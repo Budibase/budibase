@@ -18,14 +18,14 @@ const { DocumentTypes, isDevAppID } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
-const { events } = require("@budibase/backend-core")
+import { events } from "@budibase/backend-core"
 
 const fs = require("fs")
 const {
   downloadTarballDirect,
 } = require("../../../utilities/fileSystem/utilities")
 
-async function prepareUpload({ s3Key, bucket, metadata, file }) {
+async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   const response = await upload({
     bucket,
     metadata,
@@ -44,7 +44,7 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
   }
 }
 
-exports.toggleBetaUiFeature = async function (ctx) {
+export const toggleBetaUiFeature = async function (ctx: any) {
   const cookieName = `beta:${ctx.params.feature}`
 
   if (ctx.cookies.get(cookieName)) {
@@ -72,21 +72,21 @@ exports.toggleBetaUiFeature = async function (ctx) {
   }
 }
 
-exports.serveBuilder = async function (ctx) {
+export const serveBuilder = async function (ctx: any) {
   const builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
-  if (!ctx.file.includes("assets/")) {
+  if (ctx.file === "index.html") {
     await events.serve.servedBuilder()
   }
 }
 
-exports.uploadFile = async function (ctx) {
+export const uploadFile = async function (ctx: any) {
   let files =
     ctx.request.files.file.length > 1
       ? Array.from(ctx.request.files.file)
       : [ctx.request.files.file]
 
-  const uploads = files.map(async file => {
+  const uploads = files.map(async (file: any) => {
     const fileExtension = [...file.name.split(".")].pop()
     // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`
@@ -101,7 +101,7 @@ exports.uploadFile = async function (ctx) {
   ctx.body = await Promise.all(uploads)
 }
 
-exports.serveApp = async function (ctx) {
+export const serveApp = async function (ctx: any) {
   const db = getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentTypes.APP_METADATA)
   let appId = getAppId()
@@ -134,13 +134,13 @@ exports.serveApp = async function (ctx) {
   }
 }
 
-exports.serveClientLibrary = async function (ctx) {
+export const serveClientLibrary = async function (ctx: any) {
   return send(ctx, "budibase-client.js", {
     root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
   })
 }
 
-exports.getSignedUploadURL = async function (ctx) {
+export const getSignedUploadURL = async function (ctx: any) {
   const database = getAppDB()
 
   // Ensure datasource is valid

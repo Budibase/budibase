@@ -45,7 +45,7 @@ export const limited = async (event: Event): Promise<boolean> => {
     return false
   }
 
-  const cachedEvent = (await readEvent(event)) as EventProperties
+  const cachedEvent = await readEvent(event)
   if (cachedEvent) {
     const timestamp = new Date(cachedEvent.timestamp)
     const limit = RATE_LIMITS[event]
@@ -76,14 +76,17 @@ export const limited = async (event: Event): Promise<boolean> => {
 const eventKey = (event: RateLimitedEvent) => {
   let key = `${CacheKeys.EVENTS_RATE_LIMIT}:${event}`
   if (isPerApp(event)) {
-    key = key + context.getAppId()
+    key = key + ":" + context.getAppId()
   }
   return key
 }
 
-const readEvent = async (event: RateLimitedEvent) => {
+const readEvent = async (
+  event: RateLimitedEvent
+): Promise<EventProperties | undefined> => {
   const key = eventKey(event)
-  return cache.get(key)
+  const result = await cache.get(key)
+  return result as EventProperties
 }
 
 const recordEvent = async (
