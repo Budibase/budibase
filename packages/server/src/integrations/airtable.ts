@@ -63,7 +63,7 @@ module AirtableModule {
         type: QueryTypes.FIELDS,
         customisable: true,
         fields: {
-          recordId: {
+          recordID: {
             type: DatasourceFieldTypes.STRING,
             required: true,
           },
@@ -116,13 +116,13 @@ module AirtableModule {
       }
     }
 
-    async update(query: { table: any; recordId: any; json: any }) {
-      const { table, recordId, json } = query
+    async update(query: { table: any; recordID: any; json: any }) {
+      const { table, recordID, json } = query
 
       try {
         return await this.client(table).update([
           {
-            id: recordId,
+            id: recordID,
             fields: json,
           },
         ])
