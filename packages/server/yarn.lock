@@ -1094,12 +1094,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.2.24":
-  version "1.2.24"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.24.tgz#37c2f85dcb1a167eeb22a19ba8b5274111da3244"
-  integrity sha512-P1CY04uK1psyuju+WNo6y1u9YyDa2ozSkxYOAnnJHBNCi67CYuu5EeLWVJ1YcmQ6sFeoGl76/KIhwZ9IEaK8IA==
+"@budibase/backend-core@1.2.25":
+  version "1.2.25"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.25.tgz#7dcb958cfdd8f73d3755bf0d8470248d4f721360"
+  integrity sha512-UKA8t8trzTe/jHEpAGlYT2fZIR8SRxDnFvY0wQFGPspvJ0EnoVX6U2sV7kuZy8EtTxpJxShG7Nvt94I0EjiN5w==
   dependencies:
-    "@budibase/types" "^1.2.24"
+    "@budibase/types" "^1.2.25"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -1177,13 +1177,13 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.2.24":
-  version "1.2.24"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.2.24.tgz#c37c4755d864d2b019f0b9749631f4ad549043c0"
-  integrity sha512-oYXnPAwEiYtBQ0UfZ0sOYmiLy3KLGIA7HHuNWifQgL+HMlZIPRqYImcSWreCsW7oQNDGWNS+yGBUaO6bIRb/Ng==
+"@budibase/pro@1.2.25":
+  version "1.2.25"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.2.25.tgz#9e802bb7b18ba192617b01269f6ebefee0477b05"
+  integrity sha512-zxL7p61jMNznnAL9EKYg+Ap9ar3K9lbzwyM75uZjgAw2VGCYm7Z1Kftj9EGmEQxzXiZfrWTJcOE8MAhu8nAJRA==
   dependencies:
-    "@budibase/backend-core" "1.2.24"
-    "@budibase/types" "1.2.24"
+    "@budibase/backend-core" "1.2.25"
+    "@budibase/types" "1.2.25"
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
@@ -1206,10 +1206,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@1.2.24", "@budibase/types@^1.2.24":
-  version "1.2.24"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.24.tgz#37bc85720f70da65b5f510cc51b9bd611f71849f"
-  integrity sha512-o3dAvVxMpMyKgF54wLH1VVLdSAh3OWspfA4Y8C0iEtZEe8yVvK3yMLRVsVCIXQgHUOr4rnXUasfNaHQP2mdrZg==
+"@budibase/types@1.2.25", "@budibase/types@^1.2.25":
+  version "1.2.25"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.25.tgz#9b3738f774592e25f9ac44527e8b2e4aba6b4933"
+  integrity sha512-ReBvf2aN5/3M1eFcCrqycu68g54CxV2BXiEQTOS2om4u3WRcQMPa69eMjHJ4SltBb5HwfXveDu50Tc+4M8kS6w==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
