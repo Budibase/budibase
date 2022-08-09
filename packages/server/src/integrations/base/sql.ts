@@ -10,6 +10,7 @@ import {
 import { isIsoDateString, SqlClients } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import environment from "../../environment"
+import { removeKeyNumbering } from "./utils"
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -133,12 +134,13 @@ class InternalBuilder {
       fn: (key: string, value: any) => void
     ) {
       for (let [key, value] of Object.entries(structure)) {
-        const isRelationshipField = key.includes(".")
+        const updatedKey = removeKeyNumbering(key)
+        const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${opts.tableName}.${key}`, value)
+          fn(`${opts.tableName}.${updatedKey}`, value)
         }
         if (opts.relationship && isRelationshipField) {
-          fn(key, value)
+          fn(updatedKey, value)
         }
       }
     }
@@ -582,4 +584,3 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
 }
 
 export default SqlQueryBuilder
-module.exports = SqlQueryBuilder
