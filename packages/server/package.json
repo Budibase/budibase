@@ -79,7 +79,7 @@
     "@apidevtools/swagger-parser": "10.0.3",
     "@budibase/backend-core": "^1.2.26",
     "@budibase/client": "^1.2.26",
-    "@budibase/pro": "1.2.25",
+    "@budibase/pro": "1.2.26",
     "@budibase/string-templates": "^1.2.26",
     "@budibase/types": "^1.2.26",
     "@bull-board/api": "3.7.0",
