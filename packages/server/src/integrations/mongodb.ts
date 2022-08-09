@@ -126,14 +126,14 @@ module MongoDBModule {
         if (c === '"') {
           inQuotes = !inQuotes
         }
-        if (c === '{' && !inQuotes) {
+        if (c === "{" && !inQuotes) {
           openCount++
           if (openCount === 1) {
             startIndex = i
           }
-        } else if (c === '}' && !inQuotes) {
+        } else if (c === "}" && !inQuotes) {
           if (openCount === 1) {
-            queryParams.push(JSON.parse(params.substring(startIndex, i+1)))
+            queryParams.push(JSON.parse(params.substring(startIndex, i + 1)))
           }
           openCount--
         }
