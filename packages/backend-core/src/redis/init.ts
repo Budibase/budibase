@@ -1,19 +1,24 @@
-const Client = require("./index")
-const utils = require("./utils")
-const { getRedlock } = require("./redlock")
+import RedisWrapper from "./index"
+import Redlock from "redlock"
+import { getRedlock } from "./redlock"
+import * as utils from "./utils"
 
-let userClient, sessionClient, appClient, cacheClient, writethroughClient
-let migrationsRedlock
+let userClient: RedisWrapper
+let sessionClient: RedisWrapper
+let appClient: RedisWrapper
+let cacheClient: RedisWrapper
+let writethroughClient: RedisWrapper
+let migrationsRedlock: Redlock
 
 // turn retry off so that only one instance can ever hold the lock
 const migrationsRedlockConfig = { retryCount: 0 }
 
 async function init() {
-  userClient = await new Client(utils.Databases.USER_CACHE).init()
-  sessionClient = await new Client(utils.Databases.SESSIONS).init()
-  appClient = await new Client(utils.Databases.APP_METADATA).init()
-  cacheClient = await new Client(utils.Databases.GENERIC_CACHE).init()
-  writethroughClient = await new Client(
+  userClient = await new RedisWrapper(utils.Databases.USER_CACHE).init()
+  sessionClient = await new RedisWrapper(utils.Databases.SESSIONS).init()
+  appClient = await new RedisWrapper(utils.Databases.APP_METADATA).init()
+  cacheClient = await new RedisWrapper(utils.Databases.GENERIC_CACHE).init()
+  writethroughClient = await new RedisWrapper(
     utils.Databases.WRITE_THROUGH,
     utils.SelectableDatabases.WRITE_THROUGH
   ).init()
@@ -32,7 +37,7 @@ process.on("exit", async () => {
   if (writethroughClient) await writethroughClient.finish()
 })
 
-module.exports = {
+const pkg = {
   getUserClient: async () => {
     if (!userClient) {
       await init()
@@ -70,3 +75,5 @@ module.exports = {
     return migrationsRedlock
   },
 }
+
+export = pkg

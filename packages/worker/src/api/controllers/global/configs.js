@@ -368,7 +368,7 @@ exports.destroy = async function (ctx) {
   const { id, rev } = ctx.params
   try {
     await db.remove(id, rev)
-    await cache.delete(CacheKeys.CHECKLIST)
+    await cache.deleteKey(CacheKeys.CHECKLIST)
     ctx.body = { message: "Config deleted successfully" }
   } catch (err) {
     ctx.throw(err.status, err)

@@ -1,7 +1,6 @@
-import RedisWrapper from "../redis"
 const env = require("../environment")
-// ioredis mock is all in memory
-const Redis = env.isTest() ? require("ioredis-mock") : require("ioredis")
+import { Redis, Cluster } from "ioredis"
+import IORedis from "./ioredis"
 const {
   addDbPrefix,
   removeDbPrefix,
@@ -13,15 +12,20 @@ const {
 const RETRY_PERIOD_MS = 2000
 const STARTUP_TIMEOUT_MS = 5000
 const CLUSTERED = false
+
+const isClustered = (redis: Redis | Cluster): redis is Cluster => {
+  return CLUSTERED
+}
+
 const DEFAULT_SELECT_DB = SelectableDatabases.DEFAULT
 
 // for testing just generate the client once
 let CLOSED = false
-let CLIENTS: { [key: number]: any } = {}
+let CLIENTS: { [key: number]: Redis | Cluster } = {}
 // if in test always connected
 let CONNECTED = env.isTest()
 
-function pickClient(selectDb: number): any {
+function pickClient(selectDb: number) {
   return CLIENTS[selectDb]
 }
 
@@ -59,7 +63,7 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   }
   // testing uses a single in memory client
   if (env.isTest()) {
-    CLIENTS[selectDb] = new Redis(getRedisOptions())
+    CLIENTS[selectDb] = new IORedis(getRedisOptions())
   }
   // start the timer - only allowed 5 seconds to connect
   timeout = setTimeout(() => {
@@ -79,11 +83,11 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   const { redisProtocolUrl, opts, host, port } = getRedisOptions(CLUSTERED)
 
   if (CLUSTERED) {
-    client = new Redis.Cluster([{ host, port }], opts)
+    client = new IORedis.Cluster([{ host, port }], opts)
   } else if (redisProtocolUrl) {
-    client = new Redis(redisProtocolUrl)
+    client = new IORedis(redisProtocolUrl)
   } else {
-    client = new Redis(opts)
+    client = new IORedis(opts)
   }
   // attach handlers
   client.on("end", (err: Error) => {
@@ -124,7 +128,7 @@ function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {
  * @param client The client to use for further lookups.
  * @return {Promise<object>} The final output of the stream
  */
-function promisifyStream(stream: any, client: RedisWrapper) {
+function promisifyStream(stream: any, client: Redis | Cluster) {
   return new Promise((resolve, reject) => {
     const outputKeys = new Set()
     stream.on("data", (keys: string[]) => {
@@ -144,10 +148,13 @@ function promisifyStream(stream: any, client: RedisWrapper) {
         }
         const jsonArray = await Promise.all(getPromises)
         resolve(
-          keysArray.map(key => ({
-            key: removeDbPrefix(key),
-            value: JSON.parse(jsonArray.shift()),
-          }))
+          keysArray.map(key => {
+            const value = jsonArray.shift()
+            return {
+              key: removeDbPrefix(key),
+              value: value ? JSON.parse(value) : value,
+            }
+          })
         )
       } catch (err) {
         reject(err)
@@ -156,7 +163,7 @@ function promisifyStream(stream: any, client: RedisWrapper) {
   })
 }
 
-export = class RedisWrapper {
+class RedisWrapper {
   _db: string
   _select: number
 
@@ -184,14 +191,16 @@ export = class RedisWrapper {
   async scan(key = ""): Promise<any> {
     const db = this._db
     key = `${db}${SEPARATOR}${key}`
+
+    const client = this.getClient()
     let stream
-    if (CLUSTERED) {
-      let node = this.getClient().nodes("master")
+    if (isClustered(client)) {
+      let node = client.nodes("master")
       stream = node[0].scanStream({ match: key + "*", count: 100 })
     } else {
-      stream = this.getClient().scanStream({ match: key + "*", count: 100 })
+      stream = client.scanStream({ match: key + "*", count: 100 })
     }
-    return promisifyStream(stream, this.getClient())
+    return promisifyStream(stream, client)
   }
 
   async keys(pattern: string) {
@@ -202,16 +211,16 @@ export = class RedisWrapper {
   async get(key: string) {
     const db = this._db
     let response = await this.getClient().get(addDbPrefix(db, key))
-    // overwrite the prefixed key
-    if (response != null && response.key) {
-      response.key = key
+
+    if (response !== null) {
+      try {
+        return JSON.parse(response)
+      } catch (err) {
+        // if its not an object just return the response
+      }
     }
-    // if its not an object just return the response
-    try {
-      return JSON.parse(response)
-    } catch (err) {
-      return response
-    }
+
+    return response
   }
 
   async store(key: string, value: any, expirySeconds: number | null = null) {
@@ -226,18 +235,6 @@ export = class RedisWrapper {
     }
   }
 
-  async getTTL(key: string) {
-    const db = this._db
-    const prefixedKey = addDbPrefix(db, key)
-    return this.getClient().ttl(prefixedKey)
-  }
-
-  async setExpiry(key: string, expirySeconds: number | null) {
-    const db = this._db
-    const prefixedKey = addDbPrefix(db, key)
-    await this.getClient().expire(prefixedKey, expirySeconds)
-  }
-
   async delete(key: string) {
     const db = this._db
     await this.getClient().del(addDbPrefix(db, key))
@@ -248,3 +245,5 @@ export = class RedisWrapper {
     await Promise.all(items.map((obj: any) => this.delete(obj.key)))
   }
 }
+
+export = RedisWrapper

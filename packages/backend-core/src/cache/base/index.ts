@@ -7,7 +7,7 @@ function generateTenantKey(key: string) {
   return `${key}:${tenantId}`
 }
 
-export = class BaseCache {
+class BaseCache {
   client: RedisWrapper | undefined
 
   constructor(client: RedisWrapper | undefined = undefined) {
@@ -15,7 +15,10 @@ export = class BaseCache {
   }
 
   async getClient() {
-    return !this.client ? await redis.getCacheClient() : this.client
+    if (!this.client) {
+      this.client = await redis.getCacheClient()
+    }
+    return this.client as RedisWrapper
   }
 
   async keys(pattern: string) {
@@ -90,3 +93,5 @@ export = class BaseCache {
     }
   }
 }
+
+export = BaseCache

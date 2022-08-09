@@ -59,7 +59,7 @@ const saveBackfillMetadata = async (
 }
 
 const deleteBackfillMetadata = async (): Promise<void> => {
-  await cache.delete(CacheKeys.BACKFILL_METADATA)
+  await cache.deleteKey(CacheKeys.BACKFILL_METADATA)
 }
 
 const clearEvents = async () => {
@@ -70,7 +70,7 @@ const clearEvents = async () => {
   for (const key of keys) {
     // delete each key
     // don't  use tenancy, already in the key
-    await cache.delete(key, { useTenancy: false })
+    await cache.deleteKey(key, { useTenancy: false })
   }
 }
 
