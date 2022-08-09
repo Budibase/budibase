@@ -117,26 +117,31 @@ module MongoDBModule {
     }
 
     parseQueryParams(params: string, mode: string) {
-      let queryParams = params.split(/(?<=}),[\n\s]*(?={)/g)
-      if (queryParams.length > 3) {
-        for (let i = 0; i < queryParams.length; i++) {
-          const openCount = queryParams[i].match(/{/g)?.length ?? 0
-          const closeCount = queryParams[i].match(/}/g)?.length ?? 0
-          if ((openCount + closeCount) % 2 !== 0) {
-            if (openCount > closeCount) {
-              queryParams[i] += `, ${queryParams[i + 1]}`
-              queryParams.splice(i + 1, 1)
-            } else {
-              queryParams[i - 1] += `, ${queryParams[i]}`
-              queryParams.splice(i, 1)
-              i--
-            }
-          }
+      let queryParams = []
+      let openCount = 0
+      let inQuotes = false
+      let i = 0
+      let startIndex = 0
+      for (let c of params) {
+        if (c === '"') {
+          inQuotes = !inQuotes
         }
+        if (c === '{' && !inQuotes) {
+          openCount++
+          if (openCount === 1) {
+            startIndex = i
+          }
+        } else if (c === '}' && !inQuotes) {
+          if (openCount === 1) {
+            queryParams.push(JSON.parse(params.substring(startIndex, i+1)))
+          }
+          openCount--
+        }
+        i++
       }
-      let group1 = queryParams[0] ? JSON.parse(queryParams[0]) : {}
-      let group2 = queryParams[1] ? JSON.parse(queryParams[1]) : {}
-      let group3 = queryParams[2] ? JSON.parse(queryParams[2]) : {}
+      let group1 = queryParams[0] ?? {}
+      let group2 = queryParams[1] ?? {}
+      let group3 = queryParams[2] ?? {}
       if (mode === "update") {
         return {
           filter: group1,
