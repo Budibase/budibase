@@ -16,7 +16,6 @@
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
-  export let updateOnChange = true
   export let error = null
   export let secondaryOptions = []
   export let primaryOptions = []
@@ -364,25 +363,6 @@
   }
   .option-right {
     padding-left: 8px;
-  }
-
-  .circle {
-    border-radius: 50%;
-    height: 28px;
-    color: white;
-    font-weight: bold;
-    line-height: 48px;
-    font-size: 1.2em;
-    width: 28px;
-    position: relative;
-  }
-
-  .circle > div {
-    position: absolute;
-    text-decoration: none;
-    top: 50%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-50%);
   }
 
   .iconPadding {

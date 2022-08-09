@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Search, Divider, Layout } from "@budibase/bbui"
+  import { Icon, Search, Layout } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   export let searchTerm = ""
