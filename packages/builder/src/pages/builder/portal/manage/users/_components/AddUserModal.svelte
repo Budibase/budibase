@@ -48,7 +48,7 @@
     if (email) {
       const res = emailValidator(email)
       if (res === true) {
-        delete userData[index].error
+        userData[index].error = null
       } else {
         userData[index].error = res
       }
