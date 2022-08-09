@@ -29,7 +29,7 @@ on:
 
 env:
   # Posthog token used by ui at build time 
-  POSTHOG_TOKEN: phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS
+  POSTHOG_TOKEN: phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
   PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
