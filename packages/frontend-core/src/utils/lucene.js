@@ -103,6 +103,10 @@ export const buildLuceneQuery = filter => {
       const isHbs =
         typeof value === "string" && value.match(HBS_REGEX)?.length > 0
       // Parse all values into correct types
+      if (operator === "allOr") {
+        query.allOr = true
+        return
+      }
       if (type === "datetime") {
         // Ensure date value is a valid date and parse into correct format
         if (!value) {
