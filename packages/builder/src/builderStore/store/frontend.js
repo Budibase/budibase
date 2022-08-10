@@ -92,11 +92,41 @@ export const getFrontendStore = () => {
       // Allow errors to propagate.
       let components = await API.fetchComponentLibDefinitions(application.appId)
 
+      // Extend definitions with custom components
+      components["test"] = {
+        component: "test",
+        name: "Super cool component",
+        icon: "Text",
+        description: "A custom component",
+        showSettingsBar: false,
+        hasChildren: true,
+        settings: [
+          {
+            type: "text",
+            key: "text",
+            label: "Text",
+          },
+        ],
+        context: {
+          type: "static",
+          values: [
+            {
+              label: "Text prop",
+              key: "text",
+            },
+          ],
+        },
+      }
+
+      // Filter out custom component keys so we can flag them
+      let customComponents = ["test"]
+
       // Reset store state
       store.update(state => ({
         ...state,
         libraries: application.componentLibraries,
         components,
+        customComponents,
         clientFeatures: {
           ...INITIAL_FRONTEND_STATE.clientFeatures,
           ...components.features,
@@ -396,9 +426,6 @@ export const getFrontendStore = () => {
       getDefinition: componentName => {
         if (!componentName) {
           return null
-        }
-        if (!componentName.startsWith("@budibase")) {
-          componentName = `@budibase/standard-components/${componentName}`
         }
         return get(store).components[componentName]
       },
