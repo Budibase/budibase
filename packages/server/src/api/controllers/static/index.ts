@@ -14,11 +14,10 @@ const env = require("../../../environment")
 const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
-const { DocumentTypes, isDevAppID } = require("../../../db/utils")
+const { DocumentTypes } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
-import { events } from "@budibase/backend-core"
 
 const fs = require("fs")
 const {
@@ -75,9 +74,6 @@ export const toggleBetaUiFeature = async function (ctx: any) {
 export const serveBuilder = async function (ctx: any) {
   const builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
-  if (ctx.file === "index.html") {
-    await events.serve.servedBuilder()
-  }
 }
 
 export const uploadFile = async function (ctx: any) {
@@ -125,12 +121,6 @@ export const serveApp = async function (ctx: any) {
   } else {
     // just return the app info for jest to assert on
     ctx.body = appInfo
-  }
-
-  if (isDevAppID(appInfo.appId)) {
-    await events.serve.servedAppPreview(appInfo)
-  } else {
-    await events.serve.servedApp(appInfo)
   }
 }
 
