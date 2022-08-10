@@ -4,6 +4,10 @@ import { findComponentById, findComponentPathById } from "../utils/components"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
+import Router from "../components/Router.svelte"
+import * as AppComponents from "../components/app/index.js"
+
+const budibasePrefix = "@budibase/standard-components/"
 
 const createComponentStore = () => {
   const store = writable({})
@@ -34,6 +38,7 @@ const createComponentStore = () => {
         findComponentPathById(asset?.props, selectedComponentId) || []
 
       return {
+        customComponentManifest: $store.customComponentManifest,
         selectedComponentInstance: $store[selectedComponentId],
         selectedComponent: component,
         selectedComponentDefinition: definition,
@@ -68,9 +73,60 @@ const createComponentStore = () => {
   }
 
   const getComponentDefinition = type => {
-    const prefix = "@budibase/standard-components/"
-    type = type?.replace(prefix, "")
-    return type ? Manifest[type] : null
+    if (!type) {
+      return null
+    }
+
+    // Screenslot is an edge case
+    if (type === "screenslot") {
+      type = `${budibasePrefix}${type}`
+    }
+
+    // Handle built-in components
+    if (type.startsWith(budibasePrefix)) {
+      type = type.replace(budibasePrefix, "")
+      return type ? Manifest[type] : null
+    }
+
+    // Handle custom components
+    const { customComponentManifest } = get(store)
+    return customComponentManifest?.[type]?.schema?.schema
+  }
+
+  const getComponentConstructor = type => {
+    if (!type) {
+      return null
+    }
+    if (type === "screenslot") {
+      return Router
+    }
+
+    // Handle budibase components
+    if (type.startsWith(budibasePrefix)) {
+      const split = type.split("/")
+      const name = split[split.length - 1]
+      return AppComponents[name]
+    }
+
+    // Handle custom components
+    const { customComponentManifest } = get(store)
+    return customComponentManifest?.[type]?.Component
+  }
+
+  const registerCustomComponent = ({ Component, schema }) => {
+    if (!Component || !schema?.schema?.name) {
+      return
+    }
+    store.update(state => {
+      if (!state.customComponentManifest) {
+        state.customComponentManifest = {}
+      }
+      state.customComponentManifest[schema.schema.name] = {
+        schema,
+        Component,
+      }
+      return state
+    })
   }
 
   return {
@@ -81,6 +137,8 @@ const createComponentStore = () => {
       isComponentRegistered,
       getComponentById,
       getComponentDefinition,
+      getComponentConstructor,
+      registerCustomComponent,
     },
   }
 }
