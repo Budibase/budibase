@@ -48,7 +48,7 @@ describe("Airtable Integration", () => {
 
   it("calls the update method with the correct params", async () => {
     const response = await config.integration.update({
-      table: "test",
+      table: "table",
       id: "123",
       json: {
         name: "test"

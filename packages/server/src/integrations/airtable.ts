@@ -64,6 +64,11 @@ module AirtableModule {
         customisable: true,
         fields: {
           id: {
+            display: "Record ID",
+            type: DatasourceFieldTypes.STRING,
+            required: true,
+          },
+          table: {
             type: DatasourceFieldTypes.STRING,
             required: true,
           },
