@@ -1,51 +1,31 @@
 {
-  "name": "@budibase/cli",
-  "version": "1.2.27",
-  "description": "Budibase CLI, for developers, self hosting and migrations.",
-  "main": "src/index.js",
-  "bin": {
-    "budi": "src/index.js"
-  },
-  "author": "Budibase",
-  "license": "GPL-3.0",
+  "name": "budibase-component",
+  "version": "1.0.0",
+  "description": "An amazing Budibase component!",
+  "license": "UNLICENSED",
+  "svelte": "src/index.js",
+  "module": "dist/plugin.min.js",
   "scripts": {
-    "prebuild": "rm -rf prebuilds 2> /dev/null && cp -r node_modules/leveldown/prebuilds prebuilds",
-    "build": "yarn prebuild && renamer --find .node --replace .fake 'prebuilds/**' && pkg . --out-path build && yarn postbuild",
-    "postbuild": "rm -rf prebuilds 2> /dev/null"
-  },
-  "pkg": {
-    "targets": [
-      "node16-linux",
-      "node16-win",
-      "node16-macos"
-    ],
-    "assets": [
-      "node_modules/@budibase/backend-core/dist/**/*",
-      "prebuilds/**/*"
-    ],
-    "outputPath": "build"
+    "build": "npm-run-all build:js build:bundle",
+    "build:js": "rollup -c",
+    "build:bundle": "node scripts/bundle.cjs"
   },
   "dependencies": {
-    "@budibase/backend-core": "1.1.32-alpha.6",
-    "axios": "0.21.2",
-    "chalk": "4.1.0",
-    "cli-progress": "3.11.2",
-    "commander": "7.1.0",
-    "docker-compose": "0.23.6",
-    "dotenv": "16.0.1",
-    "inquirer": "8.0.0",
-    "lookpath": "1.1.0",
-    "node-fetch": "2",
-    "pkg": "5.7.0",
-    "posthog-node": "1.0.7",
-    "pouchdb": "7.3.0",
-    "pouchdb-replication-stream": "1.2.9",
-    "randomstring": "1.1.5",
-    "tar": "6.1.11"
+    "svelte": "^3.49.0"
   },
   "devDependencies": {
-    "copyfiles": "^2.4.1",
-    "eslint": "^7.20.0",
-    "renamer": "^4.0.0"
+    "@rollup/plugin-commonjs": "^18.0.0",
+    "@rollup/plugin-node-resolve": "^11.2.1",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.2.10",
+    "rollup": "^2.44.0",
+    "rollup-plugin-copy2": "^0.3.1",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-polyfill-node": "^0.8.0",
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-svelte": "^7.1.0",
+    "rollup-plugin-svg": "^2.0.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "tar": "^6.1.11"
   }
 }
