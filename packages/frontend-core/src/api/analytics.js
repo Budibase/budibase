@@ -8,9 +8,10 @@ export const buildAnalyticsEndpoints = API => ({
     })
   },
   analyticsPing: async ({ source }) => {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
     return await API.post({
       url: "/api/bbtel/ping",
-      body: { source },
+      body: { source, timezone },
     })
   },
 })
