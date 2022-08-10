@@ -3,7 +3,7 @@
   import { datasources, integrations, queries } from "stores/backend"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
-  import { IntegrationTypes } from "constants/backend"
+  import { BUDIBASE_DATASOURCE_ID } from "constants/backend"
 
   export let parameters
   export let bindings = []
@@ -14,9 +14,7 @@
   )
   // Executequery action just works on PostgreSQL and MongoDB datasources
   $: executeQueryDatasources = $datasources.list.filter(
-    x =>
-      x.source === IntegrationTypes.POSTGRES ||
-      x.source === IntegrationTypes.MONGODB
+    x => x._id !== BUDIBASE_DATASOURCE_ID
   )
 
   function fetchQueryDefinition(query) {
