@@ -75,7 +75,9 @@ services:
     ports:
       - "${MAIN_PORT}:10000"
     container_name: bbproxy
-    image: budibase/proxy
+    image: proxy-service
+    environment:
+      - PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
     depends_on:
       - minio-service
       - worker-service
