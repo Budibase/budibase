@@ -12,7 +12,7 @@
   $: datasource = $datasources.list.find(
     ds => ds._id === parameters.datasourceId
   )
-  // Executequery action just works on PostgreSQL and MongoDB datasources
+  // Executequery must exclude budibase datasource
   $: executeQueryDatasources = $datasources.list.filter(
     x => x._id !== BUDIBASE_DATASOURCE_ID
   )
