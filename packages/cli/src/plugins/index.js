@@ -3,21 +3,28 @@ const { CommandWords } = require("../constants")
 const { getSkeleton, fleshOutSkeleton } = require("./skeleton")
 const questions = require("../questions")
 const fs = require("fs")
-
-const PLUGIN_TYPES = ["component", "datasource"]
+const { PLUGIN_TYPES_ARR } = require("./constants")
+const { validate } = require("./validate")
+const { runPkgCommand } = require("../exec")
+const { join } = require("path")
+const { success, error, info } = require("../utils")
 
 async function init(opts) {
   const type = opts["init"] || opts
-  if (!type || !PLUGIN_TYPES.includes(type)) {
-    console.error(
-      "Please provide a type to init, either 'component' or 'datasource'."
+  if (!type || !PLUGIN_TYPES_ARR.includes(type)) {
+    console.log(
+      error(
+        "Please provide a type to init, either 'component' or 'datasource'."
+      )
     )
     return
   }
-  console.log("Lets get some details about your new plugin:")
+  console.log(info("Lets get some details about your new plugin:"))
   const name = await questions.string("Name", `budibase-${type}`)
   if (fs.existsSync(name)) {
-    console.error("Directory by plugin name already exists, pick a new name.")
+    console.log(
+      error("Directory by plugin name already exists, pick a new name.")
+    )
     return
   }
   const desc = await questions.string(
@@ -28,10 +35,39 @@ async function init(opts) {
   // get the skeleton
   await getSkeleton(type, name)
   await fleshOutSkeleton(name, desc, version)
-  console.log(`Plugin created in directory "${name}"`)
+  console.log(info(`Plugin created in directory "${name}"`))
 }
 
-async function build() {}
+async function build() {
+  console.log(info("Verifying plugin..."))
+  const schema = fs.readFileSync("schema.json", "utf8")
+  const pkg = fs.readFileSync("package.json", "utf8")
+  let name, version
+  try {
+    const schemaJson = JSON.parse(schema)
+    const pkgJson = JSON.parse(pkg)
+    if (!pkgJson.name || !pkgJson.version || !pkgJson.description) {
+      throw new Error(
+        "package.json is missing one of 'name', 'version' or 'description'."
+      )
+    }
+    name = pkgJson.name
+    version = pkgJson.version
+    validate(schemaJson)
+  } catch (err) {
+    if (err && err.message && err.message.includes("not valid JSON")) {
+      console.log(error(`schema.json is not valid JSON: ${err.message}`))
+    } else {
+      console.log(error(`Invalid schema/package.json: ${err.message}`))
+    }
+    return
+  }
+  console.log(success("Verified!"))
+  console.log(info("Building plugin..."))
+  await runPkgCommand("build")
+  const output = join("dist", `${name}-${version}.tar.gz`)
+  console.log(success(`Build complete - output in: ${output}`))
+}
 
 const command = new Command(`${CommandWords.PLUGIN}`)
   .addHelp(
