@@ -25,6 +25,7 @@ const newid = require("../../db/newid")
 const context = require("@budibase/backend-core/context")
 const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
 const { encrypt } = require("@budibase/backend-core/encryption")
+const { DocumentTypes } = require("../../db/utils")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -51,6 +52,10 @@ class TestConfiguration {
 
   getApp() {
     return this.app
+  }
+
+  getProdApp() {
+    return this.prodApp
   }
 
   getAppId() {
@@ -106,19 +111,11 @@ class TestConfiguration {
 
   // UTILS
 
-  async _req(body, params, controlFunc, opts = { prodApp: false }) {
+  async _req(body, params, controlFunc) {
     // create a fake request ctx
     const request = {}
-
-    // set the app id
-    let appId
-    if (opts.prodApp) {
-      appId = this.prodAppId
-    } else {
-      appId = this.appId
-    }
+    const appId = this.appId
     request.appId = appId
-
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
@@ -344,14 +341,10 @@ class TestConfiguration {
     await this._req(null, null, controllers.deploy.deployApp)
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
+
     return context.doInAppContext(prodAppId, async () => {
-      const appPackage = await this._req(
-        null,
-        { appId: prodAppId },
-        controllers.app.fetchAppPackage,
-        { prodApp: true }
-      )
-      return appPackage.application
+      const db = context.getProdAppDB()
+      return await db.get(DocumentTypes.APP_METADATA)
     })
   }
 
