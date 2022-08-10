@@ -13,22 +13,7 @@
   $: routeStore.actions.setRouteParams(params || {})
 
   // Get the screen definition for the current route
-  $: screenDefinition = getScreenDefinition($screenStore.activeScreen?.props)
-
-  const getScreenDefinition = definition => {
-    const test = {
-      _component: "test",
-      _id: "asfdasdfefgerdgrfdg",
-      _styles: {
-        normal: {},
-      },
-      text: "This is a text prop!",
-    }
-    return {
-      ...definition,
-      _children: [...definition._children, test],
-    }
-  }
+  $: screenDefinition = $screenStore.activeScreen?.props
 
   onMount(() => {
     // Mark the router as loaded whenever the screen mounts
