@@ -57,7 +57,11 @@ function publicPolicy(bucketName: any) {
   }
 }
 
-const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS, ObjectStoreBuckets.GLOBAL]
+const PUBLIC_BUCKETS = [
+  ObjectStoreBuckets.APPS,
+  ObjectStoreBuckets.GLOBAL,
+  ObjectStoreBuckets.PLUGINS,
+]
 
 /**
  * Gets a connection to the object store using the S3 SDK.

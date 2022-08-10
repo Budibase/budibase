@@ -42,6 +42,7 @@ const DocumentTypes = {
   MEM_VIEW: "view",
   USER_FLAG: "flag",
   AUTOMATION_METADATA: "meta_au",
+  PLUGIN: "plg",
 }
 
 const InternalTables = {
@@ -368,6 +369,10 @@ exports.generateMemoryViewID = viewName => {
 
 exports.getMemoryViewParams = (otherProps = {}) => {
   return getDocParams(DocumentTypes.MEM_VIEW, null, otherProps)
+}
+
+exports.generatePluginID = (name, version) => {
+  return `${DocumentTypes.PLUGIN}${SEPARATOR}${name}${SEPARATOR}${version}`
 }
 
 /**
