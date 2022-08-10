@@ -289,7 +289,7 @@ describe("MongoDB Integration", () => {
         },
         {
           "upsert": true,
-          "extra": "ad{d"
+          "extra": "ad\\"{\\"d"
         }`,
       extra: { collection: "testCollection", actionTypes: "updateOne" },
     }
@@ -317,7 +317,7 @@ describe("MongoDB Integration", () => {
     })
     expect(args[2]).toEqual({
       upsert: true,
-      extra: "ad{d"
+      extra: "ad\"{\"d"
     })
   })
 })

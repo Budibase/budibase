@@ -123,7 +123,7 @@ module MongoDBModule {
       let i = 0
       let startIndex = 0
       for (let c of params) {
-        if (c === '"') {
+        if (c === '"' && (i > 0 && params[i-1] !== '\\')) {
           inQuotes = !inQuotes
         }
         if (c === "{" && !inQuotes) {
