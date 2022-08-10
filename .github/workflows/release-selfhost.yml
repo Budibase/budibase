@@ -2,10 +2,6 @@ name: Budibase Release Selfhost
 
 on:
  workflow_dispatch:
-   inputs:
-     version:
-       description: Budibase release version. For example - 1.0.0
-       required: false
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
@@ -30,17 +26,8 @@ jobs:
       - name: Get the latest budibase release version
         id: version
         run: |
-          if [ -z "${{ github.event.inputs.version }}" ]; then
-            release_version=$(cat lerna.json | jq -r '.version')
-          else
-            release_version=${{ github.event.inputs.version }}
-          fi
+          release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-
-      - name: Checkout tag
-        run: |
-          git fetch --tags
-          git checkout v${{ env.RELEASE_VERSION }}
 
       - name: Tag and release Docker images (Self Host)
         run: | 
