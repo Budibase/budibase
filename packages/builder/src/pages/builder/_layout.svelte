@@ -3,6 +3,7 @@
   import { admin, auth } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
+  import { API } from "api"
 
   let loaded = false
 
@@ -53,6 +54,9 @@
       await auth.setOrganisation(urlTenantId)
     }
   }
+  async function analyticsPing() {
+    await API.analyticsPing({ source: "builder" })
+  }
 
   onMount(async () => {
     try {
@@ -73,6 +77,9 @@
       // being logged in
     }
     loaded = true
+
+    // lastly
+    await analyticsPing()
   })
 
   $: {
