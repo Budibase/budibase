@@ -103,3 +103,6 @@ stats.html
 
 # TypeScript cache
 *.tsbuildinfo
+
+# pouch
+pouch__all_dbs__/
