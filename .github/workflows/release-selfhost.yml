@@ -38,7 +38,9 @@ jobs:
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
       - name: Checkout tag
-        run: git checkout v${{ env.RELEASE_VERSION }}
+        run: |
+          git fetch --tags
+          git checkout v${{ env.RELEASE_VERSION }}
 
       - name: Tag and release Docker images (Self Host)
         run: | 
