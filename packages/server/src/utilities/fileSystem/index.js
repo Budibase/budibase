@@ -25,6 +25,7 @@ const {
 } = require("../../db/utils")
 const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
+const tar = require("tar")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
@@ -319,6 +320,32 @@ exports.cleanup = appIds => {
       fs.rmdirSync(path, { recursive: true })
     }
   }
+}
+
+exports.extractPluginTarball = async file => {
+  if (!file.name.endsWith(".tar.gz")) {
+    throw new Error("Plugin must be compressed into a gzipped tarball.")
+  }
+  const path = join(budibaseTempDir(), file.name.split(".tar.gz")[0])
+  // remove old tmp directories automatically - don't combine
+  if (fs.existsSync(path)) {
+    fs.rmSync(path, { recursive: true, force: true })
+  }
+  fs.mkdirSync(path)
+  await tar.extract({
+    file: file.path,
+    C: path,
+  })
+  let metadata = {}
+  try {
+    const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
+    const schema = fs.readFileSync(join(path, "schema.json"), "utf8")
+    metadata.schema = JSON.parse(schema)
+    metadata.package = JSON.parse(pkg)
+  } catch (err) {
+    throw new Error("Unable to process schema.json/package.json in plugin.")
+  }
+  return { metadata, directory: path }
 }
 
 /**
