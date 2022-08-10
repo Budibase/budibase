@@ -120,7 +120,8 @@ function typeCoercion(filters, table) {
 }
 
 const hasNullFilters = filters =>
-  filters.length === 0 || filters.some(filter => filter.value === null)
+  filters.length === 0 ||
+  filters.some(filter => filter.value === null || filter.value === "")
 
 exports.run = async function ({ inputs, appId }) {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs

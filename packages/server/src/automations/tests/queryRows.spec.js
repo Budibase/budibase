@@ -50,7 +50,6 @@ describe("Test a query step automation", () => {
   })
 
   it("Returns all rows when onEmptyFilter has no value and no filters are passed", async () => {
-    console.log(rows)
     const inputs = {
       tableId: table._id,
       filters: {},
