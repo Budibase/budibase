@@ -9,6 +9,9 @@ exports.init = () => {
 
   if (env.isTest()) {
     dbConfig.inMemory = true
+  }
+
+  if (env.isCypress()) {
     dbConfig.allDbs = true
   }
 

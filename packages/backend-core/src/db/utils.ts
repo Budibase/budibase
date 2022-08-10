@@ -182,7 +182,7 @@ export async function getAllDbs(opts = { efficient: false }) {
   const efficient = opts && opts.efficient
   // specifically for testing we use the pouch package for this
   if (env.isTest()) {
-    return allDbs()
+    return await allDbs()
   }
   let dbs: any[] = []
   let { url, cookie } = getCouchInfo()

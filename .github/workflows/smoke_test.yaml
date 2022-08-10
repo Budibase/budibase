@@ -6,7 +6,7 @@ on:
   - cron: "0 5 * * *" # every day at 5AM
 
 jobs:
-  release:
+  smoke_test:
     runs-on: ubuntu-latest
 
     steps:

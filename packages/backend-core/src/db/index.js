@@ -82,10 +82,15 @@ exports.doWithDB = async (dbName, cb, opts = {}) => {
   }
 }
 
-exports.allDbs = () => {
+exports.allDbs = async () => {
   if (!env.isTest()) {
     throw new Error("Cannot be used outside test environment.")
   }
+
+  if (!env.isCypress()) {
+    return PouchDB.allDbs()
+  }
+
   checkInitialised()
   return [...dbList]
 }

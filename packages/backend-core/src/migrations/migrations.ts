@@ -67,7 +67,7 @@ export const runMigration = async (
       dbNames = [options.noOp.appId]
     } else {
       const apps = await getAllApps(migration.appOpts)
-      dbNames = apps.map(app => app.appId)
+      dbNames = apps.map((app: any) => app.appId)
     }
   } else if (migrationType === MigrationType.INSTALLATION) {
     dbNames = [StaticDatabases.PLATFORM_INFO.name]

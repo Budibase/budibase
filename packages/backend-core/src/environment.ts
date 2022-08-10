@@ -6,6 +6,10 @@ function isTest() {
   )
 }
 
+function isCypress() {
+  return process.env.NODE_ENV === "cypress"
+}
+
 function isDev() {
   return process.env.NODE_ENV !== "production"
 }
@@ -19,6 +23,7 @@ if (!LOADED && isDev() && !isTest()) {
 const env = {
   isTest,
   isDev,
+  isCypress,
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,

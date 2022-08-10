@@ -4,6 +4,10 @@ function isDev() {
   return process.env.NODE_ENV !== "production"
 }
 
+function isCypress() {
+  return process.env.NODE_ENV === "cypress"
+}
+
 function isTest() {
   return (
     process.env.NODE_ENV === "jest" ||
@@ -67,6 +71,7 @@ module.exports = {
     module.exports[key] = value
   },
   isDev,
+  isCypress,
   isTest,
   isProd: () => {
     return !isDev()

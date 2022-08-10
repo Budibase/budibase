@@ -1,5 +1,6 @@
 const PouchDB = require("pouchdb")
 const env = require("../environment")
+const allDbs = require("pouchdb-all-dbs")
 
 exports.getUrlInfo = (url = env.COUCH_DB_URL) => {
   let cleanUrl, username, password, host
@@ -118,6 +119,10 @@ exports.getPouch = (opts = {}) => {
   if (opts.find) {
     const find = require("pouchdb-find")
     PouchDB.plugin(find)
+  }
+
+  if (opts.allDbs) {
+    PouchDB.plugin(allDbs)
   }
 
   return PouchDB.defaults(POUCH_DB_DEFAULTS)
