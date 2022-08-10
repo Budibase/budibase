@@ -19,14 +19,14 @@ export const ping = async (ctx: any) => {
       let appId = context.getAppId()
 
       if (isDevAppID(appId)) {
-        await events.serve.servedAppPreview(appInfo)
+        await events.serve.servedAppPreview(appInfo, body.timezone)
       } else {
-        await events.serve.servedApp(appInfo)
+        await events.serve.servedApp(appInfo, body.timezone)
       }
       break
     }
     case PingSource.BUILDER: {
-      await events.serve.servedBuilder()
+      await events.serve.servedBuilder(body.timezone)
       break
     }
   }
