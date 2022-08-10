@@ -3,6 +3,7 @@
   import { datasources, integrations, queries } from "stores/backend"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
+  import { IntegrationTypes } from "constants/backend"
 
   export let parameters
   export let bindings = []
@@ -10,6 +11,12 @@
   $: query = $queries.list.find(q => q._id === parameters.queryId)
   $: datasource = $datasources.list.find(
     ds => ds._id === parameters.datasourceId
+  )
+  // Executequery action just works on PostgreSQL and MongoDB datasources
+  $: executeQueryDatasources = $datasources.list.filter(
+    x =>
+      x.source === IntegrationTypes.POSTGRES ||
+      x.source === IntegrationTypes.MONGODB
   )
 
   function fetchQueryDefinition(query) {
@@ -24,7 +31,7 @@
   <Select
     label="Datasource"
     bind:value={parameters.datasourceId}
-    options={$datasources.list}
+    options={executeQueryDatasources}
     getOptionLabel={source => source.name}
     getOptionValue={source => source._id}
   />
