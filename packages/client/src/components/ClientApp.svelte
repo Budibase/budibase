@@ -85,7 +85,17 @@
       builderStore.actions.notifyLoaded()
     }
   })
+
+  // TODO: remove. this is a test to render the first custom component
+  console.log(window["##BUDIBASE_CUSTOM_COMPONENTS##"]?.[0])
+  const custom = window["##BUDIBASE_CUSTOM_COMPONENTS##"]?.[0]?.Component
 </script>
+
+{#if custom}
+  <div style="padding: 20px;">
+    <svelte:component this={custom} />
+  </div>
+{/if}
 
 {#if dataLoaded}
   <div

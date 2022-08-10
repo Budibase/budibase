@@ -83,6 +83,11 @@
   </script>
   <script type="application/javascript" src={clientLibPath}>
   </script>
+  <!-- Custom components need inserted after the core client library -->
+  <!-- But before loadBudibase is called -->
+  <script
+    type="application/javascript"
+    src="https://cdn.kingston.dev/plugin.min.js"></script>
   <script type="application/javascript">
     if (window.loadBudibase) {
       window.loadBudibase()
