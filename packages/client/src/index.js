@@ -1,5 +1,5 @@
 import ClientApp from "./components/ClientApp.svelte"
-import { builderStore, appStore, devToolsStore } from "./stores"
+import { componentStore, builderStore, appStore, devToolsStore } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
 
@@ -37,6 +37,13 @@ const loadBudibase = () => {
   // the builder preview to enable them.
   const enableDevTools = !get(builderStore).inBuilder && get(appStore).isDevApp
   devToolsStore.actions.setEnabled(enableDevTools)
+
+  // Register any custom components
+  if (window["##BUDIBASE_CUSTOM_COMPONENTS##"]) {
+    window["##BUDIBASE_CUSTOM_COMPONENTS##"].forEach(component => {
+      componentStore.actions.registerCustomComponent(component)
+    })
+  }
 
   // Create app if one hasn't been created yet
   if (!app) {

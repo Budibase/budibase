@@ -11,8 +11,6 @@
 <script>
   import { getContext, setContext, onMount, onDestroy } from "svelte"
   import { writable, get } from "svelte/store"
-  import * as AppComponents from "components/app"
-  import Router from "./Router.svelte"
   import {
     enrichProps,
     propsAreSame,
@@ -180,7 +178,7 @@
 
     // Pull definition and constructor
     const component = instance._component
-    constructor = getComponentConstructor(component)
+    constructor = componentStore.actions.getComponentConstructor(component)
     definition = componentStore.actions.getComponentDefinition(component)
     if (!definition) {
       return
@@ -235,16 +233,6 @@
     enrichComponentSettings(get(context), settingsDefinitionMap, {
       force: true,
     })
-  }
-
-  // Gets the component constructor for the specified component
-  const getComponentConstructor = component => {
-    const split = component?.split("/")
-    const name = split?.[split.length - 1]
-    if (name === "screenslot" && !insideScreenslot) {
-      return Router
-    }
-    return AppComponents[name]
   }
 
   const getSettingsDefinitionMap = settingsDefinition => {
