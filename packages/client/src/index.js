@@ -3,6 +3,12 @@ import { builderStore, appStore, devToolsStore } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
 
+// Provide svelte and svelte/internal as globals for custom components
+import * as svelte from "svelte"
+import * as internal from "svelte/internal"
+window.svelte_internal = internal
+window.svelte = svelte
+
 // Initialise spectrum icons
 loadSpectrumIcons()
 
