@@ -1,5 +1,5 @@
 const { PluginTypes } = require("./constants")
-const { DatasourceFieldTypes, QueryTypes } = require("@budibase/types")
+const { DatasourceFieldType, QueryType } = require("@budibase/types")
 const joi = require("joi")
 
 const DATASOURCE_TYPES = [
@@ -36,7 +36,7 @@ function validateDatasource(schema) {
   const fieldValidator = joi.object({
     type: joi
       .string()
-      .allow(...Object.values(DatasourceFieldTypes))
+      .allow(...Object.values(DatasourceFieldType))
       .required(),
     required: joi.boolean().required(),
     default: joi.any(),
@@ -45,7 +45,7 @@ function validateDatasource(schema) {
 
   const queryValidator = joi
     .object({
-      type: joi.string().allow(...Object.values(QueryTypes)),
+      type: joi.string().allow(...Object.values(QueryType)),
       fields: joi.object().pattern(joi.string(), fieldValidator),
     })
     .required()
