@@ -384,3 +384,10 @@ exports.getMultiIDParams = ids => {
     include_docs: true,
   }
 }
+
+/**
+ * Gets parameters for retrieving automations, this is a utility function for the getDocParams function.
+ */
+exports.getPluginParams = (pluginId = null, otherProps = {}) => {
+  return getDocParams(DocumentTypes.PLUGIN, pluginId, otherProps)
+}
