@@ -233,8 +233,10 @@ export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
   }
   let dbs = await getAllDbs({ efficient })
   const appDbNames = dbs.filter((dbName: any) => {
-    if (!dbName) {
-      return false
+    if (env.isTest()) {
+      if (!dbName) {
+        return false
+      }
     }
 
     const split = dbName.split(SEPARATOR)
