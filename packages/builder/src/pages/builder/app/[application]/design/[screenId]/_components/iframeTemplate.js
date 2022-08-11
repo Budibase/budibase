@@ -37,7 +37,6 @@ export default `
       }
     </style>
     <script src='{{ CLIENT_LIB_PATH }}'></script>
-    {{ PLUGINS }}
     <script>
       function receiveMessage(event) { 
         if (!event.data) {
@@ -67,7 +66,8 @@ export default `
           customTheme,
           previewDevice,
           navigation,
-          hiddenComponentIds
+          hiddenComponentIds,
+          usedPlugins,
         } = parsed
 
         // Set some flags so the app knows we're in the builder
@@ -82,6 +82,7 @@ export default `
         window["##BUDIBASE_PREVIEW_DEVICE##"] = previewDevice
         window["##BUDIBASE_PREVIEW_NAVIGATION##"] = navigation
         window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"] = hiddenComponentIds
+        window["##BUDIBASE_USED_PLUGINS##"] = usedPlugins
 
         // Initialise app
         try {

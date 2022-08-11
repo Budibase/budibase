@@ -89,6 +89,14 @@
   })
 </script>
 
+<svelte:head>
+  {#if $builderStore.usedPlugins?.length}
+    {#each $builderStore.usedPlugins as plugin}
+      <script src={`/plugins/${plugin.jsUrl}`}></script>
+    {/each}
+  {/if}
+</svelte:head>
+
 {#if dataLoaded}
   <div
     id="spectrum-root"

@@ -41,23 +41,10 @@
   }
 
   // Construct iframe template
-  $: pluginLinks = generatePluginLinks($store.usedPlugins)
-  $: template = iframeTemplate
-    .replace(/\{\{ CLIENT_LIB_PATH }}/, $store.clientLibPath)
-    .replace(/\{\{ PLUGINS }}/, pluginLinks)
-
-  const generatePluginLinks = plugins => {
-    if (!plugins?.length) {
-      return ""
-    }
-    return plugins
-      .map(plugin => {
-        // Split up like this as otherwise parsing fails because the script
-        // tags confuse svelte
-        return `<` + `script src="/plugins/${plugin.jsUrl}"></` + `script>`
-      })
-      .join("")
-  }
+  $: template = iframeTemplate.replace(
+    /\{\{ CLIENT_LIB_PATH }}/,
+    $store.clientLibPath
+  )
 
   const placeholderScreen = new Screen()
     .name("Screen Placeholder")

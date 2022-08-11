@@ -163,14 +163,14 @@
     missingRequiredSettings,
   })
 
-  const initialise = instance => {
+  const initialise = (instance, force = false) => {
     if (instance == null) {
       return
     }
 
     // Ensure we're processing a new instance
     const instanceKey = Helpers.hashString(JSON.stringify(instance))
-    if (instanceKey === lastInstanceKey) {
+    if (instanceKey === lastInstanceKey && !force) {
       return
     } else {
       lastInstanceKey = instanceKey
@@ -407,9 +407,11 @@
       !componentStore.actions.isComponentRegistered(id)
     ) {
       componentStore.actions.registerInstance(id, {
+        component: instance._component,
         getSettings: () => cachedSettings,
         getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
         getDataContext: () => get(context),
+        reload: () => initialise(instance, true),
       })
     }
   })
