@@ -1,11 +1,11 @@
-const { DocumentTypes, getPluginParams } = require("../../db/utils")
+const { DocumentType, getPluginParams } = require("../../db/utils")
 const { getComponentLibraryManifest } = require("../../utilities/fileSystem")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 
 exports.fetchAppComponentDefinitions = async function (ctx) {
   const db = getAppDB()
-  const app = await db.get(DocumentTypes.APP_METADATA)
+  const app = await db.get(DocumentType.APP_METADATA)
 
   let componentManifests = await Promise.all(
     app.componentLibraries.map(async library => {

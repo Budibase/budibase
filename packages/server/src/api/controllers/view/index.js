@@ -7,7 +7,7 @@ const { getTable } = require("../table/utils")
 const { FieldTypes } = require("../../../constants")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
-const { DocumentTypes } = require("../../../db/utils")
+const { DocumentType } = require("../../../db/utils")
 const { cloneDeep, isEqual } = require("lodash")
 
 exports.fetch = async ctx => {
@@ -181,7 +181,7 @@ exports.exportView = async ctx => {
   ctx.attachment(filename)
   ctx.body = apiFileReturn(exporter(headers, rows))
 
-  if (viewName.startsWith(DocumentTypes.TABLE)) {
+  if (viewName.startsWith(DocumentType.TABLE)) {
     await events.table.exported(table, format)
   } else {
     await events.view.exported(table, format)

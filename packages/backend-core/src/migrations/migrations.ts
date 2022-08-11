@@ -1,6 +1,6 @@
 import { DEFAULT_TENANT_ID } from "../constants"
 import { doWithDB } from "../db"
-import { DocumentTypes, StaticDatabases } from "../db/constants"
+import { DocumentType, StaticDatabases } from "../db/constants"
 import { getAllApps } from "../db/utils"
 import environment from "../environment"
 import {
@@ -21,10 +21,10 @@ import {
 export const getMigrationsDoc = async (db: any) => {
   // get the migrations doc
   try {
-    return await db.get(DocumentTypes.MIGRATIONS)
+    return await db.get(DocumentType.MIGRATIONS)
   } catch (err: any) {
     if (err.status && err.status === 404) {
-      return { _id: DocumentTypes.MIGRATIONS }
+      return { _id: DocumentType.MIGRATIONS }
     } else {
       console.error(err)
       throw err

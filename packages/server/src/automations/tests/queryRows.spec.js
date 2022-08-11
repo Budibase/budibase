@@ -16,7 +16,7 @@ describe("Test a query step automation", () => {
   let table
   let config = setup.getConfig()
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
     table = await config.createTable()
     const row = {
@@ -47,5 +47,71 @@ describe("Test a query step automation", () => {
     expect(res.rows).toBeDefined()
     expect(res.rows.length).toBe(2)
     expect(res.rows[0].name).toBe(NAME)
+  })
+
+  it("Returns all rows when onEmptyFilter has no value and no filters are passed", async () => {
+    const inputs = {
+      tableId: table._id,
+      filters: {},
+      sortColumn: "name",
+      sortOrder: "ascending",
+      limit: 10,
+    }
+    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    expect(res.success).toBe(true)
+    expect(res.rows).toBeDefined()
+    expect(res.rows.length).toBe(2)
+    expect(res.rows[0].name).toBe(NAME)
+  })
+
+  it("Returns no rows when onEmptyFilter is RETURN_NONE and theres no filters", async () => {
+    const inputs = {
+      tableId: table._id,
+      filters: {},
+      "filters-def": [],
+      sortColumn: "name",
+      sortOrder: "ascending",
+      limit: 10,
+      onEmptyFilter: "none",
+    }
+    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    expect(res.success).toBe(false)
+    expect(res.rows).toBeDefined()
+    expect(res.rows.length).toBe(0)
+  })
+
+  it("Returns no rows when onEmptyFilters RETURN_NONE and a filter is passed with a null value", async () => {
+    const inputs = {
+      tableId: table._id,
+      onEmptyFilter: "none",
+      filters: {},
+      "filters-def": [
+        {
+          value: null
+        }
+      ],
+      sortColumn: "name",
+      sortOrder: "ascending",
+      limit: 10,
+    }
+    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    expect(res.success).toBe(false)
+    expect(res.rows).toBeDefined()
+    expect(res.rows.length).toBe(0)
+  })
+
+  it("Returns rows when onEmptyFilter is RETURN_ALL and no filter is passed", async () => {
+    const inputs = {
+      tableId: table._id,
+      onEmptyFilter: "all",
+      filters: {},
+      sortColumn: "name",
+      sortOrder: "ascending",
+      limit: 10,
+    }
+    const res = await setup.runStep(setup.actions.QUERY_ROWS.stepId, inputs)
+    expect(res.success).toBe(true)
+    expect(res.rows).toBeDefined()
+    expect(res.rows.length).toBe(2)
   })
 })

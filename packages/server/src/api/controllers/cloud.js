@@ -11,7 +11,7 @@ const {
   getGlobalDB,
 } = require("@budibase/backend-core/tenancy")
 const { create } = require("./application")
-const { getDocParams, DocumentTypes, isDevAppID } = require("../../db/utils")
+const { getDocParams, DocumentType, isDevAppID } = require("../../db/utils")
 
 async function createApp(appName, appImport) {
   const ctx = {
@@ -31,7 +31,7 @@ exports.exportApps = async ctx => {
   }
   const apps = await getAllApps({ all: true })
   const globalDBString = await exportDB(getGlobalDBName(), {
-    filter: doc => !doc._id.startsWith(DocumentTypes.USER),
+    filter: doc => !doc._id.startsWith(DocumentType.USER),
   })
   let allDBs = {
     global: globalDBString,
@@ -97,7 +97,7 @@ exports.importApps = async ctx => {
   }
 
   // if there are any users make sure to remove them
-  let users = await getAllDocType(globalDb, DocumentTypes.USER)
+  let users = await getAllDocType(globalDb, DocumentType.USER)
   let userDeletionPromises = []
   for (let user of users) {
     userDeletionPromises.push(globalDb.remove(user._id, user._rev))
