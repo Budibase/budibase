@@ -8,9 +8,9 @@
 
   const inviteCode = $params["?code"]
   let password, error
-  
+
   $: company = $organisation.company || "Budibase"
-  
+
   async function acceptInvite() {
     try {
       await users.acceptInvite(inviteCode, password)
@@ -20,7 +20,7 @@
       notifications.error(error.message)
     }
   }
-  
+
   onMount(async () => {
     try {
       await organisation.init()
