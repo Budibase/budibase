@@ -2,7 +2,7 @@ const {
   generateDatasourceID,
   getDatasourceParams,
   getQueryParams,
-  DocumentTypes,
+  DocumentType,
   BudibaseInternalDB,
   getTableParams,
 } = require("../../db/utils")
@@ -132,7 +132,7 @@ exports.save = async function (ctx) {
 
   const datasource = {
     _id: generateDatasourceID({ plus }),
-    type: plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE,
+    type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
     ...ctx.request.body.datasource,
   }
 
