@@ -41,10 +41,23 @@
   }
 
   // Construct iframe template
-  $: template = iframeTemplate.replace(
-    /\{\{ CLIENT_LIB_PATH }}/,
-    $store.clientLibPath
-  )
+  $: pluginLinks = generatePluginLinks($store.usedPlugins)
+  $: template = iframeTemplate
+    .replace(/\{\{ CLIENT_LIB_PATH }}/, $store.clientLibPath)
+    .replace(/\{\{ PLUGINS }}/, pluginLinks)
+
+  const generatePluginLinks = plugins => {
+    if (!plugins?.length) {
+      return ""
+    }
+    return plugins
+      .map(plugin => {
+        // Split up like this as otherwise parsing fails because the script
+        // tags confuse svelte
+        return `<` + `script src="/plugins/${plugin.jsUrl}"></` + `script>`
+      })
+      .join("")
+  }
 
   const placeholderScreen = new Screen()
     .name("Screen Placeholder")
@@ -92,6 +105,7 @@
         ? [$store.componentToPaste?._id]
         : [],
     isBudibaseEvent: true,
+    usedPlugins: $store.usedPlugins,
   }
 
   // Refresh the preview when required
