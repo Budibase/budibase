@@ -21,6 +21,7 @@ exports.Headers = {
   TENANT_ID: "x-budibase-tenant-id",
   TOKEN: "x-budibase-token",
   CSRF_TOKEN: "x-csrf-token",
+  CORRELATION_ID: "x-budibase-correlation-id",
 }
 
 exports.GlobalRoles = {

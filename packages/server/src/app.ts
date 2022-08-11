@@ -15,11 +15,16 @@ const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
 const { logAlert } = require("@budibase/backend-core/logging")
-const { pinoSettings } = require("@budibase/backend-core")
 const { Thread } = require("./threads")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
-import { events, installation, tenancy } from "@budibase/backend-core"
+import {
+  pinoSettings,
+  events,
+  installation,
+  tenancy,
+  middleware,
+} from "@budibase/backend-core"
 import { createAdminUser, getChecklist } from "./utilities/workerRequests"
 
 const app = new Koa()
@@ -36,6 +41,7 @@ app.use(
   })
 )
 
+app.use(middleware.logging)
 app.use(pino(pinoSettings()))
 
 if (!env.isTest()) {

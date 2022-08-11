@@ -1,12 +1,16 @@
 const fetch = require("node-fetch")
+import logging from "../logging"
+
 class API {
-  constructor(host) {
+  host: string
+
+  constructor(host: string) {
     this.host = host
   }
 
   apiCall =
-    method =>
-    async (url = "", options = {}) => {
+    (method: string) =>
+    async (url = "", options: any = {}) => {
       if (!options.headers) {
         options.headers = {}
       }
@@ -20,6 +24,9 @@ class API {
       }
 
       let json = options.headers["Content-Type"] === "application/json"
+
+      // add x-budibase-correlation-id header
+      logging.correlation.setHeader(options.headers)
 
       const requestOptions = {
         method: method,
@@ -39,4 +46,4 @@ class API {
   put = this.apiCall("PUT")
 }
 
-module.exports = API
+export = API

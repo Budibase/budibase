@@ -1,14 +1,14 @@
 const fetch = require("node-fetch")
-const { Headers } = require("@budibase/backend-core/constants")
-const { getTenantId, isTenantIdSet } = require("@budibase/backend-core/tenancy")
+import { Headers, logging } from "@budibase/backend-core"
+import { getTenantId, isTenantIdSet } from "@budibase/backend-core/tenancy"
 const { checkSlashesInUrl } = require("../utilities")
 const env = require("../environment")
 
-async function makeAppRequest(url, method, body) {
+const makeAppRequest = async (url: string, method: string, body: any) => {
   if (env.isTest()) {
     return
   }
-  const request = { headers: {} }
+  const request: any = { headers: {} }
   request.headers[Headers.API_KEY] = env.INTERNAL_API_KEY
   if (isTenantIdSet()) {
     request.headers[Headers.TENANT_ID] = getTenantId()
@@ -18,10 +18,14 @@ async function makeAppRequest(url, method, body) {
     request.body = JSON.stringify(body)
   }
   request.method = method
+
+  // add x-budibase-correlation-id header
+  logging.correlation.setHeader(request.headers)
+
   return fetch(checkSlashesInUrl(env.APPS_URL + url), request)
 }
 
-exports.syncUserInApps = async userId => {
+export const syncUserInApps = async (userId: string) => {
   const response = await makeAppRequest(
     `/api/users/metadata/sync/${userId}`,
     "POST",

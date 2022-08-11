@@ -1,3 +1,6 @@
+import { Headers } from "./constants"
+const correlator = require("correlation-id")
+
 const NonErrors = ["AccountError"]
 
 function isSuppressed(e?: any) {
@@ -29,8 +32,20 @@ export function logWarn(message: string) {
   console.warn(`bb-warn: ${message}`)
 }
 
+const setCorrelationHeader = (headers: any) => {
+  const correlationId = correlator.getId()
+  if (correlationId) {
+    headers[Headers.CORRELATION_ID] = correlationId
+  }
+}
+
+const correlation = {
+  setHeader: setCorrelationHeader,
+}
+
 export default {
   logAlert,
   logAlertWithInfo,
   logWarn,
+  correlation,
 }

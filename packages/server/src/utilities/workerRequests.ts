@@ -3,10 +3,10 @@ const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
 const { getProdAppID } = require("@budibase/backend-core/db")
 const { updateAppRole } = require("./global")
-const { Headers } = require("@budibase/backend-core/constants")
 const { getTenantId, isTenantIdSet } = require("@budibase/backend-core/tenancy")
+import { Headers, logging } from "@budibase/backend-core"
 
-function request(ctx, request) {
+export function request(ctx: any, request: any) {
   if (!request.headers) {
     request.headers = {}
   }
@@ -28,10 +28,18 @@ function request(ctx, request) {
   if (ctx && ctx.headers) {
     request.headers = ctx.headers
   }
+
+  // add x-budibase-correlation-id header
+  logging.correlation.setHeader(request.headers)
+
   return request
 }
 
-async function checkResponse(response, errorMsg, { ctx } = {}) {
+async function checkResponse(
+  response: any,
+  errorMsg: string,
+  { ctx }: any = {}
+) {
   if (response.status !== 200) {
     let error
     try {
@@ -51,10 +59,14 @@ async function checkResponse(response, errorMsg, { ctx } = {}) {
   return response.json()
 }
 
-exports.request = request
-
 // have to pass in the tenant ID as this could be coming from an automation
-exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
+export const sendSmtpEmail = async (
+  to: string,
+  from: string,
+  subject: string,
+  contents: any,
+  automation: any
+) => {
   // tenant ID will be set in header
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
@@ -73,7 +85,7 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
   return checkResponse(response, "send email")
 }
 
-exports.getGlobalSelf = async (ctx, appId = null) => {
+export const getGlobalSelf = async (ctx: any, appId = null) => {
   const endpoint = `/api/global/self`
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
@@ -87,7 +99,7 @@ exports.getGlobalSelf = async (ctx, appId = null) => {
   return json
 }
 
-exports.removeAppFromUserRoles = async (ctx, appId) => {
+export const removeAppFromUserRoles = async (ctx: any, appId: any) => {
   const prodAppId = getProdAppID(appId)
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
@@ -98,7 +110,7 @@ exports.removeAppFromUserRoles = async (ctx, appId) => {
   return checkResponse(response, "remove app role")
 }
 
-exports.allGlobalUsers = async ctx => {
+export const allGlobalUsers = async (ctx: any) => {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
     // we don't want to use API key when getting self
@@ -107,7 +119,7 @@ exports.allGlobalUsers = async ctx => {
   return checkResponse(response, "get users", { ctx })
 }
 
-exports.saveGlobalUser = async ctx => {
+export const saveGlobalUser = async (ctx: any) => {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
     // we don't want to use API key when getting self
@@ -116,7 +128,7 @@ exports.saveGlobalUser = async ctx => {
   return checkResponse(response, "save user", { ctx })
 }
 
-exports.deleteGlobalUser = async ctx => {
+export const deleteGlobalUser = async (ctx: any) => {
   const response = await fetch(
     checkSlashesInUrl(
       env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
@@ -127,7 +139,7 @@ exports.deleteGlobalUser = async ctx => {
   return checkResponse(response, "delete user", { ctx, body: ctx.request.body })
 }
 
-exports.readGlobalUser = async ctx => {
+export const readGlobalUser = async (ctx: any) => {
   const response = await fetch(
     checkSlashesInUrl(
       env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
@@ -138,7 +150,11 @@ exports.readGlobalUser = async ctx => {
   return checkResponse(response, "get user", { ctx })
 }
 
-exports.createAdminUser = async (email, password, tenantId) => {
+export const createAdminUser = async (
+  email: string,
+  password: string,
+  tenantId: string
+) => {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users/init"),
     request(null, { method: "POST", body: { email, password, tenantId } })
@@ -146,7 +162,7 @@ exports.createAdminUser = async (email, password, tenantId) => {
   return checkResponse(response, "create admin user")
 }
 
-exports.getChecklist = async () => {
+export const getChecklist = async () => {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/configs/checklist"),
     request(null, { method: "GET" })

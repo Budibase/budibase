@@ -15,7 +15,8 @@ import auth from "./auth"
 import constants from "./constants"
 import * as dbConstants from "./db/constants"
 import logging from "./logging"
-import pino from "./pino"
+import * as pino from "./pino"
+import * as middleware from "./middleware"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"
@@ -56,6 +57,7 @@ const core = {
   roles,
   ...pino,
   ...errorClasses,
+  middleware,
 }
 
 export = core
