@@ -1494,6 +1494,46 @@
         }
       },
       {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
         "type": "boolean",
         "label": "Stacked",
         "key": "stacked",
@@ -1963,8 +2003,48 @@
       },
       {
         "type": "color",
-        "label": "Color",
-        "key": "color",
+        "label": "C1",
+        "key": "c1",
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "barSeparator": false,
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
         "barSeparator": false,
         "dependsOn": {
           "setting": "palette",
