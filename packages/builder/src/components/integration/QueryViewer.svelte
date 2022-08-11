@@ -271,8 +271,7 @@
       {#if data}
         <Tabs selected="JSON">
           <Tab title="JSON">
-            <pre
-              class="preview">
+            <pre class="preview">
                 <!-- prettier-ignore -->
                 {#if !data[0]}
                   Please run your query to fetch some data.
