@@ -27,6 +27,7 @@ const loadBudibase = () => {
     previewDevice: window["##BUDIBASE_PREVIEW_DEVICE##"],
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
+    usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
   })
 
   // Set app ID - this window flag is set by both the preview and the real
@@ -39,6 +40,11 @@ const loadBudibase = () => {
   devToolsStore.actions.setEnabled(enableDevTools)
 
   // Register any custom components
+  window.registerCustomComponent = plugin => {
+    componentStore.actions.registerCustomComponent(plugin)
+    console.log("registered!")
+    loadBudibase()
+  }
   if (window["##BUDIBASE_CUSTOM_COMPONENTS##"]) {
     window["##BUDIBASE_CUSTOM_COMPONENTS##"].forEach(component => {
       componentStore.actions.registerCustomComponent(component)

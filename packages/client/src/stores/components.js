@@ -10,7 +10,11 @@ import * as AppComponents from "../components/app/index.js"
 const budibasePrefix = "@budibase/standard-components/"
 
 const createComponentStore = () => {
-  const store = writable({})
+  const store = writable({
+    customComponentManifest: {},
+    componentsAwaitingConstructors: {},
+    mountedComponents: {},
+  })
 
   const derivedStore = derived(
     [store, builderStore, devToolsStore, screenStore],
@@ -29,9 +33,7 @@ const createComponentStore = () => {
         asset = $screenState.activeScreen
       }
       const component = findComponentById(asset?.props, selectedComponentId)
-      const prefix = "@budibase/standard-components/"
-      const type = component?._component?.replace(prefix, "")
-      const definition = type ? Manifest[type] : null
+      const definition = getComponentDefinition(component?._component)
 
       // Derive the selected component path
       const path =
@@ -39,32 +41,50 @@ const createComponentStore = () => {
 
       return {
         customComponentManifest: $store.customComponentManifest,
-        selectedComponentInstance: $store[selectedComponentId],
+        selectedComponentInstance:
+          $store.mountedComponents[selectedComponentId],
         selectedComponent: component,
         selectedComponentDefinition: definition,
         selectedComponentPath: path?.map(component => component._id),
-        mountedComponents: Object.keys($store).length,
+        mountedComponentCount: Object.keys($store.mountedComponents).length,
         currentAsset: asset,
       }
     }
   )
 
   const registerInstance = (id, instance) => {
-    store.update(state => ({
-      ...state,
-      [id]: instance,
-    }))
+    store.update(state => {
+      // If this is a custom component and does not have an implementation yet,
+      // store so we can reload this component later
+      const component = instance.component
+      let cac = state.componentsAwaitingConstructors
+      if (!getComponentConstructor(component)) {
+        if (!cac[component]) {
+          cac[component] = []
+        }
+        cac[component].push(id)
+      }
+
+      return {
+        ...state,
+        componentsAwaitingConstructors: cac,
+        mountedComponents: {
+          ...state.mountedComponents,
+          [id]: instance,
+        },
+      }
+    })
   }
 
   const unregisterInstance = id => {
     store.update(state => {
-      delete state[id]
+      delete state.mountedComponents[id]
       return state
     })
   }
 
   const isComponentRegistered = id => {
-    return get(store)[id] != null
+    return get(store).mountedComponents[id] != null
   }
 
   const getComponentById = id => {
@@ -117,17 +137,32 @@ const createComponentStore = () => {
     if (!Component || !schema?.schema?.name) {
       return
     }
+    const componentName = `plugin/${schema.schema.name}/1.0.0`
     store.update(state => {
       if (!state.customComponentManifest) {
         state.customComponentManifest = {}
       }
-      const componentName = `plugin/${schema.schema.name}/1.0.0`
       state.customComponentManifest[componentName] = {
         schema,
         Component,
       }
       return state
     })
+
+    // Reload any mounted components which depend on this definition
+    const state = get(store)
+    if (state.componentsAwaitingConstructors[componentName]?.length) {
+      state.componentsAwaitingConstructors[componentName].forEach(id => {
+        const instance = state.mountedComponents[id]
+        if (instance) {
+          instance.reload()
+        }
+      })
+      store.update(state => {
+        delete state.componentsAwaitingConstructors[componentName]
+        return state
+      })
+    }
   }
 
   return {
