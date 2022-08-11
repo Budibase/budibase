@@ -1,0 +1,32 @@
+{
+  "name": "jest-docblock",
+  "version": "27.5.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/jest.git",
+    "directory": "packages/jest-docblock"
+  },
+  "license": "MIT",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "detect-newline": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "*"
+  },
+  "engines": {
+    "node": "^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "67c1aa20c5fec31366d733e901fee2b981cb1850"
+}

@@ -1,0 +1,46 @@
+{
+  "name": "deferred-leveldown",
+  "version": "5.3.0",
+  "description": "For handling delayed-open on LevelDOWN compatible libraries",
+  "license": "MIT",
+  "main": "deferred-leveldown.js",
+  "scripts": {
+    "test": "standard && hallmark && nyc node test.js",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "hallmark": "hallmark --fix",
+    "dependency-check": "dependency-check . test.js",
+    "prepublishOnly": "npm run dependency-check"
+  },
+  "dependencies": {
+    "abstract-leveldown": "~6.2.1",
+    "inherits": "^2.0.3"
+  },
+  "devDependencies": {
+    "coveralls": "^3.0.2",
+    "dependency-check": "^3.3.0",
+    "hallmark": "^2.0.0",
+    "level-community": "^3.0.0",
+    "memdown": "^5.0.0",
+    "nyc": "^14.0.0",
+    "reachdown": "^1.0.0",
+    "standard": "^14.0.0",
+    "tape": "^4.10.0"
+  },
+  "hallmark": {
+    "community": "level-community"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Level/deferred-leveldown.git"
+  },
+  "homepage": "https://github.com/Level/deferred-leveldown",
+  "keywords": [
+    "leveldb",
+    "level",
+    "levelup",
+    "leveldown"
+  ],
+  "engines": {
+    "node": ">=6"
+  }
+}

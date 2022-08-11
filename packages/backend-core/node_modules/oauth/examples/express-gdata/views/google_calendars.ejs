@@ -1,0 +1,21 @@
+
+<p><a href="/google_contacts">Check google_contacts</a></p>
+
+<h1>Google Calendars</h1>
+
+<% for(var i = 0 ; i < feed.data.items.length ; i++ ) { 
+  
+  var calendar = feed.data.items[i]; %>
+<div>
+  
+  <h2 style="color:white;background-color:<%= calendar["color"] %>"><%= calendar["title"] %></h2>
+  
+  <p>canEdit: <%= calendar["canEdit"] %></p>
+  <p>accessLevel: <%= calendar["accessLevel"] %></p>
+  <p>timeZone: <%= calendar["timeZone"] %></p>
+  <p>kind: <%= calendar["kind"] %></p>
+  <p>updated: <%= calendar["updated"] %></p>
+  <p>created: <%= calendar["created"] %></p>
+  
+</div>
+<% } %>

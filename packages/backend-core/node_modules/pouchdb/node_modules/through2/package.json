@@ -1,0 +1,32 @@
+{
+  "name": "through2",
+  "version": "3.0.2",
+  "description": "A tiny wrapper around Node.js streams.Transform (Streams2/3) to avoid explicit subclassing noise",
+  "main": "through2.js",
+  "scripts": {
+    "test": "nyc node test/test.js | faucet && nyc report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rvagg/through2.git"
+  },
+  "keywords": [
+    "stream",
+    "streams2",
+    "through",
+    "transform"
+  ],
+  "author": "Rod Vagg <r@va.gg> (https://github.com/rvagg)",
+  "license": "MIT",
+  "dependencies": {
+    "inherits": "^2.0.4",
+    "readable-stream": "2 || 3"
+  },
+  "devDependencies": {
+    "bl": "~2.0.1",
+    "faucet": "0.0.1",
+    "nyc": "~13.1.0",
+    "stream-spigot": "~3.0.6",
+    "tape": "~4.9.1"
+  }
+}

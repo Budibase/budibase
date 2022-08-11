@@ -1,0 +1,48 @@
+{
+  "name": "level-packager",
+  "version": "5.1.1",
+  "description": "LevelUP package helper for distributing with a LevelDOWN-compatible back-end",
+  "license": "MIT",
+  "main": "level-packager.js",
+  "scripts": {
+    "test": "standard && hallmark && nyc node test.js",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "hallmark": "hallmark --fix",
+    "dependency-check": "dependency-check . test.js abstract/*.js",
+    "prepublishOnly": "npm run dependency-check"
+  },
+  "dependencies": {
+    "encoding-down": "^6.3.0",
+    "levelup": "^4.3.2"
+  },
+  "devDependencies": {
+    "coveralls": "^3.0.2",
+    "dependency-check": "^3.3.0",
+    "hallmark": "^2.0.0",
+    "level-community": "^3.0.0",
+    "nyc": "^14.0.0",
+    "standard": "^14.0.0",
+    "tape": "^4.0.0"
+  },
+  "hallmark": {
+    "community": "level-community"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Level/packager.git"
+  },
+  "homepage": "https://github.com/Level/packager",
+  "keywords": [
+    "level",
+    "leveldb",
+    "stream",
+    "database",
+    "db",
+    "store",
+    "storage",
+    "json"
+  ],
+  "engines": {
+    "node": ">=6"
+  }
+}

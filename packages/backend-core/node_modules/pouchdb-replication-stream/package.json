@@ -1,0 +1,71 @@
+{
+  "name": "pouchdb-replication-stream",
+  "version": "1.2.9",
+  "description": "PouchDB/CouchDB replication as a stream",
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nolanlawson/pouchdb-replication-stream.git"
+  },
+  "keywords": [
+    "pouch",
+    "pouchdb",
+    "plugin",
+    "stream",
+    "replication",
+    "couch",
+    "couchdb"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/nolanlawson/pouchdb-replication-stream/issues"
+  },
+  "scripts": {
+    "test-node": "TEST_DB=testdb,http://localhost:5984/testdb istanbul test ./node_modules/mocha/bin/_mocha test/test.js -- -R spec",
+    "test-browser": "./bin/test-browser.js",
+    "jshint": "jshint -c .jshintrc lib test/test.js",
+    "test": "npm run jshint && ./bin/run-test.sh",
+    "build": "mkdirp dist && npm run browserify && npm run min",
+    "browserify": "browserify -p bundle-collapser/plugin -s PouchReplicationStream . | ./bin/es3ify.js | derequire > dist/pouchdb.replication-stream.js",
+    "min": "uglifyjs dist/pouchdb.replication-stream.js -mc > dist/pouchdb.replication-stream.min.js",
+    "dev": "browserify test/test.js > test/test-bundle.js && npm run dev-server",
+    "dev-server": "./bin/dev-server.js",
+    "coverage": "npm test --coverage && istanbul check-coverage --lines 100 --function 100 --statements 100 --branches 100"
+  },
+  "dependencies": {
+    "argsarray": "0.0.1",
+    "inherits": "^2.0.3",
+    "lodash.pick": "^4.0.0",
+    "ndjson": "^1.4.3",
+    "pouch-stream": "^0.4.0",
+    "pouchdb-promise": "^6.0.4",
+    "through2": "^2.0.0"
+  },
+  "devDependencies": {
+    "bluebird": "^1.0.7",
+    "browserify": "^11.2.0",
+    "bundle-collapser": "^1.2.1",
+    "chai": "^3.3.0",
+    "chai-as-promised": "^5.1.0",
+    "derequire": "^2.0.0",
+    "es3ify": "^0.1.3",
+    "http-server": "~0.8.5",
+    "istanbul": "^0.2.7",
+    "jshint": "^2.3.0",
+    "lie": "^3.1.0",
+    "memorystream": "^0.3.0",
+    "mkdirp": "^0.5.0",
+    "mocha": "~1.18",
+    "noms": "0.0.0",
+    "phantomjs": "^1.9.7-5",
+    "pouchdb-memory": "^6.0.0",
+    "random-document-stream": "0.0.0",
+    "request": "^2.36.0",
+    "sauce-connect-launcher": "^0.4.2",
+    "selenium-standalone": "3.0.2",
+    "uglify-js": "^2.4.13",
+    "watchify": "^3.1.0",
+    "wd": "^0.2.21"
+  }
+}

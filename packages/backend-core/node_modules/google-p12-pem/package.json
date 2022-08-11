@@ -1,0 +1,20 @@
+{
+  "name": "google-p12-pem",
+  "version": "0.1.2",
+  "description": "Convert Google .p12 keys to .pem keys",
+  "main": "index.js",
+  "bin": {
+    "gp12-pem": "bin/gp12-pem"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "Ryan Seys",
+  "license": "MIT",
+  "dependencies": {
+    "node-forge": "^0.7.1"
+  },
+  "devDependencies": {
+    "mocha": "2.0.1"
+  }
+}

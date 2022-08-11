@@ -1,0 +1,61 @@
+{
+  "name": "memdown",
+  "description": "An drop-in replacement for LevelDOWN that works in memory only",
+  "version": "1.4.1",
+  "homepage": "https://github.com/Level/memdown",
+  "authors": [
+    "Rod Vagg <rod@vagg.org> (https://github.com/rvagg)"
+  ],
+  "contributors": [
+    "Julian Gruber <julian@juliangruber.com> (https://github.com/juliangruber)",
+    "Meirion Hughes <crakinshot@yahoo.com> (https://github.com/meirionhughes)"
+  ],
+  "keywords": [
+    "leveldb",
+    "leveldown",
+    "levelup",
+    "memory"
+  ],
+  "main": "memdown.js",
+  "typings": "memdown.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Level/memdown.git"
+  },
+  "dependencies": {
+    "abstract-leveldown": "~2.7.1",
+    "functional-red-black-tree": "^1.0.1",
+    "immediate": "^3.2.3",
+    "inherits": "~2.0.1",
+    "ltgt": "~2.2.0",
+    "safe-buffer": "~5.1.1"
+  },
+  "devDependencies": {
+    "bench": "*",
+    "faucet": "*",
+    "istanbul": "^0.4.2",
+    "istanbul-coveralls": "^1.0.3",
+    "rimraf": "*",
+    "standard": "^10.0.3",
+    "tape": "*",
+    "zuul": "github:vweevers/zuul#custom-loopback-hostname"
+  },
+  "browser": {
+    "rimraf": false,
+    "./immediate.js": "./immediate-browser.js"
+  },
+  "scripts": {
+    "test": "standard && node ./test.js --stderr | faucet",
+    "test-browsers": "zuul --browser-retries 2 --sauce-connect --concurrency 5 --loopback zuul.local --no-coverage ./test.js",
+    "test-browser-local": "zuul --ui tape --no-coverage --local 9000 ./test.js",
+    "coverage": "istanbul cover -i memdown.js ./node_modules/.bin/tape ./test.js && istanbul check-coverage --lines 90 --function 80 --statements 90 --branches 80",
+    "report-coverage": "npm run coverage && istanbul-coveralls"
+  },
+  "license": "MIT",
+  "files": [
+    "memdown.js",
+    "memdown.d.ts",
+    "immediate.js",
+    "immediate-browser.js"
+  ]
+}

@@ -1,0 +1,12 @@
+import { App } from "@budibase/types";
+export declare const created: (app: App, timestamp?: string | number) => Promise<void>;
+export declare function updated(app: App): Promise<void>;
+export declare function deleted(app: App): Promise<void>;
+export declare function published(app: App, timestamp?: string | number): Promise<void>;
+export declare function unpublished(app: App): Promise<void>;
+export declare function fileImported(app: App): Promise<void>;
+export declare function templateImported(app: App, templateKey: string): Promise<void>;
+export declare function versionUpdated(app: App, currentVersion: string, updatedToVersion: string): Promise<void>;
+export declare function versionReverted(app: App, currentVersion: string, revertedToVersion: string): Promise<void>;
+export declare function reverted(app: App): Promise<void>;
+export declare function exported(app: App): Promise<void>;

@@ -1,0 +1,30 @@
+{
+  "name": "write-stream",
+  "version": "0.4.3",
+  "description": "Base class for writable streams",
+  "keywords": [],
+  "author": "Raynos <raynos2@gmail.com>",
+  "repository": "git://github.com/Raynos/write-stream.git",
+  "main": "index",
+  "homepage": "https://github.com/Raynos/write-stream",
+  "contributors": [
+    {
+      "name": "Jake Verbaten"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/Raynos/write-stream/issues",
+    "email": "raynos2@gmail.com"
+  },
+  "dependencies": {
+    "readable-stream": "~0.0.2"
+  },
+  "devDependencies": {},
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/Raynos/write-stream/raw/master/LICENSE"
+    }
+  ],
+  "scripts": {}
+}

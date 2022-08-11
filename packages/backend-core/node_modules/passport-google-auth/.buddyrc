@@ -1,0 +1,7 @@
+{
+  "enforceConst": false,
+  "ignore": [
+    0
+  ],
+  "reporter": "simple"
+}

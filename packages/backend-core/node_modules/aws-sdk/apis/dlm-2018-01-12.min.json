@@ -1,0 +1,546 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2018-01-12",
+    "endpointPrefix": "dlm",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceAbbreviation": "Amazon DLM",
+    "serviceFullName": "Amazon Data Lifecycle Manager",
+    "serviceId": "DLM",
+    "signatureVersion": "v4",
+    "signingName": "dlm",
+    "uid": "dlm-2018-01-12"
+  },
+  "operations": {
+    "CreateLifecyclePolicy": {
+      "http": {
+        "requestUri": "/policies"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ExecutionRoleArn",
+          "Description",
+          "State",
+          "PolicyDetails"
+        ],
+        "members": {
+          "ExecutionRoleArn": {},
+          "Description": {},
+          "State": {},
+          "PolicyDetails": {
+            "shape": "S5"
+          },
+          "Tags": {
+            "shape": "S1q"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PolicyId": {}
+        }
+      }
+    },
+    "DeleteLifecyclePolicy": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/policies/{policyId}/"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "PolicyId"
+        ],
+        "members": {
+          "PolicyId": {
+            "location": "uri",
+            "locationName": "policyId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "GetLifecyclePolicies": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/policies"
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "PolicyIds": {
+            "location": "querystring",
+            "locationName": "policyIds",
+            "type": "list",
+            "member": {}
+          },
+          "State": {
+            "location": "querystring",
+            "locationName": "state"
+          },
+          "ResourceTypes": {
+            "shape": "S7",
+            "location": "querystring",
+            "locationName": "resourceTypes"
+          },
+          "TargetTags": {
+            "location": "querystring",
+            "locationName": "targetTags",
+            "type": "list",
+            "member": {}
+          },
+          "TagsToAdd": {
+            "location": "querystring",
+            "locationName": "tagsToAdd",
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Policies": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "PolicyId": {},
+                "Description": {},
+                "State": {},
+                "Tags": {
+                  "shape": "S1q"
+                },
+                "PolicyType": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetLifecyclePolicy": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/policies/{policyId}/"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "PolicyId"
+        ],
+        "members": {
+          "PolicyId": {
+            "location": "uri",
+            "locationName": "policyId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Policy": {
+            "type": "structure",
+            "members": {
+              "PolicyId": {},
+              "Description": {},
+              "State": {},
+              "StatusMessage": {},
+              "ExecutionRoleArn": {},
+              "DateCreated": {
+                "shape": "S2a"
+              },
+              "DateModified": {
+                "shape": "S2a"
+              },
+              "PolicyDetails": {
+                "shape": "S5"
+              },
+              "Tags": {
+                "shape": "S1q"
+              },
+              "PolicyArn": {}
+            }
+          }
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/tags/{resourceArn}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn"
+        ],
+        "members": {
+          "ResourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "S1q"
+          }
+        }
+      }
+    },
+    "TagResource": {
+      "http": {
+        "requestUri": "/tags/{resourceArn}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "Tags": {
+            "shape": "S1q"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/tags/{resourceArn}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "TagKeys": {
+            "location": "querystring",
+            "locationName": "tagKeys",
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateLifecyclePolicy": {
+      "http": {
+        "method": "PATCH",
+        "requestUri": "/policies/{policyId}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "PolicyId"
+        ],
+        "members": {
+          "PolicyId": {
+            "location": "uri",
+            "locationName": "policyId"
+          },
+          "ExecutionRoleArn": {},
+          "State": {},
+          "Description": {},
+          "PolicyDetails": {
+            "shape": "S5"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "S5": {
+      "type": "structure",
+      "members": {
+        "PolicyType": {},
+        "ResourceTypes": {
+          "shape": "S7"
+        },
+        "ResourceLocations": {
+          "type": "list",
+          "member": {}
+        },
+        "TargetTags": {
+          "type": "list",
+          "member": {
+            "shape": "Sc"
+          }
+        },
+        "Schedules": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "Name": {},
+              "CopyTags": {
+                "type": "boolean"
+              },
+              "TagsToAdd": {
+                "type": "list",
+                "member": {
+                  "shape": "Sc"
+                }
+              },
+              "VariableTags": {
+                "type": "list",
+                "member": {
+                  "shape": "Sc"
+                }
+              },
+              "CreateRule": {
+                "type": "structure",
+                "members": {
+                  "Location": {},
+                  "Interval": {
+                    "type": "integer"
+                  },
+                  "IntervalUnit": {},
+                  "Times": {
+                    "type": "list",
+                    "member": {}
+                  },
+                  "CronExpression": {}
+                }
+              },
+              "RetainRule": {
+                "type": "structure",
+                "members": {
+                  "Count": {
+                    "type": "integer"
+                  },
+                  "Interval": {
+                    "type": "integer"
+                  },
+                  "IntervalUnit": {}
+                }
+              },
+              "FastRestoreRule": {
+                "type": "structure",
+                "required": [
+                  "AvailabilityZones"
+                ],
+                "members": {
+                  "Count": {
+                    "type": "integer"
+                  },
+                  "Interval": {
+                    "type": "integer"
+                  },
+                  "IntervalUnit": {},
+                  "AvailabilityZones": {
+                    "type": "list",
+                    "member": {}
+                  }
+                }
+              },
+              "CrossRegionCopyRules": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "required": [
+                    "Encrypted"
+                  ],
+                  "members": {
+                    "TargetRegion": {},
+                    "Target": {},
+                    "Encrypted": {
+                      "type": "boolean"
+                    },
+                    "CmkArn": {},
+                    "CopyTags": {
+                      "type": "boolean"
+                    },
+                    "RetainRule": {
+                      "shape": "S14"
+                    },
+                    "DeprecateRule": {
+                      "type": "structure",
+                      "members": {
+                        "Interval": {
+                          "type": "integer"
+                        },
+                        "IntervalUnit": {}
+                      }
+                    }
+                  }
+                }
+              },
+              "ShareRules": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "required": [
+                    "TargetAccounts"
+                  ],
+                  "members": {
+                    "TargetAccounts": {
+                      "type": "list",
+                      "member": {}
+                    },
+                    "UnshareInterval": {
+                      "type": "integer"
+                    },
+                    "UnshareIntervalUnit": {}
+                  }
+                }
+              },
+              "DeprecateRule": {
+                "type": "structure",
+                "members": {
+                  "Count": {
+                    "type": "integer"
+                  },
+                  "Interval": {
+                    "type": "integer"
+                  },
+                  "IntervalUnit": {}
+                }
+              }
+            }
+          }
+        },
+        "Parameters": {
+          "type": "structure",
+          "members": {
+            "ExcludeBootVolume": {
+              "type": "boolean"
+            },
+            "NoReboot": {
+              "type": "boolean"
+            }
+          }
+        },
+        "EventSource": {
+          "type": "structure",
+          "required": [
+            "Type"
+          ],
+          "members": {
+            "Type": {},
+            "Parameters": {
+              "type": "structure",
+              "required": [
+                "EventType",
+                "SnapshotOwner",
+                "DescriptionRegex"
+              ],
+              "members": {
+                "EventType": {},
+                "SnapshotOwner": {
+                  "type": "list",
+                  "member": {}
+                },
+                "DescriptionRegex": {}
+              }
+            }
+          }
+        },
+        "Actions": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "required": [
+              "Name",
+              "CrossRegionCopy"
+            ],
+            "members": {
+              "Name": {},
+              "CrossRegionCopy": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "required": [
+                    "Target",
+                    "EncryptionConfiguration"
+                  ],
+                  "members": {
+                    "Target": {},
+                    "EncryptionConfiguration": {
+                      "type": "structure",
+                      "required": [
+                        "Encrypted"
+                      ],
+                      "members": {
+                        "Encrypted": {
+                          "type": "boolean"
+                        },
+                        "CmkArn": {}
+                      }
+                    },
+                    "RetainRule": {
+                      "shape": "S14"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "S7": {
+      "type": "list",
+      "member": {}
+    },
+    "Sc": {
+      "type": "structure",
+      "required": [
+        "Key",
+        "Value"
+      ],
+      "members": {
+        "Key": {},
+        "Value": {}
+      }
+    },
+    "S14": {
+      "type": "structure",
+      "members": {
+        "Interval": {
+          "type": "integer"
+        },
+        "IntervalUnit": {}
+      }
+    },
+    "S1q": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "S2a": {
+      "type": "timestamp",
+      "timestampFormat": "iso8601"
+    }
+  }
+}

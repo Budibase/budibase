@@ -1,0 +1,54 @@
+{
+  "name": "string-template",
+  "version": "1.0.0",
+  "description": "A simple string template function based on named or indexed arguments",
+  "keywords": [
+    "template",
+    "string",
+    "format",
+    "replace",
+    "arguments"
+  ],
+  "author": "Matt-Esch <matt@mattesch.info>",
+  "repository": "git://github.com/Matt-Esch/string-template.git",
+  "main": "index",
+  "homepage": "https://github.com/Matt-Esch/string-template",
+  "contributors": [
+    {
+      "name": "Matt-Esch"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/Matt-Esch/string-template/issues",
+    "email": "matt@mattesch.info"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "istanbul": "^0.4.1",
+    "opn": "^3.0.3",
+    "tape": "~1.1.1"
+  },
+  "license": "MIT",
+  "scripts": {
+    "test": "node ./test/index.js",
+    "travis-test": "istanbul cover ./test/index.js && ((cat coverage/lcov.info | coveralls) || exit 0)",
+    "cover": "istanbul cover --report none --print detail ./test/index.js",
+    "view-cover": "istanbul report html && opn --no-wait ./coverage/index.html"
+  },
+  "testling": {
+    "files": "test/index.js",
+    "browsers": [
+      "ie/8..latest",
+      "firefox/16..latest",
+      "firefox/nightly",
+      "chrome/22..latest",
+      "chrome/canary",
+      "opera/12..latest",
+      "opera/next",
+      "safari/5.1..latest",
+      "ipad/6.0..latest",
+      "iphone/6.0..latest",
+      "android-browser/4.2..latest"
+    ]
+  }
+}

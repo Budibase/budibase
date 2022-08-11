@@ -1,0 +1,1128 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2017-05-18",
+    "endpointPrefix": "athena",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceFullName": "Amazon Athena",
+    "serviceId": "Athena",
+    "signatureVersion": "v4",
+    "targetPrefix": "AmazonAthena",
+    "uid": "athena-2017-05-18"
+  },
+  "operations": {
+    "BatchGetNamedQuery": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "NamedQueryIds"
+        ],
+        "members": {
+          "NamedQueryIds": {
+            "shape": "S2"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NamedQueries": {
+            "type": "list",
+            "member": {
+              "shape": "S6"
+            }
+          },
+          "UnprocessedNamedQueryIds": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "NamedQueryId": {},
+                "ErrorCode": {},
+                "ErrorMessage": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "BatchGetQueryExecution": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "QueryExecutionIds"
+        ],
+        "members": {
+          "QueryExecutionIds": {
+            "shape": "Sh"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "QueryExecutions": {
+            "type": "list",
+            "member": {
+              "shape": "Sl"
+            }
+          },
+          "UnprocessedQueryExecutionIds": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "QueryExecutionId": {},
+                "ErrorCode": {},
+                "ErrorMessage": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "CreateDataCatalog": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "Type"
+        ],
+        "members": {
+          "Name": {},
+          "Type": {},
+          "Description": {},
+          "Parameters": {
+            "shape": "S13"
+          },
+          "Tags": {
+            "shape": "S16"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateNamedQuery": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "Database",
+          "QueryString"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "Database": {},
+          "QueryString": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "WorkGroup": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NamedQueryId": {}
+        }
+      },
+      "idempotent": true
+    },
+    "CreatePreparedStatement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "StatementName",
+          "WorkGroup",
+          "QueryStatement"
+        ],
+        "members": {
+          "StatementName": {},
+          "WorkGroup": {},
+          "QueryStatement": {},
+          "Description": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateWorkGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "Configuration": {
+            "shape": "S1i"
+          },
+          "Description": {},
+          "Tags": {
+            "shape": "S16"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteDataCatalog": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteNamedQuery": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "NamedQueryId"
+        ],
+        "members": {
+          "NamedQueryId": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      },
+      "idempotent": true
+    },
+    "DeletePreparedStatement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "StatementName",
+          "WorkGroup"
+        ],
+        "members": {
+          "StatementName": {},
+          "WorkGroup": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteWorkGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "WorkGroup"
+        ],
+        "members": {
+          "WorkGroup": {},
+          "RecursiveDeleteOption": {
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      },
+      "idempotent": true
+    },
+    "GetDataCatalog": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DataCatalog": {
+            "type": "structure",
+            "required": [
+              "Name",
+              "Type"
+            ],
+            "members": {
+              "Name": {},
+              "Description": {},
+              "Type": {},
+              "Parameters": {
+                "shape": "S13"
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetDatabase": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CatalogName",
+          "DatabaseName"
+        ],
+        "members": {
+          "CatalogName": {},
+          "DatabaseName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Database": {
+            "shape": "S20"
+          }
+        }
+      }
+    },
+    "GetNamedQuery": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "NamedQueryId"
+        ],
+        "members": {
+          "NamedQueryId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NamedQuery": {
+            "shape": "S6"
+          }
+        }
+      }
+    },
+    "GetPreparedStatement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "StatementName",
+          "WorkGroup"
+        ],
+        "members": {
+          "StatementName": {},
+          "WorkGroup": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PreparedStatement": {
+            "type": "structure",
+            "members": {
+              "StatementName": {},
+              "QueryStatement": {},
+              "WorkGroupName": {},
+              "Description": {},
+              "LastModifiedTime": {
+                "type": "timestamp"
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetQueryExecution": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "QueryExecutionId"
+        ],
+        "members": {
+          "QueryExecutionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "QueryExecution": {
+            "shape": "Sl"
+          }
+        }
+      }
+    },
+    "GetQueryResults": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "QueryExecutionId"
+        ],
+        "members": {
+          "QueryExecutionId": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "UpdateCount": {
+            "type": "long"
+          },
+          "ResultSet": {
+            "type": "structure",
+            "members": {
+              "Rows": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "members": {
+                    "Data": {
+                      "type": "list",
+                      "member": {
+                        "type": "structure",
+                        "members": {
+                          "VarCharValue": {}
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "ResultSetMetadata": {
+                "type": "structure",
+                "members": {
+                  "ColumnInfo": {
+                    "type": "list",
+                    "member": {
+                      "type": "structure",
+                      "required": [
+                        "Name",
+                        "Type"
+                      ],
+                      "members": {
+                        "CatalogName": {},
+                        "SchemaName": {},
+                        "TableName": {},
+                        "Name": {},
+                        "Label": {},
+                        "Type": {},
+                        "Precision": {
+                          "type": "integer"
+                        },
+                        "Scale": {
+                          "type": "integer"
+                        },
+                        "Nullable": {},
+                        "CaseSensitive": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetTableMetadata": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CatalogName",
+          "DatabaseName",
+          "TableName"
+        ],
+        "members": {
+          "CatalogName": {},
+          "DatabaseName": {},
+          "TableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableMetadata": {
+            "shape": "S2q"
+          }
+        }
+      }
+    },
+    "GetWorkGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "WorkGroup"
+        ],
+        "members": {
+          "WorkGroup": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "WorkGroup": {
+            "type": "structure",
+            "required": [
+              "Name"
+            ],
+            "members": {
+              "Name": {},
+              "State": {},
+              "Configuration": {
+                "shape": "S1i"
+              },
+              "Description": {},
+              "CreationTime": {
+                "type": "timestamp"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ListDataCatalogs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DataCatalogsSummary": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "CatalogName": {},
+                "Type": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListDatabases": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CatalogName"
+        ],
+        "members": {
+          "CatalogName": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DatabaseList": {
+            "type": "list",
+            "member": {
+              "shape": "S20"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListEngineVersions": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "EngineVersions": {
+            "type": "list",
+            "member": {
+              "shape": "Sy"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListNamedQueries": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "WorkGroup": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NamedQueryIds": {
+            "shape": "S2"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListPreparedStatements": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "WorkGroup"
+        ],
+        "members": {
+          "WorkGroup": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PreparedStatements": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "StatementName": {},
+                "LastModifiedTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListQueryExecutions": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "WorkGroup": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "QueryExecutionIds": {
+            "shape": "Sh"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTableMetadata": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CatalogName",
+          "DatabaseName"
+        ],
+        "members": {
+          "CatalogName": {},
+          "DatabaseName": {},
+          "Expression": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableMetadataList": {
+            "type": "list",
+            "member": {
+              "shape": "S2q"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN"
+        ],
+        "members": {
+          "ResourceARN": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "S16"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListWorkGroups": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "WorkGroups": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Name": {},
+                "State": {},
+                "Description": {},
+                "CreationTime": {
+                  "type": "timestamp"
+                },
+                "EngineVersion": {
+                  "shape": "Sy"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "StartQueryExecution": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "QueryString"
+        ],
+        "members": {
+          "QueryString": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "QueryExecutionContext": {
+            "shape": "Sr"
+          },
+          "ResultConfiguration": {
+            "shape": "Sn"
+          },
+          "WorkGroup": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "QueryExecutionId": {}
+        }
+      },
+      "idempotent": true
+    },
+    "StopQueryExecution": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "QueryExecutionId"
+        ],
+        "members": {
+          "QueryExecutionId": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      },
+      "idempotent": true
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN",
+          "Tags"
+        ],
+        "members": {
+          "ResourceARN": {},
+          "Tags": {
+            "shape": "S16"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceARN": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateDataCatalog": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "Type"
+        ],
+        "members": {
+          "Name": {},
+          "Type": {},
+          "Description": {},
+          "Parameters": {
+            "shape": "S13"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdatePreparedStatement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "StatementName",
+          "WorkGroup",
+          "QueryStatement"
+        ],
+        "members": {
+          "StatementName": {},
+          "WorkGroup": {},
+          "QueryStatement": {},
+          "Description": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateWorkGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "WorkGroup"
+        ],
+        "members": {
+          "WorkGroup": {},
+          "Description": {},
+          "ConfigurationUpdates": {
+            "type": "structure",
+            "members": {
+              "EnforceWorkGroupConfiguration": {
+                "type": "boolean"
+              },
+              "ResultConfigurationUpdates": {
+                "type": "structure",
+                "members": {
+                  "OutputLocation": {},
+                  "RemoveOutputLocation": {
+                    "type": "boolean"
+                  },
+                  "EncryptionConfiguration": {
+                    "shape": "Sp"
+                  },
+                  "RemoveEncryptionConfiguration": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "PublishCloudWatchMetricsEnabled": {
+                "type": "boolean"
+              },
+              "BytesScannedCutoffPerQuery": {
+                "type": "long"
+              },
+              "RemoveBytesScannedCutoffPerQuery": {
+                "type": "boolean"
+              },
+              "RequesterPaysEnabled": {
+                "type": "boolean"
+              },
+              "EngineVersion": {
+                "shape": "Sy"
+              }
+            }
+          },
+          "State": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "S2": {
+      "type": "list",
+      "member": {}
+    },
+    "S6": {
+      "type": "structure",
+      "required": [
+        "Name",
+        "Database",
+        "QueryString"
+      ],
+      "members": {
+        "Name": {},
+        "Description": {},
+        "Database": {},
+        "QueryString": {},
+        "NamedQueryId": {},
+        "WorkGroup": {}
+      }
+    },
+    "Sh": {
+      "type": "list",
+      "member": {}
+    },
+    "Sl": {
+      "type": "structure",
+      "members": {
+        "QueryExecutionId": {},
+        "Query": {},
+        "StatementType": {},
+        "ResultConfiguration": {
+          "shape": "Sn"
+        },
+        "QueryExecutionContext": {
+          "shape": "Sr"
+        },
+        "Status": {
+          "type": "structure",
+          "members": {
+            "State": {},
+            "StateChangeReason": {},
+            "SubmissionDateTime": {
+              "type": "timestamp"
+            },
+            "CompletionDateTime": {
+              "type": "timestamp"
+            }
+          }
+        },
+        "Statistics": {
+          "type": "structure",
+          "members": {
+            "EngineExecutionTimeInMillis": {
+              "type": "long"
+            },
+            "DataScannedInBytes": {
+              "type": "long"
+            },
+            "DataManifestLocation": {},
+            "TotalExecutionTimeInMillis": {
+              "type": "long"
+            },
+            "QueryQueueTimeInMillis": {
+              "type": "long"
+            },
+            "QueryPlanningTimeInMillis": {
+              "type": "long"
+            },
+            "ServiceProcessingTimeInMillis": {
+              "type": "long"
+            }
+          }
+        },
+        "WorkGroup": {},
+        "EngineVersion": {
+          "shape": "Sy"
+        }
+      }
+    },
+    "Sn": {
+      "type": "structure",
+      "members": {
+        "OutputLocation": {},
+        "EncryptionConfiguration": {
+          "shape": "Sp"
+        }
+      }
+    },
+    "Sp": {
+      "type": "structure",
+      "required": [
+        "EncryptionOption"
+      ],
+      "members": {
+        "EncryptionOption": {},
+        "KmsKey": {}
+      }
+    },
+    "Sr": {
+      "type": "structure",
+      "members": {
+        "Database": {},
+        "Catalog": {}
+      }
+    },
+    "Sy": {
+      "type": "structure",
+      "members": {
+        "SelectedEngineVersion": {},
+        "EffectiveEngineVersion": {}
+      }
+    },
+    "S13": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "S16": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "S1i": {
+      "type": "structure",
+      "members": {
+        "ResultConfiguration": {
+          "shape": "Sn"
+        },
+        "EnforceWorkGroupConfiguration": {
+          "type": "boolean"
+        },
+        "PublishCloudWatchMetricsEnabled": {
+          "type": "boolean"
+        },
+        "BytesScannedCutoffPerQuery": {
+          "type": "long"
+        },
+        "RequesterPaysEnabled": {
+          "type": "boolean"
+        },
+        "EngineVersion": {
+          "shape": "Sy"
+        }
+      }
+    },
+    "S20": {
+      "type": "structure",
+      "required": [
+        "Name"
+      ],
+      "members": {
+        "Name": {},
+        "Description": {},
+        "Parameters": {
+          "shape": "S13"
+        }
+      }
+    },
+    "S2q": {
+      "type": "structure",
+      "required": [
+        "Name"
+      ],
+      "members": {
+        "Name": {},
+        "CreateTime": {
+          "type": "timestamp"
+        },
+        "LastAccessTime": {
+          "type": "timestamp"
+        },
+        "TableType": {},
+        "Columns": {
+          "shape": "S2t"
+        },
+        "PartitionKeys": {
+          "shape": "S2t"
+        },
+        "Parameters": {
+          "shape": "S13"
+        }
+      }
+    },
+    "S2t": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "Type": {},
+          "Comment": {}
+        }
+      }
+    }
+  }
+}

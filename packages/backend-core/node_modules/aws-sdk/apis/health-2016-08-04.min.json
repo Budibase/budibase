@@ -1,0 +1,647 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2016-08-04",
+    "endpointPrefix": "health",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceAbbreviation": "AWSHealth",
+    "serviceFullName": "AWS Health APIs and Notifications",
+    "serviceId": "Health",
+    "signatureVersion": "v4",
+    "targetPrefix": "AWSHealth_20160804",
+    "uid": "health-2016-08-04"
+  },
+  "operations": {
+    "DescribeAffectedAccountsForOrganization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "eventArn"
+        ],
+        "members": {
+          "eventArn": {},
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "affectedAccounts": {
+            "type": "list",
+            "member": {}
+          },
+          "eventScopeCode": {},
+          "nextToken": {}
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeAffectedEntities": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "filter"
+        ],
+        "members": {
+          "filter": {
+            "type": "structure",
+            "required": [
+              "eventArns"
+            ],
+            "members": {
+              "eventArns": {
+                "shape": "Sb"
+              },
+              "entityArns": {
+                "shape": "Sc"
+              },
+              "entityValues": {
+                "shape": "Se"
+              },
+              "lastUpdatedTimes": {
+                "shape": "Sg"
+              },
+              "tags": {
+                "shape": "Sj"
+              },
+              "statusCodes": {
+                "type": "list",
+                "member": {}
+              }
+            }
+          },
+          "locale": {},
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "entities": {
+            "shape": "Sr"
+          },
+          "nextToken": {}
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeAffectedEntitiesForOrganization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "organizationEntityFilters"
+        ],
+        "members": {
+          "organizationEntityFilters": {
+            "type": "list",
+            "member": {
+              "shape": "Sw"
+            }
+          },
+          "locale": {},
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "entities": {
+            "shape": "Sr"
+          },
+          "failedSet": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "awsAccountId": {},
+                "eventArn": {},
+                "errorName": {},
+                "errorMessage": {}
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeEntityAggregates": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "eventArns": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "entityAggregates": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "eventArn": {},
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeEventAggregates": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "aggregateField"
+        ],
+        "members": {
+          "filter": {
+            "shape": "S19"
+          },
+          "aggregateField": {},
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "eventAggregates": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "aggregateValue": {},
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeEventDetails": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "eventArns"
+        ],
+        "members": {
+          "eventArns": {
+            "shape": "Sb"
+          },
+          "locale": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "successfulSet": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "event": {
+                  "shape": "S1v"
+                },
+                "eventDescription": {
+                  "shape": "S1x"
+                },
+                "eventMetadata": {
+                  "shape": "S1z"
+                }
+              }
+            }
+          },
+          "failedSet": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "eventArn": {},
+                "errorName": {},
+                "errorMessage": {}
+              }
+            }
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeEventDetailsForOrganization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "organizationEventDetailFilters"
+        ],
+        "members": {
+          "organizationEventDetailFilters": {
+            "type": "list",
+            "member": {
+              "shape": "Sw"
+            }
+          },
+          "locale": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "successfulSet": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "awsAccountId": {},
+                "event": {
+                  "shape": "S1v"
+                },
+                "eventDescription": {
+                  "shape": "S1x"
+                },
+                "eventMetadata": {
+                  "shape": "S1z"
+                }
+              }
+            }
+          },
+          "failedSet": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "awsAccountId": {},
+                "eventArn": {},
+                "errorName": {},
+                "errorMessage": {}
+              }
+            }
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeEventTypes": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "filter": {
+            "type": "structure",
+            "members": {
+              "eventTypeCodes": {
+                "type": "list",
+                "member": {}
+              },
+              "services": {
+                "shape": "S1c"
+              },
+              "eventTypeCategories": {
+                "type": "list",
+                "member": {}
+              }
+            }
+          },
+          "locale": {},
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "eventTypes": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "service": {},
+                "code": {},
+                "category": {}
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeEvents": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "filter": {
+            "shape": "S19"
+          },
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          },
+          "locale": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "events": {
+            "type": "list",
+            "member": {
+              "shape": "S1v"
+            }
+          },
+          "nextToken": {}
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeEventsForOrganization": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "filter": {
+            "type": "structure",
+            "members": {
+              "eventTypeCodes": {
+                "shape": "S1a"
+              },
+              "awsAccountIds": {
+                "type": "list",
+                "member": {}
+              },
+              "services": {
+                "shape": "S1c"
+              },
+              "regions": {
+                "shape": "S1e"
+              },
+              "startTime": {
+                "shape": "Sh"
+              },
+              "endTime": {
+                "shape": "Sh"
+              },
+              "lastUpdatedTime": {
+                "shape": "Sh"
+              },
+              "entityArns": {
+                "shape": "Sc"
+              },
+              "entityValues": {
+                "shape": "Se"
+              },
+              "eventTypeCategories": {
+                "shape": "S1i"
+              },
+              "eventStatusCodes": {
+                "shape": "S1k"
+              }
+            }
+          },
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          },
+          "locale": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "events": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "arn": {},
+                "service": {},
+                "eventTypeCode": {},
+                "eventTypeCategory": {},
+                "eventScopeCode": {},
+                "region": {},
+                "startTime": {
+                  "type": "timestamp"
+                },
+                "endTime": {
+                  "type": "timestamp"
+                },
+                "lastUpdatedTime": {
+                  "type": "timestamp"
+                },
+                "statusCode": {}
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeHealthServiceStatusForOrganization": {
+      "output": {
+        "type": "structure",
+        "members": {
+          "healthServiceAccessStatusForOrganization": {}
+        }
+      },
+      "idempotent": true
+    },
+    "DisableHealthServiceAccessForOrganization": {
+      "idempotent": true
+    },
+    "EnableHealthServiceAccessForOrganization": {
+      "idempotent": true
+    }
+  },
+  "shapes": {
+    "Sb": {
+      "type": "list",
+      "member": {}
+    },
+    "Sc": {
+      "type": "list",
+      "member": {}
+    },
+    "Se": {
+      "type": "list",
+      "member": {}
+    },
+    "Sg": {
+      "type": "list",
+      "member": {
+        "shape": "Sh"
+      }
+    },
+    "Sh": {
+      "type": "structure",
+      "members": {
+        "from": {
+          "type": "timestamp"
+        },
+        "to": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Sj": {
+      "type": "list",
+      "member": {
+        "shape": "Sk"
+      }
+    },
+    "Sk": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "Sr": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "entityArn": {},
+          "eventArn": {},
+          "entityValue": {},
+          "entityUrl": {},
+          "awsAccountId": {},
+          "lastUpdatedTime": {
+            "type": "timestamp"
+          },
+          "statusCode": {},
+          "tags": {
+            "shape": "Sk"
+          }
+        }
+      }
+    },
+    "Sw": {
+      "type": "structure",
+      "required": [
+        "eventArn"
+      ],
+      "members": {
+        "eventArn": {},
+        "awsAccountId": {}
+      }
+    },
+    "S19": {
+      "type": "structure",
+      "members": {
+        "eventArns": {
+          "shape": "Sb"
+        },
+        "eventTypeCodes": {
+          "shape": "S1a"
+        },
+        "services": {
+          "shape": "S1c"
+        },
+        "regions": {
+          "shape": "S1e"
+        },
+        "availabilityZones": {
+          "type": "list",
+          "member": {}
+        },
+        "startTimes": {
+          "shape": "Sg"
+        },
+        "endTimes": {
+          "shape": "Sg"
+        },
+        "lastUpdatedTimes": {
+          "shape": "Sg"
+        },
+        "entityArns": {
+          "shape": "Sc"
+        },
+        "entityValues": {
+          "shape": "Se"
+        },
+        "eventTypeCategories": {
+          "shape": "S1i"
+        },
+        "tags": {
+          "shape": "Sj"
+        },
+        "eventStatusCodes": {
+          "shape": "S1k"
+        }
+      }
+    },
+    "S1a": {
+      "type": "list",
+      "member": {}
+    },
+    "S1c": {
+      "type": "list",
+      "member": {}
+    },
+    "S1e": {
+      "type": "list",
+      "member": {}
+    },
+    "S1i": {
+      "type": "list",
+      "member": {}
+    },
+    "S1k": {
+      "type": "list",
+      "member": {}
+    },
+    "S1v": {
+      "type": "structure",
+      "members": {
+        "arn": {},
+        "service": {},
+        "eventTypeCode": {},
+        "eventTypeCategory": {},
+        "region": {},
+        "availabilityZone": {},
+        "startTime": {
+          "type": "timestamp"
+        },
+        "endTime": {
+          "type": "timestamp"
+        },
+        "lastUpdatedTime": {
+          "type": "timestamp"
+        },
+        "statusCode": {},
+        "eventScopeCode": {}
+      }
+    },
+    "S1x": {
+      "type": "structure",
+      "members": {
+        "latestDescription": {}
+      }
+    },
+    "S1z": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    }
+  }
+}

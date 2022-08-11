@@ -1,0 +1,13 @@
+language: node_js
+
+node_js:
+  - 6
+  - 8
+  - 10
+
+notifications:
+  email: false
+
+before_script: git fetch --tags
+
+after_success: npm run coverage

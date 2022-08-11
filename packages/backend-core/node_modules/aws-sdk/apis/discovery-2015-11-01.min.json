@@ -1,0 +1,915 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2015-11-01",
+    "endpointPrefix": "discovery",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceFullName": "AWS Application Discovery Service",
+    "serviceId": "Application Discovery Service",
+    "signatureVersion": "v4",
+    "targetPrefix": "AWSPoseidonService_V2015_11_01",
+    "uid": "discovery-2015-11-01"
+  },
+  "operations": {
+    "AssociateConfigurationItemsToApplication": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "applicationConfigurationId",
+          "configurationIds"
+        ],
+        "members": {
+          "applicationConfigurationId": {},
+          "configurationIds": {
+            "shape": "S3"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "BatchDeleteImportData": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "importTaskIds"
+        ],
+        "members": {
+          "importTaskIds": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "errors": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "importTaskId": {},
+                "errorCode": {},
+                "errorDescription": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "CreateApplication": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "name"
+        ],
+        "members": {
+          "name": {},
+          "description": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "configurationId": {}
+        }
+      }
+    },
+    "CreateTags": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "configurationIds",
+          "tags"
+        ],
+        "members": {
+          "configurationIds": {
+            "shape": "S3"
+          },
+          "tags": {
+            "shape": "Si"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteApplications": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "configurationIds"
+        ],
+        "members": {
+          "configurationIds": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteTags": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "configurationIds"
+        ],
+        "members": {
+          "configurationIds": {
+            "shape": "S3"
+          },
+          "tags": {
+            "shape": "Si"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DescribeAgents": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "agentIds": {
+            "shape": "St"
+          },
+          "filters": {
+            "shape": "Sv"
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "agentsInfo": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "agentId": {},
+                "hostName": {},
+                "agentNetworkInfoList": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "members": {
+                      "ipAddress": {},
+                      "macAddress": {}
+                    }
+                  }
+                },
+                "connectorId": {},
+                "version": {},
+                "health": {},
+                "lastHealthPingTime": {},
+                "collectionStatus": {},
+                "agentType": {},
+                "registeredTime": {}
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "DescribeConfigurations": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "configurationIds"
+        ],
+        "members": {
+          "configurationIds": {
+            "shape": "S3"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "configurations": {
+            "type": "list",
+            "member": {
+              "type": "map",
+              "key": {},
+              "value": {}
+            }
+          }
+        }
+      }
+    },
+    "DescribeContinuousExports": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "exportIds": {
+            "type": "list",
+            "member": {}
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "descriptions": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "exportId": {},
+                "status": {},
+                "statusDetail": {},
+                "s3Bucket": {},
+                "startTime": {
+                  "type": "timestamp"
+                },
+                "stopTime": {
+                  "type": "timestamp"
+                },
+                "dataSource": {},
+                "schemaStorageConfig": {
+                  "shape": "S1o"
+                }
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "DescribeExportConfigurations": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "exportIds": {
+            "shape": "S1r"
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "exportsInfo": {
+            "shape": "S1t"
+          },
+          "nextToken": {}
+        }
+      },
+      "deprecated": true
+    },
+    "DescribeExportTasks": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "exportIds": {
+            "shape": "S1r"
+          },
+          "filters": {
+            "shape": "S21"
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "exportsInfo": {
+            "shape": "S1t"
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "DescribeImportTasks": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "name": {},
+                "values": {
+                  "type": "list",
+                  "member": {}
+                }
+              }
+            }
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "nextToken": {},
+          "tasks": {
+            "type": "list",
+            "member": {
+              "shape": "S2e"
+            }
+          }
+        }
+      }
+    },
+    "DescribeTags": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "name",
+                "values"
+              ],
+              "members": {
+                "name": {},
+                "values": {
+                  "shape": "Sx"
+                }
+              }
+            }
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "tags": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "configurationType": {},
+                "configurationId": {},
+                "key": {},
+                "value": {},
+                "timeOfCreation": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "DisassociateConfigurationItemsFromApplication": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "applicationConfigurationId",
+          "configurationIds"
+        ],
+        "members": {
+          "applicationConfigurationId": {},
+          "configurationIds": {
+            "shape": "S3"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "ExportConfigurations": {
+      "output": {
+        "type": "structure",
+        "members": {
+          "exportId": {}
+        }
+      },
+      "deprecated": true
+    },
+    "GetDiscoverySummary": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "servers": {
+            "type": "long"
+          },
+          "applications": {
+            "type": "long"
+          },
+          "serversMappedToApplications": {
+            "type": "long"
+          },
+          "serversMappedtoTags": {
+            "type": "long"
+          },
+          "agentSummary": {
+            "type": "structure",
+            "required": [
+              "activeAgents",
+              "healthyAgents",
+              "blackListedAgents",
+              "shutdownAgents",
+              "unhealthyAgents",
+              "totalAgents",
+              "unknownAgents"
+            ],
+            "members": {
+              "activeAgents": {
+                "type": "integer"
+              },
+              "healthyAgents": {
+                "type": "integer"
+              },
+              "blackListedAgents": {
+                "type": "integer"
+              },
+              "shutdownAgents": {
+                "type": "integer"
+              },
+              "unhealthyAgents": {
+                "type": "integer"
+              },
+              "totalAgents": {
+                "type": "integer"
+              },
+              "unknownAgents": {
+                "type": "integer"
+              }
+            }
+          },
+          "connectorSummary": {
+            "type": "structure",
+            "required": [
+              "activeConnectors",
+              "healthyConnectors",
+              "blackListedConnectors",
+              "shutdownConnectors",
+              "unhealthyConnectors",
+              "totalConnectors",
+              "unknownConnectors"
+            ],
+            "members": {
+              "activeConnectors": {
+                "type": "integer"
+              },
+              "healthyConnectors": {
+                "type": "integer"
+              },
+              "blackListedConnectors": {
+                "type": "integer"
+              },
+              "shutdownConnectors": {
+                "type": "integer"
+              },
+              "unhealthyConnectors": {
+                "type": "integer"
+              },
+              "totalConnectors": {
+                "type": "integer"
+              },
+              "unknownConnectors": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ListConfigurations": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "configurationType"
+        ],
+        "members": {
+          "configurationType": {},
+          "filters": {
+            "shape": "Sv"
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {},
+          "orderBy": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "fieldName"
+              ],
+              "members": {
+                "fieldName": {},
+                "sortOrder": {}
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "configurations": {
+            "type": "list",
+            "member": {
+              "type": "map",
+              "key": {},
+              "value": {}
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "ListServerNeighbors": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "configurationId"
+        ],
+        "members": {
+          "configurationId": {},
+          "portInformationNeeded": {
+            "type": "boolean"
+          },
+          "neighborConfigurationIds": {
+            "shape": "S3"
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "neighbors"
+        ],
+        "members": {
+          "neighbors": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "sourceServerId",
+                "destinationServerId",
+                "connectionsCount"
+              ],
+              "members": {
+                "sourceServerId": {},
+                "destinationServerId": {},
+                "destinationPort": {
+                  "type": "integer"
+                },
+                "transportProtocol": {},
+                "connectionsCount": {
+                  "type": "long"
+                }
+              }
+            }
+          },
+          "nextToken": {},
+          "knownDependencyCount": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "StartContinuousExport": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "exportId": {},
+          "s3Bucket": {},
+          "startTime": {
+            "type": "timestamp"
+          },
+          "dataSource": {},
+          "schemaStorageConfig": {
+            "shape": "S1o"
+          }
+        }
+      }
+    },
+    "StartDataCollectionByAgentIds": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "agentIds"
+        ],
+        "members": {
+          "agentIds": {
+            "shape": "St"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "agentsConfigurationStatus": {
+            "shape": "S3f"
+          }
+        }
+      }
+    },
+    "StartExportTask": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "exportDataFormat": {
+            "type": "list",
+            "member": {}
+          },
+          "filters": {
+            "shape": "S21"
+          },
+          "startTime": {
+            "type": "timestamp"
+          },
+          "endTime": {
+            "type": "timestamp"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "exportId": {}
+        }
+      }
+    },
+    "StartImportTask": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "name",
+          "importUrl"
+        ],
+        "members": {
+          "clientRequestToken": {
+            "idempotencyToken": true
+          },
+          "name": {},
+          "importUrl": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "task": {
+            "shape": "S2e"
+          }
+        }
+      }
+    },
+    "StopContinuousExport": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "exportId"
+        ],
+        "members": {
+          "exportId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "startTime": {
+            "type": "timestamp"
+          },
+          "stopTime": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "StopDataCollectionByAgentIds": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "agentIds"
+        ],
+        "members": {
+          "agentIds": {
+            "shape": "St"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "agentsConfigurationStatus": {
+            "shape": "S3f"
+          }
+        }
+      }
+    },
+    "UpdateApplication": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "configurationId"
+        ],
+        "members": {
+          "configurationId": {},
+          "name": {},
+          "description": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "S3": {
+      "type": "list",
+      "member": {}
+    },
+    "Si": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "key",
+          "value"
+        ],
+        "members": {
+          "key": {},
+          "value": {}
+        }
+      }
+    },
+    "St": {
+      "type": "list",
+      "member": {}
+    },
+    "Sv": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "name",
+          "values",
+          "condition"
+        ],
+        "members": {
+          "name": {},
+          "values": {
+            "shape": "Sx"
+          },
+          "condition": {}
+        }
+      }
+    },
+    "Sx": {
+      "type": "list",
+      "member": {}
+    },
+    "S1o": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "S1r": {
+      "type": "list",
+      "member": {}
+    },
+    "S1t": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "exportId",
+          "exportStatus",
+          "statusMessage",
+          "exportRequestTime"
+        ],
+        "members": {
+          "exportId": {},
+          "exportStatus": {},
+          "statusMessage": {},
+          "configurationsDownloadUrl": {},
+          "exportRequestTime": {
+            "type": "timestamp"
+          },
+          "isTruncated": {
+            "type": "boolean"
+          },
+          "requestedStartTime": {
+            "type": "timestamp"
+          },
+          "requestedEndTime": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "S21": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "name",
+          "values",
+          "condition"
+        ],
+        "members": {
+          "name": {},
+          "values": {
+            "shape": "Sx"
+          },
+          "condition": {}
+        }
+      }
+    },
+    "S2e": {
+      "type": "structure",
+      "members": {
+        "importTaskId": {},
+        "clientRequestToken": {},
+        "name": {},
+        "importUrl": {},
+        "status": {},
+        "importRequestTime": {
+          "type": "timestamp"
+        },
+        "importCompletionTime": {
+          "type": "timestamp"
+        },
+        "importDeletedTime": {
+          "type": "timestamp"
+        },
+        "serverImportSuccess": {
+          "type": "integer"
+        },
+        "serverImportFailure": {
+          "type": "integer"
+        },
+        "applicationImportSuccess": {
+          "type": "integer"
+        },
+        "applicationImportFailure": {
+          "type": "integer"
+        },
+        "errorsAndFailedEntriesZip": {}
+      }
+    },
+    "S3f": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "agentId": {},
+          "operationSucceeded": {
+            "type": "boolean"
+          },
+          "description": {}
+        }
+      }
+    }
+  }
+}

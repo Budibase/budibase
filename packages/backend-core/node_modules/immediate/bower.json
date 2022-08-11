@@ -1,0 +1,13 @@
+{
+  "name": "immediate",
+  "version": "3.2.1",
+  "description": "A cross browser microtask library",
+  "homepage": "https://github.com/calvinmetcalf/immediate",
+  "authors": [
+    "Domenic Denicola <domenic@domenicdenicola.com> (http://domenicdenicola.com)",
+    "Donavon West <github@donavon.com> (http://donavon.com)",
+    "Yaffle",
+    "Calvin Metcalf <calvin.metcalf@gmail.com>"
+  ],
+  "main": "dist/immediate.js"
+}

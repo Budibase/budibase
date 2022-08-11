@@ -1,0 +1,44 @@
+{
+    "name": "double-ended-queue",
+    "description": "Extremely fast double-ended queue implementation",
+    "version": "2.1.0-0",
+    "keywords": [
+        "data-structure",
+        "data-structures",
+        "queue",
+        "deque",
+        "double-ended-queue"
+    ],
+    "scripts": {
+        "test": "grunt test"
+    },
+    "homepage": "https://github.com/petkaantonov/deque",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/petkaantonov/deque.git"
+    },
+    "bugs": {
+        "url": "http://github.com/petkaantonov/deque/issues"
+    },
+    "license": "MIT",
+    "author": {
+        "name": "Petka Antonov",
+        "email": "petka_antonov@hotmail.com",
+        "url": "http://github.com/petkaantonov/"
+    },
+    "devDependencies": {
+        "grunt": "~0.4.1",
+        "grunt-contrib-jshint": "~0.6.4",
+        "jshint-stylish": "latest",
+        "acorn": "~0.3.1",
+        "mocha": "~1.12.1",
+        "grunt-cli": "~0.1.9",
+        "bluebird": "~0.11",
+        "benchmark": "~1.0.0",
+        "deque": "0.0.4",
+        "q": "~0.9.7",
+        "semver-utils": "~1.1.0"
+    },
+    "readmeFilename": "README.md",
+    "main": "./js/deque.js"
+}

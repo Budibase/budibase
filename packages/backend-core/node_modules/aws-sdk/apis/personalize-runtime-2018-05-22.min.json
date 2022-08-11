@@ -1,0 +1,120 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2018-05-22",
+    "endpointPrefix": "personalize-runtime",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceFullName": "Amazon Personalize Runtime",
+    "serviceId": "Personalize Runtime",
+    "signatureVersion": "v4",
+    "signingName": "personalize",
+    "uid": "personalize-runtime-2018-05-22"
+  },
+  "operations": {
+    "GetPersonalizedRanking": {
+      "http": {
+        "requestUri": "/personalize-ranking"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "campaignArn",
+          "inputList",
+          "userId"
+        ],
+        "members": {
+          "campaignArn": {},
+          "inputList": {
+            "type": "list",
+            "member": {}
+          },
+          "userId": {},
+          "context": {
+            "shape": "S6"
+          },
+          "filterArn": {},
+          "filterValues": {
+            "shape": "S9"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "personalizedRanking": {
+            "shape": "Sd"
+          },
+          "recommendationId": {}
+        }
+      },
+      "idempotent": true
+    },
+    "GetRecommendations": {
+      "http": {
+        "requestUri": "/recommendations"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "campaignArn"
+        ],
+        "members": {
+          "campaignArn": {},
+          "itemId": {},
+          "userId": {},
+          "numResults": {
+            "type": "integer"
+          },
+          "context": {
+            "shape": "S6"
+          },
+          "filterArn": {},
+          "filterValues": {
+            "shape": "S9"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "itemList": {
+            "shape": "Sd"
+          },
+          "recommendationId": {}
+        }
+      },
+      "idempotent": true
+    }
+  },
+  "shapes": {
+    "S6": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "type": "string",
+        "sensitive": true
+      }
+    },
+    "S9": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "type": "string",
+        "sensitive": true
+      }
+    },
+    "Sd": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "itemId": {},
+          "score": {
+            "type": "double"
+          }
+        }
+      }
+    }
+  }
+}

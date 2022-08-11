@@ -1,0 +1,13 @@
+{
+	"node": true,
+	"unused": "vars",
+	"multistr": true,
+	"globals": {
+		"describe": false,
+		"it": false,
+		"before": false,
+		"beforeEach": false,
+		"after": false,
+		"afterEach": false
+	}
+}

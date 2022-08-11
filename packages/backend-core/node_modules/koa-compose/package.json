@@ -1,0 +1,30 @@
+{
+  "name": "koa-compose",
+  "description": "compose Koa middleware",
+  "repository": "koajs/compose",
+  "version": "4.1.0",
+  "keywords": [
+    "koa",
+    "middleware",
+    "compose"
+  ],
+  "files": [
+    "index.js"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "codecov": "^3.0.0",
+    "jest": "^21.0.0",
+    "matcha": "^0.7.0",
+    "standard": "^10.0.3"
+  },
+  "scripts": {
+    "bench": "matcha bench/bench.js",
+    "lint": "standard --fix .",
+    "test": "jest --forceExit --coverage"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "license": "MIT"
+}

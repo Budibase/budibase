@@ -1,0 +1,51 @@
+{
+  "name": "passport",
+  "version": "0.4.1",
+  "description": "Simple, unobtrusive authentication for Node.js.",
+  "keywords": [
+    "express",
+    "connect",
+    "auth",
+    "authn",
+    "authentication"
+  ],
+  "author": {
+    "name": "Jared Hanson",
+    "email": "jaredhanson@gmail.com",
+    "url": "http://www.jaredhanson.net/"
+  },
+  "homepage": "http://passportjs.org/",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jaredhanson/passport.git"
+  },
+  "bugs": {
+    "url": "http://github.com/jaredhanson/passport/issues"
+  },
+  "license": "MIT",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    }
+  ],
+  "main": "./lib",
+  "dependencies": {
+    "passport-strategy": "1.x.x",
+    "pause": "0.0.1"
+  },
+  "devDependencies": {
+    "make-node": "0.3.x",
+    "mocha": "2.x.x",
+    "chai": "2.x.x",
+    "chai-connect-middleware": "0.3.x",
+    "chai-passport-strategy": "0.2.x",
+    "proxyquire": "1.4.x"
+  },
+  "engines": {
+    "node": ">= 0.4.0"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/mocha --reporter spec --require test/bootstrap/node test/*.test.js test/**/*.test.js"
+  }
+}
