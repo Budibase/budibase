@@ -20,10 +20,10 @@ RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
 
 FROM couchdb:3.2.1
 # TARGETARCH can be amd64 or arm e.g. docker build --build-arg TARGETARCH=amd64
-ARG TARGETARCH amd64
+ARG TARGETARCH=amd64
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
 # e.g. docker build --build-arg TARGETBUILD=aas ....
-ARG TARGETBUILD single
+ARG TARGETBUILD=single
 ENV TARGETBUILD $TARGETBUILD
 
 COPY --from=build /app /app
@@ -35,6 +35,7 @@ ENV \
   BUDIBASE_ENVIRONMENT=PRODUCTION \
   CLUSTER_PORT=80 \
   # CUSTOM_DOMAIN=budi001.custom.com \
+  DATA_DIR=/data \
   DEPLOYMENT_ENVIRONMENT=docker \
   MINIO_URL=http://localhost:9000 \
   POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU \
@@ -114,6 +115,7 @@ RUN chmod +x ./healthcheck.sh
 ADD hosting/scripts/build-target-paths.sh .
 RUN chmod +x ./build-target-paths.sh
 
+# Script below sets the path for storing data based on $DATA_DIR
 # For Azure App Service install SSH & point data locations to /home
 RUN /build-target-paths.sh
 
