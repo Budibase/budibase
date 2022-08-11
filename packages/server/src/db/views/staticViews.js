@@ -1,10 +1,5 @@
 const { getAppDB } = require("@budibase/backend-core/context")
-const {
-  DocumentType,
-  SEPARATOR,
-  ViewNames,
-  SearchIndexes,
-} = require("../utils")
+const { DocumentType, SEPARATOR, ViewName, SearchIndexes } = require("../utils")
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 
 /**************************************************
@@ -53,7 +48,7 @@ exports.createLinkView = async () => {
   }
   designDoc.views = {
     ...designDoc.views,
-    [ViewNames.LINK]: view,
+    [ViewName.LINK]: view,
   }
   await db.put(designDoc)
 }
@@ -74,7 +69,7 @@ exports.createRoutingView = async () => {
   }
   designDoc.views = {
     ...designDoc.views,
-    [ViewNames.ROUTING]: view,
+    [ViewName.ROUTING]: view,
   }
   await db.put(designDoc)
 }

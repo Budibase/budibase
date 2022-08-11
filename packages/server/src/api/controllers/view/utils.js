@@ -1,5 +1,5 @@
 const {
-  ViewNames,
+  ViewName,
   generateMemoryViewID,
   getMemoryViewParams,
   DocumentType,
@@ -32,7 +32,7 @@ exports.getViews = async () => {
     const designDoc = await db.get("_design/database")
     for (let name of Object.keys(designDoc.views)) {
       // Only return custom views, not built ins
-      if (Object.values(ViewNames).indexOf(name) !== -1) {
+      if (Object.values(ViewName).indexOf(name) !== -1) {
         continue
       }
       response.push({
