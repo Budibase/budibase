@@ -99,7 +99,7 @@ exports.bulkDestroy = async ctx => {
 }
 
 exports.search = async ctx => {
-  const tableId = ctx.params.tableId
+  const tableId = decodeURIComponent(ctx.params.tableId)
   const { paginate, query, ...params } = ctx.request.body
   let { bookmark, limit } = params
   if (!bookmark && paginate) {
@@ -129,7 +129,7 @@ exports.search = async ctx => {
     }
   }
   try {
-    const rows = await handleRequest(DataSourceOperation.READ, tableId, {
+    let rows = await handleRequest(DataSourceOperation.READ, tableId, {
       filters: query,
       sort,
       paginate: paginateObj,
@@ -146,6 +146,10 @@ exports.search = async ctx => {
       })
       hasNextPage = nextRows.length > 0
     }
+    rows = rows.map(row => ({
+      ...row,
+      tableId: encodeURIComponent(row.tableId),
+    }))
     // need wrapper object for bookmarks etc when paginating
     return { rows, hasNextPage, bookmark: bookmark + 1 }
   } catch (err) {
