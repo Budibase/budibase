@@ -33,7 +33,7 @@
       submitted = true
       const table = await tables.save(buildDefaultTable(name, datasource._id))
       await datasources.fetch()
-      $goto(`../../table/${table._id}`)
+      $goto(`../../table/${encodeURIComponent(table._id)}`)
     } catch (error) {
       notifications.error("Error saving table")
     }
