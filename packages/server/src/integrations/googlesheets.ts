@@ -1,12 +1,13 @@
 import {
   DatasourceFieldTypes,
   Integration,
-  QueryJson,
   QueryTypes,
-} from "../definitions/datasource"
+  Table,
+  TableSchema,
+  QueryJson,
+  DatasourcePlus,
+} from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
-import { DatasourcePlus } from "./base/datasourcePlus"
-import { Table, TableSchema } from "../definitions/common"
 import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"

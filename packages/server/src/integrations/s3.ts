@@ -1,5 +1,4 @@
-import { Integration, QueryTypes } from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+import { Integration, QueryTypes, IntegrationBase } from "@budibase/types"
 
 module S3Module {
   const AWS = require("aws-sdk")

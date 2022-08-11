@@ -2,15 +2,17 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
+  PaginationConfig,
+  IntegrationBase,
+  PaginationValues,
+} from "@budibase/types"
+import {
   RestConfig,
   RestQueryFields as RestQuery,
-  PaginationConfig,
   AuthType,
   BasicAuthConfig,
   BearerAuthConfig,
-  PaginationValues,
 } from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
 import { get } from "lodash"
 
 const BodyTypes = {

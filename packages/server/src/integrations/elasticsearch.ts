@@ -2,8 +2,8 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  IntegrationBase,
+} from "@budibase/types"
 
 module ElasticsearchModule {
   const { Client } = require("@elastic/elasticsearch")
