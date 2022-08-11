@@ -3,7 +3,7 @@ const { BUILTIN_PERMISSION_IDS, PermissionLevels } = require("./permissions")
 const {
   generateRoleID,
   getRoleParams,
-  DocumentTypes,
+  DocumentType,
   SEPARATOR,
 } = require("../db/utils")
 const { getAppDB } = require("../context")
@@ -338,7 +338,7 @@ class AccessController {
  * Adds the "role_" for builtin role IDs which are to be written to the DB (for permissions).
  */
 exports.getDBRoleID = roleId => {
-  if (roleId.startsWith(DocumentTypes.ROLE)) {
+  if (roleId.startsWith(DocumentType.ROLE)) {
     return roleId
   }
   return generateRoleID(roleId)
@@ -349,8 +349,8 @@ exports.getDBRoleID = roleId => {
  */
 exports.getExternalRoleID = roleId => {
   // for built in roles we want to remove the DB role ID element (role_)
-  if (roleId.startsWith(DocumentTypes.ROLE) && isBuiltin(roleId)) {
-    return roleId.split(`${DocumentTypes.ROLE}${SEPARATOR}`)[1]
+  if (roleId.startsWith(DocumentType.ROLE) && isBuiltin(roleId)) {
+    return roleId.split(`${DocumentType.ROLE}${SEPARATOR}`)[1]
   }
   return roleId
 }

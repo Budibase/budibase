@@ -1,9 +1,4 @@
-const {
-  DocumentTypes,
-  SEPARATOR,
-  ViewNames,
-  getAllApps,
-} = require("./db/utils")
+const { DocumentType, SEPARATOR, ViewName, getAllApps } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { queryGlobalView } = require("./db/views")
@@ -17,7 +12,7 @@ const {
 const events = require("./events")
 const tenancy = require("./tenancy")
 
-const APP_PREFIX = DocumentTypes.APP + SEPARATOR
+const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
 function confirmAppId(possibleAppId) {
@@ -154,7 +149,7 @@ exports.isClient = ctx => {
 }
 
 const getBuilders = async () => {
-  const builders = await queryGlobalView(ViewNames.USER_BY_BUILDERS, {
+  const builders = await queryGlobalView(ViewName.USER_BY_BUILDERS, {
     include_docs: false,
   })
 

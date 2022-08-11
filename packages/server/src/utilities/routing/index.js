@@ -1,11 +1,11 @@
 const { createRoutingView } = require("../../db/views/staticViews")
-const { ViewNames, getQueryIndex, UNICODE_MAX } = require("../../db/utils")
+const { ViewName, getQueryIndex, UNICODE_MAX } = require("../../db/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
 
 exports.getRoutingInfo = async () => {
   const db = getAppDB()
   try {
-    const allRouting = await db.query(getQueryIndex(ViewNames.ROUTING), {
+    const allRouting = await db.query(getQueryIndex(ViewName.ROUTING), {
       startKey: "",
       endKey: UNICODE_MAX,
     })

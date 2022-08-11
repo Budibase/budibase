@@ -3,7 +3,7 @@ const triggers = require("../../automations/triggers")
 const {
   getAutomationParams,
   generateAutomationID,
-  DocumentTypes,
+  DocumentType,
 } = require("../../db/utils")
 const {
   checkForWebhooks,
@@ -201,7 +201,7 @@ exports.clearLogError = async function (ctx) {
   const { automationId, appId } = ctx.request.body
   await doInAppContext(appId, async () => {
     const db = getProdAppDB()
-    const metadata = await db.get(DocumentTypes.APP_METADATA)
+    const metadata = await db.get(DocumentType.APP_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
     } else if (

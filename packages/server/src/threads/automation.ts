@@ -11,7 +11,7 @@ import { storeLog } from "../automations/logging"
 import { Automation, AutomationStep, AutomationStatus } from "@budibase/types"
 import {
   LoopStep,
-  LoopStepTypes,
+  LoopStepType,
   LoopInput,
   AutomationEvent,
   TriggerOutput,
@@ -35,12 +35,12 @@ function typecastForLooping(loopStep: LoopStep, input: LoopInput) {
   }
   try {
     switch (loopStep.inputs.option) {
-      case LoopStepTypes.ARRAY:
+      case LoopStepType.ARRAY:
         if (typeof input.binding === "string") {
           return JSON.parse(input.binding)
         }
         break
-      case LoopStepTypes.STRING:
+      case LoopStepType.STRING:
         if (Array.isArray(input.binding)) {
           return input.binding.join(",")
         }

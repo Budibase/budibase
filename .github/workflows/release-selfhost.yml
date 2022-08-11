@@ -12,19 +12,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master'
+        run: |
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+
       - uses: actions/checkout@v2
         with: 
           node-version: 14.x
           fetch_depth: 0
 
+      - name: Get the latest budibase release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+
       - name: Tag and release Docker images (Self Host)
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
-          # Get latest release version
-          release_version=$(cat lerna.json | jq -r '.version')
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-          release_tag=v$release_version
+          release_tag=v${{ env.RELEASE_VERSION }}
 
           # Pull apps and worker images
           docker pull budibase/apps:$release_tag
