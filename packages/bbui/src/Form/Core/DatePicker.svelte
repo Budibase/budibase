@@ -51,6 +51,12 @@
     },
   }
 
+  $: redrawOptions = {
+    timeOnly,
+    enableTime,
+    time24hr,
+  }
+
   const handleChange = event => {
     const [dates] = event.detail
     const noTimezone = enableTime && !timeOnly && ignoreTimezones
@@ -144,7 +150,7 @@
   }
 </script>
 
-{#key timeOnly}
+{#key redrawOptions}
   <Flatpickr
     bind:flatpickr
     value={parseDate(value)}
