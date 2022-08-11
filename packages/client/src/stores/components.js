@@ -121,7 +121,8 @@ const createComponentStore = () => {
       if (!state.customComponentManifest) {
         state.customComponentManifest = {}
       }
-      state.customComponentManifest[schema.schema.name] = {
+      const componentName = `plugin/${schema.schema.name}/1.0.0`
+      state.customComponentManifest[componentName] = {
         schema,
         Component,
       }
