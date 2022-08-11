@@ -1,7 +1,7 @@
 import { ObjectStoreBuckets } from "../../constants"
 import { extractPluginTarball } from "../../utilities/fileSystem"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
-import { generatePluginID } from "../../db/utils"
+import { generatePluginID, getPluginParams } from "../../db/utils"
 import { uploadDirectory } from "@budibase/backend-core/objectStore"
 
 export async function upload(ctx: any) {
@@ -67,6 +67,14 @@ export async function upload(ctx: any) {
   }
 }
 
-export async function fetch(ctx: any) {}
+export async function fetch(ctx: any) {
+  const db = getGlobalDB()
+  const response = await db.allDocs(
+    getPluginParams(null, {
+      include_docs: true,
+    })
+  )
+  ctx.body = response.rows.map((row: any) => row.doc)
+}
 
 export async function destroy(ctx: any) {}
