@@ -12,7 +12,7 @@ const {
   getDevelopmentAppID,
   generateAppID,
   getQueryIndex,
-  ViewNames,
+  ViewName,
 } = require("@budibase/backend-core/db")
 
 const UNICODE_MAX = "\ufff0"
@@ -69,7 +69,7 @@ exports.isProdAppID = isProdAppID
 exports.USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.TABLE_ROW_PREFIX = `${DocumentType.ROW}${SEPARATOR}${DocumentType.TABLE}`
-exports.ViewNames = ViewNames
+exports.ViewName = ViewName
 exports.InternalTables = InternalTables
 exports.DocumentType = DocumentType
 exports.SEPARATOR = SEPARATOR
