@@ -227,9 +227,18 @@ export const getFrontendStore = () => {
         })
       },
       save: async screen => {
+        const state = get(store)
         const creatingNewScreen = screen._id === undefined
         const savedScreen = await API.saveScreen(screen)
         const routesResponse = await API.fetchAppRoutes()
+        let usedPlugins = state.usedPlugins
+
+        // If plugins changed we need to fetch the latest app metadata
+        if (savedScreen.pluginAdded) {
+          const { application } = await API.fetchAppPackage(state.appId)
+          usedPlugins = application.usedPlugins || []
+        }
+
         store.update(state => {
           // Update screen object
           const idx = state.screens.findIndex(x => x._id === savedScreen._id)
@@ -247,6 +256,9 @@ export const getFrontendStore = () => {
 
           // Update routes
           state.routes = routesResponse.routes
+
+          // Update used plugins
+          state.usedPlugins = usedPlugins
 
           return state
         })
