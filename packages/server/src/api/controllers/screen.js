@@ -41,6 +41,7 @@ exports.save = async ctx => {
 
   // Find any custom components being used
   let pluginNames = []
+  let pluginAdded = false
   findPlugins(screen.props, pluginNames)
   if (pluginNames.length) {
     const globalDB = getGlobalDB()
@@ -62,7 +63,6 @@ exports.save = async ctx => {
     const application = await db.get(DocumentTypes.APP_METADATA)
     let usedPlugins = application.usedPlugins || []
 
-    let pluginAdded = false
     requiredPlugins.forEach(plugin => {
       if (!usedPlugins.find(x => x._id === plugin._id)) {
         pluginAdded = true
@@ -76,7 +76,6 @@ exports.save = async ctx => {
     })
 
     if (pluginAdded) {
-      console.log("plugin added! new plugins", usedPlugins)
       await updateAppPackage({ usedPlugins }, ctx.appId)
     }
   }
@@ -89,6 +88,7 @@ exports.save = async ctx => {
     ...screen,
     _id: response.id,
     _rev: response.rev,
+    pluginAdded,
   }
 }
 
