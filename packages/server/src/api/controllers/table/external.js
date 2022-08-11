@@ -20,6 +20,7 @@ const csvParser = require("../../../utilities/csvParser")
 const { handleRequest } = require("../row/external")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
+const { encodeTable } = require("../../../db/utils")
 
 async function makeTableRequest(
   datasource,
@@ -165,6 +166,8 @@ function isRelationshipSetup(column) {
 
 exports.save = async function (ctx) {
   const table = ctx.request.body
+  table._id = decodeURIComponent(table._id)
+
   const { _rename: renamed } = table
   // can't do this right now
   delete table.dataImport
@@ -181,7 +184,8 @@ exports.save = async function (ctx) {
 
   let oldTable
   if (ctx.request.body && ctx.request.body._id) {
-    oldTable = await getTable(ctx.request.body._id)
+    const tableId = decodeURIComponent(ctx.request.body._id)
+    oldTable = await getTable(tableId)
   }
 
   if (hasTypeChanged(tableToSave, oldTable)) {
@@ -281,7 +285,8 @@ exports.save = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const tableToDelete = await getTable(ctx.params.tableId)
+  const tableId = decodeURIComponent(ctx.params.tableId)
+  const tableToDelete = await getTable(tableId)
   if (!tableToDelete || !tableToDelete.created) {
     ctx.throw(400, "Cannot delete tables which weren't created in Budibase.")
   }
@@ -303,7 +308,8 @@ exports.destroy = async function (ctx) {
 }
 
 exports.bulkImport = async function (ctx) {
-  const table = await getTable(ctx.params.tableId)
+  const tableId = decodeURIComponent(ctx.params.tableId)
+  const table = await getTable(tableId)
   const { dataImport } = ctx.request.body
   if (!dataImport || !dataImport.schema || !dataImport.csvString) {
     ctx.throw(400, "Provided data import information is invalid.")
@@ -316,5 +322,5 @@ exports.bulkImport = async function (ctx) {
     rows,
   })
   await events.rows.imported(table, "csv", rows.length)
-  return table
+  return encodeTable(table)
 }

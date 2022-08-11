@@ -15,6 +15,7 @@ function pickApi({ tableId, table }) {
   if (table && !tableId) {
     tableId = table._id
   }
+  tableId = decodeURIComponent(tableId)
   if (table && table.type === "external") {
     return external
   } else if (tableId && isExternalTable(tableId)) {
@@ -80,7 +81,7 @@ exports.save = async function (ctx) {
 
 exports.destroy = async function (ctx) {
   const appId = ctx.appId
-  const tableId = decodeURIComponent(ctx.params.tableId)
+  const tableId = ctx.params.tableId
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
   await events.table.deleted(deletedTable)
   ctx.eventEmitter &&
@@ -91,7 +92,7 @@ exports.destroy = async function (ctx) {
 }
 
 exports.bulkImport = async function (ctx) {
-  const tableId = decodeURIComponent(ctx.params.tableId)
+  const tableId = ctx.params.tableId
   await pickApi({ tableId }).bulkImport(ctx)
   // right now we don't trigger anything for bulk import because it
   // can only be done in the builder, but in the future we may need to
