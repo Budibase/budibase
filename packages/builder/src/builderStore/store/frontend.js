@@ -90,36 +90,14 @@ export const getFrontendStore = () => {
 
       // Fetch component definitions.
       // Allow errors to propagate.
-      let components = await API.fetchComponentLibDefinitions(application.appId)
-
-      // Extend definitions with custom components
-      components["test"] = {
-        component: "test",
-        name: "Super cool component",
-        icon: "Text",
-        description: "A custom component",
-        showSettingsBar: false,
-        hasChildren: true,
-        settings: [
-          {
-            type: "text",
-            key: "text",
-            label: "Text",
-          },
-        ],
-        context: {
-          type: "static",
-          values: [
-            {
-              label: "Text prop",
-              key: "text",
-            },
-          ],
-        },
-      }
+      const components = await API.fetchComponentLibDefinitions(
+        application.appId
+      )
 
       // Filter out custom component keys so we can flag them
-      let customComponents = ["test"]
+      const customComponents = Object.keys(components).filter(name =>
+        name.startsWith("plugin/")
+      )
 
       // Reset store state
       store.update(state => ({
@@ -146,6 +124,7 @@ export const getFrontendStore = () => {
         version: application.version,
         revertableVersion: application.revertableVersion,
         navigation: application.navigation || {},
+        usedPlugins: application.usedPlugins || [],
       }))
 
       // Initialise backend stores
