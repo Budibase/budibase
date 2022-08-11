@@ -10,7 +10,9 @@
 </script>
 
 {#if options}
-  <div use:chart={options} use:styleable={$component.styles} />
+  {#key options.customColor}
+    <div use:chart={options} use:styleable={$component.styles} />
+  {/key}
 {:else if $builderStore.inBuilder}
   <div use:styleable={$component.styles}>
     <Placeholder />

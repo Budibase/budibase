@@ -62,8 +62,14 @@ export class ApexOptionsBuilder {
     return this.setOption(["title", "text"], title)
   }
 
-  color(color) {
-    return this.setOption(["colors"], [color])
+  colors(colors) {
+    if (!colors) {
+      delete this.options.colors
+      this.options["customColor"] = false
+      return this
+    }
+    this.options["customColor"] = true
+    return this.setOption(["colors"], colors)
   }
 
   width(width) {
