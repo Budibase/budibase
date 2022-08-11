@@ -16,6 +16,7 @@
   export let appendTo = undefined
   export let timeOnly = false
   export let ignoreTimezones = false
+  export let time24hr = false
 
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
@@ -37,6 +38,7 @@
     enableTime: timeOnly || enableTime || false,
     noCalendar: timeOnly || false,
     altInput: true,
+    time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
     appendTo,
