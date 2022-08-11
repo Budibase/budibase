@@ -166,8 +166,6 @@ function isRelationshipSetup(column) {
 
 exports.save = async function (ctx) {
   const table = ctx.request.body
-  table._id = decodeURIComponent(table._id)
-
   const { _rename: renamed } = table
   // can't do this right now
   delete table.dataImport
@@ -175,6 +173,8 @@ exports.save = async function (ctx) {
   // table doesn't exist already, note that it is created
   if (!table._id) {
     table.created = true
+  } else {
+    table._id = decodeURIComponent(table._id)
   }
   let tableToSave = {
     type: "table",
