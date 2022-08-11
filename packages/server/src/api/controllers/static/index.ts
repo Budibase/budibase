@@ -14,7 +14,7 @@ const env = require("../../../environment")
 const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
-const { DocumentTypes } = require("../../../db/utils")
+const { DocumentType } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
@@ -99,7 +99,7 @@ export const uploadFile = async function (ctx: any) {
 
 export const serveApp = async function (ctx: any) {
   const db = getAppDB({ skip_setup: true })
-  const appInfo = await db.get(DocumentTypes.APP_METADATA)
+  const appInfo = await db.get(DocumentType.APP_METADATA)
   let appId = getAppId()
 
   if (!env.isJest()) {

@@ -1,7 +1,7 @@
 import {
-  DatasourceFieldTypes,
+  DatasourceFieldType,
   Integration,
-  QueryTypes,
+  QueryType,
   Table,
   TableSchema,
   QueryJson,
@@ -54,59 +54,59 @@ module GoogleSheetsModule {
     datasource: {
       spreadsheetId: {
         display: "Google Sheet URL",
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
     },
     query: {
       create: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           sheet: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           row: {
-            type: QueryTypes.JSON,
+            type: QueryType.JSON,
             required: true,
           },
         },
       },
       read: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           sheet: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       update: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           sheet: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           rowIndex: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           row: {
-            type: QueryTypes.JSON,
+            type: QueryType.JSON,
             required: true,
           },
         },
       },
       delete: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           sheet: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           rowIndex: {
-            type: DatasourceFieldTypes.NUMBER,
+            type: DatasourceFieldType.NUMBER,
             required: true,
           },
         },

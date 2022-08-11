@@ -25,7 +25,7 @@ const newid = require("../../db/newid")
 const context = require("@budibase/backend-core/context")
 const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
 const { encrypt } = require("@budibase/backend-core/encryption")
-const { DocumentTypes } = require("../../db/utils")
+const { DocumentType } = require("../../db/utils")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -344,7 +344,7 @@ class TestConfiguration {
 
     return context.doInAppContext(prodAppId, async () => {
       const db = context.getProdAppDB()
-      return await db.get(DocumentTypes.APP_METADATA)
+      return await db.get(DocumentType.APP_METADATA)
     })
   }
 

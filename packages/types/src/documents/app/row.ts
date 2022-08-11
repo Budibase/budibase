@@ -1,6 +1,6 @@
 import { Document } from "../document"
 
-export enum FieldTypes {
+export enum FieldType {
   STRING = "string",
   LONGFORM = "longform",
   OPTIONS = "options",

@@ -1,9 +1,9 @@
 import {
-  DatasourceFieldTypes,
+  DatasourceFieldType,
   Integration,
   Operation,
   QueryJson,
-  QueryTypes,
+  QueryType,
   SqlQuery,
   Table,
   DatasourcePlus,
@@ -13,7 +13,7 @@ import {
   convertSqlType,
   finaliseExternalTables,
   getSqlQuery,
-  SqlClients,
+  SqlClient,
 } from "./utils"
 import oracledb, {
   BindParameters,
@@ -45,40 +45,40 @@ module OracleModule {
       "Oracle Database is an object-relational database management system developed by Oracle Corporation",
     datasource: {
       host: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "localhost",
         required: true,
       },
       port: {
-        type: DatasourceFieldTypes.NUMBER,
+        type: DatasourceFieldType.NUMBER,
         required: true,
         default: 1521,
       },
       database: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       user: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       password: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         required: true,
       },
     },
     query: {
       create: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       read: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       update: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       delete: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
     },
   }
@@ -172,7 +172,7 @@ module OracleModule {
           OR cons.status IS NULL)
     `
     constructor(config: OracleConfig) {
-      super(SqlClients.ORACLE)
+      super(SqlClient.ORACLE)
       this.config = config
     }
 
