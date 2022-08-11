@@ -6,7 +6,7 @@ const {
   setDebounce,
 } = require("../utilities/redis")
 const { doWithDB } = require("@budibase/backend-core/db")
-const { DocumentTypes, getGlobalIDFromUserMetadataID } = require("../db/utils")
+const { DocumentType, getGlobalIDFromUserMetadataID } = require("../db/utils")
 const { PermissionTypes } = require("@budibase/backend-core/permissions")
 const { app: appCache } = require("@budibase/backend-core/cache")
 
@@ -49,7 +49,7 @@ async function updateAppUpdatedAt(ctx) {
     return
   }
   await doWithDB(appId, async db => {
-    const metadata = await db.get(DocumentTypes.APP_METADATA)
+    const metadata = await db.get(DocumentType.APP_METADATA)
     metadata.updatedAt = new Date().toISOString()
 
     metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user.userId)

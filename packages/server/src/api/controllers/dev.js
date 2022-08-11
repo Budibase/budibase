@@ -4,7 +4,7 @@ const { checkSlashesInUrl } = require("../../utilities")
 const { request } = require("../../utilities/workerRequests")
 const { clearLock } = require("../../utilities/redis")
 const { Replication, getProdAppID } = require("@budibase/backend-core/db")
-const { DocumentTypes } = require("../../db/utils")
+const { DocumentType } = require("../../db/utils")
 const { app: appCache } = require("@budibase/backend-core/cache")
 const { getProdAppDB, getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
@@ -87,7 +87,7 @@ exports.revert = async ctx => {
     if (info.error) {
       throw info.error
     }
-    const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
+    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
     if (
       !deploymentDoc.history ||
       Object.keys(deploymentDoc.history).length === 0
@@ -110,7 +110,7 @@ exports.revert = async ctx => {
 
     // update appID in reverted app to be dev version again
     const db = getAppDB()
-    const appDoc = await db.get(DocumentTypes.APP_METADATA)
+    const appDoc = await db.get(DocumentType.APP_METADATA)
     appDoc.appId = appId
     appDoc.instance._id = appId
     await db.put(appDoc)

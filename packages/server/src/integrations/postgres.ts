@@ -1,19 +1,19 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
+  DatasourceFieldType,
+  QueryType,
   QueryJson,
   SqlQuery,
-} from "../definitions/datasource"
-import { Table } from "../definitions/common"
+  Table,
+  DatasourcePlus,
+} from "@budibase/types"
 import {
   getSqlQuery,
   buildExternalTableId,
   convertSqlType,
   finaliseExternalTables,
-  SqlClients,
+  SqlClient,
 } from "./utils"
-import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
   const { Client, types } = require("pg")
@@ -52,63 +52,63 @@ module PostgresModule {
       "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
     datasource: {
       host: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "localhost",
         required: true,
       },
       port: {
-        type: DatasourceFieldTypes.NUMBER,
+        type: DatasourceFieldType.NUMBER,
         required: true,
         default: 5432,
       },
       database: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "postgres",
         required: true,
       },
       user: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "root",
         required: true,
       },
       password: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         default: "root",
         required: true,
       },
       schema: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "public",
         required: true,
       },
       ssl: {
-        type: DatasourceFieldTypes.BOOLEAN,
+        type: DatasourceFieldType.BOOLEAN,
         default: false,
         required: false,
       },
       rejectUnauthorized: {
-        type: DatasourceFieldTypes.BOOLEAN,
+        type: DatasourceFieldType.BOOLEAN,
         default: false,
         required: false,
       },
       ca: {
-        type: DatasourceFieldTypes.LONGFORM,
+        type: DatasourceFieldType.LONGFORM,
         default: false,
         required: false,
       },
     },
     query: {
       create: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       read: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       update: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       delete: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
     },
   }
@@ -133,7 +133,7 @@ module PostgresModule {
     `
 
     constructor(config: PostgresConfig) {
-      super(SqlClients.POSTGRES)
+      super(SqlClient.POSTGRES)
       this.config = config
 
       let newConfig = {
