@@ -94,6 +94,7 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should create the first application from scratch with a default name", () => {
+      cy.updateUserInformation("", "")
       cy.createApp("", false)
       cy.applicationInAppTable("My app")
       cy.deleteApp("My app")

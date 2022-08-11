@@ -140,14 +140,14 @@ Cypress.Commands.add("setUserRole", (user, role) => {
   // Set Role
   cy.wait(500)
   cy.get(".spectrum-Form-itemField")
-    .eq(2)
+    .eq(3)
     .within(() => {
       cy.get(".spectrum-Picker-label").click({ force: true })
     })
   cy.get(".spectrum-Menu").within(() => {
     cy.get(".spectrum-Menu-itemLabel").contains(role).click({ force: true })
   })
-  cy.get(".spectrum-Form-itemField").eq(2).should("contain", role)
+  cy.get(".spectrum-Form-itemField").eq(3).should("contain", role)
 })
 
 // APPLICATIONS
