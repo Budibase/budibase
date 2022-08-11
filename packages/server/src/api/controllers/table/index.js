@@ -2,7 +2,11 @@ const internal = require("./internal")
 const external = require("./external")
 const csvParser = require("../../../utilities/csvParser")
 const { isExternalTable, isSQL } = require("../../../integrations/utils")
-const { getDatasourceParams } = require("../../../db/utils")
+const {
+  getDatasourceParams,
+  encodeEntities,
+  encodeTable,
+} = require("../../../db/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { getTable, getAllInternalTables } = require("./utils")
 const { events } = require("@budibase/backend-core")
@@ -32,7 +36,7 @@ exports.fetch = async function (ctx) {
   )
 
   const external = externalTables.rows.flatMap(tableDoc => {
-    let entities = tableDoc.doc.entities
+    let entities = encodeEntities(tableDoc.doc.entities)
     if (entities) {
       return Object.values(entities).map(entity => ({
         ...entity,
@@ -49,8 +53,8 @@ exports.fetch = async function (ctx) {
 }
 
 exports.find = async function (ctx) {
-  const tableId = ctx.params.tableId
-  ctx.body = await getTable(tableId)
+  const tableId = decodeURIComponent(ctx.params.tableId)
+  ctx.body = encodeTable(await getTable(tableId))
 }
 
 exports.save = async function (ctx) {
@@ -76,7 +80,7 @@ exports.save = async function (ctx) {
 
 exports.destroy = async function (ctx) {
   const appId = ctx.appId
-  const tableId = ctx.params.tableId
+  const tableId = decodeURIComponent(ctx.params.tableId)
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
   await events.table.deleted(deletedTable)
   ctx.eventEmitter &&
@@ -87,7 +91,7 @@ exports.destroy = async function (ctx) {
 }
 
 exports.bulkImport = async function (ctx) {
-  const tableId = ctx.params.tableId
+  const tableId = decodeURIComponent(ctx.params.tableId)
   await pickApi({ tableId }).bulkImport(ctx)
   // right now we don't trigger anything for bulk import because it
   // can only be done in the builder, but in the future we may need to
@@ -101,7 +105,7 @@ exports.validateCSVSchema = async function (ctx) {
   const { csvString, schema = {}, tableId } = ctx.request.body
   let existingTable
   if (tableId) {
-    existingTable = await getTable(tableId)
+    existingTable = await getTable(decodeURIComponent(tableId))
   }
   let result = await csvParser.parse(csvString, schema)
   if (existingTable) {
