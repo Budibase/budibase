@@ -10,4 +10,13 @@ export const buildPluginEndpoints = API => ({
       json: false,
     })
   },
+
+  /**
+   * Gets a list of all plugins
+   */
+  getPlugins: async () => {
+    return await API.get({
+      url: "/api/plugin",
+    })
+  },
 })
