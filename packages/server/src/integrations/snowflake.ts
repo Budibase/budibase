@@ -1,4 +1,4 @@
-import { Integration, QueryTypes, SqlQuery } from "../definitions/datasource"
+import { Integration, QueryType, SqlQuery } from "@budibase/types"
 import { Snowflake } from "snowflake-promise"
 
 module SnowflakeModule {
@@ -45,16 +45,16 @@ module SnowflakeModule {
     },
     query: {
       create: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       read: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       update: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       delete: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
     },
   }

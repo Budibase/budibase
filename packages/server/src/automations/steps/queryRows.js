@@ -14,6 +14,16 @@ const SortOrdersPretty = {
   [SortOrders.DESCENDING]: "Descending",
 }
 
+const EmptyFilterOptions = {
+  RETURN_ALL: "all",
+  RETURN_NONE: "none",
+}
+
+const EmptyFilterOptionsPretty = {
+  [EmptyFilterOptions.RETURN_ALL]: "Return all table rows",
+  [EmptyFilterOptions.RETURN_NONE]: "Return no rows",
+}
+
 exports.definition = {
   description: "Query rows from the database",
   icon: "Search",
@@ -51,6 +61,12 @@ exports.definition = {
           type: "number",
           title: "Limit",
           customType: "queryLimit",
+        },
+        onEmptyFilter: {
+          pretty: Object.values(EmptyFilterOptionsPretty),
+          enum: Object.values(EmptyFilterOptions),
+          type: "string",
+          title: "When Filter Empty",
         },
       },
       required: ["tableId"],
@@ -103,6 +119,10 @@ function typeCoercion(filters, table) {
   return filters
 }
 
+const hasNullFilters = filters =>
+  filters.length === 0 ||
+  filters.some(filter => filter.value === null || filter.value === "")
+
 exports.run = async function ({ inputs, appId }) {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs
   const table = await getTable(appId, tableId)
@@ -127,9 +147,21 @@ exports.run = async function ({ inputs, appId }) {
     version: "1",
   })
   try {
-    await rowController.search(ctx)
+    let rows
+
+    if (
+      inputs.onEmptyFilter === EmptyFilterOptions.RETURN_NONE &&
+      inputs["filters-def"] &&
+      hasNullFilters(inputs["filters-def"])
+    ) {
+      rows = []
+    } else {
+      await rowController.search(ctx)
+      rows = ctx.body ? ctx.body.rows : []
+    }
+
     return {
-      rows: ctx.body ? ctx.body.rows : [],
+      rows,
       success: ctx.status === 200,
     }
   } catch (err) {

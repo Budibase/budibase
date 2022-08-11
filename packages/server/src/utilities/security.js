@@ -8,7 +8,7 @@ const {
   lowerBuiltinRoleID,
   getBuiltinRoles,
 } = require("@budibase/backend-core/roles")
-const { DocumentTypes } = require("../db/utils")
+const { DocumentType } = require("../db/utils")
 
 const CURRENTLY_SUPPORTED_LEVELS = [
   PermissionLevels.WRITE,
@@ -17,19 +17,19 @@ const CURRENTLY_SUPPORTED_LEVELS = [
 ]
 
 exports.getPermissionType = resourceId => {
-  const docType = Object.values(DocumentTypes).filter(docType =>
+  const docType = Object.values(DocumentType).filter(docType =>
     resourceId.startsWith(docType)
   )[0]
   switch (docType) {
-    case DocumentTypes.TABLE:
-    case DocumentTypes.ROW:
+    case DocumentType.TABLE:
+    case DocumentType.ROW:
       return PermissionTypes.TABLE
-    case DocumentTypes.AUTOMATION:
+    case DocumentType.AUTOMATION:
       return PermissionTypes.AUTOMATION
-    case DocumentTypes.WEBHOOK:
+    case DocumentType.WEBHOOK:
       return PermissionTypes.WEBHOOK
-    case DocumentTypes.QUERY:
-    case DocumentTypes.DATASOURCE:
+    case DocumentType.QUERY:
+    case DocumentType.DATASOURCE:
       return PermissionTypes.QUERY
     default:
       // views don't have an ID, will end up here

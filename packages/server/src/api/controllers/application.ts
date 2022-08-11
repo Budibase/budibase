@@ -15,7 +15,7 @@ import {
   getLayoutParams,
   getScreenParams,
   generateDevAppID,
-  DocumentTypes,
+  DocumentType,
   AppStatus,
 } from "../../db/utils"
 const {
@@ -206,7 +206,7 @@ export const fetchAppDefinition = async (ctx: any) => {
 
 export const fetchAppPackage = async (ctx: any) => {
   const db = context.getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  const application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
 
@@ -248,13 +248,13 @@ const performAppCreate = async (ctx: any) => {
   let _rev
   try {
     // if template there will be an existing doc
-    const existing = await db.get(DocumentTypes.APP_METADATA)
+    const existing = await db.get(DocumentType.APP_METADATA)
     _rev = existing._rev
   } catch (err) {
     // nothing to do
   }
   const newApplication: App = {
-    _id: DocumentTypes.APP_METADATA,
+    _id: DocumentType.APP_METADATA,
     _rev,
     appId: instance._id,
     type: "app",
@@ -383,7 +383,7 @@ export const update = async (ctx: any) => {
 export const updateClient = async (ctx: any) => {
   // Get current app version
   const db = context.getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  const application = await db.get(DocumentType.APP_METADATA)
   const currentVersion = application.version
 
   // Update client library and manifest
@@ -407,7 +407,7 @@ export const updateClient = async (ctx: any) => {
 export const revertClient = async (ctx: any) => {
   // Check app can be reverted
   const db = context.getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  const application = await db.get(DocumentType.APP_METADATA)
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
   }
@@ -439,7 +439,7 @@ const destroyApp = async (ctx: any) => {
   }
 
   const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
-  const app = await db.get(DocumentTypes.APP_METADATA)
+  const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
 
   if (isUnpublish) {
@@ -526,7 +526,7 @@ export const sync = async (ctx: any, next: any) => {
   try {
     await replication.replicate({
       filter: function (doc: any) {
-        return doc._id !== DocumentTypes.APP_METADATA
+        return doc._id !== DocumentType.APP_METADATA
       },
     })
   } catch (err) {
@@ -550,7 +550,7 @@ export const sync = async (ctx: any, next: any) => {
 const updateAppPackage = async (appPackage: any, appId: any) => {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
-    const application = await db.get(DocumentTypes.APP_METADATA)
+    const application = await db.get(DocumentType.APP_METADATA)
 
     const newAppPackage = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {

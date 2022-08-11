@@ -4,7 +4,7 @@ import { getUser } from "../cache/user"
 import { getSession, updateSessionTTL } from "../security/sessions"
 import { buildMatcherRegex, matches } from "./matchers"
 import { SEPARATOR } from "../db/constants"
-import { ViewNames } from "../db/utils"
+import { ViewName } from "../db/utils"
 import { queryGlobalView } from "../db/views"
 import { getGlobalDB, doInTenant } from "../tenancy"
 import { decrypt } from "../security/encryption"
@@ -43,7 +43,7 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
     const db = getGlobalDB()
     // api key is encrypted in the database
     const userId = await queryGlobalView(
-      ViewNames.BY_API_KEY,
+      ViewName.BY_API_KEY,
       {
         key: apiKey,
       },

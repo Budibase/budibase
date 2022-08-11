@@ -163,6 +163,8 @@ export const SWITCHABLE_TYPES = [
   ...ALLOWABLE_NUMBER_TYPES,
 ]
 
+export const BUDIBASE_DATASOURCE_ID = "bb_internal"
+
 export const IntegrationTypes = {
   POSTGRES: "POSTGRES",
   MONGODB: "MONGODB",

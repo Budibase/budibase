@@ -36,7 +36,6 @@ describe("/static", () => {
         .expect(200)
 
       expect(res.text).toContain("<title>Budibase</title>")
-      expect(events.serve.servedBuilder).toBeCalledTimes(1)
     })
   })
 
@@ -56,9 +55,6 @@ describe("/static", () => {
         .expect(200)
 
       expect(res.body.appId).toBe(config.prodAppId)
-      expect(events.serve.servedApp).toBeCalledTimes(1)
-      expect(events.serve.servedApp).toBeCalledWith(res.body)
-      expect(events.serve.servedAppPreview).not.toBeCalled()
     })
 
     it("should serve the app by url", async () => {
@@ -71,9 +67,6 @@ describe("/static", () => {
         .expect(200)
 
       expect(res.body.appId).toBe(config.prodAppId)
-      expect(events.serve.servedApp).toBeCalledTimes(1)
-      expect(events.serve.servedApp).toBeCalledWith(res.body)
-      expect(events.serve.servedAppPreview).not.toBeCalled()
     })
 
     it("should serve the app preview by id", async () => {
@@ -83,9 +76,6 @@ describe("/static", () => {
         .expect(200)
 
       expect(res.body.appId).toBe(config.appId)
-      expect(events.serve.servedAppPreview).toBeCalledTimes(1)
-      expect(events.serve.servedAppPreview).toBeCalledWith(res.body)
-      expect(events.serve.servedApp).not.toBeCalled()
     })
   })
 

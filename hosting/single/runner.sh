@@ -1,7 +1,16 @@
 #!/bin/bash
-declare -a ENV_VARS=("COUCHDB_USER" "COUCHDB_PASSWORD" "MINIO_ACCESS_KEY" "MINIO_SECRET_KEY" "INTERNAL_API_KEY" "JWT_SECRET" "REDIS_PASSWORD")
-if [ -f "/data/.env" ]; then
-    export $(cat /data/.env | xargs)
+declare -a ENV_VARS=("COUCHDB_USER" "COUCHDB_PASSWORD" "DATA_DIR" "MINIO_ACCESS_KEY" "MINIO_SECRET_KEY" "INTERNAL_API_KEY" "JWT_SECRET" "REDIS_PASSWORD")
+
+# Azure App Service customisations
+if [[ "${TARGETBUILD}" = "aas" ]]; then
+    DATA_DIR=/home
+    /etc/init.d/ssh start
+else
+    DATA_DIR=${DATA_DIR:-/data}
+fi
+
+if [ -f "${DATA_DIR}/.env" ]; then
+    export $(cat ${DATA_DIR}/.env | xargs)
 fi
 # first randomise any unset environment variables
 for ENV_VAR in "${ENV_VARS[@]}"
@@ -14,21 +23,26 @@ done
 if [[ -z "${COUCH_DB_URL}" ]]; then
     export COUCH_DB_URL=http://$COUCHDB_USER:$COUCHDB_PASSWORD@localhost:5984
 fi
-if [ ! -f "/data/.env" ]; then
-    touch /data/.env
+if [ ! -f "${DATA_DIR}/.env" ]; then
+    touch ${DATA_DIR}/.env
     for ENV_VAR in "${ENV_VARS[@]}"
     do
         temp=$(eval "echo \$$ENV_VAR")
-        echo "$ENV_VAR=$temp" >> /data/.env
+        echo "$ENV_VAR=$temp" >> ${DATA_DIR}/.env
     done
+    echo "COUCH_DB_URL=${COUCH_DB_URL}" >> ${DATA_DIR}/.env
 fi
 
+export COUCH_DB_URL=http://$COUCHDB_USER:$COUCHDB_PASSWORD@localhost:5984
+
 # make these directories in runner, incase of mount
-mkdir -p /data/couch/{dbs,views} /home/couch/{dbs,views}
-chown -R couchdb:couchdb /data/couch /home/couch
+mkdir -p ${DATA_DIR}/couchdb/{dbs,views}
+mkdir -p ${DATA_DIR}/minio
+mkdir -p ${DATA_DIR}/search
+chown -R couchdb:couchdb ${DATA_DIR}/couchdb
 redis-server --requirepass $REDIS_PASSWORD &
 /opt/clouseau/bin/clouseau &
-/minio/minio server /data/minio &
+/minio/minio server ${DATA_DIR}/minio &
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then

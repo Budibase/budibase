@@ -1,9 +1,9 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  DatasourceFieldType,
+  QueryType,
+  IntegrationBase,
+} from "@budibase/types"
 
 module DynamoModule {
   const AWS = require("aws-sdk")
@@ -24,101 +24,101 @@ module DynamoModule {
     type: "Non-relational",
     datasource: {
       region: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
         default: "us-east-1",
       },
       accessKeyId: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         required: true,
       },
       secretAccessKey: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         required: true,
       },
       endpoint: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: false,
         default: "https://dynamodb.us-east-1.amazonaws.com",
       },
     },
     query: {
       create: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         fields: {
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       read: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         readable: true,
         fields: {
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           index: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
           },
         },
       },
       scan: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         readable: true,
         fields: {
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           index: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
           },
         },
       },
       describe: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         readable: true,
         fields: {
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       get: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         readable: true,
         fields: {
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       update: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         fields: {
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       delete: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         fields: {
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },

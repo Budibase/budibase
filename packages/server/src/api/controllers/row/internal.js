@@ -3,7 +3,7 @@ const {
   generateRowID,
   getRowParams,
   getTableIDFromRowID,
-  DocumentTypes,
+  DocumentType,
   InternalTables,
 } = require("../../../db/utils")
 const { dangerousGetDB } = require("@budibase/backend-core/db")
@@ -183,7 +183,7 @@ exports.fetchView = async ctx => {
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
-  if (viewName.startsWith(DocumentTypes.TABLE)) {
+  if (viewName.startsWith(DocumentType.TABLE)) {
     ctx.params.tableId = viewName
     return exports.fetch(ctx)
   }

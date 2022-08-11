@@ -1,4 +1,4 @@
-export enum ContextKeys {
+export enum ContextKey {
   TENANT_ID = "tenantId",
   GLOBAL_DB = "globalDb",
   APP_ID = "appId",
