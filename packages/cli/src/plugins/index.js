@@ -33,8 +33,11 @@ async function init(opts) {
   )
   const version = await questions.string("Version", "1.0.0")
   // get the skeleton
+  console.log(info("Retrieving project..."))
   await getSkeleton(type, name)
   await fleshOutSkeleton(name, desc, version)
+  console.log(info("Installing dependencies..."))
+  await runPkgCommand("install")
   console.log(info(`Plugin created in directory "${name}"`))
 }
 
