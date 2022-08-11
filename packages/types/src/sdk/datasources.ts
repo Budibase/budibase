@@ -51,6 +51,7 @@ export enum SourceNames {
   FIRESTORE = "FIRESTORE",
   REDIS = "REDIS",
   SNOWFLAKE = "SNOWFLAKE",
+  UNKNOWN = "unknown",
 }
 
 export enum IncludeRelationships {

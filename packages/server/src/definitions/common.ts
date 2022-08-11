@@ -2,6 +2,7 @@ export { Query, Datasource } from "./datasource"
 export { FieldSchema, TableSchema, Table, Document, Row } from "@budibase/types"
 
 export interface Application extends Document {
+  _id: string
   appId?: string
 }
 
