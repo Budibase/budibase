@@ -1,9 +1,9 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  DatasourceFieldType,
+  QueryType,
+  IntegrationBase,
+} from "@budibase/types"
 import {
   MongoClient,
   ObjectID,
@@ -29,38 +29,38 @@ module MongoDBModule {
       "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
     datasource: {
       connectionString: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
         default: "mongodb://localhost:27017",
       },
       db: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
     },
     query: {
       create: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       read: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       update: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       delete: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
     },
     extra: {
       collection: {
         displayName: "Collection",
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       actionTypes: {
         displayName: "Action Types",
-        type: DatasourceFieldTypes.LIST,
+        type: DatasourceFieldType.LIST,
         required: true,
         data: {
           read: ["find", "findOne", "findOneAndUpdate", "count", "distinct"],

@@ -2,7 +2,7 @@ import {
   events,
   migrations,
   tenancy,
-  DocumentTypes,
+  DocumentType,
   context,
   db,
 } from "@budibase/backend-core"
@@ -17,7 +17,7 @@ const timestamp = mocks.date.MOCK_DATE.toISOString()
 const clearMigrations = async () => {
   const dbs = [context.getDevAppDB(), context.getProdAppDB()]
   for (const db of dbs) {
-    const doc = await db.get(DocumentTypes.MIGRATIONS)
+    const doc = await db.get(DocumentType.MIGRATIONS)
     const newDoc = { _id: doc._id, _rev: doc._rev }
     await db.put(newDoc)
   }

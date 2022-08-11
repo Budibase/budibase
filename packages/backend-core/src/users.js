@@ -1,5 +1,5 @@
 const {
-  ViewNames,
+  ViewName,
   getUsersByAppParams,
   getProdAppID,
   generateAppUserID,
@@ -18,7 +18,7 @@ exports.getGlobalUserByEmail = async email => {
     throw "Must supply an email address to view"
   }
 
-  return await queryGlobalView(ViewNames.USER_BY_EMAIL, {
+  return await queryGlobalView(ViewName.USER_BY_EMAIL, {
     key: email.toLowerCase(),
     include_docs: true,
   })
@@ -32,7 +32,7 @@ exports.searchGlobalUsersByApp = async (appId, opts) => {
     include_docs: true,
   })
   params.startkey = opts && opts.startkey ? opts.startkey : params.startkey
-  let response = await queryGlobalView(ViewNames.USER_BY_APP, params)
+  let response = await queryGlobalView(ViewName.USER_BY_APP, params)
   if (!response) {
     response = []
   }
@@ -56,7 +56,7 @@ exports.searchGlobalUsersByEmail = async (email, opts) => {
   const lcEmail = email.toLowerCase()
   // handle if passing up startkey for pagination
   const startkey = opts && opts.startkey ? opts.startkey : lcEmail
-  let response = await queryGlobalView(ViewNames.USER_BY_EMAIL, {
+  let response = await queryGlobalView(ViewName.USER_BY_EMAIL, {
     ...opts,
     startkey,
     endkey: `${lcEmail}${UNICODE_MAX}`,
