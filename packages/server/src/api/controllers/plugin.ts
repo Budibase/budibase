@@ -11,6 +11,7 @@ export async function upload(ctx: any) {
       : [ctx.request.files.file]
   const db = getGlobalDB()
   try {
+    let docs = []
     // can do single or multiple plugins
     for (let plugin of plugins) {
       const { metadata, directory } = await extractPluginTarball(plugin)
@@ -42,14 +43,23 @@ export async function upload(ctx: any) {
           `Plugin already exists: name: ${name}, version: ${version}`
         )
       }
-      await db.put({
+      const doc = {
         _id: pluginId,
         name,
         version,
         description,
         ...metadata,
         jsUrl: `${bucketPath}${jsFileName}`,
+      }
+      const response = await db.put(doc)
+      docs.push({
+        ...doc,
+        _rev: response.rev,
       })
+    }
+    ctx.body = {
+      message: "Plugin(s) uploaded successfully",
+      plugins: docs,
     }
   } catch (err: any) {
     const errMsg = err?.message ? err?.message : err
