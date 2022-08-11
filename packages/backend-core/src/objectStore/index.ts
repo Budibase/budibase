@@ -178,6 +178,14 @@ export const streamUpload = async (
   const objectStore = ObjectStore(bucketName)
   await makeSureBucketExists(objectStore, bucketName)
 
+  // Set content type for certain known extensions
+  if (filename?.endsWith(".js")) {
+    extra = {
+      ...extra,
+      ContentType: "application/javascript",
+    }
+  }
+
   const params = {
     Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(filename),

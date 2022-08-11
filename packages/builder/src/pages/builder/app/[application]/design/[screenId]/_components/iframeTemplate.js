@@ -37,9 +37,7 @@ export default `
       }
     </style>
     <script src='{{ CLIENT_LIB_PATH }}'></script>
-    <script
-      type="application/javascript"
-      src="https://cdn.kingston.dev/plugin.min.js"></script>
+    {{ PLUGINS }}
     <script>
       function receiveMessage(event) { 
         if (!event.data) {
