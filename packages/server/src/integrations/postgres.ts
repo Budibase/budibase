@@ -4,8 +4,9 @@ import {
   QueryTypes,
   QueryJson,
   SqlQuery,
-} from "../definitions/datasource"
-import { Table } from "../definitions/common"
+  Table,
+  DatasourcePlus,
+} from "@budibase/types"
 import {
   getSqlQuery,
   buildExternalTableId,
@@ -13,7 +14,6 @@ import {
   finaliseExternalTables,
   SqlClients,
 } from "./utils"
-import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
   const { Client, types } = require("pg")

@@ -2,8 +2,8 @@ import {
   DatasourceFieldTypes,
   Integration,
   QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  IntegrationBase,
+} from "@budibase/types"
 import { Firestore, WhereFilterOp } from "@google-cloud/firestore"
 
 module Firebase {

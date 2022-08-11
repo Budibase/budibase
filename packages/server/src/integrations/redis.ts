@@ -1,8 +1,4 @@
-import {
-  DatasourceFieldTypes,
-  Integration,
-  QueryTypes,
-} from "../definitions/datasource"
+import { DatasourceFieldTypes, Integration, QueryTypes } from "@budibase/types"
 import Redis from "ioredis"
 
 module RedisModule {

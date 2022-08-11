@@ -5,7 +5,9 @@ import {
   QueryJson,
   QueryTypes,
   SqlQuery,
-} from "../definitions/datasource"
+  Table,
+  DatasourcePlus,
+} from "@budibase/types"
 import {
   buildExternalTableId,
   convertSqlType,
@@ -21,8 +23,6 @@ import oracledb, {
   Result,
 } from "oracledb"
 import Sql from "./base/sql"
-import { Table } from "../definitions/common"
-import { DatasourcePlus } from "./base/datasourcePlus"
 import { FieldTypes } from "../constants"
 
 module OracleModule {

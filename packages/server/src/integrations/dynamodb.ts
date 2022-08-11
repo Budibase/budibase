@@ -2,8 +2,8 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  IntegrationBase,
+} from "@budibase/types"
 
 module DynamoModule {
   const AWS = require("aws-sdk")

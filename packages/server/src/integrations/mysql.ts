@@ -4,8 +4,10 @@ import {
   QueryTypes,
   QueryJson,
   SqlQuery,
-} from "../definitions/datasource"
-import { Table, TableSchema } from "../definitions/common"
+  Table,
+  TableSchema,
+  DatasourcePlus,
+} from "@budibase/types"
 import {
   getSqlQuery,
   SqlClients,
@@ -13,7 +15,6 @@ import {
   convertSqlType,
   finaliseExternalTables,
 } from "./utils"
-import { DatasourcePlus } from "./base/datasourcePlus"
 import dayjs from "dayjs"
 const { NUMBER_REGEX } = require("../utilities")
 

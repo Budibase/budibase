@@ -2,10 +2,13 @@ import {
   DatasourceFieldTypes,
   Integration,
   Operation,
+  Table,
+  TableSchema,
   QueryJson,
   QueryTypes,
   SqlQuery,
-} from "../definitions/datasource"
+  DatasourcePlus,
+} from "@budibase/types"
 import {
   getSqlQuery,
   buildExternalTableId,
@@ -13,8 +16,6 @@ import {
   finaliseExternalTables,
   SqlClients,
 } from "./utils"
-import { DatasourcePlus } from "./base/datasourcePlus"
-import { Table, TableSchema } from "../definitions/common"
 
 module MSSQLModule {
   const sqlServer = require("mssql")
