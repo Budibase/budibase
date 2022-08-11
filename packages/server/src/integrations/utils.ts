@@ -1,6 +1,5 @@
-import { SourceNames, SqlQuery } from "../definitions/datasource"
-import { Datasource, Table } from "../definitions/common"
-import { DocumentTypes, SEPARATOR } from "../db/utils"
+import { SourceName, SqlQuery, Datasource, Table } from "@budibase/types"
+import { DocumentType, SEPARATOR } from "../db/utils"
 import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
@@ -68,7 +67,7 @@ const SQL_TYPE_MAP = {
   ...SQL_MISC_TYPE_MAP,
 }
 
-export enum SqlClients {
+export enum SqlClient {
   MS_SQL = "mssql",
   POSTGRES = "pg",
   MY_SQL = "mysql2",
@@ -76,7 +75,7 @@ export enum SqlClients {
 }
 
 export function isExternalTable(tableId: string) {
-  return tableId.includes(DocumentTypes.DATASOURCE)
+  return tableId.includes(DocumentType.DATASOURCE)
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
@@ -169,10 +168,10 @@ export function isSQL(datasource: Datasource): boolean {
     return false
   }
   const SQL = [
-    SourceNames.POSTGRES,
-    SourceNames.SQL_SERVER,
-    SourceNames.MYSQL,
-    SourceNames.ORACLE,
+    SourceName.POSTGRES,
+    SourceName.SQL_SERVER,
+    SourceName.MYSQL,
+    SourceName.ORACLE,
   ]
   return SQL.indexOf(datasource.source) !== -1
 }

@@ -1,9 +1,9 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  DatasourceFieldType,
+  QueryType,
+  IntegrationBase,
+} from "@budibase/types"
 
 module AirtableModule {
   const Airtable = require("airtable")
@@ -21,61 +21,61 @@ module AirtableModule {
     type: "Spreadsheet",
     datasource: {
       apiKey: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         default: "enter api key",
         required: true,
       },
       base: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "mybase",
         required: true,
       },
     },
     query: {
       create: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         fields: {
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       read: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           view: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           numRecords: {
-            type: DatasourceFieldTypes.NUMBER,
+            type: DatasourceFieldType.NUMBER,
             default: 10,
           },
         },
       },
       update: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         fields: {
           id: {
             display: "Record ID",
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           table: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       delete: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
     },
   }
