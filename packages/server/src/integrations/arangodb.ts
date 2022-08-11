@@ -1,7 +1,7 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
+  DatasourceFieldType,
+  QueryType,
   IntegrationBase,
 } from "@budibase/types"
 
@@ -24,35 +24,35 @@ module ArangoModule {
       "ArangoDB is a scalable open-source multi-model database natively supporting graph, document and search. All supported data models & access patterns can be combined in queries allowing for maximal flexibility. ",
     datasource: {
       url: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "http://localhost:8529",
         required: true,
       },
       username: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "root",
         required: true,
       },
       password: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         required: true,
       },
       databaseName: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "_system",
         required: true,
       },
       collection: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
     },
     query: {
       read: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       create: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
     },
   }

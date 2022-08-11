@@ -1,11 +1,11 @@
 const { getAppDB } = require("@budibase/backend-core/context")
 const {
-  DocumentTypes,
+  DocumentType,
   SEPARATOR,
   ViewNames,
   SearchIndexes,
 } = require("../utils")
-const SCREEN_PREFIX = DocumentTypes.SCREEN + SEPARATOR
+const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 
 /**************************************************
  *                  INFORMATION                   *

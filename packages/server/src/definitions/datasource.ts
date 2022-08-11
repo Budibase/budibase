@@ -1,32 +1,3 @@
-import { SortDirection, Operation, SourceNames } from "@budibase/types"
-// export everything that used to be exported from here
-export {
-  Operation,
-  SortDirection,
-  QueryTypes,
-  DatasourceFieldTypes,
-  SourceNames,
-  IncludeRelationships,
-  FilterTypes,
-  QueryDefinition,
-  ExtraQueryConfig,
-  Integration,
-  IntegrationBase,
-  QueryParameter,
-  PaginationConfig,
-  PaginationValues,
-  RestQueryFields,
-  Query,
-  Datasource,
-  SearchFilters,
-  SortJson,
-  PaginationJson,
-  RenameColumn,
-  RelationshipsJson,
-  QueryJson,
-  SqlQuery,
-} from "@budibase/types"
-
 /********************************************
  * This file contains structures which are  *
  * internal to the server and don't need to *

@@ -1,5 +1,5 @@
 const Sql = require("../base/sql")
-const { SqlClients } = require("../utils")
+const { SqlClient } = require("../utils")
 
 const TABLE_NAME = "test"
 
@@ -47,7 +47,7 @@ function generateDeleteJson(table = TABLE_NAME, filters = {}) {
 
 describe("SQL query builder", () => {
   const limit = 500
-  const client = SqlClients.POSTGRES
+  const client = SqlClient.POSTGRES
   let sql
 
   beforeEach(() => {
@@ -174,7 +174,7 @@ describe("SQL query builder", () => {
   })
 
   it("should work with MS-SQL", () => {
-    const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson())
+    const query = new Sql(SqlClient.MS_SQL, 10)._query(generateReadJson())
     expect(query).toEqual({
       bindings: [10],
       sql: `select * from (select top (@p0) * from [${TABLE_NAME}]) as [${TABLE_NAME}]`
@@ -182,7 +182,7 @@ describe("SQL query builder", () => {
   })
 
   it("should work with MySQL", () => {
-    const query = new Sql(SqlClients.MY_SQL, 10)._query(generateReadJson())
+    const query = new Sql(SqlClient.MY_SQL, 10)._query(generateReadJson())
     expect(query).toEqual({
       bindings: [10],
       sql: `select * from (select * from \`${TABLE_NAME}\` limit ?) as \`${TABLE_NAME}\``
@@ -241,7 +241,7 @@ describe("SQL query builder", () => {
   })
 
   it("should use like expression for MS-SQL when filter is contains", () => {
-    const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson({
+    const query = new Sql(SqlClient.MS_SQL, 10)._query(generateReadJson({
       filters: {
         contains: {
           age: 20,
@@ -256,7 +256,7 @@ describe("SQL query builder", () => {
   })
 
   it("should use JSON_CONTAINS expression for MySQL when filter is contains", () => {
-    const query = new Sql(SqlClients.MY_SQL, 10)._query(generateReadJson({
+    const query = new Sql(SqlClient.MY_SQL, 10)._query(generateReadJson({
       filters: {
         contains: {
           age: 20,
@@ -271,7 +271,7 @@ describe("SQL query builder", () => {
   })
 
   it("should use jsonb operator expression for PostgreSQL when filter is contains", () => {
-    const query = new Sql(SqlClients.POSTGRES, 10)._query(generateReadJson({
+    const query = new Sql(SqlClient.POSTGRES, 10)._query(generateReadJson({
       filters: {
         contains: {
           age: 20,

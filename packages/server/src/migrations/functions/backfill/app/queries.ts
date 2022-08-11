@@ -1,6 +1,6 @@
 import { events } from "@budibase/backend-core"
 import { getQueryParams } from "../../../../db/utils"
-import { Query, Datasource, SourceNames } from "@budibase/types"
+import { Query, Datasource, SourceName } from "@budibase/types"
 
 const getQueries = async (appDb: any): Promise<Query[]> => {
   const response = await appDb.allDocs(
@@ -33,7 +33,7 @@ export const backfill = async (appDb: any, timestamp: string | number) => {
         datasource = {
           type: "unknown",
           _id: query.datasourceId,
-          source: SourceNames.UNKNOWN,
+          source: SourceName.UNKNOWN,
         }
       } else {
         throw e

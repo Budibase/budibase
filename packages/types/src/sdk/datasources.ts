@@ -16,13 +16,13 @@ export enum SortDirection {
   DESCENDING = "DESCENDING",
 }
 
-export enum QueryTypes {
+export enum QueryType {
   SQL = "sql",
   JSON = "json",
   FIELDS = "fields",
 }
 
-export enum DatasourceFieldTypes {
+export enum DatasourceFieldType {
   STRING = "string",
   LONGFORM = "longForm",
   BOOLEAN = "boolean",
@@ -34,7 +34,7 @@ export enum DatasourceFieldTypes {
   FILE = "file",
 }
 
-export enum SourceNames {
+export enum SourceName {
   POSTGRES = "POSTGRES",
   DYNAMODB = "DYNAMODB",
   MONGODB = "MONGODB",
@@ -54,12 +54,12 @@ export enum SourceNames {
   UNKNOWN = "unknown",
 }
 
-export enum IncludeRelationships {
+export enum IncludeRelationship {
   INCLUDE = 1,
   EXCLUDE = 0,
 }
 
-export enum FilterTypes {
+export enum FilterType {
   STRING = "string",
   FUZZY = "fuzzy",
   RANGE = "range",
@@ -71,7 +71,7 @@ export enum FilterTypes {
 }
 
 export interface QueryDefinition {
-  type: QueryTypes
+  type: QueryType
   displayName?: string
   readable?: boolean
   customisable?: boolean

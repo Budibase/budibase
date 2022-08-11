@@ -1,7 +1,7 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
+  DatasourceFieldType,
+  QueryType,
   QueryJson,
   SqlQuery,
   Table,
@@ -10,7 +10,7 @@ import {
 } from "@budibase/types"
 import {
   getSqlQuery,
-  SqlClients,
+  SqlClient,
   buildExternalTableId,
   convertSqlType,
   finaliseExternalTables,
@@ -42,51 +42,51 @@ module MySQLModule {
       "MySQL Database Service is a fully managed database service to deploy cloud-native applications. ",
     datasource: {
       host: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "localhost",
         required: true,
       },
       port: {
-        type: DatasourceFieldTypes.NUMBER,
+        type: DatasourceFieldType.NUMBER,
         default: 3306,
         required: false,
       },
       user: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "root",
         required: true,
       },
       password: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         default: "root",
         required: true,
       },
       database: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       ssl: {
-        type: DatasourceFieldTypes.OBJECT,
+        type: DatasourceFieldType.OBJECT,
         required: false,
       },
       rejectUnauthorized: {
-        type: DatasourceFieldTypes.BOOLEAN,
+        type: DatasourceFieldType.BOOLEAN,
         default: true,
         required: false,
       },
     },
     query: {
       create: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       read: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       update: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       delete: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
     },
   }
@@ -120,7 +120,7 @@ module MySQLModule {
     public schemaErrors: Record<string, string> = {}
 
     constructor(config: MySQLConfig) {
-      super(SqlClients.MY_SQL)
+      super(SqlClient.MY_SQL)
       this.config = config
       if (config.ssl && Object.keys(config.ssl).length === 0) {
         delete config.ssl

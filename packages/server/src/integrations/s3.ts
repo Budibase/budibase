@@ -1,4 +1,4 @@
-import { Integration, QueryTypes, IntegrationBase } from "@budibase/types"
+import { Integration, QueryType, IntegrationBase } from "@budibase/types"
 
 module S3Module {
   const AWS = require("aws-sdk")
@@ -43,7 +43,7 @@ module S3Module {
     },
     query: {
       read: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           bucket: {
             type: "string",

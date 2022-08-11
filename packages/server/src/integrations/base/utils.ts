@@ -1,5 +1,4 @@
-import { QueryJson } from "../../definitions/datasource"
-import { Datasource } from "../../definitions/common"
+import { QueryJson, Datasource } from "@budibase/types"
 
 module DatasourceUtils {
   const { integrations } = require("../index")

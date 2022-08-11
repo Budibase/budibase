@@ -1,5 +1,13 @@
-export { Query, Datasource } from "./datasource"
-export { FieldSchema, TableSchema, Table, Document, Row } from "@budibase/types"
+import { Document } from "@budibase/types"
+export {
+  Query,
+  Datasource,
+  FieldSchema,
+  TableSchema,
+  Table,
+  Document,
+  Row,
+} from "@budibase/types"
 
 export interface Application extends Document {
   _id: string
