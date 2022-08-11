@@ -381,7 +381,7 @@ exports.getMultiIDParams = ids => {
 }
 
 const encodeTable = table => {
-  if (table.hasOwn("_id")) {
+  if ("_id" in table) {
     table._id = encodeURIComponent(table._id)
   }
 
@@ -390,7 +390,7 @@ const encodeTable = table => {
 exports.encodeTable = encodeTable
 
 const decodeTable = table => {
-  if (table.hasOwn("_id")) {
+  if ("_id" in table) {
     table._id = decodeURIComponent(table._id)
   }
 
