@@ -80,13 +80,14 @@ export function isExternalTable(tableId: string) {
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
-  return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
+  return `${datasourceId}${DOUBLE_SEPARATOR}${decodeURIComponent(tableName)}`
 }
 
 export function breakExternalTableId(tableId: string | undefined) {
   if (!tableId) {
     return {}
   }
+  tableId = decodeURIComponent(tableId)
   const parts = tableId.split(DOUBLE_SEPARATOR)
   let datasourceId = parts.shift()
   // if they need joined

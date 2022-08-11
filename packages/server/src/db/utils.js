@@ -379,3 +379,41 @@ exports.getMultiIDParams = ids => {
     include_docs: true,
   }
 }
+
+const encodeTable = table => {
+  if (table.hasOwn("_id")) {
+    table._id = encodeURIComponent(table._id)
+  }
+
+  return table
+}
+exports.encodeTable = encodeTable
+
+const decodeTable = table => {
+  if (table.hasOwn("_id")) {
+    table._id = decodeURIComponent(table._id)
+  }
+
+  return table
+}
+exports.decodeTable = decodeTable
+
+exports.encodeEntities = (entities = {}) => {
+  let encodedEntities = {}
+
+  for (const [entityName, table] of Object.entries(entities)) {
+    encodedEntities[encodeURIComponent(entityName)] = encodeTable(table)
+  }
+
+  return { ...encodedEntities }
+}
+
+exports.decodeEntities = (entities = {}) => {
+  let decodedEntities = {}
+
+  for (const [entityName, table] of Object.entries(entities)) {
+    decodedEntities[decodeURIComponent(entityName)] = decodeTable(table)
+  }
+
+  return { ...decodedEntities }
+}

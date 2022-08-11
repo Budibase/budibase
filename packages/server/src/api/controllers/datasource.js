@@ -5,6 +5,8 @@ const {
   DocumentTypes,
   BudibaseInternalDB,
   getTableParams,
+  encodeEntities,
+  decodeEntities,
 } = require("../../db/utils")
 const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
 const { integrations } = require("../../integrations")
@@ -35,7 +37,10 @@ exports.fetch = async function (ctx) {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map(row => ({
+    ...row.doc,
+    entities: encodeEntities(row.doc.entities),
+  }))
 
   for (let datasource of datasources) {
     if (datasource.config && datasource.config.auth) {
@@ -57,7 +62,12 @@ exports.buildSchemaFromDb = async function (ctx) {
   const dbResp = await db.put(datasource)
   datasource._rev = dbResp.rev
 
-  const response = { datasource }
+  const response = {
+    datasource: {
+      ...datasource,
+      entities: encodeEntities(datasource.entities),
+    },
+  }
   if (error) {
     response.error = error
   }
@@ -102,7 +112,10 @@ exports.update = async function (ctx) {
   let datasource = await db.get(datasourceId)
   const auth = datasource.config.auth
   await invalidateVariables(datasource, ctx.request.body)
+
   datasource = { ...datasource, ...ctx.request.body }
+  datasource.entities = decodeEntities(datasource.entities)
+
   if (auth && !ctx.request.body.auth) {
     // don't strip auth config from DB
     datasource.config.auth = auth
@@ -122,7 +135,12 @@ exports.update = async function (ctx) {
 
   ctx.status = 200
   ctx.message = "Datasource saved successfully."
-  ctx.body = { datasource }
+  ctx.body = {
+    datasource: {
+      ...datasource,
+      entities: encodeEntities(datasource.entities),
+    },
+  }
 }
 
 exports.save = async function (ctx) {
@@ -135,6 +153,7 @@ exports.save = async function (ctx) {
     type: plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE,
     ...ctx.request.body.datasource,
   }
+  datasource.entities = decodeEntities(datasource.entities)
 
   let schemaError = null
   if (fetchSchema) {
@@ -155,7 +174,12 @@ exports.save = async function (ctx) {
     }
   }
 
-  const response = { datasource }
+  const response = {
+    datasource: {
+      ...datasource,
+      entities: encodeEntities(datasource.entities),
+    },
+  }
   if (schemaError) {
     response.error = schemaError
   }
@@ -187,7 +211,12 @@ exports.destroy = async function (ctx) {
 
 exports.find = async function (ctx) {
   const database = getAppDB()
-  ctx.body = await database.get(ctx.params.datasourceId)
+  const datasource = await database.get(ctx.params.datasourceId)
+
+  ctx.body = {
+    ...datasource,
+    entities: encodeEntities(datasource.entities),
+  }
 }
 
 // dynamic query functionality
