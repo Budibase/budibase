@@ -1,0 +1,3234 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2017-11-28",
+    "endpointPrefix": "guardduty",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceFullName": "Amazon GuardDuty",
+    "serviceId": "GuardDuty",
+    "signatureVersion": "v4",
+    "signingName": "guardduty",
+    "uid": "guardduty-2017-11-28"
+  },
+  "operations": {
+    "AcceptInvitation": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/master",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "MasterId",
+          "InvitationId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "MasterId": {
+            "locationName": "masterId"
+          },
+          "InvitationId": {
+            "locationName": "invitationId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "ArchiveFindings": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/findings/archive",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "FindingIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FindingIds": {
+            "shape": "S6",
+            "locationName": "findingIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateDetector": {
+      "http": {
+        "requestUri": "/detector",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "Enable"
+        ],
+        "members": {
+          "Enable": {
+            "locationName": "enable",
+            "type": "boolean"
+          },
+          "ClientToken": {
+            "idempotencyToken": true,
+            "locationName": "clientToken"
+          },
+          "FindingPublishingFrequency": {
+            "locationName": "findingPublishingFrequency"
+          },
+          "DataSources": {
+            "shape": "Sd",
+            "locationName": "dataSources"
+          },
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DetectorId": {
+            "locationName": "detectorId"
+          }
+        }
+      }
+    },
+    "CreateFilter": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/filter",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "Name",
+          "FindingCriteria"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "Name": {
+            "locationName": "name"
+          },
+          "Description": {
+            "locationName": "description"
+          },
+          "Action": {
+            "locationName": "action"
+          },
+          "Rank": {
+            "locationName": "rank",
+            "type": "integer"
+          },
+          "FindingCriteria": {
+            "shape": "So",
+            "locationName": "findingCriteria"
+          },
+          "ClientToken": {
+            "idempotencyToken": true,
+            "locationName": "clientToken"
+          },
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {
+            "locationName": "name"
+          }
+        }
+      }
+    },
+    "CreateIPSet": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/ipset",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "Name",
+          "Format",
+          "Location",
+          "Activate"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "Name": {
+            "locationName": "name"
+          },
+          "Format": {
+            "locationName": "format"
+          },
+          "Location": {
+            "locationName": "location"
+          },
+          "Activate": {
+            "locationName": "activate",
+            "type": "boolean"
+          },
+          "ClientToken": {
+            "idempotencyToken": true,
+            "locationName": "clientToken"
+          },
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "IpSetId"
+        ],
+        "members": {
+          "IpSetId": {
+            "locationName": "ipSetId"
+          }
+        }
+      }
+    },
+    "CreateMembers": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/member",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AccountDetails"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AccountDetails": {
+            "locationName": "accountDetails",
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "AccountId",
+                "Email"
+              ],
+              "members": {
+                "AccountId": {
+                  "locationName": "accountId"
+                },
+                "Email": {
+                  "locationName": "email"
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "CreatePublishingDestination": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/publishingDestination",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "DestinationType",
+          "DestinationProperties"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "DestinationType": {
+            "locationName": "destinationType"
+          },
+          "DestinationProperties": {
+            "shape": "S1d",
+            "locationName": "destinationProperties"
+          },
+          "ClientToken": {
+            "idempotencyToken": true,
+            "locationName": "clientToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "DestinationId"
+        ],
+        "members": {
+          "DestinationId": {
+            "locationName": "destinationId"
+          }
+        }
+      }
+    },
+    "CreateSampleFindings": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/findings/create",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FindingTypes": {
+            "locationName": "findingTypes",
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateThreatIntelSet": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/threatintelset",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "Name",
+          "Format",
+          "Location",
+          "Activate"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "Name": {
+            "locationName": "name"
+          },
+          "Format": {
+            "locationName": "format"
+          },
+          "Location": {
+            "locationName": "location"
+          },
+          "Activate": {
+            "locationName": "activate",
+            "type": "boolean"
+          },
+          "ClientToken": {
+            "idempotencyToken": true,
+            "locationName": "clientToken"
+          },
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "ThreatIntelSetId"
+        ],
+        "members": {
+          "ThreatIntelSetId": {
+            "locationName": "threatIntelSetId"
+          }
+        }
+      }
+    },
+    "DeclineInvitations": {
+      "http": {
+        "requestUri": "/invitation/decline",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountIds"
+        ],
+        "members": {
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "DeleteDetector": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/detector/{detectorId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteFilter": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/detector/{detectorId}/filter/{filterName}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "FilterName"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FilterName": {
+            "location": "uri",
+            "locationName": "filterName"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteIPSet": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/detector/{detectorId}/ipset/{ipSetId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "IpSetId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "IpSetId": {
+            "location": "uri",
+            "locationName": "ipSetId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteInvitations": {
+      "http": {
+        "requestUri": "/invitation/delete",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountIds"
+        ],
+        "members": {
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "DeleteMembers": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/member/delete",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AccountIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "DeletePublishingDestination": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/detector/{detectorId}/publishingDestination/{destinationId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "DestinationId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "DestinationId": {
+            "location": "uri",
+            "locationName": "destinationId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteThreatIntelSet": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/detector/{detectorId}/threatintelset/{threatIntelSetId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "ThreatIntelSetId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "ThreatIntelSetId": {
+            "location": "uri",
+            "locationName": "threatIntelSetId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DescribeOrganizationConfiguration": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/admin",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "AutoEnable",
+          "MemberAccountLimitReached"
+        ],
+        "members": {
+          "AutoEnable": {
+            "locationName": "autoEnable",
+            "type": "boolean"
+          },
+          "MemberAccountLimitReached": {
+            "locationName": "memberAccountLimitReached",
+            "type": "boolean"
+          },
+          "DataSources": {
+            "locationName": "dataSources",
+            "type": "structure",
+            "required": [
+              "S3Logs"
+            ],
+            "members": {
+              "S3Logs": {
+                "locationName": "s3Logs",
+                "type": "structure",
+                "required": [
+                  "AutoEnable"
+                ],
+                "members": {
+                  "AutoEnable": {
+                    "locationName": "autoEnable",
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "DescribePublishingDestination": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/publishingDestination/{destinationId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "DestinationId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "DestinationId": {
+            "location": "uri",
+            "locationName": "destinationId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "DestinationId",
+          "DestinationType",
+          "Status",
+          "PublishingFailureStartTimestamp",
+          "DestinationProperties"
+        ],
+        "members": {
+          "DestinationId": {
+            "locationName": "destinationId"
+          },
+          "DestinationType": {
+            "locationName": "destinationType"
+          },
+          "Status": {
+            "locationName": "status"
+          },
+          "PublishingFailureStartTimestamp": {
+            "locationName": "publishingFailureStartTimestamp",
+            "type": "long"
+          },
+          "DestinationProperties": {
+            "shape": "S1d",
+            "locationName": "destinationProperties"
+          }
+        }
+      }
+    },
+    "DisableOrganizationAdminAccount": {
+      "http": {
+        "requestUri": "/admin/disable",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "AdminAccountId"
+        ],
+        "members": {
+          "AdminAccountId": {
+            "locationName": "adminAccountId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DisassociateFromMasterAccount": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/master/disassociate",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DisassociateMembers": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/member/disassociate",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AccountIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "EnableOrganizationAdminAccount": {
+      "http": {
+        "requestUri": "/admin/enable",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "AdminAccountId"
+        ],
+        "members": {
+          "AdminAccountId": {
+            "locationName": "adminAccountId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "GetDetector": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "ServiceRole",
+          "Status"
+        ],
+        "members": {
+          "CreatedAt": {
+            "locationName": "createdAt"
+          },
+          "FindingPublishingFrequency": {
+            "locationName": "findingPublishingFrequency"
+          },
+          "ServiceRole": {
+            "locationName": "serviceRole"
+          },
+          "Status": {
+            "locationName": "status"
+          },
+          "UpdatedAt": {
+            "locationName": "updatedAt"
+          },
+          "DataSources": {
+            "shape": "S2l",
+            "locationName": "dataSources"
+          },
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      }
+    },
+    "GetFilter": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/filter/{filterName}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "FilterName"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FilterName": {
+            "location": "uri",
+            "locationName": "filterName"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "Action",
+          "FindingCriteria"
+        ],
+        "members": {
+          "Name": {
+            "locationName": "name"
+          },
+          "Description": {
+            "locationName": "description"
+          },
+          "Action": {
+            "locationName": "action"
+          },
+          "Rank": {
+            "locationName": "rank",
+            "type": "integer"
+          },
+          "FindingCriteria": {
+            "shape": "So",
+            "locationName": "findingCriteria"
+          },
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      }
+    },
+    "GetFindings": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/findings/get",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "FindingIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FindingIds": {
+            "shape": "S6",
+            "locationName": "findingIds"
+          },
+          "SortCriteria": {
+            "shape": "S2u",
+            "locationName": "sortCriteria"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Findings"
+        ],
+        "members": {
+          "Findings": {
+            "locationName": "findings",
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "AccountId",
+                "Arn",
+                "CreatedAt",
+                "Id",
+                "Region",
+                "Resource",
+                "SchemaVersion",
+                "Severity",
+                "Type",
+                "UpdatedAt"
+              ],
+              "members": {
+                "AccountId": {
+                  "locationName": "accountId"
+                },
+                "Arn": {
+                  "locationName": "arn"
+                },
+                "Confidence": {
+                  "locationName": "confidence",
+                  "type": "double"
+                },
+                "CreatedAt": {
+                  "locationName": "createdAt"
+                },
+                "Description": {
+                  "locationName": "description"
+                },
+                "Id": {
+                  "locationName": "id"
+                },
+                "Partition": {
+                  "locationName": "partition"
+                },
+                "Region": {
+                  "locationName": "region"
+                },
+                "Resource": {
+                  "locationName": "resource",
+                  "type": "structure",
+                  "members": {
+                    "AccessKeyDetails": {
+                      "locationName": "accessKeyDetails",
+                      "type": "structure",
+                      "members": {
+                        "AccessKeyId": {
+                          "locationName": "accessKeyId"
+                        },
+                        "PrincipalId": {
+                          "locationName": "principalId"
+                        },
+                        "UserName": {
+                          "locationName": "userName"
+                        },
+                        "UserType": {
+                          "locationName": "userType"
+                        }
+                      }
+                    },
+                    "S3BucketDetails": {
+                      "locationName": "s3BucketDetails",
+                      "type": "list",
+                      "member": {
+                        "type": "structure",
+                        "members": {
+                          "Arn": {
+                            "locationName": "arn"
+                          },
+                          "Name": {
+                            "locationName": "name"
+                          },
+                          "Type": {
+                            "locationName": "type"
+                          },
+                          "CreatedAt": {
+                            "locationName": "createdAt",
+                            "type": "timestamp"
+                          },
+                          "Owner": {
+                            "locationName": "owner",
+                            "type": "structure",
+                            "members": {
+                              "Id": {
+                                "locationName": "id"
+                              }
+                            }
+                          },
+                          "Tags": {
+                            "shape": "S36",
+                            "locationName": "tags"
+                          },
+                          "DefaultServerSideEncryption": {
+                            "locationName": "defaultServerSideEncryption",
+                            "type": "structure",
+                            "members": {
+                              "EncryptionType": {
+                                "locationName": "encryptionType"
+                              },
+                              "KmsMasterKeyArn": {
+                                "locationName": "kmsMasterKeyArn"
+                              }
+                            }
+                          },
+                          "PublicAccess": {
+                            "locationName": "publicAccess",
+                            "type": "structure",
+                            "members": {
+                              "PermissionConfiguration": {
+                                "locationName": "permissionConfiguration",
+                                "type": "structure",
+                                "members": {
+                                  "BucketLevelPermissions": {
+                                    "locationName": "bucketLevelPermissions",
+                                    "type": "structure",
+                                    "members": {
+                                      "AccessControlList": {
+                                        "locationName": "accessControlList",
+                                        "type": "structure",
+                                        "members": {
+                                          "AllowsPublicReadAccess": {
+                                            "locationName": "allowsPublicReadAccess",
+                                            "type": "boolean"
+                                          },
+                                          "AllowsPublicWriteAccess": {
+                                            "locationName": "allowsPublicWriteAccess",
+                                            "type": "boolean"
+                                          }
+                                        }
+                                      },
+                                      "BucketPolicy": {
+                                        "locationName": "bucketPolicy",
+                                        "type": "structure",
+                                        "members": {
+                                          "AllowsPublicReadAccess": {
+                                            "locationName": "allowsPublicReadAccess",
+                                            "type": "boolean"
+                                          },
+                                          "AllowsPublicWriteAccess": {
+                                            "locationName": "allowsPublicWriteAccess",
+                                            "type": "boolean"
+                                          }
+                                        }
+                                      },
+                                      "BlockPublicAccess": {
+                                        "shape": "S3e",
+                                        "locationName": "blockPublicAccess"
+                                      }
+                                    }
+                                  },
+                                  "AccountLevelPermissions": {
+                                    "locationName": "accountLevelPermissions",
+                                    "type": "structure",
+                                    "members": {
+                                      "BlockPublicAccess": {
+                                        "shape": "S3e",
+                                        "locationName": "blockPublicAccess"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "EffectivePermission": {
+                                "locationName": "effectivePermission"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "InstanceDetails": {
+                      "locationName": "instanceDetails",
+                      "type": "structure",
+                      "members": {
+                        "AvailabilityZone": {
+                          "locationName": "availabilityZone"
+                        },
+                        "IamInstanceProfile": {
+                          "locationName": "iamInstanceProfile",
+                          "type": "structure",
+                          "members": {
+                            "Arn": {
+                              "locationName": "arn"
+                            },
+                            "Id": {
+                              "locationName": "id"
+                            }
+                          }
+                        },
+                        "ImageDescription": {
+                          "locationName": "imageDescription"
+                        },
+                        "ImageId": {
+                          "locationName": "imageId"
+                        },
+                        "InstanceId": {
+                          "locationName": "instanceId"
+                        },
+                        "InstanceState": {
+                          "locationName": "instanceState"
+                        },
+                        "InstanceType": {
+                          "locationName": "instanceType"
+                        },
+                        "OutpostArn": {
+                          "locationName": "outpostArn"
+                        },
+                        "LaunchTime": {
+                          "locationName": "launchTime"
+                        },
+                        "NetworkInterfaces": {
+                          "locationName": "networkInterfaces",
+                          "type": "list",
+                          "member": {
+                            "type": "structure",
+                            "members": {
+                              "Ipv6Addresses": {
+                                "locationName": "ipv6Addresses",
+                                "type": "list",
+                                "member": {}
+                              },
+                              "NetworkInterfaceId": {
+                                "locationName": "networkInterfaceId"
+                              },
+                              "PrivateDnsName": {
+                                "locationName": "privateDnsName"
+                              },
+                              "PrivateIpAddress": {
+                                "locationName": "privateIpAddress"
+                              },
+                              "PrivateIpAddresses": {
+                                "locationName": "privateIpAddresses",
+                                "type": "list",
+                                "member": {
+                                  "type": "structure",
+                                  "members": {
+                                    "PrivateDnsName": {
+                                      "locationName": "privateDnsName"
+                                    },
+                                    "PrivateIpAddress": {
+                                      "locationName": "privateIpAddress"
+                                    }
+                                  }
+                                }
+                              },
+                              "PublicDnsName": {
+                                "locationName": "publicDnsName"
+                              },
+                              "PublicIp": {
+                                "locationName": "publicIp"
+                              },
+                              "SecurityGroups": {
+                                "locationName": "securityGroups",
+                                "type": "list",
+                                "member": {
+                                  "type": "structure",
+                                  "members": {
+                                    "GroupId": {
+                                      "locationName": "groupId"
+                                    },
+                                    "GroupName": {
+                                      "locationName": "groupName"
+                                    }
+                                  }
+                                }
+                              },
+                              "SubnetId": {
+                                "locationName": "subnetId"
+                              },
+                              "VpcId": {
+                                "locationName": "vpcId"
+                              }
+                            }
+                          }
+                        },
+                        "Platform": {
+                          "locationName": "platform"
+                        },
+                        "ProductCodes": {
+                          "locationName": "productCodes",
+                          "type": "list",
+                          "member": {
+                            "type": "structure",
+                            "members": {
+                              "Code": {
+                                "locationName": "code"
+                              },
+                              "ProductType": {
+                                "locationName": "productType"
+                              }
+                            }
+                          }
+                        },
+                        "Tags": {
+                          "shape": "S36",
+                          "locationName": "tags"
+                        }
+                      }
+                    },
+                    "ResourceType": {
+                      "locationName": "resourceType"
+                    }
+                  }
+                },
+                "SchemaVersion": {
+                  "locationName": "schemaVersion"
+                },
+                "Service": {
+                  "locationName": "service",
+                  "type": "structure",
+                  "members": {
+                    "Action": {
+                      "locationName": "action",
+                      "type": "structure",
+                      "members": {
+                        "ActionType": {
+                          "locationName": "actionType"
+                        },
+                        "AwsApiCallAction": {
+                          "locationName": "awsApiCallAction",
+                          "type": "structure",
+                          "members": {
+                            "Api": {
+                              "locationName": "api"
+                            },
+                            "CallerType": {
+                              "locationName": "callerType"
+                            },
+                            "DomainDetails": {
+                              "locationName": "domainDetails",
+                              "type": "structure",
+                              "members": {
+                                "Domain": {
+                                  "locationName": "domain"
+                                }
+                              }
+                            },
+                            "ErrorCode": {
+                              "locationName": "errorCode"
+                            },
+                            "RemoteIpDetails": {
+                              "shape": "S3v",
+                              "locationName": "remoteIpDetails"
+                            },
+                            "ServiceName": {
+                              "locationName": "serviceName"
+                            }
+                          }
+                        },
+                        "DnsRequestAction": {
+                          "locationName": "dnsRequestAction",
+                          "type": "structure",
+                          "members": {
+                            "Domain": {
+                              "locationName": "domain"
+                            }
+                          }
+                        },
+                        "NetworkConnectionAction": {
+                          "locationName": "networkConnectionAction",
+                          "type": "structure",
+                          "members": {
+                            "Blocked": {
+                              "locationName": "blocked",
+                              "type": "boolean"
+                            },
+                            "ConnectionDirection": {
+                              "locationName": "connectionDirection"
+                            },
+                            "LocalPortDetails": {
+                              "shape": "S42",
+                              "locationName": "localPortDetails"
+                            },
+                            "Protocol": {
+                              "locationName": "protocol"
+                            },
+                            "LocalIpDetails": {
+                              "shape": "S43",
+                              "locationName": "localIpDetails"
+                            },
+                            "RemoteIpDetails": {
+                              "shape": "S3v",
+                              "locationName": "remoteIpDetails"
+                            },
+                            "RemotePortDetails": {
+                              "locationName": "remotePortDetails",
+                              "type": "structure",
+                              "members": {
+                                "Port": {
+                                  "locationName": "port",
+                                  "type": "integer"
+                                },
+                                "PortName": {
+                                  "locationName": "portName"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "PortProbeAction": {
+                          "locationName": "portProbeAction",
+                          "type": "structure",
+                          "members": {
+                            "Blocked": {
+                              "locationName": "blocked",
+                              "type": "boolean"
+                            },
+                            "PortProbeDetails": {
+                              "locationName": "portProbeDetails",
+                              "type": "list",
+                              "member": {
+                                "type": "structure",
+                                "members": {
+                                  "LocalPortDetails": {
+                                    "shape": "S42",
+                                    "locationName": "localPortDetails"
+                                  },
+                                  "LocalIpDetails": {
+                                    "shape": "S43",
+                                    "locationName": "localIpDetails"
+                                  },
+                                  "RemoteIpDetails": {
+                                    "shape": "S3v",
+                                    "locationName": "remoteIpDetails"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "Evidence": {
+                      "locationName": "evidence",
+                      "type": "structure",
+                      "members": {
+                        "ThreatIntelligenceDetails": {
+                          "locationName": "threatIntelligenceDetails",
+                          "type": "list",
+                          "member": {
+                            "type": "structure",
+                            "members": {
+                              "ThreatListName": {
+                                "locationName": "threatListName"
+                              },
+                              "ThreatNames": {
+                                "locationName": "threatNames",
+                                "type": "list",
+                                "member": {}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "Archived": {
+                      "locationName": "archived",
+                      "type": "boolean"
+                    },
+                    "Count": {
+                      "locationName": "count",
+                      "type": "integer"
+                    },
+                    "DetectorId": {
+                      "locationName": "detectorId"
+                    },
+                    "EventFirstSeen": {
+                      "locationName": "eventFirstSeen"
+                    },
+                    "EventLastSeen": {
+                      "locationName": "eventLastSeen"
+                    },
+                    "ResourceRole": {
+                      "locationName": "resourceRole"
+                    },
+                    "ServiceName": {
+                      "locationName": "serviceName"
+                    },
+                    "UserFeedback": {
+                      "locationName": "userFeedback"
+                    }
+                  }
+                },
+                "Severity": {
+                  "locationName": "severity",
+                  "type": "double"
+                },
+                "Title": {
+                  "locationName": "title"
+                },
+                "Type": {
+                  "locationName": "type"
+                },
+                "UpdatedAt": {
+                  "locationName": "updatedAt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetFindingsStatistics": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/findings/statistics",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "FindingStatisticTypes"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FindingStatisticTypes": {
+            "locationName": "findingStatisticTypes",
+            "type": "list",
+            "member": {}
+          },
+          "FindingCriteria": {
+            "shape": "So",
+            "locationName": "findingCriteria"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "FindingStatistics"
+        ],
+        "members": {
+          "FindingStatistics": {
+            "locationName": "findingStatistics",
+            "type": "structure",
+            "members": {
+              "CountBySeverity": {
+                "locationName": "countBySeverity",
+                "type": "map",
+                "key": {},
+                "value": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetIPSet": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/ipset/{ipSetId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "IpSetId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "IpSetId": {
+            "location": "uri",
+            "locationName": "ipSetId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "Format",
+          "Location",
+          "Status"
+        ],
+        "members": {
+          "Name": {
+            "locationName": "name"
+          },
+          "Format": {
+            "locationName": "format"
+          },
+          "Location": {
+            "locationName": "location"
+          },
+          "Status": {
+            "locationName": "status"
+          },
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      }
+    },
+    "GetInvitationsCount": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/invitation/count",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "InvitationsCount": {
+            "locationName": "invitationsCount",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "GetMasterAccount": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/master",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Master"
+        ],
+        "members": {
+          "Master": {
+            "locationName": "master",
+            "type": "structure",
+            "members": {
+              "AccountId": {
+                "locationName": "accountId"
+              },
+              "InvitationId": {
+                "locationName": "invitationId"
+              },
+              "RelationshipStatus": {
+                "locationName": "relationshipStatus"
+              },
+              "InvitedAt": {
+                "locationName": "invitedAt"
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetMemberDetectors": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/member/detector/get",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AccountIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "MemberDataSourceConfigurations",
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "MemberDataSourceConfigurations": {
+            "locationName": "members",
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "AccountId",
+                "DataSources"
+              ],
+              "members": {
+                "AccountId": {
+                  "locationName": "accountId"
+                },
+                "DataSources": {
+                  "shape": "S2l",
+                  "locationName": "dataSources"
+                }
+              }
+            }
+          },
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "GetMembers": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/member/get",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AccountIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Members",
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "Members": {
+            "shape": "S4w",
+            "locationName": "members"
+          },
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "GetThreatIntelSet": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/threatintelset/{threatIntelSetId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "ThreatIntelSetId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "ThreatIntelSetId": {
+            "location": "uri",
+            "locationName": "threatIntelSetId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "Format",
+          "Location",
+          "Status"
+        ],
+        "members": {
+          "Name": {
+            "locationName": "name"
+          },
+          "Format": {
+            "locationName": "format"
+          },
+          "Location": {
+            "locationName": "location"
+          },
+          "Status": {
+            "locationName": "status"
+          },
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      }
+    },
+    "GetUsageStatistics": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/usage/statistics",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "UsageStatisticType",
+          "UsageCriteria"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "UsageStatisticType": {
+            "locationName": "usageStatisticsType"
+          },
+          "UsageCriteria": {
+            "locationName": "usageCriteria",
+            "type": "structure",
+            "required": [
+              "DataSources"
+            ],
+            "members": {
+              "AccountIds": {
+                "shape": "S1n",
+                "locationName": "accountIds"
+              },
+              "DataSources": {
+                "locationName": "dataSources",
+                "type": "list",
+                "member": {}
+              },
+              "Resources": {
+                "locationName": "resources",
+                "type": "list",
+                "member": {}
+              }
+            }
+          },
+          "Unit": {
+            "locationName": "unit"
+          },
+          "MaxResults": {
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "UsageStatistics": {
+            "locationName": "usageStatistics",
+            "type": "structure",
+            "members": {
+              "SumByAccount": {
+                "locationName": "sumByAccount",
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "members": {
+                    "AccountId": {
+                      "locationName": "accountId"
+                    },
+                    "Total": {
+                      "shape": "S5c",
+                      "locationName": "total"
+                    }
+                  }
+                }
+              },
+              "SumByDataSource": {
+                "locationName": "sumByDataSource",
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "members": {
+                    "DataSource": {
+                      "locationName": "dataSource"
+                    },
+                    "Total": {
+                      "shape": "S5c",
+                      "locationName": "total"
+                    }
+                  }
+                }
+              },
+              "SumByResource": {
+                "shape": "S5f",
+                "locationName": "sumByResource"
+              },
+              "TopResources": {
+                "shape": "S5f",
+                "locationName": "topResources"
+              }
+            }
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "InviteMembers": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/member/invite",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AccountIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          },
+          "DisableEmailNotification": {
+            "locationName": "disableEmailNotification",
+            "type": "boolean"
+          },
+          "Message": {
+            "locationName": "message"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "ListDetectors": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "DetectorIds"
+        ],
+        "members": {
+          "DetectorIds": {
+            "locationName": "detectorIds",
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "ListFilters": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/filter",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "FilterNames"
+        ],
+        "members": {
+          "FilterNames": {
+            "locationName": "filterNames",
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "ListFindings": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/findings",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FindingCriteria": {
+            "shape": "So",
+            "locationName": "findingCriteria"
+          },
+          "SortCriteria": {
+            "shape": "S2u",
+            "locationName": "sortCriteria"
+          },
+          "MaxResults": {
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "FindingIds"
+        ],
+        "members": {
+          "FindingIds": {
+            "shape": "S6",
+            "locationName": "findingIds"
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "ListIPSets": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/ipset",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "IpSetIds"
+        ],
+        "members": {
+          "IpSetIds": {
+            "locationName": "ipSetIds",
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "ListInvitations": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/invitation",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Invitations": {
+            "locationName": "invitations",
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "AccountId": {
+                  "locationName": "accountId"
+                },
+                "InvitationId": {
+                  "locationName": "invitationId"
+                },
+                "RelationshipStatus": {
+                  "locationName": "relationshipStatus"
+                },
+                "InvitedAt": {
+                  "locationName": "invitedAt"
+                }
+              }
+            }
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "ListMembers": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/member",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          },
+          "OnlyAssociated": {
+            "location": "querystring",
+            "locationName": "onlyAssociated"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Members": {
+            "shape": "S4w",
+            "locationName": "members"
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "ListOrganizationAdminAccounts": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/admin",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AdminAccounts": {
+            "locationName": "adminAccounts",
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "AdminAccountId": {
+                  "locationName": "adminAccountId"
+                },
+                "AdminStatus": {
+                  "locationName": "adminStatus"
+                }
+              }
+            }
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "ListPublishingDestinations": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/publishingDestination",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Destinations"
+        ],
+        "members": {
+          "Destinations": {
+            "locationName": "destinations",
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "DestinationId",
+                "DestinationType",
+                "Status"
+              ],
+              "members": {
+                "DestinationId": {
+                  "locationName": "destinationId"
+                },
+                "DestinationType": {
+                  "locationName": "destinationType"
+                },
+                "Status": {
+                  "locationName": "status"
+                }
+              }
+            }
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/tags/{resourceArn}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn"
+        ],
+        "members": {
+          "ResourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      }
+    },
+    "ListThreatIntelSets": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/detector/{detectorId}/threatintelset",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "ThreatIntelSetIds"
+        ],
+        "members": {
+          "ThreatIntelSetIds": {
+            "locationName": "threatIntelSetIds",
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {
+            "locationName": "nextToken"
+          }
+        }
+      }
+    },
+    "StartMonitoringMembers": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/member/start",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AccountIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "StopMonitoringMembers": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/member/stop",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AccountIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "TagResource": {
+      "http": {
+        "requestUri": "/tags/{resourceArn}",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "Tags": {
+            "shape": "Sf",
+            "locationName": "tags"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UnarchiveFindings": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/findings/unarchive",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "FindingIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FindingIds": {
+            "shape": "S6",
+            "locationName": "findingIds"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/tags/{resourceArn}",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "TagKeys": {
+            "location": "querystring",
+            "locationName": "tagKeys",
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateDetector": {
+      "http": {
+        "requestUri": "/detector/{detectorId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "Enable": {
+            "locationName": "enable",
+            "type": "boolean"
+          },
+          "FindingPublishingFrequency": {
+            "locationName": "findingPublishingFrequency"
+          },
+          "DataSources": {
+            "shape": "Sd",
+            "locationName": "dataSources"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateFilter": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/filter/{filterName}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "FilterName"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FilterName": {
+            "location": "uri",
+            "locationName": "filterName"
+          },
+          "Description": {
+            "locationName": "description"
+          },
+          "Action": {
+            "locationName": "action"
+          },
+          "Rank": {
+            "locationName": "rank",
+            "type": "integer"
+          },
+          "FindingCriteria": {
+            "shape": "So",
+            "locationName": "findingCriteria"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {
+            "locationName": "name"
+          }
+        }
+      }
+    },
+    "UpdateFindingsFeedback": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/findings/feedback",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "FindingIds",
+          "Feedback"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "FindingIds": {
+            "shape": "S6",
+            "locationName": "findingIds"
+          },
+          "Feedback": {
+            "locationName": "feedback"
+          },
+          "Comments": {
+            "locationName": "comments"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateIPSet": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/ipset/{ipSetId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "IpSetId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "IpSetId": {
+            "location": "uri",
+            "locationName": "ipSetId"
+          },
+          "Name": {
+            "locationName": "name"
+          },
+          "Location": {
+            "locationName": "location"
+          },
+          "Activate": {
+            "locationName": "activate",
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateMemberDetectors": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/member/detector/update",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AccountIds"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AccountIds": {
+            "shape": "S1n",
+            "locationName": "accountIds"
+          },
+          "DataSources": {
+            "shape": "Sd",
+            "locationName": "dataSources"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "UnprocessedAccounts"
+        ],
+        "members": {
+          "UnprocessedAccounts": {
+            "shape": "S19",
+            "locationName": "unprocessedAccounts"
+          }
+        }
+      }
+    },
+    "UpdateOrganizationConfiguration": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/admin",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "AutoEnable"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "AutoEnable": {
+            "locationName": "autoEnable",
+            "type": "boolean"
+          },
+          "DataSources": {
+            "locationName": "dataSources",
+            "type": "structure",
+            "members": {
+              "S3Logs": {
+                "locationName": "s3Logs",
+                "type": "structure",
+                "required": [
+                  "AutoEnable"
+                ],
+                "members": {
+                  "AutoEnable": {
+                    "locationName": "autoEnable",
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdatePublishingDestination": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/publishingDestination/{destinationId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "DestinationId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "DestinationId": {
+            "location": "uri",
+            "locationName": "destinationId"
+          },
+          "DestinationProperties": {
+            "shape": "S1d",
+            "locationName": "destinationProperties"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateThreatIntelSet": {
+      "http": {
+        "requestUri": "/detector/{detectorId}/threatintelset/{threatIntelSetId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DetectorId",
+          "ThreatIntelSetId"
+        ],
+        "members": {
+          "DetectorId": {
+            "location": "uri",
+            "locationName": "detectorId"
+          },
+          "ThreatIntelSetId": {
+            "location": "uri",
+            "locationName": "threatIntelSetId"
+          },
+          "Name": {
+            "locationName": "name"
+          },
+          "Location": {
+            "locationName": "location"
+          },
+          "Activate": {
+            "locationName": "activate",
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "S6": {
+      "type": "list",
+      "member": {}
+    },
+    "Sd": {
+      "type": "structure",
+      "members": {
+        "S3Logs": {
+          "locationName": "s3Logs",
+          "type": "structure",
+          "required": [
+            "Enable"
+          ],
+          "members": {
+            "Enable": {
+              "locationName": "enable",
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "Sf": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "So": {
+      "type": "structure",
+      "members": {
+        "Criterion": {
+          "locationName": "criterion",
+          "type": "map",
+          "key": {},
+          "value": {
+            "type": "structure",
+            "members": {
+              "Eq": {
+                "deprecated": true,
+                "locationName": "eq",
+                "type": "list",
+                "member": {}
+              },
+              "Neq": {
+                "deprecated": true,
+                "locationName": "neq",
+                "type": "list",
+                "member": {}
+              },
+              "Gt": {
+                "deprecated": true,
+                "locationName": "gt",
+                "type": "integer"
+              },
+              "Gte": {
+                "deprecated": true,
+                "locationName": "gte",
+                "type": "integer"
+              },
+              "Lt": {
+                "deprecated": true,
+                "locationName": "lt",
+                "type": "integer"
+              },
+              "Lte": {
+                "deprecated": true,
+                "locationName": "lte",
+                "type": "integer"
+              },
+              "Equals": {
+                "locationName": "equals",
+                "type": "list",
+                "member": {}
+              },
+              "NotEquals": {
+                "locationName": "notEquals",
+                "type": "list",
+                "member": {}
+              },
+              "GreaterThan": {
+                "locationName": "greaterThan",
+                "type": "long"
+              },
+              "GreaterThanOrEqual": {
+                "locationName": "greaterThanOrEqual",
+                "type": "long"
+              },
+              "LessThan": {
+                "locationName": "lessThan",
+                "type": "long"
+              },
+              "LessThanOrEqual": {
+                "locationName": "lessThanOrEqual",
+                "type": "long"
+              }
+            }
+          }
+        }
+      }
+    },
+    "S19": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "Result"
+        ],
+        "members": {
+          "AccountId": {
+            "locationName": "accountId"
+          },
+          "Result": {
+            "locationName": "result"
+          }
+        }
+      }
+    },
+    "S1d": {
+      "type": "structure",
+      "members": {
+        "DestinationArn": {
+          "locationName": "destinationArn"
+        },
+        "KmsKeyArn": {
+          "locationName": "kmsKeyArn"
+        }
+      }
+    },
+    "S1n": {
+      "type": "list",
+      "member": {}
+    },
+    "S2l": {
+      "type": "structure",
+      "required": [
+        "CloudTrail",
+        "DNSLogs",
+        "FlowLogs",
+        "S3Logs"
+      ],
+      "members": {
+        "CloudTrail": {
+          "locationName": "cloudTrail",
+          "type": "structure",
+          "required": [
+            "Status"
+          ],
+          "members": {
+            "Status": {
+              "locationName": "status"
+            }
+          }
+        },
+        "DNSLogs": {
+          "locationName": "dnsLogs",
+          "type": "structure",
+          "required": [
+            "Status"
+          ],
+          "members": {
+            "Status": {
+              "locationName": "status"
+            }
+          }
+        },
+        "FlowLogs": {
+          "locationName": "flowLogs",
+          "type": "structure",
+          "required": [
+            "Status"
+          ],
+          "members": {
+            "Status": {
+              "locationName": "status"
+            }
+          }
+        },
+        "S3Logs": {
+          "locationName": "s3Logs",
+          "type": "structure",
+          "required": [
+            "Status"
+          ],
+          "members": {
+            "Status": {
+              "locationName": "status"
+            }
+          }
+        }
+      }
+    },
+    "S2u": {
+      "type": "structure",
+      "members": {
+        "AttributeName": {
+          "locationName": "attributeName"
+        },
+        "OrderBy": {
+          "locationName": "orderBy"
+        }
+      }
+    },
+    "S36": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Key": {
+            "locationName": "key"
+          },
+          "Value": {
+            "locationName": "value"
+          }
+        }
+      }
+    },
+    "S3e": {
+      "type": "structure",
+      "members": {
+        "IgnorePublicAcls": {
+          "locationName": "ignorePublicAcls",
+          "type": "boolean"
+        },
+        "RestrictPublicBuckets": {
+          "locationName": "restrictPublicBuckets",
+          "type": "boolean"
+        },
+        "BlockPublicAcls": {
+          "locationName": "blockPublicAcls",
+          "type": "boolean"
+        },
+        "BlockPublicPolicy": {
+          "locationName": "blockPublicPolicy",
+          "type": "boolean"
+        }
+      }
+    },
+    "S3v": {
+      "type": "structure",
+      "members": {
+        "City": {
+          "locationName": "city",
+          "type": "structure",
+          "members": {
+            "CityName": {
+              "locationName": "cityName"
+            }
+          }
+        },
+        "Country": {
+          "locationName": "country",
+          "type": "structure",
+          "members": {
+            "CountryCode": {
+              "locationName": "countryCode"
+            },
+            "CountryName": {
+              "locationName": "countryName"
+            }
+          }
+        },
+        "GeoLocation": {
+          "locationName": "geoLocation",
+          "type": "structure",
+          "members": {
+            "Lat": {
+              "locationName": "lat",
+              "type": "double"
+            },
+            "Lon": {
+              "locationName": "lon",
+              "type": "double"
+            }
+          }
+        },
+        "IpAddressV4": {
+          "locationName": "ipAddressV4"
+        },
+        "Organization": {
+          "locationName": "organization",
+          "type": "structure",
+          "members": {
+            "Asn": {
+              "locationName": "asn"
+            },
+            "AsnOrg": {
+              "locationName": "asnOrg"
+            },
+            "Isp": {
+              "locationName": "isp"
+            },
+            "Org": {
+              "locationName": "org"
+            }
+          }
+        }
+      }
+    },
+    "S42": {
+      "type": "structure",
+      "members": {
+        "Port": {
+          "locationName": "port",
+          "type": "integer"
+        },
+        "PortName": {
+          "locationName": "portName"
+        }
+      }
+    },
+    "S43": {
+      "type": "structure",
+      "members": {
+        "IpAddressV4": {
+          "locationName": "ipAddressV4"
+        }
+      }
+    },
+    "S4w": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "MasterId",
+          "Email",
+          "RelationshipStatus",
+          "UpdatedAt"
+        ],
+        "members": {
+          "AccountId": {
+            "locationName": "accountId"
+          },
+          "DetectorId": {
+            "locationName": "detectorId"
+          },
+          "MasterId": {
+            "locationName": "masterId"
+          },
+          "Email": {
+            "locationName": "email"
+          },
+          "RelationshipStatus": {
+            "locationName": "relationshipStatus"
+          },
+          "InvitedAt": {
+            "locationName": "invitedAt"
+          },
+          "UpdatedAt": {
+            "locationName": "updatedAt"
+          }
+        }
+      }
+    },
+    "S5c": {
+      "type": "structure",
+      "members": {
+        "Amount": {
+          "locationName": "amount"
+        },
+        "Unit": {
+          "locationName": "unit"
+        }
+      }
+    },
+    "S5f": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Resource": {
+            "locationName": "resource"
+          },
+          "Total": {
+            "shape": "S5c",
+            "locationName": "total"
+          }
+        }
+      }
+    }
+  }
+}

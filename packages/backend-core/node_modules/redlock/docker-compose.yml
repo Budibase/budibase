@@ -1,0 +1,22 @@
+version: "3.7"
+
+volumes:
+  node_modules:
+
+services:
+
+  # This container builds the server.
+  redlock:
+    build:
+      context: .
+      target: build
+    command: yarn build:development
+    environment:
+      NODE_ENV: development
+    volumes:
+      - type: bind
+        source: .
+        target: /build
+      - type: volume
+        source: node_modules
+        target: /build/node_modules

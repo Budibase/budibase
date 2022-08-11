@@ -1,0 +1,24 @@
+{
+  "name": "readable-stream",
+  "version": "0.0.4",
+  "description": "An exploration of a new kind of readable streams for Node.js",
+  "main": "readable.js",
+  "dependencies": {},
+  "devDependencies": {
+    "tap": "~0.2.6"
+  },
+  "scripts": {
+    "test": "tap test/simple/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/readable-stream"
+  },
+  "keywords": [
+    "readable",
+    "stream",
+    "pipe"
+  ],
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "license": "BSD"
+}

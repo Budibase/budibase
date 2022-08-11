@@ -1,0 +1,1270 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2019-10-09",
+    "endpointPrefix": "appconfig",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceAbbreviation": "AppConfig",
+    "serviceFullName": "Amazon AppConfig",
+    "serviceId": "AppConfig",
+    "signatureVersion": "v4",
+    "signingName": "appconfig",
+    "uid": "appconfig-2019-10-09"
+  },
+  "operations": {
+    "CreateApplication": {
+      "http": {
+        "requestUri": "/applications",
+        "responseCode": 201
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "shape": "S7"
+      }
+    },
+    "CreateConfigurationProfile": {
+      "http": {
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles",
+        "responseCode": 201
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "Name",
+          "LocationUri"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "Name": {},
+          "Description": {},
+          "LocationUri": {},
+          "RetrievalRoleArn": {},
+          "Validators": {
+            "shape": "Sc"
+          },
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "shape": "Sg"
+      }
+    },
+    "CreateDeploymentStrategy": {
+      "http": {
+        "requestUri": "/deploymentstrategies",
+        "responseCode": 201
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "DeploymentDurationInMinutes",
+          "GrowthFactor",
+          "ReplicateTo"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "DeploymentDurationInMinutes": {
+            "type": "integer"
+          },
+          "FinalBakeTimeInMinutes": {
+            "type": "integer"
+          },
+          "GrowthFactor": {
+            "type": "float"
+          },
+          "GrowthType": {},
+          "ReplicateTo": {},
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "shape": "Sm"
+      }
+    },
+    "CreateEnvironment": {
+      "http": {
+        "requestUri": "/applications/{ApplicationId}/environments",
+        "responseCode": 201
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "Name"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "Name": {},
+          "Description": {},
+          "Monitors": {
+            "shape": "Sp"
+          },
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "shape": "Ss"
+      }
+    },
+    "CreateHostedConfigurationVersion": {
+      "http": {
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles/{ConfigurationProfileId}/hostedconfigurationversions",
+        "responseCode": 201
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "ConfigurationProfileId",
+          "Content",
+          "ContentType"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "ConfigurationProfileId": {
+            "location": "uri",
+            "locationName": "ConfigurationProfileId"
+          },
+          "Description": {
+            "location": "header",
+            "locationName": "Description"
+          },
+          "Content": {
+            "shape": "Sv"
+          },
+          "ContentType": {
+            "location": "header",
+            "locationName": "Content-Type"
+          },
+          "LatestVersionNumber": {
+            "location": "header",
+            "locationName": "Latest-Version-Number",
+            "type": "integer"
+          }
+        },
+        "payload": "Content"
+      },
+      "output": {
+        "shape": "Sy"
+      }
+    },
+    "DeleteApplication": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/applications/{ApplicationId}",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          }
+        }
+      }
+    },
+    "DeleteConfigurationProfile": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles/{ConfigurationProfileId}",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "ConfigurationProfileId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "ConfigurationProfileId": {
+            "location": "uri",
+            "locationName": "ConfigurationProfileId"
+          }
+        }
+      }
+    },
+    "DeleteDeploymentStrategy": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/deployementstrategies/{DeploymentStrategyId}",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DeploymentStrategyId"
+        ],
+        "members": {
+          "DeploymentStrategyId": {
+            "location": "uri",
+            "locationName": "DeploymentStrategyId"
+          }
+        }
+      }
+    },
+    "DeleteEnvironment": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/applications/{ApplicationId}/environments/{EnvironmentId}",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "EnvironmentId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "EnvironmentId": {
+            "location": "uri",
+            "locationName": "EnvironmentId"
+          }
+        }
+      }
+    },
+    "DeleteHostedConfigurationVersion": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles/{ConfigurationProfileId}/hostedconfigurationversions/{VersionNumber}",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "ConfigurationProfileId",
+          "VersionNumber"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "ConfigurationProfileId": {
+            "location": "uri",
+            "locationName": "ConfigurationProfileId"
+          },
+          "VersionNumber": {
+            "location": "uri",
+            "locationName": "VersionNumber",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "GetApplication": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{ApplicationId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          }
+        }
+      },
+      "output": {
+        "shape": "S7"
+      }
+    },
+    "GetConfiguration": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{Application}/environments/{Environment}/configurations/{Configuration}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "Application",
+          "Environment",
+          "Configuration",
+          "ClientId"
+        ],
+        "members": {
+          "Application": {
+            "location": "uri",
+            "locationName": "Application"
+          },
+          "Environment": {
+            "location": "uri",
+            "locationName": "Environment"
+          },
+          "Configuration": {
+            "location": "uri",
+            "locationName": "Configuration"
+          },
+          "ClientId": {
+            "location": "querystring",
+            "locationName": "client_id"
+          },
+          "ClientConfigurationVersion": {
+            "location": "querystring",
+            "locationName": "client_configuration_version"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Content": {
+            "shape": "Sv"
+          },
+          "ConfigurationVersion": {
+            "location": "header",
+            "locationName": "Configuration-Version"
+          },
+          "ContentType": {
+            "location": "header",
+            "locationName": "Content-Type"
+          }
+        },
+        "payload": "Content"
+      }
+    },
+    "GetConfigurationProfile": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles/{ConfigurationProfileId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "ConfigurationProfileId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "ConfigurationProfileId": {
+            "location": "uri",
+            "locationName": "ConfigurationProfileId"
+          }
+        }
+      },
+      "output": {
+        "shape": "Sg"
+      }
+    },
+    "GetDeployment": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{ApplicationId}/environments/{EnvironmentId}/deployments/{DeploymentNumber}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "EnvironmentId",
+          "DeploymentNumber"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "EnvironmentId": {
+            "location": "uri",
+            "locationName": "EnvironmentId"
+          },
+          "DeploymentNumber": {
+            "location": "uri",
+            "locationName": "DeploymentNumber",
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "shape": "S1d"
+      }
+    },
+    "GetDeploymentStrategy": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/deploymentstrategies/{DeploymentStrategyId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DeploymentStrategyId"
+        ],
+        "members": {
+          "DeploymentStrategyId": {
+            "location": "uri",
+            "locationName": "DeploymentStrategyId"
+          }
+        }
+      },
+      "output": {
+        "shape": "Sm"
+      }
+    },
+    "GetEnvironment": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{ApplicationId}/environments/{EnvironmentId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "EnvironmentId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "EnvironmentId": {
+            "location": "uri",
+            "locationName": "EnvironmentId"
+          }
+        }
+      },
+      "output": {
+        "shape": "Ss"
+      }
+    },
+    "GetHostedConfigurationVersion": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles/{ConfigurationProfileId}/hostedconfigurationversions/{VersionNumber}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "ConfigurationProfileId",
+          "VersionNumber"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "ConfigurationProfileId": {
+            "location": "uri",
+            "locationName": "ConfigurationProfileId"
+          },
+          "VersionNumber": {
+            "location": "uri",
+            "locationName": "VersionNumber",
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "shape": "Sy"
+      }
+    },
+    "ListApplications": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "max_results",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "next_token"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Items": {
+            "type": "list",
+            "member": {
+              "shape": "S7"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListConfigurationProfiles": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "max_results",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "next_token"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Items": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ApplicationId": {},
+                "Id": {},
+                "Name": {},
+                "LocationUri": {},
+                "ValidatorTypes": {
+                  "type": "list",
+                  "member": {}
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListDeploymentStrategies": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/deploymentstrategies",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "max_results",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "next_token"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Items": {
+            "type": "list",
+            "member": {
+              "shape": "Sm"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListDeployments": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{ApplicationId}/environments/{EnvironmentId}/deployments",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "EnvironmentId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "EnvironmentId": {
+            "location": "uri",
+            "locationName": "EnvironmentId"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "max_results",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "next_token"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Items": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "DeploymentNumber": {
+                  "type": "integer"
+                },
+                "ConfigurationName": {},
+                "ConfigurationVersion": {},
+                "DeploymentDurationInMinutes": {
+                  "type": "integer"
+                },
+                "GrowthType": {},
+                "GrowthFactor": {
+                  "type": "float"
+                },
+                "FinalBakeTimeInMinutes": {
+                  "type": "integer"
+                },
+                "State": {},
+                "PercentageComplete": {
+                  "type": "float"
+                },
+                "StartedAt": {
+                  "shape": "S1j"
+                },
+                "CompletedAt": {
+                  "shape": "S1j"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListEnvironments": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{ApplicationId}/environments",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "max_results",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "next_token"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Items": {
+            "type": "list",
+            "member": {
+              "shape": "Ss"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListHostedConfigurationVersions": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles/{ConfigurationProfileId}/hostedconfigurationversions",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "ConfigurationProfileId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "ConfigurationProfileId": {
+            "location": "uri",
+            "locationName": "ConfigurationProfileId"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "max_results",
+            "type": "integer"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "next_token"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Items": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ApplicationId": {},
+                "ConfigurationProfileId": {},
+                "VersionNumber": {
+                  "type": "integer"
+                },
+                "Description": {},
+                "ContentType": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/tags/{ResourceArn}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn"
+        ],
+        "members": {
+          "ResourceArn": {
+            "location": "uri",
+            "locationName": "ResourceArn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      }
+    },
+    "StartDeployment": {
+      "http": {
+        "requestUri": "/applications/{ApplicationId}/environments/{EnvironmentId}/deployments",
+        "responseCode": 201
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "EnvironmentId",
+          "DeploymentStrategyId",
+          "ConfigurationProfileId",
+          "ConfigurationVersion"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "EnvironmentId": {
+            "location": "uri",
+            "locationName": "EnvironmentId"
+          },
+          "DeploymentStrategyId": {},
+          "ConfigurationProfileId": {},
+          "ConfigurationVersion": {},
+          "Description": {},
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "shape": "S1d"
+      }
+    },
+    "StopDeployment": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/applications/{ApplicationId}/environments/{EnvironmentId}/deployments/{DeploymentNumber}",
+        "responseCode": 202
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "EnvironmentId",
+          "DeploymentNumber"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "EnvironmentId": {
+            "location": "uri",
+            "locationName": "EnvironmentId"
+          },
+          "DeploymentNumber": {
+            "location": "uri",
+            "locationName": "DeploymentNumber",
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "shape": "S1d"
+      }
+    },
+    "TagResource": {
+      "http": {
+        "requestUri": "/tags/{ResourceArn}",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArn": {
+            "location": "uri",
+            "locationName": "ResourceArn"
+          },
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      }
+    },
+    "UntagResource": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/tags/{ResourceArn}",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArn": {
+            "location": "uri",
+            "locationName": "ResourceArn"
+          },
+          "TagKeys": {
+            "location": "querystring",
+            "locationName": "tagKeys",
+            "type": "list",
+            "member": {}
+          }
+        }
+      }
+    },
+    "UpdateApplication": {
+      "http": {
+        "method": "PATCH",
+        "requestUri": "/applications/{ApplicationId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "Name": {},
+          "Description": {}
+        }
+      },
+      "output": {
+        "shape": "S7"
+      }
+    },
+    "UpdateConfigurationProfile": {
+      "http": {
+        "method": "PATCH",
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles/{ConfigurationProfileId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "ConfigurationProfileId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "ConfigurationProfileId": {
+            "location": "uri",
+            "locationName": "ConfigurationProfileId"
+          },
+          "Name": {},
+          "Description": {},
+          "RetrievalRoleArn": {},
+          "Validators": {
+            "shape": "Sc"
+          }
+        }
+      },
+      "output": {
+        "shape": "Sg"
+      }
+    },
+    "UpdateDeploymentStrategy": {
+      "http": {
+        "method": "PATCH",
+        "requestUri": "/deploymentstrategies/{DeploymentStrategyId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "DeploymentStrategyId"
+        ],
+        "members": {
+          "DeploymentStrategyId": {
+            "location": "uri",
+            "locationName": "DeploymentStrategyId"
+          },
+          "Description": {},
+          "DeploymentDurationInMinutes": {
+            "type": "integer"
+          },
+          "FinalBakeTimeInMinutes": {
+            "type": "integer"
+          },
+          "GrowthFactor": {
+            "type": "float"
+          },
+          "GrowthType": {}
+        }
+      },
+      "output": {
+        "shape": "Sm"
+      }
+    },
+    "UpdateEnvironment": {
+      "http": {
+        "method": "PATCH",
+        "requestUri": "/applications/{ApplicationId}/environments/{EnvironmentId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "EnvironmentId"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "EnvironmentId": {
+            "location": "uri",
+            "locationName": "EnvironmentId"
+          },
+          "Name": {},
+          "Description": {},
+          "Monitors": {
+            "shape": "Sp"
+          }
+        }
+      },
+      "output": {
+        "shape": "Ss"
+      }
+    },
+    "ValidateConfiguration": {
+      "http": {
+        "requestUri": "/applications/{ApplicationId}/configurationprofiles/{ConfigurationProfileId}/validators",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ApplicationId",
+          "ConfigurationProfileId",
+          "ConfigurationVersion"
+        ],
+        "members": {
+          "ApplicationId": {
+            "location": "uri",
+            "locationName": "ApplicationId"
+          },
+          "ConfigurationProfileId": {
+            "location": "uri",
+            "locationName": "ConfigurationProfileId"
+          },
+          "ConfigurationVersion": {
+            "location": "querystring",
+            "locationName": "configuration_version"
+          }
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S4": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "S7": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "Name": {},
+        "Description": {}
+      }
+    },
+    "Sc": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Type",
+          "Content"
+        ],
+        "members": {
+          "Type": {},
+          "Content": {
+            "type": "string",
+            "sensitive": true
+          }
+        }
+      }
+    },
+    "Sg": {
+      "type": "structure",
+      "members": {
+        "ApplicationId": {},
+        "Id": {},
+        "Name": {},
+        "Description": {},
+        "LocationUri": {},
+        "RetrievalRoleArn": {},
+        "Validators": {
+          "shape": "Sc"
+        }
+      }
+    },
+    "Sm": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "Name": {},
+        "Description": {},
+        "DeploymentDurationInMinutes": {
+          "type": "integer"
+        },
+        "GrowthType": {},
+        "GrowthFactor": {
+          "type": "float"
+        },
+        "FinalBakeTimeInMinutes": {
+          "type": "integer"
+        },
+        "ReplicateTo": {}
+      }
+    },
+    "Sp": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "AlarmArn": {},
+          "AlarmRoleArn": {}
+        }
+      }
+    },
+    "Ss": {
+      "type": "structure",
+      "members": {
+        "ApplicationId": {},
+        "Id": {},
+        "Name": {},
+        "Description": {},
+        "State": {},
+        "Monitors": {
+          "shape": "Sp"
+        }
+      }
+    },
+    "Sv": {
+      "type": "blob",
+      "sensitive": true
+    },
+    "Sy": {
+      "type": "structure",
+      "members": {
+        "ApplicationId": {
+          "location": "header",
+          "locationName": "Application-Id"
+        },
+        "ConfigurationProfileId": {
+          "location": "header",
+          "locationName": "Configuration-Profile-Id"
+        },
+        "VersionNumber": {
+          "location": "header",
+          "locationName": "Version-Number",
+          "type": "integer"
+        },
+        "Description": {
+          "location": "header",
+          "locationName": "Description"
+        },
+        "Content": {
+          "shape": "Sv"
+        },
+        "ContentType": {
+          "location": "header",
+          "locationName": "Content-Type"
+        }
+      },
+      "payload": "Content"
+    },
+    "S1d": {
+      "type": "structure",
+      "members": {
+        "ApplicationId": {},
+        "EnvironmentId": {},
+        "DeploymentStrategyId": {},
+        "ConfigurationProfileId": {},
+        "DeploymentNumber": {
+          "type": "integer"
+        },
+        "ConfigurationName": {},
+        "ConfigurationLocationUri": {},
+        "ConfigurationVersion": {},
+        "Description": {},
+        "DeploymentDurationInMinutes": {
+          "type": "integer"
+        },
+        "GrowthType": {},
+        "GrowthFactor": {
+          "type": "float"
+        },
+        "FinalBakeTimeInMinutes": {
+          "type": "integer"
+        },
+        "State": {},
+        "EventLog": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "EventType": {},
+              "TriggeredBy": {},
+              "Description": {},
+              "OccurredAt": {
+                "shape": "S1j"
+              }
+            }
+          }
+        },
+        "PercentageComplete": {
+          "type": "float"
+        },
+        "StartedAt": {
+          "shape": "S1j"
+        },
+        "CompletedAt": {
+          "shape": "S1j"
+        }
+      }
+    },
+    "S1j": {
+      "type": "timestamp",
+      "timestampFormat": "iso8601"
+    }
+  }
+}

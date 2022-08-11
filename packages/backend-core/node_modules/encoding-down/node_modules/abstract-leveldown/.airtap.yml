@@ -1,0 +1,15 @@
+browsers:
+  - name: chrome
+    version: latest
+    platform: Windows 10
+  - name: internet explorer
+    version: '11'
+  - name: firefox
+    version: latest
+    platform: Windows 10
+  - name: iphone
+    version: '9.0'
+  - name: android
+    version: '6.0'
+  - name: microsoftedge
+    version: latest

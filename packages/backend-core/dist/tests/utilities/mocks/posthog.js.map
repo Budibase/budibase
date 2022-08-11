@@ -1,0 +1,1 @@
+{"version":3,"file":"posthog.js","sourceRoot":"","sources":["../../../../tests/utilities/mocks/posthog.ts"],"names":[],"mappings":";AAAA,IAAI,CAAC,IAAI,CAAC,cAAc,EAAE,GAAG,EAAE;IAC7B,OAAO,IAAI,CAAC,EAAE,EAAE,CAAC,kBAAkB,CAAC,GAAG,EAAE;QACvC,OAAO;YACL,OAAO,EAAE,IAAI,CAAC,EAAE,EAAE;SACnB,CAAA;IACH,CAAC,CAAC,CAAA;AACJ,CAAC,CAAC,CAAA"}

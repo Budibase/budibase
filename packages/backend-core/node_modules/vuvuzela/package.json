@@ -1,0 +1,45 @@
+{
+  "name": "vuvuzela",
+  "version": "1.0.3",
+  "description": "Super simple and non-recursive JSON parse/stringify library",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nolanlawson/vuvuzela.git"
+  },
+  "keywords": [
+    "vuvuzela",
+    "json.parse",
+    "stringify",
+    "recursion"
+  ],
+  "author": "Nolan Lawson <nolan.lawson@gmail.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/nolanlawson/vuvuzela/issues"
+  },
+  "homepage": "https://github.com/nolanlawson/vuvuzela",
+  "scripts": {
+    "test": "npm run jshint && npm run test-node",
+    "jshint": "jshint -c .jshintrc *.js test/test.js",
+    "test-node": "istanbul test ./node_modules/mocha/bin/_mocha test/test.js",
+    "coverage": "npm test --coverage && istanbul check-coverage --lines 100 --function 100 --statements 100 --branches 100",
+    "build": "mkdir -p dist && browserify index.js -s vuvuzela -o dist/vuvuzela.js && npm run min",
+    "min": "uglifyjs dist/vuvuzela.js -mc > dist/vuvuzela.min.js"
+  },
+  "files": [
+    "dist",
+    "index.js"
+  ],
+  "devDependencies": {
+    "browserify": "~2.36.0",
+    "chai": "^1.9.1",
+    "chai-as-promised": "^4.1.1",
+    "deep-equal": "^0.2.1",
+    "inherits": "^2.0.1",
+    "istanbul": "^0.2.7",
+    "jshint": "2.8.0",
+    "mocha": "^1.18.2",
+    "uglify-js": "^2.4.13"
+  }
+}

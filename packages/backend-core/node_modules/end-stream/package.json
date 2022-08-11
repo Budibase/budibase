@@ -1,0 +1,34 @@
+{
+  "name": "end-stream",
+  "version": "0.1.0",
+  "description": "A stream that ends after computation finishes",
+  "keywords": [],
+  "author": "Raynos <raynos2@gmail.com>",
+  "repository": "git://github.com/Raynos/end-stream.git",
+  "main": "index",
+  "homepage": "https://github.com/Raynos/end-stream",
+  "contributors": [
+    {
+      "name": "Jake Verbaten"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/Raynos/end-stream/issues",
+    "email": "raynos2@gmail.com"
+  },
+  "dependencies": {
+    "write-stream": "~0.4.3"
+  },
+  "devDependencies": {
+    "tap": "~0.3.1"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/Raynos/end-stream/raw/master/LICENSE"
+    }
+  ],
+  "scripts": {
+    "test": "tap --stderr --tap ./test"
+  }
+}

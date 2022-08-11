@@ -1,0 +1,18 @@
+{
+    "name": "zlib",
+    "description": "Simple, synchronous deflate/inflate for buffers",
+    "version": "1.0.5",
+    "homepage": "https://github.com/kkaefer/node-zlib",
+    "author": "Konstantin Käfer <kkaefer@gmail.com>",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/kkaefer/node-zlib.git"
+    },
+    "engines": {
+        "node": ">=0.2.0"
+    },
+    "licenses": [
+        { "type": "BSD" }
+    ],
+    "main": "./lib/zlib"
+}

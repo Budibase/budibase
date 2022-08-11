@@ -1,0 +1,14 @@
+import { User } from "@budibase/types";
+export declare function created(user: User, timestamp?: number): Promise<void>;
+export declare function updated(user: User): Promise<void>;
+export declare function deleted(user: User): Promise<void>;
+export declare function permissionAdminAssigned(user: User, timestamp?: number): Promise<void>;
+export declare function permissionAdminRemoved(user: User): Promise<void>;
+export declare function permissionBuilderAssigned(user: User, timestamp?: number): Promise<void>;
+export declare function permissionBuilderRemoved(user: User): Promise<void>;
+export declare function invited(): Promise<void>;
+export declare function inviteAccepted(user: User): Promise<void>;
+export declare function passwordForceReset(user: User): Promise<void>;
+export declare function passwordUpdated(user: User): Promise<void>;
+export declare function passwordResetRequested(user: User): Promise<void>;
+export declare function passwordReset(user: User): Promise<void>;

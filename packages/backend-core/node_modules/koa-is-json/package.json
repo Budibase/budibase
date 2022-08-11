@@ -1,0 +1,13 @@
+{
+  "name": "koa-is-json",
+  "description": "check if a koa body should be interpreted as JSON",
+  "version": "1.0.0",
+  "author": {
+    "name": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com",
+    "twitter": "https://twitter.com/jongleberry"
+  },
+  "license": "MIT",
+  "repository": "koajs/is-json"
+}

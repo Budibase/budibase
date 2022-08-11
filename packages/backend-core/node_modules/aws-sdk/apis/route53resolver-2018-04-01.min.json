@@ -1,0 +1,1772 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2018-04-01",
+    "endpointPrefix": "route53resolver",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceAbbreviation": "Route53Resolver",
+    "serviceFullName": "Amazon Route 53 Resolver",
+    "serviceId": "Route53Resolver",
+    "signatureVersion": "v4",
+    "targetPrefix": "Route53Resolver",
+    "uid": "route53resolver-2018-04-01"
+  },
+  "operations": {
+    "AssociateFirewallRuleGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CreatorRequestId",
+          "FirewallRuleGroupId",
+          "VpcId",
+          "Priority",
+          "Name"
+        ],
+        "members": {
+          "CreatorRequestId": {
+            "idempotencyToken": true
+          },
+          "FirewallRuleGroupId": {},
+          "VpcId": {},
+          "Priority": {
+            "type": "integer"
+          },
+          "Name": {},
+          "MutationProtection": {},
+          "Tags": {
+            "shape": "S7"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRuleGroupAssociation": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "AssociateResolverEndpointIpAddress": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverEndpointId",
+          "IpAddress"
+        ],
+        "members": {
+          "ResolverEndpointId": {},
+          "IpAddress": {
+            "shape": "Sj"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverEndpoint": {
+            "shape": "Sn"
+          }
+        }
+      }
+    },
+    "AssociateResolverQueryLogConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverQueryLogConfigId",
+          "ResourceId"
+        ],
+        "members": {
+          "ResolverQueryLogConfigId": {},
+          "ResourceId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverQueryLogConfigAssociation": {
+            "shape": "Su"
+          }
+        }
+      }
+    },
+    "AssociateResolverRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverRuleId",
+          "VPCId"
+        ],
+        "members": {
+          "ResolverRuleId": {},
+          "Name": {},
+          "VPCId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverRuleAssociation": {
+            "shape": "S10"
+          }
+        }
+      }
+    },
+    "CreateFirewallDomainList": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CreatorRequestId",
+          "Name"
+        ],
+        "members": {
+          "CreatorRequestId": {
+            "idempotencyToken": true
+          },
+          "Name": {},
+          "Tags": {
+            "shape": "S7"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallDomainList": {
+            "shape": "S14"
+          }
+        }
+      }
+    },
+    "CreateFirewallRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CreatorRequestId",
+          "FirewallRuleGroupId",
+          "FirewallDomainListId",
+          "Priority",
+          "Action",
+          "Name"
+        ],
+        "members": {
+          "CreatorRequestId": {
+            "idempotencyToken": true
+          },
+          "FirewallRuleGroupId": {},
+          "FirewallDomainListId": {},
+          "Priority": {
+            "type": "integer"
+          },
+          "Action": {},
+          "BlockResponse": {},
+          "BlockOverrideDomain": {},
+          "BlockOverrideDnsType": {},
+          "BlockOverrideTtl": {
+            "type": "integer"
+          },
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRule": {
+            "shape": "S1e"
+          }
+        }
+      }
+    },
+    "CreateFirewallRuleGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CreatorRequestId",
+          "Name"
+        ],
+        "members": {
+          "CreatorRequestId": {
+            "idempotencyToken": true
+          },
+          "Name": {},
+          "Tags": {
+            "shape": "S7"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRuleGroup": {
+            "shape": "S1h"
+          }
+        }
+      }
+    },
+    "CreateResolverEndpoint": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CreatorRequestId",
+          "SecurityGroupIds",
+          "Direction",
+          "IpAddresses"
+        ],
+        "members": {
+          "CreatorRequestId": {},
+          "Name": {},
+          "SecurityGroupIds": {
+            "shape": "So"
+          },
+          "Direction": {},
+          "IpAddresses": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "SubnetId"
+              ],
+              "members": {
+                "SubnetId": {},
+                "Ip": {}
+              }
+            }
+          },
+          "Tags": {
+            "shape": "S7"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverEndpoint": {
+            "shape": "Sn"
+          }
+        }
+      }
+    },
+    "CreateResolverQueryLogConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "DestinationArn",
+          "CreatorRequestId"
+        ],
+        "members": {
+          "Name": {},
+          "DestinationArn": {},
+          "CreatorRequestId": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "S7"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverQueryLogConfig": {
+            "shape": "S1t"
+          }
+        }
+      }
+    },
+    "CreateResolverRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CreatorRequestId",
+          "RuleType",
+          "DomainName"
+        ],
+        "members": {
+          "CreatorRequestId": {},
+          "Name": {},
+          "RuleType": {},
+          "DomainName": {},
+          "TargetIps": {
+            "shape": "S1z"
+          },
+          "ResolverEndpointId": {},
+          "Tags": {
+            "shape": "S7"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverRule": {
+            "shape": "S23"
+          }
+        }
+      }
+    },
+    "DeleteFirewallDomainList": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallDomainListId"
+        ],
+        "members": {
+          "FirewallDomainListId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallDomainList": {
+            "shape": "S14"
+          }
+        }
+      }
+    },
+    "DeleteFirewallRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallRuleGroupId",
+          "FirewallDomainListId"
+        ],
+        "members": {
+          "FirewallRuleGroupId": {},
+          "FirewallDomainListId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRule": {
+            "shape": "S1e"
+          }
+        }
+      }
+    },
+    "DeleteFirewallRuleGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallRuleGroupId"
+        ],
+        "members": {
+          "FirewallRuleGroupId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRuleGroup": {
+            "shape": "S1h"
+          }
+        }
+      }
+    },
+    "DeleteResolverEndpoint": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverEndpointId"
+        ],
+        "members": {
+          "ResolverEndpointId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverEndpoint": {
+            "shape": "Sn"
+          }
+        }
+      }
+    },
+    "DeleteResolverQueryLogConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverQueryLogConfigId"
+        ],
+        "members": {
+          "ResolverQueryLogConfigId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverQueryLogConfig": {
+            "shape": "S1t"
+          }
+        }
+      }
+    },
+    "DeleteResolverRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverRuleId"
+        ],
+        "members": {
+          "ResolverRuleId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverRule": {
+            "shape": "S23"
+          }
+        }
+      }
+    },
+    "DisassociateFirewallRuleGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallRuleGroupAssociationId"
+        ],
+        "members": {
+          "FirewallRuleGroupAssociationId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRuleGroupAssociation": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "DisassociateResolverEndpointIpAddress": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverEndpointId",
+          "IpAddress"
+        ],
+        "members": {
+          "ResolverEndpointId": {},
+          "IpAddress": {
+            "shape": "Sj"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverEndpoint": {
+            "shape": "Sn"
+          }
+        }
+      }
+    },
+    "DisassociateResolverQueryLogConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverQueryLogConfigId",
+          "ResourceId"
+        ],
+        "members": {
+          "ResolverQueryLogConfigId": {},
+          "ResourceId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverQueryLogConfigAssociation": {
+            "shape": "Su"
+          }
+        }
+      }
+    },
+    "DisassociateResolverRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "VPCId",
+          "ResolverRuleId"
+        ],
+        "members": {
+          "VPCId": {},
+          "ResolverRuleId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverRuleAssociation": {
+            "shape": "S10"
+          }
+        }
+      }
+    },
+    "GetFirewallConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceId"
+        ],
+        "members": {
+          "ResourceId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallConfig": {
+            "shape": "S2r"
+          }
+        }
+      }
+    },
+    "GetFirewallDomainList": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallDomainListId"
+        ],
+        "members": {
+          "FirewallDomainListId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallDomainList": {
+            "shape": "S14"
+          }
+        }
+      }
+    },
+    "GetFirewallRuleGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallRuleGroupId"
+        ],
+        "members": {
+          "FirewallRuleGroupId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRuleGroup": {
+            "shape": "S1h"
+          }
+        }
+      }
+    },
+    "GetFirewallRuleGroupAssociation": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallRuleGroupAssociationId"
+        ],
+        "members": {
+          "FirewallRuleGroupAssociationId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRuleGroupAssociation": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "GetFirewallRuleGroupPolicy": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Arn"
+        ],
+        "members": {
+          "Arn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRuleGroupPolicy": {}
+        }
+      }
+    },
+    "GetResolverConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceId"
+        ],
+        "members": {
+          "ResourceId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverConfig": {
+            "shape": "S34"
+          }
+        }
+      }
+    },
+    "GetResolverDnssecConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceId"
+        ],
+        "members": {
+          "ResourceId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverDNSSECConfig": {
+            "shape": "S38"
+          }
+        }
+      }
+    },
+    "GetResolverEndpoint": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverEndpointId"
+        ],
+        "members": {
+          "ResolverEndpointId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverEndpoint": {
+            "shape": "Sn"
+          }
+        }
+      }
+    },
+    "GetResolverQueryLogConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverQueryLogConfigId"
+        ],
+        "members": {
+          "ResolverQueryLogConfigId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverQueryLogConfig": {
+            "shape": "S1t"
+          }
+        }
+      }
+    },
+    "GetResolverQueryLogConfigAssociation": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverQueryLogConfigAssociationId"
+        ],
+        "members": {
+          "ResolverQueryLogConfigAssociationId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverQueryLogConfigAssociation": {
+            "shape": "Su"
+          }
+        }
+      }
+    },
+    "GetResolverQueryLogConfigPolicy": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Arn"
+        ],
+        "members": {
+          "Arn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverQueryLogConfigPolicy": {}
+        }
+      }
+    },
+    "GetResolverRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverRuleId"
+        ],
+        "members": {
+          "ResolverRuleId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverRule": {
+            "shape": "S23"
+          }
+        }
+      }
+    },
+    "GetResolverRuleAssociation": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverRuleAssociationId"
+        ],
+        "members": {
+          "ResolverRuleAssociationId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverRuleAssociation": {
+            "shape": "S10"
+          }
+        }
+      }
+    },
+    "GetResolverRulePolicy": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Arn"
+        ],
+        "members": {
+          "Arn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverRulePolicy": {}
+        }
+      }
+    },
+    "ImportFirewallDomains": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallDomainListId",
+          "Operation",
+          "DomainFileUrl"
+        ],
+        "members": {
+          "FirewallDomainListId": {},
+          "Operation": {},
+          "DomainFileUrl": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Id": {},
+          "Name": {},
+          "Status": {},
+          "StatusMessage": {}
+        }
+      }
+    },
+    "ListFirewallConfigs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "FirewallConfigs": {
+            "type": "list",
+            "member": {
+              "shape": "S2r"
+            }
+          }
+        }
+      }
+    },
+    "ListFirewallDomainLists": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "FirewallDomainLists": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Id": {},
+                "Arn": {},
+                "Name": {},
+                "CreatorRequestId": {},
+                "ManagedOwnerName": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "ListFirewallDomains": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallDomainListId"
+        ],
+        "members": {
+          "FirewallDomainListId": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "Domains": {
+            "shape": "S47"
+          }
+        }
+      }
+    },
+    "ListFirewallRuleGroupAssociations": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "FirewallRuleGroupId": {},
+          "VpcId": {},
+          "Priority": {
+            "type": "integer"
+          },
+          "Status": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "FirewallRuleGroupAssociations": {
+            "type": "list",
+            "member": {
+              "shape": "Sc"
+            }
+          }
+        }
+      }
+    },
+    "ListFirewallRuleGroups": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "FirewallRuleGroups": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Id": {},
+                "Arn": {},
+                "Name": {},
+                "OwnerId": {},
+                "CreatorRequestId": {},
+                "ShareStatus": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "ListFirewallRules": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallRuleGroupId"
+        ],
+        "members": {
+          "FirewallRuleGroupId": {},
+          "Priority": {
+            "type": "integer"
+          },
+          "Action": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "FirewallRules": {
+            "type": "list",
+            "member": {
+              "shape": "S1e"
+            }
+          }
+        }
+      }
+    },
+    "ListResolverConfigs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "ResolverConfigs": {
+            "type": "list",
+            "member": {
+              "shape": "S34"
+            }
+          }
+        }
+      }
+    },
+    "ListResolverDnssecConfigs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Filters": {
+            "shape": "S4o"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "ResolverDnssecConfigs": {
+            "type": "list",
+            "member": {
+              "shape": "S38"
+            }
+          }
+        }
+      }
+    },
+    "ListResolverEndpointIpAddresses": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverEndpointId"
+        ],
+        "members": {
+          "ResolverEndpointId": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "IpAddresses": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "IpId": {},
+                "SubnetId": {},
+                "Ip": {},
+                "Status": {},
+                "StatusMessage": {},
+                "CreationTime": {},
+                "ModificationTime": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "ListResolverEndpoints": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Filters": {
+            "shape": "S4o"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "ResolverEndpoints": {
+            "type": "list",
+            "member": {
+              "shape": "Sn"
+            }
+          }
+        }
+      }
+    },
+    "ListResolverQueryLogConfigAssociations": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Filters": {
+            "shape": "S4o"
+          },
+          "SortBy": {},
+          "SortOrder": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          },
+          "TotalFilteredCount": {
+            "type": "integer"
+          },
+          "ResolverQueryLogConfigAssociations": {
+            "type": "list",
+            "member": {
+              "shape": "Su"
+            }
+          }
+        }
+      }
+    },
+    "ListResolverQueryLogConfigs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Filters": {
+            "shape": "S4o"
+          },
+          "SortBy": {},
+          "SortOrder": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          },
+          "TotalFilteredCount": {
+            "type": "integer"
+          },
+          "ResolverQueryLogConfigs": {
+            "type": "list",
+            "member": {
+              "shape": "S1t"
+            }
+          }
+        }
+      }
+    },
+    "ListResolverRuleAssociations": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Filters": {
+            "shape": "S4o"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "ResolverRuleAssociations": {
+            "type": "list",
+            "member": {
+              "shape": "S10"
+            }
+          }
+        }
+      }
+    },
+    "ListResolverRules": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Filters": {
+            "shape": "S4o"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "ResolverRules": {
+            "type": "list",
+            "member": {
+              "shape": "S23"
+            }
+          }
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "S7"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "PutFirewallRuleGroupPolicy": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Arn",
+          "FirewallRuleGroupPolicy"
+        ],
+        "members": {
+          "Arn": {},
+          "FirewallRuleGroupPolicy": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ReturnValue": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "PutResolverQueryLogConfigPolicy": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Arn",
+          "ResolverQueryLogConfigPolicy"
+        ],
+        "members": {
+          "Arn": {},
+          "ResolverQueryLogConfigPolicy": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ReturnValue": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "PutResolverRulePolicy": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Arn",
+          "ResolverRulePolicy"
+        ],
+        "members": {
+          "Arn": {},
+          "ResolverRulePolicy": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ReturnValue": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "Tags": {
+            "shape": "S7"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateFirewallConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceId",
+          "FirewallFailOpen"
+        ],
+        "members": {
+          "ResourceId": {},
+          "FirewallFailOpen": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallConfig": {
+            "shape": "S2r"
+          }
+        }
+      }
+    },
+    "UpdateFirewallDomains": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallDomainListId",
+          "Operation",
+          "Domains"
+        ],
+        "members": {
+          "FirewallDomainListId": {},
+          "Operation": {},
+          "Domains": {
+            "shape": "S47"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Id": {},
+          "Name": {},
+          "Status": {},
+          "StatusMessage": {}
+        }
+      }
+    },
+    "UpdateFirewallRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallRuleGroupId",
+          "FirewallDomainListId"
+        ],
+        "members": {
+          "FirewallRuleGroupId": {},
+          "FirewallDomainListId": {},
+          "Priority": {
+            "type": "integer"
+          },
+          "Action": {},
+          "BlockResponse": {},
+          "BlockOverrideDomain": {},
+          "BlockOverrideDnsType": {},
+          "BlockOverrideTtl": {
+            "type": "integer"
+          },
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRule": {
+            "shape": "S1e"
+          }
+        }
+      }
+    },
+    "UpdateFirewallRuleGroupAssociation": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirewallRuleGroupAssociationId"
+        ],
+        "members": {
+          "FirewallRuleGroupAssociationId": {},
+          "Priority": {
+            "type": "integer"
+          },
+          "MutationProtection": {},
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FirewallRuleGroupAssociation": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "UpdateResolverConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceId",
+          "AutodefinedReverseFlag"
+        ],
+        "members": {
+          "ResourceId": {},
+          "AutodefinedReverseFlag": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverConfig": {
+            "shape": "S34"
+          }
+        }
+      }
+    },
+    "UpdateResolverDnssecConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceId",
+          "Validation"
+        ],
+        "members": {
+          "ResourceId": {},
+          "Validation": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverDNSSECConfig": {
+            "shape": "S38"
+          }
+        }
+      }
+    },
+    "UpdateResolverEndpoint": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverEndpointId"
+        ],
+        "members": {
+          "ResolverEndpointId": {},
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverEndpoint": {
+            "shape": "Sn"
+          }
+        }
+      }
+    },
+    "UpdateResolverRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResolverRuleId",
+          "Config"
+        ],
+        "members": {
+          "ResolverRuleId": {},
+          "Config": {
+            "type": "structure",
+            "members": {
+              "Name": {},
+              "TargetIps": {
+                "shape": "S1z"
+              },
+              "ResolverEndpointId": {}
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResolverRule": {
+            "shape": "S23"
+          }
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S7": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key",
+          "Value"
+        ],
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "Sc": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "Arn": {},
+        "FirewallRuleGroupId": {},
+        "VpcId": {},
+        "Name": {},
+        "Priority": {
+          "type": "integer"
+        },
+        "MutationProtection": {},
+        "ManagedOwnerName": {},
+        "Status": {},
+        "StatusMessage": {},
+        "CreatorRequestId": {},
+        "CreationTime": {},
+        "ModificationTime": {}
+      }
+    },
+    "Sj": {
+      "type": "structure",
+      "members": {
+        "IpId": {},
+        "SubnetId": {},
+        "Ip": {}
+      }
+    },
+    "Sn": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "CreatorRequestId": {},
+        "Arn": {},
+        "Name": {},
+        "SecurityGroupIds": {
+          "shape": "So"
+        },
+        "Direction": {},
+        "IpAddressCount": {
+          "type": "integer"
+        },
+        "HostVPCId": {},
+        "Status": {},
+        "StatusMessage": {},
+        "CreationTime": {},
+        "ModificationTime": {}
+      }
+    },
+    "So": {
+      "type": "list",
+      "member": {}
+    },
+    "Su": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "ResolverQueryLogConfigId": {},
+        "ResourceId": {},
+        "Status": {},
+        "Error": {},
+        "ErrorMessage": {},
+        "CreationTime": {}
+      }
+    },
+    "S10": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "ResolverRuleId": {},
+        "Name": {},
+        "VPCId": {},
+        "Status": {},
+        "StatusMessage": {}
+      }
+    },
+    "S14": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "Arn": {},
+        "Name": {},
+        "DomainCount": {
+          "type": "integer"
+        },
+        "Status": {},
+        "StatusMessage": {},
+        "ManagedOwnerName": {},
+        "CreatorRequestId": {},
+        "CreationTime": {},
+        "ModificationTime": {}
+      }
+    },
+    "S1e": {
+      "type": "structure",
+      "members": {
+        "FirewallRuleGroupId": {},
+        "FirewallDomainListId": {},
+        "Name": {},
+        "Priority": {
+          "type": "integer"
+        },
+        "Action": {},
+        "BlockResponse": {},
+        "BlockOverrideDomain": {},
+        "BlockOverrideDnsType": {},
+        "BlockOverrideTtl": {
+          "type": "integer"
+        },
+        "CreatorRequestId": {},
+        "CreationTime": {},
+        "ModificationTime": {}
+      }
+    },
+    "S1h": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "Arn": {},
+        "Name": {},
+        "RuleCount": {
+          "type": "integer"
+        },
+        "Status": {},
+        "StatusMessage": {},
+        "OwnerId": {},
+        "CreatorRequestId": {},
+        "ShareStatus": {},
+        "CreationTime": {},
+        "ModificationTime": {}
+      }
+    },
+    "S1t": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "OwnerId": {},
+        "Status": {},
+        "ShareStatus": {},
+        "AssociationCount": {
+          "type": "integer"
+        },
+        "Arn": {},
+        "Name": {},
+        "DestinationArn": {},
+        "CreatorRequestId": {},
+        "CreationTime": {}
+      }
+    },
+    "S1z": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Ip"
+        ],
+        "members": {
+          "Ip": {},
+          "Port": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "S23": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "CreatorRequestId": {},
+        "Arn": {},
+        "DomainName": {},
+        "Status": {},
+        "StatusMessage": {},
+        "RuleType": {},
+        "Name": {},
+        "TargetIps": {
+          "shape": "S1z"
+        },
+        "ResolverEndpointId": {},
+        "OwnerId": {},
+        "ShareStatus": {},
+        "CreationTime": {},
+        "ModificationTime": {}
+      }
+    },
+    "S2r": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "ResourceId": {},
+        "OwnerId": {},
+        "FirewallFailOpen": {}
+      }
+    },
+    "S34": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "ResourceId": {},
+        "OwnerId": {},
+        "AutodefinedReverse": {}
+      }
+    },
+    "S38": {
+      "type": "structure",
+      "members": {
+        "Id": {},
+        "OwnerId": {},
+        "ResourceId": {},
+        "ValidationStatus": {}
+      }
+    },
+    "S47": {
+      "type": "list",
+      "member": {}
+    },
+    "S4o": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Name": {},
+          "Values": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      }
+    }
+  }
+}

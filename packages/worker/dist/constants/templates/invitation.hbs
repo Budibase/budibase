@@ -1,0 +1,50 @@
+<!-- Based on template: https://github.com/wildbit/postmark-templates/blob/master/templates/plain/user-invitation/content.html -->
+<tr>
+  <td class="email-body" width="570" cellpadding="0" cellspacing="0">
+    <table class="email-body_inner" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
+      <!-- Body content -->
+      <tr>
+        <td class="content-cell">
+          <div class="f-fallback">
+            <h1>Hi, {{ email }}!</h1>
+            <p>
+              {{#if request}}
+                {{ request.inviter }} has invited you to use {{ company }}'s Budibase platform.<
+              {{else}}
+                You've been invited to use {{ company }}'s Budibase platform.
+              {{/if}}
+              Use the button below to set up your account and get started:
+            </p>
+            <!-- Action -->
+            <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+              <tr>
+                <td align="center">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                    <tr>
+                      <td align="center">
+                        <a href="{{ inviteUrl }}" class="f-fallback button" target="_blank">Set up account</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <p>If you have any questions contact your Budibase platform administrator.</p>
+            <p>Welcome aboard,
+              <br>The {{ company }} Team</p>
+            <p><strong>P.S.</strong> Need help getting started? Check out our <a href="{{ docsUrl }}">help documentation</a>.</p>
+            <!-- Sub copy -->
+            <table class="body-sub" role="presentation">
+              <tr>
+                <td>
+                  <p class="f-fallback sub">If you’re having trouble with the button above, copy and paste the URL below into your web browser.</p>
+                  <p class="f-fallback sub">{{ inviteUrl }}</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>

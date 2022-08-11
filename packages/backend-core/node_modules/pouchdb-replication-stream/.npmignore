@@ -1,0 +1,8 @@
+.git*
+node_modules
+.DS_Store
+*~
+coverage
+npm-debug.log
+vendor/
+.idea

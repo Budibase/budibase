@@ -1,0 +1,45 @@
+<!-- Based on template: https://github.com/wildbit/postmark-templates/blob/master/templates/plain/welcome/content.html -->
+<tr>
+  <td class="email-body" width="570" cellpadding="0" cellspacing="0">
+    <table class="email-body_inner" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation">
+      <!-- Body content -->
+      <tr>
+        <td class="content-cell">
+          <div class="f-fallback">
+            <h1>Welcome, {{#if name}}{{ name }}{{else}}{{ email }}{{/if}}!</h1>
+            <p>Thanks for getting started with {{ company }}'s Budibase platform.</p>
+            <p>For reference, here's how to login:</p>
+            <table class="attributes" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+              <tr>
+                <td class="attributes_content">
+                  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                    <tr>
+                      <td class="attributes_item">
+                        <span class="f-fallback">
+                          <strong>Login Page:</strong> <a href="{{ loginUrl }}">{{ loginUrl }}</a>
+                        </span>
+                      </td>
+                    </tr>
+                    {{#if request}}
+                      <tr>
+                        <td class="attributes_item">
+                          <span class="f-fallback">
+                            <strong>Username:</strong> {{ request.loginUsername }}
+                          </span>
+                        </td>
+                      </tr>
+                    {{/if}}
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <p>If you have any questions get in contact with your {{ company }}'s Budibase platform administration team.</p>
+            <p>Thanks,
+              <br>The {{ company }} Team</p>
+            <p><strong>P.S.</strong> Need immediate help getting started? Check out our <a href="{{ docsUrl }}">help documentation</a>.</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>

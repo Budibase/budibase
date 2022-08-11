@@ -1,0 +1,39 @@
+{
+  "name" : "xml2js",
+  "description" : "Simple XML to JavaScript object converter.",
+  "keywords" : ["xml", "json"],
+  "homepage" : "https://github.com/Leonidas-from-XIV/node-xml2js",
+  "version" : "0.1.14",
+  "author" : "Marek Kubica <marek@xivilization.net> (http://xivilization.net)",
+  "contributors" : [
+    "maqr <maqr.lollerskates@gmail.com> (https://github.com/maqr)",
+    "Ben Weaver (http://benweaver.com/)",
+    "Jae Kwon (https://github.com/jaekwon)",
+    "Jim Robert",
+    "Ștefan Rusu (http://www.saltwaterc.eu/)",
+    "Carter Cole <carter.cole@cartercole.com> (http://cartercole.com/)",
+    "Kurt Raschke <kurt@kurtraschke.com> (http://www.kurtraschke.com/)",
+    "Contra <contra@australia.edu> (https://github.com/Contra)",
+    "Marcelo Diniz <marudiniz@gmail.com> (https://github.com/mdiniz)",
+    "Michael Hart (https://github.com/mhart)",
+    "Zachary Scott <zachary@zacharyscott.net> (http://zacharyscott.net/)",
+    "Raoul Millais (https://github.com/raoulmillais)",
+    "Salsita Software (http://www.salsitasoft.com/)"
+  ],
+  "main" : "./lib/xml2js",
+  "directories" : {
+    "lib": "./lib"
+  },
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/Leonidas-from-XIV/node-xml2js.git"
+  },
+  "dependencies" : {
+    "sax" : ">=0.1.1"
+  },
+  "devDependencies" : {
+    "coffee-script" : ">=1.0.1",
+    "zap" : ">=0.2.3",
+    "docco" : ">=0.3.0"
+  }
+}

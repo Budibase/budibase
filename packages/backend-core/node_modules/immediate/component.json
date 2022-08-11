@@ -1,0 +1,13 @@
+{
+  "name": "immediate",
+  "version": "3.2.1",
+  "description": "A cross browser microtask library",
+  "repo": "calvinmetcalf/immediate",
+  "keywords": [],
+  "development": {},
+  "license": "MIT",
+  "main": "dist/immediate.js",
+  "scripts": [
+    "dist/immediate.js"
+  ]
+}

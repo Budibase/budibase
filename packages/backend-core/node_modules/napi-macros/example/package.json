@@ -1,0 +1,11 @@
+{
+  "name": "napi-macros-example",
+  "version": "0.0.0",
+  "description": "an example using napi-macros",
+  "dependencies": {
+    "node-gyp-build": "^3.2.2"
+  },
+  "scripts": {
+    "install": "node-gyp-build"
+  }
+}

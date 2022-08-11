@@ -1,0 +1,3186 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2015-10-01",
+    "endpointPrefix": "gamelift",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceFullName": "Amazon GameLift",
+    "serviceId": "GameLift",
+    "signatureVersion": "v4",
+    "targetPrefix": "GameLift",
+    "uid": "gamelift-2015-10-01"
+  },
+  "operations": {
+    "AcceptMatch": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TicketId",
+          "PlayerIds",
+          "AcceptanceType"
+        ],
+        "members": {
+          "TicketId": {},
+          "PlayerIds": {
+            "shape": "S3"
+          },
+          "AcceptanceType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "ClaimGameServer": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "GameServerId": {},
+          "GameServerData": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServer": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "CreateAlias": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "RoutingStrategy"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "RoutingStrategy": {
+            "shape": "Sm"
+          },
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Alias": {
+            "shape": "Sv"
+          }
+        }
+      }
+    },
+    "CreateBuild": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Name": {},
+          "Version": {},
+          "StorageLocation": {
+            "shape": "Sz"
+          },
+          "OperatingSystem": {},
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Build": {
+            "shape": "S13"
+          },
+          "UploadCredentials": {
+            "shape": "S18"
+          },
+          "StorageLocation": {
+            "shape": "Sz"
+          }
+        }
+      }
+    },
+    "CreateFleet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "EC2InstanceType"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "BuildId": {},
+          "ScriptId": {},
+          "ServerLaunchPath": {},
+          "ServerLaunchParameters": {},
+          "LogPaths": {
+            "shape": "S3"
+          },
+          "EC2InstanceType": {},
+          "EC2InboundPermissions": {
+            "shape": "S1f"
+          },
+          "NewGameSessionProtectionPolicy": {},
+          "RuntimeConfiguration": {
+            "shape": "S1l"
+          },
+          "ResourceCreationLimitPolicy": {
+            "shape": "S1r"
+          },
+          "MetricGroups": {
+            "shape": "S1t"
+          },
+          "PeerVpcAwsAccountId": {},
+          "PeerVpcId": {},
+          "FleetType": {},
+          "InstanceRoleArn": {},
+          "CertificateConfiguration": {
+            "shape": "S1w"
+          },
+          "Locations": {
+            "shape": "S1y"
+          },
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetAttributes": {
+            "shape": "S22"
+          },
+          "LocationStates": {
+            "shape": "S29"
+          }
+        }
+      }
+    },
+    "CreateFleetLocations": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "Locations"
+        ],
+        "members": {
+          "FleetId": {},
+          "Locations": {
+            "shape": "S1y"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "FleetArn": {},
+          "LocationStates": {
+            "shape": "S29"
+          }
+        }
+      }
+    },
+    "CreateGameServerGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName",
+          "RoleArn",
+          "MinSize",
+          "MaxSize",
+          "LaunchTemplate",
+          "InstanceDefinitions"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "RoleArn": {},
+          "MinSize": {
+            "type": "integer"
+          },
+          "MaxSize": {
+            "type": "integer"
+          },
+          "LaunchTemplate": {
+            "type": "structure",
+            "members": {
+              "LaunchTemplateId": {},
+              "LaunchTemplateName": {},
+              "Version": {}
+            }
+          },
+          "InstanceDefinitions": {
+            "shape": "S2k"
+          },
+          "AutoScalingPolicy": {
+            "type": "structure",
+            "required": [
+              "TargetTrackingConfiguration"
+            ],
+            "members": {
+              "EstimatedInstanceWarmup": {
+                "type": "integer"
+              },
+              "TargetTrackingConfiguration": {
+                "type": "structure",
+                "required": [
+                  "TargetValue"
+                ],
+                "members": {
+                  "TargetValue": {
+                    "type": "double"
+                  }
+                }
+              }
+            }
+          },
+          "BalancingStrategy": {},
+          "GameServerProtectionPolicy": {},
+          "VpcSubnets": {
+            "type": "list",
+            "member": {}
+          },
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServerGroup": {
+            "shape": "S2w"
+          }
+        }
+      }
+    },
+    "CreateGameSession": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "MaximumPlayerSessionCount"
+        ],
+        "members": {
+          "FleetId": {},
+          "AliasId": {},
+          "MaximumPlayerSessionCount": {
+            "type": "integer"
+          },
+          "Name": {},
+          "GameProperties": {
+            "shape": "S33"
+          },
+          "CreatorId": {},
+          "GameSessionId": {},
+          "IdempotencyToken": {},
+          "GameSessionData": {},
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSession": {
+            "shape": "S3a"
+          }
+        }
+      }
+    },
+    "CreateGameSessionQueue": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "TimeoutInSeconds": {
+            "type": "integer"
+          },
+          "PlayerLatencyPolicies": {
+            "shape": "S3j"
+          },
+          "Destinations": {
+            "shape": "S3l"
+          },
+          "FilterConfiguration": {
+            "shape": "S3o"
+          },
+          "PriorityConfiguration": {
+            "shape": "S3q"
+          },
+          "CustomEventData": {},
+          "NotificationTarget": {},
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSessionQueue": {
+            "shape": "S3w"
+          }
+        }
+      }
+    },
+    "CreateMatchmakingConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "RequestTimeoutSeconds",
+          "AcceptanceRequired",
+          "RuleSetName"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "GameSessionQueueArns": {
+            "shape": "S3z"
+          },
+          "RequestTimeoutSeconds": {
+            "type": "integer"
+          },
+          "AcceptanceTimeoutSeconds": {
+            "type": "integer"
+          },
+          "AcceptanceRequired": {
+            "type": "boolean"
+          },
+          "RuleSetName": {},
+          "NotificationTarget": {},
+          "AdditionalPlayerCount": {
+            "type": "integer"
+          },
+          "CustomEventData": {},
+          "GameProperties": {
+            "shape": "S33"
+          },
+          "GameSessionData": {},
+          "BackfillMode": {},
+          "FlexMatchMode": {},
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Configuration": {
+            "shape": "S4a"
+          }
+        }
+      }
+    },
+    "CreateMatchmakingRuleSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "RuleSetBody"
+        ],
+        "members": {
+          "Name": {},
+          "RuleSetBody": {},
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "RuleSet"
+        ],
+        "members": {
+          "RuleSet": {
+            "shape": "S4g"
+          }
+        }
+      }
+    },
+    "CreatePlayerSession": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameSessionId",
+          "PlayerId"
+        ],
+        "members": {
+          "GameSessionId": {},
+          "PlayerId": {},
+          "PlayerData": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PlayerSession": {
+            "shape": "S4k"
+          }
+        }
+      }
+    },
+    "CreatePlayerSessions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameSessionId",
+          "PlayerIds"
+        ],
+        "members": {
+          "GameSessionId": {},
+          "PlayerIds": {
+            "type": "list",
+            "member": {}
+          },
+          "PlayerDataMap": {
+            "type": "map",
+            "key": {},
+            "value": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PlayerSessions": {
+            "shape": "S4r"
+          }
+        }
+      }
+    },
+    "CreateScript": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Name": {},
+          "Version": {},
+          "StorageLocation": {
+            "shape": "Sz"
+          },
+          "ZipFile": {
+            "type": "blob"
+          },
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Script": {
+            "shape": "S4v"
+          }
+        }
+      }
+    },
+    "CreateVpcPeeringAuthorization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameLiftAwsAccountId",
+          "PeerVpcId"
+        ],
+        "members": {
+          "GameLiftAwsAccountId": {},
+          "PeerVpcId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "VpcPeeringAuthorization": {
+            "shape": "S4y"
+          }
+        }
+      }
+    },
+    "CreateVpcPeeringConnection": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "PeerVpcAwsAccountId",
+          "PeerVpcId"
+        ],
+        "members": {
+          "FleetId": {},
+          "PeerVpcAwsAccountId": {},
+          "PeerVpcId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteAlias": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AliasId"
+        ],
+        "members": {
+          "AliasId": {}
+        }
+      }
+    },
+    "DeleteBuild": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "BuildId"
+        ],
+        "members": {
+          "BuildId": {}
+        }
+      }
+    },
+    "DeleteFleet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {}
+        }
+      }
+    },
+    "DeleteFleetLocations": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "Locations"
+        ],
+        "members": {
+          "FleetId": {},
+          "Locations": {
+            "shape": "S3p"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "FleetArn": {},
+          "LocationStates": {
+            "shape": "S29"
+          }
+        }
+      }
+    },
+    "DeleteGameServerGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "DeleteOption": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServerGroup": {
+            "shape": "S2w"
+          }
+        }
+      }
+    },
+    "DeleteGameSessionQueue": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteMatchmakingConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteMatchmakingRuleSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteScalingPolicy": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "FleetId"
+        ],
+        "members": {
+          "Name": {},
+          "FleetId": {}
+        }
+      }
+    },
+    "DeleteScript": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ScriptId"
+        ],
+        "members": {
+          "ScriptId": {}
+        }
+      }
+    },
+    "DeleteVpcPeeringAuthorization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameLiftAwsAccountId",
+          "PeerVpcId"
+        ],
+        "members": {
+          "GameLiftAwsAccountId": {},
+          "PeerVpcId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteVpcPeeringConnection": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "VpcPeeringConnectionId"
+        ],
+        "members": {
+          "FleetId": {},
+          "VpcPeeringConnectionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeregisterGameServer": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName",
+          "GameServerId"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "GameServerId": {}
+        }
+      }
+    },
+    "DescribeAlias": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AliasId"
+        ],
+        "members": {
+          "AliasId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Alias": {
+            "shape": "Sv"
+          }
+        }
+      }
+    },
+    "DescribeBuild": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "BuildId"
+        ],
+        "members": {
+          "BuildId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Build": {
+            "shape": "S13"
+          }
+        }
+      }
+    },
+    "DescribeEC2InstanceLimits": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "EC2InstanceType": {},
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "EC2InstanceLimits": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "EC2InstanceType": {},
+                "CurrentInstances": {
+                  "type": "integer"
+                },
+                "InstanceLimit": {
+                  "type": "integer"
+                },
+                "Location": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "DescribeFleetAttributes": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "FleetIds": {
+            "shape": "S5x"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetAttributes": {
+            "type": "list",
+            "member": {
+              "shape": "S22"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeFleetCapacity": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "FleetIds": {
+            "shape": "S5x"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetCapacity": {
+            "type": "list",
+            "member": {
+              "shape": "S63"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeFleetEvents": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {},
+          "StartTime": {
+            "type": "timestamp"
+          },
+          "EndTime": {
+            "type": "timestamp"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Events": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "EventId": {},
+                "ResourceId": {},
+                "EventCode": {},
+                "Message": {},
+                "EventTime": {
+                  "type": "timestamp"
+                },
+                "PreSignedLogUrl": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeFleetLocationAttributes": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {},
+          "Locations": {
+            "shape": "S3p"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "FleetArn": {},
+          "LocationAttributes": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "LocationState": {
+                  "shape": "S2a"
+                },
+                "StoppedActions": {
+                  "shape": "S27"
+                },
+                "UpdateStatus": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeFleetLocationCapacity": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "Location"
+        ],
+        "members": {
+          "FleetId": {},
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetCapacity": {
+            "shape": "S63"
+          }
+        }
+      }
+    },
+    "DescribeFleetLocationUtilization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "Location"
+        ],
+        "members": {
+          "FleetId": {},
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetUtilization": {
+            "shape": "S6j"
+          }
+        }
+      }
+    },
+    "DescribeFleetPortSettings": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {},
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "FleetArn": {},
+          "InboundPermissions": {
+            "shape": "S1f"
+          },
+          "UpdateStatus": {},
+          "Location": {}
+        }
+      }
+    },
+    "DescribeFleetUtilization": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "FleetIds": {
+            "shape": "S5x"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetUtilization": {
+            "type": "list",
+            "member": {
+              "shape": "S6j"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeGameServer": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName",
+          "GameServerId"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "GameServerId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServer": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "DescribeGameServerGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName"
+        ],
+        "members": {
+          "GameServerGroupName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServerGroup": {
+            "shape": "S2w"
+          }
+        }
+      }
+    },
+    "DescribeGameServerInstances": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "InstanceIds": {
+            "type": "list",
+            "member": {}
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServerInstances": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "GameServerGroupName": {},
+                "GameServerGroupArn": {},
+                "InstanceId": {},
+                "InstanceStatus": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeGameSessionDetails": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "GameSessionId": {},
+          "AliasId": {},
+          "Location": {},
+          "StatusFilter": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSessionDetails": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "GameSession": {
+                  "shape": "S3a"
+                },
+                "ProtectionPolicy": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeGameSessionPlacement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PlacementId"
+        ],
+        "members": {
+          "PlacementId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSessionPlacement": {
+            "shape": "S75"
+          }
+        }
+      }
+    },
+    "DescribeGameSessionQueues": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "type": "list",
+            "member": {}
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSessionQueues": {
+            "type": "list",
+            "member": {
+              "shape": "S3w"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeGameSessions": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "GameSessionId": {},
+          "AliasId": {},
+          "Location": {},
+          "StatusFilter": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSessions": {
+            "shape": "S7i"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeInstances": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {},
+          "InstanceId": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Instances": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "FleetId": {},
+                "FleetArn": {},
+                "InstanceId": {},
+                "IpAddress": {},
+                "DnsName": {},
+                "OperatingSystem": {},
+                "Type": {},
+                "Status": {},
+                "CreationTime": {
+                  "type": "timestamp"
+                },
+                "Location": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeMatchmaking": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TicketIds"
+        ],
+        "members": {
+          "TicketIds": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TicketList": {
+            "type": "list",
+            "member": {
+              "shape": "S7t"
+            }
+          }
+        }
+      }
+    },
+    "DescribeMatchmakingConfigurations": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "type": "list",
+            "member": {}
+          },
+          "RuleSetName": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Configurations": {
+            "type": "list",
+            "member": {
+              "shape": "S4a"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeMatchmakingRuleSets": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "type": "list",
+            "member": {}
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "RuleSets"
+        ],
+        "members": {
+          "RuleSets": {
+            "type": "list",
+            "member": {
+              "shape": "S4g"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribePlayerSessions": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "GameSessionId": {},
+          "PlayerId": {},
+          "PlayerSessionId": {},
+          "PlayerSessionStatusFilter": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PlayerSessions": {
+            "shape": "S4r"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeRuntimeConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RuntimeConfiguration": {
+            "shape": "S1l"
+          }
+        }
+      }
+    },
+    "DescribeScalingPolicies": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {},
+          "StatusFilter": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ScalingPolicies": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "FleetId": {},
+                "FleetArn": {},
+                "Name": {},
+                "Status": {},
+                "ScalingAdjustment": {
+                  "type": "integer"
+                },
+                "ScalingAdjustmentType": {},
+                "ComparisonOperator": {},
+                "Threshold": {
+                  "type": "double"
+                },
+                "EvaluationPeriods": {
+                  "type": "integer"
+                },
+                "MetricName": {},
+                "PolicyType": {},
+                "TargetConfiguration": {
+                  "shape": "S8u"
+                },
+                "UpdateStatus": {},
+                "Location": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeScript": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ScriptId"
+        ],
+        "members": {
+          "ScriptId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Script": {
+            "shape": "S4v"
+          }
+        }
+      }
+    },
+    "DescribeVpcPeeringAuthorizations": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "VpcPeeringAuthorizations": {
+            "type": "list",
+            "member": {
+              "shape": "S4y"
+            }
+          }
+        }
+      }
+    },
+    "DescribeVpcPeeringConnections": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "FleetId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "VpcPeeringConnections": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "FleetId": {},
+                "FleetArn": {},
+                "IpV4CidrBlock": {},
+                "VpcPeeringConnectionId": {},
+                "Status": {
+                  "type": "structure",
+                  "members": {
+                    "Code": {},
+                    "Message": {}
+                  }
+                },
+                "PeerVpcId": {},
+                "GameLiftVpcId": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetGameSessionLogUrl": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameSessionId"
+        ],
+        "members": {
+          "GameSessionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PreSignedUrl": {}
+        }
+      }
+    },
+    "GetInstanceAccess": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "InstanceId"
+        ],
+        "members": {
+          "FleetId": {},
+          "InstanceId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "InstanceAccess": {
+            "type": "structure",
+            "members": {
+              "FleetId": {},
+              "InstanceId": {},
+              "IpAddress": {},
+              "OperatingSystem": {},
+              "Credentials": {
+                "type": "structure",
+                "members": {
+                  "UserName": {},
+                  "Secret": {}
+                },
+                "sensitive": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "ListAliases": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "RoutingStrategyType": {},
+          "Name": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Aliases": {
+            "type": "list",
+            "member": {
+              "shape": "Sv"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListBuilds": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Status": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Builds": {
+            "type": "list",
+            "member": {
+              "shape": "S13"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListFleets": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "BuildId": {},
+          "ScriptId": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetIds": {
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListGameServerGroups": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServerGroups": {
+            "type": "list",
+            "member": {
+              "shape": "S2w"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListGameServers": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "SortOrder": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServers": {
+            "type": "list",
+            "member": {
+              "shape": "Sc"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListScripts": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Scripts": {
+            "type": "list",
+            "member": {
+              "shape": "S4v"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN"
+        ],
+        "members": {
+          "ResourceARN": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      }
+    },
+    "PutScalingPolicy": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "FleetId",
+          "MetricName"
+        ],
+        "members": {
+          "Name": {},
+          "FleetId": {},
+          "ScalingAdjustment": {
+            "type": "integer"
+          },
+          "ScalingAdjustmentType": {},
+          "Threshold": {
+            "type": "double"
+          },
+          "ComparisonOperator": {},
+          "EvaluationPeriods": {
+            "type": "integer"
+          },
+          "MetricName": {},
+          "PolicyType": {},
+          "TargetConfiguration": {
+            "shape": "S8u"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Name": {}
+        }
+      }
+    },
+    "RegisterGameServer": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName",
+          "GameServerId",
+          "InstanceId"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "GameServerId": {},
+          "InstanceId": {},
+          "ConnectionInfo": {},
+          "GameServerData": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServer": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "RequestUploadCredentials": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "BuildId"
+        ],
+        "members": {
+          "BuildId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "UploadCredentials": {
+            "shape": "S18"
+          },
+          "StorageLocation": {
+            "shape": "Sz"
+          }
+        }
+      }
+    },
+    "ResolveAlias": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AliasId"
+        ],
+        "members": {
+          "AliasId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "FleetArn": {}
+        }
+      }
+    },
+    "ResumeGameServerGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName",
+          "ResumeActions"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "ResumeActions": {
+            "shape": "S2z"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServerGroup": {
+            "shape": "S2w"
+          }
+        }
+      }
+    },
+    "SearchGameSessions": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "AliasId": {},
+          "Location": {},
+          "FilterExpression": {},
+          "SortExpression": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSessions": {
+            "shape": "S7i"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "StartFleetActions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "Actions"
+        ],
+        "members": {
+          "FleetId": {},
+          "Actions": {
+            "shape": "S27"
+          },
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "FleetArn": {}
+        }
+      }
+    },
+    "StartGameSessionPlacement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PlacementId",
+          "GameSessionQueueName",
+          "MaximumPlayerSessionCount"
+        ],
+        "members": {
+          "PlacementId": {},
+          "GameSessionQueueName": {},
+          "GameProperties": {
+            "shape": "S33"
+          },
+          "MaximumPlayerSessionCount": {
+            "type": "integer"
+          },
+          "GameSessionName": {},
+          "PlayerLatencies": {
+            "shape": "S77"
+          },
+          "DesiredPlayerSessions": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "PlayerId": {},
+                "PlayerData": {}
+              }
+            }
+          },
+          "GameSessionData": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSessionPlacement": {
+            "shape": "S75"
+          }
+        }
+      }
+    },
+    "StartMatchBackfill": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationName",
+          "Players"
+        ],
+        "members": {
+          "TicketId": {},
+          "ConfigurationName": {},
+          "GameSessionArn": {},
+          "Players": {
+            "shape": "S7w"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "MatchmakingTicket": {
+            "shape": "S7t"
+          }
+        }
+      }
+    },
+    "StartMatchmaking": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationName",
+          "Players"
+        ],
+        "members": {
+          "TicketId": {},
+          "ConfigurationName": {},
+          "Players": {
+            "shape": "S7w"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "MatchmakingTicket": {
+            "shape": "S7t"
+          }
+        }
+      }
+    },
+    "StopFleetActions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "Actions"
+        ],
+        "members": {
+          "FleetId": {},
+          "Actions": {
+            "shape": "S27"
+          },
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "FleetArn": {}
+        }
+      }
+    },
+    "StopGameSessionPlacement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PlacementId"
+        ],
+        "members": {
+          "PlacementId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSessionPlacement": {
+            "shape": "S75"
+          }
+        }
+      }
+    },
+    "StopMatchmaking": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TicketId"
+        ],
+        "members": {
+          "TicketId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "SuspendGameServerGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName",
+          "SuspendActions"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "SuspendActions": {
+            "shape": "S2z"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServerGroup": {
+            "shape": "S2w"
+          }
+        }
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN",
+          "Tags"
+        ],
+        "members": {
+          "ResourceARN": {},
+          "Tags": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceARN": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateAlias": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AliasId"
+        ],
+        "members": {
+          "AliasId": {},
+          "Name": {},
+          "Description": {},
+          "RoutingStrategy": {
+            "shape": "Sm"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Alias": {
+            "shape": "Sv"
+          }
+        }
+      }
+    },
+    "UpdateBuild": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "BuildId"
+        ],
+        "members": {
+          "BuildId": {},
+          "Name": {},
+          "Version": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Build": {
+            "shape": "S13"
+          }
+        }
+      }
+    },
+    "UpdateFleetAttributes": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {},
+          "Name": {},
+          "Description": {},
+          "NewGameSessionProtectionPolicy": {},
+          "ResourceCreationLimitPolicy": {
+            "shape": "S1r"
+          },
+          "MetricGroups": {
+            "shape": "S1t"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {}
+        }
+      }
+    },
+    "UpdateFleetCapacity": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {},
+          "DesiredInstances": {
+            "type": "integer"
+          },
+          "MinSize": {
+            "type": "integer"
+          },
+          "MaxSize": {
+            "type": "integer"
+          },
+          "Location": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {},
+          "FleetArn": {},
+          "Location": {}
+        }
+      }
+    },
+    "UpdateFleetPortSettings": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId"
+        ],
+        "members": {
+          "FleetId": {},
+          "InboundPermissionAuthorizations": {
+            "shape": "S1f"
+          },
+          "InboundPermissionRevocations": {
+            "shape": "S1f"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FleetId": {}
+        }
+      }
+    },
+    "UpdateGameServer": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName",
+          "GameServerId"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "GameServerId": {},
+          "GameServerData": {},
+          "UtilizationStatus": {},
+          "HealthCheck": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServer": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "UpdateGameServerGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameServerGroupName"
+        ],
+        "members": {
+          "GameServerGroupName": {},
+          "RoleArn": {},
+          "InstanceDefinitions": {
+            "shape": "S2k"
+          },
+          "GameServerProtectionPolicy": {},
+          "BalancingStrategy": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameServerGroup": {
+            "shape": "S2w"
+          }
+        }
+      }
+    },
+    "UpdateGameSession": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GameSessionId"
+        ],
+        "members": {
+          "GameSessionId": {},
+          "MaximumPlayerSessionCount": {
+            "type": "integer"
+          },
+          "Name": {},
+          "PlayerSessionCreationPolicy": {},
+          "ProtectionPolicy": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSession": {
+            "shape": "S3a"
+          }
+        }
+      }
+    },
+    "UpdateGameSessionQueue": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "TimeoutInSeconds": {
+            "type": "integer"
+          },
+          "PlayerLatencyPolicies": {
+            "shape": "S3j"
+          },
+          "Destinations": {
+            "shape": "S3l"
+          },
+          "FilterConfiguration": {
+            "shape": "S3o"
+          },
+          "PriorityConfiguration": {
+            "shape": "S3q"
+          },
+          "CustomEventData": {},
+          "NotificationTarget": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GameSessionQueue": {
+            "shape": "S3w"
+          }
+        }
+      }
+    },
+    "UpdateMatchmakingConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "GameSessionQueueArns": {
+            "shape": "S3z"
+          },
+          "RequestTimeoutSeconds": {
+            "type": "integer"
+          },
+          "AcceptanceTimeoutSeconds": {
+            "type": "integer"
+          },
+          "AcceptanceRequired": {
+            "type": "boolean"
+          },
+          "RuleSetName": {},
+          "NotificationTarget": {},
+          "AdditionalPlayerCount": {
+            "type": "integer"
+          },
+          "CustomEventData": {},
+          "GameProperties": {
+            "shape": "S33"
+          },
+          "GameSessionData": {},
+          "BackfillMode": {},
+          "FlexMatchMode": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Configuration": {
+            "shape": "S4a"
+          }
+        }
+      }
+    },
+    "UpdateRuntimeConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetId",
+          "RuntimeConfiguration"
+        ],
+        "members": {
+          "FleetId": {},
+          "RuntimeConfiguration": {
+            "shape": "S1l"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RuntimeConfiguration": {
+            "shape": "S1l"
+          }
+        }
+      }
+    },
+    "UpdateScript": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ScriptId"
+        ],
+        "members": {
+          "ScriptId": {},
+          "Name": {},
+          "Version": {},
+          "StorageLocation": {
+            "shape": "Sz"
+          },
+          "ZipFile": {
+            "type": "blob"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Script": {
+            "shape": "S4v"
+          }
+        }
+      }
+    },
+    "ValidateMatchmakingRuleSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RuleSetBody"
+        ],
+        "members": {
+          "RuleSetBody": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S3": {
+      "type": "list",
+      "member": {}
+    },
+    "Sc": {
+      "type": "structure",
+      "members": {
+        "GameServerGroupName": {},
+        "GameServerGroupArn": {},
+        "GameServerId": {},
+        "InstanceId": {},
+        "ConnectionInfo": {},
+        "GameServerData": {},
+        "ClaimStatus": {},
+        "UtilizationStatus": {},
+        "RegistrationTime": {
+          "type": "timestamp"
+        },
+        "LastClaimTime": {
+          "type": "timestamp"
+        },
+        "LastHealthCheckTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Sm": {
+      "type": "structure",
+      "members": {
+        "Type": {},
+        "FleetId": {},
+        "Message": {}
+      }
+    },
+    "Sq": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key",
+          "Value"
+        ],
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "Sv": {
+      "type": "structure",
+      "members": {
+        "AliasId": {},
+        "Name": {},
+        "AliasArn": {},
+        "Description": {},
+        "RoutingStrategy": {
+          "shape": "Sm"
+        },
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "LastUpdatedTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Sz": {
+      "type": "structure",
+      "members": {
+        "Bucket": {},
+        "Key": {},
+        "RoleArn": {},
+        "ObjectVersion": {}
+      }
+    },
+    "S13": {
+      "type": "structure",
+      "members": {
+        "BuildId": {},
+        "BuildArn": {},
+        "Name": {},
+        "Version": {},
+        "Status": {},
+        "SizeOnDisk": {
+          "type": "long"
+        },
+        "OperatingSystem": {},
+        "CreationTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S18": {
+      "type": "structure",
+      "members": {
+        "AccessKeyId": {},
+        "SecretAccessKey": {},
+        "SessionToken": {}
+      },
+      "sensitive": true
+    },
+    "S1f": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "FromPort",
+          "ToPort",
+          "IpRange",
+          "Protocol"
+        ],
+        "members": {
+          "FromPort": {
+            "type": "integer"
+          },
+          "ToPort": {
+            "type": "integer"
+          },
+          "IpRange": {},
+          "Protocol": {}
+        }
+      }
+    },
+    "S1l": {
+      "type": "structure",
+      "members": {
+        "ServerProcesses": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "required": [
+              "LaunchPath",
+              "ConcurrentExecutions"
+            ],
+            "members": {
+              "LaunchPath": {},
+              "Parameters": {},
+              "ConcurrentExecutions": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "MaxConcurrentGameSessionActivations": {
+          "type": "integer"
+        },
+        "GameSessionActivationTimeoutSeconds": {
+          "type": "integer"
+        }
+      }
+    },
+    "S1r": {
+      "type": "structure",
+      "members": {
+        "NewGameSessionsPerCreator": {
+          "type": "integer"
+        },
+        "PolicyPeriodInMinutes": {
+          "type": "integer"
+        }
+      }
+    },
+    "S1t": {
+      "type": "list",
+      "member": {}
+    },
+    "S1w": {
+      "type": "structure",
+      "required": [
+        "CertificateType"
+      ],
+      "members": {
+        "CertificateType": {}
+      }
+    },
+    "S1y": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Location": {}
+        }
+      }
+    },
+    "S22": {
+      "type": "structure",
+      "members": {
+        "FleetId": {},
+        "FleetArn": {},
+        "FleetType": {},
+        "InstanceType": {},
+        "Description": {},
+        "Name": {},
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "TerminationTime": {
+          "type": "timestamp"
+        },
+        "Status": {},
+        "BuildId": {},
+        "BuildArn": {},
+        "ScriptId": {},
+        "ScriptArn": {},
+        "ServerLaunchPath": {},
+        "ServerLaunchParameters": {},
+        "LogPaths": {
+          "shape": "S3"
+        },
+        "NewGameSessionProtectionPolicy": {},
+        "OperatingSystem": {},
+        "ResourceCreationLimitPolicy": {
+          "shape": "S1r"
+        },
+        "MetricGroups": {
+          "shape": "S1t"
+        },
+        "StoppedActions": {
+          "shape": "S27"
+        },
+        "InstanceRoleArn": {},
+        "CertificateConfiguration": {
+          "shape": "S1w"
+        }
+      }
+    },
+    "S27": {
+      "type": "list",
+      "member": {}
+    },
+    "S29": {
+      "type": "list",
+      "member": {
+        "shape": "S2a"
+      }
+    },
+    "S2a": {
+      "type": "structure",
+      "members": {
+        "Location": {},
+        "Status": {}
+      }
+    },
+    "S2k": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "InstanceType"
+        ],
+        "members": {
+          "InstanceType": {},
+          "WeightedCapacity": {}
+        }
+      }
+    },
+    "S2w": {
+      "type": "structure",
+      "members": {
+        "GameServerGroupName": {},
+        "GameServerGroupArn": {},
+        "RoleArn": {},
+        "InstanceDefinitions": {
+          "shape": "S2k"
+        },
+        "BalancingStrategy": {},
+        "GameServerProtectionPolicy": {},
+        "AutoScalingGroupArn": {},
+        "Status": {},
+        "StatusReason": {},
+        "SuspendedActions": {
+          "shape": "S2z"
+        },
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "LastUpdatedTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S2z": {
+      "type": "list",
+      "member": {}
+    },
+    "S33": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key",
+          "Value"
+        ],
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "S3a": {
+      "type": "structure",
+      "members": {
+        "GameSessionId": {},
+        "Name": {},
+        "FleetId": {},
+        "FleetArn": {},
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "TerminationTime": {
+          "type": "timestamp"
+        },
+        "CurrentPlayerSessionCount": {
+          "type": "integer"
+        },
+        "MaximumPlayerSessionCount": {
+          "type": "integer"
+        },
+        "Status": {},
+        "StatusReason": {},
+        "GameProperties": {
+          "shape": "S33"
+        },
+        "IpAddress": {},
+        "DnsName": {},
+        "Port": {
+          "type": "integer"
+        },
+        "PlayerSessionCreationPolicy": {},
+        "CreatorId": {},
+        "GameSessionData": {},
+        "MatchmakerData": {},
+        "Location": {}
+      }
+    },
+    "S3j": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "MaximumIndividualPlayerLatencyMilliseconds": {
+            "type": "integer"
+          },
+          "PolicyDurationSeconds": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "S3l": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "DestinationArn": {}
+        }
+      }
+    },
+    "S3o": {
+      "type": "structure",
+      "members": {
+        "AllowedLocations": {
+          "shape": "S3p"
+        }
+      }
+    },
+    "S3p": {
+      "type": "list",
+      "member": {}
+    },
+    "S3q": {
+      "type": "structure",
+      "members": {
+        "PriorityOrder": {
+          "type": "list",
+          "member": {}
+        },
+        "LocationOrder": {
+          "shape": "S3p"
+        }
+      }
+    },
+    "S3w": {
+      "type": "structure",
+      "members": {
+        "Name": {},
+        "GameSessionQueueArn": {},
+        "TimeoutInSeconds": {
+          "type": "integer"
+        },
+        "PlayerLatencyPolicies": {
+          "shape": "S3j"
+        },
+        "Destinations": {
+          "shape": "S3l"
+        },
+        "FilterConfiguration": {
+          "shape": "S3o"
+        },
+        "PriorityConfiguration": {
+          "shape": "S3q"
+        },
+        "CustomEventData": {},
+        "NotificationTarget": {}
+      }
+    },
+    "S3z": {
+      "type": "list",
+      "member": {}
+    },
+    "S4a": {
+      "type": "structure",
+      "members": {
+        "Name": {},
+        "ConfigurationArn": {},
+        "Description": {},
+        "GameSessionQueueArns": {
+          "shape": "S3z"
+        },
+        "RequestTimeoutSeconds": {
+          "type": "integer"
+        },
+        "AcceptanceTimeoutSeconds": {
+          "type": "integer"
+        },
+        "AcceptanceRequired": {
+          "type": "boolean"
+        },
+        "RuleSetName": {},
+        "RuleSetArn": {},
+        "NotificationTarget": {},
+        "AdditionalPlayerCount": {
+          "type": "integer"
+        },
+        "CustomEventData": {},
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "GameProperties": {
+          "shape": "S33"
+        },
+        "GameSessionData": {},
+        "BackfillMode": {},
+        "FlexMatchMode": {}
+      }
+    },
+    "S4g": {
+      "type": "structure",
+      "required": [
+        "RuleSetBody"
+      ],
+      "members": {
+        "RuleSetName": {},
+        "RuleSetArn": {},
+        "RuleSetBody": {},
+        "CreationTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S4k": {
+      "type": "structure",
+      "members": {
+        "PlayerSessionId": {},
+        "PlayerId": {},
+        "GameSessionId": {},
+        "FleetId": {},
+        "FleetArn": {},
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "TerminationTime": {
+          "type": "timestamp"
+        },
+        "Status": {},
+        "IpAddress": {},
+        "DnsName": {},
+        "Port": {
+          "type": "integer"
+        },
+        "PlayerData": {}
+      }
+    },
+    "S4r": {
+      "type": "list",
+      "member": {
+        "shape": "S4k"
+      }
+    },
+    "S4v": {
+      "type": "structure",
+      "members": {
+        "ScriptId": {},
+        "ScriptArn": {},
+        "Name": {},
+        "Version": {},
+        "SizeOnDisk": {
+          "type": "long"
+        },
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "StorageLocation": {
+          "shape": "Sz"
+        }
+      }
+    },
+    "S4y": {
+      "type": "structure",
+      "members": {
+        "GameLiftAwsAccountId": {},
+        "PeerVpcAwsAccountId": {},
+        "PeerVpcId": {},
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "ExpirationTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S5x": {
+      "type": "list",
+      "member": {}
+    },
+    "S63": {
+      "type": "structure",
+      "members": {
+        "FleetId": {},
+        "FleetArn": {},
+        "InstanceType": {},
+        "InstanceCounts": {
+          "type": "structure",
+          "members": {
+            "DESIRED": {
+              "type": "integer"
+            },
+            "MINIMUM": {
+              "type": "integer"
+            },
+            "MAXIMUM": {
+              "type": "integer"
+            },
+            "PENDING": {
+              "type": "integer"
+            },
+            "ACTIVE": {
+              "type": "integer"
+            },
+            "IDLE": {
+              "type": "integer"
+            },
+            "TERMINATING": {
+              "type": "integer"
+            }
+          }
+        },
+        "Location": {}
+      }
+    },
+    "S6j": {
+      "type": "structure",
+      "members": {
+        "FleetId": {},
+        "FleetArn": {},
+        "ActiveServerProcessCount": {
+          "type": "integer"
+        },
+        "ActiveGameSessionCount": {
+          "type": "integer"
+        },
+        "CurrentPlayerSessionCount": {
+          "type": "integer"
+        },
+        "MaximumPlayerSessionCount": {
+          "type": "integer"
+        },
+        "Location": {}
+      }
+    },
+    "S75": {
+      "type": "structure",
+      "members": {
+        "PlacementId": {},
+        "GameSessionQueueName": {},
+        "Status": {},
+        "GameProperties": {
+          "shape": "S33"
+        },
+        "MaximumPlayerSessionCount": {
+          "type": "integer"
+        },
+        "GameSessionName": {},
+        "GameSessionId": {},
+        "GameSessionArn": {},
+        "GameSessionRegion": {},
+        "PlayerLatencies": {
+          "shape": "S77"
+        },
+        "StartTime": {
+          "type": "timestamp"
+        },
+        "EndTime": {
+          "type": "timestamp"
+        },
+        "IpAddress": {},
+        "DnsName": {},
+        "Port": {
+          "type": "integer"
+        },
+        "PlacedPlayerSessions": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "PlayerId": {},
+              "PlayerSessionId": {}
+            }
+          }
+        },
+        "GameSessionData": {},
+        "MatchmakerData": {}
+      }
+    },
+    "S77": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "PlayerId": {},
+          "RegionIdentifier": {},
+          "LatencyInMilliseconds": {
+            "type": "float"
+          }
+        }
+      }
+    },
+    "S7i": {
+      "type": "list",
+      "member": {
+        "shape": "S3a"
+      }
+    },
+    "S7t": {
+      "type": "structure",
+      "members": {
+        "TicketId": {},
+        "ConfigurationName": {},
+        "ConfigurationArn": {},
+        "Status": {},
+        "StatusReason": {},
+        "StatusMessage": {},
+        "StartTime": {
+          "type": "timestamp"
+        },
+        "EndTime": {
+          "type": "timestamp"
+        },
+        "Players": {
+          "shape": "S7w"
+        },
+        "GameSessionConnectionInfo": {
+          "type": "structure",
+          "members": {
+            "GameSessionArn": {},
+            "IpAddress": {},
+            "DnsName": {},
+            "Port": {
+              "type": "integer"
+            },
+            "MatchedPlayerSessions": {
+              "type": "list",
+              "member": {
+                "type": "structure",
+                "members": {
+                  "PlayerId": {},
+                  "PlayerSessionId": {}
+                }
+              }
+            }
+          }
+        },
+        "EstimatedWaitTime": {
+          "type": "integer"
+        }
+      }
+    },
+    "S7w": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "PlayerId": {},
+          "PlayerAttributes": {
+            "type": "map",
+            "key": {},
+            "value": {
+              "type": "structure",
+              "members": {
+                "S": {},
+                "N": {
+                  "type": "double"
+                },
+                "SL": {
+                  "shape": "S3"
+                },
+                "SDM": {
+                  "type": "map",
+                  "key": {},
+                  "value": {
+                    "type": "double"
+                  }
+                }
+              }
+            }
+          },
+          "Team": {},
+          "LatencyInMs": {
+            "type": "map",
+            "key": {},
+            "value": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "S8u": {
+      "type": "structure",
+      "required": [
+        "TargetValue"
+      ],
+      "members": {
+        "TargetValue": {
+          "type": "double"
+        }
+      }
+    }
+  }
+}

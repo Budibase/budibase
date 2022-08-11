@@ -1,0 +1,27 @@
+{
+  "name": "error-inject",
+  "version": "1.0.0",
+  "description": "inject an error listener into a stream",
+  "main": "index.js",
+  "files": [
+    "index.js"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/node-modules/error-inject.git"
+  },
+  "keywords": [
+    "stream",
+    "error",
+    "listener"
+  ],
+  "author": "dead_horse <dead_horse@qq.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/node-modules/error-inject/issues"
+  },
+  "homepage": "https://github.com/node-modules/error-inject"
+}

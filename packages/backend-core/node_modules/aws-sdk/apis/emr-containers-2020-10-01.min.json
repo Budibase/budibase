@@ -1,0 +1,776 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2020-10-01",
+    "endpointPrefix": "emr-containers",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceFullName": "Amazon EMR Containers",
+    "serviceId": "EMR containers",
+    "signatureVersion": "v4",
+    "signingName": "emr-containers",
+    "uid": "emr-containers-2020-10-01"
+  },
+  "operations": {
+    "CancelJobRun": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/virtualclusters/{virtualClusterId}/jobruns/{jobRunId}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "id",
+          "virtualClusterId"
+        ],
+        "members": {
+          "id": {
+            "location": "uri",
+            "locationName": "jobRunId"
+          },
+          "virtualClusterId": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "id": {},
+          "virtualClusterId": {}
+        }
+      }
+    },
+    "CreateManagedEndpoint": {
+      "http": {
+        "requestUri": "/virtualclusters/{virtualClusterId}/endpoints"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "name",
+          "virtualClusterId",
+          "type",
+          "releaseLabel",
+          "executionRoleArn",
+          "clientToken"
+        ],
+        "members": {
+          "name": {},
+          "virtualClusterId": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          },
+          "type": {},
+          "releaseLabel": {},
+          "executionRoleArn": {},
+          "certificateArn": {
+            "deprecated": true,
+            "deprecatedMessage": "Customer provided certificate-arn is deprecated and would be removed in future."
+          },
+          "configurationOverrides": {
+            "shape": "Sa"
+          },
+          "clientToken": {
+            "idempotencyToken": true
+          },
+          "tags": {
+            "shape": "Sn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "id": {},
+          "name": {},
+          "arn": {},
+          "virtualClusterId": {}
+        }
+      }
+    },
+    "CreateVirtualCluster": {
+      "http": {
+        "requestUri": "/virtualclusters"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "name",
+          "containerProvider",
+          "clientToken"
+        ],
+        "members": {
+          "name": {},
+          "containerProvider": {
+            "shape": "St"
+          },
+          "clientToken": {
+            "idempotencyToken": true
+          },
+          "tags": {
+            "shape": "Sn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "id": {},
+          "name": {},
+          "arn": {}
+        }
+      }
+    },
+    "DeleteManagedEndpoint": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/virtualclusters/{virtualClusterId}/endpoints/{endpointId}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "id",
+          "virtualClusterId"
+        ],
+        "members": {
+          "id": {
+            "location": "uri",
+            "locationName": "endpointId"
+          },
+          "virtualClusterId": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "id": {},
+          "virtualClusterId": {}
+        }
+      }
+    },
+    "DeleteVirtualCluster": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/virtualclusters/{virtualClusterId}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "id": {}
+        }
+      }
+    },
+    "DescribeJobRun": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/virtualclusters/{virtualClusterId}/jobruns/{jobRunId}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "id",
+          "virtualClusterId"
+        ],
+        "members": {
+          "id": {
+            "location": "uri",
+            "locationName": "jobRunId"
+          },
+          "virtualClusterId": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "jobRun": {
+            "shape": "S17"
+          }
+        }
+      }
+    },
+    "DescribeManagedEndpoint": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/virtualclusters/{virtualClusterId}/endpoints/{endpointId}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "id",
+          "virtualClusterId"
+        ],
+        "members": {
+          "id": {
+            "location": "uri",
+            "locationName": "endpointId"
+          },
+          "virtualClusterId": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "endpoint": {
+            "shape": "S1l"
+          }
+        }
+      }
+    },
+    "DescribeVirtualCluster": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/virtualclusters/{virtualClusterId}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "virtualCluster": {
+            "shape": "S1s"
+          }
+        }
+      }
+    },
+    "ListJobRuns": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/virtualclusters/{virtualClusterId}/jobruns"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "virtualClusterId"
+        ],
+        "members": {
+          "virtualClusterId": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          },
+          "createdBefore": {
+            "shape": "S1g",
+            "location": "querystring",
+            "locationName": "createdBefore"
+          },
+          "createdAfter": {
+            "shape": "S1g",
+            "location": "querystring",
+            "locationName": "createdAfter"
+          },
+          "name": {
+            "location": "querystring",
+            "locationName": "name"
+          },
+          "states": {
+            "location": "querystring",
+            "locationName": "states",
+            "type": "list",
+            "member": {}
+          },
+          "maxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "nextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "jobRuns": {
+            "type": "list",
+            "member": {
+              "shape": "S17"
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "ListManagedEndpoints": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/virtualclusters/{virtualClusterId}/endpoints"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "virtualClusterId"
+        ],
+        "members": {
+          "virtualClusterId": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          },
+          "createdBefore": {
+            "shape": "S1g",
+            "location": "querystring",
+            "locationName": "createdBefore"
+          },
+          "createdAfter": {
+            "shape": "S1g",
+            "location": "querystring",
+            "locationName": "createdAfter"
+          },
+          "types": {
+            "location": "querystring",
+            "locationName": "types",
+            "type": "list",
+            "member": {}
+          },
+          "states": {
+            "location": "querystring",
+            "locationName": "states",
+            "type": "list",
+            "member": {}
+          },
+          "maxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "nextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "endpoints": {
+            "type": "list",
+            "member": {
+              "shape": "S1l"
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/tags/{resourceArn}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn"
+        ],
+        "members": {
+          "resourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "tags": {
+            "shape": "Sn"
+          }
+        }
+      }
+    },
+    "ListVirtualClusters": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/virtualclusters"
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "containerProviderId": {
+            "location": "querystring",
+            "locationName": "containerProviderId"
+          },
+          "containerProviderType": {
+            "location": "querystring",
+            "locationName": "containerProviderType"
+          },
+          "createdAfter": {
+            "shape": "S1g",
+            "location": "querystring",
+            "locationName": "createdAfter"
+          },
+          "createdBefore": {
+            "shape": "S1g",
+            "location": "querystring",
+            "locationName": "createdBefore"
+          },
+          "states": {
+            "location": "querystring",
+            "locationName": "states",
+            "type": "list",
+            "member": {}
+          },
+          "maxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "nextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "virtualClusters": {
+            "type": "list",
+            "member": {
+              "shape": "S1s"
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "StartJobRun": {
+      "http": {
+        "requestUri": "/virtualclusters/{virtualClusterId}/jobruns"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "virtualClusterId",
+          "clientToken",
+          "executionRoleArn",
+          "releaseLabel",
+          "jobDriver"
+        ],
+        "members": {
+          "name": {},
+          "virtualClusterId": {
+            "location": "uri",
+            "locationName": "virtualClusterId"
+          },
+          "clientToken": {
+            "idempotencyToken": true
+          },
+          "executionRoleArn": {},
+          "releaseLabel": {},
+          "jobDriver": {
+            "shape": "S1a"
+          },
+          "configurationOverrides": {
+            "shape": "Sa"
+          },
+          "tags": {
+            "shape": "Sn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "id": {},
+          "name": {},
+          "arn": {},
+          "virtualClusterId": {}
+        }
+      }
+    },
+    "TagResource": {
+      "http": {
+        "requestUri": "/tags/{resourceArn}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "tags"
+        ],
+        "members": {
+          "resourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "tags": {
+            "shape": "Sn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/tags/{resourceArn}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "tagKeys"
+        ],
+        "members": {
+          "resourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "tagKeys": {
+            "location": "querystring",
+            "locationName": "tagKeys",
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "Sa": {
+      "type": "structure",
+      "members": {
+        "applicationConfiguration": {
+          "shape": "Sb"
+        },
+        "monitoringConfiguration": {
+          "type": "structure",
+          "members": {
+            "persistentAppUI": {},
+            "cloudWatchMonitoringConfiguration": {
+              "type": "structure",
+              "required": [
+                "logGroupName"
+              ],
+              "members": {
+                "logGroupName": {},
+                "logStreamNamePrefix": {}
+              }
+            },
+            "s3MonitoringConfiguration": {
+              "type": "structure",
+              "required": [
+                "logUri"
+              ],
+              "members": {
+                "logUri": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "Sb": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "classification"
+        ],
+        "members": {
+          "classification": {},
+          "properties": {
+            "type": "map",
+            "key": {},
+            "value": {},
+            "sensitive": true
+          },
+          "configurations": {
+            "shape": "Sb"
+          }
+        }
+      }
+    },
+    "Sn": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "St": {
+      "type": "structure",
+      "required": [
+        "type",
+        "id"
+      ],
+      "members": {
+        "type": {},
+        "id": {},
+        "info": {
+          "type": "structure",
+          "members": {
+            "eksInfo": {
+              "type": "structure",
+              "members": {
+                "namespace": {}
+              }
+            }
+          },
+          "union": true
+        }
+      }
+    },
+    "S17": {
+      "type": "structure",
+      "members": {
+        "id": {},
+        "name": {},
+        "virtualClusterId": {},
+        "arn": {},
+        "state": {},
+        "clientToken": {},
+        "executionRoleArn": {},
+        "releaseLabel": {},
+        "configurationOverrides": {
+          "shape": "Sa"
+        },
+        "jobDriver": {
+          "shape": "S1a"
+        },
+        "createdAt": {
+          "shape": "S1g"
+        },
+        "createdBy": {},
+        "finishedAt": {
+          "shape": "S1g"
+        },
+        "stateDetails": {},
+        "failureReason": {},
+        "tags": {
+          "shape": "Sn"
+        }
+      }
+    },
+    "S1a": {
+      "type": "structure",
+      "members": {
+        "sparkSubmitJobDriver": {
+          "type": "structure",
+          "required": [
+            "entryPoint"
+          ],
+          "members": {
+            "entryPoint": {
+              "type": "string",
+              "sensitive": true
+            },
+            "entryPointArguments": {
+              "type": "list",
+              "member": {
+                "type": "string",
+                "sensitive": true
+              }
+            },
+            "sparkSubmitParameters": {
+              "type": "string",
+              "sensitive": true
+            }
+          }
+        }
+      }
+    },
+    "S1g": {
+      "type": "timestamp",
+      "timestampFormat": "iso8601"
+    },
+    "S1l": {
+      "type": "structure",
+      "members": {
+        "id": {},
+        "name": {},
+        "arn": {},
+        "virtualClusterId": {},
+        "type": {},
+        "state": {},
+        "releaseLabel": {},
+        "executionRoleArn": {},
+        "certificateArn": {
+          "deprecated": true,
+          "deprecatedMessage": "Customer provided certificate-arn is deprecated and would be removed in future."
+        },
+        "certificateAuthority": {
+          "type": "structure",
+          "members": {
+            "certificateArn": {},
+            "certificateData": {}
+          }
+        },
+        "configurationOverrides": {
+          "shape": "Sa"
+        },
+        "serverUrl": {},
+        "createdAt": {
+          "shape": "S1g"
+        },
+        "securityGroup": {},
+        "subnetIds": {
+          "type": "list",
+          "member": {}
+        },
+        "stateDetails": {},
+        "failureReason": {},
+        "tags": {
+          "shape": "Sn"
+        }
+      }
+    },
+    "S1s": {
+      "type": "structure",
+      "members": {
+        "id": {},
+        "name": {},
+        "arn": {},
+        "state": {},
+        "containerProvider": {
+          "shape": "St"
+        },
+        "createdAt": {
+          "shape": "S1g"
+        },
+        "tags": {
+          "shape": "Sn"
+        }
+      }
+    }
+  }
+}

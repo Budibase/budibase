@@ -1,0 +1,31 @@
+{
+  "name": "argsarray",
+  "version": "0.0.1",
+  "description": "get arguments to a function as an array, withouth deoptimizing",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "tape test/test.*.js | tspec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/calvinmetcalf/argsarray.git"
+  },
+  "keywords": [
+    "arguments",
+    "args"
+  ],
+  "author": "Calvin Metcalf",
+  "license": "WTFPL",
+  "bugs": {
+    "url": "https://github.com/calvinmetcalf/argsarray/issues"
+  },
+  "homepage": "https://github.com/calvinmetcalf/argsarray",
+  "devDependencies": {
+    "tape": "^2.10.2",
+    "glob": "^3.2.9",
+    "tap-spec": "^0.1.5"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "ltgt",
+  "description": "",
+  "version": "2.2.1",
+  "homepage": "https://github.com/dominictarr/ltgt",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dominictarr/ltgt.git"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tape": "~2.13.1"
+  },
+  "scripts": {
+    "prepublish": "npm ls && node test.js",
+    "test": "node test.js"
+  },
+  "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
+  "license": "MIT",
+  "testling": {
+    "files": "test.js",
+    "browsers": [
+      "ie/8..latest",
+      "firefox/17..latest",
+      "firefox/nightly",
+      "chrome/22..latest",
+      "chrome/canary",
+      "opera/12..latest",
+      "opera/next",
+      "safari/5.1..latest",
+      "ipad/6.0..latest",
+      "iphone/6.0..latest",
+      "android-browser/4.2..latest"
+    ]
+  }
+}

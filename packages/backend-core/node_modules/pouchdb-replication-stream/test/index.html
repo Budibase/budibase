@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Mocha Tests</title>
+    <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+    <script src="./bind-polyfill.js"></script>
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script>
+    mocha.setup('bdd');
+    </script>
+    <script src="./test-bundle.js"></script>
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script type="text/javascript" src="./webrunner.js"></script>
+  </body>
+</html>
