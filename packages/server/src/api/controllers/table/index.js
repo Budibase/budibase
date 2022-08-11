@@ -76,7 +76,7 @@ exports.save = async function (ctx) {
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, appId, savedTable)
-  ctx.body = savedTable
+  ctx.body = encodeTable(savedTable)
 }
 
 exports.destroy = async function (ctx) {
