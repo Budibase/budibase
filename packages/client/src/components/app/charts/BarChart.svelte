@@ -35,7 +35,7 @@
     yAxisUnits,
     palette,
     horizontal,
-    c1 ? [c1] : null,
+    c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null,
     customColor
   )
 
