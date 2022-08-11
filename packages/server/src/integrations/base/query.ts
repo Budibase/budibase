@@ -1,5 +1,4 @@
-import { QueryJson } from "../../definitions/datasource"
-import { Datasource } from "../../definitions/common"
+import { QueryJson, Datasource } from "@budibase/types"
 const { integrations } = require("../index")
 
 export async function makeExternalQuery(

@@ -1,9 +1,9 @@
 import {
-  DatasourceFieldTypes,
+  DatasourceFieldType,
   Integration,
-  QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  QueryType,
+  IntegrationBase,
+} from "@budibase/types"
 import { Firestore, WhereFilterOp } from "@google-cloud/firestore"
 
 module Firebase {
@@ -21,46 +21,46 @@ module Firebase {
       "Cloud Firestore is a flexible, scalable database for mobile, web, and server development from Firebase and Google Cloud.",
     datasource: {
       email: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       privateKey: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       projectId: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
     },
     query: {
       create: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       read: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       update: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       delete: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
     },
     extra: {
       collection: {
         displayName: "Collection",
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       filterField: {
         displayName: "Filter field",
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: false,
       },
       filter: {
         displayName: "Filter comparison",
-        type: DatasourceFieldTypes.LIST,
+        type: DatasourceFieldType.LIST,
         required: false,
         data: {
           read: [
@@ -79,7 +79,7 @@ module Firebase {
       },
       filterValue: {
         displayName: "Filter value",
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: false,
       },
     },

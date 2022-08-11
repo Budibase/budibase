@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store"
+import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 
 const dispatchEvent = (type, data = {}) => {
@@ -47,6 +48,13 @@ const createBuilderStore = () => {
     },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
+    },
+    analyticsPing: async () => {
+      try {
+        await API.analyticsPing({ source: "app" })
+      } catch (error) {
+        // Do nothing
+      }
     },
     moveComponent: (componentId, destinationComponentId, mode) => {
       dispatchEvent("move-component", {
