@@ -2,7 +2,7 @@ const {
   getScreenParams,
   generateScreenID,
   getPluginParams,
-  DocumentTypes,
+  DocumentType,
 } = require("../../db/utils")
 const { AccessController } = require("@budibase/backend-core/roles")
 const { getAppDB } = require("@budibase/backend-core/context")
@@ -60,7 +60,7 @@ exports.save = async ctx => {
       })
 
     // Update the app metadata
-    const application = await db.get(DocumentTypes.APP_METADATA)
+    const application = await db.get(DocumentType.APP_METADATA)
     let usedPlugins = application.usedPlugins || []
 
     requiredPlugins.forEach(plugin => {
