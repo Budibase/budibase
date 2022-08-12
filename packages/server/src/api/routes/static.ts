@@ -45,6 +45,12 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     controller.uploadFile
   )
+  .post(
+    "/api/attachments/:tableId/delete",
+    paramResource("tableId"),
+    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    controller.deleteObjects
+  )
   .get("/:appId/:path*", controller.serveApp)
   .get("/app/:appUrl/:path*", controller.serveApp)
   .post(

@@ -12,7 +12,7 @@ const {
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const { clientLibraryPath } = require("../../../utilities")
-const { upload } = require("../../../utilities/fileSystem")
+const { upload, deleteFiles } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentType } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
@@ -95,6 +95,10 @@ export const uploadFile = async function (ctx: any) {
   })
 
   ctx.body = await Promise.all(uploads)
+}
+
+export const deleteObjects = async function (ctx: any) {
+  ctx.body = await deleteFiles(ObjectStoreBuckets.APPS, ctx.request.body.keys)
 }
 
 export const serveApp = async function (ctx: any) {
