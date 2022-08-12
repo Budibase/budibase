@@ -25,7 +25,9 @@ exports.getView = async viewName => {
       return viewDoc.view
     } catch (err) {
       // Return null when PouchDB doesn't found the view
-      if (err.status === 404) return null
+      if (err.status === 404) {
+        return null
+      }
 
       throw err
     }
