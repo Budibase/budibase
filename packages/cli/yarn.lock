@@ -43,19 +43,18 @@
     "@babel/helper-validator-identifier" "^7.16.7"
     to-fast-properties "^2.0.0"
 
-"@budibase/backend-core@1.2.28-alpha.0":
-  version "1.2.28-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.28-alpha.0.tgz#f4253825724327e6552000f8c7575134bfaa05cd"
-  integrity sha512-ueu+NZgkiKrX49E0Zy2rrNE4NLe2HAyl3VolTrZfVxOzu1IvtQ/wJBcGDG84VvSliP+0bOOVO9TiGMY3bvZ/Hw==
+"@budibase/backend-core@^1.2.38":
+  version "1.2.38"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.38.tgz#9451ae72f6af8cff3aa0a57dc61fc8d3505a77a0"
+  integrity sha512-g7m4fHG1tLqNsSvdSltqRHLASOH5n3QBbN5DD7cmSBIVpUtDCA0EMx/L0vkDDhTmbOQApXAW3cyJs6H3QiWtOw==
   dependencies:
-    "@budibase/types" "1.2.28-alpha.0"
+    "@budibase/types" "^1.2.38"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
     dotenv "16.0.1"
     emitter-listener "1.1.2"
     ioredis "4.28.0"
-    joi "17.6.0"
     jsonwebtoken "8.5.1"
     koa-passport "4.1.4"
     lodash "4.17.21"
@@ -102,10 +101,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@1.2.28-alpha.0":
-  version "1.2.28-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.2.28-alpha.0.tgz#895571c142bcd68852f87e06a395232b3eb5516a"
-  integrity sha512-nXqa0IlSVW0og8NAJUW+ihUhdW8+rK0tskGWIwF+gEfAKd9NMyxoLswIAb7aYLmwdRRJFwhrpMEuF7ed8AojSQ==
+"@budibase/string-templates@^1.2.38":
+  version "1.2.38"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.2.38.tgz#404804df516fb981b4f073f09bab64c9111cecb0"
+  integrity sha512-JRIAZVuuBECxDBcbx5FOYRRKi1ZyW7//LwKL5U1r9sIVCIxCW1t5b175oTnR9/bkktNs7X2ziynH/tsT5GVC0g==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
@@ -114,10 +113,10 @@
     lodash "^4.17.20"
     vm2 "^3.9.4"
 
-"@budibase/types@1.2.28-alpha.0":
-  version "1.2.28-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.28-alpha.0.tgz#61668b7d5d9b1f85c09d658deed87ec3dc28e290"
-  integrity sha512-tYhdUl1+dEtG8h2xoGUl0NXZC5BZYQIhgPK7JkYrqFHuNx+1f6EoHPQ9MMb/WyOxIDZv4gY7QJLg0KeVflofbw==
+"@budibase/types@^1.2.38":
+  version "1.2.38"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.38.tgz#472f4ec891242488561a8cfc175961664bc7ac88"
+  integrity sha512-pMKh4FKhPoa1pge4FKqPi3gbzZp3HJ1RuhM5naKFqC1yompIn/Es+YNft39VC2bTW5tiGbucMcjWzdpMwTSTVw==
 
 "@eslint/eslintrc@^0.4.3":
   version "0.4.3"
@@ -2485,7 +2484,7 @@ jmespath@0.15.0:
   resolved "https://registry.yarnpkg.com/jmespath/-/jmespath-0.15.0.tgz#a3f222a9aae9f966f5d27c796510e28091764217"
   integrity sha512-+kHj8HXArPfpPEKGLZ+kB5ONRTCiGQXo8RQYL0hH8t6pWXUBBK5KkkQmTNOwKK4LEsd0yTsgtjJVm4UBSZea4w==
 
-joi@17.6.0, joi@^17.6.0:
+joi@^17.6.0:
   version "17.6.0"
   resolved "https://registry.yarnpkg.com/joi/-/joi-17.6.0.tgz#0bb54f2f006c09a96e75ce687957bd04290054b2"
   integrity sha512-OX5dG6DTbcr/kbMFj0KGYxuew69HPcAE3K/sZpEV2nP6e/j/C0HV+HNiBPCASxdx5T7DMoa0s8UeHWMnb6n2zw==
