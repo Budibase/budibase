@@ -39,7 +39,7 @@ export async function upload(ctx: any) {
         const existing = await db.get(pluginId)
         rev = existing._rev
       } catch (err) {
-        rev = null
+        rev = undefined
       }
       const doc = {
         _id: pluginId,
