@@ -48,19 +48,18 @@ export async function upload(ctx: any) {
       }
       const jsFileName = jsFile.name
       const pluginId = generatePluginID(name, version)
-      let existing
+
+      // overwrite existing docs entirely if they exist
+      let rev
       try {
-        existing = await db.get(pluginId)
+        const existing = await db.get(pluginId)
+        rev = existing._rev
       } catch (err) {
-        existing = null
-      }
-      if (existing) {
-        throw new Error(
-          `Plugin already exists: name: ${name}, version: ${version}`
-        )
+        rev = undefined
       }
       const doc = {
         _id: pluginId,
+        _rev: rev,
         name,
         version,
         description,

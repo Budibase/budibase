@@ -12,7 +12,7 @@ const budibasePrefix = "@budibase/standard-components/"
 const createComponentStore = () => {
   const store = writable({
     customComponentManifest: {},
-    componentsAwaitingConstructors: {},
+    customComponentMap: {},
     mountedComponents: {},
   })
 
@@ -54,30 +54,37 @@ const createComponentStore = () => {
 
   const registerInstance = (id, instance) => {
     store.update(state => {
-      // If this is a custom component and does not have an implementation yet,
-      // store so we can reload this component later
+      // If this is a custom component, flag it so we can reload this component
+      // later if required
       const component = instance.component
-      let cac = state.componentsAwaitingConstructors
-      if (!getComponentConstructor(component)) {
-        if (!cac[component]) {
-          cac[component] = []
+      if (component?.startsWith("plugin")) {
+        if (!state.customComponentMap[component]) {
+          state.customComponentMap[component] = [id]
+        } else {
+          state.customComponentMap[component].push(id)
         }
-        cac[component].push(id)
       }
 
-      return {
-        ...state,
-        componentsAwaitingConstructors: cac,
-        mountedComponents: {
-          ...state.mountedComponents,
-          [id]: instance,
-        },
-      }
+      // Register to mounted components
+      state.mountedComponents[id] = instance
+      return state
     })
   }
 
   const unregisterInstance = id => {
     store.update(state => {
+      // Remove from custom component map if required
+      const component = state.mountedComponents[id]?.instance?.component
+      let customComponentMap = state.customComponentMap
+      if (component?.startsWith("plugin")) {
+        customComponentMap[component] = customComponentMap[component].filter(
+          x => {
+            return x !== id
+          }
+        )
+      }
+
+      // Remove from mounted components
       delete state.mountedComponents[id]
       return state
     })
@@ -133,34 +140,25 @@ const createComponentStore = () => {
     return customComponentManifest?.[type]?.Component
   }
 
-  const registerCustomComponent = ({ Component, schema }) => {
+  const registerCustomComponent = ({ Component, schema, version }) => {
     if (!Component || !schema?.schema?.name) {
       return
     }
-    const componentName = `plugin/${schema.schema.name}/1.0.0`
+    const component = `plugin/${schema.schema.name}/${version}`
     store.update(state => {
-      if (!state.customComponentManifest) {
-        state.customComponentManifest = {}
-      }
-      state.customComponentManifest[componentName] = {
-        schema,
+      state.customComponentManifest[component] = {
         Component,
+        schema,
+        version,
       }
       return state
     })
 
-    // Reload any mounted components which depend on this definition
+    // Reload any mounted instances of this custom component
     const state = get(store)
-    if (state.componentsAwaitingConstructors[componentName]?.length) {
-      state.componentsAwaitingConstructors[componentName].forEach(id => {
-        const instance = state.mountedComponents[id]
-        if (instance) {
-          instance.reload()
-        }
-      })
-      store.update(state => {
-        delete state.componentsAwaitingConstructors[componentName]
-        return state
+    if (state.customComponentMap[component]?.length) {
+      state.customComponentMap[component].forEach(id => {
+        state.mountedComponents[id]?.reload()
       })
     }
   }

@@ -39,6 +39,7 @@
       let data = new FormData()
       data.append("file", $values.logo)
       await API.uploadPlugin(data)
+      notifications.success("Plugin uploaded successfully")
     } catch (error) {
       notifications.error("Error uploading logo")
     }
