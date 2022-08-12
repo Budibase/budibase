@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(['all'], () => {
-  xcontext("Add Multi-Option Datatype", () => {
+  context("Add Multi-Option Datatype", () => {
     before(() => {
       cy.login()
       cy.createTestApp()
