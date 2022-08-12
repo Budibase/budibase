@@ -62,7 +62,7 @@ export const run = async (appDb: any) => {
     await events.backfillCache.start(EVENTS)
 
     let timestamp: string | number = DEFAULT_TIMESTAMP
-    const app: App = await appDb.get(dbUtils.DocumentTypes.APP_METADATA)
+    const app: App = await appDb.get(dbUtils.DocumentType.APP_METADATA)
     if (app.createdAt) {
       timestamp = app.createdAt as string
     }
