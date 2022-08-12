@@ -164,7 +164,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
 
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
-  cy.wait(1000)
+  cy.url({ timeout: 30000 }).should("include", "/apps")
   cy.get(`[data-cy="create-app-btn"]`, { timeout: 5000 }).click({ force: true })
 
   // If apps already exist
