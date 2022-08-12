@@ -58,7 +58,10 @@
       enrichedStructure.push({
         name: "Custom components",
         isCategory: true,
-        children: customComponents.map(x => definitions[x]),
+        children: customComponents.map(x => ({
+          ...definitions[x],
+          name: definitions[x].friendlyName || definitions[x].name,
+        })),
       })
     }
 
