@@ -3,6 +3,22 @@ import { extractPluginTarball } from "../../utilities/fileSystem"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { generatePluginID, getPluginParams } from "../../db/utils"
 import { uploadDirectory } from "@budibase/backend-core/objectStore"
+import { PluginType } from "@budibase/types"
+
+export async function getPlugins(type?: PluginType) {
+  const db = getGlobalDB()
+  const response = await db.allDocs(
+    getPluginParams(null, {
+      include_docs: true,
+    })
+  )
+  const plugins = response.rows.map((row: any) => row.doc)
+  if (type) {
+    return plugins.filter((plugin: any) => plugin.schema?.type === type)
+  } else {
+    return plugins
+  }
+}
 
 export async function upload(ctx: any) {
   const plugins =
@@ -68,13 +84,7 @@ export async function upload(ctx: any) {
 }
 
 export async function fetch(ctx: any) {
-  const db = getGlobalDB()
-  const response = await db.allDocs(
-    getPluginParams(null, {
-      include_docs: true,
-    })
-  )
-  ctx.body = response.rows.map((row: any) => row.doc)
+  ctx.body = await getPlugins()
 }
 
 export async function destroy(ctx: any) {}
