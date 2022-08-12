@@ -95,8 +95,10 @@
       "change",
       value.filter((x, idx) => idx !== selectedImageIdx)
     )
+    await deleteAttachments(
+      value.filter((x, idx) => idx === selectedImageIdx).map(item => item.key)
+    )
     selectedImageIdx = 0
-    await deleteAttachments(value.map(item => item.key))
   }
 
   function navigateLeft() {
