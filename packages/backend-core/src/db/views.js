@@ -1,6 +1,6 @@
 const {
-  DocumentTypes,
-  ViewNames,
+  DocumentType,
+  ViewName,
   DeprecatedViews,
   SEPARATOR,
 } = require("./utils")
@@ -44,14 +44,14 @@ exports.createNewUserEmailView = async () => {
   const view = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
-      if (doc._id.startsWith("${DocumentTypes.USER}${SEPARATOR}")) {
+      if (doc._id.startsWith("${DocumentType.USER}${SEPARATOR}")) {
         emit(doc.email.toLowerCase(), doc._id)
       }
     }`,
   }
   designDoc.views = {
     ...designDoc.views,
-    [ViewNames.USER_BY_EMAIL]: view,
+    [ViewName.USER_BY_EMAIL]: view,
   }
   await db.put(designDoc)
 }
@@ -68,7 +68,7 @@ exports.createUserAppView = async () => {
   const view = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
-      if (doc._id.startsWith("${DocumentTypes.USER}${SEPARATOR}") && doc.roles) {
+      if (doc._id.startsWith("${DocumentType.USER}${SEPARATOR}") && doc.roles) {
         for (let prodAppId of Object.keys(doc.roles)) {
           let emitted = prodAppId + "${SEPARATOR}" + doc._id
           emit(emitted, null)
@@ -78,7 +78,7 @@ exports.createUserAppView = async () => {
   }
   designDoc.views = {
     ...designDoc.views,
-    [ViewNames.USER_BY_APP]: view,
+    [ViewName.USER_BY_APP]: view,
   }
   await db.put(designDoc)
 }
@@ -93,14 +93,14 @@ exports.createApiKeyView = async () => {
   }
   const view = {
     map: `function(doc) {
-      if (doc._id.startsWith("${DocumentTypes.DEV_INFO}") && doc.apiKey) {
+      if (doc._id.startsWith("${DocumentType.DEV_INFO}") && doc.apiKey) {
         emit(doc.apiKey, doc.userId)
       }
     }`,
   }
   designDoc.views = {
     ...designDoc.views,
-    [ViewNames.BY_API_KEY]: view,
+    [ViewName.BY_API_KEY]: view,
   }
   await db.put(designDoc)
 }
@@ -123,17 +123,17 @@ exports.createUserBuildersView = async () => {
   }
   designDoc.views = {
     ...designDoc.views,
-    [ViewNames.USER_BY_BUILDERS]: view,
+    [ViewName.USER_BY_BUILDERS]: view,
   }
   await db.put(designDoc)
 }
 
 exports.queryGlobalView = async (viewName, params, db = null) => {
   const CreateFuncByName = {
-    [ViewNames.USER_BY_EMAIL]: exports.createNewUserEmailView,
-    [ViewNames.BY_API_KEY]: exports.createApiKeyView,
-    [ViewNames.USER_BY_BUILDERS]: exports.createUserBuildersView,
-    [ViewNames.USER_BY_APP]: exports.createUserAppView,
+    [ViewName.USER_BY_EMAIL]: exports.createNewUserEmailView,
+    [ViewName.BY_API_KEY]: exports.createApiKeyView,
+    [ViewName.USER_BY_BUILDERS]: exports.createUserBuildersView,
+    [ViewName.USER_BY_APP]: exports.createUserAppView,
   }
   // can pass DB in if working with something specific
   if (!db) {

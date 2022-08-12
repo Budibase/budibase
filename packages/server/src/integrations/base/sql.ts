@@ -2,12 +2,12 @@ import { Knex, knex } from "knex"
 import {
   Operation,
   QueryJson,
-  QueryOptions,
   RelationshipsJson,
   SearchFilters,
   SortDirection,
-} from "../../definitions/datasource"
-import { isIsoDateString, SqlClients } from "../utils"
+} from "@budibase/types"
+import { QueryOptions } from "../../definitions/datasource"
+import { isIsoDateString, SqlClient } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import environment from "../../environment"
 
@@ -27,14 +27,14 @@ function likeKey(client: string, key: string): string {
   }
   let start: string, end: string
   switch (client) {
-    case SqlClients.MY_SQL:
+    case SqlClient.MY_SQL:
       start = end = "`"
       break
-    case SqlClients.ORACLE:
-    case SqlClients.POSTGRES:
+    case SqlClient.ORACLE:
+    case SqlClient.POSTGRES:
       start = end = '"'
       break
-    case SqlClients.MS_SQL:
+    case SqlClient.MS_SQL:
       start = "["
       end = "]"
       break
@@ -102,7 +102,7 @@ function generateSelectStatement(
     if (
       columnName &&
       schema?.[columnName] &&
-      knex.client.config.client === SqlClients.POSTGRES
+      knex.client.config.client === SqlClient.POSTGRES
     ) {
       const externalType = schema[columnName].externalType
       if (externalType?.includes("money")) {
@@ -146,7 +146,7 @@ class InternalBuilder {
     const like = (key: string, value: any) => {
       const fnc = allOr ? "orWhere" : "where"
       // postgres supports ilike, nothing else does
-      if (this.client === SqlClients.POSTGRES) {
+      if (this.client === SqlClient.POSTGRES) {
         query = query[fnc](key, "ilike", `%${value}%`)
       } else {
         const rawFnc = `${fnc}Raw`
@@ -173,7 +173,7 @@ class InternalBuilder {
       iterate(filters.string, (key, value) => {
         const fnc = allOr ? "orWhere" : "where"
         // postgres supports ilike, nothing else does
-        if (this.client === SqlClients.POSTGRES) {
+        if (this.client === SqlClient.POSTGRES) {
           query = query[fnc](key, "ilike", `${value}%`)
         } else {
           const rawFnc = `${fnc}Raw`
@@ -229,7 +229,7 @@ class InternalBuilder {
     if (filters.contains) {
       const fnc = allOr ? "orWhere" : "where"
       const rawFnc = `${fnc}Raw`
-      if (this.client === SqlClients.POSTGRES) {
+      if (this.client === SqlClient.POSTGRES) {
         iterate(filters.contains, (key: string, value: any) => {
           const fieldNames = key.split(/\./g)
           const tableName = fieldNames[0]
@@ -242,7 +242,7 @@ class InternalBuilder {
             `"${tableName}"."${columnName}"::jsonb @> '[${value}]'`
           )
         })
-      } else if (this.client === SqlClients.MY_SQL) {
+      } else if (this.client === SqlClient.MY_SQL) {
         iterate(filters.contains, (key: string, value: any) => {
           if (typeof value === "string") {
             value = `"${value}"`
@@ -265,7 +265,7 @@ class InternalBuilder {
         const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
         query = query.orderBy(`${table?.name}.${key}`, direction)
       }
-    } else if (this.client === SqlClients.MS_SQL && paginate?.limit) {
+    } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
       // @ts-ignore
       query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
     }
@@ -414,7 +414,7 @@ class InternalBuilder {
       [tableName]: query,
     }).select(selectStatement)
     // have to add after as well (this breaks MS-SQL)
-    if (this.client !== SqlClients.MS_SQL) {
+    if (this.client !== SqlClient.MS_SQL) {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
@@ -565,9 +565,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     // same as delete, manage returning
     if (operation === Operation.CREATE || operation === Operation.UPDATE) {
       let id
-      if (sqlClient === SqlClients.MS_SQL) {
+      if (sqlClient === SqlClient.MS_SQL) {
         id = results?.[0].id
-      } else if (sqlClient === SqlClients.MY_SQL) {
+      } else if (sqlClient === SqlClient.MY_SQL) {
         id = results?.insertId
       }
       row = processFn(
