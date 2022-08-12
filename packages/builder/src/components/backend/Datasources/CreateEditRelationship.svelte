@@ -20,8 +20,8 @@
   export let close
   export let selectedFromTable
 
-  let originalFromName = fromRelationship.name,
-    originalToName = toRelationship.name
+  let originalFromName = encodeURIComponent(fromRelationship.name),
+    originalToName = encodeURIComponent(toRelationship.name)
   let fromTable, toTable, through, linkTable, tableOptions
   let isManyToMany, isManyToOne, relationshipTypes
   let errors, valid
@@ -195,39 +195,74 @@
     toRelationship = relateTo
   }
 
+  $: console.log("fromTable", fromTable)
+  $: console.log("toTable", toTable)
+  $: console.log("datasource", datasource.entities)
+  $: console.log("fromRelationship", fromRelationship)
+  $: console.log("toRelationship", toRelationship)
+  $: console.log(
+    3331,
+    datasource?.entities?.[encodeURIComponent(fromTable?.name)]?.schema?.[
+      encodeURIComponent(fromRelationship?.name)
+    ]
+  )
+  $: console.log(
+    3332,
+    datasource?.entities?.[encodeURIComponent(toTable?.name)]?.schema?.[
+      encodeURIComponent(toRelationship?.name)
+    ]
+  )
+
   // save the relationship on to the datasource
   async function saveRelationship() {
     buildRelationships()
     // source of relationship
-    datasource.entities[fromTable.name].schema[fromRelationship.name] =
-      fromRelationship
+    datasource.entities[encodeURIComponent(fromTable.name)].schema[
+      encodeURIComponent(fromRelationship.name)
+    ] = fromRelationship
     // save other side of relationship in the other schema
-    datasource.entities[toTable.name].schema[toRelationship.name] =
-      toRelationship
+    datasource.entities[encodeURIComponent(toTable.name)].schema[
+      encodeURIComponent(toRelationship.name)
+    ] = toRelationship
 
     // If relationship has been renamed
-    if (originalFromName !== fromRelationship.name) {
-      delete datasource.entities[fromTable.name].schema[originalFromName]
+    if (originalFromName !== encodeURIComponent(fromRelationship.name)) {
+      delete datasource.entities[encodeURIComponent(fromTable.name)].schema[
+        originalFromName
+      ]
     }
-    if (originalToName !== toRelationship.name) {
-      delete datasource.entities[toTable.name].schema[originalToName]
+    if (originalToName !== encodeURIComponent(toRelationship.name)) {
+      delete datasource.entities[encodeURIComponent(toTable.name)].schema[
+        originalToName
+      ]
     }
 
     // store the original names so it won't cause an error
-    originalToName = toRelationship.name
-    originalFromName = fromRelationship.name
+    originalToName = encodeURIComponent(toRelationship.name)
+    originalFromName = encodeURIComponent(fromRelationship.name)
     await save()
   }
 
   async function deleteRelationship() {
-    delete datasource.entities[fromTable.name].schema[fromRelationship.name]
-    delete datasource.entities[toTable.name].schema[toRelationship.name]
+    delete datasource.entities[encodeURIComponent(fromTable.name)].schema[
+      encodeURIComponent(fromRelationship.name)
+    ]
+    delete datasource.entities[encodeURIComponent(toTable.name)].schema[
+      encodeURIComponent(toRelationship.name)
+    ]
     await save()
     await tables.fetch()
     close()
   }
 
   function tableChanged(fromTbl, toTbl) {
+    console.log(
+      "tableChanged",
+      fromRelationship.name,
+      toTbl?.name,
+      toRelationship.name,
+      fromTbl?.name
+    )
     if (
       (currentTables?.from?._id === fromTbl?._id &&
         currentTables?.to?._id === toTbl?._id) ||
