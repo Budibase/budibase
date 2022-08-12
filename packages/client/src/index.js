@@ -40,16 +40,16 @@ const loadBudibase = () => {
   devToolsStore.actions.setEnabled(enableDevTools)
 
   // Register any custom components
-  window.registerCustomComponent = plugin => {
-    componentStore.actions.registerCustomComponent(plugin)
-    console.log("registered!")
-    loadBudibase()
-  }
   if (window["##BUDIBASE_CUSTOM_COMPONENTS##"]) {
     window["##BUDIBASE_CUSTOM_COMPONENTS##"].forEach(component => {
       componentStore.actions.registerCustomComponent(component)
     })
   }
+
+  // Make a callback available for custom component bundles to register
+  // themselves at runtime
+  window.registerCustomComponent =
+    componentStore.actions.registerCustomComponent
 
   // Create app if one hasn't been created yet
   if (!app) {
