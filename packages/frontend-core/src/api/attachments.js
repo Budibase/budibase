@@ -61,5 +61,19 @@ export const buildAttachmentEndpoints = API => {
       })
       return { publicUrl }
     },
+
+    /**
+     * Deletes attachments from the bucket.
+     * @param keys the attachments to delete
+     * @param tableId the associated table ID
+     */
+    deleteAttachments: async ({ keys, tableId }) => {
+      return await API.post({
+        url: `/api/attachments/${tableId}/delete`,
+        body: {
+          keys,
+        },
+      })
+    },
   }
 }

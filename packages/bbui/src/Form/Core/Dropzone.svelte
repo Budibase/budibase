@@ -17,6 +17,7 @@
   export let disabled = false
   export let fileSizeLimit = BYTES_IN_MB * 20
   export let processFiles = null
+  export let deleteAttachments = null
   export let handleFileTooLarge = null
   export let handleTooManyFiles = null
   export let gallery = true
@@ -95,6 +96,7 @@
       value.filter((x, idx) => idx !== selectedImageIdx)
     )
     selectedImageIdx = 0
+    await deleteAttachments(value.map(item => item.key))
   }
 
   function navigateLeft() {
