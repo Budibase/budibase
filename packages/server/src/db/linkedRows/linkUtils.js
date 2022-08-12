@@ -1,5 +1,5 @@
 const Sentry = require("@sentry/node")
-const { ViewNames, getQueryIndex } = require("../utils")
+const { ViewName, getQueryIndex } = require("../utils")
 const { FieldTypes } = require("../../constants")
 const { createLinkView } = require("../views/staticViews")
 const { getAppDB } = require("@budibase/backend-core/context")
@@ -41,7 +41,7 @@ exports.getLinkDocuments = async function (args) {
   }
   params.include_docs = !!includeDocs
   try {
-    let linkRows = (await db.query(getQueryIndex(ViewNames.LINK), params)).rows
+    let linkRows = (await db.query(getQueryIndex(ViewName.LINK), params)).rows
     // filter to get unique entries
     const foundIds = []
     linkRows = linkRows.filter(link => {
