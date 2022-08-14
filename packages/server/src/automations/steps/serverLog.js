@@ -31,15 +31,21 @@ exports.definition = {
           type: "boolean",
           description: "Whether the action was successful",
         },
+        message: {
+          type: "string",
+          description: "What was output",
+        },
       },
-      required: ["success"],
+      required: ["success", "message"],
     },
   },
 }
 
 exports.run = async function ({ inputs, appId }) {
-  console.log(`App ${appId} - ${inputs.text}`)
+  const message = `App ${appId} - ${inputs.text}`
+  console.log(message)
   return {
     success: true,
+    message,
   }
 }

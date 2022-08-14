@@ -3,7 +3,7 @@ const { BUILTIN_PERMISSION_IDS, PermissionLevels } = require("./permissions")
 const {
   generateRoleID,
   getRoleParams,
-  DocumentTypes,
+  DocumentType,
   SEPARATOR,
 } = require("../db/utils")
 const { getAppDB } = require("../context")
@@ -76,7 +76,7 @@ function isBuiltin(role) {
 /**
  * Works through the inheritance ranks to see how far up the builtin stack this ID is.
  */
-function builtinRoleToNumber(id) {
+exports.builtinRoleToNumber = id => {
   const builtins = exports.getBuiltinRoles()
   const MAX = Object.values(BUILTIN_IDS).length + 1
   if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
@@ -104,7 +104,8 @@ exports.lowerBuiltinRoleID = (roleId1, roleId2) => {
   if (!roleId2) {
     return roleId1
   }
-  return builtinRoleToNumber(roleId1) > builtinRoleToNumber(roleId2)
+  return exports.builtinRoleToNumber(roleId1) >
+    exports.builtinRoleToNumber(roleId2)
     ? roleId2
     : roleId1
 }
@@ -202,15 +203,24 @@ exports.getAllRoles = async appId => {
   if (appId) {
     return doWithDB(appId, internal)
   } else {
-    return internal(getAppDB())
+    let appDB
+    try {
+      appDB = getAppDB()
+    } catch (error) {
+      // We don't have any apps, so we'll just use the built-in roles
+    }
+    return internal(appDB)
   }
   async function internal(db) {
-    const body = await db.allDocs(
-      getRoleParams(null, {
-        include_docs: true,
-      })
-    )
-    let roles = body.rows.map(row => row.doc)
+    let roles = []
+    if (db) {
+      const body = await db.allDocs(
+        getRoleParams(null, {
+          include_docs: true,
+        })
+      )
+      roles = body.rows.map(row => row.doc)
+    }
     const builtinRoles = exports.getBuiltinRoles()
 
     // need to combine builtin with any DB record of them (for sake of permissions)
@@ -328,7 +338,7 @@ class AccessController {
  * Adds the "role_" for builtin role IDs which are to be written to the DB (for permissions).
  */
 exports.getDBRoleID = roleId => {
-  if (roleId.startsWith(DocumentTypes.ROLE)) {
+  if (roleId.startsWith(DocumentType.ROLE)) {
     return roleId
   }
   return generateRoleID(roleId)
@@ -339,8 +349,8 @@ exports.getDBRoleID = roleId => {
  */
 exports.getExternalRoleID = roleId => {
   // for built in roles we want to remove the DB role ID element (role_)
-  if (roleId.startsWith(DocumentTypes.ROLE) && isBuiltin(roleId)) {
-    return roleId.split(`${DocumentTypes.ROLE}${SEPARATOR}`)[1]
+  if (roleId.startsWith(DocumentType.ROLE) && isBuiltin(roleId)) {
+    return roleId.split(`${DocumentType.ROLE}${SEPARATOR}`)[1]
   }
   return roleId
 }

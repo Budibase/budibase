@@ -11,6 +11,7 @@
     Body,
     Icon,
   } from "@budibase/bbui"
+  import { TriggerStepID } from "constants/backend/automations"
 
   let name
   let selectedTrigger
@@ -35,7 +36,7 @@
       )
 
       automationStore.actions.addBlockToAutomation(newBlock)
-      if (triggerVal.stepId === "WEBHOOK") {
+      if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
         webhookModal.show
       }
 

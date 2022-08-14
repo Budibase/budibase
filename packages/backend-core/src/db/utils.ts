@@ -1,24 +1,16 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentTypes } from "./constants"
+import { SEPARATOR, DocumentType, UNICODE_MAX, ViewName } from "./constants"
 import { getTenantId, getGlobalDBName, getGlobalDB } from "../tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
 import { getCouchInfo } from "./pouch"
 import { getAppMetadata } from "../cache/appMetadata"
 import { checkSlashesInUrl } from "../helpers"
-import { isDevApp, isDevAppID } from "./conversions"
+import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-
-const UNICODE_MAX = "\ufff0"
-
-export const ViewNames = {
-  USER_BY_EMAIL: "by_email",
-  BY_API_KEY: "by_api_key",
-  USER_BY_BUILDERS: "by_builders",
-}
 
 export * from "./constants"
 export * from "./conversions"
@@ -64,11 +56,18 @@ export function getDocParams(
 }
 
 /**
+ * Retrieve the correct index for a view based on default design DB.
+ */
+export function getQueryIndex(viewName: ViewName) {
+  return `database/${viewName}`
+}
+
+/**
  * Generates a new workspace ID.
  * @returns {string} The new workspace ID which the workspace doc can be stored under.
  */
 export function generateWorkspaceID() {
-  return `${DocumentTypes.WORKSPACE}${SEPARATOR}${newid()}`
+  return `${DocumentType.WORKSPACE}${SEPARATOR}${newid()}`
 }
 
 /**
@@ -77,8 +76,8 @@ export function generateWorkspaceID() {
 export function getWorkspaceParams(id = "", otherProps = {}) {
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.WORKSPACE}${SEPARATOR}${id}`,
-    endkey: `${DocumentTypes.WORKSPACE}${SEPARATOR}${id}${UNICODE_MAX}`,
+    startkey: `${DocumentType.WORKSPACE}${SEPARATOR}${id}`,
+    endkey: `${DocumentType.WORKSPACE}${SEPARATOR}${id}${UNICODE_MAX}`,
   }
 }
 
@@ -87,20 +86,33 @@ export function getWorkspaceParams(id = "", otherProps = {}) {
  * @returns {string} The new user ID which the user doc can be stored under.
  */
 export function generateGlobalUserID(id?: any) {
-  return `${DocumentTypes.USER}${SEPARATOR}${id || newid()}`
+  return `${DocumentType.USER}${SEPARATOR}${id || newid()}`
 }
 
 /**
  * Gets parameters for retrieving users.
  */
-export function getGlobalUserParams(globalId: any, otherProps = {}) {
+export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
   if (!globalId) {
     globalId = ""
   }
+  const startkey = otherProps?.startkey
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
-    endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
+    // need to include this incase pagination
+    startkey: startkey
+      ? startkey
+      : `${DocumentType.USER}${SEPARATOR}${globalId}`,
+    endkey: `${DocumentType.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
+  }
+}
+
+export function getUsersByAppParams(appId: any, otherProps: any = {}) {
+  const prodAppId = getProdAppID(appId)
+  return {
+    ...otherProps,
+    startkey: prodAppId,
+    endkey: `${prodAppId}${UNICODE_MAX}`,
   }
 }
 
@@ -109,7 +121,11 @@ export function getGlobalUserParams(globalId: any, otherProps = {}) {
  * @param ownerId The owner/user of the template, this could be global or a workspace level.
  */
 export function generateTemplateID(ownerId: any) {
-  return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
+  return `${DocumentType.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
+}
+
+export function generateAppUserID(prodAppId: string, userId: string) {
+  return `${prodAppId}${SEPARATOR}${userId}`
 }
 
 /**
@@ -127,7 +143,7 @@ export function getTemplateParams(
   if (templateId) {
     final = templateId
   } else {
-    final = `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}`
+    final = `${DocumentType.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}`
   }
   return {
     ...otherProps,
@@ -141,14 +157,14 @@ export function getTemplateParams(
  * @returns {string} The new role ID which the role doc can be stored under.
  */
 export function generateRoleID(id: any) {
-  return `${DocumentTypes.ROLE}${SEPARATOR}${id || newid()}`
+  return `${DocumentType.ROLE}${SEPARATOR}${id || newid()}`
 }
 
 /**
  * Gets parameters for retrieving a role, this is a utility function for the getDocParams function.
  */
 export function getRoleParams(roleId = null, otherProps = {}) {
-  return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
+  return getDocParams(DocumentType.ROLE, roleId, otherProps)
 }
 
 export function getStartEndKeyURL(base: any, baseKey: any, tenantId = null) {
@@ -195,9 +211,9 @@ export async function getAllDbs(opts = { efficient: false }) {
     await addDbs(couchUrl)
   } else {
     // get prod apps
-    await addDbs(getStartEndKeyURL(couchUrl, DocumentTypes.APP, tenantId))
+    await addDbs(getStartEndKeyURL(couchUrl, DocumentType.APP, tenantId))
     // get dev apps
-    await addDbs(getStartEndKeyURL(couchUrl, DocumentTypes.APP_DEV, tenantId))
+    await addDbs(getStartEndKeyURL(couchUrl, DocumentType.APP_DEV, tenantId))
     // add global db name
     dbs.push(getGlobalDBName(tenantId))
   }
@@ -217,14 +233,18 @@ export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
   }
   let dbs = await getAllDbs({ efficient })
   const appDbNames = dbs.filter((dbName: any) => {
+    if (env.isTest() && !dbName) {
+      return false
+    }
+
     const split = dbName.split(SEPARATOR)
     // it is an app, check the tenantId
-    if (split[0] === DocumentTypes.APP) {
+    if (split[0] === DocumentType.APP) {
       // tenantId is always right before the UUID
       const possibleTenantId = split[split.length - 2]
 
       const noTenantId =
-        split.length === 2 || possibleTenantId === DocumentTypes.DEV
+        split.length === 2 || possibleTenantId === DocumentType.DEV
 
       return (
         (tenantId === DEFAULT_TENANT_ID && noTenantId) ||
@@ -310,7 +330,7 @@ export async function dbExists(dbName: any) {
 export const generateConfigID = ({ type, workspace, user }: any) => {
   const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
 
-  return `${DocumentTypes.CONFIG}${SEPARATOR}${scope}`
+  return `${DocumentType.CONFIG}${SEPARATOR}${scope}`
 }
 
 /**
@@ -324,8 +344,8 @@ export const getConfigParams = (
 
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.CONFIG}${SEPARATOR}${scope}`,
-    endkey: `${DocumentTypes.CONFIG}${SEPARATOR}${scope}${UNICODE_MAX}`,
+    startkey: `${DocumentType.CONFIG}${SEPARATOR}${scope}`,
+    endkey: `${DocumentType.CONFIG}${SEPARATOR}${scope}${UNICODE_MAX}`,
   }
 }
 
@@ -334,7 +354,7 @@ export const getConfigParams = (
  * @returns {string} The new dev info ID which info for dev (like api key) can be stored under.
  */
 export const generateDevInfoID = (userId: any) => {
-  return `${DocumentTypes.DEV_INFO}${SEPARATOR}${userId}`
+  return `${DocumentType.DEV_INFO}${SEPARATOR}${userId}`
 }
 
 /**
@@ -384,7 +404,9 @@ export const getScopedFullConfig = async function (
   if (type === Configs.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
       // overrides affected by environment variables
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl()
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
+        tenantAware: true,
+      })
       scopedConfig.doc.config.analyticsEnabled =
         await events.analytics.enabled()
     } else {
@@ -393,7 +415,7 @@ export const getScopedFullConfig = async function (
         doc: {
           _id: generateConfigID({ type, user, workspace }),
           config: {
-            platformUrl: await getPlatformUrl(),
+            platformUrl: await getPlatformUrl({ tenantAware: true }),
             analyticsEnabled: await events.analytics.enabled(),
           },
         },
@@ -432,6 +454,40 @@ export const getPlatformUrl = async (opts = { tenantAware: true }) => {
   }
 
   return platformUrl
+}
+
+export function pagination(
+  data: any[],
+  pageSize: number,
+  {
+    paginate,
+    property,
+    getKey,
+  }: {
+    paginate: boolean
+    property: string
+    getKey?: (doc: any) => string | undefined
+  } = {
+    paginate: true,
+    property: "_id",
+  }
+) {
+  if (!paginate) {
+    return { data, hasNextPage: false }
+  }
+  const hasNextPage = data.length > pageSize
+  let nextPage = undefined
+  if (!getKey) {
+    getKey = (doc: any) => (property ? doc?.[property] : doc?._id)
+  }
+  if (hasNextPage) {
+    nextPage = getKey(data[pageSize])
+  }
+  return {
+    data: data.slice(0, pageSize),
+    hasNextPage,
+    nextPage,
+  }
 }
 
 export async function getScopedConfig(db: any, params: any) {

@@ -1,10 +1,10 @@
 import "@spectrum-css/vars/dist/spectrum-global.css"
 import "@spectrum-css/vars/dist/spectrum-medium.css"
 import "@spectrum-css/vars/dist/spectrum-large.css"
-import "@spectrum-css/vars/dist/spectrum-lightest.css"
-import "@spectrum-css/vars/dist/spectrum-light.css"
-import "@spectrum-css/vars/dist/spectrum-dark.css"
 import "@spectrum-css/vars/dist/spectrum-darkest.css"
+import "@spectrum-css/vars/dist/spectrum-dark.css"
+import "@spectrum-css/vars/dist/spectrum-light.css"
+import "@spectrum-css/vars/dist/spectrum-lightest.css"
 import "@spectrum-css/page/dist/index-vars.css"
 
 // Non user-facing components
@@ -35,6 +35,7 @@ export { default as embeddedmap } from "./embedded-map/EmbeddedMap.svelte"
 export * from "./charts"
 export * from "./forms"
 export * from "./table"
+
 export * from "./blocks"
 export * from "./dynamic-filter"
 

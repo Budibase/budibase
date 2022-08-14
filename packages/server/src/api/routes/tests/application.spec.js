@@ -59,14 +59,13 @@ describe("/applications", () => {
       expect(events.app.templateImported).toBeCalledTimes(1)
     })
 
-
     it("creates app from file", async () => {
       const res = await request
         .post("/api/applications")
         .field("name", "My App")
         .field("useTemplate", "true")
         .set(config.defaultHeaders())
-        .attach('templateFile', 'src/api/routes/tests/data/export.txt')
+        .attach("templateFile", "src/api/routes/tests/data/export.txt")
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
@@ -107,8 +106,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      // should have empty packages
-      expect(res.body.layouts.length).toEqual(2)
+      expect(res.body.libraries.length).toEqual(1)
     })
   })
 
@@ -120,7 +118,7 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.application).toBeDefined()
-      expect(res.body.layouts.length).toEqual(2)
+      expect(res.body.application.appId).toEqual(config.getAppId())
     })
   })
 
@@ -171,7 +169,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-        expect(events.app.versionUpdated).toBeCalledTimes(1)
+      expect(events.app.versionUpdated).toBeCalledTimes(1)
     })
     it("should be able to revert the app client library version", async () => {
       // We need to first update the version so that we can then revert
@@ -185,7 +183,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-        expect(events.app.versionReverted).toBeCalledTimes(1)
+      expect(events.app.versionReverted).toBeCalledTimes(1)
     })
   })
 

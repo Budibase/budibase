@@ -122,6 +122,14 @@ spec:
           value: {{ .Values.globals.automationMaxIterations | quote }}
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        {{ if .Values.globals.bbAdminUserEmail }}
+        - name: BB_ADMIN_USER_EMAIL
+          value: { { .Values.globals.bbAdminUserEmail | quote } }
+        {{ end }}
+        {{ if .Values.globals.bbAdminUserPassword }}
+        - name: BB_ADMIN_USER_PASSWORD
+          value: { { .Values.globals.bbAdminUserPassword | quote } }
+        {{ end }}
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
@@ -143,6 +151,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      {{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
 status: {}

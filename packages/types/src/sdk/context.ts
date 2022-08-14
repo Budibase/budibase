@@ -4,6 +4,7 @@ import { IdentityType } from "./events/identification"
 export interface BaseContext {
   _id: string
   type: IdentityType
+  tenantId?: string
 }
 
 export interface AccountUserContext extends BaseContext {
@@ -13,6 +14,7 @@ export interface AccountUserContext extends BaseContext {
 
 export interface UserContext extends BaseContext, User {
   _id: string
+  tenantId: string
   account?: Account
 }
 

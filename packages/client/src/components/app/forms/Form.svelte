@@ -13,6 +13,10 @@
   // for fields rendered in things like search blocks.
   export let disableValidation = false
 
+  // Not exposed as a builder setting. Used internally to allow searching on
+  // auto columns.
+  export let editAutoColumns = false
+
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
@@ -107,6 +111,7 @@
       {table}
       {initialValues}
       {disableValidation}
+      {editAutoColumns}
     >
       <slot />
     </InnerForm>

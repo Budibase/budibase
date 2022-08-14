@@ -1,5 +1,6 @@
 import BaseCache from "./base"
 import { getWritethroughClient } from "../redis/init"
+import { logWarn } from "../logging"
 
 const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null
@@ -51,10 +52,8 @@ export async function put(
       if (err.status !== 409) {
         throw err
       } else {
-        // get the rev, update over it - this is risky, may change in future
-        const readDoc = await db.get(doc._id)
-        doc._rev = readDoc._rev
-        await writeDb(doc)
+        // Swallow 409s but log them
+        logWarn(`Ignoring conflict in write-through cache`)
       }
     }
   }

@@ -109,6 +109,10 @@ class InMemoryQueue {
   async clean() {
     return []
   }
+
+  async getJob() {
+    return {}
+  }
 }
 
 module.exports = InMemoryQueue

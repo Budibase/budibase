@@ -48,8 +48,8 @@ describe("oidc", () => {
   
     it("should create successfully create an oidc strategy", async () => {
       const oidc = require("../oidc")
-  
-      await oidc.strategyFactory(oidcConfig, callbackUrl)
+      const enrichedConfig = await oidc.fetchStrategyConfig(oidcConfig, callbackUrl)
+      await oidc.strategyFactory(enrichedConfig, callbackUrl)
   
       expect(mockFetch).toHaveBeenCalledWith(oidcConfig.configUrl)
 

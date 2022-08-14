@@ -28,7 +28,13 @@
   }
 </script>
 
-<Icon name="Revert" hoverable on:click={revertModal.show} />
+<Icon
+  name="Revert"
+  hoverable
+  on:click={revertModal.show}
+  tooltip="Revert changes"
+  dataCy="revert-application-topnav"
+/>
 <Modal bind:this={revertModal}>
   <ModalContent
     title="Revert Changes"
