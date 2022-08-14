@@ -4,6 +4,7 @@
 
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
+  const containerClickableStore = getContext("containerClickable")
 
   export let disabled = false
   export let text = ""
@@ -17,6 +18,10 @@
   export let active = false
 
   let node
+
+  containerClickableStore.subscribe(hasOnClick => {
+    disabled = hasOnClick
+  })
 
   $: $component.editing && node?.focus()
   $: componentText = getComponentText(text, $builderStore, $component)
