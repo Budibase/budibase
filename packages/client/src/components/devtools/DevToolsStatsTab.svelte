@@ -14,8 +14,6 @@
       value={`${$appStore.clientLoadTime} ms`}
     />
   {/if}
-  <DevToolsStat label="App layouts" value={$screenStore.layouts?.length || 0} />
-  <DevToolsStat label="Active layout" value={$screenStore.activeLayout?.name} />
   <DevToolsStat label="App screens" value={$screenStore.screens?.length || 0} />
   <DevToolsStat
     label="Active screen"

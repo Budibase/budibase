@@ -3,6 +3,7 @@ import { get } from "svelte/store"
 
 export const FEATURE_FLAGS = {
   LICENSING: "LICENSING",
+  USER_GROUPS: "USER_GROUPS",
 }
 
 export const isEnabled = featureFlag => {

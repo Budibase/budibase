@@ -1,5 +1,5 @@
 <script>
-  import { goto, leftover } from "@roxi/routify"
+  import { redirect, leftover } from "@roxi/routify"
   import { onMount } from "svelte"
   import { automationStore } from "builderStore"
 
@@ -11,7 +11,7 @@
       (!$automationStore.selectedAutomation ||
         !$automationStore.selectedAutomation?.automation?._id)
     ) {
-      $goto(`./${$automationStore.automations[0]._id}`)
+      $redirect(`./${$automationStore.automations[0]._id}`)
     }
   })
 </script>

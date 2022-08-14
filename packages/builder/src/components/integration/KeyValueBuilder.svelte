@@ -11,6 +11,7 @@
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { lowercase } from "helpers"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   let dispatch = createEventDispatcher()
 
@@ -30,6 +31,8 @@
   export let tooltip
   export let menuItems
   export let showMenu = false
+  export let bindings = []
+  export let bindingDrawerLeft
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -108,6 +111,17 @@
       />
       {#if options}
         <Select bind:value={field.value} on:change={changed} {options} />
+      {:else if bindings && bindings.length}
+        <DrawerBindableInput
+          {bindings}
+          placeholder="Value"
+          on:change={e => (field.value = e.detail)}
+          disabled={readOnly}
+          value={field.value}
+          allowJS={false}
+          fillWidth={true}
+          drawerLeft={bindingDrawerLeft}
+        />
       {:else}
         <Input
           placeholder={valuePlaceholder}

@@ -1,6 +1,4 @@
 <script>
-  import { goto } from "@roxi/routify"
-  $goto("./data")
+  import { redirect } from "@roxi/routify"
+  $redirect("./data")
 </script>
-
-<!-- routify:options index=false -->

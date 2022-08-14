@@ -150,6 +150,11 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  *               query:
  *                 type: object
  *                 properties:
+ *                   allOr:
+ *                     type: boolean
+ *                     description: Specifies that a row should be returned if it satisfies
+ *                       any of the specified options, rather than requiring it to fulfill all
+ *                       the search parameters. This defaults to false, meaning AND logic will be used.
  *                   string:
  *                     type: object
  *                     example:
@@ -167,9 +172,9 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  *                   range:
  *                     type: object
  *                     description: Searches within a range, the format of this must be
- *                       columnName -> [low, high].
+ *                       in the format of an object with a "low" and "high" property.
  *                     example:
- *                       columnName1: [10, 20]
+ *                       columnName1: { low: 10, high: 20 }
  *                   equal:
  *                     type: object
  *                     description: Searches for rows that have a column value that is

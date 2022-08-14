@@ -39,8 +39,10 @@ class Command {
         let executed = false
         for (let opt of thisCmd.opts) {
           const lookup = opt.command.split(" ")[0].replace("--", "")
-          if (options[lookup]) {
-            await opt.func(options[lookup])
+          if (!executed && options[lookup]) {
+            const input =
+              Object.keys(options).length > 1 ? options : options[lookup]
+            await opt.func(input)
             executed = true
           }
         }

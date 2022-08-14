@@ -10,9 +10,8 @@ filterTests(["smoke", "all"], () => {
 
     it("should create a new Table", () => {
       cy.createTable("dog")
-      cy.wait(1000)
       // Check if Table exists
-      cy.get(interact.TABLE_TITLE_H1).should("have.text", "dog")
+      cy.get(interact.TABLE_TITLE_H1, { timeout: 1000 }).should("have.text", "dog")
     })
 
     it("adds a new column to the table", () => {
@@ -40,7 +39,7 @@ filterTests(["smoke", "all"], () => {
 
     it("edits a row", () => {
       cy.contains("button", "Edit").click({ force: true })
-      cy.wait(1000)
+      cy.wait(500)
       cy.get(interact.SPECTRUM_MODAL_INPUT).clear()
       cy.get(interact.SPECTRUM_MODAL_INPUT).type("Updated")
       cy.contains("Save").click()
@@ -49,7 +48,7 @@ filterTests(["smoke", "all"], () => {
 
     it("deletes a row", () => {
       cy.get(interact.SPECTRUM_CHECKBOX_INPUT).check({ force: true })
-      cy.contains("Delete 1 row(s)").click()
+      cy.contains("Delete 1 row").click()
       cy.get(interact.SPECTRUM_MODAL).contains("Delete").click()
       cy.contains("RoverUpdated").should("not.exist")
     })
@@ -63,8 +62,7 @@ filterTests(["smoke", "all"], () => {
           cy.addRow([i])
         }
         cy.reload()
-        cy.wait(2000)
-        cy.get(interact.SPECTRUM_PAGINATION).within(() => {
+        cy.get(interact.SPECTRUM_PAGINATION, { timeout: 2000 }).within(() => {
           cy.get(interact.SPECTRUM_ACTION_BUTTON).eq(1).click()
         })
         cy.get(interact.SPECTRUM_PAGINATION).within(() => {
@@ -79,10 +77,9 @@ filterTests(["smoke", "all"], () => {
           cy.get(interact.SPECTRUM_BUTTON).click({ force: true })
         })
         cy.get(interact.SPECTRUM_DIALOG_GRID).contains("Delete").click({ force: true })
-        cy.wait(1000)
 
         // Confirm table only has one page
-        cy.get(interact.SPECTRUM_PAGINATION).within(() => {
+        cy.get(interact.SPECTRUM_PAGINATION, { timeout: 1000 }).within(() => {
           cy.get(interact.SPECTRUM_ACTION_BUTTON).eq(1).should("not.be.enabled")
         })
       })

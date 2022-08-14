@@ -55,6 +55,9 @@
     if (!values) {
       return []
     }
+    if (!Array.isArray(values)) {
+      values = [values]
+    }
     return values.map(value => (typeof value === "object" ? value._id : value))
   }
 

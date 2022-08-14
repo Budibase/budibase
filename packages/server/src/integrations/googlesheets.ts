@@ -1,12 +1,13 @@
 import {
-  DatasourceFieldTypes,
+  DatasourceFieldType,
   Integration,
+  QueryType,
+  Table,
+  TableSchema,
   QueryJson,
-  QueryTypes,
-} from "../definitions/datasource"
+  DatasourcePlus,
+} from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
-import { DatasourcePlus } from "./base/datasourcePlus"
-import { Table, TableSchema } from "../definitions/common"
 import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
@@ -53,59 +54,59 @@ module GoogleSheetsModule {
     datasource: {
       spreadsheetId: {
         display: "Google Sheet URL",
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
     },
     query: {
       create: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           sheet: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           row: {
-            type: QueryTypes.JSON,
+            type: QueryType.JSON,
             required: true,
           },
         },
       },
       read: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           sheet: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       update: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           sheet: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           rowIndex: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           row: {
-            type: QueryTypes.JSON,
+            type: QueryType.JSON,
             required: true,
           },
         },
       },
       delete: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           sheet: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           rowIndex: {
-            type: DatasourceFieldTypes.NUMBER,
+            type: DatasourceFieldType.NUMBER,
             required: true,
           },
         },

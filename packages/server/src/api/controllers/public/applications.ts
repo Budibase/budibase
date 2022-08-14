@@ -1,6 +1,6 @@
 const { getAllApps } = require("@budibase/backend-core/db")
-const { updateAppId } = require("@budibase/backend-core/context")
-import { search as stringSearch } from "./utils"
+const { doInAppContext } = require("@budibase/backend-core/context")
+import { search as stringSearch, addRev } from "./utils"
 import * as controller from "../application"
 import { Application } from "../../../definitions/common"
 
@@ -41,28 +41,31 @@ export async function create(ctx: any, next: any) {
 }
 
 export async function read(ctx: any, next: any) {
-  updateAppId(ctx.params.appId)
-  await setResponseApp(ctx)
-  await next()
+  await doInAppContext(ctx.params.appId, async () => {
+    await setResponseApp(ctx)
+    await next()
+  })
 }
 
 export async function update(ctx: any, next: any) {
-  ctx.request.body = fixAppID(ctx.request.body, ctx.params)
-  updateAppId(ctx.params.appId)
-  await controller.update(ctx)
-  await setResponseApp(ctx)
-  await next()
+  ctx.request.body = await addRev(fixAppID(ctx.request.body, ctx.params))
+  await doInAppContext(ctx.params.appId, async () => {
+    await controller.update(ctx)
+    await setResponseApp(ctx)
+    await next()
+  })
 }
 
 export async function destroy(ctx: any, next: any) {
-  updateAppId(ctx.params.appId)
-  // get the app before deleting it
-  await setResponseApp(ctx)
-  const body = ctx.body
-  await controller.destroy(ctx)
-  // overwrite the body again
-  ctx.body = body
-  await next()
+  await doInAppContext(ctx.params.appId, async () => {
+    // get the app before deleting it
+    await setResponseApp(ctx)
+    const body = ctx.body
+    await controller.destroy(ctx)
+    // overwrite the body again
+    ctx.body = body
+    await next()
+  })
 }
 
 export default {

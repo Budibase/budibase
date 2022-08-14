@@ -19,6 +19,7 @@
   } from "@budibase/bbui"
   import OverviewTab from "../_components/OverviewTab.svelte"
   import SettingsTab from "../_components/SettingsTab.svelte"
+  import AccessTab from "../_components/AccessTab.svelte"
   import { API } from "api"
   import { store } from "builderStore"
   import { apps, auth } from "stores/portal"
@@ -27,6 +28,7 @@
   import AppLockModal from "components/common/AppLockModal.svelte"
   import EditableIcon from "components/common/EditableIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import HistoryTab from "components/portal/overview/automation/HistoryTab.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
 
@@ -64,7 +66,7 @@
     selectedApp?.status === AppStatus.DEPLOYED && latestDeployments?.length > 0
 
   $: appUrl = `${window.origin}/app${selectedApp?.url}`
-  $: tabs = ["Overview", "Automation History", "Backups", "Settings"]
+  $: tabs = ["Overview", "Automation History", "Backups", "Settings", "Access"]
   $: selectedTab = "Overview"
 
   const backToAppList = () => {
@@ -138,9 +140,10 @@
     notifications.success("App ID copied to clipboard.")
   }
 
-  const exportApp = app => {
-    const id = isPublished ? app.prodId : app.devId
+  const exportApp = (app, opts = { published: false }) => {
     const appName = encodeURIComponent(app.name)
+    const id = opts?.published ? app.prodId : app.devId
+    // always export the development version
     window.location = `/api/backups/export?appId=${id}&appname=${appName}`
   }
 
@@ -187,6 +190,10 @@
   })
 
   onMount(async () => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("tab")) {
+      selectedTab = params.get("tab")
+    }
     try {
       if (!apps.length) {
         await apps.load()
@@ -202,16 +209,11 @@
 <span class="overview-wrap">
   <Page wide noPadding>
     {#await promise}
-      <span class="page-header">
-        <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
-          Back
-        </ActionButton>
-      </span>
       <div class="loading">
         <ProgressCircle size="XL" />
       </div>
     {:then _}
-      <Layout paddingX="XXL" paddingY="XXL" gap="XL">
+      <Layout paddingX="XXL" paddingY="XL" gap="L">
         <span class="page-header" class:loaded>
           <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
             Back
@@ -266,12 +268,21 @@
               <span slot="control" class="app-overview-actions-icon">
                 <Icon hoverable name="More" />
               </span>
-              <MenuItem on:click={() => exportApp(selectedApp)} icon="Download">
-                Export
+              <MenuItem
+                on:click={() => exportApp(selectedApp, { published: false })}
+                icon="DownloadFromCloud"
+              >
+                Export latest
               </MenuItem>
               {#if isPublished}
+                <MenuItem
+                  on:click={() => exportApp(selectedApp, { published: true })}
+                  icon="DownloadFromCloudOutline"
+                >
+                  Export published
+                </MenuItem>
                 <MenuItem on:click={() => copyAppId(selectedApp)} icon="Copy">
-                  Copy App ID
+                  Copy app ID
                 </MenuItem>
               {/if}
               {#if !isPublished}
@@ -299,10 +310,15 @@
               on:unpublish={e => unpublishApp(e.detail)}
             />
           </Tab>
-          {#if false}
+          <Tab title="Access">
+            <AccessTab app={selectedApp} />
+          </Tab>
+          {#if isPublished}
             <Tab title="Automation History">
-              <div class="container">Automation History contents</div>
+              <HistoryTab app={selectedApp} />
             </Tab>
+          {/if}
+          {#if false}
             <Tab title="Backups">
               <div class="container">Backups contents</div>
             </Tab>
@@ -393,7 +409,7 @@
     line-height: 1em;
     margin-bottom: var(--spacing-s);
   }
-  .tab-wrap :global(.spectrum-Tabs) {
+  .tab-wrap :global(> .spectrum-Tabs) {
     padding-left: var(--spectrum-alias-grid-gutter-large);
     padding-right: var(--spectrum-alias-grid-gutter-large);
   }

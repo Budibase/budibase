@@ -11,7 +11,7 @@ const { createASession } = require("@budibase/backend-core/sessions")
 const { TENANT_ID, CSRF_TOKEN } = require("./structures")
 const structures = require("./structures")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
-
+const { groups } = require("@budibase/pro")
 class TestConfiguration {
   constructor(openServer = true) {
     if (openServer) {
@@ -114,6 +114,22 @@ class TestConfiguration {
     return doInTenant(TENANT_ID, () => {
       return users.getGlobalUserByEmail(email)
     })
+  }
+
+  async getGroup(id) {
+    return doInTenant(TENANT_ID, () => {
+      return groups.get(id)
+    })
+  }
+
+  async saveGroup(group) {
+    const res = await this.getRequest()
+      .post(`/api/global/groups`)
+      .send(group)
+      .set(this.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+    return res.body
   }
 
   async createUser(email, password) {
