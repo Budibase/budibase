@@ -43,7 +43,8 @@
       "embed",
       "markdownviewer",
       "backgroundimage",
-      "embeddedmap"
+      "embeddedmap",
+      "progressbar"
     ]
   },
   {
@@ -81,4 +82,3 @@
     ]
   }
 ]
-

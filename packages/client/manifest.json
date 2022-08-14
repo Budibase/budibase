@@ -10,6 +10,56 @@
     "rowSelection": true,
     "continueIfAction": true
   },
+  "progressbar": {
+    "name": "Progress Bar",
+    "description": "A Dynamic Progress Bar",
+    "icon": "Circle",
+    "showSettingsBar": true,
+    "hasChildren": false,
+    "styles": [
+      "padding",
+      "background",
+      "border",
+      "size"
+    ],
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Progress",
+        "key": "progress"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "showInBar": true,
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra large",
+            "value": "XL"
+          }
+        ],
+        "defaultValue": "M"
+      }
+    ]
+  },
   "layout": {
     "name": "Layout",
     "description": "This component is specific only to layouts",
