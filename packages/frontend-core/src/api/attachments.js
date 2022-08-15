@@ -75,5 +75,18 @@ export const buildAttachmentEndpoints = API => {
         },
       })
     },
+
+    /**
+     * Deletes attachments from the builder bucket.
+     * @param keys the attachments to delete
+     */
+    deleteBuilderAttachments: async keys => {
+      return await API.post({
+        url: `/api/attachments/delete`,
+        body: {
+          keys,
+        },
+      })
+    },
   }
 }
