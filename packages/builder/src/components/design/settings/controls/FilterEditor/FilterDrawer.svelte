@@ -3,6 +3,7 @@
     Body,
     Button,
     Combobox,
+    Multiselect,
     DatePicker,
     DrawerContent,
     Icon,
@@ -97,6 +98,16 @@
     if (expression.noValue) {
       expression.value = null
     }
+    if (
+      operator === Constants.OperatorOptions.In.value &&
+      !Array.isArray(expression.value)
+    ) {
+      if (expression.value) {
+        expression.value = [expression.value]
+      } else {
+        expression.value = []
+      }
+    }
   }
 
   const getFieldOptions = field => {
@@ -169,7 +180,13 @@
                 />
               {:else if ["string", "longform", "number", "formula"].includes(filter.type)}
                 <Input disabled={filter.noValue} bind:value={filter.value} />
-              {:else if ["options", "array"].includes(filter.type)}
+              {:else if filter.type === "array" || (filter.type === "options" && filter.operator === "oneOf")}
+                <Multiselect
+                  disabled={filter.noValue}
+                  options={getFieldOptions(filter.field)}
+                  bind:value={filter.value}
+                />
+              {:else if filter.type === "options"}
                 <Combobox
                   disabled={filter.noValue}
                   options={getFieldOptions(filter.field)}
