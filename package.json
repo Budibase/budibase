@@ -26,7 +26,7 @@
     "build": "lerna run build",
     "build:dev": "lerna run prebuild && tsc --build --watch --preserveWatchOutput",
     "release": "lerna publish ${RELEASE_VERSION_TYPE:-patch} --yes --force-publish && yarn release:pro",
-    "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop && yarn release:pro:develop",
+    "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop --exact && yarn release:pro:develop",
     "release:pro": "bash scripts/pro/release.sh",
     "release:pro:develop": "bash scripts/pro/release.sh develop",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",

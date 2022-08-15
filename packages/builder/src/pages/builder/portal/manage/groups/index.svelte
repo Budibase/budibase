@@ -11,16 +11,11 @@
   } from "@budibase/bbui"
   import { groups, auth } from "stores/portal"
   import { onMount } from "svelte"
-  import { Constants } from "@budibase/frontend-core"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
+  import { cloneDeep } from "lodash/fp"
 
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
-
-  let modal
-  let group = {
+  const DefaultGroup = {
     name: "",
     icon: "UserGroup",
     color: "var(--spectrum-global-color-blue-600)",
@@ -28,6 +23,8 @@
     apps: [],
     roles: {},
   }
+  let modal
+  let group = cloneDeep(DefaultGroup)
 
   async function deleteGroup(group) {
     try {
@@ -45,9 +42,14 @@
     }
   }
 
+  const showCreateGroupModal = () => {
+    group = cloneDeep(DefaultGroup)
+    modal?.show()
+  }
+
   onMount(async () => {
     try {
-      if (hasGroupsLicense) {
+      if ($auth.groupsEnabled) {
         await groups.actions.init()
       }
     } catch (error) {
@@ -60,7 +62,7 @@
   <Layout gap="XS" noPadding>
     <div style="display: flex;">
       <Heading size="M">User groups</Heading>
-      {#if !hasGroupsLicense}
+      {#if !$auth.groupsEnabled}
         <Tags>
           <div class="tags">
             <div class="tag">
@@ -75,14 +77,15 @@
   <div class="align-buttons">
     <Button
       newStyles
-      icon={hasGroupsLicense ? "UserGroup" : ""}
-      cta={hasGroupsLicense}
-      on:click={hasGroupsLicense
-        ? () => modal.show()
+      icon={$auth.groupsEnabled ? "UserGroup" : ""}
+      cta={$auth.groupsEnabled}
+      on:click={$auth.groupsEnabled
+        ? showCreateGroupModal
         : window.open("https://budibase.com/pricing/", "_blank")}
-      >{hasGroupsLicense ? "Create user group" : "Upgrade Account"}</Button
     >
-    {#if !hasGroupsLicense}
+      {$auth.groupsEnabled ? "Create user group" : "Upgrade Account"}
+    </Button>
+    {#if !$auth.groupsEnabled}
       <Button
         newStyles
         secondary
@@ -93,7 +96,7 @@
     {/if}
   </div>
 
-  {#if hasGroupsLicense && $groups.length}
+  {#if $auth.groupsEnabled && $groups.length}
     <div class="groupTable">
       {#each $groups as group}
         <div>
@@ -130,7 +133,7 @@
   .groupTable :global(> div) {
     background: var(--bg-color);
 
-    height: 70px;
+    height: 55px;
     display: grid;
     align-items: center;
     grid-gap: var(--spacing-xl);

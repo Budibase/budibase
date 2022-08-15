@@ -119,6 +119,8 @@ This job is responsible for deploying to our production, cloud kubernetes enviro
 
 ## Pro
 
+| **NOTE**: When developing for both pro / budibase repositories, your branch names need to match, or else the correct pro doesn't get run within your CI job.
+
 ### Installing Pro
 
 The pro package is always installed from source in our CI jobs. 
@@ -132,7 +134,7 @@ This is done to prevent pro needing to be published prior to CI runs in budiabse
   - backend-core lives in the monorepo, so it can't be released independently to be used in pro
   - therefore the only option is to pull pro from source and release it as a part of the monorepo release, as if it were a mono package
 
-The install is performed using the same steps as local development, via the `yarn bootstrap` command, see the [Contributing Guide#Pro](../CONTRIBUTING.md#pro)
+The install is performed using the same steps as local development, via the `yarn bootstrap` command, see the [Contributing Guide#Pro](../../docs/CONTRIBUTING.md#pro)
 
 The branch to install pro from can vary depending on ref of the commit that triggered the budibase CI job. This is done to enable branches which have changes in both the monorepo and the pro repo to have their CI pass successfully. 
 

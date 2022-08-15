@@ -4,10 +4,10 @@ From opening a bug report to creating a pull request: every contribution is appr
 
 ## Table of contents
 
-- [Quick start](#quick-start)
-- [Status](#status)
-- [What's included](#whats-included)
-- [Bugs and feature requests](#bugs-and-feature-requests)
+- [Where to start](#not-sure-where-to-start)
+- [Contributor Licence Agreement](#contributor-license-agreement-cla)
+- [Glossary of Terms](#glossary-of-terms)
+- [Contributing to Budibase](#contributing-to-budibase)
 
 
 ## Not Sure Where to Start?
@@ -31,6 +31,9 @@ In order to accept your pull request, we need you to submit a CLA. You only need
 All contributors must sign an [Individual Contributor License Agreement](https://github.com/budibase/budibase/blob/next/.github/cla/individual-cla.md).
 
 If contributing on behalf of your company, your company must sign a [Corporate Contributor License Agreement](https://github.com/budibase/budibase/blob/next/.github/cla/corporate-cla.md). If so, please contact us via community@budibase.com.
+
+If for any reason, your first contribution is in a PR created by other contributor, please just add a comment to the PR
+with the following text to agree our CLA: "I have read the CLA Document and I hereby sign the CLA".
 
 ## Glossary of Terms
 
@@ -162,7 +165,10 @@ When you are running locally, budibase stores data on disk using docker volumes.
 
 ### Development Modes
 
-A combination of environment variables controls the mode budibase runs in. 
+A combination of environment variables controls the mode budibase runs in.
+
+| **NOTE**: You need to clean your browser cookies when you change between different modes.
+
 Yarn commands can be used to mimic the different modes as described in the sections below:
 
 #### Self Hosted
@@ -189,7 +195,7 @@ To enable this mode, use:
 yarn mode:account
 ```
 ### CI
- An overview of the CI pipelines can be found [here](./workflows/README.md)
+ An overview of the CI pipelines can be found [here](../.github/workflows/README.md)
 
 ### Pro
 

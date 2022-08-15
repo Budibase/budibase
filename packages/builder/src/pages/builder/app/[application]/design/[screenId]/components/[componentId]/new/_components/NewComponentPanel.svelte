@@ -184,6 +184,7 @@
               <div class="category-label">{category.name}</div>
               {#each category.children as component}
                 <div
+                  data-cy={`component-${component.name}`}
                   class="component"
                   class:selected={selectedIndex ===
                     orderMap[component.component]}

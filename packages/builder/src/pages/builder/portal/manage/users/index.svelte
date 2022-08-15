@@ -8,11 +8,10 @@
     Layout,
     Modal,
     ModalContent,
-    Icon,
+    Search,
     notifications,
     Pagination,
-    Search,
-    Label,
+    Divider,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import { users, groups, auth } from "stores/portal"
@@ -20,75 +19,42 @@
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
-  import NameTableRenderer from "./_components/NameTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
+  import { get } from "svelte/store"
   import { Constants } from "@budibase/frontend-core"
 
-  const accessTypes = [
-    {
-      icon: "User",
-      description: "App user - Only has access to published apps",
-    },
-    {
-      icon: "Hammer",
-      description: "Developer - Access to the app builder",
-    },
-    {
-      icon: "Draw",
-      description: "Admin - Full access",
-    },
-  ]
-
-  //let email
   let enrichedUsers = []
   let createUserModal,
     inviteConfirmationModal,
     onboardingTypeModal,
     passwordModal,
     importUsersModal
-
   let pageInfo = createPaginationStore()
   let prevEmail = undefined,
     searchEmail = undefined
-
   let selectedRows = []
   let customRenderers = [
     { column: "userGroups", component: GroupsTableRenderer },
     { column: "apps", component: AppsTableRenderer },
-    { column: "name", component: NameTableRenderer },
     { column: "role", component: RoleTableRenderer },
   ]
 
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
-
   $: schema = {
-    name: {},
     email: {},
     role: {
-      noPropagation: true,
       sortable: false,
     },
-    ...(hasGroupsLicense && {
-      userGroups: { sortable: false, displayName: "User groups" },
+    ...($auth.groupsEnabled && {
+      userGroups: { sortable: false, displayName: "Groups" },
     }),
-    apps: { width: "120px" },
-    settings: {
-      sortable: false,
-      width: "60px",
-      displayName: "",
-      align: "Right",
-    },
+    apps: {},
   }
-
   $: userData = []
-
   $: page = $pageInfo.page
   $: fetchUsers(page, searchEmail)
   $: {
@@ -111,6 +77,7 @@
       }
     })
   }
+
   const showOnboardingTypeModal = async addUsersData => {
     userData = await removingDuplicities(addUsersData)
     if (!userData?.users?.length) return
@@ -119,13 +86,13 @@
   }
 
   async function createUserFlow() {
-    let emails = userData?.users?.map(x => x.email) || []
+    const payload = userData?.users?.map(user => ({
+      email: user.email,
+      builder: user.role === Constants.BudibaseRoles.Developer,
+      admin: user.role === Constants.BudibaseRoles.Admin,
+    }))
     try {
-      const res = await users.invite({
-        emails: emails,
-        builder: false,
-        admin: false,
-      })
+      const res = await users.invite(payload)
       notifications.success(res.message)
       inviteConfirmationModal.show()
     } catch (error) {
@@ -205,6 +172,10 @@
   const deleteRows = async () => {
     try {
       let ids = selectedRows.map(user => user._id)
+      if (ids.includes(get(auth).user._id)) {
+        notifications.error("You cannot delete yourself")
+        return
+      }
       await users.bulkDelete(ids)
       notifications.success(`Successfully deleted ${selectedRows.length} rows`)
       selectedRows = []
@@ -234,63 +205,61 @@
   }
 </script>
 
-<Layout noPadding>
+<Layout noPadding gap="M">
   <Layout gap="XS" noPadding>
     <Heading>Users</Heading>
     <Body>Add users and control who gets access to your published apps</Body>
-
-    <div>
-      {#each accessTypes as type}
-        <div class="access-description">
-          <Icon name={type.icon} />
-          <div class="access-text">
-            <Body size="S">{type.description}</Body>
-          </div>
-        </div>
-      {/each}
-    </div>
   </Layout>
-  <Layout gap="S" noPadding>
+  <Divider size="S" />
+  <div class="controls">
     <ButtonGroup>
       <Button
         dataCy="add-user"
         on:click={createUserModal.show}
         icon="UserAdd"
-        cta>Add Users</Button
+        cta>Add users</Button
       >
-      <Button on:click={importUsersModal.show} icon="Import" primary
-        >Import Users</Button
+      <Button
+        on:click={importUsersModal.show}
+        icon="Import"
+        secondary
+        newStyles
       >
-
-      <div class="field">
-        <Label size="L">Search email</Label>
-        <Search bind:value={searchEmail} placeholder="" />
-      </div>
-      {#if selectedRows.length > 0}
-        <DeleteRowsButton on:updaterows {selectedRows} {deleteRows} />
-      {/if}
+        Import users
+      </Button>
     </ButtonGroup>
-    <Table
-      on:click={({ detail }) => $goto(`./${detail._id}`)}
-      {schema}
-      bind:selectedRows
-      data={enrichedUsers}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={true}
-      showHeaderBorder={false}
-      {customRenderers}
-    />
-    <div class="pagination">
-      <Pagination
-        page={$pageInfo.pageNumber}
-        hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
-        hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
-        goToPrevPage={pageInfo.prevPage}
-        goToNextPage={pageInfo.nextPage}
-      />
+    <div class="controls-right">
+      <Search bind:value={searchEmail} placeholder="Search email" />
+      {#if selectedRows.length > 0}
+        <DeleteRowsButton
+          item="user"
+          on:updaterows
+          {selectedRows}
+          {deleteRows}
+        />
+      {/if}
     </div>
-  </Layout>
+  </div>
+  <Table
+    on:click={({ detail }) => $goto(`./${detail._id}`)}
+    {schema}
+    bind:selectedRows
+    data={enrichedUsers}
+    allowEditColumns={false}
+    allowEditRows={false}
+    allowSelectRows={true}
+    showHeaderBorder={false}
+    {customRenderers}
+  />
+  <div class="pagination">
+    <Pagination
+      page={$pageInfo.pageNumber}
+      hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+      hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+      goToPrevPage={pageInfo.prevPage}
+      goToNextPage={pageInfo.nextPage}
+    />
+  </div>
 </Layout>
 
 <Modal bind:this={createUserModal}>
@@ -323,25 +292,26 @@
 </Modal>
 
 <style>
-  .field {
+  .pagination {
     display: flex;
-    align-items: center;
     flex-direction: row;
-    grid-gap: var(--spacing-m);
-    margin-left: auto;
+    justify-content: flex-end;
   }
 
-  .field > :global(*) + :global(*) {
-    margin-left: var(--spacing-m);
-  }
-
-  .access-description {
+  .controls {
     display: flex;
-    margin-top: var(--spacing-xl);
-    opacity: 0.8;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
-
-  .access-text {
-    margin-left: var(--spacing-m);
+  .controls-right {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+  .controls-right :global(.spectrum-Search) {
+    width: 200px;
   }
 </style>

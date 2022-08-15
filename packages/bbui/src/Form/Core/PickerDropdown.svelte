@@ -8,13 +8,13 @@
   import Icon from "../../Icon/Icon.svelte"
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Detail from "../../Typography/Detail.svelte"
+  import Search from "./Search.svelte"
 
   export let primaryLabel = ""
   export let primaryValue = null
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
-  export let readonly = false
   export let updateOnChange = true
   export let error = null
   export let secondaryOptions = []
@@ -22,7 +22,6 @@
   export let secondaryFieldText = ""
   export let secondaryFieldIcon = ""
   export let secondaryFieldColour = ""
-  export let getPrimaryOptionLabel = option => option
   export let getPrimaryOptionValue = option => option
   export let getPrimaryOptionColour = () => null
   export let getPrimaryOptionIcon = () => null
@@ -35,6 +34,7 @@
   export let isOptionSelected = () => false
   export let isPlaceholder = false
   export let placeholderOption = null
+  export let showClearIcon = true
 
   const dispatch = createEventDispatcher()
   let primaryOpen = false
@@ -43,29 +43,18 @@
   let searchTerm = null
 
   $: groupTitles = Object.keys(primaryOptions)
-  $: filteredOptions = getFilteredOptions(
-    primaryOptions,
-    searchTerm,
-    getPrimaryOptionLabel
-  )
   let iconData
-  /*
-  $: iconData = primaryOptions?.find(x => {
-    return x.name === primaryFieldText
-  })
-  */
+
+  const updateSearch = e => {
+    dispatch("search", e.detail)
+  }
+
   const updateValue = newValue => {
-    if (readonly) {
-      return
-    }
     dispatch("change", newValue)
   }
 
   const onClickSecondary = () => {
     dispatch("click")
-    if (readonly) {
-      return
-    }
     secondaryOpen = true
   }
 
@@ -85,37 +74,18 @@
   }
 
   const onBlur = event => {
-    if (readonly) {
-      return
-    }
     focus = false
     updateValue(event.target.value)
   }
 
   const onInput = event => {
-    if (readonly || !updateOnChange) {
-      return
-    }
     updateValue(event.target.value)
   }
 
   const updateValueOnEnter = event => {
-    if (readonly) {
-      return
-    }
     if (event.key === "Enter") {
       updateValue(event.target.value)
     }
-  }
-
-  const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term) {
-      const lowerCaseTerm = term.toLowerCase()
-      return options.filter(option => {
-        return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
-      })
-    }
-    return options
   }
 </script>
 
@@ -155,11 +125,12 @@
       value={primaryLabel || ""}
       placeholder={placeholder || ""}
       {disabled}
-      {readonly}
+      readonly
       class="spectrum-Textfield-input spectrum-InputGroup-input"
       class:labelPadding={iconData}
+      class:open={primaryOpen}
     />
-    {#if primaryValue}
+    {#if primaryValue && showClearIcon}
       <button
         on:click={() => onClearPrimary()}
         type="reset"
@@ -183,6 +154,15 @@
       class:auto-width={autoWidth}
       class:is-full-width={!secondaryOptions.length}
     >
+      {#if autocomplete}
+        <Search
+          value={searchTerm}
+          on:change={event => updateSearch(event)}
+          {disabled}
+          placeholder="Search"
+        />
+      {/if}
+
       <ul class="spectrum-Menu" role="listbox">
         {#if placeholderOption}
           <li
@@ -204,7 +184,7 @@
           </li>
         {/if}
         {#each groupTitles as title}
-          <div class="spectrum-Menu-item">
+          <div class="spectrum-Menu-item title">
             <Detail>{title}</Detail>
           </div>
           {#if primaryOptions}
@@ -239,7 +219,10 @@
                   </div>
                 {:else if getPrimaryOptionColour(option, idx)}
                   <span class="option-left">
-                    <StatusLight color={getPrimaryOptionColour(option, idx)} />
+                    <StatusLight
+                      square
+                      color={getPrimaryOptionColour(option, idx)}
+                    />
                   </span>
                 {/if}
                 <span class="spectrum-Menu-itemLabel">
@@ -259,6 +242,7 @@
                   {#if getPrimaryOptionIcon(option, idx) && getPrimaryOptionColour(option, idx)}
                     <span class="option-right">
                       <StatusLight
+                        square
                         color={getPrimaryOptionColour(option, idx)}
                       />
                     </span>
@@ -287,7 +271,7 @@
           </span>
         {:else if secondaryFieldColour}
           <span class="option-left">
-            <StatusLight color={secondaryFieldColour} />
+            <StatusLight square color={secondaryFieldColour} />
           </span>
         {/if}
 
@@ -325,6 +309,7 @@
                 {#if getSecondaryOptionColour(option, idx)}
                   <span class="option-left">
                     <StatusLight
+                      square
                       color={getSecondaryOptionColour(option, idx)}
                     />
                   </span>
@@ -357,6 +342,13 @@
     min-width: 0;
     width: 100%;
   }
+  .spectrum-InputGroup :global(.spectrum-Search-input) {
+    border: none;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
   .override-borders {
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
@@ -426,5 +418,19 @@
 
   .spectrum-Search-clearButton {
     position: absolute;
+  }
+
+  /* Fix focus borders to show only when opened */
+  .spectrum-Textfield-input {
+    border-color: var(--spectrum-global-color-gray-400) !important;
+    border-right-width: 1px;
+  }
+  .spectrum-Textfield-input.open {
+    border-color: var(--spectrum-global-color-blue-400) !important;
+  }
+
+  /* Fix being able to hover and select titles */
+  .spectrum-Menu-item.title {
+    pointer-events: none;
   }
 </style>

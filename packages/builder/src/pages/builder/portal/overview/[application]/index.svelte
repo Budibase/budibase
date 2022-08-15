@@ -66,7 +66,7 @@
     selectedApp?.status === AppStatus.DEPLOYED && latestDeployments?.length > 0
 
   $: appUrl = `${window.origin}/app${selectedApp?.url}`
-  $: tabs = ["Overview", "Automation History", "Backups", "Settings"]
+  $: tabs = ["Overview", "Automation History", "Backups", "Settings", "Access"]
   $: selectedTab = "Overview"
 
   const backToAppList = () => {

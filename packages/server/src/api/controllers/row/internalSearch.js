@@ -1,4 +1,5 @@
 const { SearchIndexes } = require("../../../db/utils")
+const { removeKeyNumbering } = require("./utils")
 const fetch = require("node-fetch")
 const { getCouchInfo } = require("@budibase/backend-core/db")
 const { getAppId } = require("@budibase/backend-core/context")
@@ -223,6 +224,8 @@ class QueryBuilder {
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
+        // check for new format - remove numbering if needed
+        key = removeKeyNumbering(key)
         key = builder.preprocess(key.replace(/ /g, "_"), {
           escape: true,
         })
@@ -342,6 +345,9 @@ class QueryBuilder {
   }
 }
 
+// exported for unit testing
+exports.QueryBuilder = QueryBuilder
+
 /**
  * Executes a lucene search query.
  * @param url The query URL
@@ -455,6 +461,7 @@ exports.paginatedSearch = async (query, params) => {
   // Try fetching 1 row in the next page to see if another page of results
   // exists or not
   const nextResults = await search
+    .setTable(params.tableId)
     .setBookmark(searchResults.bookmark)
     .setLimit(1)
     .run()
