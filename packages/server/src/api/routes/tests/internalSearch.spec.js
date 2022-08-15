@@ -129,9 +129,10 @@ describe("internal search", () => {
     const response = await search.paginatedSearch({
       contains: {
         "column": "a",
+        "colArr": [1, 2, 3],
       },
     }, PARAMS)
-    checkLucene(response, `*:* AND column:a`, PARAMS)
+    checkLucene(response, `*:* AND column:a AND colArr:(1 AND 2 AND 3)`, PARAMS)
   })
 
   it("test multiple of same column", async () => {
@@ -153,5 +154,23 @@ describe("internal search", () => {
       },
     }, PARAMS)
     checkLucene(response, `*:* AND 1\\:column:"a"`, PARAMS)
+  })
+
+  it("test containsAny query", async () => {
+    const response = await search.paginatedSearch({
+      containsAny: {
+        "column": ["a", "b", "c"]
+      },
+    }, PARAMS)
+    checkLucene(response, `*:* AND column:(a OR b OR c)`, PARAMS)
+  })
+
+  it("test notContains query", async () => {
+    const response = await search.paginatedSearch({
+      notContains: {
+        "column": ["a", "b", "c"]
+      },
+    }, PARAMS)
+    checkLucene(response, `*:* AND NOT column:(a AND b AND c)`, PARAMS)
   })
 })
