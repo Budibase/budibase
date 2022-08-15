@@ -95,9 +95,11 @@
       "change",
       value.filter((x, idx) => idx !== selectedImageIdx)
     )
-    await deleteAttachments(
-      value.filter((x, idx) => idx === selectedImageIdx).map(item => item.key)
-    )
+    if (deleteAttachments) {
+      await deleteAttachments(
+        value.filter((x, idx) => idx === selectedImageIdx).map(item => item.key)
+      )
+    }
     selectedImageIdx = 0
   }
 
