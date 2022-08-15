@@ -18,20 +18,43 @@
     "hasChildren": false,
     "styles": [
       "padding",
+      "size",
       "background",
-      "border",
-      "size"
+      "border"
     ],
     "settings": [
       {
         "type": "text",
         "label": "Label",
-        "key": "label"
+        "key": "label",
+        "defaultValue": "Progress..."
+      },
+      {
+        "type": "select",
+        "label": "Label Position",
+        "key": "labelPosition",
+        "options": [
+          {
+            "label": "Above",
+            "value": "above"
+          },
+          {
+            "label": "Left",
+            "value": "left"
+          }
+        ],
+        "defaultValue": "above"
       },
       {
         "type": "text",
-        "label": "Progress",
-        "key": "progress"
+        "label": "Value",
+        "key": "value"
+      },
+      {
+        "type": "number",
+        "label": "Animation Duration",
+        "key": "animationDuration",
+        "defaultValue": "500"
       },
       {
         "type": "select",
