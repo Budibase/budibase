@@ -23,7 +23,7 @@ http {
   tcp_nodelay on;
   server_tokens off;
   types_hash_max_size 2048;
-  resolver {{ resolver }} valid=10s ipv6=off;
+  resolver ${RESOLVER} valid=10s ipv6=off;
 
   # buffering
   client_header_buffer_size 1k;
@@ -73,25 +73,25 @@ http {
     add_header Content-Security-Policy "${csp_default}; ${csp_script}; ${csp_style}; ${csp_object}; ${csp_base_uri}; ${csp_connect}; ${csp_font}; ${csp_frame}; ${csp_img}; ${csp_manifest}; ${csp_media}; ${csp_worker};" always;
 
     # upstreams
-    set $apps {{ apps }};
-    set $worker {{ worker }};
-    set $minio {{ minio }};
-    set $couchdb {{ couchdb }};
+    set $apps ${APPS_UPSTREAM_URL};
+    set $worker ${WORKER_UPSTREAM_URL};
+    set $minio ${MINIO_UPSTREAM_URL};
+    set $couchdb ${COUCHDB_UPSTREAM_URL};
     {{#if watchtower}}
-    set $watchtower {{ watchtower }};
+    set $watchtower ${WATCHTOWER_UPSTREAM_URL};
     {{/if}}
 
     location /app {
-      proxy_pass      http://$apps:4002;
+      proxy_pass      $apps;
     }
 
     location = / {
-      proxy_pass      http://$apps:4002;
+      proxy_pass      $apps;
     }
 
     {{#if watchtower}}
     location = /v1/update {
-      proxy_pass      http://$watchtower:8080;
+      proxy_pass      $watchtower;
     }
     {{/if}}
     location ~ ^/(builder|app_) {
@@ -100,15 +100,15 @@ http {
       proxy_set_header    Upgrade             $http_upgrade;
       proxy_set_header    X-Real-IP           $remote_addr;
       proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
-      proxy_pass      http://$apps:4002;
+      proxy_pass      $apps;
     }
 
     location ~ ^/api/(system|admin|global)/ {
-      proxy_pass      http://$worker:4003;
+      proxy_pass      $worker;
     }
 
     location /worker/ {
-      proxy_pass      http://$worker:4003;
+      proxy_pass      $worker;
       rewrite ^/worker/(.*)$ /$1 break;
     }
 
@@ -127,7 +127,7 @@ http {
       proxy_set_header    X-Real-IP           $remote_addr;
       proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
 
-      proxy_pass      http://$apps:4002;
+      proxy_pass      $apps;
     }
 
     location /api/webhooks/ {
@@ -146,11 +146,11 @@ http {
       proxy_set_header    X-Real-IP           $remote_addr;
       proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
 
-      proxy_pass      http://$apps:4002;
+      proxy_pass      $apps;
     }
 
     location /db/ {
-      proxy_pass      http://$couchdb:5984;
+      proxy_pass      $couchdb;
       rewrite ^/db/(.*)$ /$1 break;
     }
 
@@ -163,7 +163,7 @@ http {
       proxy_http_version 1.1;
       proxy_set_header Connection "";
       chunked_transfer_encoding off;
-      proxy_pass      http://$minio:9000;
+      proxy_pass      $minio;
     }
 
     client_header_timeout 60;

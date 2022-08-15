@@ -37,34 +37,11 @@ function processStringSync(string, env) {
 }
 
 const Configs = {
-  prod: {
-    apps: "app-service.budibase.svc.cluster.local",
-    worker: "worker-service.budibase.svc.cluster.local",
-    minio: "minio-service.budibase.svc.cluster.local",
-    couchdb: "budibase-prod-svc-couchdb",
-    resolver: "kube-dns.kube-system.svc.cluster.local"
-  },
-  preprod: {
-    apps: "app-service.budibase.svc.cluster.local",
-    worker: "worker-service.budibase.svc.cluster.local",
-    minio: "minio-service.budibase.svc.cluster.local",
-    couchdb: "budibase-preprod-svc-couchdb",
-    resolver: "kube-dns.kube-system.svc.cluster.local"
-  },
-  release: {
-    apps: "app-service.budibase.svc.cluster.local",
-    worker: "worker-service.budibase.svc.cluster.local",
-    minio: "minio-service.budibase.svc.cluster.local",
-    couchdb: "budibase-release-svc-couchdb",
-    resolver: "kube-dns.kube-system.svc.cluster.local"
-  },
+  prod: {},
+  preprod: {},
+  release: {},
   compose: {
-    apps: "app-service",
-    worker: "worker-service",
-    minio: "minio-service",
-    couchdb: "couchdb-service",
-    watchtower: "watchtower-service",
-    resolver: "127.0.0.11"
+    watchtower: true,
   },
 }
 
@@ -78,16 +55,14 @@ const Commands = {
 async function init(managementCommand) {
   const config = Configs[managementCommand]
   const hostingPath = path.join(process.cwd(), "hosting")
-  for (const nginxConfName of ['nginx.prod.conf', 'nginx-dyn.prod.conf']) {
-    const nginxHbsPath = path.join(hostingPath, `${nginxConfName}.hbs`)
-    const nginxOutputPath = path.join(
-        hostingPath,
-        "proxy",
-        `.generated-${nginxConfName}`
-    )
-    const contents = fs.readFileSync(nginxHbsPath, "utf8")
-    fs.writeFileSync(nginxOutputPath, processStringSync(contents, config))
-  }
+  const nginxHbsPath = path.join(hostingPath, "nginx.prod.conf.hbs")
+  const nginxOutputPath = path.join(
+    hostingPath,
+    "proxy",
+    ".generated-nginx.prod.conf"
+  )
+  const contents = fs.readFileSync(nginxHbsPath, "utf8")
+  fs.writeFileSync(nginxOutputPath, processStringSync(contents, config))
 }
 
 const managementCommand = process.argv.slice(2)[0]

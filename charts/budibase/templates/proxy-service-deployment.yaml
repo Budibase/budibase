@@ -31,14 +31,14 @@ spec:
         ports:
         - containerPort: {{ .Values.services.proxy.port }}
         env:
-        - name: ENABLE_DYNAMIC_CONFIG
-          value: 'true'
         - name: APPS_UPSTREAM_URL
           value: {{ tpl .Values.services.proxy.upstreams.apps . | quote }}
         - name: WORKER_UPSTREAM_URL
           value: {{ tpl .Values.services.proxy.upstreams.worker . | quote }}
         - name: MINIO_UPSTREAM_URL
           value: {{ tpl .Values.services.proxy.upstreams.minio . | quote }}
+        - name: COUCHDB_UPSTREAM_URL
+          value: {{ .Values.services.couchdb.url | default (tpl .Values.services.proxy.upstreams.couchdb .) | quote }}
         - name: RESOLVER
           value: kube-dns.kube-system.svc.{{ .Values.services.dns }}
         resources: {}

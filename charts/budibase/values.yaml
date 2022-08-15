@@ -125,6 +125,7 @@ services:
       apps: 'http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}'
       worker: 'http://worker-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.worker.port }}'
       minio: 'http://minio-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:9000'
+      couchdb: 'http://budibase-svc-couchdb.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:5984'
 
   apps:
     port: 4002

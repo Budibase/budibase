@@ -1,14 +1,11 @@
 FROM nginx:latest
 
-ENV ENABLE_DYNAMIC_CONFIG=0
 ENV APPS_UPSTREAM_URL=http://app-service:4002
 ENV WORKER_UPSTREAM_URL=http://worker-service:4003
 ENV MINIO_UPSTREAM_URL=http://minio-service:9000
+ENV COUCHDB_UPSTREAM_URL=http://couchdb-service:5984
 ENV WATCHTOWER_UPSTREAM_URL=http://watchtower-service:8080
 ENV RESOLVER=127.0.0.11
-
-COPY 99-envsubst-nginx-conf.sh /docker-entrypoint.d
-COPY .generated-nginx-dyn.prod.conf /etc/nginx/nginx-dyn.conf.template
 
 # nginx.conf
 # use the default nginx behaviour for *.template files which are processed with envsubst
