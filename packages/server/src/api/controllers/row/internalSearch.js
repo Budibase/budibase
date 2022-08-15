@@ -188,7 +188,7 @@ class QueryBuilder {
         return null
       }
       if (!Array.isArray(value)) {
-         return `${key}:${value}`
+        return `${key}:${value}`
       }
       let statement = `${builder.preprocess(value[0], { escape: true })}`
       for (let i = 1; i < value.length; i++) {
