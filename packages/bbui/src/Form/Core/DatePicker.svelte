@@ -60,7 +60,7 @@
     // If time only set date component to 2000-01-01
     if (timeOnly) {
       // Classic flackpickr causing issues.
-      // When selecting a time first the first time for a "time only" field,
+      // When selecting a value for the first time for a "time only" field,
       // the time is always offset by 1 hour for some reason (regardless of time
       // zone) so we need to correct it.
       if (!value && newValue) {
