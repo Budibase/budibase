@@ -6,7 +6,7 @@ import {
 } from "./index"
 import cls from "./FunctionContext"
 import { IdentityContext } from "@budibase/types"
-import { ContextKeys } from "./constants"
+import { ContextKey } from "./constants"
 import { dangerousGetDB, closeDB } from "../db"
 import { isEqual } from "lodash"
 import { getDevelopmentAppID, getProdAppID } from "../db/conversions"
@@ -47,17 +47,13 @@ export const setAppTenantId = (appId: string) => {
 }
 
 export const setIdentity = (identity: IdentityContext | null) => {
-  cls.setOnContext(ContextKeys.IDENTITY, identity)
+  cls.setOnContext(ContextKey.IDENTITY, identity)
 }
 
 // this function makes sure the PouchDB objects are closed and
 // fully deleted when finished - this protects against memory leaks
 export async function closeAppDBs() {
-  const dbKeys = [
-    ContextKeys.CURRENT_DB,
-    ContextKeys.PROD_DB,
-    ContextKeys.DEV_DB,
-  ]
+  const dbKeys = [ContextKey.CURRENT_DB, ContextKey.PROD_DB, ContextKey.DEV_DB]
   for (let dbKey of dbKeys) {
     const db = cls.getFromContext(dbKey)
     if (!db) {
@@ -68,16 +64,16 @@ export async function closeAppDBs() {
     cls.setOnContext(dbKey, null)
   }
   // clear the app ID now that the databases are closed
-  if (cls.getFromContext(ContextKeys.APP_ID)) {
-    cls.setOnContext(ContextKeys.APP_ID, null)
+  if (cls.getFromContext(ContextKey.APP_ID)) {
+    cls.setOnContext(ContextKey.APP_ID, null)
   }
-  if (cls.getFromContext(ContextKeys.DB_OPTS)) {
-    cls.setOnContext(ContextKeys.DB_OPTS, null)
+  if (cls.getFromContext(ContextKey.DB_OPTS)) {
+    cls.setOnContext(ContextKey.DB_OPTS, null)
   }
 }
 
 export function getContextDB(key: string, opts: any) {
-  const dbOptsKey = `${key}${ContextKeys.DB_OPTS}`
+  const dbOptsKey = `${key}${ContextKey.DB_OPTS}`
   let storedOpts = cls.getFromContext(dbOptsKey)
   let db = cls.getFromContext(key)
   if (db && isEqual(opts, storedOpts)) {
@@ -88,13 +84,13 @@ export function getContextDB(key: string, opts: any) {
   let toUseAppId
 
   switch (key) {
-    case ContextKeys.CURRENT_DB:
+    case ContextKey.CURRENT_DB:
       toUseAppId = appId
       break
-    case ContextKeys.PROD_DB:
+    case ContextKey.PROD_DB:
       toUseAppId = getProdAppID(appId)
       break
-    case ContextKeys.DEV_DB:
+    case ContextKey.DEV_DB:
       toUseAppId = getDevelopmentAppID(appId)
       break
   }

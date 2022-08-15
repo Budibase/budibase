@@ -135,7 +135,6 @@ export enum Event {
   // LICENSE
   LICENSE_UPGRADED = "license:upgraded",
   LICENSE_DOWNGRADED = "license:downgraded",
-  LICENSE_UPDATED = "license:updated",
   LICENSE_ACTIVATED = "license:activated",
 
   // ACCOUNT

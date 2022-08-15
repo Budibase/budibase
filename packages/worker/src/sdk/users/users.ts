@@ -20,7 +20,7 @@ import { groups as groupUtils } from "@budibase/pro"
 
 const PAGE_LIMIT = 8
 
-export const allUsers = async (newDb?: any) => {
+export const allUsers = async () => {
   const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
     dbUtils.getGlobalUserParams(null, {
@@ -28,6 +28,13 @@ export const allUsers = async (newDb?: any) => {
     })
   )
   return response.rows.map((row: any) => row.doc)
+}
+
+export const countUsersByApp = async (appId: string) => {
+  let response: any = await usersCore.searchGlobalUsersByApp(appId, {})
+  return {
+    userCount: response.length,
+  }
 }
 
 export const paginatedUsers = async ({
@@ -94,12 +101,11 @@ interface SaveUserOpts {
   bulkCreate?: boolean
 }
 
-export const buildUser = async (
+const buildUser = async (
   user: any,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
-    bulkCreate: false,
   },
   tenantId: string,
   dbUser?: any
@@ -178,15 +184,12 @@ export const save = async (
     dbUser = await db.get(_id)
   }
 
-  let builtUser = await buildUser(
-    user,
-    {
-      hashPassword: true,
-      requirePassword: user.requirePassword,
-    },
-    tenantId,
-    dbUser
-  )
+  let builtUser = await buildUser(user, opts, tenantId, dbUser)
+
+  // make sure we set the _id field for a new user
+  if (!_id) {
+    _id = builtUser._id
+  }
 
   try {
     const putOpts = {
@@ -213,7 +216,7 @@ export const save = async (
     await addTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
     // let server know to sync user
-    await apps.syncUserInApps(builtUser._id)
+    await apps.syncUserInApps(_id)
 
     return {
       _id: response.id,
@@ -286,7 +289,6 @@ export const bulkCreate = async (
         {
           hashPassword: true,
           requirePassword: user.requirePassword,
-          bulkCreate: false,
         },
         tenantId
       )
@@ -298,6 +300,9 @@ export const bulkCreate = async (
 
   // Post processing of bulk added users, i.e events and cache operations
   for (const user of usersToBulkSave) {
+    // TODO: Refactor to bulk insert users into the info db
+    // instead of relying on looping tenant creation
+    await addTenant(tenantId, user._id, user.email)
     await eventHelpers.handleSaveEvents(user, null)
     await apps.syncUserInApps(user._id)
   }
@@ -365,6 +370,7 @@ export const bulkDelete = async (userIds: any) => {
 export const destroy = async (id: string, currentUser: any) => {
   const db = tenancy.getGlobalDB()
   const dbUser = await db.get(id)
+  const userId = dbUser._id as string
   let groups = dbUser.userGroups
 
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
@@ -382,7 +388,7 @@ export const destroy = async (id: string, currentUser: any) => {
 
   await deprovisioning.removeUserFromInfoDB(dbUser)
 
-  await db.remove(dbUser._id, dbUser._rev)
+  await db.remove(userId, dbUser._rev)
 
   if (groups) {
     await groupUtils.deleteGroupUsers(groups, dbUser)
@@ -390,17 +396,18 @@ export const destroy = async (id: string, currentUser: any) => {
 
   await eventHelpers.handleDeleteEvents(dbUser)
   await quotas.removeUser(dbUser)
-  await cache.user.invalidateUser(dbUser._id)
-  await sessions.invalidateSessions(dbUser._id)
+  await cache.user.invalidateUser(userId)
+  await sessions.invalidateSessions(userId, { reason: "deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(dbUser._id)
+  await apps.syncUserInApps(userId)
 }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
+  const userId = dbUser._id as string
   await deprovisioning.removeUserFromInfoDB(dbUser)
   await eventHelpers.handleDeleteEvents(dbUser)
-  await cache.user.invalidateUser(dbUser._id)
-  await sessions.invalidateSessions(dbUser._id)
+  await cache.user.invalidateUser(userId)
+  await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(dbUser._id)
+  await apps.syncUserInApps(userId)
 }

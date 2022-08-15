@@ -3,7 +3,7 @@ const { BUILTIN_PERMISSION_IDS, PermissionLevels } = require("./permissions")
 const {
   generateRoleID,
   getRoleParams,
-  DocumentTypes,
+  DocumentType,
   SEPARATOR,
 } = require("../db/utils")
 const { getAppDB } = require("../context")
@@ -203,15 +203,24 @@ exports.getAllRoles = async appId => {
   if (appId) {
     return doWithDB(appId, internal)
   } else {
-    return internal(getAppDB())
+    let appDB
+    try {
+      appDB = getAppDB()
+    } catch (error) {
+      // We don't have any apps, so we'll just use the built-in roles
+    }
+    return internal(appDB)
   }
   async function internal(db) {
-    const body = await db.allDocs(
-      getRoleParams(null, {
-        include_docs: true,
-      })
-    )
-    let roles = body.rows.map(row => row.doc)
+    let roles = []
+    if (db) {
+      const body = await db.allDocs(
+        getRoleParams(null, {
+          include_docs: true,
+        })
+      )
+      roles = body.rows.map(row => row.doc)
+    }
     const builtinRoles = exports.getBuiltinRoles()
 
     // need to combine builtin with any DB record of them (for sake of permissions)
@@ -329,7 +338,7 @@ class AccessController {
  * Adds the "role_" for builtin role IDs which are to be written to the DB (for permissions).
  */
 exports.getDBRoleID = roleId => {
-  if (roleId.startsWith(DocumentTypes.ROLE)) {
+  if (roleId.startsWith(DocumentType.ROLE)) {
     return roleId
   }
   return generateRoleID(roleId)
@@ -340,8 +349,8 @@ exports.getDBRoleID = roleId => {
  */
 exports.getExternalRoleID = roleId => {
   // for built in roles we want to remove the DB role ID element (role_)
-  if (roleId.startsWith(DocumentTypes.ROLE) && isBuiltin(roleId)) {
-    return roleId.split(`${DocumentTypes.ROLE}${SEPARATOR}`)[1]
+  if (roleId.startsWith(DocumentType.ROLE) && isBuiltin(roleId)) {
+    return roleId.split(`${DocumentType.ROLE}${SEPARATOR}`)[1]
   }
   return roleId
 }

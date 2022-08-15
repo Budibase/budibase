@@ -26,12 +26,8 @@ export function createUsersStore() {
     return await API.getUsers()
   }
 
-  async function invite({ emails, builder, admin }) {
-    return API.inviteUsers({
-      emails,
-      builder,
-      admin,
-    })
+  async function invite(payload) {
+    return API.inviteUsers(payload)
   }
   async function acceptInvite(inviteCode, password) {
     return API.acceptInvite({
@@ -61,6 +57,7 @@ export function createUsersStore() {
           break
         case "admin":
           body.admin = { global: true }
+          body.builder = { global: true }
           break
       }
 
@@ -75,6 +72,10 @@ export function createUsersStore() {
   async function del(id) {
     await API.deleteUser(id)
     update(users => users.filter(user => user._id !== id))
+  }
+
+  async function getUserCountByApp({ appId }) {
+    return await API.getUserCountByApp({ appId })
   }
 
   async function bulkDelete(userIds) {
@@ -99,6 +100,7 @@ export function createUsersStore() {
     create,
     save,
     bulkDelete,
+    getUserCountByApp,
     delete: del,
   }
 }

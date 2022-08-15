@@ -9,6 +9,7 @@ exports.CacheKeys = {
   UNIQUE_TENANT_ID: "uniqueTenantId",
   EVENTS: "events",
   BACKFILL_METADATA: "backfillMetadata",
+  EVENTS_RATE_LIMIT: "eventsRateLimit",
 }
 
 exports.TTL = {
