@@ -15,6 +15,7 @@ import GoogleSheets from "./GoogleSheets.svelte"
 import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
+import Custom from "./Custom.svelte"
 
 export default {
   BUDIBASE: Budibase,
@@ -34,4 +35,5 @@ export default {
   FIRESTORE: Firebase,
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
+  CUSTOM: Custom,
 }
