@@ -184,8 +184,11 @@ class QueryBuilder {
     }
 
     const contains = (key, value, mode = "AND") => {
-      if (!Array.isArray(value) || value.length === 0) {
+      if (Array.isArray(value) && value.length === 0) {
         return null
+      }
+      if (!Array.isArray(value)) {
+         return `${key}:${value}`
       }
       let statement = `${builder.preprocess(value[0], { escape: true })}`
       for (let i = 1; i < value.length; i++) {
@@ -197,7 +200,8 @@ class QueryBuilder {
     }
 
     const notContains = (key, value) => {
-      return "*:* AND NOT " + contains(key, value)
+      const allPrefix = allOr === "" ? "*:* AND" : ""
+      return allPrefix + "NOT " + contains(key, value)
     }
 
     const containsAny = (key, value) => {
