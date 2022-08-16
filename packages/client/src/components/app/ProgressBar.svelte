@@ -8,14 +8,14 @@
   export let size = "M"
   export let value = "30"
   export let progress = 30
-  export let label = "Progress..."
+  export let label = "Progress"
   export let labelPosition = "above"
   export let animationDuration = 500
 
   let node
   let sideLabel
 
-  $: sideLabel = labelPosition === "left" ? true : false
+  $: sideLabel = labelPosition === "left"
   $: $component.editing && node?.focus()
   $: progress = isNaN(value) || value === "" ? undefined : Number(value)
   $: animationDuration = animationDuration < 100 ? 100 : animationDuration
