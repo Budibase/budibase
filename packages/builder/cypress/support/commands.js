@@ -128,7 +128,9 @@ Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
         .should("have.value", lastName)
         .blur()
     }
-    cy.get("button").contains("Update information").click({ force: true })
+    cy.get(".confirm-wrap").within(() => {
+      cy.get("button").contains("Update information").click({ force: true })
+    })
     cy.get(".spectrum-Dialog-grid").should("not.exist")
   })
 })
@@ -162,7 +164,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
 
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
-  cy.wait(1000)
+  cy.url({ timeout: 30000 }).should("include", "/apps")
   cy.get(`[data-cy="create-app-btn"]`, { timeout: 5000 }).click({ force: true })
 
   // If apps already exist
@@ -432,6 +434,7 @@ Cypress.Commands.add("createAppFromScratch", appName => {
 
 // TABLES
 Cypress.Commands.add("createTable", (tableName, initialTable) => {
+  // Creates an internal Budibase DB table
   if (!initialTable) {
     cy.navigateToDataSection()
     cy.get(`[data-cy="new-table"]`, { timeout: 2000 }).click()
@@ -445,6 +448,10 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
         .contains("Continue")
         .click({ force: true })
     })
+  cy.get(".spectrum-Modal", { timeout: 10000 }).should(
+    "not.contain",
+    "Add data source"
+  )
   cy.get(".spectrum-Modal", { timeout: 2000 }).within(() => {
     cy.get("input", { timeout: 2000 }).first().type(tableName).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
