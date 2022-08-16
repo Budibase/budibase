@@ -380,19 +380,49 @@ exports.getMultiIDParams = ids => {
   }
 }
 
+const encodeTableSchema = schemas => {
+  for (const schema of Object.entries(schemas)) {
+    const schemaValue = schema?.[1] || {}
+
+    if (schemaValue?.tableId) {
+      schemaValue.tableId = encodeURIComponent(schemaValue.tableId)
+    }
+  }
+
+  return schemas
+}
+exports.encodeTableSchema = encodeTableSchema
+
 const encodeTable = table => {
   if ("_id" in table) {
     table._id = encodeURIComponent(table._id)
   }
 
+  table.schema = encodeTableSchema(table.schema)
+
   return table
 }
 exports.encodeTable = encodeTable
+
+const decodeTableSchema = schemas => {
+  for (const schema of Object.entries(schemas)) {
+    const schemaValue = schema?.[1] || {}
+
+    if (schemaValue?.tableId) {
+      schemaValue.tableId = decodeURIComponent(schemaValue.tableId)
+    }
+  }
+
+  return schemas
+}
+exports.decodeTableSchema = decodeTableSchema
 
 const decodeTable = table => {
   if ("_id" in table) {
     table._id = decodeURIComponent(table._id)
   }
+
+  table.schema = decodeTableSchema(table.schema)
 
   return table
 }
