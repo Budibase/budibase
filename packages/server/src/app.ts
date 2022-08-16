@@ -25,7 +25,7 @@ import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
 import { createAdminUser, getChecklist } from "./utilities/workerRequests"
 import { processPlugin } from "./api/controllers/plugin"
-import { getGlobalDB } from "@budibase/backend-core/tenancy"
+import { DEFAULT_TENANT_ID } from "@budibase/backend-core/constants"
 
 const app = new Koa()
 
@@ -138,7 +138,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
   }
 
   // monitor plugin directory if required
-  if (env.SELF_HOSTED && env.PLUGINS_DIR && fs.existsSync(env.PLUGINS_DIR)) {
+  if (env.SELF_HOSTED && !env.MULTI_TENANCY && env.PLUGINS_DIR && fs.existsSync(env.PLUGINS_DIR)) {
     const watchPath = path.join(env.PLUGINS_DIR, "./**/dist/*.tar.gz")
     chokidar
       .watch(watchPath, {
@@ -146,8 +146,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
         awaitWriteFinish: true,
       })
       .on("all", async (event: string, path: string) => {
-        const tenantId = tenancy.getTenantId()
-        await tenancy.doInTenant(tenantId, async () => {
+        await tenancy.doInTenant(DEFAULT_TENANT_ID, async () => {
           try {
             const split = path.split("/")
             const name = split[split.length - 1]
