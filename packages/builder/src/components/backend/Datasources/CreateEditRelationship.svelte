@@ -195,24 +195,6 @@
     toRelationship = relateTo
   }
 
-  $: console.log("fromTable", fromTable)
-  $: console.log("toTable", toTable)
-  $: console.log("datasource", datasource.entities)
-  $: console.log("fromRelationship", fromRelationship)
-  $: console.log("toRelationship", toRelationship)
-  $: console.log(
-    3331,
-    datasource?.entities?.[encodeURIComponent(fromTable?.name)]?.schema?.[
-      encodeURIComponent(fromRelationship?.name)
-    ]
-  )
-  $: console.log(
-    3332,
-    datasource?.entities?.[encodeURIComponent(toTable?.name)]?.schema?.[
-      encodeURIComponent(toRelationship?.name)
-    ]
-  )
-
   // save the relationship on to the datasource
   async function saveRelationship() {
     buildRelationships()
@@ -256,13 +238,6 @@
   }
 
   function tableChanged(fromTbl, toTbl) {
-    console.log(
-      "tableChanged",
-      fromRelationship.name,
-      toTbl?.name,
-      toRelationship.name,
-      fromTbl?.name
-    )
     if (
       (currentTables?.from?._id === fromTbl?._id &&
         currentTables?.to?._id === toTbl?._id) ||
