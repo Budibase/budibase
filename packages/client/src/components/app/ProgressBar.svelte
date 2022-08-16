@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import ProgressBar from "../../../../bbui/src/ProgressBar/ProgressBar.svelte"
+  import { ProgressBar } from "@budibase/bbui"
 
   const component = getContext("component")
   const { styleable } = getContext("sdk")
