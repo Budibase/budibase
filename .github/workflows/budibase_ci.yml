@@ -64,4 +64,4 @@ jobs:
       uses: matt-ball/newman-action@master
       with:
         collection: https://www.getpostman.com/collections/8d4b96a2fdde70bc62a5.json
-        environment: https://go.postman.co/workspace/Budibase-Test.budi.live~0803103d-f679-4a59-8487-f4f99ecf3843/environment/22734786-49371294-0e64-44a1-9fd6-4e7738f97421.json
+        environment: https://go.postman.co/workspace/Budibase-Test.budi.live~0803103d-f679-4a59-8487-f4f99ecf3843/environment/22734786-49371294-0e64-44a1-9fd6-4e7738f97421
