@@ -42,7 +42,7 @@
 </script>
 
 <ModalContent
-  size="S"
+  size="M"
   title="Accounts created!"
   confirmText="Done"
   showCancelButton={false}
