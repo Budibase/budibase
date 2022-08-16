@@ -56,7 +56,7 @@
     // Add custom components category
     if (customComponents?.length) {
       enrichedStructure.push({
-        name: "Custom components",
+        name: "Plugins",
         isCategory: true,
         children: customComponents.map(x => ({
           ...definitions[x],

@@ -92,6 +92,14 @@
     }
     integrations = newIntegrations
   }
+
+  function getIcon(integrationType, schema) {
+    if (schema.custom) {
+      return ICONS.CUSTOM
+    } else {
+      return ICONS[integrationType]
+    }
+  }
 </script>
 
 <Modal bind:this={internalTableModal}>
@@ -158,7 +166,7 @@
           >
             <div class="item-body" class:with-type={!!schema.type}>
               <svelte:component
-                this={ICONS[integrationType]}
+                this={getIcon(integrationType, schema)}
                 height="20"
                 width="20"
               />

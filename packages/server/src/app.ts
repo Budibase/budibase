@@ -17,10 +17,15 @@ const bullboard = require("./automations/bullboard")
 const { logAlert } = require("@budibase/backend-core/logging")
 const { pinoSettings } = require("@budibase/backend-core")
 const { Thread } = require("./threads")
+const chokidar = require("chokidar")
+const fs = require("fs")
+const path = require("path")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
 import { createAdminUser, getChecklist } from "./utilities/workerRequests"
+import { processPlugin } from "./api/controllers/plugin"
+import { getGlobalDB } from "@budibase/backend-core/tenancy"
 
 const app = new Koa()
 
@@ -130,6 +135,29 @@ module.exports = server.listen(env.PORT || 0, async () => {
         shutdown()
       }
     }
+  }
+
+  // monitor plugin directory if required
+  if (env.SELF_HOSTED && env.PLUGINS_DIR && fs.existsSync(env.PLUGINS_DIR)) {
+    const watchPath = path.join(env.PLUGINS_DIR, "./**/dist/*.tar.gz")
+    chokidar
+      .watch(watchPath, {
+        ignored: "**/node_modules",
+        awaitWriteFinish: true,
+      })
+      .on("all", async (event: string, path: string) => {
+        const tenantId = tenancy.getTenantId()
+        await tenancy.doInTenant(tenantId, async () => {
+          try {
+            const split = path.split("/")
+            const name = split[split.length - 1]
+            console.log("Importing plugin:", path)
+            await processPlugin({ name, path })
+          } catch (err) {
+            console.log("Failed to import plugin:", err)
+          }
+        })
+      })
   }
 
   // check for version updates
