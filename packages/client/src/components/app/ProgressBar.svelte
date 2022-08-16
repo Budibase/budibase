@@ -8,7 +8,7 @@
   export let size = "M"
   export let value = "30"
   export let progress = 30
-  export let label = "Progress..."
+  export let label = "Progress"
   export let labelPosition = "above"
   export let animationDuration = 500
 
