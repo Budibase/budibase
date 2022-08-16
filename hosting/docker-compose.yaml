@@ -25,9 +25,12 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       BB_ADMIN_USER_EMAIL: ${BB_ADMIN_USER_EMAIL}
       BB_ADMIN_USER_PASSWORD: ${BB_ADMIN_USER_PASSWORD}
+      PLUGINS_DIR: ${PLUGINS_DIR}
     depends_on:
       - worker-service
       - redis-service
+#    volumes:
+#      - /some/path/to/plugins:/plugins
 
   worker-service:
     restart: unless-stopped
