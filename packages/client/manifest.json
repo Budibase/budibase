@@ -27,7 +27,7 @@
         "type": "text",
         "label": "Label",
         "key": "label",
-        "defaultValue": "Progress..."
+        "defaultValue": "Progress"
       },
       {
         "type": "select",
