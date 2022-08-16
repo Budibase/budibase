@@ -206,7 +206,7 @@
                 on:change={e => onOperatorChange(condition, e.detail)}
               />
               <Select
-                disabled={condition.noValue}
+                disabled={condition.noValue || condition.operator === "oneOf"}
                 options={condition.operator === "oneOf"
                   ? [
                       {
