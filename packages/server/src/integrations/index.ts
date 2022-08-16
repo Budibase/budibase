@@ -67,8 +67,22 @@ if (environment.SELF_HOSTED) {
 
 module.exports = {
   getDefinitions: async () => {
-    const custom = await getPlugins(PluginType.DATASOURCE)
-    return cloneDeep(DEFINITIONS)
+    const plugins = await getPlugins(PluginType.DATASOURCE)
+    // extract the actual schema from each custom
+    const pluginSchemas: { [key: string]: Integration } = {}
+    for (let plugin of plugins) {
+      const sourceId = plugin.name
+      pluginSchemas[sourceId] = {
+        ...plugin.schema["schema"],
+        custom: true,
+      }
+    }
+    return {
+      ...cloneDeep(DEFINITIONS),
+      ...pluginSchemas,
+    }
   },
-  integrations: INTEGRATIONS,
+  getIntegration: async () => {
+    return INTEGRATIONS
+  },
 }
