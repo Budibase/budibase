@@ -15,7 +15,7 @@
   let node
   let sideLabel
 
-  $: sideLabel = labelPosition === "left" ? true : false
+  $: sideLabel = labelPosition === "left"
   $: $component.editing && node?.focus()
   $: progress = isNaN(value) || value === "" ? undefined : Number(value)
   $: animationDuration = animationDuration < 100 ? 100 : animationDuration
