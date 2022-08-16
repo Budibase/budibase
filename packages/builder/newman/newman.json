@@ -1,0 +1,2402 @@
+{
+	"info": {
+		"_postman_id": "61592abe-6d90-4738-b466-53de65e94442",
+		"name": "BB API Test.budi.live",
+		"description": "The public API for Budibase apps and its services.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22734786"
+	},
+	"item": [
+		{
+			"name": "applications",
+			"item": [
+				{
+					"name": "{app Id}",
+					"item": [
+						{
+							"name": "Create an application",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"let response = pm.response.json(),",
+											"requestBody = JSON.parse(pm.request.body.raw);",
+											"",
+											"pm.globals.set(\"name\", requestBody.name);",
+											"pm.globals.set(\"x-budibase-app-id\", response.data._id);",
+											"",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": ""
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"{{$randomLastName}}\",\n  \"url\": \"/{{$randomFirstName}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/applications",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"applications"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Returns the created application.",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: apikey",
+												"key": "x-budibase-api-key",
+												"value": "<API Key>"
+											},
+											{
+												"description": "(Required) The ID of the app which this request is targeting.",
+												"key": "x-budibase-app-id",
+												"value": "aliqua ad cillum officia"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"qui est aliqua esse ipsum\",\n  \"url\": \"sit \"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/applications",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"applications"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": {\n    \"_id\": \"app_metadata\",\n    \"appId\": \"app_dev_957b12f943d348faa61db7e18e088d0f\",\n    \"version\": \"1.0.58-alpha.0\",\n    \"name\": \"App name\",\n    \"url\": \"/app-url\",\n    \"tenantId\": \"default\",\n    \"updatedAt\": \"2022-02-22T13:00:54.035Z\",\n    \"createdAt\": \"2022-02-11T18:02:26.961Z\",\n    \"status\": \"development\"\n  }\n}"
+								}
+							]
+						},
+						{
+							"name": "Retrieve an application",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/applications/:appId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"applications",
+										":appId"
+									],
+									"variable": [
+										{
+											"key": "appId",
+											"value": "{{x-budibase-app-id}}",
+											"description": "(Required) The ID of the app which this request is targeting."
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Returns the retrieved application.",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: apikey",
+												"key": "x-budibase-api-key",
+												"value": "<API Key>"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/applications/:appId",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"applications",
+												":appId"
+											],
+											"variable": [
+												{
+													"key": "appId",
+													"value": "app_dev_bb_11454a7dd09048a9bbe97517f1ba3ec4",
+													"description": "(Required) The ID of the app which this request is targeting."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": {\n    \"_id\": \"app_metadata\",\n    \"appId\": \"app_dev_957b12f943d348faa61db7e18e088d0f\",\n    \"version\": \"1.0.58-alpha.0\",\n    \"name\": \"App name\",\n    \"url\": \"/app-url\",\n    \"tenantId\": \"default\",\n    \"updatedAt\": \"2022-02-22T13:00:54.035Z\",\n    \"createdAt\": \"2022-02-11T18:02:26.961Z\",\n    \"status\": \"development\"\n  }\n}"
+								}
+							]
+						},
+						{
+							"name": "Update an application",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \" test123567\",\n  \"url\": \"/test12345\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/applications/:appId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"applications",
+										":appId"
+									],
+									"variable": [
+										{
+											"key": "appId",
+											"value": "{{x-budibase-app-id}}",
+											"description": "(Required) The ID of the app which this request is targeting."
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Returns the updated application.",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: apikey",
+												"key": "x-budibase-api-key",
+												"value": "<API Key>"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"qui est aliqua esse ipsum\",\n  \"url\": \"sit \"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/applications/:appId",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"applications",
+												":appId"
+											],
+											"variable": [
+												{
+													"key": "appId",
+													"value": "aliqua ad cillum officia",
+													"description": "(Required) The ID of the app which this request is targeting."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": {\n    \"_id\": \"app_metadata\",\n    \"appId\": \"app_dev_957b12f943d348faa61db7e18e088d0f\",\n    \"version\": \"1.0.58-alpha.0\",\n    \"name\": \"App name\",\n    \"url\": \"/app-url\",\n    \"tenantId\": \"default\",\n    \"updatedAt\": \"2022-02-22T13:00:54.035Z\",\n    \"createdAt\": \"2022-02-11T18:02:26.961Z\",\n    \"status\": \"development\"\n  }\n}"
+								}
+							]
+						},
+						{
+							"name": "Search for applications",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"{{name}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/applications/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"applications",
+										"search"
+									]
+								},
+								"description": "Based on application properties (currently only name) search for applications."
+							},
+							"response": [
+								{
+									"name": "Returns the applications that were found based on the search parameters.",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: apikey",
+												"key": "x-budibase-api-key",
+												"value": "<API Key>"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"nisi tempor deserunt\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/applications/search",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"applications",
+												"search"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": [\n    {\n      \"_id\": \"app_metadata\",\n      \"appId\": \"app_dev_957b12f943d348faa61db7e18e088d0f\",\n      \"version\": \"1.0.58-alpha.0\",\n      \"name\": \"App name\",\n      \"url\": \"/app-url\",\n      \"tenantId\": \"default\",\n      \"updatedAt\": \"2022-02-22T13:00:54.035Z\",\n      \"createdAt\": \"2022-02-11T18:02:26.961Z\",\n      \"status\": \"development\"\n    }\n  ]\n}"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "tables",
+			"item": [
+				{
+					"name": "Create a table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"let response = pm.response.json(),",
+									"requestBody = JSON.parse(pm.request.body.raw);",
+									"",
+									"pm.globals.set(\"table_name\", requestBody.name);",
+									"pm.globals.set(\"table_id\", response.data._id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"test12\",\n    \"primaryDisplay\": \"sasa\",\n    \"schema\": {\n        \"Auto ID\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"numericality\": {\n                    \"greaterThanOrEqualTo\": \"\",\n                    \"lessThanOrEqualTo\": \"\"\n                },\n                \"presence\": false,\n                \"type\": \"number\"\n            },\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Auto ID\",\n            \"subtype\": \"autoID\",\n            \"type\": \"number\"\n        },\n        \"Created At\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"datetime\": {\n                    \"earliest\": \"\",\n                    \"latest\": \"\"\n                },\n                \"length\": {\n                },\n                \"presence\": false,\n                \"type\": \"string\"\n            },\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Created At\",\n            \"subtype\": \"createdAt\",\n            \"type\": \"datetime\"\n        },\n        \"Created By\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"presence\": false,\n                \"type\": \"array\"\n            },\n            \"fieldName\": \"test12-Created By\",\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Created By\",\n            \"relationshipType\": \"many-to-many\",\n            \"subtype\": \"createdBy\",\n            \"tableId\": \"ta_users\",\n            \"type\": \"link\"\n        },\n        \"sasa\": {\n            \"constraints\": {\n                \"length\": {\n                    \"maximum\": null\n                },\n                \"presence\": {\n                    \"allowEmpty\": false\n                },\n                \"type\": \"string\"\n            },\n            \"name\": \"sasa\",\n            \"type\": \"string\"\n        },\n        \"Updated At\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"datetime\": {\n                    \"earliest\": \"\",\n                    \"latest\": \"\"\n                },\n                \"length\": {\n                },\n                \"presence\": false,\n                \"type\": \"string\"\n            },\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Updated At\",\n            \"subtype\": \"updatedAt\",\n            \"type\": \"datetime\"\n        },\n        \"Updated By\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"presence\": false,\n                \"type\": \"array\"\n            },\n            \"fieldName\": \"test12-Updated By\",\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Updated By\",\n            \"relationshipType\": \"many-to-many\",\n            \"subtype\": \"updatedBy\",\n            \"tableId\": \"ta_users\",\n            \"type\": \"link\"\n        }\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tables",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables"
+							]
+						},
+						"description": "Create a table, this could be internal or external."
+					},
+					"response": [
+						{
+							"name": "Returns the created table, including the ID which has been generated for it. This can be internal or external data sources.",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"_id\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"name\": \"People\",\n    \"schema\": {\n      \"name\": {\n        \"type\": \"string\",\n        \"name\": \"name\"\n      },\n      \"age\": {\n        \"type\": \"number\",\n        \"name\": \"age\"\n      },\n      \"relationship\": {\n        \"type\": \"link\",\n        \"name\": \"relationship\",\n        \"tableId\": \"ta_...\",\n        \"fieldName\": \"relatedColumn\",\n        \"relationshipType\": \"many-to-many\"\n      }\n    }\n  }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/tables",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"name\": \"People\",\n    \"schema\": {\n      \"name\": {\n        \"type\": \"string\",\n        \"name\": \"name\"\n      },\n      \"age\": {\n        \"type\": \"number\",\n        \"name\": \"age\"\n      },\n      \"relationship\": {\n        \"type\": \"link\",\n        \"name\": \"relationship\",\n        \"tableId\": \"ta_...\",\n        \"fieldName\": \"relatedColumn\",\n        \"relationshipType\": \"many-to-many\"\n      }\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Search for tables",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"{{table_name}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tables/search",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								"search"
+							]
+						},
+						"description": "Based on table properties (currently only name) search for tables. This could be an internal or an external table."
+					},
+					"response": [
+						{
+							"name": "Returns the found tables, based on the search parameters.",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"nisi tempor deserunt\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/tables/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables",
+										"search"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": [\n    {\n      \"_id\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n      \"name\": \"People\",\n      \"schema\": {\n        \"name\": {\n          \"type\": \"string\",\n          \"name\": \"name\"\n        },\n        \"age\": {\n          \"type\": \"number\",\n          \"name\": \"age\"\n        },\n        \"relationship\": {\n          \"type\": \"link\",\n          \"name\": \"relationship\",\n          \"tableId\": \"ta_...\",\n          \"fieldName\": \"relatedColumn\",\n          \"relationshipType\": \"many-to-many\"\n        }\n      }\n    }\n  ]\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "{table Id}",
+			"item": [
+				{
+					"name": "Retrieve a table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tables/:tableId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								":tableId"
+							],
+							"variable": [
+								{
+									"key": "tableId",
+									"value": "{{table_id}}",
+									"description": "(Required) The ID of the table which this request is targeting."
+								}
+							]
+						},
+						"description": "Lookup a table, this could be internal or external."
+					},
+					"response": [
+						{
+							"name": "Returns the retrieved table.",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/tables/:tableId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables",
+										":tableId"
+									],
+									"variable": [
+										{
+											"key": "tableId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the table which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"name\": \"People\",\n    \"schema\": {\n      \"name\": {\n        \"type\": \"string\",\n        \"name\": \"name\"\n      },\n      \"age\": {\n        \"type\": \"number\",\n        \"name\": \"age\"\n      },\n      \"relationship\": {\n        \"type\": \"link\",\n        \"name\": \"relationship\",\n        \"tableId\": \"ta_...\",\n        \"fieldName\": \"relatedColumn\",\n        \"relationshipType\": \"many-to-many\"\n      }\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update a table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"name\": \"test123\",\n    \"primaryDisplay\": \"sasa\",\n    \"schema\": {\n        \"Auto ID\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"numericality\": {\n                    \"greaterThanOrEqualTo\": \"\",\n                    \"lessThanOrEqualTo\": \"\"\n                },\n                \"presence\": false,\n                \"type\": \"number\"\n            },\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Auto ID\",\n            \"subtype\": \"autoID\",\n            \"type\": \"number\"\n        },\n        \"Created At\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"datetime\": {\n                    \"earliest\": \"\",\n                    \"latest\": \"\"\n                },\n                \"length\": {\n                },\n                \"presence\": false,\n                \"type\": \"string\"\n            },\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Created At\",\n            \"subtype\": \"createdAt\",\n            \"type\": \"datetime\"\n        },\n        \"Created By\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"presence\": false,\n                \"type\": \"array\"\n            },\n            \"fieldName\": \"test12-Created By\",\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Created By\",\n            \"relationshipType\": \"many-to-many\",\n            \"subtype\": \"createdBy\",\n            \"tableId\": \"ta_users\",\n            \"type\": \"link\"\n        },\n        \"sasa\": {\n            \"constraints\": {\n                \"length\": {\n                    \"maximum\": null\n                },\n                \"presence\": {\n                    \"allowEmpty\": false\n                },\n                \"type\": \"string\"\n            },\n            \"name\": \"sasa\",\n            \"type\": \"string\"\n        },\n        \"Updated At\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"datetime\": {\n                    \"earliest\": \"\",\n                    \"latest\": \"\"\n                },\n                \"length\": {\n                },\n                \"presence\": false,\n                \"type\": \"string\"\n            },\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Updated At\",\n            \"subtype\": \"updatedAt\",\n            \"type\": \"datetime\"\n        },\n        \"Updated By\": {\n            \"autocolumn\": true,\n            \"constraints\": {\n                \"presence\": false,\n                \"type\": \"array\"\n            },\n            \"fieldName\": \"test12-Updated By\",\n            \"icon\": \"ri-magic-line\",\n            \"name\": \"Updated By\",\n            \"relationshipType\": \"many-to-many\",\n            \"subtype\": \"updatedBy\",\n            \"tableId\": \"ta_users\",\n            \"type\": \"link\"\n        }\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tables/:tableId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								":tableId"
+							],
+							"variable": [
+								{
+									"key": "tableId",
+									"value": "{{table_id}}",
+									"description": "(Required) The ID of the table which this request is targeting."
+								}
+							]
+						},
+						"description": "Update a table, this could be internal or external."
+					},
+					"response": [
+						{
+							"name": "Returns the updated table.",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"_id\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"name\": \"People\",\n    \"schema\": {\n      \"name\": {\n        \"type\": \"string\",\n        \"name\": \"name\"\n      },\n      \"age\": {\n        \"type\": \"number\",\n        \"name\": \"age\"\n      },\n      \"relationship\": {\n        \"type\": \"link\",\n        \"name\": \"relationship\",\n        \"tableId\": \"ta_...\",\n        \"fieldName\": \"relatedColumn\",\n        \"relationshipType\": \"many-to-many\"\n      }\n    }\n  }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/tables/:tableId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables",
+										":tableId"
+									],
+									"variable": [
+										{
+											"key": "tableId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the table which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"name\": \"People\",\n    \"schema\": {\n      \"name\": {\n        \"type\": \"string\",\n        \"name\": \"name\"\n      },\n      \"age\": {\n        \"type\": \"number\",\n        \"name\": \"age\"\n      },\n      \"relationship\": {\n        \"type\": \"link\",\n        \"name\": \"relationship\",\n        \"tableId\": \"ta_...\",\n        \"fieldName\": \"relatedColumn\",\n        \"relationshipType\": \"many-to-many\"\n      }\n    }\n  }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "rows",
+			"item": [
+				{
+					"name": "Create a row",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"let response = pm.response.json(),",
+									"requestBody = JSON.parse(pm.request.body.raw);",
+									"",
+									"pm.globals.set(\"row_id\", response.data._id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"row\",\n  \"tableId\": \"{{table_id}}\",\n  \"sasa\": \"Mike\",\n  \"relationship\": [\n    \"ro_ta_...\"\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tables/:tableId/rows",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								":tableId",
+								"rows"
+							],
+							"variable": [
+								{
+									"key": "tableId",
+									"value": "{{table_id}}",
+									"description": "(Required) The ID of the table which this request is targeting."
+								}
+							]
+						},
+						"description": "Creates a row within the specified table."
+					},
+					"response": [
+						{
+							"name": "Returns the created row, including the ID which has been generated for it. This can be found in the Budibase portal, viewed under the developer information.",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"_id\": \"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4\",\n  \"type\": \"row\",\n  \"tableId\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n  \"name\": \"Mike\",\n  \"age\": 30,\n  \"relationship\": [\n    \"ro_ta_...\"\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/tables/:tableId/rows",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables",
+										":tableId",
+										"rows"
+									],
+									"variable": [
+										{
+											"key": "tableId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the table which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4\",\n    \"type\": \"row\",\n    \"tableId\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"name\": \"Mike\",\n    \"age\": 30,\n    \"relationship\": [\n      {\n        \"primaryDisplay\": \"Joe\",\n        \"_id\": \"ro_ta_...\"\n      }\n    ]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Search for rows",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": {\n    \"string\": {\n      \"columnName1\": \"value\",\n      \"columnName2\": \"value\"\n    },\n    \"fuzzy\": {},\n    \"range\": {\n      \"columnName1\": [\n        10,\n        20\n      ]\n    },\n    \"equal\": {},\n    \"notEqual\": {},\n    \"empty\": {\n      \"columnName1\": \"\"\n    },\n    \"notEmpty\": {},\n    \"oneOf\": {}\n  },\n  \"paginate\": true,\n  \"bookmark\": \"l\",\n  \"limit\": -13471453,\n  \"sort\": {\n    \"order\": \"descending\",\n    \"column\": \"sasa\",\n    \"type\": \"string\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tables/:tableId/rows/search",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								":tableId",
+								"rows",
+								"search"
+							],
+							"variable": [
+								{
+									"key": "tableId",
+									"value": "{{table_id}}",
+									"description": "(Required) The ID of the table which this request is targeting."
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "The response will contain an array of rows that match the search parameters.",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"query\": {\n    \"string\": {\n      \"columnName1\": \"value\",\n      \"columnName2\": \"value\"\n    },\n    \"fuzzy\": {},\n    \"range\": {\n      \"columnName1\": [\n        10,\n        20\n      ]\n    },\n    \"equal\": {},\n    \"notEqual\": {},\n    \"empty\": {\n      \"columnName1\": \"\"\n    },\n    \"notEmpty\": {},\n    \"oneOf\": {}\n  },\n  \"paginate\": true,\n  \"bookmark\": \"l\",\n  \"limit\": -13471453,\n  \"sort\": {\n    \"order\": \"descending\",\n    \"column\": \"aliqua culpa ullamco in\",\n    \"type\": \"string\"\n  }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/tables/:tableId/rows/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables",
+										":tableId",
+										"rows",
+										"search"
+									],
+									"variable": [
+										{
+											"key": "tableId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the table which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": [\n    {\n      \"_id\": \"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4\",\n      \"type\": \"row\",\n      \"tableId\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n      \"name\": \"Mike\",\n      \"age\": 30,\n      \"relationship\": [\n        {\n          \"primaryDisplay\": \"Joe\",\n          \"_id\": \"ro_ta_...\"\n        }\n      ]\n    }\n  ],\n  \"hasNextPage\": true,\n  \"bookmark\": 10\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "{row Id}",
+			"item": [
+				{
+					"name": "Update a row",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"row\",\n  \"tableId\": \"{{table_id}}\",\n  \"sasa\": \"MikeIsTheBest\",\n  \"relationship\": [\n    \"ro_ta_...\"\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tables/:tableId/rows/:rowId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								":tableId",
+								"rows",
+								":rowId"
+							],
+							"variable": [
+								{
+									"key": "tableId",
+									"value": "{{table_id}}",
+									"description": "(Required) The ID of the table which this request is targeting."
+								},
+								{
+									"key": "rowId",
+									"value": "{{row_id}}",
+									"description": "(Required) The ID of the row which this request is targeting."
+								}
+							]
+						},
+						"description": "Updates a row within the specified table."
+					},
+					"response": [
+						{
+							"name": "Returns the created row, including the ID which has been generated for it.",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"_id\": \"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4\",\n  \"type\": \"row\",\n  \"tableId\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n  \"name\": \"Mike\",\n  \"age\": 30,\n  \"relationship\": [\n    \"ro_ta_...\"\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/tables/:tableId/rows/:rowId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables",
+										":tableId",
+										"rows",
+										":rowId"
+									],
+									"variable": [
+										{
+											"key": "tableId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the table which this request is targeting."
+										},
+										{
+											"key": "rowId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the row which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4\",\n    \"type\": \"row\",\n    \"tableId\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"name\": \"Mike\",\n    \"age\": 30,\n    \"relationship\": [\n      {\n        \"primaryDisplay\": \"Joe\",\n        \"_id\": \"ro_ta_...\"\n      }\n    ]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Retrieve a row",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tables/:tableId/rows/:rowId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								":tableId",
+								"rows",
+								":rowId"
+							],
+							"variable": [
+								{
+									"key": "tableId",
+									"value": "{{table_id}}",
+									"description": "(Required) The ID of the table which this request is targeting."
+								},
+								{
+									"key": "rowId",
+									"value": "{{row_id}}",
+									"description": "(Required) The ID of the row which this request is targeting."
+								}
+							]
+						},
+						"description": "This gets a single row, it will be enriched with the full related rows, rather than the squashed \"primaryDisplay\" format returned by the search endpoint."
+					},
+					"response": [
+						{
+							"name": "Returns the retrieved row.",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/tables/:tableId/rows/:rowId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables",
+										":tableId",
+										"rows",
+										":rowId"
+									],
+									"variable": [
+										{
+											"key": "tableId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the table which this request is targeting."
+										},
+										{
+											"key": "rowId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the row which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4\",\n    \"name\": \"eg\",\n    \"tableId\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"type\": \"row\",\n    \"relationship\": [\n      {\n        \"_id\": \"ro_ta_users_us_8f3d717147d74d759d8cef5b6712062f\",\n        \"name\": \"Joe\",\n        \"tableId\": \"ta_users\",\n        \"internal\": [\n          {\n            \"_id\": \"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4\",\n            \"primaryDisplay\": \"eg\"\n          }\n        ]\n      }\n    ]\n  }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "{user Id}",
+					"item": [
+						{
+							"name": "Update a user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"{{$randomEmail}} \",\n  \"roles\": {\n    \"sed_6d7\": \"sit ea amet\",\n    \"cupidatat_e16\": \"fugiat proident sed\"\n  },\n  \"password\": \"cupidatat Lorem ad\",\n  \"status\": \"active\",\n  \"firstName\": \"esse sed ullamco\",\n  \"lastName\": \"ullamco commodo incididunt\",\n  \"forceResetPassword\": true,\n  \"builder\": {\n    \"global\": true\n  },\n  \"admin\": {\n    \"global\": false\n  }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/users/:userId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users",
+										":userId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "{{user_id}}",
+											"description": "(Required) The ID of the user which this request is targeting."
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Returns the updated user.",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: apikey",
+												"key": "x-budibase-api-key",
+												"value": "<API Key>"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"email\": \"aliquip qui adipisicing \",\n  \"roles\": {\n    \"sed_6d7\": \"sit ea amet\",\n    \"cupidatat_e16\": \"fugiat proident sed\"\n  },\n  \"password\": \"cupidatat Lorem ad\",\n  \"status\": \"active\",\n  \"firstName\": \"esse sed ullamco\",\n  \"lastName\": \"ullamco commodo incididunt\",\n  \"forceResetPassword\": true,\n  \"builder\": {\n    \"global\": true\n  },\n  \"admin\": {\n    \"global\": false\n  }\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/users/:userId",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"users",
+												":userId"
+											],
+											"variable": [
+												{
+													"key": "userId",
+													"value": "aliqua ad cillum officia",
+													"description": "(Required) The ID of the user which this request is targeting."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": {\n    \"_id\": \"us_693a73206518477283a8d5ae31103252\",\n    \"email\": \"test@test.com\",\n    \"roles\": {\n      \"app_957b12f943d348faa61db7e18e088d0f\": \"BASIC\"\n    },\n    \"builder\": {\n      \"global\": false\n    },\n    \"admin\": {\n      \"global\": true\n    },\n    \"tenantId\": \"default\",\n    \"status\": \"active\",\n    \"budibaseAccess\": true,\n    \"csrfToken\": \"9c70291d-7137-48f9-9166-99ab5473a3d4\",\n    \"userId\": \"us_693a73206518477283a8d5ae31103252\",\n    \"roleId\": \"ADMIN\",\n    \"role\": {\n      \"_id\": \"ADMIN\",\n      \"name\": \"Admin\",\n      \"permissionId\": \"admin\",\n      \"inherits\": \"POWER\"\n    }\n  }\n}"
+								}
+							]
+						},
+						{
+							"name": "Retrieve a user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/users/:userId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users",
+										":userId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "{{user_id}}",
+											"description": "(Required) The ID of the user which this request is targeting."
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Returns the retrieved user.",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: apikey",
+												"key": "x-budibase-api-key",
+												"value": "<API Key>"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/users/:userId",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"users",
+												":userId"
+											],
+											"variable": [
+												{
+													"key": "userId",
+													"value": "aliqua ad cillum officia",
+													"description": "(Required) The ID of the user which this request is targeting."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": {\n    \"_id\": \"us_693a73206518477283a8d5ae31103252\",\n    \"email\": \"test@test.com\",\n    \"roles\": {\n      \"app_957b12f943d348faa61db7e18e088d0f\": \"BASIC\"\n    },\n    \"builder\": {\n      \"global\": false\n    },\n    \"admin\": {\n      \"global\": true\n    },\n    \"tenantId\": \"default\",\n    \"status\": \"active\",\n    \"budibaseAccess\": true,\n    \"csrfToken\": \"9c70291d-7137-48f9-9166-99ab5473a3d4\",\n    \"userId\": \"us_693a73206518477283a8d5ae31103252\",\n    \"roleId\": \"ADMIN\",\n    \"role\": {\n      \"_id\": \"ADMIN\",\n      \"name\": \"Admin\",\n      \"permissionId\": \"admin\",\n      \"inherits\": \"POWER\"\n    }\n  }\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Create a user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"let response = pm.response.json(),",
+									"requestBody = JSON.parse(pm.request.body.raw);",
+									"",
+									"",
+									"pm.globals.set(\"user_id\", response.data._id);",
+									"pm.globals.set(\"user_email\", response.data.email);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"username@test.com \",\n  \"roles\": {\n    \"sed_6d7\": \"sit ea amet\",\n    \"cupidatat_e16\": \"fugiat proident sed\"\n  },\n  \"password\": \"cupidatat Lorem ad\",\n  \"status\": \"active\",\n  \"firstName\": \"Mitch\",\n  \"lastName\": \"Is The best\",\n  \"forceResetPassword\": true,\n  \"builder\": {\n    \"global\": true\n  },\n  \"admin\": {\n    \"global\": false\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Returns the created user.",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"aliquip qui adipisicing \",\n  \"roles\": {\n    \"sed_6d7\": \"sit ea amet\",\n    \"cupidatat_e16\": \"fugiat proident sed\"\n  },\n  \"password\": \"cupidatat Lorem ad\",\n  \"status\": \"active\",\n  \"firstName\": \"esse sed ullamco\",\n  \"lastName\": \"ullamco commodo incididunt\",\n  \"forceResetPassword\": true,\n  \"builder\": {\n    \"global\": true\n  },\n  \"admin\": {\n    \"global\": false\n  }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/users",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"us_693a73206518477283a8d5ae31103252\",\n    \"email\": \"test@test.com\",\n    \"roles\": {\n      \"app_957b12f943d348faa61db7e18e088d0f\": \"BASIC\"\n    },\n    \"builder\": {\n      \"global\": false\n    },\n    \"admin\": {\n      \"global\": true\n    },\n    \"tenantId\": \"default\",\n    \"status\": \"active\",\n    \"budibaseAccess\": true,\n    \"csrfToken\": \"9c70291d-7137-48f9-9166-99ab5473a3d4\",\n    \"userId\": \"us_693a73206518477283a8d5ae31103252\",\n    \"roleId\": \"ADMIN\",\n    \"role\": {\n      \"_id\": \"ADMIN\",\n      \"name\": \"Admin\",\n      \"permissionId\": \"admin\",\n      \"inherits\": \"POWER\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Search for users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"{{user_email}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/search",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"search"
+							]
+						},
+						"description": "Based on user properties (currently only name) search for users."
+					},
+					"response": [
+						{
+							"name": "Returns the found users based on search parameters.",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"nisi tempor deserunt\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/users/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users",
+										"search"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": [\n    {\n      \"_id\": \"us_693a73206518477283a8d5ae31103252\",\n      \"email\": \"test@test.com\",\n      \"roles\": {\n        \"app_957b12f943d348faa61db7e18e088d0f\": \"BASIC\"\n      },\n      \"builder\": {\n        \"global\": false\n      },\n      \"admin\": {\n        \"global\": true\n      },\n      \"tenantId\": \"default\",\n      \"status\": \"active\",\n      \"budibaseAccess\": true,\n      \"csrfToken\": \"9c70291d-7137-48f9-9166-99ab5473a3d4\",\n      \"userId\": \"us_693a73206518477283a8d5ae31103252\",\n      \"roleId\": \"ADMIN\",\n      \"role\": {\n        \"_id\": \"ADMIN\",\n        \"name\": \"Admin\",\n        \"permissionId\": \"admin\",\n        \"inherits\": \"POWER\"\n      }\n    }\n  ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Execute a query",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "app_dev_260dec566eaa4e0a8319fbef17dc87a2"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/queries/:queryId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"queries",
+								":queryId"
+							],
+							"variable": [
+								{
+									"key": "queryId",
+									"value": "query_datasource_aae954af49ff47249e187363eb4b800a_5171a09296dc4187b207d04cafc95691"
+								}
+							]
+						},
+						"description": "Queries which have been created within a Budibase app can be executed using this,"
+					},
+					"response": [
+						{
+							"name": "Returns the result of the query execution.",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"Duis_96\": {},\n  \"et2c\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/queries/:queryId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"queries",
+										":queryId"
+									],
+									"variable": [
+										{
+											"key": "queryId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the query which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": [\n    {\n      \"value\": \"<html lang='en-GB'></html>\"\n    }\n  ],\n  \"pagination\": {\n    \"cursor\": \"2\"\n  },\n  \"raw\": \"<html lang='en-GB'></html>\",\n  \"headers\": {\n    \"content-type\": \"text/html; charset=ISO-8859-1\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Search for queries",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "app_dev_260dec566eaa4e0a8319fbef17dc87a2"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n \"name\": \"https://api.openbrewerydb.org/breweries\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/queries/search",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"queries",
+								"search"
+							]
+						},
+						"description": "Based on query properties (currently only name) search for queries."
+					},
+					"response": [
+						{
+							"name": "Returns the queries found based on the search parameters.",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"nisi tempor deserunt\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/queries/search",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"queries",
+										"search"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": [\n    {\n      \"_id\": \"query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e\",\n      \"datasourceId\": \"datasource_plus_4d8be0c506b9465daf4bf84d890fdab6\",\n      \"parameters\": [],\n      \"fields\": {\n        \"sql\": \"select * from persons\"\n      },\n      \"queryVerb\": \"read\",\n      \"name\": \"Help\",\n      \"schema\": {\n        \"personid\": {\n          \"name\": \"personid\",\n          \"type\": \"string\"\n        },\n        \"lastname\": {\n          \"name\": \"lastname\",\n          \"type\": \"string\"\n        },\n        \"firstname\": {\n          \"name\": \"firstname\",\n          \"type\": \"string\"\n        },\n        \"address\": {\n          \"name\": \"address\",\n          \"type\": \"string\"\n        },\n        \"city\": {\n          \"name\": \"city\",\n          \"type\": \"string\"\n        }\n      },\n      \"transformer\": \"return data\",\n      \"readable\": true\n    }\n  ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete a row",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tables/:tableId/rows/:rowId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								":tableId",
+								"rows",
+								":rowId"
+							],
+							"variable": [
+								{
+									"key": "tableId",
+									"value": "{{table_id}}",
+									"description": "(Required) The ID of the table which this request is targeting."
+								},
+								{
+									"key": "rowId",
+									"value": "{{row_id}}",
+									"description": "(Required) The ID of the row which this request is targeting."
+								}
+							]
+						},
+						"description": "Deletes a row within the specified table."
+					},
+					"response": [
+						{
+							"name": "Returns the deleted row, including the ID which has been generated for it.",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/tables/:tableId/rows/:rowId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables",
+										":tableId",
+										"rows",
+										":rowId"
+									],
+									"variable": [
+										{
+											"key": "tableId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the table which this request is targeting."
+										},
+										{
+											"key": "rowId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the row which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4\",\n    \"type\": \"row\",\n    \"tableId\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"name\": \"Mike\",\n    \"age\": 30,\n    \"relationship\": [\n      {\n        \"primaryDisplay\": \"Joe\",\n        \"_id\": \"ro_ta_...\"\n      }\n    ]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete a table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"description": "(Required) The ID of the app which this request is targeting.",
+								"key": "x-budibase-app-id",
+								"value": "{{x-budibase-app-id}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/tables/:tableId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								":tableId"
+							],
+							"variable": [
+								{
+									"key": "tableId",
+									"value": "{{table_id}}",
+									"description": "(Required) The ID of the table which this request is targeting."
+								}
+							]
+						},
+						"description": "Delete a table, this could be internal or external."
+					},
+					"response": [
+						{
+							"name": "Returns the deleted table.",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									},
+									{
+										"description": "(Required) The ID of the app which this request is targeting.",
+										"key": "x-budibase-app-id",
+										"value": "aliqua ad cillum officia"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/tables/:tableId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"tables",
+										":tableId"
+									],
+									"variable": [
+										{
+											"key": "tableId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the table which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"ta_5b1649e42a5b41dea4ef7742a36a7a70\",\n    \"name\": \"People\",\n    \"schema\": {\n      \"name\": {\n        \"type\": \"string\",\n        \"name\": \"name\"\n      },\n      \"age\": {\n        \"type\": \"number\",\n        \"name\": \"age\"\n      },\n      \"relationship\": {\n        \"type\": \"link\",\n        \"name\": \"relationship\",\n        \"tableId\": \"ta_...\",\n        \"fieldName\": \"relatedColumn\",\n        \"relationshipType\": \"many-to-many\"\n      }\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete a user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/:userId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{user_id}}",
+									"description": "(Required) The ID of the user which this request is targeting."
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Returns the deleted user.",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/users/:userId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users",
+										":userId"
+									],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the user which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"us_693a73206518477283a8d5ae31103252\",\n    \"email\": \"test@test.com\",\n    \"roles\": {\n      \"app_957b12f943d348faa61db7e18e088d0f\": \"BASIC\"\n    },\n    \"builder\": {\n      \"global\": false\n    },\n    \"admin\": {\n      \"global\": true\n    },\n    \"tenantId\": \"default\",\n    \"status\": \"active\",\n    \"budibaseAccess\": true,\n    \"csrfToken\": \"9c70291d-7137-48f9-9166-99ab5473a3d4\",\n    \"userId\": \"us_693a73206518477283a8d5ae31103252\",\n    \"roleId\": \"ADMIN\",\n    \"role\": {\n      \"_id\": \"ADMIN\",\n      \"name\": \"Admin\",\n      \"permissionId\": \"admin\",\n      \"inherits\": \"POWER\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete an application",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/applications/:appId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"applications",
+								":appId"
+							],
+							"variable": [
+								{
+									"key": "appId",
+									"value": "{{x-budibase-app-id}}",
+									"description": "(Required) The ID of the app which this request is targeting."
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Returns the deleted application.",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: apikey",
+										"key": "x-budibase-api-key",
+										"value": "<API Key>"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/applications/:appId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"applications",
+										":appId"
+									],
+									"variable": [
+										{
+											"key": "appId",
+											"value": "aliqua ad cillum officia",
+											"description": "(Required) The ID of the app which this request is targeting."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"_id\": \"app_metadata\",\n    \"appId\": \"app_dev_957b12f943d348faa61db7e18e088d0f\",\n    \"version\": \"1.0.58-alpha.0\",\n    \"name\": \"App name\",\n    \"url\": \"/app-url\",\n    \"tenantId\": \"default\",\n    \"updatedAt\": \"2022-02-22T13:00:54.035Z\",\n    \"createdAt\": \"2022-02-11T18:02:26.961Z\",\n    \"status\": \"development\"\n  }\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "d2cea7096b447540de4f43c15a37fc54-f1f4e1f8ce22369d230464b8d3e4428d1f57570d74d62a67690de4d34b0543f26575dd76ebc45a8c",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "x-budibase-api-key",
+				"type": "string"
+			},
+			{
+				"key": "in",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://test.budi.live/api/public/v1",
+			"type": "string"
+		}
+	]
+}
