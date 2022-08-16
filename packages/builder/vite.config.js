@@ -15,8 +15,8 @@ export default defineConfig(({ mode }) => {
       hmr: {
         protocol: "wss",
         clientPort: env.VITE_HMR_CLIENT_PORT || 3000,
-        path: env.VITE_HMR_PATH || "/"
-      }
+        path: env.VITE_HMR_PATH || "/",
+      },
     },
     base: "/builder/",
     build: {

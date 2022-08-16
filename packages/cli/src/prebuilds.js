@@ -5,7 +5,10 @@ const PREBUILDS = "prebuilds"
 const ARCH = `${os.platform()}-${os.arch()}`
 const PREBUILD_DIR = join(process.execPath, "..", PREBUILDS, ARCH)
 
-checkForBinaries()
+// running as built CLI pkg bundle
+if (!process.argv[0].includes("node")) {
+  checkForBinaries()
+}
 
 function checkForBinaries() {
   const readDir = join(__filename, "..", "..", PREBUILDS, ARCH)
