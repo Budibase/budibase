@@ -103,5 +103,3 @@ stats.html
 
 # TypeScript cache
 *.tsbuildinfo
-hosting/.env
-hosting/docker-compose.dev.yaml
