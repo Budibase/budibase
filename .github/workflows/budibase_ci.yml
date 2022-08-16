@@ -63,5 +63,6 @@ jobs:
     - name: Newman
       uses: matt-ball/newman-action@master
       with:
-        collection: https://www.getpostman.com/collections/8d4b96a2fdde70bc62a5.json
+        apiKey: ${{ secrets.POSTMAN_API_KEY }}
+        collection: https://www.getpostman.com/collections/0d78d0f9d14769154469
         environment: https://go.postman.co/workspace/Budibase-Test.budi.live~0803103d-f679-4a59-8487-f4f99ecf3843/environment/22734786-49371294-0e64-44a1-9fd6-4e7738f97421
