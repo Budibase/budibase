@@ -43,12 +43,12 @@
     "@babel/helper-validator-identifier" "^7.16.7"
     to-fast-properties "^2.0.0"
 
-"@budibase/backend-core@^1.2.38":
-  version "1.2.38"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.38.tgz#9451ae72f6af8cff3aa0a57dc61fc8d3505a77a0"
-  integrity sha512-g7m4fHG1tLqNsSvdSltqRHLASOH5n3QBbN5DD7cmSBIVpUtDCA0EMx/L0vkDDhTmbOQApXAW3cyJs6H3QiWtOw==
+"@budibase/backend-core@1.2.40":
+  version "1.2.40"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.40.tgz#692062478f310eaee780adbc55e266fc3b6649b6"
+  integrity sha512-HUw6IQgKkP345vnQcTok6X+inqYe0WpUL7uFJnm3XERvsAWX4FYWbgDoGJGS0+jZjdPjvARkt4+uZuTAEUFLiQ==
   dependencies:
-    "@budibase/types" "^1.2.38"
+    "@budibase/types" "^1.2.40"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -101,10 +101,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^1.2.38":
-  version "1.2.38"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.2.38.tgz#404804df516fb981b4f073f09bab64c9111cecb0"
-  integrity sha512-JRIAZVuuBECxDBcbx5FOYRRKi1ZyW7//LwKL5U1r9sIVCIxCW1t5b175oTnR9/bkktNs7X2ziynH/tsT5GVC0g==
+"@budibase/string-templates@1.2.40":
+  version "1.2.40"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.2.40.tgz#d7012b415a51e0119ac098e77d052f96bc04e742"
+  integrity sha512-Vc/DrmJ//kpT+QoIGqloVnomBJgHVPNIiCOXc+2XSsN5HyR18S8uO7lc77cpln3dTlvNcd7bQqXO1UIx8oebUQ==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
@@ -113,10 +113,10 @@
     lodash "^4.17.20"
     vm2 "^3.9.4"
 
-"@budibase/types@^1.2.38":
-  version "1.2.38"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.38.tgz#472f4ec891242488561a8cfc175961664bc7ac88"
-  integrity sha512-pMKh4FKhPoa1pge4FKqPi3gbzZp3HJ1RuhM5naKFqC1yompIn/Es+YNft39VC2bTW5tiGbucMcjWzdpMwTSTVw==
+"@budibase/types@1.2.40", "@budibase/types@^1.2.40":
+  version "1.2.40"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.40.tgz#c1456728b61966cab7fe3689bd044bf415faa138"
+  integrity sha512-eNZFG0C/GBog87y6StKBjdF/aDJJtUHbAM8NWLUNNqTAiMxO2s3XhDN1dE6t74NBCRFzJo2sAD+34pJHhKFanQ==
 
 "@eslint/eslintrc@^0.4.3":
   version "0.4.3"

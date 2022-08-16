@@ -41,7 +41,7 @@ async function init(opts) {
   console.log(info(`Plugin created in directory "${name}"`))
 }
 
-async function build() {
+async function verify() {
   console.log(info("Verifying plugin..."))
   const schema = fs.readFileSync("schema.json", "utf8")
   const pkg = fs.readFileSync("package.json", "utf8")
@@ -57,19 +57,41 @@ async function build() {
     name = pkgJson.name
     version = pkgJson.version
     validate(schemaJson)
+    return { name, version }
   } catch (err) {
     if (err && err.message && err.message.includes("not valid JSON")) {
       console.log(error(`schema.json is not valid JSON: ${err.message}`))
     } else {
       console.log(error(`Invalid schema/package.json: ${err.message}`))
     }
+  }
+}
+
+async function build() {
+  const verified = await verify()
+  if (!verified.name) {
     return
   }
   console.log(success("Verified!"))
   console.log(info("Building plugin..."))
   await runPkgCommand("build")
-  const output = join("dist", `${name}-${version}.tar.gz`)
+  const output = join("dist", `${verified.name}-${verified.version}.tar.gz`)
   console.log(success(`Build complete - output in: ${output}`))
+}
+
+async function watch() {
+  const verified = await verify()
+  if (!verified.name) {
+    return
+  }
+  const output = join("dist", `${verified.name}-${verified.version}.tar.gz`)
+  console.log(info(`Watching - build in: ${output}`))
+  try {
+    await runPkgCommand("watch")
+  } catch (err) {
+    // always errors when user escapes
+    console.log(success("Watch exited."))
+  }
 }
 
 const command = new Command(`${CommandWords.PLUGIN}`)
@@ -85,6 +107,11 @@ const command = new Command(`${CommandWords.PLUGIN}`)
     "--build",
     "Build your plugin, this will verify and produce a final tarball for your project.",
     build
+  )
+  .addSubOption(
+    "--watch",
+    "Automatically build any changes to your plugin.",
+    watch
   )
 
 exports.command = command
