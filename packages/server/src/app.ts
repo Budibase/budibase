@@ -138,7 +138,12 @@ module.exports = server.listen(env.PORT || 0, async () => {
   }
 
   // monitor plugin directory if required
-  if (env.SELF_HOSTED && !env.MULTI_TENANCY && env.PLUGINS_DIR && fs.existsSync(env.PLUGINS_DIR)) {
+  if (
+    env.SELF_HOSTED &&
+    !env.MULTI_TENANCY &&
+    env.PLUGINS_DIR &&
+    fs.existsSync(env.PLUGINS_DIR)
+  ) {
     const watchPath = path.join(env.PLUGINS_DIR, "./**/dist/*.tar.gz")
     chokidar
       .watch(watchPath, {
