@@ -61,7 +61,6 @@ jobs:
     #     command: yarn test:e2e:ci
         
     - name: Newman
-      uses: actions/checkout@master
       uses: matt-ball/newman-action@master
       with:
         collection: https://www.getpostman.com/collections/8d4b96a2fdde70bc62a5.json
