@@ -1,9 +1,22 @@
 const newman = require("newman")
 
 const collection = require("./newman.json")
-const environment = require("./environments/localhost.env.json")
 
 const run = async () => {
+  console.log(process.argv)
+
+  const env = process.argv[2]
+  let environment
+  if (env === "test") {
+    environment = require("./environments/test.env.json")
+  } else if (env === "dev") {
+    environment = require("./environments/dev.env.json")
+  }
+
+  // const environment = `./environments/${env}.env.json`
+
+  console.log(environment)
+
   const options = {
     //   apiKey: "",
     collection,
@@ -36,7 +49,17 @@ const run = async () => {
     //   cookieJar: "",
   }
 
-  await newman.run(options)
+  newman
+    .run(options, err => {
+      console.log(err)
+      process.exit(1)
+    })
+    .on("done", (err, summary) => {
+      if (!options.suppressExitCode && (err || summary.run.failures.length)) {
+        process.exit(1)
+        // core.setFailed('Newman run failed! ' + (err || ''))
+      }
+    })
 }
 
 run()

@@ -23,7 +23,8 @@
     "cy:debug": "start-server-and-test cy:setup http://localhost:4100/builder cy:open",
     "cy:debug:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:open",
     "test:newman": "start-server-and-test cy:setup:ci http://localhost:4100/builder newman:run",
-    "test:newman:dev": "yarn newman:run",
+    "test:newman:env:test": "yarn newman:run test",
+    "test:newman:env:dev": "yarn newman:run dev",
     "newman:run": "node newman/run.js"
   },
   "jest": {

@@ -2391,12 +2391,5 @@
 				]
 			}
 		}
-	],
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "https://test.budi.live/api/public/v1",
-			"type": "string"
-		}
 	]
 }
