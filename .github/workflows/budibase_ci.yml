@@ -13,6 +13,13 @@ on:
       - develop 
       - release 
  workflow_dispatch:
+   inputs:
+     postman-collection-id:
+       description: The postman collection id to use in newman tests
+       required: false
+     postman-environment-id:
+       description: The postman environment id to use in newman tests
+       required: false
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
@@ -39,6 +46,26 @@ jobs:
     #   run: yarn install:pro $BRANCH $BASE_BRANCH
 
     - run: yarn
+
+    - name: Get postman collection and environment
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.postman-collection-id }}" ]; then
+          collection_id=${{ github.event.inputs.postman-collection-id }}
+        else
+          collection_id=$(node ./.github/scripts/newman/collection-id.js)
+        fi
+        echo "$collection_id"
+        echo "POSTMAN_COLLECTION=$collection_id" >> $GITHUB_ENV
+        
+        if [ -n "${{ github.event.inputs.postman-environment-id }}" ]; then
+          environment_id=${{ github.event.inputs.postman-environment-id }}
+        else
+          environment_id=22734786-49371294-0e64-44a1-9fd6-4e7738f97421
+        fi
+        echo "$environment_id"
+        echo "POSTMAN_ENVIRONMENT=$environment_id" >> $GITHUB_ENV
+
     - run: yarn bootstrap
     - run: yarn lint
     - run: yarn build
@@ -62,6 +89,4 @@ jobs:
 
     - run: yarn test:newman:ci
       env:
-        POSTMAN_COLLECTION: 19937057-61592abe-6d90-4738-b466-53de65e94442
-        POSTMAN_ENVIRONMENT: 22734786-49371294-0e64-44a1-9fd6-4e7738f97421
         POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}

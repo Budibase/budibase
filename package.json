@@ -13,6 +13,7 @@
     "js-yaml": "^4.1.0",
     "kill-port": "^1.6.1",
     "lerna": "3.14.1",
+    "node-fetch": "2.6.7",
     "prettier": "^2.3.1",
     "prettier-plugin-svelte": "^2.3.0",
     "rimraf": "^3.0.2",
