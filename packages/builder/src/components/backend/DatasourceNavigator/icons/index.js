@@ -17,7 +17,7 @@ import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Custom from "./Custom.svelte"
 
-export default {
+const ICONS = {
   BUDIBASE: Budibase,
   POSTGRES: Postgres,
   DYNAMODB: DynamoDB,
@@ -36,4 +36,14 @@ export default {
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
   CUSTOM: Custom,
+}
+
+export default ICONS
+
+export function getIcon(integrationType, schema) {
+  if (schema?.custom || !ICONS[integrationType]) {
+    return ICONS.CUSTOM
+  } else {
+    return ICONS[integrationType]
+  }
 }
