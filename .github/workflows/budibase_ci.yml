@@ -65,6 +65,8 @@ jobs:
         fi
         echo "$environment_id"
         echo "POSTMAN_ENVIRONMENT=$environment_id" >> $GITHUB_ENV
+      env:
+        POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
 
     - run: yarn bootstrap
     - run: yarn lint
