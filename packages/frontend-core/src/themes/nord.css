@@ -43,4 +43,7 @@
 
   --spectrum-alias-highlight-hover: rgba(169, 177, 193, 0.1);
   --spectrum-alias-highlight-active: rgba(169, 177, 193, 0.1);
+  --spectrum-alias-background-color-hover-overlay: rgba(169, 177, 193, 0.1);
+
+  --modal-background: var(--spectrum-global-color-gray-50);
 }
