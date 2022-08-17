@@ -1,12 +1,8 @@
 <script>
-  import { getContext, setContext } from "svelte"
-  import { writable } from "svelte/store"
+  import { getContext } from "svelte"
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
-
-  const containerClickableStore = writable(false)
-  setContext("containerClickable", containerClickableStore)
 
   export let direction
   export let hAlign
@@ -28,7 +24,6 @@
     sizeClass,
     gapClass,
   ].join(" ")
-  $: containerClickableStore.set(!!onClick)
 </script>
 
 <div
