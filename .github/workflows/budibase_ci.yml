@@ -42,10 +42,30 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    # - name: Install Pro
-    #   run: yarn install:pro $BRANCH $BASE_BRANCH
+    - name: Install Pro
+      run: yarn install:pro $BRANCH $BASE_BRANCH
 
     - run: yarn
+    - run: yarn bootstrap
+    - run: yarn lint
+    - run: yarn build
+    - run: yarn test
+      env:
+        CI: true
+        name: Budibase CI
+    - uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        files: ./packages/server/coverage/clover.xml
+        name: codecov-umbrella
+        verbose: true
+
+      # TODO: parallelise this
+    # - name: Cypress run
+    #   uses: cypress-io/github-action@v2
+    #   with:
+    #     install: false
+    #     command: yarn test:e2e:ci
 
     - name: Get postman collection and environment
       id: version
@@ -67,27 +87,6 @@ jobs:
         echo "POSTMAN_ENVIRONMENT=$environment_id" >> $GITHUB_ENV
       env:
         POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
-
-    - run: yarn bootstrap
-    - run: yarn lint
-    - run: yarn build
-#    - run: yarn test
-#      env:
-#        CI: true
-#        name: Budibase CI
-#    - uses: codecov/codecov-action@v1
-#      with:
-#        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-#        files: ./packages/server/coverage/clover.xml
-#        name: codecov-umbrella
-#        verbose: true
-
-      # TODO: parallelise this
-    # - name: Cypress run
-    #   uses: cypress-io/github-action@v2
-    #   with:
-    #     install: false
-    #     command: yarn test:e2e:ci
 
     - run: yarn test:newman:ci
       env:
