@@ -164,14 +164,16 @@
         {/each}
       </div>
       <Body size="S">Custom data source</Body>
-      {#each Object.entries(integrations).filter(entry => entry[1].custom) as [integrationType, schema]}
-        <DatasourceCard
-          on:selected={evt => selectIntegration(evt.detail)}
-          {schema}
-          bind:integrationType
-          {integration}
-        />
-      {/each}
+      <div class="item-list">
+        {#each Object.entries(integrations).filter(entry => entry[1].custom) as [integrationType, schema]}
+          <DatasourceCard
+            on:selected={evt => selectIntegration(evt.detail)}
+            {schema}
+            bind:integrationType
+            {integration}
+          />
+        {/each}
+      </div>
     </Layout>
   </ModalContent>
 </Modal>
@@ -179,7 +181,7 @@
 <style>
   .item-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
     grid-gap: var(--spectrum-alias-grid-baseline);
   }
 
