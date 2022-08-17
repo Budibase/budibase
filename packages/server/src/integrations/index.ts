@@ -15,6 +15,7 @@ import redis from "./redis"
 import snowflake from "./snowflake"
 import { getPlugins } from "../api/controllers/plugin"
 import { SourceName, Integration, PluginType } from "@budibase/types"
+import { getDatasourcePlugin } from "../utilities/fileSystem"
 const environment = require("../environment")
 const { cloneDeep } = require("lodash")
 
@@ -65,6 +66,8 @@ if (environment.SELF_HOSTED) {
   DEFINITIONS[SourceName.GOOGLE_SHEETS] = googlesheets.schema
 }
 
+function isIntegrationAvailable(integration: string) {}
+
 module.exports = {
   getDefinitions: async () => {
     const plugins = await getPlugins(PluginType.DATASOURCE)
@@ -82,7 +85,16 @@ module.exports = {
       ...pluginSchemas,
     }
   },
-  getIntegration: async () => {
-    return INTEGRATIONS
+  getIntegration: async (integration: string) => {
+    if (INTEGRATIONS[integration]) {
+      return INTEGRATIONS[integration]
+    }
+    const plugins = await getPlugins(PluginType.DATASOURCE)
+    for (let plugin of plugins) {
+      if (plugin.name === integration) {
+        // need to use commonJS require due to its dynamic runtime nature
+        return getDatasourcePlugin(plugin.name, plugin.jsUrl)
+      }
+    }
   },
 }
