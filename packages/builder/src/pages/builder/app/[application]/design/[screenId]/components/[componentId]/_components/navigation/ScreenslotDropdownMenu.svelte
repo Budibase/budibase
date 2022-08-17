@@ -31,15 +31,20 @@
     <div slot="control" class="icon">
       <Icon size="S" hoverable name="MoreSmallList" />
     </div>
-    <MenuItem icon="Copy" on:click={() => storeComponentForCopy(false)}>
+    <MenuItem
+      icon="Copy"
+      keyBind="Ctrl+C"
+      on:click={() => storeComponentForCopy(false)}
+    >
       Copy
     </MenuItem>
     <MenuItem
-      icon="ShowOneLayer"
+      icon="LayersSendToBack"
+      keyBind="Ctrl+V"
       on:click={() => pasteComponent("inside")}
       disabled={noPaste}
     >
-      Paste inside
+      Paste
     </MenuItem>
   </ActionMenu>
 {/if}
