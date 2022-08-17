@@ -37,15 +37,18 @@ exports.fetch = async function (ctx) {
         include_docs: true,
       })
     )
-  ).rows.map(row => ({
-    ...row.doc,
-    entities: encodeEntities(row.doc.entities),
-  }))
+  ).rows.map(row => row.doc)
 
   for (let datasource of datasources) {
     if (datasource.config && datasource.config.auth) {
       // strip secrets from response so they don't show in the network request
       delete datasource.config.auth
+    }
+
+    if (Object.keys(datasource?.entities).length) {
+      datasource.entities = encodeEntities(datasource.entities)
+    } else {
+      delete datasource.entities
     }
   }
 
