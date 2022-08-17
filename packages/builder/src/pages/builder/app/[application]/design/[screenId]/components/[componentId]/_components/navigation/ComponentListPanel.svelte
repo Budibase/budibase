@@ -113,7 +113,7 @@
           e.preventDefault()
           $goto("./new")
         }
-      } else if (e.key === "Delete") {
+      } else if (e.key === "Backspace" || e.key === "Delete") {
         // Don't show confirmation for the screen itself
         if (component._id === get(selectedScreen).props._id) {
           return

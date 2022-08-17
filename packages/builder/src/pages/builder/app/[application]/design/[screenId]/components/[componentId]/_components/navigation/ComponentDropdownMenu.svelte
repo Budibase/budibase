@@ -15,21 +15,21 @@
   </div>
   <MenuItem
     icon="Delete"
-    keyBind="Del"
+    keyBind="!BackAndroid"
     on:click={() => keyboardEvent("Delete")}
   >
     Delete
   </MenuItem>
   <MenuItem
     icon="ChevronUp"
-    keyBind="Ctrl+↑"
+    keyBind="Ctrl+!ArrowUp"
     on:click={() => keyboardEvent("ArrowUp", true)}
   >
     Move up
   </MenuItem>
   <MenuItem
     icon="ChevronDown"
-    keyBind="Ctrl+↓"
+    keyBind="Ctrl+!ArrowDown"
     on:click={() => keyboardEvent("ArrowDown", true)}
   >
     Move down
