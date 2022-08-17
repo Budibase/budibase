@@ -18,6 +18,7 @@
   import { createRestDatasource } from "builderStore/datasource"
   import { goto } from "@roxi/routify"
   import ImportRestQueriesModal from "./ImportRestQueriesModal.svelte"
+  import DatasourceCard from "../_components/DatasourceCard.svelte"
 
   export let modal
   let integrations = {}
@@ -95,14 +96,6 @@
     }
     integrations = newIntegrations
   }
-
-  function getIcon(integrationType, schema) {
-    if (schema.custom) {
-      return ICONS.CUSTOM
-    } else {
-      return ICONS[integrationType]
-    }
-  }
 </script>
 
 <Modal bind:this={internalTableModal}>
@@ -161,28 +154,24 @@
     <Layout noPadding gap="XS">
       <Body size="S">Connect to an external data source</Body>
       <div class="item-list">
-        {#each Object.entries(integrations).filter(([key]) => key !== IntegrationTypes.INTERNAL) as [integrationType, schema]}
-          <div
-            class:selected={integration.type === integrationType}
-            on:click={() => selectIntegration(integrationType)}
-            class="item hoverable"
-          >
-            <div class="item-body" class:with-type={!!schema.type}>
-              <svelte:component
-                this={getIcon(integrationType, schema)}
-                height="20"
-                width="20"
-              />
-              <div class="text">
-                <Heading size="XXS">{schema.friendlyName}</Heading>
-                {#if schema.type}
-                  <Detail size="S">{schema.type || ""}</Detail>
-                {/if}
-              </div>
-            </div>
-          </div>
+        {#each Object.entries(integrations).filter(([key, val]) => key !== IntegrationTypes.INTERNAL && !val.custom) as [integrationType, schema]}
+          <DatasourceCard
+            on:selected={evt => selectIntegration(evt.detail)}
+            {schema}
+            bind:integrationType
+            {integration}
+          />
         {/each}
       </div>
+      <Body size="S">Custom data source</Body>
+      {#each Object.entries(integrations).filter(entry => entry[1].custom) as [integrationType, schema]}
+        <DatasourceCard
+          on:selected={evt => selectIntegration(evt.detail)}
+          {schema}
+          bind:integrationType
+          {integration}
+        />
+      {/each}
     </Layout>
   </ModalContent>
 </Modal>
