@@ -24,8 +24,8 @@ const run = async () => {
   if (response.status === 200) {
     const collections = await response.json()
     const collection = collections.collections.find(c => c.fork && c.fork.label === branch)
-    if (collection && collection.id) {
-      console.log(collection.id)
+    if (collection && collection.uid) {
+      console.log(collection.uid)
     } else {
       console.log("19937057-61592abe-6d90-4738-b466-53de65e94442")
     }
