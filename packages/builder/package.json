@@ -22,10 +22,8 @@
     "cy:ci:notify": "node scripts/cypressResultsWebhook",
     "cy:debug": "start-server-and-test cy:setup http://localhost:4100/builder cy:open",
     "cy:debug:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:open",
-    "test:newman": "start-server-and-test cy:setup:ci http://localhost:4100/builder newman:run",
-    "test:newman:env:test": "yarn newman:run test",
-    "test:newman:env:dev": "yarn newman:run dev",
-    "newman:run": "node newman/run.js"
+    "test:newman:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder test:newman",
+    "test:newman": "node newman/run.js"
   },
   "jest": {
     "globals": {
@@ -84,6 +82,7 @@
     "dayjs": "^1.11.2",
     "downloadjs": "1.4.7",
     "lodash": "4.17.21",
+    "newman": "5.3.2",
     "posthog-js": "1.4.5",
     "remixicon": "2.5.0",
     "shortid": "2.2.15",

@@ -1,26 +1,13 @@
 const newman = require("newman")
 
-const collection = require("./newman.json")
-
 const run = async () => {
-  console.log(process.argv)
-
-  const env = process.argv[2]
-  let environment
-  if (env === "test") {
-    environment = require("./environments/test.env.json")
-  } else if (env === "dev") {
-    environment = require("./environments/dev.env.json")
-  }
-
-  // const environment = `./environments/${env}.env.json`
-
-  console.log(environment)
+  const apiKey = process.env.POSTMAN_API_KEY
+  const collectionId = process.env.POSTMAN_COLLECTION
+  const environmentId = process.env.POSTMAN_ENVIRONMENT
 
   const options = {
-    //   apiKey: "",
-    collection,
-    environment,
+    collection: `https://api.getpostman.com/collections/${collectionId}?apikey=${apiKey}`,
+    environment: `https://api.getpostman.com/environments/${environmentId}?apikey=${apiKey}`,
     //   envVar: "",
     //   globals: "",
     //   globalVar: "",
@@ -51,13 +38,13 @@ const run = async () => {
 
   newman
     .run(options, err => {
-      console.log(err)
-      process.exit(1)
+      if (err) {
+        throw err
+      }
     })
     .on("done", (err, summary) => {
       if (!options.suppressExitCode && (err || summary.run.failures.length)) {
-        process.exit(1)
-        // core.setFailed('Newman run failed! ' + (err || ''))
+        throw new Error("Newman run failed")
       }
     })
 }

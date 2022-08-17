@@ -59,10 +59,9 @@ jobs:
     #   with:
     #     install: false
     #     command: yarn test:e2e:ci
-        
-    - name: Newman
-      uses: matt-ball/newman-action@master
-      with:
-        apiKey: ${{ secrets.POSTMAN_API_KEY }}
-        collection: https://www.getpostman.com/collections/0d78d0f9d14769154469
-        environment: https://api.getpostman.com/environments/22734786-49371294-0e64-44a1-9fd6-4e7738f97421?apikey=${{ secrets.POSTMAN_API_KEY }}
+
+    - run: yarn test:newman:ci
+      env:
+        POSTMAN_COLLECTION: 2419644-1accb7cd-4679-40b7-a0a9-585297a7261d
+        POSTMAN_ENVIRONMENT: 2419644-6a279b92-1f4b-42b7-8bc6-6ba9d06514d5
+        POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
