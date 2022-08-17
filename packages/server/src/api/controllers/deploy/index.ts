@@ -4,7 +4,7 @@ import {
   getProdAppID,
   getDevelopmentAppID,
 } from "@budibase/backend-core/db"
-import { DocumentTypes, getAutomationParams } from "../../../db/utils"
+import { DocumentType, getAutomationParams } from "../../../db/utils"
 import {
   disableAllCrons,
   enableCronTrigger,
@@ -52,9 +52,9 @@ async function storeDeploymentHistory(deployment: any) {
   let deploymentDoc
   try {
     // theres only one deployment doc per app database
-    deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
+    deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
   } catch (err) {
-    deploymentDoc = { _id: DocumentTypes.DEPLOYMENTS, history: {} }
+    deploymentDoc = { _id: DocumentType.DEPLOYMENTS, history: {} }
   }
 
   const deploymentId = deploymentJSON._id
@@ -115,7 +115,7 @@ async function deployApp(deployment: any) {
     await replication.replicate()
     console.log("replication complete.. replacing app meta doc")
     const db = getProdAppDB()
-    const appDoc = await db.get(DocumentTypes.APP_METADATA)
+    const appDoc = await db.get(DocumentType.APP_METADATA)
 
     deployment.appUrl = appDoc.url
 
@@ -146,7 +146,7 @@ async function deployApp(deployment: any) {
 export async function fetchDeployments(ctx: any) {
   try {
     const db = getAppDB()
-    const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
+    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
     const { updated, deployments } = await checkAllDeployments(deploymentDoc)
     if (updated) {
       await db.put(deployments)
@@ -160,7 +160,7 @@ export async function fetchDeployments(ctx: any) {
 export async function deploymentProgress(ctx: any) {
   try {
     const db = getAppDB()
-    const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
+    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
     ctx.body = deploymentDoc[ctx.params.deploymentId]
   } catch (err) {
     ctx.throw(
@@ -173,7 +173,7 @@ export async function deploymentProgress(ctx: any) {
 const isFirstDeploy = async () => {
   try {
     const db = getProdAppDB()
-    await db.get(DocumentTypes.APP_METADATA)
+    await db.get(DocumentType.APP_METADATA)
   } catch (e: any) {
     if (e.status === 404) {
       return true
