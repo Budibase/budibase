@@ -28,7 +28,7 @@
 
 <div
   class={classNames}
-  class:clickable={onClick}
+  class:clickable={!!onClick}
   use:styleable={$component.styles}
   class:wrap
   on:click={onClick}
@@ -113,5 +113,8 @@
   }
   .clickable {
     cursor: pointer;
+  }
+  .clickable :global(*) {
+    pointer-events: none;
   }
 </style>
