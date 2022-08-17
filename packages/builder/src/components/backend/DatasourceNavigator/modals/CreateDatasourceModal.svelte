@@ -49,6 +49,9 @@
       schema: selected.datasource,
       auth: selected.auth,
     }
+    if (selected.friendlyName) {
+      integration.name = selected.friendlyName
+    }
     checkShowImport()
   }
 
