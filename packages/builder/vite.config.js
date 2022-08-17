@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
         strict: false,
       },
       hmr: {
-        protocol: "wss",
+        protocol: env.VITE_HMR_PROTOCOL || "ws",
         clientPort: env.VITE_HMR_CLIENT_PORT || 3000,
         path: env.VITE_HMR_PATH || "/",
       },
