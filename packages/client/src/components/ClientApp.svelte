@@ -94,7 +94,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium spectrum--darkest {$themeStore.theme}"
+    class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
   >
     <DeviceBindingsProvider>
       <UserBindingsProvider>
