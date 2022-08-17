@@ -17,6 +17,7 @@ const {
   downloadTarball,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
+const { checkSlashesInUrl } = require("../")
 const env = require("../../environment")
 const {
   USER_METDATA_PREFIX,
@@ -26,9 +27,11 @@ const {
 const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
 const tar = require("tar")
+const fetch = require("node-fetch")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
+const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 
 /**
  * The single stack system (Cloud and Builder) should not make use of the file system where possible,
@@ -346,6 +349,26 @@ exports.extractPluginTarball = async file => {
     throw new Error("Unable to process schema.json/package.json in plugin.")
   }
   return { metadata, directory: path }
+}
+
+exports.getDatasourcePlugin = async (name, url) => {
+  if (!fs.existsSync(DATASOURCE_PATH)) {
+    fs.mkdirSync(DATASOURCE_PATH)
+  }
+  const filename = join(DATASOURCE_PATH, name)
+  if (fs.existsSync(filename)) {
+    return require(filename)
+  }
+  const response = await fetch(checkSlashesInUrl(`${env.MINIO_URL}/${url}`))
+  if (response.status === 200) {
+    const content = await response.text()
+    fs.writeFileSync(filename, content)
+    require(filename)
+  } else {
+    throw new Error(
+      `Unable to retrieve plugin - reason: ${await response.text()}`
+    )
+  }
 }
 
 /**
