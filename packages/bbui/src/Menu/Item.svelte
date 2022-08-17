@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher, getContext } from "svelte"
-  import { Icon } from "@budibase/bbui"
+  import Icon from "../Icon/Icon.svelte"
 
   const dispatch = createEventDispatcher()
   const actionMenu = getContext("actionMenu")
