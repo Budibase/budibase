@@ -19,6 +19,9 @@
 
   async function saveDatasource() {
     try {
+      if (!datasource.name) {
+        datasource.name = name
+      }
       const resp = await save(datasource, skipFetch)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
