@@ -40,8 +40,8 @@ const createBuilderStore = () => {
     updateProp: (prop, value) => {
       dispatchEvent("update-prop", { prop, value })
     },
-    deleteComponent: id => {
-      dispatchEvent("delete-component", { id })
+    keyDown: (key, ctrlKey) => {
+      dispatchEvent("key-down", { key, ctrlKey })
     },
     duplicateComponent: id => {
       dispatchEvent("duplicate-component", { id })
