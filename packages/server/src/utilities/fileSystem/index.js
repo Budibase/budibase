@@ -17,6 +17,7 @@ const {
   downloadTarball,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
+const { checkSlashesInUrl } = require("../")
 const env = require("../../environment")
 const {
   USER_METDATA_PREFIX,
@@ -358,7 +359,7 @@ exports.getDatasourcePlugin = async (name, url) => {
   if (fs.existsSync(filename)) {
     return require(filename)
   }
-  const response = fetch(url)
+  const response = await fetch(checkSlashesInUrl(`${env.MINIO_URL}/${url}`))
   if (response.status === 200) {
     const content = await response.text()
     fs.writeFileSync(filename, content)
