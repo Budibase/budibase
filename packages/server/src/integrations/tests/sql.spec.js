@@ -1,5 +1,5 @@
-const Sql = require("../base/sql")
-const { SqlClients } = require("../utils")
+const Sql = require("../base/sql").default
+const { SqlClient } = require("../utils")
 
 const TABLE_NAME = "test"
 
@@ -47,7 +47,7 @@ function generateDeleteJson(table = TABLE_NAME, filters = {}) {
 
 describe("SQL query builder", () => {
   const limit = 500
-  const client = SqlClients.POSTGRES
+  const client = SqlClient.POSTGRES
   let sql
 
   beforeEach(() => {
@@ -174,7 +174,7 @@ describe("SQL query builder", () => {
   })
 
   it("should work with MS-SQL", () => {
-    const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson())
+    const query = new Sql(SqlClient.MS_SQL, 10)._query(generateReadJson())
     expect(query).toEqual({
       bindings: [10],
       sql: `select * from (select top (@p0) * from [${TABLE_NAME}]) as [${TABLE_NAME}]`
@@ -182,7 +182,7 @@ describe("SQL query builder", () => {
   })
 
   it("should work with MySQL", () => {
-    const query = new Sql(SqlClients.MY_SQL, 10)._query(generateReadJson())
+    const query = new Sql(SqlClient.MY_SQL, 10)._query(generateReadJson())
     expect(query).toEqual({
       bindings: [10],
       sql: `select * from (select * from \`${TABLE_NAME}\` limit ?) as \`${TABLE_NAME}\``
@@ -240,48 +240,138 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should use like expression for MS-SQL when filter is contains", () => {
-    const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson({
+  it("should use AND like expression for MS-SQL when filter is contains", () => {
+    const query = new Sql(SqlClient.MS_SQL, 10)._query(generateReadJson({
       filters: {
         contains: {
-          age: 20,
-          name: "John"
+          age: [20, 25],
+          name: ["John", "Mary"]
         }
       }
     }))
     expect(query).toEqual({
-      bindings: [10, "%20%", "%John%"],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where LOWER(${TABLE_NAME}.age) LIKE @p1 and LOWER(${TABLE_NAME}.name) LIKE @p2) as [${TABLE_NAME}]`
+      bindings: [10, "%20%", "%25%", `%"John"%`, `%"Mary"%`],
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER(${TABLE_NAME}.age) LIKE @p1 AND LOWER(${TABLE_NAME}.age) LIKE @p2) and (LOWER(${TABLE_NAME}.name) LIKE @p3 AND LOWER(${TABLE_NAME}.name) LIKE @p4)) as [${TABLE_NAME}]`
     })
   })
 
   it("should use JSON_CONTAINS expression for MySQL when filter is contains", () => {
-    const query = new Sql(SqlClients.MY_SQL, 10)._query(generateReadJson({
+    const query = new Sql(SqlClient.MY_SQL, 10)._query(generateReadJson({
       filters: {
         contains: {
-          age: 20,
-          name: "John"
+          age: [20],
+          name: ["John"]
         }
       }
     }))
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \`${TABLE_NAME}\` where JSON_CONTAINS(${TABLE_NAME}.age, '20') and JSON_CONTAINS(${TABLE_NAME}.name, '"John"') limit ?) as \`${TABLE_NAME}\``
+      sql: `select * from (select * from \`${TABLE_NAME}\` where JSON_CONTAINS(${TABLE_NAME}.age, '[20]') and JSON_CONTAINS(${TABLE_NAME}.name, '["John"]') limit ?) as \`${TABLE_NAME}\``
     })
   })
 
   it("should use jsonb operator expression for PostgreSQL when filter is contains", () => {
-    const query = new Sql(SqlClients.POSTGRES, 10)._query(generateReadJson({
+    const query = new Sql(SqlClient.POSTGRES, 10)._query(generateReadJson({
       filters: {
         contains: {
-          age: 20,
-          name: "John"
+          age: [20],
+          name: ["John"]
         }
       }
     }))
     expect(query).toEqual({
       bindings: [10],
       sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
+    })
+  })
+
+  it("should use NOT like expression for MS-SQL when filter is notContains", () => {
+    const query = new Sql(SqlClient.MS_SQL, 10)._query(generateReadJson({
+      filters: {
+        notContains: {
+          age: [20],
+          name: ["John"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10, "%20%", `%"John"%`],
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where NOT (LOWER(${TABLE_NAME}.age) LIKE @p1) and NOT (LOWER(${TABLE_NAME}.name) LIKE @p2)) as [${TABLE_NAME}]`
+    })
+  })
+
+  it("should use NOT JSON_CONTAINS expression for MySQL when filter is notContains", () => {
+    const query = new Sql(SqlClient.MY_SQL, 10)._query(generateReadJson({
+      filters: {
+        notContains: {
+          age: [20],
+          name: ["John"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \`${TABLE_NAME}\` where NOT JSON_CONTAINS(${TABLE_NAME}.age, '[20]') and NOT JSON_CONTAINS(${TABLE_NAME}.name, '["John"]') limit ?) as \`${TABLE_NAME}\``
+    })
+  })
+
+  it("should use jsonb operator NOT expression for PostgreSQL when filter is notContains", () => {
+    const query = new Sql(SqlClient.POSTGRES, 10)._query(generateReadJson({
+      filters: {
+        notContains: {
+          age: [20],
+          name: ["John"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \"${TABLE_NAME}\" where NOT \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and NOT \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
+    })
+  })
+
+  it("should use OR like expression for MS-SQL when filter is containsAny", () => {
+    const query = new Sql(SqlClient.MS_SQL, 10)._query(generateReadJson({
+      filters: {
+        containsAny: {
+          age: [20, 25],
+          name: ["John", "Mary"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10, "%20%", "%25%", `%"John"%`, `%"Mary"%`],
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER(${TABLE_NAME}.age) LIKE @p1 OR LOWER(${TABLE_NAME}.age) LIKE @p2) and (LOWER(${TABLE_NAME}.name) LIKE @p3 OR LOWER(${TABLE_NAME}.name) LIKE @p4)) as [${TABLE_NAME}]`
+    })
+  })
+
+  it("should use JSON_OVERLAPS expression for MySQL when filter is containsAny", () => {
+    const query = new Sql(SqlClient.MY_SQL, 10)._query(generateReadJson({
+      filters: {
+        containsAny: {
+          age: [20, 25],
+          name: ["John", "Mary"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \`${TABLE_NAME}\` where JSON_OVERLAPS(${TABLE_NAME}.age, '[20,25]') and JSON_OVERLAPS(${TABLE_NAME}.name, '["John","Mary"]') limit ?) as \`${TABLE_NAME}\``
+    })
+  })
+
+  it("should use ?| operator expression for PostgreSQL when filter is containsAny", () => {
+    const query = new Sql(SqlClient.POSTGRES, 10)._query(generateReadJson({
+      filters: {
+        containsAny: {
+          age: [20, 25],
+          name: ["John", "Mary"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb ?| array [20,25] and \"${TABLE_NAME}\".\"name\"::jsonb ?| array ['John','Mary'] limit $1) as \"${TABLE_NAME}\"`
     })
   })
 })

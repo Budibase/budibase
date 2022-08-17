@@ -141,20 +141,18 @@ export const buildUserEndpoints = API => ({
 
   /**
    * Invites multiple users to the current tenant.
-   * @param email An array of email addresses
-   * @param builder whether the user should be a global builder
-   * @param admin whether the user should be a global admin
+   * @param users An array of users to invite
    */
-  inviteUsers: async ({ emails, builder, admin }) => {
+  inviteUsers: async users => {
     return await API.post({
-      url: "/api/global/users/inviteMultiple",
-      body: {
-        emails,
+      url: "/api/global/users/multi/invite",
+      body: users.map(user => ({
+        email: user.email,
         userInfo: {
-          admin: admin ? { global: true } : undefined,
-          builder: builder ? { global: true } : undefined,
+          admin: user.admin ? { global: true } : undefined,
+          builder: user.admin || user.builder ? { global: true } : undefined,
         },
-      },
+      })),
     })
   },
 

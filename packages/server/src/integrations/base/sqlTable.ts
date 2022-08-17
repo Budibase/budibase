@@ -1,10 +1,5 @@
 import { Knex, knex } from "knex"
-import { Table } from "../../definitions/common"
-import {
-  Operation,
-  QueryJson,
-  RenameColumn,
-} from "../../definitions/datasource"
+import { Operation, QueryJson, RenameColumn, Table } from "@budibase/types"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder

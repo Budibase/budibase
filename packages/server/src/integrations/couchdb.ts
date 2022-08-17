@@ -1,9 +1,9 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  DatasourceFieldType,
+  QueryType,
+  IntegrationBase,
+} from "@budibase/types"
 
 module CouchDBModule {
   const PouchDB = require("pouchdb")
@@ -21,30 +21,30 @@ module CouchDBModule {
       "Apache CouchDB is an open-source document-oriented NoSQL database, implemented in Erlang.",
     datasource: {
       url: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
         default: "http://localhost:5984",
       },
       database: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
     },
     query: {
       create: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       read: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       update: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       delete: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           id: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },

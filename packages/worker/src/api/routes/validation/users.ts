@@ -1,4 +1,4 @@
-import joiValidator from "../../../middleware/joi-validator"
+const { joiValidator } = require("@budibase/backend-core/auth")
 import Joi from "joi"
 
 let schema: any = {

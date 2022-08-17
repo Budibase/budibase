@@ -26,12 +26,8 @@ export function createUsersStore() {
     return await API.getUsers()
   }
 
-  async function invite({ emails, builder, admin }) {
-    return API.inviteUsers({
-      emails,
-      builder,
-      admin,
-    })
+  async function invite(payload) {
+    return API.inviteUsers(payload)
   }
   async function acceptInvite(inviteCode, password) {
     return API.acceptInvite({

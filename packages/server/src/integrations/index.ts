@@ -13,54 +13,54 @@ const googlesheets = require("./googlesheets")
 const firebase = require("./firebase")
 const redis = require("./redis")
 const snowflake = require("./snowflake")
-const { SourceNames } = require("../definitions/datasource")
+const { SourceName } = require("@budibase/types")
 const environment = require("../environment")
 
 const DEFINITIONS = {
-  [SourceNames.POSTGRES]: postgres.schema,
-  [SourceNames.DYNAMODB]: dynamodb.schema,
-  [SourceNames.MONGODB]: mongodb.schema,
-  [SourceNames.ELASTICSEARCH]: elasticsearch.schema,
-  [SourceNames.COUCHDB]: couchdb.schema,
-  [SourceNames.SQL_SERVER]: sqlServer.schema,
-  [SourceNames.S3]: s3.schema,
-  [SourceNames.AIRTABLE]: airtable.schema,
-  [SourceNames.MYSQL]: mysql.schema,
-  [SourceNames.ARANGODB]: arangodb.schema,
-  [SourceNames.REST]: rest.schema,
-  [SourceNames.FIRESTORE]: firebase.schema,
-  [SourceNames.REDIS]: redis.schema,
-  [SourceNames.SNOWFLAKE]: snowflake.schema,
+  [SourceName.POSTGRES]: postgres.schema,
+  [SourceName.DYNAMODB]: dynamodb.schema,
+  [SourceName.MONGODB]: mongodb.schema,
+  [SourceName.ELASTICSEARCH]: elasticsearch.schema,
+  [SourceName.COUCHDB]: couchdb.schema,
+  [SourceName.SQL_SERVER]: sqlServer.schema,
+  [SourceName.S3]: s3.schema,
+  [SourceName.AIRTABLE]: airtable.schema,
+  [SourceName.MYSQL]: mysql.schema,
+  [SourceName.ARANGODB]: arangodb.schema,
+  [SourceName.REST]: rest.schema,
+  [SourceName.FIRESTORE]: firebase.schema,
+  [SourceName.REDIS]: redis.schema,
+  [SourceName.SNOWFLAKE]: snowflake.schema,
 }
 
 const INTEGRATIONS = {
-  [SourceNames.POSTGRES]: postgres.integration,
-  [SourceNames.DYNAMODB]: dynamodb.integration,
-  [SourceNames.MONGODB]: mongodb.integration,
-  [SourceNames.ELASTICSEARCH]: elasticsearch.integration,
-  [SourceNames.COUCHDB]: couchdb.integration,
-  [SourceNames.SQL_SERVER]: sqlServer.integration,
-  [SourceNames.S3]: s3.integration,
-  [SourceNames.AIRTABLE]: airtable.integration,
-  [SourceNames.MYSQL]: mysql.integration,
-  [SourceNames.ARANGODB]: arangodb.integration,
-  [SourceNames.REST]: rest.integration,
-  [SourceNames.FIRESTORE]: firebase.integration,
-  [SourceNames.GOOGLE_SHEETS]: googlesheets.integration,
-  [SourceNames.REDIS]: redis.integration,
-  [SourceNames.FIREBASE]: firebase.integration,
-  [SourceNames.SNOWFLAKE]: snowflake.integration,
+  [SourceName.POSTGRES]: postgres.integration,
+  [SourceName.DYNAMODB]: dynamodb.integration,
+  [SourceName.MONGODB]: mongodb.integration,
+  [SourceName.ELASTICSEARCH]: elasticsearch.integration,
+  [SourceName.COUCHDB]: couchdb.integration,
+  [SourceName.SQL_SERVER]: sqlServer.integration,
+  [SourceName.S3]: s3.integration,
+  [SourceName.AIRTABLE]: airtable.integration,
+  [SourceName.MYSQL]: mysql.integration,
+  [SourceName.ARANGODB]: arangodb.integration,
+  [SourceName.REST]: rest.integration,
+  [SourceName.FIRESTORE]: firebase.integration,
+  [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
+  [SourceName.REDIS]: redis.integration,
+  [SourceName.FIREBASE]: firebase.integration,
+  [SourceName.SNOWFLAKE]: snowflake.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
 if (process.arch && !process.arch.startsWith("arm")) {
   const oracle = require("./oracle")
-  DEFINITIONS[SourceNames.ORACLE] = oracle.schema
-  INTEGRATIONS[SourceNames.ORACLE] = oracle.integration
+  DEFINITIONS[SourceName.ORACLE] = oracle.schema
+  INTEGRATIONS[SourceName.ORACLE] = oracle.integration
 }
 
 if (environment.SELF_HOSTED) {
-  DEFINITIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.schema
+  DEFINITIONS[SourceName.GOOGLE_SHEETS] = googlesheets.schema
 }
 
 module.exports = {

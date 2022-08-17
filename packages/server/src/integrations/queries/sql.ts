@@ -1,6 +1,5 @@
 import { findHBSBlocks, processStringSync } from "@budibase/string-templates"
-import { Integration } from "../../definitions/datasource"
-import { DatasourcePlus } from "../base/datasourcePlus"
+import { DatasourcePlus } from "@budibase/types"
 
 const CONST_CHAR_REGEX = new RegExp("'[^']*'", "g")
 

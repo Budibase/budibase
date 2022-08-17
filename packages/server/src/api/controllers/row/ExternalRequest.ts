@@ -1,18 +1,16 @@
 import {
-  FilterTypes,
-  IncludeRelationships,
+  FilterType,
+  IncludeRelationship,
   Operation,
   PaginationJson,
   RelationshipsJson,
   SearchFilters,
   SortJson,
-} from "../../../definitions/datasource"
-import {
   Datasource,
   FieldSchema,
   Row,
   Table,
-} from "../../../definitions/common"
+} from "@budibase/types"
 import {
   breakRowIdField,
   generateRowIdField,
@@ -128,7 +126,7 @@ module External {
         if (
           typeof filter !== "object" ||
           Object.keys(filter).length === 0 ||
-          key === FilterTypes.ONE_OF
+          key === FilterType.ONE_OF
         ) {
           continue
         }
@@ -634,7 +632,7 @@ module External {
      */
     buildFields(
       table: Table,
-      includeRelations: IncludeRelationships = IncludeRelationships.INCLUDE
+      includeRelations: IncludeRelationship = IncludeRelationship.INCLUDE
     ) {
       function extractRealFields(table: Table, existing: string[] = []) {
         return Object.entries(table.schema)

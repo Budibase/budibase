@@ -11,7 +11,6 @@
   } from "@budibase/bbui"
   import { groups, auth } from "stores/portal"
   import { onMount } from "svelte"
-  import { Constants } from "@budibase/frontend-core"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
   import { cloneDeep } from "lodash/fp"
@@ -26,10 +25,6 @@
   }
   let modal
   let group = cloneDeep(DefaultGroup)
-
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
 
   async function deleteGroup(group) {
     try {
@@ -54,7 +49,7 @@
 
   onMount(async () => {
     try {
-      if (hasGroupsLicense) {
+      if ($auth.groupsEnabled) {
         await groups.actions.init()
       }
     } catch (error) {
@@ -67,7 +62,7 @@
   <Layout gap="XS" noPadding>
     <div style="display: flex;">
       <Heading size="M">User groups</Heading>
-      {#if !hasGroupsLicense}
+      {#if !$auth.groupsEnabled}
         <Tags>
           <div class="tags">
             <div class="tag">
@@ -82,15 +77,15 @@
   <div class="align-buttons">
     <Button
       newStyles
-      icon={hasGroupsLicense ? "UserGroup" : ""}
-      cta={hasGroupsLicense}
-      on:click={hasGroupsLicense
+      icon={$auth.groupsEnabled ? "UserGroup" : ""}
+      cta={$auth.groupsEnabled}
+      on:click={$auth.groupsEnabled
         ? showCreateGroupModal
         : window.open("https://budibase.com/pricing/", "_blank")}
     >
-      {hasGroupsLicense ? "Create user group" : "Upgrade Account"}
+      {$auth.groupsEnabled ? "Create user group" : "Upgrade Account"}
     </Button>
-    {#if !hasGroupsLicense}
+    {#if !$auth.groupsEnabled}
       <Button
         newStyles
         secondary
@@ -101,7 +96,7 @@
     {/if}
   </div>
 
-  {#if hasGroupsLicense && $groups.length}
+  {#if $auth.groupsEnabled && $groups.length}
     <div class="groupTable">
       {#each $groups as group}
         <div>

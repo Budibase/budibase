@@ -20,14 +20,13 @@
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, templates, groups } from "stores/portal"
+  import { apps, auth, admin, templates } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
   import Logo from "assets/bb-space-man.svg"
   import AccessFilter from "./_components/AcessFilter.svelte"
-  import { Constants } from "@budibase/frontend-core"
 
   let sortBy = "name"
   let template
@@ -68,10 +67,6 @@
   $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
   $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
-
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -360,7 +355,7 @@
                   </Button>
                 {/if}
                 <div class="filter">
-                  {#if hasGroupsLicense && $groups.length}
+                  {#if $auth.groupsEnabled}
                     <AccessFilter on:change={accessFilterAction} />
                   {/if}
                   <Select

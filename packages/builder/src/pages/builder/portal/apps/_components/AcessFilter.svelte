@@ -22,7 +22,7 @@
     if (!detail) return
 
     const groupSelected = $groups.find(x => x._id === detail)
-    const appIds = groupSelected?.apps.map(x => x.appId) || null
+    const appIds = groupSelected?.apps || null
     dispatch("change", appIds)
   }
 
