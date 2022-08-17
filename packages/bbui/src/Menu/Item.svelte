@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher, getContext } from "svelte"
+  import { Icon } from "@budibase/bbui"
 
   const dispatch = createEventDispatcher()
   const actionMenu = getContext("actionMenu")
@@ -42,21 +43,20 @@
   tabindex="0"
 >
   {#if icon}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeS spectrum-Menu-itemIcon"
-      focusable="false"
-      aria-hidden="true"
-      aria-label={icon}
-    >
-      <use xlink:href="#spectrum-icon-18-{icon}" />
-    </svg>
+    <div class="icon">
+      <Icon name={icon} size="S" />
+    </div>
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>
   {#if keys?.length}
     <div class="keys">
       {#each keys as key}
         <div class="key">
-          {key}
+          {#if key.startsWith("!")}
+            <Icon size="XS" name={key.split("!")[1]} />
+          {:else}
+            {key}
+          {/if}
         </div>
       {/each}
     </div>
@@ -64,8 +64,9 @@
 </li>
 
 <style>
-  .spectrum-Menu-itemIcon {
+  .icon {
     align-self: center;
+    margin-right: var(--spacing-s);
   }
   .keys {
     margin-left: 30px;
@@ -83,8 +84,11 @@
     background-color: var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     min-width: 12px;
+    height: 16px;
     text-align: center;
     margin: -1px 0;
+    display: grid;
+    place-items: center;
   }
   .is-disabled .key {
     color: var(--spectrum-global-color-gray-600);
