@@ -333,10 +333,6 @@ const confirmTextMap = {
  * A handler returning `false` is a flag to stop execution of handlers
  */
 export const enrichButtonActions = (actions, context) => {
-  if (actions && actions.length === 0) {
-    return null
-  }
-
   // Prevent button actions in the builder preview
   if (!actions || get(builderStore).inBuilder) {
     return () => {}
