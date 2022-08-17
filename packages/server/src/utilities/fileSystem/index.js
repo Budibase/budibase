@@ -359,7 +359,10 @@ exports.getDatasourcePlugin = async (name, url) => {
   if (fs.existsSync(filename)) {
     return require(filename)
   }
-  const response = await fetch(checkSlashesInUrl(`${env.MINIO_URL}/${url}`))
+  const fullUrl = checkSlashesInUrl(
+    `${env.MINIO_URL}/${ObjectStoreBuckets.PLUGINS}/${url}`
+  )
+  const response = await fetch(fullUrl)
   if (response.status === 200) {
     const content = await response.text()
     fs.writeFileSync(filename, content)
