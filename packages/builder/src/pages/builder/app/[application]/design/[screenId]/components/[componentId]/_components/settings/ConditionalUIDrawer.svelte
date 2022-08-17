@@ -112,7 +112,7 @@
       Constants.OperatorOptions.NotEmpty.value,
     ]
     condition.noValue = noValueOptions.includes(newOperator)
-    if (condition.noValue || condition.operator === "oneOf") {
+    if (condition.noValue || newOperator === "oneOf") {
       condition.referenceValue = null
       condition.valueType = "string"
     }
@@ -207,14 +207,7 @@
               />
               <Select
                 disabled={condition.noValue || condition.operator === "oneOf"}
-                options={condition.operator === "oneOf"
-                  ? [
-                      {
-                        value: "string",
-                        label: "Binding",
-                      },
-                    ]
-                  : valueTypeOptions}
+                options={valueTypeOptions}
                 bind:value={condition.valueType}
                 placeholder={null}
                 on:change={e => onValueTypeChange(condition, e.detail)}
