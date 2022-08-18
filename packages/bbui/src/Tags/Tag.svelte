@@ -8,6 +8,7 @@
   export let invalid = false
   export let disabled = false
   export let closable = false
+  export let onClick
 </script>
 
 <div
@@ -31,7 +32,7 @@
   {/if}
   <span class="spectrum-Tags-itemLabel"><slot /></span>
   {#if closable}
-    <ClearButton on:click />
+    <ClearButton on:click={onClick} />
   {/if}
 </div>
 
