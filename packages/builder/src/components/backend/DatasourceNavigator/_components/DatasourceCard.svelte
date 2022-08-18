@@ -1,21 +1,13 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { Heading, Detail } from "@budibase/bbui"
-  import ICONS from "../icons"
+  import { getIcon } from "../icons"
 
   export let integration
   export let integrationType
   export let schema
 
   let dispatcher = createEventDispatcher()
-
-  function getIcon(integrationType, schema) {
-    if (schema.custom) {
-      return ICONS.CUSTOM
-    } else {
-      return ICONS[integrationType]
-    }
-  }
 </script>
 
 <div
