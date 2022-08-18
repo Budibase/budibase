@@ -48,7 +48,7 @@ async function init(opts) {
   // get the skeleton
   console.log(info("Retrieving project..."))
   await getSkeleton(type, name)
-  await fleshOutSkeleton(name, desc, version)
+  await fleshOutSkeleton(type, name, desc, version)
   console.log(info("Installing dependencies..."))
   await runPkgCommand("install", join(process.cwd(), name))
   console.log(info(`Plugin created in directory "${name}"`))
