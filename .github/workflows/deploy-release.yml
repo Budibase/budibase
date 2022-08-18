@@ -72,7 +72,7 @@ jobs:
       - name: Re roll the services
         uses: actions-hub/kubectl@master
         env:
-          KUBE_CONFIG: ${{ secrets.RELEASE_KUBECONFIG }}
+          KUBE_CONFIG: '${{ secrets.RELEASE_KUBECONFIG }}'
         with:
           args: rollout restart deployment proxy-service -n budibase && kubectl rollout restart deployment app-service -n budibase && kubectl rollout restart deployment worker-service -n budibase
 
