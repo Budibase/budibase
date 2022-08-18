@@ -18,6 +18,8 @@
     Body,
     Select,
     Toggle,
+    Tag,
+    Tags,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
@@ -208,12 +210,28 @@
             providers[res.type]._id = res._id
           })
           notifications.success(`Settings saved`)
+          scopesFields[0].editing = false
         })
         .catch(() => {
           notifications.error("Failed to update auth settings")
         })
     }
   }
+
+  let defaultScopes = ["profile", "email", "offline_access"]
+
+  const refreshScopes = idx => {
+    providers.oidc.config.configs[idx]["scopes"] =
+      providers.oidc.config.configs[idx]["scopes"]
+  }
+
+  let scopesFields = [
+    {
+      editing: false,
+      inputText: null,
+      error: null,
+    },
+  ]
 
   onMount(async () => {
     try {
@@ -276,7 +294,7 @@
     if (!oidcDoc?._id) {
       providers.oidc = {
         type: ConfigTypes.OIDC,
-        config: { configs: [{ activated: true }] },
+        config: { configs: [{ activated: true, scopes: defaultScopes }] },
       }
     } else {
       originalOidcDoc = cloneDeep(oidcDoc)
@@ -397,10 +415,193 @@
         />
       </div>
     </Layout>
+    <span class="advanced-config">
+      <Layout gap="XS" noPadding>
+        <Heading size="XS">
+          <div class="advanced">Advanced</div>
+        </Heading>
+        <Body size="S">
+          Changes to your authentication scopes will only take effect when you
+          next log in. Please refer to your vendor documentation before
+          modification.
+        </Body>
+
+        <div class="auth-form" class:editing={scopesFields[0].editing}>
+          <Label size="L" tooltip={"Auth Scopes"}>{"Auth Scopes"}</Label>
+          {#if scopesFields[0].editing}
+            <span class="add-new">
+              <Input
+                error={scopesFields[0].error}
+                placeholder={"New Scope"}
+                bind:value={scopesFields[0].inputText}
+                on:keyup={e => {
+                  if (!scopesFields[0].inputText) {
+                    scopesFields[0].error = null
+                  }
+                  if (
+                    e.key === "Enter" ||
+                    e.keyCode === 13 ||
+                    e.code == "Space" ||
+                    e.keyCode == 32
+                  ) {
+                    let scopes = providers.oidc.config.configs[0]["scopes"]
+                      ? providers.oidc.config.configs[0]["scopes"]
+                      : [...defaultScopes]
+
+                    let update = scopesFields[0].inputText.trim()
+
+                    if (/[\\"\s]/.test(update)) {
+                      scopesFields[0].error =
+                        "Auth scopes cannot contain spaces, double quotes or backslashes"
+                      return
+                    } else if (scopes.indexOf(update) > -1) {
+                      scopesFields[0].error = "Auth scope already exists"
+                      return
+                    } else if (!update.length) {
+                      scopesFields[0].inputText = null
+                      scopesFields[0].error = null
+                      return
+                    } else {
+                      scopesFields[0].error = null
+                    }
+
+                    if (scopes.indexOf(update) == -1) {
+                      scopes.push(update)
+                      providers.oidc.config.configs[0]["scopes"] = scopes
+                    }
+                    scopesFields[0].inputText = null
+                  }
+                }}
+              />
+            </span>
+          {/if}
+
+          <div class="tag-wrap">
+            <Tags>
+              <Tag disabled={!scopesFields[0].editing} closable={false}>
+                openid
+              </Tag>
+              {#each providers.oidc.config.configs[0]["scopes"] || [...defaultScopes] as tag, idx}
+                <Tag
+                  disabled={!scopesFields[0].editing}
+                  closable={scopesFields[0].editing}
+                  onClick={() => {
+                    let idxScopes = providers.oidc.config.configs[0]["scopes"]
+                    if (idxScopes.length == 1) {
+                      idxScopes.pop()
+                    } else {
+                      idxScopes.splice(idx, 1)
+                      refreshScopes(0)
+                    }
+                  }}
+                >
+                  {tag}
+                </Tag>
+              {/each}
+
+              {#if !scopesFields[0].editing}
+                <span
+                  class="edit-icon"
+                  on:click={() => {
+                    if (!providers.oidc.config.configs[0]) {
+                      providers.oidc.config.configs[0]["scopes"] = [
+                        ...defaultScopes,
+                      ]
+                    }
+                    scopesFields[0].editing = !scopesFields[0].editing
+                  }}
+                >
+                  <Tag>Edit</Tag>
+                </span>
+              {/if}
+            </Tags>
+          </div>
+
+          {#if scopesFields[0].editing}
+            <div class="scope_actions">
+              <Button
+                quiet
+                secondary
+                size="S"
+                on:click={() => {
+                  if (originalOidcDoc.config.configs[0].scopes) {
+                    providers.oidc.config.configs[0]["scopes"] = [
+                      ...originalOidcDoc.config.configs[0]["scopes"],
+                    ]
+                  } else {
+                    delete providers.oidc.config.configs[0]?.scopes
+                  }
+                  scopesFields[0].editing = false
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                secondary
+                size="S"
+                on:click={() => {
+                  providers.oidc.config.configs[0]["scopes"] = [
+                    ...defaultScopes,
+                  ]
+                }}
+              >
+                Use Default
+              </Button>
+            </div>
+          {/if}
+        </div>
+      </Layout>
+    </span>
   {/if}
 </Layout>
 
 <style>
+  .scope_actions {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    gap: var(--spacing-m);
+  }
+  .edit-icon :global(.spectrum-Tags-itemLabel) {
+    cursor: pointer !important;
+  }
+  .advanced-config :global(.spectrum-Tags-item) {
+    margin-top: 5px;
+    margin-left: 0px;
+  }
+
+  .auth-form {
+    display: grid;
+    grid-gap: var(--spacing-l);
+    grid-template-columns: 100px 1fr;
+  }
+
+  .auth-form.editing {
+    align-items: center;
+    grid-template-columns: unset;
+  }
+
+  .advanced-config :global(.spectrum-Tags-item:first-child) {
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+  .advanced-config .auth-form.editing .tag-wrap {
+    background-color: var(
+      --spectrum-sidenav-item-background-color-selected,
+      var(--spectrum-alias-highlight-hover)
+    );
+    padding: 0px 5px 5px 5px;
+    border-radius: var(
+      --spectrum-alias-border-radius-regular,
+      var(--spectrum-global-dimension-size-50)
+    );
+  }
+  .edit-icon,
+  .edit-icon :global(.icon) {
+    display: inline-block;
+    cursor: pointer;
+  }
+
   .form-row {
     display: grid;
     grid-template-columns: 100px 1fr;
