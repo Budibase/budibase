@@ -363,6 +363,7 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
     if (currentHash === hash) {
       return require(filename)
     } else {
+      console.log(`Updating plugin: ${name}`)
       fs.unlinkSync(filename)
     }
   }
