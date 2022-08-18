@@ -1094,12 +1094,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.2.41-alpha.3":
-  version "1.2.41-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.41-alpha.3.tgz#12f1b80565683e9d5bfc6a2b05288ddf424bfecd"
-  integrity sha512-aylQ27Ly3NE2dAccKF7d2DNIPxi30FqT/opvnV6e4oBjU2v68HloG2P/5dqTpUtp1irHUCS2YqmkHWuM5Q82cA==
+"@budibase/backend-core@1.2.41-alpha.4":
+  version "1.2.41-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.41-alpha.4.tgz#e475e19b61c30fde06fc2f9f36d88fd8800eff71"
+  integrity sha512-lB2rM9sAvqmb8x49CFalALnK+MRP570UzqEsM2cuyUbXHG9PIkeQDpTi92+Lt33CEzIA20U8FT89CXmNBckEKQ==
   dependencies:
-    "@budibase/types" "1.2.41-alpha.3"
+    "@budibase/types" "1.2.41-alpha.4"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -1178,13 +1178,13 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.2.41-alpha.3":
-  version "1.2.41-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.2.41-alpha.3.tgz#cc80bb7bd5ebddb8bb0bddaffe66416c5a811088"
-  integrity sha512-B3lEicrKfTP770+JDcAJ50VCRekiIRClab/4oDkd45iveidnx+O0nMfyBfLPU+0RzUUvq9OSS65GSsJXEwaPhg==
+"@budibase/pro@1.2.41-alpha.4":
+  version "1.2.41-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.2.41-alpha.4.tgz#f30a68cda568e7d666662f0e034710fef96439c8"
+  integrity sha512-vxhsNLMhmcEAtKOTEwJ5uEc+zCCo0qs0g04eadN95AHTSXivOOIomwB3bsCPRSTyl5GZHDW7mLnj7Xcjo47e/Q==
   dependencies:
-    "@budibase/backend-core" "1.2.41-alpha.3"
-    "@budibase/types" "1.2.41-alpha.3"
+    "@budibase/backend-core" "1.2.41-alpha.4"
+    "@budibase/types" "1.2.41-alpha.4"
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
@@ -1207,10 +1207,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@1.2.41-alpha.3":
-  version "1.2.41-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.41-alpha.3.tgz#3f9ff9279491caebcccee383841c7ec9738572d8"
-  integrity sha512-O2fvsQaQUENL2XfHtv2iaaj6moqeVwUdHqBS4Jbe+7/UmJIULamCv9oNkjbqEuElhaCi2hyPZEFCPcrN5zJO4A==
+"@budibase/types@1.2.41-alpha.4":
+  version "1.2.41-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.41-alpha.4.tgz#b968d791926381481e43db0c8835aba3dc3263e0"
+  integrity sha512-9VUcMp8p7Ht6pxTv8MTJThs1dSS8zeBJ1DIZVt5mXqmjueUwVE6jPhOFe0YNr3o+zNSj6e917stHUQvG8Ek4bA==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
