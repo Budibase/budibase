@@ -502,11 +502,11 @@ const getRoleBindings = () => {
 }
 
 /**
- * Gets all bindable properties exposed in a button actions flow up until
+ * Gets all bindable properties exposed in an event action flow up until
  * the specified action ID, as well as context provided for the action
  * setting as a whole by the component.
  */
-export const getButtonContextBindings = (
+export const getEventContextBindings = (
   asset,
   componentId,
   settingKey,
@@ -520,10 +520,7 @@ export const getButtonContextBindings = (
   const component = findComponent(asset.props, componentId)
   const settings = getComponentSettings(component?._component)
   const eventSetting = settings.find(setting => setting.key === settingKey)
-  if (!eventSetting) {
-    return bindings
-  }
-  if (eventSetting.context?.length) {
+  if (eventSetting?.context?.length) {
     eventSetting.context.forEach(contextEntry => {
       bindings.push({
         readableBinding: contextEntry.label,
