@@ -503,7 +503,7 @@
                 <span
                   class="edit-icon"
                   on:click={() => {
-                    if (!providers.oidc.config.configs[0]) {
+                    if (!providers.oidc.config.configs[0]["scopes"]) {
                       providers.oidc.config.configs[0]["scopes"] = [
                         ...defaultScopes,
                       ]
