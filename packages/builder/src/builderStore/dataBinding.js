@@ -502,11 +502,11 @@ const getRoleBindings = () => {
 }
 
 /**
- * Gets all bindable properties exposed in a button action flow up until
+ * Gets all bindable properties exposed in an event action flow up until
  * the specified action ID, as well as context provided for the action
  * setting as a whole by the component.
  */
-export const getButtonContextBindings = (
+export const getEventContextBindings = (
   asset,
   componentId,
   settingKey,
