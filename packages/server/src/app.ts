@@ -17,15 +17,12 @@ const bullboard = require("./automations/bullboard")
 const { logAlert } = require("@budibase/backend-core/logging")
 const { pinoSettings } = require("@budibase/backend-core")
 const { Thread } = require("./threads")
-const chokidar = require("chokidar")
 const fs = require("fs")
-const path = require("path")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
 import { createAdminUser, getChecklist } from "./utilities/workerRequests"
-import { processPlugin } from "./api/controllers/plugin"
-import { DEFAULT_TENANT_ID } from "@budibase/backend-core/constants"
+import { watch } from "./watch"
 
 const app = new Koa()
 
@@ -144,28 +141,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
     env.PLUGINS_DIR &&
     fs.existsSync(env.PLUGINS_DIR)
   ) {
-    const watchPath = path.join(env.PLUGINS_DIR, "./**/*.tar.gz")
-    chokidar
-      .watch(watchPath, {
-        ignored: "**/node_modules",
-        awaitWriteFinish: true,
-      })
-      .on("all", async (event: string, path: string) => {
-        // Sanity checks
-        if (!path?.endsWith(".tar.gz") || !fs.existsSync(path)) {
-          return
-        }
-        await tenancy.doInTenant(DEFAULT_TENANT_ID, async () => {
-          try {
-            const split = path.split("/")
-            const name = split[split.length - 1]
-            console.log("Importing plugin:", path)
-            await processPlugin({ name, path })
-          } catch (err) {
-            console.log("Failed to import plugin:", err)
-          }
-        })
-      })
+    watch()
   }
 
   // check for version updates

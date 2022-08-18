@@ -22,6 +22,8 @@ function validateComponent(schema) {
   const validator = joi.object({
     type: joi.string().allow("component").required(),
     metadata: joi.object().unknown(true).required(),
+    hash: joi.string().optional(),
+    version: joi.string().optional(),
     schema: joi
       .object({
         name: joi.string().required(),
@@ -53,6 +55,8 @@ function validateDatasource(schema) {
   const validator = joi.object({
     type: joi.string().allow("datasource").required(),
     metadata: joi.object().unknown(true).required(),
+    hash: joi.string().optional(),
+    version: joi.string().optional(),
     schema: joi.object({
       docs: joi.string(),
       friendlyName: joi.string().required(),
