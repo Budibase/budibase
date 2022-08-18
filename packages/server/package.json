@@ -93,7 +93,7 @@
     "arangojs": "7.2.0",
     "aws-sdk": "2.1030.0",
     "bcryptjs": "2.4.3",
-    "bull": "3.29.3",
+    "bull": "^4.8.5",
     "chmodr": "1.2.0",
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
