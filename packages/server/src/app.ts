@@ -151,6 +151,10 @@ module.exports = server.listen(env.PORT || 0, async () => {
         awaitWriteFinish: true,
       })
       .on("all", async (event: string, path: string) => {
+        // Sanity checks
+        if (!path?.endsWith(".tar.gz") || !fs.existsSync(path)) {
+          return
+        }
         await tenancy.doInTenant(DEFAULT_TENANT_ID, async () => {
           try {
             const split = path.split("/")
