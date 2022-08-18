@@ -144,7 +144,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
     env.PLUGINS_DIR &&
     fs.existsSync(env.PLUGINS_DIR)
   ) {
-    const watchPath = path.join(env.PLUGINS_DIR, "./**/dist/*.tar.gz")
+    const watchPath = path.join(env.PLUGINS_DIR, "./**/*.tar.gz")
     chokidar
       .watch(watchPath, {
         ignored: "**/node_modules",
