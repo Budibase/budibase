@@ -7,6 +7,29 @@ filterTests(["smoke", "all"], () => {
       cy.login()
     })
 
+    after(() => {
+      cy.get(".spectrum-SideNav li").contains("Auth").click()
+      cy.location().should(loc => {
+        expect(loc.pathname).to.eq("/builder/portal/manage/auth")
+      })
+
+      cy.get("[data-cy=new-scope-input]").clear()
+
+      cy.get("div.content").scrollTo("bottom")
+      cy.get("[data-cy=oidc-active]").click()
+
+      cy.get("[data-cy=oidc-active]").should('not.be.checked')
+
+      cy.intercept("POST", "/api/global/configs").as("updateAuth")
+      cy.get("button[data-cy=oidc-save]").contains("Save").click({force: true})
+      cy.wait("@updateAuth")
+      cy.get("@updateAuth").its("response.statusCode").should("eq", 200)
+
+      cy.get(".spectrum-Toast-content")
+        .contains("Settings saved")
+        .should("be.visible")
+    })
+
     it("Should allow updating of the OIDC config", () => {
       cy.get(".spectrum-SideNav li").contains("Auth").click()
       cy.location().should(loc => {
