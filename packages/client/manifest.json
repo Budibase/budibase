@@ -10,6 +10,79 @@
     "rowSelection": true,
     "continueIfAction": true
   },
+  "progressbar": {
+    "name": "Progress Bar",
+    "description": "A Dynamic Progress Bar",
+    "icon": "Circle",
+    "showSettingsBar": true,
+    "hasChildren": false,
+    "styles": [
+      "padding",
+      "size",
+      "background",
+      "border"
+    ],
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label",
+        "defaultValue": "Progress"
+      },
+      {
+        "type": "select",
+        "label": "Label Position",
+        "key": "labelPosition",
+        "options": [
+          {
+            "label": "Above",
+            "value": "above"
+          },
+          {
+            "label": "Left",
+            "value": "left"
+          }
+        ],
+        "defaultValue": "above"
+      },
+      {
+        "type": "text",
+        "label": "Value",
+        "key": "value"
+      },
+      {
+        "type": "number",
+        "label": "Animation Duration",
+        "key": "animationDuration",
+        "defaultValue": "500"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "showInBar": true,
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra large",
+            "value": "XL"
+          }
+        ],
+        "defaultValue": "M"
+      }
+    ]
+  },
   "layout": {
     "name": "Layout",
     "description": "This component is specific only to layouts",
