@@ -1,8 +1,4 @@
-import {
-  DatasourceFieldTypes,
-  Integration,
-  QueryTypes,
-} from "../definitions/datasource"
+import { DatasourceFieldType, Integration, QueryType } from "@budibase/types"
 import Redis from "ioredis"
 
 module RedisModule {
@@ -40,36 +36,36 @@ module RedisModule {
     },
     query: {
       create: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           key: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           value: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           ttl: {
-            type: DatasourceFieldTypes.NUMBER,
+            type: DatasourceFieldType.NUMBER,
           },
         },
       },
       read: {
         readable: true,
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           key: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       delete: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           key: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
@@ -77,7 +73,7 @@ module RedisModule {
       command: {
         readable: true,
         displayName: "Redis Command",
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
     },
   }

@@ -3,11 +3,13 @@
 
   export let title
   export let icon
+  export let expandable = false
   export let showAddButton = false
   export let showBackButton = false
-  export let showExpandIcon = false
+  export let showCloseButton = false
   export let onClickAddButton
   export let onClickBackButton
+  export let onClickCloseButton
   export let borderLeft = false
   export let borderRight = false
 
@@ -25,7 +27,7 @@
     <div class="title">
       <Heading size="XXS">{title || ""}</Heading>
     </div>
-    {#if showExpandIcon}
+    {#if expandable}
       <Icon
         name={wide ? "Minimize" : "Maximize"}
         hoverable
@@ -36,6 +38,9 @@
       <div class="add-button" on:click={onClickAddButton}>
         <Icon name="Add" />
       </div>
+    {/if}
+    {#if showCloseButton}
+      <Icon name="Close" hoverable on:click={onClickCloseButton} />
     {/if}
   </div>
   <div class="body">

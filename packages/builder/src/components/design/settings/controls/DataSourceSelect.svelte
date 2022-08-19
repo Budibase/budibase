@@ -25,6 +25,7 @@
   export let otherSources
   export let showAllQueries
   export let bindings = []
+  export let showDataProviders = true
 
   const dispatch = createEventDispatcher()
   const arrayTypes = ["attachment", "array"]
@@ -258,7 +259,7 @@
         {/each}
       </ul>
     {/if}
-    {#if dataProviders?.length}
+    {#if showDataProviders && dataProviders?.length}
       <Divider size="S" />
       <div class="title">
         <Heading size="XS">Data Providers</Heading>

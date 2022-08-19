@@ -37,6 +37,7 @@ module.exports = {
   types,
   errors: {
     UsageLimitError: licensing.UsageLimitError,
+    FeatureDisabledError: licensing.FeatureDisabledError,
     HTTPError: http.HTTPError,
   },
   getPublicError,

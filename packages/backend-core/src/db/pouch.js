@@ -102,6 +102,13 @@ exports.getPouch = (opts = {}) => {
     }
   }
 
+  if (opts.onDisk) {
+    POUCH_DB_DEFAULTS = {
+      prefix: undefined,
+      adapter: "leveldb",
+    }
+  }
+
   if (opts.replication) {
     const replicationStream = require("pouchdb-replication-stream")
     PouchDB.plugin(replicationStream.plugin)

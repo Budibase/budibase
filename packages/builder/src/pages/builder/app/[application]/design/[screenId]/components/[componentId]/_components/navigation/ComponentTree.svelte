@@ -18,6 +18,13 @@
 
   let closedNodes = {}
 
+  $: filteredComponents = components?.filter(component => {
+    return (
+      !$store.componentToPaste?.isCut ||
+      component._id !== $store.componentToPaste?._id
+    )
+  })
+
   const dragover = (component, index) => e => {
     const mousePosition = e.offsetY / e.currentTarget.offsetHeight
     dndStore.actions.dragover({
@@ -91,7 +98,7 @@
 </script>
 
 <ul>
-  {#each components || [] as component, index (component._id)}
+  {#each filteredComponents || [] as component, index (component._id)}
     {@const opened = isOpen(component, $selectedComponentPath, closedNodes)}
     <li
       on:click|stopPropagation={() => {

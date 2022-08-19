@@ -13,7 +13,7 @@ filterTests(['smoke', 'all'], () => {
       it("should show the new user UI/UX", () => {
         cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/create`, { timeout: 5000 }) //added /portal/apps/create
         cy.wait(1000)
-        cy.get(interact.CREATE_APP_BUTTON).contains('Start from scratch').should("exist")
+        cy.get(interact.CREATE_APP_BUTTON, { timeout: 10000 }).contains('Start from scratch').should("exist")
         
         cy.get(interact.TEMPLATE_CATEGORY_FILTER).should("exist")
         cy.get(interact.TEMPLATE_CATEGORY).should("exist")
@@ -94,30 +94,25 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should create the first application from scratch with a default name", () => {
+      cy.updateUserInformation("", "")
       cy.createApp("", false)
       cy.applicationInAppTable("My app")
       cy.deleteApp("My app")
     })
 
     it("should create the first application from scratch, using the users first name as the default app name", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
 
       cy.updateUserInformation("Ted", "Userman")
       
       cy.createApp("", false)
-
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-
       cy.applicationInAppTable("Teds app")
       cy.deleteApp("Teds app")
 
-      //Accomodate names that end in 'S'
+      // Accomodate names that end in 'S'
       cy.updateUserInformation("Chris", "Userman")
       
       cy.createApp("", false)
-
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-
       cy.applicationInAppTable("Chris app")
       cy.deleteApp("Chris app")
 

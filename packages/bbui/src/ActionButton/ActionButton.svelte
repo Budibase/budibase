@@ -84,6 +84,7 @@
   }
   :global([dir="ltr"] .spectrum-ActionButton .spectrum-Icon) {
     margin-left: 0;
+    transition: color ease-out 130ms;
   }
   .is-selected:not(.spectrum-ActionButton--emphasized) {
     background: var(--spectrum-global-color-gray-300);
@@ -91,5 +92,11 @@
   .noPadding {
     padding: 0;
     min-width: 0;
+  }
+  .spectrum-ActionButton--quiet {
+    padding: 0 8px;
+  }
+  .is-selected:not(.emphasized) .spectrum-Icon {
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

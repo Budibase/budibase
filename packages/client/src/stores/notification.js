@@ -1,18 +1,12 @@
 import { writable, get } from "svelte/store"
-import { generate } from "shortid"
 import { routeStore } from "./routes"
 
 const NOTIFICATION_TIMEOUT = 3000
 
 const createNotificationStore = () => {
-  let timeout
   let block = false
 
-  const store = writable(null, () => {
-    return () => {
-      clearTimeout(timeout)
-    }
-  })
+  const store = writable([])
 
   const blockNotifications = (timeout = 1000) => {
     block = true
@@ -37,26 +31,31 @@ const createNotificationStore = () => {
       })
       return
     }
-
-    store.set({
-      id: generate(),
-      type,
-      message,
-      icon,
-      dismissable: !autoDismiss,
-      delay: get(store) != null,
+    const _id = id()
+    store.update(state => {
+      return [
+        ...state,
+        {
+          id: _id,
+          type,
+          message,
+          icon,
+          dismissable: !autoDismiss,
+          delay: get(store) != null,
+        },
+      ]
     })
-    clearTimeout(timeout)
     if (autoDismiss) {
-      timeout = setTimeout(() => {
-        store.set(null)
+      setTimeout(() => {
+        dismiss(_id)
       }, NOTIFICATION_TIMEOUT)
     }
   }
 
-  const dismiss = () => {
-    clearTimeout(timeout)
-    store.set(null)
+  const dismiss = id => {
+    store.update(state => {
+      return state.filter(n => n.id !== id)
+    })
   }
 
   return {
@@ -70,6 +69,10 @@ const createNotificationStore = () => {
       blockNotifications,
       dismiss,
     },
+  }
+
+  function id() {
+    return "_" + Math.random().toString(36).slice(2, 9)
   }
 }
 

@@ -1,4 +1,4 @@
-const joiValidator = require("../../../middleware/joi-validator")
+const { joiValidator } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
@@ -22,7 +22,7 @@ exports.queryValidation = () => {
     schema: Joi.object({}).required().unknown(true),
     transformer: OPTIONAL_STRING,
     flags: Joi.object().optional(),
-  })
+  }).unknown(true)
 }
 
 exports.generateQueryValidation = () => {
@@ -46,5 +46,5 @@ exports.generateQueryPreviewValidation = () => {
     transformer: OPTIONAL_STRING,
     parameters: Joi.object({}).required().unknown(true),
     queryId: OPTIONAL_STRING,
-  }))
+  }).unknown(true))
 }

@@ -1,6 +1,6 @@
 {
   "name": "@budibase/string-templates",
-  "version": "1.1.15",
+  "version": "1.2.41-alpha.5",
   "description": "Handlebars wrapper for Budibase templating.",
   "main": "src/index.cjs",
   "module": "dist/bundle.mjs",

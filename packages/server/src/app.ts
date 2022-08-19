@@ -15,6 +15,7 @@ const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
 const { logAlert } = require("@budibase/backend-core/logging")
+const { pinoSettings } = require("@budibase/backend-core")
 const { Thread } = require("./threads")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
@@ -35,14 +36,7 @@ app.use(
   })
 )
 
-app.use(
-  pino({
-    prettyPrint: {
-      levelFirst: true,
-    },
-    level: env.LOG_LEVEL || "error",
-  })
-)
+app.use(pino(pinoSettings()))
 
 if (!env.isTest()) {
   const plugin = bullboard.init()

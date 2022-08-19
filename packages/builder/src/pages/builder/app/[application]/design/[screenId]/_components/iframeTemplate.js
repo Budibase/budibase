@@ -65,7 +65,8 @@ export default `
           theme,
           customTheme,
           previewDevice,
-          navigation
+          navigation,
+          hiddenComponentIds
         } = parsed
 
         // Set some flags so the app knows we're in the builder
@@ -79,6 +80,7 @@ export default `
         window["##BUDIBASE_PREVIEW_CUSTOM_THEME##"] = customTheme
         window["##BUDIBASE_PREVIEW_DEVICE##"] = previewDevice
         window["##BUDIBASE_PREVIEW_NAVIGATION##"] = navigation
+        window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"] = hiddenComponentIds
 
         // Initialise app
         try {

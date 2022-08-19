@@ -2,7 +2,6 @@ import { getFrontendStore } from "./store/frontend"
 import { getAutomationStore } from "./store/automation"
 import { getThemeStore } from "./store/theme"
 import { derived } from "svelte/store"
-import { LAYOUT_NAMES } from "../constants"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
 
@@ -27,6 +26,10 @@ export const selectedComponent = derived(
     return findComponent($selectedScreen?.props, $store.selectedComponentId)
   }
 )
+
+// For legacy compatibility only, but with the new design UI this is just
+// the selected screen
+export const currentAsset = selectedScreen
 
 export const sortedScreens = derived(store, $store => {
   return $store.screens.slice().sort((a, b) => {
@@ -66,12 +69,3 @@ export const selectedComponentPath = derived(
     ).map(component => component._id)
   }
 )
-
-export const mainLayout = derived(store, $store => {
-  return $store.layouts?.find(
-    layout => layout._id === LAYOUT_NAMES.MASTER.PRIVATE
-  )
-})
-
-// For compatibility
-export const currentAsset = selectedScreen
