@@ -147,7 +147,6 @@
 
   async function save(docs) {
     let calls = []
-
     // Only if the user has provided an image, upload it
     if (image) {
       let data = new FormData()
@@ -159,7 +158,6 @@
         })
       )
     }
-
     docs.forEach(element => {
       // Delete unsupported fields
       delete element.createdAt
@@ -201,7 +199,6 @@
         }
       }
     })
-
     if (calls.length) {
       Promise.all(calls)
         .then(data => {
@@ -362,6 +359,7 @@
             size="s"
             cta
             on:click={() => save([providers.oidc])}
+            dataCy={"oidc-save"}
           >
             Save
           </Button>
@@ -379,6 +377,7 @@
             bind:value={providers.oidc.config.configs[0][field.name]}
             readonly={field.readonly}
             placeholder={field.placeholder}
+            dataCy={field.name}
           />
         </div>
       {/each}
@@ -426,6 +425,7 @@
               on:click={() => {
                 providers.oidc.config.configs[0]["scopes"] = [...defaultScopes]
               }}
+              dataCy={"restore-oidc-default-scopes"}
             >
               Restore Defaults
             </Button>
@@ -441,6 +441,7 @@
           <span class="add-new">
             <Label size="L">{"Auth Scopes"}</Label>
             <Input
+              dataCy={"new-scope-input"}
               error={scopesFields[0].error}
               placeholder={"New Scope"}
               bind:value={scopesFields[0].inputText}
