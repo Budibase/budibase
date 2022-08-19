@@ -81,7 +81,7 @@ jobs:
         if [ -n "${{ github.event.inputs.postman-environment-id }}" ]; then
           environment_id=${{ github.event.inputs.postman-environment-id }}
         else
-          environment_id=22734786-49371294-0e64-44a1-9fd6-4e7738f97421
+          environment_id=19937057-61592abe-6d90-4738-b466-53de65e94442
         fi
         echo "$environment_id"
         echo "POSTMAN_ENVIRONMENT=$environment_id" >> $GITHUB_ENV
