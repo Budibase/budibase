@@ -35,12 +35,10 @@ const formatUsage = (usage: QuotaUsage) => {
   let maxAutomations = 0
   let maxQueries = 0
   let rows = 0
-  let developers = 0
 
   if (usage) {
     if (usage.usageQuota) {
       rows = usage.usageQuota.rows
-      developers = usage.usageQuota.developers
     }
 
     if (usage.monthly) {
@@ -59,7 +57,6 @@ const formatUsage = (usage: QuotaUsage) => {
     maxAutomations,
     maxQueries,
     rows,
-    developers,
   }
 }
 

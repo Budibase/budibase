@@ -1,5 +1,4 @@
 import env from "../../environment"
-import { quotas } from "@budibase/pro"
 import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
 import {
@@ -164,15 +163,7 @@ export const save = async (
       return putOpts
     }
     // save the user to db
-    let response
-    const putUserFn = () => {
-      return db.put(user)
-    }
-    if (eventHelpers.isAddingBuilder(user, dbUser)) {
-      response = await quotas.addDeveloper(putUserFn)
-    } else {
-      response = await putUserFn()
-    }
+    let response = await db.put(user)
     user._rev = response.rev
 
     await eventHelpers.handleSaveEvents(user, dbUser)
@@ -223,7 +214,6 @@ export const destroy = async (id: string, currentUser: any) => {
   await deprovisioning.removeUserFromInfoDB(dbUser)
   await db.remove(dbUser._id, dbUser._rev)
   await eventHelpers.handleDeleteEvents(dbUser)
-  await quotas.removeUser(dbUser)
   await cache.user.invalidateUser(dbUser._id)
   await sessions.invalidateSessions(dbUser._id)
   // let server know to sync user

@@ -18,14 +18,6 @@ export const DEFINITIONS: MigrationDefinition[] = [
     name: MigrationName.APP_URLS,
   },
   {
-    type: MigrationType.GLOBAL,
-    name: MigrationName.DEVELOPER_QUOTA,
-  },
-  {
-    type: MigrationType.GLOBAL,
-    name: MigrationName.PUBLISHED_APP_QUOTA,
-  },
-  {
     type: MigrationType.APP,
     name: MigrationName.EVENT_APP_BACKFILL,
   },
