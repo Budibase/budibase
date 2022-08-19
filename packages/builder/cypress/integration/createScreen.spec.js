@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(["smoke", "all"], () => {
   context("Screen Tests", () => {
@@ -10,32 +11,44 @@ filterTests(["smoke", "all"], () => {
 
     it("Should successfully create a screen", () => {
       cy.createScreen("test")
-      cy.get(".nav-items-container").within(() => {
+      cy.get(interact.BODY).within(() => {
         cy.contains("/test").should("exist")
       })
     })
 
     it("Should update the url", () => {
       cy.createScreen("test with spaces")
-      cy.get(".nav-items-container").within(() => {
+      cy.get(interact.BODY).within(() => {
         cy.contains("/test-with-spaces").should("exist")
       })
     })
 
-    it("Should create a blank screen with the selected access level", () => {
-      cy.createScreen("admin only", "Admin")
+    it("should delete all screens then create first screen via button", () => {
+      cy.deleteAllScreens()
+      
+      cy.contains("Create first screen").click()
+      cy.get(interact.BODY, { timeout: 2000 }).should('contain', '/home')
+    })
 
-      cy.get(".nav-items-container").within(() => {
-        cy.contains("/admin-only").should("exist")
-      })
+    it("Should create and filter screens by access level", () => {
+      const accessLevels = ["Basic", "Admin", "Public", "Power"]
 
-      cy.createScreen("open to all", "Public")
+      for (const access of accessLevels){
+        // Create screen with specified access level
+        cy.createScreen(access, access)
+        // Filter by access level and confirm screen visible
+        cy.filterScreensAccessLevel(access)
+        cy.get(interact.BODY).within(() => {
+          cy.get(interact.NAV_ITEM).should('contain', access.toLowerCase())
+        })
+      }
 
-      cy.get(".nav-items-container").within(() => {
-        cy.contains("/open-to-all").should("exist")
-        //The access level should now be set to admin. Previous screens should be filtered.
-        cy.get(".nav-item").contains("/test-screen").should("not.exist")
-      })
+      // Filter by All screens - Confirm all screens visible
+      cy.filterScreensAccessLevel("All screens")
+      cy.get(interact.BODY).should('contain', accessLevels[0])
+      .and('contain', accessLevels[1])
+      .and('contain', accessLevels[2])
+      .and('contain', accessLevels[3])
     })
   })
 })

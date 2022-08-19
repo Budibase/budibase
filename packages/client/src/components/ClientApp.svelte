@@ -83,6 +83,8 @@
     dataLoaded = true
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
+    } else {
+      builderStore.actions.analyticsPing({ source: "app" })
     }
   })
 </script>
@@ -92,7 +94,7 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {$themeStore.theme}"
+    class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
   >
     <DeviceBindingsProvider>
       <UserBindingsProvider>

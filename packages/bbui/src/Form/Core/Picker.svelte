@@ -87,8 +87,13 @@
     on:mousedown={onClick}
   >
     {#if fieldIcon}
-      <span class="option-icon">
+      <span class="option-extra">
         <Icon name={fieldIcon} />
+      </span>
+    {/if}
+    {#if fieldColour}
+      <span class="option-extra">
+        <StatusLight square color={fieldColour} />
       </span>
     {/if}
     <span
@@ -107,11 +112,6 @@
       >
         <use xlink:href="#spectrum-icon-18-Alert" />
       </svg>
-    {/if}
-    {#if fieldColour}
-      <span class="option-colour">
-        <StatusLight size="L" color={fieldColour} />
-      </span>
     {/if}
     <svg
       class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
@@ -166,8 +166,13 @@
               on:click={() => onSelectOption(getOptionValue(option, idx))}
             >
               {#if getOptionIcon(option, idx)}
-                <span class="option-icon">
+                <span class="option-extra">
                   <Icon name={getOptionIcon(option, idx)} />
+                </span>
+              {/if}
+              {#if getOptionColour(option, idx)}
+                <span class="option-extra">
+                  <StatusLight square color={getOptionColour(option, idx)} />
                 </span>
               {/if}
               <span class="spectrum-Menu-itemLabel">
@@ -180,11 +185,6 @@
               >
                 <use xlink:href="#spectrum-css-icon-Checkmark100" />
               </svg>
-              {#if getOptionColour(option, idx)}
-                <span class="option-colour">
-                  <StatusLight size="L" color={getOptionColour(option, idx)} />
-                </span>
-              {/if}
             </li>
           {/each}
         {/if}
@@ -209,6 +209,9 @@
     width: 100%;
     box-shadow: none;
   }
+  .spectrum-Picker-label.auto-width {
+    margin-right: var(--spacing-xs);
+  }
   .spectrum-Picker-label:not(.auto-width) {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -221,16 +224,16 @@
   .spectrum-Picker-label.auto-width.is-placeholder {
     padding-right: 2px;
   }
+  .auto-width .spectrum-Menu-item {
+    padding-right: var(--spacing-xl);
+  }
 
   /* Icon and colour alignment */
   .spectrum-Menu-checkmark {
     align-self: center;
     margin-top: 0;
   }
-  .option-colour {
-    padding-left: 8px;
-  }
-  .option-icon {
+  .option-extra {
     padding-right: 8px;
   }
 

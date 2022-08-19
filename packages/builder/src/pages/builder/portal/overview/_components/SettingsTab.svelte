@@ -66,21 +66,26 @@
               <Body>
                 The app is currently using version
                 <strong>{$store.version}</strong>
-                but version <strong>{clientPackage.version}</strong> is available.
+                but version <strong>{clientPackage.version}</strong> is
+                available.
+                <br />
+                Updates can contain new features, performance improvements and bug
+                fixes.
               </Body>
+              <div class="page-action">
+                <Button cta on:click={versionModal.show()}>Update app</Button>
+              </div>
             {:else}
-              <p class="version-status">
+              <div class="version-status">
                 The app is currently using version
                 <strong>{$store.version}</strong>. You're running the latest!
-              </p>
+              </div>
+              <div class="page-action">
+                <Button secondary on:click={versionModal.show()}>
+                  Revert app
+                </Button>
+              </div>
             {/if}
-
-            Updates can contain new features, performance improvements and bug
-            fixes.
-
-            <div class="page-action">
-              <Button cta on:click={versionModal.show()}>Update app</Button>
-            </div>
           </Body>
         </Layout>
       </span>

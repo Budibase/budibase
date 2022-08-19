@@ -1,24 +1,25 @@
 import {
-  DatasourceFieldTypes,
+  DatasourceFieldType,
   Integration,
   Operation,
+  Table,
+  TableSchema,
   QueryJson,
-  QueryTypes,
+  QueryType,
   SqlQuery,
-} from "../definitions/datasource"
+  DatasourcePlus,
+} from "@budibase/types"
 import {
   getSqlQuery,
   buildExternalTableId,
   convertSqlType,
   finaliseExternalTables,
-  SqlClients,
+  SqlClient,
 } from "./utils"
-import { DatasourcePlus } from "./base/datasourcePlus"
-import { Table, TableSchema } from "../definitions/common"
+import Sql from "./base/sql"
 
 module MSSQLModule {
   const sqlServer = require("mssql")
-  const Sql = require("./base/sql")
   const DEFAULT_SCHEMA = "dbo"
 
   interface MSSQLConfig {
@@ -47,48 +48,48 @@ module MSSQLModule {
     type: "Relational",
     datasource: {
       user: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
         default: "localhost",
       },
       password: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         required: true,
       },
       server: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "localhost",
       },
       port: {
-        type: DatasourceFieldTypes.NUMBER,
+        type: DatasourceFieldType.NUMBER,
         required: false,
         default: 1433,
       },
       database: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "root",
       },
       schema: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: DEFAULT_SCHEMA,
       },
       encrypt: {
-        type: DatasourceFieldTypes.BOOLEAN,
+        type: DatasourceFieldType.BOOLEAN,
         default: true,
       },
     },
     query: {
       create: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       read: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       update: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       delete: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
     },
   }
@@ -96,7 +97,8 @@ module MSSQLModule {
   class SqlServerIntegration extends Sql implements DatasourcePlus {
     private readonly config: MSSQLConfig
     private index: number = 0
-    static pool: any
+    private readonly pool: any
+    private client: any
     public tables: Record<string, Table> = {}
     public schemaErrors: Record<string, string> = {}
 
@@ -111,7 +113,7 @@ module MSSQLModule {
       "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
 
     constructor(config: MSSQLConfig) {
-      super(SqlClients.MS_SQL)
+      super(SqlClient.MS_SQL)
       this.config = config
       const clientCfg = {
         ...this.config,

@@ -106,7 +106,9 @@
         {/if}
 
         {#if showCancelButton}
-          <Button group secondary on:click={close}>{cancelText}</Button>
+          <Button group secondary newStyles on:click={close}>
+            {cancelText}
+          </Button>
         {/if}
         {#if showConfirmButton}
           <span class="confirm-wrap">

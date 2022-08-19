@@ -2,6 +2,7 @@ const chalk = require("chalk")
 const fs = require("fs")
 const axios = require("axios")
 const path = require("path")
+const progress = require("cli-progress")
 
 exports.downloadFile = async (url, filePath) => {
   filePath = path.resolve(filePath)
@@ -55,4 +56,14 @@ exports.parseEnv = env => {
     }
   }
   return result
+}
+
+exports.progressBar = total => {
+  const bar = new progress.SingleBar({}, progress.Presets.shades_classic)
+  bar.start(total, 0)
+  return bar
+}
+
+exports.checkSlashesInUrl = url => {
+  return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
 }

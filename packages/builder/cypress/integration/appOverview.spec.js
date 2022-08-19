@@ -205,7 +205,7 @@ filterTests(["all"], () => {
 
       cy.navigateToFrontend()
 
-      cy.addComponent("Elements", "Headline").then(componentId => {
+      cy.searchAndAddComponent("Headline").then(componentId => {
         cy.getComponent(componentId).should("exist")
       })
 
@@ -266,7 +266,7 @@ filterTests(["all"], () => {
           cy.reload()
           cy.log("Current deployment version: " + clientPackage.version)
 
-          cy.get(".version-status a", { timeout: 1000 }).contains("Update").click()
+          cy.get(".version-status a", { timeout: 5000 }).contains("Update").click()
           cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
 
           cy.get(".version-section .page-action button")

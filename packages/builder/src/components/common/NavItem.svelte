@@ -1,5 +1,5 @@
 <script>
-  import { Icon, StatusLight } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
 
   export let icon
@@ -14,8 +14,8 @@
   export let iconText
   export let iconColor
   export let scrollable = false
-  export let color
   export let highlighted = false
+  export let rightAlignIcon = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -78,7 +78,7 @@
         {iconText}
       </div>
     {:else if icon}
-      <div class="icon">
+      <div class="icon" class:right={rightAlignIcon}>
         <Icon color={iconColor} size="S" name={icon} />
       </div>
     {/if}
@@ -88,9 +88,9 @@
         <slot />
       </div>
     {/if}
-    {#if color}
-      <div class="light">
-        <StatusLight size="L" {color} />
+    {#if $$slots.right}
+      <div class="right">
+        <slot name="right" />
       </div>
     {/if}
   </div>
@@ -107,7 +107,7 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center;
+    align-items: stretch;
   }
   .nav-item.scrollable {
     flex-direction: column;
@@ -135,10 +135,8 @@
     align-items: center;
     gap: var(--spacing-xs);
     width: max-content;
-    overflow: hidden;
     position: relative;
     padding-left: var(--spacing-l);
-    pointer-events: none;
   }
 
   /* Needed to fully display the actions icon */
@@ -153,10 +151,15 @@
     justify-content: center;
     align-items: center;
     color: var(--spectrum-global-color-gray-600);
+    order: 1;
+  }
+  .icon.right {
+    order: 4;
   }
   .icon.arrow {
     flex: 0 0 20px;
     pointer-events: all;
+    order: 0;
   }
   .icon.arrow.absolute {
     position: absolute;
@@ -188,11 +191,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 1 1 auto;
-    color: var(--spectrum-global-color-gray-800);
+    color: var(--spectrum-global-color-gray-900);
+    order: 2;
+    width: 0;
   }
   .scrollable .text {
     flex: 0 0 auto;
     max-width: 160px;
+    width: auto;
   }
 
   .actions {
@@ -201,18 +207,17 @@
     display: grid;
     place-items: center;
     visibility: hidden;
-  }
-  .actions,
-  .light :global(.spectrum-StatusLight) {
+    order: 3;
+    opacity: 0;
     width: 20px;
     height: 20px;
-    margin-left: var(--spacing-s);
+    margin-left: var(--spacing-xs);
   }
-  .light {
-    position: absolute;
-    right: 0;
+  .nav-item.withActions:hover .actions {
+    opacity: 1;
   }
-  .nav-item.withActions:hover .light {
-    display: none;
+
+  .right {
+    order: 10;
   }
 </style>

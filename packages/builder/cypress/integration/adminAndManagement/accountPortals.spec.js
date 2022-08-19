@@ -19,9 +19,14 @@ filterTests(["smoke", "all"], () => {
       cy.wait(500)
 
       // Reset password
-      cy.get(".spectrum-ActionButton-label", { timeout: 2000 }).contains("Force password reset").click({ force: true })
+      cy.get(".title").within(() => {
+        cy.get(interact.SPECTRUM_ICON).click({ force: true })
+      })
+      cy.get(interact.SPECTRUM_MENU).within(() => {
+        cy.get(interact.SPECTRUM_MENU_ITEM).contains("Force password reset").click({ force: true })
+      })
       
-      cy.get(".spectrum-Dialog-grid")
+      cy.get(interact.SPECTRUM_DIALOG_GRID)
       .find(interact.SPECTRUM_TEXTFIELD_INPUT).invoke('val').as('pwd')
 
       cy.get(interact.SPECTRUM_BUTTON).contains("Reset password").click({ force: true })
@@ -36,26 +41,32 @@ filterTests(["smoke", "all"], () => {
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).eq(i).type("test")
       }
       cy.get(interact.SPECTRUM_BUTTON).contains("Reset your password").click({ force: true })
+      //cy.logoutNoAppGrid()
+    })
+
+    it("should verify Standard Portal", () => {
+      // Development access should be disabled (Admin access is already disabled)
+      cy.login()
+      cy.setUserRole("bbuser", "App User")
+      bbUserLogin()
+
+      // Verify Standard Portal
+      cy.get(interact.SPECTRUM_SIDENAV).should('not.exist') // No config sections
+      cy.get(interact.CREATE_APP_BUTTON).should('not.exist') // No create app button
+      cy.get(".app").should('not.exist') // No apps -> no roles assigned to user
+      cy.get(interact.CONTAINER).should('contain', bbUserEmail) // Message containing users email
+
       cy.logoutNoAppGrid()
     })
     
     it("should verify Admin Portal", () => {
         cy.login()
-        cy.contains("Users").click()
-        cy.contains("bbuser").click()
-
-        // Enable Development & Administration access
-        cy.wait(500)
-        for (let i = 4; i < 6; i++) {
-            cy.get(interact.FIELD).eq(i).within(() => {
-              cy.get(interact.SPECTRUM_SWITCH_INPUT).click({ force: true })
-              cy.get(interact.SPECTRUM_SWITCH_INPUT).should('be.enabled')
-            })
-        }
+        // Configure user role
+        cy.setUserRole("bbuser", "Admin")
         bbUserLogin()
 
         // Verify available options for Admin portal
-        cy.get(".spectrum-SideNav")
+        cy.get(interact.SPECTRUM_SIDENAV)
         .should('contain', 'Apps')
         //.and('contain', 'Usage')
         .and('contain', 'Users')
@@ -72,13 +83,7 @@ filterTests(["smoke", "all"], () => {
     it("should verify Development Portal", () => {
       // Only Development access should be enabled
       cy.login()
-      cy.contains("Users").click()
-      cy.contains("bbuser").click()
-      cy.wait(500)
-      cy.get(interact.FIELD).eq(5).within(() => {
-        cy.get(interact.SPECTRUM_SWITCH_INPUT).click({ force: true })
-      })
-
+      cy.setUserRole("bbuser", "Developer")
       bbUserLogin()
 
       // Verify available options for Admin portal
@@ -94,27 +99,6 @@ filterTests(["smoke", "all"], () => {
         .and('not.contain', 'Upgrade')
 
         cy.logOut()
-    })
-
-    it("should verify Standard Portal", () => {
-      // Development access should be disabled (Admin access is already disabled)
-      cy.login()
-      cy.contains("Users").click()
-      cy.contains("bbuser").click()
-      cy.wait(500)
-      cy.get(interact.FIELD).eq(4).within(() => {
-        cy.get(interact.SPECTRUM_SWITCH_INPUT).click({ force: true })
-      })
-
-      bbUserLogin()
-
-      // Verify Standard Portal
-      cy.get(interact.SPECTRUM_SIDENAV).should('not.exist') // No config sections
-      cy.get(interact.CREATE_APP_BUTTON).should('not.exist') // No create app button
-      cy.get(".app").should('not.exist') // No apps -> no roles assigned to user
-      cy.get(interact.CONTAINER).should('contain', bbUserEmail) // Message containing users email
-
-      cy.logoutNoAppGrid()
     })
 
     const bbUserLogin = () => {

@@ -7,10 +7,10 @@ const RolePriorities = {
   [Roles.PUBLIC]: 1,
 }
 const RoleColours = {
-  [Roles.ADMIN]: "var(--spectrum-global-color-static-seafoam-400)",
-  [Roles.POWER]: "var(--spectrum-global-color-static-purple-400)",
-  [Roles.BASIC]: "var(--spectrum-global-color-static-magenta-400)",
-  [Roles.PUBLIC]: "var(--spectrum-global-color-static-yellow-400)",
+  [Roles.ADMIN]: "var(--spectrum-global-color-static-red-400)",
+  [Roles.POWER]: "var(--spectrum-global-color-static-orange-400)",
+  [Roles.BASIC]: "var(--spectrum-global-color-static-green-400)",
+  [Roles.PUBLIC]: "var(--spectrum-global-color-static-blue-400)",
 }
 
 export const getRolePriority = roleId => {
@@ -18,5 +18,7 @@ export const getRolePriority = roleId => {
 }
 
 export const getRoleColour = roleId => {
-  return RoleColours[roleId] ?? "rgb(20, 115, 230)"
+  return (
+    RoleColours[roleId] ?? "var(--spectrum-global-color-static-magenta-400)"
+  )
 }

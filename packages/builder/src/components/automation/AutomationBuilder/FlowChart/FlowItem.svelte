@@ -52,8 +52,9 @@
       x => x.blockToLoop === block.id
     )
 
-  $: setPermissions(role)
-  $: getPermissions(automationId)
+  $: isAppAction = block?.stepId === TriggerStepID.APP
+  $: isAppAction && setPermissions(role)
+  $: isAppAction && getPermissions(automationId)
 
   async function setPermissions(role) {
     if (!role || !automationId) {
@@ -161,7 +162,7 @@
             width="28px"
             height="28px"
             class="spectrum-Icon"
-            style="color:grey;"
+            style="color:var(--spectrum-global-color-gray-700);"
             focusable="false"
           >
             <use xlink:href="#spectrum-icon-18-Reuse" />
@@ -238,7 +239,7 @@
           </div>
         {/if}
 
-        {#if block.stepId === TriggerStepID.APP}
+        {#if isAppAction}
           <Label>Role</Label>
           <RoleSelect bind:value={role} />
         {/if}

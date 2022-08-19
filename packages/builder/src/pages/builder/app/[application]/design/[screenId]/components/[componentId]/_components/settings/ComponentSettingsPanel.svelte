@@ -27,20 +27,26 @@
 </script>
 
 {#if $selectedComponent}
-  <Panel {title} icon={componentDefinition.icon} borderLeft>
-    <ComponentSettingsSection
-      {componentInstance}
-      {componentDefinition}
-      {bindings}
-      {componentBindings}
-      {isScreen}
-    />
-    <DesignSection {componentInstance} {componentDefinition} {bindings} />
-    <CustomStylesSection {componentInstance} {componentDefinition} {bindings} />
-    <ConditionalUISection
-      {componentInstance}
-      {componentDefinition}
-      {bindings}
-    />
-  </Panel>
+  {#key $selectedComponent._id}
+    <Panel {title} icon={componentDefinition.icon} borderLeft>
+      <ComponentSettingsSection
+        {componentInstance}
+        {componentDefinition}
+        {bindings}
+        {componentBindings}
+        {isScreen}
+      />
+      <DesignSection {componentInstance} {componentDefinition} {bindings} />
+      <CustomStylesSection
+        {componentInstance}
+        {componentDefinition}
+        {bindings}
+      />
+      <ConditionalUISection
+        {componentInstance}
+        {componentDefinition}
+        {bindings}
+      />
+    </Panel>
+  {/key}
 {/if}

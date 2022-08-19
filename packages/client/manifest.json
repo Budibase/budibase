@@ -237,6 +237,11 @@
         "showInBar": true,
         "barIcon": "ModernGridView",
         "barTitle": "Wrap"
+      },
+      {
+        "type": "event",
+        "label": "On Click",
+        "key": "onClick"
       }
     ]
   },
@@ -1466,10 +1471,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1481,6 +1487,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -1581,10 +1632,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1596,6 +1648,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "select",
@@ -1695,10 +1792,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1710,6 +1808,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "select",
@@ -1800,10 +1943,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1815,6 +1959,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -1882,10 +2071,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1897,6 +2087,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -2763,7 +2998,7 @@
   },
   "longformfield": {
     "name": "Long Form Field",
-    "icon": "AlignLeft",
+    "icon": "TextAlignLeft",
     "styles": [
       "size"
     ],
@@ -2873,6 +3108,12 @@
         "type": "boolean",
         "label": "Time only",
         "key": "timeOnly",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "24-Hour time",
+        "key": "time24hr",
         "defaultValue": false
       },
       {
@@ -3509,17 +3750,18 @@
       },
       {
         "type": "boolean",
-        "label": "Show button",
+        "label": "Use button for click action",
         "key": "showButton"
       },
       {
         "type": "text",
         "key": "buttonText",
-        "label": "Button text"
+        "label": "Button text",
+        "dependsOn": "showButton"
       },
       {
         "type": "event",
-        "label": "Button action",
+        "label": "Click action",
         "key": "buttonOnClick"
       }
     ]
@@ -3736,7 +3978,7 @@
   "cardsblock": {
     "block": true,
     "name": "Cards block",
-    "icon": "Table",
+    "icon": "PersonalizationField",
     "styles": [
       "size"
     ],
@@ -3841,18 +4083,19 @@
           },
           {
             "type": "boolean",
-            "label": "Show button",
+            "label": "Use button for click action",
             "key": "showCardButton"
           },
           {
             "type": "text",
             "key": "cardButtonText",
             "label": "Button text",
-            "nested": true
+            "nested": true,
+            "dependsOn": "showCardButton"
           },
           {
             "type": "event",
-            "label": "Button action",
+            "label": "Click action",
             "key": "cardButtonOnClick",
             "nested": true
           }

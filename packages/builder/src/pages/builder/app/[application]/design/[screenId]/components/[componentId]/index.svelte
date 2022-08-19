@@ -1,7 +1,4 @@
-<script>
-  import ComponentListPanel from "./_components/navigation/ComponentListPanel.svelte"
-  import ComponentSettingsPanel from "./_components/settings/ComponentSettingsPanel.svelte"
-</script>
-
-<ComponentListPanel />
-<ComponentSettingsPanel />
+<!--
+  Placeholder file so that routify works.
+  No unique content is needed in this index page.
+-->

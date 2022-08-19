@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store"
+import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 
 const dispatchEvent = (type, data = {}) => {
@@ -17,6 +18,7 @@ const createBuilderStore = () => {
     previewDevice: "desktop",
     isDragging: false,
     navigation: null,
+    hiddenComponentIds: [],
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -38,14 +40,21 @@ const createBuilderStore = () => {
     updateProp: (prop, value) => {
       dispatchEvent("update-prop", { prop, value })
     },
-    deleteComponent: id => {
-      dispatchEvent("delete-component", { id })
+    keyDown: (key, ctrlKey) => {
+      dispatchEvent("key-down", { key, ctrlKey })
     },
     duplicateComponent: id => {
       dispatchEvent("duplicate-component", { id })
     },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
+    },
+    analyticsPing: async () => {
+      try {
+        await API.analyticsPing({ source: "app" })
+      } catch (error) {
+        // Do nothing
+      }
     },
     moveComponent: (componentId, destinationComponentId, mode) => {
       dispatchEvent("move-component", {

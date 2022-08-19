@@ -9,7 +9,11 @@ events {
 }
 
 http {
+  # rate limiting
+  limit_req_status 429;
   limit_req_zone $binary_remote_addr zone=ratelimit:10m rate=20r/s;
+  limit_req_zone $binary_remote_addr zone=webhooks:10m rate=${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND}r/s;
+
   include       /etc/nginx/mime.types;
   default_type  application/octet-stream;
   proxy_set_header Host $host;
@@ -112,6 +116,25 @@ http {
       # calls to the API are rate limited with bursting
       limit_req zone=ratelimit burst=20 nodelay;
 
+      # 120s timeout on API requests
+      proxy_read_timeout 120s;
+      proxy_connect_timeout 120s;
+      proxy_send_timeout 120s;
+
+      proxy_http_version  1.1;
+      proxy_set_header    Connection          $connection_upgrade;
+      proxy_set_header    Upgrade             $http_upgrade;
+      proxy_set_header    X-Real-IP           $remote_addr;
+      proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+
+      proxy_pass      http://$apps:4002;
+    }
+
+    location /api/webhooks/ {
+      # calls to webhooks are rate limited
+      limit_req zone=webhooks nodelay;
+
+      # Rest of configuration copied from /api/ location above
       # 120s timeout on API requests
       proxy_read_timeout 120s;
       proxy_connect_timeout 120s;

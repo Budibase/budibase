@@ -2,6 +2,8 @@ import { derived, writable, get } from "svelte/store"
 import { API } from "api"
 import { admin } from "stores/portal"
 import analytics from "analytics"
+import { FEATURE_FLAGS } from "helpers/featureFlags"
+import { Constants } from "@budibase/frontend-core"
 
 export function createAuthStore() {
   const auth = writable({
@@ -10,11 +12,13 @@ export function createAuthStore() {
     tenantSet: false,
     loaded: false,
     postLogout: false,
+    groupsEnabled: false,
   })
   const store = derived(auth, $store => {
     let initials = null
     let isAdmin = false
     let isBuilder = false
+    let groupsEnabled = false
     if ($store.user) {
       const user = $store.user
       if (user.firstName) {
@@ -29,6 +33,9 @@ export function createAuthStore() {
       }
       isAdmin = !!user.admin?.global
       isBuilder = !!user.builder?.global
+      groupsEnabled =
+        user?.license.features.includes(Constants.Features.USER_GROUPS) &&
+        user?.featureFlags.includes(FEATURE_FLAGS.USER_GROUPS)
     }
     return {
       user: $store.user,
@@ -39,6 +46,7 @@ export function createAuthStore() {
       initials,
       isAdmin,
       isBuilder,
+      groupsEnabled,
     }
   })
 

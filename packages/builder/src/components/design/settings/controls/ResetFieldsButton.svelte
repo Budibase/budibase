@@ -18,7 +18,7 @@
     const dataSource = form?.dataSource
     const fields = makeDatasourceFormComponents(dataSource)
     try {
-      await store.actions.components.updateProp(
+      await store.actions.components.updateSetting(
         "_children",
         fields.map(field => field.json())
       )
