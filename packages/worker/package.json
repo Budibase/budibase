@@ -36,7 +36,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@budibase/backend-core": "^1.2.44",
-    "@budibase/pro": "1.2.43",
+    "@budibase/pro": "1.2.44",
     "@budibase/string-templates": "^1.2.44",
     "@budibase/types": "^1.2.44",
     "@koa/router": "8.0.8",
