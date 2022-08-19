@@ -133,7 +133,13 @@
         <div class="title">
           <div class="filename">
             {#if selectedUrl}
-              <Link href={selectedUrl}>{selectedImage.name}</Link>
+              <Link
+                target="_blank"
+                download={selectedImage.name}
+                href={selectedUrl}
+              >
+                {selectedImage.name}
+              </Link>
             {:else}
               {selectedImage.name}
             {/if}
