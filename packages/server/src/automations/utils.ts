@@ -24,7 +24,7 @@ const Runner = new Thread(ThreadType.AUTOMATION)
 export async function processEvent(job: any) {
   try {
     console.log(
-      `${job.data.automation.appId} automation ${job.data.automation._id} running`
+      `${job.data.automation.appId} automation ${job.data.automation._id} running. jobId=${job.id}`
     )
     // need to actually await these so that an error can be captured properly
     const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
