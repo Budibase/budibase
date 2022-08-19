@@ -68,6 +68,7 @@ export default `
           navigation,
           hiddenComponentIds,
           usedPlugins,
+          location
         } = parsed
 
         // Set some flags so the app knows we're in the builder
@@ -83,6 +84,7 @@ export default `
         window["##BUDIBASE_PREVIEW_NAVIGATION##"] = navigation
         window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"] = hiddenComponentIds
         window["##BUDIBASE_USED_PLUGINS##"] = usedPlugins
+        window["##BUDIBASE_LOCATION##"] = location
 
         // Initialise app
         try {
