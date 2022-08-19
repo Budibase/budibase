@@ -4,6 +4,7 @@ import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { generatePluginID, getPluginParams } from "../../db/utils"
 import { uploadDirectory } from "@budibase/backend-core/objectStore"
 import { PluginType, FileType } from "@budibase/types"
+import { io } from "../../app"
 
 export async function getPlugins(type?: PluginType) {
   const db = getGlobalDB()
@@ -53,7 +54,8 @@ export async function processPlugin(plugin: FileType) {
   const { metadata, directory } = await extractPluginTarball(plugin)
   const version = metadata.package.version,
     name = metadata.package.name,
-    description = metadata.package.description
+    description = metadata.package.description,
+    hash = metadata.schema.hash
 
   // first open the tarball into tmp directory
   const bucketPath = `${name}/${version}/`
@@ -82,11 +84,13 @@ export async function processPlugin(plugin: FileType) {
     _rev: rev,
     name,
     version,
+    hash,
     description,
     ...metadata,
     jsUrl: `${bucketPath}${jsFileName}`,
   }
   const response = await db.put(doc)
+  io.sockets.emit("plugin-update", { name, hash })
   return {
     ...doc,
     _rev: response.rev,

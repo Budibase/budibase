@@ -20,6 +20,7 @@ const { Thread } = require("./threads")
 const chokidar = require("chokidar")
 const fs = require("fs")
 const path = require("path")
+const SocketIO = require("socket.io")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
@@ -70,6 +71,15 @@ if (env.isProd()) {
 
 const server = http.createServer(app.callback())
 destroyable(server)
+
+// Websocket
+export const io = SocketIO(server, {
+  path: "/socket/",
+  cors: {
+    origin: ["https://hmr.lan.kingston.dev"],
+    methods: ["GET", "POST"],
+  },
+})
 
 let shuttingDown = false,
   errCode = 0
