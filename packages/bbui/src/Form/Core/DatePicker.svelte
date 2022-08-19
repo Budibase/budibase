@@ -59,6 +59,13 @@
 
     // If time only set date component to 2000-01-01
     if (timeOnly) {
+      // Classic flackpickr causing issues.
+      // When selecting a value for the first time for a "time only" field,
+      // the time is always offset by 1 hour for some reason (regardless of time
+      // zone) so we need to correct it.
+      if (!value && newValue) {
+        newValue = new Date(dates[0].getTime() + 60 * 60 * 1000).toISOString()
+      }
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
 
