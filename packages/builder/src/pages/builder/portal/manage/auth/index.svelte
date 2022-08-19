@@ -408,6 +408,7 @@
       <div class="form-row">
         <Label size="L">Activated</Label>
         <Toggle
+          dataCy={"oidc-active"}
           text=""
           bind:value={providers.oidc.config.configs[0].activated}
         />
