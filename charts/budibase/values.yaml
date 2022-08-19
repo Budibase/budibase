@@ -126,6 +126,7 @@ services:
     port: 4002
     replicaCount: 1
     logLevel: info
+#    nodeDebug: "" # set the value of NODE_DEBUG
 
   worker:
     port: 4003
