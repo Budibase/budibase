@@ -114,7 +114,7 @@ export const buildLuceneQuery = filter => {
           return
         }
       }
-      if (type === "number" && !Array.isArray(value)) {
+      if (type === "number" && typeof value === "string") {
         if (operator === "oneOf") {
           value = value.split(",").map(item => parseFloat(item))
         } else if (!isHbs) {
