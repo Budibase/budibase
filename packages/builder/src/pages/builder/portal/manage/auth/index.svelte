@@ -439,7 +439,7 @@
 
         <div class="auth-form">
           <span class="add-new">
-            <Label size="L" tooltip={"Auth Scopes"}>{"Auth Scopes"}</Label>
+            <Label size="L">{"Auth Scopes"}</Label>
             <Input
               error={scopesFields[0].error}
               placeholder={"New Scope"}
