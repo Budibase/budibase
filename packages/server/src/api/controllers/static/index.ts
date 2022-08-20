@@ -102,7 +102,6 @@ export const deleteObjects = async function (ctx: any) {
 }
 
 export const serveApp = async function (ctx: any) {
-  console.log("SERVE APP")
   const db = getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
   let appId = getAppId()
