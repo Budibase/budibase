@@ -8,12 +8,14 @@ const Queue = env.isTest()
 const { JobQueues } = require("../constants")
 const { utils } = require("@budibase/backend-core/redis")
 const { opts, redisProtocolUrl } = utils.getRedisOptions()
+const listeners = require("./listeners")
 
 const CLEANUP_PERIOD_MS = 60 * 1000
 const queueConfig = redisProtocolUrl || { redis: opts }
 let cleanupInternal = null
 
 let automationQueue = new Queue(JobQueues.AUTOMATIONS, queueConfig)
+listeners.addListeners(automationQueue)
 
 async function cleanup() {
   await automationQueue.clean(CLEANUP_PERIOD_MS, "completed")
