@@ -4,11 +4,11 @@ import * as automation from "../threads/automation"
 
 export const addListeners = (queue: Queue) => {
   logging(queue)
-  // handleStalled(queue)
+  handleStalled(queue)
 }
 
 const handleStalled = (queue: Queue) => {
-  queue.on("active", async (job: Job) => {
+  queue.on("stalled", async (job: Job) => {
     await automation.removeStalled(job as AutomationEvent)
   })
 }

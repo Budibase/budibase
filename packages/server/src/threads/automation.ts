@@ -473,9 +473,9 @@ export function execute(input: AutomationEvent, callback: WorkerCallback) {
   })
 }
 
-export const removeStalled = (input: AutomationEvent) => {
+export const removeStalled = async (input: AutomationEvent) => {
   const appId = input.data.event.appId
-  doInAppContext(appId, async () => {
+  await doInAppContext(appId, async () => {
     const automationOrchestrator = new Orchestrator(
       input.data.automation,
       input.data.event,
