@@ -102,6 +102,7 @@ export const deleteObjects = async function (ctx: any) {
 }
 
 export const serveApp = async function (ctx: any) {
+  console.log("SERVE APP")
   const db = getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
   let appId = getAppId()
@@ -125,6 +126,22 @@ export const serveApp = async function (ctx: any) {
   } else {
     // just return the app info for jest to assert on
     ctx.body = appInfo
+  }
+}
+
+export const serveBuilderPreview = async function (ctx: any) {
+  const db = getAppDB({ skip_setup: true })
+  const appInfo = await db.get(DocumentType.APP_METADATA)
+
+  if (!env.isJest()) {
+    let appId = getAppId()
+    const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
+    ctx.body = await processString(previewHbs, {
+      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+    })
+  } else {
+    // just return the app info for jest to assert on
+    ctx.body = { ...appInfo, builderPreview: true }
   }
 }
 
