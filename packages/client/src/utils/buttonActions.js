@@ -334,8 +334,8 @@ const confirmTextMap = {
  */
 export const enrichButtonActions = (actions, context) => {
   // Prevent button actions in the builder preview
-  if (!actions || get(builderStore).inBuilder) {
-    return () => {}
+  if (!actions?.length || get(builderStore).inBuilder) {
+    return null
   }
 
   // If this is a function then it has already been enriched
