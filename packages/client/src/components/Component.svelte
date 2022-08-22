@@ -379,6 +379,9 @@
           // initial props are up to date. By setting it this way rather than
           // setting it on initialSettings directly, we avoid a double render.
           cachedSettings[key] = allSettings[key]
+          if (key === "css") {
+            instance._styles.custom = cachedSettings[key]
+          }
 
           if (ref?.$$set) {
             // Programmatically set the prop to avoid svelte reactive statements
