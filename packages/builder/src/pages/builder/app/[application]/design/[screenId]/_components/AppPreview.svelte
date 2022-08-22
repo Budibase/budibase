@@ -8,7 +8,6 @@
     selectedLayout,
     currentAsset,
   } from "builderStore"
-  import iframeTemplate from "./iframeTemplate"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ProgressCircle,
@@ -39,12 +38,6 @@
     ERROR: "error",
     BUDIBASE: "type",
   }
-
-  // Construct iframe template
-  $: template = iframeTemplate.replace(
-    /\{\{ CLIENT_LIB_PATH }}/,
-    $store.clientLibPath
-  )
 
   const placeholderScreen = new Screen()
     .name("Screen Placeholder")
@@ -299,7 +292,7 @@
   <iframe
     title="componentPreview"
     bind:this={iframe}
-    srcdoc={template}
+    src="/preview"
     class:hidden={loading || error}
     class:tablet={$store.previewDevice === "tablet"}
     class:mobile={$store.previewDevice === "mobile"}
