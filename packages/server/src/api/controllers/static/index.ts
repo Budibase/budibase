@@ -128,6 +128,22 @@ export const serveApp = async function (ctx: any) {
   }
 }
 
+export const serveBuilderPreview = async function (ctx: any) {
+  const db = getAppDB({ skip_setup: true })
+  const appInfo = await db.get(DocumentType.APP_METADATA)
+
+  if (!env.isJest()) {
+    let appId = getAppId()
+    const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
+    ctx.body = await processString(previewHbs, {
+      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+    })
+  } else {
+    // just return the app info for jest to assert on
+    ctx.body = { ...appInfo, builderPreview: true }
+  }
+}
+
 export const serveClientLibrary = async function (ctx: any) {
   return send(ctx, "budibase-client.js", {
     root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
