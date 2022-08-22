@@ -27,6 +27,14 @@
       return []
     }
   }
+
+  async function deleteAttachments(fileList) {
+    try {
+      return await API.deleteBuilderAttachments(fileList)
+    } catch (error) {
+      return []
+    }
+  }
 </script>
 
 <Dropzone
@@ -34,5 +42,6 @@
   {label}
   {...$$restProps}
   {processFiles}
+  {deleteAttachments}
   {handleFileTooLarge}
 />

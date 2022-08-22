@@ -2,16 +2,19 @@
   import Panel from "components/design/Panel.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore } from "./dndStore.js"
-  import { goto } from "@roxi/routify"
-  import { store, selectedScreen } from "builderStore"
+  import { goto, isActive } from "@roxi/routify"
+  import { store, selectedScreen, selectedComponent } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
-  import { setContext } from "svelte"
+  import { setContext, onMount } from "svelte"
+  import { get } from "svelte/store"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import { DropPosition } from "./dndStore"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { notifications, Button } from "@budibase/bbui"
 
   let scrollRef
+  let confirmDeleteDialog
 
   const scrollTo = bounds => {
     if (!bounds) {
@@ -69,6 +72,76 @@
   setContext("scroll", {
     scrollTo,
   })
+
+  const deleteComponent = async () => {
+    await store.actions.components.delete(get(selectedComponent))
+  }
+
+  const handleKeyPress = async e => {
+    // Ignore repeating events
+    if (e.repeat) {
+      return
+    }
+    // Ignore events when typing
+    const activeTag = document.activeElement?.tagName.toLowerCase()
+    if (["input", "textarea"].indexOf(activeTag) !== -1 && e.key !== "Escape") {
+      return
+    }
+    const component = get(selectedComponent)
+    try {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === "ArrowUp") {
+          e.preventDefault()
+          await store.actions.components.moveUp(component)
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault()
+          await store.actions.components.moveDown(component)
+        } else if (e.key === "c") {
+          e.preventDefault()
+          await store.actions.components.copy(component, false)
+        } else if (e.key === "x") {
+          e.preventDefault()
+          store.actions.components.copy(component, true)
+        } else if (e.key === "v") {
+          e.preventDefault()
+          await store.actions.components.paste(component, "inside")
+        } else if (e.key === "d") {
+          e.preventDefault()
+          await store.actions.components.copy(component)
+          await store.actions.components.paste(component, "below")
+        } else if (e.key === "Enter") {
+          e.preventDefault()
+          $goto("./new")
+        }
+      } else if (e.key === "Backspace" || e.key === "Delete") {
+        // Don't show confirmation for the screen itself
+        if (component._id === get(selectedScreen).props._id) {
+          return
+        }
+        e.preventDefault()
+        confirmDeleteDialog.show()
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault()
+        await store.actions.components.selectPrevious()
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault()
+        await store.actions.components.selectNext()
+      } else if (e.key === "Escape" && $isActive("./new")) {
+        e.preventDefault()
+        $goto("./")
+      }
+    } catch (error) {
+      console.log(error)
+      notifications.error("Error handling key press")
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener("keydown", handleKeyPress)
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress)
+    }
+  })
 </script>
 
 <Panel title="Components" showExpandIcon borderRight>
@@ -116,6 +189,13 @@
     </ul>
   </div>
 </Panel>
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  title="Confirm Deletion"
+  body={`Are you sure you want to delete "${$selectedComponent?._instanceName}"?`}
+  okText="Delete Component"
+  onOk={deleteComponent}
+/>
 
 <style>
   .add-component {
