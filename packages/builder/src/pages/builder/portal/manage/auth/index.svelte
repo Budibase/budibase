@@ -31,6 +31,8 @@
     OIDC: "oidc",
   }
 
+  const HasSpacesRegex = /[\\"\s]/
+
   // Some older google configs contain a manually specified value - retain the functionality to edit the field
   // When there is no value or we are in the cloud - prohibit editing the field, must use platform url to change
   $: googleCallbackUrl = undefined
@@ -462,7 +464,7 @@
 
                   let update = scopesFields[0].inputText.trim()
 
-                  if (/[\\"\s]/.test(update)) {
+                  if (HasSpacesRegex.test(update)) {
                     scopesFields[0].error =
                       "Auth scopes cannot contain spaces, double quotes or backslashes"
                     return
@@ -475,13 +477,10 @@
                     return
                   } else {
                     scopesFields[0].error = null
-                  }
-
-                  if (scopes.indexOf(update) == -1) {
                     scopes.push(update)
                     providers.oidc.config.configs[0]["scopes"] = scopes
+                    scopesFields[0].inputText = null
                   }
-                  scopesFields[0].inputText = null
                 }
               }}
             />
@@ -493,7 +492,7 @@
               {#each providers.oidc.config.configs[0]["scopes"] || [...defaultScopes] as tag, idx}
                 <Tag
                   closable={scopesFields[0].editing}
-                  onClick={() => {
+                  on:click={() => {
                     let idxScopes = providers.oidc.config.configs[0]["scopes"]
                     if (idxScopes.length == 1) {
                       idxScopes.pop()
