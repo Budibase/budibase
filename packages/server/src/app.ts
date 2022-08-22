@@ -18,12 +18,12 @@ const { logAlert } = require("@budibase/backend-core/logging")
 const { pinoSettings } = require("@budibase/backend-core")
 const { Thread } = require("./threads")
 const fs = require("fs")
-const SocketIO = require("socket.io")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
 import { createAdminUser, getChecklist } from "./utilities/workerRequests"
 import { watch } from "./watch"
+import { Websocket } from "./websocket"
 
 const app = new Koa()
 
@@ -69,14 +69,8 @@ if (env.isProd()) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
-// Websocket
-export const io = SocketIO(server, {
-  path: "/socket/",
-  cors: {
-    origin: ["https://hmr.lan.kingston.dev"],
-    methods: ["GET", "POST"],
-  },
-})
+// initialise websockets
+export const ClientAppSocket = new Websocket(server, "/socket/client")
 
 let shuttingDown = false,
   errCode = 0
