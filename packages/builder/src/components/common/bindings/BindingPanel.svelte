@@ -9,6 +9,9 @@
     Body,
     Layout,
     Button,
+    ActionButton,
+    Icon,
+    Popover,
   } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
   import {
@@ -45,6 +48,21 @@
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
 
+  let selectedCategory = null
+  let categoryIcons = {
+    Device: "DevicePhone",
+    "Current User": "User",
+    Helpers: "MagicWand",
+    Data: "Data",
+    State: "AutomatedSegment",
+    URL: "RailTop",
+    Role: "UsersLock",
+  }
+
+  let popover
+  let popoverAnchor
+  let hoverHelper
+
   $: usingJS = mode === "JavaScript"
   $: searchRgx = new RegExp(search, "ig")
   $: categories = Object.entries(groupBy("category", bindings))
@@ -55,10 +73,25 @@
         return binding.readableBinding.match(searchRgx)
       }),
     }))
-    .filter(category => category.bindings?.length > 0)
+    .filter(category => {
+      return (
+        category.bindings?.length > 0 &&
+        (!selectedCategory ? true : selectedCategory === category.name)
+      )
+    })
+
   $: filteredHelpers = helpers?.filter(helper => {
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })
+
+  $: categoryNames = [
+    ...categories.reduce((acc, cat) => {
+      acc.push(cat[0])
+      return acc
+    }, []),
+    "Helpers",
+  ]
+
   $: codeMirrorHints = bindings?.map(x => `$("${x.readableBinding}")`)
 
   const updateValue = val => {
@@ -140,23 +173,91 @@
   })
 </script>
 
+<span class="detailPopover">
+  <Popover
+    align="right-side"
+    bind:this={popover}
+    anchor={popoverAnchor}
+    maxWidth={300}
+    observe={false}
+  >
+    <Layout gap="S">
+      {#if selectedCategory === "Helpers" || search}
+        <div class="helper">
+          <div class="helper__name">{hoverHelper.displayText}</div>
+          <div class="helper__description">
+            {@html hoverHelper.description}
+          </div>
+          <pre class="helper__example">{getHelperExample(
+              hoverHelper,
+              usingJS
+            )}</pre>
+        </div>
+      {/if}
+    </Layout>
+  </Popover>
+</span>
+
 <DrawerContent>
   <svelte:fragment slot="sidebar">
-    <div class="container">
-      <section>
+    <Layout noPadding gap="S">
+      {#if selectedCategory}
+        <div>
+          <ActionButton
+            secondary
+            icon={"ArrowLeft"}
+            on:click={() => {
+              selectedCategory = null
+            }}
+          >
+            Back
+          </ActionButton>
+        </div>
+      {/if}
+
+      {#if !selectedCategory}
         <div class="heading">Search</div>
         <Search placeholder="Search" bind:value={search} />
-      </section>
-      {#each filteredCategories as category}
-        {#if category.bindings?.length}
-          <section>
-            <div class="heading">{category.name}</div>
+      {/if}
+
+      {#if !selectedCategory && !search}
+        <ul class="category-list">
+          {#each categoryNames as categoryName}
+            <li
+              on:click={() => {
+                selectedCategory = categoryName
+              }}
+            >
+              <Icon name={categoryIcons[categoryName]} />
+              <span class="category-name">{categoryName} </span>
+              <span class="category-chevron"><Icon name="ChevronRight" /></span>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+
+      {#if selectedCategory || search}
+        {#each filteredCategories as category}
+          {#if category.bindings?.length}
+            <div class="cat-heading">
+              <Icon name={categoryIcons[category.name]} />{category.name}
+            </div>
             <ul>
               {#each category.bindings as binding}
-                <li on:click={() => addBinding(binding)}>
+                <!-- {JSON.stringify(binding)} -->
+                <li class="binding" on:click={() => addBinding(binding)}>
                   <span class="binding__label">{binding.readableBinding}</span>
-                  {#if binding.type}
-                    <span class="binding__type">{binding.type}</span>
+                  <!-- {#if binding.type}
+                    <span class="binding__typeWrap">
+                      <span class="binding__type">{binding.type}</span>
+                    </span>
+                  {/if} -->
+                  {#if binding.fieldSchema?.type}
+                    <span class="binding__typeWrap">
+                      <span class="binding__type">
+                        {binding.fieldSchema.type}
+                      </span>
+                    </span>
                   {/if}
                   {#if binding.description}
                     <br />
@@ -167,31 +268,44 @@
                 </li>
               {/each}
             </ul>
-          </section>
+          {/if}
+        {/each}
+
+        {#if selectedCategory === "Helpers" || search}
+          {#if filteredHelpers?.length}
+            <div class="heading">Helpers</div>
+            <ul class="helpers">
+              {#each filteredHelpers as helper}
+                <li
+                  on:click={() => addHelper(helper, usingJS)}
+                  on:mouseenter={e => {
+                    // if (e.target !== this) return
+                    popoverAnchor = e.target
+                    hoverHelper = helper
+                    popover.show()
+                    e.stopPropagation()
+                  }}
+                  on:mouseleave={() => {
+                    popover.hide()
+                    popoverAnchor = null
+                    hoverHelper = null
+                  }}
+                  on:focus={() => {}}
+                  on:blur={() => {}}
+                >
+                  <span class="binding__label">{helper.displayText}</span>
+                  {#if helper.type}
+                    <span class="binding__typeWrap">
+                      <span class="binding__type">{helper.type}</span>
+                    </span>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+          {/if}
         {/if}
-      {/each}
-      {#if filteredHelpers?.length}
-        <section>
-          <div class="heading">Helpers</div>
-          <ul>
-            {#each filteredHelpers as helper}
-              <li on:click={() => addHelper(helper, usingJS)}>
-                <div class="helper">
-                  <div class="helper__name">{helper.displayText}</div>
-                  <div class="helper__description">
-                    {@html helper.description}
-                  </div>
-                  <pre class="helper__example">{getHelperExample(
-                      helper,
-                      usingJS
-                    )}</pre>
-                </div>
-              </li>
-            {/each}
-          </ul>
-        </section>
       {/if}
-    </div>
+    </Layout>
   </svelte:fragment>
   <div class="main">
     <Tabs selected={mode} on:select={onChangeMode}>
@@ -241,6 +355,35 @@
 </DrawerContent>
 
 <style>
+  ul.helpers li * {
+    pointer-events: none;
+  }
+  ul.category-list li {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
+  }
+  ul.category-list .category-name {
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  ul.category-list .category-chevron {
+    flex: 1;
+    text-align: right;
+  }
+  ul.category-list .category-chevron :global(div.icon),
+  .cat-heading :global(div.icon) {
+    display: inline-block;
+  }
+  li.binding {
+    display: flex;
+    align-items: center;
+  }
+  li.binding .binding__typeWrap {
+    flex: 1;
+    text-align: right;
+    text-transform: capitalize;
+  }
   .main :global(textarea) {
     min-height: 202px !important;
   }
@@ -251,23 +394,20 @@
     padding: var(--spacing-s) var(--spacing-xl);
   }
 
-  .container {
-    margin: calc(-1 * var(--spacing-xl));
-  }
-  .heading {
+  .heading,
+  .cat-heading {
     font-size: var(--font-size-s);
     font-weight: 600;
     text-transform: uppercase;
     color: var(--spectrum-global-color-gray-600);
-    padding: var(--spacing-xl) 0 var(--spacing-m) 0;
   }
 
-  section {
-    padding: 0 var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
+  .cat-heading {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
   }
-  section:not(:first-child) {
-    border-top: var(--border-light);
-  }
+
   ul {
     list-style: none;
     padding: 0;
@@ -278,7 +418,7 @@
     font-size: var(--font-size-s);
     padding: var(--spacing-m);
     border-radius: 4px;
-    border: var(--border-light);
+    background-color: var(--spectrum-global-color-gray-200);
     transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
       border-color 130ms ease-in-out;
     word-wrap: break-word;
@@ -292,11 +432,7 @@
   li:hover {
     color: var(--spectrum-global-color-gray-900);
     background-color: var(--spectrum-global-color-gray-50);
-    border-color: var(--spectrum-global-color-gray-500);
     cursor: pointer;
-  }
-  li:hover :global(*) {
-    color: var(--spectrum-global-color-gray-900) !important;
   }
 
   .binding__label {

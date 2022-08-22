@@ -359,6 +359,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
           providerId,
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
+          category: "Data",
         })
       })
     })
@@ -385,6 +386,7 @@ const getUserBindings = () => {
       // datasource options, based on bindable properties
       fieldSchema,
       providerId: "user",
+      category: "Current User",
     })
   })
   return bindings
@@ -401,11 +403,13 @@ const getDeviceBindings = () => {
       type: "context",
       runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
       readableBinding: `Device.Mobile`,
+      category: "Device",
     })
     bindings.push({
       type: "context",
       runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
       readableBinding: `Device.Tablet`,
+      category: "Device",
     })
   }
   return bindings
@@ -460,6 +464,7 @@ const getStateBindings = () => {
       type: "context",
       runtimeBinding: `${safeState}.${makePropSafe(key)}`,
       readableBinding: `State.${key}`,
+      category: "State",
     }))
   }
   return bindings
@@ -482,11 +487,13 @@ const getUrlBindings = asset => {
     type: "context",
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
+    category: "URL",
   }))
   const queryParamsBinding = {
     type: "context",
     runtimeBinding: makePropSafe("query"),
     readableBinding: "Query params",
+    category: "URL",
   }
   return urlParamBindings.concat([queryParamsBinding])
 }
@@ -497,6 +504,7 @@ const getRoleBindings = () => {
       type: "context",
       runtimeBinding: `trim "${role._id}"`,
       readableBinding: `Role.${role.name}`,
+      category: "Role",
     }
   })
 }
