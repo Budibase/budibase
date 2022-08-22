@@ -4,6 +4,7 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
+  export let bindings = []
 
   const types = [
     {
@@ -39,6 +40,7 @@
   <Select bind:value={parameters.type} options={types} placeholder={null} />
   <Label>Message</Label>
   <DrawerBindableInput
+    {bindings}
     value={parameters.message}
     on:change={e => (parameters.message = e.detail)}
   />
