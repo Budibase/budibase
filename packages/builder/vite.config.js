@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
         clientPort: env.VITE_HMR_CLIENT_PORT || 3000,
         path: env.VITE_HMR_PATH || "/",
       },
+      port: 3000,
     },
     base: "/builder/",
     build: {

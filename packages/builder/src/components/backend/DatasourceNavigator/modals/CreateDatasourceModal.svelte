@@ -28,6 +28,9 @@
   let importModal
 
   $: showImportButton = false
+  $: customIntegrations = Object.entries(integrations).filter(
+    entry => entry[1].custom
+  )
 
   checkShowImport()
 
@@ -163,17 +166,19 @@
           />
         {/each}
       </div>
-      <Body size="S">Custom data source</Body>
-      <div class="item-list">
-        {#each Object.entries(integrations).filter(entry => entry[1].custom) as [integrationType, schema]}
-          <DatasourceCard
-            on:selected={evt => selectIntegration(evt.detail)}
-            {schema}
-            bind:integrationType
-            {integration}
-          />
-        {/each}
-      </div>
+      {#if customIntegrations.length > 0}
+        <Body size="S">Custom data source</Body>
+        <div class="item-list">
+          {#each customIntegrations as [integrationType, schema]}
+            <DatasourceCard
+              on:selected={evt => selectIntegration(evt.detail)}
+              {schema}
+              bind:integrationType
+              {integration}
+            />
+          {/each}
+        </div>
+      {/if}
     </Layout>
   </ModalContent>
 </Modal>

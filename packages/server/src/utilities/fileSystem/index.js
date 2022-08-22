@@ -15,6 +15,7 @@ const {
   streamUpload,
   deleteFolder,
   downloadTarball,
+  deleteFiles,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
 const { checkSlashesInUrl } = require("../")
@@ -351,13 +352,21 @@ exports.extractPluginTarball = async file => {
   return { metadata, directory: path }
 }
 
-exports.getDatasourcePlugin = async (name, url) => {
+exports.getDatasourcePlugin = async (name, url, hash) => {
   if (!fs.existsSync(DATASOURCE_PATH)) {
     fs.mkdirSync(DATASOURCE_PATH)
   }
   const filename = join(DATASOURCE_PATH, name)
+  const metadataName = `${filename}.bbmetadata`
   if (fs.existsSync(filename)) {
-    return require(filename)
+    const currentHash = fs.readFileSync(metadataName, "utf8")
+    // if hash is the same return the file, otherwise remove it and re-download
+    if (currentHash === hash) {
+      return require(filename)
+    } else {
+      console.log(`Updating plugin: ${name}`)
+      fs.unlinkSync(filename)
+    }
   }
   const fullUrl = checkSlashesInUrl(
     `${env.MINIO_URL}/${ObjectStoreBuckets.PLUGINS}/${url}`
@@ -366,6 +375,7 @@ exports.getDatasourcePlugin = async (name, url) => {
   if (response.status === 200) {
     const content = await response.text()
     fs.writeFileSync(filename, content)
+    fs.writeFileSync(metadataName, hash)
     require(filename)
   } else {
     throw new Error(
@@ -380,5 +390,6 @@ exports.getDatasourcePlugin = async (name, url) => {
 exports.upload = upload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
+exports.deleteFiles = deleteFiles
 exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
 exports.NODE_MODULES_PATH = NODE_MODULES_PATH
