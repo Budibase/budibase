@@ -34,7 +34,8 @@ filterTests(['smoke', 'all'], () => {
           }
         })
 
-      cy.get(interact.TEMPLATE_CATEGORY_FILTER).should("not.exist")
+      cy.get(".thisisnothere").should("exist")
+      cy.get(interact.TEMPLATE_CATEGORY_FILTER).should("exist")
       cy.get(interact.TEMPLATE_CATEGORY).should("exist")
       
       cy.get(interact.TEMPLATE_CATEGORY_ACTIONGROUP).its('length').should('be.gt', 1)
