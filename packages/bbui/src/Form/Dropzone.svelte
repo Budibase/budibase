@@ -10,6 +10,7 @@
   export let error = null
   export let fileSizeLimit = undefined
   export let processFiles = undefined
+  export let deleteAttachments = undefined
   export let handleFileTooLarge = undefined
   export let handleTooManyFiles = undefined
   export let gallery = true
@@ -30,6 +31,7 @@
     {value}
     {fileSizeLimit}
     {processFiles}
+    {deleteAttachments}
     {handleFileTooLarge}
     {handleTooManyFiles}
     {gallery}

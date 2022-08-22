@@ -20,7 +20,7 @@
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, templates, groups } from "stores/portal"
+  import { apps, auth, admin, templates } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
@@ -355,7 +355,7 @@
                   </Button>
                 {/if}
                 <div class="filter">
-                  {#if $auth.groupsEnabled && $groups.length}
+                  {#if $auth.groupsEnabled}
                     <AccessFilter on:change={accessFilterAction} />
                   {/if}
                   <Select

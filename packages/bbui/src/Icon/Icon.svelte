@@ -83,4 +83,9 @@
     transform: translateX(-50%);
     text-align: center;
   }
+
+  .spectrum-Icon--sizeXS {
+    width: 10px;
+    height: 10px;
+  }
 </style>

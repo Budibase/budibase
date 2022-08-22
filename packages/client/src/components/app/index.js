@@ -5,6 +5,8 @@ import "@spectrum-css/vars/dist/spectrum-darkest.css"
 import "@spectrum-css/vars/dist/spectrum-dark.css"
 import "@spectrum-css/vars/dist/spectrum-light.css"
 import "@spectrum-css/vars/dist/spectrum-lightest.css"
+import "@budibase/frontend-core/src/themes/nord.css"
+import "@budibase/frontend-core/src/themes/midnight.css"
 import "@spectrum-css/page/dist/index-vars.css"
 
 // Non user-facing components
