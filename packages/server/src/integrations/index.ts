@@ -93,7 +93,11 @@ module.exports = {
     for (let plugin of plugins) {
       if (plugin.name === integration) {
         // need to use commonJS require due to its dynamic runtime nature
-        return getDatasourcePlugin(plugin.name, plugin.jsUrl)
+        return getDatasourcePlugin(
+          plugin.name,
+          plugin.jsUrl,
+          plugin.schema?.hash
+        )
       }
     }
   },

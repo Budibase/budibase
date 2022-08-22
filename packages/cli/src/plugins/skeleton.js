@@ -6,7 +6,7 @@ const { join } = require("path")
 const tar = require("tar")
 const { processStringSync } = require("@budibase/string-templates")
 
-const HBS_FILES = ["package.json.hbs", "schema.json.hbs"]
+const HBS_FILES = ["package.json.hbs", "schema.json.hbs", "README.md.hbs"]
 
 async function getSkeletonUrl(type) {
   const resp = await fetch(
@@ -40,7 +40,7 @@ exports.getSkeleton = async (type, name) => {
   fs.rmSync(tarballFile)
 }
 
-exports.fleshOutSkeleton = async (name, description, version) => {
+exports.fleshOutSkeleton = async (type, name, description, version) => {
   for (let file of HBS_FILES) {
     const oldFile = join(name, file),
       newFile = join(name, file.substring(0, file.length - 4))
