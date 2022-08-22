@@ -301,11 +301,11 @@ const continueIfHandler = action => {
 }
 
 const showNotificationHandler = action => {
-  const { message, type } = action.parameters
+  const { message, type, autoDismiss } = action.parameters
   if (!message || !type) {
     return
   }
-  notificationStore.actions[type]?.(message)
+  notificationStore.actions[type]?.(message, autoDismiss)
 }
 
 const handlerMap = {
