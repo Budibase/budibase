@@ -11,7 +11,7 @@
   } from "@budibase/bbui"
   import { getAvailableActions } from "./index"
   import { generate } from "shortid"
-  import { getButtonContextBindings } from "builderStore/dataBinding"
+  import { getEventContextBindings } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
 
   const flipDurationMs = 150
@@ -41,14 +41,14 @@
   }, {})
 
   // These are ephemeral bindings which only exist while executing actions
-  $: buttonContextBindings = getButtonContextBindings(
+  $: eventContexBindings = getEventContextBindings(
     $currentAsset,
     $store.selectedComponentId,
     key,
     actions,
     selectedAction?.id
   )
-  $: allBindings = buttonContextBindings.concat(bindings)
+  $: allBindings = eventContexBindings.concat(bindings)
 
   // Assign a unique ID to each action
   $: {

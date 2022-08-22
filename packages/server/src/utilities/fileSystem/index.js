@@ -15,6 +15,7 @@ const {
   streamUpload,
   deleteFolder,
   downloadTarball,
+  deleteFiles,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
 const { checkSlashesInUrl } = require("../")
@@ -380,5 +381,6 @@ exports.getDatasourcePlugin = async (name, url) => {
 exports.upload = upload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
+exports.deleteFiles = deleteFiles
 exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
 exports.NODE_MODULES_PATH = NODE_MODULES_PATH
