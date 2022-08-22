@@ -56,6 +56,7 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     controller.deleteObjects
   )
+  .get("/preview", authorized(BUILDER), controller.serveBuilderPreview)
   .get("/:appId/:path*", controller.serveApp)
   .get("/app/:appUrl/:path*", controller.serveApp)
   .post(
