@@ -5,7 +5,6 @@ const path = require("path")
 const fs = require("fs")
 
 const WEBHOOK_URL = process.env.CYPRESS_WEBHOOK_URL
-const OUTCOME = process.env.CYPRESS_OUTCOME
 const DASHBOARD_URL = process.env.CYPRESS_DASHBOARD_URL
 const GIT_SHA = process.env.GITHUB_SHA
 const GITHUB_ACTIONS_RUN_URL = process.env.GITHUB_ACTIONS_RUN_URL
@@ -34,6 +33,8 @@ async function discordCypressResultsNotification(report) {
     passPercent,
     skipped,
   } = report.stats
+
+  const OUTCOME = failures > 0 ? "failure" : "success"
 
   const options = {
     method: "POST",
@@ -114,7 +115,7 @@ async function discordCypressResultsNotification(report) {
   }
   const response = await fetch(WEBHOOK_URL, options)
 
-  if (response.status >= 400) {
+  if (response.status >= 201) {
     const text = await response.text()
     console.error(
       `Error sending discord webhook. \nStatus: ${response.status}. \nResponse Body: ${text}. \nRequest Body: ${options.body}`
