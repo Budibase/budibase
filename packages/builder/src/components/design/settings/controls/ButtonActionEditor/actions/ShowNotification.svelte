@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label } from "@budibase/bbui"
+  import { Select, Label, Checkbox } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
@@ -28,17 +28,22 @@
     if (!parameters.type) {
       parameters.type = "success"
     }
+    if (parameters.autoDismiss == null) {
+      parameters.autoDismiss = true
+    }
   })
 </script>
 
 <div class="root">
-  <Label small>Type</Label>
+  <Label>Type</Label>
   <Select bind:value={parameters.type} options={types} placeholder={null} />
-  <Label small>Message</Label>
+  <Label>Message</Label>
   <DrawerBindableInput
     value={parameters.message}
     on:change={e => (parameters.message = e.detail)}
   />
+  <Label />
+  <Checkbox text="Auto dismiss" bind:value={parameters.autoDismiss} />
 </div>
 
 <style>
