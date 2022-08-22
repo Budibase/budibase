@@ -9,6 +9,19 @@ const { runPkgCommand } = require("../exec")
 const { join } = require("path")
 const { success, error, info } = require("../utils")
 
+function checkInPlugin() {
+  if (!fs.existsSync("package.json")) {
+    throw new Error(
+      "Please run in a plugin directory - must contain package.json"
+    )
+  }
+  if (!fs.existsSync("schema.json")) {
+    throw new Error(
+      "Please run in a plugin directory - must contain schema.json"
+    )
+  }
+}
+
 async function init(opts) {
   const type = opts["init"] || opts
   if (!type || !PLUGIN_TYPES_ARR.includes(type)) {
@@ -35,13 +48,15 @@ async function init(opts) {
   // get the skeleton
   console.log(info("Retrieving project..."))
   await getSkeleton(type, name)
-  await fleshOutSkeleton(name, desc, version)
+  await fleshOutSkeleton(type, name, desc, version)
   console.log(info("Installing dependencies..."))
   await runPkgCommand("install", join(process.cwd(), name))
   console.log(info(`Plugin created in directory "${name}"`))
 }
 
 async function verify() {
+  // will throw errors if not acceptable
+  checkInPlugin()
   console.log(info("Verifying plugin..."))
   const schema = fs.readFileSync("schema.json", "utf8")
   const pkg = fs.readFileSync("package.json", "utf8")
