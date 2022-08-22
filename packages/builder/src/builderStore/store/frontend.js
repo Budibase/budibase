@@ -40,6 +40,7 @@ const INITIAL_FRONTEND_STATE = {
     devicePreview: false,
     messagePassing: false,
     continueIfAction: false,
+    showNotificationAction: false,
   },
   errors: [],
   hasAppPackage: false,
