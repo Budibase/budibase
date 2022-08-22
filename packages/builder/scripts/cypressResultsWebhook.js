@@ -114,7 +114,7 @@ async function discordCypressResultsNotification(report) {
   }
   const response = await fetch(WEBHOOK_URL, options)
 
-  if (response.status >= 400) {
+  if (response.status >= 201) {
     const text = await response.text()
     console.error(
       `Error sending discord webhook. \nStatus: ${response.status}. \nResponse Body: ${text}. \nRequest Body: ${options.body}`
@@ -123,8 +123,12 @@ async function discordCypressResultsNotification(report) {
 }
 
 async function run() {
-  const report = await generateReport()
-  await discordCypressResultsNotification(report)
+  try {
+    const report = await generateReport()
+    await discordCypressResultsNotification(report)
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 run()
