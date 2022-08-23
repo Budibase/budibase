@@ -33,6 +33,7 @@
   export let showMenu = false
   export let bindings = []
   export let bindingDrawerLeft
+  export let handleDuplicateKeys = false
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -40,10 +41,20 @@
   }))
   let fieldActivity = buildFieldActivity(activity)
 
-  $: object = fields.reduce(
-    (acc, next) => ({ ...acc, [next.name]: next.value }),
-    {}
-  )
+  $: {
+    object = fields.reduce(
+      (acc, next) => ({ ...acc, [next.name]: next.value }),
+      {}
+    )
+    if (handleDuplicateKeys) {
+      for (const key in object) {
+        const fieldValues = fields.filter(field => field.name === key)
+        if (fieldValues.length > 1) {
+          object[key] = fieldValues.map(field => field.value)
+        }
+      }
+    }
+  }
 
   function buildFieldActivity(obj) {
     if (!obj || typeof obj !== "object") {

@@ -460,6 +460,7 @@
               bind:object={breakQs}
               name="param"
               headings
+              handleDuplicateKeys
               bindings={mergedBindings}
               bindingDrawerLeft="260px"
             />

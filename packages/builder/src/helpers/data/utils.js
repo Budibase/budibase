@@ -46,7 +46,16 @@ export function buildQueryString(obj) {
       if (str !== "") {
         str += "&"
       }
-      str += `${key}=${value || ""}`
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          str += `${key}=${value[i] || ""}`
+          if (i < value.length - 1) {
+            str += "&"
+          }
+        }
+      } else {
+        str += `${key}=${value || ""}`
+      }
     }
   }
   return str
