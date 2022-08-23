@@ -14,8 +14,10 @@ import {
   HTTPError,
   accounts,
   migrations,
+  StaticDatabases,
+  ViewName
 } from "@budibase/backend-core"
-import { MigrationType, User } from "@budibase/types"
+import { MigrationType, PlatformUserByEmail, User, Account } from "@budibase/types"
 import { groups as groupUtils } from "@budibase/pro"
 
 const PAGE_LIMIT = 8
@@ -247,6 +249,54 @@ export const addTenant = async (
   }
 }
 
+const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
+  return dbUtils.queryGlobalView(ViewName.USER_BY_EMAIL, {
+    keys: emails,
+    include_docs: true,
+    arrayResponse: true
+  })
+}
+
+const getExistingPlatformUsers = async (emails: string[]): Promise<PlatformUserByEmail[]> => {
+  return dbUtils.doWithDB(StaticDatabases.PLATFORM_INFO.name, async (infoDb: any) => {
+    const response = await infoDb.allDocs({
+      keys: emails,
+      include_docs: true,
+    })
+    return response.rows.map((row: any) => row.doc)
+  })
+}
+
+const getExistingAccounts = async (emails: string[]): Promise<Account[]> => {
+  return dbUtils.queryPlatformView(ViewName.ACCOUNT_BY_EMAIL, {
+    keys: emails,
+    include_docs: true,
+    arrayResponse: true
+  })
+}
+
+/**
+ * Apply a system-wide search on emails:
+ * - in tenant
+ * - cross tenant
+ * - accounts
+ * return an array of emails that match the supplied emails.
+ */
+const searchExistingEmails = async (emails: string[]) => {
+  let matchedEmails: string[] = []
+
+  const existingTenantUsers = await getExistingTenantUsers(emails)
+  matchedEmails.push(...existingTenantUsers.map((user: User) => user.email))
+
+  const existingPlatformUsers = await getExistingPlatformUsers(emails)
+  matchedEmails.push(...existingPlatformUsers.map((user: PlatformUserByEmail) => user._id!))
+
+  const existingAccounts = await getExistingAccounts(emails)
+  matchedEmails.push(...existingAccounts.map((account: Account) => account.email))
+
+  return matchedEmails
+}
+
 export const bulkCreate = async (
   newUsersRequested: User[],
   groups: string[]
@@ -257,19 +307,16 @@ export const bulkCreate = async (
   let usersToSave: any[] = []
   let newUsers: any[] = []
 
-  const allUsers = await db.allDocs(
-    dbUtils.getGlobalUserParams(null, {
-      include_docs: true,
-    })
-  )
-  let mapped = allUsers.rows.map((row: any) => row.id)
+  const emails = newUsersRequested.map((user: User) => user.email)
+  const existingEmails = await searchExistingEmails(emails)
+  const unsuccessful: { email: string, reason: string }[] = []
 
-  const currentUserEmails = mapped.map((x: any) => x.email) || []
   for (const newUser of newUsersRequested) {
     if (
       newUsers.find((x: any) => x.email === newUser.email) ||
-      currentUserEmails.includes(newUser.email)
+      existingEmails.includes(newUser.email)
     ) {
+      unsuccessful.push({ email: newUser.email, reason: `Email address ${newUser.email} already in use.` })
       continue
     }
     newUser.userGroups = groups
@@ -307,12 +354,17 @@ export const bulkCreate = async (
     await apps.syncUserInApps(user._id)
   }
 
-  return usersToBulkSave.map(user => {
+  const saved = usersToBulkSave.map(user => {
     return {
       _id: user._id,
       email: user.email,
     }
   })
+
+  return {
+    successful: saved,
+    unsuccessful
+  }
 }
 
 export const bulkDelete = async (userIds: any) => {

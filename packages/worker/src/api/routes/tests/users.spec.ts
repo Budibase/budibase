@@ -1,7 +1,9 @@
 jest.mock("nodemailer")
-const { config, request, mocks, structures } = require("../../../tests")
+import { config, request, mocks, structures } from "../../../tests"
 const sendMailMock = mocks.email.mock()
-const { events } = require("@budibase/backend-core")
+import { events } from "@budibase/backend-core"
+import { User, BulkCreateUsersRequest, BulkDeleteUsersRequest } from "@budibase/types"
+
 describe("/api/global/users", () => {
 
   beforeAll(async () => {
@@ -10,6 +12,10 @@ describe("/api/global/users", () => {
 
   afterAll(async () => {
     await config.afterAll()
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
   const sendUserInvite = async () => {
@@ -31,35 +37,75 @@ describe("/api/global/users", () => {
     return { code, res }
   }
 
-  it("should be able to generate an invitation", async () => {
-    const { code, res } = await sendUserInvite()
+  describe("invite", () => {
+    it("should be able to generate an invitation", async () => {
+      const { code, res } = await sendUserInvite()
 
-    expect(res.body).toEqual({ message: "Invitation has been sent." })
-    expect(sendMailMock).toHaveBeenCalled()
-    expect(code).toBeDefined()
-    expect(events.user.invited).toBeCalledTimes(1)
+      expect(res.body).toEqual({ message: "Invitation has been sent." })
+      expect(sendMailMock).toHaveBeenCalled()
+      expect(code).toBeDefined()
+      expect(events.user.invited).toBeCalledTimes(1)
+    })
+
+    it("should be able to create new user from invite", async () => {
+      const { code } = await sendUserInvite()
+
+      const res = await request
+        .post(`/api/global/users/invite/accept`)
+        .send({
+          password: "newpassword",
+          inviteCode: code,
+        })
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body._id).toBeDefined()
+      const user = await config.getUser("invite@test.com")
+      expect(user).toBeDefined()
+      expect(user._id).toEqual(res.body._id)
+      expect(events.user.inviteAccepted).toBeCalledTimes(1)
+      expect(events.user.inviteAccepted).toBeCalledWith(user)
+    })
   })
 
-  it("should be able to create new user from invite", async () => {
-    const { code } = await sendUserInvite()
-
+  const bulkCreateUsers = async (users: User[], groups: any[] = []) => {
+    const body: BulkCreateUsersRequest = { users, groups }
     const res = await request
-      .post(`/api/global/users/invite/accept`)
-      .send({
-        password: "newpassword",
-        inviteCode: code,
-      })
+      .post(`/api/global/users/bulkCreate`)
+      .send(body)
+      .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
-    expect(res.body._id).toBeDefined()
-    const user = await config.getUser("invite@test.com")
-    expect(user).toBeDefined()
-    expect(user._id).toEqual(res.body._id)
-    expect(events.user.inviteAccepted).toBeCalledTimes(1)
-    expect(events.user.inviteAccepted).toBeCalledWith(user)
+    return res.body
+  }
+
+  describe("bulkCreate", () => {
+
+    it("should ignore users existing in the same tenant", async () => {
+      await bulkCreateUsers(toCreate)
+    })
+
+    it("should ignore users existing in other tenants", async () => {
+      await bulkCreateUsers(toCreate)
+    })
+
+    it("should ignore accounts using the same email", async () => {
+      await bulkCreateUsers(toCreate)
+    })
+
+    it("should be able to bulkCreate users with different permissions", async () => {
+      const builder = structures.users.builderUser({ email: "bulkbasic@test.com" })
+      const admin = structures.users.adminUser({ email: "bulkadmin@test.com" })
+      const user = structures.users.user({ email: "bulkuser@test.com" })
+
+      await bulkCreateUsers([builder, admin, user])
+
+      expect(events.user.created).toBeCalledTimes(3)
+      expect(events.user.permissionAdminAssigned).toBeCalledTimes(1)
+      expect(events.user.permissionBuilderAssigned).toBeCalledTimes(1)
+    })
   })
 
-  const createUser = async (user) => {
+  const createUser = async (user: User) => {
     const existing = await config.getUser(user.email)
     if (existing) {
       await deleteUser(existing._id)
@@ -67,13 +113,13 @@ describe("/api/global/users", () => {
     return saveUser(user)
   }
 
-  const updateUser = async (user) => {
+  const updateUser = async (user: User) => {
     const existing = await config.getUser(user.email)
     user._id = existing._id
     return saveUser(user)
   }
 
-  const saveUser = async (user) => {
+  const saveUser = async (user: User) => {
     const res = await request
       .post(`/api/global/users`)
       .send(user)
@@ -83,30 +129,20 @@ describe("/api/global/users", () => {
     return res.body
   }
 
-
-  const bulkCreateUsers = async (users) => {
-    const res = await request
-      .post(`/api/global/users/bulkCreate`)
-      .send(users)
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return res.body
-  }
-
-  const bulkDeleteUsers = async (users) => {
+  const bulkDeleteUsers = async (users: User[]) => {
+    const body: BulkDeleteUsersRequest = {
+      userIds: users.map(u => u._id!)
+    }
     const res = await request
       .post(`/api/global/users/bulkDelete`)
-      .send(users)
+      .send(body)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
     return res.body
   }
 
-
-
-  const deleteUser = async (email) => {
+  const deleteUser = async (email: string) => {
     const user = await config.getUser(email)
     if (user) {
       await request
@@ -119,7 +155,6 @@ describe("/api/global/users", () => {
 
   describe("create", () => {
     it("should be able to create a basic user", async () => {
-      jest.clearAllMocks()
       const user = structures.users.user({ email: "basic@test.com" })
       await createUser(user)
 
@@ -129,23 +164,8 @@ describe("/api/global/users", () => {
       expect(events.user.permissionAdminAssigned).not.toBeCalled()
     })
 
-    it("should be able to bulkCreate users with different permissions", async () => {
-      jest.clearAllMocks()
-      const builder = structures.users.builderUser({ email: "bulkbasic@test.com" })
-      const admin = structures.users.adminUser({ email: "bulkadmin@test.com" })
-      const user = structures.users.user({ email: "bulkuser@test.com" })
-
-      let toCreate = { users: [builder, admin, user], groups: [] }
-      await bulkCreateUsers(toCreate)
-
-      expect(events.user.created).toBeCalledTimes(3)
-      expect(events.user.permissionAdminAssigned).toBeCalledTimes(1)
-      expect(events.user.permissionBuilderAssigned).toBeCalledTimes(1)
-    })
-
 
     it("should be able to create an admin user", async () => {
-      jest.clearAllMocks()
       const user = structures.users.adminUser({ email: "admin@test.com" })
       await createUser(user)
 
@@ -156,7 +176,6 @@ describe("/api/global/users", () => {
     })
 
     it("should be able to create a builder user", async () => {
-      jest.clearAllMocks()
       const user = structures.users.builderUser({ email: "builder@test.com" })
       await createUser(user)
 
@@ -167,7 +186,6 @@ describe("/api/global/users", () => {
     })
 
     it("should be able to assign app roles", async () => {
-      jest.clearAllMocks()
       const user = structures.users.user({ email: "assign-roles@test.com" })
       user.roles = {
         "app_123": "role1",
@@ -230,7 +248,7 @@ describe("/api/global/users", () => {
     })
 
     it("should be able to update a basic user to a builder user", async () => {
-      let user = structures.users.user({ email: "basic-update-builder@test.com" })
+      const user = structures.users.user({ email: "basic-update-builder@test.com" })
       await createUser(user)
       jest.clearAllMocks()
 
@@ -243,7 +261,7 @@ describe("/api/global/users", () => {
     })
 
     it("should be able to update an admin user to a basic user", async () => {
-      let user = structures.users.adminUser({ email: "admin-update-basic@test.com" })
+      const user = structures.users.adminUser({ email: "admin-update-basic@test.com" })
       await createUser(user)
       jest.clearAllMocks()
 
@@ -257,7 +275,7 @@ describe("/api/global/users", () => {
     })
 
     it("should be able to update an builder user to a basic user", async () => {
-      let user = structures.users.builderUser({ email: "builder-update-basic@test.com" })
+      const user = structures.users.builderUser({ email: "builder-update-basic@test.com" })
       await createUser(user)
       jest.clearAllMocks()
 
@@ -334,6 +352,29 @@ describe("/api/global/users", () => {
     })
   })
 
+  describe("bulkDelete", () => {
+
+    it("should not be able to bulkDelete account admin as admin", async () => {
+
+    })
+
+    it("should not be able to bulkDelete account owner as account owner", async () => {
+
+    })
+
+    it("should be able to bulk delete users with different permissions", async () => {
+      const builder = structures.users.builderUser({ email: "basic@test.com" })
+      const admin = structures.users.adminUser({ email: "admin@test.com" })
+      const user = structures.users.user({ email: "user@test.com" })
+
+      const createdUsers = await bulkCreateUsers([builder, admin, user])
+      await bulkDeleteUsers(createdUsers)
+      expect(events.user.deleted).toBeCalledTimes(3)
+      expect(events.user.permissionAdminRemoved).toBeCalledTimes(1)
+      expect(events.user.permissionBuilderRemoved).toBeCalledTimes(1)
+    })
+  })
+
   describe("destroy", () => {
     it("should be able to destroy a basic user", async () => {
       let user = structures.users.user({ email: "destroy@test.com" })
@@ -371,18 +412,11 @@ describe("/api/global/users", () => {
       expect(events.user.permissionAdminRemoved).not.toBeCalled()
     })
 
-    it("should be able to bulk delete users with different permissions", async () => {
-      jest.clearAllMocks()
-      const builder = structures.users.builderUser({ email: "basic@test.com" })
-      const admin = structures.users.adminUser({ email: "admin@test.com" })
-      const user = structures.users.user({ email: "user@test.com" })
+    it("should not be able to destroy account admin as admin", async () => {
 
-      let toCreate = { users: [builder, admin, user], groups: [] }
-      let createdUsers = await bulkCreateUsers(toCreate)
-      await bulkDeleteUsers({ userIds: [createdUsers[0]._id, createdUsers[1]._id, createdUsers[2]._id] })
-      expect(events.user.deleted).toBeCalledTimes(3)
-      expect(events.user.permissionAdminRemoved).toBeCalledTimes(1)
-      expect(events.user.permissionBuilderRemoved).toBeCalledTimes(1)
+    })
+
+    it("should not be able to destroy account owner as account owner", async () => {
 
     })
 
