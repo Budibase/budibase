@@ -20,8 +20,17 @@ exports.getView = async viewName => {
       return null
     }
 
-    const viewDoc = await db.get(generateMemoryViewID(viewName))
-    return viewDoc.view
+    try {
+      const viewDoc = await db.get(generateMemoryViewID(viewName))
+      return viewDoc.view
+    } catch (err) {
+      // Return null when PouchDB doesn't found the view
+      if (err.status === 404) {
+        return null
+      }
+
+      throw err
+    }
   }
 }
 

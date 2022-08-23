@@ -1,4 +1,4 @@
-name: Budibase Smoke Test
+name: Budibase Nightly Tests
 
 on:
  workflow_dispatch:
@@ -6,7 +6,7 @@ on:
   - cron: "0 5 * * *" # every day at 5AM
 
 jobs:
-  release:
+  nightly:
     runs-on: ubuntu-latest
 
     steps:
@@ -42,6 +42,18 @@ jobs:
         with:
           name: Test Reports
           path: packages/builder/cypress/reports/testReport.html
+
+      # TODO: enable once running in QA test env
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: eu-west-1
+      
+      # - name: Upload test results HTML
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   run: aws s3 cp packages/builder/cypress/reports/testReport.html s3://{{ secrets.BUDI_QA_REPORTS_BUCKET_NAME }}/$GITHUB_RUN_ID/index.html
 
       - name: Cypress Discord Notify
         run: yarn test:e2e:ci:notify
