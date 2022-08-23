@@ -16,6 +16,9 @@
 />
 
 <style>
+  hr {
+    background: var(--spectrum-global-color-gray-200);
+  }
   hr.noMargin {
     margin: 0;
   }

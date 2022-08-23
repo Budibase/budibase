@@ -17,7 +17,8 @@ exports.getFetchResponse = async fetched => {
 // need to make sure all ctx structures have the
 // throw added to them, so that controllers don't
 // throw a ctx.throw undefined when error occurs
-exports.buildCtx = (appId, emitter, { body, params } = {}) => {
+// opts can contain, body, params and version
+exports.buildCtx = (appId, emitter, opts = {}) => {
   const ctx = {
     appId,
     user: { appId },
@@ -26,11 +27,14 @@ exports.buildCtx = (appId, emitter, { body, params } = {}) => {
       throw error
     },
   }
-  if (body) {
-    ctx.request = { body }
+  if (opts.body) {
+    ctx.request = { body: opts.body }
   }
-  if (params) {
-    ctx.params = params
+  if (opts.params) {
+    ctx.params = opts.params
+  }
+  if (opts.version) {
+    ctx.version = opts.version
   }
   return ctx
 }

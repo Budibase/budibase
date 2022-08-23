@@ -25,9 +25,12 @@ const newid = require("../../db/newid")
 const context = require("@budibase/backend-core/context")
 const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
 const { encrypt } = require("@budibase/backend-core/encryption")
+const { DocumentType } = require("../../db/utils")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
+const FIRSTNAME = "Barbara"
+const LASTNAME = "Barbington"
 const CSRF_TOKEN = "e3727778-7af0-4226-b5eb-f43cbe60a306"
 
 class TestConfiguration {
@@ -51,12 +54,25 @@ class TestConfiguration {
     return this.app
   }
 
+  getProdApp() {
+    return this.prodApp
+  }
+
   getAppId() {
     return this.appId
   }
 
   getProdAppId() {
     return this.prodAppId
+  }
+
+  getUserDetails() {
+    return {
+      globalId: GLOBAL_USER_ID,
+      email: EMAIL,
+      firstName: FIRSTNAME,
+      lastName: LASTNAME,
+    }
   }
 
   async doInContext(appId, task) {
@@ -95,21 +111,23 @@ class TestConfiguration {
 
   // UTILS
 
-  async _req(config, params, controlFunc) {
+  async _req(body, params, controlFunc) {
+    // create a fake request ctx
     const request = {}
+    const appId = this.appId
+    request.appId = appId
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
-    request.appId = this.appId
-    request.user = { appId: this.appId, tenantId: TENANT_ID }
+    request.user = { appId, tenantId: TENANT_ID }
     request.query = {}
     request.request = {
-      body: config,
+      body,
     }
-    return this.doInContext(this.appId, async () => {
-      if (params) {
-        request.params = params
-      }
+    if (params) {
+      request.params = params
+    }
+    return this.doInContext(appId, async () => {
       await controlFunc(request)
       return request.body
     })
@@ -118,6 +136,8 @@ class TestConfiguration {
   // USER / AUTH
   async globalUser({
     id = GLOBAL_USER_ID,
+    firstName = FIRSTNAME,
+    lastName = LASTNAME,
     builder = true,
     admin = false,
     email = EMAIL,
@@ -135,6 +155,8 @@ class TestConfiguration {
         ...existing,
         roles: roles || {},
         tenantId: TENANT_ID,
+        firstName,
+        lastName,
       }
       await createASession(id, {
         sessionId: "sessionid",
@@ -161,6 +183,8 @@ class TestConfiguration {
 
   async createUser(
     id = null,
+    firstName = FIRSTNAME,
+    lastName = LASTNAME,
     email = EMAIL,
     builder = true,
     admin = false,
@@ -169,6 +193,8 @@ class TestConfiguration {
     const globalId = !id ? `us_${Math.random()}` : `us_${id}`
     const resp = await this.globalUser({
       id: globalId,
+      firstName,
+      lastName,
       email,
       builder,
       admin,
@@ -304,7 +330,6 @@ class TestConfiguration {
 
     // create production app
     this.prodApp = await this.deploy()
-    this.prodAppId = this.prodApp.appId
 
     this.allApps.push(this.prodApp)
     this.allApps.push(this.app)
@@ -315,13 +340,11 @@ class TestConfiguration {
   async deploy() {
     await this._req(null, null, controllers.deploy.deployApp)
     const prodAppId = this.getAppId().replace("_dev", "")
+    this.prodAppId = prodAppId
+
     return context.doInAppContext(prodAppId, async () => {
-      const appPackage = await this._req(
-        null,
-        { appId: prodAppId },
-        controllers.app.fetchAppPackage
-      )
-      return appPackage.application
+      const db = context.getProdAppDB()
+      return await db.get(DocumentType.APP_METADATA)
     })
   }
 
@@ -520,14 +543,14 @@ class TestConfiguration {
 
   // QUERY
 
-  async previewQuery(request, config, datasource, fields) {
+  async previewQuery(request, config, datasource, fields, params, verb) {
     return request
       .post(`/api/queries/preview`)
       .send({
         datasourceId: datasource._id,
-        parameters: {},
+        parameters: params || {},
         fields,
-        queryVerb: "read",
+        queryVerb: verb || "read",
         name: datasource.name,
       })
       .set(config.defaultHeaders())

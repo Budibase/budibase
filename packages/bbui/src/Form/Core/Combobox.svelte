@@ -52,7 +52,10 @@
       {id}
       type="text"
       on:focus={() => (focus = true)}
-      on:blur={() => (focus = false)}
+      on:blur={() => {
+        focus = false
+        dispatch("blur")
+      }}
       on:change={onType}
       value={value || ""}
       placeholder={placeholder || ""}

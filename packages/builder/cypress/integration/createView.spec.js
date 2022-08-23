@@ -5,7 +5,6 @@ filterTests(['smoke', 'all'], () => {
   context("Create a View", () => {
     before(() => {
       cy.login()
-
       cy.createTestApp()
       cy.createTable("data")
       cy.addColumn("data", "group", "Text")
@@ -69,8 +68,8 @@ filterTests(['smoke', 'all'], () => {
 
         cy.get(interact.SPECTRUM_BUTTON).contains("Save").click({ force: true })
       })
-      cy.wait(1000)
 
+      cy.wait(1000)
       cy.get(interact.TITLE).then($headers => {
         expect($headers).to.have.length(7)
         const headers = Array.from($headers).map(header =>

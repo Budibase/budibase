@@ -1,8 +1,8 @@
 const {
-  ViewNames,
+  ViewName,
   generateMemoryViewID,
   getMemoryViewParams,
-  DocumentTypes,
+  DocumentType,
   SEPARATOR,
 } = require("../../../db/utils")
 const env = require("../../../environment")
@@ -16,12 +16,21 @@ exports.getView = async viewName => {
     return designDoc.views[viewName]
   } else {
     // This is a table view, don't read the view from the DB
-    if (viewName.startsWith(DocumentTypes.TABLE + SEPARATOR)) {
+    if (viewName.startsWith(DocumentType.TABLE + SEPARATOR)) {
       return null
     }
 
-    const viewDoc = await db.get(generateMemoryViewID(viewName))
-    return viewDoc.view
+    try {
+      const viewDoc = await db.get(generateMemoryViewID(viewName))
+      return viewDoc.view
+    } catch (err) {
+      // Return null when PouchDB doesn't found the view
+      if (err.status === 404) {
+        return null
+      }
+
+      throw err
+    }
   }
 }
 
@@ -32,7 +41,7 @@ exports.getViews = async () => {
     const designDoc = await db.get("_design/database")
     for (let name of Object.keys(designDoc.views)) {
       // Only return custom views, not built ins
-      if (Object.values(ViewNames).indexOf(name) !== -1) {
+      if (Object.values(ViewName).indexOf(name) !== -1) {
         continue
       }
       response.push({

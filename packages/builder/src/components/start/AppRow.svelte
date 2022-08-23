@@ -30,7 +30,7 @@
   {/if}
 </div>
 <div class="desktop">
-  <AppLockModal {app} buttonSize="M" />
+  <span><AppLockModal {app} buttonSize="M" /></span>
 </div>
 <div class="desktop">
   <div class="app-status">

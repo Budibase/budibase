@@ -278,6 +278,9 @@ const notEqualHandler = (value, rule) => {
 // Evaluates a regex constraint
 const regexHandler = (value, rule) => {
   const regex = parseType(rule.value, "string")
+  if (!value) {
+    value = ""
+  }
   return new RegExp(regex).test(value)
 }
 

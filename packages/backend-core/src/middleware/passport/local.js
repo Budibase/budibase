@@ -55,6 +55,7 @@ exports.authenticate = async function (ctx, email, password, done) {
   if (await compare(password, dbUser.password)) {
     const sessionId = newid()
     const tenantId = getTenantId()
+
     await createASession(dbUser._id, { sessionId, tenantId })
 
     dbUser.token = jwt.sign(

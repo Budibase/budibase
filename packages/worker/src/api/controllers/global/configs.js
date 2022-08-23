@@ -1,7 +1,6 @@
 const {
   generateConfigID,
   getConfigParams,
-  getGlobalUserParams,
   getScopedFullConfig,
   getAllApps,
 } = require("@budibase/backend-core/db")
@@ -18,8 +17,10 @@ const {
   withCache,
   CacheKeys,
   bustCache,
+  cache,
 } = require("@budibase/backend-core/cache")
 const { events } = require("@budibase/backend-core")
+const { checkAnyUserExists } = require("../../../utilities/users")
 
 const BB_TENANT_CDN = "https://tenants.cdn.budi.live"
 
@@ -365,9 +366,9 @@ exports.upload = async function (ctx) {
 exports.destroy = async function (ctx) {
   const db = getGlobalDB()
   const { id, rev } = ctx.params
-
   try {
     await db.remove(id, rev)
+    await cache.delete(CacheKeys.CHECKLIST)
     ctx.body = { message: "Config deleted successfully" }
   } catch (err) {
     ctx.throw(err.status, err)
@@ -405,12 +406,7 @@ exports.configChecklist = async function (ctx) {
         })
 
         // They have set up an global user
-        const users = await db.allDocs(
-          getGlobalUserParams(null, {
-            include_docs: true,
-            limit: 1,
-          })
-        )
+        const userExists = await checkAnyUserExists()
         return {
           apps: {
             checked: apps.length > 0,
@@ -423,7 +419,7 @@ exports.configChecklist = async function (ctx) {
             link: "/builder/portal/manage/email",
           },
           adminUser: {
-            checked: users && users.rows.length >= 1,
+            checked: userExists,
             label: "Create your first user",
             link: "/builder/portal/manage/users",
           },

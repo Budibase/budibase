@@ -157,7 +157,8 @@
 
 <style>
   .datasource-icon {
-    margin-right: 3px;
-    padding-top: 3px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 24px;
   }
 </style>

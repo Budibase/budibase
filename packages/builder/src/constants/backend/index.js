@@ -158,14 +158,12 @@ export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
   opt => opt.type
 )
 
-export const ALLOWABLE_JSON_OPTIONS = [FIELDS.JSON, FIELDS.ARRAY]
-export const ALLOWABLE_JSON_TYPES = ALLOWABLE_JSON_OPTIONS.map(opt => opt.type)
-
 export const SWITCHABLE_TYPES = [
   ...ALLOWABLE_STRING_TYPES,
   ...ALLOWABLE_NUMBER_TYPES,
-  ...ALLOWABLE_JSON_TYPES,
 ]
+
+export const BUDIBASE_DATASOURCE_ID = "bb_internal"
 
 export const IntegrationTypes = {
   POSTGRES: "POSTGRES",

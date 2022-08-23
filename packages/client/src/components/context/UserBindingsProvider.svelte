@@ -1,6 +1,6 @@
 <script>
   import Provider from "./Provider.svelte"
-  import { authStore, devToolsStore } from "stores"
+  import { authStore, currentRole } from "stores"
   import { ActionTypes } from "constants"
   import { Constants } from "@budibase/frontend-core"
 
@@ -17,10 +17,6 @@
   ]
 </script>
 
-<Provider
-  key="user"
-  data={{ ...$authStore, roleId: $devToolsStore.role || $authStore?.roleId }}
-  {actions}
->
+<Provider key="user" data={{ ...$authStore, roleId: $currentRole }} {actions}>
   <slot />
 </Provider>

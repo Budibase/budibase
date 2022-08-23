@@ -36,13 +36,22 @@ cd ../budibase-pro
 # Install NPM credentials
 echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
 
-# Sync backend-core version in packages/pro/package.json
+# Sync budibase dependency versions in packages/pro/package.json
 # Ensures pro does not use out of date dependency
 cd packages/pro
 jq '.dependencies."@budibase/backend-core"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
+jq '.dependencies."@budibase/types"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
 
 # Go back to pro repo root
 cd -
+
+# Update lockfile with new dependency versions
+yarn clean -y && yarn bootstrap
+
+# Commit and push
+git add packages/pro/yarn.lock
+git commit -m "Update dependency versions to $VERSION"
+git push
 
 #############################################
 #                  PUBLISH                  #
@@ -87,8 +96,13 @@ jq '.dependencies."@budibase/pro"="'$VERSION'"' package.json > package.json.tmp 
 # Go back to budibase repo root
 cd -
 
+# Update lockfile with new pro version
+yarn clean -y && yarn bootstrap
+
 # Commit and push changes
 git add packages/server/package.json
+git add packages/server/yarn.lock
 git add packages/worker/package.json
+git add packages/worker/yarn.lock
 git commit -m "Update pro version to $VERSION"
 git push
