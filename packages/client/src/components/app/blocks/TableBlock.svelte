@@ -76,6 +76,7 @@
               hAlign: "stretch",
               vAlign: "middle",
               gap: "M",
+              wrap: true,
             }}
             styles={{
               "margin-bottom": "20px",
@@ -93,9 +94,10 @@
               type="container"
               props={{
                 direction: "row",
-                hAlign: "right",
+                hAlign: "left",
                 vAlign: "center",
                 gap: "M",
+                wrap: true,
               }}
               order={1}
             >
