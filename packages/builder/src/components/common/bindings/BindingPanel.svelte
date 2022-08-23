@@ -53,15 +53,15 @@
     Device: "DevicePhone",
     "Current User": "User",
     Helpers: "MagicWand",
-    Data: "Data",
+    Dataprovider: "Data",
     State: "AutomatedSegment",
     URL: "RailTop",
-    Role: "UsersLock",
+    Role: "UserGroup",
   }
 
   let popover
   let popoverAnchor
-  let hoverHelper
+  let hoverTarget
 
   $: usingJS = mode === "JavaScript"
   $: searchRgx = new RegExp(search, "ig")
@@ -179,21 +179,15 @@
     bind:this={popover}
     anchor={popoverAnchor}
     maxWidth={300}
-    observe={false}
   >
     <Layout gap="S">
-      {#if selectedCategory === "Helpers" || search}
-        <div class="helper">
-          <div class="helper__name">{hoverHelper.displayText}</div>
-          <div class="helper__description">
-            {@html hoverHelper.description}
-          </div>
-          <pre class="helper__example">{getHelperExample(
-              hoverHelper,
-              usingJS
-            )}</pre>
+      <div class="helper">
+        <div class="helper__name">{hoverTarget.title}</div>
+        <div class="helper__description">
+          {@html hoverTarget.description}
         </div>
-      {/if}
+        <pre class="helper__example">{hoverTarget.example}</pre>
+      </div>
     </Layout>
   </Popover>
 </span>
@@ -244,21 +238,53 @@
             </div>
             <ul>
               {#each category.bindings as binding}
-                <!-- {JSON.stringify(binding)} -->
-                <li class="binding" on:click={() => addBinding(binding)}>
-                  <span class="binding__label">{binding.readableBinding}</span>
-                  <!-- {#if binding.type}
-                    <span class="binding__typeWrap">
-                      <span class="binding__type">{binding.type}</span>
-                    </span>
-                  {/if} -->
-                  {#if binding.fieldSchema?.type}
+                <li
+                  class="binding"
+                  on:mouseenter={e => {
+                    popoverAnchor = e.target
+                    if (!binding.name && !binding.description) {
+                      return
+                    }
+                    hoverTarget = {
+                      title: binding.name,
+                      description: binding.description,
+                    }
+                    popover.show()
+                    e.stopPropagation()
+                  }}
+                  on:mouseleave={() => {
+                    popover.hide()
+                    popoverAnchor = null
+                    hoverTarget = null
+                  }}
+                  on:focus={() => {}}
+                  on:blur={() => {}}
+                  on:click={() => addBinding(binding)}
+                >
+                  <span class="binding__label">
+                    {#if binding.display?.name}
+                      {binding.display.name}
+                    {:else if binding.fieldSchema?.name}
+                      {binding.fieldSchema?.name}
+                    {:else}
+                      {binding.readableBinding}
+                    {/if}
+                  </span>
+
+                  {#if binding.display?.type}
                     <span class="binding__typeWrap">
                       <span class="binding__type">
-                        {binding.fieldSchema.type}
+                        {binding.display.type}
+                      </span>
+                    </span>
+                  {:else if binding.fieldSchema?.type}
+                    <span class="binding__typeWrap">
+                      <span class="binding__type">
+                        {binding.fieldSchema?.type}
                       </span>
                     </span>
                   {/if}
+
                   {#if binding.description}
                     <br />
                     <div class="binding__description">
@@ -277,28 +303,33 @@
             <ul class="helpers">
               {#each filteredHelpers as helper}
                 <li
+                  class="binding"
                   on:click={() => addHelper(helper, usingJS)}
                   on:mouseenter={e => {
-                    // if (e.target !== this) return
                     popoverAnchor = e.target
-                    hoverHelper = helper
+                    if (!helper.displayText && helper.description) {
+                      return
+                    }
+                    hoverTarget = {
+                      title: helper.displayText,
+                      description: helper.description,
+                      example: getHelperExample(helper, usingJS),
+                    }
                     popover.show()
                     e.stopPropagation()
                   }}
                   on:mouseleave={() => {
                     popover.hide()
                     popoverAnchor = null
-                    hoverHelper = null
+                    hoverTarget = null
                   }}
                   on:focus={() => {}}
                   on:blur={() => {}}
                 >
                   <span class="binding__label">{helper.displayText}</span>
-                  {#if helper.type}
-                    <span class="binding__typeWrap">
-                      <span class="binding__type">{helper.type}</span>
-                    </span>
-                  {/if}
+                  <span class="binding__typeWrap">
+                    <span class="binding__type">function</span>
+                  </span>
                 </li>
               {/each}
             </ul>
