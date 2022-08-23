@@ -100,13 +100,13 @@ jobs:
       - name: Tag and release Proxy service docker image
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker:proxy:preprod
-          docker tag proxy-service budibase/proxy:$PREPROD_TAG
-          docker push budibase/proxy:$PREPROD_TAG
+          yarn build:docker:proxy:k8s
+          docker tag proxy-service budibase/proxy:$TAG
+          docker push budibase/proxy:$TAG
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          PREPROD_TAG: k8s-preprod
+          TAG: ${{ steps.previoustag.outputs.tag }}
 
       - name: Pull values.yaml from budibase-infra
         run: | 

@@ -37,18 +37,14 @@ function processStringSync(string, env) {
 }
 
 const Configs = {
-  prod: {},
-  preprod: {},
-  release: {},
+  k8s: {},
   compose: {
     watchtower: true,
   },
 }
 
 const Commands = {
-  Prod: "prod",
-  Preprod: "preprod",
-  Release: "release",
+  k8s: "k8s",
   Compose: "compose",
 }
 
@@ -72,7 +68,7 @@ if (
   !Object.values(Commands).some(command => managementCommand === command)
 ) {
   throw new Error(
-    "You must supply either a 'compose', 'preprod' or 'prod' commmand to generate an NGINX config."
+    "You must supply either a 'compose' or 'k8s' commmand to generate an NGINX config."
   )
 }
 
