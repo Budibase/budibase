@@ -22,7 +22,7 @@
     "cy:ci:notify": "node scripts/cypressResultsWebhook",
     "cy:debug": "start-server-and-test cy:setup http://localhost:4100/builder cy:open",
     "cy:debug:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:open",
-    "test:newman:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder test:newman",
+    "test:newman:ci": "start-server-and-test BB_ADMIN_USER_EMAIL=test@budibase.com BB_ADMIN_USER_PASSWORD=test cy:setup:ci http://localhost:4100/builder test:newman",
     "test:newman": "node newman/run.js"
   },
   "jest": {

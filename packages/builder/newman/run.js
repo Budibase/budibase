@@ -1,5 +1,7 @@
 const newman = require("newman")
 
+const NEWMAN_TEST_API_KEY = "default_test"
+
 const run = async () => {
   const apiKey = process.env.POSTMAN_API_KEY
   const collectionId = process.env.POSTMAN_COLLECTION
@@ -9,8 +11,13 @@ const run = async () => {
     collection: `https://api.getpostman.com/collections/${collectionId}?apikey=${apiKey}`,
     environment: `https://api.getpostman.com/environments/${environmentId}?apikey=${apiKey}`,
     //   envVar: "",
-    //   globals: "",
-    //   globalVar: "",
+    //   globals: {},
+    globalVar: [
+      {
+        key: "x-budibase-api-key",
+        value: process.env.NEWMAN_BUDIBASE_API_KEY || NEWMAN_TEST_API_KEY,
+      },
+    ],
     //   iterationCount: "",
     //   iterationData: "",
     //   folder: "",
