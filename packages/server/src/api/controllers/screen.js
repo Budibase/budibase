@@ -1,6 +1,7 @@
 const { getScreenParams, generateScreenID } = require("../../db/utils")
 const { AccessController } = require("@budibase/backend-core/roles")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
 
 exports.fetch = async ctx => {
   const db = getAppDB()
@@ -23,11 +24,17 @@ exports.save = async ctx => {
   const db = getAppDB()
   let screen = ctx.request.body
 
+  let eventFn
   if (!screen._id) {
     screen._id = generateScreenID()
+    eventFn = events.screen.created
   }
+
   const response = await db.put(screen)
 
+  if (eventFn) {
+    await eventFn(screen)
+  }
   ctx.message = `Screen ${screen.name} saved.`
   ctx.body = {
     ...screen,
@@ -38,7 +45,12 @@ exports.save = async ctx => {
 
 exports.destroy = async ctx => {
   const db = getAppDB()
-  await db.remove(ctx.params.screenId, ctx.params.screenRev)
+  const id = ctx.params.screenId
+  const screen = await db.get(id)
+
+  await db.remove(id, ctx.params.screenRev)
+
+  await events.screen.deleted(screen)
   ctx.body = {
     message: "Screen deleted successfully",
   }

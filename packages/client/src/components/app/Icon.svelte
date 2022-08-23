@@ -33,11 +33,13 @@
 {/if}
 
 <style>
-  div {
-    font-style: italic;
+  @media (hover: hover) {
+    .hoverable:hover {
+      color: var(--spectrum-alias-icon-color-selected-hover) !important;
+      cursor: pointer;
+    }
   }
-  .hoverable:hover {
+  .hoverable:active {
     color: var(--spectrum-alias-icon-color-selected-hover) !important;
-    cursor: pointer;
   }
 </style>

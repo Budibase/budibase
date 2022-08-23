@@ -1,4 +1,6 @@
 const TestConfig = require("../../../tests/utilities/TestConfiguration")
+const { TENANT_ID } = require("../../../tests/utilities/structures")
+const { doInTenant } = require("@budibase/backend-core/tenancy")
 const actions = require("../../actions")
 const emitter = require("../../../events/index")
 const env = require("../../../environment")
@@ -18,7 +20,6 @@ exports.afterAll = () => {
 
 exports.runInProd = async fn => {
   env._set("NODE_ENV", "production")
-  env._set("USE_QUOTAS", 1)
   let error
   try {
     await fn()
@@ -26,21 +27,22 @@ exports.runInProd = async fn => {
     error = err
   }
   env._set("NODE_ENV", "jest")
-  env._set("USE_QUOTAS", null)
   if (error) {
     throw error
   }
 }
 
 exports.runStep = async function runStep(stepId, inputs) {
-  let step = await actions.getAction(stepId)
-  expect(step).toBeDefined()
-  return step({
-    inputs,
-    appId: config ? config.getAppId() : null,
-    // don't really need an API key, mocked out usage quota, not being tested here
-    apiKey: exports.apiKey,
-    emitter,
+  return doInTenant(TENANT_ID, async () => {
+    let step = await actions.getAction(stepId)
+    expect(step).toBeDefined()
+    return step({
+      inputs,
+      appId: config ? config.getAppId() : null,
+      // don't really need an API key, mocked out usage quota, not being tested here
+      apiKey: exports.apiKey,
+      emitter,
+    })
   })
 }
 

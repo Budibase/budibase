@@ -39,6 +39,7 @@
     if (v.internal) {
       acc[k] = v
     }
+    delete acc.LOOP
     return acc
   }, {})
 

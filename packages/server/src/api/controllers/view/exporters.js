@@ -6,7 +6,7 @@ exports.csv = function (headers, rows) {
       .map(header => {
         let val = row[header]
         val =
-          typeof val === "object"
+          typeof val === "object" && !(val instanceof Date)
             ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
             : `"${val}"`
         return val.trim()

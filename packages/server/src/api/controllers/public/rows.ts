@@ -1,4 +1,4 @@
-import { default as rowController } from "../row"
+import * as rowController from "../row"
 import { addRev } from "./utils"
 import { Row } from "../../../definitions/common"
 import { convertBookmark } from "../../../utilities"

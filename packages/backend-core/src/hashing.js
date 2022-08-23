@@ -1,4 +1,4 @@
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcrypt")
 const env = require("./environment")
 const { v4 } = require("uuid")
 

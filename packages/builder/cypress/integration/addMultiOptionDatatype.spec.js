@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(['all'], () => {
   context("Add Multi-Option Datatype", () => {
@@ -15,21 +16,17 @@ filterTests(['all'], () => {
 
   it("should add form with multi select picker, containing 5 options", () => {
     cy.navigateToFrontend()
-    cy.wait(500)
     // Add data provider
-    cy.get(`[data-cy="category-Data"]`).click()
-    cy.get(`[data-cy="component-Data Provider"]`).click()
-    cy.get('[data-cy="dataSource-prop-control"]').click()
-    cy.get(".dropdown").contains("Multi Data").click()
-    cy.wait(500)
+    cy.searchAndAddComponent("Data Provider")
+    cy.get(interact.DATASOURCE_PROP_CONTROL).click()
+    cy.get(interact.DROPDOWN).contains("Multi Data").click()
     // Add Form with schema to match table
-    cy.addComponent("Form", "Form")
-    cy.get('[data-cy="dataSource-prop-control"').click()
-    cy.get(".dropdown").contains("Multi Data").click()
-    cy.wait(500)
+    cy.searchAndAddComponent("Form")
+    cy.get(interact.DATASOURCE_PROP_CONTROL).click()
+    cy.get(interact.DROPDOWN).contains("Multi Data").click()
     // Add multi-select picker to form
-    cy.addComponent("Form", "Multi-select Picker").then(componentId => {
-      cy.get('[data-cy="field-prop-control"]').type("Test Data").type("{enter}")
+    cy.searchAndAddComponent("Multi-select Picker").then(componentId => {
+      cy.get(interact.DATASOURCE_FIELD_CONTROL).type("Test Data").type("{enter}")
       cy.wait(1000)
       cy.getComponent(componentId).contains("Choose some options").click()
       // Check picker has 5 items
@@ -40,7 +37,7 @@ filterTests(['all'], () => {
       }
       // Check items have been selected
       cy.getComponent(componentId)
-        .find(".spectrum-Picker-label")
+        .find(interact.SPECTRUM_PICKER_LABEL)
         .contains("(5)")
       })
     })

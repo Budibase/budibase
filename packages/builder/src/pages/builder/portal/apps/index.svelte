@@ -2,22 +2,20 @@
   import {
     Heading,
     Layout,
-    Detail,
     Button,
-    Input,
     Select,
     Modal,
     Page,
     notifications,
+    Notification,
     Body,
     Search,
-    Divider,
   } from "@budibase/bbui"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-  import ChooseIconModal from "components/start/ChooseIconModal.svelte"
+  import ExportAppModal from "components/start/ExportAppModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
@@ -25,26 +23,24 @@
   import { apps, auth, admin, templates } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
-  import analytics, { Events } from "analytics"
   import Logo from "assets/bb-space-man.svg"
+  import AccessFilter from "./_components/AcessFilter.svelte"
 
   let sortBy = "name"
   let template
   let selectedApp
   let creationModal
   let updatingModal
-  let deletionModal
-  let unpublishModal
-  let iconModal
+  let exportModal
   let creatingApp = false
-  let loaded = false
+  let loaded = $apps?.length || $templates?.length
   let searchTerm = ""
   let cloud = $admin.cloud
-  let appName = ""
   let creatingFromTemplate = false
+  let automationErrors
+  let accessFilterList = null
 
   const resolveWelcomeMessage = (auth, apps) => {
     const userWelcome = auth?.user?.firstName
@@ -62,9 +58,15 @@
     : "Start from scratch"
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
-  $: filteredApps = enrichedApps.filter(app =>
-    app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  $: filteredApps = enrichedApps.filter(
+    app =>
+      app?.name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (accessFilterList !== null ? accessFilterList.includes(app?.appId) : true)
   )
+
+  $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
+  $: unlocked = lockedApps?.length === 0
+  $: automationErrors = getAutomationErrors(enrichedApps)
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -92,6 +94,36 @@
         return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
       })
     }
+  }
+
+  const getAutomationErrors = apps => {
+    const automationErrors = {}
+    for (let app of apps) {
+      if (app.automationErrors) {
+        if (errorCount(app.automationErrors) > 0) {
+          automationErrors[app.devId] = app.automationErrors
+        }
+      }
+    }
+    return automationErrors
+  }
+
+  const goToAutomationError = appId => {
+    const params = new URLSearchParams({
+      tab: "Automation History",
+      open: "error",
+    })
+    $goto(`../overview/${appId}?${params.toString()}`)
+  }
+
+  const errorCount = errors => {
+    return Object.values(errors).reduce((acc, next) => acc + next.length, 0)
+  }
+
+  const automationErrorMessage = appId => {
+    const app = enrichedApps.find(app => app.devId === appId)
+    const errors = automationErrors[appId]
+    return `${app.name} - Automation error (${errorCount(errors)})`
   }
 
   const initiateAppCreation = () => {
@@ -136,12 +168,6 @@
 
       // Create App
       const createdApp = await API.createApp(data)
-      analytics.captureEvent(Events.APP.CREATED, {
-        name: appName,
-        appId: createdApp.instance._id,
-        template,
-        fromTemplateMarketplace: true,
-      })
 
       // Select Correct Application/DB in prep for creating user
       const pkg = await API.fetchAppPackage(createdApp.instance._id)
@@ -166,12 +192,8 @@
     creatingApp = false
   }
 
-  const viewApp = app => {
-    if (app.url) {
-      window.open(`/app${app.url}`)
-    } else {
-      window.open(`/${app.prodId}`)
-    }
+  const appOverview = app => {
+    $goto(`../overview/${app.devId}`)
   }
 
   const editApp = app => {
@@ -184,70 +206,8 @@
     $goto(`../../app/${app.devId}`)
   }
 
-  const editIcon = app => {
-    selectedApp = app
-    iconModal.show()
-  }
-
-  const exportApp = app => {
-    const id = app.deployed ? app.prodId : app.devId
-    const appName = encodeURIComponent(app.name)
-    window.location = `/api/backups/export?appId=${id}&appname=${appName}`
-  }
-
-  const unpublishApp = app => {
-    selectedApp = app
-    unpublishModal.show()
-  }
-
-  const confirmUnpublishApp = async () => {
-    if (!selectedApp) {
-      return
-    }
-    try {
-      await API.unpublishApp(selectedApp.prodId)
-      await apps.load()
-      notifications.success("App unpublished successfully")
-    } catch (err) {
-      notifications.error("Error unpublishing app")
-    }
-  }
-
-  const deleteApp = app => {
-    selectedApp = app
-    deletionModal.show()
-  }
-
-  const confirmDeleteApp = async () => {
-    if (!selectedApp) {
-      return
-    }
-    try {
-      await API.deleteApp(selectedApp?.devId)
-      await apps.load()
-      // Get checklist, just in case that was the last app
-      await admin.init()
-      notifications.success("App deleted successfully")
-    } catch (err) {
-      notifications.error("Error deleting app")
-    }
-    selectedApp = null
-    appName = null
-  }
-
-  const updateApp = async app => {
-    selectedApp = app
-    updatingModal.show()
-  }
-
-  const releaseLock = async app => {
-    try {
-      await API.releaseAppLock(app.devId)
-      await apps.load()
-      notifications.success("Lock released successfully")
-    } catch (err) {
-      notifications.error("Error releasing lock")
-    }
+  const accessFilterAction = accessFilter => {
+    accessFilterList = accessFilter.detail
   }
 
   function createAppFromTemplateUrl(templateKey) {
@@ -287,39 +247,44 @@
 </script>
 
 <Page wide>
-  <Layout noPadding gap="XL">
+  <Layout noPadding gap="M">
     {#if loaded}
+      {#each Object.keys(automationErrors || {}) as appId}
+        <Notification
+          wide
+          dismissable
+          action={() => goToAutomationError(appId)}
+          type="error"
+          icon="Alert"
+          actionMessage={errorCount(automationErrors[appId]) > 1
+            ? "View errors"
+            : "View error"}
+          on:dismiss={async () => {
+            await automationStore.actions.clearLogErrors({ appId })
+            await apps.load()
+          }}
+          message={automationErrorMessage(appId)}
+        />
+      {/each}
       <div class="title">
         <div class="welcome">
           <Layout noPadding gap="XS">
-            <Heading size="M">{welcomeHeader}</Heading>
-            <Body size="S">
+            <Heading size="L">{welcomeHeader}</Heading>
+            <Body size="M">
               {welcomeBody}
             </Body>
           </Layout>
-
-          <div class="buttons">
-            <Button
-              dataCy="create-app-btn"
-              size="L"
-              icon="Add"
-              cta
-              on:click={initiateAppCreation}
-            >
-              {createAppButtonText}
-            </Button>
-            {#if $apps?.length > 0}
+          {#if !$apps?.length}
+            <div class="buttons">
               <Button
-                icon="Experience"
-                size="L"
-                quiet
-                secondary
-                on:click={$goto("/builder/portal/apps/templates")}
+                dataCy="create-app-btn"
+                size="M"
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
               >
-                Templates
+                {createAppButtonText}
               </Button>
-            {/if}
-            {#if !$apps?.length}
               <Button
                 dataCy="import-app-btn"
                 icon="Import"
@@ -330,15 +295,9 @@
               >
                 Import app
               </Button>
-            {/if}
-          </div>
+            </div>
+          {/if}
         </div>
-        <div>
-          <Layout gap="S" justifyItems="center">
-            <img class="img-logo img-size" alt="logo" src={Logo} />
-          </Layout>
-        </div>
-        <Divider size="S" />
       </div>
 
       {#if !$apps?.length && $templates?.length}
@@ -346,9 +305,42 @@
       {/if}
 
       {#if enrichedApps.length}
-        <Layout noPadding gap="S">
+        <Layout noPadding gap="L">
           <div class="title">
-            <Detail size="L">My apps</Detail>
+            <div class="buttons">
+              <Button
+                dataCy="create-app-btn"
+                size="M"
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
+              >
+                {createAppButtonText}
+              </Button>
+              {#if $apps?.length > 0}
+                <Button
+                  icon="Experience"
+                  size="M"
+                  quiet
+                  secondary
+                  on:click={$goto("/builder/portal/apps/templates")}
+                >
+                  Templates
+                </Button>
+              {/if}
+              {#if !$apps?.length}
+                <Button
+                  dataCy="import-app-btn"
+                  icon="Import"
+                  size="L"
+                  quiet
+                  secondary
+                  on:click={initiateAppImport}
+                >
+                  Import app
+                </Button>
+              {/if}
+            </div>
             {#if enrichedApps.length > 1}
               <div class="app-actions">
                 {#if cloud}
@@ -363,6 +355,9 @@
                   </Button>
                 {/if}
                 <div class="filter">
+                  {#if $auth.groupsEnabled}
+                    <AccessFilter on:change={accessFilterAction} />
+                  {/if}
                   <Select
                     quiet
                     autoWidth
@@ -380,19 +375,9 @@
             {/if}
           </div>
 
-          <div class="appTable">
+          <div class="appTable" class:unlocked>
             {#each filteredApps as app (app.appId)}
-              <AppRow
-                {releaseLock}
-                {editIcon}
-                {app}
-                {unpublishApp}
-                {viewApp}
-                {editApp}
-                {exportApp}
-                {deleteApp}
-                {updateApp}
-              />
+              <AppRow {app} {editApp} {appOverview} />
             {/each}
           </div>
         </Layout>
@@ -422,35 +407,14 @@
   <UpdateAppModal app={selectedApp} />
 </Modal>
 
-<ConfirmDialog
-  bind:this={deletionModal}
-  title="Confirm deletion"
-  okText="Delete app"
-  onOk={confirmDeleteApp}
-  onCancel={() => (appName = null)}
-  disabled={appName !== selectedApp?.name}
->
-  Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
-
-  <p>Please enter the app name below to confirm.</p>
-  <Input
-    bind:value={appName}
-    data-cy="delete-app-confirmation"
-    placeholder={selectedApp?.name}
-  />
-</ConfirmDialog>
-<ConfirmDialog
-  bind:this={unpublishModal}
-  title="Confirm unpublish"
-  okText="Unpublish app"
-  onOk={confirmUnpublishApp}
->
-  Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
-</ConfirmDialog>
-
-<ChooseIconModal app={selectedApp} bind:this={iconModal} />
+<Modal bind:this={exportModal} padding={false} width="600px">
+  <ExportAppModal app={selectedApp} />
+</Modal>
 
 <style>
+  .appTable {
+    border-top: var(--border-light);
+  }
   .app-actions {
     display: flex;
   }
@@ -458,7 +422,7 @@
     margin-right: 10px;
   }
   .title .welcome > .buttons {
-    padding-top: 30px;
+    padding-top: var(--spacing-l);
   }
   .title {
     display: flex;
@@ -494,16 +458,18 @@
     grid-template-columns: 1fr 1fr 1fr 1fr auto;
     align-items: center;
   }
+
+  .appTable.unlocked {
+    grid-template-columns: 1fr 1fr auto 1fr auto;
+  }
+
   .appTable :global(> div) {
     height: 70px;
     display: grid;
     align-items: center;
-    grid-gap: var(--spacing-xl);
-    grid-template-columns: auto 1fr;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 var(--spacing-s);
   }
   .appTable :global(> div) {
     border-bottom: var(--border-light);

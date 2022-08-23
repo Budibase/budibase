@@ -11,6 +11,13 @@ on:
     branches:
       - master
       - develop 
+      - release 
+ workflow_dispatch:
+
+env:
+  BRANCH: ${{ github.event.pull_request.head.ref }}
+  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
+  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
   build:
@@ -27,6 +34,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+
+    - name: Install Pro
+      run: yarn install:pro $BRANCH $BASE_BRANCH
+
     - run: yarn
     - run: yarn bootstrap
     - run: yarn lint

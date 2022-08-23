@@ -53,6 +53,7 @@ exports.run = async function ({ inputs }) {
   if (!contents) {
     contents = "<h1>No content</h1>"
   }
+  to = to || undefined
   try {
     let response = await sendSmtpEmail(to, from, subject, contents, true)
     return {

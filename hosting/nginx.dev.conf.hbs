@@ -28,6 +28,12 @@ http {
     ignore_invalid_headers off;
     proxy_buffering off;
 
+    error_page 502 503 504 /error.html;
+    location = /error.html {
+      root /usr/share/nginx/html; 
+      internal;
+    }
+
     location /db/ {
       proxy_pass      http://couchdb-service:5984;
       rewrite ^/db/(.*)$ /$1 break;
@@ -53,6 +59,10 @@ http {
     }
 
     location /app {
+      proxy_pass      http://{{ address }}:4001;
+    }
+
+    location /preview {
       proxy_pass      http://{{ address }}:4001;
     }
 

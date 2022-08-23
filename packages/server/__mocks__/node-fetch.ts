@@ -15,6 +15,15 @@ module FetchMock {
           },
         },
         json: async () => {
+          //x-www-form-encoded body is a URLSearchParams
+          //The call to stringify it leaves it blank
+          if (body?.opts?.body instanceof URLSearchParams) {
+            const paramArray = Array.from(body.opts.body.entries())
+            body.opts.body = paramArray.reduce((acc: any, pair: any) => {
+              acc[pair[0]] = pair[1]
+              return acc
+            }, {})
+          }
           return body
         },
       }
@@ -48,12 +57,19 @@ module FetchMock {
         404
       )
     } else if (url.includes("_search")) {
+      const body = opts.body
+      const parts = body.split("tableId:")
+      let tableId
+      if (parts && parts[1]) {
+        tableId = parts[1].split('"')[0]
+      }
       return json({
         rows: [
           {
             doc: {
               _id: "test",
-              tableId: opts.body.split("tableId:")[1].split('"')[0],
+              tableId: tableId,
+              query: opts.body,
             },
           },
         ],

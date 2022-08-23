@@ -2,6 +2,6 @@
   import { Page } from "@budibase/bbui"
 </script>
 
-<Page>
+<Page maxWidth="90ch">
   <slot />
 </Page>

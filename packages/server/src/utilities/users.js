@@ -1,6 +1,7 @@
 const { InternalTables } = require("../db/utils")
 const { getGlobalUser } = require("../utilities/global")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { getProdAppID } = require("@budibase/backend-core/db")
 
 exports.getFullUser = async (ctx, userId) => {
   const global = await getGlobalUser(userId)
@@ -21,4 +22,24 @@ exports.getFullUser = async (ctx, userId) => {
     // make sure the ID is always a local ID, not a global one
     _id: userId,
   }
+}
+
+exports.publicApiUserFix = ctx => {
+  if (!ctx.request.body) {
+    return ctx
+  }
+  if (!ctx.request.body._id && ctx.params.userId) {
+    ctx.request.body._id = ctx.params.userId
+  }
+  if (!ctx.request.body.roles) {
+    ctx.request.body.roles = {}
+  } else {
+    const newRoles = {}
+    for (let [appId, role] of Object.entries(ctx.request.body.roles)) {
+      // @ts-ignore
+      newRoles[getProdAppID(appId)] = role
+    }
+    ctx.request.body.roles = newRoles
+  }
+  return ctx
 }

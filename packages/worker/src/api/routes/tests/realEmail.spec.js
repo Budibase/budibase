@@ -1,4 +1,4 @@
-const setup = require("./utilities")
+const { config, request } = require("../../../tests")
 const { EmailTemplatePurpose } = require("../../../constants")
 const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
@@ -7,20 +7,26 @@ const fetch = require("node-fetch")
 jest.setTimeout(30000)
 
 describe("/api/global/email", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
 
   beforeAll(async () => {
-    await config.init()
+    await config.beforeAll()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    await config.afterAll()
+  })
 
   async function sendRealEmail(purpose) {
     let response, text
     try {
-      await config.saveEtherealSmtpConfig()
-      await config.saveSettingsConfig()
+      const timeout = () => new Promise((resolve, reject) =>
+        setTimeout(() => reject({
+          status: 301,
+          errno: "ETIME"
+        }), 20000)
+      )
+      await Promise.race([config.saveEtherealSmtpConfig(), timeout()])
+      await Promise.race([config.saveSettingsConfig(), timeout()])
       const user = await config.getUser("test@test.com")
       const res = await request
         .post(`/api/global/email/send`)

@@ -97,7 +97,7 @@ exports.externalTrigger = async function (
     // values are likely to be submitted as strings, so we shall convert to correct type
     const coercedFields = {}
     const fields = automation.definition.trigger.inputs.fields
-    for (let key of Object.keys(fields)) {
+    for (let key of Object.keys(fields || {})) {
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }
     params.fields = coercedFields

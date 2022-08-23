@@ -1,18 +1,11 @@
-// Mock data
-
-require("../../../tests/utilities/dbConfig")
-
-const database = require("../../../db")
+require("../../../../tests/utilities/TestConfiguration")
 const { authenticateThirdParty } = require("../third-party-common")
 const { data } = require("./utilities/mock-data")
+const { DEFAULT_TENANT_ID } = require("../../../constants")
 
-const {
-  StaticDatabases,
-  generateGlobalUserID
-} = require("../../../db/utils")
+const { generateGlobalUserID } = require("../../../db/utils")
 const { newid } = require("../../../hashing")
-
-let db
+const { doWithGlobalDB, doInTenant } = require("../../../tenancy")
 
 const done = jest.fn()
 
@@ -21,43 +14,52 @@ const getErrorMessage = () => {
 }
 
 const saveUser = async (user) => {
-  return await db.put(user)
+  return doWithGlobalDB(DEFAULT_TENANT_ID, async db => {
+    return await db.put(user)
+  })
+}
+
+function authenticate(user, requireLocal, saveFn) {
+  return doInTenant(DEFAULT_TENANT_ID, () => {
+    return authenticateThirdParty(user, requireLocal, done, saveFn)
+  })
 }
 
 describe("third party common", () => {
-  describe("authenticateThirdParty", () => { 
+  describe("authenticateThirdParty", () => {
     let thirdPartyUser
-    
+
     beforeEach(() => {
-      db = database.getDB(StaticDatabases.GLOBAL.name)
       thirdPartyUser = data.buildThirdPartyUser()
     })
 
     afterEach(async () => {
-      jest.clearAllMocks()
-      await db.destroy()
+      return doWithGlobalDB(DEFAULT_TENANT_ID, async db => {
+        jest.clearAllMocks()
+        await db.destroy()
+      })
     })
-  
+
     describe("validation", () => {
       const testValidation = async (message) => {
-        await authenticateThirdParty(thirdPartyUser, false, done, saveUser)
+        await authenticate(thirdPartyUser, false, saveUser)
         expect(done.mock.calls.length).toBe(1)
         expect(getErrorMessage()).toContain(message)
       }
 
       it("provider fails", async () => {
         delete thirdPartyUser.provider
-        testValidation("third party user provider required")
+        await testValidation("third party user provider required")
       })
 
       it("user id fails", async () => {
         delete thirdPartyUser.userId
-        testValidation("third party user id required")
+        await testValidation("third party user id required")
       })
 
       it("email fails", async () => {
         delete thirdPartyUser.email
-        testValidation("third party user email required")
+        await testValidation("third party user email required")
       })
     })
 
@@ -81,34 +83,37 @@ describe("third party common", () => {
     describe("when the user doesn't exist", () => {
       describe("when a local account is required", () => {
         it("returns an error message", async () => {
-          await authenticateThirdParty(thirdPartyUser, true, done, saveUser)
+          await authenticate(thirdPartyUser, true, saveUser)
           expect(done.mock.calls.length).toBe(1)
           expect(getErrorMessage()).toContain("Email does not yet exist. You must set up your local budibase account first.")
         })
       })
-      
+
       describe("when a local account isn't required", () => {
         it("creates and authenticates the user", async () => {
-          await authenticateThirdParty(thirdPartyUser, false, done, saveUser)
+          await authenticate(thirdPartyUser, false, saveUser)
           const user = expectUserIsAuthenticated()
           expectUserIsSynced(user, thirdPartyUser)
           expect(user.roles).toStrictEqual({})
         })
       })
     })
-    
+
     describe("when the user exists", () => {
       let dbUser
       let id
       let email
 
       const createUser = async () => {
-        dbUser = {
-          _id: id,
-          email: email,
-        }
-        const response = await db.put(dbUser)
-        dbUser._rev = response.rev
+        return doWithGlobalDB(DEFAULT_TENANT_ID, async db => {
+          dbUser = {
+            _id: id,
+            email: email,
+          }
+          const response = await db.put(dbUser)
+          dbUser._rev = response.rev
+          return dbUser
+        })
       }
 
       const expectUserIsUpdated = (user) => {
@@ -126,8 +131,8 @@ describe("third party common", () => {
         })
 
         it("syncs and authenticates the user", async () => {
-          await authenticateThirdParty(thirdPartyUser, true, done, saveUser)
-        
+          await authenticate(thirdPartyUser, true, saveUser)
+
           const user = expectUserIsAuthenticated()
           expectUserIsSynced(user, thirdPartyUser)
           expectUserIsUpdated(user)
@@ -142,8 +147,8 @@ describe("third party common", () => {
         })
 
         it("syncs and authenticates the user", async () => {
-          await authenticateThirdParty(thirdPartyUser, true, done, saveUser)
-        
+          await authenticate(thirdPartyUser, true, saveUser)
+
           const user = expectUserIsAuthenticated()
           expectUserIsSynced(user, thirdPartyUser)
           expectUserIsUpdated(user)
@@ -160,8 +165,8 @@ describe("third party common", () => {
         })
 
         it("syncs and authenticates the user", async () => {
-          await authenticateThirdParty(thirdPartyUser, true, done, saveUser)
-        
+          await authenticate(thirdPartyUser, true, saveUser)
+
           const user = expectUserIsAuthenticated()
           expectUserIsSynced(user, thirdPartyUser)
           expectUserIsUpdated(user)

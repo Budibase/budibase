@@ -1,5 +1,5 @@
-const redis = require("../redis/authRedis")
-const { getTenantId, lookupTenantId, getGlobalDB } = require("../tenancy")
+const redis = require("../redis/init")
+const { getTenantId, lookupTenantId, doWithGlobalDB } = require("../tenancy")
 const env = require("../environment")
 const accounts = require("../cloud/accounts")
 
@@ -9,9 +9,8 @@ const EXPIRY_SECONDS = 3600
  * The default populate user function
  */
 const populateFromDB = async (userId, tenantId) => {
-  const user = await getGlobalDB(tenantId).get(userId)
+  const user = await doWithGlobalDB(tenantId, db => db.get(userId))
   user.budibaseAccess = true
-
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accounts.getAccount(user.email)
     if (account) {

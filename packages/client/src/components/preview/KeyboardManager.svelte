@@ -16,20 +16,20 @@
   })
 
   const onKeyDown = e => {
-    if (e.key === "Delete" || e.key === "Backspace") {
-      deleteSelectedComponent()
-    }
-  }
-
-  const deleteSelectedComponent = () => {
     const state = get(builderStore)
-    if (!state.inBuilder || !state.selectedComponentId || state.editMode) {
+    if (!state.inBuilder || state.editMode) {
       return
     }
     const activeTag = document.activeElement?.tagName.toLowerCase()
     if (["input", "textarea"].indexOf(activeTag) !== -1) {
       return
     }
-    builderStore.actions.deleteComponent(state.selectedComponentId)
+
+    // Need to manually block certain keys from propagating to the browser
+    if (e.ctrlKey && e.key === "d") {
+      e.preventDefault()
+    }
+
+    builderStore.actions.keyDown(e.key, e.ctrlKey)
   }
 </script>

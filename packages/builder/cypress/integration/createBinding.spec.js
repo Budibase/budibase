@@ -9,13 +9,13 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should add a current user binding", () => {
-      cy.addComponent("Elements", "Paragraph").then(() => {
+      cy.searchAndAddComponent("Paragraph").then(() => {
         addSettingBinding("text", "Current User._id")
       })
     })
 
     it("should handle an invalid binding", () => {
-      cy.addComponent("Elements", "Paragraph").then(componentId => {
+      cy.searchAndAddComponent("Paragraph").then(componentId => {
         // Cypress needs to escape curly brackets
         cy.get("[data-cy=setting-text] input")
           .type("{{}{{}{{} Current User._id {}}{}}")
@@ -24,10 +24,10 @@ filterTests(['smoke', 'all'], () => {
       })
     })
 
-    it("should add a URL param binding", () => {
+    xit("should add a URL param binding", () => {
       const paramName = "foo"
-      cy.createScreen("Test Param", `/test/:${paramName}`)
-      cy.addComponent("Elements", "Paragraph").then(componentId => {
+      cy.createScreen(`/test/:${paramName}`)
+      cy.searchAndAddComponent("Paragraph").then(componentId => {
         addSettingBinding("text", `URL.${paramName}`)
         // The builder preview pages don't have a real URL, so all we can do
         // is check that we were able to bind to the property, and that the
@@ -37,7 +37,7 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should add a binding with a handlebars helper", () => {
-      cy.addComponent("Elements", "Paragraph").then(componentId => {
+      cy.searchAndAddComponent("Paragraph").then(componentId => {
         // Cypress needs to escape curly brackets
         cy.get("[data-cy=setting-text] input")
           .type("{{}{{} add 1 2 {}}{}}")

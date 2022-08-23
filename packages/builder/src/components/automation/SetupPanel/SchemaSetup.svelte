@@ -30,6 +30,10 @@
       label: "DateTime",
       value: "datetime",
     },
+    {
+      label: "Array",
+      value: "array",
+    },
   ]
 
   function addField() {
@@ -70,6 +74,7 @@
         secondary
         placeholder="Enter field name"
         on:change={fieldNameChanged(field.name)}
+        updateOnChange={false}
       />
       <Select
         value={field.type}

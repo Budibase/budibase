@@ -3,10 +3,10 @@
   import SettingsButton from "./SettingsButton.svelte"
   import SettingsColorPicker from "./SettingsColorPicker.svelte"
   import SettingsPicker from "./SettingsPicker.svelte"
-  import { builderStore } from "stores"
+  import { builderStore, componentStore } from "stores"
   import { domDebounce } from "utils/domDebounce"
 
-  const verticalOffset = 28
+  const verticalOffset = 36
   const horizontalOffset = 2
 
   let top = 0
@@ -15,7 +15,7 @@
   let self
   let measured = false
 
-  $: definition = $builderStore.selectedComponentDefinition
+  $: definition = $componentStore.selectedComponentDefinition
   $: showBar = definition?.showSettingsBar && !$builderStore.isDragging
   $: settings = getBarSettings(definition)
 
@@ -37,7 +37,7 @@
     }
     const id = $builderStore.selectedComponentId
     const parent = document.getElementsByClassName(id)?.[0]
-    const element = parent?.childNodes?.[0]
+    const element = parent?.children?.[0]
 
     // The settings bar is higher in the dom tree than the selection indicators
     // as we want to be able to render the settings bar wider than the screen,
@@ -64,6 +64,11 @@
       const deviceBottom = deviceBounds.top + deviceBounds.height
       if (newTop > deviceBottom - 44) {
         newTop = deviceBottom - 44
+      }
+
+      //If element is at the very top of the screen, put the bar below the element
+      if (elBounds.top < elBounds.height && elBounds.height < 80) {
+        newTop = elBounds.bottom + verticalOffset
       }
 
       // Horizontally, try to center first.
@@ -150,7 +155,7 @@
       icon="Duplicate"
       on:click={() => {
         builderStore.actions.duplicateComponent(
-          $builderStore.selectedComponent._id
+          $builderStore.selectedComponentId
         )
       }}
       title="Duplicate component"
@@ -158,9 +163,7 @@
     <SettingsButton
       icon="Delete"
       on:click={() => {
-        builderStore.actions.deleteComponent(
-          $builderStore.selectedComponent._id
-        )
+        builderStore.actions.deleteComponent($builderStore.selectedComponentId)
       }}
       title="Delete component"
     />

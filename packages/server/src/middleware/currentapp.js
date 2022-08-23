@@ -4,7 +4,7 @@ const {
   getCookie,
   clearCookie,
 } = require("@budibase/backend-core/utils")
-const { Cookies } = require("@budibase/backend-core/constants")
+const { Cookies, Headers } = require("@budibase/backend-core/constants")
 const { getRole } = require("@budibase/backend-core/roles")
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { generateUserMetadataID, isDevAppID } = require("../db/utils")
@@ -63,6 +63,25 @@ module.exports = async (ctx, next) => {
     appId = requestAppId
     // retrieving global user gets the right role
     roleId = globalUser.roleId || roleId
+
+    // Allow builders to specify their role via a header
+    const isBuilder =
+      globalUser && globalUser.builder && globalUser.builder.global
+    const isDevApp = appId && isDevAppID(appId)
+    const roleHeader = ctx.request && ctx.request.headers[Headers.PREVIEW_ROLE]
+    if (isBuilder && isDevApp && roleHeader) {
+      // Ensure the role is valid by ensuring a definition exists
+      try {
+        await getRole(roleHeader)
+        roleId = roleHeader
+
+        // Delete admin and builder flags so that the specified role is honoured
+        delete ctx.user.builder
+        delete ctx.user.admin
+      } catch (error) {
+        // Swallow error and do nothing
+      }
+    }
   }
 
   // nothing more to do

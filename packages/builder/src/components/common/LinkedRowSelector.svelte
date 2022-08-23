@@ -8,7 +8,9 @@
   export let linkedRows = []
 
   let rows = []
-  let linkedIds = (linkedRows || [])?.map(row => row?._id || row)
+  let linkedIds = (Array.isArray(linkedRows) ? linkedRows : [])?.map(
+    row => row?._id || row
+  )
 
   $: linkedRows = linkedIds
   $: label = capitalise(schema.name)

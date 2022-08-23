@@ -48,7 +48,9 @@ exports.updateLock = async (devAppId, user) => {
     ...user,
     userId: globalId,
     _id: globalId,
+    lockedAt: new Date().getTime(),
   }
+
   await devAppClient.store(devAppId, inputUser, APP_DEV_LOCK_SECONDS)
 }
 

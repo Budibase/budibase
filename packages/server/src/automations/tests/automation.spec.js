@@ -1,4 +1,3 @@
-jest.mock("../../utilities/usageQuota")
 jest.mock("../../threads/automation")
 jest.mock("../../utilities/redis", () => ({
   init: jest.fn(),
@@ -32,7 +31,7 @@ describe("Run through some parts of the automations system", () => {
   it("should be able to init in builder", async () => {
     await triggers.externalTrigger(basicAutomation(), { a: 1 })
     await wait(100)
-    expect(thread).toHaveBeenCalled()
+    expect(thread.execute).toHaveBeenCalled()
   })
 
   it("should be able to init in prod", async () => {
@@ -53,7 +52,7 @@ describe("Run through some parts of the automations system", () => {
       }
     })
     await wait(100)
-    expect(thread).toHaveBeenCalledWith(makePartial({
+    expect(thread.execute).toHaveBeenCalledWith(makePartial({
       data: {
         event: {
           fields: {

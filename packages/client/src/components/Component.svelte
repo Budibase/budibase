@@ -9,16 +9,21 @@
 </script>
 
 <script>
-  import { getContext, setContext } from "svelte"
+  import { getContext, setContext, onMount, onDestroy } from "svelte"
   import { writable, get } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
-  import { enrichProps, propsAreSame } from "utils/componentProps"
-  import { builderStore } from "stores"
+  import {
+    enrichProps,
+    propsAreSame,
+    getSettingsDefinition,
+  } from "utils/componentProps"
+  import { builderStore, devToolsStore, componentStore, appStore } from "stores"
   import { Helpers } from "@budibase/bbui"
-  import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
+  import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
+  import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
 
   export let instance = {}
   export let isLayout = false
@@ -30,8 +35,8 @@
   const insideScreenslot = !!getContext("screenslot")
 
   // Create component context
-  const componentStore = writable({})
-  setContext("component", componentStore)
+  const store = writable({})
+  setContext("component", store)
 
   // Ref to the svelte component
   let ref
@@ -77,6 +82,7 @@
   let definition
   let settingsDefinition
   let settingsDefinitionMap
+  let missingRequiredSettings = false
 
   // Set up initial state for each new component instance
   $: initialise(instance)
@@ -84,27 +90,29 @@
   // Extract component instance info
   $: children = instance._children || []
   $: id = instance._id
-  $: name = instance._instanceName
+  $: name = isScreen ? "Screen" : instance._instanceName
+  $: icon = definition?.icon
 
   // Determine if the component is selected or is part of the critical path
   // leading to the selected component
   $: selected =
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
-  $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
+  $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
-  $: editable = !!definition?.editable
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
+  $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
+  $: editable = !!definition?.editable && !hasMissingRequiredSettings
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
-  $: interactive =
-    $builderStore.inBuilder &&
-    ($builderStore.previewType === "layout" || insideScreenslot) &&
-    !isBlock
+  $: builderInteractive =
+    $builderStore.inBuilder && insideScreenslot && !isBlock
+  $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
+  $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
   $: draggable =
     !inDragPath &&
@@ -113,6 +121,8 @@
     !isScreen &&
     definition?.draggable !== false
   $: droppable = interactive && !isLayout && !isScreen
+  $: builderHidden =
+    $builderStore.inBuilder && $builderStore.hiddenComponentIds?.includes(id)
 
   // Empty components are those which accept children but do not have any.
   // Empty states can be shown for these components, but can be disabled
@@ -132,8 +142,11 @@
   // Determine and apply settings to the component
   $: applySettings(staticSettings, enrichedSettings, conditionalSettings)
 
+  // Scroll the selected element into view
+  $: selected && scrollIntoView()
+
   // Update component context
-  $: componentStore.set({
+  $: store.set({
     id,
     children: children.length,
     styles: {
@@ -148,6 +161,8 @@
     selected,
     name,
     editing,
+    type: instance._component,
+    missingRequiredSettings,
   })
 
   const initialise = instance => {
@@ -164,8 +179,9 @@
     }
 
     // Pull definition and constructor
-    constructor = getComponentConstructor(instance._component)
-    definition = getComponentDefinition(instance._component)
+    const component = instance._component
+    constructor = getComponentConstructor(component)
+    definition = componentStore.actions.getComponentDefinition(component)
     if (!definition) {
       return
     }
@@ -194,6 +210,27 @@
     staticSettings = instanceSettings.staticSettings
     dynamicSettings = instanceSettings.dynamicSettings
 
+    // Check if we have any missing required settings
+    missingRequiredSettings = settingsDefinition.filter(setting => {
+      let empty = instance[setting.key] == null || instance[setting.key] === ""
+      let missing = setting.required && empty
+
+      // Check if this setting depends on another, as it may not be required
+      if (setting.dependsOn) {
+        const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
+        const dependsOnValue = setting.dependsOn.value
+        const realDependentValue = instance[dependsOnKey]
+        if (dependsOnValue == null && realDependentValue == null) {
+          return false
+        }
+        if (dependsOnValue !== realDependentValue) {
+          return false
+        }
+      }
+
+      return missing
+    })
+
     // Force an initial enrichment of the new settings
     enrichComponentSettings(get(context), settingsDefinitionMap, {
       force: true,
@@ -204,33 +241,10 @@
   const getComponentConstructor = component => {
     const split = component?.split("/")
     const name = split?.[split.length - 1]
-    if (name === "screenslot" && $builderStore.previewType !== "layout") {
+    if (name === "screenslot" && !insideScreenslot) {
       return Router
     }
     return AppComponents[name]
-  }
-
-  // Gets this component's definition from the manifest
-  const getComponentDefinition = component => {
-    const prefix = "@budibase/standard-components/"
-    const type = component?.replace(prefix, "")
-    return type ? Manifest[type] : null
-  }
-
-  // Gets the definition of this component's settings from the manifest
-  const getSettingsDefinition = definition => {
-    if (!definition) {
-      return []
-    }
-    let settings = []
-    definition.settings?.forEach(setting => {
-      if (setting.section) {
-        settings = settings.concat(setting.settings || [])
-      } else {
-        settings.push(setting)
-      }
-    })
-    return settings
   }
 
   const getSettingsDefinitionMap = settingsDefinition => {
@@ -385,9 +399,44 @@
       })
     }
   }
+
+  const scrollIntoView = () => {
+    const node = document.getElementsByClassName(id)?.[0]?.children[0]
+    if (!node) {
+      return
+    }
+    node.style.scrollMargin = "100px"
+    node.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+      inline: "start",
+    })
+  }
+
+  onMount(() => {
+    if (
+      $appStore.isDevApp &&
+      !componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.registerInstance(id, {
+        getSettings: () => cachedSettings,
+        getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
+        getDataContext: () => get(context),
+      })
+    }
+  })
+
+  onDestroy(() => {
+    if (
+      $appStore.isDevApp &&
+      componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.unregisterInstance(id)
+    }
+  })
 </script>
 
-{#if constructor && initialSettings && (visible || inSelectedPath)}
+{#if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}
   <!-- The ID is used as a class because getElementsByClassName is O(1) -->
   <!-- and the performance matters for the selection indicators -->
   <div
@@ -400,14 +449,21 @@
     class:block={isBlock}
     data-id={id}
     data-name={name}
+    data-icon={icon}
   >
     <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
-      {#if children.length}
+      {#if hasMissingRequiredSettings}
+        <ComponentPlaceholder />
+      {:else if children.length}
         {#each children as child (child._id)}
           <svelte:self instance={child} />
         {/each}
       {:else if emptyState}
-        <Placeholder />
+        {#if isScreen}
+          <ScreenPlaceholder />
+        {:else}
+          <Placeholder />
+        {/if}
       {:else if isBlock}
         <slot />
       {/if}
@@ -419,12 +475,15 @@
   .component {
     display: contents;
   }
+
   .interactive :global(*:hover) {
     cursor: pointer;
   }
+
   .draggable :global(*:hover) {
     cursor: grab;
   }
+
   .editing :global(*:hover) {
     cursor: auto;
   }

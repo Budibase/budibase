@@ -1,4 +1,4 @@
-import Router from "koa-router"
+import Router from "@koa/router"
 
 export type CtxFn = (ctx: any, next?: any) => void | Promise<any>
 
