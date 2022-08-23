@@ -90,7 +90,7 @@
   // using a create form, we just want a fake array so that our repeater
   // will actually render the form, but data doesn't matter.
   $: dataProvider =
-    actionType === "Update"
+    actionType !== "Create"
       ? `{{ literal ${safe(providerId)} }}`
       : { rows: [{}] }
 
@@ -133,7 +133,7 @@
           <BlockComponent
             type="form"
             props={{
-              actionType,
+              actionType: actionType === "Create" ? "Create" : "Update",
               dataSource,
               size,
               disabled: disabled || actionType === "View",

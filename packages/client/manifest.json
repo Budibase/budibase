@@ -4399,11 +4399,12 @@
       },
       {
         "type": "text",
-        "label": "Row ID to update",
+        "label": "Row ID",
         "key": "rowId",
         "dependsOn": {
           "setting": "actionType",
-          "value": "Update"
+          "value": "Create",
+          "invert": true
         }
       },
       {
@@ -4411,6 +4412,22 @@
         "label": "Title",
         "key": "title",
         "nested": true
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ],
+        "defaultValue": "spectrum--medium"
       },
       {
         "section": true,
@@ -4436,22 +4453,6 @@
                 "value": "above"
               }
             ]
-          },
-          {
-            "type": "select",
-            "label": "Size",
-            "key": "size",
-            "options": [
-              {
-                "label": "Medium",
-                "value": "spectrum--medium"
-              },
-              {
-                "label": "Large",
-                "value": "spectrum--large"
-              }
-            ],
-            "defaultValue": "spectrum--medium"
           },
           {
             "type": "boolean",
