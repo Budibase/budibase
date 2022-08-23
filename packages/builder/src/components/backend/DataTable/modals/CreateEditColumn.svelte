@@ -22,10 +22,8 @@
     RelationshipTypes,
     ALLOWABLE_STRING_OPTIONS,
     ALLOWABLE_NUMBER_OPTIONS,
-    ALLOWABLE_JSON_OPTIONS,
     ALLOWABLE_STRING_TYPES,
     ALLOWABLE_NUMBER_TYPES,
-    ALLOWABLE_JSON_TYPES,
     SWITCHABLE_TYPES,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
@@ -255,11 +253,6 @@
       ALLOWABLE_NUMBER_TYPES.indexOf(field.type) !== -1
     ) {
       return ALLOWABLE_NUMBER_OPTIONS
-    } else if (
-      originalName &&
-      ALLOWABLE_JSON_TYPES.indexOf(field.type) !== -1
-    ) {
-      return ALLOWABLE_JSON_OPTIONS
     } else if (!external) {
       return [
         ...Object.values(fieldDefinitions),

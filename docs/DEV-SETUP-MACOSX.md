@@ -4,6 +4,11 @@
 
 Install instructions [here](https://brew.sh/)
 
+| **NOTE**: If you are working on a M1 Apple Silicon which is running Z shell, you could need to add 
+`eval $(/opt/homebrew/bin/brew shellenv)` line to your `.zshrc`. This will make your zsh to find the apps you install 
+through brew.
+
+
 ### Install Node
 
 Budibase requires a recent version of node (14+):
@@ -52,3 +57,6 @@ So this command will actually run the application in dev mode. It creates .env f
 The dev version will be available on port 10000 i.e.
 
 http://127.0.0.1:10000/builder/admin
+
+| **NOTE**: If you are working on a M1 Apple Silicon, you will need to uncomment `# platform: linux/amd64` line in
+[hosting/docker-compose-dev.yaml](../hosting/docker-compose.dev.yaml)

@@ -12,7 +12,7 @@ export const APP_NAME_INPUT = "input" // we need to update this with atribute cy
 export const SPECTRUM_BUTTON_GROUP = ".spectrum-ButtonGroup"
 export const SPECTRUM_MODAL_INPUT = ".spectrum-Modal input"
 
-//AddMultiOptionDatatype test
+//AddMultiOptionDatatype
 export const CATEGORY_DATA = '[data-cy="category-Data"]'
 export const COMPONENT_DATA_PROVIDER = '[data-cy="component-Data Provider"]'
 export const DATASOURCE_PROP_CONTROL = '[data-cy="dataSource-prop-control"]'
@@ -51,7 +51,7 @@ export const LABEL_ADD_CIRCLE = "[aria-label=AddCircle]"
 export const ITEM_DISABLED = ".item.disabled"
 export const CONFIRM_WRAP_SPE_BUTTON = ".confirm-wrap .spectrum-Button"
 export const DATA_SOURCE_ENTRY = ".data-source-entry"
-export const NAV_ITEMS_CONTAINER = ".nav-items-container"
+export const BODY = ".body"
 
 //publishWorkFlow
 export const DEPLOY_APP_MODAL = ".spectrum-Modal [data-cy=deploy-app-modal]"
@@ -62,6 +62,7 @@ export const GLOBESTRIKE = "svg[aria-label=GlobeStrike]"
 export const GLOBE = "svg[aria-label=Globe]"
 export const UNPUBLISH_MODAL = "[data-cy=unpublish-modal]"
 export const CONFIRM_WRAP_BUTTON = ".confirm-wrap button"
+export const DEPLOYMENT_TOP_NAV = ".deployment-top-nav"
 
 //changeAppiconAndColour
 export const APP_ROW_ACTION = ".app-row-actions-icon"
@@ -97,13 +98,19 @@ export const ACTION_SPECTRUM_ICON = ".actions .spectrum-Icon"
 export const SPECTRUM_MENU_CHILD2 = ".spectrum-Menu > :nth-child(2)"
 export const DELETE_TABLE_CONFIRM = '[data-cy="delete-table-confirm"]'
 
-//createUSerAndRoles
+//adminAndManagement Folder
 export const SPECTRUM_TABLE = ".spectrum-Table"
 export const SPECTRUM_SIDENAV = ".spectrum-SideNav"
 export const SPECTRUM_TABLE_ROW = ".spectrum-Table-row"
 export const SPECTRUM_TABLE_CELL = ".spectrum-Table-cell"
 export const FIELD = ".field"
 export const CONTAINER = ".container"
+export const REGENERATE = ".regenerate"
+export const SPECTRUM_DIALOG_CONTENT = ".spectrum-Dialog-content"
+export const SPECTRUM_ICON = ".spectrum-Icon"
+export const SPECTRUM_HEADING = ".spectrum-Heading"
+export const SPECTRUM_FORM_ITEMFIELD = ".spectrum-Form-itemField"
+export const LIST_ITEMS = ".list-items"
 
 //createView
 export const SPECTRUM_MENU_ITEM_LABEL = ".spectrum-Menu-itemLabel"
@@ -113,14 +120,17 @@ export const TOP_RIGHT_NAV = ".toprightnav"
 export const AREA_LABEL_REVERT = "[aria-label=Revert]"
 export const ROOT = ".root"
 
-//quertLevelTransformers
+//queryLevelTransformers
 export const SPECTRUM_TABS_ITEM = ".spectrum-Tabs-itemLabel"
 export const CODEMIRROR_TEXTAREA = ".CodeMirror textarea"
 
-//renemaApplication
+//renameApplication
 export const WRAPPER = ".wrapper"
 export const ERROR = ".error"
 export const AREA_LABEL_MORE = "[aria-label=More]"
 export const APP_ROW_ACTION_MENU_POPOVER =
   '[data-cy="app-row-actions-menu-popover"]'
-export const SPECTRUM_MENU_ITEMM = ".spectrum-Menu-item"
+export const SPECTRUM_MENU_ITEM = ".spectrum-Menu-item"
+
+//commands
+export const HOME_LOGO = ".home-logo"

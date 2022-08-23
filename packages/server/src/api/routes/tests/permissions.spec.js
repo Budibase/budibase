@@ -37,9 +37,10 @@ describe("/permission", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body).toBeDefined()
-      expect(res.body.length).toEqual(2)
+      expect(res.body.length).toEqual(3)
       expect(res.body).toContain("read")
       expect(res.body).toContain("write")
+      expect(res.body).toContain("execute")
     })
   })
 

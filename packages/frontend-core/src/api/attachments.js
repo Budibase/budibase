@@ -48,7 +48,6 @@ export const buildAttachmentEndpoints = API => {
      * @param data the file to upload
      */
     externalUpload: async ({ datasourceId, bucket, key, data }) => {
-      console.log(API)
       const { signedUrl, publicUrl } = await getSignedDatasourceURL({
         datasourceId,
         bucket,
@@ -61,6 +60,33 @@ export const buildAttachmentEndpoints = API => {
         external: true,
       })
       return { publicUrl }
+    },
+
+    /**
+     * Deletes attachments from the bucket.
+     * @param keys the attachments to delete
+     * @param tableId the associated table ID
+     */
+    deleteAttachments: async ({ keys, tableId }) => {
+      return await API.post({
+        url: `/api/attachments/${tableId}/delete`,
+        body: {
+          keys,
+        },
+      })
+    },
+
+    /**
+     * Deletes attachments from the builder bucket.
+     * @param keys the attachments to delete
+     */
+    deleteBuilderAttachments: async keys => {
+      return await API.post({
+        url: `/api/attachments/delete`,
+        body: {
+          keys,
+        },
+      })
     },
   }
 }

@@ -1,9 +1,9 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/templates")
-const joiValidator = require("../../../middleware/joi-validator")
+const { joiValidator } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const { TemplatePurpose, TemplateTypes } = require("../../../constants")
-const adminOnly = require("../../../middleware/adminOnly")
+const { adminOnly } = require("@budibase/backend-core/auth")
 
 const router = Router()
 

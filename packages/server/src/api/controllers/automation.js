@@ -1,6 +1,10 @@
 const actions = require("../../automations/actions")
 const triggers = require("../../automations/triggers")
-const { getAutomationParams, generateAutomationID } = require("../../db/utils")
+const {
+  getAutomationParams,
+  generateAutomationID,
+  DocumentType,
+} = require("../../db/utils")
 const {
   checkForWebhooks,
   updateTestHistory,
@@ -9,8 +13,14 @@ const {
 const { deleteEntityMetadata } = require("../../utilities")
 const { MetadataTypes } = require("../../constants")
 const { setTestFlag, clearTestFlag } = require("../../utilities/redis")
-const { getAppDB } = require("@budibase/backend-core/context")
+const {
+  getAppDB,
+  getProdAppDB,
+  doInAppContext,
+} = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
+const { app } = require("@budibase/backend-core/cache")
+const { automations } = require("@budibase/pro")
 
 const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
 const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
@@ -181,6 +191,29 @@ exports.destroy = async function (ctx) {
   await cleanupAutomationMetadata(automationId)
   ctx.body = await db.remove(automationId, ctx.params.rev)
   await events.automation.deleted(oldAutomation)
+}
+
+exports.logSearch = async function (ctx) {
+  ctx.body = await automations.logs.logSearch(ctx.request.body)
+}
+
+exports.clearLogError = async function (ctx) {
+  const { automationId, appId } = ctx.request.body
+  await doInAppContext(appId, async () => {
+    const db = getProdAppDB()
+    const metadata = await db.get(DocumentType.APP_METADATA)
+    if (!automationId) {
+      delete metadata.automationErrors
+    } else if (
+      metadata.automationErrors &&
+      metadata.automationErrors[automationId]
+    ) {
+      delete metadata.automationErrors[automationId]
+    }
+    await db.put(metadata)
+    await app.invalidateAppMetadata(metadata.appId, metadata)
+    ctx.body = { message: `Error logs cleared.` }
+  })
 }
 
 exports.getActionList = async function (ctx) {

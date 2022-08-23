@@ -1,48 +1,35 @@
 <script>
   import DashCard from "components/common/DashCard.svelte"
   import { AppStatus } from "constants"
-  import {
-    Icon,
-    Heading,
-    Link,
-    Avatar,
-    notifications,
-    Layout,
-  } from "@budibase/bbui"
+  import { Icon, Heading, Link, Avatar, Layout, Body } from "@budibase/bbui"
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
-  import { users, auth } from "stores/portal"
-  import { createEventDispatcher } from "svelte"
+  import { users, auth, apps } from "stores/portal"
+  import { createEventDispatcher, onMount } from "svelte"
 
   export let app
   export let deployments
   export let navigateTab
+  let userCount
   const dispatch = createEventDispatcher()
-
-  const userInit = async () => {
-    try {
-      await users.init()
-    } catch (error) {
-      notifications.error("Error getting user list")
-    }
-  }
 
   const unpublishApp = () => {
     dispatch("unpublish", app)
   }
 
-  let userPromise = userInit()
+  let appEditor, appEditorPromise
 
   $: updateAvailable = clientPackage.version !== $store.version
   $: isPublished = app && app?.status === AppStatus.DEPLOYED
   $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
   $: appEditorText = appEditor?.firstName || appEditor?.email
-  $: filteredUsers = !appEditorId
-    ? []
-    : $users.filter(user => user._id === appEditorId)
+  $: fetchAppEditor(appEditorId)
 
-  $: appEditor = filteredUsers.length ? filteredUsers[0] : null
+  async function fetchAppEditor(editorId) {
+    appEditorPromise = users.get(editorId)
+    appEditor = await appEditorPromise
+  }
 
   const getInitials = user => {
     let initials = ""
@@ -51,6 +38,14 @@
 
     return initials == "" ? user.email[0] : initials
   }
+
+  onMount(async () => {
+    let resp = await users.getUserCountByApp({
+      appId: apps.getProdAppID(app.devId),
+    })
+    userCount = resp.userCount
+    await users.search({ appId: apps.getProdAppID(app.devId), limit: 4 })
+  })
 </script>
 
 <div class="overview-tab">
@@ -90,7 +85,7 @@
       </DashCard>
       <DashCard title={"Last Edited"} dataCy={"edited-by"}>
         <div class="last-edited-content">
-          {#await userPromise}
+          {#await appEditorPromise}
             <Avatar size="M" initials={"-"} />
           {:then _}
             <div class="updated-by">
@@ -143,6 +138,38 @@
             </div>
           {:else}
             <div class="version-status">You're running the latest!</div>
+          {/if}
+        </div>
+      </DashCard>
+      <DashCard
+        title={"Access"}
+        showIcon={true}
+        action={() => {
+          navigateTab("Access")
+        }}
+        dataCy={"access"}
+      >
+        <div class="last-edited-content">
+          {#if $users?.data?.length}
+            <Layout noPadding gap="S">
+              <div class="users-tab">
+                {#each $users?.data as user}
+                  <Avatar size="M" initials={getInitials(user)} />
+                {/each}
+              </div>
+
+              <div class="users-text">
+                {userCount}
+                {userCount > 1 ? `users have` : `user has`} access to this app
+              </div>
+            </Layout>
+          {:else}
+            <Layout noPadding gap="S">
+              <Body>No users</Body>
+              <div class="users-text">
+                No users have been assigned to this app
+              </div>
+            </Layout>
           {/if}
         </div>
       </DashCard>
@@ -200,6 +227,14 @@
     grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
   }
 
+  .users-tab {
+    display: flex;
+    gap: var(--spacing-m);
+  }
+
+  .users-text {
+    color: var(--spectrum-global-color-gray-600);
+  }
   .overview-tab .bottom,
   .automation-metrics {
     display: grid;
@@ -211,6 +246,7 @@
     .overview-tab .top {
       grid-template-columns: 1fr 1fr;
     }
+
     .overview-tab .bottom {
       grid-template-columns: 1fr;
     }
@@ -228,29 +264,35 @@
     align-items: center;
     gap: var(--spacing-m);
   }
+
   .status-text,
   .last-edit-text {
     color: var(--spectrum-global-color-gray-600);
   }
+
   .updated-by {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
   }
+
   .succeeded :global(.icon) {
     color: var(--spectrum-global-color-green-600);
   }
+
   .failed :global(.icon) {
     color: var(
       --spectrum-semantic-negative-color-default,
       var(--spectrum-global-color-red-500)
     );
   }
+
   .metric-info {
     display: flex;
     gap: var(--spacing-l);
     margin-top: var(--spacing-s);
   }
+
   .version-status,
   .last-edit-text,
   .status-text {

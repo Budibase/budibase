@@ -1,5 +1,4 @@
 <script>
-  import Tooltip from "../Tooltip/Tooltip.svelte"
   import Link from "../Link/Link.svelte"
 
   export let value
@@ -17,18 +16,16 @@
 {#each attachments as attachment}
   {#if isImage(attachment.extension)}
     <Link quiet target="_blank" href={attachment.url}>
-      <div class="center">
+      <div class="center" title={attachment.name}>
         <img src={attachment.url} alt={attachment.extension} />
       </div>
     </Link>
   {:else}
-    <Tooltip text={attachment.name} direction="right">
-      <div class="file">
-        <Link quiet target="_blank" href={attachment.url}>
-          {attachment.extension}
-        </Link>
-      </div>
-    </Tooltip>
+    <div class="file" title={attachment.name}>
+      <Link quiet target="_blank" href={attachment.url}>
+        {attachment.extension}
+      </Link>
+    </div>
   {/if}
 {/each}
 {#if leftover}
@@ -52,7 +49,7 @@
     padding: 0 8px;
     color: var(--spectrum-global-color-gray-800);
     border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 2px;
+    border-radius: 4px;
     text-transform: uppercase;
     font-weight: 600;
     font-size: 11px;

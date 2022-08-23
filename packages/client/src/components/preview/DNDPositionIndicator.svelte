@@ -10,6 +10,7 @@
   $: dimensions = getDimensions(dropInfo)
   $: prefix = dropInfo?.mode === "above" ? "Before" : "After"
   $: text = `${prefix} ${dropInfo?.name}`
+  $: icon = dropInfo?.icon
   $: renderKey = `${dropInfo?.target}-${dropInfo?.side}`
 
   const getDimensions = info => {
@@ -54,6 +55,7 @@
       width={dimensions.width}
       height={dimensions.height}
       {text}
+      {icon}
       {zIndex}
       {color}
       {transition}

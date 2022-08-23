@@ -1,6 +1,6 @@
 const { streamBackup } = require("../../utilities/fileSystem")
 const { events, context } = require("@budibase/backend-core")
-const { DocumentTypes } = require("../../db/utils")
+const { DocumentType } = require("../../db/utils")
 
 exports.exportAppDump = async function (ctx) {
   let { appId, excludeRows } = ctx.query
@@ -12,7 +12,7 @@ exports.exportAppDump = async function (ctx) {
 
   await context.doInAppContext(appId, async () => {
     const appDb = context.getAppDB()
-    const app = await appDb.get(DocumentTypes.APP_METADATA)
+    const app = await appDb.get(DocumentType.APP_METADATA)
     await events.app.exported(app)
   })
 }

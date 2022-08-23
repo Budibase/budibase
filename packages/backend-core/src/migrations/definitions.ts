@@ -37,4 +37,8 @@ export const DEFINITIONS: MigrationDefinition[] = [
     type: MigrationType.INSTALLATION,
     name: MigrationName.EVENT_INSTALLATION_BACKFILL,
   },
+  {
+    type: MigrationType.GLOBAL,
+    name: MigrationName.GLOBAL_INFO_SYNC_USERS,
+  },
 ]

@@ -1,4 +1,4 @@
-const { createUserEmailView } = require("@budibase/backend-core/db")
+const { createNewUserEmailView } = require("@budibase/backend-core/db")
 
 /**
  * Date:
@@ -9,5 +9,5 @@ const { createUserEmailView } = require("@budibase/backend-core/db")
  */
 
 export const run = async (db: any) => {
-  await createUserEmailView(db)
+  await createNewUserEmailView(db)
 }

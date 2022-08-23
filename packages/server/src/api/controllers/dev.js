@@ -3,12 +3,8 @@ const env = require("../../environment")
 const { checkSlashesInUrl } = require("../../utilities")
 const { request } = require("../../utilities/workerRequests")
 const { clearLock } = require("../../utilities/redis")
-const {
-  Replication,
-  getProdAppID,
-  dangerousGetDB,
-} = require("@budibase/backend-core/db")
-const { DocumentTypes, getRowParams } = require("../../db/utils")
+const { Replication, getProdAppID } = require("@budibase/backend-core/db")
+const { DocumentType } = require("../../db/utils")
 const { app: appCache } = require("@budibase/backend-core/cache")
 const { getProdAppDB, getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
@@ -91,7 +87,7 @@ exports.revert = async ctx => {
     if (info.error) {
       throw info.error
     }
-    const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
+    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
     if (
       !deploymentDoc.history ||
       Object.keys(deploymentDoc.history).length === 0
@@ -114,7 +110,7 @@ exports.revert = async ctx => {
 
     // update appID in reverted app to be dev version again
     const db = getAppDB()
-    const appDoc = await db.get(DocumentTypes.APP_METADATA)
+    const appDoc = await db.get(DocumentType.APP_METADATA)
     appDoc.appId = appId
     appDoc.instance._id = appId
     await db.put(appDoc)
@@ -136,51 +132,4 @@ exports.getBudibaseVersion = async ctx => {
     version,
   }
   await events.installation.versionChecked(version)
-}
-
-// TODO: remove as part of beta program
-exports.checkBetaAccess = async ctx => {
-  // go to the cloud platform if running self hosted
-  if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
-    let baseUrl = ""
-    if (env.ACCOUNT_PORTAL_URL) {
-      baseUrl = env.ACCOUNT_PORTAL_URL.replace("account.", "")
-    } else {
-      baseUrl = "https://budibase.app"
-    }
-
-    const response = await fetch(
-      `${baseUrl}/api/beta/access?email=${ctx.query.email}`
-    )
-    const json = await response.json()
-    ctx.body = json
-    return
-  }
-
-  const userToCheck = ctx.query.email
-  const BETA_USERS_DB = "app_bb_f9b77d06b9db4e3ca185476ab87a2364"
-  const BETA_USERS_TABLE = "ta_8c2c6df1c03f49cfb6340e85e066dd15"
-
-  try {
-    const db = dangerousGetDB(BETA_USERS_DB)
-    const betaUsers = (
-      await db.allDocs(
-        getRowParams(BETA_USERS_TABLE, null, {
-          include_docs: true,
-        })
-      )
-    ).rows.map(row => row.doc)
-
-    let access = false
-    for (let betaUser of betaUsers) {
-      if (betaUser["Email address"].trim() === userToCheck) {
-        access = true
-        break
-      }
-    }
-    ctx.body = { access }
-  } catch (err) {
-    console.error(err)
-    ctx.body = { access: false }
-  }
 }

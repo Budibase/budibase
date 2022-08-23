@@ -18,7 +18,7 @@ const http = require("http")
 const api = require("./api")
 const redis = require("./utilities/redis")
 const Sentry = require("@sentry/node")
-import { events } from "@budibase/backend-core"
+import { events, pinoSettings } from "@budibase/backend-core"
 
 // this will setup http and https proxies form env variables
 bootstrap()
@@ -30,14 +30,7 @@ app.keys = ["secret", "key"]
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
-app.use(
-  logger({
-    prettyPrint: {
-      levelFirst: true,
-    },
-    level: env.LOG_LEVEL || "error",
-  })
-)
+app.use(logger(pinoSettings()))
 
 // authentication
 app.use(passport.initialize())

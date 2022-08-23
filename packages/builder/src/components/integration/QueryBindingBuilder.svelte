@@ -57,6 +57,7 @@
         placeholder="Default"
         thin
         disabled={bindable}
+        on:change={evt => onBindingChange(binding.name, evt.detail)}
         bind:value={binding.default}
       />
       {#if bindable}
