@@ -2,7 +2,6 @@
   import { getContext, onDestroy, onMount, setContext } from "svelte"
   import { builderStore } from "stores/builder.js"
   import { blockStore } from "stores/blocks.js"
-  import { Button } from "@budibase/bbui"
 
   const component = getContext("component")
 
