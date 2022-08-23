@@ -103,16 +103,16 @@ describe("MongoDB Integration", () => {
     restore()
   })
 
-  it("creates ObjectIds if the _id fields contains a match on ObjectId", async () => {
+  it("creates ObjectIds if the field contains a match on ObjectId", async () => {
     const query = {
       json: {
         filter: {
           _id: "ObjectId('ACBD12345678ABCD12345678')",
-          name: "ObjectId('name')"
+          name: "ObjectId('BBBB12345678ABCD12345678')"
         },
         update: {
           _id: "ObjectId('FFFF12345678ABCD12345678')",
-          name: "ObjectId('updatedName')",
+          name: "ObjectId('CCCC12345678ABCD12345678')",
         },
         options: {
           upsert: false,
@@ -126,11 +126,11 @@ describe("MongoDB Integration", () => {
     const args = config.integration.client.updateOne.mock.calls[0]
     expect(args[0]).toEqual({
       _id: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
-      name: "ObjectId('name')",
+      name: mongo.ObjectID.createFromHexString("BBBB12345678ABCD12345678"),
     })
     expect(args[1]).toEqual({
       _id: mongo.ObjectID.createFromHexString("FFFF12345678ABCD12345678"),
-      name: "ObjectId('updatedName')",
+      name: mongo.ObjectID.createFromHexString("CCCC12345678ABCD12345678"),
     })
     expect(args[2]).toEqual({
       upsert: false
