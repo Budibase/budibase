@@ -2,7 +2,6 @@
   import { getContext } from "svelte"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
-  import { Heading } from "@budibase/bbui"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { enrichSearchColumns, enrichFilter } from "utils/blocks.js"
 
@@ -30,7 +29,6 @@
   export let titleButtonPeek
 
   const { fetchDatasourceSchema, styleable } = getContext("sdk")
-  const context = getContext("context")
   const component = getContext("component")
 
   let formId
@@ -126,7 +124,7 @@
                     text: titleButtonText,
                     type: "cta",
                   }}
-                  order={3}
+                  order={enrichedSearchColumns?.length ?? 0}
                 />
               {/if}
             </BlockComponent>
@@ -168,40 +166,3 @@
     </div>
   </Block>
 {/if}
-
-<style>
-  .controls :global(.spectrum-InputGroup .spectrum-InputGroup-input) {
-    width: 100%;
-  }
-
-  .search {
-    flex: 0 1 auto;
-    gap: 10px;
-    max-width: 100%;
-    display: grid;
-    grid-template-columns: repeat(var(--cols), minmax(120px, 200px));
-  }
-  .search :global(.spectrum-InputGroup) {
-    min-width: 0;
-  }
-
-  /* Mobile styles */
-  .mobile {
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-  .mobile .controls {
-    flex-direction: column-reverse;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-  .mobile .search {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    position: relative;
-    width: 100%;
-  }
-</style>
