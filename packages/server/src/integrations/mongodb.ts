@@ -92,8 +92,10 @@ module MongoDBModule {
           if (json[field] instanceof Object) {
             json[field] = self.createObjectIds(json[field])
           }
-          if (typeof json[field] === "string" && json[field].toLowerCase().startsWith("objectid"))
-          {
+          if (
+            typeof json[field] === "string" &&
+            json[field].toLowerCase().startsWith("objectid")
+          ) {
             const id = json[field].match(
               /(?<=objectid\(['"]).*(?=['"]\))/gi
             )?.[0]
