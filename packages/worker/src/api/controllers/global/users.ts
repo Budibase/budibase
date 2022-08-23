@@ -46,8 +46,8 @@ export const bulkCreate = async (ctx: any) => {
   }
 
   try {
-    let response = await users.bulkCreate(newUsersRequested, groups)
-    await groupUtils.bulkSaveGroupUsers(groupsToSave, response)
+    const response = await users.bulkCreate(newUsersRequested, groups)
+    await groupUtils.bulkSaveGroupUsers(groupsToSave, response.successful)
 
     ctx.body = response
   } catch (err: any) {
