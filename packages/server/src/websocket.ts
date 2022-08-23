@@ -1,20 +1,17 @@
-import SocketIO from "socket.io"
+import { Server } from "socket.io"
+import http from "http"
 
 export class Websocket {
-  socketIO: any
+  socketServer: Server
 
-  constructor(server: any, path: string) {
-    // @ts-ignore
-    this.socketIO = SocketIO(server, {
+  constructor(server: http.Server, path: string) {
+    this.socketServer = new Server(server, {
       path,
-      cors: {
-        origin: "*",
-      },
     })
   }
 
   // Emit an event to all sockets
   emit(event: string, payload: any) {
-    this.socketIO.sockets.emit(event, payload)
+    this.socketServer.sockets.emit(event, payload)
   }
 }

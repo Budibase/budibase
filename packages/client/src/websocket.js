@@ -14,7 +14,7 @@ export const initWebsocket = () => {
   const tls = location.protocol === "https:"
   const proto = tls ? "wss:" : "ws:"
   const host = location.hostname
-  const port = location.port || (tls ? 433 : 80)
+  const port = location.port || (tls ? 443 : 80)
   console.log(`${proto}//${host}:${port}`)
   const socket = io(`${proto}//${host}:${port}`, {
     path: "/socket/client",
