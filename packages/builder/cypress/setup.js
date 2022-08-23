@@ -22,6 +22,9 @@ process.env.COUCH_DB_PASSWORD = "budibase"
 process.env.INTERNAL_API_KEY = "budibase"
 process.env.ALLOW_DEV_AUTOMATIONS = 1
 
+process.env.BB_ADMIN_USER_EMAIL = "test@budibase.com"
+process.env.BB_ADMIN_USER_PASSWORD = "budibase"
+
 // Stop info logs polluting test outputs
 process.env.LOG_LEVEL = "error"
 
