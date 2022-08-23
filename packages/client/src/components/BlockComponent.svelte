@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { generate } from "shortid"
+  import { builderStore } from "../stores/builder.js"
   import Component from "components/Component.svelte"
 
   export let type
@@ -23,7 +24,7 @@
   $: instance = {
     _component: `@budibase/standard-components/${type}`,
     _id: id,
-    _instanceName: type,
+    _instanceName: type[0].toUpperCase() + type.slice(1),
     _styles: {
       normal: {
         ...styles,
@@ -31,7 +32,14 @@
     },
     ...props,
   }
-  $: block.registerComponent(id, order, $component?.id, instance)
+
+  // Register this block component if we're inside the builder so it can be
+  // ejected later
+  $: {
+    if ($builderStore.inBuilder) {
+      block.registerComponent(id, order, $component?.id, instance)
+    }
+  }
 </script>
 
 <Component {instance} isBlock>

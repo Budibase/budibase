@@ -6,6 +6,7 @@
   const component = getContext("component")
 
   let structureLookupMap = {}
+
   const registerBlockComponent = (id, order, parentId, instance) => {
     // Ensure child array exists
     if (!structureLookupMap[parentId]) {
@@ -13,7 +14,7 @@
     }
     // Remove existing instance of this component in case props changed
     structureLookupMap[parentId] = structureLookupMap[parentId].filter(
-      x => x.instance._id !== id
+      blockComponent => blockComponent.instance._id !== id
     )
     // Add new instance of this component
     structureLookupMap[parentId].push({ order, instance })
