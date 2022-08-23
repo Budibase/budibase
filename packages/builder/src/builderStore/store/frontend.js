@@ -895,13 +895,21 @@ export const getFrontendStore = () => {
           component[name] = value
         })
       },
-      ejectBlock: async (id, definition) => {
-        // const asset = get(currentAsset)
-        // let parent = findComponentParent(asset.props, id)
-        // const childIndex = parent._children.findIndex(x => x._id === id)
-        // parent._children[childIndex] = definition
-        // await store.actions.preview.saveSelected()
-        // await store.actions.components.select(definition)
+      ejectBlock: async (componentId, ejectedDefinition) => {
+        await store.actions.screens.patch(screen => {
+          const parent = findComponentParent(screen.props, componentId)
+
+          // Sanity check parent is found
+          if (!parent?._children?.length) {
+            return false
+          }
+
+          // Replace block with ejected definition
+          const childIndex = parent._children.findIndex(
+            child => child._id === componentId
+          )
+          parent._children[childIndex] = ejectedDefinition
+        })
       },
     },
     links: {
