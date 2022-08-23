@@ -1,6 +1,6 @@
-const redis = require("../redis/authRedis")
-const { getCouch } = require("../db")
-const { DocumentTypes } = require("../db/constants")
+const redis = require("../redis/init")
+const { doWithDB } = require("../db")
+const { DocumentType } = require("../db/constants")
 
 const AppState = {
   INVALID: "invalid",
@@ -10,12 +10,14 @@ const EXPIRY_SECONDS = 3600
 /**
  * The default populate app metadata function
  */
-const populateFromDB = async (appId, CouchDB = null) => {
-  if (!CouchDB) {
-    CouchDB = getCouch()
-  }
-  const db = new CouchDB(appId, { skip_setup: true })
-  return db.get(DocumentTypes.APP_METADATA)
+const populateFromDB = async appId => {
+  return doWithDB(
+    appId,
+    db => {
+      return db.get(DocumentType.APP_METADATA)
+    },
+    { skip_setup: true }
+  )
 }
 
 const isInvalid = metadata => {
@@ -27,17 +29,16 @@ const isInvalid = metadata => {
  * Use redis cache to first read the app metadata.
  * If not present fallback to loading the app metadata directly and re-caching.
  * @param {string} appId the id of the app to get metadata from.
- * @param {object} CouchDB the database being passed
  * @returns {object} the app metadata.
  */
-exports.getAppMetadata = async (appId, CouchDB = null) => {
+exports.getAppMetadata = async appId => {
   const client = await redis.getAppClient()
   // try cache
   let metadata = await client.get(appId)
   if (!metadata) {
     let expiry = EXPIRY_SECONDS
     try {
-      metadata = await populateFromDB(appId, CouchDB)
+      metadata = await populateFromDB(appId)
     } catch (err) {
       // app DB left around, but no metadata, it is invalid
       if (err && err.status === 404) {

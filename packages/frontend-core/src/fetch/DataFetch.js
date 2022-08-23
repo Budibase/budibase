@@ -6,6 +6,7 @@ import {
   runLuceneQuery,
   luceneSort,
 } from "../utils/lucene"
+import { convertJSONSchemaToTableSchema } from "../utils/json"
 
 /**
  * Parent class which handles the implementation of fetching data from an
@@ -169,6 +170,7 @@ export default class DataFetch {
       rows: page.rows,
       info: page.info,
       cursors: paginate && page.hasNextPage ? [null, page.cursor] : [null],
+      error: page.error,
     }))
   }
 
@@ -181,7 +183,7 @@ export default class DataFetch {
     const features = get(this.featureStore)
 
     // Get the actual data
-    let { rows, info, hasNextPage, cursor } = await this.getData()
+    let { rows, info, hasNextPage, cursor, error } = await this.getData()
 
     // If we don't support searching, do a client search
     if (!features.supportsSearch) {
@@ -203,6 +205,7 @@ export default class DataFetch {
       info,
       hasNextPage,
       cursor,
+      error,
     }
   }
 
@@ -248,7 +251,8 @@ export default class DataFetch {
   }
 
   /**
-   * Enriches the schema and ensures that entries are objects with names
+   * Enriches a datasource schema with nested fields and ensures the structure
+   * is correct.
    * @param schema the datasource schema
    * @return {object} the enriched datasource schema
    */
@@ -256,6 +260,26 @@ export default class DataFetch {
     if (schema == null) {
       return null
     }
+
+    // Check for any JSON fields so we can add any top level properties
+    let jsonAdditions = {}
+    Object.keys(schema).forEach(fieldKey => {
+      const fieldSchema = schema[fieldKey]
+      if (fieldSchema?.type === "json") {
+        const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
+          squashObjects: true,
+        })
+        Object.keys(jsonSchema).forEach(jsonKey => {
+          jsonAdditions[`${fieldKey}.${jsonKey}`] = {
+            type: jsonSchema[jsonKey].type,
+            nestedJSON: true,
+          }
+        })
+      }
+    })
+    schema = { ...schema, ...jsonAdditions }
+
+    // Ensure schema is in the correct structure
     let enrichedSchema = {}
     Object.entries(schema).forEach(([fieldName, fieldSchema]) => {
       if (typeof fieldSchema === "string") {
@@ -270,6 +294,7 @@ export default class DataFetch {
         }
       }
     })
+
     return enrichedSchema
   }
 
@@ -322,8 +347,14 @@ export default class DataFetch {
       return
     }
     this.store.update($store => ({ ...$store, loading: true }))
-    const { rows, info } = await this.getPage()
-    this.store.update($store => ({ ...$store, rows, info, loading: false }))
+    const { rows, info, error } = await this.getPage()
+    this.store.update($store => ({
+      ...$store,
+      rows,
+      info,
+      loading: false,
+      error,
+    }))
   }
 
   /**
@@ -363,7 +394,7 @@ export default class DataFetch {
       cursor: nextCursor,
       pageNumber: $store.pageNumber + 1,
     }))
-    const { rows, info, hasNextPage, cursor } = await this.getPage()
+    const { rows, info, hasNextPage, cursor, error } = await this.getPage()
 
     // Update state
     this.store.update($store => {
@@ -377,6 +408,7 @@ export default class DataFetch {
         info,
         cursors,
         loading: false,
+        error,
       }
     })
   }
@@ -398,7 +430,7 @@ export default class DataFetch {
       cursor: prevCursor,
       pageNumber: $store.pageNumber - 1,
     }))
-    const { rows, info } = await this.getPage()
+    const { rows, info, error } = await this.getPage()
 
     // Update state
     this.store.update($store => {
@@ -407,6 +439,7 @@ export default class DataFetch {
         rows,
         info,
         loading: false,
+        error,
       }
     })
   }

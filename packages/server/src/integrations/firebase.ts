@@ -1,9 +1,9 @@
 import {
-  DatasourceFieldTypes,
+  DatasourceFieldType,
   Integration,
-  QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  QueryType,
+  IntegrationBase,
+} from "@budibase/types"
 import { Firestore, WhereFilterOp } from "@google-cloud/firestore"
 
 module Firebase {
@@ -11,67 +11,62 @@ module Firebase {
     email: string
     privateKey: string
     projectId: string
-    serviceAccount?: string
   }
 
   const SCHEMA: Integration = {
     docs: "https://firebase.google.com/docs/firestore/quickstart",
     friendlyName: "Firestore",
+    type: "Non-relational",
     description:
       "Cloud Firestore is a flexible, scalable database for mobile, web, and server development from Firebase and Google Cloud.",
     datasource: {
       email: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       privateKey: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       projectId: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
-      },
-      serviceAccount: {
-        type: DatasourceFieldTypes.JSON,
-        required: false,
       },
     },
     query: {
       create: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       read: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       update: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
       delete: {
-        type: QueryTypes.JSON,
+        type: QueryType.JSON,
       },
     },
     extra: {
       collection: {
         displayName: "Collection",
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       filterField: {
         displayName: "Filter field",
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: false,
       },
       filter: {
         displayName: "Filter comparison",
-        type: DatasourceFieldTypes.LIST,
+        type: DatasourceFieldType.LIST,
         required: false,
         data: {
           read: [
             "==",
             "<",
             "<=",
-            "==",
             "!=",
             ">=",
             ">",
@@ -84,7 +79,7 @@ module Firebase {
       },
       filterValue: {
         displayName: "Filter value",
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: false,
       },
     },
@@ -92,33 +87,22 @@ module Firebase {
 
   class FirebaseIntegration implements IntegrationBase {
     private config: FirebaseConfig
-    private db: Firestore
+    private client: Firestore
 
     constructor(config: FirebaseConfig) {
       this.config = config
-      if (config.serviceAccount) {
-        const serviceAccount = JSON.parse(config.serviceAccount)
-        this.db = new Firestore({
-          projectId: serviceAccount.project_id,
-          credentials: {
-            client_email: serviceAccount.client_email,
-            private_key: serviceAccount.private_key,
-          },
-        })
-      } else {
-        this.db = new Firestore({
-          projectId: config.projectId,
-          credentials: {
-            client_email: config.email,
-            private_key: config.privateKey,
-          },
-        })
-      }
+      this.client = new Firestore({
+        projectId: config.projectId,
+        credentials: {
+          client_email: config.email,
+          private_key: config.privateKey?.replace(/\\n/g, "\n"),
+        },
+      })
     }
 
     async create(query: { json: object; extra: { [key: string]: string } }) {
       try {
-        const documentReference = this.db
+        const documentReference = this.client
           .collection(query.extra.collection)
           .doc()
         await documentReference.set({ ...query.json, id: documentReference.id })
@@ -133,7 +117,7 @@ module Firebase {
     async read(query: { json: object; extra: { [key: string]: string } }) {
       try {
         let snapshot
-        const collectionRef = this.db.collection(query.extra.collection)
+        const collectionRef = this.client.collection(query.extra.collection)
         if (
           query.extra.filterField &&
           query.extra.filter &&
@@ -164,19 +148,19 @@ module Firebase {
       extra: { [key: string]: string }
     }) {
       try {
-        await this.db
+        await this.client
           .collection(query.extra.collection)
           .doc(query.json.id)
           .update(query.json)
 
         return (
-          await this.db
+          await this.client
             .collection(query.extra.collection)
             .doc(query.json.id)
             .get()
         ).data()
       } catch (err) {
-        console.error("Error writing to firebase", err)
+        console.error("Error writing to Firestore", err)
         throw err
       }
     }
@@ -186,13 +170,13 @@ module Firebase {
       extra: { [key: string]: string }
     }) {
       try {
-        await this.db
+        await this.client
           .collection(query.extra.collection)
           .doc(query.json.id)
           .delete()
         return true
       } catch (err) {
-        console.error("Error writing to mongodb", err)
+        console.error("Error deleting from Firestore", err)
         throw err
       }
     }

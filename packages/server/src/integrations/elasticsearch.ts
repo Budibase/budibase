@@ -1,9 +1,9 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
-} from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+  DatasourceFieldType,
+  QueryType,
+  IntegrationBase,
+} from "@budibase/types"
 
 module ElasticsearchModule {
   const { Client } = require("@elastic/elasticsearch")
@@ -17,57 +17,58 @@ module ElasticsearchModule {
     description:
       "Elasticsearch is a search engine based on the Lucene library. It provides a distributed, multitenant-capable full-text search engine with an HTTP web interface and schema-free JSON documents.",
     friendlyName: "ElasticSearch",
+    type: "Non-relational",
     datasource: {
       url: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
         default: "http://localhost:9200",
       },
     },
     query: {
       create: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         fields: {
           index: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       read: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         fields: {
           index: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       update: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         customisable: true,
         fields: {
           id: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           index: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },
       },
       delete: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           index: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
           id: {
-            type: DatasourceFieldTypes.STRING,
+            type: DatasourceFieldType.STRING,
             required: true,
           },
         },

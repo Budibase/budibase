@@ -155,12 +155,27 @@ describe("REST Integration", () => {
       expect(output.headers["Content-Type"]).toEqual("application/json")
     })
 
-    it("should allow XML", () => {
+    it("should allow raw XML", () => {
+      const output = config.integration.addBody("xml", "<a>1</a><b>2</b>", {})
+      expect(output.body.includes("<a>1</a>")).toEqual(true)
+      expect(output.body.includes("<b>2</b>")).toEqual(true)
+      expect(output.headers["Content-Type"]).toEqual("application/xml")
+    })
+
+    it("should allow a valid js object and parse the contents to xml", () => {
       const output = config.integration.addBody("xml", input, {})
       expect(output.body.includes("<a>1</a>")).toEqual(true)
       expect(output.body.includes("<b>2</b>")).toEqual(true)
       expect(output.headers["Content-Type"]).toEqual("application/xml")
     })
+
+    it("should allow a valid json string and parse the contents to xml", () => {
+      const output = config.integration.addBody("xml", JSON.stringify(input), {})
+      expect(output.body.includes("<a>1</a>")).toEqual(true)
+      expect(output.body.includes("<b>2</b>")).toEqual(true)
+      expect(output.headers["Content-Type"]).toEqual("application/xml")
+    })
+
   })
 
   describe("response", () => {

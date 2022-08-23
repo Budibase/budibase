@@ -12,4 +12,4 @@
   }
 </script>
 
-<CopyInput {value} copyValue={fullWebhookURL(value)} />
+<CopyInput value={fullWebhookURL(value)} />

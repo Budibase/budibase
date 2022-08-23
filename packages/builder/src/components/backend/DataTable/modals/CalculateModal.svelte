@@ -1,7 +1,6 @@
 <script>
   import { Select, Label, notifications, ModalContent } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
-  import analytics, { Events } from "analytics"
   import { FIELDS } from "constants/backend"
 
   const CALCULATIONS = [
@@ -41,7 +40,6 @@
     try {
       views.save(view)
       notifications.success(`View ${view.name} saved`)
-      analytics.captureEvent(Events.VIEW.ADDED_CALCULATE, { field: view.field })
     } catch (error) {
       notifications.error("Error saving view")
     }

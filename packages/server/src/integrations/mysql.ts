@@ -1,23 +1,26 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
+  DatasourceFieldType,
+  QueryType,
   QueryJson,
   SqlQuery,
-} from "../definitions/datasource"
-import { Table, TableSchema } from "../definitions/common"
+  Table,
+  TableSchema,
+  DatasourcePlus,
+} from "@budibase/types"
 import {
   getSqlQuery,
-  SqlClients,
+  SqlClient,
   buildExternalTableId,
   convertSqlType,
   finaliseExternalTables,
 } from "./utils"
-import { DatasourcePlus } from "./base/datasourcePlus"
+import dayjs from "dayjs"
+const { NUMBER_REGEX } = require("../utilities")
+import Sql from "./base/sql"
 
 module MySQLModule {
   const mysql = require("mysql2/promise")
-  const Sql = require("./base/sql")
 
   interface MySQLConfig {
     host: string
@@ -25,60 +28,70 @@ module MySQLModule {
     user: string
     password: string
     database: string
-    ssl?: object
+    ssl?: { [key: string]: any }
+    rejectUnauthorized: boolean
+    typeCast: Function
   }
 
   const SCHEMA: Integration = {
     docs: "https://github.com/sidorares/node-mysql2",
     plus: true,
     friendlyName: "MySQL",
+    type: "Relational",
     description:
       "MySQL Database Service is a fully managed database service to deploy cloud-native applications. ",
     datasource: {
       host: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "localhost",
         required: true,
       },
       port: {
-        type: DatasourceFieldTypes.NUMBER,
+        type: DatasourceFieldType.NUMBER,
         default: 3306,
         required: false,
       },
       user: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "root",
         required: true,
       },
       password: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         default: "root",
         required: true,
       },
       database: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       ssl: {
-        type: DatasourceFieldTypes.OBJECT,
+        type: DatasourceFieldType.OBJECT,
+        required: false,
+      },
+      rejectUnauthorized: {
+        type: DatasourceFieldType.BOOLEAN,
+        default: true,
         required: false,
       },
     },
     query: {
       create: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       read: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       update: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       delete: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
     },
   }
+
+  const TimezoneAwareDateTypes = ["timestamp"]
 
   function bindingTypeCoerce(bindings: any[]) {
     for (let i = 0; i < bindings.length; i++) {
@@ -86,9 +99,15 @@ module MySQLModule {
       if (typeof binding !== "string") {
         continue
       }
-      const matches = binding.match(/^\d*/g)
+      const matches = binding.match(NUMBER_REGEX)
+      // check if number first
       if (matches && matches[0] !== "" && !isNaN(Number(matches[0]))) {
         bindings[i] = parseFloat(binding)
+      }
+      // if not a number, see if it is a date - important to do in this order as any
+      // integer will be considered a valid date
+      else if (/^\d/.test(binding) && dayjs(binding).isValid()) {
+        bindings[i] = dayjs(binding).toDate()
       }
     }
     return bindings
@@ -101,12 +120,34 @@ module MySQLModule {
     public schemaErrors: Record<string, string> = {}
 
     constructor(config: MySQLConfig) {
-      super(SqlClients.MY_SQL)
+      super(SqlClient.MY_SQL)
       this.config = config
       if (config.ssl && Object.keys(config.ssl).length === 0) {
         delete config.ssl
       }
-      this.config = config
+      // make sure this defaults to true
+      if (
+        config.rejectUnauthorized != null &&
+        !config.rejectUnauthorized &&
+        config.ssl
+      ) {
+        config.ssl.rejectUnauthorized = config.rejectUnauthorized
+      }
+      // @ts-ignore
+      delete config.rejectUnauthorized
+      this.config = {
+        ...config,
+        typeCast: function (field: any, next: any) {
+          if (
+            field.type == "DATETIME" ||
+            field.type === "DATE" ||
+            field.type === "TIMESTAMP"
+          ) {
+            return field.string()
+          }
+          return next()
+        },
+      }
     }
 
     getBindingIdentifier(): string {
@@ -127,20 +168,24 @@ module MySQLModule {
 
     async internalQuery(
       query: SqlQuery,
-      connect: boolean = true
+      opts: { connect?: boolean; disableCoercion?: boolean } = {
+        connect: true,
+        disableCoercion: false,
+      }
     ): Promise<any[] | any> {
       try {
-        if (connect) {
+        if (opts?.connect) {
           await this.connect()
         }
+        const baseBindings = query.bindings || []
+        const bindings = opts?.disableCoercion
+          ? baseBindings
+          : bindingTypeCoerce(baseBindings)
         // Node MySQL is callback based, so we must wrap our call in a promise
-        const response = await this.client.query(
-          query.sql,
-          bindingTypeCoerce(query.bindings || [])
-        )
+        const response = await this.client.query(query.sql, bindings)
         return response[0]
       } finally {
-        if (connect) {
+        if (opts?.connect) {
           await this.disconnect()
         }
       }
@@ -155,7 +200,7 @@ module MySQLModule {
         // get the tables first
         const tablesResp = await this.internalQuery(
           { sql: "SHOW TABLES;" },
-          false
+          { connect: false }
         )
         const tableNames = tablesResp.map(
           (obj: any) =>
@@ -167,7 +212,7 @@ module MySQLModule {
           const schema: TableSchema = {}
           const descResp = await this.internalQuery(
             { sql: `DESCRIBE \`${tableName}\`;` },
-            false
+            { connect: false }
           )
           for (let column of descResp) {
             const columnName = column.Field
@@ -187,8 +232,9 @@ module MySQLModule {
             schema[columnName] = {
               name: columnName,
               autocolumn: isAuto,
-              type: convertSqlType(column.Type),
               constraints,
+              ...convertSqlType(column.Type),
+              externalType: column.Type,
             }
           }
           if (!tables[tableName]) {
@@ -230,7 +276,8 @@ module MySQLModule {
     async query(json: QueryJson) {
       await this.connect()
       try {
-        const queryFn = (query: any) => this.internalQuery(query, false)
+        const queryFn = (query: any) =>
+          this.internalQuery(query, { connect: false, disableCoercion: true })
         return await this.queryWithReturning(json, queryFn)
       } finally {
         await this.disconnect()

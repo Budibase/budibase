@@ -1,12 +1,13 @@
 const fetch = require("node-fetch")
 const { downloadTemplate } = require("../../utilities/fileSystem")
+const env = require("../../environment")
 
 // development flag, can be used to test against templates exported locally
 const DEFAULT_TEMPLATES_BUCKET =
   "prod-budi-templates.s3-eu-west-1.amazonaws.com"
 
 exports.fetch = async function (ctx) {
-  const { type = "app" } = ctx.query
+  let type = env.TEMPLATE_REPOSITORY
   let response,
     error = false
   try {

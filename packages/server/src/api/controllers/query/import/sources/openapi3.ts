@@ -1,5 +1,5 @@
 import { ImportInfo } from "./base"
-import { Query, QueryParameter } from "../../../../../definitions/datasource"
+import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
@@ -104,6 +104,10 @@ export class OpenAPI3 extends OpenAPISource {
     return {
       name,
     }
+  }
+
+  getImportSource(): string {
+    return "openapi3.0"
   }
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {

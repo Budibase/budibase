@@ -8,6 +8,8 @@
   export let disabled = false
   export let validation
   export let extensions
+  export let onChange
+  export let maximum = undefined
 
   let fieldState
   let fieldApi
@@ -24,6 +26,12 @@
     )
   }
 
+  const handleTooManyFiles = fileLimit => {
+    notificationStore.actions.warning(
+      `Please select a maximum of ${fileLimit} files.`
+    )
+  }
+
   const processFiles = async fileList => {
     let data = new FormData()
     for (let i = 0; i < fileList.length; i++) {
@@ -36,6 +44,24 @@
       })
     } catch (error) {
       return []
+    }
+  }
+
+  const deleteAttachments = async fileList => {
+    try {
+      return await API.deleteAttachments({
+        keys: fileList,
+        tableId: formContext?.dataSource?.tableId,
+      })
+    } catch (error) {
+      return []
+    }
+  }
+
+  const handleChange = e => {
+    fieldApi.setValue(e.detail)
+    if (onChange) {
+      onChange({ value: e.detail })
     }
   }
 </script>
@@ -55,11 +81,12 @@
       value={fieldState.value}
       disabled={fieldState.disabled}
       error={fieldState.error}
-      on:change={e => {
-        fieldApi.setValue(e.detail)
-      }}
+      on:change={handleChange}
       {processFiles}
+      {deleteAttachments}
       {handleFileTooLarge}
+      {handleTooManyFiles}
+      {maximum}
       {extensions}
     />
   {/if}

@@ -58,8 +58,10 @@ describe("google", () => {
 
     it("delegates authentication to third party common", async () => {
       const google = require("../google")
+      const mockSaveUserFn = jest.fn()
+      const authenticate = await google.buildVerifyFn(mockSaveUserFn)
 
-      await google.authenticate(
+      await authenticate(
         data.accessToken,
         data.refreshToken,
         profile,
@@ -69,7 +71,8 @@ describe("google", () => {
       expect(authenticateThirdParty).toHaveBeenCalledWith(
         user,
         true, 
-        mockDone)
+        mockDone,
+        mockSaveUserFn)
     })
   })
 })

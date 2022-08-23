@@ -4,11 +4,21 @@
 
   export let modalContentComponent = CreateEditRow
   export let title = "Create row"
+  export let disabled = false
+  export let highlighted = false
 
   let modal
 </script>
 
-<ActionButton icon="TableRowAddBottom" size="S" quiet on:click={modal.show}>
+<ActionButton
+  {disabled}
+  emphasized={highlighted}
+  selected={highlighted}
+  icon="TableRowAddBottom"
+  size="S"
+  quiet
+  on:click={modal.show}
+>
   {title}
 </ActionButton>
 <Modal bind:this={modal}>

@@ -2,7 +2,7 @@ const {
   generateDatasourceID,
   getDatasourceParams,
   getQueryParams,
-  DocumentTypes,
+  DocumentType,
   BudibaseInternalDB,
   getTableParams,
 } = require("../../db/utils")
@@ -11,6 +11,7 @@ const { integrations } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
 const { invalidateDynamicVariables } = require("../../threads/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
 
 exports.fetch = async function (ctx) {
   // Get internal tables
@@ -108,6 +109,7 @@ exports.update = async function (ctx) {
   }
 
   const response = await db.put(datasource)
+  await events.datasource.updated(datasource)
   datasource._rev = response.rev
 
   // Drain connection pools when configuration is changed
@@ -130,7 +132,7 @@ exports.save = async function (ctx) {
 
   const datasource = {
     _id: generateDatasourceID({ plus }),
-    type: plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE,
+    type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
     ...ctx.request.body.datasource,
   }
 
@@ -142,6 +144,7 @@ exports.save = async function (ctx) {
   }
 
   const dbResp = await db.put(datasource)
+  await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
 
   // Drain connection pools when configuration is changed
@@ -161,11 +164,11 @@ exports.save = async function (ctx) {
 
 exports.destroy = async function (ctx) {
   const db = getAppDB()
+  const datasourceId = ctx.params.datasourceId
 
+  const datasource = await db.get(datasourceId)
   // Delete all queries for the datasource
-  const queries = await db.allDocs(
-    getQueryParams(ctx.params.datasourceId, null)
-  )
+  const queries = await db.allDocs(getQueryParams(datasourceId, null))
   await db.bulkDocs(
     queries.rows.map(row => ({
       _id: row.id,
@@ -175,7 +178,8 @@ exports.destroy = async function (ctx) {
   )
 
   // delete the datasource
-  await db.remove(ctx.params.datasourceId, ctx.params.revId)
+  await db.remove(datasourceId, ctx.params.revId)
+  await events.datasource.deleted(datasource)
 
   ctx.message = `Datasource deleted.`
   ctx.status = 200

@@ -13,10 +13,9 @@
     Table,
     Checkbox,
   } from "@budibase/bbui"
-  import { email } from "stores/portal"
+  import { email, admin } from "stores/portal"
   import { API } from "api"
   import { cloneDeep } from "lodash/fp"
-  import analytics, { Events } from "analytics"
 
   const ConfigTypes = {
     SMTP: "smtp",
@@ -58,11 +57,33 @@
       const savedConfig = await API.saveConfig(smtp)
       smtpConfig._rev = savedConfig._rev
       smtpConfig._id = savedConfig._id
+      await admin.getChecklist()
       notifications.success(`Settings saved`)
-      analytics.captureEvent(Events.SMTP.SAVED)
     } catch (error) {
       notifications.error(
         `Failed to save email settings, reason: ${error?.message || "Unknown"}`
+      )
+    }
+  }
+
+  async function deleteSmtp() {
+    // Delete the SMTP config
+    try {
+      await API.deleteConfig({
+        id: smtpConfig._id,
+        rev: smtpConfig._rev,
+      })
+      smtpConfig = {
+        type: ConfigTypes.SMTP,
+        config: {
+          secure: true,
+        },
+      }
+      await admin.getChecklist()
+      notifications.success(`Settings cleared`)
+    } catch (error) {
+      notifications.error(
+        `Failed to clear email settings, reason: ${error?.message || "Unknown"}`
       )
     }
   }
@@ -111,7 +132,7 @@
       values below and click activate.
     </Body>
   </Layout>
-  <Divider />
+  <Divider size="S" />
   {#if smtpConfig}
     <Layout gap="XS" noPadding>
       <Heading size="S">SMTP</Heading>
@@ -155,10 +176,17 @@
         </div>
       {/if}
     </Layout>
-    <div>
+    <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
       <Button cta on:click={saveSmtp}>Save</Button>
+      <Button
+        secondary
+        on:click={deleteSmtp}
+        disabled={!$admin.checklist.smtp.checked}
+      >
+        Reset
+      </Button>
     </div>
-    <Divider />
+    <Divider size="S" />
     <Layout gap="XS" noPadding>
       <Heading size="S">Templates</Heading>
       <Body size="S">
@@ -184,5 +212,9 @@
     grid-template-columns: 120px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+  .spectrum-Settings-buttonGroup {
+    gap: var(--spectrum-global-dimension-static-size-200);
+    align-items: flex-end;
   }
 </style>

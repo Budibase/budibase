@@ -20,6 +20,7 @@
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
+  import { isEnabled, FEATURE_FLAGS } from "../../../helpers/featureFlags"
 
   let loaded = false
   let userInfoModal
@@ -30,7 +31,21 @@
   $: menu = buildMenu($auth.isAdmin)
 
   const buildMenu = admin => {
-    let menu = [{ title: "Apps", href: "/builder/portal/apps" }]
+    let menu = [
+      {
+        title: "Apps",
+        href: "/builder/portal/apps",
+      },
+    ]
+    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+      menu = menu.concat([
+        {
+          title: "Usage",
+          href: "/builder/portal/settings/usage",
+        },
+      ])
+    }
+
     if (admin) {
       menu = menu.concat([
         {
@@ -51,13 +66,29 @@
         },
       ])
 
+      if (isEnabled(FEATURE_FLAGS.USER_GROUPS)) {
+        let item = {
+          title: "User Groups",
+          href: "/builder/portal/manage/groups",
+        }
+
+        menu.splice(2, 0, item)
+      }
+
       if (!$adminStore.cloud) {
         menu = menu.concat([
           {
-            title: "Updates",
+            title: "Update",
             href: "/builder/portal/settings/update",
           },
         ])
+
+        if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+          menu = menu.concat({
+            title: "Upgrade",
+            href: "/builder/portal/settings/upgrade",
+          })
+        }
       }
     } else {
       menu = menu.concat([
@@ -152,7 +183,7 @@
           />
         </div>
         <div class="user-dropdown">
-          <ActionMenu align="right">
+          <ActionMenu align="right" dataCy="user-menu">
             <div slot="control" class="avatar">
               <Avatar
                 size="M"
@@ -161,7 +192,11 @@
               />
               <Icon size="XL" name="ChevronDown" />
             </div>
-            <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+            <MenuItem
+              icon="UserEdit"
+              on:click={() => userInfoModal.show()}
+              dataCy={"user-info"}
+            >
               Update user information
             </MenuItem>
             {#if $auth.isBuilder}
@@ -178,7 +213,9 @@
             <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
               Close developer mode
             </MenuItem>
-            <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}
+              >Log out
+            </MenuItem>
           </ActionMenu>
         </div>
       </div>
@@ -307,7 +344,7 @@
 
     .mobile-toggle,
     .user-dropdown {
-      flex: 1 1 0;
+      flex: 0 1 0;
     }
 
     /* Reduce BBUI page padding */

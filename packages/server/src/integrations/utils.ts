@@ -1,6 +1,5 @@
-import { SourceNames, SqlQuery } from "../definitions/datasource"
-import { Datasource, Table } from "../definitions/common"
-import { DocumentTypes, SEPARATOR } from "../db/utils"
+import { SourceName, SqlQuery, Datasource, Table } from "@budibase/types"
+import { DocumentType, SEPARATOR } from "../db/utils"
 import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
@@ -35,6 +34,9 @@ const SQL_DATE_TYPE_MAP = {
   date: FieldTypes.DATETIME,
 }
 
+const SQL_DATE_ONLY_TYPES = ["date"]
+const SQL_TIME_ONLY_TYPES = ["time"]
+
 const SQL_STRING_TYPE_MAP = {
   varchar: FieldTypes.STRING,
   char: FieldTypes.STRING,
@@ -42,9 +44,9 @@ const SQL_STRING_TYPE_MAP = {
   nvarchar: FieldTypes.STRING,
   ntext: FieldTypes.STRING,
   enum: FieldTypes.STRING,
-  blob: FieldTypes.LONGFORM,
-  long: FieldTypes.LONGFORM,
-  text: FieldTypes.LONGFORM,
+  blob: FieldTypes.STRING,
+  long: FieldTypes.STRING,
+  text: FieldTypes.STRING,
 }
 
 const SQL_BOOLEAN_TYPE_MAP = {
@@ -65,7 +67,7 @@ const SQL_TYPE_MAP = {
   ...SQL_MISC_TYPE_MAP,
 }
 
-export enum SqlClients {
+export enum SqlClient {
   MS_SQL = "mssql",
   POSTGRES = "pg",
   MY_SQL = "mysql2",
@@ -73,7 +75,7 @@ export enum SqlClients {
 }
 
 export function isExternalTable(tableId: string) {
-  return tableId.includes(DocumentTypes.DATASOURCE)
+  return tableId.includes(DocumentType.DATASOURCE)
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
@@ -85,9 +87,9 @@ export function breakExternalTableId(tableId: string | undefined) {
     return {}
   }
   const parts = tableId.split(DOUBLE_SEPARATOR)
-  let tableName = parts.pop()
+  let datasourceId = parts.shift()
   // if they need joined
-  let datasourceId = parts.join(DOUBLE_SEPARATOR)
+  let tableName = parts.join(DOUBLE_SEPARATOR)
   return { datasourceId, tableName }
 }
 
@@ -137,12 +139,20 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
 }
 
 export function convertSqlType(type: string) {
+  let foundType = FieldTypes.STRING
+  const lcType = type.toLowerCase()
   for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
-    if (type.toLowerCase().includes(external)) {
-      return internal
+    if (lcType.includes(external)) {
+      foundType = internal
+      break
     }
   }
-  return FieldTypes.STRING
+  const schema: any = { type: foundType }
+  if (foundType === FieldTypes.DATETIME) {
+    schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lcType)
+    schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lcType)
+  }
+  return schema
 }
 
 export function getSqlQuery(query: SqlQuery | string): SqlQuery {
@@ -158,10 +168,10 @@ export function isSQL(datasource: Datasource): boolean {
     return false
   }
   const SQL = [
-    SourceNames.POSTGRES,
-    SourceNames.SQL_SERVER,
-    SourceNames.MYSQL,
-    SourceNames.ORACLE,
+    SourceName.POSTGRES,
+    SourceName.SQL_SERVER,
+    SourceName.MYSQL,
+    SourceName.ORACLE,
   ]
   return SQL.indexOf(datasource.source) !== -1
 }
@@ -207,11 +217,21 @@ function shouldCopySpecialColumn(
   column: { type: string },
   fetchedColumn: { type: string } | undefined
 ) {
+  const specialTypes = [
+    FieldTypes.OPTIONS,
+    FieldTypes.LONGFORM,
+    FieldTypes.ARRAY,
+    FieldTypes.FORMULA,
+  ]
+  // column has been deleted, remove
+  if (column && !fetchedColumn) {
+    return false
+  }
+  const fetchedIsNumber =
+    !fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER
   return (
-    column.type === FieldTypes.OPTIONS ||
-    column.type === FieldTypes.ARRAY ||
-    ((!fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER) &&
-      column.type === FieldTypes.BOOLEAN)
+    specialTypes.indexOf(column.type) !== -1 ||
+    (fetchedIsNumber && column.type === FieldTypes.BOOLEAN)
   )
 }
 

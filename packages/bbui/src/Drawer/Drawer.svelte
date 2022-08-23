@@ -6,6 +6,8 @@
 
   export let title
   export let fillWidth
+  export let left = "314px"
+  export let width = "calc(100% - 576px)"
 
   let visible = false
 
@@ -42,7 +44,12 @@
 
 {#if visible}
   <Portal>
-    <section class:fillWidth class="drawer" transition:slide|local>
+    <section
+      class:fillWidth
+      class="drawer"
+      transition:slide|local
+      style={`width: ${width}; left: ${left};`}
+    >
       <header>
         <div class="text">
           <Heading size="XS">{title}</Heading>
@@ -69,14 +76,13 @@
   .drawer {
     position: absolute;
     bottom: 0;
-    left: 260px;
-    width: calc(100% - 520px);
     background: var(--background);
     border-top: var(--border-light);
     z-index: 2;
   }
 
   .fillWidth {
+    left: 260px !important;
     width: calc(100% - 260px) !important;
   }
 

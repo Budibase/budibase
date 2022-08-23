@@ -6,6 +6,9 @@ const { fetchView } = require("../row")
 const { getTable } = require("../table/utils")
 const { FieldTypes } = require("../../../constants")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
+const { DocumentType } = require("../../../db/utils")
+const { cloneDeep, isEqual } = require("lodash")
 
 exports.fetch = async ctx => {
   ctx.body = await getViews()
@@ -15,29 +18,89 @@ exports.save = async ctx => {
   const db = getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
   const view = viewTemplate(viewToSave)
+  const viewName = viewToSave.name
 
-  if (!viewToSave.name) {
+  if (!viewName) {
     ctx.throw(400, "Cannot create view without a name")
   }
 
-  await saveView(originalName, viewToSave.name, view)
+  await saveView(originalName, viewName, view)
 
   // add views to table document
-  const table = await db.get(ctx.request.body.tableId)
+  const existingTable = await db.get(ctx.request.body.tableId)
+  const table = cloneDeep(existingTable)
   if (!table.views) table.views = {}
   if (!view.meta.schema) {
     view.meta.schema = table.schema
   }
-  table.views[viewToSave.name] = view.meta
+  table.views[viewName] = view.meta
   if (originalName) {
     delete table.views[originalName]
+    existingTable.views[viewName] = existingTable.views[originalName]
   }
   await db.put(table)
+  await handleViewEvents(existingTable.views[viewName], table.views[viewName])
 
   ctx.body = {
     ...table.views[viewToSave.name],
     name: viewToSave.name,
   }
+}
+
+const calculationEvents = async (existingView, newView) => {
+  const existingCalculation = existingView && existingView.calculation
+  const newCalculation = newView && newView.calculation
+
+  if (existingCalculation && !newCalculation) {
+    await events.view.calculationDeleted(existingView)
+  }
+
+  if (!existingCalculation && newCalculation) {
+    await events.view.calculationCreated(newView)
+  }
+
+  if (
+    existingCalculation &&
+    newCalculation &&
+    existingCalculation !== newCalculation
+  ) {
+    await events.view.calculationUpdated(newView)
+  }
+}
+
+const filterEvents = async (existingView, newView) => {
+  const hasExistingFilters = !!(
+    existingView &&
+    existingView.filters &&
+    existingView.filters.length
+  )
+  const hasNewFilters = !!(newView && newView.filters && newView.filters.length)
+
+  if (hasExistingFilters && !hasNewFilters) {
+    await events.view.filterDeleted(newView)
+  }
+
+  if (!hasExistingFilters && hasNewFilters) {
+    await events.view.filterCreated(newView)
+  }
+
+  if (
+    hasExistingFilters &&
+    hasNewFilters &&
+    !isEqual(existingView.filters, newView.filters)
+  ) {
+    await events.view.filterUpdated(newView)
+  }
+}
+
+const handleViewEvents = async (existingView, newView) => {
+  if (!existingView) {
+    await events.view.created(newView)
+  } else {
+    await events.view.updated(newView)
+  }
+  await calculationEvents(existingView, newView)
+  await filterEvents(existingView, newView)
 }
 
 exports.destroy = async ctx => {
@@ -47,6 +110,7 @@ exports.destroy = async ctx => {
   const table = await db.get(view.meta.tableId)
   delete table.views[viewName]
   await db.put(table)
+  await events.view.deleted(view)
 
   ctx.body = view
 }
@@ -79,9 +143,9 @@ exports.exportView = async ctx => {
   let rows = ctx.body
 
   let schema = view && view.meta && view.meta.schema
+  const tableId = ctx.params.tableId || view.meta.tableId
+  const table = await getTable(tableId)
   if (!schema) {
-    const tableId = ctx.params.tableId || view.meta.tableId
-    const table = await getTable(tableId)
     schema = table.schema
   }
 
@@ -116,4 +180,10 @@ exports.exportView = async ctx => {
   // send down the file
   ctx.attachment(filename)
   ctx.body = apiFileReturn(exporter(headers, rows))
+
+  if (viewName.startsWith(DocumentType.TABLE)) {
+    await events.table.exported(table, format)
+  } else {
+    await events.view.exported(table, format)
+  }
 }

@@ -1,47 +1,52 @@
 const fetch = require("node-fetch")
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 const { authenticateThirdParty } = require("./third-party-common")
+const { ssoCallbackUrl } = require("./utils")
+const { Configs } = require("../../../constants")
 
-/**
- * @param {*} issuer The identity provider base URL
- * @param {*} sub The user ID
- * @param {*} profile The user profile information. Created by passport from the /userinfo response
- * @param {*} jwtClaims The parsed id_token claims
- * @param {*} accessToken The access_token for contacting the identity provider - may or may not be a JWT
- * @param {*} refreshToken The refresh_token for obtaining a new access_token - usually not a JWT
- * @param {*} idToken The id_token - always a JWT
- * @param {*} params The response body from requesting an access_token
- * @param {*} done The passport callback: err, user, info
- */
-async function authenticate(
-  issuer,
-  sub,
-  profile,
-  jwtClaims,
-  accessToken,
-  refreshToken,
-  idToken,
-  params,
-  done
-) {
-  const thirdPartyUser = {
-    // store the issuer info to enable sync in future
-    provider: issuer,
-    providerType: "oidc",
-    userId: profile.id,
-    profile: profile,
-    email: getEmail(profile, jwtClaims),
-    oauth2: {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    },
-  }
-
-  return authenticateThirdParty(
-    thirdPartyUser,
-    false, // don't require local accounts to exist
+const buildVerifyFn = saveUserFn => {
+  /**
+   * @param {*} issuer The identity provider base URL
+   * @param {*} sub The user ID
+   * @param {*} profile The user profile information. Created by passport from the /userinfo response
+   * @param {*} jwtClaims The parsed id_token claims
+   * @param {*} accessToken The access_token for contacting the identity provider - may or may not be a JWT
+   * @param {*} refreshToken The refresh_token for obtaining a new access_token - usually not a JWT
+   * @param {*} idToken The id_token - always a JWT
+   * @param {*} params The response body from requesting an access_token
+   * @param {*} done The passport callback: err, user, info
+   */
+  return async (
+    issuer,
+    sub,
+    profile,
+    jwtClaims,
+    accessToken,
+    refreshToken,
+    idToken,
+    params,
     done
-  )
+  ) => {
+    const thirdPartyUser = {
+      // store the issuer info to enable sync in future
+      provider: issuer,
+      providerType: "oidc",
+      userId: profile.id,
+      profile: profile,
+      email: getEmail(profile, jwtClaims),
+      oauth2: {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      },
+    }
+
+    return authenticateThirdParty(
+      thirdPartyUser,
+      false, // don't require local accounts to exist
+      done,
+      saveUserFn
+    )
+  }
 }
 
 /**
@@ -86,11 +91,24 @@ function validEmail(value) {
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
  * @returns Dynamically configured Passport OIDC Strategy
  */
-exports.strategyFactory = async function (config, callbackUrl) {
+exports.strategyFactory = async function (config, saveUserFn) {
   try {
-    const { clientID, clientSecret, configUrl } = config
+    const verify = buildVerifyFn(saveUserFn)
+    const strategy = new OIDCStrategy(config, verify)
+    strategy.name = "oidc"
+    return strategy
+  } catch (err) {
+    console.error(err)
+    throw new Error("Error constructing OIDC authentication strategy", err)
+  }
+}
+
+exports.fetchStrategyConfig = async function (enrichedConfig, callbackUrl) {
+  try {
+    const { clientID, clientSecret, configUrl } = enrichedConfig
 
     if (!clientID || !clientSecret || !callbackUrl || !configUrl) {
+      //check for remote config and all required elements
       throw new Error(
         "Configuration invalid. Must contain clientID, clientSecret, callbackUrl and configUrl"
       )
@@ -106,23 +124,24 @@ exports.strategyFactory = async function (config, callbackUrl) {
 
     const body = await response.json()
 
-    return new OIDCStrategy(
-      {
-        issuer: body.issuer,
-        authorizationURL: body.authorization_endpoint,
-        tokenURL: body.token_endpoint,
-        userInfoURL: body.userinfo_endpoint,
-        clientID: clientID,
-        clientSecret: clientSecret,
-        callbackURL: callbackUrl,
-      },
-      authenticate
-    )
+    return {
+      issuer: body.issuer,
+      authorizationURL: body.authorization_endpoint,
+      tokenURL: body.token_endpoint,
+      userInfoURL: body.userinfo_endpoint,
+      clientID: clientID,
+      clientSecret: clientSecret,
+      callbackURL: callbackUrl,
+    }
   } catch (err) {
     console.error(err)
-    throw new Error("Error constructing OIDC authentication strategy", err)
+    throw new Error("Error constructing OIDC authentication configuration", err)
   }
 }
 
+exports.getCallbackUrl = async function (db, config) {
+  return ssoCallbackUrl(db, config, Configs.OIDC)
+}
+
 // expose for testing
-exports.authenticate = authenticate
+exports.buildVerifyFn = buildVerifyFn

@@ -7,7 +7,9 @@ class TestConfiguration {
     this.integration = new AirtableIntegration.integration(config) 
     this.client = {
       create: jest.fn(),
-      select: jest.fn(),
+      select: jest.fn(() => ({
+        firstPage: jest.fn(() => []),
+      })),
       update: jest.fn(),
       destroy: jest.fn(),
     }
@@ -46,7 +48,7 @@ describe("Airtable Integration", () => {
 
   it("calls the update method with the correct params", async () => {
     const response = await config.integration.update({
-      table: "test",
+      table: "table",
       id: "123",
       json: {
         name: "test"

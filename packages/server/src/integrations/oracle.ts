@@ -1,17 +1,19 @@
 import {
-  DatasourceFieldTypes,
+  DatasourceFieldType,
   Integration,
   Operation,
   QueryJson,
-  QueryTypes,
+  QueryType,
   SqlQuery,
-} from "../definitions/datasource"
+  Table,
+  DatasourcePlus,
+} from "@budibase/types"
 import {
   buildExternalTableId,
   convertSqlType,
   finaliseExternalTables,
   getSqlQuery,
-  SqlClients,
+  SqlClient,
 } from "./utils"
 import oracledb, {
   BindParameters,
@@ -21,8 +23,6 @@ import oracledb, {
   Result,
 } from "oracledb"
 import Sql from "./base/sql"
-import { Table } from "../definitions/common"
-import { DatasourcePlus } from "./base/datasourcePlus"
 import { FieldTypes } from "../constants"
 
 module OracleModule {
@@ -40,44 +40,45 @@ module OracleModule {
     docs: "https://github.com/oracle/node-oracledb",
     plus: true,
     friendlyName: "Oracle",
+    type: "Relational",
     description:
       "Oracle Database is an object-relational database management system developed by Oracle Corporation",
     datasource: {
       host: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "localhost",
         required: true,
       },
       port: {
-        type: DatasourceFieldTypes.NUMBER,
+        type: DatasourceFieldType.NUMBER,
         required: true,
         default: 1521,
       },
       database: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       user: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         required: true,
       },
       password: {
-        type: DatasourceFieldTypes.PASSWORD,
+        type: DatasourceFieldType.PASSWORD,
         required: true,
       },
     },
     query: {
       create: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       read: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       update: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
       delete: {
-        type: QueryTypes.SQL,
+        type: QueryType.SQL,
       },
     },
   }
@@ -171,7 +172,7 @@ module OracleModule {
           OR cons.status IS NULL)
     `
     constructor(config: OracleConfig) {
-      super(SqlClients.ORACLE)
+      super(SqlClient.ORACLE)
       this.config = config
     }
 
@@ -279,9 +280,9 @@ module OracleModule {
       )
     }
 
-    private internalConvertType(column: OracleColumn): string {
+    private internalConvertType(column: OracleColumn): { type: string } {
       if (this.isBooleanType(column)) {
-        return FieldTypes.BOOLEAN
+        return { type: FieldTypes.BOOLEAN }
       }
 
       return convertSqlType(column.type)
@@ -328,7 +329,7 @@ module OracleModule {
               fieldSchema = {
                 autocolumn: OracleIntegration.isAutoColumn(oracleColumn),
                 name: columnName,
-                type: this.internalConvertType(oracleColumn),
+                ...this.internalConvertType(oracleColumn),
               }
               table.schema[columnName] = fieldSchema
             }

@@ -1,4 +1,3 @@
-const env = require("../../../environment")
 const TestConfig = require("../../../tests/utilities/TestConfiguration")
 
 const syncApps = jest.fn()
@@ -14,7 +13,6 @@ describe("run", () => {
 
   beforeEach(async () => {
     await config.init()
-    env._set("USE_QUOTAS", 1)
   })
 
   afterAll(config.end)  

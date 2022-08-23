@@ -7,7 +7,11 @@ import {
   getComponentSettings,
 } from "./componentUtils"
 import { store } from "builderStore"
-import { queries as queriesStores, tables as tablesStore } from "stores/backend"
+import {
+  queries as queriesStores,
+  tables as tablesStore,
+  roles as rolesStore,
+} from "stores/backend"
 import {
   makePropSafe,
   isJSBinding,
@@ -16,7 +20,7 @@ import {
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
-import ActionDefinitions from "components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/manifest.json"
+import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -33,6 +37,7 @@ export const getBindableProperties = (asset, componentId) => {
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
   const selectedRowsBindings = getSelectedRowsBindings(asset)
+  const roleBindings = getRoleBindings()
   return [
     ...contextBindings,
     ...urlBindings,
@@ -40,7 +45,97 @@ export const getBindableProperties = (asset, componentId) => {
     ...userBindings,
     ...deviceBindings,
     ...selectedRowsBindings,
+    ...roleBindings,
   ]
+}
+
+/**
+ * Gets all rest bindable data fields
+ */
+export const getRestBindings = () => {
+  const userBindings = getUserBindings()
+  return [...userBindings, ...getAuthBindings()]
+}
+
+/**
+ * Gets all rest bindable auth fields
+ */
+export const getAuthBindings = () => {
+  let bindings = []
+  const safeUser = makePropSafe("user")
+  const safeOAuth2 = makePropSafe("oauth2")
+  const safeAccessToken = makePropSafe("accessToken")
+
+  const authBindings = [
+    {
+      runtime: `${safeUser}.${safeOAuth2}.${safeAccessToken}`,
+      readable: `Current User.OAuthToken`,
+      key: "accessToken",
+    },
+  ]
+
+  bindings = Object.keys(authBindings).map(key => {
+    const fieldBinding = authBindings[key]
+    return {
+      type: "context",
+      runtimeBinding: fieldBinding.runtime,
+      readableBinding: fieldBinding.readable,
+      fieldSchema: { type: "string", name: fieldBinding.key },
+      providerId: "user",
+    }
+  })
+  return bindings
+}
+
+/**
+ * Utility - convert a key/value map to an array of custom 'context' bindings
+ * @param {object} valueMap Key/value pairings
+ * @param {string} prefix A contextual string prefix/path for a user readable binding
+ * @return {object[]} An array containing readable/runtime binding objects
+ */
+export const toBindingsArray = (valueMap, prefix) => {
+  if (!valueMap) {
+    return []
+  }
+  return Object.keys(valueMap).reduce((acc, binding) => {
+    if (!binding || !valueMap[binding]) {
+      return acc
+    }
+    acc.push({
+      type: "context",
+      runtimeBinding: binding,
+      readableBinding: `${prefix}.${binding}`,
+    })
+    return acc
+  }, [])
+}
+
+/**
+ * Utility - coverting a map of readable bindings to runtime
+ */
+export const readableToRuntimeMap = (bindings, ctx) => {
+  if (!bindings || !ctx) {
+    return {}
+  }
+  return Object.keys(ctx).reduce((acc, key) => {
+    let parsedQuery = readableToRuntimeBinding(bindings, ctx[key])
+    acc[key] = parsedQuery
+    return acc
+  }, {})
+}
+
+/**
+ * Utility - coverting a map of runtime bindings to readable
+ */
+export const runtimeToReadableMap = (bindings, ctx) => {
+  if (!bindings || !ctx) {
+    return {}
+  }
+  return Object.keys(ctx).reduce((acc, key) => {
+    let parsedQuery = runtimeToReadableBinding(bindings, ctx[key])
+    acc[key] = parsedQuery
+    return acc
+  }, {})
 }
 
 /**
@@ -287,7 +382,6 @@ const getUserBindings = () => {
       providerId: "user",
     })
   })
-
   return bindings
 }
 
@@ -379,19 +473,35 @@ const getUrlBindings = asset => {
     }
   })
   const safeURL = makePropSafe("url")
-  return params.map(param => ({
+  const urlParamBindings = params.map(param => ({
     type: "context",
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
   }))
+  const queryParamsBinding = {
+    type: "context",
+    runtimeBinding: makePropSafe("query"),
+    readableBinding: "Query params",
+  }
+  return urlParamBindings.concat([queryParamsBinding])
+}
+
+const getRoleBindings = () => {
+  return (get(rolesStore) || []).map(role => {
+    return {
+      type: "context",
+      runtimeBinding: `trim "${role._id}"`,
+      readableBinding: `Role.${role.name}`,
+    }
+  })
 }
 
 /**
- * Gets all bindable properties exposed in a button actions flow up until
+ * Gets all bindable properties exposed in an event action flow up until
  * the specified action ID, as well as context provided for the action
  * setting as a whole by the component.
  */
-export const getButtonContextBindings = (
+export const getEventContextBindings = (
   asset,
   componentId,
   settingKey,
@@ -405,10 +515,7 @@ export const getButtonContextBindings = (
   const component = findComponent(asset.props, componentId)
   const settings = getComponentSettings(component?._component)
   const eventSetting = settings.find(setting => setting.key === settingKey)
-  if (!eventSetting) {
-    return bindings
-  }
-  if (eventSetting.context?.length) {
+  if (eventSetting?.context?.length) {
     eventSetting.context.forEach(contextEntry => {
       bindings.push({
         readableBinding: contextEntry.label,
@@ -633,7 +740,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
  * Builds a form schema given a form component.
  * A form schema is a schema of all the fields nested anywhere within a form.
  */
-const buildFormSchema = component => {
+export const buildFormSchema = component => {
   let schema = {}
   if (!component) {
     return schema
@@ -682,6 +789,13 @@ export const getAllStateVariables = () => {
           eventSettings.push(component[setting.key])
         })
     })
+  })
+
+  // Add on load settings from screens
+  get(store).screens.forEach(screen => {
+    if (screen.onLoad) {
+      eventSettings.push(screen.onLoad)
+    }
   })
 
   // Extract all state keys from any "update state" actions in each setting

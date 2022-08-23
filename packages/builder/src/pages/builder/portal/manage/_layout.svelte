@@ -9,10 +9,14 @@
       $redirect("../")
     }
   }
+
+  $: wide =
+    $page.path.includes("email/:template") ||
+    ($page.path.includes("groups") && !$page.path.includes(":groupId"))
 </script>
 
 {#if $auth.isAdmin}
-  <Page wide={$page.path.includes("email/:template")}>
+  <Page maxWidth="90ch" {wide}>
     <slot />
   </Page>
 {/if}

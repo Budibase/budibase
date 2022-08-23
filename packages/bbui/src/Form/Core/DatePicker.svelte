@@ -15,35 +15,79 @@
   export let placeholder = null
   export let appendTo = undefined
   export let timeOnly = false
+  export let ignoreTimezones = false
+  export let time24hr = false
 
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
   let open = false
-  let flatpickr, flatpickrOptions, isTimeOnly
+  let flatpickr, flatpickrOptions
 
-  $: isTimeOnly = !timeOnly && value ? !isNaN(new Date(`0-${value}`)) : timeOnly
+  const resolveTimeStamp = timestamp => {
+    let maskedDate = new Date(`0-${timestamp}`)
+
+    if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
+      return maskedDate
+    } else {
+      return null
+    }
+  }
+
   $: flatpickrOptions = {
     element: `#${flatpickrId}`,
-    enableTime: isTimeOnly || enableTime || false,
-    noCalendar: isTimeOnly || false,
+    enableTime: timeOnly || enableTime || false,
+    noCalendar: timeOnly || false,
     altInput: true,
-    altFormat: isTimeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
+    time_24hr: time24hr || false,
+    altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
     appendTo,
     disableMobile: "true",
+    onReady: () => {
+      let timestamp = resolveTimeStamp(value)
+      if (timeOnly && timestamp) {
+        dispatch("change", timestamp.toISOString())
+      }
+    },
+  }
+
+  $: redrawOptions = {
+    timeOnly,
+    enableTime,
+    time24hr,
   }
 
   const handleChange = event => {
     const [dates] = event.detail
+    const noTimezone = enableTime && !timeOnly && ignoreTimezones
     let newValue = dates[0]
     if (newValue) {
       newValue = newValue.toISOString()
     }
-    // if time only set date component to today
+
+    // If time only set date component to 2000-01-01
     if (timeOnly) {
-      const todayDate = new Date().toISOString().split("T")[0]
-      newValue = `${todayDate}T${newValue.split("T")[1]}`
+      newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
+
+    // For date-only fields, construct a manual timestamp string without a time
+    // or time zone
+    else if (!enableTime) {
+      const year = dates[0].getFullYear()
+      const month = `${dates[0].getMonth() + 1}`.padStart(2, "0")
+      const day = `${dates[0].getDate()}`.padStart(2, "0")
+      newValue = `${year}-${month}-${day}T00:00:00.000`
+    }
+
+    // For non-timezone-aware fields, create an ISO 8601 timestamp of the exact
+    // time picked, without timezone
+    else if (noTimezone) {
+      const offset = dates[0].getTimezoneOffset() * 60000
+      newValue = new Date(dates[0].getTime() - offset)
+        .toISOString()
+        .slice(0, -1)
+    }
+
     dispatch("change", newValue)
   }
 
@@ -76,10 +120,13 @@
       return null
     }
     let date
-    let time = new Date(`0-${val}`)
+    let time
+
     // it is a string like 00:00:00, just time
-    if (timeOnly || (typeof val === "string" && !isNaN(time))) {
-      date = time
+    let ts = resolveTimeStamp(val)
+
+    if (timeOnly && ts) {
+      date = ts
     } else if (val instanceof Date) {
       // Use real date obj if already parsed
       date = val
@@ -90,10 +137,12 @@
       // Treat as numerical timestamp
       date = new Date(parseInt(val))
     }
+
     time = date.getTime()
     if (isNaN(time)) {
       return null
     }
+
     // By rounding to the nearest second we avoid locking up in an endless
     // loop in the builder, caused by potentially enriching {{ now }} to every
     // millisecond.
@@ -101,7 +150,7 @@
   }
 </script>
 
-{#key isTimeOnly}
+{#key redrawOptions}
   <Flatpickr
     bind:flatpickr
     value={parseDate(value)}
@@ -139,8 +188,8 @@
         <input
           data-input
           type="text"
-          {disabled}
           class="spectrum-Textfield-input spectrum-InputGroup-input"
+          class:is-disabled={disabled}
           {placeholder}
           {id}
           {value}
@@ -150,7 +199,7 @@
         type="button"
         class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
         tabindex="-1"
-        {disabled}
+        class:is-disabled={disabled}
         class:is-invalid={!!error}
         on:click={flatpickr?.open}
       >
@@ -194,5 +243,8 @@
   }
   :global(.flatpickr-calendar) {
     font-family: "Source Sans Pro", sans-serif;
+  }
+  .is-disabled {
+    pointer-events: none !important;
   }
 </style>

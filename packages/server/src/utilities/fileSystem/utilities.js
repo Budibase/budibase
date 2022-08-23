@@ -9,6 +9,7 @@ const {
   deleteFolder,
   uploadDirectory,
   downloadTarball,
+  downloadTarballDirect,
 } = require("@budibase/backend-core/objectStore")
 
 /***********************************
@@ -29,4 +30,5 @@ exports.retrieveToTmp = retrieveToTmp
 exports.deleteFolder = deleteFolder
 exports.uploadDirectory = uploadDirectory
 exports.downloadTarball = downloadTarball
+exports.downloadTarballDirect = downloadTarballDirect
 exports.deleteFiles = deleteFiles

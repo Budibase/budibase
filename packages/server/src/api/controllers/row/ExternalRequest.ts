@@ -1,18 +1,16 @@
 import {
-  FilterTypes,
-  IncludeRelationships,
+  FilterType,
+  IncludeRelationship,
   Operation,
   PaginationJson,
   RelationshipsJson,
   SearchFilters,
   SortJson,
-} from "../../../definitions/datasource"
-import {
   Datasource,
   FieldSchema,
   Row,
   Table,
-} from "../../../definitions/common"
+} from "@budibase/types"
 import {
   breakRowIdField,
   generateRowIdField,
@@ -29,7 +27,10 @@ import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
 // @ts-ignore
 import { cloneDeep } from "lodash/fp"
-import { processFormulas } from "../../../utilities/rowProcessor/utils"
+import {
+  processFormulas,
+  processDates,
+} from "../../../utilities/rowProcessor/utils"
 // @ts-ignore
 import { getAppDB } from "@budibase/backend-core/context"
 
@@ -52,7 +53,7 @@ interface RunConfig {
 
 module External {
   function buildFilters(
-    id: string | undefined,
+    id: string | undefined | string[],
     filters: SearchFilters,
     table: Table
   ) {
@@ -125,7 +126,7 @@ module External {
         if (
           typeof filter !== "object" ||
           Object.keys(filter).length === 0 ||
-          key === FilterTypes.ONE_OF
+          key === FilterType.ONE_OF
         ) {
           continue
         }
@@ -175,9 +176,10 @@ module External {
     const thisRow: Row = {}
     // filter the row down to what is actually the row (not joined)
     for (let fieldName of Object.keys(table.schema)) {
-      const value = row[`${table.name}.${fieldName}`] || row[fieldName]
+      const pathValue = row[`${table.name}.${fieldName}`]
+      const value = pathValue != null ? pathValue : row[fieldName]
       // all responses include "select col as table.col" so that overlaps are handled
-      if (value) {
+      if (value != null) {
         thisRow[fieldName] = value
       }
     }
@@ -323,6 +325,28 @@ module External {
       return { row: newRow, manyRelationships }
     }
 
+    squashRelationshipColumns(
+      table: Table,
+      row: Row,
+      relationships: RelationshipsJson[]
+    ): Row {
+      for (let relationship of relationships) {
+        const linkedTable = this.tables[relationship.tableName]
+        if (!linkedTable || !row[relationship.column]) {
+          continue
+        }
+        const display = linkedTable.primaryDisplay
+        for (let key of Object.keys(row[relationship.column])) {
+          const related: Row = row[relationship.column][key]
+          row[relationship.column][key] = {
+            primaryDisplay: display ? related[display] : undefined,
+            _id: related._id,
+          }
+        }
+      }
+      return row
+    }
+
     /**
      * This iterates through the returned rows and works out what elements of the rows
      * actually match up to another row (based on primary keys) - this is pretty specific
@@ -353,12 +377,6 @@ module External {
         let linked = basicProcessing(row, linkedTable)
         if (!linked._id) {
           continue
-        }
-        // if not returning full docs then get the minimal links out
-        const display = linkedTable.primaryDisplay
-        linked = {
-          primaryDisplay: display ? linked[display] : undefined,
-          _id: linked._id,
         }
         columns[relationship.column] = linked
       }
@@ -417,7 +435,15 @@ module External {
           relationships
         )
       }
-      return processFormulas(table, Object.values(finalRows))
+
+      // Process some additional data types
+      let finalRowArray = Object.values(finalRows)
+      finalRowArray = processDates(table, finalRowArray)
+      finalRowArray = processFormulas(table, finalRowArray)
+
+      return finalRowArray.map((row: Row) =>
+        this.squashRelationshipColumns(table, row, relationships)
+      )
     }
 
     /**
@@ -606,7 +632,7 @@ module External {
      */
     buildFields(
       table: Table,
-      includeRelations: IncludeRelationships = IncludeRelationships.INCLUDE
+      includeRelations: IncludeRelationship = IncludeRelationship.INCLUDE
     ) {
       function extractRealFields(table: Table, existing: string[] = []) {
         return Object.entries(table.schema)

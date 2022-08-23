@@ -3,9 +3,10 @@ const {
   generateRowID,
   getRowParams,
   getTableIDFromRowID,
-  DocumentTypes,
+  DocumentType,
   InternalTables,
 } = require("../../../db/utils")
+const { dangerousGetDB } = require("@budibase/backend-core/db")
 const userController = require("../user")
 const {
   inputProcessing,
@@ -182,7 +183,7 @@ exports.fetchView = async ctx => {
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
-  if (viewName.startsWith(DocumentTypes.TABLE)) {
+  if (viewName.startsWith(DocumentType.TABLE)) {
     ctx.params.tableId = viewName
     return exports.fetch(ctx)
   }
@@ -250,7 +251,7 @@ exports.fetch = async ctx => {
 }
 
 exports.find = async ctx => {
-  const db = getAppDB()
+  const db = dangerousGetDB(ctx.appId)
   const table = await db.get(ctx.params.tableId)
   let row = await findRow(ctx, ctx.params.tableId, ctx.params.rowId)
   row = await outputProcessing(table, row)
@@ -259,8 +260,9 @@ exports.find = async ctx => {
 
 exports.destroy = async function (ctx) {
   const db = getAppDB()
-  const { _id, _rev } = ctx.request.body
+  const { _id } = ctx.request.body
   let row = await db.get(_id)
+  let _rev = ctx.request.body._rev || row._rev
 
   if (row.tableId !== ctx.params.tableId) {
     throw "Supplied tableId doesn't match the row's tableId"

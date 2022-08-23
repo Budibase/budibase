@@ -40,7 +40,7 @@
 </script>
 
 <ActionMenu>
-  <div slot="control" class="icon">
+  <div slot="control" class="icon open-popover">
     <Icon s hoverable name="MoreSmallList" />
   </div>
   <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>

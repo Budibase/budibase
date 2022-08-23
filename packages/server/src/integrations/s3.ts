@@ -1,5 +1,4 @@
-import { Integration, QueryTypes } from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
+import { Integration, QueryType, IntegrationBase } from "@budibase/types"
 
 module S3Module {
   const AWS = require("aws-sdk")
@@ -17,6 +16,7 @@ module S3Module {
     description:
       "Amazon Simple Storage Service (Amazon S3) is an object storage service that offers industry-leading scalability, data availability, security, and performance.",
     friendlyName: "Amazon S3",
+    type: "Object store",
     datasource: {
       region: {
         type: "string",
@@ -43,7 +43,7 @@ module S3Module {
     },
     query: {
       read: {
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: {
           bucket: {
             type: "string",

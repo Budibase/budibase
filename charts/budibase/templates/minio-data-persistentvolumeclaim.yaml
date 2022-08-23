@@ -12,5 +12,8 @@ spec:
   resources:
     requests:
       storage: {{ .Values.services.objectStore.storage }}
+  {{ if .Values.services.objectStore.storageClass }}
+  storageClassName: {{ .Values.services.objectStore.storageClass }}
+  {{- end }}
 status: {}
 {{- end }}

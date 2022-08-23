@@ -1,4 +1,10 @@
 const { getTable } = require("../api/controllers/table/utils")
+const {
+  findHBSBlocks,
+  decodeJSBinding,
+  isJSBinding,
+  encodeJSBinding,
+} = require("@budibase/string-templates")
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -73,4 +79,37 @@ exports.getError = err => {
     return JSON.stringify(err)
   }
   return typeof err !== "string" ? err.toString() : err
+}
+
+exports.substituteLoopStep = (hbsString, substitute) => {
+  let blocks = []
+  let checkForJS = isJSBinding(hbsString)
+  if (checkForJS) {
+    hbsString = decodeJSBinding(hbsString)
+    blocks.push(hbsString)
+  } else {
+    blocks = findHBSBlocks(hbsString)
+  }
+  for (let block of blocks) {
+    block = block.replace(/loop/, substitute)
+    if (checkForJS) {
+      hbsString = encodeJSBinding(block)
+    } else {
+      hbsString = block
+    }
+  }
+
+  return hbsString
+}
+
+exports.stringSplit = value => {
+  if (value == null) {
+    return []
+  }
+  if (value.split("\n").length > 1) {
+    value = value.split("\n")
+  } else {
+    value = value.split(",")
+  }
+  return value
 }

@@ -14,11 +14,12 @@ const {
   FieldTypes,
   RelationshipTypes,
 } = require("../../../constants")
-const { makeExternalQuery } = require("../../../integrations/base/utils")
+const { makeExternalQuery } = require("../../../integrations/base/query")
 const { cloneDeep } = require("lodash/fp")
 const csvParser = require("../../../utilities/csvParser")
 const { handleRequest } = require("../row/external")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
 
 async function makeTableRequest(
   datasource,
@@ -314,5 +315,6 @@ exports.bulkImport = async function (ctx) {
   await handleRequest(DataSourceOperation.BULK_CREATE, table._id, {
     rows,
   })
+  await events.rows.imported(table, "csv", rows.length)
   return table
 }

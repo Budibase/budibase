@@ -66,12 +66,20 @@ class InMemoryQueue {
    * @param {object} msg A message to be transported over the queue, this should be
    * a JSON message as this is required by Bull.
    */
-  add(msg) {
+  // eslint-disable-next-line no-unused-vars
+  add(msg, repeat) {
     if (typeof msg !== "object") {
       throw "Queue only supports carrying JSON."
     }
     this._messages.push(newJob(this._name, msg))
     this._emitter.emit("message")
+  }
+
+  /**
+   * replicating the close function from bull, which waits for jobs to finish.
+   */
+  async close() {
+    return []
   }
 
   /**
@@ -90,11 +98,20 @@ class InMemoryQueue {
     return []
   }
 
+  // eslint-disable-next-line no-unused-vars
+  removeJobs(pattern) {
+    // no-op
+  }
+
   /**
    * Implemented for tests
    */
   async clean() {
     return []
+  }
+
+  async getJob() {
+    return {}
   }
 }
 

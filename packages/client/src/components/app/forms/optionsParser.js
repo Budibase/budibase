@@ -40,6 +40,15 @@ export const getOptions = (
 
   // Extract custom options
   if (optionsSource === "custom" && customOptions) {
+    customOptions.forEach(option => {
+      if (typeof option.value === "string") {
+        if (option.value.toLowerCase() === "true") {
+          option.value = true
+        } else if (option.value.toLowerCase() === "false") {
+          option.value = false
+        }
+      }
+    })
     return customOptions
   }
 

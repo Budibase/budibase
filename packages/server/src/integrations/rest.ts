@@ -1,16 +1,18 @@
 import {
   Integration,
-  DatasourceFieldTypes,
-  QueryTypes,
-  RestConfig,
-  RestQueryFields as RestQuery,
+  DatasourceFieldType,
+  QueryType,
   PaginationConfig,
+  IntegrationBase,
+  PaginationValues,
+  RestQueryFields as RestQuery,
+} from "@budibase/types"
+import {
+  RestConfig,
   AuthType,
   BasicAuthConfig,
   BearerAuthConfig,
-  PaginationValues,
 } from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
 import { get } from "lodash"
 
 const BodyTypes = {
@@ -24,27 +26,27 @@ const BodyTypes = {
 
 const coreFields = {
   path: {
-    type: DatasourceFieldTypes.STRING,
+    type: DatasourceFieldType.STRING,
     display: "URL",
   },
   queryString: {
-    type: DatasourceFieldTypes.STRING,
+    type: DatasourceFieldType.STRING,
   },
   headers: {
-    type: DatasourceFieldTypes.OBJECT,
+    type: DatasourceFieldType.OBJECT,
   },
   enabledHeaders: {
-    type: DatasourceFieldTypes.OBJECT,
+    type: DatasourceFieldType.OBJECT,
   },
   requestBody: {
-    type: DatasourceFieldTypes.JSON,
+    type: DatasourceFieldType.JSON,
   },
   bodyType: {
-    type: DatasourceFieldTypes.STRING,
+    type: DatasourceFieldType.STRING,
     enum: Object.values(BodyTypes),
   },
   pagination: {
-    type: DatasourceFieldTypes.OBJECT,
+    type: DatasourceFieldType.OBJECT,
   },
 }
 
@@ -64,15 +66,16 @@ module RestModule {
     description:
       "With the REST API datasource, you can connect, query and pull data from multiple REST APIs. You can then use the retrieved data to build apps.",
     friendlyName: "REST API",
+    type: "API",
     datasource: {
       url: {
-        type: DatasourceFieldTypes.STRING,
+        type: DatasourceFieldType.STRING,
         default: "",
         required: false,
         deprecated: true,
       },
       defaultHeaders: {
-        type: DatasourceFieldTypes.OBJECT,
+        type: DatasourceFieldType.OBJECT,
         required: false,
         default: {},
       },
@@ -81,30 +84,30 @@ module RestModule {
       create: {
         readable: true,
         displayName: "POST",
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: coreFields,
       },
       read: {
         displayName: "GET",
         readable: true,
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: coreFields,
       },
       update: {
         displayName: "PUT",
         readable: true,
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: coreFields,
       },
       patch: {
         displayName: "PATCH",
         readable: true,
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: coreFields,
       },
       delete: {
         displayName: "DELETE",
-        type: QueryTypes.FIELDS,
+        type: QueryType.FIELDS,
         fields: coreFields,
       },
     },
@@ -286,7 +289,7 @@ module RestModule {
           input.body = form
           break
         case BodyTypes.XML:
-          if (object != null) {
+          if (object != null && Object.keys(object).length) {
             string = new XmlBuilder().buildObject(object)
           }
           input.body = string

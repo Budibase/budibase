@@ -1,26 +1,11 @@
-const PouchDB = require("pouchdb")
-const allDbs = require("pouchdb-all-dbs")
+const core = require("@budibase/backend-core")
 const env = require("../environment")
-const { getCouchUrl } = require("@budibase/backend-core/db")
 
-// level option is purely for testing (development)
-const COUCH_DB_URL = getCouchUrl() || "http://localhost:4005"
-
-let POUCH_DB_DEFAULTS = {
-  prefix: COUCH_DB_URL,
-}
-
-if (env.isTest()) {
-  PouchDB.plugin(require("pouchdb-adapter-memory"))
-  POUCH_DB_DEFAULTS = {
-    prefix: undefined,
-    adapter: "memory",
+exports.init = () => {
+  const dbConfig = {}
+  if (env.isTest()) {
+    dbConfig.inMemory = true
+    dbConfig.allDbs = true
   }
+  core.init({ db: dbConfig })
 }
-
-const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
-
-// have to still have pouch alldbs for testing
-allDbs(Pouch)
-
-module.exports = Pouch

@@ -17,6 +17,8 @@
   export let disabled = false
   export let fillWidth
   export let allowJS = true
+  export let updateOnChange = true
+  export let drawerLeft
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -36,7 +38,7 @@
   }
 </script>
 
-<div class="control">
+<div class="control" class:disabled>
   <Input
     {label}
     {disabled}
@@ -44,6 +46,7 @@
     value={isJS ? "(JavaScript function)" : readableValue}
     on:change={event => onChange(event.detail)}
     {placeholder}
+    {updateOnChange}
   />
   {#if !disabled}
     <div class="icon" on:click={bindingDrawer.show}>
@@ -51,7 +54,7 @@
     </div>
   {/if}
 </div>
-<Drawer {fillWidth} bind:this={bindingDrawer} {title}>
+<Drawer {fillWidth} bind:this={bindingDrawer} {title} left={drawerLeft}>
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
@@ -102,5 +105,9 @@
     color: var(--spectrum-alias-text-color-hover);
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-alias-border-color-hover);
+  }
+
+  .control:not(.disabled) :global(.spectrum-Textfield-input) {
+    padding-right: 40px;
   }
 </style>

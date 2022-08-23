@@ -9,13 +9,14 @@
     Body,
     Modal,
     Divider,
+    ActionButton,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
   import { onMount } from "svelte"
   import { templates } from "stores/portal"
 
-  let loaded = false
+  let loaded = $templates?.length
   let template
   let creationModal = false
   let creatingApp = false
@@ -60,23 +61,22 @@
 <Page wide>
   <Layout noPadding gap="XL">
     <span>
-      <Button
-        quiet
+      <ActionButton
         secondary
-        icon={"ChevronLeft"}
+        icon={"ArrowLeft"}
         on:click={() => {
           $goto("../")
         }}
       >
         Back
-      </Button>
+      </ActionButton>
     </span>
 
     <div class="title">
       <div class="welcome">
         <Layout noPadding gap="XS">
-          <Heading size="M">{createAppTitle}</Heading>
-          <Body size="S">
+          <Heading size="L">{createAppTitle}</Heading>
+          <Body size="M">
             {welcomeBody}
           </Body>
         </Layout>
@@ -84,7 +84,7 @@
         <div class="buttons">
           <Button
             dataCy="create-app-btn"
-            size="L"
+            size="M"
             icon="Add"
             cta
             on:click={initiateAppCreation}
@@ -94,7 +94,7 @@
           <Button
             dataCy="import-app-btn"
             icon="Import"
-            size="L"
+            size="M"
             quiet
             secondary
             on:click={initiateAppImport}

@@ -11,7 +11,7 @@
     Body,
     Icon,
   } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
+  import { TriggerStepID } from "constants/backend/automations"
 
   let name
   let selectedTrigger
@@ -36,7 +36,7 @@
       )
 
       automationStore.actions.addBlockToAutomation(newBlock)
-      if (triggerVal.stepId === "WEBHOOK") {
+      if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
         webhookModal.show
       }
 
@@ -47,7 +47,6 @@
       notifications.success(`Automation ${name} created`)
 
       $goto(`./${$automationStore.selectedAutomation.automation._id}`)
-      analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
     } catch (error) {
       notifications.error("Error creating automation")
     }

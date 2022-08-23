@@ -96,6 +96,7 @@ const BUILTIN_PERMISSIONS = {
       new Permission(PermissionTypes.QUERY, PermissionLevels.WRITE),
       new Permission(PermissionTypes.TABLE, PermissionLevels.WRITE),
       new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
+      new Permission(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
     ],
   },
   POWER: {
