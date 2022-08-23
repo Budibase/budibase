@@ -70,7 +70,9 @@ jobs:
           KUBECONFIG_FILE: '${{ secrets.RELEASE_KUBECONFIG }}'
       
       - name: Set the base64 kubeconfig
-        run: echo 'RELEASE_KUBECONFIG=${{ secrets.RELEASE_KUBECONFIG }}' | base64
+        run: |
+          base64_kubeconfig=$(echo ${{ secrets.RELEASE_KUBECONFIG }} | base64)
+          echo "RELEASE_KUBECONFIG=$base64_kubeconfig" >> $GITHUB_ENV
 
       - name: Re roll the services
         uses: actions-hub/kubectl@master
