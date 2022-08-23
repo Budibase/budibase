@@ -359,7 +359,8 @@ const getProviderContextBindings = (asset, dataProviders) => {
           providerId,
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
-          category: "Data",
+          category: "Dataprovider",
+          display: { name: readableBinding, type: fieldSchema.type },
         })
       })
     })
@@ -387,6 +388,7 @@ const getUserBindings = () => {
       fieldSchema,
       providerId: "user",
       category: "Current User",
+      display: fieldSchema,
     })
   })
   return bindings
@@ -404,12 +406,14 @@ const getDeviceBindings = () => {
       runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
       readableBinding: `Device.Mobile`,
       category: "Device",
+      display: { type: "string", name: "mobile" },
     })
     bindings.push({
       type: "context",
       runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
       readableBinding: `Device.Tablet`,
       category: "Device",
+      display: { type: "string", name: "tablet" },
     })
   }
   return bindings
@@ -433,6 +437,7 @@ const getSelectedRowsBindings = asset => {
           "selectedRows"
         )}`,
         readableBinding: `${table._instanceName}.Selected rows`,
+        category: "Dataprovider",
       }))
     )
 
@@ -465,6 +470,7 @@ const getStateBindings = () => {
       runtimeBinding: `${safeState}.${makePropSafe(key)}`,
       readableBinding: `State.${key}`,
       category: "State",
+      display: { name: key },
     }))
   }
   return bindings
@@ -505,6 +511,7 @@ const getRoleBindings = () => {
       runtimeBinding: `trim "${role._id}"`,
       readableBinding: `Role.${role.name}`,
       category: "Role",
+      display: { name: role.name },
     }
   })
 }
