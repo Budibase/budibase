@@ -84,35 +84,61 @@
 
 {#if schemaLoaded}
   <Block>
-    <div class="card-list" use:styleable={$component.styles}>
+    <div use:styleable={$component.styles}>
       <BlockComponent
         type="form"
         bind:id={formId}
         props={{ dataSource, disableValidation: true }}
       >
         {#if title || enrichedSearchColumns?.length || showTitleButton}
-          <div class="header" class:mobile={$context.device.mobile}>
-            <div class="title">
-              <Heading>{title || ""}</Heading>
-            </div>
-            <div class="controls">
+          <BlockComponent
+            type="container"
+            props={{
+              direction: "row",
+              hAlign: "stretch",
+              vAlign: "middle",
+              gap: "M",
+              wrap: true,
+            }}
+            styles={{
+              "margin-bottom": "20px",
+            }}
+            order={0}
+          >
+            <BlockComponent
+              type="heading"
+              props={{
+                text: title,
+              }}
+              order={0}
+            />
+            <BlockComponent
+              type="container"
+              props={{
+                direction: "row",
+                hAlign: "left",
+                vAlign: "middle",
+                gap: "M",
+                wrap: true,
+              }}
+              order={1}
+            >
               {#if enrichedSearchColumns?.length}
-                <div
-                  class="search"
-                  style="--cols:{enrichedSearchColumns?.length}"
-                >
-                  {#each enrichedSearchColumns as column}
-                    <BlockComponent
-                      type={column.componentType}
-                      props={{
-                        field: column.name,
-                        placeholder: column.name,
-                        text: column.name,
-                        autoWidth: true,
-                      }}
-                    />
-                  {/each}
-                </div>
+                {#each enrichedSearchColumns as column, idx}
+                  <BlockComponent
+                    type={column.componentType}
+                    props={{
+                      field: column.name,
+                      placeholder: column.name,
+                      text: column.name,
+                      autoWidth: true,
+                    }}
+                    order={idx}
+                    styles={{
+                      width: "192px",
+                    }}
+                  />
+                {/each}
               {/if}
               {#if showTitleButton}
                 <BlockComponent
@@ -122,10 +148,11 @@
                     text: titleButtonText,
                     type: "cta",
                   }}
+                  order={enrichedSearchColumns?.length ?? 0}
                 />
               {/if}
-            </div>
-          </div>
+            </BlockComponent>
+          </BlockComponent>
         {/if}
         <BlockComponent
           type="dataprovider"
@@ -138,6 +165,7 @@
             paginate,
             limit,
           }}
+          order={1}
         >
           <BlockComponent
             type="repeater"
@@ -151,10 +179,8 @@
               gap: "M",
               noRowsMessage: "No rows found",
             }}
-            styles={{
-              display: "grid",
-              "grid-template-columns": `repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr))`,
-            }}
+            css={`display: grid;\ngrid-template-columns: repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr));`}
+            order={0}
           >
             <BlockComponent
               type="spectrumcard"
@@ -173,6 +199,7 @@
               styles={{
                 width: "auto",
               }}
+              order={0}
             />
           </BlockComponent>
         </BlockComponent>
@@ -180,67 +207,3 @@
     </div>
   </Block>
 {/if}
-
-<style>
-  .header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-
-  .title {
-    overflow: hidden;
-  }
-  .title :global(.spectrum-Heading) {
-    flex: 1 1 auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .controls {
-    flex: 0 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 20px;
-  }
-  .controls :global(.spectrum-InputGroup .spectrum-InputGroup-input) {
-    width: 100%;
-  }
-
-  .search {
-    flex: 0 1 auto;
-    gap: 10px;
-    max-width: 100%;
-    display: grid;
-    grid-template-columns: repeat(var(--cols), minmax(120px, 200px));
-  }
-  .search :global(.spectrum-InputGroup) {
-    min-width: 0;
-  }
-
-  /* Mobile styles */
-  .mobile {
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-  .mobile .controls {
-    flex-direction: column-reverse;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-  .mobile .search {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    position: relative;
-    width: 100%;
-  }
-</style>
