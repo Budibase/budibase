@@ -35,10 +35,32 @@
   export let bindingDrawerLeft
   export let handleDuplicateKeys = false
 
-  let fields = Object.entries(object || {}).map(([name, value]) => ({
-    name,
-    value,
-  }))
+  function initFields() {
+    if (handleDuplicateKeys) {
+      let objectFields = []
+      for (const key in object) {
+        if (Array.isArray(object[key])) {
+          for (const item of object[key]) {
+            objectFields.push({
+              name: key,
+              value: item,
+            })
+          }
+        } else {
+          objectFields.push({
+            name: key,
+            value: object[key],
+          })
+        }
+      }
+      return objectFields
+    }
+    return Object.entries(object || {}).map(([name, value]) => ({
+      name,
+      value,
+    }))
+  }
+  let fields = initFields()
   let fieldActivity = buildFieldActivity(activity)
 
   $: {

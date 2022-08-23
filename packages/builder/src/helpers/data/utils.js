@@ -31,7 +31,14 @@ export function breakQueryString(qs) {
   let paramObj = {}
   for (let param of params) {
     const split = param.split("=")
-    paramObj[split[0]] = split.slice(1).join("=")
+    if (!paramObj[split[0]]) {
+      paramObj[split[0]] = split.slice(1).join("=")
+    } else {
+      if (!Array.isArray(paramObj[split[0]])) {
+        paramObj[split[0]] = [paramObj[split[0]]]
+      }
+      paramObj[split[0]].push(split.slice(1).join("="))
+    }
   }
   return paramObj
 }
