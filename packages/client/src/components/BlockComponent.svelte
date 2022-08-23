@@ -39,7 +39,7 @@
   // ejected later
   $: {
     if ($builderStore.inBuilder) {
-      block.registerComponent(id, order, $component?.id, instance)
+      block.registerComponent(id, order ?? 0, $component?.id, instance)
     }
   }
 </script>

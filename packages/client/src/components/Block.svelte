@@ -14,7 +14,7 @@
     }
     // Remove existing instance of this component in case props changed
     structureLookupMap[parentId] = structureLookupMap[parentId].filter(
-      blockComponent => blockComponent.instance._id !== id
+      blockComponent => blockComponent.order !== order
     )
     // Add new instance of this component
     structureLookupMap[parentId].push({ order, instance })
