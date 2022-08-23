@@ -7,6 +7,7 @@
   export let type
   export let props
   export let styles
+  export let css
   export let context
   export let order = 0
 
@@ -29,6 +30,7 @@
       normal: {
         ...styles,
       },
+      custom: css,
     },
     ...props,
   }
