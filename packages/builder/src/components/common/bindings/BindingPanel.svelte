@@ -271,16 +271,10 @@
                     {/if}
                   </span>
 
-                  {#if binding.display?.type}
+                  {#if binding.display?.type || binding.fieldSchema?.type}
                     <span class="binding__typeWrap">
                       <span class="binding__type">
-                        {binding.display.type}
-                      </span>
-                    </span>
-                  {:else if binding.fieldSchema?.type}
-                    <span class="binding__typeWrap">
-                      <span class="binding__type">
-                        {binding.fieldSchema?.type}
+                        {binding.display?.type || binding.fieldSchema?.type}
                       </span>
                     </span>
                   {/if}
