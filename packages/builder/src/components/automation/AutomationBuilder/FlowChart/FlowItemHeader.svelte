@@ -64,7 +64,7 @@
           width="28px"
           height="28px"
           class="spectrum-Icon"
-          style="color:grey;"
+          style="color:var(--spectrum-global-color-gray-700);"
           focusable="false"
         >
           <use xlink:href="#spectrum-icon-18-{block.icon}" />

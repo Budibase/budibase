@@ -8,7 +8,8 @@
     "devicePreview": true,
     "messagePassing": true,
     "rowSelection": true,
-    "continueIfAction": true
+    "continueIfAction": true,
+    "showNotificationAction": true
   },
   "layout": {
     "name": "Layout",
@@ -237,6 +238,11 @@
         "showInBar": true,
         "barIcon": "ModernGridView",
         "barTitle": "Wrap"
+      },
+      {
+        "type": "event",
+        "label": "On Click",
+        "key": "onClick"
       }
     ]
   },

@@ -11,6 +11,10 @@ if [[ "${TARGETBUILD}" = "aas" ]]; then
     apt-get install -y openssh-server
     sed -i "s/#Port 22/Port 2222/" /etc/ssh/sshd_config
     /etc/init.d/ssh restart
-fi
+    sed -i "s#DATA_DIR#/home#g" /opt/clouseau/clouseau.ini
+    sed -i "s#DATA_DIR#/home#g" /opt/couchdb/etc/local.ini
+else
+    sed -i "s#DATA_DIR#/data#g" /opt/clouseau/clouseau.ini
+    sed -i "s#DATA_DIR#/data#g" /opt/couchdb/etc/local.ini
 
-sed -i 's#DATA_DIR#$DATA_DIR#' /opt/clouseau/clouseau.ini /opt/couchdb/etc/local.ini
+fi
