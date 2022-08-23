@@ -1,7 +1,6 @@
 const rowController = require("../../api/controllers/row")
 const automationUtils = require("../automationUtils")
 const { buildCtx } = require("./utils")
-const env = require("../../environment")
 
 exports.definition = {
   name: "Update Row",
@@ -84,7 +83,6 @@ exports.run = async function ({ inputs, appId, emitter }) {
       rowId: inputs.rowId,
       tableId: tableId,
     },
-    disableEmit: !env.SELF_HOSTED,
   })
 
   try {
