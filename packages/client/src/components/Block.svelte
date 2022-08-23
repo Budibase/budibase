@@ -71,9 +71,3 @@
 </script>
 
 <slot />
-
-{#if $component.selected}
-  <div>
-    <Button cta on:click={eject}>Eject block</Button>
-  </div>
-{/if}
