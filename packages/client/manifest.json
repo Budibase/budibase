@@ -4389,142 +4389,12 @@
         "type": "select",
         "label": "Type",
         "key": "actionType",
-        "options": ["Create", "Update"],
-        "defaultValue": "Create"
-      },
-      {
-        "type": "dataSource",
-        "label": "Schema",
-        "key": "dataSource"
-      },
-      {
-        "type": "text",
-        "label": "Title",
-        "key": "title"
-      },
-      {
-        "section": true,
-        "name": "Fields",
-        "settings": [
-          {
-            "type": "multifield",
-            "label": "Fields",
-            "key": "fields"
-          },
-          {
-            "type": "select",
-            "label": "Field labels",
-            "key": "labelPosition",
-            "defaultValue": "left",
-            "options": [
-              {
-                "label": "Left",
-                "value": "left"
-              },
-              {
-                "label": "Right",
-                "value": "right"
-              },
-              {
-                "label": "Above",
-                "value": "above"
-              }
-            ]
-          },
-          {
-            "type": "select",
-            "label": "Size",
-            "key": "size",
-            "options": [
-              {
-                "label": "Medium",
-                "value": "spectrum--medium"
-              },
-              {
-                "label": "Large",
-                "value": "spectrum--large"
-              }
-            ],
-            "defaultValue": "spectrum--medium"
-          },
-          {
-            "type": "boolean",
-            "label": "Disabled",
-            "key": "disabled",
-            "defaultValue": false
-          }
-        ]
-      },
-      {
-        "section": true,
-        "name": "Buttons",
-        "settings": [
-          {
-            "type": "boolean",
-            "label": "Show primary button",
-            "key": "showPrimaryButton",
-            "defaultValue": true
-          },
-          {
-            "type": "text",
-            "label": "Text",
-            "key": "primaryButtonText",
-            "defaultValue": "Submit",
-            "dependsOn": "showPrimaryButton"
-          },
-          {
-            "type": "event",
-            "label": "On click",
-            "key": "primaryButtonOnClick",
-            "nested": true,
-            "dependsOn": "showPrimaryButton"
-          },
-          {
-            "type": "boolean",
-            "label": "Show secondary button",
-            "key": "showSecondaryButton",
-            "defaultValue": false
-          },
-          {
-            "type": "text",
-            "label": "Text",
-            "key": "secondaryButtonText",
-            "defaultValue": "Action",
-            "dependsOn": "showSecondaryButton"
-          },
-          {
-            "type": "event",
-            "label": "On click",
-            "key": "secondaryButtonOnClick",
-            "nested": true,
-            "dependsOn": "showSecondaryButton"
-          }
-        ]
-      }
-    ],
-    "context": [
-      {
-        "type": "form",
-        "suffix": "form"
-      }
-    ]
-  },
-  "formblockplus": {
-    "name": "Form Block+",
-    "icon": "Form",
-    "styles": ["size"],
-    "block": true,
-    "settings": [
-      {
-        "type": "select",
-        "label": "Type",
-        "key": "actionType",
-        "options": ["Create", "Update"],
+        "options": ["Create", "Update", "View"],
         "defaultValue": "Create"
       },
       {
         "type": "table",
-        "label": "Schema",
+        "label": "Table",
         "key": "dataSource"
       },
       {
@@ -4562,10 +4432,6 @@
                 "value": "left"
               },
               {
-                "label": "Right",
-                "value": "right"
-              },
-              {
                 "label": "Above",
                 "value": "above"
               }
@@ -4591,7 +4457,12 @@
             "type": "boolean",
             "label": "Disabled",
             "key": "disabled",
-            "defaultValue": false
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
           }
         ]
       },
@@ -4603,7 +4474,12 @@
             "type": "boolean",
             "label": "Show save button",
             "key": "showSaveButton",
-            "defaultValue": true
+            "defaultValue": true,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
           },
           {
             "type": "boolean",
@@ -4613,6 +4489,17 @@
             "dependsOn": {
               "setting": "actionType",
               "value": "Update"
+            }
+          },
+          {
+            "type": "url",
+            "label": "Navigate after button press",
+            "key": "actionUrl",
+            "placeholder": "Choose a screen",
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
             }
           }
         ]
