@@ -35,8 +35,9 @@ export async function patch(ctx: any): Promise<any> {
       pickApi(tableId).patch(ctx)
     )
     ctx.status = 200
-    ctx.eventEmitter &&
+    if (!ctx.disableEmit && ctx.eventEmitter) {
       ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
+    }
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
   } catch (err) {
