@@ -354,6 +354,16 @@ export const getFrontendStore = () => {
           return state
         })
       },
+      sendEvent: (name, payload) => {
+        const { previewEventHandler } = get(store)
+        previewEventHandler?.(name, payload)
+      },
+      registerEventHandler: handler => {
+        store.update(state => {
+          state.previewEventHandler = handler
+          return state
+        })
+      },
     },
     layouts: {
       select: layoutId => {
@@ -895,7 +905,12 @@ export const getFrontendStore = () => {
           component[name] = value
         })
       },
-      ejectBlock: async (componentId, ejectedDefinition) => {
+      requestEjectBlock: componentId => {
+        store.actions.preview.sendEvent("eject-block", componentId)
+      },
+      handleEjectBlock: async (componentId, ejectedDefinition) => {
+        let nextSelectedComponentId
+
         await store.actions.screens.patch(screen => {
           const parent = findComponentParent(screen.props, componentId)
 
@@ -908,8 +923,18 @@ export const getFrontendStore = () => {
           const childIndex = parent._children.findIndex(
             child => child._id === componentId
           )
+          makeComponentUnique(ejectedDefinition)
           parent._children[childIndex] = ejectedDefinition
+          nextSelectedComponentId = ejectedDefinition._id
         })
+
+        // Select new root component
+        if (nextSelectedComponentId) {
+          store.update(state => {
+            state.selectedComponentId = nextSelectedComponentId
+            return state
+          })
+        }
       },
     },
     links: {

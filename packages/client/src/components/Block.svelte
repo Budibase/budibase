@@ -1,6 +1,7 @@
 <script>
-  import { getContext, setContext } from "svelte"
-  import { builderStore } from "../stores/builder.js"
+  import { getContext, onDestroy, onMount, setContext } from "svelte"
+  import { builderStore } from "stores/builder.js"
+  import { blockStore } from "stores/blocks.js"
   import { Button } from "@budibase/bbui"
 
   const component = getContext("component")
@@ -54,6 +55,18 @@
     // We register block components with their raw props so that we can eject
     // blocks later on
     registerComponent: registerBlockComponent,
+  })
+
+  onMount(() => {
+    if ($builderStore.inBuilder) {
+      blockStore.actions.registerBlock($component.id, { eject })
+    }
+  })
+
+  onDestroy(() => {
+    if ($builderStore.inBuilder) {
+      blockStore.actions.unregisterBlock($component.id)
+    }
   })
 </script>
 
