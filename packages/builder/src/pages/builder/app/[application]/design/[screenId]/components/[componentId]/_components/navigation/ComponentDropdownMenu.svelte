@@ -26,7 +26,7 @@
   </MenuItem>
   {#if isBlock}
     <MenuItem
-      icon="Delete"
+      icon="Export"
       keyBind="Ctrl+E"
       on:click={() => keyboardEvent("e", true)}
     >
