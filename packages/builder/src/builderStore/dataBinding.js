@@ -359,8 +359,9 @@ const getProviderContextBindings = (asset, dataProviders) => {
           providerId,
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
-          category: "Dataprovider",
-          display: { name: readableBinding, type: fieldSchema.type },
+          category: component._instanceName,
+          icon: def.icon,
+          display: { name: fieldSchema.name || key, type: fieldSchema.type },
         })
       })
     })
@@ -388,6 +389,7 @@ const getUserBindings = () => {
       fieldSchema,
       providerId: "user",
       category: "Current User",
+      icon: "User",
       display: fieldSchema,
     })
   })
@@ -406,14 +408,16 @@ const getDeviceBindings = () => {
       runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
       readableBinding: `Device.Mobile`,
       category: "Device",
-      display: { type: "string", name: "mobile" },
+      icon: "DevicePhone",
+      display: { type: "boolean", name: "mobile" },
     })
     bindings.push({
       type: "context",
       runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
       readableBinding: `Device.Tablet`,
       category: "Device",
-      display: { type: "string", name: "tablet" },
+      icon: "DevicePhone",
+      display: { type: "boolean", name: "tablet" },
     })
   }
   return bindings
@@ -437,7 +441,8 @@ const getSelectedRowsBindings = asset => {
           "selectedRows"
         )}`,
         readableBinding: `${table._instanceName}.Selected rows`,
-        category: "Dataprovider",
+        category: "Selected rows",
+        icon: "ViewRow",
       }))
     )
 
@@ -470,6 +475,7 @@ const getStateBindings = () => {
       runtimeBinding: `${safeState}.${makePropSafe(key)}`,
       readableBinding: `State.${key}`,
       category: "State",
+      icon: "AutomatedSegment",
       display: { name: key },
     }))
   }
@@ -494,12 +500,16 @@ const getUrlBindings = asset => {
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
     category: "URL",
+    icon: "RailTop",
+    display: { type: "string" },
   }))
   const queryParamsBinding = {
     type: "context",
     runtimeBinding: makePropSafe("query"),
     readableBinding: "Query params",
     category: "URL",
+    icon: "RailTop",
+    display: { type: "object" },
   }
   return urlParamBindings.concat([queryParamsBinding])
 }
@@ -511,7 +521,8 @@ const getRoleBindings = () => {
       runtimeBinding: `trim "${role._id}"`,
       readableBinding: `Role.${role.name}`,
       category: "Role",
-      display: { name: role.name },
+      icon: "UserGroup",
+      display: { type: "string", name: role.name },
     }
   })
 }

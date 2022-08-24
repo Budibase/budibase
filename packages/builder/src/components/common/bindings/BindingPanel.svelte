@@ -49,15 +49,6 @@
   let hbsValue = initialValueJS ? null : value
 
   let selectedCategory = null
-  let categoryIcons = {
-    Device: "DevicePhone",
-    "Current User": "User",
-    Helpers: "MagicWand",
-    Dataprovider: "Data",
-    State: "AutomatedSegment",
-    URL: "RailTop",
-    Role: "UserGroup",
-  }
 
   let popover
   let popoverAnchor
@@ -66,6 +57,16 @@
   $: usingJS = mode === "JavaScript"
   $: searchRgx = new RegExp(search, "ig")
   $: categories = Object.entries(groupBy("category", bindings))
+
+  $: bindingIcons = bindings?.reduce((acc, ele) => {
+    if (ele.icon) {
+      acc[ele.category] = acc[ele.category] || ele.icon
+    }
+    return acc
+  }, {})
+
+  $: categoryIcons = { ...bindingIcons, Helpers: "MagicWand" }
+
   $: filteredCategories = categories
     .map(([name, categoryBindings]) => ({
       name,
@@ -84,13 +85,7 @@
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })
 
-  $: categoryNames = [
-    ...categories.reduce((acc, cat) => {
-      acc.push(cat[0])
-      return acc
-    }, []),
-    "Helpers",
-  ]
+  $: categoryNames = [...categories.map(cat => cat[0]), "Helpers"]
 
   $: codeMirrorHints = bindings?.map(x => `$("${x.readableBinding}")`)
 
