@@ -26,7 +26,10 @@
     _component: `@budibase/standard-components/${type}`,
     _id: id,
     _instanceName: type[0].toUpperCase() + type.slice(1),
-    _styles: styles,
+    _styles: {
+      ...styles,
+      normal: styles?.normal || {},
+    },
     _containsSlot: containsSlot,
     ...props,
   }
