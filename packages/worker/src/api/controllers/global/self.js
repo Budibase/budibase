@@ -19,7 +19,7 @@ const { events, featureFlags } = require("@budibase/backend-core")
 const env = require("../../../environment")
 
 function newTestApiKey() {
-  return `${getTenantId()}${SEPARATOR}test`
+  return env.ENCRYPTED_TEST_PUBLIC_API_KEY
 }
 
 function newApiKey() {

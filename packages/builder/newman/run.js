@@ -1,6 +1,7 @@
 const newman = require("newman")
 
-const NEWMAN_TEST_API_KEY = "default_test"
+const NEWMAN_TEST_API_KEY =
+  "a65722f06bee5caeadc5d7ca2f543a43-d610e627344210c643bb726f"
 
 const run = async () => {
   const apiKey = process.env.POSTMAN_API_KEY
@@ -15,7 +16,7 @@ const run = async () => {
     globalVar: [
       {
         key: "x-budibase-api-key",
-        value: process.env.NEWMAN_BUDIBASE_API_KEY || NEWMAN_TEST_API_KEY,
+        value: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY || NEWMAN_TEST_API_KEY,
       },
     ],
     //   iterationCount: "",
