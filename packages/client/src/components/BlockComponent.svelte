@@ -7,7 +7,6 @@
   export let type
   export let props
   export let styles
-  export let css
   export let context
   export let order = 0
   export let containsSlot = false
@@ -27,12 +26,7 @@
     _component: `@budibase/standard-components/${type}`,
     _id: id,
     _instanceName: type[0].toUpperCase() + type.slice(1),
-    _styles: {
-      normal: {
-        ...styles,
-      },
-      custom: css,
-    },
+    _styles: styles,
     _containsSlot: containsSlot,
     ...props,
   }

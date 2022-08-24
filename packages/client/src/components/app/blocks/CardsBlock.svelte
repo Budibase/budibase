@@ -2,7 +2,6 @@
   import { getContext } from "svelte"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
-  import { Heading } from "@budibase/bbui"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { enrichSearchColumns, enrichFilter } from "utils/blocks.js"
 
@@ -31,9 +30,7 @@
   export let cardButtonOnClick
   export let linkColumn
 
-  const { fetchDatasourceSchema, styleable } = getContext("sdk")
-  const context = getContext("context")
-  const component = getContext("component")
+  const { fetchDatasourceSchema } = getContext("sdk")
 
   let formId
   let dataProviderId
@@ -84,126 +81,132 @@
 
 {#if schemaLoaded}
   <Block>
-    <div use:styleable={$component.styles}>
-      <BlockComponent
-        type="form"
-        bind:id={formId}
-        props={{ dataSource, disableValidation: true }}
-      >
-        {#if title || enrichedSearchColumns?.length || showTitleButton}
+    <BlockComponent
+      type="form"
+      bind:id={formId}
+      props={{ dataSource, disableValidation: true }}
+    >
+      {#if title || enrichedSearchColumns?.length || showTitleButton}
+        <BlockComponent
+          type="container"
+          props={{
+            direction: "row",
+            hAlign: "stretch",
+            vAlign: "middle",
+            gap: "M",
+            wrap: true,
+          }}
+          styles={{
+            normal: {
+              "margin-bottom": "20px",
+            },
+          }}
+          order={0}
+        >
+          <BlockComponent
+            type="heading"
+            props={{
+              text: title,
+            }}
+            order={0}
+          />
           <BlockComponent
             type="container"
             props={{
               direction: "row",
-              hAlign: "stretch",
+              hAlign: "left",
               vAlign: "middle",
               gap: "M",
               wrap: true,
             }}
-            styles={{
-              "margin-bottom": "20px",
-            }}
-            order={0}
+            order={1}
           >
-            <BlockComponent
-              type="heading"
-              props={{
-                text: title,
-              }}
-              order={0}
-            />
-            <BlockComponent
-              type="container"
-              props={{
-                direction: "row",
-                hAlign: "left",
-                vAlign: "middle",
-                gap: "M",
-                wrap: true,
-              }}
-              order={1}
-            >
-              {#if enrichedSearchColumns?.length}
-                {#each enrichedSearchColumns as column, idx}
-                  <BlockComponent
-                    type={column.componentType}
-                    props={{
-                      field: column.name,
-                      placeholder: column.name,
-                      text: column.name,
-                      autoWidth: true,
-                    }}
-                    order={idx}
-                    styles={{
-                      width: "192px",
-                    }}
-                  />
-                {/each}
-              {/if}
-              {#if showTitleButton}
+            {#if enrichedSearchColumns?.length}
+              {#each enrichedSearchColumns as column, idx}
                 <BlockComponent
-                  type="button"
+                  type={column.componentType}
                   props={{
-                    onClick: titleButtonAction,
-                    text: titleButtonText,
-                    type: "cta",
+                    field: column.name,
+                    placeholder: column.name,
+                    text: column.name,
+                    autoWidth: true,
                   }}
-                  order={enrichedSearchColumns?.length ?? 0}
+                  order={idx}
+                  styles={{
+                    normal: {
+                      width: "192px",
+                    },
+                  }}
                 />
-              {/if}
-            </BlockComponent>
-          </BlockComponent>
-        {/if}
-        <BlockComponent
-          type="dataprovider"
-          bind:id={dataProviderId}
-          props={{
-            dataSource,
-            filter: enrichedFilter,
-            sortColumn,
-            sortOrder,
-            paginate,
-            limit,
-          }}
-          order={1}
-        >
-          <BlockComponent
-            type="repeater"
-            bind:id={repeaterId}
-            context="repeater"
-            props={{
-              dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
-              direction: "row",
-              hAlign: "stretch",
-              vAlign: "top",
-              gap: "M",
-              noRowsMessage: "No rows found",
-            }}
-            css={`display: grid;\ngrid-template-columns: repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr));`}
-            order={0}
-          >
-            <BlockComponent
-              type="spectrumcard"
-              props={{
-                title: cardTitle,
-                subtitle: cardSubtitle,
-                description: cardDescription,
-                imageURL: cardImageURL,
-                horizontal: cardHorizontal,
-                showButton: showCardButton,
-                buttonText: cardButtonText,
-                buttonOnClick: cardButtonOnClick,
-                linkURL: fullCardURL,
-                linkPeek: cardPeek,
-              }}
-              styles={{
-                width: "auto",
-              }}
-              order={0}
-            />
+              {/each}
+            {/if}
+            {#if showTitleButton}
+              <BlockComponent
+                type="button"
+                props={{
+                  onClick: titleButtonAction,
+                  text: titleButtonText,
+                  type: "cta",
+                }}
+                order={enrichedSearchColumns?.length ?? 0}
+              />
+            {/if}
           </BlockComponent>
         </BlockComponent>
+      {/if}
+      <BlockComponent
+        type="dataprovider"
+        bind:id={dataProviderId}
+        props={{
+          dataSource,
+          filter: enrichedFilter,
+          sortColumn,
+          sortOrder,
+          paginate,
+          limit,
+        }}
+        order={1}
+      >
+        <BlockComponent
+          type="repeater"
+          bind:id={repeaterId}
+          context="repeater"
+          props={{
+            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+            direction: "row",
+            hAlign: "stretch",
+            vAlign: "top",
+            gap: "M",
+            noRowsMessage: "No rows found",
+          }}
+          styles={{
+            custom: `display: grid;\ngrid-template-columns: repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr));`,
+          }}
+          order={0}
+        >
+          <BlockComponent
+            type="spectrumcard"
+            props={{
+              title: cardTitle,
+              subtitle: cardSubtitle,
+              description: cardDescription,
+              imageURL: cardImageURL,
+              horizontal: cardHorizontal,
+              showButton: showCardButton,
+              buttonText: cardButtonText,
+              buttonOnClick: cardButtonOnClick,
+              linkURL: fullCardURL,
+              linkPeek: cardPeek,
+            }}
+            styles={{
+              normal: {
+                width: "auto",
+              },
+            }}
+            order={0}
+          />
+        </BlockComponent>
       </BlockComponent>
-    </div>
+    </BlockComponent>
   </Block>
 {/if}

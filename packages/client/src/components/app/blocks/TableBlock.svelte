@@ -28,8 +28,7 @@
   export let titleButtonURL
   export let titleButtonPeek
 
-  const { fetchDatasourceSchema, styleable } = getContext("sdk")
-  const component = getContext("component")
+  const { fetchDatasourceSchema } = getContext("sdk")
 
   let formId
   let dataProviderId
@@ -62,109 +61,116 @@
 
 {#if schemaLoaded}
   <Block>
-    <div class={size} use:styleable={$component.styles}>
-      <BlockComponent
-        type="form"
-        bind:id={formId}
-        props={{ dataSource, disableValidation: true, editAutoColumns: true }}
-      >
-        {#if title || enrichedSearchColumns?.length || showTitleButton}
+    <BlockComponent
+      type="form"
+      bind:id={formId}
+      props={{
+        dataSource,
+        disableValidation: true,
+        editAutoColumns: true,
+        size,
+      }}
+    >
+      {#if title || enrichedSearchColumns?.length || showTitleButton}
+        <BlockComponent
+          type="container"
+          props={{
+            direction: "row",
+            hAlign: "stretch",
+            vAlign: "middle",
+            gap: "M",
+            wrap: true,
+          }}
+          styles={{
+            normal: {
+              "margin-bottom": "20px",
+            },
+          }}
+          order={0}
+        >
+          <BlockComponent
+            type="heading"
+            props={{
+              text: title,
+            }}
+            order={0}
+          />
           <BlockComponent
             type="container"
             props={{
               direction: "row",
-              hAlign: "stretch",
-              vAlign: "middle",
+              hAlign: "left",
+              vAlign: "center",
               gap: "M",
               wrap: true,
             }}
-            styles={{
-              "margin-bottom": "20px",
-            }}
-            order={0}
+            order={1}
           >
-            <BlockComponent
-              type="heading"
-              props={{
-                text: title,
-              }}
-              order={0}
-            />
-            <BlockComponent
-              type="container"
-              props={{
-                direction: "row",
-                hAlign: "left",
-                vAlign: "center",
-                gap: "M",
-                wrap: true,
-              }}
-              order={1}
-            >
-              {#if enrichedSearchColumns?.length}
-                {#each enrichedSearchColumns as column, idx}
-                  <BlockComponent
-                    type={column.componentType}
-                    props={{
-                      field: column.name,
-                      placeholder: column.name,
-                      text: column.name,
-                      autoWidth: true,
-                    }}
-                    styles={{
-                      width: "192px",
-                    }}
-                    order={idx}
-                  />
-                {/each}
-              {/if}
-              {#if showTitleButton}
+            {#if enrichedSearchColumns?.length}
+              {#each enrichedSearchColumns as column, idx}
                 <BlockComponent
-                  type="button"
+                  type={column.componentType}
                   props={{
-                    onClick: titleButtonAction,
-                    text: titleButtonText,
-                    type: "cta",
+                    field: column.name,
+                    placeholder: column.name,
+                    text: column.name,
+                    autoWidth: true,
                   }}
-                  order={enrichedSearchColumns?.length ?? 0}
+                  styles={{
+                    normal: {
+                      width: "192px",
+                    },
+                  }}
+                  order={idx}
                 />
-              {/if}
-            </BlockComponent>
+              {/each}
+            {/if}
+            {#if showTitleButton}
+              <BlockComponent
+                type="button"
+                props={{
+                  onClick: titleButtonAction,
+                  text: titleButtonText,
+                  type: "cta",
+                }}
+                order={enrichedSearchColumns?.length ?? 0}
+              />
+            {/if}
           </BlockComponent>
-        {/if}
-        <BlockComponent
-          type="dataprovider"
-          bind:id={dataProviderId}
-          props={{
-            dataSource,
-            filter: enrichedFilter,
-            sortColumn,
-            sortOrder,
-            paginate,
-            limit: rowCount,
-          }}
-          order={1}
-        >
-          <BlockComponent
-            type="table"
-            context="table"
-            props={{
-              dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
-              columns: tableColumns,
-              showAutoColumns,
-              rowCount,
-              quiet,
-              compact,
-              allowSelectRows,
-              size,
-              linkRows,
-              linkURL,
-              linkColumn,
-              linkPeek,
-            }}
-          />
         </BlockComponent>
+      {/if}
+      <BlockComponent
+        type="dataprovider"
+        bind:id={dataProviderId}
+        props={{
+          dataSource,
+          filter: enrichedFilter,
+          sortColumn,
+          sortOrder,
+          paginate,
+          limit: rowCount,
+        }}
+        order={1}
+      >
+        <BlockComponent
+          type="table"
+          context="table"
+          props={{
+            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+            columns: tableColumns,
+            showAutoColumns,
+            rowCount,
+            quiet,
+            compact,
+            allowSelectRows,
+            size,
+            linkRows,
+            linkURL,
+            linkColumn,
+            linkPeek,
+          }}
+        />
       </BlockComponent>
-    </div>
+    </BlockComponent>
   </Block>
 {/if}

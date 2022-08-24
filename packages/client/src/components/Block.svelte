@@ -4,6 +4,7 @@
   import { blockStore } from "stores/blocks.js"
 
   const component = getContext("component")
+  const { styleable } = getContext("sdk")
 
   let structureLookupMap = {}
 
@@ -18,8 +19,21 @@
   }
 
   const eject = () => {
-    // Start the new structure with the first top level component
+    // Start the new structure with the root component
     let definition = structureLookupMap[$component.id][0]
+
+    // Copy styles from block to root component
+    definition._styles = {
+      ...definition._styles,
+      normal: {
+        ...definition._styles?.normal,
+        ...$component.styles?.normal,
+      },
+      custom:
+        definition._styles?.custom || "" + $component.styles?.custom || "",
+    }
+
+    // Create component tree
     attachChildren(definition, structureLookupMap)
     builderStore.actions.ejectBlock($component.id, definition)
   }
@@ -73,4 +87,6 @@
   })
 </script>
 
-<slot />
+<div use:styleable={$component.styles}>
+  <slot />
+</div>
