@@ -912,19 +912,32 @@ export const getFrontendStore = () => {
         let nextSelectedComponentId
 
         await store.actions.screens.patch(screen => {
+          const block = findComponent(screen.props, componentId)
           const parent = findComponentParent(screen.props, componentId)
 
-          // Sanity check parent is found
-          if (!parent?._children?.length) {
+          // Sanity check
+          if (!block || !parent?._children?.length) {
             return false
           }
 
+          // Attach block children back into ejected definition, using the
+          // _containsSlot flag to know where to insert them
+          const slotContainer = findAllMatchingComponents(
+            ejectedDefinition,
+            x => x._containsSlot
+          )[0]
+          if (slotContainer) {
+            delete slotContainer._containsSlot
+            slotContainer._children = [
+              ...(slotContainer._children || []),
+              ...(block._children || []),
+            ]
+          }
+
           // Replace block with ejected definition
-          const childIndex = parent._children.findIndex(
-            child => child._id === componentId
-          )
           makeComponentUnique(ejectedDefinition)
-          parent._children[childIndex] = ejectedDefinition
+          const index = parent._children.findIndex(x => x._id === componentId)
+          parent._children[index] = ejectedDefinition
           nextSelectedComponentId = ejectedDefinition._id
         })
 

@@ -44,6 +44,7 @@
         <BlockComponent
           type="repeater"
           context="repeater"
+          containsSlot
           props={{
             dataProvider: `{{ literal ${safe(providerId)} }}`,
             noRowsMessage,

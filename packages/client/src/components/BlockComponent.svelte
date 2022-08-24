@@ -10,6 +10,7 @@
   export let css
   export let context
   export let order = 0
+  export let containsSlot = false
 
   // ID is only exposed as a prop so that it can be bound to from parent
   // block components
@@ -32,6 +33,7 @@
       },
       custom: css,
     },
+    _containsSlot: containsSlot,
     ...props,
   }
 
