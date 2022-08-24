@@ -458,11 +458,7 @@
     font-weight: 600;
     text-transform: capitalize;
   }
-  .binding__description {
-    color: var(--spectrum-global-color-gray-700);
-    margin: 0.5rem 0 0 0;
-    white-space: normal;
-  }
+
   .binding__type {
     font-family: monospace;
     background-color: var(--spectrum-global-color-gray-200);

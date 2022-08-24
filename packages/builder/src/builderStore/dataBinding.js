@@ -299,7 +299,10 @@ const getProviderContextBindings = (asset, dataProviders) => {
         schema = {}
         const values = context.values || []
         values.forEach(value => {
-          schema[value.key] = { name: value.label, type: "string" }
+          schema[value.key] = {
+            name: value.label,
+            type: value.type || "string",
+          }
         })
       } else if (context.type === "schema") {
         // Schema contexts are generated dynamically depending on their data
@@ -361,7 +364,10 @@ const getProviderContextBindings = (asset, dataProviders) => {
           tableId: table?._id,
           category: component._instanceName,
           icon: def.icon,
-          display: { name: fieldSchema.name || key, type: fieldSchema.type },
+          display: {
+            name: fieldSchema.name || key,
+            type: fieldSchema.type,
+          },
         })
       })
     })
@@ -544,6 +550,7 @@ export const getEventContextBindings = (
   // Check if any context bindings are provided by the component for this
   // setting
   const component = findComponent(asset.props, componentId)
+  const def = store.actions.components.getDefinition(component?._component)
   const settings = getComponentSettings(component?._component)
   const eventSetting = settings.find(setting => setting.key === settingKey)
   if (eventSetting?.context?.length) {
@@ -553,6 +560,8 @@ export const getEventContextBindings = (
         runtimeBinding: `${makePropSafe("eventContext")}.${makePropSafe(
           contextEntry.key
         )}`,
+        category: component._instanceName,
+        icon: def.icon,
       })
     })
   }
@@ -574,6 +583,8 @@ export const getEventContextBindings = (
         bindings.push({
           readableBinding: `Action ${idx + 1}.${contextValue.label}`,
           runtimeBinding: `actions.${idx}.${contextValue.value}`,
+          category: "Actions",
+          icon: "JourneyAction",
         })
       })
     }
