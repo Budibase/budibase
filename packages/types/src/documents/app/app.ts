@@ -14,11 +14,7 @@ export interface App extends Document {
   tenantId: string
   status: string
   theme?: string
-  customTheme?: {
-    buttonBorderRadius?: string
-    primaryColor?: string
-    primaryColorHover?: string
-  }
+  customTheme?: AppCustomTheme
   revertableVersion?: string
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
@@ -46,4 +42,14 @@ export interface AppNavigationLink {
   url: string
   id?: string
   roleId?: string
+}
+
+export interface AppCustomTheme {
+  buttonBorderRadius?: string
+  primaryColor?: string
+  primaryColorHover?: string
+
+  // Used to exist before new design UI
+  navTextColor?: string
+  navBackground?: string
 }
