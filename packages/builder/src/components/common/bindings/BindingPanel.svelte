@@ -177,11 +177,17 @@
   >
     <Layout gap="S">
       <div class="helper">
-        <div class="helper__name">{hoverTarget.title}</div>
-        <div class="helper__description">
-          {@html hoverTarget.description}
-        </div>
-        <pre class="helper__example">{hoverTarget.example}</pre>
+        {#if hoverTarget.title}
+          <div class="helper__name">{hoverTarget.title}</div>
+        {/if}
+        {#if hoverTarget.description}
+          <div class="helper__description">
+            {@html hoverTarget.description}
+          </div>
+        {/if}
+        {#if hoverTarget.example}
+          <pre class="helper__example">{hoverTarget.example}</pre>
+        {/if}
       </div>
     </Layout>
   </Popover>
@@ -237,11 +243,11 @@
                   class="binding"
                   on:mouseenter={e => {
                     popoverAnchor = e.target
-                    if (!binding.name && !binding.description) {
+                    if (!binding.description) {
                       return
                     }
                     hoverTarget = {
-                      title: binding.name,
+                      title: binding.display.name || binding.fieldSchema.name,
                       description: binding.description,
                     }
                     popover.show()
@@ -272,13 +278,6 @@
                         {binding.display?.type || binding.fieldSchema?.type}
                       </span>
                     </span>
-                  {/if}
-
-                  {#if binding.description}
-                    <br />
-                    <div class="binding__description">
-                      {binding.description || ""}
-                    </div>
                   {/if}
                 </li>
               {/each}
