@@ -67,7 +67,7 @@
       {/if}
     {:else if schema.type === QueryTypes.FLOW}
       <br />
-      {#if query.fields.steps?.length == 0}
+      {#if (query.fields.steps?.length ?? 0) === 0}
         <div class="controls">
           <Button
             secondary
@@ -93,9 +93,8 @@
                   Stage {index + 1}
                   <ActionButton
                     on:click={() => {
-                      query.fields.steps = [
-                        ...query.fields.steps.splice(index, 1),
-                      ]
+                      query.fields.steps.splice(index, 1)
+                      query.fields.steps = query.fields.steps
                     }}
                     icon="DeleteOutline"
                   />
@@ -109,14 +108,18 @@
                           query.fields.steps[index].key = detail
                         }}
                       />
-                      <Editor
-                        editorHeight={height / 2}
-                        mode="json"
-                        value={step.value}
-                        on:change={({ detail }) => {
-                          query.fields.steps[index].value = detail
-                        }}
-                      />
+                      {#key query.fields.steps.length}
+                        <Editor
+                          editorHeight={height / 2}
+                          mode="json"
+                          value={typeof step.value === "string"
+                            ? step.value
+                            : step.value.value}
+                          on:change={({ detail }) => {
+                            query.fields.steps[index].value = detail
+                          }}
+                        />
+                      {/key}
                     </div>
                   </div>
                 </Layout>
