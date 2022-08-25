@@ -158,20 +158,18 @@
                 type="container"
                 props={{
                   direction: "row",
-                  hAlign: title ? "stretch" : "right",
+                  hAlign: "stretch",
                   vAlign: "center",
                   gap: "M",
                   wrap: true,
                 }}
                 order={0}
               >
-                {#if title}
-                  <BlockComponent
-                    type="heading"
-                    props={{ text: title }}
-                    order={0}
-                  />
-                {/if}
+                <BlockComponent
+                  type="heading"
+                  props={{ text: title || "" }}
+                  order={0}
+                />
                 {#if renderButtons}
                   <BlockComponent
                     type="container"
