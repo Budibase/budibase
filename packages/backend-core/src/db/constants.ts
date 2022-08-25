@@ -42,7 +42,7 @@ export enum DocumentType {
   MIGRATIONS = "migrations",
   DEV_INFO = "devinfo",
   AUTOMATION_LOG = "log_au",
-  ACCOUNT = "acc",
+  ACCOUNT_METADATA = "acc_metadata",
 }
 
 export const StaticDatabases = {

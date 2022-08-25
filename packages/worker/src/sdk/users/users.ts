@@ -15,9 +15,21 @@ import {
   accounts,
   migrations,
   StaticDatabases,
-  ViewName
+  ViewName,
 } from "@budibase/backend-core"
-import { MigrationType, PlatformUserByEmail, User, Account } from "@budibase/types"
+import {
+  MigrationType,
+  PlatformUserByEmail,
+  User,
+  Account,
+  BulkCreateUsersResponse,
+  CreateUserResponse,
+  BulkDeleteUsersResponse,
+  CloudAccount,
+  AllDocsResponse,
+  RowResponse,
+  BulkDocsResponse,
+} from "@budibase/types"
 import { groups as groupUtils } from "@budibase/pro"
 
 const PAGE_LIMIT = 8
@@ -100,7 +112,6 @@ export const getUser = async (userId: string) => {
 interface SaveUserOpts {
   hashPassword?: boolean
   requirePassword?: boolean
-  bulkCreate?: boolean
 }
 
 const buildUser = async (
@@ -111,7 +122,7 @@ const buildUser = async (
   },
   tenantId: string,
   dbUser?: any
-) => {
+): Promise<User> => {
   let { password, _id } = user
 
   let hashedPassword
@@ -145,62 +156,63 @@ const buildUser = async (
   return user
 }
 
+const validateUniqueUser = async (email: string, tenantId: string) => {
+  // check budibase users in other tenants
+  if (env.MULTI_TENANCY) {
+    const tenantUser = await tenancy.getTenantUser(email)
+    if (tenantUser != null && tenantUser.tenantId !== tenantId) {
+      throw `Email address ${email} already in use.`
+    }
+  }
+
+  // check root account users in account portal
+  if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+    const account = await accounts.getAccount(email)
+    if (account && account.verified && account.tenantId !== tenantId) {
+      throw `Email address ${email} already in use.`
+    }
+  }
+}
+
 export const save = async (
-  user: any,
+  user: User,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
-    bulkCreate: false,
   }
-) => {
+): Promise<CreateUserResponse> => {
   const tenantId = tenancy.getTenantId()
   const db = tenancy.getGlobalDB()
   let { email, _id } = user
-  // make sure another user isn't using the same email
-  let dbUser: any
-  if (opts.bulkCreate) {
-    dbUser = null
+
+  let dbUser: User | undefined
+  if (_id) {
+    // try to get existing user from db
+    dbUser = (await db.get(_id)) as User
+    if (email && dbUser.email !== email) {
+      throw "Email address cannot be changed"
+    }
+    email = dbUser.email
   } else if (email) {
-    // check budibase users inside the tenant
+    // no id was specified - load from email instead
     dbUser = await usersCore.getGlobalUserByEmail(email)
-    if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
+    if (dbUser && dbUser._id !== _id) {
       throw `Email address ${email} already in use.`
     }
-
-    // check budibase users in other tenants
-    if (env.MULTI_TENANCY) {
-      const tenantUser = await tenancy.getTenantUser(email)
-      if (tenantUser != null && tenantUser.tenantId !== tenantId) {
-        throw `Email address ${email} already in use.`
-      }
-    }
-
-    // check root account users in account portal
-    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-      const account = await accounts.getAccount(email)
-      if (account && account.verified && account.tenantId !== tenantId) {
-        throw `Email address ${email} already in use.`
-      }
-    }
-  } else if (_id) {
-    dbUser = await db.get(_id)
+  } else {
+    throw new Error("_id or email is required")
   }
+
+  await validateUniqueUser(email, tenantId)
 
   let builtUser = await buildUser(user, opts, tenantId, dbUser)
 
   // make sure we set the _id field for a new user
   if (!_id) {
-    _id = builtUser._id
+    _id = builtUser._id!
   }
 
   try {
-    const putOpts = {
-      password: builtUser.password,
-      ...user,
-    }
-    if (opts.bulkCreate) {
-      return putOpts
-    }
     // save the user to db
     let response
     const putUserFn = () => {
@@ -253,25 +265,32 @@ const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
   return dbUtils.queryGlobalView(ViewName.USER_BY_EMAIL, {
     keys: emails,
     include_docs: true,
-    arrayResponse: true
+    arrayResponse: true,
   })
 }
 
-const getExistingPlatformUsers = async (emails: string[]): Promise<PlatformUserByEmail[]> => {
-  return dbUtils.doWithDB(StaticDatabases.PLATFORM_INFO.name, async (infoDb: any) => {
-    const response = await infoDb.allDocs({
-      keys: emails,
-      include_docs: true,
-    })
-    return response.rows.map((row: any) => row.doc)
-  })
+const getExistingPlatformUsers = async (
+  emails: string[]
+): Promise<PlatformUserByEmail[]> => {
+  return dbUtils.doWithDB(
+    StaticDatabases.PLATFORM_INFO.name,
+    async (infoDb: any) => {
+      const response = await infoDb.allDocs({
+        keys: emails,
+        include_docs: true,
+      })
+      return response.rows
+        .filter((row: any) => row.error !== "not_found")
+        .map((row: any) => row.doc)
+    }
+  )
 }
 
 const getExistingAccounts = async (emails: string[]): Promise<Account[]> => {
   return dbUtils.queryPlatformView(ViewName.ACCOUNT_BY_EMAIL, {
     keys: emails,
     include_docs: true,
-    arrayResponse: true
+    arrayResponse: true,
   })
 }
 
@@ -289,18 +308,22 @@ const searchExistingEmails = async (emails: string[]) => {
   matchedEmails.push(...existingTenantUsers.map((user: User) => user.email))
 
   const existingPlatformUsers = await getExistingPlatformUsers(emails)
-  matchedEmails.push(...existingPlatformUsers.map((user: PlatformUserByEmail) => user._id!))
+  matchedEmails.push(
+    ...existingPlatformUsers.map((user: PlatformUserByEmail) => user._id!)
+  )
 
   const existingAccounts = await getExistingAccounts(emails)
-  matchedEmails.push(...existingAccounts.map((account: Account) => account.email))
+  matchedEmails.push(
+    ...existingAccounts.map((account: Account) => account.email)
+  )
 
-  return matchedEmails
+  return [...new Set(matchedEmails)]
 }
 
 export const bulkCreate = async (
   newUsersRequested: User[],
   groups: string[]
-) => {
+): Promise<BulkCreateUsersResponse> => {
   const db = tenancy.getGlobalDB()
   const tenantId = tenancy.getTenantId()
 
@@ -309,14 +332,17 @@ export const bulkCreate = async (
 
   const emails = newUsersRequested.map((user: User) => user.email)
   const existingEmails = await searchExistingEmails(emails)
-  const unsuccessful: { email: string, reason: string }[] = []
+  const unsuccessful: { email: string; reason: string }[] = []
 
   for (const newUser of newUsersRequested) {
     if (
       newUsers.find((x: any) => x.email === newUser.email) ||
       existingEmails.includes(newUser.email)
     ) {
-      unsuccessful.push({ email: newUser.email, reason: `Email address ${newUser.email} already in use.` })
+      unsuccessful.push({
+        email: newUser.email,
+        reason: `Email address ${newUser.email} already in use.`,
+      })
       continue
     }
     newUser.userGroups = groups
@@ -363,58 +389,120 @@ export const bulkCreate = async (
 
   return {
     successful: saved,
-    unsuccessful
+    unsuccessful,
   }
 }
 
-export const bulkDelete = async (userIds: any) => {
+/**
+ * For the given user id's, return the account holder if it is in the ids.
+ */
+const getAccountHolderFromUserIds = async (
+  userIds: string[]
+): Promise<CloudAccount | undefined> => {
+  if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+    const tenantId = tenancy.getTenantId()
+    const account = await accounts.getAccountByTenantId(tenantId)
+    if (!account) {
+      throw new Error(`Account not found for tenantId=${tenantId}`)
+    }
+
+    const budibaseUserId = account.budibaseUserId
+    if (userIds.includes(budibaseUserId)) {
+      return account
+    }
+  }
+}
+
+export const bulkDelete = async (
+  userIds: string[]
+): Promise<BulkDeleteUsersResponse> => {
   const db = tenancy.getGlobalDB()
+
+  const response: BulkDeleteUsersResponse = {
+    successful: [],
+    unsuccessful: [],
+  }
+
+  // remove the account holder from the delete request if present
+  const account = await getAccountHolderFromUserIds(userIds)
+  if (account) {
+    userIds = userIds.filter(u => u !== account.budibaseUserId)
+    // mark user as unsuccessful
+    response.unsuccessful.push({
+      _id: account.budibaseUserId,
+      email: account.email,
+      reason: "Account holder cannot be deleted",
+    })
+  }
 
   let groupsToModify: any = {}
   let builderCount = 0
+
   // Get users and delete
-  let usersToDelete = (
-    await db.allDocs({
-      include_docs: true,
-      keys: userIds,
-    })
-  ).rows.map((user: any) => {
-    // if we find a user that has an associated group, add it to
-    // an array so we can easily use allDocs on them later.
-    // This prevents us having to re-loop over all the users
-    if (user.doc.userGroups) {
-      for (let groupId of user.doc.userGroups) {
-        if (!Object.keys(groupsToModify).includes(groupId)) {
-          groupsToModify[groupId] = [user.id]
-        } else {
-          groupsToModify[groupId] = [...groupsToModify[groupId], user.id]
+  const allDocsResponse: AllDocsResponse<User> = await db.allDocs({
+    include_docs: true,
+    keys: userIds,
+  })
+  const usersToDelete: User[] = allDocsResponse.rows.map(
+    (user: RowResponse<User>) => {
+      // if we find a user that has an associated group, add it to
+      // an array so we can easily use allDocs on them later.
+      // This prevents us having to re-loop over all the users
+      if (user.doc.userGroups) {
+        for (let groupId of user.doc.userGroups) {
+          if (!Object.keys(groupsToModify).includes(groupId)) {
+            groupsToModify[groupId] = [user.id]
+          } else {
+            groupsToModify[groupId] = [...groupsToModify[groupId], user.id]
+          }
         }
       }
+
+      // Also figure out how many builders are being deleted
+      if (eventHelpers.isAddingBuilder(user.doc, null)) {
+        builderCount++
+      }
+
+      return user.doc
     }
+  )
 
-    // Also figure out how many builders are being deleted
-    if (eventHelpers.isAddingBuilder(user.doc, null)) {
-      builderCount++
-    }
-
-    return user.doc
-  })
-
-  const response = await db.bulkDocs(
-    usersToDelete.map((user: any) => ({
+  // Delete from DB
+  const dbResponse: BulkDocsResponse = await db.bulkDocs(
+    usersToDelete.map(user => ({
       ...user,
       _deleted: true,
     }))
   )
 
+  // Deletion post processing
   await groupUtils.bulkDeleteGroupUsers(groupsToModify)
-
-  //Deletion post processing
   for (let user of usersToDelete) {
     await bulkDeleteProcessing(user)
   }
-
   await quotas.removeDevelopers(builderCount)
+
+  // Build Response
+  // index users by id
+  const userIndex: { [key: string]: User } = {}
+  usersToDelete.reduce((prev, current) => {
+    prev[current._id!] = current
+    return prev
+  }, userIndex)
+
+  // add the successful and unsuccessful users to response
+  dbResponse.forEach(item => {
+    const email = userIndex[item.id].email
+    if (item.ok) {
+      response.successful.push({ _id: item.id, email })
+    } else {
+      response.unsuccessful.push({
+        _id: item.id,
+        email,
+        reason: "Database error",
+      })
+    }
+  })
 
   return response
 }

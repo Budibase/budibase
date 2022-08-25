@@ -1,15 +1,14 @@
 import TestConfiguration from "./TestConfiguration"
 import structures from "./structures"
 import mocks from "./mocks"
+import API from "./api"
 
-const config = new TestConfiguration()
-const request = config.getRequest()
-
-const pkg =  {
+const pkg = {
   structures,
+  TENANT_1: structures.TENANT_1,
   mocks,
-  config,
-  request,
+  TestConfiguration,
+  API,
 }
 
 export = pkg

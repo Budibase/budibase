@@ -78,7 +78,7 @@ const shutdown = () => {
   server.destroy()
 }
 
-module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
+export = server.listen(parseInt(env.PORT || 4002), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await redis.init()
 })
@@ -90,5 +90,9 @@ process.on("uncaughtException", err => {
 })
 
 process.on("SIGTERM", () => {
+  shutdown()
+})
+
+process.on("SIGINT", () => {
   shutdown()
 })
