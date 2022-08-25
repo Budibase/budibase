@@ -83,7 +83,7 @@ export function createUsersStore() {
   }
 
   async function bulkDelete(userIds) {
-    await API.deleteUsers(userIds)
+    return API.deleteUsers(userIds)
   }
 
   async function save(user) {

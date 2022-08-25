@@ -96,7 +96,7 @@
 </script>
 
 <ModalContent
-  size="S"
+  size="M"
   {title}
   confirmText="Done"
   showCancelButton={false}
