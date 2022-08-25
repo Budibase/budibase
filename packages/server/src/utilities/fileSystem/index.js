@@ -291,6 +291,7 @@ exports.getComponentLibraryManifest = async library => {
     const path = join(appId, filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
   } catch (error) {
+    console.error(`component-manifest-objectstore=failed appId=${appId}`, error)
     // Fallback to loading it from the old location for old apps
     const path = join(appId, "node_modules", library, "package", filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
