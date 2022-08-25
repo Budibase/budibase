@@ -50,6 +50,9 @@ module MongoDBModule {
       delete: {
         type: QueryType.JSON,
       },
+      aggregate: {
+        type: QueryType.FLOW,
+      }
     },
     extra: {
       collection: {
@@ -310,6 +313,28 @@ module MongoDBModule {
             )
           }
         }
+      } catch (err) {
+        console.error("Error writing to mongodb", err)
+        throw err
+      } finally {
+        await this.client.close()
+      }
+    }
+
+    async aggregate(query: { steps: any[]; extra: { [key: string]: string } }) {
+      try {
+        await this.connect()
+        const db = this.client.db(this.config.db)
+        const collection = db.collection(query.extra.collection)
+        let response = {}
+        for await (const doc of collection.aggregate(query.steps.map(({ key, value }) => {
+          let temp:any = {}
+          temp[key] = JSON.parse(value.value)
+          return temp
+        }))) {
+          response = doc
+        }
+        return response
       } catch (err) {
         console.error("Error writing to mongodb", err)
         throw err

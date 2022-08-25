@@ -20,6 +20,7 @@ export enum QueryType {
   SQL = "sql",
   JSON = "json",
   FIELDS = "fields",
+  FLOW = "flow",
 }
 
 export enum DatasourceFieldType {
