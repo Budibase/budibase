@@ -98,7 +98,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
   // not recommended in a clustered environment
   if (!env.HTTP_MIGRATIONS && !env.isTest()) {
     try {
-      // await migrations.migrate()
+      await migrations.migrate()
     } catch (e) {
       logAlert("Error performing migrations. Exiting.", e)
       shutdown()
