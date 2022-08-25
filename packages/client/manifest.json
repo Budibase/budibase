@@ -3818,7 +3818,7 @@
     "styles": [
       "size"
     ],
-    "info": "Only the first 3 search columns will be used.",
+    "info": "Only the first 5 search columns will be used",
     "settings": [
       {
         "type": "text",
@@ -4385,6 +4385,7 @@
     "icon": "Form",
     "styles": ["size"],
     "block": true,
+    "info": "Form blocks are only compatible with internal or SQL tables",
     "settings": [
       {
         "type": "select",
