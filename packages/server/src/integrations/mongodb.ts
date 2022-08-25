@@ -52,7 +52,7 @@ module MongoDBModule {
       },
       aggregate: {
         type: QueryType.FLOW,
-      }
+      },
     },
     extra: {
       collection: {
@@ -327,11 +327,13 @@ module MongoDBModule {
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
         let response = {}
-        for await (const doc of collection.aggregate(query.steps.map(({ key, value }) => {
-          let temp:any = {}
-          temp[key] = JSON.parse(value.value)
-          return temp
-        }))) {
+        for await (const doc of collection.aggregate(
+          query.steps.map(({ key, value }) => {
+            let temp: any = {}
+            temp[key] = JSON.parse(value.value)
+            return temp
+          })
+        )) {
           response = doc
         }
         return response
