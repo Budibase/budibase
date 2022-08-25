@@ -18,6 +18,7 @@ export interface App extends Document {
   revertableVersion?: string
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
+  icon?: AppIcon
 }
 
 export interface AppInstance {
@@ -52,4 +53,9 @@ export interface AppCustomTheme {
   // Used to exist before new design UI
   navTextColor?: string
   navBackground?: string
+}
+
+export interface AppIcon {
+  name: string
+  color: string
 }

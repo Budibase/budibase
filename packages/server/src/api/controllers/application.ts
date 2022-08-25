@@ -252,7 +252,6 @@ const performAppCreate = async (ctx: any) => {
   const appId = instance._id
   const db = context.getAppDB()
 
-  // Create new app doc
   let newApplication: App = {
     _id: DocumentType.APP_METADATA,
     _rev: undefined,
@@ -263,7 +262,7 @@ const performAppCreate = async (ctx: any) => {
     name: name,
     url: url,
     template: templateKey,
-    instance: instance,
+    instance,
     tenantId: getTenantId(),
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
@@ -290,15 +289,14 @@ const performAppCreate = async (ctx: any) => {
   // Fetch and migrate some metadata from the existing app.
   try {
     const existing: App = await db.get(DocumentType.APP_METADATA)
-    const keys: string[] = [
+    const keys: (keyof App)[] = [
       "_rev",
       "navigation",
       "theme",
       "customTheme",
       "icon",
     ]
-    keys.forEach((key: string) => {
-      // @ts-ignore
+    keys.forEach(key => {
       if (existing[key]) {
         // @ts-ignore
         newApplication[key] = existing[key]
@@ -602,17 +600,15 @@ const updateAppPackage = async (appPackage: any, appId: any) => {
 const migrateAppNavigation = async () => {
   const db = context.getAppDB()
   const existing: App = await db.get(DocumentType.APP_METADATA)
-  const layouts = await getLayouts()
-  const screens = await getScreens()
+  const layouts: Layout[] = await getLayouts()
+  const screens: Screen[] = await getScreens()
 
   // Migrate all screens, removing custom layouts
   for (let screen of screens) {
     if (!screen.layoutId) {
       return
     }
-    const layout = layouts.find(
-      (layout: Layout) => layout._id === screen.layoutId
-    )
+    const layout = layouts.find(layout => layout._id === screen.layoutId)
     screen.layoutId = undefined
     screen.showNavigation = layout?.props.navigation !== "None"
     screen.width = layout?.props.width || "Large"
