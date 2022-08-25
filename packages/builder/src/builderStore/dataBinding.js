@@ -240,7 +240,19 @@ export const getDatasourceForProvider = (asset, component) => {
   if (!datasourceSetting) {
     return null
   }
-  return component[datasourceSetting?.key]
+
+  // For legacy compatibility, we need to be able to handle datasources that are
+  // just strings. These are not generated any more, so could be removed in
+  // future.
+  // TODO: remove at some point
+  const datasource = component[datasourceSetting?.key]
+  if (typeof datasource === "string") {
+    return {
+      tableId: datasource,
+      type: "table",
+    }
+  }
+  return datasource
 }
 
 /**
