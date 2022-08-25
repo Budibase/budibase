@@ -6,13 +6,12 @@ import {
 } from "@budibase/types"
 import {
   MongoClient,
-  ObjectID,
-  FilterQuery,
-  UpdateQuery,
-  FindOneAndUpdateOption,
-  UpdateOneOptions,
-  UpdateManyOptions,
-  CommonOptions,
+  ObjectId,
+  Filter,
+  UpdateFilter,
+  FindOneAndUpdateOptions,
+  UpdateOptions,
+  OperationOptions,
 } from "mongodb"
 
 module MongoDBModule {
@@ -100,7 +99,7 @@ module MongoDBModule {
               /(?<=objectid\(['"]).*(?=['"]\))/gi
             )?.[0]
             if (id) {
-              json[field] = ObjectID.createFromHexString(id)
+              json[field] = ObjectId.createFromHexString(id)
             }
           }
         }
@@ -204,9 +203,9 @@ module MongoDBModule {
               json = this.parseQueryParams(query.json, "update")
             }
             let findAndUpdateJson = this.createObjectIds(json) as {
-              filter: FilterQuery<any>
-              update: UpdateQuery<any>
-              options: FindOneAndUpdateOption<any>
+              filter: Filter<any>
+              update: UpdateFilter<any>
+              options: FindOneAndUpdateOptions
             }
             return await collection.findOneAndUpdate(
               findAndUpdateJson.filter,
@@ -244,8 +243,8 @@ module MongoDBModule {
           queryJson = this.parseQueryParams(queryJson, "update")
         }
         let json = this.createObjectIds(queryJson) as {
-          filter: FilterQuery<any>
-          update: UpdateQuery<any>
+          filter: Filter<any>
+          update: UpdateFilter<any>
           options: object
         }
 
@@ -254,14 +253,14 @@ module MongoDBModule {
             return await collection.updateOne(
               json.filter,
               json.update,
-              json.options as UpdateOneOptions
+              json.options as UpdateOptions
             )
           }
           case "updateMany": {
             return await collection.updateMany(
               json.filter,
               json.update,
-              json.options as UpdateManyOptions
+              json.options as UpdateOptions
             )
           }
           default: {
@@ -288,8 +287,8 @@ module MongoDBModule {
           queryJson = this.parseQueryParams(queryJson, "delete")
         }
         let json = this.createObjectIds(queryJson) as {
-          filter: FilterQuery<any>
-          options: CommonOptions
+          filter: Filter<any>
+          options: OperationOptions
         }
         if (!json.options) {
           json = {
