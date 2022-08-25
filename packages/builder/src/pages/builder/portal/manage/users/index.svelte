@@ -23,6 +23,7 @@
   import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
+  import DeletionFailureModal from "./_components/DeletionFailureModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { get } from "svelte/store"
@@ -33,7 +34,8 @@
     inviteConfirmationModal,
     onboardingTypeModal,
     passwordModal,
-    importUsersModal
+    importUsersModal,
+    deletionFailureModal
   let pageInfo = createPaginationStore()
   let prevEmail = undefined,
     searchEmail = undefined
@@ -56,6 +58,7 @@
   }
   $: userData = []
   $: createUsersResponse = { successful: [], unsuccessful: [] }
+  $: deleteUsersResponse = { successful: [], unsuccessful: [] }
   $: page = $pageInfo.page
   $: fetchUsers(page, searchEmail)
   $: {
@@ -180,8 +183,13 @@
         notifications.error("You cannot delete yourself")
         return
       }
-      await users.bulkDelete(ids)
-      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+      deleteUsersResponse = await users.bulkDelete(ids)
+      if (deleteUsersResponse.unsuccessful?.length) {
+        deletionFailureModal.show()
+      } else {
+        notifications.success(`Successfully deleted ${selectedRows.length} users`)
+      }
+
       selectedRows = []
       await fetchUsers(page, searchEmail)
     } catch (error) {
@@ -289,6 +297,10 @@
 
 <Modal bind:this={passwordModal}>
   <PasswordModal {createUsersResponse} userData={userData.users} />
+</Modal>
+
+<Modal bind:this={deletionFailureModal}>
+  <DeletionFailureModal {deleteUsersResponse} />
 </Modal>
 
 <Modal bind:this={importUsersModal}>
