@@ -67,7 +67,7 @@
       {/if}
     {:else if schema.type === QueryTypes.FLOW}
       <br />
-      {#if !query.fields.steps}
+      {#if query.fields.steps?.length == 0}
         <div class="controls">
           <Button
             secondary
@@ -91,7 +91,14 @@
               <div class="blockSection">
                 <div class="block-options">
                   Stage {index + 1}
-                  <ActionButton on:click={() => {}} icon="DeleteOutline" />
+                  <ActionButton
+                    on:click={() => {
+                      query.fields.steps = [
+                        ...query.fields.steps.splice(index, 1),
+                      ]
+                    }}
+                    icon="DeleteOutline"
+                  />
                 </div>
                 <Layout noPadding gap="S">
                   <div class="fields">
