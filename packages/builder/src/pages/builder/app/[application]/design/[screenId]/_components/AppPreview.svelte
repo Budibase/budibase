@@ -96,11 +96,21 @@
     `./components/${$selectedComponent?._id}/new`
   )
 
+  // Register handler to send custom to the preview
+  $: store.actions.preview.registerEventHandler((name, payload) => {
+    iframe?.contentWindow.postMessage(
+      JSON.stringify({
+        name,
+        payload,
+        isBudibaseEvent: true,
+        runtimeEvent: true,
+      })
+    )
+  })
+
   // Update the iframe with the builder info to render the correct preview
   const refreshContent = message => {
-    if (iframe) {
-      iframe.contentWindow.postMessage(message)
-    }
+    iframe?.contentWindow.postMessage(message)
   }
 
   const receiveMessage = message => {
@@ -196,6 +206,9 @@
             block: "center",
           })
         }
+      } else if (type === "eject-block") {
+        const { id, definition } = data
+        await store.actions.components.handleEjectBlock(id, definition)
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }

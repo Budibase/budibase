@@ -2,7 +2,11 @@
   import { store } from "builderStore"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
+  export let component
+
+  $: definition = store.actions.components.getDefinition(component?._component)
   $: noPaste = !$store.componentToPaste
+  $: isBlock = definition?.block === true
 
   const keyboardEvent = (key, ctrlKey = false) => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
@@ -20,6 +24,15 @@
   >
     Delete
   </MenuItem>
+  {#if isBlock}
+    <MenuItem
+      icon="Export"
+      keyBind="Ctrl+E"
+      on:click={() => keyboardEvent("e", true)}
+    >
+      Eject block
+    </MenuItem>
+  {/if}
   <MenuItem
     icon="ChevronUp"
     keyBind="Ctrl+!ArrowUp"
