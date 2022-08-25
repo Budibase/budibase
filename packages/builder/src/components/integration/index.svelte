@@ -1,12 +1,21 @@
 <script>
   import Editor from "./QueryEditor.svelte"
   import FieldsBuilder from "./QueryFieldsBuilder.svelte"
-  import { Label, Input } from "@budibase/bbui"
+  import {
+    Label,
+    Input,
+    Divider,
+    Layout,
+    Icon,
+    Button,
+    ActionButton,
+  } from "@budibase/bbui"
 
   const QueryTypes = {
     SQL: "sql",
     JSON: "json",
     FIELDS: "fields",
+    FLOW: "flow",
   }
 
   export let query
@@ -56,6 +65,77 @@
           <Input thin outline disabled value={urlDisplay} />
         </div>
       {/if}
+    {:else if schema.type === QueryTypes.FLOW}
+      <br />
+      {#if !query.fields.steps}
+        <div class="controls">
+          <Button
+            secondary
+            slot="buttons"
+            on:click={() => {
+              query.fields.steps = [
+                {
+                  key: "$match",
+                  value: "{\n\t\n}",
+                },
+              ]
+            }}>Add stage</Button
+          >
+        </div>
+        <br />
+      {:else}
+        {#each query.fields.steps as step, index}
+          <div class="block">
+            <div class="subblock">
+              <Divider noMargin />
+              <div class="blockSection">
+                <div class="block-options">
+                  Stage {index + 1}
+                  <ActionButton on:click={() => {}} icon="DeleteOutline" />
+                </div>
+                <Layout noPadding gap="S">
+                  <div class="fields">
+                    <div class="block-field">
+                      <Input
+                        value={step.key}
+                        on:change={({ detail }) => {
+                          query.fields.steps[index].key = detail
+                        }}
+                      />
+                      <Editor
+                        editorHeight={height / 2}
+                        mode="json"
+                        value={step.value}
+                        on:change={({ detail }) => {
+                          query.fields.steps[index].value = detail
+                        }}
+                      />
+                    </div>
+                  </div>
+                </Layout>
+              </div>
+            </div>
+            <div class="separator" />
+            {#if index === query.fields.steps.length - 1}
+              <Icon
+                hoverable
+                name="AddCircle"
+                size="S"
+                on:click={() => {
+                  query.fields.steps = [
+                    ...query.fields.steps,
+                    {
+                      key: "$match",
+                      value: "{\n\t\n}",
+                    },
+                  ]
+                }}
+              />
+              <br />
+            {/if}
+          </div>
+        {/each}
+      {/if}
     {/if}
   {/key}
 {/if}
@@ -66,5 +146,53 @@
     grid-template-columns: 20% 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+  .blockSection {
+    padding: var(--spacing-xl);
+  }
+  .block {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: -6px;
+  }
+  .subblock {
+    width: 480px;
+    font-size: 16px;
+    background-color: var(--background);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 4px 4px 4px 4px;
+  }
+  .block-options {
+    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    padding-bottom: 24px;
+  }
+
+  .fields {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-s);
+  }
+  .block-field {
+    display: grid;
+    grid-gap: 5px;
+  }
+  .separator {
+    width: 1px;
+    height: 25px;
+    border-left: 1px dashed var(--grey-4);
+    color: var(--grey-4);
+    /* center horizontally */
+    align-self: center;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: right;
   }
 </style>
