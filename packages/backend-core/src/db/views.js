@@ -6,7 +6,7 @@ const {
 } = require("./utils")
 const { getGlobalDB } = require("../tenancy")
 const { StaticDatabases } = require("./constants")
-const { doWithDB } = require("./");
+const { doWithDB } = require("./")
 
 const DESIGN_DB = "_design/database"
 
@@ -59,7 +59,7 @@ exports.createNewUserEmailView = async () => {
 }
 
 exports.createAccountEmailView = async () => {
-  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db) => {
+  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async db => {
     let designDoc
     try {
       designDoc = await db.get(DESIGN_DB)
@@ -70,8 +70,8 @@ exports.createAccountEmailView = async () => {
     const view = {
       // if using variables in a map function need to inject them before use
       map: `function(doc) {
-      if (doc._id.startsWith("${DocumentType.ACCOUNT}${SEPARATOR}")) {
-        emit(doc.email.toLowerCase(), doc.tenantId)
+      if (doc._id.startsWith("${DocumentType.ACCOUNT_METADATA}${SEPARATOR}")) {
+        emit(doc.email.toLowerCase(), doc._id)
       }
     }`,
     }
@@ -171,7 +171,7 @@ exports.queryView = async (viewName, params, db, CreateFuncByName) => {
       const createFunc = CreateFuncByName[viewName]
       await removeDeprecated(db, viewName)
       await createFunc()
-      return exports.queryGlobalView(viewName, params)
+      return exports.queryView(viewName, params, db, CreateFuncByName)
     } else {
       throw err
     }
@@ -183,7 +183,7 @@ exports.queryPlatformView = async (viewName, params) => {
     [ViewName.ACCOUNT_BY_EMAIL]: exports.createAccountEmailView,
   }
 
-  return doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db) => {
+  return doWithDB(StaticDatabases.PLATFORM_INFO.name, async db => {
     return exports.queryView(viewName, params, db, CreateFuncByName)
   })
 }

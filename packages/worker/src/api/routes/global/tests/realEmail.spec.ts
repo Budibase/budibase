@@ -1,5 +1,5 @@
-const { config, request } = require("../../../tests")
-const { EmailTemplatePurpose } = require("../../../constants")
+import { TestConfiguration, API } from "../../../../tests"
+import { EmailTemplatePurpose } from "../../../../constants"
 const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
 
@@ -7,6 +7,8 @@ const fetch = require("node-fetch")
 jest.setTimeout(30000)
 
 describe("/api/global/email", () => {
+  const config = new TestConfiguration()
+  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -16,27 +18,24 @@ describe("/api/global/email", () => {
     await config.afterAll()
   })
 
-  async function sendRealEmail(purpose) {
+  async function sendRealEmail(purpose: string) {
     let response, text
     try {
-      const timeout = () => new Promise((resolve, reject) =>
-        setTimeout(() => reject({
-          status: 301,
-          errno: "ETIME"
-        }), 20000)
-      )
+      const timeout = () =>
+        new Promise((resolve, reject) =>
+          setTimeout(
+            () =>
+              reject({
+                status: 301,
+                errno: "ETIME",
+              }),
+            20000
+          )
+        )
       await Promise.race([config.saveEtherealSmtpConfig(), timeout()])
       await Promise.race([config.saveSettingsConfig(), timeout()])
-      const user = await config.getUser("test@test.com")
-      const res = await request
-        .post(`/api/global/email/send`)
-        .send({
-          email: "test@test.com",
-          purpose,
-          userId: user._id,
-        })
-        .set(config.defaultHeaders())
-        .timeout(20000)
+
+      const res = await api.emails.sendEmail(purpose).timeout(20000)
       // ethereal hiccup, can't test right now
       if (res.status >= 300) {
         return
@@ -47,7 +46,7 @@ describe("/api/global/email", () => {
       expect(testUrl).toBeDefined()
       response = await fetch(testUrl)
       text = await response.text()
-    } catch (err) {
+    } catch (err: any) {
       // ethereal hiccup, can't test right now
       if (parseInt(err.status) >= 300 || (err && err.errno === "ETIME")) {
         return
