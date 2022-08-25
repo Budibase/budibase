@@ -1,7 +1,13 @@
+export interface RowValue {
+  rev: string
+  deleted: boolean
+}
+
 export interface RowResponse<T> {
   id: string
   key: string
-  value: any
+  error: string
+  value: RowValue
   doc: T
 }
 

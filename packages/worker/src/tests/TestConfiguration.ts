@@ -4,11 +4,15 @@ dbConfig.init()
 import env from "../environment"
 import controllers from "./controllers"
 const supertest = require("supertest")
-import { jwt } from "@budibase/backend-core/auth"
-import { Cookies, Headers } from "@budibase/backend-core/constants"
 import { Configs } from "../constants"
-import { users, tenancy } from "@budibase/backend-core"
-import { createASession } from "@budibase/backend-core/sessions"
+import {
+  users,
+  tenancy,
+  Cookies,
+  Headers,
+  sessions,
+  auth,
+} from "@budibase/backend-core"
 import { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
 import structures from "./structures"
 import { CreateUserResponse, User, AuthToken } from "@budibase/types"
@@ -137,7 +141,7 @@ class TestConfiguration {
   }
 
   async createSession(user: User) {
-    await createASession(user._id!, {
+    await sessions.createASession(user._id!, {
       sessionId: "sessionid",
       tenantId: user.tenantId,
       csrfToken: CSRF_TOKEN,
@@ -156,7 +160,7 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId: user.tenantId,
     }
-    const authCookie = jwt.sign(authToken, env.JWT_SECRET)
+    const authCookie = auth.jwt.sign(authToken, env.JWT_SECRET)
     return {
       Accept: "application/json",
       ...this.cookieHeader([`${Cookies.Auth}=${authCookie}`]),
@@ -237,7 +241,7 @@ class TestConfiguration {
   // CONFIGS - OIDC
 
   getOIDConfigCookie(configId: string) {
-    const token = jwt.sign(configId, env.JWT_SECRET)
+    const token = auth.jwt.sign(configId, env.JWT_SECRET)
     return this.cookieHeader([[`${Cookies.OIDC_CONFIG}=${token}`]])
   }
 
