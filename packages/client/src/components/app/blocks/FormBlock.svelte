@@ -2,7 +2,6 @@
   import { getContext } from "svelte"
   import BlockComponent from "../../BlockComponent.svelte"
   import Block from "../../Block.svelte"
-  import { Layout } from "@budibase/bbui"
   import Placeholder from "../Placeholder.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
 
@@ -18,8 +17,7 @@
   export let rowId
   export let actionUrl
 
-  const { styleable, fetchDatasourceSchema, builderStore } = getContext("sdk")
-  const component = getContext("component")
+  const { fetchDatasourceSchema, builderStore } = getContext("sdk")
   const FieldTypeToComponentMap = {
     string: "stringfield",
     number: "numberfield",
