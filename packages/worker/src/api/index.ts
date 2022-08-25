@@ -2,14 +2,8 @@ import Router from "@koa/router"
 const compress = require("koa-compress")
 const zlib = require("zlib")
 import { routes } from "./routes"
-import {
-  buildAuthMiddleware,
-  auditLog,
-  buildTenancyMiddleware,
-  buildCsrfMiddleware,
-} from "@budibase/backend-core/auth"
 import { middleware as pro } from "@budibase/pro"
-import { errors } from "@budibase/backend-core"
+import { errors, auth, middleware } from "@budibase/backend-core"
 import { APIError } from "@budibase/types"
 
 const PUBLIC_ENDPOINTS = [
@@ -98,9 +92,9 @@ router
     })
   )
   .use("/health", ctx => (ctx.status = 200))
-  .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
-  .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
-  .use(buildCsrfMiddleware({ noCsrfPatterns: NO_CSRF_ENDPOINTS }))
+  .use(auth.buildAuthMiddleware(PUBLIC_ENDPOINTS))
+  .use(auth.buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
+  .use(auth.buildCsrfMiddleware({ noCsrfPatterns: NO_CSRF_ENDPOINTS }))
   .use(pro.licensing())
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
@@ -115,7 +109,7 @@ router
     }
     return next()
   })
-  .use(auditLog)
+  .use(middleware.auditLog)
 
 // error handling middleware - TODO: This could be moved to backend-core
 router.use(async (ctx, next) => {

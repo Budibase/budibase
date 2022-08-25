@@ -29,6 +29,7 @@ import {
   AllDocsResponse,
   RowResponse,
   BulkDocsResponse,
+  AccountMetadata,
 } from "@budibase/types"
 import { groups as groupUtils } from "@budibase/pro"
 
@@ -161,7 +162,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   if (env.MULTI_TENANCY) {
     const tenantUser = await tenancy.getTenantUser(email)
     if (tenantUser != null && tenantUser.tenantId !== tenantId) {
-      throw `Email address ${email} already in use.`
+      throw `Unavailable`
     }
   }
 
@@ -169,7 +170,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accounts.getAccount(email)
     if (account && account.verified && account.tenantId !== tenantId) {
-      throw `Email address ${email} already in use.`
+      throw `Unavailable`
     }
   }
 }
@@ -197,7 +198,7 @@ export const save = async (
     // no id was specified - load from email instead
     dbUser = await usersCore.getGlobalUserByEmail(email)
     if (dbUser && dbUser._id !== _id) {
-      throw `Email address ${email} already in use.`
+      throw `Unavailable`
     }
   } else {
     throw new Error("_id or email is required")
@@ -275,18 +276,21 @@ const getExistingPlatformUsers = async (
   return dbUtils.doWithDB(
     StaticDatabases.PLATFORM_INFO.name,
     async (infoDb: any) => {
-      const response = await infoDb.allDocs({
-        keys: emails,
-        include_docs: true,
-      })
+      const response: AllDocsResponse<PlatformUserByEmail> =
+        await infoDb.allDocs({
+          keys: emails,
+          include_docs: true,
+        })
       return response.rows
-        .filter((row: any) => row.error !== "not_found")
+        .filter(row => row.doc && (row.error !== "not_found") !== null)
         .map((row: any) => row.doc)
     }
   )
 }
 
-const getExistingAccounts = async (emails: string[]): Promise<Account[]> => {
+const getExistingAccounts = async (
+  emails: string[]
+): Promise<AccountMetadata[]> => {
   return dbUtils.queryPlatformView(ViewName.ACCOUNT_BY_EMAIL, {
     keys: emails,
     include_docs: true,
@@ -305,17 +309,13 @@ const searchExistingEmails = async (emails: string[]) => {
   let matchedEmails: string[] = []
 
   const existingTenantUsers = await getExistingTenantUsers(emails)
-  matchedEmails.push(...existingTenantUsers.map((user: User) => user.email))
+  matchedEmails.push(...existingTenantUsers.map(user => user.email))
 
   const existingPlatformUsers = await getExistingPlatformUsers(emails)
-  matchedEmails.push(
-    ...existingPlatformUsers.map((user: PlatformUserByEmail) => user._id!)
-  )
+  matchedEmails.push(...existingPlatformUsers.map(user => user._id!))
 
   const existingAccounts = await getExistingAccounts(emails)
-  matchedEmails.push(
-    ...existingAccounts.map((account: Account) => account.email)
-  )
+  matchedEmails.push(...existingAccounts.map(account => account.email))
 
   return [...new Set(matchedEmails)]
 }
@@ -341,7 +341,7 @@ export const bulkCreate = async (
     ) {
       unsuccessful.push({
         email: newUser.email,
-        reason: `Email address ${newUser.email} already in use.`,
+        reason: `Unavailable`,
       })
       continue
     }

@@ -55,6 +55,7 @@
     apps: {},
   }
   $: userData = []
+  $: createUsersResponse = { successful: [], unsuccessful: [] }
   $: page = $pageInfo.page
   $: fetchUsers(page, searchEmail)
   $: {
@@ -116,8 +117,9 @@
       newUsers.push(user)
     }
 
-    if (!newUsers.length)
+    if (!newUsers.length) {
       notifications.info("Duplicated! There is no new users to add.")
+    }
     return { ...userData, users: newUsers }
   }
 
@@ -144,7 +146,9 @@
 
   async function createUser() {
     try {
-      await users.create(await removingDuplicities(userData))
+      createUsersResponse = await users.create(
+        await removingDuplicities(userData)
+      )
       notifications.success("Successfully created user")
       await groups.actions.init()
       passwordModal.show()
@@ -284,7 +288,7 @@
 </Modal>
 
 <Modal bind:this={passwordModal}>
-  <PasswordModal userData={userData.users} />
+  <PasswordModal {createUsersResponse} userData={userData.users} />
 </Modal>
 
 <Modal bind:this={importUsersModal}>

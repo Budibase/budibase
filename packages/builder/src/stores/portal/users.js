@@ -63,10 +63,14 @@ export function createUsersStore() {
 
       return body
     })
-    await API.createUsers({ users: mappedUsers, groups: data.groups })
+    const response = await API.createUsers({
+      users: mappedUsers,
+      groups: data.groups,
+    })
 
     // re-search from first page
     await search()
+    return response
   }
 
   async function del(id) {

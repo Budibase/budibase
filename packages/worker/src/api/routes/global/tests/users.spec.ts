@@ -167,9 +167,7 @@ describe("/api/global/users", () => {
 
       const response = await api.users.saveUser(user, 400)
 
-      expect(response.body.message).toBe(
-        `Email address ${user.email} already in use.`
-      )
+      expect(response.body.message).toBe(`Unavailable`)
       expect(events.user.created).toBeCalledTimes(0)
     })
 
@@ -181,9 +179,7 @@ describe("/api/global/users", () => {
         delete user._id
         const response = await api.users.saveUser(user, 400)
 
-        expect(response.body.message).toBe(
-          `Email address ${user.email} already in use.`
-        )
+        expect(response.body.message).toBe(`Unavailable`)
         expect(events.user.created).toBeCalledTimes(0)
       })
     })
@@ -195,9 +191,7 @@ describe("/api/global/users", () => {
 
       const response = await api.users.saveUser(user, 400)
 
-      expect(response.body.message).toBe(
-        `Email address ${user.email} already in use.`
-      )
+      expect(response.body.message).toBe(`Unavailable`)
       expect(events.user.created).toBeCalledTimes(0)
     })
   })
