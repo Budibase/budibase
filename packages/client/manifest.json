@@ -4147,6 +4147,7 @@
     }
   },
   "repeaterblock": {
+    "block": true,
     "name": "Repeater block",
     "icon": "ViewList",
     "illegalChildren": [

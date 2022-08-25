@@ -112,6 +112,9 @@
         } else if (e.key === "Enter") {
           e.preventDefault()
           $goto("./new")
+        } else if (e.key === "e") {
+          e.preventDefault()
+          await store.actions.components.requestEjectBlock(component?._id)
         }
       } else if (e.key === "Backspace" || e.key === "Delete") {
         // Don't show confirmation for the screen itself
