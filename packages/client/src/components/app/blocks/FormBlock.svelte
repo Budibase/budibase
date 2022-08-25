@@ -83,7 +83,7 @@
       operator: "equal",
       type: "string",
       value: rowId,
-      valueType: "binding",
+      valueType: "Binding",
     },
   ]
   // If we're using an "update" form, use the real data provider. If we're
@@ -93,6 +93,10 @@
     actionType !== "Create"
       ? `{{ literal ${safe(providerId)} }}`
       : { rows: [{}] }
+  $: renderDeleteButton = showDeleteButton && actionType === "Update"
+  $: renderSaveButton = showSaveButton && actionType !== "View"
+  $: renderButtons = renderDeleteButton || renderSaveButton
+  $: renderHeader = renderButtons || title
 
   const fetchSchema = async () => {
     schema = (await fetchDatasourceSchema(dataSource)) || {}
@@ -108,110 +112,132 @@
 </script>
 
 <Block>
-  <div use:styleable={$component.styles}>
-    {#if fields?.length}
+  {#if fields?.length}
+    <BlockComponent
+      type="dataprovider"
+      context="provider"
+      bind:id={providerId}
+      props={{
+        dataSource,
+        filter,
+        limit: rowId ? 1 : $builderStore.inBuilder ? 1 : 0,
+        paginate: false,
+      }}
+    >
       <BlockComponent
-        type="dataprovider"
-        context="provider"
-        bind:id={providerId}
+        type="repeater"
+        context="repeater"
+        bind:id={repeaterId}
         props={{
-          dataSource,
-          filter,
-          limit: rowId ? 1 : $builderStore.inBuilder ? 1 : 0,
-          paginate: false,
+          dataProvider,
+          noRowsMessage: "We couldn't find a row to display",
         }}
       >
         <BlockComponent
-          type="repeater"
-          context="repeater"
-          bind:id={repeaterId}
+          type="form"
           props={{
-            dataProvider,
-            noRowsMessage: "We couldn't find a row to display",
+            actionType: actionType === "Create" ? "Create" : "Update",
+            dataSource,
+            size,
+            disabled: disabled || actionType === "View",
           }}
+          context="form"
+          bind:id={formId}
         >
           <BlockComponent
-            type="form"
+            type="container"
             props={{
-              actionType: actionType === "Create" ? "Create" : "Update",
-              dataSource,
-              size,
-              disabled: disabled || actionType === "View",
+              direction: "column",
+              hAlign: "stretch",
+              vAlign: "top",
+              gap: "M",
             }}
-            context="form"
-            bind:id={formId}
           >
-            <Layout noPadding gap="M">
-              <div class="title" class:with-text={!!title}>
-                <BlockComponent type="heading" props={{ text: title || "" }} />
-                <div class="buttons">
-                  {#if showDeleteButton && actionType === "Update"}
-                    <BlockComponent
-                      type="button"
-                      props={{
-                        text: "Delete",
-                        onClick: onDelete,
-                        quiet: true,
-                        type: "secondary",
-                      }}
-                    />
-                  {/if}
-                  {#if showSaveButton && actionType !== "View"}
-                    <BlockComponent
-                      type="button"
-                      props={{
-                        text: "Save",
-                        onClick: onSave,
-                        type: "cta",
-                      }}
-                    />
-                  {/if}
-                </div>
-              </div>
-              <BlockComponent type="fieldgroup" props={{ labelPosition }}>
-                {#each fields as field}
-                  {#if getComponentForField(field)}
-                    <BlockComponent
-                      type={getComponentForField(field)}
-                      props={{
-                        field,
-                        label: field,
-                        placeholder: field,
-                        disabled,
-                      }}
-                    />
-                  {/if}
-                {/each}
+            {#if renderHeader}
+              <BlockComponent
+                type="container"
+                props={{
+                  direction: "row",
+                  hAlign: title ? "stretch" : "right",
+                  vAlign: "center",
+                  gap: "M",
+                  wrap: true,
+                }}
+                order={0}
+              >
+                {#if title}
+                  <BlockComponent
+                    type="heading"
+                    props={{ text: title }}
+                    order={0}
+                  />
+                {/if}
+                {#if renderButtons}
+                  <BlockComponent
+                    type="container"
+                    props={{
+                      direction: "row",
+                      hAlign: "stretch",
+                      vAlign: "center",
+                      gap: "M",
+                      wrap: true,
+                    }}
+                    order={1}
+                  >
+                    {#if renderDeleteButton}
+                      <BlockComponent
+                        type="button"
+                        props={{
+                          text: "Delete",
+                          onClick: onDelete,
+                          quiet: true,
+                          type: "secondary",
+                        }}
+                        order={0}
+                      />
+                    {/if}
+                    {#if renderSaveButton}
+                      <BlockComponent
+                        type="button"
+                        props={{
+                          text: "Save",
+                          onClick: onSave,
+                          type: "cta",
+                        }}
+                        order={1}
+                      />
+                    {/if}
+                  </BlockComponent>
+                {/if}
               </BlockComponent>
-            </Layout>
+            {/if}
+            <BlockComponent
+              type="fieldgroup"
+              props={{ labelPosition }}
+              order={1}
+            >
+              {#each fields as field, idx}
+                {#if getComponentForField(field)}
+                  <BlockComponent
+                    type={getComponentForField(field)}
+                    props={{
+                      field,
+                      label: field,
+                      placeholder: field,
+                      disabled,
+                    }}
+                    order={idx}
+                  />
+                {/if}
+              {/each}
+            </BlockComponent>
           </BlockComponent>
         </BlockComponent>
       </BlockComponent>
-    {:else}
-      <Placeholder
-        text="Choose your table and add some fields to your form to get started"
-      />
-    {/if}
-  </div>
+    </BlockComponent>
+  {:else}
+    <Placeholder
+      text="Choose your table and add some fields to your form to get started"
+    />
+  {/if}
 </Block>
-
-<style>
-  .title {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--spacing-m);
-    order: 2;
-  }
-  .title.with-text {
-    order: 0;
-  }
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: var(--spacing-m);
-  }
-</style>

@@ -4402,6 +4402,7 @@
         "type": "text",
         "label": "Row ID",
         "key": "rowId",
+        "nested": true,
         "dependsOn": {
           "setting": "actionType",
           "value": "Create",
