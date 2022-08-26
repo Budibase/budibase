@@ -13,7 +13,8 @@
     "icon": "ClassicGridView",
     "children": [
       "container",
-      "section"
+      "section",
+      "grid"
     ]
   },
   {

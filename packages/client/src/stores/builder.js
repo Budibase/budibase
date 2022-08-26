@@ -40,6 +40,9 @@ const createBuilderStore = () => {
     updateProp: (prop, value) => {
       dispatchEvent("update-prop", { prop, value })
     },
+    updateStyles: styles => {
+      dispatchEvent("update-styles", { styles })
+    },
     keyDown: (key, ctrlKey) => {
       dispatchEvent("key-down", { key, ctrlKey })
     },
@@ -67,7 +70,11 @@ const createBuilderStore = () => {
       if (dragging === get(store).isDragging) {
         return
       }
-      store.update(state => ({ ...state, isDragging: dragging }))
+      store.update(state => ({
+        ...state,
+        isDragging: dragging,
+        gridStyles: null,
+      }))
     },
     setEditMode: enabled => {
       if (enabled === get(store).editMode) {
@@ -83,6 +90,12 @@ const createBuilderStore = () => {
     },
     highlightSetting: setting => {
       dispatchEvent("highlight-setting", { setting })
+    },
+    setGridStyles: styles => {
+      store.update(state => {
+        state.gridStyles = styles
+        return state
+      })
     },
   }
   return {
