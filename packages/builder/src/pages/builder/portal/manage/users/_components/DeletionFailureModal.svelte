@@ -52,7 +52,7 @@
 
 <ModalContent
   size="M"
-  title={title}
+  {title}
   confirmText="Close"
   showCloseIcon={false}
   showCancelButton={false}
@@ -61,7 +61,7 @@
     {message}
   </Body>
   <Table
-    schema={schema}
+    {schema}
     data={unsuccessfulUsers}
     allowEditColumns={false}
     allowEditRows={false}

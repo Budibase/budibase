@@ -187,7 +187,9 @@
       if (deleteUsersResponse.unsuccessful?.length) {
         deletionFailureModal.show()
       } else {
-        notifications.success(`Successfully deleted ${selectedRows.length} users`)
+        notifications.success(
+          `Successfully deleted ${selectedRows.length} users`
+        )
       }
 
       selectedRows = []
