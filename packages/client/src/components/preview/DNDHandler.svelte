@@ -93,6 +93,7 @@
     // Update grid styles
     if ($builderStore.gridStyles) {
       builderStore.actions.updateStyles($builderStore.gridStyles)
+      builderStore.actions.clearGridNextLoad()
     }
 
     // Reset state and styles
