@@ -33,7 +33,10 @@ http {
 
   log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
                     '$status $body_bytes_sent "$http_referer" '
-                    '"$http_user_agent" "$http_x_forwarded_for"';
+                    '"$http_user_agent" "$http_x_forwarded_for" '
+                    'response_time=$upstream_response_time proxy_host=$proxy_host upstream_addr=$upstream_addr';
+
+  access_log /var/log/nginx/access.log main;
 
   map $http_upgrade $connection_upgrade {
     default     "upgrade";
