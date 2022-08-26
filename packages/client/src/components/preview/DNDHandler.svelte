@@ -12,7 +12,7 @@
   import { get } from "svelte/store"
   import IndicatorSet from "./IndicatorSet.svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
-  import { builderStore } from "stores"
+  import { builderStore, componentStore } from "stores"
 
   let dragInfo
   let dropInfo
@@ -35,22 +35,41 @@
 
   const getDOMNodeForComponent = component => {
     const parent = component.closest(".component")
-    const children = Array.from(parent.children)
-    return children[0]
+    const children = Array.from(parent?.children || [])
+    return children?.[0]
   }
 
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
-    const parent = e.target.closest(".component")
-    if (!parent?.classList.contains("draggable")) {
+    var img = new Image()
+    img.src =
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs="
+    e.dataTransfer.setDragImage(img, 0, 0)
+
+    // Resize component
+    if (e.target.classList.contains("anchor")) {
+      dragInfo = {
+        target: e.target.dataset.id,
+        side: e.target.dataset.side,
+        mode: "resize",
+      }
+    } else {
+      // Drag component
+      const parent = e.target.closest(".component")
+      if (!parent?.classList.contains("draggable")) {
+        return
+      }
+      dragInfo = {
+        target: parent.dataset.id,
+        parent: parent.dataset.parent,
+        mode: "move",
+      }
+    }
+
+    if (!dragInfo) {
       return
     }
 
-    // Update state
-    dragInfo = {
-      target: parent.dataset.id,
-      parent: parent.dataset.parent,
-    }
     builderStore.actions.selectComponent(dragInfo.target)
     builderStore.actions.setDragging(true)
 
@@ -71,20 +90,48 @@
       }
     }
 
+    // Update grid styles
+    if ($builderStore.gridStyles) {
+      builderStore.actions.updateStyles($builderStore.gridStyles)
+    }
+
     // Reset state and styles
     dragInfo = null
     dropInfo = null
-    builderStore.actions.setDragging(false)
   }
 
   // Callback when on top of a component
   const onDragOver = e => {
     // Skip if we aren't validly dragging currently
-    if (!dragInfo || !dropInfo) {
+    if (!dragInfo) {
       return
     }
 
     e.preventDefault()
+
+    // Set drag info for grids if not set
+    if (!dragInfo.grid) {
+      const coord = e.target.closest(".grid-coord")
+      if (coord) {
+        const row = parseInt(coord.dataset.row)
+        const col = parseInt(coord.dataset.col)
+        const component = $componentStore.selectedComponent
+        const getStyle = x => parseInt(component._styles.normal?.[x] || "0")
+        dragInfo.grid = {
+          startRow: row,
+          startCol: col,
+          rowDeltaMin: 1 - getStyle("grid-row-start"),
+          rowDeltaMax: 13 - getStyle("grid-row-end"),
+          colDeltaMin: 1 - getStyle("grid-column-start"),
+          colDeltaMax: 13 - getStyle("grid-column-end"),
+        }
+      }
+    }
+
+    if (!dropInfo) {
+      return
+    }
+
     const { droppableInside, bounds } = dropInfo
     const { top, left, height, width } = bounds
     const mouseY = e.clientY
@@ -146,6 +193,72 @@
     if (!dragInfo || !e.target.closest) {
       return
     }
+
+    const coord = e.target.closest(".grid-coord")
+    if (coord && dragInfo.grid) {
+      const row = parseInt(coord.dataset.row)
+      const col = parseInt(coord.dataset.col)
+      const { mode, side, grid } = dragInfo
+      const {
+        startRow,
+        startCol,
+        rowDeltaMin,
+        rowDeltaMax,
+        colDeltaMin,
+        colDeltaMax,
+      } = grid
+
+      const component = $componentStore.selectedComponent
+      const rowStart = parseInt(
+        component._styles.normal?.["grid-row-start"] || 0
+      )
+      const rowEnd = parseInt(component._styles.normal?.["grid-row-end"] || 0)
+      const colStart = parseInt(
+        component._styles.normal?.["grid-column-start"] || 0
+      )
+      const colEnd = parseInt(
+        component._styles.normal?.["grid-column-end"] || 0
+      )
+
+      let rowDelta = row - startRow
+      let colDelta = col - startCol
+
+      if (mode === "move") {
+        rowDelta = Math.min(Math.max(rowDelta, rowDeltaMin), rowDeltaMax)
+        colDelta = Math.min(Math.max(colDelta, colDeltaMin), colDeltaMax)
+        builderStore.actions.setGridStyles({
+          "grid-row-start": rowStart + rowDelta,
+          "grid-row-end": rowEnd + rowDelta,
+          "grid-column-start": colStart + colDelta,
+          "grid-column-end": colEnd + colDelta,
+        })
+      } else if (mode === "resize") {
+        let newStyles = {}
+        if (side === "right") {
+          newStyles["grid-column-end"] = colEnd + colDelta
+        } else if (side === "left") {
+          newStyles["grid-column-start"] = colStart + colDelta
+        } else if (side === "top") {
+          newStyles["grid-row-start"] = rowStart + rowDelta
+        } else if (side === "bottom") {
+          newStyles["grid-row-end"] = rowEnd + rowDelta
+        } else if (side === "bottom-right") {
+          newStyles["grid-column-end"] = colEnd + colDelta
+          newStyles["grid-row-end"] = rowEnd + rowDelta
+        } else if (side === "bottom-left") {
+          newStyles["grid-column-start"] = colStart + colDelta
+          newStyles["grid-row-end"] = rowEnd + rowDelta
+        } else if (side === "top-right") {
+          newStyles["grid-column-end"] = colEnd + colDelta
+          newStyles["grid-row-start"] = rowStart + rowDelta
+        } else if (side === "top-left") {
+          newStyles["grid-column-start"] = colStart + colDelta
+          newStyles["grid-row-start"] = rowStart + rowDelta
+        }
+        builderStore.actions.setGridStyles(newStyles)
+      }
+    }
+    return
 
     const element = e.target.closest(".component:not(.block)")
     if (

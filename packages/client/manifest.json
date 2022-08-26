@@ -86,6 +86,7 @@
     "hasChildren": true,
     "showSettingsBar": true,
     "styles": [
+      "grid",
       "padding",
       "size",
       "background",
@@ -4377,6 +4378,14 @@
         "key": "value",
         "required": true
       }
+    ]
+  },
+  "grid": {
+    "name": "Grid",
+    "icon": "ViewGrid",
+    "hasChildren": true,
+    "styles": [
+      "size"
     ]
   }
 }

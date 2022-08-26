@@ -439,7 +439,16 @@ export const getFrontendStore = () => {
         return {
           _id: Helpers.uuid(),
           _component: definition.component,
-          _styles: { normal: {}, hover: {}, active: {} },
+          _styles: {
+            normal: {
+              "grid-column-start": 1,
+              "grid-column-end": 2,
+              "grid-row-start": 1,
+              "grid-row-end": 2,
+            },
+            hover: {},
+            active: {},
+          },
           _instanceName: `New ${definition.name}`,
           ...cloneDeep(props),
           ...extras,
@@ -870,6 +879,14 @@ export const getFrontendStore = () => {
             delete component._styles.normal[name]
           } else {
             component._styles.normal[name] = value
+          }
+        })
+      },
+      updateStyles: async styles => {
+        await store.actions.components.patch(component => {
+          component._styles.normal = {
+            ...component._styles.normal,
+            ...styles,
           }
         })
       },

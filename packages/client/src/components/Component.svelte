@@ -151,6 +151,10 @@
     children: children.length,
     styles: {
       ...instance._styles,
+      normal: {
+        ...instance._styles?.normal,
+        ...(selected ? $builderStore.gridStyles : null),
+      },
       id,
       empty: emptyState,
       interactive,

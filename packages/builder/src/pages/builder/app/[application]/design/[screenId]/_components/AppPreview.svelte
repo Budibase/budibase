@@ -143,6 +143,8 @@
         }
       } else if (type === "update-prop") {
         await store.actions.components.updateSetting(data.prop, data.value)
+      } else if (type === "update-styles") {
+        await store.actions.components.updateStyles(data.styles)
       } else if (type === "delete-component" && data.id) {
         // Legacy type, can be deleted in future
         confirmDeleteComponent(data.id)

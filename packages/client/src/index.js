@@ -32,6 +32,10 @@ const loadBudibase = () => {
   const enableDevTools = !get(builderStore).inBuilder && get(appStore).isDevApp
   devToolsStore.actions.setEnabled(enableDevTools)
 
+  if (get(builderStore).gridOffset) {
+    builderStore.actions.setDragging(false)
+  }
+
   // Create app if one hasn't been created yet
   if (!app) {
     app = new ClientApp({

@@ -127,6 +127,7 @@
       height={indicator.height}
       text={idx === 0 ? text : null}
       icon={idx === 0 ? icon : null}
+      {componentId}
       {transition}
       {zIndex}
       {color}
