@@ -19,6 +19,8 @@ const createBuilderStore = () => {
     isDragging: false,
     navigation: null,
     hiddenComponentIds: [],
+    gridStyles: null,
+    clearGridNextLoad: false,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -74,6 +76,7 @@ const createBuilderStore = () => {
         ...state,
         isDragging: dragging,
         gridStyles: null,
+        clearGridNextLoad: false,
       }))
     },
     setEditMode: enabled => {
@@ -94,6 +97,12 @@ const createBuilderStore = () => {
     setGridStyles: styles => {
       store.update(state => {
         state.gridStyles = styles
+        return state
+      })
+    },
+    clearGridNextLoad: () => {
+      store.update(state => {
+        state.clearGridNextLoad = true
         return state
       })
     },

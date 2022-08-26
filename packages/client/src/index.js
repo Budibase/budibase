@@ -9,6 +9,10 @@ loadSpectrumIcons()
 let app
 
 const loadBudibase = () => {
+  if (get(builderStore).clearGridNextLoad) {
+    builderStore.actions.setDragging(false)
+  }
+
   // Update builder store with any builder flags
   builderStore.set({
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
@@ -21,6 +25,8 @@ const loadBudibase = () => {
     previewDevice: window["##BUDIBASE_PREVIEW_DEVICE##"],
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
+    gridStyles: get(builderStore).gridStyles,
+    isDragging: get(builderStore).isDragging,
   })
 
   // Set app ID - this window flag is set by both the preview and the real
@@ -31,10 +37,6 @@ const loadBudibase = () => {
   // the builder preview to enable them.
   const enableDevTools = !get(builderStore).inBuilder && get(appStore).isDevApp
   devToolsStore.actions.setEnabled(enableDevTools)
-
-  if (get(builderStore).gridOffset) {
-    builderStore.actions.setDragging(false)
-  }
 
   // Create app if one hasn't been created yet
   if (!app) {
