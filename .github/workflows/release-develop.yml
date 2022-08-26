@@ -1,21 +1,21 @@
 name: Budibase Prerelease
 concurrency: release-prerelease
 
-on: 
- push:
+on:
+  push:
     branches:
       - develop
     paths:
-      - '.aws/**'
-      - '.github/**'
-      - 'charts/**'
-      - 'packages/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'yarn.lock'
-      - 'package.json'
-      - 'yarn.lock'
- workflow_dispatch:
+      - ".aws/**"
+      - ".github/**"
+      - "charts/**"
+      - "packages/**"
+      - "scripts/**"
+      - "package.json"
+      - "yarn.lock"
+      - "package.json"
+      - "yarn.lock"
+  workflow_dispatch:
 
 env:
   # Posthog token used by ui at build time
@@ -24,15 +24,15 @@ env:
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   FEATURE_PREVIEW_URL: https://budirelease.live
-      
+
 jobs:
   release:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
 
     steps:
       - name: Fail if branch is not develop
-        if: github.ref != 'refs/heads/develop' 
-        run: | 
+        if: github.ref != 'refs/heads/develop'
+        run: |
           echo "Ref is not develop, you must run this job from develop."
           exit 1
       - uses: actions/checkout@v2
@@ -43,10 +43,10 @@ jobs:
       - name: Install Pro
         run: yarn install:pro develop
 
-      - run: yarn 
-      - run: yarn bootstrap 
-      - run: yarn lint 
-      - run: yarn build 
+      - run: yarn
+      - run: yarn bootstrap
+      - run: yarn lint
+      - run: yarn build
       - run: yarn test
 
       - name: Configure AWS Credentials
@@ -59,7 +59,7 @@ jobs:
       - name: Publish budibase packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: | 
+        run: |
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
@@ -67,7 +67,7 @@ jobs:
           yarn release:develop
 
       - name: Build/release Docker images
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build
           yarn build:docker:develop
@@ -77,12 +77,12 @@ jobs:
 
       - name: Get the latest budibase release version
         id: version
-        run: | 
+        run: |
           release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
       - name: Tag and release Proxy service docker image
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build:docker:proxy:release
           docker tag proxy-service budibase/proxy:$RELEASE_TAG
@@ -93,7 +93,7 @@ jobs:
           RELEASE_TAG: k8s-release
 
       - name: Pull values.yaml from budibase-infra
-        run: | 
+        run: |
           curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
           -H 'Accept: application/vnd.github.v3.raw' \
           -o values.release.yaml \
@@ -119,8 +119,8 @@ jobs:
               "values.release.yaml"
             ]
         env:
-          KUBECONFIG_FILE: '${{ secrets.RELEASE_KUBECONFIG }}'
-      
+          KUBECONFIG_FILE: "${{ secrets.RELEASE_KUBECONFIG }}"
+
       - name: Re roll app-service
         uses: actions-hub/kubectl@master
         env:

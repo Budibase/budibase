@@ -1,9 +1,9 @@
 name: Budibase Nightly Tests
 
 on:
- workflow_dispatch:
- schedule:
-  - cron: "0 5 * * *" # every day at 5AM
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *" # every day at 5AM
 
 jobs:
   nightly:
@@ -19,7 +19,7 @@ jobs:
       - run: yarn bootstrap
       - run: yarn build
       - name: Pull cypress.env.yaml from budibase-infra
-        run: | 
+        run: |
           curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
           -H 'Accept: application/vnd.github.v3.raw' \
           -o packages/builder/cypress.env.json \
@@ -37,7 +37,7 @@ jobs:
           command: yarn test:e2e:ci:record
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-      
+
       - uses: actions/upload-artifact@v3
         with:
           name: Test Reports
@@ -50,7 +50,7 @@ jobs:
       #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       #     aws-region: eu-west-1
-      
+
       # - name: Upload test results HTML
       #   uses: aws-actions/configure-aws-credentials@v1
       #   run: aws s3 cp packages/builder/cypress/reports/testReport.html s3://{{ secrets.BUDI_QA_REPORTS_BUCKET_NAME }}/$GITHUB_RUN_ID/index.html

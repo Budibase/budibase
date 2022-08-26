@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Budibase</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">  
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
   </head>
 
   <script>
@@ -15,17 +15,17 @@
     }
 
     function goToStatus() {
-      window.location.href = "https://status.budibase.com";
+      window.location.href = "https://status.budibase.com"
     }
     function goHome() {
-      window.location.href = window.location.origin;
+      window.location.href = window.location.origin
     }
     function getStatus() {
       var http = new XMLHttpRequest()
       var url = window.location.href
-      http.open('GET', url, true)
+      http.open("GET", url, true)
       http.send()
-      http.onreadystatechange = (e) => {
+      http.onreadystatechange = e => {
         var status = http.status
         document.getElementById("status").innerHTML = status
 
@@ -44,34 +44,33 @@
       }
     }
 
-    window.onload = function() {
+    window.onload = function () {
       checkStatusButton()
       getStatus()
-    };
-   
+    }
   </script>
 
   <style>
-
     :root {
-      --spectrum-global-color-gray-600: rgb(144,144,144);
-      --spectrum-global-color-gray-900: rgb(255,255,255);
-      --spectrum-global-color-gray-800: rgb(227,227,227);
-      --spectrum-global-color-static-blue-600: rgb(20,115,230);
-      --spectrum-global-color-static-blue-hover: rgb(	18, 103, 207);
+      --spectrum-global-color-gray-600: rgb(144, 144, 144);
+      --spectrum-global-color-gray-900: rgb(255, 255, 255);
+      --spectrum-global-color-gray-800: rgb(227, 227, 227);
+      --spectrum-global-color-static-blue-600: rgb(20, 115, 230);
+      --spectrum-global-color-static-blue-hover: rgb(18, 103, 207);
     }
 
-    html, body {
+    html,
+    body {
       background-color: #1a1a1a;
       padding: 0;
       margin: 0;
       overflow: hidden;
       color: #e7e7e7;
-      font-family: 'Roboto', sans-serif;
-    } 
+      font-family: "Roboto", sans-serif;
+    }
     button {
       color: #e7e7e7;
-      font-family: 'Roboto', sans-serif;
+      font-family: "Roboto", sans-serif;
       border: none;
       font-size: 15px;
       border-radius: 15px;
@@ -100,15 +99,15 @@
     }
 
     .status {
-      color: var(--spectrum-global-color-gray-600)
+      color: var(--spectrum-global-color-gray-600);
     }
     .title {
       font-weight: 400;
-      color: var(--spectrum-global-color-gray-900)
+      color: var(--spectrum-global-color-gray-900);
     }
     .message {
       font-weight: 200;
-      color: var(--spectrum-global-color-gray-800)
+      color: var(--spectrum-global-color-gray-800);
     }
     .buttons {
       display: flex;
@@ -145,31 +144,36 @@
     }
   </style>
 
-  <script src="">
-  </script>
+  <script src=""></script>
 
   <body>
     <div class="main">
       <div class="content">
         <div class="hero">
-          <img src="https://raw.githubusercontent.com/Budibase/budibase/master/packages/builder/assets/bb-space-man.svg" alt="Budibase Logo">
+          <img
+            src="https://raw.githubusercontent.com/Budibase/budibase/master/packages/builder/assets/bb-space-man.svg"
+            alt="Budibase Logo"
+          />
         </div>
         <div class="info">
           <div>
             <h4 id="status" class="status"></h4>
-            <h1 class="title">
-              Houston we have a problem!
-            </h1>
-            <h3 id="message" class="message">
-            </h3>
+            <h1 class="title">Houston we have a problem!</h1>
+            <h3 id="message" class="message"></h3>
           </div>
           <div class="buttons">
-            <button class="homeButton" onclick=goHome()>Return home</button> 
-            <button id="statusButton" class="statusButton" hidden="true" onclick=goToStatus()>Check out status</button> 
+            <button class="homeButton" onclick="goHome()">Return home</button>
+            <button
+              id="statusButton"
+              class="statusButton"
+              hidden="true"
+              onclick="goToStatus()"
+            >
+              Check out status
+            </button>
           </div>
         </div>
       </div>
     </div>
   </body>
-
 </html>

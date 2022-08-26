@@ -29,9 +29,7 @@
       "files": ["**/*.ts"],
       "parser": "@typescript-eslint/parser",
       "plugins": [],
-      "extends": [
-        "eslint:recommended"
-      ],
+      "extends": ["eslint:recommended"],
       "rules": {
         "no-unused-vars": "off",
         "no-inner-declarations": "off",

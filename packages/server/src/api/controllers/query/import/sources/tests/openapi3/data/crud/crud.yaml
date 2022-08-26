@@ -20,7 +20,7 @@ paths:
             schema:
               "$ref": "#/components/schemas/CreateEntity"
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
@@ -34,7 +34,7 @@ paths:
         - "$ref": "#/components/parameters/PageParameter"
         - "$ref": "#/components/parameters/SizeParameter"
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
@@ -48,7 +48,7 @@ paths:
         - entity
       operationId: getEntity
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
@@ -64,7 +64,7 @@ paths:
             schema:
               "$ref": "#/components/schemas/Entity"
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
@@ -80,7 +80,7 @@ paths:
             schema:
               "$ref": "#/components/schemas/Entity"
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
@@ -93,7 +93,7 @@ paths:
         - "$ref": "#/components/parameters/APIKeyParameter"
       operationId: deleteEntity
       responses:
-        '204':
+        "204":
           description: successful operation
 components:
   parameters:

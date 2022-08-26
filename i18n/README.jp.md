@@ -52,18 +52,22 @@
 </h3>
 
 <br /><br />
+
 ## ✨ 特徴
 
-### "本物"のソフトウェアを構築できます 
-ほかのプラットフォームとは違い、Budibaseだけでシングルページのアプリケーションを制作し完成させることができます。Budibaseで作られたアプリケーションは素晴らしいパフォーマンスを持っており、レスポンシブデザインにも対応しています。ユーザー達にいい印象を与えること間違いなしでしょう！
+### "本物"のソフトウェアを構築できます
+
+ほかのプラットフォームとは違い、Budibase だけでシングルページのアプリケーションを制作し完成させることができます。Budibase で作られたアプリケーションは素晴らしいパフォーマンスを持っており、レスポンシブデザインにも対応しています。ユーザー達にいい印象を与えること間違いなしでしょう！
 <br /><br />
 
 ### 拡張性が高くオープンソース
-Budibaseはオープンソースで、GPL v3ライセンスの下に公開されています。このことは、Budibaseが常にあなたのそばにいるという安心感を与えてくれることでしょう。そして、私たちは開発者に優しい環境を提供しているので、あなたは好きなだけにソースコードをフォークして改造、もしくは直接Budibaseにコントリビュートすることができます。 
+
+Budibase はオープンソースで、GPL v3 ライセンスの下に公開されています。このことは、Budibase が常にあなたのそばにいるという安心感を与えてくれることでしょう。そして、私たちは開発者に優しい環境を提供しているので、あなたは好きなだけにソースコードをフォークして改造、もしくは直接 Budibase にコントリビュートすることができます。
 <br /><br />
 
 ### 既存のデータ、もしくは一から始める
-Budibaseはいろんなツールから既存のデータを使用できます。たとえばMongoDB、CouchDB、 PostgreSQL、MySQL、Airtable、S3、DynamoDB、REST APIなど。ほかのプラットフォームにない特徴として、Budibaseはデータなしの状態でビジネスアプリケーションの構築を一から始めることができます。 [新しいデータリソースをリクエスト](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
+
+Budibase はいろんなツールから既存のデータを使用できます。たとえば MongoDB、CouchDB、 PostgreSQL、MySQL、Airtable、S3、DynamoDB、REST API など。ほかのプラットフォームにない特徴として、Budibase はデータなしの状態でビジネスアプリケーションの構築を一から始めることができます。 [新しいデータリソースをリクエスト](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
 
 <p align="center">
   <img alt="Budibase data" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970242/Out%20of%20beta%20launch/data_n1tlhf.png">
@@ -72,16 +76,17 @@ Budibaseはいろんなツールから既存のデータを使用できます。
 
 ### パワフルな内蔵コンポーネントでアプリケーションを設計し構築
 
-Budibaseには、美しくデザインされた強力なコンポーネントが付属しており、それら使用しUIを簡単に構築することができます。また、CSSによるスタイリングオプションも豊富に用意されているので、よりクリエイティブな表現もも可能です。
- [Request new component](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
+Budibase には、美しくデザインされた強力なコンポーネントが付属しており、それら使用し UI を簡単に構築することができます。また、CSS によるスタイリングオプションも豊富に用意されているので、よりクリエイティブな表現もも可能です。
+[Request new component](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
 
 <p align="center">
   <img alt="Budibase design" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970243/Out%20of%20beta%20launch/design-like-a-pro_qhlfeu.gif">
 </p>
 <br /><br />
 
-### プロセスを自動化し、ほかのツールと連携し、Webhookをでつながる！
-定型化した作業を自動化して時間を節約しましょう。Webhookに接続、Eメールの自動送信など、すべてBudibaseに任せましょう。 こちらで簡単に [新しいオートメーションを作る](https://github.com/Budibase/automations)または[新しいオートメーションをリクエストすることができます](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
+### プロセスを自動化し、ほかのツールと連携し、Webhook をでつながる！
+
+定型化した作業を自動化して時間を節約しましょう。Webhook に接続、E メールの自動送信など、すべて Budibase に任せましょう。 こちらで簡単に [新しいオートメーションを作る](https://github.com/Budibase/automations)または[新しいオートメーションをリクエストすることができます](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas)。
 
 <p align="center">
   <img alt="Budibase automations" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970486/Out%20of%20beta%20launch/automation_riro7u.png">
@@ -89,7 +94,8 @@ Budibaseには、美しくデザインされた強力なコンポーネントが
 <br /><br />
 
 ### 使い親しんだツールとの統合
-Budibaseは多くの人気ツールと統合されており、あなたのニーズに合わせたパーフェクトなアプリケーションを構築することができます。
+
+Budibase は多くの人気ツールと統合されており、あなたのニーズに合わせたパーフェクトなアプリケーションを構築することができます。
 
 <p align="center">
   <img alt="Budibase integrations" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970242/Out%20of%20beta%20launch/integrations_kc7dqt.png">
@@ -97,7 +103,9 @@ Budibaseは多くの人気ツールと統合されており、あなたのニー
 <br /><br />
 
 ### 管理者のパラダイス
-Budibaseはどんな規模のプロジェクトにも柔軟に対応できます。Budibaseを使えば、個人または組織のサーバーでセルフホスティングし、ユーザー、オンボーディング、SMTP、アプリ、グループ、テーマなどをひとまとめに管理することが可能です。また、ユーザーやグループにアプリポータルを提供し、グループ管理者にユーザー管理を委ねることも可能です。
+
+Budibase はどんな規模のプロジェクトにも柔軟に対応できます。Budibase を使えば、個人または組織のサーバーでセルフホスティングし、ユーザー、オンボーディング、SMTP、アプリ、グループ、テーマなどをひとまとめに管理することが可能です。また、ユーザーやグループにアプリポータルを提供し、グループ管理者にユーザー管理を委ねることも可能です。
+
 - プロモーションビデオを視聴する： https://youtu.be/xoljVpty_Kw
 
 <br /><br /><br />
@@ -106,60 +114,55 @@ Budibaseはどんな規模のプロジェクトにも柔軟に対応できます
 
 <a href="https://docs.budibase.com/self-hosting/self-host"><img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" /></a>
 
-Docker、KubernetesもしくはDegital Oceanを使用しセルフホスティングするか、セルフホスティングに困難がある、もしくは今すぐ開始したい場合はBudibase Cloudを使用しすぐに始めましょう。
+Docker、Kubernetes もしくは Degital Ocean を使用しセルフホスティングするか、セルフホスティングに困難がある、もしくは今すぐ開始したい場合は Budibase Cloud を使用しすぐに始めましょう。
 
-### [Budibaseをセルフホスティングする](https://docs.budibase.com/self-hosting/self-host)
+### [Budibase をセルフホスティングする](https://docs.budibase.com/self-hosting/self-host)
 
-### [Budibase Cloudを使用する](https://budibase.com)
-
+### [Budibase Cloud を使用する](https://budibase.com)
 
 <br /><br />
 
-## 🎓 Budibaseを学ぶ
+## 🎓 Budibase を学ぶ
 
-Budibaseのドキュメント[はここです](https://docs.budibase.com)。
+Budibase のドキュメント[はここです](https://docs.budibase.com)。
 <br />
-
 
 <br /><br />
 
 ## 💬 コミュニティ
 
-もし何か問題がある、もしくはBudibaseコミュニティのほかのユーザーと交流したいのであれば私たちの[Github discussions](https://github.com/Budibase/budibase/discussions)までお越しください。
+もし何か問題がある、もしくは Budibase コミュニティのほかのユーザーと交流したいのであれば私たちの[Github discussions](https://github.com/Budibase/budibase/discussions)までお越しください。
 
 <br /><br /><br />
-
 
 ## ❗ 行動規範
 
 Budibase は、すべての人を歓迎し、多様で、ハラスメントのない環境を提供することに尽力しています。Budibase コミュニティに参加するすべての人たちが私たちの[**行動規範**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md)を遵守していただくことお願いします。必ず読んでください。
 <br />
 
-
 <br /><br />
 
+## 🙌 Budibase にコントリビュート
 
-## 🙌 Budibaseにコントリビュート
-
-
-バグレポートからプルリクエストの作成まで、すべての貢献は感謝、そして歓迎されております。新しい新機能の実装やAPIの変更を計画している場合は、まずIssueを作成してください。これであなたの貴重な考えは私たちにも伝わり、無駄とはなりません。
+バグレポートからプルリクエストの作成まで、すべての貢献は感謝、そして歓迎されております。新しい新機能の実装や API の変更を計画している場合は、まず Issue を作成してください。これであなたの貴重な考えは私たちにも伝わり、無駄とはなりません。
 
 ### どこから始めるか混乱していますか？
+
 ここはコントリビュートをはじめるための最適な場所です！ [First time issues project](https://github.com/Budibase/budibase/projects/22).
 
 ### リポジトリの構成
-Budibaseは、lernaによってmonorepo方式で管理されています。budibase パッケージのビルドと公開はlernaによって管理されています。Budibaseを構成するパッケージは以下の通り：
 
-- [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - budibase builder クライアントサイドのsvelteアプリケーションのコードが含まれています。
+Budibase は、lerna によって monorepo 方式で管理されています。budibase パッケージのビルドと公開は lerna によって管理されています。Budibase を構成するパッケージは以下の通り：
 
-- [packages/client](https://github.com/Budibase/budibase/tree/HEAD/packages/client) - ブラウザ上で動作するモジュールで、JSONの定義を読み取り、そこから"生きている"Webアプリケーションを作成します。
+- [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - budibase builder クライアントサイドの svelte アプリケーションのコードが含まれています。
 
-- [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server) - budibaseのサーバーです。この Koa アプリは、builder アプリと budibase アプリの JS を提供し、データベースとファイル システムと対話するための API を提供する役割を担っています。
+- [packages/client](https://github.com/Budibase/budibase/tree/HEAD/packages/client) - ブラウザ上で動作するモジュールで、JSON の定義を読み取り、そこから"生きている"Web アプリケーションを作成します。
+
+- [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server) - budibase のサーバーです。この Koa アプリは、builder アプリと budibase アプリの JS を提供し、データベースとファイル システムと対話するための API を提供する役割を担っています。
 
 詳しくは[CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)をご覧ください。
 
 <br /><br />
-
 
 ## 📝 ライセンス
 
@@ -211,4 +214,3 @@ Budibase はオープンソースであり、[GPL v3](https://www.gnu.org/licens
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 このプロジェクトは、[all-contributors](https://github.com/all-contributors/all-contributors)仕様に準拠しています。どのような貢献でも歓迎します。
-

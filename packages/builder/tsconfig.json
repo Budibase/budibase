@@ -14,8 +14,5 @@
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   },
-  "references": [
-    { "path": "../types" },
-    { "path": "../backend-core" },
-  ]
+  "references": [{ "path": "../types" }, { "path": "../backend-core" }]
 }

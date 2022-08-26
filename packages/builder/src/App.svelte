@@ -2,8 +2,11 @@
   import { Router } from "@roxi/routify"
   import { routes } from "../.routify/routes"
   import { NotificationDisplay, BannerDisplay } from "@budibase/bbui"
+  import { initI18n } from "builderStore/store/i18n.js"
   import { parse, stringify } from "qs"
   import HelpIcon from "components/common/HelpIcon.svelte"
+
+  initI18n()
 
   const queryHandler = { parse, stringify }
 </script>

@@ -11,13 +11,6 @@
     "resolveJsonModule": true,
     "incremental": true
   },
-  "include": [
-    "./src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.json",
-    "**/*.spec.ts",
-    "**/*.spec.js"
-  ]
+  "include": ["./src/**/*"],
+  "exclude": ["node_modules", "**/*.json", "**/*.spec.ts", "**/*.spec.js"]
 }

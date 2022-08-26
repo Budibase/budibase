@@ -19,7 +19,6 @@ automatizar aplicaciones personalizadas en cuestión de minutos
  🤖 🎨 🚀
 </h3>
 
-
 <p align="center">
   <img alt="Budibase design ui" src="https://res.cloudinary.com/daog6scxm/image/upload/v1633524049/ui/design-ui-wide-mobile_gdaveq.jpg">
 </p>
@@ -55,24 +54,28 @@ automatizar aplicaciones personalizadas en cuestión de minutos
 </h3>
 
 <br /><br />
+
 ## ✨ Caracteristicas
 
 ### Construir aplicaciones reales
-Con Budibase podras construir aplicaciones de pagina unica de gran rendimiento. Ademas, puedes hacerlas con un diseño 
+
+Con Budibase podras construir aplicaciones de pagina unica de gran rendimiento. Ademas, puedes hacerlas con un diseño
 adaptativo para darles a tus usuarios una gran experiencia.
 <br /><br />
 
 ### Codigo abierto y ampliable
-Budibase es de codigo abierto con licencia GPL v3. Puedes ampliarlo o modificarlo para adaptarlo a tus necesidades y preferencias. 
+
+Budibase es de codigo abierto con licencia GPL v3. Puedes ampliarlo o modificarlo para adaptarlo a tus necesidades y preferencias.
 
 De esta manera proveemos una buena experiencia para el desarrollador asi como establecemos la confianza de que Budibase siempre estara funcional.
 <br /><br />
 
 ### Cargar informacion o empezar desde cero
-Budibase permite importar datos desde multiples fuentes, entre las que estan incluidas: MondoDB, CouchDB, PostgreSQL, MySQL,
-Airtable, S3, DynamoDB o API REST. 
 
-O si lo prefieres, con Budibase puedes empezar desde cero y construir tus propias aplicaciones 
+Budibase permite importar datos desde multiples fuentes, entre las que estan incluidas: MondoDB, CouchDB, PostgreSQL, MySQL,
+Airtable, S3, DynamoDB o API REST.
+
+O si lo prefieres, con Budibase puedes empezar desde cero y construir tus propias aplicaciones
 sin necesidad de herramientas externas.  
 [Sugerir fuente de datos](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
@@ -117,9 +120,9 @@ Budibase integra un gran numero de herramientas que te permitiran construir tus 
 ### Un paraiso para administradores
 
 Puedes albergar Budibase en tu propia infraestructura y gestionar globalmente usuarios, incorporaciones, SMTP, aplicaciones,
-grupos, diseños de temas, etc. 
+grupos, diseños de temas, etc.
 
-Tambien puedes gestionar los usuarios y grupos, o delegar en personas asignadas para ello, desde nuestra aplicacion sin 
+Tambien puedes gestionar los usuarios y grupos, o delegar en personas asignadas para ello, desde nuestra aplicacion sin
 mucho esfuerzo.
 
 Budibase is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user-management to the group manager.
@@ -132,17 +135,18 @@ Budibase is made to scale. With Budibase, you can self-host on your own infrastr
 
 <br />
 
-
 ## Budibase API Publica
 
 Como todo lo que construimos en Budibase, nuestra nueva API publica es facil de usar, flexible e introduce nueva ampliacion
 del sistema. Budibase API ofrece:
+
 - Uso de Budibase como backend
 - Interoperabilidad
 
 #### Documentacion
 
 Puedes aprender mas acerca de Budibase API en los siguientes documentos:
+
 - [Documentacion general](https://docs.budibase.com/docs/public-api) : Como optener tu clave para la API, usar Insomnia y Postman
 - [API Interactiva](https://docs.budibase.com/reference/post_applications) : Aprende como trabajar con la API
 
@@ -170,52 +174,49 @@ quieres empezar a crear tus aplicaciones rapidamente y sin ningun tipo de preocu
 - [Digital Ocean](https://docs.budibase.com/docs/digitalocean)
 - [Portainer](https://docs.budibase.com/docs/portainer)
 
-
 ### [Comenzar con Budibase en la nube](https://budibase.com)
 
 <br /><br />
 
 ## 🎓 Aprende a usar Budibase
- 
+
 Aqui tienes la [documentacion de Budibase](https://docs.budibase.com/docs).
 <br />
-
 
 <br /><br />
 
 ## 💬 Comunidad
 
 Te invitamos a que te unas a nuestra comunidad de Budibase, alli podras hacer las preguntas que quieras, ayudar a otras
-personas o tener una charla entretenida con otros usuarios de Budibase. 
+personas o tener una charla entretenida con otros usuarios de Budibase.
 [Acceder a la comunidad de Budibase](https://github.com/Budibase/budibase/discussions)
 <br /><br /><br />
-
 
 ## ❗ Codigo de conducta
 
 Budibase presta especial atencion en acoger a personas de toda diversidad y ofrecer un entorno de respeto mutuo. Asi mismo
-esperamos lo mismo de nuestra comunidad, por favor lee el 
+esperamos lo mismo de nuestra comunidad, por favor lee el
 [**Codigo de conducta**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md).
 <br />
 
 <br /><br />
 
-
 ## 🙌 Contribuir en Budibase
 
-Desde comunicar un bug a solventar un error en el codigo, toda contribucion es apreciada y bienvenida. Si estas planeando 
+Desde comunicar un bug a solventar un error en el codigo, toda contribucion es apreciada y bienvenida. Si estas planeando
 implementar una nueva funcionalidad o un realizar un cambio en la API, por favor crea un [nuevo mensaje aqui](https://github.com/Budibase/budibase/issues),
 de esta manera nos encargaremos que tu trabajo no sea en vano.
 
-Aqui tienes instrucciones de como configurar tu entorno Budibase para [Debian](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-DEBIAN.md) 
+Aqui tienes instrucciones de como configurar tu entorno Budibase para [Debian](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-DEBIAN.md)
 y [MacOSX](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-MACOSX.md)
 
 ### No estas seguro por donde empezar?
+
 Un buen lugar para empezar a contribuir con nosotros es [aqui](https://github.com/Budibase/budibase/projects/22).
 
 ### Organizacion del repositorio
 
-Budibase es un repositorio unico gestionado por Lerna. Lerna construye y publica los paquetes de Budibase sincronizandolos 
+Budibase es un repositorio unico gestionado por Lerna. Lerna construye y publica los paquetes de Budibase sincronizandolos
 cada ves que se realiza un cambio. A rasgos generales, estos son los paquetes que conforman Budibase:
 
 - [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - contiene el codigo del builder de la parte cliente, esta es una aplicacion svelte.
@@ -228,10 +229,9 @@ Para mas informacion, por favor lee el siguiente documento [CONTRIBUTING.md](htt
 
 <br /><br />
 
-
 ## 📝 Licencia
 
-Budibase es open-source, licenciado como [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). El cliente y las librerias 
+Budibase es open-source, licenciado como [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). El cliente y las librerias
 de componentes estan licenciadas como [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - de esta manera, puedes licenciar
 como tu quieras las aplicaciones que construyas.
 
@@ -280,5 +280,5 @@ Queremos prestar un especial agradecimiento a nuestra maravillosa gente ([emoji 
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-Este proyecto sigue las especificaciones de [all-contributors](https://github.com/all-contributors/all-contributors). 
+Este proyecto sigue las especificaciones de [all-contributors](https://github.com/all-contributors/all-contributors).
 Todo tipo de contribuciones son agradecidas!

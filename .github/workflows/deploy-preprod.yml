@@ -1,7 +1,7 @@
 name: Budibase Deploy Preprod
 
 on:
- workflow_dispatch:
+  workflow_dispatch:
 
 env:
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
@@ -21,15 +21,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-
       - name: Get the latest budibase release version
         id: version
-        run: | 
+        run: |
           release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
       - name: Tag and release Proxy service docker image
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build:docker:proxy:preprod
           docker tag proxy-service budibase/proxy:$PREPROD_TAG
@@ -40,7 +39,7 @@ jobs:
           PREPROD_TAG: k8s-preprod
 
       - name: Pull values.yaml from budibase-infra
-        run: | 
+        run: |
           curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
           -H 'Accept: application/vnd.github.v3.raw' \
           -o values.preprod.yaml \
@@ -66,7 +65,7 @@ jobs:
               "values.preprod.yaml"
             ]
         env:
-          KUBECONFIG_FILE: '${{ secrets.PREPROD_KUBECONFIG }}'
+          KUBECONFIG_FILE: "${{ secrets.PREPROD_KUBECONFIG }}"
 
       - name: Discord Webhook Action
         uses: tsickert/discord-webhook@v4.0.0

@@ -2,29 +2,17 @@
   {
     "name": "Blocks",
     "icon": "Article",
-    "children": [
-      "tableblock",
-      "cardsblock",
-      "repeaterblock"
-    ]
+    "children": ["tableblock", "cardsblock", "repeaterblock"]
   },
   {
     "name": "Layout",
     "icon": "ClassicGridView",
-    "children": [
-      "container",
-      "section"
-    ]
+    "children": ["container", "section"]
   },
   {
     "name": "Data",
     "icon": "Data",
-    "children": [
-      "dataprovider",
-      "repeater",
-      "table",
-      "dynamicfilter"
-    ]
+    "children": ["dataprovider", "repeater", "table", "dynamicfilter"]
   },
   {
     "name": "Basic",
@@ -71,14 +59,6 @@
   {
     "name": "Chart",
     "icon": "GraphBarVertical",
-    "children": [
-      "bar",
-      "line",
-      "area",
-      "candlestick",
-      "pie",
-      "donut"
-    ]
+    "children": ["bar", "line", "area", "candlestick", "pie", "donut"]
   }
 ]
-

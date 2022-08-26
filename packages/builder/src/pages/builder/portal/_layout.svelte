@@ -20,6 +20,7 @@
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
+  import { _ as t, locale } from "svelte-i18n"
   import { isEnabled, FEATURE_FLAGS } from "../../../helpers/featureFlags"
 
   let loaded = false
@@ -28,12 +29,14 @@
   let apiKeyModal
   let mobileMenuVisible = false
 
+  locale.set("fr")
+
   $: menu = buildMenu($auth.isAdmin)
 
   const buildMenu = admin => {
     let menu = [
       {
-        title: "Apps",
+        title: $t("apps"),
         href: "/builder/portal/apps",
       },
     ]
@@ -51,7 +54,7 @@
         {
           title: "Users",
           href: "/builder/portal/manage/users",
-          heading: "Manage",
+          heading: $t("manage"),
         },
         { title: "Auth", href: "/builder/portal/manage/auth" },
         { title: "Email", href: "/builder/portal/manage/email" },

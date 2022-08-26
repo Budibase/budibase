@@ -11,18 +11,9 @@
     "incremental": true,
     "sourceMap": true,
     "declaration": true,
-    "types": [ "node", "jest" ],
+    "types": ["node", "jest"],
     "outDir": "dist"
   },
-  "include": [
-    "**/*.js",
-    "**/*.ts",
-    "package.json"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.spec.ts",
-    "**/*.spec.js"
-  ]
+  "include": ["**/*.js", "**/*.ts", "package.json"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.spec.js"]
 }

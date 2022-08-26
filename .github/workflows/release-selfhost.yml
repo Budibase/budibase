@@ -1,7 +1,7 @@
 name: Budibase Release Selfhost
 
 on:
- workflow_dispatch:
+  workflow_dispatch:
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
@@ -19,7 +19,7 @@ jobs:
           exit 1
 
       - uses: actions/checkout@v2
-        with: 
+        with:
           node-version: 14.x
           fetch_depth: 0
 
@@ -30,7 +30,7 @@ jobs:
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
       - name: Tag and release Docker images (Self Host)
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
           release_tag=v${{ env.RELEASE_VERSION }}
@@ -44,7 +44,7 @@ jobs:
           docker tag budibase/apps:$release_tag budibase/apps:$SELFHOST_TAG
           docker tag budibase/worker:$release_tag budibase/worker:$SELFHOST_TAG
           docker tag budibase/proxy:$release_tag budibase/proxy:$SELFHOST_TAG
-          
+
           # Push images
           docker push budibase/apps:$SELFHOST_TAG
           docker push budibase/worker:$SELFHOST_TAG
@@ -69,13 +69,13 @@ jobs:
           yarn
           yarn specs
           popd
-      
-      - name: Setup Helm 
+
+      - name: Setup Helm
         uses: azure/setup-helm@v1
         id: helm-install
 
       - name: Build and release helm chart
-        run: | 
+        run: |
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git reset --hard

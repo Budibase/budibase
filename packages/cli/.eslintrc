@@ -7,6 +7,5 @@
     "node": true
   },
   "extends": ["eslint:recommended"],
-  "rules": {
-  }
+  "rules": {}
 }

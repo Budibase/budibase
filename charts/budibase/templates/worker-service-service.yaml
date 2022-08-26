@@ -10,9 +10,9 @@ metadata:
   name: worker-service
 spec:
   ports:
-  - name: {{ .Values.services.worker.port | quote }}
-    port: {{ .Values.services.worker.port }}
-    targetPort: {{ .Values.services.worker.port }}
+    - name: { { .Values.services.worker.port | quote } }
+      port: { { .Values.services.worker.port } }
+      targetPort: { { .Values.services.worker.port } }
   selector:
     io.kompose.service: worker-service
 status:

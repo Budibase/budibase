@@ -27,7 +27,7 @@ module.exports.convertToJS = templates.convertToJS
 setJSRunner((js, context) => {
   const vm = new VM({
     sandbox: context,
-    timeout: 1000
+    timeout: 1000,
   })
   return vm.run(js)
 })

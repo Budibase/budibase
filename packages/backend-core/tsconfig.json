@@ -7,7 +7,5 @@
       "@budibase/types": ["../types/src"]
     }
   },
-  "references": [
-    { "path": "../types" },
-  ]
+  "references": [{ "path": "../types" }]
 }

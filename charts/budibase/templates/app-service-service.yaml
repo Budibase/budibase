@@ -10,9 +10,9 @@ metadata:
   name: app-service
 spec:
   ports:
-  - name: {{ .Values.services.apps.port | quote }}
-    port: {{ .Values.services.apps.port }}
-    targetPort: {{ .Values.services.apps.port }}
+    - name: { { .Values.services.apps.port | quote } }
+      port: { { .Values.services.apps.port } }
+      targetPort: { { .Values.services.apps.port } }
   selector:
     io.kompose.service: app-service
 status:

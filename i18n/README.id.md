@@ -51,6 +51,7 @@
 </h3>
 
 <br /><br />
+
 ## ✨ Fitur-fitur
 
 - **Membangun dan mengirimkan perangkat lunak sebenarnya .** Tidak seperti platform lain, dengan Budibase Anda membuat dan mengirimkan aplikasi-aplikasi satu halaman. Aplikasi-aplikasi Budibase memiliki kinerja yang matang dan dapat dirancang secara responsif, memberikan pengalaman yang menyenangkan bagi pengguna.
@@ -72,10 +73,12 @@
 <br />
 
 ## 🏁 Memulai
+
 Saat ini ada 2 cara untuk memulai Budibase, yaitu: Digital Ocean dan Docker.
 <br /><br />
 
 ### Memulai Dengan Digital Ocean
+
 Cara paling mudah dan cepat untuk memulai adalah dengan menggunakan Digital Ocean:
 <a href="https://marketplace.digitalocean.com/apps/budibase">1-klik Digital Ocean <i>deploy</i></a>
 
@@ -85,29 +88,27 @@ Cara paling mudah dan cepat untuk memulai adalah dengan menggunakan Digital Ocea
 <br /><br />
 
 ### Memulai dengan Docker
-Untuk memulai, Anda harus memiliki docker dan docker compose ter<i>install</i> di mesin anda. 
+
+Untuk memulai, Anda harus memiliki docker dan docker compose ter<i>install</i> di mesin anda.
 Setelah Anda docker ter<i>install</i>, prosesnya akan memakan waktu 5 menit, dengan empat langkah ini:
 
 1. <i>Install</i> CLI Budibase.
 
 ```
-$ npm i -g @budibase/cli 
+$ npm i -g @budibase/cli
 ```
-
 
 2. Mempersiapkan Budibase (pilih tempat menyimpan Budibase dan <i>port</i> untuk menjalankannya)
 
 ```
-budi hosting --init 
+budi hosting --init
 ```
-
 
 3. Jalankan Budibase
 
 ```
-budi hosting --start 
+budi hosting --start
 ```
-
 
 4. Buat pengguna admin Anda
 
@@ -156,9 +157,11 @@ Budibase berdedikasi untuk memberikan pengalaman yang ramah, beragam, dan bebas 
 Dari membuka laporan bug hingga membuat <i>pull request</i>: setiap kontribusi dihargai dan disambut. Jika Anda berencana untuk menerapkan fitur baru atau mengubah API, harap buat <i>issue</i> terlebih dahulu. Dengan cara ini kami dapat memastikan pekerjaan Anda tidak sia-sia.
 
 ### Tidak yakin memulai dari mana?
+
 Sebuat tempat yang baik untuk mulai berkontribusi, adalah [masalah pertama di proyek](https://github.com/Budibase/budibase/projects/22).
 
 ### Bagaimana repositori diatur
+
 Budibase adalah <i>monorepo</i> yang dikelola oleh lerna. Lerna mengelola pembangunan dan penerbitan paket Budibase. Pada level tinggi, inilah paket-paket yang membentuk Budibase.
 
 - [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - berisi kode untuk aplikasi svelte sisi klien pembangun Budibase.
@@ -180,7 +183,6 @@ Budibase adalah sumber terbuka, dilisensikan sebagai [GPL v3](https://www.gnu.or
 <br /><br />
 
 ---
-
 
 <br />
 

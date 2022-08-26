@@ -25,4 +25,4 @@ services:
       - "5050:80"
 
 volumes:
- pg_data:
+  pg_data:

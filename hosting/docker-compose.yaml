@@ -99,7 +99,12 @@ services:
       PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
     depends_on:
       - couchdb-service
-    command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
+    command:
+      [
+        "sh",
+        "-c",
+        "sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;",
+      ]
 
   redis-service:
     restart: unless-stopped

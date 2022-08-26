@@ -54,17 +54,21 @@
 </h3>
 
 <br /><br />
+
 ## ✨ Features
 
-### Build and ship real software 
+### Build and ship real software
+
 Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing your users with a great experience.
 <br /><br />
 
 ### Open source and extensible
+
 Budibase is open-source - licensed as GPL v3. This should fill you with confidence that Budibase will always be around. You can also code against Budibase or fork it and make changes as you please, providing a developer-friendly experience.
 <br /><br />
 
 ### Load data or start from scratch
+
 Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, MySQL, Airtable, S3, DynamoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
@@ -82,6 +86,7 @@ Budibase comes out of the box with beautifully designed, powerful components whi
 <br /><br />
 
 ### Automate processes, integrate with other tools, and connect to webhooks
+
 Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [Request new automation](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
@@ -90,6 +95,7 @@ Save time by automating manual processes and workflows. From connecting to webho
 <br /><br />
 
 ### Integrate with your favorite tools
+
 Budibase integrates with a number of popular tools allowing you to build apps that perfectly fit your stack.
 
 <p align="center">
@@ -98,6 +104,7 @@ Budibase integrates with a number of popular tools allowing you to build apps th
 <br /><br />
 
 ### Admin paradise
+
 Budibase is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user-management to the group manager.
 
 - Checkout the promo video: https://youtu.be/xoljVpty_Kw
@@ -108,15 +115,15 @@ Budibase is made to scale. With Budibase, you can self-host on your own infrastr
 
 <br />
 
-
 ## Budibase Public API
+
 As with anything that we build in Budibase, our new public API is simple to use, flexible, and introduces new extensibility. To summarize, the Budibase API enables:
 
 - Budibase as a backend
 - Interoperability
 
-
 #### Docs
+
 You can learn more about the Budibase API at the following places:
 
 - [General documentation](https://docs.budibase.com/docs/public-api) : Learn how to get your API key, how to use spec, and how to use with Postman
@@ -146,9 +153,7 @@ Or use Budibase Cloud if you don't need to self-host, and would like to get star
 - [Digital Ocean](https://docs.budibase.com/docs/digitalocean)
 - [Portainer](https://docs.budibase.com/docs/portainer)
 
-
 ### [Get started with Budibase Cloud](https://budibase.com)
-
 
 <br /><br />
 
@@ -156,7 +161,6 @@ Or use Budibase Cloud if you don't need to self-host, and would like to get star
 
 The Budibase documentation [lives here](https://docs.budibase.com/docs).
 <br />
-
 
 <br /><br />
 
@@ -166,15 +170,12 @@ If you have a question or would like to talk with other Budibase users and join 
 
 <br /><br /><br />
 
-
 ## ❗ Code of conduct
 
 Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/docs/CODE_OF_CONDUCT.md). Please read it.
 <br />
 
-
 <br /><br />
-
 
 ## 🙌 Contributing to Budibase
 
@@ -182,9 +183,11 @@ From opening a bug report to creating a pull request: every contribution is appr
 Environment setup instructions are available for [Debian](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-DEBIAN.md) and [MacOSX](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-MACOSX.md)
 
 ### Not Sure Where to Start?
+
 A good place to start contributing, is the [First time issues project](https://github.com/Budibase/budibase/projects/22).
 
 ### How the repository is organized
+
 Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up Budibase.
 
 - [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - contains code for the budibase builder client side svelte application.
@@ -196,7 +199,6 @@ Budibase is a monorepo managed by lerna. Lerna manages the building and publishi
 For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/docs/CONTRIBUTING.md)
 
 <br /><br />
-
 
 ## 📝 License
 
