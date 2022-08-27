@@ -34,7 +34,7 @@ const DEFINITIONS = {
   [SourceName.FIRESTORE]: firebase.schema,
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
-  SP2019: sp2019.schema,
+  [SourceName.SP2019]: sp2019.schema,
 }
 
 const INTEGRATIONS = {
@@ -54,7 +54,7 @@ const INTEGRATIONS = {
   [SourceName.REDIS]: redis.integration,
   [SourceName.FIREBASE]: firebase.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
-  SP2019: sp2019.integration,
+  [SourceName.SP2019]: sp2019.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
