@@ -137,6 +137,7 @@
     "redis": "4",
     "server-destroy": "1.0.1",
     "snowflake-promise": "^4.5.0",
+    "sp-jsom-node": "^4.0.0",
     "svelte": "3.49.0",
     "swagger-parser": "10.0.3",
     "to-json-schema": "0.2.5",
