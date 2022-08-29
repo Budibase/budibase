@@ -151,6 +151,7 @@ services:
       target: ""
       # backup interval in seconds
       interval: ""
+      resources: {}
 
   redis:
     enabled: true # disable if using external redis
