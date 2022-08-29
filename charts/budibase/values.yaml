@@ -164,6 +164,7 @@ services:
     ## If undefined (the default) or set to null, no storageClassName spec is
     ##   set, choosing the default provisioner.
     storageClass: ""
+    resources: {}
 
   objectStore:
     minio: true
@@ -180,6 +181,7 @@ services:
     ## If undefined (the default) or set to null, no storageClassName spec is
     ##   set, choosing the default provisioner.
     storageClass: ""
+    resources: {}
 
 # Override values in couchDB subchart
 couchdb:
