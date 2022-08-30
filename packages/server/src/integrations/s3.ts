@@ -119,6 +119,19 @@ module S3Module {
           },
         },
       },
+      delete: {
+        type: QueryType.FIELDS,
+        fields: {
+          bucket: {
+            type: DatasourceFieldType.STRING,
+            required: true,
+          },
+          delete: {
+            type: DatasourceFieldType.JSON,
+            required: true,
+          },
+        },
+      }
     },
     extra: {
       acl: {
@@ -178,8 +191,7 @@ module S3Module {
           LocationConstraint: query.location,
         }
       }
-      const response = await this.client.createBucket(params).promise()
-      return response
+      return await this.client.createBucket(params).promise()
     }
 
     async read(query: {
@@ -230,6 +242,15 @@ module S3Module {
           throw err
         }
       })
+    }
+
+    async delete(query: { bucket: string, delete: string }) {
+      return await this.client
+      .deleteObjects({
+        Bucket: query.bucket,
+        Delete: JSON.parse(query.delete),
+      })
+      .promise()
     }
   }
 
