@@ -41,10 +41,10 @@ describe("S3 Integration", () => {
       grantReadAcp: "her",
       grantWrite: "she",
       grantWriteAcp: "he",
-      objectLockEnabledForBucket: true
-    }, {
-      acl: "private",
-      objectOwnership: "BucketOwnerPreferred"
+      objectLockEnabledForBucket: true,
+      extra: {
+        acl: "private"
+      }
     })
     expect(config.integration.client.createBucket).toHaveBeenCalledWith({
       Bucket: "test",
@@ -53,12 +53,25 @@ describe("S3 Integration", () => {
       },
       GrantFullControl: "me",
       GrantRead: "him",
-      GrantReadAcp: "her",
+      GrantReadACP: "her",
       GrantWrite: "she",
-      GrantWriteAcp: "he",
-      ObjectLockEnabledForBucket: true,
+      GrantWriteACP: "he",
       ACL: "private",
-      ObjectOwnership: "BucketOwnerPreferred"
+    })
+  })
+
+  it("does not add undefined location constraint when calling the create method", async () => {
+    await config.integration.create({ 
+      bucket: "test"
+    })
+    expect(config.integration.client.createBucket).toHaveBeenCalledWith({
+      Bucket: "test",
+      GrantFullControl: undefined,
+      GrantRead: undefined,
+      GrantReadACP: undefined,
+      GrantWrite: undefined,
+      GrantWriteACP: undefined,
+      ACL: undefined,
     })
   })
 })
