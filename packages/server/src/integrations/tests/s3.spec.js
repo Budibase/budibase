@@ -17,10 +17,18 @@ describe("S3 Integration", () => {
 
   it("calls the read method with the correct params", async () => {
     const response = await config.integration.read({ 
-      bucket: "test"
+      bucket: "test",
+      delimiter: "/",
+      marker: "file.txt",
+      maxKeys: 999,
+      prefix: "directory/",
     })
     expect(config.integration.client.listObjects).toHaveBeenCalledWith({
-      Bucket: "test"
+      Bucket: "test",
+      Delimiter: "/",
+      Marker: "file.txt",
+      MaxKeys: 999,
+      Prefix: "directory/"
     })
   })
 })

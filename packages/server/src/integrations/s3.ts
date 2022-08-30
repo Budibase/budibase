@@ -1,4 +1,4 @@
-import { Integration, QueryType, IntegrationBase } from "@budibase/types"
+import { Integration, QueryType, IntegrationBase, DatasourceFieldType } from "@budibase/types"
 
 module S3Module {
   const AWS = require("aws-sdk")
@@ -46,12 +46,25 @@ module S3Module {
         type: QueryType.FIELDS,
         fields: {
           bucket: {
-            type: "string",
+            type: DatasourceFieldType.STRING,
             required: true,
           },
+          delimiter: {
+            type: DatasourceFieldType.STRING,
+          },
+          marker: {
+            type: DatasourceFieldType.STRING,
+          },
+          maxKeys: {
+            type: DatasourceFieldType.NUMBER,
+            display: "Max Keys",
+          },
+          prefix: {
+            type: DatasourceFieldType.STRING,
+          },
         },
-      },
-    },
+      }
+    }
   }
 
   class S3Integration implements IntegrationBase {
@@ -69,10 +82,21 @@ module S3Module {
       this.client = new AWS.S3(this.config)
     }
 
-    async read(query: { bucket: string }) {
+    async read(query: { 
+      bucket: string, 
+      delimiter: string, 
+      expectedBucketOwner: string, 
+      marker: string, 
+      maxKeys: number, 
+      prefix: string, 
+    }) {
       const response = await this.client
         .listObjects({
           Bucket: query.bucket,
+          Delimiter: query.delimiter,
+          Marker: query.marker,
+          MaxKeys: query.maxKeys,
+          Prefix: query.prefix,
         })
         .promise()
       return response.Contents
