@@ -74,4 +74,37 @@ describe("S3 Integration", () => {
       ACL: undefined,
     })
   })
+
+  it("calls the delete method with the correct params ", async () => {
+    await config.integration.delete({ 
+      bucket: "test",
+      delete: `{
+        "Objects": [
+          {
+         "Key": "HappyFace.jpg", 
+         "VersionId": "2LWg7lQLnY41.maGB5Z6SWW.dcq0vx7b"
+        }, 
+          {
+         "Key": "HappyFace.jpg", 
+         "VersionId": "yoz3HB.ZhCS_tKVEmIOr7qYyyAaZSKVd"
+        }
+       ]
+      }`
+    })
+    expect(config.integration.client.deleteObjects).toHaveBeenCalledWith({
+      Bucket: "test",
+      Delete: {
+        Objects: [
+          {
+         Key: "HappyFace.jpg", 
+         VersionId: "2LWg7lQLnY41.maGB5Z6SWW.dcq0vx7b"
+        }, 
+          {
+         Key: "HappyFace.jpg", 
+         VersionId: "yoz3HB.ZhCS_tKVEmIOr7qYyyAaZSKVd"
+        }
+       ]
+      }
+    })
+  })
 })

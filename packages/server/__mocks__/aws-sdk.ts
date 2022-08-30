@@ -44,6 +44,13 @@ module AwsMock {
         Contents: {},
       })
     )
+
+    // @ts-ignore
+    this.deleteObjects = jest.fn(
+      response({
+        Contents: {},
+      })
+    )
   }
 
   aws.DynamoDB = { DocumentClient }
