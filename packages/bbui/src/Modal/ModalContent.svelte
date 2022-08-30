@@ -24,7 +24,7 @@
   export let secondaryAction = undefined
   export let secondaryButtonWarning = false
   export let dataCy = null
-
+  export let buttonCta = true
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
   $: confirmDisabled = disabled || loading
@@ -93,7 +93,6 @@
         class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter"
       >
         <slot name="footer" />
-
         {#if showSecondaryButton && secondaryButtonText && secondaryAction}
           <div class="secondary-action">
             <Button
@@ -114,7 +113,7 @@
           <span class="confirm-wrap">
             <Button
               group
-              cta
+              cta={buttonCta}
               {...$$restProps}
               disabled={confirmDisabled}
               on:click={confirm}
