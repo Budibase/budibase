@@ -52,7 +52,6 @@ export async function destroy(ctx: any) {
   await db.remove(ctx.params.pluginId, ctx.params.pluginRev)
   ctx.message = `Plugin ${ctx.params.pluginId} deleted.`
   ctx.status = 200
-
 }
 
 export async function processPlugin(plugin: FileType, source?: string) {
