@@ -131,7 +131,7 @@ module S3Module {
             required: true,
           },
         },
-      }
+      },
     },
     extra: {
       acl: {
@@ -244,13 +244,13 @@ module S3Module {
       })
     }
 
-    async delete(query: { bucket: string, delete: string }) {
+    async delete(query: { bucket: string; delete: string }) {
       return await this.client
-      .deleteObjects({
-        Bucket: query.bucket,
-        Delete: JSON.parse(query.delete),
-      })
-      .promise()
+        .deleteObjects({
+          Bucket: query.bucket,
+          Delete: JSON.parse(query.delete),
+        })
+        .promise()
     }
   }
 
