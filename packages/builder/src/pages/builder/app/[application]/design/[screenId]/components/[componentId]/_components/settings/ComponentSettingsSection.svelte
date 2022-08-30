@@ -126,7 +126,7 @@
       <ResetFieldsButton {componentInstance} />
     {/if}
     {#if idx === 0 && componentDefinition?.block}
-      <EjectBlockButton {componentInstance} />
+      <EjectBlockButton />
     {/if}
   </DetailSummary>
 {/each}
