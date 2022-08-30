@@ -130,14 +130,25 @@ module S3Module {
         })
         .createReadStream()
 
-      return new Promise((resolve, reject) => {
-        stream
-          .on("error", (err: Error) => {
-            reject(err)
+      let csvError = false
+      return new Promise(async (resolve, reject) => {
+        stream.on("error", (err: Error) => {
+          reject(err)
+        })
+        const response = csv()
+          .fromStream(stream)
+          .on("error", () => {
+            csvError = true
           })
-          .on("finish", async () => {
-            resolve(csv().fromStream(stream))
-          })
+        stream.on("finish", () => {
+          resolve(response)
+        })
+      }).catch(err => {
+        if (csvError) {
+          throw new Error("Could not read CSV")
+        } else {
+          throw err
+        }
       })
     }
   }
