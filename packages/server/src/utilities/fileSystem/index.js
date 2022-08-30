@@ -1,6 +1,9 @@
 const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
+// const { promisify } = require("util")
+// const exec = promisify(require("child_process").exec)
+// const streamPipeline = promisify(require("stream"))
 const uuid = require("uuid/v4")
 const {
   doWithDB,
@@ -29,6 +32,7 @@ const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
 const tar = require("tar")
 const fetch = require("node-fetch")
+// const fileType = require("file-type")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
@@ -326,11 +330,11 @@ exports.cleanup = appIds => {
   }
 }
 
-exports.extractPluginTarball = async file => {
-  if (!file.name.endsWith(".tar.gz")) {
+const extractPluginTarball = async (file, ext = ".tar.gz") => {
+  if (!file.name.endsWith(ext)) {
     throw new Error("Plugin must be compressed into a gzipped tarball.")
   }
-  const path = join(budibaseTempDir(), file.name.split(".tar.gz")[0])
+  const path = join(budibaseTempDir(), file.name.split(ext)[0])
   // remove old tmp directories automatically - don't combine
   if (fs.existsSync(path)) {
     fs.rmSync(path, { recursive: true, force: true })
@@ -340,6 +344,63 @@ exports.extractPluginTarball = async file => {
     file: file.path,
     C: path,
   })
+
+  return await getPluginMetadata(path)
+}
+exports.extractPluginTarball = extractPluginTarball
+
+exports.npmPlugin = async (url, name = "") => {
+  let npmTarball = url
+  let filename = name
+  let path = join(budibaseTempDir(), name)
+
+  if (!npmTarball.includes(".tgz")) {
+    const npmPackageURl = url.replace(
+      "https://www.npmjs.com/package/",
+      "https://registry.npmjs.org/"
+    )
+    const response = await fetch(npmPackageURl)
+    if (response.status === 200) {
+      let npmDetails = await response.json()
+      filename = npmDetails.name
+      path = join(budibaseTempDir(), filename)
+      const npmVersion = npmDetails["dist-tags"].latest
+      npmTarball = npmDetails.versions[npmVersion].dist.tarball
+    } else {
+      throw "Cannot get package details"
+    }
+  }
+
+  try {
+    if (fs.existsSync(path)) {
+      fs.rmSync(path, { recursive: true, force: true })
+    }
+    fs.mkdirSync(path)
+
+    const response = await fetch(npmTarball)
+    if (!response.ok)
+      throw new Error(`Loading NPM plugin failed ${response.statusText}`)
+
+    // const dest = fs.createWriteStream(`${path}/${filename}.tgz`)
+    await response.body.pipe(
+      await tar.x({
+        strip: 1,
+        C: path,
+      })
+    )
+
+    // const readStream = fs.createReadStream(`${path}/${filename}.tgz`)
+    // readStream.pipe(
+
+    // )
+  } catch (e) {
+    throw `Cannot store package locally: ${e.message}`
+  }
+
+  return path
+}
+
+const getPluginMetadata = async path => {
   let metadata = {}
   try {
     const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
@@ -349,8 +410,10 @@ exports.extractPluginTarball = async file => {
   } catch (err) {
     throw new Error("Unable to process schema.json/package.json in plugin.")
   }
+
   return { metadata, directory: path }
 }
+exports.getPluginMetadata = getPluginMetadata
 
 exports.getDatasourcePlugin = async (name, url, hash) => {
   if (!fs.existsSync(DATASOURCE_PATH)) {

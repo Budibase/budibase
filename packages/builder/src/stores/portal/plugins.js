@@ -17,6 +17,41 @@ export function createPluginsStore() {
     })
   }
 
+  async function createPlugin(type, source, name, url, auth) {
+    let pluginData = {
+      type,
+      source,
+      name,
+      url,
+    }
+
+    switch (source) {
+      case "github":
+        pluginData.githubToken = auth
+        break
+      case "url":
+        pluginData.header = auth
+        break
+      case "npm":
+        pluginData.npmToken = auth
+        break
+    }
+
+    let resp = await API.createPlugin(pluginData)
+    console.log(resp)
+    // TODO_RIC
+    // let newPlugin = resp.plugins[0]
+    // update(state => {
+    //   const currentIdx = state.findIndex(plugin => plugin._id === newPlugin._id)
+    //   if (currentIdx >= 0) {
+    //     state.splice(currentIdx, 1, newPlugin)
+    //   } else {
+    //     state.push(newPlugin)
+    //   }
+    //   return state
+    // })
+  }
+
   async function uploadPlugin(file, source) {
     let data = new FormData()
     data.append("file", file)
@@ -35,6 +70,7 @@ export function createPluginsStore() {
   return {
     subscribe,
     load,
+    createPlugin,
     deletePlugin,
     uploadPlugin,
   }

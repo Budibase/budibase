@@ -18,13 +18,50 @@
     Upload: ["Upload"],
   }
   let file
-  let sourceValue = "Upload"
+  let sourceValue = "NPM"
+  let typeValue = "Datasource"
+  let nameValue
+  let dynamicValues = {}
 
   let verificationSuccessful = false
 
   async function save() {
-    if (file) {
-      await plugins.uploadPlugin(file, sourceValue)
+    const source = sourceValue.toLocaleLowerCase()
+    const url = dynamicValues["URL"]
+
+    switch (source) {
+      case "upload":
+        if (file) {
+          await plugins.uploadPlugin(file, sourceValue)
+        }
+        break
+      case "github":
+        await plugins.createPlugin(
+          typeValue,
+          source,
+          nameValue,
+          url,
+          dynamicValues["Github Token"]
+        )
+        break
+      case "url":
+        await plugins.createPlugin(
+          typeValue,
+          source,
+          nameValue,
+          url,
+          dynamicValues["Header"]
+        )
+        break
+      case "npm":
+        await plugins.createPlugin(
+          typeValue,
+          source,
+          nameValue,
+          url,
+          dynamicValues["NPM Token"]
+        )
+        break
     }
   }
 
@@ -45,7 +82,7 @@
   <div class="form-row">
     <Label size="M">Type</Label>
     <Select
-      value="Datasource"
+      bind:value={typeValue}
       placeholder={null}
       options={["Component", "Datasource"]}
     />
@@ -61,7 +98,7 @@
 
   <div class="form-row">
     <Label size="M">Name</Label>
-    <Input />
+    <Input bind:value={nameValue} />
   </div>
   {#each authOptions[sourceValue] as option}
     {#if option === "Upload"}
@@ -82,7 +119,7 @@
     {:else}
       <div class="form-row">
         <Label size="M">{option}</Label>
-        <Input />
+        <Input bind:value={dynamicValues[option]} />
       </div>
     {/if}
   {/each}

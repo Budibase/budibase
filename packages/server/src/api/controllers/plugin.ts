@@ -1,5 +1,9 @@
 import { ObjectStoreBuckets } from "../../constants"
-import { extractPluginTarball } from "../../utilities/fileSystem"
+import {
+  extractPluginTarball,
+  npmPlugin,
+  getPluginMetadata,
+} from "../../utilities/fileSystem"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { generatePluginID, getPluginParams } from "../../db/utils"
 import { uploadDirectory } from "@budibase/backend-core/objectStore"
@@ -39,8 +43,46 @@ export async function upload(ctx: any) {
     }
   } catch (err: any) {
     const errMsg = err?.message ? err?.message : err
+
     ctx.throw(400, `Failed to import plugin: ${errMsg}`)
   }
+}
+
+export async function create(ctx: any) {
+  const { type, source, name, url, header, githubToken, npmToken } =
+    ctx.request.body
+  let metadata
+  let directory
+
+  switch (source) {
+    case "npm":
+      // const { metadata: metadataNpm, directory: directoryNpm } = await npmPlugin(url, name)
+      // metadata = metadataNpm
+      // directory = directoryNpm
+
+      console.log(22222, await getPluginMetadata(await npmPlugin(url, name)))
+      break
+    case "github":
+      console.log("github")
+      break
+    case "url":
+      console.log("url")
+      break
+  }
+
+  // try {
+  //   const doc = storePlugin(metadata, directory, source)
+  //
+  //   ctx.body = {
+  //     message: "Plugin uploaded successfully",
+  //     plugins: doc,
+  //   }
+  // } catch (err: any) {
+  //   const errMsg = err?.message ? err?.message : err
+  //
+  //   ctx.throw(400, `Failed to import plugin: ${errMsg}`)
+  // }
+  ctx.status = 200
 }
 
 export async function fetch(ctx: any) {
@@ -54,9 +96,12 @@ export async function destroy(ctx: any) {
   ctx.status = 200
 }
 
-export async function processPlugin(plugin: FileType, source?: string) {
+export async function storePlugin(
+  metadata: any,
+  directory: any,
+  source?: string
+) {
   const db = getGlobalDB()
-  const { metadata, directory } = await extractPluginTarball(plugin)
   const version = metadata.package.version,
     name = metadata.package.name,
     description = metadata.package.description
@@ -98,4 +143,9 @@ export async function processPlugin(plugin: FileType, source?: string) {
     ...doc,
     _rev: response.rev,
   }
+}
+
+export async function processPlugin(plugin: FileType, source?: string) {
+  const { metadata, directory } = await extractPluginTarball(plugin)
+  return await storePlugin(metadata, directory, source)
 }
