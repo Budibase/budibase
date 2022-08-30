@@ -99,6 +99,7 @@
     "curlconverter": "3.21.0",
     "dotenv": "8.2.0",
     "download": "8.0.0",
+    "elastic-apm-node": "3.38.0",
     "fix-path": "3.0.0",
     "form-data": "4.0.0",
     "fs-extra": "8.1.0",
