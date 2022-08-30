@@ -7,14 +7,66 @@
   import NavItem from "components/common/NavItem.svelte"
   import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
   import { setContext, onMount } from "svelte"
-  import { get } from "svelte/store"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import { DropPosition } from "./dndStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { notifications, Button } from "@budibase/bbui"
+  import { findComponent } from "builderStore/componentUtils"
 
   let scrollRef
   let confirmDeleteDialog
+  let confirmEjectDialog
+  let componentToDelete
+  let componentToEject
+
+  const keyHandlers = {
+    ["^ArrowUp"]: async component => {
+      await store.actions.components.moveUp(component)
+    },
+    ["^ArrowDown"]: async component => {
+      await store.actions.components.moveDown(component)
+    },
+    ["^c"]: component => {
+      store.actions.components.copy(component, false)
+    },
+    ["^x"]: component => {
+      store.actions.components.copy(component, true)
+    },
+    ["^v"]: async component => {
+      await store.actions.components.paste(component, "inside")
+    },
+    ["^d"]: async component => {
+      store.actions.components.copy(component)
+      await store.actions.components.paste(component, "below")
+    },
+    ["^e"]: component => {
+      componentToEject = component
+      confirmEjectDialog.show()
+    },
+    ["^Enter"]: () => {
+      $goto("./new")
+    },
+    ["Delete"]: component => {
+      // Don't show confirmation for the screen itself
+      if (component?._id === $selectedScreen.props._id) {
+        return false
+      }
+      componentToDelete = component
+      confirmDeleteDialog.show()
+    },
+    ["ArrowUp"]: () => {
+      store.actions.components.selectPrevious()
+    },
+    ["ArrowDown"]: () => {
+      store.actions.components.selectNext()
+    },
+    ["Escape"]: () => {
+      if (!$isActive("/new")) {
+        return false
+      }
+      $goto("./")
+    },
+  }
 
   const scrollTo = bounds => {
     if (!bounds) {
@@ -59,6 +111,11 @@
     })
   }
 
+  // Set scroll context so components can invoke scrolling when selected
+  setContext("scroll", {
+    scrollTo,
+  })
+
   const onDrop = async () => {
     try {
       await dndStore.actions.drop()
@@ -68,13 +125,28 @@
     }
   }
 
-  // Set scroll context so components can invoke scrolling when selected
-  setContext("scroll", {
-    scrollTo,
-  })
-
-  const deleteComponent = async () => {
-    await store.actions.components.delete(get(selectedComponent))
+  const handleKeyAction = async (component, key, ctrlKey = false) => {
+    if (!component || !key) {
+      return false
+    }
+    try {
+      // Delete and backspace are the same
+      if (key === "Backspace") {
+        key = "Delete"
+      }
+      // Prefix key with a caret for ctrl modifier
+      if (ctrlKey) {
+        key = "^" + key
+      }
+      const handler = keyHandlers[key]
+      if (!handler) {
+        return false
+      }
+      return handler(component)
+    } catch (error) {
+      console.log(error)
+      notifications.error("Error handling key press")
+    }
   }
 
   const handleKeyPress = async e => {
@@ -87,62 +159,23 @@
     if (["input", "textarea"].indexOf(activeTag) !== -1 && e.key !== "Escape") {
       return
     }
-    const component = get(selectedComponent)
-    try {
-      if (e.ctrlKey || e.metaKey) {
-        if (e.key === "ArrowUp") {
-          e.preventDefault()
-          await store.actions.components.moveUp(component)
-        } else if (e.key === "ArrowDown") {
-          e.preventDefault()
-          await store.actions.components.moveDown(component)
-        } else if (e.key === "c") {
-          e.preventDefault()
-          await store.actions.components.copy(component, false)
-        } else if (e.key === "x") {
-          e.preventDefault()
-          store.actions.components.copy(component, true)
-        } else if (e.key === "v") {
-          e.preventDefault()
-          await store.actions.components.paste(component, "inside")
-        } else if (e.key === "d") {
-          e.preventDefault()
-          await store.actions.components.copy(component)
-          await store.actions.components.paste(component, "below")
-        } else if (e.key === "Enter") {
-          e.preventDefault()
-          $goto("./new")
-        } else if (e.key === "e") {
-          e.preventDefault()
-          await store.actions.components.requestEjectBlock(component?._id)
-        }
-      } else if (e.key === "Backspace" || e.key === "Delete") {
-        // Don't show confirmation for the screen itself
-        if (component._id === get(selectedScreen).props._id) {
-          return
-        }
-        e.preventDefault()
-        confirmDeleteDialog.show()
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault()
-        await store.actions.components.selectPrevious()
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault()
-        await store.actions.components.selectNext()
-      } else if (e.key === "Escape" && $isActive("./new")) {
-        e.preventDefault()
-        $goto("./")
-      }
-    } catch (error) {
-      console.log(error)
-      notifications.error("Error handling key press")
-    }
+    // Key events are always for the selected component
+    return handleKeyAction($selectedComponent, e.key, e.ctrlKey || e.metaKey)
+  }
+
+  const handleComponentMenu = async e => {
+    // Menu events can be for any component
+    const { id, key, ctrlKey } = e.detail
+    const component = findComponent($selectedScreen.props, id)
+    return await handleKeyAction(component, key, ctrlKey)
   }
 
   onMount(() => {
     document.addEventListener("keydown", handleKeyPress)
+    document.addEventListener("component-menu", handleComponentMenu)
     return () => {
       document.removeEventListener("keydown", handleKeyPress)
+      document.removeEventListener("component-menu", handleComponentMenu)
     }
   })
 </script>
@@ -195,9 +228,16 @@
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
-  body={`Are you sure you want to delete "${$selectedComponent?._instanceName}"?`}
+  body={`Are you sure you want to delete "${componentToDelete?._instanceName}"?`}
   okText="Delete Component"
-  onOk={deleteComponent}
+  onOk={() => store.actions.components.delete(componentToDelete)}
+/>
+<ConfirmDialog
+  bind:this={confirmEjectDialog}
+  title="Eject block"
+  body={`Ejecting a block breaks it down into multiple components. Are you sure you want to eject "${componentToEject?._instanceName}"?`}
+  onOk={() => store.actions.components.requestEjectBlock(componentToEject?._id)}
+  okText="Eject block"
 />
 
 <style>
