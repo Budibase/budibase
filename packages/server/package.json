@@ -95,7 +95,7 @@
     "bcryptjs": "2.4.3",
     "bull": "4.8.5",
     "chmodr": "1.2.0",
-    "csvtojson": "2.0.10",
+    "csvtojson": "^2.0.10",
     "curlconverter": "3.21.0",
     "dotenv": "8.2.0",
     "download": "8.0.0",

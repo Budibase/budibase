@@ -1,7 +1,13 @@
-import { Integration, QueryType, IntegrationBase, DatasourceFieldType } from "@budibase/types"
+import {
+  Integration,
+  QueryType,
+  IntegrationBase,
+  DatasourceFieldType,
+} from "@budibase/types"
 
 module S3Module {
   const AWS = require("aws-sdk")
+  const csv = require("csvtojson")
 
   interface S3Config {
     region: string
@@ -63,8 +69,22 @@ module S3Module {
             type: DatasourceFieldType.STRING,
           },
         },
-      }
-    }
+      },
+      readCsv: {
+        displayName: "Read CSV",
+        type: QueryType.FIELDS,
+        fields: {
+          bucket: {
+            type: DatasourceFieldType.STRING,
+            required: true,
+          },
+          key: {
+            type: DatasourceFieldType.STRING,
+            required: true,
+          },
+        },
+      },
+    },
   }
 
   class S3Integration implements IntegrationBase {
@@ -82,13 +102,13 @@ module S3Module {
       this.client = new AWS.S3(this.config)
     }
 
-    async read(query: { 
-      bucket: string, 
-      delimiter: string, 
-      expectedBucketOwner: string, 
-      marker: string, 
-      maxKeys: number, 
-      prefix: string, 
+    async read(query: {
+      bucket: string
+      delimiter: string
+      expectedBucketOwner: string
+      marker: string
+      maxKeys: number
+      prefix: string
     }) {
       const response = await this.client
         .listObjects({
@@ -100,6 +120,32 @@ module S3Module {
         })
         .promise()
       return response.Contents
+    }
+
+    async readCsv(query: { bucket: string; key: string }) {
+      let streamErr: string | undefined = undefined
+      const stream = this.client
+        .getObject({
+          Bucket: query.bucket,
+          Key: query.key,
+        })
+        .createReadStream()
+        .on("error", (err: string) => {
+          //stream.destroy()
+          //
+          console.log("err ", err)
+          streamErr = "ERROR"
+        })
+
+      if (streamErr) {
+        throw new Error("ERROR")
+      }
+
+      try {
+        return await csv().fromStream(stream)
+      } catch (err) {
+        throw new Error("Failed to read CSV")
+      }
     }
   }
 
