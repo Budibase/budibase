@@ -1,5 +1,7 @@
 <script>
   import { setContext } from "svelte"
+  import { dndStore } from "./dndStore"
+  import { notifications } from "@budibase/bbui"
 
   let scrollRef
 
@@ -50,9 +52,23 @@
   setContext("scroll", {
     scrollTo,
   })
+
+  const onDrop = async () => {
+    try {
+      await dndStore.actions.drop()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error saving component")
+    }
+  }
 </script>
 
-<div bind:this={scrollRef}>
+<div
+  bind:this={scrollRef}
+  on:drop={onDrop}
+  ondragover="return false"
+  ondragenter="return false"
+>
   <slot />
 </div>
 
