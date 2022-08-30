@@ -12,6 +12,16 @@ export const buildPluginEndpoints = API => ({
   },
 
   /**
+   * Creates a plugin from URL, Github or NPM
+   */
+  createPlugin: async data => {
+    return await API.post({
+      url: `/api/plugin`,
+      body: data,
+    })
+  },
+
+  /**
    * Gets a list of all plugins
    */
   getPlugins: async () => {
