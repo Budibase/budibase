@@ -48,6 +48,41 @@ module S3Module {
       },
     },
     query: {
+      create: {
+        type: QueryType.FIELDS,
+        fields: {
+          bucket: {
+            display: "New Bucket",
+            type: DatasourceFieldType.STRING,
+            required: true,
+          },
+          location: {
+            required: true,
+            default: "us-east-1",
+            type: DatasourceFieldType.STRING,
+          },
+          grantFullControl: {
+            display: "Grant full control",
+            type: DatasourceFieldType.STRING,
+          },
+          grantRead: {
+            display: "Grant read",
+            type: DatasourceFieldType.STRING,
+          },
+          grantReadAcp: {
+            display: "Grant read ACP",
+            type: DatasourceFieldType.STRING,
+          },
+          grantWrite: {
+            display: "Grant write",
+            type: DatasourceFieldType.STRING,
+          },
+          grantWriteAcp: {
+            display: "Grant write ACP",
+            type: DatasourceFieldType.STRING,
+          },
+        },
+      },
       read: {
         type: QueryType.FIELDS,
         fields: {
@@ -85,6 +120,33 @@ module S3Module {
         },
       },
     },
+    extra: {
+      acl: {
+        required: false,
+        displayName: "ACL",
+        type: DatasourceFieldType.LIST,
+        data: {
+          create: [
+            "private",
+            "public-read",
+            "public-read-write",
+            "authenticated-read",
+          ]
+        }
+      },
+      objectOwnership: {
+        required: false,
+        displayName: "Object ownership",
+        type: DatasourceFieldType.LIST,
+        data: {
+          create: [
+            "BucketOwnerPreferred",
+            "ObjectWriter",
+            "BucketOwnerEnforced",
+          ],
+        },
+      },
+    }
   }
 
   class S3Integration implements IntegrationBase {
@@ -100,6 +162,36 @@ module S3Module {
       }
 
       this.client = new AWS.S3(this.config)
+    }
+
+    async create(query: {
+      bucket: string,
+      location: string,
+      grantFullControl: string,
+      grantRead: string,
+      grantReadAcp: string,
+      grantWrite: string,
+      grantWriteAcp: string,
+      extra: {
+        acl: string,
+        objectOwnership: string,
+      }}) {
+      const response = await this.client.createBucket({
+        Bucket: query.bucket,
+        // ACL: query.extra?.acl,
+        CreateBucketConfiguration: {
+          LocationConstraint: query.location
+        },
+        GrantFullControl: query.grantFullControl,
+        GrantRead: query.grantRead,
+        GrantReadACP: query.grantReadAcp,
+        GrantWrite: query.grantWrite,
+        GrantWriteACP: query.grantWriteAcp,
+      }, (err: any) => {
+        console.log("ERR ", err)
+      })
+      .promise()
+      return response.Contents
     }
 
     async read(query: {
