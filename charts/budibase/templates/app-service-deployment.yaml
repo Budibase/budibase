@@ -130,6 +130,10 @@ spec:
         - name: BB_ADMIN_USER_PASSWORD
           value: { { .Values.globals.bbAdminUserPassword | quote } }
         {{ end }}
+        {{ if .Values.services.apps.nodeDebug }}
+        - name: NODE_DEBUG
+          value: {{ .Values.services.apps.nodeDebug | quote }}
+        {{ end }}
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
