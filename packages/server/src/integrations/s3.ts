@@ -131,22 +131,10 @@ module S3Module {
             "public-read",
             "public-read-write",
             "authenticated-read",
-          ]
-        }
-      },
-      objectOwnership: {
-        required: false,
-        displayName: "Object ownership",
-        type: DatasourceFieldType.LIST,
-        data: {
-          create: [
-            "BucketOwnerPreferred",
-            "ObjectWriter",
-            "BucketOwnerEnforced",
           ],
         },
       },
-    }
+    },
   }
 
   class S3Integration implements IntegrationBase {
@@ -165,33 +153,33 @@ module S3Module {
     }
 
     async create(query: {
-      bucket: string,
-      location: string,
-      grantFullControl: string,
-      grantRead: string,
-      grantReadAcp: string,
-      grantWrite: string,
-      grantWriteAcp: string,
+      bucket: string
+      location: string
+      grantFullControl: string
+      grantRead: string
+      grantReadAcp: string
+      grantWrite: string
+      grantWriteAcp: string
       extra: {
-        acl: string,
-        objectOwnership: string,
-      }}) {
-      const response = await this.client.createBucket({
+        acl: string
+      }
+    }) {
+      let params: any = {
         Bucket: query.bucket,
-        // ACL: query.extra?.acl,
-        CreateBucketConfiguration: {
-          LocationConstraint: query.location
-        },
+        ACL: query.extra?.acl,
         GrantFullControl: query.grantFullControl,
         GrantRead: query.grantRead,
         GrantReadACP: query.grantReadAcp,
         GrantWrite: query.grantWrite,
         GrantWriteACP: query.grantWriteAcp,
-      }, (err: any) => {
-        console.log("ERR ", err)
-      })
-      .promise()
-      return response.Contents
+      }
+      if (query.location) {
+        params["CreateBucketConfiguration"] = {
+          LocationConstraint: query.location,
+        }
+      }
+      const response = await this.client.createBucket(params).promise()
+      return response
     }
 
     async read(query: {

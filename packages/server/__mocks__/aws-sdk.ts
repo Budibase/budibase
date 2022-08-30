@@ -37,6 +37,13 @@ module AwsMock {
         Contents: {},
       })
     )
+
+    // @ts-ignore
+    this.createBucket = jest.fn(
+      response({
+        Contents: {},
+      })
+    )
   }
 
   aws.DynamoDB = { DocumentClient }
