@@ -3,9 +3,9 @@ export const buildPluginEndpoints = API => ({
    * Uploads a plugin tarball bundle
    * @param data the plugin tarball bundle to upload
    */
-  uploadPlugin: async data => {
+  uploadPlugin: async (data, source) => {
     return await API.post({
-      url: "/api/plugin/upload",
+      url: `/api/plugin/upload/${source}`,
       body: data,
       json: false,
     })
@@ -19,4 +19,17 @@ export const buildPluginEndpoints = API => ({
       url: "/api/plugin",
     })
   },
+
+  /**
+     * Deletes a plugin.
+     * @param pluginId the ID of the plugin to delete
+     *      
+     * * @param pluginId the revision of the plugin to delete
+     */
+  deletePlugin: async (pluginId, pluginRev) => {
+    return await API.delete({
+      url: `/api/plugin/${pluginId}/${pluginRev}`,
+    })
+  },
+
 })

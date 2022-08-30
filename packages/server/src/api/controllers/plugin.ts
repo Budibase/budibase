@@ -21,6 +21,7 @@ export async function getPlugins(type?: PluginType) {
 }
 
 export async function upload(ctx: any) {
+  const { source } = ctx.params
   const plugins: FileType[] =
     ctx.request.files.file.length > 1
       ? Array.from(ctx.request.files.file)
@@ -29,7 +30,7 @@ export async function upload(ctx: any) {
     let docs = []
     // can do single or multiple plugins
     for (let plugin of plugins) {
-      const doc = await processPlugin(plugin)
+      const doc = await processPlugin(plugin, source)
       docs.push(doc)
     }
     ctx.body = {
@@ -46,9 +47,15 @@ export async function fetch(ctx: any) {
   ctx.body = await getPlugins()
 }
 
-export async function destroy(ctx: any) {}
+export async function destroy(ctx: any) {
+  const db = getGlobalDB()
+  await db.remove(ctx.params.pluginId, ctx.params.pluginRev)
+  ctx.message = `Plugin ${ctx.params.pluginId} deleted.`
+  ctx.status = 200
 
-export async function processPlugin(plugin: FileType) {
+}
+
+export async function processPlugin(plugin: FileType, source?: string) {
   const db = getGlobalDB()
   const { metadata, directory } = await extractPluginTarball(plugin)
   const version = metadata.package.version,
@@ -80,6 +87,7 @@ export async function processPlugin(plugin: FileType) {
   const doc = {
     _id: pluginId,
     _rev: rev,
+    source,
     name,
     version,
     description,
