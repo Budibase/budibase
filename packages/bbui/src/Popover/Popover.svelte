@@ -11,6 +11,7 @@
   export let align = "right"
   export let portalTarget
   export let dataCy
+  export let maxWidth
 
   export let direction = "bottom"
   export let showTip = false
@@ -45,7 +46,7 @@
   <Portal target={portalTarget}>
     <div
       tabindex="0"
-      use:positionDropdown={{ anchor, align }}
+      use:positionDropdown={{ anchor, align, maxWidth }}
       use:clickOutside={hide}
       on:keydown={handleEscape}
       class={"spectrum-Popover is-open " + (tooltipClasses || "")}
