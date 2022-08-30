@@ -15,6 +15,7 @@
     }
     return bindings?.map(binding => ({
       ...binding,
+      category: "Bindable Values",
       type: null,
     }))
   }
