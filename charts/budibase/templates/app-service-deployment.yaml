@@ -140,9 +140,9 @@ spec:
         {{ end }}
         {{ if .Values.globals.elasticApmSecretToken }}
         - name: ELASTIC_APM_SECRET_TOKEN
-          value: { { .Values.globals.elasticApmSecretToken | quote } }
+          value: {{ .Values.globals.elasticApmSecretToken | quote }}
         {{ end }}
-        {{ if .Values.globals.elasticApmServerUrl } }
+        {{ if .Values.globals.elasticApmServerUrl }}
         - name: ELASTIC_APM_SERVER_URL
           value: {{ .Values.globals.elasticApmServerUrl | quote }}
         {{ end }}
