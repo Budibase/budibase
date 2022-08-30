@@ -125,7 +125,7 @@
 <ConfirmDialog
   bind:this={confirmEjectDialog}
   title="Eject block"
-  body={`Ejecting a block breaks it down into multiple components. Are you sure you want to eject "${componentToEject?._instanceName}"?`}
+  body={`Ejecting a block breaks it down into multiple components and cannot be undone. Are you sure you want to eject "${componentToEject?._instanceName}"?`}
   onOk={() => store.actions.components.requestEjectBlock(componentToEject?._id)}
   okText="Eject block"
 />
