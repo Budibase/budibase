@@ -26,9 +26,9 @@ spec:
         io.kompose.service: worker-service
     spec:
       containers:
-      - name: BUDIBASE_ENVIRONMENT
-        value: {{ .Values.globals.budibaseEnv }}
       - env:
+        - name: BUDIBASE_ENVIRONMENT
+          value: {{ .Values.globals.budibaseEnv }}
         - name: DEPLOYMENT_ENVIRONMENT
           value: "kubernetes"
         - name: CLUSTER_PORT
