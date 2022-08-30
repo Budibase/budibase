@@ -123,29 +123,22 @@ module S3Module {
     }
 
     async readCsv(query: { bucket: string; key: string }) {
-      let streamErr: string | undefined = undefined
       const stream = this.client
         .getObject({
           Bucket: query.bucket,
           Key: query.key,
         })
         .createReadStream()
-        .on("error", (err: string) => {
-          //stream.destroy()
-          //
-          console.log("err ", err)
-          streamErr = "ERROR"
-        })
 
-      if (streamErr) {
-        throw new Error("ERROR")
-      }
-
-      try {
-        return await csv().fromStream(stream)
-      } catch (err) {
-        throw new Error("Failed to read CSV")
-      }
+      return new Promise((resolve, reject) => {
+        stream
+          .on("error", (err: Error) => {
+            reject(err)
+          })
+          .on("finish", async () => {
+            resolve(csv().fromStream(stream))
+          })
+      })
     }
   }
 
