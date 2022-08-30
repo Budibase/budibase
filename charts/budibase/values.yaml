@@ -114,6 +114,10 @@ globals:
   smtp:
     enabled: false
 
+#  elasticApmEnabled:
+#  elasticApmSecretToken:
+#  elasticApmServerUrl:
+
 services:
   budibaseVersion: latest
   dns: cluster.local
