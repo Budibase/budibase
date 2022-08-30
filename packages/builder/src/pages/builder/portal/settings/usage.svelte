@@ -5,20 +5,39 @@
     Heading,
     Layout,
     notifications,
-    Link,
+    Page,
+    Detail,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { admin, auth, licensing } from "stores/portal"
-  import Usage from "components/usage/Usage.svelte"
+  import { admin, auth, licensing } from "../../../../stores/portal"
+  import { PlanType } from "../../../../constants"
+  import { DashCard, Usage } from "../../../../components/usage"
 
   let staticUsage = []
   let monthlyUsage = []
+  let price
+  let lastPayment
+  let cancelAt
+  let nextPayment
+  let balance
   let loaded = false
+  let textRows = []
+  let daysRemainingInMonth
+
+  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  const manageUrl = `${$admin.accountPortalUrl}/portal/billing`
+
+  const warnUsage = ["Queries", "Automations", "Rows"]
 
   $: quotaUsage = $licensing.quotaUsage
   $: license = $auth.user?.license
 
-  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  const numberFormatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
 
   const setMonthlyUsage = () => {
     monthlyUsage = []
@@ -34,6 +53,7 @@
         }
       }
     }
+    monthlyUsage = monthlyUsage.sort((a, b) => a.name.localeCompare(b.name))
   }
 
   const setStaticUsage = () => {
@@ -48,11 +68,120 @@
         })
       }
     }
+    staticUsage = staticUsage.sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  const setNextPayment = () => {
+    const periodEnd = license?.billing.subscription?.currentPeriodEnd
+    const cancelAt = license?.billing.subscription?.cancelAt
+    if (periodEnd) {
+      if (cancelAt && periodEnd <= cancelAt) {
+        return
+      }
+      nextPayment = `Next payment: ${getLocaleDataString(periodEnd)}`
+    }
+  }
+
+  const setCancelAt = () => {
+    cancelAt = license?.billing.subscription?.cancelAt
+  }
+
+  const setLastPayment = () => {
+    const periodStart = license?.billing.subscription?.currentPeriodStart
+    if (periodStart) {
+      lastPayment = `Last payment: ${getLocaleDataString(periodStart)}`
+    }
+  }
+
+  const setBalance = () => {
+    const customerBalance = license?.billing.customer.balance
+    if (customerBalance) {
+      balance = `Balance: ${numberFormatter.format(
+        (customerBalance / 100) * -1
+      )}`
+    }
+  }
+
+  const getLocaleDataString = epoch => {
+    const date = new Date(epoch * 1000)
+    return date.toLocaleDateString("default", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+  }
+
+  const setPrice = () => {
+    const planPrice = license.plan.price
+    price = `${numberFormatter.format(planPrice.amountMonthly / 100)} per month`
   }
 
   const capitalise = string => {
     if (string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
+    }
+  }
+
+  const planTitle = () => {
+    return capitalise(license?.plan.type)
+  }
+
+  const planSubtitle = () => {
+    return `${license?.plan.price.sessions} day passes`
+  }
+
+  const getDaysRemaining = timestamp => {
+    if (!timestamp) {
+      return
+    }
+    const now = new Date()
+    now.setHours(0)
+    now.setMinutes(0)
+
+    const thenDate = new Date(timestamp)
+    thenDate.setHours(0)
+    thenDate.setMinutes(0)
+
+    const difference = thenDate.getTime() - now
+    // return the difference in days
+    return (difference / (1000 * 3600 * 24)).toFixed(0)
+  }
+
+  const setTextRows = () => {
+    textRows = []
+
+    if (cancelAt) {
+      textRows.push("Subscription has been cancelled")
+      textRows.push(`${getDaysRemaining(cancelAt * 1000)} days remaining`)
+    } else {
+      if (price) {
+        textRows.push(price)
+      }
+      if (lastPayment) {
+        textRows.push(lastPayment)
+      }
+      if (nextPayment) {
+        textRows.push(nextPayment)
+      }
+    }
+  }
+
+  const setDaysRemainingInMonth = () => {
+    let now = new Date()
+    now = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    const firstNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    const difference = firstNextMonth.getTime() - now.getTime()
+
+    // return the difference in days
+    daysRemainingInMonth = (difference / (1000 * 3600 * 24)).toFixed(0)
+  }
+
+  const goToAccountPortal = () => {
+    if (license?.plan.type === PlanType.FREE) {
+      window.location.href = upgradeUrl
+    } else {
+      window.location.href = manageUrl
     }
   }
 
@@ -71,69 +200,99 @@
   })
 
   $: {
-    if (license && quotaUsage) {
-      setMonthlyUsage()
-      setStaticUsage()
+    if (license) {
+      setPrice()
+      setBalance()
+      setLastPayment()
+      setNextPayment()
+      setCancelAt()
+      setTextRows()
+      setDaysRemainingInMonth()
+
+      if (quotaUsage) {
+        setMonthlyUsage()
+        setStaticUsage()
+      }
     }
   }
 </script>
 
-{#if loaded}
-  <Layout>
-    <Heading>Usage</Heading>
-    <Body
-      >Get information about your current usage within Budibase.
-      {#if $admin.cloud}
-        {#if $auth.user?.accountPortalAccess}
-          To upgrade your plan and usage limits visit your <Link
-            size="L"
-            href={upgradeUrl}>Account</Link
-          >.
-        {:else}
-          Contact your account holder to upgrade your usage limits.
-        {/if}
-      {/if}
-    </Body>
-  </Layout>
-  <Layout gap="S">
-    <Divider size="S" />
-  </Layout>
-  <Layout gap="S" noPadding>
-    <Layout gap="XS">
-      <Body size="S">YOUR PLAN</Body>
-      <Heading size="S">{capitalise(license?.plan.type)}</Heading>
-    </Layout>
-    <Layout gap="S">
-      <Body size="S">USAGE</Body>
-      <div class="usages">
-        {#each staticUsage as usage}
-          <div class="usage">
-            <Usage {usage} />
-          </div>
-        {/each}
-      </div>
-    </Layout>
-    {#if monthlyUsage.length}
-      <Layout gap="S">
-        <Body size="S">MONTHLY</Body>
-        <div class="usages">
-          {#each monthlyUsage as usage}
-            <div class="usage">
-              <Usage {usage} />
-            </div>
-          {/each}
-        </div>
+<Page maxWidth={"100ch"}>
+  {#if loaded}
+    <Layout>
+      <Layout noPadding gap="S">
+        <Heading>Billing</Heading>
+        <Body
+          >Get information about your current usage and manage your plan</Body
+        >
       </Layout>
-      <div />
-    {/if}
-  </Layout>
-{/if}
+      <Divider />
+      <DashCard
+        description="YOUR CURRENT PLAN"
+        title={planTitle()}
+        subtitle={planSubtitle()}
+        primaryActionText={cancelAt ? "Upgrade" : "Manage"}
+        primaryAction={goToAccountPortal}
+        {textRows}
+      >
+        <Layout gap="S" noPadding>
+          <Layout gap="S">
+            <div class="usages">
+              <Layout noPadding>
+                {#each staticUsage as usage}
+                  <div class="usage">
+                    <Usage
+                      {usage}
+                      warnWhenFull={warnUsage.includes(usage.name)}
+                    />
+                  </div>
+                {/each}
+              </Layout>
+            </div>
+          </Layout>
+          {#if monthlyUsage.length}
+            <div class="monthly-container">
+              <Layout gap="S">
+                <Heading size="S" weight="light">Monthly</Heading>
+                <div class="detail">
+                  <Detail size="M">Resets in {daysRemainingInMonth} days</Detail
+                  >
+                </div>
+                <div class="usages">
+                  <Layout noPadding>
+                    {#each monthlyUsage as usage}
+                      <div class="usage">
+                        <Usage
+                          {usage}
+                          warnWhenFull={warnUsage.includes(usage.name)}
+                        />
+                      </div>
+                    {/each}
+                  </Layout>
+                </div>
+              </Layout>
+            </div>
+          {/if}
+        </Layout>
+      </DashCard>
+    </Layout>
+  {/if}
+</Page>
 
 <style>
   .usages {
-    display: grid;
-    column-gap: 60px;
-    row-gap: 50px;
-    grid-template-columns: 1fr 1fr 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+  .detail :global(.spectrum-Detail) {
+    color: var(--spectrum-global-color-gray-700);
+    margin-bottom: 5px;
+    margin-top: -8px;
+  }
+  /*.monthly-container {*/
+  /*  margin-top: -35px;*/
+  /*}*/
+  .card-container {
+    margin-top: 25px;
   }
 </style>
