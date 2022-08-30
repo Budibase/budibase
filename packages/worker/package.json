@@ -46,6 +46,7 @@
     "aws-sdk": "2.1030.0",
     "bcryptjs": "2.4.3",
     "dotenv": "8.6.0",
+    "elastic-apm-node": "3.38.0",
     "global-agent": "3.0.0",
     "got": "11.8.3",
     "joi": "17.6.0",
