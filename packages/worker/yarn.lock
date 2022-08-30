@@ -291,12 +291,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.2.52":
-  version "1.2.52"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.52.tgz#0fb41c42081224e513781a9deee23cfbbe40477d"
-  integrity sha512-e4RguuyYih4pP2lg62Qro5LPa4zGYYafaH5VvZvpZ/YrGsZxcnf0vweE5WZVUKtX3ZQhVtrW5gzvrAaqQUOIbQ==
+"@budibase/backend-core@1.2.44-alpha.11":
+  version "1.2.44-alpha.11"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.44-alpha.11.tgz#6dc33219c343776f9142d3d6938513cebe267f58"
+  integrity sha512-47snLRBA9gU3EjhyskKetKeM35fDHkgzflme/VfFFBBTEjl5WuRMEg2I7Vg9ZCWjiY7VQbkYX1yzxuXtw+zf3w==
   dependencies:
-    "@budibase/types" "^1.2.52"
+    "@budibase/types" "1.2.44-alpha.11"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -324,58 +324,21 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/handlebars-helpers@^0.11.8":
-  version "0.11.8"
-  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.8.tgz#6953d29673a8c5c407e096c0a84890465c7ce841"
-  integrity sha512-ggWJUt0GqsHFAEup5tlWlcrmYML57nKhpNGGLzVsqXVYN8eVmf3xluYmmMe7fDYhQH0leSprrdEXmsdFQF3HAQ==
+"@budibase/pro@1.2.44-alpha.11":
+  version "1.2.44-alpha.11"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.2.44-alpha.11.tgz#27dd5b1f5083bd69406357063dd111ab5810e476"
+  integrity sha512-xKKuSjo9NznmA2BRN6EGsklp+Eegta5bIInpUJS0K5OGoUBQ9rBD9HTLYVBei6irQ0eZAig9iNW+LF/Qy07P/A==
   dependencies:
-    array-sort "^1.0.0"
-    define-property "^2.0.2"
-    extend-shallow "^3.0.2"
-    for-in "^1.0.2"
-    get-object "^0.2.0"
-    get-value "^3.0.1"
-    handlebars "^4.7.7"
-    handlebars-utils "^1.0.6"
-    has-value "^2.0.2"
-    helper-md "^0.2.2"
-    html-tag "^2.0.0"
-    is-even "^1.0.0"
-    is-glob "^4.0.1"
-    kind-of "^6.0.3"
-    micromatch "^3.1.5"
-    relative "^3.0.2"
-    striptags "^3.1.1"
-    to-gfm-code-block "^0.1.1"
-    year "^0.2.1"
-
-"@budibase/pro@1.2.52":
-  version "1.2.52"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.2.52.tgz#585789af03cb1440a7edbab06fb197c77141b887"
-  integrity sha512-ehVC4dle5/yEMKG8etEzD7cxWDEGsMoaigpf1iseY1S+EbV4MHvkku1oSB64fekDc211UD5jMXQx8lLVgoZQDw==
-  dependencies:
-    "@budibase/backend-core" "1.2.52"
-    "@budibase/types" "1.2.52"
+    "@budibase/backend-core" "1.2.44-alpha.11"
+    "@budibase/types" "1.2.44-alpha.11"
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
 
-"@budibase/string-templates@^1.2.52":
-  version "1.2.52"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.2.52.tgz#955233f35037b48e8d1287aedae58bedbcdbaf79"
-  integrity sha512-LoaIBWqhD9VQ6+IH2h1/+CN9Pjdsmcy8sOzZmgldsYKzjvDkbk4vHk51Cp30FYHHTTTnYvHE562Lppz9vB1K5A==
-  dependencies:
-    "@budibase/handlebars-helpers" "^0.11.8"
-    dayjs "^1.10.4"
-    handlebars "^4.7.6"
-    handlebars-utils "^1.0.6"
-    lodash "^4.17.20"
-    vm2 "^3.9.4"
-
-"@budibase/types@1.2.52", "@budibase/types@^1.2.52":
-  version "1.2.52"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.52.tgz#11d35cdaf1b88bd9f4e12677dc3e34a74e80bf74"
-  integrity sha512-i9bZC59THo+BXssF1eCln2wouj3esFY8fWqqmjPN+Bo1l078LBMXTF0q+BjdSkf5jf6SR1TrT0uXj5AN0e6xWA==
+"@budibase/types@1.2.44-alpha.11":
+  version "1.2.44-alpha.11"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.44-alpha.11.tgz#f6c3312d0392f8561509ca4649ca553917df6492"
+  integrity sha512-22sFDaHqS8+Oc9DhgGN6upITA/F/XZNONlpF4s15Lrc6rQg9Ou0RkXJ6z1Zr0LrrhhjJhslg4179/xJ0irGoPA==
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
