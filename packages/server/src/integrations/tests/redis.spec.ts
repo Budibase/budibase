@@ -1,13 +1,16 @@
 const Redis = require("ioredis-mock")
-const RedisIntegration = require("../redis")
+import { default as RedisIntegration } from "../redis"
 
 class TestConfiguration {
-  constructor(config = {}) {
-    this.integration = new RedisIntegration.integration(config) 
+  integration: any
+  redis: any
+
+  constructor(config: any = {}) {
+    this.integration = new RedisIntegration.integration(config)
     this.redis = new Redis({
       data: {
-        test: 'test',
-        result: "1"
+        test: "test",
+        result: "1",
       },
     })
     this.integration.client = this.redis
@@ -15,7 +18,7 @@ class TestConfiguration {
 }
 
 describe("Redis Integration", () => {
-  let config 
+  let config: any
 
   beforeEach(() => {
     config = new TestConfiguration()
@@ -24,7 +27,7 @@ describe("Redis Integration", () => {
   it("calls the create method with the correct params", async () => {
     const body = {
       key: "key",
-      value: "value"
+      value: "value",
     }
     const response = await config.integration.create(body)
     expect(await config.redis.get("key")).toEqual("value")
@@ -32,7 +35,7 @@ describe("Redis Integration", () => {
 
   it("calls the read method with the correct params", async () => {
     const body = {
-      key: "test"
+      key: "test",
     }
     const response = await config.integration.read(body)
     expect(response).toEqual("test")
@@ -40,7 +43,7 @@ describe("Redis Integration", () => {
 
   it("calls the delete method with the correct params", async () => {
     const body = {
-      key: "test"
+      key: "test",
     }
     await config.integration.delete(body)
     expect(await config.redis.get(body.key)).toEqual(null)
@@ -48,13 +51,17 @@ describe("Redis Integration", () => {
 
   it("calls the command method with the correct params", async () => {
     const body = {
-      json: "KEYS *"
+      json: "KEYS *",
     }
 
     // ioredis-mock doesn't support pipelines
-    config.integration.client.pipeline = jest.fn(() => ({ exec: jest.fn(() => [[]]) }))
+    config.integration.client.pipeline = jest.fn(() => ({
+      exec: jest.fn(() => [[]]),
+    }))
 
     await config.integration.command(body)
-    expect(config.integration.client.pipeline).toHaveBeenCalledWith([["KEYS", "*"]])
+    expect(config.integration.client.pipeline).toHaveBeenCalledWith([
+      ["KEYS", "*"],
+    ])
   })
 })

@@ -8,7 +8,7 @@ const { AccessController } = require("@budibase/backend-core/roles")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-import { updateAppPackage } from "./application"
+const { updateAppPackage } = require("./application")
 
 exports.fetch = async ctx => {
   const db = getAppDB()
