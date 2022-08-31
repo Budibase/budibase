@@ -13,8 +13,8 @@ MAIN_PORT=${port}
 
 # This section contains all secrets pertaining to the system
 JWT_SECRET=${randomString.generate()}
-MINIO_ACCESS_KEY=${randomString.generate()}
-MINIO_SECRET_KEY=${randomString.generate()}
+MINIO_ROOT_USER=${randomString.generate()}
+MINIO_ROOT_PASSWORD=${randomString.generate()}
 COUCH_DB_PASSWORD=${randomString.generate()}
 COUCH_DB_USER=${randomString.generate()}
 REDIS_PASSWORD=${randomString.generate()}
