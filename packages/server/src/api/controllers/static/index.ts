@@ -12,7 +12,7 @@ const {
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const { clientLibraryPath } = require("../../../utilities")
-const { upload } = require("../../../utilities/fileSystem")
+const { upload, deleteFiles } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentType } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
@@ -97,6 +97,10 @@ export const uploadFile = async function (ctx: any) {
   ctx.body = await Promise.all(uploads)
 }
 
+export const deleteObjects = async function (ctx: any) {
+  ctx.body = await deleteFiles(ObjectStoreBuckets.APPS, ctx.request.body.keys)
+}
+
 export const serveApp = async function (ctx: any) {
   const db = getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
@@ -121,6 +125,22 @@ export const serveApp = async function (ctx: any) {
   } else {
     // just return the app info for jest to assert on
     ctx.body = appInfo
+  }
+}
+
+export const serveBuilderPreview = async function (ctx: any) {
+  const db = getAppDB({ skip_setup: true })
+  const appInfo = await db.get(DocumentType.APP_METADATA)
+
+  if (!env.isJest()) {
+    let appId = getAppId()
+    const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
+    ctx.body = await processString(previewHbs, {
+      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+    })
+  } else {
+    // just return the app info for jest to assert on
+    ctx.body = { ...appInfo, builderPreview: true }
   }
 }
 

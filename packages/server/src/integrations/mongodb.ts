@@ -92,12 +92,15 @@ module MongoDBModule {
           if (json[field] instanceof Object) {
             json[field] = self.createObjectIds(json[field])
           }
-          if (field === "_id" && typeof json[field] === "string") {
-            const id = json["_id"].match(
+          if (
+            typeof json[field] === "string" &&
+            json[field].toLowerCase().startsWith("objectid")
+          ) {
+            const id = json[field].match(
               /(?<=objectid\(['"]).*(?=['"]\))/gi
             )?.[0]
             if (id) {
-              json["_id"] = ObjectID.createFromHexString(id)
+              json[field] = ObjectID.createFromHexString(id)
             }
           }
         }
@@ -114,10 +117,31 @@ module MongoDBModule {
     }
 
     parseQueryParams(params: string, mode: string) {
-      let queryParams = params.split(/(?<=}),[\n\s]*(?={)/g)
-      let group1 = queryParams[0] ? JSON.parse(queryParams[0]) : {}
-      let group2 = queryParams[1] ? JSON.parse(queryParams[1]) : {}
-      let group3 = queryParams[2] ? JSON.parse(queryParams[2]) : {}
+      let queryParams = []
+      let openCount = 0
+      let inQuotes = false
+      let i = 0
+      let startIndex = 0
+      for (let c of params) {
+        if (c === '"' && i > 0 && params[i - 1] !== "\\") {
+          inQuotes = !inQuotes
+        }
+        if (c === "{" && !inQuotes) {
+          openCount++
+          if (openCount === 1) {
+            startIndex = i
+          }
+        } else if (c === "}" && !inQuotes) {
+          if (openCount === 1) {
+            queryParams.push(JSON.parse(params.substring(startIndex, i + 1)))
+          }
+          openCount--
+        }
+        i++
+      }
+      let group1 = queryParams[0] ?? {}
+      let group2 = queryParams[1] ?? {}
+      let group3 = queryParams[2] ?? {}
       if (mode === "update") {
         return {
           filter: group1,
@@ -176,7 +200,10 @@ module MongoDBModule {
             return await collection.findOne(json)
           }
           case "findOneAndUpdate": {
-            let findAndUpdateJson = json as {
+            if (typeof query.json === "string") {
+              json = this.parseQueryParams(query.json, "update")
+            }
+            let findAndUpdateJson = this.createObjectIds(json) as {
               filter: FilterQuery<any>
               update: UpdateQuery<any>
               options: FindOneAndUpdateOption<any>

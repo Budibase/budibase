@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "1.2.47",
+  "version": "1.2.57",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -20,13 +20,14 @@
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
-    "@budibase/types": "^1.2.47",
+    "@budibase/types": "^1.2.57",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.0.1",
     "dotenv": "16.0.1",
     "emitter-listener": "1.1.2",
     "ioredis": "4.28.0",
+    "joi": "17.6.0",
     "jsonwebtoken": "8.5.1",
     "koa-passport": "4.1.4",
     "lodash": "4.17.21",

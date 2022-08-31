@@ -233,6 +233,10 @@ export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
   }
   let dbs = await getAllDbs({ efficient })
   const appDbNames = dbs.filter((dbName: any) => {
+    if (env.isTest() && !dbName) {
+      return false
+    }
+
     const split = dbName.split(SEPARATOR)
     // it is an app, check the tenantId
     if (split[0] === DocumentType.APP) {

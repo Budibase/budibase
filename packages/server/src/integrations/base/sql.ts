@@ -10,6 +10,7 @@ import { QueryOptions } from "../../definitions/datasource"
 import { isIsoDateString, SqlClient } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import environment from "../../environment"
+import { removeKeyNumbering } from "./utils"
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -133,12 +134,13 @@ class InternalBuilder {
       fn: (key: string, value: any) => void
     ) {
       for (let [key, value] of Object.entries(structure)) {
-        const isRelationshipField = key.includes(".")
+        const updatedKey = removeKeyNumbering(key)
+        const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${opts.tableName}.${key}`, value)
+          fn(`${opts.tableName}.${updatedKey}`, value)
         }
         if (opts.relationship && isRelationshipField) {
-          fn(key, value)
+          fn(updatedKey, value)
         }
       }
     }
@@ -154,6 +156,61 @@ class InternalBuilder {
         query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
           `%${value}%`,
         ])
+      }
+    }
+
+    const contains = (mode: object, any: boolean = false) => {
+      const fnc = allOr ? "orWhere" : "where"
+      const rawFnc = `${fnc}Raw`
+      const not = mode === filters?.notContains ? "NOT " : ""
+      function stringifyArray(value: Array<any>, quoteStyle = '"'): string {
+        for (let i in value) {
+          if (typeof value[i] === "string") {
+            value[i] = `${quoteStyle}${value[i]}${quoteStyle}`
+          }
+        }
+        return `[${value.join(",")}]`
+      }
+      if (this.client === SqlClient.POSTGRES) {
+        iterate(mode, (key: string, value: Array<any>) => {
+          const wrap = any ? "" : "'"
+          const containsOp = any ? "\\?| array" : "@>"
+          const fieldNames = key.split(/\./g)
+          const tableName = fieldNames[0]
+          const columnName = fieldNames[1]
+          // @ts-ignore
+          query = query[rawFnc](
+            `${not}"${tableName}"."${columnName}"::jsonb ${containsOp} ${wrap}${stringifyArray(
+              value,
+              any ? "'" : '"'
+            )}${wrap}`
+          )
+        })
+      } else if (this.client === SqlClient.MY_SQL) {
+        const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
+        iterate(mode, (key: string, value: Array<any>) => {
+          // @ts-ignore
+          query = query[rawFnc](
+            `${not}${jsonFnc}(${key}, '${stringifyArray(value)}')`
+          )
+        })
+      } else {
+        const andOr = mode === filters?.containsAny ? " OR " : " AND "
+        iterate(mode, (key: string, value: Array<any>) => {
+          let statement = ""
+          for (let i in value) {
+            if (typeof value[i] === "string") {
+              value[i] = `%"${value[i]}"%`
+            } else {
+              value[i] = `%${value[i]}%`
+            }
+            statement +=
+              (statement ? andOr : "") +
+              `LOWER(${likeKey(this.client, key)}) LIKE ?`
+          }
+          // @ts-ignore
+          query = query[rawFnc](`${not}(${statement})`, value)
+        })
       }
     }
 
@@ -227,32 +284,13 @@ class InternalBuilder {
       })
     }
     if (filters.contains) {
-      const fnc = allOr ? "orWhere" : "where"
-      const rawFnc = `${fnc}Raw`
-      if (this.client === SqlClient.POSTGRES) {
-        iterate(filters.contains, (key: string, value: any) => {
-          const fieldNames = key.split(/\./g)
-          const tableName = fieldNames[0]
-          const columnName = fieldNames[1]
-          if (typeof value === "string") {
-            value = `"${value}"`
-          }
-          // @ts-ignore
-          query = query[rawFnc](
-            `"${tableName}"."${columnName}"::jsonb @> '[${value}]'`
-          )
-        })
-      } else if (this.client === SqlClient.MY_SQL) {
-        iterate(filters.contains, (key: string, value: any) => {
-          if (typeof value === "string") {
-            value = `"${value}"`
-          }
-          // @ts-ignore
-          query = query[rawFnc](`JSON_CONTAINS(${key}, '${value}')`)
-        })
-      } else {
-        iterate(filters.contains, like)
-      }
+      contains(filters.contains)
+    }
+    if (filters.notContains) {
+      contains(filters.notContains)
+    }
+    if (filters.containsAny) {
+      contains(filters.containsAny, true)
     }
     return query
   }
@@ -582,4 +620,3 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
 }
 
 export default SqlQueryBuilder
-module.exports = SqlQueryBuilder

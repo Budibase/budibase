@@ -108,6 +108,10 @@ function getCommentInfo(file, func) {
   if (examples.length > 0) {
     docs.example = examples.join(" ")
   }
+  // hacky example fix
+  if (docs.example && docs.example.includes("product")) {
+    docs.example = docs.example.replace("product", "multiply")
+  }
   docs.description = blocks[0].trim()
   return docs
 }
@@ -166,7 +170,7 @@ function run() {
   // convert all markdown to HTML
   for (let collection of Object.values(outputJSON)) {
     for (let helper of Object.values(collection)) {
-      helper.description = marked(helper.description)
+      helper.description = marked.parse(helper.description)
     }
   }
   fs.writeFileSync(FILENAME, JSON.stringify(outputJSON, null, 2))

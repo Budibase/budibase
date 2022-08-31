@@ -4,7 +4,7 @@
   "singleQuote": false,
   "trailingComma": "es5",
   "arrowParens": "avoid",
-  "jsxBracketSameLine": false,
+  "bracketSameLine": false,
   "plugins": ["prettier-plugin-svelte"],
   "svelteSortOrder": "options-scripts-markup-styles"
 }

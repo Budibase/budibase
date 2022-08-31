@@ -36,7 +36,12 @@
     }
   }
 
-  const canRenderControl = setting => {
+  const canRenderControl = (setting, isScreen) => {
+    // Prevent rendering on click setting for screens
+    if (setting?.type === "event" && isScreen) {
+      return false
+    }
+
     const control = getComponentForSetting(setting)
     if (!control) {
       return false
@@ -87,7 +92,7 @@
       />
     {/if}
     {#each section.settings as setting (setting.key)}
-      {#if canRenderControl(setting)}
+      {#if canRenderControl(setting, isScreen)}
         <PropertyControl
           type={setting.type}
           control={getComponentForSetting(setting)}
