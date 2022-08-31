@@ -1,6 +1,15 @@
 // need to load environment first
-import { ExtendableContext } from "koa"
 import * as env from "./environment"
+
+// enable APM if configured
+if (process.env.ELASTIC_APM_ENABLED) {
+  const apm = require("elastic-apm-node").start({
+    serviceName: process.env.SERVICE,
+    environment: process.env.BUDIBASE_ENVIRONMENT,
+  })
+}
+
+import { ExtendableContext } from "koa"
 import db from "./db"
 db.init()
 const Koa = require("koa")

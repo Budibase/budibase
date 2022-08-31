@@ -128,7 +128,9 @@ Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
         .should("have.value", lastName)
         .blur()
     }
-    cy.get("button").contains("Update information").click({ force: true })
+    cy.get(".confirm-wrap").within(() => {
+      cy.get("button").contains("Update information").click({ force: true })
+    })
     cy.get(".spectrum-Dialog-grid").should("not.exist")
   })
 })
@@ -140,14 +142,14 @@ Cypress.Commands.add("setUserRole", (user, role) => {
   // Set Role
   cy.wait(500)
   cy.get(".spectrum-Form-itemField")
-    .eq(2)
+    .eq(3)
     .within(() => {
       cy.get(".spectrum-Picker-label").click({ force: true })
     })
   cy.get(".spectrum-Menu").within(() => {
     cy.get(".spectrum-Menu-itemLabel").contains(role).click({ force: true })
   })
-  cy.get(".spectrum-Form-itemField").eq(2).should("contain", role)
+  cy.get(".spectrum-Form-itemField").eq(3).should("contain", role)
 })
 
 // APPLICATIONS
@@ -162,7 +164,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
 
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
-  cy.wait(1000)
+  cy.url({ timeout: 30000 }).should("include", "/apps")
   cy.get(`[data-cy="create-app-btn"]`, { timeout: 5000 }).click({ force: true })
 
   // If apps already exist
@@ -432,6 +434,7 @@ Cypress.Commands.add("createAppFromScratch", appName => {
 
 // TABLES
 Cypress.Commands.add("createTable", (tableName, initialTable) => {
+  // Creates an internal Budibase DB table
   if (!initialTable) {
     cy.navigateToDataSection()
     cy.get(`[data-cy="new-table"]`, { timeout: 2000 }).click()
@@ -445,6 +448,7 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
         .contains("Continue")
         .click({ force: true })
     })
+  cy.get(".spectrum-Modal").contains("Create Table", { timeout: 10000 })
   cy.get(".spectrum-Modal", { timeout: 2000 }).within(() => {
     cy.get("input", { timeout: 2000 }).first().type(tableName).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
@@ -735,8 +739,15 @@ Cypress.Commands.add("deleteAllScreens", () => {
 Cypress.Commands.add("navigateToFrontend", () => {
   // Clicks on Design tab and then the Home nav item
   cy.wait(500)
+  cy.intercept("**/preview").as("preview")
   cy.contains("Design").click()
-  cy.get(".spectrum-Search", { timeout: 2000 }).type("/")
+  cy.wait("@preview")
+  cy.get("@preview").then(res => {
+    if (res.statusCode != 200) {
+      cy.reload()
+    }
+  })
+  cy.get(".spectrum-Search", { timeout: 20000 }).type("/")
   cy.get(".nav-item", { timeout: 2000 }).contains("home").click({ force: true })
 })
 

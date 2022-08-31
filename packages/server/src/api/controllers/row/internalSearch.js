@@ -1,4 +1,5 @@
 const { SearchIndexes } = require("../../../db/utils")
+const { removeKeyNumbering } = require("./utils")
 const fetch = require("node-fetch")
 const { getCouchInfo } = require("@budibase/backend-core/db")
 const { getAppId } = require("@budibase/backend-core/context")
@@ -20,6 +21,8 @@ class QueryBuilder {
       notEmpty: {},
       oneOf: {},
       contains: {},
+      notContains: {},
+      containsAny: {},
       ...base,
     }
     this.limit = 50
@@ -125,6 +128,16 @@ class QueryBuilder {
     return this
   }
 
+  addNotContains(key, value) {
+    this.query.notContains[key] = value
+    return this
+  }
+
+  addContainsAny(key, value) {
+    this.query.containsAny[key] = value
+    return this
+  }
+
   /**
    * Preprocesses a value before going into a lucene search.
    * Transforms strings to lowercase and wraps strings and bools in quotes.
@@ -170,11 +183,29 @@ class QueryBuilder {
       return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
     }
 
-    const contains = (key, value) => {
-      if (!value && value !== 0) {
+    const contains = (key, value, mode = "AND") => {
+      if (Array.isArray(value) && value.length === 0) {
         return null
       }
-      return `${key}:${builder.preprocess(value, { escape: true })}`
+      if (!Array.isArray(value)) {
+        return `${key}:${value}`
+      }
+      let statement = `${builder.preprocess(value[0], { escape: true })}`
+      for (let i = 1; i < value.length; i++) {
+        statement += ` ${mode} ${builder.preprocess(value[i], {
+          escape: true,
+        })}`
+      }
+      return `${key}:(${statement})`
+    }
+
+    const notContains = (key, value) => {
+      const allPrefix = allOr === "" ? "*:* AND" : ""
+      return allPrefix + "NOT " + contains(key, value)
+    }
+
+    const containsAny = (key, value) => {
+      return contains(key, value, "OR")
     }
 
     const oneOf = (key, value) => {
@@ -197,6 +228,8 @@ class QueryBuilder {
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
+        // check for new format - remove numbering if needed
+        key = removeKeyNumbering(key)
         key = builder.preprocess(key.replace(/ /g, "_"), {
           escape: true,
         })
@@ -275,6 +308,12 @@ class QueryBuilder {
     if (this.query.contains) {
       build(this.query.contains, contains)
     }
+    if (this.query.notContains) {
+      build(this.query.notContains, notContains)
+    }
+    if (this.query.containsAny) {
+      build(this.query.containsAny, containsAny)
+    }
     // make sure table ID is always added as an AND
     if (tableId) {
       query = `(${query})`
@@ -309,6 +348,9 @@ class QueryBuilder {
     return await runQuery(fullPath, body, cookie)
   }
 }
+
+// exported for unit testing
+exports.QueryBuilder = QueryBuilder
 
 /**
  * Executes a lucene search query.

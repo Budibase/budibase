@@ -8,7 +8,8 @@
     "devicePreview": true,
     "messagePassing": true,
     "rowSelection": true,
-    "continueIfAction": true
+    "continueIfAction": true,
+    "showNotificationAction": true
   },
   "layout": {
     "name": "Layout",
@@ -237,6 +238,11 @@
         "showInBar": true,
         "barIcon": "ModernGridView",
         "barTitle": "Wrap"
+      },
+      {
+        "type": "event",
+        "label": "On Click",
+        "key": "onClick"
       }
     ]
   },
@@ -1466,10 +1472,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1481,6 +1488,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -1581,10 +1633,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1596,6 +1649,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "select",
@@ -1695,10 +1793,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1710,6 +1809,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "select",
@@ -1800,10 +1944,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1815,6 +1960,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -1882,10 +2072,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1897,6 +2088,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -2873,6 +3109,12 @@
         "type": "boolean",
         "label": "Time only",
         "key": "timeOnly",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "24-Hour time",
+        "key": "time24hr",
         "defaultValue": false
       },
       {
