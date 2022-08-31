@@ -55,8 +55,8 @@ ENV \
 #  COUCH_DB_URL=http://budibase:budibase@localhost:5984 \
 #  INTERNAL_API_KEY=budibase \
 #  JWT_SECRET=testsecret \
-#  MINIO_ACCESS_KEY=budibase \
-#  MINIO_SECRET_KEY=budibase \
+#  MINIO_ROOT_USER=budibase \
+#  MINIO_ROOT_PASSWORD=budibase \
 
 # install base dependencies
 RUN apt-get update && \
