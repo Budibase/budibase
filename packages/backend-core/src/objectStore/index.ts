@@ -70,8 +70,8 @@ export const ObjectStore = (bucket: any) => {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
     apiVersion: "2006-03-01",
-    accessKeyId: env.MINIO_ACCESS_KEY,
-    secretAccessKey: env.MINIO_SECRET_KEY,
+    accessKeyId: env.MINIO_ROOT_USER,
+    secretAccessKey: env.MINIO_ROOT_PASSWORD,
     region: env.AWS_REGION,
   }
   if (bucket) {
