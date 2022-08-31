@@ -38,8 +38,8 @@ services:
       PORT: 4003
       CLUSTER_PORT: ${MAIN_PORT}
       JWT_SECRET: ${JWT_SECRET}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_URL: http://minio-service:9000
       APPS_URL: http://app-service:4002
       COUCH_DB_USERNAME: ${COUCH_DB_USER}
@@ -60,8 +60,8 @@ services:
     volumes:
       - minio_data:/data
     environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BROWSER: "off"
     command: server /data --console-address ":9001"
     healthcheck:
