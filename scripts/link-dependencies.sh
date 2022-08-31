@@ -20,6 +20,7 @@ cd -
 
 if [ -d "../budibase-pro" ]; then
   cd ../budibase-pro
+  echo "Bootstrapping budibase-pro"
   yarn bootstrap
 
   cd packages/pro
@@ -44,7 +45,11 @@ if [ -d "../budibase-pro" ]; then
 fi
 
 if [ -d "../account-portal" ]; then
-  cd ../account-portal/packages/server
+  cd ../account-portal
+  echo "Bootstrapping account-portal"
+  yarn bootstrap
+  
+  cd packages/server
   echo "Linking backend-core to account-portal"
   yarn link "@budibase/backend-core"
 
