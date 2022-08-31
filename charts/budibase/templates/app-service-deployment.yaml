@@ -134,6 +134,18 @@ spec:
         - name: NODE_DEBUG
           value: {{ .Values.services.apps.nodeDebug | quote }}
         {{ end }}
+        {{ if .Values.globals.elasticApmEnabled }}
+        - name: ELASTIC_APM_ENABLED
+          value: {{ .Values.globals.elasticApmEnabled | quote }}
+        {{ end }}
+        {{ if .Values.globals.elasticApmSecretToken }}
+        - name: ELASTIC_APM_SECRET_TOKEN
+          value: {{ .Values.globals.elasticApmSecretToken | quote }}
+        {{ end }}
+        {{ if .Values.globals.elasticApmServerUrl }}
+        - name: ELASTIC_APM_SERVER_URL
+          value: {{ .Values.globals.elasticApmServerUrl | quote }}
+        {{ end }}
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
