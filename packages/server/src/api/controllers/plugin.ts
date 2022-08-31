@@ -72,11 +72,11 @@ export async function create(ctx: any) {
   }
 
   try {
-    const doc = storePlugin(metadata, directory, source)
+    const doc = await storePlugin(metadata, directory, source)
 
     ctx.body = {
       message: "Plugin uploaded successfully",
-      plugins: doc,
+      plugins: [doc],
     }
   } catch (err: any) {
     const errMsg = err?.message ? err?.message : err

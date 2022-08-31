@@ -36,17 +36,17 @@ export function createPluginsStore() {
 
     let res = await API.createPlugin(pluginData)
     console.log("RESP", res)
-    // TODO_RIC
-    // let newPlugin = resp.plugins[0]
-    // update(state => {
-    //   const currentIdx = state.findIndex(plugin => plugin._id === newPlugin._id)
-    //   if (currentIdx >= 0) {
-    //     state.splice(currentIdx, 1, newPlugin)
-    //   } else {
-    //     state.push(newPlugin)
-    //   }
-    //   return state
-    // })
+
+    let newPlugin = res.plugins[0]
+    update(state => {
+      const currentIdx = state.findIndex(plugin => plugin._id === newPlugin._id)
+      if (currentIdx >= 0) {
+        state.splice(currentIdx, 1, newPlugin)
+      } else {
+        state.push(newPlugin)
+      }
+      return state
+    })
   }
 
   async function uploadPlugin(file, source) {
