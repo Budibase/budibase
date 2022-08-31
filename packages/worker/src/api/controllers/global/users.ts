@@ -3,7 +3,7 @@ import { checkInviteCode } from "../../../utilities/redis"
 import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
 import env from "../../../environment"
-import { CloudAccount, User } from "@budibase/types"
+import { BulkDeleteUsersRequest, CloudAccount, User } from "@budibase/types"
 import {
   accounts,
   cache,
@@ -46,8 +46,8 @@ export const bulkCreate = async (ctx: any) => {
   }
 
   try {
-    let response = await users.bulkCreate(newUsersRequested, groups)
-    await groupUtils.bulkSaveGroupUsers(groupsToSave, response)
+    const response = await users.bulkCreate(newUsersRequested, groups)
+    await groupUtils.bulkSaveGroupUsers(groupsToSave, response.successful)
 
     ctx.body = response
   } catch (err: any) {
@@ -138,17 +138,15 @@ export const destroy = async (ctx: any) => {
 }
 
 export const bulkDelete = async (ctx: any) => {
-  const { userIds } = ctx.request.body
+  const { userIds } = ctx.request.body as BulkDeleteUsersRequest
   if (userIds?.indexOf(ctx.user._id) !== -1) {
     ctx.throw(400, "Unable to delete self.")
   }
 
   try {
-    let usersResponse = await users.bulkDelete(userIds)
+    let response = await users.bulkDelete(userIds)
 
-    ctx.body = {
-      message: `${usersResponse.length} user(s) deleted`,
-    }
+    ctx.body = response
   } catch (err) {
     ctx.throw(err)
   }

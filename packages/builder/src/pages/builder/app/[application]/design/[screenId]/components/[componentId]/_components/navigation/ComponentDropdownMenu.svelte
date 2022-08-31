@@ -2,9 +2,18 @@
   import { store } from "builderStore"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
+  export let component
+
   $: noPaste = !$store.componentToPaste
 
   const keyboardEvent = (key, ctrlKey = false) => {
+    // Ensure this component is selected first
+    if (component._id !== $store.selectedComponentId) {
+      store.update(state => {
+        state.selectedComponentId = component._id
+        return state
+      })
+    }
     document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
   }
 </script>

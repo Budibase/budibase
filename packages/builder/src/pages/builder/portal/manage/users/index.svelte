@@ -23,6 +23,7 @@
   import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
+  import DeletionFailureModal from "./_components/DeletionFailureModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { get } from "svelte/store"
@@ -33,7 +34,8 @@
     inviteConfirmationModal,
     onboardingTypeModal,
     passwordModal,
-    importUsersModal
+    importUsersModal,
+    deletionFailureModal
   let pageInfo = createPaginationStore()
   let prevEmail = undefined,
     searchEmail = undefined
@@ -55,6 +57,8 @@
     apps: {},
   }
   $: userData = []
+  $: createUsersResponse = { successful: [], unsuccessful: [] }
+  $: deleteUsersResponse = { successful: [], unsuccessful: [] }
   $: page = $pageInfo.page
   $: fetchUsers(page, searchEmail)
   $: {
@@ -116,8 +120,9 @@
       newUsers.push(user)
     }
 
-    if (!newUsers.length)
+    if (!newUsers.length) {
       notifications.info("Duplicated! There is no new users to add.")
+    }
     return { ...userData, users: newUsers }
   }
 
@@ -144,7 +149,9 @@
 
   async function createUser() {
     try {
-      await users.create(await removingDuplicities(userData))
+      createUsersResponse = await users.create(
+        await removingDuplicities(userData)
+      )
       notifications.success("Successfully created user")
       await groups.actions.init()
       passwordModal.show()
@@ -176,8 +183,15 @@
         notifications.error("You cannot delete yourself")
         return
       }
-      await users.bulkDelete(ids)
-      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+      deleteUsersResponse = await users.bulkDelete(ids)
+      if (deleteUsersResponse.unsuccessful?.length) {
+        deletionFailureModal.show()
+      } else {
+        notifications.success(
+          `Successfully deleted ${selectedRows.length} users`
+        )
+      }
+
       selectedRows = []
       await fetchUsers(page, searchEmail)
     } catch (error) {
@@ -284,7 +298,11 @@
 </Modal>
 
 <Modal bind:this={passwordModal}>
-  <PasswordModal userData={userData.users} />
+  <PasswordModal {createUsersResponse} userData={userData.users} />
+</Modal>
+
+<Modal bind:this={deletionFailureModal}>
+  <DeletionFailureModal {deleteUsersResponse} />
 </Modal>
 
 <Modal bind:this={importUsersModal}>
