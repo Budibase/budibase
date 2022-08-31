@@ -28,8 +28,8 @@ function parseIntSafe(number) {
 
 module.exports = {
   // auth
-  MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
-  MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  MINIO_ROOT_USER: process.env.MINIO_ROOT_USER,
+  MINIO_ROOT_PASSWORD: process.env.MINIO_ROOT_PASSWORD,
   JWT_SECRET: process.env.JWT_SECRET,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
