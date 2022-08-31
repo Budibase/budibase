@@ -1,9 +1,8 @@
 const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
-// const { promisify } = require("util")
-// const exec = promisify(require("child_process").exec)
-// const streamPipeline = promisify(require("stream"))
+const { promisify } = require("util")
+const streamPipeline = promisify(require("stream").pipeline)
 const uuid = require("uuid/v4")
 const {
   doWithDB,
@@ -32,7 +31,6 @@ const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
 const tar = require("tar")
 const fetch = require("node-fetch")
-// const fileType = require("file-type")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
@@ -349,10 +347,9 @@ const extractPluginTarball = async (file, ext = ".tar.gz") => {
 }
 exports.extractPluginTarball = extractPluginTarball
 
-exports.npmPlugin = async (url, name = "") => {
+exports.createNpmPlugin = async (url, name = "") => {
   let npmTarball = url
-  let filename = name
-  let path = join(budibaseTempDir(), name)
+  let pluginName = name
 
   if (!npmTarball.includes(".tgz")) {
     const npmPackageURl = url.replace(
@@ -362,8 +359,7 @@ exports.npmPlugin = async (url, name = "") => {
     const response = await fetch(npmPackageURl)
     if (response.status === 200) {
       let npmDetails = await response.json()
-      filename = npmDetails.name
-      path = join(budibaseTempDir(), filename)
+      pluginName = npmDetails.name
       const npmVersion = npmDetails["dist-tags"].latest
       npmTarball = npmDetails.versions[npmVersion].dist.tarball
     } else {
@@ -371,36 +367,47 @@ exports.npmPlugin = async (url, name = "") => {
     }
   }
 
+  return await downloadUnzipPlugin(pluginName, npmTarball)
+}
+
+exports.createUrlPlugin = async (url, name = "", headers = {}) => {
+  if (!url.includes(".tgz") && !url.includes(".tar.gz")) {
+    throw new Error("Plugin must be compressed into a gzipped tarball.")
+  }
+
+  return await downloadUnzipPlugin(name, url, headers)
+}
+
+const downloadUnzipPlugin = async (name, url, headers = {}) => {
+  console.log(name, url, headers)
+  const path = join(budibaseTempDir(), name)
   try {
+    // Remove first if exists
     if (fs.existsSync(path)) {
       fs.rmSync(path, { recursive: true, force: true })
     }
     fs.mkdirSync(path)
 
-    const response = await fetch(npmTarball)
+    const response = await fetch(url, { headers })
     if (!response.ok)
       throw new Error(`Loading NPM plugin failed ${response.statusText}`)
 
-    // const dest = fs.createWriteStream(`${path}/${filename}.tgz`)
-    await response.body.pipe(
-      await tar.x({
+    await streamPipeline(
+      response.body,
+      tar.x({
         strip: 1,
         C: path,
       })
     )
-
-    // const readStream = fs.createReadStream(`${path}/${filename}.tgz`)
-    // readStream.pipe(
-
-    // )
+    return await getPluginMetadata(path)
   } catch (e) {
-    throw `Cannot store package locally: ${e.message}`
+    throw `Cannot store plugin locally: ${e.message}`
   }
-
-  return path
 }
+exports.downloadUnzipPlugin = downloadUnzipPlugin
 
 const getPluginMetadata = async path => {
+  console.log(path)
   let metadata = {}
   try {
     const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
