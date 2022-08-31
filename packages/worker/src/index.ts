@@ -1,10 +1,18 @@
 // need to load environment first
+const env = require("./environment")
+
+// enable APM if configured
+if (process.env.ELASTIC_APM_ENABLED) {
+  const apm = require("elastic-apm-node").start({
+    serviceName: process.env.SERVICE,
+    environment: process.env.BUDIBASE_ENVIRONMENT,
+  })
+}
+
 import { Scope } from "@sentry/node"
 import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
-
-const env = require("./environment")
 import db from "./db"
 db.init()
 const Koa = require("koa")
