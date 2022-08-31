@@ -53,6 +53,7 @@ exports.shutdown = async () => {
     await automationQueue.close()
     automationQueue = null
   }
+  console.log("Bull shutdown")
 }
 
 exports.queue = automationQueue

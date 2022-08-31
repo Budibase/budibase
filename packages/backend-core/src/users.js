@@ -11,7 +11,6 @@ const { UNICODE_MAX } = require("./db/constants")
  * Given an email address this will use a view to search through
  * all the users to find one with this email address.
  * @param {string} email the email to lookup the user by.
- * @return {Promise<object|null>}
  */
 exports.getGlobalUserByEmail = async email => {
   if (email == null) {
