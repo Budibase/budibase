@@ -24,13 +24,13 @@
           "default": "change-me"
         },
         {
-          "name": "MINIO_ACCESS_KEY",
-          "label": "MinIO access key",
+          "name": "MINIO_ROOT_USER",
+          "label": "MinIO root user",
           "default": "change-me"
         },
         {
-          "name": "MINIO_SECRET_KEY",
-          "label": "MinIO secret key",
+          "name": "MINIO_ROOT_PASSWORD",
+          "label": "MinIO root password",
           "default": "change-me"
         },
         {
