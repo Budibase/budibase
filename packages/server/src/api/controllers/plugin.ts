@@ -1,8 +1,8 @@
 import { ObjectStoreBuckets } from "../../constants"
 import {
   extractPluginTarball,
-  npmPlugin,
-  getPluginMetadata,
+  createNpmPlugin,
+  createUrlPlugin,
 } from "../../utilities/fileSystem"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { generatePluginID, getPluginParams } from "../../db/utils"
@@ -49,39 +49,40 @@ export async function upload(ctx: any) {
 }
 
 export async function create(ctx: any) {
-  const { type, source, name, url, header, githubToken, npmToken } =
-    ctx.request.body
+  const { type, source, name, url, headers, githubToken } = ctx.request.body
   let metadata
   let directory
 
   switch (source) {
     case "npm":
-      // const { metadata: metadataNpm, directory: directoryNpm } = await npmPlugin(url, name)
-      // metadata = metadataNpm
-      // directory = directoryNpm
-
-      console.log(22222, await getPluginMetadata(await npmPlugin(url, name)))
+      const { metadata: metadataNpm, directory: directoryNpm } =
+        await createNpmPlugin(url, name)
+      metadata = metadataNpm
+      directory = directoryNpm
       break
     case "github":
       console.log("github")
       break
     case "url":
-      console.log("url")
+      const { metadata: metadataUrl, directory: directoryUrl } =
+        await createUrlPlugin(url, name, headers)
+      metadata = metadataUrl
+      directory = directoryUrl
       break
   }
 
-  // try {
-  //   const doc = storePlugin(metadata, directory, source)
-  //
-  //   ctx.body = {
-  //     message: "Plugin uploaded successfully",
-  //     plugins: doc,
-  //   }
-  // } catch (err: any) {
-  //   const errMsg = err?.message ? err?.message : err
-  //
-  //   ctx.throw(400, `Failed to import plugin: ${errMsg}`)
-  // }
+  try {
+    const doc = storePlugin(metadata, directory, source)
+
+    ctx.body = {
+      message: "Plugin uploaded successfully",
+      plugins: doc,
+    }
+  } catch (err: any) {
+    const errMsg = err?.message ? err?.message : err
+
+    ctx.throw(400, `Failed to import plugin: ${errMsg}`)
+  }
   ctx.status = 200
 }
 

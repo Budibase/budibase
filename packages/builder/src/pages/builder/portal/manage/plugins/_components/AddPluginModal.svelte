@@ -11,10 +11,10 @@
   import { plugins } from "stores/portal"
 
   let authOptions = {
-    NPM: ["NPM Token", "URL"],
+    NPM: ["URL"],
     Github: ["Github Token", "URL"],
-    URL: ["Header", "URL"],
-    File: ["Path", "Header"],
+    URL: ["Headers", "URL"],
+    File: ["Path", "Headers"],
     Upload: ["Upload"],
   }
   let file
@@ -50,17 +50,11 @@
           source,
           nameValue,
           url,
-          dynamicValues["Header"]
+          dynamicValues["Headers"]
         )
         break
       case "npm":
-        await plugins.createPlugin(
-          typeValue,
-          source,
-          nameValue,
-          url,
-          dynamicValues["NPM Token"]
-        )
+        await plugins.createPlugin(typeValue, source, nameValue, url)
         break
     }
   }

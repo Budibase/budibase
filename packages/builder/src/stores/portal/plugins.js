@@ -17,7 +17,7 @@ export function createPluginsStore() {
     })
   }
 
-  async function createPlugin(type, source, name, url, auth) {
+  async function createPlugin(type, source, name, url, auth = null) {
     let pluginData = {
       type,
       source,
@@ -26,19 +26,16 @@ export function createPluginsStore() {
     }
 
     switch (source) {
-      case "github":
-        pluginData.githubToken = auth
-        break
       case "url":
-        pluginData.header = auth
+        pluginData.headers = auth
         break
       case "npm":
         pluginData.npmToken = auth
         break
     }
 
-    let resp = await API.createPlugin(pluginData)
-    console.log(resp)
+    let res = await API.createPlugin(pluginData)
+    console.log("RESP", res)
     // TODO_RIC
     // let newPlugin = resp.plugins[0]
     // update(state => {
