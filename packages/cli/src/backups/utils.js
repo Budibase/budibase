@@ -13,8 +13,8 @@ const REQUIRED = [
   { value: "MAIN_PORT", default: "10000" },
   { value: "COUCH_DB_URL", default: exports.DEFAULT_COUCH },
   { value: "MINIO_URL", default: exports.DEFAULT_MINIO },
-  { value: "MINIO_ACCESS_KEY" },
-  { value: "MINIO_SECRET_KEY" },
+  { value: "MINIO_ROOT_USER" },
+  { value: "MINIO_ROOT_PASSWORD" },
 ]
 
 exports.checkURLs = config => {
