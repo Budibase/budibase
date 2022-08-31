@@ -375,6 +375,7 @@ exports.exportRows = async ctx => {
   const table = await db.get(ctx.params.tableId)
   const rowIds = ctx.request.body.rows
   let format = ctx.query.format
+  const { columns } = ctx.request.body
   let response = (
     await db.allDocs({
       include_docs: true,
@@ -382,7 +383,20 @@ exports.exportRows = async ctx => {
     })
   ).rows.map(row => row.doc)
 
-  let rows = await outputProcessing(table, response)
+  let result = await outputProcessing(table, response)
+  let rows = []
+
+  // Filter data to only specified columns if required
+  if (columns && columns.length) {
+    for (let i = 0; i < result.length; i++) {
+      rows[i] = {}
+      for (let column of columns) {
+        rows[i][column] = result[i][column]
+      }
+    }
+  } else {
+    rows = result
+  }
 
   let headers = Object.keys(rows[0])
   const exporter = exporters[format]

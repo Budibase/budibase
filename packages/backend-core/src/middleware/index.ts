@@ -13,7 +13,8 @@ const adminOnly = require("./adminOnly")
 const builderOrAdmin = require("./builderOrAdmin")
 const builderOnly = require("./builderOnly")
 const joiValidator = require("./joi-validator")
-module.exports = {
+
+const pkg = {
   google,
   oidc,
   jwt,
@@ -33,3 +34,5 @@ module.exports = {
   builderOrAdmin,
   joiValidator,
 }
+
+export = pkg

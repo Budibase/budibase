@@ -113,6 +113,10 @@ class InMemoryQueue {
   async getJob() {
     return {}
   }
+
+  on() {
+    // do nothing
+  }
 }
 
 module.exports = InMemoryQueue

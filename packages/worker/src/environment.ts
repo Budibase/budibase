@@ -20,13 +20,13 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
-function parseIntSafe(number) {
+function parseIntSafe(number: any) {
   if (number) {
     return parseInt(number)
   }
 }
 
-module.exports = {
+const env = {
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
@@ -47,7 +47,7 @@ module.exports = {
   CLUSTER_PORT: process.env.CLUSTER_PORT,
   // flags
   NODE_ENV: process.env.NODE_ENV,
-  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
+  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
   LOG_LEVEL: process.env.LOG_LEVEL,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
@@ -62,7 +62,7 @@ module.exports = {
   // other
   CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
-  _set(key, value) {
+  _set(key: any, value: any) {
     process.env[key] = value
     module.exports[key] = value
   },
@@ -74,16 +74,17 @@ module.exports = {
 }
 
 // if some var haven't been set, define them
-if (!module.exports.APPS_URL) {
-  module.exports.APPS_URL = isDev()
-    ? "http://localhost:4001"
-    : "http://app-service:4002"
+if (!env.APPS_URL) {
+  env.APPS_URL = isDev() ? "http://localhost:4001" : "http://app-service:4002"
 }
 
 // clean up any environment variable edge cases
 for (let [key, value] of Object.entries(module.exports)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
-    module.exports[key] = 0
+    // @ts-ignore
+    env[key] = 0
   }
 }
+
+export = env

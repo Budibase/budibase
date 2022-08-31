@@ -12,6 +12,7 @@
   export let direction = "vertical"
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
+  export let getOptionTitle = option => extractProperty(option, "label")
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -35,6 +36,7 @@
     {direction}
     {getOptionLabel}
     {getOptionValue}
+    {getOptionTitle}
     on:change={onChange}
   />
 </Field>

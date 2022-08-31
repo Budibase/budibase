@@ -21,11 +21,13 @@ const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
 const Runner = new Thread(ThreadType.AUTOMATION)
 
+const jobMessage = (job: any, message: string) => {
+  return `app=${job.data.event.appId} automation=${job.data.automation._id} jobId=${job.id} trigger=${job.data.automation.definition.trigger.event} : ${message}`
+}
+
 export async function processEvent(job: any) {
   try {
-    console.log(
-      `${job.data.automation.appId} automation ${job.data.automation._id} running`
-    )
+    console.log(jobMessage(job, "running"))
     // need to actually await these so that an error can be captured properly
     const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
     return await tenancy.doInTenant(tenantId, async () => {
@@ -34,9 +36,7 @@ export async function processEvent(job: any) {
     })
   } catch (err) {
     const errJson = JSON.stringify(err)
-    console.error(
-      `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${errJson}`
-    )
+    console.error(jobMessage(job, `was unable to run - ${errJson}`))
     console.trace(err)
     return { err }
   }
@@ -91,6 +91,7 @@ export async function disableAllCrons(appId: any) {
 export async function disableCron(jobId: string, jobKey: string) {
   await queue.removeRepeatableByKey(jobKey)
   await queue.removeJobs(jobId)
+  console.log(`jobId=${jobId} disabled`)
 }
 
 export async function clearMetadata() {
