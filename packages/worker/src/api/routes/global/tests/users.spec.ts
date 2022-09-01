@@ -1,3 +1,5 @@
+import { InviteUsersResponse } from "@budibase/types"
+
 jest.mock("nodemailer")
 import {
   TestConfiguration,
@@ -27,7 +29,8 @@ describe("/api/global/users", () => {
 
   describe("invite", () => {
     it("should be able to generate an invitation", async () => {
-      const { code, res } = await api.users.sendUserInvite(sendMailMock)
+      const email = structures.users.newEmail()
+      const { code, res } = await api.users.sendUserInvite(sendMailMock, email)
 
       expect(res.body).toEqual({ message: "Invitation has been sent." })
       expect(sendMailMock).toHaveBeenCalled()
@@ -35,17 +38,62 @@ describe("/api/global/users", () => {
       expect(events.user.invited).toBeCalledTimes(1)
     })
 
+    it("should be able to generate an invitation for existing user", async () => {
+      const { code, res } = await api.users.sendUserInvite(
+        sendMailMock,
+        config.defaultUser!.email,
+        400
+      )
+
+      expect(res.body.message).toBe("Unavailable")
+      expect(sendMailMock).toHaveBeenCalledTimes(0)
+      expect(code).toBeUndefined()
+      expect(events.user.invited).toBeCalledTimes(0)
+    })
+
     it("should be able to create new user from invite", async () => {
-      const { code } = await api.users.sendUserInvite(sendMailMock)
+      const email = structures.users.newEmail()
+      const { code } = await api.users.sendUserInvite(sendMailMock, email)
 
       const res = await api.users.acceptInvite(code)
 
       expect(res.body._id).toBeDefined()
-      const user = await config.getUser("invite@test.com")
+      const user = await config.getUser(email)
       expect(user).toBeDefined()
       expect(user._id).toEqual(res.body._id)
       expect(events.user.inviteAccepted).toBeCalledTimes(1)
       expect(events.user.inviteAccepted).toBeCalledWith(user)
+    })
+  })
+
+  describe("inviteMultiple", () => {
+    it("should be able to generate an invitation", async () => {
+      const newUserInvite = () => ({
+        email: structures.users.newEmail(),
+        userInfo: {},
+      })
+      const request = [newUserInvite(), newUserInvite()]
+
+      const res = await api.users.sendMultiUserInvite(request)
+
+      const body = res.body as InviteUsersResponse
+      expect(body.successful.length).toBe(2)
+      expect(body.unsuccessful.length).toBe(0)
+      expect(sendMailMock).toHaveBeenCalledTimes(2)
+      expect(events.user.invited).toBeCalledTimes(2)
+    })
+
+    it("should not be able to generate an invitation for existing user", async () => {
+      const request = [{ email: config.defaultUser!.email, userInfo: {} }]
+
+      const res = await api.users.sendMultiUserInvite(request)
+
+      const body = res.body as InviteUsersResponse
+      expect(body.successful.length).toBe(0)
+      expect(body.unsuccessful.length).toBe(1)
+      expect(body.unsuccessful[0].reason).toBe("Unavailable")
+      expect(sendMailMock).toHaveBeenCalledTimes(0)
+      expect(events.user.invited).toBeCalledTimes(0)
     })
   })
 

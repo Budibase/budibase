@@ -29,3 +29,15 @@ export interface BulkDeleteUsersResponse {
   successful: UserDetails[]
   unsuccessful: { _id: string; email: string; reason: string }[]
 }
+
+export interface InviteUserRequest {
+  email: string
+  userInfo: any
+}
+
+export type InviteUsersRequest = InviteUserRequest[]
+
+export interface InviteUsersResponse {
+  successful: { email: string }[]
+  unsuccessful: { email: string; reason: string }[]
+}

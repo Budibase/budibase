@@ -1,9 +1,13 @@
-import { EmailTemplatePurpose } from "../../../constants"
 import { checkInviteCode } from "../../../utilities/redis"
-import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
 import env from "../../../environment"
-import { BulkDeleteUsersRequest, CloudAccount, User } from "@budibase/types"
+import {
+  BulkDeleteUsersRequest,
+  CloudAccount,
+  InviteUserRequest,
+  InviteUsersRequest,
+  User,
+} from "@budibase/types"
 import {
   accounts,
   cache,
@@ -191,58 +195,27 @@ export const tenantUserLookup = async (ctx: any) => {
 }
 
 export const invite = async (ctx: any) => {
-  let { email, userInfo } = ctx.request.body
-  const existing = await usersCore.getGlobalUserByEmail(email)
-  if (existing) {
-    ctx.throw(400, "Email address already in use.")
+  const request = ctx.request.body as InviteUserRequest
+  const response = await users.invite([request])
+
+  // explicitly throw for single user invite
+  if (response.unsuccessful.length) {
+    const reason = response.unsuccessful[0].reason
+    if (reason === "Unavailable") {
+      ctx.throw(400, reason)
+    } else {
+      ctx.throw(500, reason)
+    }
   }
-  if (!userInfo) {
-    userInfo = {}
-  }
-  userInfo.tenantId = tenancy.getTenantId()
-  const opts: any = {
-    subject: "{{ company }} platform invitation",
-    info: userInfo,
-  }
-  await sendEmail(email, EmailTemplatePurpose.INVITATION, opts)
+
   ctx.body = {
     message: "Invitation has been sent.",
   }
-  await events.user.invited()
 }
 
 export const inviteMultiple = async (ctx: any) => {
-  let users = ctx.request.body
-  let existing = false
-  let existingEmail
-  for (let user of users) {
-    if (await usersCore.getGlobalUserByEmail(user.email)) {
-      existing = true
-      existingEmail = user.email
-      break
-    }
-  }
-
-  if (existing) {
-    ctx.throw(400, `${existingEmail} already exists`)
-  }
-
-  for (let i = 0; i < users.length; i++) {
-    let userInfo = users[i].userInfo
-    if (!userInfo) {
-      userInfo = {}
-    }
-    userInfo.tenantId = tenancy.getTenantId()
-    const opts: any = {
-      subject: "{{ company }} platform invitation",
-      info: userInfo,
-    }
-    await sendEmail(users[i].email, EmailTemplatePurpose.INVITATION, opts)
-  }
-
-  ctx.body = {
-    message: "Invitations have been sent.",
-  }
+  const request = ctx.request.body as InviteUsersRequest
+  ctx.body = await users.invite(request)
 }
 
 export const inviteAccept = async (ctx: any) => {
