@@ -185,7 +185,7 @@
           $goto("./navigation")
         }
       } else if (type === "request-add-component") {
-        $goto(`./components/${$selectedComponent?._id}/new`)
+        toggleAddComponent()
       } else if (type === "highlight-setting") {
         store.actions.settings.highlight(data.setting)
 
@@ -229,9 +229,8 @@
     if (isAddingComponent) {
       $goto(`../${$selectedScreen._id}/components/${$selectedComponent?._id}`)
     } else {
-      $goto(
-        `../${$selectedScreen._id}/components/${$selectedComponent?._id}/new`
-      )
+      const id = $selectedComponent?._id || $selectedScreen?.props?._id
+      $goto(`../${$selectedScreen._id}/components/${id}/new`)
     }
   }
 
