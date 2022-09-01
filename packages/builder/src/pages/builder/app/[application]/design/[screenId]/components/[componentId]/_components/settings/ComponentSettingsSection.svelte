@@ -124,5 +124,17 @@
     {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
       <ResetFieldsButton {componentInstance} />
     {/if}
+    {#if section?.info}
+      <div class="text">
+        {@html section.info}
+      </div>
+    {/if}
   </DetailSummary>
 {/each}
+
+<style>
+  .text {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--grey-6);
+  }
+</style>
