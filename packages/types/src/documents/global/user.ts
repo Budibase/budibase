@@ -21,3 +21,20 @@ export interface User extends Document {
 export interface UserRoles {
   [key: string]: string
 }
+
+// utility types
+
+export interface BuilderUser extends User {
+  builder: {
+    global: boolean
+  }
+}
+
+export interface AdminUser extends User {
+  admin: {
+    global: boolean
+  }
+  builder: {
+    global: boolean
+  }
+}

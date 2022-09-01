@@ -72,7 +72,7 @@ const cleanupQuery = query => {
       continue
     }
     for (let [key, value] of Object.entries(query[filterField])) {
-      if (!value || value === "") {
+      if (value == null || value === "") {
         delete query[filterField][key]
       }
     }
@@ -119,7 +119,7 @@ export const buildLuceneQuery = filter => {
           return
         }
       }
-      if (type === "number" && !Array.isArray(value)) {
+      if (type === "number" && typeof value === "string") {
         if (operator === "oneOf") {
           value = value.split(",").map(item => parseFloat(item))
         } else if (!isHbs) {
@@ -186,7 +186,7 @@ export const runLuceneQuery = (docs, query) => {
     return docs
   }
 
-  // make query consistent first
+  // Make query consistent first
   query = cleanupQuery(query)
 
   // Iterates over a set of filters and evaluates a fail function against a doc
@@ -218,7 +218,12 @@ export const runLuceneQuery = (docs, query) => {
 
   // Process a range match
   const rangeMatch = match("range", (docValue, testValue) => {
-    return !docValue || docValue < testValue.low || docValue > testValue.high
+    return (
+      docValue == null ||
+      docValue === "" ||
+      docValue < testValue.low ||
+      docValue > testValue.high
+    )
   })
 
   // Process an equal match (fails if the value is different)
