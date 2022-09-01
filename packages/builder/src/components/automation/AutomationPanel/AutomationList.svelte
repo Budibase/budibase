@@ -5,6 +5,7 @@
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
   import { notifications } from "@budibase/bbui"
+  import _ from 'lodash'
 
   $: selectedAutomationId = $automationStore.selectedAutomation?.automation?._id
 
