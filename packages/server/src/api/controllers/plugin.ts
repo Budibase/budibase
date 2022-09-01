@@ -3,6 +3,7 @@ import {
   extractPluginTarball,
   createNpmPlugin,
   createUrlPlugin,
+  createGithubPlugin,
 } from "../../utilities/fileSystem"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { generatePluginID, getPluginParams } from "../../db/utils"
@@ -61,7 +62,10 @@ export async function create(ctx: any) {
       directory = directoryNpm
       break
     case "github":
-      console.log("github")
+      const { metadata: metadataGithub, directory: directoryGithub } =
+        await createGithubPlugin(ctx, url, name, githubToken)
+      metadata = metadataGithub
+      directory = directoryGithub
       break
     case "url":
       const { metadata: metadataUrl, directory: directoryUrl } =
