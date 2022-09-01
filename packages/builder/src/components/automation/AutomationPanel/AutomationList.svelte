@@ -5,7 +5,6 @@
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
   import { notifications } from "@budibase/bbui"
-  import _ from "lodash"
 
   $: selectedAutomationId = $automationStore.selectedAutomation?.automation?._id
 
@@ -24,7 +23,7 @@
 </script>
 
 <div class="automations-list">
-  {#each _.orderBy($automationStore.automations, ["name"], ["asc"]) as automation, idx}
+  {#each $automationStore.automations.sort(aut => aut.name) as automation, idx}
     <NavItem
       border={idx > 0}
       icon="ShareAndroid"
