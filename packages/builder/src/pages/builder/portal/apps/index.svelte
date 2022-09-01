@@ -20,7 +20,7 @@
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, templates } from "stores/portal"
+  import { apps, auth, admin, templates, licensing } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
@@ -243,6 +243,10 @@
       notifications.error("Error loading apps and templates")
     }
     loaded = true
+
+    //Testing
+    await licensing.getQuotaUsage()
+    await licensing.getTestData()
   })
 </script>
 
