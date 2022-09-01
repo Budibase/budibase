@@ -1,11 +1,11 @@
 const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
-const { getGlobalDB } = require("./tenancy")
+import { getGlobalDB } from "./tenancy"
 const refresh = require("passport-oauth2-refresh")
-const { Configs } = require("./constants")
-const { getScopedConfig } = require("./db/utils")
-const {
+import { Configs } from "./constants"
+import { getScopedConfig } from "./db/utils"
+import {
   jwt,
   local,
   authenticated,
@@ -13,7 +13,6 @@ const {
   oidc,
   auditLog,
   tenancy,
-  appTenancy,
   authError,
   ssoCallbackUrl,
   csrf,
@@ -22,32 +21,36 @@ const {
   builderOnly,
   builderOrAdmin,
   joiValidator,
-} = require("./middleware")
-
-const { invalidateUser } = require("./cache/user")
+} from "./middleware"
+import { invalidateUser } from "./cache/user"
+import { User } from "@budibase/types"
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
 passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
 
-passport.serializeUser((user, done) => done(null, user))
+passport.serializeUser((user: User, done: any) => done(null, user))
 
-passport.deserializeUser(async (user, done) => {
+passport.deserializeUser(async (user: User, done: any) => {
   const db = getGlobalDB()
 
   try {
-    const user = await db.get(user._id)
-    return done(null, user)
+    const dbUser = await db.get(user._id)
+    return done(null, dbUser)
   } catch (err) {
     console.error(`User not found`, err)
     return done(null, false, { message: "User not found" })
   }
 })
 
-async function refreshOIDCAccessToken(db, chosenConfig, refreshToken) {
+async function refreshOIDCAccessToken(
+  db: any,
+  chosenConfig: any,
+  refreshToken: string
+) {
   const callbackUrl = await oidc.getCallbackUrl(db, chosenConfig)
-  let enrichedConfig
-  let strategy
+  let enrichedConfig: any
+  let strategy: any
 
   try {
     enrichedConfig = await oidc.fetchStrategyConfig(chosenConfig, callbackUrl)
@@ -70,22 +73,28 @@ async function refreshOIDCAccessToken(db, chosenConfig, refreshToken) {
     refresh.requestNewAccessToken(
       Configs.OIDC,
       refreshToken,
-      (err, accessToken, refreshToken, params) => {
+      (err: any, accessToken: string, refreshToken: any, params: any) => {
         resolve({ err, accessToken, refreshToken, params })
       }
     )
   })
 }
 
-async function refreshGoogleAccessToken(db, config, refreshToken) {
+async function refreshGoogleAccessToken(
+  db: any,
+  config: any,
+  refreshToken: any
+) {
   let callbackUrl = await google.getCallbackUrl(db, config)
 
   let strategy
   try {
     strategy = await google.strategyFactory(config, callbackUrl)
-  } catch (err) {
+  } catch (err: any) {
     console.error(err)
-    throw new Error("Error constructing OIDC refresh strategy", err)
+    throw new Error(
+      `Error constructing OIDC refresh strategy: message=${err.message}`
+    )
   }
 
   refresh.use(strategy)
@@ -94,14 +103,18 @@ async function refreshGoogleAccessToken(db, config, refreshToken) {
     refresh.requestNewAccessToken(
       Configs.GOOGLE,
       refreshToken,
-      (err, accessToken, refreshToken, params) => {
+      (err: any, accessToken: string, refreshToken: string, params: any) => {
         resolve({ err, accessToken, refreshToken, params })
       }
     )
   })
 }
 
-async function refreshOAuthToken(refreshToken, configType, configId) {
+async function refreshOAuthToken(
+  refreshToken: string,
+  configType: string,
+  configId: string
+) {
   const db = getGlobalDB()
 
   const config = await getScopedConfig(db, {
@@ -113,7 +126,7 @@ async function refreshOAuthToken(refreshToken, configType, configId) {
   let refreshResponse
   if (configType === Configs.OIDC) {
     // configId - retrieved from cookie.
-    chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
+    chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
     if (!chosenConfig) {
       throw new Error("Invalid OIDC configuration")
     }
@@ -134,7 +147,7 @@ async function refreshOAuthToken(refreshToken, configType, configId) {
   return refreshResponse
 }
 
-async function updateUserOAuth(userId, oAuthConfig) {
+async function updateUserOAuth(userId: string, oAuthConfig: any) {
   const details = {
     accessToken: oAuthConfig.accessToken,
     refreshToken: oAuthConfig.refreshToken,
@@ -162,14 +175,13 @@ async function updateUserOAuth(userId, oAuthConfig) {
   }
 }
 
-module.exports = {
+export = {
   buildAuthMiddleware: authenticated,
   passport,
   google,
   oidc,
   jwt: require("jsonwebtoken"),
   buildTenancyMiddleware: tenancy,
-  buildAppTenancyMiddleware: appTenancy,
   auditLog,
   authError,
   buildCsrfMiddleware: csrf,

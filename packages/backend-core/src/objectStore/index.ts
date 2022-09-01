@@ -66,15 +66,13 @@ const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS, ObjectStoreBuckets.GLOBAL]
  * @constructor
  */
 export const ObjectStore = (bucket: any) => {
-  AWS.config.update({
-    accessKeyId: env.MINIO_ACCESS_KEY,
-    secretAccessKey: env.MINIO_SECRET_KEY,
-    region: env.AWS_REGION,
-  })
   const config: any = {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
     apiVersion: "2006-03-01",
+    accessKeyId: env.MINIO_ACCESS_KEY,
+    secretAccessKey: env.MINIO_SECRET_KEY,
+    region: env.AWS_REGION,
   }
   if (bucket) {
     config.params = {

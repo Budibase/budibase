@@ -102,7 +102,7 @@ filterTests(['all'], () => {
 
       cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 6000 })
       cy.wait(500)
-      cy.get(interact.APP_TABLE_STATUS, { timeout: 1000 }).eq(0).contains("Unpublished")
+      cy.get(interact.APP_TABLE_STATUS, { timeout: 10000 }).eq(0).contains("Unpublished")
 
     })
   })

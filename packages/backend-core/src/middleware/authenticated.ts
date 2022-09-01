@@ -65,7 +65,7 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
  * The tenancy modules should not be used here and it should be assumed that the tenancy context
  * has not yet been populated.
  */
-module.exports = (
+export = (
   noAuthPatterns = [],
   opts: { publicAllowed: boolean; populateUser?: Function } = {
     publicAllowed: false,

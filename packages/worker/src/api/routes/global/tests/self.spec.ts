@@ -1,8 +1,10 @@
 jest.mock("nodemailer")
-const { config, request } = require("../../../tests")
-const { events } = require("@budibase/backend-core")
+import { TestConfiguration, API } from "../../../../tests"
+import { events } from "@budibase/backend-core"
 
 describe("/api/global/self", () => {
+  const config = new TestConfiguration()
+  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -16,23 +18,13 @@ describe("/api/global/self", () => {
     jest.clearAllMocks()
   })
 
-  const updateSelf = async (user) => {
-    const res = await request
-      .post(`/api/global/self`)
-      .send(user)
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return res
-  }
-
   describe("update", () => {
-
     it("should update self", async () => {
       const user = await config.createUser()
+      await config.createSession(user)
 
       delete user.password
-      const res = await updateSelf(user)
+      const res = await api.self.updateSelf(user)
 
       expect(res.body._id).toBe(user._id)
       expect(events.user.updated).toBeCalledTimes(1)
@@ -42,10 +34,10 @@ describe("/api/global/self", () => {
 
     it("should update password", async () => {
       const user = await config.createUser()
-      const password = "newPassword" 
-      user.password = password
+      await config.createSession(user)
 
-      const res = await updateSelf(user)
+      user.password = "newPassword"
+      const res = await api.self.updateSelf(user)
 
       delete user.password
       expect(res.body._id).toBe(user._id)
