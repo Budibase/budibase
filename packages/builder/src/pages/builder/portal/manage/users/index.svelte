@@ -7,7 +7,6 @@
     Table,
     Layout,
     Modal,
-    ModalContent,
     Search,
     notifications,
     Pagination,
@@ -23,6 +22,7 @@
   import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
+  import InvitedModal from "./_components/InvitedModal.svelte"
   import DeletionFailureModal from "./_components/DeletionFailureModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
@@ -59,6 +59,7 @@
   $: userData = []
   $: createUsersResponse = { successful: [], unsuccessful: [] }
   $: deleteUsersResponse = { successful: [], unsuccessful: [] }
+  $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: page = $pageInfo.page
   $: fetchUsers(page, searchEmail)
   $: {
@@ -96,8 +97,7 @@
       admin: user.role === Constants.BudibaseRoles.Admin,
     }))
     try {
-      const res = await users.invite(payload)
-      notifications.success(res.message)
+      inviteUsersResponse = await users.invite(payload)
       inviteConfirmationModal.show()
     } catch (error) {
       notifications.error("Error inviting user")
@@ -144,10 +144,10 @@
     userData = await removingDuplicities({ groups, users })
     if (!userData.users.length) return
 
-    return createUser()
+    return createUsers()
   }
 
-  async function createUser() {
+  async function createUsers() {
     try {
       createUsersResponse = await users.create(
         await removingDuplicities(userData)
@@ -164,7 +164,7 @@
     if (onboardingType === "emailOnboarding") {
       createUserFlow()
     } else {
-      await createUser()
+      await createUsers()
     }
   }
 
@@ -281,16 +281,7 @@
 </Modal>
 
 <Modal bind:this={inviteConfirmationModal}>
-  <ModalContent
-    showCancelButton={false}
-    title="Invites sent!"
-    confirmText="Done"
-  >
-    <Body size="S"
-      >Your users should now recieve an email invite to get access to their
-      Budibase account</Body
-    ></ModalContent
-  >
+  <InvitedModal {inviteUsersResponse} />
 </Modal>
 
 <Modal bind:this={onboardingTypeModal}>

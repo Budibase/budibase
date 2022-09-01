@@ -47,7 +47,14 @@ import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
 import { errors, events, migrations } from "@budibase/backend-core"
-import { App, MigrationType } from "@budibase/types"
+import {
+  App,
+  Layout,
+  Screen,
+  MigrationType,
+  AppNavigation,
+} from "@budibase/types"
+import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -243,27 +250,19 @@ const performAppCreate = async (ctx: any) => {
   }
   const instance = await createInstance(instanceConfig)
   const appId = instance._id
-
   const db = context.getAppDB()
-  let _rev
-  try {
-    // if template there will be an existing doc
-    const existing = await db.get(DocumentType.APP_METADATA)
-    _rev = existing._rev
-  } catch (err) {
-    // nothing to do
-  }
-  const newApplication: App = {
+
+  let newApplication: App = {
     _id: DocumentType.APP_METADATA,
-    _rev,
-    appId: instance._id,
+    _rev: undefined,
+    appId,
     type: "app",
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
     name: name,
     url: url,
-    template: ctx.request.body.template,
-    instance: instance,
+    template: templateKey,
+    instance,
     tenantId: getTenantId(),
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
@@ -285,6 +284,36 @@ const performAppCreate = async (ctx: any) => {
       buttonBorderRadius: "16px",
     },
   }
+
+  // If we used a template or imported an app there will be an existing doc.
+  // Fetch and migrate some metadata from the existing app.
+  try {
+    const existing: App = await db.get(DocumentType.APP_METADATA)
+    const keys: (keyof App)[] = [
+      "_rev",
+      "navigation",
+      "theme",
+      "customTheme",
+      "icon",
+    ]
+    keys.forEach(key => {
+      if (existing[key]) {
+        // @ts-ignore
+        newApplication[key] = existing[key]
+      }
+    })
+
+    // Migrate navigation settings and screens if required
+    if (existing && !existing.navigation) {
+      const navigation = await migrateAppNavigation()
+      if (navigation) {
+        newApplication.navigation = navigation
+      }
+    }
+  } catch (err) {
+    // Nothing to do
+  }
+
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
 
@@ -566,4 +595,56 @@ const updateAppPackage = async (appPackage: any, appId: any) => {
     await appCache.invalidateAppMetadata(appId)
     return newAppPackage
   })
+}
+
+const migrateAppNavigation = async () => {
+  const db = context.getAppDB()
+  const existing: App = await db.get(DocumentType.APP_METADATA)
+  const layouts: Layout[] = await getLayouts()
+  const screens: Screen[] = await getScreens()
+
+  // Migrate all screens, removing custom layouts
+  for (let screen of screens) {
+    if (!screen.layoutId) {
+      return
+    }
+    const layout = layouts.find(layout => layout._id === screen.layoutId)
+    screen.layoutId = undefined
+    screen.showNavigation = layout?.props.navigation !== "None"
+    screen.width = layout?.props.width || "Large"
+    await db.put(screen)
+  }
+
+  // Migrate layout navigation settings
+  const { name, customTheme } = existing
+  const layout = layouts?.find(
+    (layout: Layout) => layout._id === BASE_LAYOUT_PROP_IDS.PRIVATE
+  )
+  if (layout) {
+    let navigationSettings: any = {
+      navigation: "Top",
+      title: name,
+      navWidth: "Large",
+      navBackground:
+        customTheme?.navBackground || "var(--spectrum-global-color-gray-50)",
+      navTextColor:
+        customTheme?.navTextColor || "var(--spectrum-global-color-gray-800)",
+    }
+    if (layout) {
+      navigationSettings.hideLogo = layout.props.hideLogo
+      navigationSettings.hideTitle = layout.props.hideTitle
+      navigationSettings.title = layout.props.title || name
+      navigationSettings.logoUrl = layout.props.logoUrl
+      navigationSettings.links = layout.props.links
+      navigationSettings.navigation = layout.props.navigation || "Top"
+      navigationSettings.sticky = layout.props.sticky
+      navigationSettings.navWidth = layout.props.width || "Large"
+      if (navigationSettings.navigation === "None") {
+        navigationSettings.navigation = "Top"
+      }
+    }
+    return navigationSettings
+  } else {
+    return null
+  }
 }

@@ -1,7 +1,7 @@
 import { Document } from "../document"
 
 export interface Screen extends Document {
-  layoutId: string
+  layoutId?: string
   showNavigation?: boolean
   width?: string
   routing: {
