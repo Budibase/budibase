@@ -53,6 +53,7 @@ function oidcValidation() {
         name: Joi.string().allow("", null),
         uuid: Joi.string().required(),
         activated: Joi.boolean().required(),
+        scopes: Joi.array().optional()
       })
     ).required(true)
   }).unknown(true)

@@ -40,7 +40,6 @@ describe("/static", () => {
   })
 
   describe("/app", () => {
-
     beforeEach(() => {
       jest.clearAllMocks()
     })
@@ -60,7 +59,7 @@ describe("/static", () => {
     it("should serve the app by url", async () => {
       const headers = config.defaultHeaders()
       delete headers[constants.Headers.APP_ID]
-      
+
       const res = await request
         .get(`/app${config.prodApp.url}`)
         .set(headers)
@@ -82,7 +81,7 @@ describe("/static", () => {
   describe("/attachments", () => {
     describe("generateSignedUrls", () => {
       let datasource
-  
+
       beforeEach(async () => {
         datasource = await config.createDatasource({
           datasource: {
@@ -93,7 +92,7 @@ describe("/static", () => {
           },
         })
       })
-  
+
       it("should be able to generate a signed upload URL", async () => {
         const bucket = "foo"
         const key = "bar"
@@ -108,7 +107,7 @@ describe("/static", () => {
           `https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`
         )
       })
-  
+
       it("should handle an invalid datasource ID", async () => {
         const res = await request
           .post(`/api/attachments/foo/url`)
@@ -123,7 +122,7 @@ describe("/static", () => {
           "The specified datasource could not be found"
         )
       })
-  
+
       it("should require a bucket parameter", async () => {
         const res = await request
           .post(`/api/attachments/${datasource._id}/url`)
@@ -136,7 +135,7 @@ describe("/static", () => {
           .expect(400)
         expect(res.body.message).toEqual("bucket and key values are required")
       })
-  
+
       it("should require a key parameter", async () => {
         const res = await request
           .post(`/api/attachments/${datasource._id}/url`)
@@ -151,4 +150,17 @@ describe("/static", () => {
     })
   })
 
+  describe("/preview", () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    it("should serve the builder preview", async () => {
+      const headers = config.defaultHeaders()
+      const res = await request.get(`/preview`).set(headers).expect(200)
+
+      expect(res.body.appId).toBe(config.appId)
+      expect(res.body.builderPreview).toBe(true)
+    })
+  })
 })
