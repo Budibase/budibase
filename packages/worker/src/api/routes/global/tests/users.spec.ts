@@ -38,7 +38,7 @@ describe("/api/global/users", () => {
       expect(events.user.invited).toBeCalledTimes(1)
     })
 
-    it("should be able to generate an invitation for existing user", async () => {
+    it("should not be able to generate an invitation for existing user", async () => {
       const { code, res } = await api.users.sendUserInvite(
         sendMailMock,
         config.defaultUser!.email,
