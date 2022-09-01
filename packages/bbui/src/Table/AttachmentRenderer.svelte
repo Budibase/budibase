@@ -15,14 +15,24 @@
 
 {#each attachments as attachment}
   {#if isImage(attachment.extension)}
-    <Link quiet target="_blank" href={attachment.url}>
+    <Link
+      quiet
+      target="_blank"
+      download={attachment.name}
+      href={attachment.url}
+    >
       <div class="center" title={attachment.name}>
         <img src={attachment.url} alt={attachment.extension} />
       </div>
     </Link>
   {:else}
     <div class="file" title={attachment.name}>
-      <Link quiet target="_blank" href={attachment.url}>
+      <Link
+        quiet
+        target="_blank"
+        download={attachment.name}
+        href={attachment.url}
+      >
         {attachment.extension}
       </Link>
     </div>

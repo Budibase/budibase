@@ -125,6 +125,14 @@ const hasNullFilters = filters =>
 
 exports.run = async function ({ inputs, appId }) {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs
+  if (!tableId) {
+    return {
+      success: false,
+      response: {
+        message: "You must select a table to query.",
+      },
+    }
+  }
   const table = await getTable(appId, tableId)
   let sortType = FieldTypes.STRING
   if (table && table.schema && table.schema[sortColumn] && sortColumn) {

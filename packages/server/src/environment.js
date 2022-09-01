@@ -13,10 +13,7 @@ function isJest() {
 }
 
 function isDev() {
-  return (
-    process.env.NODE_ENV !== "production" &&
-    process.env.BUDIBASE_ENVIRONMENT !== "production"
-  )
+  return process.env.NODE_ENV !== "production"
 }
 
 function isCypress() {
