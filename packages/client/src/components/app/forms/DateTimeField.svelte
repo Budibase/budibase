@@ -17,8 +17,8 @@
   let fieldApi
 
   const handleChange = e => {
-    fieldApi.setValue(e.detail)
-    if (onChange) {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
       onChange({ value: e.detail })
     }
   }
