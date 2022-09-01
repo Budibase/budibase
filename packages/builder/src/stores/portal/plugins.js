@@ -32,10 +32,12 @@ export function createPluginsStore() {
       case "npm":
         pluginData.npmToken = auth
         break
+      case "github":
+        pluginData.githubToken = auth
+        break
     }
 
     let res = await API.createPlugin(pluginData)
-    console.log("RESP", res)
 
     let newPlugin = res.plugins[0]
     update(state => {

@@ -31,6 +31,7 @@ const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
 const tar = require("tar")
 const fetch = require("node-fetch")
+const { NodeVM } = require("vm2")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
@@ -378,8 +379,69 @@ exports.createUrlPlugin = async (url, name = "", headers = {}) => {
   return await downloadUnzipPlugin(name, url, headers)
 }
 
+exports.createGithubPlugin = async (ctx, url, name = "", token = "") => {
+  let githubRepositoryUrl
+  let githubUrl
+
+  if (url.includes(".git")) {
+    githubRepositoryUrl = token
+      ? url.replace("https://", `https://${token}@`)
+      : url
+    githubUrl = url.replace(".git", "")
+  } else {
+    githubRepositoryUrl = token
+      ? `${url}.git`.replace("https://", `https://${token}@`)
+      : `${url}.git`
+    githubUrl = url
+  }
+
+  const githubApiUrl = githubUrl.replace(
+    "https://github.com/",
+    "https://api.github.com/repos/"
+  )
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+  try {
+    const pluginRaw = await fetch(githubApiUrl, { headers })
+    if (pluginRaw.status !== 200) {
+      throw `Repository not found`
+    }
+
+    let pluginDetails = await pluginRaw.json()
+    const pluginName = pluginDetails.name || name
+
+    const path = join(budibaseTempDir(), pluginName)
+    // Remove first if exists
+    if (fs.existsSync(path)) {
+      fs.rmSync(path, { recursive: true, force: true })
+    }
+    fs.mkdirSync(path)
+
+    const script = `
+module.exports = async () => {
+  const child_process = require('child_process')
+  child_process.execSync(\`git clone ${githubRepositoryUrl} ${join(
+      budibaseTempDir(),
+      pluginName
+    )}\`);
+}
+`
+    const scriptRunner = new NodeVM({
+      require: {
+        external: true,
+        builtin: ["child_process"],
+        root: "./",
+      },
+    }).run(script)
+
+    await scriptRunner()
+
+    return await getPluginMetadata(path)
+  } catch (e) {
+    throw e.message
+  }
+}
+
 const downloadUnzipPlugin = async (name, url, headers = {}) => {
-  console.log(name, url, headers)
   const path = join(budibaseTempDir(), name)
   try {
     // Remove first if exists
@@ -407,7 +469,6 @@ const downloadUnzipPlugin = async (name, url, headers = {}) => {
 exports.downloadUnzipPlugin = downloadUnzipPlugin
 
 const getPluginMetadata = async path => {
-  console.log(path)
   let metadata = {}
   try {
     const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
