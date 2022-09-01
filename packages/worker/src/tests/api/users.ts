@@ -3,6 +3,7 @@ import {
   BulkCreateUsersResponse,
   BulkDeleteUsersRequest,
   CreateUserResponse,
+  InviteUsersRequest,
   User,
   UserDetails,
 } from "@budibase/types"
@@ -19,17 +20,21 @@ export class UserAPI {
 
   // INVITE
 
-  sendUserInvite = async (sendMailMock: any) => {
+  sendUserInvite = async (sendMailMock: any, email: string, status = 200) => {
     await this.config.saveSmtpConfig()
     await this.config.saveSettingsConfig()
     const res = await this.request
       .post(`/api/global/users/invite`)
       .send({
-        email: "invite@test.com",
+        email,
       })
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(200)
+      .expect(status)
+
+    if (status !== 200) {
+      return { code: undefined, res }
+    }
 
     const emailCall = sendMailMock.mock.calls[0][0]
     // after this URL there should be a code
@@ -49,6 +54,17 @@ export class UserAPI {
       })
       .expect("Content-Type", /json/)
       .expect(200)
+  }
+
+  sendMultiUserInvite = async (request: InviteUsersRequest, status = 200) => {
+    await this.config.saveSmtpConfig()
+    await this.config.saveSettingsConfig()
+    return this.request
+      .post(`/api/global/users/multi/invite`)
+      .send(request)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(status)
   }
 
   // BULK
