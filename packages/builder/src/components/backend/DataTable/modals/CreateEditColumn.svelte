@@ -467,6 +467,7 @@
         options={relationshipOptions}
         getOptionLabel={option => option.name}
         getOptionValue={option => option.value}
+        getOptionTitle={option => option.alt}
       />
     {/if}
     <Input
