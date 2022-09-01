@@ -132,7 +132,7 @@ spec:
         {{ end }}
         {{ if .Values.globals.pluginsDir }}
         - name: PLUGINS_DIR
-          value: { { .Values.globals.pluginsDir | quote }}
+          value: {{ .Values.globals.pluginsDir | quote }}
         {{ end }}
         {{ if .Values.services.apps.nodeDebug }}
         - name: NODE_DEBUG
