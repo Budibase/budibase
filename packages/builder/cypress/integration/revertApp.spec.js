@@ -48,6 +48,7 @@ filterTests(['smoke', 'all'], () => {
                 cy.get(interact.AREA_LABEL_REVERT).click({ force: true })
             })
             cy.get(interact.SPECTRUM_DIALOG_GRID).within(() => {
+                cy.get("input").type("Cypress Tests")
                 // Click Revert
                 cy.get(interact.SPECTRUM_BUTTON).contains("Revert").click({ force: true })
                 cy.wait(2000) // Wait for app to finish reverting

@@ -291,13 +291,18 @@ exports.getComponentLibraryManifest = async library => {
   }
 
   let resp
+  let path
   try {
     // Try to load the manifest from the new file location
-    const path = join(appId, filename)
+    path = join(appId, filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
   } catch (error) {
+    console.error(
+      `component-manifest-objectstore=failed appId=${appId} path=${path}`,
+      error
+    )
     // Fallback to loading it from the old location for old apps
-    const path = join(appId, "node_modules", library, "package", filename)
+    path = join(appId, "node_modules", library, "package", filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
   }
   if (typeof resp !== "string") {
