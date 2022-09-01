@@ -7,9 +7,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   let confirmDeleteDialog
-  let confirmEjectDialog
   let componentToDelete
-  let componentToEject
 
   const keyHandlers = {
     ["^ArrowUp"]: async component => {
@@ -30,10 +28,6 @@
     ["^d"]: async component => {
       store.actions.components.copy(component)
       await store.actions.components.paste(component, "below")
-    },
-    ["^e"]: component => {
-      componentToEject = component
-      confirmEjectDialog.show()
     },
     ["^Enter"]: () => {
       $goto("./new")
@@ -121,11 +115,4 @@
   body={`Are you sure you want to delete "${componentToDelete?._instanceName}"?`}
   okText="Delete Component"
   onOk={() => store.actions.components.delete(componentToDelete)}
-/>
-<ConfirmDialog
-  bind:this={confirmEjectDialog}
-  title="Eject block"
-  body={`Ejecting a block breaks it down into multiple components. Are you sure you want to eject "${componentToEject?._instanceName}"?`}
-  onOk={() => store.actions.components.requestEjectBlock(componentToEject?._id)}
-  okText="Eject block"
 />
