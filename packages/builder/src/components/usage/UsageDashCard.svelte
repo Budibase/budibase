@@ -3,12 +3,11 @@
 
   export let description = ""
   export let title = ""
-  export let subtitle = ""
   export let primaryAction
   export let secondaryAction
   export let primaryActionText
   export let secondaryActionText
-  export let primaryCta = false
+  export let primaryCta = true
   export let textRows = []
 
   $: primaryDefined = primaryAction && primaryActionText
@@ -23,14 +22,13 @@
           <Detail size="M">{description}</Detail>
         </div>
         <Heading size="M">{title}</Heading>
-        <div class="dash-card-title">
-          <Detail size="M">{subtitle}</Detail>
-        </div>
-        <div class="text-rows">
-          {#each textRows as row}
-            <Body>{row}</Body>
-          {/each}
-        </div>
+        {#if textRows.length}
+          <div class="text-rows">
+            {#each textRows as row}
+              <Body>{row}</Body>
+            {/each}
+          </div>
+        {/if}
       </Layout>
     </div>
     <div class="header-actions">

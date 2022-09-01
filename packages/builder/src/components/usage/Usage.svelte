@@ -1,6 +1,6 @@
 <script>
   import { Body, ProgressBar, Heading, Icon, Link } from "@budibase/bbui"
-  import { admin } from "../../stores/portal"
+  import { admin, auth } from "../../stores/portal"
   import { onMount } from "svelte"
   export let usage
   export let warnWhenFull = false
@@ -8,6 +8,8 @@
   let percentage
   let unlimited = false
   let showWarning = false
+
+  $: accountPortalAccess = $auth?.user?.accountPortalAccess
 
   const isUnlimited = () => {
     if (usage.total === -1) {
@@ -66,7 +68,12 @@
     {/if}
     {#if showWarning}
       <Body size="S">
-        To get more queries <Link href={upgradeUrl}>upgrade your plan</Link>
+        To get more {usage.name.toLowerCase()}
+        {#if accountPortalAccess}
+          <Link href={upgradeUrl}>upgrade your plan</Link>
+        {:else}
+          contact your account holder
+        {/if}
       </Body>
     {/if}
   </div>
