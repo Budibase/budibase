@@ -11,7 +11,12 @@ export function watch() {
   chokidar
     .watch(watchPath, {
       ignored: "**/node_modules",
-      awaitWriteFinish: true,
+      awaitWriteFinish: {
+        pollInterval: 100,
+        stabilityThreshold: 250,
+      },
+      usePolling: true,
+      interval: 250,
     })
     .on("all", async (event: string, path: string) => {
       // Sanity checks
