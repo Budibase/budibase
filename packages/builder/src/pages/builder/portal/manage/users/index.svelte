@@ -144,10 +144,10 @@
     userData = await removingDuplicities({ groups, users })
     if (!userData.users.length) return
 
-    return createUser()
+    return createUsers()
   }
 
-  async function createUser() {
+  async function createUsers() {
     try {
       createUsersResponse = await users.create(
         await removingDuplicities(userData)
@@ -164,7 +164,7 @@
     if (onboardingType === "emailOnboarding") {
       createUserFlow()
     } else {
-      await createUser()
+      await createUsers()
     }
   }
 
