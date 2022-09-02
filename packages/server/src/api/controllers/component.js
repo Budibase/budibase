@@ -46,7 +46,7 @@ exports.fetchAppComponentDefinitions = async function (ctx) {
         .map(row => row.doc)
         .filter(plugin => plugin.schema.type === "component")
         .forEach(plugin => {
-          const fullComponentName = `plugin/${plugin.name}/${plugin.version}`
+          const fullComponentName = `plugin/${plugin.name}`
           definitions[fullComponentName] = {
             component: fullComponentName,
             ...plugin.schema.schema,
