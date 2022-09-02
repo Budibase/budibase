@@ -14,6 +14,7 @@
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
   import { cloneDeep } from "lodash/fp"
+  import DeleteGroupModal from "./_components/DeleteGroupModal.svelte"
 
   const DefaultGroup = {
     name: "",
@@ -24,14 +25,13 @@
     roles: {},
   }
   let modal
+  let deleteModal
   let group = cloneDeep(DefaultGroup)
+  let removeGroup
 
   async function deleteGroup(group) {
-    try {
-      groups.actions.delete(group)
-    } catch (error) {
-      notifications.error(`Failed to delete group`)
-    }
+    deleteModal.show()
+    removeGroup = group
   }
 
   async function saveGroup(group) {
@@ -109,6 +109,10 @@
 
 <Modal bind:this={modal}>
   <CreateEditGroupModal bind:group {saveGroup} />
+</Modal>
+
+<Modal bind:this={deleteModal}>
+  <DeleteGroupModal {removeGroup} />
 </Modal>
 
 <style>
