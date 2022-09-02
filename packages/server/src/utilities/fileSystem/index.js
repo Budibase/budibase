@@ -15,6 +15,7 @@ const {
   streamUpload,
   deleteFolder,
   downloadTarball,
+  deleteFiles,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
 const env = require("../../environment")
@@ -332,5 +333,6 @@ exports.cleanup = appIds => {
 exports.upload = upload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
+exports.deleteFiles = deleteFiles
 exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
 exports.NODE_MODULES_PATH = NODE_MODULES_PATH

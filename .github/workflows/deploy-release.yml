@@ -69,6 +69,28 @@ jobs:
         env:
           KUBECONFIG_FILE: '${{ secrets.RELEASE_KUBECONFIG }}'
 
+      - name: Re roll app-service
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.RELEASE_KUBECONFIG_BASE64 }}
+        with:
+          args: rollout restart deployment app-service -n budibase
+
+      - name: Re roll proxy-service
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.RELEASE_KUBECONFIG_BASE64 }}
+        with:
+          args: rollout restart deployment proxy-service -n budibase
+
+      - name: Re roll worker-service
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.RELEASE_KUBECONFIG_BASE64 }}
+        with:
+          args: rollout restart deployment worker-service -n budibase
+
+
       - name: Discord Webhook Action
         uses: tsickert/discord-webhook@v4.0.0
         with:

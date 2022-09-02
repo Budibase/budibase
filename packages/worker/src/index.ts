@@ -71,9 +71,7 @@ server.on("close", async () => {
     return
   }
   shuttingDown = true
-  if (!env.isTest()) {
-    console.log("Server Closed")
-  }
+  console.log("Server Closed")
   await redis.shutdown()
   await events.shutdown()
   if (!env.isTest()) {
@@ -86,7 +84,7 @@ const shutdown = () => {
   server.destroy()
 }
 
-module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
+export = server.listen(parseInt(env.PORT || 4002), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await redis.init()
 })
@@ -98,5 +96,9 @@ process.on("uncaughtException", err => {
 })
 
 process.on("SIGTERM", () => {
+  shutdown()
+})
+
+process.on("SIGINT", () => {
   shutdown()
 })

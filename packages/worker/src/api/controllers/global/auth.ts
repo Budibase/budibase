@@ -227,9 +227,22 @@ export const oidcPreAuth = async (ctx: any, next: any) => {
 
   setCookie(ctx, configId, Cookies.OIDC_CONFIG)
 
+  const db = getGlobalDB()
+  const config = await core.db.getScopedConfig(db, {
+    type: Configs.OIDC,
+    group: ctx.query.group,
+  })
+
+  const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
+
+  let authScopes =
+    chosenConfig.scopes?.length > 0
+      ? chosenConfig.scopes
+      : ["profile", "email", "offline_access"]
+
   return passport.authenticate(strategy, {
     // required 'openid' scope is added by oidc strategy factory
-    scope: ["profile", "email", "offline_access"], //auth0 offline_access scope required for the refresh token behaviour.
+    scope: authScopes,
   })(ctx, next)
 }
 

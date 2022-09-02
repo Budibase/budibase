@@ -17,10 +17,10 @@ import {
 } from "./utils"
 import dayjs from "dayjs"
 const { NUMBER_REGEX } = require("../utilities")
+import Sql from "./base/sql"
 
 module MySQLModule {
   const mysql = require("mysql2/promise")
-  const Sql = require("./base/sql")
 
   interface MySQLConfig {
     host: string

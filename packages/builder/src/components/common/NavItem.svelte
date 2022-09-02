@@ -16,6 +16,7 @@
   export let scrollable = false
   export let highlighted = false
   export let rightAlignIcon = false
+  export let id
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -58,6 +59,7 @@
   on:click={onClick}
   ondragover="return false"
   ondragenter="return false"
+  {id}
 >
   <div class="nav-item-content" bind:this={contentRef}>
     {#if withArrow}
