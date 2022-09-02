@@ -8,6 +8,7 @@ const {
   FIND_ANY_HBS_REGEX,
   findDoubleHbsInstances,
 } = require("./utilities")
+const { convertHBSBlock } = require("./conversion")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -341,4 +342,32 @@ module.exports.findHBSBlocks = string => {
  */
 module.exports.doesContainString = (template, string) => {
   return exports.doesContainStrings(template, [string])
+}
+
+module.exports.convertToJS = hbs => {
+  const blocks = exports.findHBSBlocks(hbs)
+  let js = "return `",
+    prevBlock = null
+  const variables = {}
+  if (blocks.length === 0) {
+    js += hbs
+  }
+  let count = 1
+  for (let block of blocks) {
+    let stringPart = hbs
+    if (prevBlock) {
+      stringPart = stringPart.split(prevBlock)[1]
+    }
+    stringPart = stringPart.split(block)[0]
+    prevBlock = block
+    const { variable, value } = convertHBSBlock(block, count++)
+    variables[variable] = value
+    js += `${stringPart.split()}\${${variable}}`
+  }
+  let varBlock = ""
+  for (let [variable, value] of Object.entries(variables)) {
+    varBlock += `const ${variable} = ${value};\n`
+  }
+  js += "`;"
+  return `${varBlock}${js}`
 }

@@ -14,10 +14,10 @@ import {
   finaliseExternalTables,
   SqlClient,
 } from "./utils"
+import Sql from "./base/sql"
 
 module PostgresModule {
   const { Client, types } = require("pg")
-  const Sql = require("./base/sql")
   const { escapeDangerousCharacters } = require("../utilities")
 
   // Return "date" and "timestamp" types as plain strings.
@@ -117,6 +117,7 @@ module PostgresModule {
     private readonly client: any
     private readonly config: PostgresConfig
     private index: number = 1
+    private open: boolean
     public tables: Record<string, Table> = {}
     public schemaErrors: Record<string, string> = {}
 

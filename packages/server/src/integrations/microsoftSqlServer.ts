@@ -16,10 +16,10 @@ import {
   finaliseExternalTables,
   SqlClient,
 } from "./utils"
+import Sql from "./base/sql"
 
 module MSSQLModule {
   const sqlServer = require("mssql")
-  const Sql = require("./base/sql")
   const DEFAULT_SCHEMA = "dbo"
 
   interface MSSQLConfig {
@@ -97,7 +97,8 @@ module MSSQLModule {
   class SqlServerIntegration extends Sql implements DatasourcePlus {
     private readonly config: MSSQLConfig
     private index: number = 0
-    static pool: any
+    private readonly pool: any
+    private client: any
     public tables: Record<string, Table> = {}
     public schemaErrors: Record<string, string> = {}
 
