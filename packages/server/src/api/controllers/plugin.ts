@@ -1,9 +1,10 @@
 import { ObjectStoreBuckets } from "../../constants"
-import { extractPluginTarball } from "../../utilities/fileSystem"
+import { extractPluginTarball, loadJSFile } from "../../utilities/fileSystem"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { generatePluginID, getPluginParams } from "../../db/utils"
 import { uploadDirectory } from "@budibase/backend-core/objectStore"
 import { PluginType, FileType } from "@budibase/types"
+import env from "../../environment"
 
 export async function getPlugins(type?: PluginType) {
   const db = getGlobalDB()
@@ -49,6 +50,9 @@ export async function fetch(ctx: any) {
 export async function destroy(ctx: any) {}
 
 export async function processPlugin(plugin: FileType) {
+  if (!env.SELF_HOSTED) {
+    throw new Error("Plugins not supported outside of self-host.")
+  }
   const db = getGlobalDB()
   const { metadata, directory } = await extractPluginTarball(plugin)
   const version = metadata.package.version,
@@ -56,7 +60,7 @@ export async function processPlugin(plugin: FileType) {
     description = metadata.package.description
 
   // first open the tarball into tmp directory
-  const bucketPath = `${name}/${version}/`
+  const bucketPath = `${name}/`
   const files = await uploadDirectory(
     ObjectStoreBuckets.PLUGINS,
     directory,
@@ -66,8 +70,20 @@ export async function processPlugin(plugin: FileType) {
   if (!jsFile) {
     throw new Error(`Plugin missing .js file.`)
   }
+  // validate the JS for a datasource
+  if (metadata.schema.type === PluginType.DATASOURCE) {
+    const js = loadJSFile(directory, jsFile.name)
+    // TODO: this isn't safe - but we need full node environment
+    // in future we should do this in a thread for safety
+    try {
+      eval(js)
+    } catch (err: any) {
+      const message = err?.message ? err.message : JSON.stringify(err)
+      throw new Error(`JS invalid: ${message}`)
+    }
+  }
   const jsFileName = jsFile.name
-  const pluginId = generatePluginID(name, version)
+  const pluginId = generatePluginID(name)
 
   // overwrite existing docs entirely if they exist
   let rev
@@ -80,10 +96,10 @@ export async function processPlugin(plugin: FileType) {
   const doc = {
     _id: pluginId,
     _rev: rev,
+    ...metadata,
     name,
     version,
     description,
-    ...metadata,
     jsUrl: `${bucketPath}${jsFileName}`,
   }
   const response = await db.put(doc)
