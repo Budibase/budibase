@@ -7,14 +7,15 @@
   $: noPaste = !$store.componentToPaste
 
   const keyboardEvent = (key, ctrlKey = false) => {
-    // Ensure this component is selected first
-    if (component._id !== $store.selectedComponentId) {
-      store.update(state => {
-        state.selectedComponentId = component._id
-        return state
+    document.dispatchEvent(
+      new CustomEvent("component-menu", {
+        detail: {
+          key,
+          ctrlKey,
+          id: component?._id,
+        },
       })
-    }
-    document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
+    )
   }
 </script>
 

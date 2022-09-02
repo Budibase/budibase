@@ -371,8 +371,8 @@ exports.getMemoryViewParams = (otherProps = {}) => {
   return getDocParams(DocumentType.MEM_VIEW, null, otherProps)
 }
 
-exports.generatePluginID = (name, version) => {
-  return `${DocumentType.PLUGIN}${SEPARATOR}${name}${SEPARATOR}${version}`
+exports.generatePluginID = name => {
+  return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
 }
 
 /**
