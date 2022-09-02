@@ -17,6 +17,7 @@ const {
   checkBuilderEndpoint,
 } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
+const { basicScreen, basicLayout } = setup.structures
 const { AppStatus } = require("../../../db/utils")
 const { events } = require("@budibase/backend-core")
 
@@ -80,6 +81,31 @@ describe("/applications", () => {
         url: `/api/applications`,
         body: { name: "My App" },
       })
+    })
+
+    it("migrates navigation settings from old apps", async () => {
+      const res = await request
+        .post("/api/applications")
+        .field("name", "Old App")
+        .field("useTemplate", "true")
+        .set(config.defaultHeaders())
+        .attach("templateFile", "src/api/routes/tests/data/old-app.txt")
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body._id).toBeDefined()
+      expect(res.body.navigation).toBeDefined()
+      expect(res.body.navigation.hideLogo).toBe(true)
+      expect(res.body.navigation.title).toBe("Custom Title")
+      expect(res.body.navigation.hideLogo).toBe(true)
+      expect(res.body.navigation.navigation).toBe("Left")
+      expect(res.body.navigation.navBackground).toBe(
+        "var(--spectrum-global-color-blue-600)"
+      )
+      expect(res.body.navigation.navTextColor).toBe(
+        "var(--spectrum-global-color-gray-50)"
+      )
+      expect(events.app.created).toBeCalledTimes(1)
+      expect(events.app.fileImported).toBeCalledTimes(1)
     })
   })
 

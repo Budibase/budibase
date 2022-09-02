@@ -3,17 +3,27 @@ const { v4: uuidv4 } = require("uuid")
 const { logWarn } = require("../logging")
 const env = require("../environment")
 
-interface Session {
-  key: string
-  userId: string
+interface CreateSession {
   sessionId: string
-  lastAccessedAt: string
-  createdAt: string
+  tenantId: string
   csrfToken?: string
-  value: string
 }
 
-type SessionKey = { key: string }[]
+interface Session extends CreateSession {
+  userId: string
+  lastAccessedAt: string
+  createdAt: string
+  // make optional attributes required
+  csrfToken: string
+}
+
+interface SessionKey {
+  key: string
+}
+
+interface ScannedSession {
+  value: Session
+}
 
 // a week in seconds
 const EXPIRY_SECONDS = 86400 * 7
@@ -22,14 +32,14 @@ function makeSessionID(userId: string, sessionId: string) {
   return `${userId}/${sessionId}`
 }
 
-export async function getSessionsForUser(userId: string) {
+export async function getSessionsForUser(userId: string): Promise<Session[]> {
   if (!userId) {
     console.trace("Cannot get sessions for undefined userId")
     return []
   }
   const client = await redis.getSessionClient()
-  const sessions = await client.scan(userId)
-  return sessions.map((session: Session) => session.value)
+  const sessions: ScannedSession[] = await client.scan(userId)
+  return sessions.map(session => session.value)
 }
 
 export async function invalidateSessions(
@@ -39,33 +49,32 @@ export async function invalidateSessions(
   try {
     const reason = opts?.reason || "unknown"
     let sessionIds: string[] = opts.sessionIds || []
-    let sessions: SessionKey
+    let sessionKeys: SessionKey[]
 
     // If no sessionIds, get all the sessions for the user
     if (sessionIds.length === 0) {
-      sessions = await getSessionsForUser(userId)
-      sessions.forEach(
-        (session: any) =>
-          (session.key = makeSessionID(session.userId, session.sessionId))
-      )
+      const sessions = await getSessionsForUser(userId)
+      sessionKeys = sessions.map(session => ({
+        key: makeSessionID(session.userId, session.sessionId),
+      }))
     } else {
       // use the passed array of sessionIds
       sessionIds = Array.isArray(sessionIds) ? sessionIds : [sessionIds]
-      sessions = sessionIds.map((sessionId: string) => ({
+      sessionKeys = sessionIds.map(sessionId => ({
         key: makeSessionID(userId, sessionId),
       }))
     }
 
-    if (sessions && sessions.length > 0) {
+    if (sessionKeys && sessionKeys.length > 0) {
       const client = await redis.getSessionClient()
       const promises = []
-      for (let session of sessions) {
-        promises.push(client.delete(session.key))
+      for (let sessionKey of sessionKeys) {
+        promises.push(client.delete(sessionKey.key))
       }
       if (!env.isTest()) {
         logWarn(
-          `Invalidating sessions for ${userId} (reason: ${reason}) - ${sessions
-            .map(session => session.key)
+          `Invalidating sessions for ${userId} (reason: ${reason}) - ${sessionKeys
+            .map(sessionKey => sessionKey.key)
             .join(", ")}`
         )
       }
@@ -76,22 +85,26 @@ export async function invalidateSessions(
   }
 }
 
-export async function createASession(userId: string, session: Session) {
+export async function createASession(
+  userId: string,
+  createSession: CreateSession
+) {
   // invalidate all other sessions
   await invalidateSessions(userId, { reason: "creation" })
 
   const client = await redis.getSessionClient()
-  const sessionId = session.sessionId
-  if (!session.csrfToken) {
-    session.csrfToken = uuidv4()
-  }
-  session = {
-    ...session,
+  const sessionId = createSession.sessionId
+  const csrfToken = createSession.csrfToken ? createSession.csrfToken : uuidv4()
+  const key = makeSessionID(userId, sessionId)
+
+  const session: Session = {
+    ...createSession,
+    csrfToken,
     createdAt: new Date().toISOString(),
     lastAccessedAt: new Date().toISOString(),
     userId,
   }
-  await client.store(makeSessionID(userId, sessionId), session, EXPIRY_SECONDS)
+  await client.store(key, session, EXPIRY_SECONDS)
 }
 
 export async function updateSessionTTL(session: Session) {
@@ -106,7 +119,10 @@ export async function endSession(userId: string, sessionId: string) {
   await client.delete(makeSessionID(userId, sessionId))
 }
 
-export async function getSession(userId: string, sessionId: string) {
+export async function getSession(
+  userId: string,
+  sessionId: string
+): Promise<Session> {
   if (!userId || !sessionId) {
     throw new Error(`Invalid session details - ${userId} - ${sessionId}`)
   }

@@ -57,12 +57,19 @@ module FetchMock {
         404
       )
     } else if (url.includes("_search")) {
+      const body = opts.body
+      const parts = body.split("tableId:")
+      let tableId
+      if (parts && parts[1]) {
+        tableId = parts[1].split('"')[0]
+      }
       return json({
         rows: [
           {
             doc: {
               _id: "test",
-              tableId: opts.body.split("tableId:")[1].split('"')[0],
+              tableId: tableId,
+              query: opts.body,
             },
           },
         ],

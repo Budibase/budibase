@@ -48,18 +48,19 @@
     "@babel/helper-validator-identifier" "^7.16.7"
     to-fast-properties "^2.0.0"
 
-"@budibase/backend-core@1.1.32-alpha.6":
-  version "1.1.32-alpha.6"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.1.32-alpha.6.tgz#e9dc1a1989a2a6952f5ce002fcdfef66625f3de8"
-  integrity sha512-8oT6veeSmymuJfnu1jAkDAWD4fLj5W0KxNq6GlC+eMWWDZloDF4fMWDpuYTFBeinq1z1GeSFXc9Ak6u+1Z7LtQ==
+"@budibase/backend-core@1.2.58-alpha.7":
+  version "1.2.58-alpha.7"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.58-alpha.7.tgz#b7888eb0e9796a4e49283cf8b928a6771439dbc0"
+  integrity sha512-wdZlJDQtYkGNce9hlj30Np6BDxvS5Mr07XhMwERlKzSRjOOAkQtM5bX+7UVZoIE/X0f8/h47U8P4T3Y98WGMkg==
   dependencies:
-    "@budibase/types" "1.1.32-alpha.6"
+    "@budibase/types" "1.2.58-alpha.7"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
     dotenv "16.0.1"
     emitter-listener "1.1.2"
     ioredis "4.28.0"
+    joi "17.6.0"
     jsonwebtoken "8.5.1"
     koa-passport "4.1.4"
     lodash "4.17.21"
@@ -81,10 +82,10 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/types@1.1.32-alpha.6":
-  version "1.1.32-alpha.6"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.1.32-alpha.6.tgz#95d8d73c7ed6ebc22ff26a44365127a478e19409"
-  integrity sha512-AKKxrzVqGtcSzZZ2fP6i2Vgv6ICN9NEEE1dmzRk9AImZS+XKQ9VgVpdE+4gHgFK7L0gBYAsiaoEpCbbrI/+NoQ==
+"@budibase/types@1.2.58-alpha.7":
+  version "1.2.58-alpha.7"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.58-alpha.7.tgz#5f4e7d262bb597d01a1bd7c0674453946de3cfa2"
+  integrity sha512-VVW7XKFyax5A69cMoR8gwI06cxt/1G1cLH+8ECjIiwb2oO3hHe6WnlA91dUar0IdcdBHji7vYXg4MD1p8wb6jA==
 
 "@eslint/eslintrc@^0.4.3":
   version "0.4.3"
@@ -100,6 +101,18 @@
     js-yaml "^3.13.1"
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
+
+"@hapi/hoek@^9.0.0":
+  version "9.3.0"
+  resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.3.0.tgz#8368869dcb735be2e7f5cb7647de78e167a251fb"
+  integrity sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==
+
+"@hapi/topo@^5.0.0":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@hapi/topo/-/topo-5.1.0.tgz#dc448e332c6c6e37a4dc02fd84ba8d44b9afb012"
+  integrity sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg==
+  dependencies:
+    "@hapi/hoek" "^9.0.0"
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
@@ -150,6 +163,23 @@
   dependencies:
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
+
+"@sideway/address@^4.1.3":
+  version "4.1.4"
+  resolved "https://registry.yarnpkg.com/@sideway/address/-/address-4.1.4.tgz#03dccebc6ea47fdc226f7d3d1ad512955d4783f0"
+  integrity sha512-7vwq+rOHVWjyXxVlR76Agnvhy8I9rpzjosTESvmhNeXOXdZZB15Fl+TI9x1SiHZH5Jv2wTGduSxFDIaq0m3DUw==
+  dependencies:
+    "@hapi/hoek" "^9.0.0"
+
+"@sideway/formula@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@sideway/formula/-/formula-3.0.0.tgz#fe158aee32e6bd5de85044be615bc08478a0a13c"
+  integrity sha512-vHe7wZ4NOXVfkoRb8T5otiENVlT7a3IAiw7H5M2+GO+9CDgcVUUsX1zalAztCmwyOr2RUTGJdgB+ZvSVqmdHmg==
+
+"@sideway/pinpoint@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@sideway/pinpoint/-/pinpoint-2.0.0.tgz#cff8ffadc372ad29fd3f78277aeb29e632cc70df"
+  integrity sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==
 
 "@techpass/passport-openidconnect@0.3.2":
   version "0.3.2"
@@ -1625,6 +1655,17 @@ jmespath@0.15.0:
   version "0.15.0"
   resolved "https://registry.yarnpkg.com/jmespath/-/jmespath-0.15.0.tgz#a3f222a9aae9f966f5d27c796510e28091764217"
   integrity sha512-+kHj8HXArPfpPEKGLZ+kB5ONRTCiGQXo8RQYL0hH8t6pWXUBBK5KkkQmTNOwKK4LEsd0yTsgtjJVm4UBSZea4w==
+
+joi@17.6.0:
+  version "17.6.0"
+  resolved "https://registry.yarnpkg.com/joi/-/joi-17.6.0.tgz#0bb54f2f006c09a96e75ce687957bd04290054b2"
+  integrity sha512-OX5dG6DTbcr/kbMFj0KGYxuew69HPcAE3K/sZpEV2nP6e/j/C0HV+HNiBPCASxdx5T7DMoa0s8UeHWMnb6n2zw==
+  dependencies:
+    "@hapi/hoek" "^9.0.0"
+    "@hapi/topo" "^5.0.0"
+    "@sideway/address" "^4.1.3"
+    "@sideway/formula" "^3.0.0"
+    "@sideway/pinpoint" "^2.0.0"
 
 join-component@^1.1.0:
   version "1.1.0"

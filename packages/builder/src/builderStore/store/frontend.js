@@ -19,7 +19,6 @@ import {
   makeComponentUnique,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
-import { DefaultAppTheme, LAYOUT_NAMES } from "../../constants"
 import { Utils } from "@budibase/frontend-core"
 
 const INITIAL_FRONTEND_STATE = {
@@ -40,6 +39,7 @@ const INITIAL_FRONTEND_STATE = {
     devicePreview: false,
     messagePassing: false,
     continueIfAction: false,
+    showNotificationAction: false,
   },
   errors: [],
   hasAppPackage: false,
@@ -124,35 +124,6 @@ export const getFrontendStore = () => {
       await integrations.init()
       await queries.init()
       await tables.init()
-
-      // Add navigation settings to old apps
-      if (!application.navigation) {
-        const layout = layouts.find(x => x._id === LAYOUT_NAMES.MASTER.PRIVATE)
-        const customTheme = application.customTheme
-        let navigationSettings = {
-          navigation: "Top",
-          title: application.name,
-          navWidth: "Large",
-          navBackground:
-            customTheme?.navBackground || DefaultAppTheme.navBackground,
-          navTextColor:
-            customTheme?.navTextColor || DefaultAppTheme.navTextColor,
-        }
-        if (layout) {
-          navigationSettings.hideLogo = layout.props.hideLogo
-          navigationSettings.hideTitle = layout.props.hideTitle
-          navigationSettings.title = layout.props.title || application.name
-          navigationSettings.logoUrl = layout.props.logoUrl
-          navigationSettings.links = layout.props.links
-          navigationSettings.navigation = layout.props.navigation || "Top"
-          navigationSettings.sticky = layout.props.sticky
-          navigationSettings.navWidth = layout.props.width || "Large"
-          if (navigationSettings.navigation === "None") {
-            navigationSettings.navigation = "Top"
-          }
-        }
-        await store.actions.navigation.save(navigationSettings)
-      }
     },
     theme: {
       save: async theme => {
@@ -534,7 +505,16 @@ export const getFrontendStore = () => {
         if (!component) {
           return
         }
-        let parentId
+
+        // Determine the next component to select after deletion
+        const state = get(store)
+        let nextSelectedComponentId
+        if (state.selectedComponentId === component._id) {
+          nextSelectedComponentId = store.actions.components.getNext()
+          if (!nextSelectedComponentId) {
+            nextSelectedComponentId = store.actions.components.getPrevious()
+          }
+        }
 
         // Patch screen
         await store.actions.screens.patch(screen => {
@@ -549,17 +529,18 @@ export const getFrontendStore = () => {
           if (!parent) {
             return false
           }
-          parentId = parent._id
           parent._children = parent._children.filter(
             child => child._id !== component._id
           )
         })
 
-        // Select the deleted component's parent
-        store.update(state => {
-          state.selectedComponentId = parentId
-          return state
-        })
+        // Update selected component if required
+        if (nextSelectedComponentId) {
+          store.update(state => {
+            state.selectedComponentId = nextSelectedComponentId
+            return state
+          })
+        }
       },
       copy: (component, cut = false, selectParent = true) => {
         // Update store with copied component
@@ -618,6 +599,16 @@ export const getFrontendStore = () => {
             }
           }
 
+          // Check inside is valid
+          if (mode === "inside") {
+            const definition = store.actions.components.getDefinition(
+              targetComponent._component
+            )
+            if (!definition.hasChildren) {
+              mode = "below"
+            }
+          }
+
           // Paste new component
           if (mode === "inside") {
             // Paste inside target component if chosen
@@ -654,46 +645,193 @@ export const getFrontendStore = () => {
           return state
         })
       },
+      getPrevious: () => {
+        const state = get(store)
+        const componentId = state.selectedComponentId
+        const screen = get(selectedScreen)
+        const parent = findComponentParent(screen.props, componentId)
+
+        // Check we aren't right at the top of the tree
+        const index = parent?._children.findIndex(x => x._id === componentId)
+        if (!parent || componentId === screen.props._id) {
+          return null
+        }
+
+        // If we have siblings above us, choose the sibling or a descendant
+        if (index > 0) {
+          // If sibling before us accepts children, select a descendant
+          const previousSibling = parent._children[index - 1]
+          if (previousSibling._children?.length) {
+            let target = previousSibling
+            while (target._children?.length) {
+              target = target._children[target._children.length - 1]
+            }
+            return target._id
+          }
+
+          // Otherwise just select sibling
+          return previousSibling._id
+        }
+
+        // If no siblings above us, select the parent
+        return parent._id
+      },
+      getNext: () => {
+        const component = get(selectedComponent)
+        const componentId = component?._id
+        const screen = get(selectedScreen)
+        const parent = findComponentParent(screen.props, componentId)
+        const index = parent?._children.findIndex(x => x._id === componentId)
+
+        // If we have children, select first child
+        if (component._children?.length) {
+          return component._children[0]._id
+        } else if (!parent) {
+          return null
+        }
+
+        // Otherwise select the next sibling if we have one
+        if (index < parent._children.length - 1) {
+          const nextSibling = parent._children[index + 1]
+          return nextSibling._id
+        }
+
+        // Last child, select our parents next sibling
+        let target = parent
+        let targetParent = findComponentParent(screen.props, target._id)
+        let targetIndex = targetParent?._children.findIndex(
+          child => child._id === target._id
+        )
+        while (
+          targetParent != null &&
+          targetIndex === targetParent._children?.length - 1
+        ) {
+          target = targetParent
+          targetParent = findComponentParent(screen.props, target._id)
+          targetIndex = targetParent?._children.findIndex(
+            child => child._id === target._id
+          )
+        }
+        if (targetParent) {
+          return targetParent._children[targetIndex + 1]._id
+        } else {
+          return null
+        }
+      },
+      selectPrevious: () => {
+        const previousId = store.actions.components.getPrevious()
+        if (previousId) {
+          store.update(state => {
+            state.selectedComponentId = previousId
+            return state
+          })
+        }
+      },
+      selectNext: () => {
+        const nextId = store.actions.components.getNext()
+        if (nextId) {
+          store.update(state => {
+            state.selectedComponentId = nextId
+            return state
+          })
+        }
+      },
       moveUp: async component => {
         await store.actions.screens.patch(screen => {
           const componentId = component?._id
           const parent = findComponentParent(screen.props, componentId)
-          if (!parent?._children?.length) {
-            return false
+
+          // Check we aren't right at the top of the tree
+          const index = parent?._children.findIndex(x => x._id === componentId)
+          if (!parent || (index === 0 && parent._id === screen.props._id)) {
+            return
           }
-          const currentIndex = parent._children.findIndex(
-            child => child._id === componentId
-          )
-          if (currentIndex === 0) {
-            return false
-          }
-          const originalComponent = cloneDeep(parent._children[currentIndex])
-          const newChildren = parent._children.filter(
+
+          // Copy original component and remove it from the parent
+          const originalComponent = cloneDeep(parent._children[index])
+          parent._children = parent._children.filter(
             component => component._id !== componentId
           )
-          newChildren.splice(currentIndex - 1, 0, originalComponent)
-          parent._children = newChildren
+
+          // If we have siblings above us, move up
+          if (index > 0) {
+            // If sibling before us accepts children, move to last child of
+            // sibling
+            const previousSibling = parent._children[index - 1]
+            const definition = store.actions.components.getDefinition(
+              previousSibling._component
+            )
+            if (definition.hasChildren) {
+              previousSibling._children.push(originalComponent)
+            }
+
+            // Otherwise just move component above sibling
+            else {
+              parent._children.splice(index - 1, 0, originalComponent)
+            }
+          }
+
+          // If no siblings above us, go above the parent as long as it isn't
+          // the screen
+          else if (parent._id !== screen.props._id) {
+            const grandParent = findComponentParent(screen.props, parent._id)
+            const parentIndex = grandParent._children.findIndex(
+              child => child._id === parent._id
+            )
+            grandParent._children.splice(parentIndex, 0, originalComponent)
+          }
         })
       },
       moveDown: async component => {
         await store.actions.screens.patch(screen => {
           const componentId = component?._id
           const parent = findComponentParent(screen.props, componentId)
+
+          // Sanity check parent is found
           if (!parent?._children?.length) {
             return false
           }
-          const currentIndex = parent._children.findIndex(
-            child => child._id === componentId
-          )
-          if (currentIndex === parent._children.length - 1) {
-            return false
+
+          // Check we aren't right at the bottom of the tree
+          const index = parent._children.findIndex(x => x._id === componentId)
+          if (
+            index === parent._children.length - 1 &&
+            parent._id === screen.props._id
+          ) {
+            return
           }
-          const originalComponent = cloneDeep(parent._children[currentIndex])
-          const newChildren = parent._children.filter(
+
+          // Copy the original component and remove from parent
+          const originalComponent = cloneDeep(parent._children[index])
+          parent._children = parent._children.filter(
             component => component._id !== componentId
           )
-          newChildren.splice(currentIndex + 1, 0, originalComponent)
-          parent._children = newChildren
+
+          // Move below the next sibling if we are not the last sibling
+          if (index < parent._children.length) {
+            // If the next sibling has children, become the first child
+            const nextSibling = parent._children[index]
+            const definition = store.actions.components.getDefinition(
+              nextSibling._component
+            )
+            if (definition.hasChildren) {
+              nextSibling._children.splice(0, 0, originalComponent)
+            }
+
+            // Otherwise move below next sibling
+            else {
+              parent._children.splice(index + 1, 0, originalComponent)
+            }
+          }
+
+          // Last child, so move below our parent
+          else {
+            const grandParent = findComponentParent(screen.props, parent._id)
+            const parentIndex = grandParent._children.findIndex(
+              child => child._id === parent._id
+            )
+            grandParent._children.splice(parentIndex + 1, 0, originalComponent)
+          }
         })
       },
       updateStyle: async (name, value) => {

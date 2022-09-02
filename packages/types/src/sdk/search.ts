@@ -31,7 +31,13 @@ export interface SearchFilters {
     [key: string]: any[]
   }
   contains?: {
-    [key: string]: any
+    [key: string]: any[]
+  }
+  notContains?: {
+    [key: string]: any[]
+  }
+  containsAny?: {
+    [key: string]: any[]
   }
 }
 
