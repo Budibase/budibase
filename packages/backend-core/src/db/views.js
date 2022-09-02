@@ -4,7 +4,7 @@ const {
   DeprecatedViews,
   SEPARATOR,
 } = require("./utils")
-const { getGlobalDB } = require("../context")
+const { getGlobalDB } = require("../tenancy")
 const { StaticDatabases } = require("./constants")
 const { doWithDB } = require("./")
 
