@@ -47,6 +47,7 @@ export enum MigrationName {
   EVENT_GLOBAL_BACKFILL = "event_global_backfill",
   EVENT_INSTALLATION_BACKFILL = "event_installation_backfill",
   GLOBAL_INFO_SYNC_USERS = "global_info_sync_users",
+  PLATFORM_USERS_EMAIL_CASING = "platform_users_email_casing",
 }
 
 export interface MigrationDefinition {
