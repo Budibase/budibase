@@ -1,5 +1,5 @@
 import { doWithDB } from "../db"
-import { StaticDatabases } from "../db/constants"
+import { StaticDatabases, UNICODE_MAX, ViewName } from "../db/constants"
 import { baseGlobalDBName } from "./utils"
 import {
   getTenantId,
@@ -8,6 +8,7 @@ import {
   getTenantIDFromAppID,
 } from "../context"
 import env from "../environment"
+import { queryGlobalView } from "../db/views"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
@@ -117,12 +118,22 @@ export const lookupTenantId = async (userId: string) => {
 
 // lookup, could be email or userId, either will return a doc
 export const getTenantUser = async (identifier: string) => {
-  return doWithDB(PLATFORM_INFO_DB, async (db: any) => {
-    try {
-      return await db.get(identifier)
-    } catch (err) {
-      return null
+  // use the view here and allow to find anyone regardless of casing
+  const lcIdentifier = identifier.toLowerCase()
+
+  return await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: any) => {
+    let response = await queryGlobalView(
+      ViewName.PLATFORM_USERS_LOWERCASE,
+      {
+        startkey: lcIdentifier,
+        endkey: `${lcIdentifier}${UNICODE_MAX}`,
+      },
+      db
+    )
+    if (!response) {
+      response = []
     }
+    return response
   })
 }
 

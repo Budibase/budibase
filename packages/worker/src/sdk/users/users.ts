@@ -264,11 +264,14 @@ export const bulkCreate = async (
   )
   let mapped = allUsers.rows.map((row: any) => row.id)
 
-  const currentUserEmails = mapped.map((x: any) => x.email) || []
+  const currentUserEmails = mapped.map((x: any) => x.email.toLowerCase()) || []
   for (const newUser of newUsersRequested) {
+    // Lowercase emails to ensure several users can't be created with different email casing
     if (
-      newUsers.find((x: any) => x.email === newUser.email) ||
-      currentUserEmails.includes(newUser.email)
+      newUsers.find(
+        (x: any) => x.email.toLowerCase() === newUser.email.toLowerCase()
+      ) ||
+      currentUserEmails.includes(newUser.email.toLowerCase())
     ) {
       continue
     }

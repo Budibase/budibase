@@ -18,6 +18,7 @@ export enum ViewName {
   LINK = "by_link",
   ROUTING = "screen_routes",
   AUTOMATION_LOGS = "automation_logs",
+  PLATFORM_USERS_LOWERCASE = "platform_users_lowercase",
 }
 
 export const DeprecatedViews = {

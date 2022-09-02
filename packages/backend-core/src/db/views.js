@@ -128,12 +128,33 @@ exports.createUserBuildersView = async () => {
   await db.put(designDoc)
 }
 
+exports.createPlatformUserView = async db => {
+  let designDoc
+  try {
+    designDoc = await db.get(DESIGN_DB)
+  } catch (err) {
+    // no design doc, make one
+    designDoc = DesignDoc()
+  }
+  const view = {
+    map: `function(doc) {
+      emit(doc._id.toLowerCase(), doc._id)
+    }`,
+  }
+  designDoc.views = {
+    ...designDoc.views,
+    [ViewName.PLATFORM_USERS_LOWERCASE]: view,
+  }
+  await db.put(designDoc)
+}
+
 exports.queryGlobalView = async (viewName, params, db = null) => {
   const CreateFuncByName = {
     [ViewName.USER_BY_EMAIL]: exports.createNewUserEmailView,
     [ViewName.BY_API_KEY]: exports.createApiKeyView,
     [ViewName.USER_BY_BUILDERS]: exports.createUserBuildersView,
     [ViewName.USER_BY_APP]: exports.createUserAppView,
+    [ViewName.PLATFORM_USERS_LOWERCASE]: exports.createPlatformUserView,
   }
   // can pass DB in if working with something specific
   if (!db) {
@@ -149,7 +170,7 @@ exports.queryGlobalView = async (viewName, params, db = null) => {
     if (err != null && err.name === "not_found") {
       const createFunc = CreateFuncByName[viewName]
       await removeDeprecated(db, viewName)
-      await createFunc()
+      await createFunc(db)
       return exports.queryGlobalView(viewName, params)
     } else {
       throw err
