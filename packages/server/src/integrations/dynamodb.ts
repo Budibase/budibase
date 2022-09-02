@@ -13,7 +13,8 @@ module DynamoModule {
     region: string
     accessKeyId: string
     secretAccessKey: string
-    endpoint: string
+    endpoint?: string
+    currentClockSkew?: boolean
   }
 
   const SCHEMA: Integration = {
@@ -132,31 +133,20 @@ module DynamoModule {
 
     constructor(config: DynamoDBConfig) {
       this.config = config
-      if (this.config.endpoint && !this.config.endpoint.includes("localhost")) {
-        this.connect()
+
+      // User is using a local dynamoDB endpoint, don't auth with remote
+      if (this.config?.endpoint?.includes("localhost")) {
+        // @ts-ignore
+        this.config = {}
       }
-      let options = {
-        correctClockSkew: true,
-        region: this.config.region || AWS_REGION,
-        endpoint: config.endpoint ? config.endpoint : undefined,
+
+      this.config = {
+        ...this.config,
+        currentClockSkew: true,
+        region: config.region || AWS_REGION,
+        endpoint: config.endpoint || undefined,
       }
-      this.client = new AWS.DynamoDB.DocumentClient(options)
-    }
-
-    end() {
-      this.disconnect()
-    }
-
-    connect() {
-      AWS.config.update(this.config)
-    }
-
-    disconnect() {
-      AWS.config.update({
-        secretAccessKey: undefined,
-        accessKeyId: undefined,
-        region: AWS_REGION,
-      })
+      this.client = new AWS.DynamoDB.DocumentClient(this.config)
     }
 
     async create(query: { table: string; json: object }) {
@@ -197,7 +187,7 @@ module DynamoModule {
       const params = {
         TableName: query.table,
       }
-      return new AWS.DynamoDB().describeTable(params).promise()
+      return new AWS.DynamoDB(this.config).describeTable(params).promise()
     }
 
     async get(query: { table: string; json: object }) {

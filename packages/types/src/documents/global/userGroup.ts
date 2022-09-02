@@ -1,19 +1,20 @@
 import { Document } from "../document"
-import { User } from "./user"
+
 export interface UserGroup extends Document {
   name: string
   icon: string
   color: string
-  users: groupUser[]
+  users: GroupUser[]
   apps: string[]
   roles: UserGroupRoles
   createdAt?: number
 }
 
-export interface groupUser {
+export interface GroupUser {
   _id: string
-  email: string[]
+  email: string
 }
+
 export interface UserGroupRoles {
   [key: string]: string
 }

@@ -1,6 +1,15 @@
 // need to load environment first
-import { ExtendableContext } from "koa"
 import * as env from "./environment"
+
+// enable APM if configured
+if (process.env.ELASTIC_APM_ENABLED) {
+  const apm = require("elastic-apm-node").start({
+    serviceName: process.env.SERVICE,
+    environment: process.env.BUDIBASE_ENVIRONMENT,
+  })
+}
+
+import { ExtendableContext } from "koa"
 import db from "./db"
 db.init()
 const Koa = require("koa")
@@ -74,9 +83,7 @@ server.on("close", async () => {
     return
   }
   shuttingDown = true
-  if (!env.isTest()) {
-    console.log("Server Closed")
-  }
+  console.log("Server Closed")
   await automations.shutdown()
   await redis.shutdown()
   await events.shutdown()
@@ -156,5 +163,9 @@ process.on("uncaughtException", err => {
 })
 
 process.on("SIGTERM", () => {
+  shutdown()
+})
+
+process.on("SIGINT", () => {
   shutdown()
 })
