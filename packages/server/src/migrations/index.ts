@@ -9,7 +9,6 @@ import * as appUrls from "./functions/appUrls"
 import * as developerQuota from "./functions/developerQuota"
 import * as publishedAppsQuota from "./functions/publishedAppsQuota"
 import * as backfill from "./functions/backfill"
-import * as platformUsersEmailViewCasing from "./functions/platformUserEmailViewCasing"
 
 /**
  * Populate the migration function and additional configuration from
@@ -82,13 +81,6 @@ export const buildMigrations = () => {
           fn: backfill.installation.run,
           silent: !!env.SELF_HOSTED, // reduce noisy logging
           preventRetry: !!env.SELF_HOSTED, // only ever run once
-        })
-        break
-      }
-      case MigrationName.PLATFORM_USERS_EMAIL_CASING: {
-        serverMigrations.push({
-          ...definition,
-          fn: platformUsersEmailViewCasing.run,
         })
         break
       }
