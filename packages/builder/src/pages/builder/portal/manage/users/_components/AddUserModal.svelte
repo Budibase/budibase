@@ -65,7 +65,7 @@
   const onConfirm = () => {
     let valid = true
     userData.forEach((input, index) => {
-      valid = validateInput(input.email, index) && valid
+      valid = validateInput(input, index) && valid
     })
     if (!valid) {
       return false
