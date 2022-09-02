@@ -1,23 +1,13 @@
 <script>
   import { Icon, Body, ActionMenu, MenuItem, Detail } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-
-  const dispatch = createEventDispatcher()
 
   export let plugin
+  export let deletePlugin
   $: console.log(plugin)
   let modal
 
   function editGroup() {
     modal.show()
-  }
-
-  const remove = plugin => {
-    dispatch("delete", {
-      _id: plugin._id,
-      _rev: plugin._rev,
-      name: plugin.name,
-    })
   }
 </script>
 
@@ -51,7 +41,8 @@
         <span slot="control">
           <Icon hoverable name="More" />
         </span>
-        <MenuItem on:click={() => remove(plugin)} icon="Delete">Delete</MenuItem
+        <MenuItem on:click={() => deletePlugin(plugin)} icon="Delete"
+          >Delete</MenuItem
         >
         <MenuItem on:click={() => editGroup(plugin)} icon="Edit">Edit</MenuItem>
       </ActionMenu>

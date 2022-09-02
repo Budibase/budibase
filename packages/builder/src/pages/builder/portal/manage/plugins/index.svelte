@@ -35,11 +35,9 @@
             plugin?.name?.toLowerCase().includes(searchTerm.toLowerCase())
           )
 
-  const deletePlugin = evt => {
-    const { detail } = evt
-
+  const deletePlugin = plugin => {
     deleteModal.show()
-    removePlugin = detail
+    removePlugin = plugin
   }
 
   onMount(async () => {
@@ -77,7 +75,7 @@
 
     {#if $plugins}
       {#each filteredPlugins as plugin}
-        <PluginRow {plugin} on:delete={deletePlugin} />
+        <PluginRow {plugin} {deletePlugin} />
       {/each}
     {/if}
   </Layout>
@@ -87,7 +85,7 @@
   <AddPluginModal />
 </Modal>
 <Modal bind:this={deleteModal}>
-  <DeletePluginModal plugin={removePlugin} />
+  <DeletePluginModal {removePlugin} />
 </Modal>
 
 <style>
