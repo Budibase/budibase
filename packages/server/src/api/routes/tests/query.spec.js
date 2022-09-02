@@ -231,20 +231,6 @@ describe("/queries", () => {
         url: `/api/queries/preview`,
       })
     })
-
-    it("should fail with invalid integration type", async () => {
-      const { datasource } = await createInvalidIntegration()
-      await request
-        .post(`/api/queries/preview`)
-        .send({
-          datasourceId: datasource._id,
-          parameters: {},
-          fields: {},
-          queryVerb: "read",
-        })
-        .set(config.defaultHeaders())
-        .expect(400)
-    })
   })
 
   describe("execute", () => {
@@ -261,17 +247,14 @@ describe("/queries", () => {
     })
 
     it("should fail with invalid integration type", async () => {
-      const { query, datasource } = await createInvalidIntegration()
-      await request
-        .post(`/api/queries/${query._id}`)
-        .send({
-          datasourceId: datasource._id,
-          parameters: {},
-          fields: {},
-          queryVerb: "read",
-        })
-        .set(config.defaultHeaders())
-        .expect(400)
+      let error
+      try {
+        await createInvalidIntegration()
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeDefined()
+      expect(error.message).toBe("No datasource implementation found.")
     })
   })
 
