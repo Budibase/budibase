@@ -29,8 +29,9 @@ export function watch() {
           const name = split[split.length - 1]
           console.log("Importing plugin:", path)
           await processPlugin({ name, path })
-        } catch (err) {
-          console.log("Failed to import plugin:", err)
+        } catch (err: any) {
+          const message = err?.message ? err?.message : err
+          console.error("Failed to import plugin:", message)
         }
       })
     })
