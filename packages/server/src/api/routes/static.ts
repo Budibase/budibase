@@ -38,6 +38,11 @@ router
   // TODO: for now this builder endpoint is not authorized/secured, will need to be
   .get("/builder/:file*", controller.serveBuilder)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
+  .post(
+    "/api/attachments/delete",
+    authorized(BUILDER),
+    controller.deleteObjects
+  )
   .post("/api/beta/:feature", controller.toggleBetaUiFeature)
   .post(
     "/api/attachments/:tableId/upload",
@@ -45,6 +50,13 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     controller.uploadFile
   )
+  .post(
+    "/api/attachments/:tableId/delete",
+    paramResource("tableId"),
+    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    controller.deleteObjects
+  )
+  .get("/preview", authorized(BUILDER), controller.serveBuilderPreview)
   .get("/:appId/:path*", controller.serveApp)
   .get("/app/:appUrl/:path*", controller.serveApp)
   .post(

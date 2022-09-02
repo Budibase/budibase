@@ -62,10 +62,14 @@ const createNotificationStore = () => {
     subscribe: store.subscribe,
     actions: {
       send,
-      info: msg => send(msg, "info", "Info"),
-      success: msg => send(msg, "success", "CheckmarkCircle"),
-      warning: msg => send(msg, "warning", "Alert"),
-      error: msg => send(msg, "error", "Alert", false),
+      info: (msg, autoDismiss) =>
+        send(msg, "info", "Info", autoDismiss ?? true),
+      success: (msg, autoDismiss) =>
+        send(msg, "success", "CheckmarkCircle", autoDismiss ?? true),
+      warning: (msg, autoDismiss) =>
+        send(msg, "warning", "Alert", autoDismiss ?? true),
+      error: (msg, autoDismiss) =>
+        send(msg, "error", "Alert", autoDismiss ?? false),
       blockNotifications,
       dismiss,
     },

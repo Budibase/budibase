@@ -8,7 +8,6 @@
     selectedLayout,
     currentAsset,
   } from "builderStore"
-  import iframeTemplate from "./iframeTemplate"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ProgressCircle,
@@ -39,12 +38,6 @@
     ERROR: "error",
     BUDIBASE: "type",
   }
-
-  // Construct iframe template
-  $: template = iframeTemplate.replace(
-    /\{\{ CLIENT_LIB_PATH }}/,
-    $store.clientLibPath
-  )
 
   const placeholderScreen = new Screen()
     .name("Screen Placeholder")
@@ -151,7 +144,11 @@
       } else if (type === "update-prop") {
         await store.actions.components.updateSetting(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
+        // Legacy type, can be deleted in future
         confirmDeleteComponent(data.id)
+      } else if (type === "key-down") {
+        const { key, ctrlKey } = data
+        document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
       } else if (type === "duplicate-component" && data.id) {
         const rootComponent = get(currentAsset).props
         const component = findComponent(rootComponent, data.id)
@@ -293,7 +290,7 @@
   <iframe
     title="componentPreview"
     bind:this={iframe}
-    srcdoc={template}
+    src="/preview"
     class:hidden={loading || error}
     class:tablet={$store.previewDevice === "tablet"}
     class:mobile={$store.previewDevice === "mobile"}

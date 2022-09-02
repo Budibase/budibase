@@ -88,6 +88,10 @@ http {
       proxy_pass      http://$apps:4002;
     }
 
+    location /preview {
+      proxy_pass      http://$apps:4002;
+    }
+
     location = / {
       proxy_pass      http://$apps:4002;
     }
@@ -97,6 +101,7 @@ http {
       proxy_pass      http://$watchtower:8080;
     }
     {{/if}}
+
     location ~ ^/(builder|app_) {
       proxy_http_version  1.1;
       proxy_set_header    Connection          $connection_upgrade;

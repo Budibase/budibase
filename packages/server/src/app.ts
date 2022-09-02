@@ -83,9 +83,7 @@ server.on("close", async () => {
     return
   }
   shuttingDown = true
-  if (!env.isTest()) {
-    console.log("Server Closed")
-  }
+  console.log("Server Closed")
   await automations.shutdown()
   await redis.shutdown()
   await events.shutdown()
@@ -165,5 +163,9 @@ process.on("uncaughtException", err => {
 })
 
 process.on("SIGTERM", () => {
+  shutdown()
+})
+
+process.on("SIGINT", () => {
   shutdown()
 })
