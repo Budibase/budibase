@@ -84,6 +84,7 @@
     "remixicon": "2.5.0",
     "shortid": "2.2.15",
     "svelte-dnd-action": "^0.9.8",
+    "svelte-i18n": "^3.4.0",
     "svelte-loading-spinners": "^0.1.1",
     "svelte-portal": "0.1.0",
     "uuid": "8.3.1",
