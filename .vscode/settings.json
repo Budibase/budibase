@@ -16,4 +16,7 @@
             "<node_internals>/**"
         ]
     },
+    "[xml]": {
+        "editor.defaultFormatter": "mikeburgh.xml-format"
+    },
 }
