@@ -51,7 +51,7 @@ module AdLdapModule {
     },
   }
 
-  class AdLdapIntegration implements IntegrationBase {
+  class AdLdapIntegration {
     private readonly config: IClientConfig
     private client: any
 
