@@ -58,7 +58,7 @@ const INTEGRATIONS = {
   [SourceName.FIREBASE]: firebase.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
   [SourceName.SP2019]: sp2019.integration,
-  [SourceName.ADLDAP]: adldap.schema,
+  [SourceName.ADLDAP]: adldap.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
