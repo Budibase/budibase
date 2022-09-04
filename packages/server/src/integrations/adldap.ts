@@ -1,11 +1,11 @@
 import { Integration, QueryType, IntegrationBase, DatasourceFieldType } from "@budibase/types"
-import { IClientConfig, Client } from "ldap-ts-client";
+import { Client } from 'ldapts';
 
 
 module AdLdapModule {
   
 
-  interface AdLdapConfig extends IClientConfig {
+  interface AdLdapConfig  {
     url: string
     bindDN: string
     secret: string
@@ -97,7 +97,16 @@ module AdLdapModule {
       this.config = config
       
 
-      this.client = new Client(this.config)
+      this.client = new Client({
+        url: this.config.url,
+        timeout: 0,
+        connectTimeout: 0,
+        tlsOptions: {
+          minVersion: 'TLSv1.2',
+        },
+        strictDN: true,
+      })
+      console.log("Client crée :",this.client)
     }
 
 
@@ -141,7 +150,11 @@ module AdLdapModule {
     }
     async command(query: { bucket: string }) {
       return this.ldapContext(async () => {
-      const response = await this.client.queryAttributes({
+        await this.client.bind(this.config.bindDN, this.config.secret);
+        if (this.client.isConnected) {
+          console.log("Client ldap connecté")
+        }
+      /*const response = await this.client.queryAttributes({
         attributes: [`${query.bucket}`],
         options: {
           filter:"(&(|(objectClass=user)(objectClass=person))(!(objectClass=computer))(!(objectClass=group)))",
@@ -150,7 +163,8 @@ module AdLdapModule {
         },
         base:this.config.baseDN
         
-      });
+      });*/
+      const response = { result:'test'}
       console.log("Ldap users :",response)
       // always free-Up after you done the job!
       this.client.unbind();
@@ -161,6 +175,6 @@ module AdLdapModule {
 
   module.exports = {
     schema: SCHEMA,
-    integration: AdLdapIntegration,
+    integration: AdLdapIntegration
   }
 }
