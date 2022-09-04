@@ -100,9 +100,9 @@ module AdLdapModule {
         url: this.config.url,
         timeout: 0,
         connectTimeout: 0,
-        tlsOptions: {
+        /*tlsOptions: {
           minVersion: 'TLSv1.2',
-        },
+        },*/
         strictDN: true,
       })
     }
@@ -156,32 +156,23 @@ module AdLdapModule {
         } else {
           console.log("Client ldap Non connecté")
         }
+        var response;
         try {
           await this.client.bind(this.config.bindDN, this.config.secret)
         
           const { searchEntries, searchReferences } = await this.client.search(this.config.baseDN, {
             scope: 'sub',
-            filter: '(mail=herve.dechavigny@cacem.fr)',
+            filter: (query.bucket=='')?'(&(objectCategory=person)(objectClass=user)(mail=*)(sAMAccountName=*))':`${query.bucket}`,
           })
+          response = searchEntries
         } catch (ex) {
           throw ex;
         } finally {
           await this.client.unbind()
         }
-      /*const response = await this.client.queryAttributes({
-        attributes: [`${query.bucket}`],
-        options: {
-          filter:"(&(|(objectClass=user)(objectClass=person))(!(objectClass=computer))(!(objectClass=group)))",
-          scope: "sub",
-          paged: false
-        },
-        base:this.config.baseDN
-        
-      });*/
-      const response = { result:'test'}
+      
       console.log("Ldap users :",response)
-      // always free-Up after you done the job!
-      this.client.unbind();
+      
       return response
     })
     }
