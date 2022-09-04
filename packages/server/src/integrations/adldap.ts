@@ -91,12 +91,10 @@ module AdLdapModule {
 
   class AdLdapIntegration  {
     private readonly config: AdLdapConfig
-    private client:any
+    
 
     constructor(config: AdLdapConfig) {
       this.config = config
-      
-
       
     }
 
@@ -141,7 +139,7 @@ module AdLdapModule {
     }
     async command(query: { bucket: string }) {
       return this.ldapContext(async () => {
-        this.client = new Client({
+        const client = new Client({
           url: this.config.url,
           timeout: 0,
           connectTimeout: 0,
@@ -150,9 +148,9 @@ module AdLdapModule {
           },
           strictDN: true,
         })
-        console.log("Client crée :",this.client)
-        await this.client.bind(this.config.bindDN, this.config.secret);
-        if (this.client.isConnected) {
+        console.log("Client crée :",client)
+        await client.bind(this.config.bindDN, this.config.secret);
+        if (client.isConnected) {
           console.log("Client ldap connecté")
         }
       /*const response = await this.client.queryAttributes({
@@ -168,7 +166,7 @@ module AdLdapModule {
       const response = { result:'test'}
       console.log("Ldap users :",response)
       // always free-Up after you done the job!
-      this.client.unbind();
+      client.unbind();
       return response
     })
     }
