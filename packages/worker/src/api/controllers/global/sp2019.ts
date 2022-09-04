@@ -8,15 +8,15 @@ const {
 
 
 
-  exports.sp2019Lists = async ctx => {
+  exports.sp2019Lists = async (ctx:any) => {
     let {
         siteUrl,
         username,
         password,
         domain,
     } = ctx.request.body
-    let user
-    /*if (userId) {
+    /*let user
+    if (userId) {
       const db = getGlobalDB()
       user = await db.get(userId)
     }*/
