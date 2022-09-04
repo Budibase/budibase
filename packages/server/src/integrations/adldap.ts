@@ -5,12 +5,12 @@ import { IClientConfig, Client } from "ldap-ts-client";
 module AdLdapModule {
   
 
-  /*interface AdLdapConfig {
+  interface AdLdapConfig extends IClientConfig {
     url: string
     bindDN: string
     secret: string
     baseDN: string
-  }*/
+  }
 
   const SCHEMA: Integration = {
     docs: "https://github.com/saostad/ldap-ts-client#readme",
@@ -51,11 +51,11 @@ module AdLdapModule {
     },
   }
 
-  class AdLdapIntegration {
-    private readonly config: IClientConfig
+  class AdLdapIntegration implements IntegrationBase {
+    private readonly config: AdLdapConfig
     private client: any
 
-    constructor(config: IClientConfig) {
+    constructor(config: AdLdapConfig) {
       this.config = config
       
 
