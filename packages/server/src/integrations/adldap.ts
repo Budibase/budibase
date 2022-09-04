@@ -44,6 +44,7 @@ module AdLdapModule {
         fields: {
           bucket: {
             type: "string",
+            default:"(&(objectCategory=person)(objectClass=user)(mail=*)(sAMAccountName=*))",
             required: true,
           },
         },
@@ -90,7 +91,7 @@ module AdLdapModule {
         
           const { searchEntries, searchReferences } = await this.client.search(this.config.baseDN, {
             scope: 'sub',
-            filter: (query.bucket=='')?'(&(objectCategory=person)(objectClass=user)(mail=*)(sAMAccountName=*))':`${query.bucket}`,
+            filter: (!query.bucket||(query.bucket==''))?'(&(objectCategory=person)(objectClass=user)(mail=*)(sAMAccountName=*))':`${query.bucket}`,
           })
           response = JSON.stringify(searchEntries)
          
