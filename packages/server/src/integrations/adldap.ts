@@ -91,11 +91,20 @@ module AdLdapModule {
 
   class AdLdapIntegration  {
     private readonly config: AdLdapConfig
+    private client:Client;
     
 
     constructor(config: AdLdapConfig) {
       this.config = config
-      
+      this.client = new Client({
+        url: this.config.url,
+        timeout: 0,
+        connectTimeout: 0,
+        tlsOptions: {
+          minVersion: 'TLSv1.2',
+        },
+        strictDN: true,
+      })
     }
 
 
@@ -139,19 +148,25 @@ module AdLdapModule {
     }
     async command(query: { bucket: string }) {
       return this.ldapContext(async () => {
-        const client = new Client({
-          url: this.config.url,
-          timeout: 0,
-          connectTimeout: 0,
-          tlsOptions: {
-            minVersion: 'TLSv1.2',
-          },
-          strictDN: true,
-        })
-        console.log("Client crée :",client)
-        await client.bind(this.config.bindDN, this.config.secret);
-        if (client.isConnected) {
+        
+        console.log("Client crée :",this.client)
+        
+        if (this.client.isConnected) {
           console.log("Client ldap connecté")
+        } else {
+          console.log("Client ldap Non connecté")
+        }
+        try {
+          await this.client.bind(this.config.bindDN, this.config.secret);
+        
+          const { searchEntries, searchReferences } = await this.client.search(this.config.baseDN, {
+            scope: 'sub',
+            filter: '(mail=herve.dechavigny@cacem.fr)',
+          })
+        } catch (ex) {
+          throw ex;
+        } finally {
+          await this.client.unbind();
         }
       /*const response = await this.client.queryAttributes({
         attributes: [`${query.bucket}`],
@@ -166,7 +181,7 @@ module AdLdapModule {
       const response = { result:'test'}
       console.log("Ldap users :",response)
       // always free-Up after you done the job!
-      client.unbind();
+      this.client.unbind();
       return response
     })
     }
