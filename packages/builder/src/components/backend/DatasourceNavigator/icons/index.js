@@ -16,6 +16,7 @@ import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import SP2019 from "./SP2019.svelte"
+import ADLDAP from "./ADLDAP.svlete"
 
 export default {
   BUDIBASE: Budibase,
@@ -36,4 +37,5 @@ export default {
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
   SP2019: SP2019,
+  ADLDAP: ADLDAP
 }
