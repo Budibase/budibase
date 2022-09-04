@@ -91,7 +91,7 @@ module AdLdapModule {
 
   class AdLdapIntegration  {
     private readonly config: AdLdapConfig
-    private client;
+    private client:any
 
     constructor(config: AdLdapConfig) {
       this.config = config
