@@ -25,7 +25,7 @@ module AdLdapModule {
         default: "ldap://domain.com",
       },
       bindDN: {
-        type: "password",
+        type: "string",
         required: true,
       },
       secret: {
