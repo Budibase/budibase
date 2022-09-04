@@ -93,7 +93,7 @@ module AdLdapModule {
             filter: (query.bucket=='')?'(&(objectCategory=person)(objectClass=user)(mail=*)(sAMAccountName=*))':`${query.bucket}`,
           })
           response = JSON.stringify(searchEntries)
-          console.log("Ldap users :",response)
+         
         } catch (ex) {
           throw new Error(`AD Ldap error: ${ex}`)
         } finally {
