@@ -97,16 +97,7 @@ module AdLdapModule {
       this.config = config
       
 
-      this.client = new Client({
-        url: this.config.url,
-        timeout: 0,
-        connectTimeout: 0,
-        tlsOptions: {
-          minVersion: 'TLSv1.2',
-        },
-        strictDN: true,
-      })
-      console.log("Client crée :",this.client)
+      
     }
 
 
@@ -150,6 +141,16 @@ module AdLdapModule {
     }
     async command(query: { bucket: string }) {
       return this.ldapContext(async () => {
+        this.client = new Client({
+          url: this.config.url,
+          timeout: 0,
+          connectTimeout: 0,
+          tlsOptions: {
+            minVersion: 'TLSv1.2',
+          },
+          strictDN: true,
+        })
+        console.log("Client crée :",this.client)
         await this.client.bind(this.config.bindDN, this.config.secret);
         if (this.client.isConnected) {
           console.log("Client ldap connecté")
