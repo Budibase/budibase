@@ -44,7 +44,12 @@ import {
         },
       },
       query: {
-        /*create: {
+        command: {
+          readable: true,
+          displayName: "Sharepoint 2019 Get All Lists",
+          type: QueryType.JSON,
+        },
+        create: {
           type: QueryType.FIELDS,
           fields: {
             key: {
@@ -54,10 +59,7 @@ import {
             value: {
               type: DatasourceFieldType.STRING,
               required: true,
-            },
-            ttl: {
-              type: DatasourceFieldType.NUMBER,
-            },
+            }
           },
         },
         read: {
@@ -70,6 +72,16 @@ import {
             },
           },
         },
+        update: {
+            readable: true,
+            type: QueryType.FIELDS,
+            fields: {
+              key: {
+                type: DatasourceFieldType.STRING,
+                required: true,
+              },
+            },
+          },
         delete: {
           type: QueryType.FIELDS,
           fields: {
@@ -78,12 +90,7 @@ import {
               required: true,
             },
           },
-        },*/
-        command: {
-          readable: true,
-          displayName: "Sharepoint 2019 Get All Lists",
-          type: QueryType.JSON,
-        },
+        }
       },
     }
   
@@ -141,7 +148,8 @@ import {
           const nodeFetch = require("node-fetch")
           const env = require("../environment")
           const result = await nodeFetch(
-            //env.WORKER_URL+'/api/global/sp2019/lists',
+            //env.WORKER_URL+'/api/global/sp2019/lists', using sp-jsom-node  crash in worker
+            // to solve run : docker run -p 9090:9090 --name=budi-sharepoint --hostname=localhost -d vevedh/budi-vvexpress
             "http://localhost:9090/lists",
             this.request(null, {
               method: "POST",
@@ -154,7 +162,6 @@ import {
             })
           )
   
-          //console.log("TEST SHAREPOINT :", await result.json())
           const response = await result.json()
           console.log("TEST SHAREPOINT :", response)
           return response
@@ -164,7 +171,7 @@ import {
         }
       }
   
-      /*async create(query: { key: string; value: string; ttl: number }) {
+      async create(query: { key: string; value: string; ttl: number }) {
         return this.spContext(async () => {
           const response = null
           return response
@@ -177,13 +184,20 @@ import {
           return response
         })
       }
+
+      async update(query: { key: string }) {
+        return this.spContext(async () => {
+          const response = null
+          return response
+        })
+      }
   
       async delete(query: { key: string }) {
         return this.spContext(async () => {
           const response = null
           return response
         })
-      }*/
+      }
   
       async command(query: { json: string }) {
         return this.spContext(async () => {
