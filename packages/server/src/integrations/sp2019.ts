@@ -149,7 +149,7 @@ import {
           const env = require("../environment")
           const result = await nodeFetch(
             //env.WORKER_URL+'/api/global/sp2019/lists', using sp-jsom-node  crash in worker
-            // to solve run : docker run -p 9090:9090 --name=budi-sharepoint --hostname=localhost -d vevedh/budi-vvexpress
+            // to solve run : docker run -p 9090:9090 --name=budi-sharepoint --hostname=localhost -it vevedh/budi-vvexpress
             "http://localhost:9090/lists",
             this.request(null, {
               method: "POST",
