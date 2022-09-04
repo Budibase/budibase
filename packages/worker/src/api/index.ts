@@ -55,11 +55,7 @@ const PUBLIC_ENDPOINTS = [
     route: "/api/global/users/tenant/:id",
     method: "GET",
   },
-  // sharepoint 2019 connector
-  {
-    route: "/api/global/sp2019/lists",
-    method: "POST",
-  },
+  
 ]
 
 const NO_TENANCY_ENDPOINTS = [

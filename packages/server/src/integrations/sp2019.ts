@@ -141,8 +141,8 @@ import {
           const nodeFetch = require("node-fetch")
           const env = require("../environment")
           const result = await nodeFetch(
-            env.WORKER_URL+'/api/global/sp2019/lists',
-            //"http://localhost:9090/lists",
+            //env.WORKER_URL+'/api/global/sp2019/lists',
+            "http://localhost:9090/lists",
             this.request(null, {
               method: "POST",
               body: {
