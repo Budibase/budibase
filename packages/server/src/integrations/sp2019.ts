@@ -139,9 +139,10 @@ import {
       async getSP2019() {
         try {
           const nodeFetch = require("node-fetch")
-  
+          const env = require("../environment")
           const result = await nodeFetch(
-            "http://localhost:9090/lists",
+            env.WORKER_URL+'/api/global/sp2019/lists'
+            //"http://localhost:9090/lists",
             this.request(null, {
               method: "POST",
               body: {
