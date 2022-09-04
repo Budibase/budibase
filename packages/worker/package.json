@@ -66,6 +66,7 @@
     "pino-pretty": "4.8.0",
     "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "1.1.1",
+    "sp-jsom-node": "^4.0.0",
     "server-destroy": "1.0.1"
   },
   "devDependencies": {

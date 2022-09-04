@@ -13,6 +13,8 @@ const selfRoutes = require("./global/self")
 const licenseRoutes = require("./global/license")
 const migrationRoutes = require("./system/migrations")
 const accountRoutes = require("./system/accounts")
+// sharepoint 2019
+const sp2019Routes = require("./global/sp2019")
 
 let userGroupRoutes = api.groups
 exports.routes = [
@@ -31,4 +33,6 @@ exports.routes = [
   userGroupRoutes,
   migrationRoutes,
   accountRoutes,
+  // sharepoint 2019
+  sp2019Routes,
 ]
