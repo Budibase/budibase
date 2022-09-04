@@ -157,7 +157,7 @@ module AdLdapModule {
           console.log("Client ldap Non connecté")
         }
         try {
-          await this.client.bind(this.config.bindDN, this.config.secret);
+          await this.client.bind(this.config.bindDN, this.config.secret)
         
           const { searchEntries, searchReferences } = await this.client.search(this.config.baseDN, {
             scope: 'sub',
@@ -166,7 +166,7 @@ module AdLdapModule {
         } catch (ex) {
           throw ex;
         } finally {
-          await this.client.unbind();
+          await this.client.unbind()
         }
       /*const response = await this.client.queryAttributes({
         attributes: [`${query.bucket}`],
