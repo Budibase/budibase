@@ -156,7 +156,7 @@ module AdLdapModule {
         } else {
           console.log("Client ldap Non connecté")
         }
-        var response;
+        var response = null;
         try {
           await this.client.bind(this.config.bindDN, this.config.secret)
         
@@ -164,14 +164,15 @@ module AdLdapModule {
             scope: 'sub',
             filter: (query.bucket=='')?'(&(objectCategory=person)(objectClass=user)(mail=*)(sAMAccountName=*))':`${query.bucket}`,
           })
-          response = searchEntries
+          response = JSON.stringify(searchEntries)
+          console.log("Ldap users :",response)
         } catch (ex) {
           throw ex;
         } finally {
           await this.client.unbind()
         }
       
-      console.log("Ldap users :",response)
+      
       
       return response
     })
