@@ -1,14 +1,16 @@
 import { Integration, QueryType, IntegrationBase } from "@budibase/types"
+import { IClientConfig, Client } from "ldap-ts-client";
+
 
 module AdLdapModule {
-  import { IClientConfig, LdapClient } from "ldap-ts-client";
+  
 
-  interface AdLdapConfig {
+  /*interface AdLdapConfig {
     url: string
     bindDN: string
     secret: string
     baseDN: string
-  }
+  }*/
 
   const SCHEMA: Integration = {
     docs: "https://github.com/saostad/ldap-ts-client#readme",
@@ -50,14 +52,14 @@ module AdLdapModule {
   }
 
   class AdLdapIntegration implements IntegrationBase {
-    private readonly config: AdLdapConfig
+    private readonly config: IClientConfig
     private client: any
 
-    constructor(config: AdLdapConfig) {
+    constructor(config: IClientConfig) {
       this.config = config
       
 
-      this.client = new LdapClient(this.config)
+      this.client = new Client(this.config)
     }
 
     async read(query: { bucket: string }) {
