@@ -137,7 +137,7 @@ import {
         try {
           return await query()
         } catch (err) {
-          throw new Error(`Redis error: ${err}`)
+          throw new Error(`Sharepoint Connector error: ${err}`)
         } finally {
           console.log("end")
         }
