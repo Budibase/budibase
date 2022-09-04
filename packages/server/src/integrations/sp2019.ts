@@ -44,7 +44,7 @@ import {
         },
       },
       query: {
-        create: {
+        /*create: {
           type: QueryType.FIELDS,
           fields: {
             key: {
@@ -78,10 +78,10 @@ import {
               required: true,
             },
           },
-        },
+        },*/
         command: {
           readable: true,
-          displayName: "Sharepoint 2019 Lists Command",
+          displayName: "Sharepoint 2019 Get All Lists",
           type: QueryType.JSON,
         },
       },
@@ -164,7 +164,7 @@ import {
         }
       }
   
-      async create(query: { key: string; value: string; ttl: number }) {
+      /*async create(query: { key: string; value: string; ttl: number }) {
         return this.spContext(async () => {
           const response = null
           return response
@@ -183,7 +183,7 @@ import {
           const response = null
           return response
         })
-      }
+      }*/
   
       async command(query: { json: string }) {
         return this.spContext(async () => {
