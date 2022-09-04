@@ -39,57 +39,19 @@ module AdLdapModule {
 
     },
     query: {
-      command: {
-        readable: true,
-        displayName: "Get Ldap users",
-        type: QueryType.JSON,
-      },
-      create: {
-        type: QueryType.FIELDS,
-        fields: {
-          key: {
-            type: DatasourceFieldType.STRING,
-            required: true,
-          },
-          value: {
-            type: DatasourceFieldType.STRING,
-            required: true,
-          }
-        },
-      },
       read: {
-        readable: true,
         type: QueryType.FIELDS,
         fields: {
-          key: {
-            type: DatasourceFieldType.STRING,
+          bucket: {
+            type: "string",
             required: true,
           },
         },
       },
-      update: {
-          readable: true,
-          type: QueryType.FIELDS,
-          fields: {
-            key: {
-              type: DatasourceFieldType.STRING,
-              required: true,
-            },
-          },
-        },
-      delete: {
-        type: QueryType.FIELDS,
-        fields: {
-          key: {
-            type: DatasourceFieldType.STRING,
-            required: true,
-          },
-        },
-      }
     },
   }
 
-  class AdLdapIntegration  {
+  class AdLdapIntegration implements IntegrationBase {
     private readonly config: AdLdapConfig
     private client:Client;
     
@@ -108,46 +70,12 @@ module AdLdapModule {
     }
 
 
-    async ldapContext(query: Function) {
-      try {
-        return await query()
-      } catch (err) {
-        throw new Error(`AD Ldap error: ${err}`)
-      } finally {
-        console.log("end")
-      }
-    }
+    
 
 
-    async create(query: { key: string; value: string; ttl: number }) {
-      return this.ldapContext(async () => {
-        const response = null
-        return response
-      })
-    }
-
-    async read(query: { key: string }) {
-      return this.ldapContext(async () => {
-        const response = null
-        return response
-      })
-    }
-
-    async update(query: { key: string }) {
-      return this.ldapContext(async () => {
-        const response = null
-        return response
-      })
-    }
-
-    async delete(query: { key: string }) {
-      return this.ldapContext(async () => {
-        const response = null
-        return response
-      })
-    }
-    async command(query: { bucket: string }) {
-      return this.ldapContext(async () => {
+   
+    async read(query: { bucket: string }) {
+     
         
         console.log("Client crée :",this.client)
         
@@ -167,7 +95,7 @@ module AdLdapModule {
           response = JSON.stringify(searchEntries)
           console.log("Ldap users :",response)
         } catch (ex) {
-          throw ex;
+          throw new Error(`AD Ldap error: ${ex}`)
         } finally {
           await this.client.unbind()
         }
@@ -175,7 +103,7 @@ module AdLdapModule {
       
       
       return response
-    })
+    
     }
   }
 
