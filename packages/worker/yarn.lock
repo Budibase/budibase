@@ -5791,7 +5791,7 @@ pouchdb-fetch@7.2.2:
   version "7.2.2"
   resolved "https://registry.yarnpkg.com/pouchdb-fetch/-/pouchdb-fetch-7.2.2.tgz#492791236d60c899d7e9973f9aca0d7b9cc02230"
   integrity sha512-lUHmaG6U3zjdMkh8Vob9GvEiRGwJfXKE02aZfjiVQgew+9SLkuOxNw3y2q4d1B6mBd273y1k2Lm0IAziRNxQnA==
-  dependencies:
+ , dependencies:
     abort-controller "3.0.0"
     fetch-cookie "0.10.1"
     node-fetch "2.6.0"
