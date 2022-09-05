@@ -20,6 +20,7 @@ exports.shutdown = async () => {
   if (devAppClient) await devAppClient.finish()
   if (debounceClient) await debounceClient.finish()
   if (flagClient) await flagClient.finish()
+  console.log("Redis shutdown")
 }
 
 exports.doesUserHaveLock = async (devAppId, user) => {

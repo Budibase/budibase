@@ -5,6 +5,8 @@ const {
   SEPARATOR,
 } = require("./utils")
 const { getGlobalDB } = require("../tenancy")
+const { StaticDatabases } = require("./constants")
+const { doWithDB } = require("./")
 
 const DESIGN_DB = "_design/database"
 
@@ -54,6 +56,31 @@ exports.createNewUserEmailView = async () => {
     [ViewName.USER_BY_EMAIL]: view,
   }
   await db.put(designDoc)
+}
+
+exports.createAccountEmailView = async () => {
+  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async db => {
+    let designDoc
+    try {
+      designDoc = await db.get(DESIGN_DB)
+    } catch (err) {
+      // no design doc, make one
+      designDoc = DesignDoc()
+    }
+    const view = {
+      // if using variables in a map function need to inject them before use
+      map: `function(doc) {
+      if (doc._id.startsWith("${DocumentType.ACCOUNT_METADATA}${SEPARATOR}")) {
+        emit(doc.email.toLowerCase(), doc._id)
+      }
+    }`,
+    }
+    designDoc.views = {
+      ...designDoc.views,
+      [ViewName.ACCOUNT_BY_EMAIL]: view,
+    }
+    await db.put(designDoc)
+  })
 }
 
 exports.createUserAppView = async () => {
@@ -128,6 +155,39 @@ exports.createUserBuildersView = async () => {
   await db.put(designDoc)
 }
 
+exports.queryView = async (viewName, params, db, CreateFuncByName) => {
+  try {
+    let response = (await db.query(`database/${viewName}`, params)).rows
+    response = response.map(resp =>
+      params.include_docs ? resp.doc : resp.value
+    )
+    if (params.arrayResponse) {
+      return response
+    } else {
+      return response.length <= 1 ? response[0] : response
+    }
+  } catch (err) {
+    if (err != null && err.name === "not_found") {
+      const createFunc = CreateFuncByName[viewName]
+      await removeDeprecated(db, viewName)
+      await createFunc()
+      return exports.queryView(viewName, params, db, CreateFuncByName)
+    } else {
+      throw err
+    }
+  }
+}
+
+exports.queryPlatformView = async (viewName, params) => {
+  const CreateFuncByName = {
+    [ViewName.ACCOUNT_BY_EMAIL]: exports.createAccountEmailView,
+  }
+
+  return doWithDB(StaticDatabases.PLATFORM_INFO.name, async db => {
+    return exports.queryView(viewName, params, db, CreateFuncByName)
+  })
+}
+
 exports.queryGlobalView = async (viewName, params, db = null) => {
   const CreateFuncByName = {
     [ViewName.USER_BY_EMAIL]: exports.createNewUserEmailView,
@@ -139,20 +199,5 @@ exports.queryGlobalView = async (viewName, params, db = null) => {
   if (!db) {
     db = getGlobalDB()
   }
-  try {
-    let response = (await db.query(`database/${viewName}`, params)).rows
-    response = response.map(resp =>
-      params.include_docs ? resp.doc : resp.value
-    )
-    return response.length <= 1 ? response[0] : response
-  } catch (err) {
-    if (err != null && err.name === "not_found") {
-      const createFunc = CreateFuncByName[viewName]
-      await removeDeprecated(db, viewName)
-      await createFunc()
-      return exports.queryGlobalView(viewName, params)
-    } else {
-      throw err
-    }
-  }
+  return exports.queryView(viewName, params, db, CreateFuncByName)
 }

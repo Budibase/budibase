@@ -20,6 +20,13 @@ interface MongoDBConfig {
   db: string
 }
 
+interface MongoDBQuery {
+  json: object | string
+  extra: {
+    [key: string]: string
+  }
+}
+
 const SCHEMA: Integration = {
   docs: "https://github.com/mongodb/node-mongodb-native",
   friendlyName: "MongoDB",
@@ -92,8 +99,8 @@ class MongoIntegration implements IntegrationBase {
           json[field] = self.createObjectIds(json[field])
         }
         if (
-          (field === "_id" || field?.startsWith("$")) &&
-          typeof json[field] === "string"
+          typeof json[field] === "string" &&
+          json[field].toLowerCase().startsWith("objectid")
         ) {
           const id = json[field].match(/(?<=objectid\(['"]).*(?=['"]\))/gi)?.[0]
           if (id) {
@@ -152,7 +159,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async create(query: { json: object; extra: { [key: string]: string } }) {
+  async create(query: MongoDBQuery) {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -182,7 +189,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async read(query: { json: object; extra: { [key: string]: string } }) {
+  async read(query: MongoDBQuery) {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -231,7 +238,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async update(query: { json: object; extra: { [key: string]: string } }) {
+  async update(query: MongoDBQuery) {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -275,7 +282,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async delete(query: { json: object; extra: { [key: string]: string } }) {
+  async delete(query: MongoDBQuery) {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)

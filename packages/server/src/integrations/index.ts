@@ -66,18 +66,18 @@ if (environment.SELF_HOSTED) {
   DEFINITIONS[SourceName.GOOGLE_SHEETS] = googlesheets.schema
 }
 
-function isIntegrationAvailable(integration: string) {}
-
 module.exports = {
   getDefinitions: async () => {
-    const plugins = await getPlugins(PluginType.DATASOURCE)
-    // extract the actual schema from each custom
     const pluginSchemas: { [key: string]: Integration } = {}
-    for (let plugin of plugins) {
-      const sourceId = plugin.name
-      pluginSchemas[sourceId] = {
-        ...plugin.schema["schema"],
-        custom: true,
+    if (environment.SELF_HOSTED) {
+      const plugins = await getPlugins(PluginType.DATASOURCE)
+      // extract the actual schema from each custom
+      for (let plugin of plugins) {
+        const sourceId = plugin.name
+        pluginSchemas[sourceId] = {
+          ...plugin.schema["schema"],
+          custom: true,
+        }
       }
     }
     return {
@@ -89,16 +89,19 @@ module.exports = {
     if (INTEGRATIONS[integration]) {
       return INTEGRATIONS[integration]
     }
-    const plugins = await getPlugins(PluginType.DATASOURCE)
-    for (let plugin of plugins) {
-      if (plugin.name === integration) {
-        // need to use commonJS require due to its dynamic runtime nature
-        return getDatasourcePlugin(
-          plugin.name,
-          plugin.jsUrl,
-          plugin.schema?.hash
-        )
+    if (environment.SELF_HOSTED) {
+      const plugins = await getPlugins(PluginType.DATASOURCE)
+      for (let plugin of plugins) {
+        if (plugin.name === integration) {
+          // need to use commonJS require due to its dynamic runtime nature
+          return getDatasourcePlugin(
+            plugin.name,
+            plugin.jsUrl,
+            plugin.schema?.hash
+          )
+        }
       }
     }
+    throw new Error("No datasource implementation found.")
   },
 }
