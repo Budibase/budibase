@@ -14,13 +14,11 @@
     NPM: ["URL"],
     Github: ["Github Token", "URL"],
     URL: ["Headers", "URL"],
-    File: ["Path", "Headers"],
-    Upload: ["Upload"],
+    "File Upload": ["File Upload"],
   }
   let file
   let sourceValue = "NPM"
   let typeValue = "Datasource"
-  let nameValue
   let dynamicValues = {}
 
   let verificationSuccessful = false
@@ -30,7 +28,7 @@
     const url = dynamicValues["URL"]
 
     switch (source) {
-      case "upload":
+      case "file upload":
         if (file) {
           await plugins.uploadPlugin(file, sourceValue)
         }
@@ -39,7 +37,6 @@
         await plugins.createPlugin(
           typeValue,
           source,
-          nameValue,
           url,
           dynamicValues["Github Token"]
         )
@@ -48,13 +45,12 @@
         await plugins.createPlugin(
           typeValue,
           source,
-          nameValue,
           url,
           dynamicValues["Headers"]
         )
         break
       case "npm":
-        await plugins.createPlugin(typeValue, source, nameValue, url)
+        await plugins.createPlugin(typeValue, source, url)
         break
     }
   }
@@ -86,16 +82,12 @@
     <Select
       placeholder={null}
       bind:value={sourceValue}
-      options={["NPM", "Github", "URL", "File", "Upload"]}
+      options={["NPM", "Github", "URL", "File Upload"]}
     />
   </div>
 
-  <div class="form-row">
-    <Label size="M">Name</Label>
-    <Input bind:value={nameValue} />
-  </div>
   {#each authOptions[sourceValue] as option}
-    {#if option === "Upload"}
+    {#if option === "File Upload"}
       <div class="form-row">
         <Label size="M">{option}</Label>
 
