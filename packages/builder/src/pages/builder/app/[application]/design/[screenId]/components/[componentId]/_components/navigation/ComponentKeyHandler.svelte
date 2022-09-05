@@ -92,7 +92,12 @@
       return
     }
     // Key events are always for the selected component
-    return handleKeyAction(e, $selectedComponent, e.key, e.ctrlKey || e.metaKey)
+    return await handleKeyAction(
+      e,
+      $selectedComponent,
+      e.key,
+      e.ctrlKey || e.metaKey
+    )
   }
 
   const handleComponentMenu = async e => {
