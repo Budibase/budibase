@@ -1,14 +1,18 @@
 <script>
-  import { Icon, Body, ActionMenu, MenuItem, Detail } from "@budibase/bbui"
+  import {
+    Icon,
+    Body,
+    Modal,
+    ModalContent,
+    Button,
+    Label,
+    Input,
+  } from "@budibase/bbui"
   import { plugins } from "stores/portal"
 
   export let plugin
-  $: console.log(plugin)
-  let modal
 
-  function editGroup() {
-    modal.show()
-  }
+  let detailsModal
 </script>
 
 <div class="row">
@@ -25,36 +29,72 @@
         >
           {plugin.name}
         </Body>
-        <Detail size="S">
-          <div class="opacity">{plugin.schema.type}</div>
-        </Detail>
       </div>
     </div>
   </div>
-  <div class="desktop">{plugin.source || "-"}</div>
-  <div class="desktop">{plugin.author || "-"}</div>
   <div class="desktop">{plugin.version}</div>
+  <div class="desktop">
+    {plugin.schema.type.charAt(0).toUpperCase() + plugin.schema.type.slice(1)}
+  </div>
 
   <div>
-    <div>
-      <ActionMenu align="right">
-        <span slot="control">
-          <Icon hoverable name="More" />
-        </span>
-        <MenuItem
-          on:click={() => plugins.deletePlugin(plugin._id, plugin._rev)}
-          icon="Delete">Delete</MenuItem
-        >
-        <MenuItem on:click={() => editGroup(plugin)} icon="Edit">Edit</MenuItem>
-      </ActionMenu>
-    </div>
+    <Icon on:click={detailsModal.show()} hoverable name="ChevronRight" />
   </div>
 </div>
+
+<Modal bind:this={detailsModal}>
+  <ModalContent
+    title="Plugin details"
+    showConfirmButton={false}
+    showCancelButton={false}
+  >
+    <div class="form-row">
+      <Label size="M">Type</Label>
+      <Input
+        disabled
+        value={plugin.schema.type.charAt(0).toUpperCase() +
+          plugin.schema.type.slice(1)}
+      />
+    </div>
+    <div class="form-row">
+      <Label size="M">Source</Label>
+      <Input disabled value={plugin.source} />
+    </div>
+    <div class="form-row">
+      <Label size="M">Version</Label>
+      <Input disabled value={plugin.version} />
+    </div>
+    <div class="form-row">
+      <Label size="M">License</Label>
+      <Input disabled value={plugin.package.license} />
+    </div>
+    <div class="form-row">
+      <Label size="M">Author</Label>
+      <Input disabled value={plugin.package.author || "N/A"} />
+    </div>
+
+    <div class="footer" slot="footer">
+      <Button
+        newStyles
+        on:click={() => plugins.deletePlugin(plugin._id, plugin._rev)}
+        warning>Delete</Button
+      >
+
+      <Button
+        newStyles
+        on:click={() => plugins.deletePlugin(plugin._id, plugin._rev)}
+        >Update</Button
+      >
+
+      <Button cta newStyles on:click={detailsModal.hide()}>Done</Button>
+    </div>
+  </ModalContent>
+</Modal>
 
 <style>
   .row {
     display: grid;
-    grid-template-columns: 0.3fr auto auto auto auto;
+    grid-template-columns: 0.3fr auto auto auto;
     align-items: center;
     background: var(--background);
     height: 50px;
@@ -70,6 +110,13 @@
     display: flex;
   }
 
+  .form-row {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    grid-gap: var(--spacing-l) var(--spacing-l);
+    align-items: center;
+  }
+
   .opacity {
     opacity: 50%;
   }
@@ -77,5 +124,10 @@
     .desktop {
       display: none !important;
     }
+  }
+
+  .footer {
+    display: flex;
+    gap: var(--spacing-l);
   }
 </style>
