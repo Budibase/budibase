@@ -17,11 +17,10 @@ export function createPluginsStore() {
     })
   }
 
-  async function createPlugin(type, source, name, url, auth = null) {
+  async function createPlugin(type, source, url, auth = null) {
     let pluginData = {
       type,
       source,
-      name,
       url,
     }
 

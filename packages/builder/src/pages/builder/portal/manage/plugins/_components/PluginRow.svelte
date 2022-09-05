@@ -8,9 +8,9 @@
     Label,
     Input,
   } from "@budibase/bbui"
-  import { plugins } from "stores/portal"
 
   export let plugin
+  export let deletePlugin
 
   let detailsModal
 </script>
@@ -74,17 +74,11 @@
     </div>
 
     <div class="footer" slot="footer">
-      <Button
-        newStyles
-        on:click={() => plugins.deletePlugin(plugin._id, plugin._rev)}
-        warning>Delete</Button
+      <Button newStyles on:click={() => deletePlugin(plugin)} warning
+        >Delete</Button
       >
 
-      <Button
-        newStyles
-        on:click={() => plugins.deletePlugin(plugin._id, plugin._rev)}
-        >Update</Button
-      >
+      <Button newStyles>Update</Button>
 
       <Button cta newStyles on:click={detailsModal.hide()}>Done</Button>
     </div>

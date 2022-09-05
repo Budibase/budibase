@@ -92,6 +92,7 @@
         <Label size="M">{option}</Label>
 
         <Dropzone
+          gallery={false}
           value={[file]}
           on:change={e => {
             if (!e.detail || e.detail.length === 0) {

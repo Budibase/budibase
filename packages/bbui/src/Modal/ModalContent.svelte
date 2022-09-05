@@ -88,7 +88,7 @@
     <section class="spectrum-Dialog-content content-grid">
       <slot />
     </section>
-    {#if showCancelButton || showConfirmButton}
+    {#if showCancelButton || showConfirmButton || $$slots.footer}
       <div
         class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter"
       >
