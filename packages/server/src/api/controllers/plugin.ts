@@ -55,9 +55,11 @@ export async function upload(ctx: any) {
 }
 
 export async function create(ctx: any) {
-  const { type, source, name, url, headers, githubToken } = ctx.request.body
+  const { type, source, url, headers, githubToken } = ctx.request.body
   let metadata
   let directory
+  // Generating random name as a backup and needed for url
+  let name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
 
   switch (source) {
     case "npm":
