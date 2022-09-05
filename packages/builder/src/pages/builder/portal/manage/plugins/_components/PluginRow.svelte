@@ -117,9 +117,6 @@
     align-items: center;
   }
 
-  .opacity {
-    opacity: 50%;
-  }
   @media (max-width: 640px) {
     .desktop {
       display: none !important;
