@@ -19,7 +19,6 @@ import {
   makeComponentUnique,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
-import { DefaultAppTheme, LAYOUT_NAMES } from "../../constants"
 import { Utils } from "@budibase/frontend-core"
 
 const INITIAL_FRONTEND_STATE = {
@@ -40,6 +39,7 @@ const INITIAL_FRONTEND_STATE = {
     devicePreview: false,
     messagePassing: false,
     continueIfAction: false,
+    showNotificationAction: false,
   },
   errors: [],
   hasAppPackage: false,
@@ -124,35 +124,6 @@ export const getFrontendStore = () => {
       await integrations.init()
       await queries.init()
       await tables.init()
-
-      // Add navigation settings to old apps
-      if (!application.navigation) {
-        const layout = layouts.find(x => x._id === LAYOUT_NAMES.MASTER.PRIVATE)
-        const customTheme = application.customTheme
-        let navigationSettings = {
-          navigation: "Top",
-          title: application.name,
-          navWidth: "Large",
-          navBackground:
-            customTheme?.navBackground || DefaultAppTheme.navBackground,
-          navTextColor:
-            customTheme?.navTextColor || DefaultAppTheme.navTextColor,
-        }
-        if (layout) {
-          navigationSettings.hideLogo = layout.props.hideLogo
-          navigationSettings.hideTitle = layout.props.hideTitle
-          navigationSettings.title = layout.props.title || application.name
-          navigationSettings.logoUrl = layout.props.logoUrl
-          navigationSettings.links = layout.props.links
-          navigationSettings.navigation = layout.props.navigation || "Top"
-          navigationSettings.sticky = layout.props.sticky
-          navigationSettings.navWidth = layout.props.width || "Large"
-          if (navigationSettings.navigation === "None") {
-            navigationSettings.navigation = "Top"
-          }
-        }
-        await store.actions.navigation.save(navigationSettings)
-      }
     },
     theme: {
       save: async theme => {

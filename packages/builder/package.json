@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "1.2.44-alpha.1",
+  "version": "1.3.4-alpha.1",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -13,11 +13,11 @@
     "cy:setup:ci": "node ./cypress/setup.js",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "cy:run:ci": "cypress run --headed --browser chrome --spec  cypress/integration/createApp.spec.js",
+    "cy:run:ci": "cypress run --headed --browser chrome --spec cypress/integration/createApp.spec.js",
     "cy:run:ci:record": "xvfb-run cypress run --headed --browser chrome --record",
     "cy:test": "start-server-and-test cy:setup http://localhost:4100/builder cy:run",
     "cy:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci",
-    "cy:ci:record": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci:record && npm run cy:ci:report",
+    "cy:ci:record": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci:record; npm run cy:ci:report",
     "cy:ci:report": "mochawesome-merge cypress/reports/*.json > cypress/reports/testReport.json && marge cypress/reports/testReport.json --reportDir cypress/reports --inline",
     "cy:ci:notify": "node scripts/cypressResultsWebhook",
     "cy:debug": "start-server-and-test cy:setup http://localhost:4100/builder cy:open",
@@ -69,10 +69,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "1.2.44-alpha.1",
-    "@budibase/client": "1.2.44-alpha.1",
-    "@budibase/frontend-core": "1.2.44-alpha.1",
-    "@budibase/string-templates": "1.2.44-alpha.1",
+    "@budibase/bbui": "1.3.4-alpha.1",
+    "@budibase/client": "1.3.4-alpha.1",
+    "@budibase/frontend-core": "1.3.4-alpha.1",
+    "@budibase/string-templates": "1.3.4-alpha.1",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",

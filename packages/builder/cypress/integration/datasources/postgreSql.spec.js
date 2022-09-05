@@ -252,7 +252,8 @@ filterTests(["all"], () => {
           .contains("Delete Query")
           .click({ force: true })
         // Confirm deletion
-        cy.reload({ timeout: 5000 })
+        cy.reload()
+        cy.get(".nav-item", { timeout: 30000 }).contains(datasource).click({ force: true })
         cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryRename)
       })
 
