@@ -1,11 +1,11 @@
 import { ObjectStoreBuckets } from "../../constants"
 import {
   extractPluginTarball,
-  createNpmPlugin,
   createUrlPlugin,
   createGithubPlugin,
   loadJSFile,
 } from "../../utilities/fileSystem"
+import { createNpmPlugin } from "./plugin/utils"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { generatePluginID, getPluginParams } from "../../db/utils"
 import {
@@ -148,7 +148,7 @@ export async function storePlugin(
     // TODO: this isn't safe - but we need full node environment
     // in future we should do this in a thread for safety
     try {
-      //eval(js)
+      eval(js)
     } catch (err: any) {
       const message = err?.message ? err.message : JSON.stringify(err)
       throw new Error(`JS invalid: ${message}`)
