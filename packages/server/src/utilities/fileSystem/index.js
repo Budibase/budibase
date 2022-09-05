@@ -360,29 +360,6 @@ const extractPluginTarball = async (file, ext = ".tar.gz") => {
 }
 exports.extractPluginTarball = extractPluginTarball
 
-exports.createNpmPlugin = async (url, name = "") => {
-  let npmTarball = url
-  let pluginName = name
-
-  if (!npmTarball.includes(".tgz")) {
-    const npmPackageURl = url.replace(
-      "https://www.npmjs.com/package/",
-      "https://registry.npmjs.org/"
-    )
-    const response = await fetch(npmPackageURl)
-    if (response.status === 200) {
-      let npmDetails = await response.json()
-      pluginName = npmDetails.name
-      const npmVersion = npmDetails["dist-tags"].latest
-      npmTarball = npmDetails.versions[npmVersion].dist.tarball
-    } else {
-      throw "Cannot get package details"
-    }
-  }
-
-  return await downloadUnzipPlugin(pluginName, npmTarball)
-}
-
 exports.createUrlPlugin = async (url, name = "", headers = {}) => {
   if (!url.includes(".tgz") && !url.includes(".tar.gz")) {
     throw new Error("Plugin must be compressed into a gzipped tarball.")
