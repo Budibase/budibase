@@ -379,7 +379,7 @@ module GoogleSheetsModule {
         const rows = await sheet.getRows()
         const row = rows[query.rowIndex]
         if (row) {
-          const updateValues = JSON.parse(query.row)
+          const updateValues = typeof query.row === "string" ? JSON.parse(query.row) : query.row
           for (let key in updateValues) {
             row[key] = updateValues[key]
           }
