@@ -12,6 +12,11 @@
   export let plugin
   export let deletePlugin
 
+  let icon =
+    plugin.schema.type === "component"
+      ? plugin.schema.schema.icon || "Book"
+      : plugin.schema.schema.icon || "Beaker"
+
   let detailsModal
 </script>
 
@@ -19,7 +24,7 @@
   <div class="title">
     <div class="name">
       <div>
-        <Icon size="M" name={plugin.schema.schema.icon} />
+        <Icon size="M" name={icon} />
       </div>
       <div>
         <Body
@@ -44,11 +49,17 @@
 
 <Modal bind:this={detailsModal}>
   <ModalContent
+    size="M"
     title="Plugin details"
     showConfirmButton={false}
     showCancelButton={false}
   >
-    <div class="form-row">
+    <div class="details-row">
+      <Label size="M">Name</Label>
+      <Input disabled value={plugin.name} />
+    </div>
+
+    <div class="details-row">
       <Label size="M">Type</Label>
       <Input
         disabled
@@ -56,19 +67,19 @@
           plugin.schema.type.slice(1)}
       />
     </div>
-    <div class="form-row">
+    <div class="details-row">
       <Label size="M">Source</Label>
       <Input disabled value={plugin.source} />
     </div>
-    <div class="form-row">
+    <div class="details-row">
       <Label size="M">Version</Label>
       <Input disabled value={plugin.version} />
     </div>
-    <div class="form-row">
+    <div class="details-row">
       <Label size="M">License</Label>
       <Input disabled value={plugin.package.license} />
     </div>
-    <div class="form-row">
+    <div class="details-row">
       <Label size="M">Author</Label>
       <Input disabled value={plugin.package.author || "N/A"} />
     </div>
@@ -88,7 +99,7 @@
 <style>
   .row {
     display: grid;
-    grid-template-columns: 0.3fr auto auto auto;
+    grid-template-columns: 35% auto auto auto;
     align-items: center;
     background: var(--background);
     height: 50px;
@@ -104,7 +115,7 @@
     display: flex;
   }
 
-  .form-row {
+  .details-row {
     display: grid;
     grid-template-columns: 60px 1fr;
     grid-gap: var(--spacing-l) var(--spacing-l);
