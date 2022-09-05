@@ -107,6 +107,13 @@ exports.loadHandlebarsFile = path => {
 }
 
 /**
+ * Same as above just with a different name.
+ */
+exports.loadJSFile = (directory, name) => {
+  return fs.readFileSync(join(directory, name), "utf8")
+}
+
+/**
  * When return a file from the API need to write the file to the system temporarily so we
  * can create a read stream to send.
  * @param {string} contents the contents of the file which is to be returned from the API.
@@ -294,13 +301,18 @@ exports.getComponentLibraryManifest = async library => {
   }
 
   let resp
+  let path
   try {
     // Try to load the manifest from the new file location
-    const path = join(appId, filename)
+    path = join(appId, filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
   } catch (error) {
+    console.error(
+      `component-manifest-objectstore=failed appId=${appId} path=${path}`,
+      error
+    )
     // Fallback to loading it from the old location for old apps
-    const path = join(appId, "node_modules", library, "package", filename)
+    path = join(appId, "node_modules", library, "package", filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
   }
   if (typeof resp !== "string") {
