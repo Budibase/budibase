@@ -11,7 +11,12 @@ export function watch() {
   chokidar
     .watch(watchPath, {
       ignored: "**/node_modules",
-      awaitWriteFinish: true,
+      awaitWriteFinish: {
+        pollInterval: 100,
+        stabilityThreshold: 250,
+      },
+      usePolling: true,
+      interval: 250,
     })
     .on("all", async (event: string, path: string) => {
       // Sanity checks
@@ -24,8 +29,9 @@ export function watch() {
           const name = split[split.length - 1]
           console.log("Importing plugin:", path)
           await processPlugin({ name, path })
-        } catch (err) {
-          console.log("Failed to import plugin:", err)
+        } catch (err: any) {
+          const message = err?.message ? err?.message : err
+          console.error("Failed to import plugin:", message)
         }
       })
     })
