@@ -4,11 +4,14 @@ import {
   createNpmPlugin,
   createUrlPlugin,
   createGithubPlugin,
-  loadJSFile
+  loadJSFile,
 } from "../../utilities/fileSystem"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { generatePluginID, getPluginParams } from "../../db/utils"
-import { uploadDirectory } from "@budibase/backend-core/objectStore"
+import {
+  uploadDirectory,
+  deleteFolder,
+} from "@budibase/backend-core/objectStore"
 import { PluginType, FileType } from "@budibase/types"
 import env from "../../environment"
 
@@ -98,7 +101,20 @@ export async function fetch(ctx: any) {
 
 export async function destroy(ctx: any) {
   const db = getGlobalDB()
-  await db.remove(ctx.params.pluginId, ctx.params.pluginRev)
+  const { pluginId, pluginRev } = ctx.params
+
+  try {
+    const plugin = await db.get(pluginId)
+    const bucketPath = `${plugin.name}/`
+    await deleteFolder(ObjectStoreBuckets.PLUGINS, bucketPath)
+
+    await db.remove(pluginId, pluginRev)
+  } catch (err: any) {
+    const errMsg = err?.message ? err?.message : err
+
+    ctx.throw(400, `Failed to delete plugin: ${errMsg}`)
+  }
+
   ctx.message = `Plugin ${ctx.params.pluginId} deleted.`
   ctx.status = 200
 }
