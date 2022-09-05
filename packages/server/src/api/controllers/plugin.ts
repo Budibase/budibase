@@ -148,7 +148,7 @@ export async function storePlugin(
     // TODO: this isn't safe - but we need full node environment
     // in future we should do this in a thread for safety
     try {
-      eval(js)
+      //eval(js)
     } catch (err: any) {
       const message = err?.message ? err.message : JSON.stringify(err)
       throw new Error(`JS invalid: ${message}`)
