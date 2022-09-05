@@ -291,12 +291,21 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+<<<<<<< HEAD
 "@budibase/backend-core@1.3.4-alpha.0":
   version "1.3.4-alpha.0"
   resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.3.4-alpha.0.tgz#630120bbbbeda7e13edc2d3ef878088d64fbdba5"
   integrity sha512-LzAnOM06f0nDY76bgLjQuL2ChSOdhLg1zLPnwK07OEfQ9w8ZkkhNwJC/7/FAnnNEMypnKezrxXfhqee341JPZA==
   dependencies:
     "@budibase/types" "1.3.4-alpha.0"
+=======
+"@budibase/backend-core@1.3.4-alpha.1":
+  version "1.3.4-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.3.4-alpha.1.tgz#5c7547bdf22da936ab6fea8c5fc3ad1b9d54a910"
+  integrity sha512-TH4AyFm31kduVYdciw0TLhkGbilSi6vtE2h0qbnr5QV8SszZ8iKt3vUljTHS0PsH2V/S7qLQVEqZ2blkpRHO0A==
+  dependencies:
+    "@budibase/types" "1.3.4-alpha.1"
+>>>>>>> a5c46f2e93926a79ee126b7d3e957f5a8709a4ba
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -325,6 +334,7 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
+<<<<<<< HEAD
 "@budibase/pro@1.3.4-alpha.0":
   version "1.3.4-alpha.0"
   resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.3.4-alpha.0.tgz#37af17330c85131be1d2fe3cb5ef9c15bb46ab0a"
@@ -332,14 +342,30 @@
   dependencies:
     "@budibase/backend-core" "1.3.4-alpha.0"
     "@budibase/types" "1.3.4-alpha.0"
+=======
+"@budibase/pro@1.3.4-alpha.1":
+  version "1.3.4-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.3.4-alpha.1.tgz#fa58c6a0e58d620ddd329389ae896b823a4dd50e"
+  integrity sha512-e8dReYYw+weqYYAQC0zkatBgACaXcbM71kneUTYaX7DnYg7WGY3EHyfajjlQXq+gxmVuXc6wkY28dIozG+/8TQ==
+  dependencies:
+    "@budibase/backend-core" "1.3.4-alpha.1"
+    "@budibase/types" "1.3.4-alpha.1"
+>>>>>>> a5c46f2e93926a79ee126b7d3e957f5a8709a4ba
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
 
+<<<<<<< HEAD
 "@budibase/types@1.3.4-alpha.0":
   version "1.3.4-alpha.0"
   resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.3.4-alpha.0.tgz#954a99cb10e564d8a28e789eced870f7602f092b"
   integrity sha512-SXJ3kMBpsIVzXqux3z5X/L4IM5QhhrGNcS03k8pKpfqr5yoDwH+P5S2rAc0qZ7YgqlTBP9TVfzaJntWAc9YtQQ==
+=======
+"@budibase/types@1.3.4-alpha.1":
+  version "1.3.4-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.3.4-alpha.1.tgz#e75aaf70b5c5a3e7b9fde6f77cb91447dffe0d2d"
+  integrity sha512-DpjO3bkPiOCDtIsvPWU4p6SGBAsN80vtr7zz3Cjrv7p98050fWzkUBPAISOTCWTq59OpF6dUhmMmOQuN6OrK+g==
+>>>>>>> a5c46f2e93926a79ee126b7d3e957f5a8709a4ba
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
@@ -5791,7 +5817,7 @@ pouchdb-fetch@7.2.2:
   version "7.2.2"
   resolved "https://registry.yarnpkg.com/pouchdb-fetch/-/pouchdb-fetch-7.2.2.tgz#492791236d60c899d7e9973f9aca0d7b9cc02230"
   integrity sha512-lUHmaG6U3zjdMkh8Vob9GvEiRGwJfXKE02aZfjiVQgew+9SLkuOxNw3y2q4d1B6mBd273y1k2Lm0IAziRNxQnA==
-  dependencies:
+ , dependencies:
     abort-controller "3.0.0"
     fetch-cookie "0.10.1"
     node-fetch "2.6.0"
