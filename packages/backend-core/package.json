@@ -60,7 +60,7 @@
     ]
   },
   "devDependencies": {
-    "@shopify/jest-koa-mocks": "3.1.5",
+    "@shopify/jest-koa-mocks": "5.0.1",
     "@types/jest": "27.5.1",
     "@types/koa": "2.0.52",
     "@types/lodash": "4.14.180",
