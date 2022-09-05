@@ -1,0 +1,18 @@
+{
+  "email": "test@budibase.com",
+  "roles": {
+    "sed_6d7": "sit ea amet",
+    "cupidatat_e16": "fugiat proident sed"
+  },
+  "password": "cupidatat Lorem ad",
+  "status": "active",
+  "firstName": "QA",
+  "lastName": "Updated",
+  "forceResetPassword": true,
+  "builder": {
+    "global": true
+  },
+  "admin": {
+    "global": false
+  }
+}

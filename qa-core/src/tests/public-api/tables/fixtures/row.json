@@ -1,0 +1,8 @@
+{
+  "type": "row",
+  "tableId": "seed_table",
+  "sasa": "Mike",
+  "relationship": [
+    "ro_ta_"
+  ]
+}
