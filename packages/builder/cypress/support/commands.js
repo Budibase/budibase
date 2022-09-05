@@ -4,7 +4,7 @@ Cypress.on("uncaught:exception", () => {
 
 // ACCOUNTS & USERS
 Cypress.Commands.add("login", (email, password) => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
   cy.url()
     .should("include", "/builder/")
     .then(url => {
@@ -33,7 +33,7 @@ Cypress.Commands.add("login", (email, password) => {
 })
 
 Cypress.Commands.add("logOut", () => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 2000 })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
   cy.get(".user-dropdown .avatar > .icon").click({ force: true })
   cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
     cy.get("li[data-cy='user-logout']").click({ force: true })
@@ -43,7 +43,7 @@ Cypress.Commands.add("logOut", () => {
 
 Cypress.Commands.add("logoutNoAppGrid", () => {
   // Logs user out when app grid is not present
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
   cy.get(".avatar > .icon").click({ force: true })
   cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
     cy.get(".spectrum-Menu-item").contains("Log out").click({ force: true })
@@ -68,11 +68,14 @@ Cypress.Commands.add("createUser", (email, permission) => {
           .click({ force: true })
       })
     }
-    // Add user and wait for modal to change
-    cy.get(".spectrum-Button").contains("Add user").click({ force: true })
+    // Add user
+    cy.get(".spectrum-Button").contains("Add users").click({ force: true })
     cy.get(".spectrum-ActionButton").contains("Add email").should("not.exist")
   })
   // Onboarding modal
+  cy.get(".spectrum-Dialog-grid", { timeout: 5000 }).contains(
+    "Choose your onboarding"
+  )
   cy.get(".spectrum-Dialog-grid").within(() => {
     cy.get(".onboarding-type").eq(1).click()
     cy.get(".spectrum-Button").contains("Done").click({ force: true })
@@ -163,7 +166,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
   const shouldCreateDefaultTable =
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
 
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
   cy.url({ timeout: 30000 }).should("include", "/apps")
   cy.get(`[data-cy="create-app-btn"]`, { timeout: 5000 }).click({ force: true })
 
@@ -197,7 +200,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
 })
 
 Cypress.Commands.add("deleteApp", name => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
   cy.wait(2000)
   cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
@@ -254,7 +257,7 @@ Cypress.Commands.add("deleteApp", name => {
 })
 
 Cypress.Commands.add("deleteAllApps", () => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
   cy.wait(500)
   cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`, {
     timeout: 5000,
@@ -351,7 +354,7 @@ Cypress.Commands.add("alterAppVersion", (appId, version) => {
 })
 
 Cypress.Commands.add("importApp", (exportFilePath, name) => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
 
   cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
@@ -386,7 +389,7 @@ Cypress.Commands.add("importApp", (exportFilePath, name) => {
 
 // Filters visible with 1 or more
 Cypress.Commands.add("searchForApplication", appName => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
   cy.wait(2000)
 
   // No app filter functionality if only 1 app exists
@@ -409,7 +412,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
   cy.get(".appTable", { timeout: 5000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
