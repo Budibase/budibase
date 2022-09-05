@@ -57,8 +57,8 @@
 
   let dragDisabled = true
   $: settings = getComponentSettings($selectedComponent?._component)?.concat({
-    label: "CSS",
-    key: "css",
+    label: "Custom CSS",
+    key: "_css",
     type: "text",
   })
   $: settingOptions = settings.map(setting => ({
