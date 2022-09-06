@@ -144,6 +144,7 @@ exports.updateSelf = async ctx => {
   }
 
   // remove the old password from the user before sending events
+  user._rev = response.rev
   delete user.password
   await events.user.updated(user)
   if (passwordChange) {

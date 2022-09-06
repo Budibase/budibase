@@ -2,7 +2,7 @@ import Router from "@koa/router"
 const compress = require("koa-compress")
 const zlib = require("zlib")
 import { routes } from "./routes"
-import { middleware as pro, quotas } from "@budibase/pro"
+import { middleware as pro } from "@budibase/pro"
 import { errors, auth, middleware } from "@budibase/backend-core"
 import { APIError } from "@budibase/types"
 
@@ -92,15 +92,10 @@ router
     })
   )
   .use("/health", ctx => (ctx.status = 200))
-  .use(
-    auth.buildAuthMiddleware(PUBLIC_ENDPOINTS, {
-      checkDayPass: quotas.checkDayPass,
-    })
-  )
+  .use(auth.buildAuthMiddleware(PUBLIC_ENDPOINTS))
   .use(auth.buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
   .use(auth.buildCsrfMiddleware({ noCsrfPatterns: NO_CSRF_ENDPOINTS }))
   .use(pro.licensing())
-  .use(pro.activity())
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
     if (ctx.publicEndpoint) {
