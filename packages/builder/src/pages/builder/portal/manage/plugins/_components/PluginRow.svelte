@@ -8,16 +8,17 @@
     Label,
     Input,
   } from "@budibase/bbui"
+  import DeletePluginModal from "../_components/DeletePluginModal.svelte"
 
   export let plugin
-  export let deletePlugin
+
+  let detailsModal
+  let deleteModal
 
   let icon =
     plugin.schema.type === "component"
       ? plugin.schema.schema.icon || "Book"
       : plugin.schema.schema.icon || "Beaker"
-
-  let detailsModal
 </script>
 
 <div class="row">
@@ -69,7 +70,7 @@
     </div>
     <div class="details-row">
       <Label size="M">Source</Label>
-      <Input disabled value={plugin.source} />
+      <Input disabled value={plugin.source || "N/A"} />
     </div>
     <div class="details-row">
       <Label size="M">Version</Label>
@@ -85,15 +86,17 @@
     </div>
 
     <div class="footer" slot="footer">
-      <Button newStyles on:click={() => deletePlugin(plugin)} warning
-        >Delete</Button
-      >
+      <Button newStyles on:click={deleteModal.show()} warning>Delete</Button>
 
       <Button newStyles>Update</Button>
 
       <Button cta newStyles on:click={detailsModal.hide()}>Done</Button>
     </div>
   </ModalContent>
+
+  <Modal bind:this={deleteModal}>
+    <DeletePluginModal {plugin} />
+  </Modal>
 </Modal>
 
 <style>
