@@ -457,8 +457,8 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
   // Ensure modal has closed and table is created
-  cy.get(".spectrum-Modal").should("not.exist")
-  cy.get(".spectrum-Tabs-content", { timeout: 1000 }).should(
+  cy.get(".spectrum-Modal", { timeout: 2000 }).should("not.exist")
+  cy.get(".spectrum-Tabs-content", { timeout: 2000 }).should(
     "contain",
     tableName
   )
@@ -642,25 +642,25 @@ Cypress.Commands.add(
       cy.get(".spectrum-Button").contains("Continue").click({ force: true })
     })
     cy.get(".spectrum-Modal [data-cy='data-source-modal']", {
-      timeout: 500,
+      timeout: 20000,
     }).within(() => {
       for (let i = 0; i < datasourceNames.length; i++) {
-        cy.wait(500)
-        cy.get(".data-source-entry").contains(datasourceNames[i]).click()
+        cy.get(".data-source-entry", { timeout: 10000 })
+          .contains(datasourceNames[i])
+          .click({ force: true })
         //Ensure the check mark is visible
         cy.get(".data-source-entry")
           .contains(datasourceNames[i])
-          .get(".data-source-check")
+          .get(".data-source-check", { timeout: 10000 })
           .should("exist")
       }
 
       cy.get(".spectrum-Button").contains("Confirm").click({ force: true })
     })
 
-    cy.get(".spectrum-Modal").within(() => {
+    cy.get(".spectrum-Modal", { timeout: 10000 }).within(() => {
       if (accessLevelLabel) {
-        cy.get(".spectrum-Picker-label").click()
-        cy.wait(500)
+        cy.get(".spectrum-Picker-label", { timeout: 10000 }).click()
         cy.contains(accessLevelLabel).click()
       }
       cy.get(".spectrum-Button").contains("Done").click({ force: true })
