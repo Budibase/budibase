@@ -20,8 +20,6 @@
     "package.json"
   ],
   "exclude": [
-    "scripts",
-    "tests",
     "node_modules",
     "dist",
     "**/*.spec.ts",
