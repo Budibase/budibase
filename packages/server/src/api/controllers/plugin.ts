@@ -55,43 +55,38 @@ export async function upload(ctx: any) {
 
 export async function create(ctx: any) {
   const { type, source, url, headers, githubToken } = ctx.request.body
-  let metadata
-  let directory
-  // Generating random name as a backup and needed for url
-  let name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
 
   if (!env.SELF_HOSTED) {
-    throw new Error("Plugins not supported outside of self-host.")
+    ctx.throw(400, "Plugins not supported outside of self-host.")
   }
 
-  switch (source) {
-    case "npm":
-      try {
+  try {
+    let metadata
+    let directory
+    // Generating random name as a backup and needed for url
+    let name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
+
+    switch (source) {
+      case "npm":
         const { metadata: metadataNpm, directory: directoryNpm } =
           await uploadedNpmPlugin(url, name)
         metadata = metadataNpm
         directory = directoryNpm
-      } catch (err: any) {
-        const errMsg = err?.message ? err?.message : err
+        break
+      case "github":
+        const { metadata: metadataGithub, directory: directoryGithub } =
+          await uploadedGithubPlugin(ctx, url, name, githubToken)
+        metadata = metadataGithub
+        directory = directoryGithub
+        break
+      case "url":
+        const { metadata: metadataUrl, directory: directoryUrl } =
+          await uploadedUrlPlugin(url, name, headers)
+        metadata = metadataUrl
+        directory = directoryUrl
+        break
+    }
 
-        ctx.throw(400, `Failed to import plugin: ${errMsg}`)
-      }
-      break
-    case "github":
-      const { metadata: metadataGithub, directory: directoryGithub } =
-        await uploadedGithubPlugin(ctx, url, name, githubToken)
-      metadata = metadataGithub
-      directory = directoryGithub
-      break
-    case "url":
-      const { metadata: metadataUrl, directory: directoryUrl } =
-        await uploadedUrlPlugin(url, name, headers)
-      metadata = metadataUrl
-      directory = directoryUrl
-      break
-  }
-
-  try {
     const doc = await storePlugin(metadata, directory, source)
 
     ctx.body = {
