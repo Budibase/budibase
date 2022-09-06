@@ -11,3 +11,4 @@ COPY error.html /usr/share/nginx/html/error.html
 
 # Default environment
 ENV PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
+ENV PROXY_RATE_LIMIT_API_PER_SECOND=20

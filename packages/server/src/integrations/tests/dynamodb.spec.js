@@ -100,4 +100,52 @@ describe("DynamoDB Integration", () => {
       Name: "John"
     })
   })
+
+  it("configures the dynamoDB constructor based on an empty endpoint parameter", async () => {
+    const config = {
+      region: "us-east-1",
+      accessKeyId: "test",
+      secretAccessKeyId: "test"
+    }
+
+    const integration = new DynamoDBIntegration.integration(config)
+
+    expect(integration.config).toEqual({
+      currentClockSkew: true,
+      ...config
+    })
+  })
+
+  it("configures the dynamoDB constructor based on a localhost endpoint parameter", async () => {
+    const config = {
+      region: "us-east-1",
+      accessKeyId: "test",
+      secretAccessKeyId: "test",
+      endpoint: "localhost:8080"
+    }
+
+    const integration = new DynamoDBIntegration.integration(config)
+
+    expect(integration.config).toEqual({
+      region: "us-east-1",
+      currentClockSkew: true,
+      endpoint: "localhost:8080"
+    })
+  })
+
+  it("configures the dynamoDB constructor based on a remote endpoint parameter", async () => {
+    const config = {
+      region: "us-east-1",
+      accessKeyId: "test",
+      secretAccessKeyId: "test",
+      endpoint: "dynamodb.aws.foo.net"
+    }
+
+    const integration = new DynamoDBIntegration.integration(config)
+
+    expect(integration.config).toEqual({
+      currentClockSkew: true,
+      ...config
+    })
+  })
 })

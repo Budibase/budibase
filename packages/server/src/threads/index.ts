@@ -106,5 +106,6 @@ export class Thread {
 
   static async shutdown() {
     await Thread.stopThreads()
+    console.log("Threads shutdown")
   }
 }
