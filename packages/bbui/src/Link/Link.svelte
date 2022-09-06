@@ -8,12 +8,14 @@
   export let secondary = false
   export let overBackground = false
   export let target
+  export let download
 </script>
 
 <a
   on:click
   {href}
   {target}
+  {download}
   class:spectrum-Link--primary={primary}
   class:spectrum-Link--secondary={secondary}
   class:spectrum-Link--overBackground={overBackground}
