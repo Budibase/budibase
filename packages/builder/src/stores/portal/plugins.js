@@ -53,7 +53,9 @@ export function createPluginsStore() {
   async function uploadPlugin(file, source) {
     let data = new FormData()
     data.append("file", file)
-    let resp = await API.uploadPlugin(data, source)
+    data.append("source", source)
+
+    let resp = await API.uploadPlugin(data)
     let newPlugin = resp.plugins[0]
     update(state => {
       const currentIdx = state.findIndex(plugin => plugin._id === newPlugin._id)
