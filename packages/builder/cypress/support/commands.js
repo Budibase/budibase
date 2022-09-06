@@ -646,11 +646,11 @@ Cypress.Commands.add(
     }).within(() => {
       for (let i = 0; i < datasourceNames.length; i++) {
         cy.get(".data-source-entry", { timeout: 10000 })
-          .contains(datasourceNames[i])
+          .contains(datasourceNames[i], { timeout: 10000 })
           .click({ force: true })
         //Ensure the check mark is visible
         cy.get(".data-source-entry")
-          .contains(datasourceNames[i])
+          .contains(datasourceNames[i], { timeout: 10000 })
           .get(".data-source-check", { timeout: 10000 })
           .should("exist")
       }
