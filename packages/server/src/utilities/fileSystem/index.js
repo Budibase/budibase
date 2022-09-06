@@ -1,8 +1,6 @@
 const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
-const { promisify } = require("util")
-const streamPipeline = promisify(require("stream").pipeline)
 const uuid = require("uuid/v4")
 const {
   doWithDB,
@@ -17,6 +15,7 @@ const {
   streamUpload,
   deleteFolder,
   downloadTarball,
+  downloadTarballDirect,
   deleteFiles,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
@@ -31,7 +30,6 @@ const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
 const tar = require("tar")
 const fetch = require("node-fetch")
-const { NodeVM } = require("vm2")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
@@ -341,131 +339,52 @@ exports.cleanup = appIds => {
   }
 }
 
-const extractPluginTarball = async (file, ext = ".tar.gz") => {
-  if (!file.name.endsWith(ext)) {
-    throw new Error("Plugin must be compressed into a gzipped tarball.")
+const createTempFolder = item => {
+  const path = join(budibaseTempDir(), item)
+  try {
+    // remove old tmp directories automatically - don't combine
+    if (fs.existsSync(path)) {
+      fs.rmSync(path, { recursive: true, force: true })
+    }
+    fs.mkdirSync(path)
+  } catch (err) {
+    throw new Error(`Path cannot be created: ${err.message}`)
   }
-  const path = join(budibaseTempDir(), file.name.split(ext)[0])
-  // remove old tmp directories automatically - don't combine
-  if (fs.existsSync(path)) {
-    fs.rmSync(path, { recursive: true, force: true })
-  }
-  fs.mkdirSync(path)
+
+  return path
+}
+exports.createTempFolder = createTempFolder
+
+const extractTarball = async (fromFilePath, toPath) => {
   await tar.extract({
-    file: file.path,
-    C: path,
+    file: fromFilePath,
+    C: toPath,
   })
-
-  return await getPluginMetadata(path)
 }
-exports.extractPluginTarball = extractPluginTarball
-
-exports.createUrlPlugin = async (url, name = "", headers = {}) => {
-  if (!url.includes(".tgz") && !url.includes(".tar.gz")) {
-    throw new Error("Plugin must be compressed into a gzipped tarball.")
-  }
-
-  return await downloadUnzipPlugin(name, url, headers)
-}
-
-exports.createGithubPlugin = async (ctx, url, name = "", token = "") => {
-  let githubRepositoryUrl
-  let githubUrl
-
-  if (url.includes(".git")) {
-    githubRepositoryUrl = token
-      ? url.replace("https://", `https://${token}@`)
-      : url
-    githubUrl = url.replace(".git", "")
-  } else {
-    githubRepositoryUrl = token
-      ? `${url}.git`.replace("https://", `https://${token}@`)
-      : `${url}.git`
-    githubUrl = url
-  }
-
-  const githubApiUrl = githubUrl.replace(
-    "https://github.com/",
-    "https://api.github.com/repos/"
-  )
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
-  try {
-    const pluginRaw = await fetch(githubApiUrl, { headers })
-    if (pluginRaw.status !== 200) {
-      throw `Repository not found`
-    }
-
-    let pluginDetails = await pluginRaw.json()
-    const pluginName = pluginDetails.name || name
-
-    const path = join(budibaseTempDir(), pluginName)
-    // Remove first if exists
-    if (fs.existsSync(path)) {
-      fs.rmSync(path, { recursive: true, force: true })
-    }
-    fs.mkdirSync(path)
-
-    const script = `
-module.exports = async () => {
-  const child_process = require('child_process')
-  child_process.execSync(\`git clone ${githubRepositoryUrl} ${join(
-      budibaseTempDir(),
-      pluginName
-    )}\`);
-}
-`
-    const scriptRunner = new NodeVM({
-      require: {
-        external: true,
-        builtin: ["child_process"],
-        root: "./",
-      },
-    }).run(script)
-
-    await scriptRunner()
-
-    return await getPluginMetadata(path)
-  } catch (e) {
-    throw e.message
-  }
-}
-
-const downloadUnzipPlugin = async (name, url, headers = {}) => {
-  const path = join(budibaseTempDir(), name)
-  try {
-    // Remove first if exists
-    if (fs.existsSync(path)) {
-      fs.rmSync(path, { recursive: true, force: true })
-    }
-    fs.mkdirSync(path)
-
-    const response = await fetch(url, { headers })
-    if (!response.ok)
-      throw new Error(`Loading NPM plugin failed ${response.statusText}`)
-
-    await streamPipeline(
-      response.body,
-      tar.x({
-        strip: 1,
-        C: path,
-      })
-    )
-    return await getPluginMetadata(path)
-  } catch (e) {
-    throw `Cannot store plugin locally: ${e.message}`
-  }
-}
-exports.downloadUnzipPlugin = downloadUnzipPlugin
+exports.extractTarball = extractTarball
 
 const getPluginMetadata = async path => {
   let metadata = {}
   try {
     const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
     const schema = fs.readFileSync(join(path, "schema.json"), "utf8")
+
     metadata.schema = JSON.parse(schema)
     metadata.package = JSON.parse(pkg)
+
+    if (
+      !metadata.package.name ||
+      !metadata.package.version ||
+      !metadata.package.description
+    ) {
+      throw new Error(
+        "package.json is missing one of 'name', 'version' or 'description'."
+      )
+    }
   } catch (err) {
-    throw new Error("Unable to process schema.json/package.json in plugin.")
+    throw new Error(
+      `Unable to process schema.json/package.json in plugin. ${err.message}`
+    )
   }
 
   return { metadata, directory: path }
@@ -505,11 +424,46 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
 }
 
 /**
+ * Find for a file recursively from start path applying filter, return first match
+ */
+const findFileRec = (startPath, filter) => {
+  if (!fs.existsSync(startPath)) {
+    return
+  }
+
+  var files = fs.readdirSync(startPath)
+  for (let i = 0, len = files.length; i < len; i++) {
+    const filename = join(startPath, files[i])
+    const stat = fs.lstatSync(filename)
+
+    if (stat.isDirectory()) {
+      return findFileRec(filename, filter)
+    } else if (filename.endsWith(filter)) {
+      return filename
+    }
+  }
+}
+exports.findFileRec = findFileRec
+
+/**
+ * Remove a folder which is not empty from the file system
+ */
+const deleteFolderFileSystem = path => {
+  if (!fs.existsSync(path)) {
+    return
+  }
+
+  fs.rmSync(path, { recursive: true, force: true })
+}
+exports.deleteFolderFileSystem = deleteFolderFileSystem
+
+/**
  * Full function definition for below can be found in the utilities.
  */
 exports.upload = upload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
 exports.deleteFiles = deleteFiles
+exports.downloadTarballDirect = downloadTarballDirect
 exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
 exports.NODE_MODULES_PATH = NODE_MODULES_PATH
