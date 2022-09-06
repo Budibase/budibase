@@ -544,7 +544,8 @@
         "values": [
           {
             "label": "Row Index",
-            "key": "index"
+            "key": "index",
+            "type": "number"
           }
         ]
       }
@@ -2314,19 +2315,23 @@
         "values": [
           {
             "label": "Value",
-            "key": "__value"
+            "key": "__value",
+            "type": "object"
           },
           {
             "label": "Valid",
-            "key": "__valid"
+            "key": "__valid",
+            "type": "boolean"
           },
           {
             "label": "Current Step",
-            "key": "__currentStep"
+            "key": "__currentStep",
+            "type": "number"
           },
           {
             "label": "Current Step Valid",
-            "key": "__currentStepValid"
+            "key": "__currentStepValid",
+            "type": "boolean"
           }
         ]
       },
@@ -3437,7 +3442,6 @@
   },
   "s3upload": {
     "name": "S3 File Upload",
-    "info": "This component can't be used with S3 datasources that use custom endpoints.",
     "icon": "UploadToCloud",
     "styles": [
       "size"
@@ -3458,7 +3462,8 @@
       {
         "type": "dataSource/s3",
         "label": "S3 Datasource",
-        "key": "datasourceId"
+        "key": "datasourceId",
+        "info": "This component can't be used with S3 datasources that use custom endpoints"
       },
       {
         "type": "text",
@@ -3496,7 +3501,6 @@
   },
   "dataprovider": {
     "name": "Data Provider",
-    "info": "Pagination is only available for data stored in tables.",
     "icon": "Data",
     "illegalChildren": [
       "section"
@@ -3542,7 +3546,8 @@
         "type": "boolean",
         "label": "Paginate",
         "key": "paginate",
-        "defaultValue": true
+        "defaultValue": true,
+        "info": "Pagination is only available for data stored in tables"
       }
     ],
     "context": {
@@ -3550,23 +3555,28 @@
       "values": [
         {
           "label": "Rows",
-          "key": "rows"
+          "key": "rows",
+          "type": "array"
         },
         {
           "label": "Extra Info",
-          "key": "info"
+          "key": "info",
+          "type": "string"
         },
         {
           "label": "Rows Length",
-          "key": "rowsLength"
+          "key": "rowsLength",
+          "type": "number"
         },
         {
           "label": "Schema",
-          "key": "schema"
+          "key": "schema",
+          "type": "object"
         },
         {
           "label": "Page Number",
-          "key": "pageNumber"
+          "key": "pageNumber",
+          "type": "number"
         }
       ]
     }
@@ -3579,7 +3589,6 @@
     ],
     "hasChildren": true,
     "showEmptyState": false,
-    "info": "Row selection is only compatible with internal or SQL tables",
     "settings": [
       {
         "type": "dataProvider",
@@ -3636,7 +3645,8 @@
         "type": "boolean",
         "label": "Allow row selection",
         "key": "allowSelectRows",
-        "defaultValue": false
+        "defaultValue": false,
+        "info": "Row selection is only compatible with internal or SQL tables"
       },
       {
         "type": "boolean",
@@ -3677,13 +3687,13 @@
       "size"
     ],
     "hasChildren": false,
-    "info": "Your data provider will be automatically filtered to the given date range.",
     "settings": [
       {
         "type": "dataProvider",
         "label": "Provider",
         "key": "dataProvider",
-        "required": true
+        "required": true,
+        "info": "Your data provider will be automatically filtered to the given date range."
       },
       {
         "type": "field",
@@ -3818,7 +3828,6 @@
     "styles": [
       "size"
     ],
-    "info": "Only the first 5 search columns will be used",
     "settings": [
       {
         "type": "text",
@@ -3835,7 +3844,8 @@
         "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
-        "placeholder": "Choose search columns"
+        "placeholder": "Choose search columns",
+        "info": "Only the first 5 search columns will be used"
       },
       {
         "type": "filter",
@@ -3882,7 +3892,6 @@
       {
         "section": true,
         "name": "Table",
-        "info": "Row selection is only compatible with internal or SQL tables",
         "settings": [
           {
             "type": "number",
@@ -3916,7 +3925,8 @@
           {
             "type": "boolean",
             "label": "Allow row selection",
-            "key": "allowSelectRows"
+            "key": "allowSelectRows",
+            "info": "Row selection is only compatible with internal or SQL tables"
           },
           {
             "type": "boolean",
@@ -3983,7 +3993,6 @@
     "styles": [
       "size"
     ],
-    "info": "Only the first 3 search columns will be used.",
     "settings": [
       {
         "type": "text",
@@ -4000,7 +4009,8 @@
         "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
-        "placeholder": "Choose search columns"
+        "placeholder": "Choose search columns",
+        "info": "Only the first 5 search columns will be used"
       },
       {
         "type": "filter",
@@ -4329,23 +4339,28 @@
         "values": [
           {
             "label": "Rows",
-            "key": "rows"
+            "key": "rows",
+            "type": "array"
           },
           {
             "label": "Extra Info",
-            "key": "info"
+            "key": "info",
+            "type": "string"
           },
           {
             "label": "Rows Length",
-            "key": "rowsLength"
+            "key": "rowsLength",
+            "type": "number"
           },
           {
             "label": "Schema",
-            "key": "schema"
+            "key": "schema",
+            "type": "object"
           },
           {
             "label": "Page Number",
-            "key": "pageNumber"
+            "key": "pageNumber",
+            "type": "number"
           }
         ]
       },
@@ -4355,7 +4370,8 @@
         "values": [
           {
             "label": "Row Index",
-            "key": "index"
+            "key": "index",
+            "type": "number"
           }
         ]
       },

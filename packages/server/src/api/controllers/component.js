@@ -3,32 +3,36 @@ const { getComponentLibraryManifest } = require("../../utilities/fileSystem")
 const { getAppDB } = require("@budibase/backend-core/context")
 
 exports.fetchAppComponentDefinitions = async function (ctx) {
-  const db = getAppDB()
-  const app = await db.get(DocumentType.APP_METADATA)
+  try {
+    const db = getAppDB()
+    const app = await db.get(DocumentType.APP_METADATA)
 
-  let componentManifests = await Promise.all(
-    app.componentLibraries.map(async library => {
-      let manifest = await getComponentLibraryManifest(library)
+    let componentManifests = await Promise.all(
+      app.componentLibraries.map(async library => {
+        let manifest = await getComponentLibraryManifest(library)
 
-      return {
-        manifest,
-        library,
-      }
-    })
-  )
-  const definitions = {}
-  for (let { manifest, library } of componentManifests) {
-    for (let key of Object.keys(manifest)) {
-      if (key === "features") {
-        definitions[key] = manifest[key]
-      } else {
-        const fullComponentName = `${library}/${key}`.toLowerCase()
-        definitions[fullComponentName] = {
-          component: fullComponentName,
-          ...manifest[key],
+        return {
+          manifest,
+          library,
+        }
+      })
+    )
+    const definitions = {}
+    for (let { manifest, library } of componentManifests) {
+      for (let key of Object.keys(manifest)) {
+        if (key === "features") {
+          definitions[key] = manifest[key]
+        } else {
+          const fullComponentName = `${library}/${key}`.toLowerCase()
+          definitions[fullComponentName] = {
+            component: fullComponentName,
+            ...manifest[key],
+          }
         }
       }
     }
+    ctx.body = definitions
+  } catch (err) {
+    console.error(`component-definitions=failed`, err)
   }
-  ctx.body = definitions
 }
