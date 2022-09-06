@@ -381,10 +381,6 @@
       initialSettings = cachedSettings
     } else {
       Object.keys(allSettings).forEach(key => {
-        if (key === "_css") {
-          console.log(enrichedSettings._css)
-        }
-
         const same = propsAreSame(allSettings[key], cachedSettings[key])
         if (!same) {
           // Updated cachedSettings (which is assigned by reference to
