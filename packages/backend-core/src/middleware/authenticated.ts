@@ -112,11 +112,6 @@ export = (
           }
           user.csrfToken = session.csrfToken
 
-          // check day passes for the current user
-          if (opts.checkDayPass) {
-            await opts.checkDayPass(ctx, user, session.tenantId)
-          }
-
           if (
             !session.lastAccessedAt ||
             session.lastAccessedAt < timeMinusOneMinute()

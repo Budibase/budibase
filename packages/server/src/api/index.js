@@ -11,7 +11,7 @@ const zlib = require("zlib")
 const { mainRoutes, staticRoutes, publicRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
-const { middleware: pro, quotas } = require("@budibase/pro")
+const { middleware: pro } = require("@budibase/pro")
 const { shutdown } = require("./routes/public")
 
 const router = new Router()
@@ -44,7 +44,6 @@ router
   .use(
     buildAuthMiddleware(null, {
       publicAllowed: true,
-      checkDayPass: quotas.checkDayPass,
     })
   )
   // nothing in the server should allow query string tenants
@@ -55,9 +54,8 @@ router
       noTenancyRequired: true,
     })
   )
-  .use(currentApp)
   .use(pro.licensing())
-  .use(pro.activity())
+  .use(currentApp)
   .use(auditLog)
 
 // error handling middleware
