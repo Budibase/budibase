@@ -38,7 +38,10 @@ spec:
         image: redgeoff/replicate-couchdb-cluster
         imagePullPolicy: Always
         name: couchdb-backup
-        resources: {}
+        {{ with .Values.services.couchdb.backup.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
