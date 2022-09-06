@@ -16,6 +16,7 @@ export interface User extends Document {
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
   userGroups?: string[]
   forceResetPassword?: boolean
+  dayPassRecordedAt?: string
 }
 
 export interface UserRoles {

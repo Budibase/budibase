@@ -13,7 +13,9 @@ import { User } from "@budibase/types"
  * all the users to find one with this email address.
  * @param {string} email the email to lookup the user by.
  */
-export const getGlobalUserByEmail = async (email: String) => {
+export const getGlobalUserByEmail = async (
+  email: String
+): Promise<User | undefined> => {
   if (email == null) {
     throw "Must supply an email address to view"
   }
