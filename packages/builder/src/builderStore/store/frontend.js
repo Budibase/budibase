@@ -595,7 +595,7 @@ export const getFrontendStore = () => {
 
           // Make new component unique if copying
           if (!cut) {
-            makeComponentUnique(componentToPaste)
+            componentToPaste = makeComponentUnique(componentToPaste)
           }
           newComponentId = componentToPaste._id
 
@@ -905,7 +905,7 @@ export const getFrontendStore = () => {
           }
 
           // Replace block with ejected definition
-          makeComponentUnique(ejectedDefinition)
+          ejectedDefinition = makeComponentUnique(ejectedDefinition)
           const index = parent._children.findIndex(x => x._id === componentId)
           parent._children[index] = ejectedDefinition
           nextSelectedComponentId = ejectedDefinition._id
