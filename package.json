@@ -52,8 +52,6 @@
     "test:e2e:ci": "lerna run cy:ci --stream",
     "test:e2e:ci:record": "lerna run cy:ci:record --stream",
     "test:e2e:ci:notify": "lerna run cy:ci:notify",
-    "test:api:ci": "npm --prefix ./qa-core run api:test:ci",
-    "test:api": "npm --prefix ./qa-core run api:test",
     "build:specs": "lerna run specs",
     "build:docker": "lerna run build:docker && npm run build:docker:proxy:compose && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh $BUDIBASE_RELEASE_VERSION && cd -",
     "build:docker:pre": "lerna run build && lerna run predocker",

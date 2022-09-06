@@ -60,4 +60,7 @@ jobs:
     #     install: false
     #     command: yarn test:e2e:ci
 
-    - run: yarn test:api:ci
+    - run: | 
+        cd qa-core
+        yarn
+        yarn api:test:ci
