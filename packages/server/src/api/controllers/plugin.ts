@@ -31,7 +31,6 @@ export async function getPlugins(type?: PluginType) {
 }
 
 export async function upload(ctx: any) {
-  const { source } = ctx.params
   const plugins: FileType[] =
     ctx.request.files.file.length > 1
       ? Array.from(ctx.request.files.file)
@@ -40,7 +39,7 @@ export async function upload(ctx: any) {
     let docs = []
     // can do single or multiple plugins
     for (let plugin of plugins) {
-      const doc = await processPlugin(plugin, source)
+      const doc = await processPlugin(plugin, ctx.request.body.source)
       docs.push(doc)
     }
     ctx.body = {
@@ -165,15 +164,21 @@ export async function storePlugin(
   } catch (err) {
     rev = undefined
   }
-  const doc = {
+  let doc = {
     _id: pluginId,
     _rev: rev,
-    source,
     ...metadata,
     name,
     version,
     description,
     jsUrl: `${bucketPath}${jsFileName}`,
+  }
+
+  if (source) {
+    doc = {
+      ...doc,
+      source,
+    }
   }
   const response = await db.put(doc)
   return {

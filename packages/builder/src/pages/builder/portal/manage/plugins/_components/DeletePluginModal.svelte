@@ -4,12 +4,12 @@
 
   import { plugins } from "stores/portal"
 
-  export let removePlugin
+  export let plugin
 
   async function deletePlugin() {
     try {
-      await plugins.deletePlugin(removePlugin._id, removePlugin._rev)
-      notifications.success(`Plugin ${removePlugin?.name} deleted.`)
+      await plugins.deletePlugin(plugin._id, plugin._rev)
+      notifications.success(`Plugin ${plugin?.name} deleted.`)
       $goto("./")
     } catch (error) {
       notifications.error("Error deleting plugin")
@@ -26,6 +26,6 @@
   showCloseIcon={false}
 >
   <Body>
-    Are you sure you want to delete <strong>{removePlugin?.name}</strong>
+    Are you sure you want to delete <strong>{plugin?.name}</strong>
   </Body>
 </ModalContent>
