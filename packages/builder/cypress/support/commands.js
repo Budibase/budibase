@@ -915,8 +915,9 @@ Cypress.Commands.add("createRestQuery", (method, restUrl, queryPrettyName) => {
 Cypress.Commands.add("closeModal", () => {
   cy.get(".spectrum-Modal", { timeout: 2000 }).within(() => {
     cy.get(".close-icon").click()
-    cy.wait(1000) // Wait for modal to close
   })
+  // Confirm modal has closed
+  cy.get(".spectrum-Modal", { timeout: 10000 }).should("not.exist")
 })
 
 Cypress.Commands.add("expandBudibaseConnection", () => {
