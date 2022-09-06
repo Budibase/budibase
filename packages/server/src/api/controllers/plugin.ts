@@ -1,11 +1,11 @@
 import { ObjectStoreBuckets } from "../../constants"
+import { loadJSFile } from "../../utilities/fileSystem"
 import {
-  extractPluginTarball,
-  createUrlPlugin,
-  createGithubPlugin,
-  loadJSFile,
-} from "../../utilities/fileSystem"
-import { createNpmPlugin } from "./plugin/utils"
+  uploadedNpmPlugin,
+  uploadedUrlPlugin,
+  uploadedGithubPlugin,
+  uploadedFilePlugin,
+} from "./plugin/utils"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { generatePluginID, getPluginParams } from "../../db/utils"
 import {
@@ -60,22 +60,32 @@ export async function create(ctx: any) {
   // Generating random name as a backup and needed for url
   let name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
 
+  if (!env.SELF_HOSTED) {
+    throw new Error("Plugins not supported outside of self-host.")
+  }
+
   switch (source) {
     case "npm":
-      const { metadata: metadataNpm, directory: directoryNpm } =
-        await createNpmPlugin(url, name)
-      metadata = metadataNpm
-      directory = directoryNpm
+      try {
+        const { metadata: metadataNpm, directory: directoryNpm } =
+          await uploadedNpmPlugin(url, name)
+        metadata = metadataNpm
+        directory = directoryNpm
+      } catch (err: any) {
+        const errMsg = err?.message ? err?.message : err
+
+        ctx.throw(400, `Failed to import plugin: ${errMsg}`)
+      }
       break
     case "github":
       const { metadata: metadataGithub, directory: directoryGithub } =
-        await createGithubPlugin(ctx, url, name, githubToken)
+        await uploadedGithubPlugin(ctx, url, name, githubToken)
       metadata = metadataGithub
       directory = directoryGithub
       break
     case "url":
       const { metadata: metadataUrl, directory: directoryUrl } =
-        await createUrlPlugin(url, name, headers)
+        await uploadedUrlPlugin(url, name, headers)
       metadata = metadataUrl
       directory = directoryUrl
       break
@@ -192,6 +202,6 @@ export async function processPlugin(plugin: FileType, source?: string) {
     throw new Error("Plugins not supported outside of self-host.")
   }
 
-  const { metadata, directory } = await extractPluginTarball(plugin)
+  const { metadata, directory } = await uploadedFilePlugin(plugin)
   return await storePlugin(metadata, directory, source)
 }
