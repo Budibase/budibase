@@ -13,12 +13,9 @@
   import { plugins } from "stores/portal"
   import PluginRow from "./_components/PluginRow.svelte"
   import AddPluginModal from "./_components/AddPluginModal.svelte"
-  import DeletePluginModal from "./_components/DeletePluginModal.svelte"
 
   let modal
-  let deleteModal
   let searchTerm = ""
-  let removePlugin
 
   let filterOptions = [
     { label: "All Plugins", value: "all" },
@@ -34,11 +31,6 @@
           .filter(plugin =>
             plugin?.name?.toLowerCase().includes(searchTerm.toLowerCase())
           )
-
-  const deletePlugin = plugin => {
-    deleteModal.show()
-    removePlugin = plugin
-  }
 
   onMount(async () => {
     await plugins.load()
@@ -75,7 +67,7 @@
 
     {#if $plugins}
       {#each filteredPlugins as plugin}
-        <PluginRow {plugin} {deletePlugin} />
+        <PluginRow {plugin} />
       {/each}
     {/if}
   </Layout>
@@ -83,9 +75,6 @@
 
 <Modal bind:this={modal}>
   <AddPluginModal />
-</Modal>
-<Modal bind:this={deleteModal}>
-  <DeletePluginModal {removePlugin} />
 </Modal>
 
 <style>
