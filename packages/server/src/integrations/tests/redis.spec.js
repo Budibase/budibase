@@ -46,7 +46,7 @@ describe("Redis Integration", () => {
     expect(await config.redis.get(body.key)).toEqual(null)
   })
 
-  it("calls the command method with the correct params", async () => {
+  it("calls the pipeline method with the correct params", async () => {
     const body = {
       json: "KEYS *"
     }
@@ -55,6 +55,21 @@ describe("Redis Integration", () => {
     config.integration.client.pipeline = jest.fn(() => ({ exec: jest.fn(() => [[]]) }))
 
     await config.integration.command(body)
-    expect(config.integration.client.pipeline).toHaveBeenCalledWith([["KEYS", "*"]])
+    expect(config.integration.client.pipeline).toHaveBeenCalledWith([["keys", "*"]])
+  })
+
+  it("calls the pipeline method with several separated commands when there are newlines", async () => {
+    const body = {
+      json: 'SET foo "bar"\nGET foo'
+    }
+
+    // ioredis-mock doesn't support pipelines
+    config.integration.client.pipeline = jest.fn(() => ({ exec: jest.fn(() => [[]]) }))
+
+    await config.integration.command(body)
+    expect(config.integration.client.pipeline).toHaveBeenCalledWith([
+      ["set", 'foo', '"bar"'],
+      ["get", 'foo']
+    ])
   })
 })
