@@ -316,7 +316,7 @@ const searchExistingEmails = async (emails: string[]) => {
   const existingAccounts = await getExistingAccounts(emails)
   matchedEmails.push(...existingAccounts.map(account => account.email))
 
-  return [...new Set(matchedEmails)]
+  return [...new Set(matchedEmails.map(email => email.toLowerCase()))]
 }
 
 export const bulkCreate = async (
