@@ -132,12 +132,22 @@ module RedisModule {
 
     async command(query: { json: string }) {
       return this.redisContext(async () => {
-        const commands = query.json.trim().split(" ")
-        const pipeline = this.client.pipeline([commands])
-        const result = await pipeline.exec()
-        return {
-          response: result[0][1],
+        // commands split line by line
+        const commands = query.json.trim().split("\n")
+        let pipelineCommands = []
+
+        // process each command separately
+        for (let command of commands) {
+          const tokenised = command.trim().split(" ")
+          // Pipeline only accepts lower case commands
+          tokenised[0] = tokenised[0].toLowerCase()
+          pipelineCommands.push(tokenised)
         }
+
+        const pipeline = this.client.pipeline(pipelineCommands)
+        const result = await pipeline.exec()
+
+        return result.map((output: string | string[]) => output[1])
       })
     }
   }
