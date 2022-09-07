@@ -267,8 +267,9 @@ export const addTenant = async (
 }
 
 const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
+  const lcEmails = emails.map(email => email.toLowerCase())
   return dbUtils.queryGlobalView(ViewName.USER_BY_EMAIL, {
-    keys: emails,
+    keys: lcEmails,
     include_docs: true,
     arrayResponse: true,
   })
@@ -277,8 +278,9 @@ const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
 const getExistingPlatformUsers = async (
   emails: string[]
 ): Promise<PlatformUserByEmail[]> => {
+  const lcEmails = emails.map(email => email.toLowerCase())
   return dbUtils.queryPlatformView(ViewName.PLATFORM_USERS_LOWERCASE, {
-    keys: emails.map(email => email.toLowerCase()),
+    keys: lcEmails,
     include_docs: true,
     arrayResponse: true,
   })
@@ -287,8 +289,9 @@ const getExistingPlatformUsers = async (
 const getExistingAccounts = async (
   emails: string[]
 ): Promise<AccountMetadata[]> => {
+  const lcEmails = emails.map(email => email.toLowerCase())
   return dbUtils.queryPlatformView(ViewName.ACCOUNT_BY_EMAIL, {
-    keys: emails,
+    keys: lcEmails,
     include_docs: true,
     arrayResponse: true,
   })
@@ -333,7 +336,7 @@ export const bulkCreate = async (
   for (const newUser of newUsersRequested) {
     if (
       newUsers.find(
-        (x: any) => x.email.toLowerCase() === newUser.email.toLowerCase()
+        (x: User) => x.email.toLowerCase() === newUser.email.toLowerCase()
       ) ||
       existingEmails.includes(newUser.email.toLowerCase())
     ) {
