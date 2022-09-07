@@ -1,4 +1,3 @@
-import fetch from "node-fetch"
 import {
   createTempFolder,
   getPluginMetadata,
@@ -8,6 +7,7 @@ import {
   deleteFolderFileSystem,
 } from "../../../utilities/fileSystem"
 import { join } from "path"
+const fetch = require("node-fetch")
 
 export const uploadedFilePlugin = async file => {
   if (!file.name.endsWith(".tar.gz")) {
