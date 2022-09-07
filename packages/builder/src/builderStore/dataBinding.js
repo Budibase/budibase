@@ -299,7 +299,10 @@ const getProviderContextBindings = (asset, dataProviders) => {
         schema = {}
         const values = context.values || []
         values.forEach(value => {
-          schema[value.key] = { name: value.label, type: "string" }
+          schema[value.key] = {
+            name: value.label,
+            type: value.type || "string",
+          }
         })
       } else if (context.type === "schema") {
         // Schema contexts are generated dynamically depending on their data
@@ -359,6 +362,12 @@ const getProviderContextBindings = (asset, dataProviders) => {
           providerId,
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
+          category: component._instanceName,
+          icon: def.icon,
+          display: {
+            name: fieldSchema.name || key,
+            type: fieldSchema.type,
+          },
         })
       })
     })
@@ -385,6 +394,9 @@ const getUserBindings = () => {
       // datasource options, based on bindable properties
       fieldSchema,
       providerId: "user",
+      category: "Current User",
+      icon: "User",
+      display: fieldSchema,
     })
   })
   return bindings
@@ -401,11 +413,17 @@ const getDeviceBindings = () => {
       type: "context",
       runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
       readableBinding: `Device.Mobile`,
+      category: "Device",
+      icon: "DevicePhone",
+      display: { type: "boolean", name: "mobile" },
     })
     bindings.push({
       type: "context",
       runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
       readableBinding: `Device.Tablet`,
+      category: "Device",
+      icon: "DevicePhone",
+      display: { type: "boolean", name: "tablet" },
     })
   }
   return bindings
@@ -429,6 +447,8 @@ const getSelectedRowsBindings = asset => {
           "selectedRows"
         )}`,
         readableBinding: `${table._instanceName}.Selected rows`,
+        category: "Selected rows",
+        icon: "ViewRow",
       }))
     )
 
@@ -460,6 +480,9 @@ const getStateBindings = () => {
       type: "context",
       runtimeBinding: `${safeState}.${makePropSafe(key)}`,
       readableBinding: `State.${key}`,
+      category: "State",
+      icon: "AutomatedSegment",
+      display: { name: key },
     }))
   }
   return bindings
@@ -482,11 +505,17 @@ const getUrlBindings = asset => {
     type: "context",
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
+    category: "URL",
+    icon: "RailTop",
+    display: { type: "string" },
   }))
   const queryParamsBinding = {
     type: "context",
     runtimeBinding: makePropSafe("query"),
     readableBinding: "Query params",
+    category: "URL",
+    icon: "RailTop",
+    display: { type: "object" },
   }
   return urlParamBindings.concat([queryParamsBinding])
 }
@@ -497,6 +526,9 @@ const getRoleBindings = () => {
       type: "context",
       runtimeBinding: `trim "${role._id}"`,
       readableBinding: `Role.${role.name}`,
+      category: "Role",
+      icon: "UserGroup",
+      display: { type: "string", name: role.name },
     }
   })
 }
@@ -518,6 +550,7 @@ export const getEventContextBindings = (
   // Check if any context bindings are provided by the component for this
   // setting
   const component = findComponent(asset.props, componentId)
+  const def = store.actions.components.getDefinition(component?._component)
   const settings = getComponentSettings(component?._component)
   const eventSetting = settings.find(setting => setting.key === settingKey)
   if (eventSetting?.context?.length) {
@@ -527,6 +560,8 @@ export const getEventContextBindings = (
         runtimeBinding: `${makePropSafe("eventContext")}.${makePropSafe(
           contextEntry.key
         )}`,
+        category: component._instanceName,
+        icon: def.icon,
       })
     })
   }
@@ -548,6 +583,8 @@ export const getEventContextBindings = (
         bindings.push({
           readableBinding: `Action ${idx + 1}.${contextValue.label}`,
           runtimeBinding: `actions.${idx}.${contextValue.value}`,
+          category: "Actions",
+          icon: "JourneyAction",
         })
       })
     }
