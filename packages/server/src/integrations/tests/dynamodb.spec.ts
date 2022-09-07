@@ -1,15 +1,16 @@
-const AWS = require("aws-sdk")
-const DynamoDBIntegration = require("../dynamodb")
+import { default as DynamoDBIntegration } from "../dynamodb"
 jest.mock("aws-sdk")
 
 class TestConfiguration {
-  constructor(config = {}) {
-    this.integration = new DynamoDBIntegration.integration(config) 
+  integration: any
+
+  constructor(config: any = {}) {
+    this.integration = new DynamoDBIntegration.integration(config)
   }
 }
 
 describe("DynamoDB Integration", () => {
-  let config 
+  let config: any
   let tableName = "Users"
 
   beforeEach(() => {
@@ -17,25 +18,25 @@ describe("DynamoDB Integration", () => {
   })
 
   it("calls the create method with the correct params", async () => {
-    const response = await config.integration.create({ 
+    const response = await config.integration.create({
       table: tableName,
       json: {
-        Name: "John"
-      }
+        Name: "John",
+      },
     })
     expect(config.integration.client.put).toHaveBeenCalledWith({
       TableName: tableName,
-      Name: "John"
+      Name: "John",
     })
   })
 
   it("calls the read method with the correct params", async () => {
     const indexName = "Test"
 
-    const response = await config.integration.read({ 
+    const response = await config.integration.read({
       table: tableName,
-      index: indexName, 
-      json: {}
+      index: indexName,
+      json: {},
     })
     expect(config.integration.client.query).toHaveBeenCalledWith({
       TableName: tableName,
@@ -47,57 +48,59 @@ describe("DynamoDB Integration", () => {
   it("calls the scan method with the correct params", async () => {
     const indexName = "Test"
 
-    const response = await config.integration.scan({ 
+    const response = await config.integration.scan({
       table: tableName,
-      index: indexName, 
-      json: {}
+      index: indexName,
+      json: {},
     })
     expect(config.integration.client.scan).toHaveBeenCalledWith({
       TableName: tableName,
       IndexName: indexName,
     })
-    expect(response).toEqual([{
-      Name: "test"
-    }])
+    expect(response).toEqual([
+      {
+        Name: "test",
+      },
+    ])
   })
 
   it("calls the get method with the correct params", async () => {
-    const response = await config.integration.get({ 
+    const response = await config.integration.get({
       table: tableName,
       json: {
-        Id: 123
-      }
+        Id: 123,
+      },
     })
 
     expect(config.integration.client.get).toHaveBeenCalledWith({
       TableName: tableName,
-      Id: 123
+      Id: 123,
     })
   })
 
   it("calls the update method with the correct params", async () => {
-    const response = await config.integration.update({ 
+    const response = await config.integration.update({
       table: tableName,
       json: {
-        Name: "John"
-      }
+        Name: "John",
+      },
     })
     expect(config.integration.client.update).toHaveBeenCalledWith({
       TableName: tableName,
-      Name: "John"
+      Name: "John",
     })
   })
 
   it("calls the delete method with the correct params", async () => {
-    const response = await config.integration.delete({ 
+    const response = await config.integration.delete({
       table: tableName,
       json: {
-        Name: "John"
-      }
+        Name: "John",
+      },
     })
     expect(config.integration.client.delete).toHaveBeenCalledWith({
       TableName: tableName,
-      Name: "John"
+      Name: "John",
     })
   })
 
@@ -105,14 +108,14 @@ describe("DynamoDB Integration", () => {
     const config = {
       region: "us-east-1",
       accessKeyId: "test",
-      secretAccessKeyId: "test"
+      secretAccessKey: "test",
     }
 
-    const integration = new DynamoDBIntegration.integration(config)
+    const integration: any = new DynamoDBIntegration.integration(config)
 
     expect(integration.config).toEqual({
       currentClockSkew: true,
-      ...config
+      ...config,
     })
   })
 
@@ -120,16 +123,16 @@ describe("DynamoDB Integration", () => {
     const config = {
       region: "us-east-1",
       accessKeyId: "test",
-      secretAccessKeyId: "test",
-      endpoint: "localhost:8080"
+      secretAccessKey: "test",
+      endpoint: "localhost:8080",
     }
 
-    const integration = new DynamoDBIntegration.integration(config)
+    const integration: any = new DynamoDBIntegration.integration(config)
 
     expect(integration.config).toEqual({
       region: "us-east-1",
       currentClockSkew: true,
-      endpoint: "localhost:8080"
+      endpoint: "localhost:8080",
     })
   })
 
@@ -137,15 +140,16 @@ describe("DynamoDB Integration", () => {
     const config = {
       region: "us-east-1",
       accessKeyId: "test",
-      secretAccessKeyId: "test",
-      endpoint: "dynamodb.aws.foo.net"
+      secretAccessKey: "test",
+      endpoint: "dynamodb.aws.foo.net",
     }
 
     const integration = new DynamoDBIntegration.integration(config)
 
+    // @ts-ignore
     expect(integration.config).toEqual({
       currentClockSkew: true,
-      ...config
+      ...config,
     })
   })
 })
