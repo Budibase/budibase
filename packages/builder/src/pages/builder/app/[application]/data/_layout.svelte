@@ -31,7 +31,9 @@
       class="add-button"
       data-cy={`new-${isExternal ? "datasource" : "table"}`}
     >
-      <Icon hoverable name="AddCircle" on:click={modal.show} />
+      {#if modal}
+        <Icon hoverable name="AddCircle" on:click={modal.show} />
+      {/if}
     </div>
   </div>
   <div class="content">

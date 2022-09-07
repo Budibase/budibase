@@ -113,6 +113,7 @@ export const serveApp = async function (ctx: any) {
       production: env.isProd(),
       appId,
       clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+      usedPlugins: appInfo.usedPlugins,
     })
 
     const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
