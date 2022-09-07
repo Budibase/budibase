@@ -1,4 +1,5 @@
 import { doWithDB } from "../db"
+import { queryPlatformView } from "../db/views"
 import { StaticDatabases, ViewName } from "../db/constants"
 import { baseGlobalDBName } from "./utils"
 import {
@@ -8,7 +9,6 @@ import {
   getTenantIDFromAppID,
 } from "../context"
 import env from "../environment"
-import { queryPlatformView } from "../db"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name

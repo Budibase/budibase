@@ -23,6 +23,7 @@
     "dev:stack:init": "node ./scripts/dev/manage.js init",
     "dev:builder": "npm run dev:stack:init && nodemon",
     "test": "jest --runInBand",
+    "test:watch": "jest --watch",
     "env:multi:enable": "node scripts/multiTenancy.js enable",
     "env:multi:disable": "node scripts/multiTenancy.js disable",
     "env:selfhost:enable": "node scripts/selfhost.js enable",
