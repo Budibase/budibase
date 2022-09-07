@@ -150,14 +150,14 @@ describe("/static", () => {
     })
   })
 
-  describe("/preview", () => {
+  describe("/app/preview", () => {
     beforeEach(() => {
       jest.clearAllMocks()
     })
 
     it("should serve the builder preview", async () => {
       const headers = config.defaultHeaders()
-      const res = await request.get(`/preview`).set(headers).expect(200)
+      const res = await request.get(`/app/preview`).set(headers).expect(200)
 
       expect(res.body.appId).toBe(config.appId)
       expect(res.body.builderPreview).toBe(true)
