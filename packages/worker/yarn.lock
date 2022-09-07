@@ -291,12 +291,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.3.11":
-  version "1.3.11"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.3.11.tgz#ecd2125a97d7edd8c290caea659af01b08d456f7"
-  integrity sha512-JwZlHml5E4BCSRc94dUvM88ZWb6ZKogdaws366XQy0aa70z7M191LpsPP3x3mKZDg4H2hNNv2k4mQZBQBv0l8A==
+"@budibase/backend-core@1.3.12":
+  version "1.3.12"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.3.12.tgz#dd5fbfe791b46343e783b9b23ff6f6e22d77ce1c"
+  integrity sha512-+fRBrf66peeNXzY5WA3y7Dz6Gl6EUYQI0/zswCddtZhs5+x1cFJZLLRu2V1MFJ41z+cNiw0Pru1XrDRcQX7aMw==
   dependencies:
-    "@budibase/types" "^1.3.11"
+    "@budibase/types" "^1.3.12"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -326,21 +326,21 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/pro@1.3.11":
-  version "1.3.11"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.3.11.tgz#f21a31b13557effd6694c19c56aa6abca1853f93"
-  integrity sha512-L1UpN81SX3XKoMr9YqHQpOTKnxe3j0hixlOlJlFTU5bVWPVv0CGFAWnc7cDXlpVT8frgpyajNwrf6irNB4P7zw==
+"@budibase/pro@1.3.12":
+  version "1.3.12"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.3.12.tgz#8a92d98e297375bdd6e311ffb8002f13c3af909f"
+  integrity sha512-luKQPVyiIxu4Jjq1zw2W2YfkJwC9hDq/lEQfMhbwMDfROZ9opbwokg37SVWbYzqqt8NrQ1uZFt5ieWHF937NoA==
   dependencies:
-    "@budibase/backend-core" "1.3.11"
-    "@budibase/types" "1.3.11"
+    "@budibase/backend-core" "1.3.12"
+    "@budibase/types" "1.3.12"
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
 
-"@budibase/types@1.3.11", "@budibase/types@^1.3.11":
-  version "1.3.11"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.3.11.tgz#41f2a5c7274e305751636df4aa645d5b418cbe7f"
-  integrity sha512-hXDqWxH0nVRlgU7CiaqAbD7txdctBed6ZSLmNUD0a2LGY/yueR6MbAO04TD5kXDGvLsEnjxcSWI2N+/GvzqluA==
+"@budibase/types@1.3.12", "@budibase/types@^1.3.12":
+  version "1.3.12"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.3.12.tgz#5d6cef221085a8ac1c348afa151684a2cebab4bd"
+  integrity sha512-c+TXAu7j9PeH7o4lOE57fPXj9uJf7MzwJxYvjD0fT962zzCgtseeK9XhD0zF8HERoBc01V3ooNniUWT9llC/Ew==
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
