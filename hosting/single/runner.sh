@@ -36,10 +36,10 @@ fi
 export COUCH_DB_URL=http://$COUCHDB_USER:$COUCHDB_PASSWORD@localhost:5984
 
 # make these directories in runner, incase of mount
-mkdir -p ${DATA_DIR}/couchdb/{dbs,views}
+mkdir -p ${DATA_DIR}/couch/{dbs,views}
 mkdir -p ${DATA_DIR}/minio
 mkdir -p ${DATA_DIR}/search
-chown -R couchdb:couchdb ${DATA_DIR}/couchdb
+chown -R couchdb:couchdb ${DATA_DIR}/couch
 redis-server --requirepass $REDIS_PASSWORD &
 /opt/clouseau/bin/clouseau &
 /minio/minio server ${DATA_DIR}/minio &
