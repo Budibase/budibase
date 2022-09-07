@@ -1,13 +1,5 @@
 <script>
-  import {
-    ModalContent,
-    Label,
-    Input,
-    Select,
-    Body,
-    StatusLight,
-    Dropzone,
-  } from "@budibase/bbui"
+  import { ModalContent, Label, Input, Select, Dropzone } from "@budibase/bbui"
   import { plugins } from "stores/portal"
 
   let authOptions = {
@@ -21,7 +13,8 @@
   let typeValue = "Datasource"
   let dynamicValues = {}
 
-  let verificationSuccessful = false
+  let validation
+  $: validation = sourceValue === "File Upload" ? file : dynamicValues["URL"]
 
   async function save() {
     const source = sourceValue.toLocaleLowerCase()
@@ -54,18 +47,12 @@
         break
     }
   }
-
-  function verify() {
-    verificationSuccessful = true
-    // return false so modal doesn't exit
-    return false
-  }
 </script>
 
 <ModalContent
-  confirmText={verificationSuccessful ? "Save" : "Verify"}
-  buttonCta={verificationSuccessful}
-  onConfirm={verificationSuccessful ? save : verify}
+  confirmText={"Save"}
+  onConfirm={save}
+  disabled={!validation}
   size="M"
   title="Add new plugin"
 >
@@ -110,33 +97,9 @@
       </div>
     {/if}
   {/each}
-
-  <div class="verification" slot="footer">
-    <div>
-      <StatusLight
-        positive={verificationSuccessful}
-        neutral={!verificationSuccessful}
-      />
-    </div>
-    <div class="verification-spacing">
-      {#if verificationSuccessful}
-        <Body size="XS">Verification Successful</Body>
-      {:else}
-        <Body size="XS"><i>Verify your source</i></Body>
-      {/if}
-    </div>
-  </div>
 </ModalContent>
 
 <style>
-  .verification-spacing {
-    padding-left: var(--spacing-s);
-  }
-  .verification {
-    display: flex;
-    margin-right: auto;
-    align-items: center;
-  }
   .form-row {
     display: grid;
     grid-template-columns: 60px 1fr;

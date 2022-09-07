@@ -1,16 +1,15 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { Body, ModalContent, notifications } from "@budibase/bbui"
 
   import { plugins } from "stores/portal"
 
   export let plugin
-
+  export let detailsModal
   async function deletePlugin() {
     try {
       await plugins.deletePlugin(plugin._id, plugin._rev)
+      detailsModal.hide()
       notifications.success(`Plugin ${plugin?.name} deleted.`)
-      $goto("./")
     } catch (error) {
       notifications.error("Error deleting plugin")
     }
