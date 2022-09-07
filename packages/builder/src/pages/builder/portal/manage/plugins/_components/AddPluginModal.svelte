@@ -3,14 +3,14 @@
   import { plugins } from "stores/portal"
 
   let authOptions = {
+    URL: ["Headers", "URL"],
     NPM: ["URL"],
     Github: ["Github Token", "URL"],
-    URL: ["Headers", "URL"],
     "File Upload": ["File Upload"],
   }
   let file
-  let sourceValue = "NPM"
-  let typeValue = "Datasource"
+  let sourceValue = "URL"
+  let typeValue = "Component"
   let dynamicValues = {}
 
   let validation
