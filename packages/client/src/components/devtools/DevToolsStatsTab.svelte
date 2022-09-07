@@ -19,7 +19,10 @@
     label="Active screen"
     value={$screenStore.activeScreen?.routing.route}
   />
-  <DevToolsStat label="Components" value={$componentStore.mountedComponents} />
+  <DevToolsStat
+    label="Components"
+    value={$componentStore.mountedComponentCount}
+  />
   <DevToolsStat label="User" value={$authStore.email} />
   <DevToolsStat label="Role" value={$authStore.roleId} />
 </Layout>
