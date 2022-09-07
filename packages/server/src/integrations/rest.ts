@@ -215,7 +215,7 @@ module RestModule {
         }
       }
 
-      const main = `${path}?${queryString}`
+      const main = `${path}?${encodeURIComponent(queryString)}`
       let complete = main
       if (this.config.url && !main.startsWith("http")) {
         complete = !this.config.url ? main : `${this.config.url}/${main}`
