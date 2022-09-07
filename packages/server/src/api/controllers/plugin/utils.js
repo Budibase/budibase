@@ -1,12 +1,12 @@
-import {
+const {
   createTempFolder,
   getPluginMetadata,
   findFileRec,
   downloadTarballDirect,
   extractTarball,
   deleteFolderFileSystem,
-} from "../../../utilities/fileSystem"
-import { join } from "path"
+} = require("../../../utilities/fileSystem")
+const join = require("path")
 const fetch = require("node-fetch")
 
 export const uploadedFilePlugin = async file => {
