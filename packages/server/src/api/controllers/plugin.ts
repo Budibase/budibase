@@ -39,11 +39,7 @@ export async function upload(ctx: any) {
     let docs = []
     // can do single or multiple plugins
     for (let plugin of plugins) {
-      const doc = await processPlugin(
-        plugin,
-        ctx.request.body.source,
-        ctx.request.body.update
-      )
+      const doc = await processPlugin(plugin, ctx.request.body.source)
       docs.push(doc)
     }
     ctx.body = {
@@ -132,8 +128,7 @@ export async function destroy(ctx: any) {
 export async function storePlugin(
   metadata: any,
   directory: any,
-  source?: string,
-  update?: boolean
+  source?: string
 ) {
   const db = getGlobalDB()
   const version = metadata.package.version,
@@ -172,9 +167,6 @@ export async function storePlugin(
     const existing = await db.get(pluginId)
     rev = existing._rev
   } catch (err) {
-    if (update) {
-      throw new Error("Unable to update. Plugin does not exist")
-    }
     rev = undefined
   }
   let doc = {
@@ -201,15 +193,11 @@ export async function storePlugin(
   }
 }
 
-export async function processPlugin(
-  plugin: FileType,
-  source?: string,
-  update?: boolean
-) {
+export async function processPlugin(plugin: FileType, source?: string) {
   if (!env.SELF_HOSTED) {
     throw new Error("Plugins not supported outside of self-host.")
   }
 
   const { metadata, directory } = await uploadedFilePlugin(plugin)
-  return await storePlugin(metadata, directory, source, update)
+  return await storePlugin(metadata, directory, source)
 }

@@ -7,27 +7,18 @@
     Button,
     Label,
     Input,
-    Dropzone,
   } from "@budibase/bbui"
   import DeletePluginModal from "../_components/DeletePluginModal.svelte"
-  import { plugins } from "stores/portal"
 
   export let plugin
 
   let detailsModal
   let deleteModal
-  let updateModal
 
-  let file
   let icon =
     plugin.schema.type === "component"
       ? plugin.schema.schema.icon || "Book"
       : plugin.schema.schema.icon || "Beaker"
-
-  async function save() {
-    let update = true
-    await plugins.uploadPlugin(file, plugin.source, update)
-  }
 </script>
 
 <div class="row">
@@ -96,52 +87,12 @@
 
     <div class="footer" slot="footer">
       <Button newStyles on:click={deleteModal.show()} warning>Delete</Button>
-
-      <Button
-        on:click={() => {
-          detailsModal.hide()
-          updateModal.show()
-        }}
-        newStyles>Update</Button
-      >
     </div>
   </ModalContent>
 
   <Modal bind:this={deleteModal}>
-    <DeletePluginModal {plugin} />
+    <DeletePluginModal {detailsModal} {plugin} />
   </Modal>
-</Modal>
-
-<Modal bind:this={updateModal}>
-  <ModalContent
-    size="M"
-    title="Update Plugin"
-    showConfirmButton={true}
-    showCancelButton={true}
-    cancelText="Back"
-    onConfirm={() => save()}
-    onCancel={() => {
-      updateModal.hide()
-      detailsModal.show()
-    }}
-  >
-    {#if plugin.source === "File Upload"}
-      <div class="form-row">
-        <Label size="M">File Upload</Label>
-      </div>
-      <Dropzone
-        gallery={false}
-        value={[file]}
-        on:change={e => {
-          if (!e.detail || e.detail.length === 0) {
-            file = null
-          } else {
-            file = e.detail[0]
-          }
-        }}
-      />
-    {/if}
-  </ModalContent>
 </Modal>
 
 <style>
@@ -179,12 +130,5 @@
   .footer {
     display: flex;
     gap: var(--spacing-l);
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 60px 1fr;
-    grid-gap: var(--spacing-l);
-    align-items: center;
   }
 </style>

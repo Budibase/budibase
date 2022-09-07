@@ -24,7 +24,6 @@
   export let secondaryAction = undefined
   export let secondaryButtonWarning = false
   export let dataCy = null
-  export let buttonCta = true
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
   $: confirmDisabled = disabled || loading
@@ -113,7 +112,7 @@
           <span class="confirm-wrap">
             <Button
               group
-              cta={buttonCta}
+              cta
               {...$$restProps}
               disabled={confirmDisabled}
               on:click={confirm}

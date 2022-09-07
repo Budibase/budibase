@@ -50,11 +50,10 @@ export function createPluginsStore() {
     })
   }
 
-  async function uploadPlugin(file, source, updatePlugin) {
+  async function uploadPlugin(file, source) {
     let data = new FormData()
     data.append("file", file)
     data.append("source", source)
-    data.append("update", updatePlugin)
     let resp = await API.uploadPlugin(data)
     let newPlugin = resp.plugins[0]
     update(state => {
