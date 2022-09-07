@@ -88,10 +88,6 @@ http {
       proxy_pass      http://$apps:4002;
     }
 
-    location /preview {
-      proxy_pass      http://$apps:4002;
-    }
-
     location = / {
       proxy_pass      http://$apps:4002;
     }
