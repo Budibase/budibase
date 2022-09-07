@@ -125,7 +125,7 @@ async function deployApp(deployment: any) {
       const prodAppDoc = await db.get(DocumentType.APP_METADATA)
       appDoc._rev = prodAppDoc._rev
     } catch (err) {
-      // ignore the error - doesn't exist
+      delete appDoc._rev
     }
 
     // switch to production app ID
