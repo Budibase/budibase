@@ -9,7 +9,7 @@ function prepareData(config) {
     ds => ds.source === config.type
   ).length
 
-  let baseName = IntegrationNames[config.type]
+  let baseName = IntegrationNames[config.type] || config.name
   let name =
     existingTypeCount === 0 ? baseName : `${baseName}-${existingTypeCount + 1}`
 

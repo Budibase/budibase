@@ -46,8 +46,14 @@ export const destroyMetadata = async (accountId: string) => {
   await db.doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: any) => {
     const metadata = await getMetadata(accountId)
     if (!metadata) {
-      throw new HTTPError(`id=${accountId} does not exist`, 404)
+      return
     }
-    await db.remove(accountId, metadata._rev)
+    try {
+      await db.remove(accountId, metadata._rev)
+    } catch (e: any) {
+      if (e.status !== 404) {
+        throw e
+      }
+    }
   })
 }

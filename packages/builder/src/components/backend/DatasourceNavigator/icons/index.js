@@ -15,10 +15,14 @@ import GoogleSheets from "./GoogleSheets.svelte"
 import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
+<<<<<<< HEAD
 import SP2019 from "./SP2019.svelte"
 import ADLDAP from "./ADLDAP.svelte"
+=======
+import Custom from "./Custom.svelte"
+>>>>>>> develop
 
-export default {
+const ICONS = {
   BUDIBASE: Budibase,
   POSTGRES: Postgres,
   DYNAMODB: DynamoDB,
@@ -36,6 +40,20 @@ export default {
   FIRESTORE: Firebase,
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
+<<<<<<< HEAD
   SP2019: SP2019,
   ADLDAP: ADLDAP
+=======
+  CUSTOM: Custom,
+}
+
+export default ICONS
+
+export function getIcon(integrationType, schema) {
+  if (schema?.custom || !ICONS[integrationType]) {
+    return ICONS.CUSTOM
+  } else {
+    return ICONS[integrationType]
+  }
+>>>>>>> develop
 }

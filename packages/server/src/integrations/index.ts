@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const postgres = require("./postgres")
 const dynamodb = require("./dynamodb")
 const mongodb = require("./mongodb")
@@ -19,9 +20,30 @@ const sp2019 = require("./sp2019")
 const adldap = require("./adldap")
 
 const { SourceName } = require("@budibase/types")
+=======
+import postgres from "./postgres"
+import dynamodb from "./dynamodb"
+import mongodb from "./mongodb"
+import elasticsearch from "./elasticsearch"
+import couchdb from "./couchdb"
+import sqlServer from "./microsoftSqlServer"
+import s3 from "./s3"
+import airtable from "./airtable"
+import mysql from "./mysql"
+import arangodb from "./arangodb"
+import rest from "./rest"
+import googlesheets from "./googlesheets"
+import firebase from "./firebase"
+import redis from "./redis"
+import snowflake from "./snowflake"
+import { getPlugins } from "../api/controllers/plugin"
+import { SourceName, Integration, PluginType } from "@budibase/types"
+import { getDatasourcePlugin } from "../utilities/fileSystem"
+>>>>>>> develop
 const environment = require("../environment")
+const { cloneDeep } = require("lodash")
 
-const DEFINITIONS = {
+const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.POSTGRES]: postgres.schema,
   [SourceName.DYNAMODB]: dynamodb.schema,
   [SourceName.MONGODB]: mongodb.schema,
@@ -40,7 +62,7 @@ const DEFINITIONS = {
   [SourceName.ADLDAP]: adldap.schema,
 }
 
-const INTEGRATIONS = {
+const INTEGRATIONS: { [key: string]: any } = {
   [SourceName.POSTGRES]: postgres.integration,
   [SourceName.DYNAMODB]: dynamodb.integration,
   [SourceName.MONGODB]: mongodb.integration,
@@ -55,7 +77,7 @@ const INTEGRATIONS = {
   [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
   [SourceName.REDIS]: redis.integration,
-  [SourceName.FIREBASE]: firebase.integration,
+  [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
   [SourceName.SP2019]: sp2019.integration,
   [SourceName.ADLDAP]: adldap.integration,
@@ -73,6 +95,41 @@ if (environment.SELF_HOSTED) {
 }
 
 module.exports = {
-  definitions: DEFINITIONS,
-  integrations: INTEGRATIONS,
+  getDefinitions: async () => {
+    const pluginSchemas: { [key: string]: Integration } = {}
+    if (environment.SELF_HOSTED) {
+      const plugins = await getPlugins(PluginType.DATASOURCE)
+      // extract the actual schema from each custom
+      for (let plugin of plugins) {
+        const sourceId = plugin.name
+        pluginSchemas[sourceId] = {
+          ...plugin.schema["schema"],
+          custom: true,
+        }
+      }
+    }
+    return {
+      ...cloneDeep(DEFINITIONS),
+      ...pluginSchemas,
+    }
+  },
+  getIntegration: async (integration: string) => {
+    if (INTEGRATIONS[integration]) {
+      return INTEGRATIONS[integration]
+    }
+    if (environment.SELF_HOSTED) {
+      const plugins = await getPlugins(PluginType.DATASOURCE)
+      for (let plugin of plugins) {
+        if (plugin.name === integration) {
+          // need to use commonJS require due to its dynamic runtime nature
+          return getDatasourcePlugin(
+            plugin.name,
+            plugin.jsUrl,
+            plugin.schema?.hash
+          )
+        }
+      }
+    }
+    throw new Error("No datasource implementation found.")
+  },
 }
