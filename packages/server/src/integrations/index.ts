@@ -1,26 +1,4 @@
-<<<<<<< HEAD
-const postgres = require("./postgres")
-const dynamodb = require("./dynamodb")
-const mongodb = require("./mongodb")
-const elasticsearch = require("./elasticsearch")
-const couchdb = require("./couchdb")
-const sqlServer = require("./microsoftSqlServer")
-const s3 = require("./s3")
-const airtable = require("./airtable")
-const mysql = require("./mysql")
-const arangodb = require("./arangodb")
-const rest = require("./rest")
-const googlesheets = require("./googlesheets")
-const firebase = require("./firebase")
-const redis = require("./redis")
-const snowflake = require("./snowflake")
-// pour sharepoint2019
-const sp2019 = require("./sp2019")
-// pour adLdap
-const adldap = require("./adldap")
 
-const { SourceName } = require("@budibase/types")
-=======
 import postgres from "./postgres"
 import dynamodb from "./dynamodb"
 import mongodb from "./mongodb"
@@ -36,10 +14,14 @@ import googlesheets from "./googlesheets"
 import firebase from "./firebase"
 import redis from "./redis"
 import snowflake from "./snowflake"
+// pour sharepoint2019
+import sp2019 from "./sp2019"
+// pour adLdap
+import adldap from "./adldap"
 import { getPlugins } from "../api/controllers/plugin"
 import { SourceName, Integration, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
->>>>>>> develop
+
 const environment = require("../environment")
 const { cloneDeep } = require("lodash")
 

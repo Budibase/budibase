@@ -15,12 +15,10 @@ import GoogleSheets from "./GoogleSheets.svelte"
 import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
-<<<<<<< HEAD
 import SP2019 from "./SP2019.svelte"
 import ADLDAP from "./ADLDAP.svelte"
-=======
 import Custom from "./Custom.svelte"
->>>>>>> develop
+
 
 const ICONS = {
   BUDIBASE: Budibase,
@@ -40,10 +38,8 @@ const ICONS = {
   FIRESTORE: Firebase,
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
-<<<<<<< HEAD
   SP2019: SP2019,
-  ADLDAP: ADLDAP
-=======
+  ADLDAP: ADLDAP,
   CUSTOM: Custom,
 }
 
@@ -55,5 +51,4 @@ export function getIcon(integrationType, schema) {
   } else {
     return ICONS[integrationType]
   }
->>>>>>> develop
 }
