@@ -15,6 +15,7 @@ import GoogleSheets from "./GoogleSheets.svelte"
 import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
+import ADLDAP from "./ADLDAP.svelte"
 import Custom from "./Custom.svelte"
 
 const ICONS = {
@@ -35,6 +36,7 @@ const ICONS = {
   FIRESTORE: Firebase,
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
+  ADLDAP: ADLDAP,
   CUSTOM: Custom,
 }
 
