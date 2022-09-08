@@ -576,7 +576,7 @@ export const sync = async (ctx: any, next: any) => {
   }
 }
 
-const updateAppPackage = async (appPackage: any, appId: any) => {
+export const updateAppPackage = async (appPackage: any, appId: any) => {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await db.get(DocumentType.APP_METADATA)
