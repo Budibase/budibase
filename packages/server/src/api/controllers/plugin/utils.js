@@ -6,7 +6,7 @@ const {
   extractTarball,
   deleteFolderFileSystem,
 } = require("../../../utilities/fileSystem")
-const join = require("path")
+const { join } = require("path")
 const fetch = require("node-fetch")
 
 export const uploadedFilePlugin = async file => {
