@@ -14,6 +14,7 @@ import {
   BearerAuthConfig,
 } from "../definitions/datasource"
 import { get } from "lodash"
+import * as https from "https"
 const fetch = require("node-fetch")
 const { formatBytes } = require("../utilities")
 const { performance } = require("perf_hooks")
@@ -75,6 +76,11 @@ const SCHEMA: Integration = {
       required: false,
       default: {},
     },
+      rejectUnauthorized: {
+        type: DatasourceFieldType.BOOLEAN,
+        default: true,
+        required: false,
+      },
   },
   query: {
     create: {
@@ -372,6 +378,12 @@ class RestIntegration implements IntegrationBase {
       pagination,
       paginationValues
     )
+
+      if (this.config.rejectUnauthorized == false) {
+        input.agent = new https.Agent({
+          rejectUnauthorized: false,
+        })
+      }
 
     this.startTimeMs = performance.now()
     const url = this.getUrl(path, queryString, pagination, paginationValues)
