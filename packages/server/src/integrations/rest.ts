@@ -76,11 +76,11 @@ const SCHEMA: Integration = {
       required: false,
       default: {},
     },
-      rejectUnauthorized: {
-        type: DatasourceFieldType.BOOLEAN,
-        default: true,
-        required: false,
-      },
+    rejectUnauthorized: {
+      type: DatasourceFieldType.BOOLEAN,
+      default: true,
+      required: false,
+    },
   },
   query: {
     create: {
@@ -217,9 +217,9 @@ class RestIntegration implements IntegrationBase {
       }
     }
 
-      if (queryString) {
-        queryString = "?" + queryString
-      }
+    if (queryString) {
+      queryString = "?" + queryString
+    }
     const main = `${path}${queryString}`
     let complete = main
     if (this.config.url && !main.startsWith("http")) {
@@ -382,11 +382,11 @@ class RestIntegration implements IntegrationBase {
       paginationValues
     )
 
-      if (this.config.rejectUnauthorized == false) {
-        input.agent = new https.Agent({
-          rejectUnauthorized: false,
-        })
-      }
+    if (this.config.rejectUnauthorized == false) {
+      input.agent = new https.Agent({
+        rejectUnauthorized: false,
+      })
+    }
 
     this.startTimeMs = performance.now()
     const url = this.getUrl(path, queryString, pagination, paginationValues)
