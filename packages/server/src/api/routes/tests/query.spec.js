@@ -311,7 +311,7 @@ describe("/queries", () => {
         "url": "string",
         "value": "string"
       })
-      expect(res.body.rows[0].url).toContain("doctype html")
+      expect(res.body.rows[0].url).toContain("doctype%20html")
     })
 
     it("check that it automatically retries on fail with cached dynamics", async () => {
@@ -396,7 +396,7 @@ describe("/queries", () => {
         "queryHdr": userDetails.firstName,
         "secondHdr" : "1234"
       })
-      expect(res.body.rows[0].url).toEqual("http://www.google.com?email=" + userDetails.email)
+      expect(res.body.rows[0].url).toEqual("http://www.google.com?email=" + userDetails.email.replace("@", "%40"))
     })
 
     it("should bind the current user to query parameters", async () => {
@@ -413,7 +413,7 @@ describe("/queries", () => {
         "testParam" : "1234"
       })
   
-      expect(res.body.rows[0].url).toEqual("http://www.google.com?test=" + userDetails.email + 
+      expect(res.body.rows[0].url).toEqual("http://www.google.com?test=" + userDetails.email.replace("@", "%40") +
         "&testName=" + userDetails.firstName + "&testParam=1234")
     })
 

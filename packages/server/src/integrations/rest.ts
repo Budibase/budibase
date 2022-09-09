@@ -14,6 +14,7 @@ import {
   BearerAuthConfig,
 } from "../definitions/datasource"
 import { get } from "lodash"
+import qs from "querystring"
 
 const BodyTypes = {
   NONE: "none",
@@ -215,7 +216,8 @@ module RestModule {
         }
       }
 
-      const main = `${path}?${encodeURIComponent(queryString)}`
+      // make sure the query string is fully encoded
+      const main = `${path}?${qs.encode(qs.decode(queryString))}`
       let complete = main
       if (this.config.url && !main.startsWith("http")) {
         complete = !this.config.url ? main : `${this.config.url}/${main}`
