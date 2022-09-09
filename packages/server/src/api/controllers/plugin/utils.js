@@ -9,7 +9,7 @@ const {
 const { join } = require("path")
 const fetch = require("node-fetch")
 
-export const uploadedFilePlugin = async file => {
+exports.uploadedFilePlugin = async file => {
   if (!file.name.endsWith(".tar.gz")) {
     throw new Error("Plugin must be compressed into a gzipped tarball.")
   }
@@ -19,7 +19,7 @@ export const uploadedFilePlugin = async file => {
   return await getPluginMetadata(path)
 }
 
-export const uploadedNpmPlugin = async (url, name, headers = {}) => {
+exports.uploadedNpmPlugin = async (url, name, headers = {}) => {
   let npmTarballUrl = url
   let pluginName = name
 
@@ -66,7 +66,7 @@ export const uploadedNpmPlugin = async (url, name, headers = {}) => {
   return await getPluginMetadata(path)
 }
 
-export const uploadedUrlPlugin = async (url, name = "", headers = {}) => {
+exports.uploadedUrlPlugin = async (url, name = "", headers = {}) => {
   if (!url.includes(".tar.gz")) {
     throw new Error("Plugin must be compressed into a gzipped tarball.")
   }
@@ -76,7 +76,7 @@ export const uploadedUrlPlugin = async (url, name = "", headers = {}) => {
   return await getPluginMetadata(path)
 }
 
-export const uploadedGithubPlugin = async (ctx, url, name = "", token = "") => {
+exports.uploadedGithubPlugin = async (ctx, url, name = "", token = "") => {
   let githubUrl = url
 
   if (!githubUrl.includes("https://github.com/")) {
@@ -140,7 +140,7 @@ export const uploadedGithubPlugin = async (ctx, url, name = "", token = "") => {
   }
 }
 
-export const downloadUnzipTarball = async (url, name, headers = {}) => {
+const downloadUnzipTarball = async (url, name, headers = {}) => {
   try {
     const path = createTempFolder(name)
 
