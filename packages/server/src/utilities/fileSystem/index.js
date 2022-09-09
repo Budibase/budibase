@@ -125,13 +125,13 @@ exports.defineFilter = excludeRows => {
  * data or user relationships.
  * @param {string} appId The app to backup
  * @param {object} config Config to send to export DB
- * @param {boolean} includeRows Flag to state whether the export should include data.
+ * @param {boolean} excludeRows Flag to state whether the export should include data.
  * @returns {*} either a string or a stream of the backup
  */
-const backupAppData = async (appId, config, includeRows) => {
+const backupAppData = async (appId, config, excludeRows) => {
   return await exports.exportDB(appId, {
     ...config,
-    filter: exports.defineFilter(includeRows),
+    filter: exports.defineFilter(excludeRows),
   })
 }
 
@@ -148,11 +148,11 @@ exports.performBackup = async (appId, backupName) => {
 /**
  * Streams a backup of the database state for an app
  * @param {string} appId The ID of the app which is to be backed up.
- * @param {boolean} includeRows Flag to state whether the export should include data.
+ * @param {boolean} excludeRows Flag to state whether the export should include data.
  * @returns {*} a readable stream of the backup which is written in real time
  */
-exports.streamBackup = async (appId, includeRows) => {
-  return await backupAppData(appId, { stream: true }, includeRows)
+exports.streamBackup = async (appId, excludeRows) => {
+  return await backupAppData(appId, { stream: true }, excludeRows)
 }
 
 /**

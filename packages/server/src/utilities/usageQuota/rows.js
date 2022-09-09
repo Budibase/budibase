@@ -72,7 +72,8 @@ exports.getUniqueRows = async appIds => {
     // ensure uniqueness on a per app pair basis
     // this can't be done on all rows because app import results in
     // duplicate row ids across apps
-    uniqueRows = uniqueRows.concat(...new Set(appRows))
+    // the array pre-concat is important to avoid stack overflow
+    uniqueRows = uniqueRows.concat([...new Set(appRows)])
   }
 
   return uniqueRows

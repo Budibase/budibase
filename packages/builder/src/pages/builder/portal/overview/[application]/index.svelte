@@ -16,6 +16,7 @@
     MenuItem,
     Icon,
     Helpers,
+    Modal,
   } from "@budibase/bbui"
   import OverviewTab from "../_components/OverviewTab.svelte"
   import SettingsTab from "../_components/SettingsTab.svelte"
@@ -29,6 +30,7 @@
   import EditableIcon from "components/common/EditableIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import HistoryTab from "components/portal/overview/automation/HistoryTab.svelte"
+  import ExportAppModal from "components/start/ExportAppModal.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
 
@@ -38,7 +40,9 @@
   let loaded = false
   let deletionModal
   let unpublishModal
+  let exportModal
   let appName = ""
+  let published
 
   // App
   $: filteredApps = $apps.filter(app => app.devId === application)
@@ -140,11 +144,9 @@
     notifications.success("App ID copied to clipboard.")
   }
 
-  const exportApp = (app, opts = { published: false }) => {
-    const appName = encodeURIComponent(app.name)
-    const id = opts?.published ? app.prodId : app.devId
-    // always export the development version
-    window.location = `/api/backups/export?appId=${id}&appname=${appName}`
+  const exportApp = opts => {
+    published = opts.published
+    exportModal.show()
   }
 
   const unpublishApp = app => {
@@ -205,6 +207,10 @@
     }
   })
 </script>
+
+<Modal bind:this={exportModal} padding={false} width="600px">
+  <ExportAppModal app={selectedApp} {published} />
+</Modal>
 
 <span class="overview-wrap">
   <Page wide noPadding>
@@ -269,14 +275,14 @@
                 <Icon hoverable name="More" />
               </span>
               <MenuItem
-                on:click={() => exportApp(selectedApp, { published: false })}
+                on:click={() => exportApp({ published: false })}
                 icon="DownloadFromCloud"
               >
                 Export latest
               </MenuItem>
               {#if isPublished}
                 <MenuItem
-                  on:click={() => exportApp(selectedApp, { published: true })}
+                  on:click={() => exportApp({ published: true })}
                   icon="DownloadFromCloudOutline"
                 >
                   Export published
