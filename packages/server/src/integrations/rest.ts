@@ -217,7 +217,10 @@ class RestIntegration implements IntegrationBase {
       }
     }
 
-    const main = `${path}?${queryString}`
+      if (queryString) {
+        queryString = "?" + queryString
+      }
+    const main = `${path}${queryString}`
     let complete = main
     if (this.config.url && !main.startsWith("http")) {
       complete = !this.config.url ? main : `${this.config.url}/${main}`
