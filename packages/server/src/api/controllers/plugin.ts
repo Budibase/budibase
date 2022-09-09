@@ -7,6 +7,7 @@ import {
   uploadedFilePlugin,
 } from "./plugin/utils"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
+import { validate } from "@budibase/backend-core/plugins"
 import { generatePluginID, getPluginParams } from "../../db/utils"
 import {
   uploadDirectory,
@@ -80,12 +81,15 @@ export async function create(ctx: any) {
         directory = directoryGithub
         break
       case "url":
+        const headersObj = JSON.parse(headers || null) || {}
         const { metadata: metadataUrl, directory: directoryUrl } =
-          await uploadedUrlPlugin(url, name, headers)
+          await uploadedUrlPlugin(url, name, headersObj)
         metadata = metadataUrl
         directory = directoryUrl
         break
     }
+
+    validate(metadata?.schema)
 
     const doc = await storePlugin(metadata, directory, source)
 
