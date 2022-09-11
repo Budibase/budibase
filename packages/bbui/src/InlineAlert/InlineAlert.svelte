@@ -6,6 +6,7 @@
   export let header = ""
   export let message = ""
   export let onConfirm = undefined
+  export let buttonText = ""
 
   $: icon = selectIcon(type)
   // if newlines used, convert them to different elements
@@ -40,7 +41,7 @@
   {/each}
   {#if onConfirm}
     <div class="spectrum-InLineAlert-footer button">
-      <Button secondary on:click={onConfirm}>OK</Button>
+      <Button secondary on:click={onConfirm}>{buttonText || "OK"}</Button>
     </div>
   {/if}
 </div>
