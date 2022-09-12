@@ -11,8 +11,8 @@
   "dependencies": {
     "bulma": "^0.9.3",
     "next": "12.1.0",
-    "node-fetch": "^3.2.2",
-    "node-sass": "^7.0.1",
+    "node-fetch": "^3.2.10",
+    "sass": "^1.52.3",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-notifications-component": "^3.4.1"

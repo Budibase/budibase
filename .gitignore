@@ -103,3 +103,5 @@ stats.html
 
 # TypeScript cache
 *.tsbuildinfo
+budibase-component
+budibase-datasource

@@ -18,6 +18,7 @@
   import { createRestDatasource } from "builderStore/datasource"
   import { goto } from "@roxi/routify"
   import ImportRestQueriesModal from "./ImportRestQueriesModal.svelte"
+  import DatasourceCard from "../_components/DatasourceCard.svelte"
 
   export let modal
   let integrations = {}
@@ -27,6 +28,9 @@
   let importModal
 
   $: showImportButton = false
+  $: customIntegrations = Object.entries(integrations).filter(
+    entry => entry[1].custom
+  )
 
   checkShowImport()
 
@@ -48,6 +52,9 @@
       config,
       schema: selected.datasource,
       auth: selected.auth,
+    }
+    if (selected.friendlyName) {
+      integration.name = selected.friendlyName
     }
     checkShowImport()
   }
@@ -150,36 +157,39 @@
     <Layout noPadding gap="XS">
       <Body size="S">Connect to an external data source</Body>
       <div class="item-list">
-        {#each Object.entries(integrations).filter(([key]) => key !== IntegrationTypes.INTERNAL) as [integrationType, schema]}
-          <div
-            class:selected={integration.type === integrationType}
-            on:click={() => selectIntegration(integrationType)}
-            class="item hoverable"
-          >
-            <div class="item-body" class:with-type={!!schema.type}>
-              <svelte:component
-                this={ICONS[integrationType]}
-                height="20"
-                width="20"
-              />
-              <div class="text">
-                <Heading size="XXS">{schema.friendlyName}</Heading>
-                {#if schema.type}
-                  <Detail size="S">{schema.type || ""}</Detail>
-                {/if}
-              </div>
-            </div>
-          </div>
+        {#each Object.entries(integrations).filter(([key, val]) => key !== IntegrationTypes.INTERNAL && !val.custom) as [integrationType, schema]}
+          <DatasourceCard
+            on:selected={evt => selectIntegration(evt.detail)}
+            {schema}
+            bind:integrationType
+            {integration}
+          />
         {/each}
       </div>
     </Layout>
+
+    {#if customIntegrations.length > 0}
+      <Layout noPadding gap="XS">
+        <Body size="S">Custom data source</Body>
+        <div class="item-list">
+          {#each customIntegrations as [integrationType, schema]}
+            <DatasourceCard
+              on:selected={evt => selectIntegration(evt.detail)}
+              {schema}
+              bind:integrationType
+              {integration}
+            />
+          {/each}
+        </div>
+      </Layout>
+    {/if}
   </ModalContent>
 </Modal>
 
 <style>
   .item-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
     grid-gap: var(--spectrum-alias-grid-baseline);
   }
 
