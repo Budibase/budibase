@@ -16,21 +16,23 @@
 
   let modal
   let searchTerm = ""
-
+  let filter = "all"
   let filterOptions = [
     { label: "All Plugins", value: "all" },
-    { label: "Components", value: "datasource" },
-    { label: "Datasources", value: "component" },
+    { label: "Components", value: "component" },
+    { label: "Datasources", value: "datasource" },
   ]
-  let filter = "all"
-  $: filteredPlugins =
-    filter === "all" && searchTerm.length === 0
-      ? $plugins
-      : $plugins
-          .filter(plugin => plugin.schema.type !== filter)
-          .filter(plugin =>
-            plugin?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+
+  $: filteredPlugins = $plugins
+    .filter(plugin => {
+      return filter === "all" || plugin.schema.type === filter
+    })
+    .filter(plugin => {
+      return (
+        !searchTerm ||
+        plugin?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    })
 
   onMount(async () => {
     await plugins.load()
