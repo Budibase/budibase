@@ -1,5 +1,6 @@
-const http = require("./http")
-const licensing = require("./licensing")
+import { HTTPError } from "./http"
+import { UsageLimitError, FeatureDisabledError } from "./licensing"
+import * as licensing from "./licensing"
 
 const codes = {
   ...licensing.codes,
@@ -11,7 +12,7 @@ const context = {
   ...licensing.context,
 }
 
-const getPublicError = err => {
+const getPublicError = (err: any) => {
   let error
   if (err.code || err.type) {
     // add generic error information
@@ -32,13 +33,15 @@ const getPublicError = err => {
   return error
 }
 
-module.exports = {
+const pkg = {
   codes,
   types,
   errors: {
-    UsageLimitError: licensing.UsageLimitError,
-    FeatureDisabledError: licensing.FeatureDisabledError,
-    HTTPError: http.HTTPError,
+    UsageLimitError,
+    FeatureDisabledError,
+    HTTPError,
   },
   getPublicError,
 }
+
+export = pkg

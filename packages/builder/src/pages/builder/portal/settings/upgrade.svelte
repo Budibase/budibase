@@ -35,10 +35,14 @@
   }
 
   const activate = async () => {
-    await API.activateLicenseKey({ licenseKey })
-    await auth.getSelf()
-    await setLicenseInfo()
-    notifications.success("Successfully activated")
+    try {
+      await API.activateLicenseKey({ licenseKey })
+      await auth.getSelf()
+      await setLicenseInfo()
+      notifications.success("Successfully activated")
+    } catch (e) {
+      notifications.error(e.message)
+    }
   }
 
   const refresh = async () => {

@@ -33,6 +33,7 @@ export interface Account extends CreateAccount {
   tier: string // deprecated
   stripeCustomerId?: string
   licenseKey?: string
+  licenseKeyActivatedAt?: number
 }
 
 export interface PasswordAccount extends Account {
