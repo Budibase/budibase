@@ -76,7 +76,7 @@ exports.processDates = (table, rows) => {
     if (schema.type !== FieldTypes.DATETIME) {
       continue
     }
-    if (!schema.ignoreTimezones) {
+    if (!schema.timeOnly && !schema.ignoreTimezones) {
       datesWithTZ.push(column)
     }
   }
