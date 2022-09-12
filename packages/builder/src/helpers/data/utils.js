@@ -46,7 +46,7 @@ export function buildQueryString(obj) {
       if (str !== "") {
         str += "&"
       }
-      str += `${key}=${value || ""}`
+      str += `${key}=${encodeURIComponent(value || "")}`
     }
   }
   return str

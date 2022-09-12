@@ -15,6 +15,7 @@ const {
   streamUpload,
   deleteFolder,
   downloadTarball,
+  downloadTarballDirect,
   deleteFiles,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
@@ -136,13 +137,13 @@ exports.defineFilter = excludeRows => {
  * data or user relationships.
  * @param {string} appId The app to backup
  * @param {object} config Config to send to export DB
- * @param {boolean} includeRows Flag to state whether the export should include data.
+ * @param {boolean} excludeRows Flag to state whether the export should include data.
  * @returns {*} either a string or a stream of the backup
  */
-const backupAppData = async (appId, config, includeRows) => {
+const backupAppData = async (appId, config, excludeRows) => {
   return await exports.exportDB(appId, {
     ...config,
-    filter: exports.defineFilter(includeRows),
+    filter: exports.defineFilter(excludeRows),
   })
 }
 
@@ -159,11 +160,11 @@ exports.performBackup = async (appId, backupName) => {
 /**
  * Streams a backup of the database state for an app
  * @param {string} appId The ID of the app which is to be backed up.
- * @param {boolean} includeRows Flag to state whether the export should include data.
+ * @param {boolean} excludeRows Flag to state whether the export should include data.
  * @returns {*} a readable stream of the backup which is written in real time
  */
-exports.streamBackup = async (appId, includeRows) => {
-  return await backupAppData(appId, { stream: true }, includeRows)
+exports.streamBackup = async (appId, excludeRows) => {
+  return await backupAppData(appId, { stream: true }, excludeRows)
 }
 
 /**
@@ -338,31 +339,57 @@ exports.cleanup = appIds => {
   }
 }
 
-exports.extractPluginTarball = async file => {
-  if (!file.name.endsWith(".tar.gz")) {
-    throw new Error("Plugin must be compressed into a gzipped tarball.")
+const createTempFolder = item => {
+  const path = join(budibaseTempDir(), item)
+  try {
+    // remove old tmp directories automatically - don't combine
+    if (fs.existsSync(path)) {
+      fs.rmSync(path, { recursive: true, force: true })
+    }
+    fs.mkdirSync(path)
+  } catch (err) {
+    throw new Error(`Path cannot be created: ${err.message}`)
   }
-  const path = join(budibaseTempDir(), file.name.split(".tar.gz")[0])
-  // remove old tmp directories automatically - don't combine
-  if (fs.existsSync(path)) {
-    fs.rmSync(path, { recursive: true, force: true })
-  }
-  fs.mkdirSync(path)
+
+  return path
+}
+exports.createTempFolder = createTempFolder
+
+const extractTarball = async (fromFilePath, toPath) => {
   await tar.extract({
-    file: file.path,
-    C: path,
+    file: fromFilePath,
+    C: toPath,
   })
+}
+exports.extractTarball = extractTarball
+
+const getPluginMetadata = async path => {
   let metadata = {}
   try {
     const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
     const schema = fs.readFileSync(join(path, "schema.json"), "utf8")
+
     metadata.schema = JSON.parse(schema)
     metadata.package = JSON.parse(pkg)
+
+    if (
+      !metadata.package.name ||
+      !metadata.package.version ||
+      !metadata.package.description
+    ) {
+      throw new Error(
+        "package.json is missing one of 'name', 'version' or 'description'."
+      )
+    }
   } catch (err) {
-    throw new Error("Unable to process schema.json/package.json in plugin.")
+    throw new Error(
+      `Unable to process schema.json/package.json in plugin. ${err.message}`
+    )
   }
+
   return { metadata, directory: path }
 }
+exports.getPluginMetadata = getPluginMetadata
 
 exports.getDatasourcePlugin = async (name, url, hash) => {
   if (!fs.existsSync(DATASOURCE_PATH)) {
@@ -397,11 +424,44 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
 }
 
 /**
+ * Find for a file recursively from start path applying filter, return first match
+ */
+exports.findFileRec = (startPath, filter) => {
+  if (!fs.existsSync(startPath)) {
+    return
+  }
+
+  const files = fs.readdirSync(startPath)
+  for (let i = 0, len = files.length; i < len; i++) {
+    const filename = join(startPath, files[i])
+    const stat = fs.lstatSync(filename)
+
+    if (stat.isDirectory()) {
+      return exports.findFileRec(filename, filter)
+    } else if (filename.endsWith(filter)) {
+      return filename
+    }
+  }
+}
+
+/**
+ * Remove a folder which is not empty from the file system
+ */
+exports.deleteFolderFileSystem = path => {
+  if (!fs.existsSync(path)) {
+    return
+  }
+
+  fs.rmSync(path, { recursive: true, force: true })
+}
+
+/**
  * Full function definition for below can be found in the utilities.
  */
 exports.upload = upload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
 exports.deleteFiles = deleteFiles
+exports.downloadTarballDirect = downloadTarballDirect
 exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
 exports.NODE_MODULES_PATH = NODE_MODULES_PATH

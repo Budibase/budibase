@@ -1,6 +1,7 @@
 <script>
   import { Button, Select, Input, Label } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { onMount, createEventDispatcher } from "svelte"
+  import { flags } from "stores/backend"
   const dispatch = createEventDispatcher()
 
   export let value
@@ -29,11 +30,16 @@
       label: "Every Night at Midnight",
       value: "0 0 * * *",
     },
-    {
-      label: "Every Budibase Reboot",
-      value: "@reboot",
-    },
   ]
+
+  onMount(() => {
+    if (!$flags.cloud) {
+      CRON_EXPRESSIONS.push({
+        label: "Every Budibase Reboot",
+        value: "@reboot",
+      })
+    }
+  })
 </script>
 
 <div class="block-field">

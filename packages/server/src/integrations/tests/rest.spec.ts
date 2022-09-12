@@ -51,7 +51,7 @@ describe("REST Integration", () => {
         name: "test",
       }),
     }
-    const response = await config.integration.create(query)
+    await config.integration.create(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "POST",
       body: '{"name":"test"}',
@@ -299,7 +299,7 @@ describe("REST Integration", () => {
       }
       await config.integration.read(query)
       expect(fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}&`,
+        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}`,
         {
           headers: {},
           method: "GET",
@@ -426,7 +426,7 @@ describe("REST Integration", () => {
       }
       const res = await config.integration.read(query)
       expect(fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}&`,
+        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}`,
         {
           headers: {},
           method: "GET",
@@ -535,6 +535,41 @@ describe("REST Integration", () => {
       expect(sentData.has(sizeParam))
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
       expect(res.pagination.cursor).toEqual(123)
+    })
+
+    it("should encode query string correctly", async () => {
+      const query = {
+        path: "api",
+        queryString: "test=1 2",
+        headers: HEADERS,
+        bodyType: "json",
+        requestBody: JSON.stringify({
+          name: "test",
+        }),
+      }
+      await config.integration.create(query)
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1%202`, {
+        method: "POST",
+        body: '{"name":"test"}',
+        headers: HEADERS,
+      })
+    })
+  })
+
+  describe("Configuration options", () => {
+    it("Attaches insecureHttpParams when legacy HTTP Parser option is set", async () => {
+      config = new TestConfiguration({
+        url: BASE_URL,
+        legacyHttpParser: true,
+      })
+      await config.integration.read({})
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
+        method: "GET",
+        headers: {},
+        extraHttpOptions: {
+          insecureHTTPParser: true,
+        },
+      })
     })
   })
 })
