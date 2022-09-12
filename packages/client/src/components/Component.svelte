@@ -127,7 +127,9 @@
   // Empty components are those which accept children but do not have any.
   // Empty states can be shown for these components, but can be disabled
   // in the component manifest.
-  $: empty = interactive && !children.length && hasChildren
+  $: empty =
+    (interactive && !children.length && hasChildren) ||
+    hasMissingRequiredSettings
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
