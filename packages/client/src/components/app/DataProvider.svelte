@@ -133,11 +133,7 @@
         <ProgressCircle />
       </div>
     {:else}
-      {#if $component.emptyState}
-        <Placeholder />
-      {:else}
-        <slot />
-      {/if}
+      <slot />
       {#if paginate && $fetch.supportsPagination}
         <div class="pagination">
           <Pagination
