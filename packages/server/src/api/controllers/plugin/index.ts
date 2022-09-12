@@ -1,20 +1,20 @@
-import { ObjectStoreBuckets } from "../../constants"
-import { loadJSFile } from "../../utilities/fileSystem"
+import { ObjectStoreBuckets } from "../../../constants"
+import { loadJSFile } from "../../../utilities/fileSystem"
 import {
   uploadedNpmPlugin,
   uploadedUrlPlugin,
   uploadedGithubPlugin,
   uploadedFilePlugin,
-} from "./plugin/utils"
+} from "./utils"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { validate } from "@budibase/backend-core/plugins"
-import { generatePluginID, getPluginParams } from "../../db/utils"
+import { generatePluginID, getPluginParams } from "../../../db/utils"
 import {
   uploadDirectory,
   deleteFolder,
 } from "@budibase/backend-core/objectStore"
 import { PluginType, FileType } from "@budibase/types"
-import env from "../../environment"
+import env from "../../../environment"
 
 export async function getPlugins(type?: PluginType) {
   const db = getGlobalDB()
