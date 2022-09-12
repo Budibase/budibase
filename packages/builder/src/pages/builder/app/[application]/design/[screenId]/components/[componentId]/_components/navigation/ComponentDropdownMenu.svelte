@@ -2,10 +2,20 @@
   import { store } from "builderStore"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
+  export let component
+
   $: noPaste = !$store.componentToPaste
 
   const keyboardEvent = (key, ctrlKey = false) => {
-    document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
+    document.dispatchEvent(
+      new CustomEvent("component-menu", {
+        detail: {
+          key,
+          ctrlKey,
+          id: component?._id,
+        },
+      })
+    )
   }
 </script>
 

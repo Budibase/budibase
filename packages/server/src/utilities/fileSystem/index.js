@@ -18,6 +18,7 @@ const {
   deleteFiles,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
+const { checkSlashesInUrl } = require("../")
 const env = require("../../environment")
 const {
   USER_METDATA_PREFIX,
@@ -26,9 +27,12 @@ const {
 } = require("../../db/utils")
 const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
+const tar = require("tar")
+const fetch = require("node-fetch")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
+const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 
 /**
  * The single stack system (Cloud and Builder) should not make use of the file system where possible,
@@ -97,6 +101,13 @@ exports.getTemplateStream = async template => {
  */
 exports.loadHandlebarsFile = path => {
   return fs.readFileSync(path, "utf8")
+}
+
+/**
+ * Same as above just with a different name.
+ */
+exports.loadJSFile = (directory, name) => {
+  return fs.readFileSync(join(directory, name), "utf8")
 }
 
 /**
@@ -287,13 +298,18 @@ exports.getComponentLibraryManifest = async library => {
   }
 
   let resp
+  let path
   try {
     // Try to load the manifest from the new file location
-    const path = join(appId, filename)
+    path = join(appId, filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
   } catch (error) {
+    console.error(
+      `component-manifest-objectstore=failed appId=${appId} path=${path}`,
+      error
+    )
     // Fallback to loading it from the old location for old apps
-    const path = join(appId, "node_modules", library, "package", filename)
+    path = join(appId, "node_modules", library, "package", filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
   }
   if (typeof resp !== "string") {
@@ -319,6 +335,64 @@ exports.cleanup = appIds => {
     if (fs.existsSync(path)) {
       fs.rmdirSync(path, { recursive: true })
     }
+  }
+}
+
+exports.extractPluginTarball = async file => {
+  if (!file.name.endsWith(".tar.gz")) {
+    throw new Error("Plugin must be compressed into a gzipped tarball.")
+  }
+  const path = join(budibaseTempDir(), file.name.split(".tar.gz")[0])
+  // remove old tmp directories automatically - don't combine
+  if (fs.existsSync(path)) {
+    fs.rmSync(path, { recursive: true, force: true })
+  }
+  fs.mkdirSync(path)
+  await tar.extract({
+    file: file.path,
+    C: path,
+  })
+  let metadata = {}
+  try {
+    const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
+    const schema = fs.readFileSync(join(path, "schema.json"), "utf8")
+    metadata.schema = JSON.parse(schema)
+    metadata.package = JSON.parse(pkg)
+  } catch (err) {
+    throw new Error("Unable to process schema.json/package.json in plugin.")
+  }
+  return { metadata, directory: path }
+}
+
+exports.getDatasourcePlugin = async (name, url, hash) => {
+  if (!fs.existsSync(DATASOURCE_PATH)) {
+    fs.mkdirSync(DATASOURCE_PATH)
+  }
+  const filename = join(DATASOURCE_PATH, name)
+  const metadataName = `${filename}.bbmetadata`
+  if (fs.existsSync(filename)) {
+    const currentHash = fs.readFileSync(metadataName, "utf8")
+    // if hash is the same return the file, otherwise remove it and re-download
+    if (currentHash === hash) {
+      return require(filename)
+    } else {
+      console.log(`Updating plugin: ${name}`)
+      fs.unlinkSync(filename)
+    }
+  }
+  const fullUrl = checkSlashesInUrl(
+    `${env.MINIO_URL}/${ObjectStoreBuckets.PLUGINS}/${url}`
+  )
+  const response = await fetch(fullUrl)
+  if (response.status === 200) {
+    const content = await response.text()
+    fs.writeFileSync(filename, content)
+    fs.writeFileSync(metadataName, hash)
+    require(filename)
+  } else {
+    throw new Error(
+      `Unable to retrieve plugin - reason: ${await response.text()}`
+    )
   }
 }
 

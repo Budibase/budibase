@@ -1,8 +1,10 @@
 const { rowEmission, tableEmission } = require("./utils")
 const mainEmitter = require("./index")
+const env = require("../environment")
 
 // max number of automations that can chain on top of each other
-const MAX_AUTOMATION_CHAIN = 5
+// TODO: in future make this configurable at the automation level
+const MAX_AUTOMATION_CHAIN = env.SELF_HOSTED ? 5 : 0
 
 /**
  * Special emitter which takes the count of automation runs which have occurred and blocks an

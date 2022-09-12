@@ -3,6 +3,7 @@
   export let favicon = ""
 
   export let clientLibPath
+  export let usedPlugins
 </script>
 
 <svelte:head>
@@ -83,6 +84,15 @@
   </script>
   <script type="application/javascript" src={clientLibPath}>
   </script>
+  <!-- Custom components need inserted after the core client library -->
+  <!-- But before loadBudibase is called -->
+  {#if usedPlugins?.length}
+    {#each usedPlugins as plugin}
+      <script
+        type="application/javascript"
+        src={`/plugins/${plugin.jsUrl}`}></script>
+    {/each}
+  {/if}
   <script type="application/javascript">
     if (window.loadBudibase) {
       window.loadBudibase()
