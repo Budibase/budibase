@@ -18,7 +18,7 @@
   let searchTerm = ""
   let filter = "all"
   let filterOptions = [
-    { label: "All Plugins", value: "all" },
+    { label: "All plugins", value: "all" },
     { label: "Components", value: "component" },
     { label: "Datasources", value: "datasource" },
   ]
