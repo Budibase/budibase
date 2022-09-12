@@ -3,6 +3,7 @@ exports.CommandWords = {
   HOSTING: "hosting",
   ANALYTICS: "analytics",
   HELP: "help",
+  PLUGIN: "plugins",
 }
 
 exports.InitTypes = {

@@ -47,10 +47,7 @@ describe("accounts", () => {
 
         const response = await api.accounts.destroyMetadata(id)
 
-        expect(response.status).toBe(404)
-        expect(response.body.message).toBe(
-          `id=${accounts.formatAccountMetadataId(id)} does not exist`
-        )
+        expect(response.status).toBe(204)
       })
     })
   })
