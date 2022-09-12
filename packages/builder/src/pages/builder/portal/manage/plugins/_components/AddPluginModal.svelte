@@ -35,13 +35,13 @@
   function infoMessage(optionName) {
     switch (optionName) {
       case PluginSource.URL:
-        return "Please specify a URL which directs to a built plugin TAR archive, you can provide headers if authentication is required."
+        return "Please specify a URL which directs to a built plugin TAR archive. You can provide headers if authentication is required."
       case PluginSource.NPM:
         return "Please specify the URL to a public NPM package which contains the built version of the plugin you wish to install."
       case PluginSource.GITHUB:
         return "Please specify the URL to a Github repository which contains built plugin releases. If this is a private repo you can provide a token to access it."
       case PluginSource.FILE:
-        return "Please provide a built plugin TAR archive, you can build a plugin locally using the Budibase CLI."
+        return "Please provide a built plugin TAR archive. You can build a plugin locally using the Budibase CLI."
     }
   }
 
