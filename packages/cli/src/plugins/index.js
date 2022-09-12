@@ -3,8 +3,8 @@ const { CommandWords } = require("../constants")
 const { getSkeleton, fleshOutSkeleton } = require("./skeleton")
 const questions = require("../questions")
 const fs = require("fs")
-const { PLUGIN_TYPES_ARR } = require("./constants")
-const { validate } = require("./validate")
+const { PLUGIN_TYPE_ARR } = require("@budibase/types")
+const { validate } = require("@budibase/backend-core/plugins")
 const { runPkgCommand } = require("../exec")
 const { join } = require("path")
 const { success, error, info } = require("../utils")
@@ -24,7 +24,7 @@ function checkInPlugin() {
 
 async function init(opts) {
   const type = opts["init"] || opts
-  if (!type || !PLUGIN_TYPES_ARR.includes(type)) {
+  if (!type || !PLUGIN_TYPE_ARR.includes(type)) {
     console.log(
       error(
         "Please provide a type to init, either 'component' or 'datasource'."
