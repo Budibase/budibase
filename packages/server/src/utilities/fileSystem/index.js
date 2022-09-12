@@ -44,7 +44,15 @@ const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 exports.init = () => {
   const tempDir = budibaseTempDir()
   if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir)
+    // some test cases fire this quickly enough that
+    // synchronous cases can end up here at the same time
+    try {
+      fs.mkdirSync(tempDir)
+    } catch (err) {
+      if (!err || err.code !== "EEXIST") {
+        throw err
+      }
+    }
   }
   const clientLibPath = join(budibaseTempDir(), "budibase-client.js")
   if (env.isTest() && !fs.existsSync(clientLibPath)) {
