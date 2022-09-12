@@ -166,7 +166,10 @@
           />
         {/each}
       </div>
-      {#if customIntegrations.length > 0}
+    </Layout>
+
+    {#if customIntegrations.length > 0}
+      <Layout noPadding gap="XS">
         <Body size="S">Custom data source</Body>
         <div class="item-list">
           {#each customIntegrations as [integrationType, schema]}
@@ -178,8 +181,8 @@
             />
           {/each}
         </div>
-      {/if}
-    </Layout>
+      </Layout>
+    {/if}
   </ModalContent>
 </Modal>
 

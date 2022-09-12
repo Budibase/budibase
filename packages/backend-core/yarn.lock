@@ -543,13 +543,13 @@
     semver "^7.3.5"
     tar "^6.1.11"
 
-"@shopify/jest-koa-mocks@3.1.5":
-  version "3.1.5"
-  resolved "https://registry.yarnpkg.com/@shopify/jest-koa-mocks/-/jest-koa-mocks-3.1.5.tgz#11f77ccfbcaf35cf5ee2c6108a286e61e6bea084"
-  integrity sha512-gQ3/7ELerv00TWO37AGFX5mT9CsFCS+3/UbKMuoIlKEU0QH2OX8BV9WBf/EKw7adCDNlxss0lqV6J8kf5pgr4A==
+"@shopify/jest-koa-mocks@5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@shopify/jest-koa-mocks/-/jest-koa-mocks-5.0.1.tgz#fba490b6b7985fbb571eb9974897d396a3642e94"
+  integrity sha512-4YskS9q8+TEHNoyopmuoy2XyhInyqeOl7CF5ShJs19sm6m0EA/jGGvgf/osv2PeTfuf42/L2G9CzWUSg49yTSg==
   dependencies:
     koa "^2.13.4"
-    node-mocks-http "^1.5.8"
+    node-mocks-http "^1.11.0"
 
 "@sideway/address@^4.1.3":
   version "4.1.4"
@@ -3914,7 +3914,7 @@ node-int64@^0.4.0:
   resolved "https://registry.yarnpkg.com/node-int64/-/node-int64-0.4.0.tgz#87a9065cdb355d3182d8f94ce11188b825c68a3b"
   integrity sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==
 
-node-mocks-http@^1.5.8:
+node-mocks-http@^1.11.0:
   version "1.11.0"
   resolved "https://registry.yarnpkg.com/node-mocks-http/-/node-mocks-http-1.11.0.tgz#defc0febf6b935f08245397d47534a8de592996e"
   integrity sha512-jS/WzSOcKbOeGrcgKbenZeNhxUNnP36Yw11+hL4TTxQXErGfqYZ+MaYNNvhaTiGIJlzNSqgQkk9j8dSu1YWSuw==

@@ -553,11 +553,7 @@ export const sync = async (ctx: any, next: any) => {
   })
   let error
   try {
-    await replication.replicate({
-      filter: function (doc: any) {
-        return doc._id !== DocumentType.APP_METADATA
-      },
-    })
+    await replication.replicate(replication.appReplicateOpts())
   } catch (err) {
     error = err
   } finally {

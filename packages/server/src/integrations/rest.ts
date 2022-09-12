@@ -14,6 +14,7 @@ import {
   BearerAuthConfig,
 } from "../definitions/datasource"
 import { get } from "lodash"
+import qs from "querystring"
 const fetch = require("node-fetch")
 const { formatBytes } = require("../utilities")
 const { performance } = require("perf_hooks")
@@ -74,6 +75,12 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.OBJECT,
       required: false,
       default: {},
+    },
+    legacyHttpParser: {
+      display: "Legacy HTTP Support",
+      type: DatasourceFieldType.BOOLEAN,
+      required: false,
+      default: false,
     },
   },
   query: {
@@ -211,7 +218,8 @@ class RestIntegration implements IntegrationBase {
       }
     }
 
-    const main = `${path}?${queryString}`
+    // make sure the query string is fully encoded
+    const main = `${path}?${qs.encode(qs.decode(queryString))}`
     let complete = main
     if (this.config.url && !main.startsWith("http")) {
       complete = !this.config.url ? main : `${this.config.url}/${main}`
@@ -372,6 +380,11 @@ class RestIntegration implements IntegrationBase {
       pagination,
       paginationValues
     )
+
+    if (this.config.legacyHttpParser) {
+      // https://github.com/nodejs/node/issues/43798
+      input.extraHttpOptions = { insecureHTTPParser: true }
+    }
 
     this.startTimeMs = performance.now()
     const url = this.getUrl(path, queryString, pagination, paginationValues)

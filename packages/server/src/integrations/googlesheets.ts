@@ -1,11 +1,11 @@
 import {
   DatasourceFieldType,
+  DatasourcePlus,
   Integration,
+  QueryJson,
   QueryType,
   Table,
   TableSchema,
-  QueryJson,
-  DatasourcePlus,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId } from "./utils"
@@ -286,8 +286,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async createTable(name?: string) {
     try {
       await this.connect()
-      const sheet = await this.client.addSheet({ title: name })
-      return sheet
+      return await this.client.addSheet({ title: name })
     } catch (err) {
       console.error("Error creating new table in google sheets", err)
       throw err
@@ -375,7 +374,8 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       const rows = await sheet.getRows()
       const row = rows[query.rowIndex]
       if (row) {
-        const updateValues = query.row
+        const updateValues =
+          typeof query.row === "string" ? JSON.parse(query.row) : query.row
         for (let key in updateValues) {
           row[key] = updateValues[key]
         }
