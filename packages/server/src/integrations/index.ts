@@ -13,7 +13,7 @@ const googlesheets = require("./googlesheets")
 const firebase = require("./firebase")
 const redis = require("./redis")
 const snowflake = require("./snowflake")
-// pour sharepoint2019
+// for sharepoint2019
 const sp2019 = require("./sp2019")
 const { SourceName } = require("@budibase/types")
 const environment = require("../environment")
