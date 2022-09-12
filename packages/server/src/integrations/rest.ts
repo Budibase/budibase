@@ -80,6 +80,12 @@ module RestModule {
         required: false,
         default: {},
       },
+      legacyHttpParser: {
+        display: "Legacy HTTP Support",
+        type: DatasourceFieldType.BOOLEAN,
+        required: false,
+        default: false,
+      },
     },
     query: {
       create: {
@@ -378,6 +384,11 @@ module RestModule {
         pagination,
         paginationValues
       )
+
+      if (this.config.legacyHttpParser) {
+        // https://github.com/nodejs/node/issues/43798
+        input.extraHttpOptions = { insecureHTTPParser: true }
+      }
 
       this.startTimeMs = performance.now()
       const url = this.getUrl(path, queryString, pagination, paginationValues)
