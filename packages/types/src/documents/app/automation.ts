@@ -25,6 +25,10 @@ export interface AutomationStep {
 export interface AutomationTrigger {
   id: string
   stepId: string
+  inputs: {
+    [key: string]: any
+  }
+  cronJobId?: string
 }
 
 export enum AutomationStatus {

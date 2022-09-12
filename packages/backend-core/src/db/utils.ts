@@ -254,7 +254,16 @@ export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
     return false
   })
   if (idsOnly) {
-    return appDbNames
+    const devAppIds = appDbNames.filter(appId => isDevAppID(appId))
+    const prodAppIds = appDbNames.filter(appId => !isDevAppID(appId))
+    switch (dev) {
+      case true:
+        return devAppIds
+      case false:
+        return prodAppIds
+      default:
+        return appDbNames
+    }
   }
   const appPromises = appDbNames.map((app: any) =>
     // skip setup otherwise databases could be re-created
