@@ -66,7 +66,6 @@
         $automationStore.selectedAutomation.automation._id
       delete parameters.newAutomationName
     } catch (error) {
-      console.log("ERROR ", error)
       notifications.error("Error creating automation")
     }
   }
