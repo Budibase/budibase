@@ -547,4 +547,21 @@ describe("REST Integration", () => {
       })
     })
   })
+
+  describe("Configuration options", () => {
+    it("Attaches insecureHttpParams when legacy HTTP Parser option is set", async () => {
+      config = new TestConfiguration({
+        url: BASE_URL,
+        legacyHttpParser: true
+      })
+      await config.integration.read({})
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
+        method: "GET",
+        headers: {},
+        extraHttpOptions: {
+          insecureHTTPParser: true
+        }
+      })
+    })
+  })
 })
