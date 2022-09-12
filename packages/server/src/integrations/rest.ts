@@ -80,6 +80,7 @@ module RestModule {
         default: {},
       },
       legacyHttpParser: {
+        display: "Legacy HTTP Support",
         type: DatasourceFieldType.BOOLEAN,
         required: false,
         default: false,
