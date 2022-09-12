@@ -314,8 +314,6 @@
     }
   }
 
-  $: console.log(breakQs)
-
   const paramsChanged = evt => {
     breakQs = {}
     for (let param of evt.detail) {

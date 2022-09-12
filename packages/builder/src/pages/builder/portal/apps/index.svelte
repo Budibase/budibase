@@ -39,9 +39,6 @@
   let creatingFromTemplate = false
   let automationErrors
   let accessFilterList = null
-  let welcomeHeader, welcomeBody
-  let createAppButtonText
-  let enrichedApps, filteredApps, lockedApps, unlocked
 
   const resolveWelcomeMessage = (auth, apps) => {
     const userWelcome = auth?.user?.firstName
