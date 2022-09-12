@@ -41,18 +41,16 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <div style="display: flex;">
-      <Heading size="M">Plugins</Heading>
-    </div>
+    <Heading size="M">Plugins</Heading>
     <Body>Add your own custom datasources and components</Body>
-    <Divider />
   </Layout>
+  <Divider size="S" />
   <Layout noPadding>
-    <div class="align-buttons">
+    <div class="controls">
       <div>
-        <Button on:click={modal.show} newStyles cta icon={"Add"}
-          >Add plugin</Button
-        >
+        <Button on:click={modal.show} newStyles cta icon={"Add"}>
+          Add plugin
+        </Button>
       </div>
       <div class="filters">
         <div class="select">
@@ -60,17 +58,19 @@
             bind:value={filter}
             placeholder={null}
             options={filterOptions}
+            autoWidth
+            quiet
           />
         </div>
-
-        <Search bind:value={searchTerm} />
+        <Search bind:value={searchTerm} placeholder="Search plugins" />
       </div>
     </div>
-
-    {#if $plugins}
-      {#each filteredPlugins as plugin}
-        <PluginRow {plugin} />
-      {/each}
+    {#if filteredPlugins?.length}
+      <Layout noPadding gap="S">
+        {#each filteredPlugins as plugin}
+          <PluginRow {plugin} />
+        {/each}
+      </Layout>
     {/if}
   </Layout>
 </Layout>
@@ -84,14 +84,12 @@
     display: flex;
     gap: var(--spacing-xl);
   }
-  .align-buttons {
-    margin-top: -10px;
+  .controls {
     display: flex;
-    column-gap: var(--spacing-xl);
+    gap: var(--spacing-xl);
     justify-content: space-between;
   }
-
-  .select {
-    flex-basis: 180px;
+  .controls :global(.spectrum-Search) {
+    width: 200px;
   }
 </style>
