@@ -43,7 +43,8 @@ const env = {
   PLATFORM_URL: process.env.PLATFORM_URL,
   APPS_URL: process.env.APPS_URL,
   // ports
-  PORT: process.env.PORT || process.env.WORKER_PORT,
+  // prefer worker port to generic port
+  PORT: process.env.WORKER_PORT || process.env.PORT,
   CLUSTER_PORT: process.env.CLUSTER_PORT,
   // flags
   NODE_ENV: process.env.NODE_ENV,
