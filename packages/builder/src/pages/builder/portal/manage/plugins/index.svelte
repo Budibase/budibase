@@ -67,7 +67,7 @@
     </div>
     {#if filteredPlugins?.length}
       <Layout noPadding gap="S">
-        {#each filteredPlugins as plugin}
+        {#each filteredPlugins as plugin (plugin._id)}
           <PluginRow {plugin} />
         {/each}
       </Layout>
