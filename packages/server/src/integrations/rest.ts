@@ -79,6 +79,11 @@ module RestModule {
         required: false,
         default: {},
       },
+      legacyHttpParser: {
+        type: DatasourceFieldType.BOOLEAN,
+        required: false,
+        default: false,
+      },
     },
     query: {
       create: {
@@ -233,9 +238,6 @@ module RestModule {
       pagination: PaginationConfig | null,
       paginationValues: PaginationValues | null
     ) {
-      // https://github.com/nodejs/node/issues/43798
-      input.extraHttpOptions = { insecureHTTPParser: true }
-
       if (!input.headers) {
         input.headers = {}
       }
@@ -379,6 +381,11 @@ module RestModule {
         pagination,
         paginationValues
       )
+
+      if (this.config.legacyHttpParser) {
+        // https://github.com/nodejs/node/issues/43798
+        input.extraHttpOptions = { insecureHTTPParser: true }
+      }
 
       this.startTimeMs = performance.now()
       const url = this.getUrl(path, queryString, pagination, paginationValues)
