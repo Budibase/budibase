@@ -55,7 +55,7 @@ export async function upload(ctx: any) {
 }
 
 export async function create(ctx: any) {
-  const { type, source, url, headers, githubToken } = ctx.request.body
+  const { source, url, headers, githubToken } = ctx.request.body
 
   if (!env.SELF_HOSTED) {
     ctx.throw(400, "Plugins not supported outside of self-host.")
@@ -111,14 +111,14 @@ export async function fetch(ctx: any) {
 
 export async function destroy(ctx: any) {
   const db = getGlobalDB()
-  const { pluginId, pluginRev } = ctx.params
+  const { pluginId } = ctx.params
 
   try {
     const plugin = await db.get(pluginId)
     const bucketPath = `${plugin.name}/`
     await deleteFolder(ObjectStoreBuckets.PLUGINS, bucketPath)
 
-    await db.remove(pluginId, pluginRev)
+    await db.remove(pluginId, plugin._rev)
   } catch (err: any) {
     const errMsg = err?.message ? err?.message : err
 

@@ -9,17 +9,16 @@ export function createPluginsStore() {
     set(plugins)
   }
 
-  async function deletePlugin(pluginId, pluginRev) {
-    await API.deletePlugin(pluginId, pluginRev)
+  async function deletePlugin(pluginId) {
+    await API.deletePlugin(pluginId)
     update(state => {
       state = state.filter(existing => existing._id !== pluginId)
       return state
     })
   }
 
-  async function createPlugin(type, source, url, auth = null) {
+  async function createPlugin(source, url, auth = null) {
     let pluginData = {
-      type,
       source,
       url,
     }

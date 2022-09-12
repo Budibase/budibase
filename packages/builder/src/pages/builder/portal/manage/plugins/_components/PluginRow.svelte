@@ -19,6 +19,12 @@
     plugin.schema.type === "component"
       ? plugin.schema.schema.icon || "Book"
       : plugin.schema.schema.icon || "Beaker"
+
+  function pluginDeleted() {
+    if (detailsModal) {
+      detailsModal.hide()
+    }
+  }
 </script>
 
 <div class="row" on:click={() => detailsModal.show()}>
@@ -90,7 +96,7 @@
   </ModalContent>
 
   <Modal bind:this={deleteModal}>
-    <DeletePluginModal {detailsModal} {plugin} />
+    <DeletePluginModal {plugin} on:deleted={pluginDeleted} />
   </Modal>
 </Modal>
 
