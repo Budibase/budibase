@@ -3,7 +3,12 @@ const setup = require("./utilities")
 const { basicRow } = setup.structures
 const { doInAppContext } = require("@budibase/backend-core/context")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
-const { quotas, QuotaUsageType, StaticQuotaName, MonthlyQuotaName } = require("@budibase/pro")
+const {
+  quotas,
+  QuotaUsageType,
+  StaticQuotaName,
+  MonthlyQuotaName,
+} = require("@budibase/pro")
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -23,23 +28,30 @@ describe("/rows", () => {
     await request
       .get(`/api/${table._id}/rows/${id}`)
       .set(config.defaultHeaders())
-      .expect('Content-Type', /json/)
+      .expect("Content-Type", /json/)
       .expect(status)
 
   const getRowUsage = async () => {
-    return config.doInContext(null, () => quotas.getCurrentUsageValue(QuotaUsageType.STATIC, StaticQuotaName.ROWS))
+    return config.doInContext(null, () =>
+      quotas.getCurrentUsageValue(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
+    )
   }
 
   const getQueryUsage = async () => {
-    return config.doInContext(null, () => quotas.getCurrentUsageValue(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
+    return config.doInContext(null, () =>
+      quotas.getCurrentUsageValue(
+        QuotaUsageType.MONTHLY,
+        MonthlyQuotaName.QUERIES
+      )
+    )
   }
 
-  const assertRowUsage = async (expected) => {
+  const assertRowUsage = async expected => {
     const usage = await getRowUsage()
     expect(usage).toBe(expected)
   }
 
-  const assertQueryUsage = async (expected) => {
+  const assertQueryUsage = async expected => {
     const usage = await getQueryUsage()
     expect(usage).toBe(expected)
   }
@@ -76,10 +88,12 @@ describe("/rows", () => {
           name: "Updated Name",
         })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(res.res.statusMessage).toEqual(`${table.name} updated successfully.`)
+      expect(res.res.statusMessage).toEqual(
+        `${table.name} updated successfully.`
+      )
       expect(res.body.name).toEqual("Updated Name")
       // await assertRowUsage(rowUsage)
       // await assertQueryUsage(queryUsage + 1)
@@ -92,7 +106,7 @@ describe("/rows", () => {
       const res = await request
         .get(`/api/${table._id}/rows/${existing._id}`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       expect(res.body).toEqual({
@@ -110,7 +124,7 @@ describe("/rows", () => {
       const newRow = {
         tableId: table._id,
         name: "Second Contact",
-        status: "new"
+        status: "new",
       }
       await config.createRow()
       await config.createRow(newRow)
@@ -119,7 +133,7 @@ describe("/rows", () => {
       const res = await request
         .get(`/api/${table._id}/rows`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       expect(res.body.length).toBe(2)
@@ -135,17 +149,36 @@ describe("/rows", () => {
       await request
         .get(`/api/${table._id}/rows/not-a-valid-id`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(404)
       await assertQueryUsage(queryUsage) // no change
     })
 
     it("row values are coerced", async () => {
-      const str = {type:"string", constraints: { type: "string", presence: false }}
-      const attachment = {type:"attachment", constraints: { type: "array", presence: false }}
-      const bool = {type:"boolean", constraints: { type: "boolean", presence: false }}
-      const number = {type:"number", constraints: { type: "number", presence: false }}
-      const datetime = {type:"datetime", constraints: { type: "string", presence: false, datetime: {earliest:"", latest: ""}  }}
+      const str = {
+        type: "string",
+        constraints: { type: "string", presence: false },
+      }
+      const attachment = {
+        type: "attachment",
+        constraints: { type: "array", presence: false },
+      }
+      const bool = {
+        type: "boolean",
+        constraints: { type: "boolean", presence: false },
+      }
+      const number = {
+        type: "number",
+        constraints: { type: "number", presence: false },
+      }
+      const datetime = {
+        type: "datetime",
+        constraints: {
+          type: "string",
+          presence: false,
+          datetime: { earliest: "", latest: "" },
+        },
+      }
 
       table = await config.createTable({
         name: "TestTable2",
@@ -171,9 +204,9 @@ describe("/rows", () => {
           boolUndefined: bool,
           boolString: bool,
           boolBool: bool,
-          attachmentNull : attachment,
-          attachmentUndefined : attachment,
-          attachmentEmpty : attachment,
+          attachmentNull: attachment,
+          attachmentUndefined: attachment,
+          attachmentEmpty: attachment,
         },
       })
 
@@ -198,9 +231,9 @@ describe("/rows", () => {
         boolString: "true",
         boolBool: true,
         tableId: table._id,
-        attachmentNull : null,
-        attachmentUndefined : undefined,
-        attachmentEmpty : "",
+        attachmentNull: null,
+        attachmentUndefined: undefined,
+        attachmentEmpty: "",
       }
 
       const id = (await config.createRow(row))._id
@@ -218,7 +251,9 @@ describe("/rows", () => {
       expect(saved.datetimeEmptyString).toBe(null)
       expect(saved.datetimeNull).toBe(null)
       expect(saved.datetimeUndefined).toBe(undefined)
-      expect(saved.datetimeString).toBe(new Date(row.datetimeString).toISOString())
+      expect(saved.datetimeString).toBe(
+        new Date(row.datetimeString).toISOString()
+      )
       expect(saved.datetimeDate).toBe(row.datetimeDate.toISOString())
       expect(saved.boolNull).toBe(null)
       expect(saved.boolEmpty).toBe(null)
@@ -247,10 +282,12 @@ describe("/rows", () => {
           name: "Updated Name",
         })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
-      
-      expect(res.res.statusMessage).toEqual(`${table.name} updated successfully.`)
+
+      expect(res.res.statusMessage).toEqual(
+        `${table.name} updated successfully.`
+      )
       expect(res.body.name).toEqual("Updated Name")
       expect(res.body.description).toEqual(existing.description)
 
@@ -292,16 +329,14 @@ describe("/rows", () => {
       const res = await request
         .delete(`/api/${table._id}/rows`)
         .send({
-          rows: [
-            createdRow
-          ]
+          rows: [createdRow],
         })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body[0]._id).toEqual(createdRow._id)
-      await assertRowUsage(rowUsage -1)
-      await assertQueryUsage(queryUsage +1)
+      await assertRowUsage(rowUsage - 1)
+      await assertQueryUsage(queryUsage + 1)
     })
   })
 
@@ -314,9 +349,9 @@ describe("/rows", () => {
         .post(`/api/${table._id}/rows/validate`)
         .send({ name: "ivan" })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
-      
+
       expect(res.body.valid).toBe(true)
       expect(Object.keys(res.body.errors)).toEqual([])
       await assertRowUsage(rowUsage)
@@ -331,9 +366,9 @@ describe("/rows", () => {
         .post(`/api/${table._id}/rows/validate`)
         .send({ name: 1 })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
-      
+
       expect(res.body.valid).toBe(false)
       expect(Object.keys(res.body.errors)).toEqual(["name"])
       await assertRowUsage(rowUsage)
@@ -351,19 +386,16 @@ describe("/rows", () => {
       const res = await request
         .delete(`/api/${table._id}/rows`)
         .send({
-          rows: [
-            row1,
-            row2,
-          ]
+          rows: [row1, row2],
         })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       expect(res.body.length).toEqual(2)
       await loadRow(row1._id, 404)
       await assertRowUsage(rowUsage - 2)
-      await assertQueryUsage(queryUsage +1)
+      await assertQueryUsage(queryUsage + 1)
     })
   })
 
@@ -376,12 +408,12 @@ describe("/rows", () => {
       const res = await request
         .get(`/api/views/${table._id}`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.length).toEqual(1)
       expect(res.body[0]._id).toEqual(row._id)
       await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage +1)
+      await assertQueryUsage(queryUsage + 1)
     })
 
     it("should throw an error if view doesn't exist", async () => {
@@ -406,7 +438,7 @@ describe("/rows", () => {
       const res = await request
         .get(`/api/views/${view.name}`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.length).toEqual(1)
       expect(res.body[0]._id).toEqual(row._id)
@@ -418,21 +450,24 @@ describe("/rows", () => {
 
   describe("fetchEnrichedRows", () => {
     it("should allow enriching some linked rows", async () => {
-      const { table, firstRow, secondRow } = await doInTenant(setup.structures.TENANT_ID, async () => {
-        const table = await config.createLinkedTable()
-        const firstRow = await config.createRow({
-          name: "Test Contact",
-          description: "original description",
-          tableId: table._id
-        })
-        const secondRow = await config.createRow({
-          name: "Test 2",
-          description: "og desc",
-          link: [{_id: firstRow._id}],
-          tableId: table._id,
-        })
-        return { table, firstRow, secondRow }
-      })
+      const { table, firstRow, secondRow } = await doInTenant(
+        setup.structures.TENANT_ID,
+        async () => {
+          const table = await config.createLinkedTable()
+          const firstRow = await config.createRow({
+            name: "Test Contact",
+            description: "original description",
+            tableId: table._id,
+          })
+          const secondRow = await config.createRow({
+            name: "Test 2",
+            description: "og desc",
+            link: [{ _id: firstRow._id }],
+            tableId: table._id,
+          })
+          return { table, firstRow, secondRow }
+        }
+      )
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -440,7 +475,7 @@ describe("/rows", () => {
       const resBasic = await request
         .get(`/api/${table._id}/rows/${secondRow._id}`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(resBasic.body.link[0]._id).toBe(firstRow._id)
       expect(resBasic.body.link[0].primaryDisplay).toBe("Test Contact")
@@ -449,14 +484,14 @@ describe("/rows", () => {
       const resEnriched = await request
         .get(`/api/${table._id}/${secondRow._id}/enrich`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(resEnriched.body.link.length).toBe(1)
       expect(resEnriched.body.link[0]._id).toBe(firstRow._id)
       expect(resEnriched.body.link[0].name).toBe("Test Contact")
       expect(resEnriched.body.link[0].description).toBe("original description")
       await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage +2)
+      await assertQueryUsage(queryUsage + 2)
     })
   })
 
@@ -466,9 +501,11 @@ describe("/rows", () => {
       const row = await config.createRow({
         name: "test",
         description: "test",
-        attachment: [{
-          key: `${config.getAppId()}/attachments/test/thing.csv`,
-        }],
+        attachment: [
+          {
+            key: `${config.getAppId()}/attachments/test/thing.csv`,
+          },
+        ],
         tableId: table._id,
       })
       // the environment needs configured for this
@@ -480,6 +517,51 @@ describe("/rows", () => {
           )
         })
       })
+    })
+  })
+
+  describe("exportData", () => {
+    it("should allow exporting all columns", async () => {
+      const existing = await config.createRow()
+      const res = await request
+        .post(`/api/${table._id}/rows/exportRows?format=json`)
+        .set(config.defaultHeaders())
+        .send({
+          rows: [existing._id],
+        })
+        .expect("Content-Type", /json/)
+        .expect(200)
+      const results = JSON.parse(res.text)
+      expect(results.length).toEqual(1)
+      const row = results[0]
+
+      // Ensure all original columns were exported
+      expect(Object.keys(row).length).toBeGreaterThanOrEqual(
+        Object.keys(existing).length
+      )
+      Object.keys(existing).forEach(key => {
+        expect(row[key]).toEqual(existing[key])
+      })
+    })
+
+    it("should allow exporting only certain columns", async () => {
+      const existing = await config.createRow()
+      const res = await request
+        .post(`/api/${table._id}/rows/exportRows?format=json`)
+        .set(config.defaultHeaders())
+        .send({
+          rows: [existing._id],
+          columns: ["_id"],
+        })
+        .expect("Content-Type", /json/)
+        .expect(200)
+      const results = JSON.parse(res.text)
+      expect(results.length).toEqual(1)
+      const row = results[0]
+
+      // Ensure only the _id column was exported
+      expect(Object.keys(row).length).toEqual(1)
+      expect(row._id).toEqual(existing._id)
     })
   })
 })

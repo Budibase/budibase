@@ -7,7 +7,7 @@ const {
   getTableParams,
 } = require("../../db/utils")
 const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
-const { integrations } = require("../../integrations")
+const { getIntegration } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
 const { invalidateDynamicVariables } = require("../../threads/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
@@ -114,7 +114,7 @@ exports.update = async function (ctx) {
 
   // Drain connection pools when configuration is changed
   if (datasource.source) {
-    const source = integrations[datasource.source]
+    const source = await getIntegration(datasource.source)
     if (source && source.pool) {
       await source.pool.end()
     }
@@ -149,7 +149,7 @@ exports.save = async function (ctx) {
 
   // Drain connection pools when configuration is changed
   if (datasource.source) {
-    const source = integrations[datasource.source]
+    const source = await getIntegration(datasource.source)
     if (source && source.pool) {
       await source.pool.end()
     }
@@ -218,7 +218,7 @@ function updateError(error, newError, tables) {
 }
 
 const buildSchemaHelper = async datasource => {
-  const Connector = integrations[datasource.source]
+  const Connector = await getIntegration(datasource.source)
 
   // Connect to the DB and build the schema
   const connector = new Connector(datasource.config)

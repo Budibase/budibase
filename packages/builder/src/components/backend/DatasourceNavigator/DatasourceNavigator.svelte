@@ -13,7 +13,7 @@
     customQueryIconColor,
     customQueryText,
   } from "helpers/data/utils"
-  import ICONS from "./icons"
+  import { getIcon } from "./icons"
   import { notifications } from "@budibase/bbui"
 
   let openDataSources = []
@@ -124,7 +124,7 @@
       >
         <div class="datasource-icon" slot="icon">
           <svelte:component
-            this={ICONS[datasource.source]}
+            this={getIcon(datasource.source, datasource.schema)}
             height="18"
             width="18"
           />
