@@ -55,7 +55,7 @@ exports.save = async ctx => {
       .filter(plugin => {
         return (
           plugin.schema.type === "component" &&
-          pluginNames.includes(`plugin/${plugin.name}/${plugin.version}`)
+          pluginNames.includes(`plugin/${plugin.name}`)
         )
       })
 

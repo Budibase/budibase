@@ -54,7 +54,7 @@
     },
   }
 
-  const handleKeyAction = async (component, key, ctrlKey = false) => {
+  const handleKeyAction = async (event, component, key, ctrlKey = false) => {
     if (!component || !key) {
       return false
     }
@@ -70,6 +70,9 @@
       const handler = keyHandlers[key]
       if (!handler) {
         return false
+      } else if (event) {
+        event.preventDefault()
+        event.stopPropagation()
       }
       return handler(component)
     } catch (error) {
@@ -89,14 +92,19 @@
       return
     }
     // Key events are always for the selected component
-    return handleKeyAction($selectedComponent, e.key, e.ctrlKey || e.metaKey)
+    return await handleKeyAction(
+      e,
+      $selectedComponent,
+      e.key,
+      e.ctrlKey || e.metaKey
+    )
   }
 
   const handleComponentMenu = async e => {
     // Menu events can be for any component
     const { id, key, ctrlKey } = e.detail
     const component = findComponent($selectedScreen.props, id)
-    return await handleKeyAction(component, key, ctrlKey)
+    return await handleKeyAction(null, component, key, ctrlKey)
   }
 
   onMount(() => {

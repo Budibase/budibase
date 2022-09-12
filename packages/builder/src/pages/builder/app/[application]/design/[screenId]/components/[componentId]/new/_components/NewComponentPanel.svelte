@@ -58,10 +58,14 @@
       enrichedStructure.push({
         name: "Plugins",
         isCategory: true,
-        children: customComponents.map(x => ({
-          ...definitions[x],
-          name: definitions[x].friendlyName || definitions[x].name,
-        })),
+        children: customComponents
+          .map(x => ({
+            ...definitions[x],
+            name: definitions[x].friendlyName || definitions[x].name,
+          }))
+          .sort((a, b) => {
+            return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
+          }),
       })
     }
 
