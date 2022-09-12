@@ -458,6 +458,9 @@ class Orchestrator {
 
 export function execute(input: AutomationEvent, callback: WorkerCallback) {
   const appId = input.data.event.appId
+  if (!appId) {
+    throw new Error("Unable to execute, event doesn't contain app ID.")
+  }
   doInAppContext(appId, async () => {
     const automationOrchestrator = new Orchestrator(
       input.data.automation,
@@ -475,6 +478,9 @@ export function execute(input: AutomationEvent, callback: WorkerCallback) {
 
 export const removeStalled = async (input: AutomationEvent) => {
   const appId = input.data.event.appId
+  if (!appId) {
+    throw new Error("Unable to execute, event doesn't contain app ID.")
+  }
   await doInAppContext(appId, async () => {
     const automationOrchestrator = new Orchestrator(
       input.data.automation,
