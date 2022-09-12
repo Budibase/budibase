@@ -10,7 +10,7 @@
   async function deletePlugin() {
     try {
       await plugins.deletePlugin(plugin._id)
-      notifications.success(`Plugin ${plugin?.name} deleted.`)
+      notifications.success(`Plugin ${plugin?.name} deleted`)
       dispatch("deleted")
     } catch (error) {
       const msg = error?.message ? error.message : JSON.stringify(error)
