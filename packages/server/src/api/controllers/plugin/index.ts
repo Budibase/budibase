@@ -1,11 +1,6 @@
 import { ObjectStoreBuckets } from "../../../constants"
 import { loadJSFile } from "../../../utilities/fileSystem"
-import {
-  uploadedNpmPlugin,
-  uploadedUrlPlugin,
-  uploadedGithubPlugin,
-  uploadedFilePlugin,
-} from "./utils"
+import { npmUpload, urlUpload, githubUpload, fileUpload } from "./uploaders"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { validate } from "@budibase/backend-core/plugins"
 import { generatePluginID, getPluginParams } from "../../../db/utils"
@@ -70,20 +65,20 @@ export async function create(ctx: any) {
     switch (source) {
       case PluginSource.NPM:
         const { metadata: metadataNpm, directory: directoryNpm } =
-          await uploadedNpmPlugin(url, name)
+          await npmUpload(url, name)
         metadata = metadataNpm
         directory = directoryNpm
         break
       case PluginSource.GITHUB:
         const { metadata: metadataGithub, directory: directoryGithub } =
-          await uploadedGithubPlugin(ctx, url, name, githubToken)
+          await githubUpload(url, name, githubToken)
         metadata = metadataGithub
         directory = directoryGithub
         break
       case PluginSource.URL:
-        const headersObj = JSON.parse(headers || null) || {}
+        const headersObj = headers || {}
         const { metadata: metadataUrl, directory: directoryUrl } =
-          await uploadedUrlPlugin(url, name, headersObj)
+          await urlUpload(url, name, headersObj)
         metadata = metadataUrl
         directory = directoryUrl
         break
@@ -202,6 +197,6 @@ export async function processPlugin(plugin: FileType, source?: string) {
     throw new Error("Plugins not supported outside of self-host.")
   }
 
-  const { metadata, directory } = await uploadedFilePlugin(plugin)
+  const { metadata, directory } = await fileUpload(plugin)
   return await storePlugin(metadata, directory, source)
 }
