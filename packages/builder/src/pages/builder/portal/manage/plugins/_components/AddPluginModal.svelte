@@ -1,5 +1,12 @@
 <script>
-  import { ModalContent, Label, Input, Select, Dropzone } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Label,
+    Input,
+    Select,
+    Dropzone,
+    notifications,
+  } from "@budibase/bbui"
   import { plugins } from "stores/portal"
 
   const Sources = {
@@ -17,24 +24,29 @@
   }
   let file
   let source = Sources.URL
-  let typeValue = "Component"
   let dynamicValues = {}
 
   let validation
   $: validation = source === "File Upload" ? file : dynamicValues["URL"]
 
   async function save() {
-    if (source === Sources.FILE) {
-      await plugins.uploadPlugin(file)
-    } else {
-      const url = dynamicValues["URL"]
-      let auth =
-        source === Sources.GITHUB
-          ? dynamicValues["Github Token"]
-          : source === Sources.URL
-          ? dynamicValues["Headers"]
-          : undefined
-      await plugins.createPlugin(typeValue, source, url, auth)
+    try {
+      if (source === Sources.FILE) {
+        await plugins.uploadPlugin(file)
+      } else {
+        const url = dynamicValues["URL"]
+        let auth =
+          source === Sources.GITHUB
+            ? dynamicValues["Github Token"]
+            : source === Sources.URL
+            ? dynamicValues["Headers"]
+            : undefined
+        await plugins.createPlugin(source, url, auth)
+      }
+      notifications.success("Plugin added successfully.")
+    } catch (err) {
+      const msg = err?.message ? err.message : JSON.stringify(err)
+      notifications.error(`Failed to add plugin: ${msg}`)
     }
   }
 </script>
@@ -46,14 +58,6 @@
   size="M"
   title="Add new plugin"
 >
-  <div class="form-row">
-    <Label size="M">Type</Label>
-    <Select
-      bind:value={typeValue}
-      placeholder={null}
-      options={["Component", "Datasource"]}
-    />
-  </div>
   <div class="form-row">
     <Label size="M">Source</Label>
     <Select
@@ -67,7 +71,6 @@
     {#if option === "File Upload"}
       <div class="form-row">
         <Label size="M">{option}</Label>
-
         <Dropzone
           gallery={false}
           value={[file]}

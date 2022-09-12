@@ -36,9 +36,9 @@ export const buildPluginEndpoints = API => ({
    *
    * * @param pluginId the revision of the plugin to delete
    */
-  deletePlugin: async (pluginId, pluginRev) => {
+  deletePlugin: async pluginId => {
     return await API.delete({
-      url: `/api/plugin/${pluginId}/${pluginRev}`,
+      url: `/api/plugin/${pluginId}`,
     })
   },
 })

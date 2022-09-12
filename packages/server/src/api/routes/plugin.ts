@@ -9,10 +9,6 @@ router
   .post("/api/plugin/upload", authorized(BUILDER), controller.upload)
   .post("/api/plugin", authorized(BUILDER), controller.create)
   .get("/api/plugin", authorized(BUILDER), controller.fetch)
-  .delete(
-    "/api/plugin/:pluginId/:pluginRev",
-    authorized(BUILDER),
-    controller.destroy
-  )
+  .delete("/api/plugin/:pluginId", authorized(BUILDER), controller.destroy)
 
 export default router
