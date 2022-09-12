@@ -15,6 +15,7 @@ import {
   getAppId,
   getAppDB,
   getProdAppDB,
+  getDevAppDB,
 } from "@budibase/backend-core/context"
 import { quotas } from "@budibase/pro"
 import { events } from "@budibase/backend-core"
@@ -110,17 +111,29 @@ async function deployApp(deployment: any) {
       target: productionAppId,
     }
     replication = new Replication(config)
-
+    const devDb = getDevAppDB()
+    console.log("Compacting development DB")
+    await devDb.compact()
     console.log("Replication object created")
-    await replication.replicate()
+    await replication.replicate(replication.appReplicateOpts())
     console.log("replication complete.. replacing app meta doc")
+    // app metadata is excluded as it is likely to be in conflict
+    // replicate the app metadata document manually
     const db = getProdAppDB()
-    const appDoc = await db.get(DocumentType.APP_METADATA)
+    const appDoc = await devDb.get(DocumentType.APP_METADATA)
+    try {
+      const prodAppDoc = await db.get(DocumentType.APP_METADATA)
+      appDoc._rev = prodAppDoc._rev
+    } catch (err) {
+      delete appDoc._rev
+    }
 
+    // switch to production app ID
     deployment.appUrl = appDoc.url
-
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
+    // remove automation errors if they exist
+    delete appDoc.automationErrors
     await db.put(appDoc)
     await appCache.invalidateAppMetadata(productionAppId)
     console.log("New app doc written successfully.")

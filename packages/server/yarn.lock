@@ -1094,12 +1094,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.3.12-alpha.3":
-  version "1.3.12-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.3.12-alpha.3.tgz#baf7ea0590db9e49db08e4e05b7d374a2ed05f20"
-  integrity sha512-8xkaJX2kA2n7LKNXJ9SSyQnvOYRPDxiZ6BKDEPNoOa0WjYZ/htCnUJxgjdnSSzSojqfdDf8eqxa+pGXA87ZU6Q==
+"@budibase/backend-core@1.3.13":
+  version "1.3.13"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.3.13.tgz#62341d7eb2daba955069b4b54d1e7ef6ade62598"
+  integrity sha512-ib+ojvO8Yw5wCoHkE6Gc09D5EZiQL72g/KVEs0y2oRD92VGnv9VGpY3dA1A1UIRdi8wELDz20LrDaV/4lFbmfg==
   dependencies:
-    "@budibase/types" "1.3.12-alpha.3"
+    "@budibase/types" "^1.3.13"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -1179,13 +1179,13 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.3.12-alpha.3":
-  version "1.3.12-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.3.12-alpha.3.tgz#30dce4ba54aa7c19b60d6faf2852e3402c81ee50"
-  integrity sha512-qDddYE6XNbiNIpADUIhXWvgBjJMNxWhHdCpS7Qoci2tmoS4ofLlh5C8qKJuddg3RaLkWIQmII/p/ZnZ0uQ3E9A==
+"@budibase/pro@1.3.13":
+  version "1.3.13"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.3.13.tgz#2833898c04b041716f712ba95599da46d07e2d1d"
+  integrity sha512-l9AkPCCmOtX9htB7rT+cisgcihVXI4b5wsPzDwHKYfAj1rSRa/0FA+m6/V6D5FzwHAILY3//YOZmgPavL9gvMw==
   dependencies:
-    "@budibase/backend-core" "1.3.12-alpha.3"
-    "@budibase/types" "1.3.12-alpha.3"
+    "@budibase/backend-core" "1.3.13"
+    "@budibase/types" "1.3.13"
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
@@ -1208,10 +1208,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@1.3.12-alpha.3":
-  version "1.3.12-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.3.12-alpha.3.tgz#26c5f168281f5ead4a108af2918ce9810d92d239"
-  integrity sha512-dvs+KWlu+DdaVKAA6vU2qTZJmS4ACIllBSSjDeG0sGOBkIlGJSi5aC6zvkPXpaaZlbDQpDwao/9xNP+Ub8wj1g==
+"@budibase/types@1.3.13", "@budibase/types@^1.3.13":
+  version "1.3.13"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.3.13.tgz#d71986f4785311322636231589ca5e1d29e87985"
+  integrity sha512-iqBjB3wart+rjQ8q/QbZU5JEljixVzzDwZu3i9rFCWbHAUH+GVeuP4CehdLlDRhCjoecFw+UxA6SuhCwdLi+yQ==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -4515,7 +4515,7 @@ chmodr@1.2.0:
   resolved "https://registry.yarnpkg.com/chmodr/-/chmodr-1.2.0.tgz#720e96caa09b7f1cdbb01529b7d0ab6bc5e118b9"
   integrity sha512-Y5uI7Iq/Az6HgJEL6pdw7THVd7jbVOTPwsmcPOBjQL8e3N+pz872kzK5QxYGEy21iRys+iHWV0UZQXDFJo1hyA==
 
-chokidar@^3.5.2, chokidar@^3.5.3:
+chokidar@3.5.3, chokidar@^3.5.2:
   version "3.5.3"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.3.tgz#1cf37c8707b932bd1af1ae22c0432e2acd1903bd"
   integrity sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==
@@ -13463,7 +13463,7 @@ tar-stream@^2.1.4:
     inherits "^2.0.3"
     readable-stream "^3.1.1"
 
-tar@^6.1.11:
+tar@6.1.11, tar@^6.1.11:
   version "6.1.11"
   resolved "https://registry.yarnpkg.com/tar/-/tar-6.1.11.tgz#6760a38f003afa1b2ffd0ffe9e9abbd0eab3d621"
   integrity sha512-an/KZQzQUkZCkuoAA64hM92X0Urb6VpRhAFllDzz44U2mcD5scmT3zBc4VgVpkugF580+DQn8eAFSyoQt0tznA==
