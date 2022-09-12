@@ -2,49 +2,39 @@
   import { ModalContent, Label, Input, Select, Dropzone } from "@budibase/bbui"
   import { plugins } from "stores/portal"
 
+  const Sources = {
+    NPM: "NPM",
+    GITHUB: "Github",
+    URL: "URL",
+    FILE: "File Upload",
+  }
+
   let authOptions = {
-    URL: ["Headers", "URL"],
-    NPM: ["URL"],
-    Github: ["Github Token", "URL"],
-    "File Upload": ["File Upload"],
+    [Sources.NPM]: ["URL"],
+    [Sources.GITHUB]: ["Github Token", "URL"],
+    [Sources.URL]: ["Headers", "URL"],
+    [Sources.FILE]: ["File Upload"],
   }
   let file
-  let sourceValue = "URL"
+  let source = Sources.URL
   let typeValue = "Component"
   let dynamicValues = {}
 
   let validation
-  $: validation = sourceValue === "File Upload" ? file : dynamicValues["URL"]
+  $: validation = source === "File Upload" ? file : dynamicValues["URL"]
 
   async function save() {
-    const source = sourceValue.toLocaleLowerCase()
-    const url = dynamicValues["URL"]
-
-    switch (source) {
-      case "file upload":
-        if (file) {
-          await plugins.uploadPlugin(file, sourceValue)
-        }
-        break
-      case "github":
-        await plugins.createPlugin(
-          typeValue,
-          source,
-          url,
-          dynamicValues["Github Token"]
-        )
-        break
-      case "url":
-        await plugins.createPlugin(
-          typeValue,
-          source,
-          url,
-          dynamicValues["Headers"]
-        )
-        break
-      case "npm":
-        await plugins.createPlugin(typeValue, source, url)
-        break
+    if (source === Sources.FILE) {
+      await plugins.uploadPlugin(file)
+    } else {
+      const url = dynamicValues["URL"]
+      let auth =
+        source === Sources.GITHUB
+          ? dynamicValues["Github Token"]
+          : source === Sources.URL
+          ? dynamicValues["Headers"]
+          : undefined
+      await plugins.createPlugin(typeValue, source, url, auth)
     }
   }
 </script>
@@ -68,12 +58,12 @@
     <Label size="M">Source</Label>
     <Select
       placeholder={null}
-      bind:value={sourceValue}
-      options={["NPM", "Github", "URL", "File Upload"]}
+      bind:value={source}
+      options={Object.values(Sources)}
     />
   </div>
 
-  {#each authOptions[sourceValue] as option}
+  {#each authOptions[source] as option}
     {#if option === "File Upload"}
       <div class="form-row">
         <Label size="M">{option}</Label>

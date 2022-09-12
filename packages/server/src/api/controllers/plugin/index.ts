@@ -13,7 +13,7 @@ import {
   uploadDirectory,
   deleteFolder,
 } from "@budibase/backend-core/objectStore"
-import { PluginType, FileType } from "@budibase/types"
+import { PluginType, FileType, PluginSource } from "@budibase/types"
 import env from "../../../environment"
 
 export async function getPlugins(type?: PluginType) {
@@ -40,7 +40,7 @@ export async function upload(ctx: any) {
     let docs = []
     // can do single or multiple plugins
     for (let plugin of plugins) {
-      const doc = await processPlugin(plugin, ctx.request.body.source)
+      const doc = await processPlugin(plugin, PluginSource.FILE)
       docs.push(doc)
     }
     ctx.body = {
@@ -68,19 +68,19 @@ export async function create(ctx: any) {
     let name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
 
     switch (source) {
-      case "npm":
+      case PluginSource.NPM:
         const { metadata: metadataNpm, directory: directoryNpm } =
           await uploadedNpmPlugin(url, name)
         metadata = metadataNpm
         directory = directoryNpm
         break
-      case "github":
+      case PluginSource.GITHUB:
         const { metadata: metadataGithub, directory: directoryGithub } =
           await uploadedGithubPlugin(ctx, url, name, githubToken)
         metadata = metadataGithub
         directory = directoryGithub
         break
-      case "url":
+      case PluginSource.URL:
         const headersObj = JSON.parse(headers || null) || {}
         const { metadata: metadataUrl, directory: directoryUrl } =
           await uploadedUrlPlugin(url, name, headersObj)
