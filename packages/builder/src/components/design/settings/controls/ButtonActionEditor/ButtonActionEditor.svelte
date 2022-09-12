@@ -52,7 +52,7 @@
       )
 
       newBlock.inputs = {
-        fields: Object.keys(parameters.fields).reduce((fields, key) => {
+        fields: Object.keys(parameters.fields ?? {}).reduce((fields, key) => {
           fields[key] = "string"
           return fields
         }, {}),
@@ -66,6 +66,7 @@
         $automationStore.selectedAutomation.automation._id
       delete parameters.newAutomationName
     } catch (error) {
+      console.log("ERROR ", error)
       notifications.error("Error creating automation")
     }
   }
