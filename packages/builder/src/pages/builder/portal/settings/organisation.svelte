@@ -15,7 +15,6 @@
   import { API } from "api"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
-  import { onMount } from "svelte"
 
   // Only admins allowed here
   $: {
@@ -34,12 +33,11 @@
   })
   let loading = false
 
-  async function uploadLogo() {
+  async function uploadLogo(file) {
     try {
       let data = new FormData()
-      data.append("file", $values.logo)
-      await API.uploadPlugin(data)
-      notifications.success("Plugin uploaded successfully")
+      data.append("file", file)
+      await API.uploadLogo(data)
     } catch (error) {
       notifications.error("Error uploading logo")
     }
@@ -73,11 +71,6 @@
     }
     loading = false
   }
-
-  onMount(async () => {
-    const plugins = await API.getPlugins()
-    console.log(plugins)
-  })
 </script>
 
 {#if $auth.isAdmin}
@@ -113,7 +106,6 @@
               }
             }}
           />
-          <button on:click={uploadLogo}>Upload</button>
         </div>
       </div>
     </div>

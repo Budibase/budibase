@@ -426,36 +426,34 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
 /**
  * Find for a file recursively from start path applying filter, return first match
  */
-const findFileRec = (startPath, filter) => {
+exports.findFileRec = (startPath, filter) => {
   if (!fs.existsSync(startPath)) {
     return
   }
 
-  var files = fs.readdirSync(startPath)
+  const files = fs.readdirSync(startPath)
   for (let i = 0, len = files.length; i < len; i++) {
     const filename = join(startPath, files[i])
     const stat = fs.lstatSync(filename)
 
     if (stat.isDirectory()) {
-      return findFileRec(filename, filter)
+      return exports.findFileRec(filename, filter)
     } else if (filename.endsWith(filter)) {
       return filename
     }
   }
 }
-exports.findFileRec = findFileRec
 
 /**
  * Remove a folder which is not empty from the file system
  */
-const deleteFolderFileSystem = path => {
+exports.deleteFolderFileSystem = path => {
   if (!fs.existsSync(path)) {
     return
   }
 
   fs.rmSync(path, { recursive: true, force: true })
 }
-exports.deleteFolderFileSystem = deleteFolderFileSystem
 
 /**
  * Full function definition for below can be found in the utilities.
