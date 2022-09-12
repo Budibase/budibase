@@ -21,7 +21,7 @@
       : plugin.schema.schema.icon || "Beaker"
 </script>
 
-<div class="row">
+<div class="row" on:click={() => detailsModal.show()}>
   <div class="title">
     <div class="name">
       <div>
@@ -42,9 +42,8 @@
   <div class="desktop">
     {plugin.schema.type.charAt(0).toUpperCase() + plugin.schema.type.slice(1)}
   </div>
-
   <div>
-    <Icon on:click={detailsModal.show()} hoverable name="ChevronRight" />
+    <Icon name="ChevronRight" />
   </div>
 </div>
 
@@ -98,13 +97,19 @@
 <style>
   .row {
     display: grid;
-    grid-template-columns: 35% auto auto auto;
+    grid-template-columns: 1fr 110px 140px 20px;
     align-items: center;
     background: var(--background);
-    height: 50px;
-    padding-left: 20px;
-    padding-right: 20px;
-    justify-content: space-between;
+    border-radius: 4px;
+    padding: 0 16px;
+    height: 56px;
+    background: var(--spectrum-global-color-gray-50);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    transition: background 130ms ease-out;
+  }
+  .row:hover {
+    cursor: pointer;
+    background: var(--spectrum-global-color-gray-75);
   }
 
   .name {
