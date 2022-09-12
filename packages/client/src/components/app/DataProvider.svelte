@@ -1,7 +1,6 @@
 <script>
   import { getContext } from "svelte"
   import { ProgressCircle, Pagination } from "@budibase/bbui"
-  import Placeholder from "./Placeholder.svelte"
   import { fetchData, LuceneUtils } from "@budibase/frontend-core"
 
   export let dataSource
