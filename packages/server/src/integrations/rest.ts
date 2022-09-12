@@ -233,6 +233,9 @@ module RestModule {
       pagination: PaginationConfig | null,
       paginationValues: PaginationValues | null
     ) {
+      // https://github.com/nodejs/node/issues/43798
+      input.extraHttpOptions = { insecureHTTPParser: true }
+
       if (!input.headers) {
         input.headers = {}
       }
