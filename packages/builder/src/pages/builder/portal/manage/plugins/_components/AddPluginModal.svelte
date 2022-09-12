@@ -5,40 +5,56 @@
     Input,
     Select,
     Dropzone,
+    Body,
     notifications,
   } from "@budibase/bbui"
+  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { plugins } from "stores/portal"
+  import { PluginSource } from "constants"
 
-  const Sources = {
-    NPM: "NPM",
-    GITHUB: "Github",
-    URL: "URL",
-    FILE: "File Upload",
+  function opt(name, optional) {
+    if (optional) {
+      return { name, optional }
+    }
+    return { name }
   }
 
   let authOptions = {
-    [Sources.NPM]: ["URL"],
-    [Sources.GITHUB]: ["Github Token", "URL"],
-    [Sources.URL]: ["Headers", "URL"],
-    [Sources.FILE]: ["File Upload"],
+    [PluginSource.URL]: [opt("URL"), opt("Headers", true)],
+    [PluginSource.NPM]: [opt("URL")],
+    [PluginSource.GITHUB]: [opt("URL"), opt("Github Token", true)],
+    [PluginSource.FILE]: [opt("File Upload")],
   }
   let file
-  let source = Sources.URL
+  let source = PluginSource.URL
   let dynamicValues = {}
 
   let validation
   $: validation = source === "File Upload" ? file : dynamicValues["URL"]
 
+  function infoMessage(optionName) {
+    switch (optionName) {
+      case PluginSource.URL:
+        return "Please specify a URL which directs to a built plugin TAR archive, you can provide headers if authentication is required."
+      case PluginSource.NPM:
+        return "Please specify the URL to a public NPM package which contains the built version of the plugin you wish to install."
+      case PluginSource.GITHUB:
+        return "Please specify the URL to a Github repository which contains built plugin releases. If this is a private repo you can provide a token to access it."
+      case PluginSource.FILE:
+        return "Please provide a built plugin TAR archive, you can build a plugin locally using the Budibase CLI."
+    }
+  }
+
   async function save() {
     try {
-      if (source === Sources.FILE) {
+      if (source === PluginSource.FILE) {
         await plugins.uploadPlugin(file)
       } else {
         const url = dynamicValues["URL"]
         let auth =
-          source === Sources.GITHUB
+          source === PluginSource.GITHUB
             ? dynamicValues["Github Token"]
-            : source === Sources.URL
+            : source === PluginSource.URL
             ? dynamicValues["Headers"]
             : undefined
         await plugins.createPlugin(source, url, auth)
@@ -63,14 +79,14 @@
     <Select
       placeholder={null}
       bind:value={source}
-      options={Object.values(Sources)}
+      options={Object.values(PluginSource)}
     />
   </div>
-
+  <Body size="S">{infoMessage(source)}</Body>
   {#each authOptions[source] as option}
-    {#if option === "File Upload"}
+    {#if option.name === PluginSource.FILE}
       <div class="form-row">
-        <Label size="M">{option}</Label>
+        <Label size="M">{option.name}</Label>
         <Dropzone
           gallery={false}
           value={[file]}
@@ -85,8 +101,17 @@
       </div>
     {:else}
       <div class="form-row">
-        <Label size="M">{option}</Label>
-        <Input bind:value={dynamicValues[option]} />
+        <div>
+          <Label size="M">{option.name}</Label>
+          {#if option.optional}
+            <Label size="S" muted><i>Optional</i></Label>
+          {/if}
+        </div>
+        {#if option.name === "Headers"}
+          <KeyValueBuilder bind:object={dynamicValues[option.name]} />
+        {:else}
+          <Input bind:value={dynamicValues[option.name]} />
+        {/if}
       </div>
     {/if}
   {/each}

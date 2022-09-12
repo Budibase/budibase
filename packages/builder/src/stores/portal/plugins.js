@@ -1,5 +1,6 @@
 import { writable } from "svelte/store"
 import { API } from "api"
+import { PluginSource } from "constants"
 
 export function createPluginsStore() {
   const { subscribe, set, update } = writable([])
@@ -24,13 +25,10 @@ export function createPluginsStore() {
     }
 
     switch (source) {
-      case "url":
+      case PluginSource.URL:
         pluginData.headers = auth
         break
-      case "npm":
-        pluginData.npmToken = auth
-        break
-      case "github":
+      case PluginSource.GITHUB:
         pluginData.githubToken = auth
         break
     }
