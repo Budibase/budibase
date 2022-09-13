@@ -1,7 +1,7 @@
-const { DEFAULT_TENANT_ID } = require("../constants")
-const { StaticDatabases, SEPARATOR } = require("../db/constants")
+import { DEFAULT_TENANT_ID } from "../constants"
+import { StaticDatabases, SEPARATOR } from "../db/constants"
 
-exports.baseGlobalDBName = tenantId => {
+export const baseGlobalDBName = (tenantId: string | undefined | null) => {
   let dbName
   if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
     dbName = StaticDatabases.GLOBAL.name

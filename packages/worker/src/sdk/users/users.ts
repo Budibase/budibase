@@ -164,7 +164,7 @@ const buildUser = async (
 const validateUniqueUser = async (email: string, tenantId: string) => {
   // check budibase users in other tenants
   if (env.MULTI_TENANCY) {
-    const tenantUser = await tenancy.getTenantUser(email)
+    const tenantUser = (await tenancy.getTenantUser(email)) as User | undefined
     if (tenantUser != null && tenantUser.tenantId !== tenantId) {
       throw `Unavailable`
     }
@@ -279,33 +279,60 @@ export const addTenant = async (
 
 const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
   const lcEmails = emails.map(email => email.toLowerCase())
-  return dbUtils.queryGlobalView(ViewName.USER_BY_EMAIL, {
+  const params = {
     keys: lcEmails,
     include_docs: true,
+  }
+
+  const opts = {
     arrayResponse: true,
-  })
+  }
+
+  return dbUtils.queryGlobalView(
+    ViewName.USER_BY_EMAIL,
+    params,
+    undefined,
+    opts
+  ) as Promise<User[]>
 }
 
 const getExistingPlatformUsers = async (
   emails: string[]
 ): Promise<PlatformUserByEmail[]> => {
   const lcEmails = emails.map(email => email.toLowerCase())
-  return dbUtils.queryPlatformView(ViewName.PLATFORM_USERS_LOWERCASE, {
+  const params = {
     keys: lcEmails,
     include_docs: true,
+  }
+
+  const opts = {
     arrayResponse: true,
-  })
+  }
+  return dbUtils.queryPlatformView(
+    ViewName.PLATFORM_USERS_LOWERCASE,
+    params,
+    opts
+  ) as Promise<PlatformUserByEmail[]>
 }
 
 const getExistingAccounts = async (
   emails: string[]
 ): Promise<AccountMetadata[]> => {
   const lcEmails = emails.map(email => email.toLowerCase())
-  return dbUtils.queryPlatformView(ViewName.ACCOUNT_BY_EMAIL, {
+  const params = {
     keys: lcEmails,
     include_docs: true,
+  }
+
+  const opts = {
     arrayResponse: true,
-  })
+  }
+
+  return dbUtils.queryPlatformView(
+    ViewName.ACCOUNT_BY_EMAIL,
+    params,
+    opts
+  ) as Promise<AccountMetadata[]>
 }
 
 /**
