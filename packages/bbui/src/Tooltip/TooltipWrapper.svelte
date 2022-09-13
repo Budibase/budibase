@@ -54,7 +54,6 @@
     transform: scale(0.75);
   }
   .icon-small {
-    margin-top: -2px;
-    margin-bottom: -5px;
+    margin-bottom: -2px;
   }
 </style>

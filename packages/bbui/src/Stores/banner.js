@@ -1,7 +1,9 @@
 import { writable } from "svelte/store"
 
 export function createBannerStore() {
-  const DEFAULT_CONFIG = {}
+  const DEFAULT_CONFIG = {
+    messages: [],
+  }
 
   const banner = writable(DEFAULT_CONFIG)
 
@@ -28,9 +30,23 @@ export function createBannerStore() {
     await show(config)
   }
 
+  const queue = async entries => {
+    banner.update(store => {
+      const sorted = [...store.messages, ...entries].sort(
+        (a, b) => a.priority > b.priority
+      )
+      return {
+        ...store,
+        messages: sorted,
+      }
+    })
+  }
+
   return {
     subscribe: banner.subscribe,
     showStatus,
+    show,
+    queue,
   }
 }
 

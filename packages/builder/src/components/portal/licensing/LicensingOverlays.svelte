@@ -1,0 +1,117 @@
+<script>
+  import { licensing, auth } from "stores/portal"
+  import { temporalStore } from "builderStore"
+  import { onMount } from "svelte"
+  import DayPassWarningModal from "./DayPassWarningModal.svelte"
+  import PaymentFailedModal from "./PaymentFailedModal.svelte"
+  import AccountDowngradedModal from "./AccountDowngradedModal.svelte"
+  import { ExpiringKeys } from "./constants"
+  import { getBanners } from "./banners"
+  import { banner } from "@budibase/bbui"
+
+  const oneDayInSeconds = 86400
+
+  let queuedBanners = []
+  let queuedModals = []
+  let dayPassModal
+  let paymentFailedModal
+  let accountDowngradeModal
+  let userLoaded = false
+  let loaded = false
+  let licensingLoaded = false
+  let currentModalCfg = null
+
+  const processModals = () => {
+    const defaultCacheFn = key => {
+      temporalStore.actions.setExpiring(key, {}, oneDayInSeconds)
+    }
+
+    const dismissableModals = [
+      {
+        key: ExpiringKeys.LICENSING_DAYPASS_WARNING_MODAL,
+        criteria: () => {
+          return $licensing?.usageMetrics?.dayPasses >= 90
+        },
+        action: () => {
+          dayPassModal.show()
+        },
+        cache: () => {
+          defaultCacheFn(ExpiringKeys.LICENSING_DAYPASS_WARNING_MODAL)
+        },
+      },
+      {
+        key: ExpiringKeys.LICENSING_PAYMENT_FAILED,
+        criteria: () => {
+          return $licensing.accountPastDue
+        },
+        action: () => {
+          paymentFailedModal.show()
+        },
+        cache: () => {
+          defaultCacheFn(ExpiringKeys.LICENSING_PAYMENT_FAILED)
+        },
+      },
+      {
+        key: ExpiringKeys.LICENSING_ACCOUNT_DOWNGRADED_MODAL,
+        criteria: () => {
+          return $licensing?.accountDowngraded
+        },
+        action: () => {
+          accountDowngradeModal.show()
+        },
+        cache: () => {
+          defaultCacheFn(ExpiringKeys.LICENSING_ACCOUNT_DOWNGRADED_MODAL)
+        },
+      },
+    ]
+    return dismissableModals.filter(modal => {
+      return !temporalStore.actions.getExpiring(modal.key) && modal.criteria()
+    })
+  }
+
+  $: if (userLoaded && licensingLoaded && loaded) {
+    queuedModals = processModals()
+    queuedBanners = getBanners()
+    showNext()
+    banner.queue(queuedBanners)
+  }
+
+  const showNext = () => {
+    if (currentModalCfg) {
+      currentModalCfg.cache()
+    }
+    if (queuedModals.length) {
+      currentModalCfg = queuedModals.shift()
+      currentModalCfg.action()
+    } else {
+      currentModalCfg = null
+    }
+  }
+
+  onMount(async () => {
+    auth.subscribe(state => {
+      if (state.user && !userLoaded) {
+        userLoaded = true
+      }
+    })
+
+    licensing.subscribe(state => {
+      if (state.usageMetrics && !licensingLoaded) {
+        licensingLoaded = true
+      }
+    })
+
+    temporalStore.subscribe(state => {
+      console.log("Stored temporal ", state)
+    })
+
+    loaded = true
+  })
+</script>
+
+<DayPassWarningModal bind:this={dayPassModal} onDismiss={showNext} />
+<PaymentFailedModal bind:this={paymentFailedModal} onDismiss={showNext} />
+<AccountDowngradedModal
+  bind:this={accountDowngradeModal}
+  onDismiss={showNext}
+/>
