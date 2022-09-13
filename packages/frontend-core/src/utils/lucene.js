@@ -81,6 +81,19 @@ const cleanupQuery = query => {
 }
 
 /**
+ * Removes a numeric prefix on field names designed to give fields uniqueness
+ */
+const removeKeyNumbering = key => {
+  if (typeof key === "string" && key.match(/\d[0-9]*:/g) != null) {
+    const parts = key.split(":")
+    parts.shift()
+    return parts.join(":")
+  } else {
+    return key
+  }
+}
+
+/**
  * Builds a lucene JSON query from the filter structure generated in the builder
  * @param filter the builder filter structure
  */
@@ -194,7 +207,7 @@ export const runLuceneQuery = (docs, query) => {
     const filters = Object.entries(query[type] || {})
     for (let i = 0; i < filters.length; i++) {
       const [key, testValue] = filters[i]
-      const docValue = Helpers.deepGet(doc, key)
+      const docValue = Helpers.deepGet(doc, removeKeyNumbering(key))
       if (failFn(docValue, testValue)) {
         return false
       }

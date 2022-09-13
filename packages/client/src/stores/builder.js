@@ -19,6 +19,7 @@ const createBuilderStore = () => {
     isDragging: false,
     navigation: null,
     hiddenComponentIds: [],
+    usedPlugins: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -86,6 +87,20 @@ const createBuilderStore = () => {
     },
     ejectBlock: (id, definition) => {
       dispatchEvent("eject-block", { id, definition })
+    },
+    updateUsedPlugin: (name, hash) => {
+      // Check if we used this plugin
+      const used = get(store)?.usedPlugins?.find(x => x.name === name)
+      if (used) {
+        store.update(state => {
+          state.usedPlugins = state.usedPlugins.filter(x => x.name !== name)
+          state.usedPlugins.push({
+            ...used,
+            hash,
+          })
+          return state
+        })
+      }
     },
   }
   return {

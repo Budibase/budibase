@@ -1,10 +1,12 @@
-const Airtable = require("airtable")
-const AirtableIntegration = require("../airtable")
+import { default as AirtableIntegration } from "../airtable"
 jest.mock("airtable")
 
 class TestConfiguration {
-  constructor(config = {}) {
-    this.integration = new AirtableIntegration.integration(config) 
+  integration: any
+  client: any
+
+  constructor(config: any = {}) {
+    this.integration = new AirtableIntegration.integration(config)
     this.client = {
       create: jest.fn(),
       select: jest.fn(() => ({
@@ -13,12 +15,12 @@ class TestConfiguration {
       update: jest.fn(),
       destroy: jest.fn(),
     }
-    this.integration.client = () => this.client 
+    this.integration.client = () => this.client
   }
 }
 
 describe("Airtable Integration", () => {
-  let config 
+  let config: any
 
   beforeEach(() => {
     config = new TestConfiguration()
@@ -27,22 +29,23 @@ describe("Airtable Integration", () => {
   it("calls the create method with the correct params", async () => {
     const response = await config.integration.create({
       table: "test",
-      json: {}
+      json: {},
     })
     expect(config.client.create).toHaveBeenCalledWith([
       {
-        fields: {}
-      }
+        fields: {},
+      },
     ])
   })
 
   it("calls the read method with the correct params", async () => {
     const response = await config.integration.read({
       table: "test",
-      view: "Grid view"
+      view: "Grid view",
     })
     expect(config.client.select).toHaveBeenCalledWith({
-      maxRecords: 10, view: "Grid view"
+      maxRecords: 10,
+      view: "Grid view",
     })
   })
 
@@ -51,21 +54,21 @@ describe("Airtable Integration", () => {
       table: "table",
       id: "123",
       json: {
-        name: "test"
-      }
+        name: "test",
+      },
     })
     expect(config.client.update).toHaveBeenCalledWith([
       {
         id: "123",
-        fields: { name: "test" }
-      }
+        fields: { name: "test" },
+      },
     ])
   })
 
   it("calls the delete method with the correct params", async () => {
-    const ids = [1,2,3,4]
+    const ids = [1, 2, 3, 4]
     const response = await config.integration.delete({
-      ids
+      ids,
     })
     expect(config.client.destroy).toHaveBeenCalledWith(ids)
   })
