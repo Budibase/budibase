@@ -22,6 +22,24 @@ function checkInPlugin() {
   }
 }
 
+async function askAboutTopLevel() {
+  const files = fs.readdirSync(process.cwd())
+  // we are in an empty git repo, don't ask
+  if (files.length === 1 && files[0] === ".git") {
+    return false
+  } else {
+    console.log(
+      info(`By default the plugin will be created in the directory "${name}"`)
+    )
+    console.log(
+      info(
+        "if you are already in an empty directory, such as a new Git repo, you can disable this functionality."
+      )
+    )
+    return questions.confirmation("Create top level directory?")
+  }
+}
+
 async function init(opts) {
   const type = opts["init"] || opts
   if (!type || !PLUGIN_TYPE_ARR.includes(type)) {
@@ -45,15 +63,7 @@ async function init(opts) {
     `An amazing Budibase ${type}!`
   )
   const version = await questions.string("Version", "1.0.0")
-  console.log(
-    info(`By default the plugin will be created in the directory "${name}"`)
-  )
-  console.log(
-    info(
-      "if you are already in an empty directory, such as a new Git repo, you can disable this functionality."
-    )
-  )
-  const topLevel = await questions.confirmation("Create top level directory?")
+  const topLevel = await askAboutTopLevel()
   // get the skeleton
   console.log(info("Retrieving project..."))
   await getSkeleton(type, name)
