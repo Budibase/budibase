@@ -108,7 +108,7 @@ export const buildLuceneQuery = filter => {
         query.allOr = true
         return
       }
-      if (type === "datetime") {
+      if (type === "datetime" && !isHbs) {
         // Ensure date value is a valid date and parse into correct format
         if (!value) {
           return
@@ -218,6 +218,7 @@ export const runLuceneQuery = (docs, query) => {
 
   // Process a range match
   const rangeMatch = match("range", (docValue, testValue) => {
+    console.log("test")
     return (
       docValue == null ||
       docValue === "" ||
