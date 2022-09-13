@@ -1,12 +1,7 @@
-const {
-  DocumentType,
-  ViewName,
-  DeprecatedViews,
-  SEPARATOR,
-} = require("./utils")
-const { getGlobalDB } = require("../tenancy")
-const { StaticDatabases } = require("./constants")
-const { doWithDB } = require("./")
+import { DocumentType, ViewName, DeprecatedViews, SEPARATOR } from "./utils"
+import { getGlobalDB } from "../tenancy"
+import { StaticDatabases } from "./constants"
+import { doWithDB } from "./"
 
 const DESIGN_DB = "_design/database"
 
@@ -19,12 +14,18 @@ function DesignDoc() {
   }
 }
 
-async function removeDeprecated(db, viewName) {
+interface DesignDocument {
+  views: any
+}
+
+async function removeDeprecated(db: PouchDB.Database, viewName: ViewName) {
+  // @ts-ignore
   if (!DeprecatedViews[viewName]) {
     return
   }
   try {
-    const designDoc = await db.get(DESIGN_DB)
+    const designDoc = await db.get<DesignDocument>(DESIGN_DB)
+    // @ts-ignore
     for (let deprecatedNames of DeprecatedViews[viewName]) {
       delete designDoc.views[deprecatedNames]
     }
@@ -34,7 +35,7 @@ async function removeDeprecated(db, viewName) {
   }
 }
 
-exports.createNewUserEmailView = async () => {
+export const createNewUserEmailView = async () => {
   const db = getGlobalDB()
   let designDoc
   try {
@@ -58,36 +59,39 @@ exports.createNewUserEmailView = async () => {
   await db.put(designDoc)
 }
 
-exports.createAccountEmailView = async () => {
-  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async db => {
-    let designDoc
-    try {
-      designDoc = await db.get(DESIGN_DB)
-    } catch (err) {
-      // no design doc, make one
-      designDoc = DesignDoc()
-    }
-    const view = {
-      // if using variables in a map function need to inject them before use
-      map: `function(doc) {
+export const createAccountEmailView = async () => {
+  await doWithDB(
+    StaticDatabases.PLATFORM_INFO.name,
+    async (db: PouchDB.Database) => {
+      let designDoc
+      try {
+        designDoc = await db.get<DesignDocument>(DESIGN_DB)
+      } catch (err) {
+        // no design doc, make one
+        designDoc = DesignDoc()
+      }
+      const view = {
+        // if using variables in a map function need to inject them before use
+        map: `function(doc) {
       if (doc._id.startsWith("${DocumentType.ACCOUNT_METADATA}${SEPARATOR}")) {
         emit(doc.email.toLowerCase(), doc._id)
       }
     }`,
+      }
+      designDoc.views = {
+        ...designDoc.views,
+        [ViewName.ACCOUNT_BY_EMAIL]: view,
+      }
+      await db.put(designDoc)
     }
-    designDoc.views = {
-      ...designDoc.views,
-      [ViewName.ACCOUNT_BY_EMAIL]: view,
-    }
-    await db.put(designDoc)
-  })
+  )
 }
 
-exports.createUserAppView = async () => {
-  const db = getGlobalDB()
+export const createUserAppView = async () => {
+  const db = getGlobalDB() as PouchDB.Database
   let designDoc
   try {
-    designDoc = await db.get("_design/database")
+    designDoc = await db.get<DesignDocument>("_design/database")
   } catch (err) {
     // no design doc, make one
     designDoc = DesignDoc()
@@ -110,7 +114,7 @@ exports.createUserAppView = async () => {
   await db.put(designDoc)
 }
 
-exports.createApiKeyView = async () => {
+export const createApiKeyView = async () => {
   const db = getGlobalDB()
   let designDoc
   try {
@@ -132,7 +136,7 @@ exports.createApiKeyView = async () => {
   await db.put(designDoc)
 }
 
-exports.createUserBuildersView = async () => {
+export const createUserBuildersView = async () => {
   const db = getGlobalDB()
   let designDoc
   try {
@@ -155,43 +159,58 @@ exports.createUserBuildersView = async () => {
   await db.put(designDoc)
 }
 
-exports.createPlatformUserView = async () => {
-  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async db => {
-    let designDoc
-    try {
-      designDoc = await db.get(DESIGN_DB)
-    } catch (err) {
-      // no design doc, make one
-      designDoc = DesignDoc()
-    }
-    const view = {
-      // if using variables in a map function need to inject them before use
-      map: `function(doc) {
+export const createPlatformUserView = async () => {
+  await doWithDB(
+    StaticDatabases.PLATFORM_INFO.name,
+    async (db: PouchDB.Database) => {
+      let designDoc
+      try {
+        designDoc = await db.get<DesignDocument>(DESIGN_DB)
+      } catch (err) {
+        // no design doc, make one
+        designDoc = DesignDoc()
+      }
+      const view = {
+        // if using variables in a map function need to inject them before use
+        map: `function(doc) {
         if (doc.tenantId) {
           emit(doc._id.toLowerCase(), doc._id)
         }
       }`,
+      }
+      designDoc.views = {
+        ...designDoc.views,
+        [ViewName.PLATFORM_USERS_LOWERCASE]: view,
+      }
+      await db.put(designDoc)
     }
-    designDoc.views = {
-      ...designDoc.views,
-      [ViewName.PLATFORM_USERS_LOWERCASE]: view,
-    }
-    await db.put(designDoc)
-  })
+  )
 }
 
-exports.queryView = async (viewName, params, db, CreateFuncByName) => {
+export interface QueryViewOptions {
+  arrayResponse?: boolean
+}
+
+export const queryView = async <T>(
+  viewName: ViewName,
+  params: PouchDB.Query.Options<T, T>,
+  db: PouchDB.Database,
+  CreateFuncByName: any,
+  opts?: QueryViewOptions
+): Promise<T[] | T | undefined> => {
   try {
-    let response = (await db.query(`database/${viewName}`, params)).rows
-    response = response.map(resp =>
+    let response = await db.query<T, T>(`database/${viewName}`, params)
+    const rows = response.rows
+    const docs = rows.map((resp: any) =>
       params.include_docs ? resp.doc : resp.value
     )
-    if (params.arrayResponse) {
-      return response
+
+    if (opts?.arrayResponse) {
+      return docs
     } else {
-      return response.length <= 1 ? response[0] : response
+      return docs.length <= 1 ? docs[0] : docs
     }
-  } catch (err) {
+  } catch (err: any) {
     if (err != null && err.name === "not_found") {
       const createFunc = CreateFuncByName[viewName]
       await removeDeprecated(db, viewName)
@@ -203,18 +222,30 @@ exports.queryView = async (viewName, params, db, CreateFuncByName) => {
   }
 }
 
-exports.queryPlatformView = async (viewName, params) => {
+export const queryPlatformView = async <T>(
+  viewName: ViewName,
+  params: PouchDB.Query.Options<T, T>,
+  opts?: QueryViewOptions
+): Promise<T[] | T | undefined> => {
   const CreateFuncByName = {
     [ViewName.ACCOUNT_BY_EMAIL]: exports.createAccountEmailView,
     [ViewName.PLATFORM_USERS_LOWERCASE]: exports.createPlatformUserView,
   }
 
-  return doWithDB(StaticDatabases.PLATFORM_INFO.name, async db => {
-    return exports.queryView(viewName, params, db, CreateFuncByName)
-  })
+  return doWithDB(
+    StaticDatabases.PLATFORM_INFO.name,
+    async (db: PouchDB.Database) => {
+      return exports.queryView(viewName, params, db, CreateFuncByName, opts)
+    }
+  )
 }
 
-exports.queryGlobalView = async (viewName, params, db = null) => {
+export const queryGlobalView = async <T>(
+  viewName: ViewName,
+  params: PouchDB.Query.Options<T, T>,
+  db?: PouchDB.Database,
+  opts?: QueryViewOptions
+): Promise<T[] | T | undefined> => {
   const CreateFuncByName = {
     [ViewName.USER_BY_EMAIL]: exports.createNewUserEmailView,
     [ViewName.BY_API_KEY]: exports.createApiKeyView,
