@@ -1,5 +1,5 @@
 import { DocumentType, ViewName, DeprecatedViews, SEPARATOR } from "./utils"
-import { getGlobalDB } from "../tenancy"
+import { getGlobalDB } from "../context"
 import { StaticDatabases } from "./constants"
 import { doWithDB } from "./"
 
@@ -256,5 +256,5 @@ export const queryGlobalView = async <T>(
   if (!db) {
     db = getGlobalDB() as PouchDB.Database
   }
-  return queryView(viewName, params, db, CreateFuncByName)
+  return queryView(viewName, params, db, CreateFuncByName, opts)
 }

@@ -1,7 +1,7 @@
 import { doWithDB } from "../db"
 import { queryPlatformView } from "../db/views"
 import { StaticDatabases, ViewName } from "../db/constants"
-import { baseGlobalDBName } from "./utils"
+import { getGlobalDBName } from "./utils"
 import {
   getTenantId,
   DEFAULT_TENANT_ID,
@@ -86,15 +86,6 @@ export const tryAddTenant = async (
     }
     await Promise.all(promises)
   })
-}
-
-export const getGlobalDBName = (tenantId?: string) => {
-  // tenant ID can be set externally, for example user API where
-  // new tenants are being created, this may be the case
-  if (!tenantId) {
-    tenantId = getTenantId()
-  }
-  return baseGlobalDBName(tenantId)
 }
 
 export const doWithGlobalDB = (tenantId: string, cb: any) => {
