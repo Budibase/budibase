@@ -415,7 +415,7 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
     const content = await response.text()
     fs.writeFileSync(filename, content)
     fs.writeFileSync(metadataName, hash)
-    require(filename)
+    return require(filename)
   } else {
     throw new Error(
       `Unable to retrieve plugin - reason: ${await response.text()}`
