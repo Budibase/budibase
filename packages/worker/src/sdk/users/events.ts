@@ -83,7 +83,6 @@ export const handleSaveEvents = async (
     }
   } else {
     await events.user.created(user)
-    await pro.createAccountUser(user)
   }
 
   if (isAddingBuilder(user, existingUser)) {

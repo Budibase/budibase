@@ -12,9 +12,8 @@ jest.mock("node-fetch", () =>
     text: jest.fn(),
   }))
 )
-const fetch = require("node-fetch")
-const RestIntegration = require("../rest")
-const { AuthType } = require("../rest")
+import fetch from "node-fetch"
+import { default as RestIntegration } from "../rest"
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
 
@@ -24,14 +23,16 @@ const HEADERS = {
 }
 
 class TestConfiguration {
-  constructor(config = {}) {
+  integration: any
+
+  constructor(config: any = {}) {
     this.integration = new RestIntegration.integration(config)
   }
 }
 
 describe("REST Integration", () => {
   const BASE_URL = "https://myapi.com"
-  let config
+  let config: any
 
   beforeEach(() => {
     config = new TestConfiguration({
@@ -170,22 +171,25 @@ describe("REST Integration", () => {
     })
 
     it("should allow a valid json string and parse the contents to xml", () => {
-      const output = config.integration.addBody("xml", JSON.stringify(input), {})
+      const output = config.integration.addBody(
+        "xml",
+        JSON.stringify(input),
+        {}
+      )
       expect(output.body.includes("<a>1</a>")).toEqual(true)
       expect(output.body.includes("<b>2</b>")).toEqual(true)
       expect(output.headers["Content-Type"]).toEqual("application/xml")
     })
-
   })
 
   describe("response", () => {
-    function buildInput(json, text, header) {
+    function buildInput(json: any, text: any, header: any) {
       return {
         status: 200,
         json: json ? async () => json : undefined,
         text: text ? async () => text : undefined,
         headers: {
-          get: key => (key === "content-length" ? 100 : header),
+          get: (key: any) => (key === "content-length" ? 100 : header),
           raw: () => ({ "content-type": header }),
         },
       }
@@ -224,7 +228,7 @@ describe("REST Integration", () => {
     const basicAuth = {
       _id: "c59c14bd1898a43baa08da68959b24686",
       name: "basic-1",
-      type: AuthType.BASIC,
+      type: RestIntegration.AuthType.BASIC,
       config: {
         username: "user",
         password: "password",
@@ -234,7 +238,7 @@ describe("REST Integration", () => {
     const bearerAuth = {
       _id: "0d91d732f34e4befabeff50b392a8ff3",
       name: "bearer-1",
-      type: AuthType.BEARER,
+      type: RestIntegration.AuthType.BEARER,
       config: {
         token: "mytoken",
       },
@@ -360,6 +364,7 @@ describe("REST Integration", () => {
         headers: {},
         method: "POST",
       })
+      // @ts-ignore
       const sentData = JSON.stringify(fetch.mock.calls[0][1].body)
       expect(sentData).toContain(pageParam)
       expect(sentData).toContain(sizeParam)
@@ -390,6 +395,7 @@ describe("REST Integration", () => {
         headers: {},
         method: "POST",
       })
+      // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
       expect(sentData.has(pageParam))
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())
@@ -489,6 +495,7 @@ describe("REST Integration", () => {
         headers: {},
         method: "POST",
       })
+      // @ts-ignore
       const sentData = JSON.stringify(fetch.mock.calls[0][1].body)
       expect(sentData).toContain(pageParam)
       expect(sentData).toContain(sizeParam)
@@ -521,6 +528,7 @@ describe("REST Integration", () => {
         headers: {},
         method: "POST",
       })
+      // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
       expect(sentData.has(pageParam))
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())

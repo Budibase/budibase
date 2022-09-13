@@ -10,6 +10,7 @@ import { getGlobalDB, doInTenant } from "../tenancy"
 import { decrypt } from "../security/encryption"
 const identity = require("../context/identity")
 const env = require("../environment")
+import { User } from "@budibase/types"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD || 60 * 1000
 
@@ -67,7 +68,11 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
  */
 export = (
   noAuthPatterns = [],
-  opts: { publicAllowed: boolean; populateUser?: Function } = {
+  opts: {
+    publicAllowed: boolean
+    populateUser?: Function
+    checkDayPass?: (ctx: any, user: User, tenantId: string) => Promise<void>
+  } = {
     publicAllowed: false,
   }
 ) => {
@@ -106,7 +111,11 @@ export = (
             user = await getUser(userId, session.tenantId)
           }
           user.csrfToken = session.csrfToken
-          if (session?.lastAccessedAt < timeMinusOneMinute()) {
+
+          if (
+            !session.lastAccessedAt ||
+            session.lastAccessedAt < timeMinusOneMinute()
+          ) {
             // make sure we denote that the session is still in use
             await updateSessionTTL(session)
           }

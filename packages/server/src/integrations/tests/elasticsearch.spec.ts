@@ -1,15 +1,16 @@
-const elasticsearch = require("@elastic/elasticsearch")
-const ElasticSearchIntegration = require("../elasticsearch")
+import { default as ElasticSearchIntegration } from "../elasticsearch"
 jest.mock("@elastic/elasticsearch")
 
 class TestConfiguration {
-  constructor(config = {}) {
-    this.integration = new ElasticSearchIntegration.integration(config) 
+  integration: any
+
+  constructor(config: any = {}) {
+    this.integration = new ElasticSearchIntegration.integration(config)
   }
 }
 
 describe("Elasticsearch Integration", () => {
-  let config 
+  let config: any
   let indexName = "Users"
 
   beforeEach(() => {
@@ -18,15 +19,15 @@ describe("Elasticsearch Integration", () => {
 
   it("calls the create method with the correct params", async () => {
     const body = {
-      name: "Hello"
+      name: "Hello",
     }
-    const response = await config.integration.create({ 
+    const response = await config.integration.create({
       index: indexName,
-      json: body
+      json: body,
     })
     expect(config.integration.client.index).toHaveBeenCalledWith({
       index: indexName,
-      body 
+      body,
     })
   })
 
@@ -34,43 +35,43 @@ describe("Elasticsearch Integration", () => {
     const body = {
       query: {
         term: {
-          name: "kimchy"
-        }
-      }
+          name: "kimchy",
+        },
+      },
     }
-    const response = await config.integration.read({ 
+    const response = await config.integration.read({
       index: indexName,
-      json: body
+      json: body,
     })
     expect(config.integration.client.search).toHaveBeenCalledWith({
       index: indexName,
-      body 
+      body,
     })
     expect(response).toEqual(expect.any(Array))
   })
 
   it("calls the update method with the correct params", async () => {
     const body = {
-      name: "updated"
+      name: "updated",
     }
 
-    const response = await config.integration.update({ 
+    const response = await config.integration.update({
       id: "1234",
       index: indexName,
-      json: body
+      json: body,
     })
 
     expect(config.integration.client.update).toHaveBeenCalledWith({
       id: "1234",
       index: indexName,
-      body 
+      body,
     })
     expect(response).toEqual(expect.any(Array))
   })
 
   it("calls the delete method with the correct params", async () => {
     const body = {
-      id: "1234"
+      id: "1234",
     }
 
     const response = await config.integration.delete(body)

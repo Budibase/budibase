@@ -1,5 +1,5 @@
 jest.mock("nodemailer")
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration, API, mocks } from "../../../../tests"
 import { events } from "@budibase/backend-core"
 
 describe("/api/global/self", () => {
@@ -26,6 +26,9 @@ describe("/api/global/self", () => {
       delete user.password
       const res = await api.self.updateSelf(user)
 
+      const dbUser = await config.getUser(user.email)
+      user._rev = dbUser._rev
+      user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
       expect(res.body._id).toBe(user._id)
       expect(events.user.updated).toBeCalledTimes(1)
       expect(events.user.updated).toBeCalledWith(user)
@@ -39,6 +42,9 @@ describe("/api/global/self", () => {
       user.password = "newPassword"
       const res = await api.self.updateSelf(user)
 
+      const dbUser = await config.getUser(user.email)
+      user._rev = dbUser._rev
+      user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
       delete user.password
       expect(res.body._id).toBe(user._id)
       expect(events.user.updated).toBeCalledTimes(1)
