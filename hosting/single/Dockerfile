@@ -117,6 +117,8 @@ RUN chmod +x ./build-target-paths.sh
 
 # Script below sets the path for storing data based on $DATA_DIR
 # For Azure App Service install SSH & point data locations to /home
+ADD hosting/single/ssh/sshd_config /etc/
+ADD hosting/single/ssh/ssh_setup.sh /tmp
 RUN /build-target-paths.sh
 
 # cleanup cache
@@ -124,6 +126,8 @@ RUN yarn cache clean -f
 
 EXPOSE 80
 EXPOSE 443
+# Expose port 2222 for SSH on Azure App Service build
+EXPOSE 2222
 VOLUME /data
 
 #  setup letsencrypt certificate
