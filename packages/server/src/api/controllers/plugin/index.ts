@@ -10,7 +10,7 @@ import {
 } from "@budibase/backend-core/objectStore"
 import { PluginType, FileType, PluginSource } from "@budibase/types"
 import env from "../../../environment"
-import { ClientAppSocket } from "../../../app"
+import { ClientAppSocket } from "../../../websocket"
 
 export async function getPlugins(type?: PluginType) {
   const db = getGlobalDB()
