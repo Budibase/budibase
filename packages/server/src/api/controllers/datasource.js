@@ -50,9 +50,23 @@ exports.fetch = async function (ctx) {
 exports.buildSchemaFromDb = async function (ctx) {
   const db = getAppDB()
   const datasource = await db.get(ctx.params.datasourceId)
+  const tablesFilter = ctx.request.body.tablesFilter
 
-  const { tables, error } = await buildSchemaHelper(datasource)
-  datasource.entities = tables
+  let { tables, error } = await buildSchemaHelper(datasource)
+  if (tablesFilter) {
+    if (!datasource.entities) {
+      datasource.entities = {}
+    }
+    for (let key in tables) {
+      if (
+        tablesFilter.some(filter => filter.toLowerCase() === key.toLowerCase())
+      ) {
+        datasource.entities[key] = tables[key]
+      }
+    }
+  } else {
+    datasource.entities = tables
+  }
 
   const dbResp = await db.put(datasource)
   datasource._rev = dbResp.rev
@@ -223,10 +237,9 @@ const buildSchemaHelper = async datasource => {
   // Connect to the DB and build the schema
   const connector = new Connector(datasource.config)
   await connector.buildSchema(datasource._id, datasource.entities)
-  datasource.entities = connector.tables
 
   // make sure they all have a display name selected
-  for (let entity of Object.values(datasource.entities)) {
+  for (let entity of Object.values(datasource.entities ?? {})) {
     if (entity.primaryDisplay) {
       continue
     }
