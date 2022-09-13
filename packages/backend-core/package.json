@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "1.3.16",
+  "version": "1.3.17",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -20,7 +20,7 @@
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
-    "@budibase/types": "^1.3.16",
+    "@budibase/types": "^1.3.17",
     "@shopify/jest-koa-mocks": "5.0.1",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-sdk": "2.1030.0",
