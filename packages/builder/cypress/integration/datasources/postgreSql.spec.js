@@ -162,7 +162,7 @@ filterTests(["all"], () => {
         switchSchema("randomText")
 
         // No tables displayed
-        cy.get(".spectrum-Body", { timeout: 20000 }).eq(2).should("contain", "No tables found")
+        cy.get(".spectrum-Body", { timeout: 10000 }).eq(2, { timeout: 10000 }).should("contain", "No tables found")
 
         // Previously created query should be visible
         cy.get(".spectrum-Table").should("contain", queryName)
