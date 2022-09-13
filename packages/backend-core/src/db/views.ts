@@ -215,7 +215,7 @@ export const queryView = async <T>(
       const createFunc = CreateFuncByName[viewName]
       await removeDeprecated(db, viewName)
       await createFunc()
-      return exports.queryView(viewName, params, db, CreateFuncByName)
+      return queryView(viewName, params, db, CreateFuncByName, opts)
     } else {
       throw err
     }
@@ -228,14 +228,14 @@ export const queryPlatformView = async <T>(
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   const CreateFuncByName = {
-    [ViewName.ACCOUNT_BY_EMAIL]: exports.createAccountEmailView,
-    [ViewName.PLATFORM_USERS_LOWERCASE]: exports.createPlatformUserView,
+    [ViewName.ACCOUNT_BY_EMAIL]: createAccountEmailView,
+    [ViewName.PLATFORM_USERS_LOWERCASE]: createPlatformUserView,
   }
 
   return doWithDB(
     StaticDatabases.PLATFORM_INFO.name,
     async (db: PouchDB.Database) => {
-      return exports.queryView(viewName, params, db, CreateFuncByName, opts)
+      return queryView(viewName, params, db, CreateFuncByName, opts)
     }
   )
 }
@@ -247,14 +247,14 @@ export const queryGlobalView = async <T>(
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   const CreateFuncByName = {
-    [ViewName.USER_BY_EMAIL]: exports.createNewUserEmailView,
-    [ViewName.BY_API_KEY]: exports.createApiKeyView,
-    [ViewName.USER_BY_BUILDERS]: exports.createUserBuildersView,
-    [ViewName.USER_BY_APP]: exports.createUserAppView,
+    [ViewName.USER_BY_EMAIL]: createNewUserEmailView,
+    [ViewName.BY_API_KEY]: createApiKeyView,
+    [ViewName.USER_BY_BUILDERS]: createUserBuildersView,
+    [ViewName.USER_BY_APP]: createUserAppView,
   }
   // can pass DB in if working with something specific
   if (!db) {
-    db = getGlobalDB()
+    db = getGlobalDB() as PouchDB.Database
   }
-  return exports.queryView(viewName, params, db, CreateFuncByName)
+  return queryView(viewName, params, db, CreateFuncByName)
 }
