@@ -25,6 +25,7 @@
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.0.1",
+    "bcryptjs": "2.4.3",
     "dotenv": "16.0.1",
     "emitter-listener": "1.1.2",
     "ioredis": "4.28.0",
