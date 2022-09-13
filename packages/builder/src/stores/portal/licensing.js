@@ -1,11 +1,15 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
 import { auth } from "stores/portal"
+import { Constants } from "@budibase/frontend-core"
+import { StripeStatus } from "components/portal/licensing/constants"
 
 export const createLicensingStore = () => {
   const DEFAULT = {
     plans: {},
   }
+
+  const oneDayInMilliseconds = 86400000
 
   const store = writable(DEFAULT)
 
@@ -19,65 +23,86 @@ export const createLicensingStore = () => {
         }
       })
     },
-    getTestData: async () => {
-      const tenantId = get(auth).tenantId
-      console.log("Tenant ", tenantId)
-
-      const license = get(auth).user.license
-      console.log("User LICENSE ", license)
-
-      // Pull out the usage.
+    getUsageMetrics: async () => {
       const quota = get(store).quotaUsage
-      console.log("Quota usage", quota)
+      const license = get(auth).user.license
+      const now = Date.now()
+      const nowSeconds = now / 1000
 
-      // Would only initialise the usage elements if the account element is present.
-      console.log("User account ", get(auth).user.account)
+      const getMetrics = (keys, license, quota) => {
+        if (!license || !quota || !keys) {
+          return {}
+        }
+        return keys.reduce((acc, key) => {
+          const quotaLimit = license[key].value
+          const quotaUsed = (quota[key] / quotaLimit) * 100
 
-      //separate into functions that pass in both the usage and quota
-      //easier to test
+          // Catch for sessions
+          key = key === "sessions" ? "dayPasses" : key
 
-      const getMonthlyMetrics = (license, quota) => {
-        return ["sessions", "queries", "automations"].reduce((acc, key) => {
-          const quotaLimit = license.quotas.usage.monthly[key].value
-          acc[key] =
-            quotaLimit > -1
-              ? (quota.monthly.current[key] / quotaLimit) * 100
-              : -1
+          acc[key] = quotaLimit > -1 ? Math.round(quotaUsed) : -1
           return acc
         }, {})
       }
+      const monthlyMetrics = getMetrics(
+        ["sessions", "queries", "automations"],
+        license.quotas.usage.monthly,
+        quota.monthly.current
+      )
+      const staticMetrics = getMetrics(
+        ["apps", "rows"],
+        license.quotas.usage.static,
+        quota.usageQuota
+      )
 
-      const getStaticMetrics = (license, quota) => {
-        return ["apps", "rows"].reduce((acc, key) => {
-          const quotaLimit = license.quotas.usage.monthly[key].value
-          acc[key] =
-            quotaLimit > -1 ? (quota.usageQuota[key] / quotaLimit) * 100 : -1
-          return acc
-        }, {})
-      }
-
-      const modQuotaStr = JSON.stringify(quota)
-      const cloneQuota = JSON.parse(modQuotaStr)
-      cloneQuota.monthly.current.sessions = 4
-
-      const monthlyMetrics = getMonthlyMetrics(license, cloneQuota)
-      const staticMetrics = getStaticMetrics(license, cloneQuota)
-
-      console.log("Monthly Usage Metrics ", monthlyMetrics)
-      console.log("Static Usage Metrics ", staticMetrics)
-
-      const flagged = Object.keys(monthlyMetrics).filter(key => {
-        return monthlyMetrics[key] >= 100
+      // DEBUG
+      console.log("Store licensing val ", {
+        ...monthlyMetrics,
+        ...staticMetrics,
       })
 
-      console.log(flagged)
+      let subscriptionDaysRemaining
+      if (license?.billing?.subscription) {
+        const currentPeriodEnd = license.billing.subscription.currentPeriodEnd
+        const currentPeriodEndMilliseconds = currentPeriodEnd * 1000
 
-      // store.update(state => {
-      //   return {
-      //     ...state,
-      //     metrics,
-      //   }
-      // })
+        subscriptionDaysRemaining = Math.round(
+          (currentPeriodEndMilliseconds - now) / oneDayInMilliseconds
+        )
+      }
+
+      const quotaResetDaysRemaining =
+        quota.quotaReset > now
+          ? Math.round((quota.quotaReset - now) / oneDayInMilliseconds)
+          : 0
+
+      const accountDowngraded =
+        license?.billing?.subscription?.status === StripeStatus.PAST_DUE &&
+        license?.plan === Constants.PlanType.FREE
+
+      const accountPastDue =
+        nowSeconds >= license?.billing?.subscription?.currentPeriodEnd &&
+        nowSeconds <= license?.billing?.subscription?.pastDueAt &&
+        license?.billing?.subscription?.status === StripeStatus.PAST_DUE &&
+        !accountDowngraded
+
+      const pastDueAtSeconds = license?.billing?.subscription?.pastDueAt
+      const pastDueAtMilliseconds = pastDueAtSeconds * 1000
+      const paymentDueDaysRemaining = Math.round(
+        (pastDueAtMilliseconds - now) / oneDayInMilliseconds
+      )
+
+      store.update(state => {
+        return {
+          ...state,
+          usageMetrics: { ...monthlyMetrics, ...staticMetrics },
+          subscriptionDaysRemaining,
+          paymentDueDaysRemaining,
+          quotaResetDaysRemaining,
+          accountDowngraded,
+          accountPastDue,
+        }
+      })
     },
   }
 

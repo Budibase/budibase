@@ -16,6 +16,7 @@
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import ExportAppModal from "components/start/ExportAppModal.svelte"
+  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
@@ -34,6 +35,7 @@
   let creationModal
   let updatingModal
   let exportModal
+  let appLimitModal
   let creatingApp = false
   let loaded = $apps?.length || $templates?.length
   let searchTerm = ""
@@ -126,8 +128,10 @@
     return `${app.name} - Automation error (${errorCount(errors)})`
   }
 
-  const initiateAppCreation = () => {
-    if ($apps?.length) {
+  const initiateAppCreation = async () => {
+    if ($licensing.usageMetrics.apps >= 100) {
+      appLimitModal.show()
+    } else if ($apps?.length) {
       $goto("/builder/portal/apps/create")
     } else {
       template = null
@@ -227,6 +231,10 @@
     try {
       await apps.load()
       await templates.load()
+
+      await licensing.getQuotaUsage()
+      await licensing.getUsageMetrics()
+
       if ($templates?.length === 0) {
         notifications.error(
           "There was a problem loading quick start templates."
@@ -243,10 +251,6 @@
       notifications.error("Error loading apps and templates")
     }
     loaded = true
-
-    //Testing
-    await licensing.getQuotaUsage()
-    await licensing.getTestData()
   })
 </script>
 
@@ -414,6 +418,8 @@
 <Modal bind:this={exportModal} padding={false} width="600px">
   <ExportAppModal app={selectedApp} />
 </Modal>
+
+<AppLimitModal bind:this={appLimitModal} />
 
 <style>
   .appTable {
