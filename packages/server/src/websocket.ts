@@ -1,7 +1,7 @@
 import { Server } from "socket.io"
 import http from "http"
 
-export class Websocket {
+class Websocket {
   socketServer: Server
 
   constructor(server: http.Server, path: string) {
@@ -15,3 +15,12 @@ export class Websocket {
     this.socketServer.sockets.emit(event, payload)
   }
 }
+
+// Likely to be more socket instances in future
+let ClientAppSocket: Websocket
+
+export const initialise = (server: http.Server) => {
+  ClientAppSocket = new Websocket(server, "/socket/client")
+}
+
+export { ClientAppSocket }
