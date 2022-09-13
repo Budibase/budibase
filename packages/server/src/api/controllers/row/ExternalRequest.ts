@@ -534,7 +534,7 @@ module External {
         })
         // this is the response from knex if no rows found
         const rows = !response[0].read ? response : []
-        const storeTo = isMany ? field.throughFrom || linkPrimaryKey : manyKey
+        const storeTo = isMany ? field.throughFrom || linkPrimaryKey : fieldName
         related[storeTo] = { rows, isMany, tableId }
       }
       return related

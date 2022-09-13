@@ -74,6 +74,7 @@ module.exports = {
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
+  PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,

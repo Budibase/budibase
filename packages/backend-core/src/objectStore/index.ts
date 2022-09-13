@@ -57,7 +57,11 @@ function publicPolicy(bucketName: any) {
   }
 }
 
-const PUBLIC_BUCKETS = [ObjectStoreBuckets.APPS, ObjectStoreBuckets.GLOBAL]
+const PUBLIC_BUCKETS = [
+  ObjectStoreBuckets.APPS,
+  ObjectStoreBuckets.GLOBAL,
+  ObjectStoreBuckets.PLUGINS,
+]
 
 /**
  * Gets a connection to the object store using the S3 SDK.
@@ -171,6 +175,14 @@ export const streamUpload = async (
 ) => {
   const objectStore = ObjectStore(bucketName)
   await makeSureBucketExists(objectStore, bucketName)
+
+  // Set content type for certain known extensions
+  if (filename?.endsWith(".js")) {
+    extra = {
+      ...extra,
+      ContentType: "application/javascript",
+    }
+  }
 
   const params = {
     Bucket: sanitizeBucket(bucketName),
@@ -295,9 +307,13 @@ export const uploadDirectory = async (
   return files
 }
 
-exports.downloadTarballDirect = async (url: string, path: string) => {
+exports.downloadTarballDirect = async (
+  url: string,
+  path: string,
+  headers = {}
+) => {
   path = sanitizeKey(path)
-  const response = await fetch(url)
+  const response = await fetch(url, { headers })
   if (!response.ok) {
     throw new Error(`unexpected response ${response.statusText}`)
   }

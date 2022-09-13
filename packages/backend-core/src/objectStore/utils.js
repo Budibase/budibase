@@ -8,6 +8,7 @@ exports.ObjectStoreBuckets = {
   TEMPLATES: env.TEMPLATES_BUCKET_NAME,
   GLOBAL: env.GLOBAL_BUCKET_NAME,
   GLOBAL_CLOUD: env.GLOBAL_CLOUD_BUCKET_NAME,
+  PLUGINS: env.PLUGIN_BUCKET_NAME,
 }
 
 exports.budibaseTempDir = function () {
