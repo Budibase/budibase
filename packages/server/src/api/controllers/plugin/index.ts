@@ -10,6 +10,7 @@ import {
 } from "@budibase/backend-core/objectStore"
 import { PluginType, FileType, PluginSource } from "@budibase/types"
 import env from "../../../environment"
+import { ClientAppSocket } from "../../../websocket"
 
 export async function getPlugins(type?: PluginType) {
   const db = getGlobalDB()
@@ -132,7 +133,8 @@ export async function storePlugin(
   const db = getGlobalDB()
   const version = metadata.package.version,
     name = metadata.package.name,
-    description = metadata.package.description
+    description = metadata.package.description,
+    hash = metadata.schema.hash
 
   // first open the tarball into tmp directory
   const bucketPath = `${name}/`
@@ -174,6 +176,7 @@ export async function storePlugin(
     ...metadata,
     name,
     version,
+    hash,
     description,
     jsUrl: `${bucketPath}${jsFileName}`,
   }
@@ -186,6 +189,7 @@ export async function storePlugin(
   }
 
   const response = await db.put(doc)
+  ClientAppSocket.emit("plugin-update", { name, hash })
   return {
     ...doc,
     _rev: response.rev,
