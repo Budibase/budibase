@@ -19,6 +19,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    "src/tests",
     "**/*.spec.ts",
     "**/*.spec.js"
   ]

@@ -1,22 +1,26 @@
 const mongo = require("mongodb")
-const MongoDBIntegration = require("../mongodb")
+import { default as MongoDBIntegration } from "../mongodb"
 jest.mock("mongodb")
 
 class TestConfiguration {
-  constructor(config = {}) {
+  integration: any
+
+  constructor(config: any = {}) {
     this.integration = new MongoDBIntegration.integration(config)
   }
 }
 
 function disableConsole() {
   jest.spyOn(console, "error")
+  // @ts-ignore
   console.error.mockImplementation(() => {})
 
+  // @ts-ignore
   return console.error.mockRestore
 }
 
 describe("MongoDB Integration", () => {
-  let config
+  let config: any
   let indexName = "Users"
 
   beforeEach(() => {
@@ -54,13 +58,16 @@ describe("MongoDB Integration", () => {
           id: "test",
         },
         options: {
-          opt: "option"
-        }
+          opt: "option",
+        },
       },
       extra: { collection: "testCollection", actionTypes: "deleteOne" },
     }
     await config.integration.delete(query)
-    expect(config.integration.client.deleteOne).toHaveBeenCalledWith(query.json.filter, query.json.options)
+    expect(config.integration.client.deleteOne).toHaveBeenCalledWith(
+      query.json.filter,
+      query.json.options
+    )
   })
 
   it("calls the update method with the correct params", async () => {
@@ -108,7 +115,7 @@ describe("MongoDB Integration", () => {
       json: {
         filter: {
           _id: "ObjectId('ACBD12345678ABCD12345678')",
-          name: "ObjectId('BBBB12345678ABCD12345678')"
+          name: "ObjectId('BBBB12345678ABCD12345678')",
         },
         update: {
           _id: "ObjectId('FFFF12345678ABCD12345678')",
@@ -122,7 +129,7 @@ describe("MongoDB Integration", () => {
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalled()
-    
+
     const args = config.integration.client.updateOne.mock.calls[0]
     expect(args[0]).toEqual({
       _id: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
@@ -133,7 +140,7 @@ describe("MongoDB Integration", () => {
       name: mongo.ObjectID.createFromHexString("CCCC12345678ABCD12345678"),
     })
     expect(args[2]).toEqual({
-      upsert: false
+      upsert: false,
     })
   })
 
@@ -143,7 +150,7 @@ describe("MongoDB Integration", () => {
         filter: {
           _id: {
             $eq: "ObjectId('ACBD12345678ABCD12345678')",
-          }
+          },
         },
         update: {
           $set: {
@@ -158,20 +165,20 @@ describe("MongoDB Integration", () => {
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalled()
-    
+
     const args = config.integration.client.updateOne.mock.calls[0]
     expect(args[0]).toEqual({
       _id: {
         $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
-      }
+      },
     })
     expect(args[1]).toEqual({
       $set: {
         _id: mongo.ObjectID.createFromHexString("FFFF12345678ABCD12345678"),
-      }
+      },
     })
     expect(args[2]).toEqual({
-      upsert: true
+      upsert: true,
     })
   })
 
@@ -181,12 +188,12 @@ describe("MongoDB Integration", () => {
         filter: {
           _id: {
             $eq: "ObjectId('ACBD12345678ABCD12345678')",
-          }
+          },
         },
         update: {
           $set: {
             name: "UPDATED",
-            age: 99
+            age: 99,
           },
         },
         options: {
@@ -197,21 +204,21 @@ describe("MongoDB Integration", () => {
     }
     await config.integration.read(query)
     expect(config.integration.client.findOneAndUpdate).toHaveBeenCalled()
-    
+
     const args = config.integration.client.findOneAndUpdate.mock.calls[0]
     expect(args[0]).toEqual({
       _id: {
         $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
-      }
+      },
     })
     expect(args[1]).toEqual({
       $set: {
         name: "UPDATED",
-        age: 99
-      }
+        age: 99,
+      },
     })
     expect(args[2]).toEqual({
-      upsert: false
+      upsert: false,
     })
   })
 
@@ -242,12 +249,12 @@ describe("MongoDB Integration", () => {
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalled()
-    
+
     const args = config.integration.client.updateOne.mock.calls[0]
     expect(args[0]).toEqual({
       _id: {
         $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
-      }
+      },
     })
     expect(args[1]).toEqual({
       $set: {
@@ -255,15 +262,17 @@ describe("MongoDB Integration", () => {
           data: [
             { cid: 1 },
             { cid: 2 },
-            { nested: {
-              name: "test"
-            }}
-          ]
+            {
+              nested: {
+                name: "test",
+              },
+            },
+          ],
         },
       },
     })
     expect(args[2]).toEqual({
-      upsert: true
+      upsert: true,
     })
   })
 
@@ -295,12 +304,12 @@ describe("MongoDB Integration", () => {
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalled()
-    
+
     const args = config.integration.client.updateOne.mock.calls[0]
     expect(args[0]).toEqual({
       _id: {
         $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
-      }
+      },
     })
     expect(args[1]).toEqual({
       $set: {
@@ -308,16 +317,18 @@ describe("MongoDB Integration", () => {
           data: [
             { cid: 1 },
             { cid: 2 },
-            { nested: {
-              name: "te}st"
-            }}
-          ]
+            {
+              nested: {
+                name: "te}st",
+              },
+            },
+          ],
         },
       },
     })
     expect(args[2]).toEqual({
       upsert: true,
-      extra: "ad\"{\"d"
+      extra: 'ad"{"d',
     })
   })
 })

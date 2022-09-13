@@ -7,6 +7,7 @@
     notifications,
     Detail,
     Link,
+    TooltipWrapper,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { admin, auth, licensing } from "../../../../stores/portal"
@@ -29,6 +30,7 @@
   $: quotaUsage = $licensing.quotaUsage
   $: license = $auth.user?.license
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
+  $: quotaReset = quotaUsage?.quotaReset
 
   const setMonthlyUsage = () => {
     monthlyUsage = []
@@ -97,17 +99,19 @@
     textRows = []
 
     if (cancelAt) {
-      textRows.push("Subscription has been cancelled")
-      textRows.push(`${getDaysRemaining(cancelAt * 1000)} days remaining`)
+      textRows.push({ message: "Subscription has been cancelled" })
+      textRows.push({
+        message: `${getDaysRemaining(cancelAt * 1000)} days remaining`,
+        tooltip: new Date(cancelAt * 1000),
+      })
     }
   }
 
   const setDaysRemainingInMonth = () => {
-    let now = new Date()
-    now = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const resetDate = new Date(quotaReset)
 
-    const firstNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-    const difference = firstNextMonth.getTime() - now.getTime()
+    const now = new Date()
+    const difference = resetDate.getTime() - now.getTime()
 
     // return the difference in days
     daysRemainingInMonth = (difference / (1000 * 3600 * 24)).toFixed(0)
@@ -207,7 +211,10 @@
             <Layout gap="S">
               <Heading size="S" weight="light">Monthly</Heading>
               <div class="detail">
-                <Detail size="M">Resets in {daysRemainingInMonth} days</Detail>
+                <TooltipWrapper tooltip={new Date(quotaReset)}>
+                  <Detail size="M">Resets in {daysRemainingInMonth} days</Detail
+                  >
+                </TooltipWrapper>
               </div>
               <div class="usages">
                 <Layout noPadding>
@@ -236,7 +243,8 @@
   }
   .detail :global(.spectrum-Detail) {
     color: var(--spectrum-global-color-gray-700);
-    margin-bottom: 5px;
-    margin-top: -8px;
+  }
+  .detail :global(.icon) {
+    margin-bottom: 0;
   }
 </style>

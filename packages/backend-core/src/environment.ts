@@ -36,7 +36,7 @@ const env = {
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ACCOUNT_PORTAL_URL:
     process.env.ACCOUNT_PORTAL_URL || "https://account.budibase.app",
-  ACCOUNT_PORTAL_API_KEY: process.env.ACCOUNT_PORTAL_API_KEY,
+  ACCOUNT_PORTAL_API_KEY: process.env.ACCOUNT_PORTAL_API_KEY || "",
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
@@ -50,6 +50,7 @@ const env = {
   GLOBAL_BUCKET_NAME: process.env.GLOBAL_BUCKET_NAME || "global",
   GLOBAL_CLOUD_BUCKET_NAME:
     process.env.GLOBAL_CLOUD_BUCKET_NAME || "prod-budi-tenant-uploads",
+  PLUGIN_BUCKET_NAME: process.env.PLUGIN_BUCKET_NAME || "plugins",
   USE_COUCH: process.env.USE_COUCH || true,
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,

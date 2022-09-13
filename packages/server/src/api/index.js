@@ -54,9 +54,8 @@ router
       noTenancyRequired: true,
     })
   )
-  .use(currentApp)
   .use(pro.licensing())
-  .use(pro.activity())
+  .use(currentApp)
   .use(auditLog)
 
 // error handling middleware

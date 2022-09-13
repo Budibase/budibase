@@ -1,5 +1,12 @@
 <script>
-  import { Detail, Button, Heading, Layout, Body } from "@budibase/bbui"
+  import {
+    Detail,
+    Button,
+    Heading,
+    Layout,
+    Body,
+    TooltipWrapper,
+  } from "@budibase/bbui"
 
   export let description = ""
   export let title = ""
@@ -25,7 +32,13 @@
         {#if textRows.length}
           <div class="text-rows">
             {#each textRows as row}
-              <Body>{row}</Body>
+              {#if row.tooltip}
+                <TooltipWrapper tooltip={row.tooltip}>
+                  <Body>{row.message}</Body>
+                </TooltipWrapper>
+              {:else}
+                <Body>{row.message}</Body>
+              {/if}
             {/each}
           </div>
         {/if}

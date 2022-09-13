@@ -42,6 +42,7 @@ const DocumentType = {
   MEM_VIEW: "view",
   USER_FLAG: "flag",
   AUTOMATION_METADATA: "meta_au",
+  PLUGIN: "plg",
 }
 
 const InternalTables = {
@@ -370,6 +371,10 @@ exports.getMemoryViewParams = (otherProps = {}) => {
   return getDocParams(DocumentType.MEM_VIEW, null, otherProps)
 }
 
+exports.generatePluginID = name => {
+  return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
+}
+
 /**
  * This can be used with the db.allDocs to get a list of IDs
  */
@@ -378,4 +383,11 @@ exports.getMultiIDParams = ids => {
     keys: ids,
     include_docs: true,
   }
+}
+
+/**
+ * Gets parameters for retrieving automations, this is a utility function for the getDocParams function.
+ */
+exports.getPluginParams = (pluginId = null, otherProps = {}) => {
+  return getDocParams(DocumentType.PLUGIN, pluginId, otherProps)
 }
