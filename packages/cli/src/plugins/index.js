@@ -7,7 +7,7 @@ const { PLUGIN_TYPE_ARR } = require("@budibase/types")
 const { validate } = require("@budibase/backend-core/plugins")
 const { runPkgCommand } = require("../exec")
 const { join } = require("path")
-const { success, error, info } = require("../utils")
+const { success, error, info, moveDirectory } = require("../utils")
 
 function checkInPlugin() {
   if (!fs.existsSync("package.json")) {
@@ -45,13 +45,28 @@ async function init(opts) {
     `An amazing Budibase ${type}!`
   )
   const version = await questions.string("Version", "1.0.0")
+  console.log(
+    info(`By default the plugin will be created in the directory "${name}"`)
+  )
+  console.log(
+    info(
+      "if you are already in an empty directory, such as a new Git repo, you can disable this functionality."
+    )
+  )
+  const topLevel = await questions.confirmation("Create top level directory?")
   // get the skeleton
   console.log(info("Retrieving project..."))
   await getSkeleton(type, name)
   await fleshOutSkeleton(type, name, desc, version)
   console.log(info("Installing dependencies..."))
   await runPkgCommand("install", join(process.cwd(), name))
-  console.log(info(`Plugin created in directory "${name}"`))
+  // if no parent directory desired move to cwd
+  if (!topLevel) {
+    moveDirectory(name, process.cwd())
+    console.log(info(`Plugin created in current directory.`))
+  } else {
+    console.log(info(`Plugin created in directory "${name}"`))
+  }
 }
 
 async function verify() {
