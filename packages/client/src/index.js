@@ -1,7 +1,20 @@
 import ClientApp from "./components/ClientApp.svelte"
-import { builderStore, appStore, devToolsStore, blockStore } from "./stores"
+import {
+  builderStore,
+  appStore,
+  devToolsStore,
+  blockStore,
+  componentStore,
+} from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
+import { initWebsocket } from "./websocket.js"
+
+// Provide svelte and svelte/internal as globals for custom components
+import * as svelte from "svelte"
+import * as internal from "svelte/internal"
+window.svelte_internal = internal
+window.svelte = svelte
 
 // Initialise spectrum icons
 loadSpectrumIcons()
@@ -21,6 +34,8 @@ const loadBudibase = () => {
     previewDevice: window["##BUDIBASE_PREVIEW_DEVICE##"],
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
+    usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
+    location: window["##BUDIBASE_LOCATION##"],
   })
 
   // Set app ID - this window flag is set by both the preview and the real
@@ -42,6 +57,21 @@ const loadBudibase = () => {
       block?.eject()
     }
   }
+
+  // Register any custom components
+  if (window["##BUDIBASE_CUSTOM_COMPONENTS##"]) {
+    window["##BUDIBASE_CUSTOM_COMPONENTS##"].forEach(component => {
+      componentStore.actions.registerCustomComponent(component)
+    })
+  }
+
+  // Make a callback available for custom component bundles to register
+  // themselves at runtime
+  window.registerCustomComponent =
+    componentStore.actions.registerCustomComponent
+
+  // Initialise websocket
+  initWebsocket()
 
   // Create app if one hasn't been created yet
   if (!app) {

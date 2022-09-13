@@ -24,7 +24,11 @@
   $: currentDefinition = store.actions.components.getDefinition(
     $selectedComponent?._component
   )
-  $: enrichedStructure = enrichStructure(structure, $store.components)
+  $: enrichedStructure = enrichStructure(
+    structure,
+    $store.components,
+    $store.customComponents
+  )
   $: filteredStructure = filterStructure(
     enrichedStructure,
     section,
@@ -46,8 +50,25 @@
 
   // Parses the structure in the manifest and returns an enriched structure with
   // explicit categories
-  const enrichStructure = (structure, definitions) => {
+  const enrichStructure = (structure, definitions, customComponents) => {
     let enrichedStructure = []
+
+    // Add custom components category
+    if (customComponents?.length) {
+      enrichedStructure.push({
+        name: "Plugins",
+        isCategory: true,
+        children: customComponents
+          .map(x => ({
+            ...definitions[x],
+            name: definitions[x].friendlyName || definitions[x].name,
+          }))
+          .sort((a, b) => {
+            return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
+          }),
+      })
+    }
+
     structure.forEach(item => {
       if (typeof item === "string") {
         const def = definitions[`@budibase/standard-components/${item}`]
@@ -65,6 +86,7 @@
         })
       }
     })
+
     return enrichedStructure
   }
 
@@ -225,7 +247,7 @@
     position: fixed;
     right: 0;
     z-index: 1;
-    height: 100%;
+    height: calc(100% - 60px);
     display: flex;
     flex-direction: row;
     align-items: stretch;
