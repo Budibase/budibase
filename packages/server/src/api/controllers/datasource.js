@@ -58,7 +58,9 @@ exports.buildSchemaFromDb = async function (ctx) {
       datasource.entities = {}
     }
     for (let key in tables) {
-      if (tablesFilter.includes(key)) {
+      if (
+        tablesFilter.some(filter => filter.toLowerCase() === key.toLowerCase())
+      ) {
         datasource.entities[key] = tables[key]
       }
     }
@@ -237,7 +239,7 @@ const buildSchemaHelper = async datasource => {
   await connector.buildSchema(datasource._id, datasource.entities)
 
   // make sure they all have a display name selected
-  for (let entity of Object.values(datasource.entities)) {
+  for (let entity of Object.values(datasource.entities ?? {})) {
     if (entity.primaryDisplay) {
       continue
     }
