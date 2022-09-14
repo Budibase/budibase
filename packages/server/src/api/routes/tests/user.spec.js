@@ -23,6 +23,7 @@ describe("/users", () => {
   })
 
   describe("fetch", () => {
+
     it("returns a list of users from an instance db", async () => {
       await config.createUser("uuidx")
       await config.createUser("uuidy")

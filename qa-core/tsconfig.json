@@ -14,8 +14,6 @@
     "skipLibCheck": true,
     "paths": {
       "@budibase/types": ["../packages/types/src"],
-      "@budibase/backend-core": ["../packages/backend-core/src"],
-      "@budibase/backend-core/*": ["../packages/backend-core/*"]
     }
   },
   "ts-node": {
@@ -23,7 +21,6 @@
   },
   "references": [
     { "path": "../packages/types" },
-    { "path": "../packages/backend-core" },
   ],
   "include": [
     "src/**/*",

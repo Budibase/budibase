@@ -1,14 +1,16 @@
-import TestConfiguration from "../TestConfiguration"
-import PublicAPIClient from "../PublicAPIClient"
+import { Table } from "../../../../../packages/server/src/api/controllers/public/mapping/types"
+import { generateTable } from "../../../config/public-api/fixtures/tables"
+import TestConfiguration from "../../../config/public-api/TestConfiguration"
+import PublicAPIClient from "../../../config/public-api/TestConfiguration/PublicAPIClient"
 
 describe("Public API - /tables endpoints", () => {
-  let api: PublicAPIClient
-  const config = new TestConfiguration()
+  let api = new PublicAPIClient()
+  const config = new TestConfiguration<Table>(api)
 
   beforeAll(async () => {
     await config.beforeAll()
-    const app = await config.seedApp()
-    api = new PublicAPIClient(app.data._id)
+    const [_, app] = await config.applications.seed()
+    config.tables.appId = app._id
   })
 
   afterAll(async () => {
@@ -16,33 +18,29 @@ describe("Public API - /tables endpoints", () => {
   })
 
   it("POST - Create a table", async () => {
-    const response = await api.post(`/tables`, {
-      body: require("./fixtures/table.json")
-    })
-    const json = await response.json()
-    config.testContext.table = json.data
+    const [response, table] = await config.tables.create(generateTable())
+    config.context = table
     expect(response).toHaveStatusCode(200)
   })
 
   it("POST - Search tables", async () => {
-    const response = await api.post(`/tables/search`, {
-      body: {
-        name: config.testContext.table.name
-      }
+    const [response, table] = await config.tables.search({
+      name: config.context.name,
     })
     expect(response).toHaveStatusCode(200)
   })
 
   it("GET - Retrieve a table", async () => {
-    const response = await api.get(`/tables/${config.testContext.table._id}`)
+    const [response, table] = await config.tables.read(config.context._id)
     expect(response).toHaveStatusCode(200)
   })
 
-
   it("PUT - update a table", async () => {
-    const response = await api.put(`/tables/${config.testContext.table._id}`, {
-      body: require("./fixtures/update_table.json")
-    })
+    config.context.name = "updatedName"
+    const [response, table] = await config.tables.update(
+      config.context._id,
+      config.context
+    )
     expect(response).toHaveStatusCode(200)
   })
 })

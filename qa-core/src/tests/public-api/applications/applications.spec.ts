@@ -1,10 +1,11 @@
-import TestConfiguration from "../TestConfiguration"
-import PublicAPIClient from "../PublicAPIClient"
-import generateApp from "./fixtures/generate"
+import TestConfiguration from "../../../config/public-api/TestConfiguration"
+import PublicAPIClient from "../../../config/public-api/TestConfiguration/PublicAPIClient"
+import generateApp from "../../../config/public-api/fixtures/applications"
+import { Application } from "../../../../../packages/server/src/api/controllers/public/mapping/types"
 
 describe("Public API - /applications endpoints", () => {
   const api = new PublicAPIClient()
-  const config = new TestConfiguration()
+  const config = new TestConfiguration<Application>(api)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -14,34 +15,30 @@ describe("Public API - /applications endpoints", () => {
     await config.afterAll()
   })
 
-  it("POST - Create a application", async () => {
-    const response = await api.post(`/applications`, {
-      body: generateApp()
-    })
-    const json = await response.json()
-    config.testContext.application = json.data
+  it("POST - Create an application", async () => {
+    const [response, app] = await config.applications.create(generateApp())
+    config.context = app
     expect(response).toHaveStatusCode(200)
   })
 
   it("POST - Search applications", async () => {
-    const response = await api.post(`/applications/search`, {
-      body: {
-        name: config.testContext.application.name
-      }
+    const [response, app] = await config.applications.search({
+      name: config.context.name,
     })
     expect(response).toHaveStatusCode(200)
   })
 
-  it("GET - Retrieve a application", async () => {
-    const response = await api.get(`/applications/${config.testContext.application._id}`)
+  it("GET - Retrieve an application", async () => {
+    const [response, app] = await config.applications.read(config.context._id)
     expect(response).toHaveStatusCode(200)
   })
 
-
-  it("PUT - update a application", async () => {
-    const response = await api.put(`/applications/${config.testContext.application._id}`, {
-      body: require("./fixtures/update_application.json")
-    })
+  it("PUT - update an application", async () => {
+    config.context.name = "UpdatedName"
+    const [response, app] = await config.applications.update(
+      config.context._id,
+      config.context
+    )
     expect(response).toHaveStatusCode(200)
   })
 })
