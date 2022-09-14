@@ -73,7 +73,7 @@ exports.moveDirectory = (oldPath, newPath) => {
   const files = fs.readdirSync(oldPath)
   // check any file exists already
   for (let file of files) {
-    if (fs.existsSync(file)) {
+    if (fs.existsSync(join(newPath, file))) {
       throw new Error(
         "Unable to remove top level directory - some skeleton files already exist."
       )
