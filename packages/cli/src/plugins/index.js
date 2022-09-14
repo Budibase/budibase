@@ -25,7 +25,7 @@ function checkInPlugin() {
 async function askAboutTopLevel(name) {
   const files = fs.readdirSync(process.cwd())
   // we are in an empty git repo, don't ask
-  if (files.length === 1 && files[0] === ".git") {
+  if (files.find(file => file === ".git")) {
     return false
   } else {
     console.log(
