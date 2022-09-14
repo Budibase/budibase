@@ -71,13 +71,13 @@
 
 <div class="root">
   <Body size="S">
-    Choosing a Data Source will automatically use the data it provides, but it's
+    Choosing a Datasource will automatically use the data it provides, but it's
     optional.<br />
     You can always add or override fields manually.
   </Body>
 
   <div class="params">
-    <Label small>Data Source</Label>
+    <Label small>Datasource</Label>
     <Select
       bind:value={parameters.providerId}
       options={providerOptions}
