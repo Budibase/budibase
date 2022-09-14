@@ -4,6 +4,7 @@
 
   export let tooltip = ""
   export let size = "M"
+  export let disabled = true
 
   let showTooltip = false
 </script>
@@ -19,7 +20,7 @@
         on:mouseleave={() => (showTooltip = false)}
         on:focus
       >
-        <Icon name="InfoOutline" size="S" disabled={true} />
+        <Icon name="InfoOutline" size="S" {disabled} />
       </div>
       {#if showTooltip}
         <div class="tooltip">

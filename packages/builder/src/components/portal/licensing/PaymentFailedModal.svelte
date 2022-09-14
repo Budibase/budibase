@@ -7,10 +7,11 @@
   export let onShow = () => {}
 
   let paymentFailedModal
-  let pastDueAt
+  let pastDueEndDate
 
   const paymentFailedTitle = "Payment failed"
-  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  $: accountUrl = $admin.accountPortalUrl
+  $: upgradeUrl = `${accountUrl}/portal/upgrade`
 
   export function show() {
     paymentFailedModal.show()
@@ -21,12 +22,8 @@
   }
 
   onMount(() => {
-    auth.subscribe(state => {
-      if (state.user && state.user.license?.billing?.subscription) {
-        pastDueAt = new Date(
-          state.user.license?.billing?.subscription.pastDueAt * 1000
-        )
-      }
+    licensing.subscribe(state => {
+      pastDueEndDate = state.pastDueEndDate
     })
   })
 </script>
@@ -48,11 +45,11 @@
       </Body>
       <Body weight={800}>
         <div class="tooltip-root">
-          {`${$licensing.paymentDueDaysRemaining} day${
-            $licensing.paymentDueDaysRemaining == 1 ? "" : "s"
+          {`${$licensing.pastDueDaysRemaining} day${
+            $licensing.pastDueDaysRemaining == 1 ? "" : "s"
           } remaining`}
           <span class="tooltip">
-            <TooltipWrapper tooltip={pastDueAt.toString()} size="S" />
+            <TooltipWrapper tooltip={pastDueEndDate} size="S" />
           </span>
         </div>
       </Body>
@@ -67,11 +64,11 @@
       <Body>Please contact your account holder.</Body>
       <Body weight={800}>
         <div class="tooltip-root">
-          {`${$licensing.paymentDueDaysRemaining} day${
-            $licensing.paymentDueDaysRemaining == 1 ? "" : "s"
+          {`${$licensing.pastDueDaysRemaining} day${
+            $licensing.pastDueDaysRemaining == 1 ? "" : "s"
           } remaining`}
           <span class="tooltip">
-            <TooltipWrapper tooltip={pastDueAt.toString()} size="S" />
+            <TooltipWrapper tooltip={pastDueEndDate} size="S" />
           </span>
         </div>
       </Body>

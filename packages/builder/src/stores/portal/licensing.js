@@ -8,7 +8,6 @@ export const createLicensingStore = () => {
   const DEFAULT = {
     plans: {},
   }
-
   const oneDayInMilliseconds = 86400000
 
   const store = writable(DEFAULT)
@@ -26,8 +25,7 @@ export const createLicensingStore = () => {
     getUsageMetrics: async () => {
       const quota = get(store).quotaUsage
       const license = get(auth).user.license
-      const now = Date.now()
-      const nowSeconds = now / 1000
+      const now = new Date()
 
       const getMetrics = (keys, license, quota) => {
         if (!license || !quota || !keys) {
@@ -36,16 +34,12 @@ export const createLicensingStore = () => {
         return keys.reduce((acc, key) => {
           const quotaLimit = license[key].value
           const quotaUsed = (quota[key] / quotaLimit) * 100
-
-          // Catch for sessions
-          key = key === "sessions" ? "dayPasses" : key
-
           acc[key] = quotaLimit > -1 ? Math.round(quotaUsed) : -1
           return acc
         }, {})
       }
       const monthlyMetrics = getMetrics(
-        ["sessions", "queries", "automations"],
+        ["dayPasses", "queries", "automations"],
         license.quotas.usage.monthly,
         quota.monthly.current
       )
@@ -55,52 +49,50 @@ export const createLicensingStore = () => {
         quota.usageQuota
       )
 
-      // DEBUG
-      console.log("Store licensing val ", {
-        ...monthlyMetrics,
-        ...staticMetrics,
-      })
-
-      let subscriptionDaysRemaining
-      if (license?.billing?.subscription) {
-        const currentPeriodEnd = license.billing.subscription.currentPeriodEnd
-        const currentPeriodEndMilliseconds = currentPeriodEnd * 1000
-
-        subscriptionDaysRemaining = Math.round(
-          (currentPeriodEndMilliseconds - now) / oneDayInMilliseconds
-        )
+      const getDaysBetween = (dateStart, dateEnd) => {
+        return dateEnd > dateStart
+          ? Math.round(
+              (dateEnd.getTime() - dateStart.getTime()) / oneDayInMilliseconds
+            )
+          : 0
       }
 
-      const quotaResetDaysRemaining =
-        quota.quotaReset > now
-          ? Math.round((quota.quotaReset - now) / oneDayInMilliseconds)
-          : 0
+      const quotaResetDate = new Date(quota.quotaReset)
+      const quotaResetDaysRemaining = getDaysBetween(now, quotaResetDate)
 
       const accountDowngraded =
+        license?.billing?.subscription?.downgradeAt &&
+        license?.billing?.subscription?.downgradeAt <= now.getTime() &&
         license?.billing?.subscription?.status === StripeStatus.PAST_DUE &&
-        license?.plan === Constants.PlanType.FREE
+        license?.plan.type === Constants.PlanType.FREE
 
-      const accountPastDue =
-        nowSeconds >= license?.billing?.subscription?.currentPeriodEnd &&
-        nowSeconds <= license?.billing?.subscription?.pastDueAt &&
-        license?.billing?.subscription?.status === StripeStatus.PAST_DUE &&
-        !accountDowngraded
+      const pastDueAtMilliseconds = license?.billing?.subscription?.pastDueAt
+      const downgradeAtMilliseconds =
+        license?.billing?.subscription?.downgradeAt
+      let pastDueDaysRemaining
+      let pastDueEndDate
 
-      const pastDueAtSeconds = license?.billing?.subscription?.pastDueAt
-      const pastDueAtMilliseconds = pastDueAtSeconds * 1000
-      const paymentDueDaysRemaining = Math.round(
-        (pastDueAtMilliseconds - now) / oneDayInMilliseconds
-      )
+      if (pastDueAtMilliseconds && downgradeAtMilliseconds) {
+        pastDueEndDate = new Date(downgradeAtMilliseconds)
+        pastDueDaysRemaining = getDaysBetween(
+          new Date(pastDueAtMilliseconds),
+          pastDueEndDate
+        )
+      }
 
       store.update(state => {
         return {
           ...state,
           usageMetrics: { ...monthlyMetrics, ...staticMetrics },
-          subscriptionDaysRemaining,
-          paymentDueDaysRemaining,
           quotaResetDaysRemaining,
+          quotaResetDate,
           accountDowngraded,
-          accountPastDue,
+          accountPastDue: pastDueAtMilliseconds != null,
+          pastDueEndDate,
+          pastDueDaysRemaining,
+          isFreePlan: () => {
+            return license?.plan.type === Constants.PlanType.FREE
+          },
         }
       })
     },
