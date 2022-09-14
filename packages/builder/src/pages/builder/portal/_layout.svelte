@@ -42,6 +42,7 @@
         {
           title: "Usage",
           href: "/builder/portal/settings/usage",
+          badge: "New",
         },
       ])
     }
@@ -53,6 +54,13 @@
           href: "/builder/portal/manage/users",
           heading: "Manage",
         },
+        isEnabled(FEATURE_FLAGS.USER_GROUPS)
+          ? {
+              title: "User Groups",
+              href: "/builder/portal/manage/groups",
+              badge: "New",
+            }
+          : undefined,
         { title: "Auth", href: "/builder/portal/manage/auth" },
         { title: "Email", href: "/builder/portal/manage/email" },
         {
@@ -66,15 +74,6 @@
         },
       ])
 
-      if (isEnabled(FEATURE_FLAGS.USER_GROUPS)) {
-        let item = {
-          title: "User Groups",
-          href: "/builder/portal/manage/groups",
-        }
-
-        menu.splice(2, 0, item)
-      }
-
       if (!$adminStore.cloud) {
         menu = menu.concat([
           {
@@ -87,6 +86,7 @@
           menu = menu.concat({
             title: "Upgrade",
             href: "/builder/portal/settings/upgrade",
+            badge: "New",
           })
         }
       }
@@ -106,9 +106,21 @@
         {
           title: "Account",
           href: $adminStore.accountPortalUrl,
+          heading: "Account",
         },
       ])
+
+      if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+        menu = menu.concat([
+          {
+            title: "Upgrade",
+            href: $adminStore.accountPortalUrl + "/portal/upgrade",
+            badge: "New",
+          },
+        ])
+      }
     }
+    menu = menu.filter(item => !!item)
     return menu
   }
 
@@ -159,11 +171,12 @@
         </div>
         <div class="menu">
           <Navigation>
-            {#each menu as { title, href, heading }}
+            {#each menu as { title, href, heading, badge }}
               <Item
                 on:click={hideMobileMenu}
                 selected={$isActive(href)}
                 {href}
+                {badge}
                 {heading}>{title}</Item
               >
             {/each}
