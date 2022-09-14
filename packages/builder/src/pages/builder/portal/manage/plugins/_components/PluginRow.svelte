@@ -20,8 +20,7 @@
       ? plugin.schema.schema.icon || "Book"
       : plugin.schema.schema.icon || "Beaker"
 
-  $: friendlyName =
-    plugin?.schema?.friendlyName || plugin?.schema?.schema?.friendlyName
+  $: friendlyName = plugin?.schema?.schema?.friendlyName
 
   function pluginDeleted() {
     if (detailsModal) {
@@ -138,7 +137,7 @@
 
   .details-row {
     display: grid;
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: 70px 1fr;
     grid-gap: var(--spacing-l) var(--spacing-l);
     align-items: center;
   }
