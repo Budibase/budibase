@@ -15,6 +15,7 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 [[ -z "${WORKER_PORT}" ]] && export WORKER_PORT=4002
 [[ -z "${WORKER_URL}" ]] && export WORKER_URL=http://localhost:4002
 [[ -z "${APPS_URL}" ]] && export APPS_URL=http://localhost:4001
+#  export CUSTOM_DOMAIN=budi001.custom.com
 # Azure App Service customisations
 if [[ "${TARGETBUILD}" = "aas" ]]; then
     DATA_DIR=/home
