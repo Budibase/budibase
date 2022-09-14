@@ -53,10 +53,6 @@ export async function upload(ctx: any) {
 export async function create(ctx: any) {
   const { source, url, headers, githubToken } = ctx.request.body
 
-  if (!env.SELF_HOSTED) {
-    ctx.throw(400, "Plugins not supported outside of self-host.")
-  }
-
   try {
     let metadata
     let directory
@@ -86,6 +82,13 @@ export async function create(ctx: any) {
     }
 
     validate(metadata?.schema)
+
+    // Only allow components in cloud
+    if (!env.SELF_HOSTED && metadata?.schema?.type !== PluginType.COMPONENT) {
+      throw new Error(
+        "Only component plugins are supported outside of self-host"
+      )
+    }
 
     const doc = await storePlugin(metadata, directory, source)
 
@@ -198,6 +201,7 @@ export async function storePlugin(
 
 export async function processPlugin(plugin: FileType, source?: string) {
   const { metadata, directory } = await fileUpload(plugin)
+  validate(metadata?.schema)
 
   // Only allow components in cloud
   if (!env.SELF_HOSTED && metadata?.schema?.type !== PluginType.COMPONENT) {
