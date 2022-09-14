@@ -1,9 +1,11 @@
-import TestConfiguration from "../TestConfiguration"
-import PublicAPIClient from "../PublicAPIClient"
+import TestConfiguration from "../../../config/public-api/TestConfiguration"
+import PublicAPIClient from "../../../config/public-api/TestConfiguration/PublicAPIClient"
+import generateUser from "../../../config/public-api/fixtures/users"
+import { User } from "../../../../../packages/server/src/api/controllers/public/mapping/types"
 
 describe("Public API - /users endpoints", () => {
   const api = new PublicAPIClient()
-  const config = new TestConfiguration()
+  const config = new TestConfiguration<User>(api)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -14,33 +16,29 @@ describe("Public API - /users endpoints", () => {
   })
 
   it("POST - Create a user", async () => {
-    const response = await api.post(`/users`, {
-      body: require("./fixtures/user.json")
-    })
-    const json = await response.json()
-    config.testContext.user = json.data
+    const [response, user] = await config.users.create(generateUser())
+    config.context = user
     expect(response).toHaveStatusCode(200)
   })
 
   it("POST - Search users", async () => {
-    const response = await api.post(`/users/search`, {
-      body: {
-        name: config.testContext.user.email
-      }
+    const [response, user] = await config.users.search({
+      name: config.context.email,
     })
     expect(response).toHaveStatusCode(200)
   })
 
   it("GET - Retrieve a user", async () => {
-    const response = await api.get(`/users/${config.testContext.user._id}`)
+    const [response, user] = await config.users.read(config.context._id)
     expect(response).toHaveStatusCode(200)
   })
 
-
   it("PUT - update a user", async () => {
-    const response = await api.put(`/users/${config.testContext.user._id}`, { 
-      body: require("./fixtures/update_user.json") 
-    })
+    config.context.firstName = "Updated First Name"
+    const [response, user] = await config.users.update(
+      config.context._id,
+      config.context
+    )
     expect(response).toHaveStatusCode(200)
   })
 })
