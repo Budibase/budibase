@@ -2,7 +2,6 @@ const { DocumentType, getPluginParams } = require("../../db/utils")
 const { getComponentLibraryManifest } = require("../../utilities/fileSystem")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-const env = require("../../environment")
 
 exports.fetchAppComponentDefinitions = async function (ctx) {
   try {
