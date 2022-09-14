@@ -10,6 +10,7 @@ const Joi = require("joi")
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_BOOLEAN = Joi.boolean().optional().allow(null)
+const APP_NAME_REGEX = /^[\w\s]+$/
 
 exports.tableValidator = () => {
   // prettier-ignore
@@ -214,7 +215,7 @@ exports.applicationValidator = () => {
   return joiValidator.body(Joi.object({
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
-    name: Joi.string().required(),
+    name: Joi.string().pattern(new RegExp(APP_NAME_REGEX)).required().error(new Error('App name must be letters, numbers and spaces only')),
     url: OPTIONAL_STRING,
     template: Joi.object({
       templateString: OPTIONAL_STRING,
