@@ -37,15 +37,6 @@
         href: "/builder/portal/apps",
       },
     ]
-    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
-      menu = menu.concat([
-        {
-          title: "Usage",
-          href: "/builder/portal/settings/usage",
-          badge: "New",
-        },
-      ])
-    }
 
     if (admin) {
       menu = menu.concat([
@@ -81,14 +72,6 @@
             href: "/builder/portal/settings/update",
           },
         ])
-
-        if (isEnabled(FEATURE_FLAGS.LICENSING)) {
-          menu = menu.concat({
-            title: "Upgrade",
-            href: "/builder/portal/settings/upgrade",
-            badge: "New",
-          })
-        }
       }
     } else {
       menu = menu.concat([
@@ -101,7 +84,11 @@
     }
 
     // add link to account portal if the user has access
-    if ($auth?.user?.accountPortalAccess) {
+    let accountSectionAdded = false
+
+    // link out to account-portal if account holder in cloud or always in self-host
+    if ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin)) {
+      accountSectionAdded = true
       menu = menu.concat([
         {
           title: "Account",
@@ -109,8 +96,20 @@
           heading: "Account",
         },
       ])
+    }
 
-      if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+      // always show usage in self-host or cloud if licensing enabled
+      menu = menu.concat([
+        {
+          title: "Usage",
+          href: "/builder/portal/settings/usage",
+          heading: accountSectionAdded ? "" : "Account",
+        },
+      ])
+
+      // show the relevant hosting upgrade page
+      if ($adminStore.cloud && $auth?.user?.accountPortalAccess) {
         menu = menu.concat([
           {
             title: "Upgrade",
@@ -118,8 +117,28 @@
             badge: "New",
           },
         ])
+      } else if (!$adminStore.cloud && admin) {
+        menu = menu.concat({
+          title: "Upgrade",
+          href: "/builder/portal/settings/upgrade",
+          badge: "New",
+        })
+      }
+
+      // show the billing page to licensed account holders in cloud
+      if (
+        $auth?.user?.accountPortalAccess &&
+        $auth.user.account.stripeCustomerId
+      ) {
+        menu = menu.concat([
+          {
+            title: "Billing",
+            href: $adminStore.accountPortalUrl + "/portal/billing",
+          },
+        ])
       }
     }
+
     menu = menu.filter(item => !!item)
     return menu
   }
