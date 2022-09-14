@@ -1004,7 +1004,7 @@ components:
           description: The ID of the query.
           type: string
         datasourceId:
-          description: The ID of the data source the query belongs to.
+          description: The ID of the datasource the query belongs to.
           type: string
         parameters:
           description: The bindings which are required to perform this query.
@@ -1051,7 +1051,7 @@ components:
                 description: The ID of the query.
                 type: string
               datasourceId:
-                description: The ID of the data source the query belongs to.
+                description: The ID of the datasource the query belongs to.
                 type: string
               parameters:
                 description: The bindings which are required to perform this query.
@@ -1665,7 +1665,7 @@ paths:
       responses:
         "200":
           description: Returns the created table, including the ID which has been
-            generated for it. This can be internal or external data sources.
+            generated for it. This can be internal or external datasources.
           content:
             application/json:
               schema:
