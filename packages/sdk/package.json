@@ -1,0 +1,25 @@
+{
+  "name": "@budibase/sdk",
+  "version": "1.3.15-alpha.7",
+  "description": "Budibase Public API SDK",
+  "author": "Budibase",
+  "license": "MPL-2.0",
+  "main": "dist/sdk.cjs",
+  "module": "dist/sdk.mjs",
+  "type": "module",
+  "scripts": {
+    "generate": "cd scripts && bash generate-sdk.sh",
+    "build": "rollup -c",
+    "dev:server": "rollup -c"
+  },
+  "dependencies": {
+    "superagent": "^5.3.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^18.0.0",
+    "@rollup/plugin-node-resolve": "^11.2.1",
+    "rollup-plugin-polyfill-node": "^0.8.0",
+    "rollup": "^2.44.0",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}
