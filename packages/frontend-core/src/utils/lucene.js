@@ -218,7 +218,6 @@ export const runLuceneQuery = (docs, query) => {
 
   // Process a range match
   const rangeMatch = match("range", (docValue, testValue) => {
-    console.log("test")
     return (
       docValue == null ||
       docValue === "" ||
