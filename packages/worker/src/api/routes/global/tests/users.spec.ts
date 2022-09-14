@@ -248,7 +248,7 @@ describe("/api/global/users", () => {
       await api.users.saveUser(user)
 
       user.email = user.email.toUpperCase()
-      await api.users.saveUser(user)
+      await api.users.saveUser(user, 400)
 
       expect(events.user.created).toBeCalledTimes(1)
     })

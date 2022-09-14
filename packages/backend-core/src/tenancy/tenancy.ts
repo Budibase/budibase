@@ -9,6 +9,7 @@ import {
   getTenantIDFromAppID,
 } from "../context"
 import env from "../environment"
+import { PlatformUser, PlatformUserByEmail } from "@budibase/types"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
@@ -108,13 +109,15 @@ export const lookupTenantId = async (userId: string) => {
 }
 
 // lookup, could be email or userId, either will return a doc
-export const getTenantUser = async (identifier: string) => {
+export const getTenantUser = async (
+  identifier: string
+): Promise<PlatformUser | null> => {
   // use the view here and allow to find anyone regardless of casing
   // Use lowercase to ensure email login is case insensitive
-  const response = await queryPlatformView(ViewName.PLATFORM_USERS_LOWERCASE, {
+  const response = queryPlatformView(ViewName.PLATFORM_USERS_LOWERCASE, {
     keys: [identifier.toLowerCase()],
     include_docs: true,
-  })
+  }) as Promise<PlatformUser>
   return response
 }
 
