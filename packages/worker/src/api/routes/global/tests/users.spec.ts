@@ -242,6 +242,26 @@ describe("/api/global/users", () => {
       expect(response.body.message).toBe(`Unavailable`)
       expect(events.user.created).toBeCalledTimes(0)
     })
+
+    it("should not be able to create a user with the same email and different casing", async () => {
+      const user = structures.users.user()
+      await api.users.saveUser(user)
+
+      user.email = user.email.toUpperCase()
+      await api.users.saveUser(user, 400)
+
+      expect(events.user.created).toBeCalledTimes(1)
+    })
+
+    it("should not be able to bulk create a user with the same email and different casing", async () => {
+      const user = structures.users.user()
+      await api.users.saveUser(user)
+
+      user.email = user.email.toUpperCase()
+      await api.users.bulkCreateUsers([user])
+
+      expect(events.user.created).toBeCalledTimes(1)
+    })
   })
 
   describe("update", () => {
