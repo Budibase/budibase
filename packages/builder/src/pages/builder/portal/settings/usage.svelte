@@ -25,7 +25,8 @@
   const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
   const manageUrl = `${$admin.accountPortalUrl}/portal/billing`
 
-  const warnUsage = ["Queries", "Automations", "Rows", "Day Passes"]
+  const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes"]
+  const EXCLUDE_QUOTAS = ["Queries"]
 
   $: quotaUsage = $licensing.quotaUsage
   $: license = $auth.user?.license
@@ -36,11 +37,14 @@
     monthlyUsage = []
     if (quotaUsage.monthly) {
       for (let [key, value] of Object.entries(license.quotas.usage.monthly)) {
+        if (EXCLUDE_QUOTAS.includes(value.name)) {
+          continue
+        }
         const used = quotaUsage.monthly.current[key]
-        if (used !== undefined) {
+        if (value.value !== 0) {
           monthlyUsage.push({
             name: value.name,
-            used: used,
+            used: used ? used : 0,
             total: value.value,
           })
         }
@@ -52,11 +56,14 @@
   const setStaticUsage = () => {
     staticUsage = []
     for (let [key, value] of Object.entries(license.quotas.usage.static)) {
+      if (EXCLUDE_QUOTAS.includes(value.name)) {
+        continue
+      }
       const used = quotaUsage.usageQuota[key]
-      if (used !== undefined) {
+      if (value.value !== 0) {
         staticUsage.push({
           name: value.name,
-          used: used,
+          used: used ? used : 0,
           total: value.value,
         })
       }
@@ -199,7 +206,7 @@
                 <div class="usage">
                   <Usage
                     {usage}
-                    warnWhenFull={warnUsage.includes(usage.name)}
+                    warnWhenFull={WARN_USAGE.includes(usage.name)}
                   />
                 </div>
               {/each}
@@ -222,7 +229,7 @@
                     <div class="usage">
                       <Usage
                         {usage}
-                        warnWhenFull={warnUsage.includes(usage.name)}
+                        warnWhenFull={WARN_USAGE.includes(usage.name)}
                       />
                     </div>
                   {/each}
