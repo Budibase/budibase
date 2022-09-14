@@ -1,5 +1,5 @@
-const bcrypt = require("bcrypt")
 const env = require("./environment")
+const bcrypt = env.JS_BCRYPT ? require("bcryptjs") : require("bcrypt")
 const { v4 } = require("uuid")
 
 const SALT_ROUNDS = env.SALT_ROUNDS || 10
