@@ -33,26 +33,23 @@ exports.fetchAppComponentDefinitions = async function (ctx) {
       }
     }
 
-    // for now custom components only supported in self-host
-    if (env.SELF_HOSTED) {
-      // Add custom components
-      const globalDB = getGlobalDB()
-      const response = await globalDB.allDocs(
-        getPluginParams(null, {
-          include_docs: true,
-        })
-      )
-      response.rows
-        .map(row => row.doc)
-        .filter(plugin => plugin.schema.type === "component")
-        .forEach(plugin => {
-          const fullComponentName = `plugin/${plugin.name}`
-          definitions[fullComponentName] = {
-            component: fullComponentName,
-            ...plugin.schema.schema,
-          }
-        })
-    }
+    // Add custom components
+    const globalDB = getGlobalDB()
+    const response = await globalDB.allDocs(
+      getPluginParams(null, {
+        include_docs: true,
+      })
+    )
+    response.rows
+      .map(row => row.doc)
+      .filter(plugin => plugin.schema.type === "component")
+      .forEach(plugin => {
+        const fullComponentName = `plugin/${plugin.name}`
+        definitions[fullComponentName] = {
+          component: fullComponentName,
+          ...plugin.schema.schema,
+        }
+      })
 
     ctx.body = definitions
   } catch (err) {
