@@ -18,6 +18,11 @@ cd packages/bbui
 yarn link
 cd -
 
+echo "Linking frontend-core"
+cd packages/frontend-core
+yarn link
+cd -
+
 if [ -d "../budibase-pro" ]; then
   cd ../budibase-pro
   echo "Bootstrapping budibase-pro"
@@ -67,4 +72,7 @@ if [ -d "../account-portal" ]; then
   cd ../ui
   echo "Linking bbui to account-portal"
   yarn link "@budibase/bbui"
+
+   echo "Linking frontend-core to account-portal"
+    yarn link "@budibase/frontend-core"
 fi
