@@ -1327,7 +1327,7 @@
             "type": "string"
           },
           "datasourceId": {
-            "description": "The ID of the data source the query belongs to.",
+            "description": "The ID of the datasource the query belongs to.",
             "type": "string"
           },
           "parameters": {
@@ -1386,7 +1386,7 @@
                   "type": "string"
                 },
                 "datasourceId": {
-                  "description": "The ID of the data source the query belongs to.",
+                  "description": "The ID of the datasource the query belongs to.",
                   "type": "string"
                 },
                 "parameters": {
@@ -2289,7 +2289,7 @@
         },
         "responses": {
           "200": {
-            "description": "Returns the created table, including the ID which has been generated for it. This can be internal or external data sources.",
+            "description": "Returns the created table, including the ID which has been generated for it. This can be internal or external datasources.",
             "content": {
               "application/json": {
                 "schema": {

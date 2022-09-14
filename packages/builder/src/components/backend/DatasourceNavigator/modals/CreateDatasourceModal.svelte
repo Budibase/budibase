@@ -126,7 +126,7 @@
 <Modal bind:this={modal}>
   <ModalContent
     disabled={!Object.keys(integration).length}
-    title="Add data source"
+    title="Add datasource"
     confirmText="Continue"
     showSecondaryButton={showImportButton}
     secondaryButtonText="Import"
@@ -155,7 +155,7 @@
     </Layout>
 
     <Layout noPadding gap="XS">
-      <Body size="S">Connect to an external data source</Body>
+      <Body size="S">Connect to an external datasource</Body>
       <div class="item-list">
         {#each Object.entries(integrations).filter(([key, val]) => key !== IntegrationTypes.INTERNAL && !val.custom) as [integrationType, schema]}
           <DatasourceCard
@@ -170,7 +170,7 @@
 
     {#if customIntegrations.length > 0}
       <Layout noPadding gap="XS">
-        <Body size="S">Custom data source</Body>
+        <Body size="S">Custom datasource</Body>
         <div class="item-list">
           {#each customIntegrations as [integrationType, schema]}
             <DatasourceCard
