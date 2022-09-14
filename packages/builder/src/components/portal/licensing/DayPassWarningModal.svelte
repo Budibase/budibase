@@ -1,31 +1,40 @@
 <script>
-  import { Modal, ModalContent, Body } from "@budibase/bbui"
+  import { Modal, ModalContent, Body, TooltipWrapper } from "@budibase/bbui"
   import { licensing, auth, admin } from "stores/portal"
 
   export let onDismiss = () => {}
   export let onShow = () => {}
 
-  let sessionsModal
+  let dayPassModal
 
-  const outOfSessionsTitle = "You are almost out of sessions"
-  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  $: accountUrl = $admin.accountPortalUrl
+  $: upgradeUrl = `${accountUrl}/portal/upgrade`
 
   $: daysRemaining = $licensing.quotaResetDaysRemaining
-  $: sessionsUsed = $licensing.usageMetrics?.dayPasses
+  $: quotaResetDate = $licensing.quotaResetDate
+  $: dayPassesUsed = $licensing.usageMetrics?.dayPasses
+  $: dayPassesTitle =
+    dayPassesUsed >= 100
+      ? "You have run out of Day Passes"
+      : "You are almost out of Day Passes"
+  $: dayPassesBody =
+    dayPassesUsed >= 100
+      ? "Upgrade your account to bring your apps back online."
+      : "Upgrade your account to prevent your apps from going offline."
 
   export function show() {
-    sessionsModal.show()
+    dayPassModal.show()
   }
 
   export function hide() {
-    sessionsModal.hide()
+    dayPassModal.hide()
   }
 </script>
 
-<Modal bind:this={sessionsModal} on:show={onShow} on:hide={onDismiss}>
+<Modal bind:this={dayPassModal} on:show={onShow} on:hide={onDismiss}>
   {#if $auth.user.accountPortalAccess}
     <ModalContent
-      title={outOfSessionsTitle}
+      title={dayPassesTitle}
       size="M"
       confirmText="Upgrade"
       onConfirm={() => {
@@ -33,22 +42,37 @@
       }}
     >
       <Body>
-        You have used <span class="session_percent">{sessionsUsed}%</span> of
+        You have used <span class="daypass_percent">{dayPassesUsed}%</span> of
         your plans Day Passes with {daysRemaining} day{daysRemaining == 1
           ? ""
           : "s"} remaining.
+        <span class="tooltip">
+          <TooltipWrapper tooltip={quotaResetDate} size="S" />
+        </span>
       </Body>
-      <Body>Upgrade your account to prevent your apps from going offline.</Body>
+      <Body>{dayPassesBody}</Body>
     </ModalContent>
   {:else}
-    <ModalContent title={outOfSessionsTitle} size="M" showCancelButton={false}>
+    <ModalContent title={dayPassesTitle} size="M" showCancelButton={false}>
       <Body>
-        You have used <span class="session_percent">{sessionsUsed}%</span> of
+        You have used <span class="daypass_percent">{dayPassesUsed}%</span> of
         your plans Day Passes with {daysRemaining} day{daysRemaining == 1
           ? ""
           : "s"} remaining.
+        <span class="tooltip">
+          <TooltipWrapper tooltip={quotaResetDate} size="S" />
+        </span>
       </Body>
-      <Body>Please contact your account holder.</Body>
+      <Body>Please contact your account holder to upgrade.</Body>
     </ModalContent>
   {/if}
 </Modal>
+
+<style>
+  .tooltip {
+    display: inline-block;
+  }
+  .tooltip :global(.icon-container) {
+    margin: 0px;
+  }
+</style>

@@ -4,8 +4,7 @@ import { get } from "svelte/store"
 export const getTemporalStore = () => {
   const initialValue = {}
 
-  //const appId = window["##BUDIBASE_APP_ID##"] || "app"
-  const localStorageKey = `${123}.bb-temporal`
+  const localStorageKey = `bb-temporal`
   const store = createLocalStorageStore(localStorageKey, initialValue)
 
   const setExpiring = (key, data, duration) => {

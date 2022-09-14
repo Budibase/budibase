@@ -6,7 +6,7 @@
   import PaymentFailedModal from "./PaymentFailedModal.svelte"
   import AccountDowngradedModal from "./AccountDowngradedModal.svelte"
   import { ExpiringKeys } from "./constants"
-  import { getBanners } from "./banners"
+  import { getBanners } from "./licensingBanners"
   import { banner } from "@budibase/bbui"
 
   const oneDayInSeconds = 86400
@@ -42,7 +42,7 @@
       {
         key: ExpiringKeys.LICENSING_PAYMENT_FAILED,
         criteria: () => {
-          return $licensing.accountPastDue
+          return $licensing.accountPastDue && !$licensing.isFreePlan()
         },
         action: () => {
           paymentFailedModal.show()
@@ -69,14 +69,7 @@
     })
   }
 
-  $: if (userLoaded && licensingLoaded && loaded) {
-    queuedModals = processModals()
-    queuedBanners = getBanners()
-    showNext()
-    banner.queue(queuedBanners)
-  }
-
-  const showNext = () => {
+  const showNextModal = () => {
     if (currentModalCfg) {
       currentModalCfg.cache()
     }
@@ -86,6 +79,13 @@
     } else {
       currentModalCfg = null
     }
+  }
+
+  $: if (userLoaded && licensingLoaded && loaded) {
+    queuedModals = processModals()
+    queuedBanners = getBanners()
+    showNextModal()
+    banner.queue(queuedBanners)
   }
 
   onMount(async () => {
@@ -100,18 +100,13 @@
         licensingLoaded = true
       }
     })
-
-    temporalStore.subscribe(state => {
-      console.log("Stored temporal ", state)
-    })
-
     loaded = true
   })
 </script>
 
-<DayPassWarningModal bind:this={dayPassModal} onDismiss={showNext} />
-<PaymentFailedModal bind:this={paymentFailedModal} onDismiss={showNext} />
+<DayPassWarningModal bind:this={dayPassModal} onDismiss={showNextModal} />
+<PaymentFailedModal bind:this={paymentFailedModal} onDismiss={showNextModal} />
 <AccountDowngradedModal
   bind:this={accountDowngradeModal}
-  onDismiss={showNext}
+  onDismiss={showNextModal}
 />

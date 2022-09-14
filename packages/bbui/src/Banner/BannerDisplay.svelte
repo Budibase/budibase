@@ -16,13 +16,15 @@
           extraButtonText={message.extraButtonText}
           extraButtonAction={message.extraButtonAction}
           on:change={() => {
-            message.onChange()
+            if (message.onChange) {
+              message.onChange()
+            }
           }}
           showCloseButton={typeof message.showCloseButton === "boolean"
             ? message.showCloseButton
             : true}
         >
-          <TooltipWrapper tooltip={"test"}>
+          <TooltipWrapper tooltip={message.tooltip} disabled={false}>
             {message.message}
           </TooltipWrapper>
         </Banner>

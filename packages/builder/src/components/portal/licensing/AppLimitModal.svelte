@@ -6,7 +6,8 @@
 
   let appLimitModal
 
-  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  $: accountUrl = $admin.accountPortalUrl
+  $: upgradeUrl = `${accountUrl}/portal/upgrade`
 
   export function show() {
     appLimitModal.show()
@@ -19,7 +20,7 @@
 
 <Modal bind:this={appLimitModal} on:hide={onDismiss}>
   <ModalContent
-    title="Upgrade to get more apps"
+    title="Upgrade to get more apps "
     size="M"
     showCancelButton={false}
     confirmText={$auth.user.accountPortalAccess ? "Upgrade" : "Confirm"}
@@ -31,10 +32,10 @@
   >
     <Body>
       You are currently on our <span class="free-plan">Free plan</span>. Upgrade
-      to our Pro plan to get unlimited apps.
+      to our Pro plan to get unlimited apps and additional features.
     </Body>
     {#if !$auth.user.accountPortalAccess}
-      <Body>Please contact the account holder.</Body>
+      <Body>Please contact the account holder to upgrade.</Body>
     {/if}
   </ModalContent>
 </Modal>

@@ -7,7 +7,8 @@
 
   let accountDowngradeModal
 
-  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  $: accountUrl = $admin.accountPortalUrl
+  $: upgradeUrl = `${accountUrl}/portal/upgrade`
 
   export function show() {
     accountDowngradeModal.show()
@@ -31,15 +32,12 @@
       : null}
   >
     <Body>
-      The payment for your Business Subscription failed and we have downgraded
-      your account to the <span class="free-plan">Free plan</span>.
+      The payment for your subscription has failed and we have downgraded your
+      account to the <span class="free-plan">Free plan</span>.
     </Body>
-    <Body>
-      Update to Business to get all your apps and user sessions back up and
-      running.
-    </Body>
+    <Body>Upgrade to restore full functionality.</Body>
     {#if !$auth.user.accountPortalAccess}
-      <Body>Please contact the account holder.</Body>
+      <Body>Please contact the account holder to upgrade.</Body>
     {/if}
   </ModalContent>
 </Modal>
