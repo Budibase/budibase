@@ -197,10 +197,12 @@ export async function storePlugin(
 }
 
 export async function processPlugin(plugin: FileType, source?: string) {
-  if (!env.SELF_HOSTED) {
-    throw new Error("Plugins not supported outside of self-host.")
+  const { metadata, directory } = await fileUpload(plugin)
+
+  // Only allow components in cloud
+  if (!env.SELF_HOSTED && metadata?.schema?.type !== PluginType.COMPONENT) {
+    throw new Error("Only component plugins are supported outside of self-host")
   }
 
-  const { metadata, directory } = await fileUpload(plugin)
   return await storePlugin(metadata, directory, source)
 }
