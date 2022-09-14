@@ -22,7 +22,7 @@ function checkInPlugin() {
   }
 }
 
-async function askAboutTopLevel() {
+async function askAboutTopLevel(name) {
   const files = fs.readdirSync(process.cwd())
   // we are in an empty git repo, don't ask
   if (files.length === 1 && files[0] === ".git") {
@@ -63,7 +63,7 @@ async function init(opts) {
     `An amazing Budibase ${type}!`
   )
   const version = await questions.string("Version", "1.0.0")
-  const topLevel = await askAboutTopLevel()
+  const topLevel = await askAboutTopLevel(name)
   // get the skeleton
   console.log(info("Retrieving project..."))
   await getSkeleton(type, name)
