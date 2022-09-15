@@ -34,6 +34,7 @@ export interface RestConfig {
   defaultHeaders: {
     [key: string]: any
   }
+  legacyHttpParser: boolean
   authConfigs: AuthConfig[]
   staticVariables: {
     [key: string]: string

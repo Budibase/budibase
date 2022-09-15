@@ -94,11 +94,16 @@ module.exports = {
       for (let plugin of plugins) {
         if (plugin.name === integration) {
           // need to use commonJS require due to its dynamic runtime nature
-          return getDatasourcePlugin(
+          const retrieved: any = await getDatasourcePlugin(
             plugin.name,
             plugin.jsUrl,
             plugin.schema?.hash
           )
+          if (retrieved.integration) {
+            return retrieved.integration
+          } else {
+            return retrieved
+          }
         }
       }
     }

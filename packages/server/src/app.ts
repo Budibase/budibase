@@ -32,6 +32,7 @@ import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
 import { createAdminUser, getChecklist } from "./utilities/workerRequests"
 import { watch } from "./watch"
+import { initialise as initialiseWebsockets } from "./websocket"
 
 const app = new Koa()
 
@@ -76,6 +77,7 @@ if (env.isProd()) {
 
 const server = http.createServer(app.callback())
 destroyable(server)
+initialiseWebsockets(server)
 
 let shuttingDown = false,
   errCode = 0
