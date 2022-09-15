@@ -14,7 +14,6 @@ import {
   errors,
   events,
   tenancy,
-  users as usersCore,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { groups as groupUtils } from "@budibase/pro"
@@ -148,9 +147,7 @@ export const bulkDelete = async (ctx: any) => {
   }
 
   try {
-    let response = await users.bulkDelete(userIds)
-
-    ctx.body = response
+    ctx.body = await users.bulkDelete(userIds)
   } catch (err) {
     ctx.throw(err)
   }
