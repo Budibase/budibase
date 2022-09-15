@@ -1,5 +1,8 @@
-const { PluginTypes } = require("./constants")
-const { DatasourceFieldType, QueryType } = require("@budibase/types")
+const {
+  DatasourceFieldType,
+  QueryType,
+  PluginType,
+} = require("@budibase/types")
 const joi = require("joi")
 
 const DATASOURCE_TYPES = [
@@ -78,11 +81,11 @@ function validateDatasource(schema) {
 }
 
 exports.validate = schema => {
-  switch (schema.type) {
-    case PluginTypes.COMPONENT:
+  switch (schema?.type) {
+    case PluginType.COMPONENT:
       validateComponent(schema)
       break
-    case PluginTypes.DATASOURCE:
+    case PluginType.DATASOURCE:
       validateDatasource(schema)
       break
     default:
