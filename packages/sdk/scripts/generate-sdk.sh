@@ -7,11 +7,8 @@ fi
 if [[ -d "generated" ]]; then
     rm -r generated
 fi
-if [[ -d "../docs" ]]; then
-    rm -r ../docs
-fi
-if [[ -d "../src" ]]; then
-    rm -r ../src
+if [[ -d "../sdk" ]]; then
+    rm -r ../sdk
 fi
 
 # Generate new SDK
@@ -25,10 +22,10 @@ docker run --rm \
   -i /openapi.yml \
   -l javascript \
   -o /generated
+  --additional-properties useES6=false
 
 # Use a subset of the generated files
-mv generated/docs ../
-mv generated/src ../
+mv generated/src ../sdk
 
 # Cleanup
 if [[ -f "openapi.yaml" ]]; then

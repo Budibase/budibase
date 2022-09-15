@@ -4,13 +4,12 @@
   "description": "Budibase Public API SDK",
   "author": "Budibase",
   "license": "MPL-2.0",
-  "main": "dist/sdk.cjs",
   "module": "dist/sdk.mjs",
   "type": "module",
   "scripts": {
     "generate": "cd scripts && bash generate-sdk.sh",
-    "build": "rollup -c",
-    "dev:server": "rollup -c"
+    "build": "yarn run generate && rollup -c",
+    "dev:builder": "yarn run build"
   },
   "dependencies": {
     "superagent": "^5.3.0"
