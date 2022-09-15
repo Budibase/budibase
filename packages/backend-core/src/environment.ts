@@ -19,6 +19,7 @@ if (!LOADED && isDev() && !isTest()) {
 const env = {
   isTest,
   isDev,
+  JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
@@ -50,6 +51,7 @@ const env = {
   GLOBAL_BUCKET_NAME: process.env.GLOBAL_BUCKET_NAME || "global",
   GLOBAL_CLOUD_BUCKET_NAME:
     process.env.GLOBAL_CLOUD_BUCKET_NAME || "prod-budi-tenant-uploads",
+  PLUGIN_BUCKET_NAME: process.env.PLUGIN_BUCKET_NAME || "plugins",
   USE_COUCH: process.env.USE_COUCH || true,
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,

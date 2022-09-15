@@ -85,6 +85,8 @@
         ? [$store.componentToPaste?._id]
         : [],
     isBudibaseEvent: true,
+    usedPlugins: $store.usedPlugins,
+    location: window.location,
   }
 
   // Refresh the preview when required
@@ -290,7 +292,7 @@
   <iframe
     title="componentPreview"
     bind:this={iframe}
-    src="/preview"
+    src="/app/preview"
     class:hidden={loading || error}
     class:tablet={$store.previewDevice === "tablet"}
     class:mobile={$store.previewDevice === "mobile"}
