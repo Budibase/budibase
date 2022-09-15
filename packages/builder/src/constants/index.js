@@ -64,3 +64,10 @@ export const PlanType = {
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
 }
+
+export const PluginSource = {
+  URL: "URL",
+  NPM: "NPM",
+  GITHUB: "Github",
+  FILE: "File Upload",
+}

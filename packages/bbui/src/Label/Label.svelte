@@ -4,10 +4,15 @@
 
   export let size = "M"
   export let tooltip = ""
+  export let muted
 </script>
 
 <TooltipWrapper {tooltip} {size}>
-  <label for="" class={`spectrum-FieldLabel spectrum-FieldLabel--size${size}`}>
+  <label
+    class:muted
+    for=""
+    class={`spectrum-FieldLabel spectrum-FieldLabel--size${size}`}
+  >
     <slot />
   </label>
 </TooltipWrapper>
@@ -16,5 +21,9 @@
   label {
     padding: 0;
     white-space: nowrap;
+  }
+
+  .muted {
+    opacity: 0.5;
   }
 </style>

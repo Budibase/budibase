@@ -71,6 +71,7 @@ exports.save = async ctx => {
           name: plugin.name,
           version: plugin.version,
           jsUrl: plugin.jsUrl,
+          hash: plugin.hash,
         })
       }
     })

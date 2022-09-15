@@ -2,6 +2,7 @@ import ClientApp from "./components/ClientApp.svelte"
 import { componentStore, builderStore, appStore, devToolsStore } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
+import { initWebsocket } from "./websocket.js"
 
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
@@ -28,6 +29,7 @@ const loadBudibase = () => {
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
+    location: window["##BUDIBASE_LOCATION##"],
   })
 
   // Set app ID - this window flag is set by both the preview and the real
@@ -50,6 +52,9 @@ const loadBudibase = () => {
   // themselves at runtime
   window.registerCustomComponent =
     componentStore.actions.registerCustomComponent
+
+  // Initialise websocket
+  initWebsocket()
 
   // Create app if one hasn't been created yet
   if (!app) {

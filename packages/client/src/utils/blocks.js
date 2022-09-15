@@ -13,7 +13,7 @@ const schemaComponentMap = {
 /**
  * Determine data types for search fields and only use those that are valid
  * @param searchColumns the search columns to use
- * @param schema the data source schema
+ * @param schema the datasource schema
  */
 export const enrichSearchColumns = (searchColumns, schema) => {
   let enrichedColumns = []

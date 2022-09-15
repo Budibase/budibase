@@ -15,7 +15,6 @@
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-  import ExportAppModal from "components/start/ExportAppModal.svelte"
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
 
   import { store, automationStore } from "builderStore"
@@ -34,7 +33,6 @@
   let selectedApp
   let creationModal
   let updatingModal
-  let exportModal
   let appLimitModal
   let creatingApp = false
   let loaded = $apps?.length || $templates?.length
@@ -413,10 +411,6 @@
 
 <Modal bind:this={updatingModal} padding={false} width="600px">
   <UpdateAppModal app={selectedApp} />
-</Modal>
-
-<Modal bind:this={exportModal} padding={false} width="600px">
-  <ExportAppModal app={selectedApp} />
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />

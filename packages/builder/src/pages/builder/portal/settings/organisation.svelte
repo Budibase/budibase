@@ -15,7 +15,6 @@
   import { API } from "api"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
-  import { onMount } from "svelte"
 
   // Only admins allowed here
   $: {
@@ -34,12 +33,11 @@
   })
   let loading = false
 
-  async function uploadLogo() {
+  async function uploadLogo(file) {
     try {
       let data = new FormData()
-      data.append("file", $values.logo)
-      await API.uploadPlugin(data)
-      notifications.success("Plugin uploaded successfully")
+      data.append("file", file)
+      await API.uploadLogo(data)
     } catch (error) {
       notifications.error("Error uploading logo")
     }
@@ -73,11 +71,6 @@
     }
     loading = false
   }
-
-  onMount(async () => {
-    const plugins = await API.getPlugins()
-    console.log(plugins)
-  })
 </script>
 
 {#if $auth.isAdmin}
@@ -95,14 +88,14 @@
       <Heading size="S">Information</Heading>
       <Body size="S">Here you can update your logo and organization name.</Body>
     </Layout>
-    <div class="fields">
-      <div class="field">
+    <div className="fields">
+      <div className="field">
         <Label size="L">Org. name</Label>
         <Input thin bind:value={$values.company} />
       </div>
-      <div class="field logo">
+      <div className="field logo">
         <Label size="L">Logo</Label>
-        <div class="file">
+        <div className="file">
           <Dropzone
             value={[$values.logo]}
             on:change={e => {
@@ -113,7 +106,6 @@
               }
             }}
           />
-          <button on:click={uploadLogo}>Upload</button>
         </div>
       </div>
     </div>
@@ -123,8 +115,8 @@
         <Heading size="S">Platform</Heading>
         <Body size="S">Here you can set up general platform settings.</Body>
       </Layout>
-      <div class="fields">
-        <div class="field">
+      <div className="fields">
+        <div className="field">
           <Label
             size="L"
             tooltip={"Update the Platform URL to match your Budibase web URL. This keeps email templates and authentication configs up to date."}
@@ -158,15 +150,18 @@
     display: grid;
     grid-gap: var(--spacing-m);
   }
+
   .field {
     display: grid;
     grid-template-columns: 100px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
   }
+
   .file {
     max-width: 30ch;
   }
+
   .logo {
     align-items: start;
   }
