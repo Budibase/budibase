@@ -1,5 +1,5 @@
 const Command = require("../structures/Command")
-const { CommandWords } = require("../constants")
+const { CommandWords, AnalyticsEvents } = require("../constants")
 const { getSkeleton, fleshOutSkeleton } = require("./skeleton")
 const questions = require("../questions")
 const fs = require("fs")
@@ -8,6 +8,7 @@ const { validate } = require("@budibase/backend-core/plugins")
 const { runPkgCommand } = require("../exec")
 const { join } = require("path")
 const { success, error, info, moveDirectory } = require("../utils")
+const { captureEvent } = require("../events")
 
 function checkInPlugin() {
   if (!fs.existsSync("package.json")) {
@@ -58,7 +59,7 @@ async function init(opts) {
     )
     return
   }
-  const desc = await questions.string(
+  const description = await questions.string(
     "Description",
     `An amazing Budibase ${type}!`
   )
@@ -67,7 +68,7 @@ async function init(opts) {
   // get the skeleton
   console.log(info("Retrieving project..."))
   await getSkeleton(type, name)
-  await fleshOutSkeleton(type, name, desc, version)
+  await fleshOutSkeleton(type, name, description, version)
   console.log(info("Installing dependencies..."))
   await runPkgCommand("install", join(process.cwd(), name))
   // if no parent directory desired move to cwd
@@ -77,6 +78,12 @@ async function init(opts) {
   } else {
     console.log(info(`Plugin created in directory "${name}"`))
   }
+  captureEvent(AnalyticsEvents.PluginInit, {
+    type,
+    name,
+    description,
+    version,
+  })
 }
 
 async function verify() {
