@@ -13,8 +13,7 @@
     notifications,
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
-  import { organisation, auth } from "stores/portal"
-  import { admin as adminStore } from "stores/portal"
+  import { organisation, auth, admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"

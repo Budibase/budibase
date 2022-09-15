@@ -13,6 +13,10 @@ export const createLicensingStore = () => {
   const store = writable(DEFAULT)
 
   const actions = {
+    init: async () => {
+      await actions.getQuotaUsage()
+      await actions.getUsageMetrics()
+    },
     getQuotaUsage: async () => {
       const quotaUsage = await API.getQuotaUsage()
       store.update(state => {
