@@ -11,7 +11,7 @@ events {
 http {
   # rate limiting
   limit_req_status 429;
-  limit_req_zone $binary_remote_addr zone=ratelimit:10m rate=20r/s;
+  limit_req_zone $binary_remote_addr zone=ratelimit:10m rate=${PROXY_RATE_LIMIT_API_PER_SECOND}r/s;
   limit_req_zone $binary_remote_addr zone=webhooks:10m rate=${PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND}r/s;
 
   include       /etc/nginx/mime.types;
@@ -88,10 +88,6 @@ http {
       proxy_pass      http://$apps:4002;
     }
 
-    location /preview {
-      proxy_pass      http://$apps:4002;
-    }
-
     location = / {
       proxy_pass      http://$apps:4002;
     }
@@ -160,6 +156,15 @@ http {
     location /db/ {
       proxy_pass      http://$couchdb:5984;
       rewrite ^/db/(.*)$ /$1 break;
+    }
+
+    location /socket/ {
+      proxy_http_version  1.1;
+      proxy_set_header    Upgrade     $http_upgrade;
+      proxy_set_header    Connection  'upgrade';
+      proxy_set_header    Host        $host;
+      proxy_cache_bypass  $http_upgrade;
+      proxy_pass          http://$apps:4002;
     }
 
     location / {

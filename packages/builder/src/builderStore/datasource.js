@@ -9,7 +9,7 @@ function prepareData(config) {
     ds => ds.source === config.type
   ).length
 
-  let baseName = IntegrationNames[config.type]
+  let baseName = IntegrationNames[config.type] || config.name
   let name =
     existingTypeCount === 0 ? baseName : `${baseName}-${existingTypeCount + 1}`
 
@@ -27,7 +27,7 @@ export async function saveDatasource(config, skipFetch = false) {
   // Create datasource
   const resp = await datasources.save(datasource, !skipFetch && datasource.plus)
 
-  // update the tables incase data source plus
+  // update the tables incase datasource plus
   await tables.fetch()
   await datasources.select(resp._id)
   return resp
