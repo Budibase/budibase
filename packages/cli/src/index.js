@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 require("./prebuilds")
+require("./environment")
 const { getCommands } = require("./options")
 const { Command } = require("commander")
 const { getHelpDescription } = require("./utils")
