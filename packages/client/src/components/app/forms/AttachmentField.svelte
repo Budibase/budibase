@@ -9,6 +9,7 @@
   export let validation
   export let extensions
   export let onChange
+  export let maximum = undefined
 
   let fieldState
   let fieldApi
@@ -22,6 +23,12 @@
       `Files cannot exceed ${
         fileSizeLimit / BYTES_IN_MB
       } MB. Please try again with smaller files.`
+    )
+  }
+
+  const handleTooManyFiles = fileLimit => {
+    notificationStore.actions.warning(
+      `Please select a maximum of ${fileLimit} files.`
     )
   }
 
@@ -40,9 +47,20 @@
     }
   }
 
+  const deleteAttachments = async fileList => {
+    try {
+      return await API.deleteAttachments({
+        keys: fileList,
+        tableId: formContext?.dataSource?.tableId,
+      })
+    } catch (error) {
+      return []
+    }
+  }
+
   const handleChange = e => {
-    fieldApi.setValue(e.detail)
-    if (onChange) {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
       onChange({ value: e.detail })
     }
   }
@@ -65,7 +83,10 @@
       error={fieldState.error}
       on:change={handleChange}
       {processFiles}
+      {deleteAttachments}
       {handleFileTooLarge}
+      {handleTooManyFiles}
+      {maximum}
       {extensions}
     />
   {/if}

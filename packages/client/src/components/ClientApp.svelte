@@ -24,6 +24,7 @@
   import DeviceBindingsProvider from "components/context/DeviceBindingsProvider.svelte"
   import StateBindingsProvider from "components/context/StateBindingsProvider.svelte"
   import RowSelectionProvider from "components/context/RowSelectionProvider.svelte"
+  import QueryParamsProvider from "components/context/QueryParamsProvider.svelte"
   import SettingsBar from "components/preview/SettingsBar.svelte"
   import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
@@ -41,6 +42,40 @@
   let dataLoaded = false
   let permissionError = false
 
+  // Determine if we should show devtools or not
+  $: showDevTools =
+    !$builderStore.inBuilder &&
+    $devToolsStore.enabled &&
+    !$routeStore.queryParams?.peek
+
+  // Handle no matching route
+  $: {
+    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
+      if ($screenStore.screens.length) {
+        // If we have some available screens, use the first screen which
+        // represents the best route based on rank
+        const route = $screenStore.screens[0].routing?.route
+        if (!route) {
+          permissionError = true
+          console.error("No route found but screens exist")
+        } else {
+          permissionError = false
+          routeStore.actions.navigate(route)
+        }
+      } else if ($authStore) {
+        // If the user is logged in but has no screens, they don't have
+        // permission to use the app
+        permissionError = true
+      } else {
+        // If they have no screens and are not logged in, it probably means
+        // they should log in to gain access
+        const returnUrl = `${window.location.pathname}${window.location.hash}`
+        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
+        window.location = "/builder/auth/login"
+      }
+    }
+  }
+
   // Load app config
   onMount(async () => {
     await initialise()
@@ -49,69 +84,31 @@
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
     } else {
-      builderStore.actions.pingEndUser()
+      builderStore.actions.analyticsPing({ source: "app" })
     }
   })
-
-  // Handle no matching route - this is likely a permission error
-  $: {
-    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
-      if ($authStore) {
-        // There is a logged in user, so handle them
-        if ($screenStore.screens.length) {
-          let firstRoute
-
-          // If using devtools, find the first screen matching our role
-          if ($devToolsStore.role) {
-            const roleRoutes = $screenStore.screens.filter(
-              screen => screen.routing?.roleId === $devToolsStore.role
-            )
-            firstRoute = roleRoutes[0]?.routing?.route || "/"
-          }
-
-          // Otherwise just use the first route
-          else {
-            firstRoute = $screenStore.screens[0]?.routing?.route ?? "/"
-          }
-
-          // Screens exist so navigate back to the home screen
-          routeStore.actions.navigate(firstRoute)
-        } else {
-          // No screens likely means the user has no permissions to view this app
-          permissionError = true
-        }
-      } else {
-        // The user is not logged in, redirect them to login
-        const returnUrl = `${window.location.pathname}${window.location.hash}`
-        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
-        window.location = "/builder/auth/login"
-      }
-    }
-  }
-
-  $: isDevPreview = $appStore.isDevApp && !$builderStore.inBuilder
 </script>
+
+<svelte:head>
+  {#if $builderStore.usedPlugins?.length}
+    {#each $builderStore.usedPlugins as plugin (plugin.hash)}
+      <script src={`/plugins/${plugin.jsUrl}?r=${plugin.hash || ""}`}></script>
+    {/each}
+  {/if}
+</svelte:head>
 
 {#if dataLoaded}
   <div
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {$themeStore.theme}"
+    class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
   >
-    {#if permissionError}
-      <div class="error">
-        <Layout justifyItems="center" gap="S">
-          {@html ErrorSVG}
-          <Heading size="L">You don't have permission to use this app</Heading>
-          <Body size="S">Ask your administrator to grant you access</Body>
-        </Layout>
-      </div>
-    {:else if $screenStore.activeLayout}
+    <DeviceBindingsProvider>
       <UserBindingsProvider>
-        <DeviceBindingsProvider>
-          <StateBindingsProvider>
-            <RowSelectionProvider>
+        <StateBindingsProvider>
+          <RowSelectionProvider>
+            <QueryParamsProvider>
               <!-- Settings bar can be rendered outside of device preview -->
               <!-- Key block needs to be outside the if statement or it breaks -->
               {#key $builderStore.selectedComponentId}
@@ -129,36 +126,62 @@
               >
                 <!-- Actual app -->
                 <div id="app-root">
-                  {#if isDevPreview}
+                  {#if showDevTools}
                     <DevToolsHeader />
                   {/if}
 
                   <div id="app-body">
-                    <CustomThemeWrapper>
-                      {#key `${$screenStore.activeLayout._id}-${$builderStore.previewType}`}
-                        <Component
-                          isLayout
-                          instance={$screenStore.activeLayout.props}
-                        />
-                      {/key}
+                    {#if permissionError}
+                      <div class="error">
+                        <Layout justifyItems="center" gap="S">
+                          {@html ErrorSVG}
+                          <Heading size="L">
+                            You don't have permission to use this app
+                          </Heading>
+                          <Body size="S">
+                            Ask your administrator to grant you access
+                          </Body>
+                        </Layout>
+                      </div>
+                    {:else if !$screenStore.activeLayout}
+                      <div class="error">
+                        <Layout justifyItems="center" gap="S">
+                          {@html ErrorSVG}
+                          <Heading size="L">
+                            Something went wrong rendering your app
+                          </Heading>
+                          <Body size="S">
+                            Get in touch with support if this issue persists
+                          </Body>
+                        </Layout>
+                      </div>
+                    {:else}
+                      <CustomThemeWrapper>
+                        {#key $screenStore.activeLayout._id}
+                          <Component
+                            isLayout
+                            instance={$screenStore.activeLayout.props}
+                          />
+                        {/key}
 
-                      <!--
-                        Flatpickr needs to be inside the theme wrapper.
-                        It also needs its own container because otherwise it hijacks
-                        key events on the whole page. It is painful to work with.
-                      -->
-                      <div id="flatpickr-root" />
+                        <!--
+                          Flatpickr needs to be inside the theme wrapper.
+                          It also needs its own container because otherwise it hijacks
+                          key events on the whole page. It is painful to work with.
+                        -->
+                        <div id="flatpickr-root" />
 
-                      <!-- Modal container to ensure they sit on top -->
-                      <div class="modal-container" />
+                        <!-- Modal container to ensure they sit on top -->
+                        <div class="modal-container" />
 
-                      <!-- Layers on top of app -->
-                      <NotificationDisplay />
-                      <ConfirmationDisplay />
-                      <PeekScreenDisplay />
-                    </CustomThemeWrapper>
+                        <!-- Layers on top of app -->
+                        <NotificationDisplay />
+                        <ConfirmationDisplay />
+                        <PeekScreenDisplay />
+                      </CustomThemeWrapper>
+                    {/if}
 
-                    {#if $appStore.isDevApp && !$builderStore.inBuilder}
+                    {#if showDevTools}
                       <DevTools />
                     {/if}
                   </div>
@@ -175,11 +198,11 @@
                   <DNDHandler />
                 {/if}
               </div>
-            </RowSelectionProvider>
-          </StateBindingsProvider>
-        </DeviceBindingsProvider>
+            </QueryParamsProvider>
+          </RowSelectionProvider>
+        </StateBindingsProvider>
       </UserBindingsProvider>
-    {/if}
+    </DeviceBindingsProvider>
   </div>
   <KeyboardManager />
 {/if}
@@ -228,7 +251,6 @@
   }
 
   .error {
-    position: absolute;
     width: 100%;
     height: 100%;
     display: grid;
@@ -237,23 +259,19 @@
     text-align: center;
     padding: 20px;
   }
-
   .error :global(svg) {
     fill: var(--spectrum-global-color-gray-500);
     width: 80px;
     height: 80px;
   }
-
   .error :global(h1),
   .error :global(p) {
     color: var(--spectrum-global-color-gray-800);
   }
-
   .error :global(p) {
     font-style: italic;
     margin-top: -0.5em;
   }
-
   .error :global(h1) {
     font-weight: 400;
   }
@@ -263,12 +281,10 @@
   #clip-root.preview {
     padding: 2px;
   }
-
   #clip-root.tablet-preview {
     width: calc(1024px + 6px);
     height: calc(768px + 6px);
   }
-
   #clip-root.mobile-preview {
     width: calc(390px + 6px);
     height: calc(844px + 6px);
@@ -283,7 +299,8 @@
   @media print {
     #spectrum-root,
     #clip-root,
-    #app-root {
+    #app-root,
+    #app-body {
       overflow: visible !important;
     }
   }

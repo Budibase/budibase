@@ -348,7 +348,7 @@ export interface paths {
         }
       }
       responses: {
-        /** Returns the created table, including the ID which has been generated for it. This can be internal or external data sources. */
+        /** Returns the created table, including the ID which has been generated for it. This can be internal or external datasources. */
         200: {
           content: {
             "application/json": components["schemas"]["tableOutput"]
@@ -959,7 +959,7 @@ export interface components {
     query: {
       /** @description The ID of the query. */
       _id: string
-      /** @description The ID of the data source the query belongs to. */
+      /** @description The ID of the datasource the query belongs to. */
       datasourceId?: string
       /** @description The bindings which are required to perform this query. */
       parameters?: string[]
@@ -983,7 +983,7 @@ export interface components {
       data: {
         /** @description The ID of the query. */
         _id: string
-        /** @description The ID of the data source the query belongs to. */
+        /** @description The ID of the datasource the query belongs to. */
         datasourceId?: string
         /** @description The bindings which are required to perform this query. */
         parameters?: string[]

@@ -2,18 +2,16 @@ import posthog from "posthog-js"
 import { Events } from "./constants"
 
 export default class PosthogClient {
-  constructor(token, url) {
+  constructor(token) {
     this.token = token
-    this.url = url
   }
 
   init() {
-    if (!this.token || !this.url) return
+    if (!this.token) return
 
     posthog.init(this.token, {
       autocapture: false,
-      capture_pageview: true,
-      api_host: this.url,
+      capture_pageview: false,
     })
     posthog.set_config({ persistence: "cookie" })
 

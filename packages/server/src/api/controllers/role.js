@@ -10,6 +10,7 @@ const {
   InternalTables,
 } = require("../../db/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
 
 const UpdateRolesOptions = {
   CREATED: "created",
@@ -50,8 +51,10 @@ exports.find = async function (ctx) {
 exports.save = async function (ctx) {
   const db = getAppDB()
   let { _id, name, inherits, permissionId } = ctx.request.body
+  let isCreate = false
   if (!_id) {
     _id = generateRoleID()
+    isCreate = true
   } else if (isBuiltin(_id)) {
     ctx.throw(400, "Cannot update builtin roles.")
   }
@@ -62,6 +65,11 @@ exports.save = async function (ctx) {
     role._rev = ctx.request.body._rev
   }
   const result = await db.put(role)
+  if (isCreate) {
+    await events.role.created(role)
+  } else {
+    await events.role.updated(role)
+  }
   await updateRolesOnUserTable(db, _id, UpdateRolesOptions.CREATED)
   role._rev = result.rev
   ctx.body = role
@@ -71,6 +79,7 @@ exports.save = async function (ctx) {
 exports.destroy = async function (ctx) {
   const db = getAppDB()
   const roleId = ctx.params.roleId
+  const role = await db.get(roleId)
   if (isBuiltin(roleId)) {
     ctx.throw(400, "Cannot delete builtin role.")
   }
@@ -88,6 +97,7 @@ exports.destroy = async function (ctx) {
   }
 
   await db.remove(roleId, ctx.params.rev)
+  await events.role.deleted(role)
   await updateRolesOnUserTable(
     db,
     ctx.params.roleId,

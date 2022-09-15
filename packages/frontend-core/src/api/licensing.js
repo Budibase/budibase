@@ -27,4 +27,13 @@ export const buildLicensingEndpoints = API => ({
       url: "/api/global/license/refresh",
     })
   },
+
+  /**
+   * Retrieve the usage information for the tenant
+   */
+  getQuotaUsage: async () => {
+    return API.get({
+      url: "/api/global/license/usage",
+    })
+  },
 })

@@ -1,7 +1,7 @@
 import filterTests from "../../support/filterTests"
 
 filterTests(["all"], () => {
-  context("Oracle Datasource Testing", () => {
+  xcontext("Oracle Datasource Testing", () => {
     if (Cypress.env("TEST_ENV")) {
       before(() => {
         cy.login()
@@ -11,8 +11,8 @@ filterTests(["all"], () => {
       const queryName = "Cypress Test Query"
       const queryRename = "CT Query Rename"
 
-      it("Should add Oracle data source and skip table fetch", () => {
-        // Select Oracle data source
+      it("Should add Oracle datasource and skip table fetch", () => {
+        // Select Oracle datasource
         cy.selectExternalDatasource(datasource)
         // Skip table fetch - no config added
         cy.get(".spectrum-Button")
@@ -20,10 +20,10 @@ filterTests(["all"], () => {
           .click({ force: true })
         cy.wait(500)
         // Confirm config contains localhost
-        cy.get(".spectrum-Textfield-input")
+        cy.get(".spectrum-Textfield-input", { timeout: 500 })
           .eq(1)
           .should("have.value", "localhost")
-        // Add another Oracle data source, configure & skip table fetch
+        // Add another Oracle datasource, configure & skip table fetch
         cy.selectExternalDatasource(datasource)
         cy.addDatasourceConfig(datasource, true)
         // Confirm config and no tables
@@ -33,8 +33,8 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Body").eq(2).should("contain", "No tables found.")
       })
 
-      it("Should add Oracle data source and fetch tables without configuration", () => {
-        // Select Oracle data source
+      it("Should add Oracle datasource and fetch tables without configuration", () => {
+        // Select Oracle datasource
         cy.selectExternalDatasource(datasource)
         // Attempt to fetch tables without applying configuration
         cy.intercept("**/datasources").as("datasource")
@@ -49,8 +49,8 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button").contains("Skip table fetch").click({ force: true })
       })
 
-      xit("should add Oracle data source and fetch tables", () => {
-        // Add & configure Oracle data source
+      xit("should add Oracle datasource and fetch tables", () => {
+        // Add & configure Oracle datasource
         cy.selectExternalDatasource(datasource)
         cy.intercept("**/datasources").as("datasource")
         cy.addDatasourceConfig(datasource)
@@ -140,9 +140,8 @@ filterTests(["all"], () => {
                 .eq(1)
                 .within(() => {
                   cy.get(".spectrum-Table-row").eq(0).click()
-                  cy.wait(500)
                 })
-              cy.get(".spectrum-Dialog-grid").within(() => {
+              cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
                 cy.get(".spectrum-Button")
                   .contains("Delete")
                   .click({ force: true })
@@ -221,10 +220,9 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button")
           .contains("Delete Query")
           .click({ force: true })
-        cy.wait(1000)
 
         // Confirm deletion
-        cy.get(".nav-item").should("not.contain", queryName)
+        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryName)
       })
     }
   })

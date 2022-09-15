@@ -170,28 +170,29 @@ export function makeDatasourceFormComponents(datasource) {
           optionsType: "select",
           optionsSource: "schema",
         })
-      }
-      if (fieldType === "longform") {
+      } else if (fieldType === "longform") {
         component.customProps({
           format: "auto",
         })
-      }
-      if (fieldType === "array") {
+      } else if (fieldType === "array") {
         component.customProps({
           placeholder: "Choose an option",
           optionsSource: "schema",
         })
-      }
-
-      if (fieldType === "link") {
+      } else if (fieldType === "link") {
         let placeholder =
           fieldSchema.relationshipType === "one-to-many"
             ? "Choose an option"
             : "Choose some options"
         component.customProps({ placeholder })
-      }
-      if (fieldType === "boolean") {
+      } else if (fieldType === "boolean") {
         component.customProps({ text: field, label: "" })
+      } else if (fieldType === "datetime") {
+        component.customProps({
+          enableTime: !fieldSchema?.dateOnly,
+          timeOnly: fieldSchema?.timeOnly,
+          ignoreTimezones: fieldSchema.ignoreTimezones,
+        })
       }
       components.push(component)
     }

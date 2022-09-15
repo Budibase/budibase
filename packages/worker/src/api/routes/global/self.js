@@ -1,7 +1,7 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/self")
-const builderOnly = require("../../../middleware/builderOnly")
-const { buildUserSaveValidation } = require("../../utilities/validation")
+const { builderOnly } = require("@budibase/backend-core/auth")
+const { users } = require("../validation")
 
 const router = Router()
 
@@ -11,7 +11,7 @@ router
   .get("/api/global/self", controller.getSelf)
   .post(
     "/api/global/self",
-    buildUserSaveValidation(true),
+    users.buildUserSaveValidation(true),
     controller.updateSelf
   )
 

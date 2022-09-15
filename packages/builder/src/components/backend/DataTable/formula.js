@@ -60,6 +60,7 @@ export function getBindings({
     )
 
     const label = path == null ? column : `${path}.0.${column}`
+    const binding = path == null ? `[${column}]` : `[${path}].0.[${column}]`
     // only supply a description for relationship paths
     const description =
       path == null
@@ -73,8 +74,8 @@ export function getBindings({
       description,
       // don't include path, it messes things up, relationship path
       // will be replaced by the main array binding
-      readableBinding: column,
-      runtimeBinding: `[${column}]`,
+      readableBinding: label,
+      runtimeBinding: binding,
     })
   }
   return bindings

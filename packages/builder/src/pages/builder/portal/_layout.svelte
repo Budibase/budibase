@@ -13,8 +13,7 @@
     notifications,
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
-  import { organisation, auth } from "stores/portal"
-  import { admin as adminStore } from "stores/portal"
+  import { organisation, auth, admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
@@ -31,7 +30,13 @@
   $: menu = buildMenu($auth.isAdmin)
 
   const buildMenu = admin => {
-    let menu = [{ title: "Apps", href: "/builder/portal/apps" }]
+    let menu = [
+      {
+        title: "Apps",
+        href: "/builder/portal/apps",
+      },
+    ]
+
     if (admin) {
       menu = menu.concat([
         {
@@ -39,8 +44,21 @@
           href: "/builder/portal/manage/users",
           heading: "Manage",
         },
+        isEnabled(FEATURE_FLAGS.USER_GROUPS)
+          ? {
+              title: "User Groups",
+              href: "/builder/portal/manage/groups",
+              badge: "New",
+            }
+          : undefined,
         { title: "Auth", href: "/builder/portal/manage/auth" },
         { title: "Email", href: "/builder/portal/manage/email" },
+        {
+          title: "Plugins",
+          href: "/builder/portal/manage/plugins",
+          badge: "New",
+        },
+
         {
           title: "Organisation",
           href: "/builder/portal/settings/organisation",
@@ -59,13 +77,6 @@
             href: "/builder/portal/settings/update",
           },
         ])
-
-        if (isEnabled(FEATURE_FLAGS.LICENSING)) {
-          menu = menu.concat({
-            title: "Upgrade",
-            href: "/builder/portal/settings/upgrade",
-          })
-        }
       }
     } else {
       menu = menu.concat([
@@ -78,14 +89,62 @@
     }
 
     // add link to account portal if the user has access
-    if ($auth?.user?.accountPortalAccess) {
+    let accountSectionAdded = false
+
+    // link out to account-portal if account holder in cloud or always in self-host
+    if ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin)) {
+      accountSectionAdded = true
       menu = menu.concat([
         {
           title: "Account",
           href: $adminStore.accountPortalUrl,
+          heading: "Account",
         },
       ])
     }
+
+    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+      // always show usage in self-host or cloud if licensing enabled
+      menu = menu.concat([
+        {
+          title: "Usage",
+          href: "/builder/portal/settings/usage",
+          heading: accountSectionAdded ? "" : "Account",
+        },
+      ])
+
+      // show the relevant hosting upgrade page
+      if ($adminStore.cloud && $auth?.user?.accountPortalAccess) {
+        menu = menu.concat([
+          {
+            title: "Upgrade",
+            href: $adminStore.accountPortalUrl + "/portal/upgrade",
+            badge: "New",
+          },
+        ])
+      } else if (!$adminStore.cloud && admin) {
+        menu = menu.concat({
+          title: "Upgrade",
+          href: "/builder/portal/settings/upgrade",
+          badge: "New",
+        })
+      }
+
+      // show the billing page to licensed account holders in cloud
+      if (
+        $auth?.user?.accountPortalAccess &&
+        $auth.user.account.stripeCustomerId
+      ) {
+        menu = menu.concat([
+          {
+            title: "Billing",
+            href: $adminStore.accountPortalUrl + "/portal/billing",
+          },
+        ])
+      }
+    }
+
+    menu = menu.filter(item => !!item)
     return menu
   }
 
@@ -136,11 +195,12 @@
         </div>
         <div class="menu">
           <Navigation>
-            {#each menu as { title, href, heading }}
+            {#each menu as { title, href, heading, badge }}
               <Item
                 on:click={hideMobileMenu}
                 selected={$isActive(href)}
                 {href}
+                {badge}
                 {heading}>{title}</Item
               >
             {/each}
@@ -160,7 +220,7 @@
           />
         </div>
         <div class="user-dropdown">
-          <ActionMenu align="right">
+          <ActionMenu align="right" dataCy="user-menu">
             <div slot="control" class="avatar">
               <Avatar
                 size="M"
@@ -169,7 +229,11 @@
               />
               <Icon size="XL" name="ChevronDown" />
             </div>
-            <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+            <MenuItem
+              icon="UserEdit"
+              on:click={() => userInfoModal.show()}
+              dataCy={"user-info"}
+            >
               Update user information
             </MenuItem>
             {#if $auth.isBuilder}
@@ -186,7 +250,9 @@
             <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
               Close developer mode
             </MenuItem>
-            <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}
+              >Log out
+            </MenuItem>
           </ActionMenu>
         </div>
       </div>
@@ -315,7 +381,7 @@
 
     .mobile-toggle,
     .user-dropdown {
-      flex: 1 1 0;
+      flex: 0 1 0;
     }
 
     /* Reduce BBUI page padding */

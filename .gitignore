@@ -98,4 +98,10 @@ hosting/proxy/.generated-nginx.prod.conf
 bin/
 hosting/.generated*
 packages/builder/cypress.env.json
+packages/builder/cypress/reports
 stats.html
+
+# TypeScript cache
+*.tsbuildinfo
+budibase-component
+budibase-datasource

@@ -20,6 +20,9 @@
   export let readonly
 
   const resolveTimeStamp = timestamp => {
+    if (!timestamp) {
+      return null
+    }
     let maskedDate = new Date(`0-${timestamp}`)
     if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
       return maskedDate
@@ -34,7 +37,7 @@
   $: label = meta.name ? capitalise(meta.name) : ""
 
   const timeStamp = resolveTimeStamp(value)
-  const isTimeStamp = !!timeStamp
+  const isTimeStamp = !!timeStamp || meta?.timeOnly
 </script>
 
 {#if type === "options" && meta.constraints.inclusion.length !== 0}
@@ -46,7 +49,13 @@
     sort
   />
 {:else if type === "datetime"}
-  <DatePicker {label} timeOnly={isTimeStamp} bind:value />
+  <DatePicker
+    {label}
+    timeOnly={isTimeStamp}
+    enableTime={!meta?.dateOnly}
+    ignoreTimezones={meta?.ignoreTimezones}
+    bind:value
+  />
 {:else if type === "attachment"}
   <Dropzone {label} bind:value />
 {:else if type === "boolean"}

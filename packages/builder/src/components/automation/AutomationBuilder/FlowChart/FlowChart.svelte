@@ -12,9 +12,9 @@
     notifications,
     Modal,
   } from "@budibase/bbui"
+  import { ActionStepID } from "constants/backend/automations"
 
   export let automation
-
   let testDataModal
   let blocks
   let confirmDeleteDialog
@@ -41,66 +41,70 @@
 </script>
 
 <div class="canvas">
-  <div class="content">
-    <div class="title">
-      <div class="subtitle">
-        <Heading size="S">{automation.name}</Heading>
-        <div style="display:flex; align-items: center;">
-          <div class="iconPadding">
-            <div class="icon">
-              <Icon
-                on:click={confirmDeleteDialog.show}
-                hoverable
-                size="M"
-                name="DeleteOutline"
-              />
-            </div>
-          </div>
+  <div style="float: left; padding-left: var(--spacing-xl);">
+    <Heading size="S">{automation.name}</Heading>
+  </div>
+  <div style="float: right; padding-right: var(--spacing-xl);" class="title">
+    <div class="subtitle">
+      <div style="display:flex; align-items: center;">
+        <div class="icon">
+          <Icon
+            on:click={confirmDeleteDialog.show}
+            hoverable
+            size="M"
+            name="DeleteOutline"
+          />
+        </div>
+        <ActionButton
+          on:click={() => {
+            testDataModal.show()
+          }}
+          icon="MultipleCheck"
+          size="M">Run test</ActionButton
+        >
+        <div style="padding-left: var(--spacing-m);">
           <ActionButton
+            disabled={!$automationStore.selectedAutomation?.testResults}
             on:click={() => {
-              testDataModal.show()
+              $automationStore.showTestPanel = true
             }}
-            icon="MultipleCheck"
-            size="M">Run test</ActionButton
+            size="M">Test Details</ActionButton
           >
         </div>
       </div>
     </div>
-    {#each blocks as block, idx (block.id)}
-      <div
-        class="block"
-        animate:flip={{ duration: 500 }}
-        in:fly|local={{ x: 500, duration: 1500 }}
-      >
-        {#if block.stepId !== "LOOP"}
-          <FlowItem {testDataModal} {block} />
-        {/if}
-      </div>
-    {/each}
   </div>
-  <ConfirmDialog
-    bind:this={confirmDeleteDialog}
-    okText="Delete Automation"
-    onOk={deleteAutomation}
-    title="Confirm Deletion"
-  >
-    Are you sure you wish to delete the automation
-    <i>{automation.name}?</i>
-    This action cannot be undone.
-  </ConfirmDialog>
-
-  <Modal bind:this={testDataModal} width="30%">
-    <TestDataModal />
-  </Modal>
 </div>
+<div class="content">
+  {#each blocks as block, idx (block.id)}
+    <div
+      class="block"
+      animate:flip={{ duration: 500 }}
+      in:fly|local={{ x: 500, duration: 500 }}
+      out:fly|local={{ x: 500, duration: 500 }}
+    >
+      {#if block.stepId !== ActionStepID.LOOP}
+        <FlowItem {testDataModal} {block} />
+      {/if}
+    </div>
+  {/each}
+</div>
+<ConfirmDialog
+  bind:this={confirmDeleteDialog}
+  okText="Delete Automation"
+  onOk={deleteAutomation}
+  title="Confirm Deletion"
+>
+  Are you sure you wish to delete the automation
+  <i>{automation.name}?</i>
+  This action cannot be undone.
+</ConfirmDialog>
+
+<Modal bind:this={testDataModal} width="30%">
+  <TestDataModal />
+</Modal>
 
 <style>
-  .canvas {
-    margin: 0 -40px calc(-1 * var(--spacing-l)) -40px;
-    overflow-y: auto;
-    text-align: center;
-    height: 100%;
-  }
   /* Fix for firefox not respecting bottom padding in scrolling containers */
   .canvas > *:last-child {
     padding-bottom: 40px;
@@ -128,10 +132,6 @@
     justify-content: space-between;
     align-items: center;
   }
-  .iconPadding {
-    padding-top: var(--spacing-s);
-  }
-
   .icon {
     cursor: pointer;
     padding-right: var(--spacing-m);

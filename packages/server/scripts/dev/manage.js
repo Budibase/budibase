@@ -54,6 +54,11 @@ async function init() {
       DISABLE_ACCOUNT_PORTAL: "",
       MULTI_TENANCY: "",
       DISABLE_THREADING: 1,
+      SERVICE: "app-service",
+      DEPLOYMENT_ENVIRONMENT: "development",
+      BB_ADMIN_USER_EMAIL: "",
+      BB_ADMIN_USER_PASSWORD: "",
+      PLUGINS_DIR: "",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {

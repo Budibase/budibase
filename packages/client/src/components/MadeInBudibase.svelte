@@ -4,6 +4,7 @@
 
 <Link
   href="https://www.budibase.com/?utm_source=budibase-apps-public-screens&utm_medium=badge&utm_campaign=made-in-budibase"
+  target="_blank"
 >
   <div>
     <img src="https://i.imgur.com/Xhdt1YP.png" alt="Budibase" />
@@ -31,7 +32,7 @@
 
   p {
     text-decoration: none;
-    color: var(--spectrum-heading-m-text-color);
+    color: var(--spectrum-global-color-gray-900);
   }
 
   img {

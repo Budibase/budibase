@@ -1,4 +1,4 @@
-name: Budibase Cloud Deploy
+name: Budibase Deploy Production
 
 on:
  workflow_dispatch:
@@ -66,7 +66,7 @@ jobs:
           config-files: values.production.yaml
           chart-path: charts/budibase
           namespace: budibase
-          values: globals.appVersion=v${{ env.RELEASE_VERSION }}
+          values: globals.appVersion=v${{ env.RELEASE_VERSION }},services.couchdb.url=${{ secrets.PRODUCTION_COUCHDB_URL }},services.couchdb.password=${{ secrets.PRODUCTION_COUCHDB_PASSWORD }}
           name: budibase-prod
 
       - name: Discord Webhook Action

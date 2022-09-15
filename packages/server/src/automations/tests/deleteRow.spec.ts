@@ -26,7 +26,7 @@ describe("test the delete row action", () => {
     expect(res.row._id).toEqual(row._id)
     let error
     try {
-      await config.getRow(table._id, res.id)
+      await config.getRow(table._id, res.row._id)
     } catch (err) {
       error = err
     }

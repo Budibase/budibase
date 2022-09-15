@@ -11,8 +11,8 @@ filterTests(["all"], () => {
       const queryName = "Cypress Test Query"
       const queryRename = "CT Query Rename"
 
-      it("Should add MySQL data source without configuration", () => {
-        // Select MySQL data source
+      it("Should add MySQL datasource without configuration", () => {
+        // Select MySQL datasource
         cy.selectExternalDatasource(datasource)
         // Attempt to fetch tables without applying configuration
         cy.intercept("**/datasources").as("datasource")
@@ -35,8 +35,8 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button").contains("Skip table fetch").click({ force: true })
       })
 
-      it("should add MySQL data source and fetch tables", () => {
-        // Add & configure MySQL data source
+      it("should add MySQL datasource and fetch tables", () => {
+        // Add & configure MySQL datasource
         cy.selectExternalDatasource(datasource)
         cy.intercept("**/datasources").as("datasource")
         cy.addDatasourceConfig(datasource)
@@ -52,7 +52,7 @@ filterTests(["all"], () => {
       })
 
       it("should check table fetching error", () => {
-        // MySQL test data source contains tables without primary keys
+        // MySQL test datasource contains tables without primary keys
         cy.get(".spectrum-InLineAlert")
           .should("contain", "Error fetching tables")
           .and("contain", "No primary key constraint found")
@@ -114,7 +114,7 @@ filterTests(["all"], () => {
           cy.wait(1000)
         })
         // Confirm table length & relationship name
-        cy.get(".spectrum-Table")
+        cy.get(".spectrum-Table", { timeout: 1000 })
           .eq(1)
           .find(".spectrum-Table-row")
           .its("length")
@@ -136,15 +136,15 @@ filterTests(["all"], () => {
               cy.get(".spectrum-Table")
                 .eq(1)
                 .within(() => {
-                  cy.get(".spectrum-Table-row").eq(0).click({ force: true })
-                  cy.wait(500)
+                  cy.get(".spectrum-Table-cell").eq(0).click({ force: true })
                 })
-              cy.get(".spectrum-Dialog-grid").within(() => {
+              cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
                 cy.get(".spectrum-Button")
                   .contains("Delete")
                   .click({ force: true })
               })
               cy.reload()
+              cy.wait(500)
             }
             // Confirm relationships no longer exist
             cy.get(".spectrum-Body").should(
@@ -175,7 +175,10 @@ filterTests(["all"], () => {
         cy.get("@query").its("response.statusCode").should("eq", 200)
         cy.get("@query").its("response.body").should("not.be.empty")
         // Save query
+        cy.intercept("POST", "**/queries").as("saveQuery")
         cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
+        cy.wait("@saveQuery")
+        cy.get("@saveQuery").its("response.statusCode").should("eq", 200)
         cy.get(".nav-item").should("contain", queryName)
       })
 
@@ -199,15 +202,16 @@ filterTests(["all"], () => {
           .within(() => {
             cy.get("input").clear().type(queryRename)
           })
-        // Save query
-        cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
+        // Click on a nav item
+        cy.get(".nav-item").first().click()
+        // Confirm name change
         cy.get(".nav-item").should("contain", queryRename)
       })
 
       it("should delete a query", () => {
         // Get query nav item - QueryName
         cy.get(".nav-item")
-          .contains(queryName)
+          .contains(queryRename)
           .parent()
           .within(() => {
             cy.get(".spectrum-Icon").eq(1).click({ force: true })
@@ -217,9 +221,8 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button")
           .contains("Delete Query")
           .click({ force: true })
-        cy.wait(1000)
         // Confirm deletion
-        cy.get(".nav-item").should("not.contain", queryName)
+        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryRename)
       })
     }
   })

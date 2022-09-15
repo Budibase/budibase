@@ -90,8 +90,8 @@ export function createQueriesStore() {
       // Assume all the fields are strings and create a basic schema from the
       // unique fields returned by the server
       const schema = {}
-      for (let field of result.schemaFields) {
-        schema[field] = "string"
+      for (let [field, type] of Object.entries(result.schemaFields)) {
+        schema[field] = type || "string"
       }
       return { ...result, schema, rows: result.rows || [] }
     },

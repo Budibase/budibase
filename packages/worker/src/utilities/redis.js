@@ -55,12 +55,14 @@ exports.init = async () => {
 exports.shutdown = async () => {
   if (pwResetClient) await pwResetClient.finish()
   if (invitationClient) await invitationClient.finish()
+  console.log("Redis shutdown")
 }
 
 /**
  * Given a user ID this will store a code (that is returned) for an hour in redis.
  * The user can then return this code for resetting their password (through their reset link).
  * @param {string} userId the ID of the user which is to be reset.
+ * @param {object} info Info about the user/the reset process.
  * @return {Promise<string>} returns the code that was stored to redis.
  */
 exports.getResetPasswordCode = async (userId, info) => {

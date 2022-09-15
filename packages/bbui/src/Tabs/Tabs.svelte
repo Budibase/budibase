@@ -10,8 +10,8 @@
   export let noHorizPadding = false
   export let quiet = false
   export let emphasized = false
-  // overlay content from the tab bar onto tabs e.g. for a dropdown
   export let onTop = false
+  export let size = "M"
 
   let thisSelected = undefined
 
@@ -74,20 +74,19 @@
 
 <div
   bind:this={container}
-  class:quiet
+  class:spectrum-Tabs--quiet={quiet}
   class:noHorizPadding
-  class="selected-border spectrum-Tabs {quiet &&
-    'spectrum-Tabs--quiet'} spectrum-Tabs--{vertical
-    ? 'vertical'
-    : 'horizontal'}"
   class:onTop
+  class:spectrum-Tabs--vertical={vertical}
+  class:spectrum-Tabs--horizontal={!vertical}
+  class="spectrum-Tabs spectrum-Tabs--size{size}"
 >
   <slot />
   {#if $tab.info}
     <div
-      class="spectrum-Tabs-selectionIndicator indicator-transition"
-      style="{emphasized &&
-        'background-color: var(--spectrum-global-color-blue-400)'}; width: {width}; height: {height}; left: {left}; top: {top};"
+      class="spectrum-Tabs-selectionIndicator"
+      class:emphasized
+      style="width: {width}; height: {height}; left: {left}; top: {top};"
     />
   {/if}
 </div>
@@ -98,31 +97,34 @@
 />
 
 <style>
-  .quiet {
+  .spectrum-Tabs--quiet {
     border-bottom: none !important;
-  }
-  .onTop {
-    z-index: 20;
   }
   .spectrum-Tabs {
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);
     position: relative;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    border-bottom-color: var(--spectrum-global-color-gray-200);
   }
   .spectrum-Tabs-content {
     margin-top: var(--spectrum-global-dimension-static-size-150);
   }
-  .indicator-transition {
+  .spectrum-Tabs-selectionIndicator {
     transition: all 200ms;
+    background-color: var(--spectrum-global-color-gray-900);
+  }
+  .spectrum-Tabs-selectionIndicator.emphasized {
+    background-color: var(--spectrum-global-color-blue-400);
   }
   .spectrum-Tabs--horizontal .spectrum-Tabs-selectionIndicator {
-    bottom: 0 !important;
   }
   .noHorizPadding {
     padding: 0;
   }
   .noPadding {
     margin: 0;
+  }
+  .onTop {
+    z-index: 100;
   }
 </style>

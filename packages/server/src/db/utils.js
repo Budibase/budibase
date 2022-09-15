@@ -1,6 +1,6 @@
 const newid = require("./newid")
 const {
-  DocumentTypes: CoreDocTypes,
+  DocumentType: CoreDocTypes,
   getRoleParams,
   generateRoleID,
   APP_DEV_PREFIX,
@@ -9,6 +9,10 @@ const {
   StaticDatabases,
   isDevAppID,
   isProdAppID,
+  getDevelopmentAppID,
+  generateAppID,
+  getQueryIndex,
+  ViewName,
 } = require("@budibase/backend-core/db")
 
 const UNICODE_MAX = "\ufff0"
@@ -19,12 +23,8 @@ const AppStatus = {
   DEPLOYED: "published",
 }
 
-const DocumentTypes = {
-  APP: CoreDocTypes.APP,
-  DEV: CoreDocTypes.DEV,
-  APP_DEV: CoreDocTypes.APP_DEV,
-  APP_METADATA: CoreDocTypes.APP_METADATA,
-  ROLE: CoreDocTypes.ROLE,
+const DocumentType = {
+  ...CoreDocTypes,
   TABLE: "ta",
   ROW: "ro",
   USER: "us",
@@ -41,11 +41,8 @@ const DocumentTypes = {
   METADATA: "metadata",
   MEM_VIEW: "view",
   USER_FLAG: "flag",
-}
-
-const ViewNames = {
-  LINK: "by_link",
-  ROUTING: "screen_routes",
+  AUTOMATION_METADATA: "meta_au",
+  PLUGIN: "plg",
 }
 
 const InternalTables = {
@@ -70,23 +67,24 @@ exports.APP_PREFIX = APP_PREFIX
 exports.APP_DEV_PREFIX = APP_DEV_PREFIX
 exports.isDevAppID = isDevAppID
 exports.isProdAppID = isProdAppID
-exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
-exports.LINK_USER_METADATA_PREFIX = `${DocumentTypes.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
-exports.ViewNames = ViewNames
+exports.USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+exports.LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+exports.TABLE_ROW_PREFIX = `${DocumentType.ROW}${SEPARATOR}${DocumentType.TABLE}`
+exports.ViewName = ViewName
 exports.InternalTables = InternalTables
-exports.DocumentTypes = DocumentTypes
+exports.DocumentType = DocumentType
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
 exports.SearchIndexes = SearchIndexes
 exports.AppStatus = AppStatus
 exports.BudibaseInternalDB = BudibaseInternalDB
+exports.generateAppID = generateAppID
+exports.generateDevAppID = getDevelopmentAppID
 
 exports.generateRoleID = generateRoleID
 exports.getRoleParams = getRoleParams
 
-exports.getQueryIndex = viewName => {
-  return `database/${viewName}`
-}
+exports.getQueryIndex = getQueryIndex
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -117,7 +115,7 @@ exports.getDocParams = getDocParams
  * Gets parameters for retrieving tables, this is a utility function for the getDocParams function.
  */
 exports.getTableParams = (tableId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.TABLE, tableId, otherProps)
+  return getDocParams(DocumentType.TABLE, tableId, otherProps)
 }
 
 /**
@@ -125,7 +123,7 @@ exports.getTableParams = (tableId = null, otherProps = {}) => {
  * @returns {string} The new table ID which the table doc can be stored under.
  */
 exports.generateTableID = () => {
-  return `${DocumentTypes.TABLE}${SEPARATOR}${newid()}`
+  return `${DocumentType.TABLE}${SEPARATOR}${newid()}`
 }
 
 /**
@@ -138,12 +136,12 @@ exports.generateTableID = () => {
  */
 exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
   if (tableId == null) {
-    return getDocParams(DocumentTypes.ROW, null, otherProps)
+    return getDocParams(DocumentType.ROW, null, otherProps)
   }
 
   const endOfKey = rowId == null ? `${tableId}${SEPARATOR}` : rowId
 
-  return getDocParams(DocumentTypes.ROW, endOfKey, otherProps)
+  return getDocParams(DocumentType.ROW, endOfKey, otherProps)
 }
 
 /**
@@ -153,9 +151,9 @@ exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
  */
 exports.getTableIDFromRowID = rowId => {
   const components = rowId
-    .split(DocumentTypes.TABLE + SEPARATOR)[1]
+    .split(DocumentType.TABLE + SEPARATOR)[1]
     .split(SEPARATOR)
-  return `${DocumentTypes.TABLE}${SEPARATOR}${components[0]}`
+  return `${DocumentType.TABLE}${SEPARATOR}${components[0]}`
 }
 
 /**
@@ -166,7 +164,7 @@ exports.getTableIDFromRowID = rowId => {
  */
 exports.generateRowID = (tableId, id = null) => {
   id = id || newid()
-  return `${DocumentTypes.ROW}${SEPARATOR}${tableId}${SEPARATOR}${id}`
+  return `${DocumentType.ROW}${SEPARATOR}${tableId}${SEPARATOR}${id}`
 }
 
 /**
@@ -189,7 +187,7 @@ exports.generateUserMetadataID = globalId => {
  * Breaks up the ID to get the global ID.
  */
 exports.getGlobalIDFromUserMetadataID = id => {
-  const prefix = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+  const prefix = `${DocumentType.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
   if (!id || !id.includes(prefix)) {
     return id
   }
@@ -200,7 +198,7 @@ exports.getGlobalIDFromUserMetadataID = id => {
  * Gets parameters for retrieving automations, this is a utility function for the getDocParams function.
  */
 exports.getAutomationParams = (automationId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.AUTOMATION, automationId, otherProps)
+  return getDocParams(DocumentType.AUTOMATION, automationId, otherProps)
 }
 
 /**
@@ -208,7 +206,7 @@ exports.getAutomationParams = (automationId = null, otherProps = {}) => {
  * @returns {string} The new automation ID which the automation doc can be stored under.
  */
 exports.generateAutomationID = () => {
-  return `${DocumentTypes.AUTOMATION}${SEPARATOR}${newid()}`
+  return `${DocumentType.AUTOMATION}${SEPARATOR}${newid()}`
 }
 
 /**
@@ -233,36 +231,14 @@ exports.generateLinkID = (
   const tables = `${SEPARATOR}${tableId1}${SEPARATOR}${tableId2}`
   const rows = `${SEPARATOR}${rowId1}${SEPARATOR}${rowId2}`
   const fields = `${SEPARATOR}${fieldName1}${SEPARATOR}${fieldName2}`
-  return `${DocumentTypes.LINK}${tables}${rows}${fields}`
+  return `${DocumentType.LINK}${tables}${rows}${fields}`
 }
 
 /**
  * Gets parameters for retrieving link docs, this is a utility function for the getDocParams function.
  */
 exports.getLinkParams = (otherProps = {}) => {
-  return getDocParams(DocumentTypes.LINK, null, otherProps)
-}
-
-/**
- * Generates a new app ID.
- * @returns {string} The new app ID which the app doc can be stored under.
- */
-exports.generateAppID = (tenantId = null) => {
-  let id = `${DocumentTypes.APP}${SEPARATOR}`
-  if (tenantId) {
-    id += `${tenantId}${SEPARATOR}`
-  }
-  return `${id}${newid()}`
-}
-
-/**
- * Generates a development app ID from a real app ID.
- * @returns {string} the dev app ID which can be used for dev database.
- */
-exports.generateDevAppID = appId => {
-  const prefix = `${DocumentTypes.APP}${SEPARATOR}`
-  const rest = appId.split(prefix)[1]
-  return `${DocumentTypes.APP_DEV}${SEPARATOR}${rest}`
+  return getDocParams(DocumentType.LINK, null, otherProps)
 }
 
 /**
@@ -270,14 +246,14 @@ exports.generateDevAppID = appId => {
  * @returns {string} The new layout ID which the layout doc can be stored under.
  */
 exports.generateLayoutID = id => {
-  return `${DocumentTypes.LAYOUT}${SEPARATOR}${id || newid()}`
+  return `${DocumentType.LAYOUT}${SEPARATOR}${id || newid()}`
 }
 
 /**
  * Gets parameters for retrieving layout, this is a utility function for the getDocParams function.
  */
 exports.getLayoutParams = (layoutId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.LAYOUT, layoutId, otherProps)
+  return getDocParams(DocumentType.LAYOUT, layoutId, otherProps)
 }
 
 /**
@@ -285,14 +261,14 @@ exports.getLayoutParams = (layoutId = null, otherProps = {}) => {
  * @returns {string} The new screen ID which the screen doc can be stored under.
  */
 exports.generateScreenID = () => {
-  return `${DocumentTypes.SCREEN}${SEPARATOR}${newid()}`
+  return `${DocumentType.SCREEN}${SEPARATOR}${newid()}`
 }
 
 /**
  * Gets parameters for retrieving screens, this is a utility function for the getDocParams function.
  */
 exports.getScreenParams = (screenId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.SCREEN, screenId, otherProps)
+  return getDocParams(DocumentType.SCREEN, screenId, otherProps)
 }
 
 /**
@@ -300,14 +276,14 @@ exports.getScreenParams = (screenId = null, otherProps = {}) => {
  * @returns {string} The new webhook ID which the webhook doc can be stored under.
  */
 exports.generateWebhookID = () => {
-  return `${DocumentTypes.WEBHOOK}${SEPARATOR}${newid()}`
+  return `${DocumentType.WEBHOOK}${SEPARATOR}${newid()}`
 }
 
 /**
  * Gets parameters for retrieving a webhook, this is a utility function for the getDocParams function.
  */
 exports.getWebhookParams = (webhookId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.WEBHOOK, webhookId, otherProps)
+  return getDocParams(DocumentType.WEBHOOK, webhookId, otherProps)
 }
 
 /**
@@ -316,7 +292,7 @@ exports.getWebhookParams = (webhookId = null, otherProps = {}) => {
  */
 exports.generateDatasourceID = ({ plus = false } = {}) => {
   return `${
-    plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE
+    plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE
   }${SEPARATOR}${newid()}`
 }
 
@@ -324,7 +300,7 @@ exports.generateDatasourceID = ({ plus = false } = {}) => {
  * Gets parameters for retrieving a datasource, this is a utility function for the getDocParams function.
  */
 exports.getDatasourceParams = (datasourceId = null, otherProps = {}) => {
-  return getDocParams(DocumentTypes.DATASOURCE, datasourceId, otherProps)
+  return getDocParams(DocumentType.DATASOURCE, datasourceId, otherProps)
 }
 
 /**
@@ -333,8 +309,23 @@ exports.getDatasourceParams = (datasourceId = null, otherProps = {}) => {
  */
 exports.generateQueryID = datasourceId => {
   return `${
-    DocumentTypes.QUERY
+    DocumentType.QUERY
   }${SEPARATOR}${datasourceId}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Generates a metadata ID for automations, used to track errors in recurring
+ * automations etc.
+ */
+exports.generateAutomationMetadataID = automationId => {
+  return `${DocumentType.AUTOMATION_METADATA}${SEPARATOR}${automationId}`
+}
+
+/**
+ * Retrieve all automation metadata in an app database.
+ */
+exports.getAutomationMetadataParams = (otherProps = {}) => {
+  return getDocParams(DocumentType.AUTOMATION_METADATA, null, otherProps)
 }
 
 /**
@@ -342,11 +333,11 @@ exports.generateQueryID = datasourceId => {
  */
 exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
   if (datasourceId == null) {
-    return getDocParams(DocumentTypes.QUERY, null, otherProps)
+    return getDocParams(DocumentType.QUERY, null, otherProps)
   }
 
   return getDocParams(
-    DocumentTypes.QUERY,
+    DocumentType.QUERY,
     `${datasourceId}${SEPARATOR}`,
     otherProps
   )
@@ -357,11 +348,11 @@ exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
  * @returns {string} The ID of the flag document that was generated.
  */
 exports.generateUserFlagID = userId => {
-  return `${DocumentTypes.USER_FLAG}${SEPARATOR}${userId}`
+  return `${DocumentType.USER_FLAG}${SEPARATOR}${userId}`
 }
 
 exports.generateMetadataID = (type, entityId) => {
-  return `${DocumentTypes.METADATA}${SEPARATOR}${type}${SEPARATOR}${entityId}`
+  return `${DocumentType.METADATA}${SEPARATOR}${type}${SEPARATOR}${entityId}`
 }
 
 exports.getMetadataParams = (type, entityId = null, otherProps = {}) => {
@@ -369,15 +360,19 @@ exports.getMetadataParams = (type, entityId = null, otherProps = {}) => {
   if (entityId != null) {
     docId += entityId
   }
-  return getDocParams(DocumentTypes.METADATA, docId, otherProps)
+  return getDocParams(DocumentType.METADATA, docId, otherProps)
 }
 
 exports.generateMemoryViewID = viewName => {
-  return `${DocumentTypes.MEM_VIEW}${SEPARATOR}${viewName}`
+  return `${DocumentType.MEM_VIEW}${SEPARATOR}${viewName}`
 }
 
 exports.getMemoryViewParams = (otherProps = {}) => {
-  return getDocParams(DocumentTypes.MEM_VIEW, null, otherProps)
+  return getDocParams(DocumentType.MEM_VIEW, null, otherProps)
+}
+
+exports.generatePluginID = name => {
+  return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
 }
 
 /**
@@ -388,4 +383,11 @@ exports.getMultiIDParams = ids => {
     keys: ids,
     include_docs: true,
   }
+}
+
+/**
+ * Gets parameters for retrieving automations, this is a utility function for the getDocParams function.
+ */
+exports.getPluginParams = (pluginId = null, otherProps = {}) => {
+  return getDocParams(DocumentType.PLUGIN, pluginId, otherProps)
 }

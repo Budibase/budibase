@@ -137,3 +137,19 @@ exports.readGlobalUser = async ctx => {
   )
   return checkResponse(response, "get user", { ctx })
 }
+
+exports.createAdminUser = async (email, password, tenantId) => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + "/api/global/users/init"),
+    request(null, { method: "POST", body: { email, password, tenantId } })
+  )
+  return checkResponse(response, "create admin user")
+}
+
+exports.getChecklist = async () => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + "/api/global/configs/checklist"),
+    request(null, { method: "GET" })
+  )
+  return checkResponse(response, "get checklist")
+}

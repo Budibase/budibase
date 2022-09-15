@@ -1,26 +1,34 @@
 import { Thread, ThreadType } from "../threads"
 import { definitions } from "./triggerInfo"
 import * as webhooks from "../api/controllers/webhook"
-import CouchDB from "../db"
 import { queue } from "./bullboard"
 import newid from "../db/newid"
 import { updateEntityMetadata } from "../utilities"
 import { MetadataTypes, WebhookType } from "../constants"
-import { getProdAppID } from "@budibase/backend-core/db"
+import { getProdAppID, doWithDB } from "@budibase/backend-core/db"
+import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
-import { getAppDB, getAppId } from "@budibase/backend-core/context"
+import {
+  getAppDB,
+  getAppId,
+  getProdAppDB,
+} from "@budibase/backend-core/context"
 import { tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
+import { Automation } from "@budibase/types"
 
+const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
 const Runner = new Thread(ThreadType.AUTOMATION)
 
+const jobMessage = (job: any, message: string) => {
+  return `app=${job.data.event.appId} automation=${job.data.automation._id} jobId=${job.id} trigger=${job.data.automation.definition.trigger.event} : ${message}`
+}
+
 export async function processEvent(job: any) {
   try {
-    console.log(
-      `${job.data.automation.appId} automation ${job.data.automation._id} running`
-    )
+    console.log(jobMessage(job, "running"))
     // need to actually await these so that an error can be captured properly
     const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
     return await tenancy.doInTenant(tenantId, async () => {
@@ -29,9 +37,7 @@ export async function processEvent(job: any) {
     })
   } catch (err) {
     const errJson = JSON.stringify(err)
-    console.error(
-      `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${errJson}`
-    )
+    console.error(jobMessage(job, `was unable to run - ${errJson}`))
     console.trace(err)
     return { err }
   }
@@ -83,22 +89,54 @@ export async function disableAllCrons(appId: any) {
   return Promise.all(promises)
 }
 
+export async function disableCron(jobId: string, jobKey: string) {
+  await queue.removeRepeatableByKey(jobKey)
+  await queue.removeJobs(jobId)
+  console.log(`jobId=${jobId} disabled`)
+}
+
+export async function clearMetadata() {
+  const db = getProdAppDB()
+  const automationMetadata = (
+    await db.allDocs(
+      getAutomationMetadataParams({
+        include_docs: true,
+      })
+    )
+  ).rows.map((row: any) => row.doc)
+  for (let metadata of automationMetadata) {
+    metadata._deleted = true
+  }
+  await db.bulkDocs(automationMetadata)
+}
+
+export function isCronTrigger(auto: Automation) {
+  return (
+    auto &&
+    auto.definition.trigger &&
+    auto.definition.trigger.stepId === CRON_STEP_ID
+  )
+}
+
+export function isRebootTrigger(auto: Automation) {
+  const trigger = auto ? auto.definition.trigger : null
+  return isCronTrigger(auto) && trigger?.inputs.cron === REBOOT_CRON
+}
+
 /**
  * This function handles checking of any cron jobs that need to be enabled/updated.
  * @param {string} appId The ID of the app in which we are checking for webhooks
  * @param {object|undefined} automation The automation object to be updated.
  */
-export async function enableCronTrigger(appId: any, automation: any) {
+export async function enableCronTrigger(appId: any, automation: Automation) {
   const trigger = automation ? automation.definition.trigger : null
-  function isCronTrigger(auto: any) {
-    return (
-      auto &&
-      auto.definition.trigger &&
-      auto.definition.trigger.stepId === CRON_STEP_ID
-    )
-  }
+
   // need to create cron job
-  if (isCronTrigger(automation)) {
+  if (
+    isCronTrigger(automation) &&
+    !isRebootTrigger(automation) &&
+    trigger?.inputs.cron
+  ) {
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${newid()}`
     const job: any = await queue.add(
@@ -113,10 +151,11 @@ export async function enableCronTrigger(appId: any, automation: any) {
     // can't use getAppDB here as this is likely to be called from dev app,
     // but this call could be for dev app or prod app, need to just use what
     // was passed in
-    const db = new CouchDB(appId)
-    const response = await db.put(automation)
-    automation._id = response.id
-    automation._rev = response.rev
+    await doWithDB(appId, async (db: any) => {
+      const response = await db.put(automation)
+      automation._id = response.id
+      automation._rev = response.rev
+    })
   }
   return automation
 }
@@ -203,4 +242,31 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
  */
 export async function cleanupAutomations(appId: any) {
   await disableAllCrons(appId)
+}
+
+/**
+ * Checks if the supplied automation is of a recurring type.
+ * @param automation The automation to check.
+ * @return {boolean} if it is recurring (cron).
+ */
+export function isRecurring(automation: Automation) {
+  return automation.definition.trigger.stepId === definitions.CRON.stepId
+}
+
+export function isErrorInOutput(output: {
+  steps: { outputs?: { success: boolean } }[]
+}) {
+  let first = true,
+    error = false
+  for (let step of output.steps) {
+    // skip the trigger, its always successful if automation ran
+    if (first) {
+      first = false
+      continue
+    }
+    if (!step.outputs?.success) {
+      error = true
+    }
+  }
+  return error
 }

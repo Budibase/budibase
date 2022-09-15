@@ -3,21 +3,32 @@ import { API } from "api"
 import { update } from "lodash"
 
 export function createUsersStore() {
-  const { subscribe, set } = writable([])
+  const { subscribe, set } = writable({})
 
-  async function init() {
-    const users = await API.getUsers()
-    set(users)
-  }
-
-  async function invite({ email, builder, admin }) {
-    return API.inviteUser({
-      email,
-      builder,
-      admin,
+  // opts can contain page and search params
+  async function search(opts = {}) {
+    const paged = await API.searchUsers(opts)
+    set({
+      ...paged,
+      ...opts,
     })
+    return paged
   }
 
+  async function get(userId) {
+    try {
+      return await API.getUser(userId)
+    } catch (err) {
+      return null
+    }
+  }
+  const fetch = async () => {
+    return await API.getUsers()
+  }
+
+  async function invite(payload) {
+    return API.inviteUsers(payload)
+  }
   async function acceptInvite(inviteCode, password) {
     return API.acceptInvite({
       inviteCode,
@@ -25,29 +36,41 @@ export function createUsersStore() {
     })
   }
 
-  async function create({
-    email,
-    password,
-    admin,
-    builder,
-    forceResetPassword,
-  }) {
-    const body = {
-      email,
-      password,
-      roles: {},
-    }
-    if (forceResetPassword) {
-      body.forceResetPassword = forceResetPassword
-    }
-    if (builder) {
-      body.builder = { global: true }
-    }
-    if (admin) {
-      body.admin = { global: true }
-    }
-    await API.saveUser(body)
-    await init()
+  async function create(data) {
+    let mappedUsers = data.users.map(user => {
+      const body = {
+        email: user.email,
+        password: user.password,
+        roles: {},
+      }
+      if (user.forceResetPassword) {
+        body.forceResetPassword = user.forceResetPassword
+      }
+
+      switch (user.role) {
+        case "appUser":
+          body.builder = { global: false }
+          body.admin = { global: false }
+          break
+        case "developer":
+          body.builder = { global: true }
+          break
+        case "admin":
+          body.admin = { global: true }
+          body.builder = { global: true }
+          break
+      }
+
+      return body
+    })
+    const response = await API.createUsers({
+      users: mappedUsers,
+      groups: data.groups,
+    })
+
+    // re-search from first page
+    await search()
+    return response
   }
 
   async function del(id) {
@@ -55,17 +78,33 @@ export function createUsersStore() {
     update(users => users.filter(user => user._id !== id))
   }
 
-  async function save(data) {
-    await API.saveUser(data)
+  async function getUserCountByApp({ appId }) {
+    return await API.getUserCountByApp({ appId })
   }
+
+  async function bulkDelete(userIds) {
+    return API.deleteUsers(userIds)
+  }
+
+  async function save(user) {
+    return await API.saveUser(user)
+  }
+
+  const getUserRole = ({ admin, builder }) =>
+    admin?.global ? "admin" : builder?.global ? "developer" : "appUser"
 
   return {
     subscribe,
-    init,
+    search,
+    get,
+    getUserRole,
+    fetch,
     invite,
     acceptInvite,
     create,
     save,
+    bulkDelete,
+    getUserCountByApp,
     delete: del,
   }
 }

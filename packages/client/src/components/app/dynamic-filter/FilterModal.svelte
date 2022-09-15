@@ -88,6 +88,10 @@
     const schema = schemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
   }
+
+  const getSchema = filter => {
+    return schemaFields.find(field => field.name === filter.field)
+  }
 </script>
 
 <div class="container" class:mobile={$context.device.mobile}>
@@ -134,7 +138,12 @@
               bind:value={filter.value}
             />
           {:else if filter.type === "datetime"}
-            <DatePicker disabled={filter.noValue} bind:value={filter.value} />
+            <DatePicker
+              disabled={filter.noValue}
+              enableTime={!getSchema(filter).dateOnly}
+              timeOnly={getSchema(filter).timeOnly}
+              bind:value={filter.value}
+            />
           {:else}
             <Input disabled />
           {/if}

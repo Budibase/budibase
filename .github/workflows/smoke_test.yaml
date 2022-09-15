@@ -1,4 +1,4 @@
-name: Budibase Smoke Test
+name: Budibase Nightly Tests
 
 on:
  workflow_dispatch:
@@ -6,7 +6,7 @@ on:
   - cron: "0 5 * * *" # every day at 5AM
 
 jobs:
-  release:
+  nightly:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,22 +31,34 @@ jobs:
         continue-on-error: true
         uses: cypress-io/github-action@v2
         with:
+          record: true
           install: false
-          command: yarn test:e2e:ci
+          tag: nightly
+          command: yarn test:e2e:ci:record
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       
-      # TODO: upload recordings to s3
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Test Reports
+          path: packages/builder/cypress/reports/testReport.html
+
+      # TODO: enable once running in QA test env
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
       #   with:
       #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       #     aws-region: eu-west-1
-        
-      - name: Discord Webhook Action
-        uses: tsickert/discord-webhook@v4.0.0
-        with:
-          webhook-url: ${{ secrets.BUDI_QA_WEBHOOK }}
-          content: "Smoke test run completed with ${{ steps.cypress.outcome }}. See results at ${{ steps.cypress.dashboardUrl }}"
-          embed-title: ${{ steps.cypress.outcome }}
-          embed-color: ${{ steps.cypress.outcome == 'success' && '3066993' || '15548997' }}
+      
+      # - name: Upload test results HTML
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   run: aws s3 cp packages/builder/cypress/reports/testReport.html s3://{{ secrets.BUDI_QA_REPORTS_BUCKET_NAME }}/$GITHUB_RUN_ID/index.html
 
+      - name: Cypress Discord Notify
+        run: yarn test:e2e:ci:notify
+        env:
+          CYPRESS_WEBHOOK_URL: ${{ secrets.BUDI_QA_WEBHOOK }}
+          CYPRESS_OUTCOME: ${{ steps.cypress.outcome }}
+          CYPRESS_DASHBOARD_URL: ${{ steps.cypress.outputs.dashboardUrl }}
+          GITHUB_RUN_URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID

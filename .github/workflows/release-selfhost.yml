@@ -3,24 +3,37 @@ name: Budibase Release Selfhost
 on:
  workflow_dispatch:
 
+env:
+  BRANCH: ${{ github.event.pull_request.head.ref }}
+  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
+
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master'
+        run: |
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+
       - uses: actions/checkout@v2
         with: 
           node-version: 14.x
           fetch_depth: 0
 
+      - name: Get the latest budibase release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+
       - name: Tag and release Docker images (Self Host)
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
-          # Get latest release version
-          release_version=$(cat lerna.json | jq -r '.version')
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-          release_tag=v$release_version
+          release_tag=v${{ env.RELEASE_VERSION }}
 
           # Pull apps and worker images
           docker pull budibase/apps:$release_tag
@@ -40,13 +53,15 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           SELFHOST_TAG: latest
-      
-      - name: Build CLI executables
+
+      - name: Install Pro
+        run: yarn install:pro $BRANCH $BASE_BRANCH
+
+      - name: Bootstrap and build (CLI)
         run: |
-          pushd packages/cli
           yarn
+          yarn bootstrap
           yarn build
-          popd
 
       - name: Build OpenAPI spec
         run: |
@@ -87,3 +102,10 @@ jobs:
             packages/cli/build/cli-macos 
             packages/server/specs/openapi.yaml
             packages/server/specs/openapi.json
+
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v4.0.0
+        with:
+          webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
+          content: "Self Host Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Self Host."
+          embed-title: ${{ env.RELEASE_VERSION }}

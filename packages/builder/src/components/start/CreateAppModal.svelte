@@ -4,23 +4,37 @@
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { apps, admin, auth } from "stores/portal"
-  import analytics, { Events } from "analytics"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "helpers/validation/yup"
   import * as appValidation from "helpers/validation/yup/app"
   import TemplateCard from "components/common/TemplateCard.svelte"
+  import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
+  import { Roles } from "constants/backend"
 
   export let template
 
   let creating = false
+  let defaultAppName
 
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
   $: validation.check($values)
 
   onMount(async () => {
-    $values.name = resolveAppName(template, $values.name)
+    const lastChar = $auth.user?.firstName
+      ? $auth.user?.firstName[$auth.user?.firstName.length - 1]
+      : null
+
+    defaultAppName =
+      lastChar && lastChar.toLowerCase() == "s"
+        ? `${$auth.user?.firstName} app`
+        : `${$auth.user.firstName}s app`
+
+    $values.name = resolveAppName(
+      template,
+      !$auth.user?.firstName ? "My app" : defaultAppName
+    )
     nameToUrl($values.name)
     await setupValidation()
   })
@@ -42,7 +56,7 @@
   }
 
   const resolveAppName = (template, name) => {
-    if (template && !name) {
+    if (template && !template.fromFile) {
       return template.name
     }
     return name ? name.trim() : null
@@ -88,11 +102,6 @@
 
       // Create App
       const createdApp = await API.createApp(data)
-      analytics.captureEvent(Events.APP.CREATED, {
-        name: $values.name,
-        appId: createdApp.instance._id,
-        templateToUse: template,
-      })
 
       // Select Correct Application/DB in prep for creating user
       const pkg = await API.fetchAppPackage(createdApp.instance._id)
@@ -102,8 +111,23 @@
       await admin.init()
 
       // Create user
-      await API.updateOwnMetadata({ roleId: $values.roleId })
       await auth.setInitInfo({})
+
+      // Create a default home screen if no template was selected
+      if (template == null) {
+        let defaultScreenTemplate = createFromScratchScreen.create()
+        defaultScreenTemplate.routing.route = "/home"
+        defaultScreenTemplate.routing.roldId = Roles.BASIC
+        try {
+          await store.actions.screens.save(defaultScreenTemplate)
+        } catch (err) {
+          console.error("Could not create a default application screen", err)
+          notifications.warning(
+            "Encountered an issue creating the default screen."
+          )
+        }
+      }
+
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
       creating = false
@@ -141,15 +165,14 @@
     />
   {/if}
   <Input
+    autofocus={true}
     bind:value={$values.name}
     disabled={creating}
     error={$validation.touched.name && $validation.errors.name}
     on:blur={() => ($validation.touched.name = true)}
     on:change={nameToUrl($values.name)}
     label="Name"
-    placeholder={$auth.user?.firstName
-      ? `${$auth.user.firstName}s app`
-      : "My app"}
+    placeholder={defaultAppName}
   />
   <span>
     <Input

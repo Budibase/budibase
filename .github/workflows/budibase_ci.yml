@@ -11,6 +11,8 @@ on:
     branches:
       - master
       - develop 
+      - release 
+ workflow_dispatch:
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}

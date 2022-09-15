@@ -35,7 +35,10 @@ spec:
         name: redis-service
         ports:
         - containerPort: {{ .Values.services.redis.port }}
-        resources: {}
+        {{ with .Values.services.redis.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
         volumeMounts:
         - mountPath: /data
           name: redis-data
@@ -47,6 +50,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      {{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
       volumes:

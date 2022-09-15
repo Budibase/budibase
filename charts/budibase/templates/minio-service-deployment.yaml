@@ -56,7 +56,10 @@ spec:
         name: minio-service
         ports:
         - containerPort: {{ .Values.services.objectStore.port }}
-        resources: {}
+        {{ with .Values.services.objectStore.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
         volumeMounts:
         - mountPath: /data
           name: minio-data
@@ -68,6 +71,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      {{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
       volumes:

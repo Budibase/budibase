@@ -1,6 +1,10 @@
 const actions = require("../../automations/actions")
 const triggers = require("../../automations/triggers")
-const { getAutomationParams, generateAutomationID } = require("../../db/utils")
+const {
+  getAutomationParams,
+  generateAutomationID,
+  DocumentType,
+} = require("../../db/utils")
 const {
   checkForWebhooks,
   updateTestHistory,
@@ -9,7 +13,14 @@ const {
 const { deleteEntityMetadata } = require("../../utilities")
 const { MetadataTypes } = require("../../constants")
 const { setTestFlag, clearTestFlag } = require("../../utilities/redis")
-const { getAppDB } = require("@budibase/backend-core/context")
+const {
+  getAppDB,
+  getProdAppDB,
+  doInAppContext,
+} = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
+const { app } = require("@budibase/backend-core/cache")
+const { automations } = require("@budibase/pro")
 
 const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
 const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
@@ -70,6 +81,10 @@ exports.create = async function (ctx) {
     newAuto: automation,
   })
   const response = await db.put(automation)
+  await events.automation.created(automation)
+  for (let step of automation.definition.steps) {
+    await events.automation.stepCreated(automation, step)
+  }
   automation._rev = response.rev
 
   ctx.status = 200
@@ -79,6 +94,30 @@ exports.create = async function (ctx) {
       ...automation,
       ...response,
     },
+  }
+}
+
+const getNewSteps = (oldAutomation, automation) => {
+  const oldStepIds = oldAutomation.definition.steps.map(s => s.id)
+  return automation.definition.steps.filter(s => !oldStepIds.includes(s.id))
+}
+
+const getDeletedSteps = (oldAutomation, automation) => {
+  const stepIds = automation.definition.steps.map(s => s.id)
+  return oldAutomation.definition.steps.filter(s => !stepIds.includes(s.id))
+}
+
+const handleStepEvents = async (oldAutomation, automation) => {
+  // new steps
+  const newSteps = getNewSteps(oldAutomation, automation)
+  for (let step of newSteps) {
+    await events.automation.stepCreated(automation, step)
+  }
+
+  // old steps
+  const deletedSteps = getDeletedSteps(oldAutomation, automation)
+  for (let step of deletedSteps) {
+    await events.automation.stepDeleted(automation, step)
   }
 }
 
@@ -98,19 +137,22 @@ exports.update = async function (ctx) {
   const oldAutoTrigger =
     oldAutomation && oldAutomation.definition.trigger
       ? oldAutomation.definition.trigger
-      : {}
+      : undefined
   const newAutoTrigger =
     automation && automation.definition.trigger
       ? automation.definition.trigger
       : {}
   // trigger has been updated, remove the test inputs
-  if (oldAutoTrigger.id !== newAutoTrigger.id) {
+  if (oldAutoTrigger && oldAutoTrigger.id !== newAutoTrigger.id) {
+    await events.automation.triggerUpdated(automation)
     await deleteEntityMetadata(
       ctx.appId,
       MetadataTypes.AUTOMATION_TEST_INPUT,
       automation._id
     )
   }
+
+  await handleStepEvents(oldAutomation, automation)
 
   ctx.status = 200
   ctx.body = {
@@ -148,6 +190,30 @@ exports.destroy = async function (ctx) {
   // delete metadata first
   await cleanupAutomationMetadata(automationId)
   ctx.body = await db.remove(automationId, ctx.params.rev)
+  await events.automation.deleted(oldAutomation)
+}
+
+exports.logSearch = async function (ctx) {
+  ctx.body = await automations.logs.logSearch(ctx.request.body)
+}
+
+exports.clearLogError = async function (ctx) {
+  const { automationId, appId } = ctx.request.body
+  await doInAppContext(appId, async () => {
+    const db = getProdAppDB()
+    const metadata = await db.get(DocumentType.APP_METADATA)
+    if (!automationId) {
+      delete metadata.automationErrors
+    } else if (
+      metadata.automationErrors &&
+      metadata.automationErrors[automationId]
+    ) {
+      delete metadata.automationErrors[automationId]
+    }
+    await db.put(metadata)
+    await app.invalidateAppMetadata(metadata.appId, metadata)
+    ctx.body = { message: `Error logs cleared.` }
+  })
 }
 
 exports.getActionList = async function (ctx) {
@@ -215,4 +281,5 @@ exports.test = async function (ctx) {
   })
   await clearTestFlag(automation._id)
   ctx.body = response
+  await events.automation.tested(automation)
 }

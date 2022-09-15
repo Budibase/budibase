@@ -53,7 +53,7 @@ exports.save = async ctx => {
 }
 
 exports.fetchView = async ctx => {
-  // there are no views in external data sources, shouldn't ever be called
+  // there are no views in external datasources, shouldn't ever be called
   // for now just fetch
   const split = ctx.params.viewName.split("all_")
   ctx.params.tableId = split[1] ? split[1] : split[0]
@@ -128,25 +128,35 @@ exports.search = async ctx => {
       [params.sort]: direction,
     }
   }
-  const rows = await handleRequest(DataSourceOperation.READ, tableId, {
-    filters: query,
-    sort,
-    paginate: paginateObj,
-  })
-  let hasNextPage = false
-  if (paginate && rows.length === limit) {
-    const nextRows = await handleRequest(DataSourceOperation.READ, tableId, {
+  try {
+    const rows = await handleRequest(DataSourceOperation.READ, tableId, {
       filters: query,
       sort,
-      paginate: {
-        limit: 1,
-        page: bookmark * limit + 1,
-      },
+      paginate: paginateObj,
     })
-    hasNextPage = nextRows.length > 0
+    let hasNextPage = false
+    if (paginate && rows.length === limit) {
+      const nextRows = await handleRequest(DataSourceOperation.READ, tableId, {
+        filters: query,
+        sort,
+        paginate: {
+          limit: 1,
+          page: bookmark * limit + 1,
+        },
+      })
+      hasNextPage = nextRows.length > 0
+    }
+    // need wrapper object for bookmarks etc when paginating
+    return { rows, hasNextPage, bookmark: bookmark + 1 }
+  } catch (err) {
+    if (err.message && err.message.includes("does not exist")) {
+      throw new Error(
+        `Table updated externally, please re-fetch - ${err.message}`
+      )
+    } else {
+      throw err
+    }
   }
-  // need wrapper object for bookmarks etc when paginating
-  return { rows, hasNextPage, bookmark: bookmark + 1 }
 }
 
 exports.validate = async () => {
@@ -155,34 +165,44 @@ exports.validate = async () => {
 }
 
 exports.exportRows = async ctx => {
-  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
+  const { datasourceId } = breakExternalTableId(ctx.params.tableId)
   const db = getAppDB()
-  let format = ctx.query.format
+  const format = ctx.query.format
+  const { columns } = ctx.request.body
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
-  const tables = datasource.entities
-  const table = tables[tableName]
   ctx.request.body = {
     query: {
       oneOf: {
-        [table.primaryDisplay]: ctx.request.body.rows.map(
-          id => breakRowIdField(id)[0]
-        ),
+        _id: ctx.request.body.rows.map(row => JSON.parse(decodeURI(row))[0]),
       },
     },
   }
 
   let result = await exports.search(ctx)
+  let rows = []
 
-  let headers = Object.keys(result.rows[0])
+  // Filter data to only specified columns if required
+  if (columns && columns.length) {
+    for (let i = 0; i < result.rows.length; i++) {
+      rows[i] = {}
+      for (let column of columns) {
+        rows[i][column] = result.rows[i][column]
+      }
+    }
+  } else {
+    rows = result.rows
+  }
+
+  let headers = Object.keys(rows[0])
   const exporter = exporters[format]
   const filename = `export.${format}`
 
   // send down the file
   ctx.attachment(filename)
-  return apiFileReturn(exporter(headers, result.rows))
+  return apiFileReturn(exporter(headers, rows))
 }
 
 exports.fetchEnrichedRow = async ctx => {

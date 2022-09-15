@@ -20,8 +20,12 @@ if [[ -d "budibase-pro" ]]; then
 
   # Try to checkout the matching pro branch
   git checkout $BRANCH
-  # Try to checkout the matching pro base (master or develop) branch
-  git checkout $BASE_BRANCH
+
+  if [[ $? == "1" ]] && [[ $BASE_BRANCH ]]; then
+    # There is no matching branch, try to match the base branch
+    git checkout $BASE_BRANCH
+  fi
+
   # If neither branch exists continue with default branch 'develop'
   git pull
 

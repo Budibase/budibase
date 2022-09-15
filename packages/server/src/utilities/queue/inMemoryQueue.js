@@ -76,6 +76,13 @@ class InMemoryQueue {
   }
 
   /**
+   * replicating the close function from bull, which waits for jobs to finish.
+   */
+  async close() {
+    return []
+  }
+
+  /**
    * This removes a cron which has been implemented, this is part of Bull API.
    * @param {string} cronJobId The cron which is to be removed.
    */
@@ -101,6 +108,14 @@ class InMemoryQueue {
    */
   async clean() {
     return []
+  }
+
+  async getJob() {
+    return {}
+  }
+
+  on() {
+    // do nothing
   }
 }
 
