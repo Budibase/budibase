@@ -8,7 +8,7 @@
 >
   <div>
     <img src="https://i.imgur.com/Xhdt1YP.png" alt="Budibase" />
-    <p>Made In Budibase</p>
+    <p>Made with Budibase</p>
   </div>
 </Link>
 
