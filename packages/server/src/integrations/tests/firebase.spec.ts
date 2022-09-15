@@ -1,89 +1,94 @@
-const firebase = require("@google-cloud/firestore")
-const FirebaseIntegration = require("../firebase")
+import { default as FirebaseIntegration } from "../firebase"
 jest.mock("@google-cloud/firestore")
 
 class TestConfiguration {
-  constructor(config = {}) {
-    this.integration = new FirebaseIntegration.integration(config) 
+  integration: any
+
+  constructor(config: any = {}) {
+    this.integration = new FirebaseIntegration.integration(config)
   }
 }
 
 describe("Firebase Integration", () => {
-  let config 
+  let config: any
   let tableName = "Users"
 
   beforeEach(() => {
     config = new TestConfiguration({
-      serviceAccount: "{}"
+      serviceAccount: "{}",
     })
   })
 
   it("calls the create method with the correct params", async () => {
-    await config.integration.create({ 
+    await config.integration.create({
       table: tableName,
       json: {
-        Name: "Test Name"
+        Name: "Test Name",
       },
       extra: {
-        collection: "test"
-      }
+        collection: "test",
+      },
     })
     expect(config.integration.client.collection).toHaveBeenCalledWith("test")
-    expect(config.integration.client.set).toHaveBeenCalledWith({ 
+    expect(config.integration.client.set).toHaveBeenCalledWith({
       Name: "Test Name",
-      id: "test_id"
+      id: "test_id",
     })
   })
 
   it("calls the read method with the correct params", async () => {
-    const response = await config.integration.read({ 
+    const response = await config.integration.read({
       table: tableName,
       json: {
-        Name: "Test"
+        Name: "Test",
       },
       extra: {
         collection: "test",
         filterField: "field",
         filter: "==",
         filterValue: "value",
-      }
+      },
     })
     expect(config.integration.client.collection).toHaveBeenCalledWith("test")
-    expect(config.integration.client.where).toHaveBeenCalledWith("field", "==", "value")
-    expect(response).toEqual([{ result: "test"}])
+    expect(config.integration.client.where).toHaveBeenCalledWith(
+      "field",
+      "==",
+      "value"
+    )
+    expect(response).toEqual([{ result: "test" }])
   })
 
   it("calls the update method with the correct params", async () => {
-    const response = await config.integration.update({ 
+    const response = await config.integration.update({
       table: tableName,
       json: {
         id: "test",
-        Name: "Test"
+        Name: "Test",
       },
       extra: {
-        collection: "test"
-      }
+        collection: "test",
+      },
     })
     expect(config.integration.client.collection).toHaveBeenCalledWith("test")
     expect(config.integration.client.update).toHaveBeenCalledWith({
       Name: "Test",
-      id: "test"
+      id: "test",
     })
     expect(response).toEqual({
-      result: "test"
+      result: "test",
     })
   })
 
   it("calls the delete method with the correct params", async () => {
-    const response = await config.integration.delete({ 
+    const response = await config.integration.delete({
       table: tableName,
       json: {
         id: "test",
-        Name: "Test"
+        Name: "Test",
       },
       extra: {
-        collection: "test"
-      }
+        collection: "test",
+      },
     })
     expect(config.integration.client.collection).toHaveBeenCalledWith("test")
     expect(config.integration.client.doc).toHaveBeenCalledWith("test")

@@ -26,7 +26,7 @@ const read = [],
  *     responses:
  *       200:
  *         description: Returns the created table, including the ID which has been generated for it. This can be
- *           internal or external data sources.
+ *           internal or external datasources.
  *         content:
  *           application/json:
  *             schema:

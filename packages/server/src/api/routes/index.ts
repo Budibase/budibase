@@ -24,6 +24,7 @@ import metadataRoutes from "./metadata"
 import devRoutes from "./dev"
 import cloudRoutes from "./cloud"
 import migrationRoutes from "./migrations"
+import pluginRoutes from "./plugin"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"
@@ -57,4 +58,5 @@ export const mainRoutes = [
   tableRoutes,
   rowRoutes,
   migrationRoutes,
+  pluginRoutes,
 ]

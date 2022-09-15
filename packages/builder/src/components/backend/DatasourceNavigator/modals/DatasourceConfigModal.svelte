@@ -14,8 +14,14 @@
   let datasource = cloneDeep(integration)
   let skipFetch = false
 
+  $: name =
+    IntegrationNames[datasource.type] || datasource.name || datasource.type
+
   async function saveDatasource() {
     try {
+      if (!datasource.name) {
+        datasource.name = name
+      }
       const resp = await save(datasource, skipFetch)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
@@ -32,7 +38,7 @@
 </script>
 
 <ModalContent
-  title={`Connect to ${IntegrationNames[datasource.type]}`}
+  title={`Connect to ${name}`}
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
   confirmText={datasource.plus
