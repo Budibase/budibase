@@ -9,6 +9,8 @@ describe("Public API - /applications endpoints", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
+    const [response, app] = await config.applications.seed()
+    config.context = app
   })
 
   afterAll(async () => {
@@ -17,7 +19,6 @@ describe("Public API - /applications endpoints", () => {
 
   it("POST - Create an application", async () => {
     const [response, app] = await config.applications.create(generateApp())
-    config.context = app
     expect(response).toHaveStatusCode(200)
   })
 

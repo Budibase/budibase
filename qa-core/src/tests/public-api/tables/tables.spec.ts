@@ -9,8 +9,11 @@ describe("Public API - /tables endpoints", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
-    const [_, app] = await config.applications.seed()
-    config.tables.appId = app._id
+    const [appResp, app] = await config.applications.seed()
+    config.tables.api.appId = app._id
+
+    const [tableResp, table] = await config.tables.seed()
+    config.context = table
   })
 
   afterAll(async () => {
@@ -19,7 +22,6 @@ describe("Public API - /tables endpoints", () => {
 
   it("POST - Create a table", async () => {
     const [response, table] = await config.tables.create(generateTable())
-    config.context = table
     expect(response).toHaveStatusCode(200)
   })
 

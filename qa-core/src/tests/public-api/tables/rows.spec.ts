@@ -12,11 +12,14 @@ describe("Public API - /rows endpoints", () => {
     await config.beforeAll()
     const [appResp, app] = await config.applications.seed()
 
-    config.tables.appId = app._id
-    const [tableResp, table] = await config.tables.seed()
+    config.tables.api.appId = app._id
+    config.rows.api.appId = app._id
 
-    config.rows.appId = app._id
+    const [tableResp, table] = await config.tables.seed()
     config.rows.tableId = table._id
+
+    const [response, row] = await config.rows.create(generateRow())
+    config.context = row
   })
 
   afterAll(async () => {
@@ -25,7 +28,6 @@ describe("Public API - /rows endpoints", () => {
 
   it("POST - Create a row", async () => {
     const [response, row] = await config.rows.create(generateRow())
-    config.context = row
     expect(response).toHaveStatusCode(200)
   })
 

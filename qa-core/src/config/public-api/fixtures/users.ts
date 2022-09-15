@@ -1,7 +1,10 @@
-import { CreateUserParams } from "../../../../../packages/server/src/api/controllers/public/mapping/types"
+import {
+  CreateUserParams,
+  User,
+} from "../../../../../packages/server/src/api/controllers/public/mapping/types"
 import generator from "../TestConfiguration/generator"
 
-const generate = (overrides = {}): CreateUserParams => ({
+const generate = (overrides: Partial<User> = {}): CreateUserParams => ({
   email: generator.email(),
   roles: {
     [generator.string({ length: 32, alpha: true, numeric: true })]:

@@ -5,6 +5,7 @@ import {
   User,
 } from "../../../../../packages/server/src/api/controllers/public/mapping/types"
 import { Response } from "node-fetch"
+import generateUser from "../fixtures/users"
 
 export default class UserApi {
   api: PublicAPIClient
@@ -13,7 +14,9 @@ export default class UserApi {
     this.api = apiClient
   }
 
-  async seed() {}
+  async seed() {
+    return this.create(generateUser())
+  }
 
   async create(body: CreateUserParams): Promise<[Response, User]> {
     const response = await this.api.post(`/users`, { body })
