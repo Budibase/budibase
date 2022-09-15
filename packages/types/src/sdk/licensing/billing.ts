@@ -1,11 +1,11 @@
 import { PriceDuration } from "./plan"
 
-export interface CustomerBilling {
+export interface Customer {
   balance: number | null | undefined
   currency: string | null | undefined
 }
 
-export interface SubscriptionBilling {
+export interface Subscription {
   amount: number
   quantity: number
   duration: PriceDuration
@@ -15,6 +15,6 @@ export interface SubscriptionBilling {
 }
 
 export interface Billing {
-  customer: CustomerBilling
-  subscription?: SubscriptionBilling
+  customer: Customer
+  subscription?: Subscription
 }

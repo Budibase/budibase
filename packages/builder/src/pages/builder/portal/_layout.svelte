@@ -54,7 +54,11 @@
           : undefined,
         { title: "Auth", href: "/builder/portal/manage/auth" },
         { title: "Email", href: "/builder/portal/manage/email" },
-        { title: "Plugins", href: "/builder/portal/manage/plugins" },
+        {
+          title: "Plugins",
+          href: "/builder/portal/manage/plugins",
+          badge: "New",
+        },
 
         {
           title: "Organisation",
