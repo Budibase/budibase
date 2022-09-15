@@ -370,7 +370,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
 /**
  * Gets all bindable properties from the logged in user.
  */
-const getUserBindings = () => {
+export const getUserBindings = () => {
   let bindings = []
   const { schema } = getSchemaForTable(TableNames.USERS)
   const keys = Object.keys(schema).sort()
