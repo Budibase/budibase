@@ -17,12 +17,13 @@ cp ../../server/specs/openapi.yaml ./
 docker run --rm \
   -v ${PWD}/openapi.yaml:/openapi.yml \
   -v ${PWD}/generated:/generated \
+  -v ${PWD}/config.json:/config.json \
   -u $(id -u):$(id -g) \
   swaggerapi/swagger-codegen-cli-v3 generate \
   -i /openapi.yml \
   -l javascript \
-  -o /generated
-  --additional-properties useES6=false
+  -o /generated \
+  -c /config.json
 
 # Use a subset of the generated files
 mv generated/src ../sdk
