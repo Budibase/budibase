@@ -3,14 +3,14 @@ import {
   CreateTableParams,
   Row,
   Table,
-} from "../../../../../packages/server/src/api/controllers/public/mapping/types"
+} from "@budibase/server/api/controllers/public/mapping/types"
 import generator from "../TestConfiguration/generator"
 
 export const generateTable = (
   overrides: Partial<Table> = {}
 ): CreateTableParams => ({
   name: generator.word(),
-  primaryDisplay: "sasa",
+  primaryDisplay: "testColumn",
   schema: {
     "Auto ID": {
       autocolumn: true,
@@ -30,8 +30,8 @@ export const generateTable = (
       tableId: "ta_users",
       type: "link",
     },
-    sasa: {
-      name: "sasa",
+    testColumn: {
+      name: "testColumn",
       type: "string",
     },
     "Updated At": {
@@ -54,7 +54,7 @@ export const generateTable = (
 export const generateRow = (overrides: Partial<Row> = {}): CreateRowParams => ({
   type: "row",
   tableId: "seed_table",
-  sasa: generator.word(),
+  testColumn: generator.word(),
   relationship: [generator.string({ length: 32, alpha: true, numeric: true })],
   ...overrides,
 })

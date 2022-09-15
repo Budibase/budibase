@@ -3,7 +3,7 @@ import {
   Application,
   SearchInputParams,
   CreateApplicationParams,
-} from "../../../../../packages/server/src/api/controllers/public/mapping/types"
+} from "@budibase/server/api/controllers/public/mapping/types"
 import { Response } from "node-fetch"
 import generateApp from "../fixtures/applications"
 
@@ -32,7 +32,7 @@ export default class AppApi {
     return [response, json.data]
   }
 
-  async search(body: SearchInputParams): Promise<[Response, Application]> {
+  async search(body: SearchInputParams): Promise<[Response, [Application]]> {
     const response = await this.api.post(`/applications/search`, { body })
     const json = await response.json()
     return [response, json.data]

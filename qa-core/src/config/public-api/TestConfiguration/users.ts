@@ -3,7 +3,7 @@ import {
   CreateUserParams,
   SearchInputParams,
   User,
-} from "../../../../../packages/server/src/api/controllers/public/mapping/types"
+} from "@budibase/server/api/controllers/public/mapping/types"
 import { Response } from "node-fetch"
 import generateUser from "../fixtures/users"
 
@@ -30,7 +30,7 @@ export default class UserApi {
     return [response, json.data]
   }
 
-  async search(body: SearchInputParams): Promise<[Response, User]> {
+  async search(body: SearchInputParams): Promise<[Response, [User]]> {
     const response = await this.api.post(`/users/search`, { body })
     const json = await response.json()
     return [response, json.data]

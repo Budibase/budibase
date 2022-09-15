@@ -21,7 +21,8 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "@budibase/types": "<rootDir>/../packages/types/src"
+      "@budibase/types": "<rootDir>/../packages/types/src",
+      "@budibase/server": "<rootDir>/../packages/server/src"
     },
     "setupFiles": [
       "./scripts/jestSetup.js"

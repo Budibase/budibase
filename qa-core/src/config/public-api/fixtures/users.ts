@@ -1,7 +1,7 @@
 import {
   CreateUserParams,
   User,
-} from "../../../../../packages/server/src/api/controllers/public/mapping/types"
+} from "@budibase/server/api/controllers/public/mapping/types"
 import generator from "../TestConfiguration/generator"
 
 const generate = (overrides: Partial<User> = {}): CreateUserParams => ({

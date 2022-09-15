@@ -3,8 +3,9 @@ import {
   CreateRowParams,
   Row,
   SearchInputParams,
-} from "../../../../../packages/server/src/api/controllers/public/mapping/types"
+} from "@budibase/server/api/controllers/public/mapping/types"
 import { HeadersInit, Response } from "node-fetch"
+import { generateRow } from "../fixtures/tables"
 
 export default class RowApi {
   api: PublicAPIClient
@@ -13,6 +14,10 @@ export default class RowApi {
 
   constructor(apiClient: PublicAPIClient) {
     this.api = apiClient
+  }
+
+  async seed(tableId: string) {
+    return this.create(generateRow({ tableId }))
   }
 
   async create(body: CreateRowParams): Promise<[Response, Row]> {
@@ -29,7 +34,7 @@ export default class RowApi {
     return [response, json.data]
   }
 
-  async search(body: SearchInputParams): Promise<[Response, Row]> {
+  async search(body: SearchInputParams): Promise<[Response, [Row]]> {
     const response = await this.api.post(
       `/tables/${this.tableId}/rows/search`,
       { body }

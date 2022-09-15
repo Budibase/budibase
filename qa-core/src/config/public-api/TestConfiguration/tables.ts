@@ -3,7 +3,7 @@ import {
   Table,
   SearchInputParams,
   CreateTableParams,
-} from "../../../../../packages/server/src/api/controllers/public/mapping/types"
+} from "@budibase/server/api/controllers/public/mapping/types"
 import { HeadersInit, Response } from "node-fetch"
 import { generateTable } from "../fixtures/tables"
 
@@ -33,7 +33,7 @@ export default class TableApi {
     return [response, json.data]
   }
 
-  async search(body: SearchInputParams): Promise<[Response, Table]> {
+  async search(body: SearchInputParams): Promise<[Response, [Table]]> {
     const response = await this.api.post(`/tables/search`, { body })
     const json = await response.json()
     return [response, json.data]
