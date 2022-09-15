@@ -20,7 +20,7 @@ router
   .put(
     "/api/applications/:appId",
     authorized(BUILDER),
-    applicationValidator(),
+    applicationValidator({ isCreate: false }),
     controller.update
   )
   .post(
