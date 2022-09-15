@@ -347,6 +347,7 @@
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
     breakQs = restUtils.breakQueryString(qs)
+    console.log(breakQs)
     breakQs = runtimeToReadableMap(mergedBindings, breakQs)
 
     const path = query.fields.path
@@ -708,6 +709,7 @@
   .url-block {
     display: flex;
     gap: var(--spacing-s);
+    z-index: 200;
   }
   .verb {
     flex: 1;
