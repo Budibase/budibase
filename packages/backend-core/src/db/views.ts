@@ -1,5 +1,5 @@
 import { DocumentType, ViewName, DeprecatedViews, SEPARATOR } from "./utils"
-import { getGlobalDB } from "../tenancy"
+import { getGlobalDB } from "../context"
 import PouchDB from "pouchdb"
 import { StaticDatabases } from "./constants"
 import { doWithDB } from "./"
@@ -160,6 +160,34 @@ export const createUserBuildersView = async () => {
   await db.put(designDoc)
 }
 
+export const createPlatformUserView = async () => {
+  await doWithDB(
+    StaticDatabases.PLATFORM_INFO.name,
+    async (db: PouchDB.Database) => {
+      let designDoc
+      try {
+        designDoc = await db.get<DesignDocument>(DESIGN_DB)
+      } catch (err) {
+        // no design doc, make one
+        designDoc = DesignDoc()
+      }
+      const view = {
+        // if using variables in a map function need to inject them before use
+        map: `function(doc) {
+        if (doc.tenantId) {
+          emit(doc._id.toLowerCase(), doc._id)
+        }
+      }`,
+      }
+      designDoc.views = {
+        ...designDoc.views,
+        [ViewName.PLATFORM_USERS_LOWERCASE]: view,
+      }
+      await db.put(designDoc)
+    }
+  )
+}
+
 export interface QueryViewOptions {
   arrayResponse?: boolean
 }
@@ -201,7 +229,8 @@ export const queryPlatformView = async <T>(
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   const CreateFuncByName = {
-    [ViewName.ACCOUNT_BY_EMAIL]: exports.createAccountEmailView,
+    [ViewName.ACCOUNT_BY_EMAIL]: createAccountEmailView,
+    [ViewName.PLATFORM_USERS_LOWERCASE]: createPlatformUserView,
   }
 
   return doWithDB(
@@ -219,10 +248,10 @@ export const queryGlobalView = async <T>(
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   const CreateFuncByName = {
-    [ViewName.USER_BY_EMAIL]: exports.createNewUserEmailView,
-    [ViewName.BY_API_KEY]: exports.createApiKeyView,
-    [ViewName.USER_BY_BUILDERS]: exports.createUserBuildersView,
-    [ViewName.USER_BY_APP]: exports.createUserAppView,
+    [ViewName.USER_BY_EMAIL]: createNewUserEmailView,
+    [ViewName.BY_API_KEY]: createApiKeyView,
+    [ViewName.USER_BY_BUILDERS]: createUserBuildersView,
+    [ViewName.USER_BY_APP]: createUserAppView,
   }
   // can pass DB in if working with something specific
   if (!db) {

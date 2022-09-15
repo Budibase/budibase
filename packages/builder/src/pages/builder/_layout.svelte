@@ -63,8 +63,9 @@
       await auth.getSelf()
       await admin.init()
 
-      await licensing.getQuotaUsage()
-      await licensing.getUsageMetrics()
+      if ($auth.user) {
+        await licensing.init()
+      }
 
       // Set init info if present
       if ($params["?template"]) {
