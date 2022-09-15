@@ -210,15 +210,35 @@ exports.automationValidator = (existing = false) => {
   }).unknown(true))
 }
 
-exports.applicationValidator = () => {
+exports.applicationValidator = (opts = { isCreate: true }) => {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  const base = {
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
-    name: Joi.string().pattern(new RegExp(APP_NAME_REGEX)).required().error(new Error('App name must be letters, numbers and spaces only')),
     url: OPTIONAL_STRING,
     template: Joi.object({
       templateString: OPTIONAL_STRING,
-    }).unknown(true),
-  }).unknown(true))
+    })
+  }
+
+  const appNameValidator = Joi.string()
+    .pattern(new RegExp(APP_NAME_REGEX))
+    .error(new Error("App name must be letters, numbers and spaces only"))
+  if (opts.isCreate) {
+    base.name = appNameValidator.required()
+  } else {
+    base.name = appNameValidator.optional()
+  }
+
+  return joiValidator.body(
+    Joi.object({
+      _id: OPTIONAL_STRING,
+      _rev: OPTIONAL_STRING,
+      name: appNameValidator,
+      url: OPTIONAL_STRING,
+      template: Joi.object({
+        templateString: OPTIONAL_STRING,
+      }).unknown(true),
+    }).unknown(true)
+  )
 }
