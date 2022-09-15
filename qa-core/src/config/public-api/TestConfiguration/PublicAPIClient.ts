@@ -38,8 +38,6 @@ class PublicAPIClient {
           Accept: "application/json",
           ...options.headers,
         },
-        // TODO: See if this is necessary
-        credentials: "include",
       }
 
       // @ts-ignore
