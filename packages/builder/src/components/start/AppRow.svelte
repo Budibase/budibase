@@ -1,31 +1,19 @@
 <script>
-  import {
-    Heading,
-    Button,
-    Icon,
-    ActionMenu,
-    MenuItem,
-    StatusLight,
-  } from "@budibase/bbui"
+  import { Heading, Button, Icon } from "@budibase/bbui"
+  import AppLockModal from "../common/AppLockModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
 
   export let app
-  export let exportApp
-  export let viewApp
   export let editApp
-  export let updateApp
-  export let deleteApp
-  export let unpublishApp
-  export let releaseLock
-  export let editIcon
+  export let appOverview
 </script>
 
-<div class="title">
+<div class="title" data-cy={`${app.devId}`}>
   <div style="display: flex;">
-    <div style="color: {app.icon?.color || ''}">
+    <div class="app-icon" style="color: {app.icon?.color || ''}">
       <Icon size="XL" name={app.icon?.name || "Apps"} />
     </div>
-    <div class="name" on:click={() => editApp(app)}>
+    <div class="name" data-cy="app-name-link" on:click={() => editApp(app)}>
       <Heading size="XS">
         {app.name}
       </Heading>
@@ -42,61 +30,51 @@
   {/if}
 </div>
 <div class="desktop">
-  <StatusLight
-    positive={!app.lockedYou && !app.lockedOther}
-    notice={app.lockedYou}
-    negative={app.lockedOther}
-  >
-    {#if app.lockedYou}
-      Locked by you
-    {:else if app.lockedOther}
-      Locked by {app.lockedBy.email}
-    {:else}
-      Open
-    {/if}
-  </StatusLight>
+  <span><AppLockModal {app} buttonSize="M" /></span>
 </div>
 <div class="desktop">
-  <StatusLight active={app.deployed} neutral={!app.deployed}>
-    {#if app.deployed}Published{:else}Unpublished{/if}
-  </StatusLight>
+  <div class="app-status">
+    {#if app.deployed}
+      <Icon name="Globe" disabled={false} />
+      Published
+    {:else}
+      <Icon name="GlobeStrike" disabled={true} />
+      <span class="disabled"> Unpublished </span>
+    {/if}
+  </div>
 </div>
 <div data-cy={`row_actions_${app.appId}`}>
-  <Button
-    size="S"
-    disabled={app.lockedOther}
-    on:click={() => editApp(app)}
-    secondary
-  >
-    Open
-  </Button>
-  <ActionMenu align="right">
-    <Icon hoverable slot="control" name="More" />
-    {#if app.deployed}
-      <MenuItem on:click={() => viewApp(app)} icon="GlobeOutline">
-        View published app
-      </MenuItem>
-    {/if}
-    {#if app.lockedYou}
-      <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
-        Release lock
-      </MenuItem>
-    {/if}
-    <MenuItem on:click={() => exportApp(app)} icon="Download">Export</MenuItem>
-    {#if app.deployed}
-      <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
-        Unpublish
-      </MenuItem>
-    {/if}
-    {#if !app.deployed}
-      <MenuItem on:click={() => updateApp(app)} icon="Edit">Edit</MenuItem>
-      <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
-    {/if}
-    <MenuItem on:click={() => editIcon(app)} icon="Brush">Edit icon</MenuItem>
-  </ActionMenu>
+  <div class="app-row-actions">
+    <Button size="S" secondary newStyles on:click={() => appOverview(app)}>
+      Manage
+    </Button>
+    <Button
+      size="S"
+      primary
+      newStyles
+      disabled={app.lockedOther}
+      on:click={() => editApp(app)}
+    >
+      Edit
+    </Button>
+  </div>
 </div>
 
 <style>
+  .app-row-actions {
+    grid-gap: var(--spacing-s);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  .app-status {
+    display: grid;
+    grid-gap: var(--spacing-s);
+    grid-template-columns: 24px 100px;
+  }
+  .app-status span.disabled {
+    opacity: 0.3;
+  }
   .name {
     text-decoration: none;
     overflow: hidden;

@@ -3,9 +3,10 @@ const {
   generateRowID,
   getRowParams,
   getTableIDFromRowID,
-  DocumentTypes,
+  DocumentType,
   InternalTables,
 } = require("../../../db/utils")
+const { dangerousGetDB } = require("@budibase/backend-core/db")
 const userController = require("../user")
 const {
   inputProcessing,
@@ -182,7 +183,7 @@ exports.fetchView = async ctx => {
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
-  if (viewName.startsWith(DocumentTypes.TABLE)) {
+  if (viewName.startsWith(DocumentType.TABLE)) {
     ctx.params.tableId = viewName
     return exports.fetch(ctx)
   }
@@ -250,7 +251,7 @@ exports.fetch = async ctx => {
 }
 
 exports.find = async ctx => {
-  const db = getAppDB()
+  const db = dangerousGetDB(ctx.appId)
   const table = await db.get(ctx.params.tableId)
   let row = await findRow(ctx, ctx.params.tableId, ctx.params.rowId)
   row = await outputProcessing(table, row)
@@ -374,6 +375,7 @@ exports.exportRows = async ctx => {
   const table = await db.get(ctx.params.tableId)
   const rowIds = ctx.request.body.rows
   let format = ctx.query.format
+  const { columns } = ctx.request.body
   let response = (
     await db.allDocs({
       include_docs: true,
@@ -381,7 +383,20 @@ exports.exportRows = async ctx => {
     })
   ).rows.map(row => row.doc)
 
-  let rows = await outputProcessing(table, response)
+  let result = await outputProcessing(table, response)
+  let rows = []
+
+  // Filter data to only specified columns if required
+  if (columns && columns.length) {
+    for (let i = 0; i < result.length; i++) {
+      rows[i] = {}
+      for (let column of columns) {
+        rows[i][column] = result[i][column]
+      }
+    }
+  } else {
+    rows = result
+  }
 
   let headers = Object.keys(rows[0])
   const exporter = exporters[format]

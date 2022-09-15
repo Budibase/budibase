@@ -4,37 +4,36 @@
     Icon,
     Divider,
     Layout,
-    Body,
     Detail,
     Modal,
     Button,
-    StatusLight,
     Select,
     ActionButton,
     notifications,
+    Label,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import ResultsModal from "./ResultsModal.svelte"
   import ActionModal from "./ActionModal.svelte"
-  import { externalActions } from "./ExternalActions"
+  import FlowItemHeader from "./FlowItemHeader.svelte"
+  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
+  import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import { permissions } from "stores/backend"
 
   export let block
   export let testDataModal
   let selected
   let webhookModal
   let actionModal
-  let resultsModal
   let blockComplete
   let showLooping = false
+  let role
 
-  $: rowControl = $automationStore.selectedAutomation.automation.rowControl
+  $: automationId = $automationStore.selectedAutomation?.automation._id
   $: showBindingPicker =
-    block.stepId === "CREATE_ROW" || block.stepId === "UPDATE_ROW"
+    block.stepId === ActionStepID.CREATE_ROW ||
+    block.stepId === ActionStepID.UPDATE_ROW
 
-  $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
-    step => (block.id ? step.id === block.id : step.stepId === block.stepId)
-  )
   $: isTrigger = block.type === "TRIGGER"
 
   $: selected = $automationStore.selectedBlock?.id === block.id
@@ -48,14 +47,49 @@
     $automationStore.selectedAutomation?.automation?.definition?.steps.length +
     1
 
-  $: hasCompletedInputs = Object.keys(
-    block.schema?.inputs?.properties || {}
-  ).every(x => block?.inputs[x])
-
   $: loopingSelected =
     $automationStore.selectedAutomation?.automation.definition.steps.find(
       x => x.blockToLoop === block.id
     )
+
+  $: isAppAction = block?.stepId === TriggerStepID.APP
+  $: isAppAction && setPermissions(role)
+  $: isAppAction && getPermissions(automationId)
+
+  async function setPermissions(role) {
+    if (!role || !automationId) {
+      return
+    }
+    await permissions.save({
+      level: "execute",
+      role,
+      resource: automationId,
+    })
+  }
+
+  async function getPermissions(automationId) {
+    if (!automationId) {
+      return
+    }
+    const perms = await permissions.forResource(automationId)
+    if (!perms["execute"]) {
+      role = "BASIC"
+    } else {
+      role = perms["execute"]
+    }
+  }
+
+  async function removeLooping() {
+    loopingSelected = false
+    let loopBlock =
+      $automationStore.selectedAutomation?.automation.definition.steps.find(
+        x => x.blockToLoop === block.id
+      )
+    automationStore.actions.deleteAutomationBlock(loopBlock)
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
+  }
 
   async function deleteStep() {
     let loopBlock =
@@ -128,7 +162,7 @@
             width="28px"
             height="28px"
             class="spectrum-Icon"
-            style="color:grey;"
+            style="color:var(--spectrum-global-color-gray-700);"
             focusable="false"
           >
             <use xlink:href="#spectrum-icon-18-Reuse" />
@@ -155,9 +189,7 @@
     {#if !showLooping}
       <div class="blockSection">
         <div class="block-options">
-          <div class="delete-padding" on:click={() => deleteStep()}>
-            <Icon name="DeleteOutline" />
-          </div>
+          <ActionButton on:click={() => removeLooping()} icon="DeleteOutline" />
         </div>
         <Layout noPadding gap="S">
           <AutomationBlockSetup
@@ -176,63 +208,7 @@
     {/if}
   {/if}
 
-  <div class="blockSection">
-    <div
-      on:click={() => {
-        blockComplete = !blockComplete
-      }}
-      class="splitHeader"
-    >
-      <div class="center-items">
-        {#if externalActions[block.stepId]}
-          <img
-            alt={externalActions[block.stepId].name}
-            width="28px"
-            height="28px"
-            src={externalActions[block.stepId].icon}
-          />
-        {:else}
-          <svg
-            width="28px"
-            height="28px"
-            class="spectrum-Icon"
-            style="color:grey;"
-            focusable="false"
-          >
-            <use xlink:href="#spectrum-icon-18-{block.icon}" />
-          </svg>
-        {/if}
-        <div class="iconAlign">
-          {#if isTrigger}
-            <Body size="XS">When this happens:</Body>
-          {:else}
-            <Body size="XS">Do this:</Body>
-          {/if}
-
-          <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
-        </div>
-      </div>
-      <div class="blockTitle">
-        {#if testResult && testResult[0]}
-          <div style="float: right;" on:click={() => resultsModal.show()}>
-            <StatusLight
-              positive={isTrigger || testResult[0].outputs?.success}
-              negative={!testResult[0].outputs?.success}
-              ><Body size="XS">View response</Body></StatusLight
-            >
-          </div>
-        {/if}
-        <div
-          style="margin-left: 10px;"
-          on:click={() => {
-            onSelect(block)
-          }}
-        >
-          <Icon name={blockComplete ? "ChevronDown" : "ChevronUp"} />
-        </div>
-      </div>
-    </div>
-  </div>
+  <FlowItemHeader bind:blockComplete {block} {testDataModal} />
   {#if !blockComplete}
     <Divider noMargin />
     <div class="blockSection">
@@ -250,7 +226,7 @@
                   on:change={toggleFieldControl}
                   defaultValue="Use values"
                   autoWidth
-                  value={rowControl ? "Use bindings" : "Use values"}
+                  value={block.rowControl ? "Use bindings" : "Use values"}
                   options={["Use values", "Use bindings"]}
                   placeholder={null}
                 />
@@ -263,6 +239,10 @@
           </div>
         {/if}
 
+        {#if isAppAction}
+          <Label>Role</Label>
+          <RoleSelect bind:value={role} />
+        {/if}
         <AutomationBlockSetup
           schemaProperties={Object.entries(block.schema.inputs.properties)}
           {block}
@@ -277,10 +257,6 @@
     </div>
   {/if}
 
-  <Modal bind:this={resultsModal} width="30%">
-    <ResultsModal {isTrigger} {testResult} />
-  </Modal>
-
   <Modal bind:this={actionModal} width="30%">
     <ActionModal {blockIdx} bind:blockComplete />
   </Modal>
@@ -290,13 +266,7 @@
   </Modal>
 </div>
 <div class="separator" />
-<Icon
-  on:click={() => actionModal.show()}
-  disabled={!hasCompletedInputs}
-  hoverable
-  name="AddCircle"
-  size="S"
-/>
+<Icon on:click={() => actionModal.show()} hoverable name="AddCircle" size="S" />
 {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
   <div class="separator" />
 {/if}

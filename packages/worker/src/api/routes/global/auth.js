@@ -1,6 +1,6 @@
 const Router = require("@koa/router")
 const authController = require("../../controllers/global/auth")
-const joiValidator = require("../../../middleware/joi-validator")
+const { joiValidator } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const { updateTenantId } = require("@budibase/backend-core/tenancy")
 

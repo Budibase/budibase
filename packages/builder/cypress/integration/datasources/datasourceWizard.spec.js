@@ -1,7 +1,7 @@
 import filterTests from "../../support/filterTests"
 
 filterTests(['all'], () => {
-  context("Datasource Wizard", () => {
+  xcontext("Datasource Wizard", () => {
     if (Cypress.env("TEST_ENV")) {
       before(() => {
         cy.login()
@@ -17,11 +17,10 @@ filterTests(['all'], () => {
       // Navigate back within datasource wizard
       cy.get(".spectrum-Dialog-grid").within(() => {
         cy.get(".spectrum-Button").contains("Back").click({ force: true })
-        cy.wait(1000)
       })
     
       // Select PostgreSQL datasource again
-      cy.get(".item-list").contains(datasource).click()
+      cy.get(".item-list", { timeout: 1000 }).contains(datasource).click()
       cy.get(".spectrum-Dialog-grid").within(() => {
         cy.get(".spectrum-Button").contains("Continue").click({ force: true })
       })

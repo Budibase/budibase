@@ -1,65 +1,17 @@
-export { Query, Datasource } from "./datasource"
+import { Document } from "@budibase/types"
+export {
+  Query,
+  Datasource,
+  FieldSchema,
+  TableSchema,
+  Table,
+  Document,
+  Row,
+} from "@budibase/types"
 
-export interface Base {
-  _id?: string
-  _rev?: string
-}
-
-export interface Application extends Base {
+export interface Application extends Document {
+  _id: string
   appId?: string
-}
-
-export interface FieldSchema {
-  // TODO: replace with field types enum when done
-  type: string
-  fieldName?: string
-  name: string
-  tableId?: string
-  relationshipType?: string
-  through?: string
-  foreignKey?: string
-  autocolumn?: boolean
-  throughFrom?: string
-  throughTo?: string
-  formula?: string
-  formulaType?: string
-  main?: boolean
-  meta?: {
-    toTable: string
-    toKey: string
-  }
-  constraints?: {
-    type?: string
-    email?: boolean
-    inclusion?: string[]
-    length?: {
-      minimum?: string | number
-      maximum?: string | number
-    }
-    presence?: boolean
-  }
-}
-
-export interface TableSchema {
-  [key: string]: FieldSchema
-}
-
-export interface Table extends Base {
-  type?: string
-  views?: {}
-  name: string
-  primary?: string[]
-  schema: TableSchema
-  primaryDisplay?: string
-  sourceId?: string
-  relatedFormula?: string[]
-  constrained?: string[]
-}
-
-export interface Row extends Base {
-  type?: string
-  tableId?: string
-  [key: string]: any
 }
 
 interface JsonSchemaField {
@@ -91,7 +43,7 @@ export interface AutomationStep {
   type: string
 }
 
-export interface Automation extends Base {
+export interface Automation extends Document {
   name: string
   type: string
   appId?: string

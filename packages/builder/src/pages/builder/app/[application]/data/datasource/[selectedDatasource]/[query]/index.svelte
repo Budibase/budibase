@@ -1,5 +1,5 @@
 <script>
-  import { params, goto } from "@roxi/routify"
+  import { params, redirect } from "@roxi/routify"
   import { database, datasources, queries } from "stores/backend"
   import QueryInterface from "components/integration/QueryViewer.svelte"
   import { IntegrationTypes } from "constants/backend"
@@ -18,7 +18,7 @@
   )
   $: {
     if (datasource?.source === IntegrationTypes.REST) {
-      $goto(`../rest/${$params.query}`)
+      $redirect(`../rest/${$params.query}`)
     }
   }
 </script>

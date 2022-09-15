@@ -1,9 +1,10 @@
 <script>
   export let wide = false
   export let maxWidth = "80ch"
+  export let noPadding = false
 </script>
 
-<div style="--max-width: {maxWidth}" class:wide>
+<div style="--max-width: {maxWidth}" class:wide class:noPadding>
   <slot />
 </div>
 
@@ -22,5 +23,10 @@
   .wide {
     max-width: none;
     margin: 0;
+  }
+
+  .noPadding {
+    padding: 0px;
+    margin: 0px;
   }
 </style>

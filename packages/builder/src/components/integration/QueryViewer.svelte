@@ -44,6 +44,20 @@
   $: readQuery = query.queryVerb === "read" || query.readable
   $: queryInvalid = !query.name || (readQuery && data.length === 0)
 
+  //Cast field in query preview response to number if specified by schema
+  $: {
+    for (let i = 0; i < data.length; i++) {
+      let row = data[i]
+      for (let fieldName of Object.keys(fields)) {
+        if (fields[fieldName] === "number" && !isNaN(Number(row[fieldName]))) {
+          row[fieldName] = Number(row[fieldName])
+        } else {
+          row[fieldName] = row[fieldName]?.toString()
+        }
+      }
+    }
+  }
+
   // seed the transformer
   if (query && !query.transformer) {
     query.transformer = "return data"

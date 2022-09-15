@@ -11,6 +11,8 @@ exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 exports.isDev = env.isDev
 
+exports.NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
+
 exports.removeFromArray = (array, element) => {
   const index = array.indexOf(element)
   if (index !== -1) {
@@ -57,6 +59,7 @@ exports.clientLibraryPath = (appId, version) => {
     let url = `${exports.objectStoreUrl()}/${sanitizeKey(
       appId
     )}/budibase-client.js`
+
     // append app version to bust the cache
     if (version) {
       url += `?v=${version}`
@@ -158,4 +161,12 @@ exports.convertBookmark = bookmark => {
     return parseFloat(bookmark)
   }
   return bookmark
+}
+
+exports.isQsTrue = param => {
+  if (typeof param === "string") {
+    return param.toLowerCase() === "true"
+  } else {
+    return param === true
+  }
 }

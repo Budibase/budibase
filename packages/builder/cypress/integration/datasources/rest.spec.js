@@ -10,12 +10,11 @@ filterTests(["smoke", "all"], () => {
     const datasource = "REST"
     const restUrl = "https://api.openbrewerydb.org/breweries"
 
-    it("Should add REST data source with incorrect API", () => {
-      // Select REST data source
+    it("Should add REST datasource with incorrect API", () => {
+      // Select REST datasource
       cy.selectExternalDatasource(datasource)
       // Enter incorrect api & attempt to send query
-      cy.wait(500)
-      cy.get(".spectrum-Button").contains("Add query").click({ force: true })
+      cy.get(".query-buttons", { timeout: 1000 }).contains("Add query").click({ force: true })
       cy.intercept("**/preview").as("queryError")
       cy.get("input").clear().type("random text")
       cy.get(".spectrum-Button").contains("Send").click({ force: true })
@@ -36,8 +35,7 @@ filterTests(["smoke", "all"], () => {
       // createRestQuery confirms query creation
       cy.createRestQuery("GET", restUrl, "/breweries")
       // Confirm status code response within REST datasource
-      cy.wait(1000)
-      cy.get(".stats").within(() => {
+      cy.get(".stats", { timeout: 1000 }).within(() => {
         cy.get(".spectrum-FieldLabel")
         .eq(0)
         .should("contain", 200)

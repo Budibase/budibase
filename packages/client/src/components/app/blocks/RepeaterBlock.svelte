@@ -39,7 +39,7 @@
       }}
     >
       {#if $component.empty}
-        <Placeholder text={$component.name} />
+        <Placeholder />
       {:else}
         <BlockComponent
           type="repeater"

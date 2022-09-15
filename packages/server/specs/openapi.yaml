@@ -1004,7 +1004,7 @@ components:
           description: The ID of the query.
           type: string
         datasourceId:
-          description: The ID of the data source the query belongs to.
+          description: The ID of the datasource the query belongs to.
           type: string
         parameters:
           description: The bindings which are required to perform this query.
@@ -1051,7 +1051,7 @@ components:
                 description: The ID of the query.
                 type: string
               datasourceId:
-                description: The ID of the data source the query belongs to.
+                description: The ID of the datasource the query belongs to.
                 type: string
               parameters:
                 description: The bindings which are required to perform this query.
@@ -1551,6 +1551,12 @@ paths:
                 query:
                   type: object
                   properties:
+                    allOr:
+                      type: boolean
+                      description: Specifies that a row should be returned if it satisfies any of the
+                        specified options, rather than requiring it to fulfill
+                        all the search parameters. This defaults to false,
+                        meaning AND logic will be used.
                     string:
                       type: object
                       example:
@@ -1566,12 +1572,12 @@ paths:
                       description: A fuzzy search, only supported by internal tables.
                     range:
                       type: object
-                      description: Searches within a range, the format of this must be columnName ->
-                        [low, high].
+                      description: Searches within a range, the format of this must be in the format
+                        of an object with a "low" and "high" property.
                       example:
                         columnName1:
-                          - 10
-                          - 20
+                          low: 10
+                          high: 20
                     equal:
                       type: object
                       description: Searches for rows that have a column value that is exactly the
@@ -1659,7 +1665,7 @@ paths:
       responses:
         "200":
           description: Returns the created table, including the ID which has been
-            generated for it. This can be internal or external data sources.
+            generated for it. This can be internal or external datasources.
           content:
             application/json:
               schema:

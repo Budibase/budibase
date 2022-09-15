@@ -35,8 +35,8 @@
 
   const getDOMNodeForComponent = component => {
     const parent = component.closest(".component")
-    const children = Array.from(parent.childNodes)
-    return children?.find(node => node?.nodeType === 1)
+    const children = Array.from(parent.children)
+    return children[0]
   }
 
   // Callback when initially starting a drag on a draggable component
@@ -175,6 +175,7 @@
       dropInfo = {
         target,
         name: element.dataset.name,
+        icon: element.dataset.icon,
         droppableInside: element.classList.contains("empty"),
         bounds,
       }

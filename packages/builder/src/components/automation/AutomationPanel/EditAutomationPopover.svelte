@@ -19,12 +19,23 @@
       notifications.error("Error deleting automation")
     }
   }
+
+  async function duplicateAutomation() {
+    try {
+      await automationStore.actions.duplicate(automation)
+      notifications.success("Automation has been duplicated successfully")
+      $goto(`./${$automationStore.selectedAutomation.automation._id}`)
+    } catch (error) {
+      notifications.error("Error duplicating automation")
+    }
+  }
 </script>
 
 <ActionMenu>
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
+  <MenuItem icon="Duplicate" on:click={duplicateAutomation}>Duplicate</MenuItem>
   <MenuItem icon="Edit" on:click={updateAutomationDialog.show}>Edit</MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>

@@ -1,4 +1,4 @@
-const joiValidator = require("../../../middleware/joi-validator")
+const { joiValidator } = require("@budibase/backend-core/auth")
 const { DataSourceOperation } = require("../../../constants")
 const { WebhookType } = require("../../../constants")
 const {
@@ -9,6 +9,8 @@ const Joi = require("joi")
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
+const OPTIONAL_BOOLEAN = Joi.boolean().optional().allow(null)
+const APP_NAME_REGEX = /^[\w\s]+$/
 
 exports.tableValidator = () => {
   // prettier-ignore
@@ -58,6 +60,7 @@ function filterObject() {
     oneOf: Joi.object().optional(),
     contains: Joi.object().optional(),
     notContains: Joi.object().optional(),
+    allOr: Joi.boolean().optional(),
   }).unknown(true)
 }
 
@@ -159,15 +162,17 @@ exports.screenValidator = () => {
   // prettier-ignore
   return joiValidator.body(Joi.object({
     name: Joi.string().required(),
+    showNavigation: OPTIONAL_BOOLEAN,
+    width: OPTIONAL_STRING,
     routing: Joi.object({
       route: Joi.string().required(),
       roleId: Joi.string().required().allow(""),
+      homeScreen: OPTIONAL_BOOLEAN,
     }).required().unknown(true),
     props: Joi.object({
       _id: Joi.string().required(),
       _component: Joi.string().required(),
       _children: Joi.array().required(),
-      _instanceName: Joi.string().required(),
       _styles: Joi.object().required(),
       type: OPTIONAL_STRING,
       table: OPTIONAL_STRING,
@@ -210,7 +215,7 @@ exports.applicationValidator = () => {
   return joiValidator.body(Joi.object({
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
-    name: Joi.string().required(),
+    name: Joi.string().pattern(new RegExp(APP_NAME_REGEX)).required().error(new Error('App name must be letters, numbers and spaces only')),
     url: OPTIONAL_STRING,
     template: Joi.object({
       templateString: OPTIONAL_STRING,

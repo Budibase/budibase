@@ -46,7 +46,7 @@ export function buildQueryString(obj) {
       if (str !== "") {
         str += "&"
       }
-      str += `${key}=${value || ""}`
+      str += `${key}=${encodeURIComponent(value || "")}`
     }
   }
   return str
@@ -150,12 +150,31 @@ export function flipHeaderState(headersActivity) {
   return enabled
 }
 
+export const parseToCsv = (headers, rows) => {
+  let csv = headers?.map(key => `"${key}"`)?.join(",") || ""
+
+  for (let row of rows) {
+    csv = `${csv}\n${headers
+      .map(header => {
+        let val = row[header]
+        val =
+          typeof val === "object" && !(val instanceof Date)
+            ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
+            : `"${val}"`
+        return val.trim()
+      })
+      .join(",")}`
+  }
+  return csv
+}
+
 export default {
   breakQueryString,
   buildQueryString,
   fieldsToSchema,
   flipHeaderState,
   keyValueToQueryParameters,
+  parseToCsv,
   queryParametersToKeyValue,
   schemaToFields,
 }

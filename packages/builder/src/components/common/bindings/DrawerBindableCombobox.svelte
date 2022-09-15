@@ -18,6 +18,7 @@
   export let options
   export let allowJS = true
   export let appendBindingsAsOptions = true
+  export let error
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -59,8 +60,10 @@
     value={isJS ? "(JavaScript function)" : readableValue}
     on:type={e => onChange(e.detail, false)}
     on:pick={e => onChange(e.detail, true)}
+    on:blur={() => dispatch("blur")}
     {placeholder}
     options={allOptions}
+    {error}
   />
   {#if !disabled}
     <div
@@ -72,6 +75,7 @@
     </div>
   {/if}
 </div>
+
 <Drawer bind:this={bindingDrawer} {title}>
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.

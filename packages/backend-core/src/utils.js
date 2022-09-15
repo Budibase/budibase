@@ -1,29 +1,18 @@
-const {
-  DocumentTypes,
-  SEPARATOR,
-  ViewNames,
-  generateGlobalUserID,
-  getAllApps,
-} = require("./db/utils")
+const { DocumentType, SEPARATOR, ViewName, getAllApps } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { queryGlobalView } = require("./db/views")
-const { Headers, UserStatus, Cookies, MAX_VALID_DATE } = require("./constants")
-const {
-  getGlobalDB,
-  updateTenantId,
-  getTenantUser,
-  tryAddTenant,
-} = require("./tenancy")
-const environment = require("./environment")
-const accounts = require("./cloud/accounts")
-const { hash } = require("./hashing")
-const userCache = require("./cache/user")
+const { Headers, Cookies, MAX_VALID_DATE } = require("./constants")
 const env = require("./environment")
-const { getUserSessions, invalidateSessions } = require("./security/sessions")
+const userCache = require("./cache/user")
+const {
+  getSessionsForUser,
+  invalidateSessions,
+} = require("./security/sessions")
+const events = require("./events")
 const tenancy = require("./tenancy")
 
-const APP_PREFIX = DocumentTypes.APP + SEPARATOR
+const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
 function confirmAppId(possibleAppId) {
@@ -51,6 +40,18 @@ async function resolveAppUrl(ctx) {
   )[0]
 
   return app && app.appId ? app.appId : undefined
+}
+
+exports.isServingApp = ctx => {
+  // dev app
+  if (ctx.path.startsWith(`/${APP_PREFIX}`)) {
+    return true
+  }
+  // prod app
+  if (ctx.path.startsWith(PROD_APP_PREFIX)) {
+    return true
+  }
+  return false
 }
 
 /**
@@ -135,8 +136,8 @@ exports.setCookie = (ctx, value, name = "builder", opts = { sign: true }) => {
     overwrite: true,
   }
 
-  if (environment.COOKIE_DOMAIN) {
-    config.domain = environment.COOKIE_DOMAIN
+  if (env.COOKIE_DOMAIN) {
+    config.domain = env.COOKIE_DOMAIN
   }
 
   ctx.cookies.set(name, value, config)
@@ -159,25 +160,8 @@ exports.isClient = ctx => {
   return ctx.headers[Headers.TYPE] === "client"
 }
 
-/**
- * Given an email address this will use a view to search through
- * all the users to find one with this email address.
- * @param {string} email the email to lookup the user by.
- * @return {Promise<object|null>}
- */
-exports.getGlobalUserByEmail = async email => {
-  if (email == null) {
-    throw "Must supply an email address to view"
-  }
-
-  return queryGlobalView(ViewNames.USER_BY_EMAIL, {
-    key: email.toLowerCase(),
-    include_docs: true,
-  })
-}
-
 const getBuilders = async () => {
-  const builders = await queryGlobalView(ViewNames.USER_BY_BUILDERS, {
+  const builders = await queryGlobalView(ViewName.USER_BY_BUILDERS, {
     include_docs: false,
   })
 
@@ -197,96 +181,6 @@ exports.getBuildersCount = async () => {
   return builders.length
 }
 
-exports.saveUser = async (
-  user,
-  tenantId,
-  hashPassword = true,
-  requirePassword = true
-) => {
-  if (!tenantId) {
-    throw "No tenancy specified."
-  }
-  // need to set the context for this request, as specified
-  updateTenantId(tenantId)
-  // specify the tenancy incase we're making a new admin user (public)
-  const db = getGlobalDB(tenantId)
-  let { email, password, _id } = user
-  // make sure another user isn't using the same email
-  let dbUser
-  if (email) {
-    // check budibase users inside the tenant
-    dbUser = await exports.getGlobalUserByEmail(email)
-    if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
-      throw `Email address ${email} already in use.`
-    }
-
-    // check budibase users in other tenants
-    if (env.MULTI_TENANCY) {
-      const tenantUser = await getTenantUser(email)
-      if (tenantUser != null && tenantUser.tenantId !== tenantId) {
-        throw `Email address ${email} already in use.`
-      }
-    }
-
-    // check root account users in account portal
-    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-      const account = await accounts.getAccount(email)
-      if (account && account.verified && account.tenantId !== tenantId) {
-        throw `Email address ${email} already in use.`
-      }
-    }
-  } else {
-    dbUser = await db.get(_id)
-  }
-
-  // get the password, make sure one is defined
-  let hashedPassword
-  if (password) {
-    hashedPassword = hashPassword ? await hash(password) : password
-  } else if (dbUser) {
-    hashedPassword = dbUser.password
-  } else if (requirePassword) {
-    throw "Password must be specified."
-  }
-
-  _id = _id || generateGlobalUserID()
-  user = {
-    createdAt: Date.now(),
-    ...dbUser,
-    ...user,
-    _id,
-    password: hashedPassword,
-    tenantId,
-  }
-  // make sure the roles object is always present
-  if (!user.roles) {
-    user.roles = {}
-  }
-  // add the active status to a user if its not provided
-  if (user.status == null) {
-    user.status = UserStatus.ACTIVE
-  }
-  try {
-    const response = await db.put({
-      password: hashedPassword,
-      ...user,
-    })
-    await tryAddTenant(tenantId, _id, email)
-    await userCache.invalidateUser(response.id)
-    return {
-      _id: response.id,
-      _rev: response.rev,
-      email,
-    }
-  } catch (err) {
-    if (err.status === 409) {
-      throw "User exists already"
-    } else {
-      throw err
-    }
-  }
-}
-
 /**
  * Logs a user out from budibase. Re-used across account portal and builder.
  */
@@ -294,7 +188,7 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
   const currentSession = exports.getCookie(ctx, Cookies.Auth)
-  let sessions = await getUserSessions(userId)
+  let sessions = await getSessionsForUser(userId)
 
   if (keepActiveSession) {
     sessions = sessions.filter(
@@ -306,9 +200,12 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     exports.clearCookie(ctx, Cookies.CurrentApp)
   }
 
-  await invalidateSessions(
-    userId,
-    sessions.map(({ sessionId }) => sessionId)
-  )
+  const sessionIds = sessions.map(({ sessionId }) => sessionId)
+  await invalidateSessions(userId, { sessionIds, reason: "logout" })
+  await events.auth.logout()
   await userCache.invalidateUser(userId)
+}
+
+exports.timeout = timeMs => {
+  return new Promise(resolve => setTimeout(resolve, timeMs))
 }

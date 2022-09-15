@@ -144,7 +144,11 @@ export const RelationshipTypes = {
   MANY_TO_ONE: "many-to-one",
 }
 
-export const ALLOWABLE_STRING_OPTIONS = [FIELDS.STRING, FIELDS.OPTIONS]
+export const ALLOWABLE_STRING_OPTIONS = [
+  FIELDS.STRING,
+  FIELDS.OPTIONS,
+  FIELDS.LONGFORM,
+]
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type
 )
@@ -154,14 +158,12 @@ export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
   opt => opt.type
 )
 
-export const ALLOWABLE_JSON_OPTIONS = [FIELDS.JSON, FIELDS.ARRAY]
-export const ALLOWABLE_JSON_TYPES = ALLOWABLE_JSON_OPTIONS.map(opt => opt.type)
-
 export const SWITCHABLE_TYPES = [
   ...ALLOWABLE_STRING_TYPES,
   ...ALLOWABLE_NUMBER_TYPES,
-  ...ALLOWABLE_JSON_TYPES,
 ]
+
+export const BUDIBASE_DATASOURCE_ID = "bb_internal"
 
 export const IntegrationTypes = {
   POSTGRES: "POSTGRES",
@@ -178,8 +180,9 @@ export const IntegrationTypes = {
   ORACLE: "ORACLE",
   INTERNAL: "INTERNAL",
   GOOGLE_SHEETS: "GOOGLE_SHEETS",
-  FIREBASE: "FIREBASE",
+  FIRESTORE: "FIRESTORE",
   REDIS: "REDIS",
+  SNOWFLAKE: "SNOWFLAKE",
 }
 
 export const IntegrationNames = {
@@ -197,8 +200,9 @@ export const IntegrationNames = {
   [IntegrationTypes.ORACLE]: "Oracle",
   [IntegrationTypes.INTERNAL]: "Internal",
   [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
-  [IntegrationTypes.FIREBASE]: "Firebase",
+  [IntegrationTypes.FIRESTORE]: "Firestore",
   [IntegrationTypes.REDIS]: "Redis",
+  [IntegrationTypes.SNOWFLAKE]: "Snowflake",
 }
 
 export const SchemaTypeOptions = [

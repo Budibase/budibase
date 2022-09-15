@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { tables } from "stores/backend"
+  import { tables, datasources } from "stores/backend"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -22,10 +22,8 @@
     RelationshipTypes,
     ALLOWABLE_STRING_OPTIONS,
     ALLOWABLE_NUMBER_OPTIONS,
-    ALLOWABLE_JSON_OPTIONS,
     ALLOWABLE_STRING_TYPES,
     ALLOWABLE_NUMBER_TYPES,
-    ALLOWABLE_JSON_TYPES,
     SWITCHABLE_TYPES,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
@@ -63,6 +61,7 @@
   let primaryDisplay =
     $tables.selected.primaryDisplay == null ||
     $tables.selected.primaryDisplay === field.name
+  let isCreating = originalName == null
 
   let table = $tables.selected
   let indexes = [...($tables.selected.indexes || [])]
@@ -81,6 +80,9 @@
     (field.type === LINK_TYPE && !field.tableId) ||
     Object.keys(errors).length !== 0
   $: errors = checkErrors(field)
+  $: datasource = $datasources.list.find(
+    source => source._id === table?.sourceId
+  )
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -251,11 +253,6 @@
       ALLOWABLE_NUMBER_TYPES.indexOf(field.type) !== -1
     ) {
       return ALLOWABLE_NUMBER_OPTIONS
-    } else if (
-      originalName &&
-      ALLOWABLE_JSON_TYPES.indexOf(field.type) !== -1
-    ) {
-      return ALLOWABLE_JSON_OPTIONS
     } else if (!external) {
       return [
         ...Object.values(fieldDefinitions),
@@ -304,7 +301,9 @@
       )
     }
     const newError = {}
-    if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
+    if (!external && fieldInfo.name?.startsWith("_")) {
+      newError.name = `Column name cannot start with an underscore.`
+    } else if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
       newError.name = `${PROHIBITED_COLUMN_NAMES.join(
         ", "
       )} are not allowed as column names`
@@ -428,6 +427,18 @@
       bind:value={field.constraints.datetime.earliest}
     />
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
+    {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
+      <div>
+        <Label
+          tooltip={isCreating
+            ? null
+            : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
+        >
+          Time zones
+        </Label>
+        <Toggle bind:value={field.ignoreTimezones} text="Ignore time zones" />
+      </div>
+    {/if}
   {:else if field.type === "number"}
     <Input
       type="number"
@@ -456,6 +467,7 @@
         options={relationshipOptions}
         getOptionLabel={option => option.name}
         getOptionValue={option => option.value}
+        getOptionTitle={option => option.alt}
       />
     {/if}
     <Input

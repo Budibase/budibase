@@ -26,11 +26,19 @@
     array: ArrayRenderer,
     internal: InternalRenderer,
   }
-  $: type = schema?.type ?? "string"
+  $: type = getType(schema)
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
   $: width = schema?.width || "150px"
   $: cellValue = getCellValue(value, schema.template)
+
+  const getType = schema => {
+    // Use a string renderer for dates if we use a custom template
+    if (schema?.type === "datetime" && schema?.template) {
+      return "string"
+    }
+    return schema?.type || "string"
+  }
 
   const getCellValue = (value, template) => {
     if (!template) {

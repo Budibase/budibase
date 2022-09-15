@@ -11,7 +11,6 @@
     Layout,
   } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
-  import analytics, { Events } from "analytics"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
 
   $: tableNames = $tables.list.map(table => table.name)
@@ -45,6 +44,8 @@
       name,
       schema: addAutoColumns(name, dataImport.schema || {}),
       dataImport,
+      type: "internal",
+      sourceId: "bb_internal",
     }
 
     // Only set primary display if defined
@@ -57,7 +58,6 @@
     try {
       table = await tables.save(newTable)
       notifications.success(`Table ${name} created successfully.`)
-      analytics.captureEvent(Events.TABLE.CREATED, { name })
 
       // Navigate to new table
       const currentUrl = $url()

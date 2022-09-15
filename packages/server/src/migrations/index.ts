@@ -1,68 +1,119 @@
-import CouchDB from "../db"
-const {
-  MIGRATION_TYPES,
-  runMigrations,
-} = require("@budibase/backend-core/migrations")
+import { migrations, redis } from "@budibase/backend-core"
+import { Migration, MigrationOptions, MigrationName } from "@budibase/types"
+import env from "../environment"
 
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
 import * as quota1 from "./functions/quotas1"
 import * as appUrls from "./functions/appUrls"
-import * as developerQuota from "./functions/developerQuota"
-import * as publishedAppsQuota from "./functions/publishedAppsQuota"
-
-export interface Migration {
-  type: string
-  name: string
-  opts?: object
-  fn: Function
-}
+import * as backfill from "./functions/backfill"
 
 /**
- * e.g.
- * {
- *   tenantIds: ['bb'],
- *   force: {
- *    global: ['quota_1']
- *   }
- * }
+ * Populate the migration function and additional configuration from
+ * the static migration definitions.
  */
-export interface MigrationOptions {
-  tenantIds?: string[]
-  force?: {
-    [type: string]: string[]
+export const buildMigrations = () => {
+  const definitions = migrations.DEFINITIONS
+  const serverMigrations: Migration[] = []
+
+  for (const definition of definitions) {
+    switch (definition.name) {
+      case MigrationName.USER_EMAIL_VIEW_CASING: {
+        serverMigrations.push({
+          ...definition,
+          fn: userEmailViewCasing.run,
+        })
+        break
+      }
+      case MigrationName.QUOTAS_1: {
+        serverMigrations.push({
+          ...definition,
+          fn: quota1.run,
+        })
+        break
+      }
+      case MigrationName.APP_URLS: {
+        serverMigrations.push({
+          ...definition,
+          appOpts: { all: true },
+          fn: appUrls.run,
+        })
+        break
+      }
+      case MigrationName.EVENT_APP_BACKFILL: {
+        serverMigrations.push({
+          ...definition,
+          appOpts: { all: true },
+          fn: backfill.app.run,
+          silent: !!env.SELF_HOSTED, // reduce noisy logging
+          preventRetry: !!env.SELF_HOSTED, // only ever run once
+        })
+        break
+      }
+      case MigrationName.EVENT_GLOBAL_BACKFILL: {
+        serverMigrations.push({
+          ...definition,
+          fn: backfill.global.run,
+          silent: !!env.SELF_HOSTED, // reduce noisy logging
+          preventRetry: !!env.SELF_HOSTED, // only ever run once
+        })
+        break
+      }
+      case MigrationName.EVENT_INSTALLATION_BACKFILL: {
+        serverMigrations.push({
+          ...definition,
+          fn: backfill.installation.run,
+          silent: !!env.SELF_HOSTED, // reduce noisy logging
+          preventRetry: !!env.SELF_HOSTED, // only ever run once
+        })
+        break
+      }
+    }
+  }
+
+  return serverMigrations
+}
+
+export const MIGRATIONS = buildMigrations()
+
+export const migrate = async (options?: MigrationOptions) => {
+  if (env.SELF_HOSTED) {
+    // self host runs migrations on startup
+    // make sure only a single instance runs them
+    await migrateWithLock(options)
+  } else {
+    await migrations.runMigrations(MIGRATIONS, options)
   }
 }
 
-export const MIGRATIONS: Migration[] = [
-  {
-    type: MIGRATION_TYPES.GLOBAL,
-    name: "user_email_view_casing",
-    fn: userEmailViewCasing.run,
-  },
-  {
-    type: MIGRATION_TYPES.GLOBAL,
-    name: "quotas_1",
-    fn: quota1.run,
-  },
-  {
-    type: MIGRATION_TYPES.APP,
-    name: "app_urls",
-    opts: { all: true },
-    fn: appUrls.run,
-  },
-  {
-    type: MIGRATION_TYPES.GLOBAL,
-    name: "developer_quota",
-    fn: developerQuota.run,
-  },
-  {
-    type: MIGRATION_TYPES.GLOBAL,
-    name: "published_apps_quota",
-    fn: publishedAppsQuota.run,
-  },
-]
+const migrateWithLock = async (options?: MigrationOptions) => {
+  // get a new lock client
+  const redlock = await redis.clients.getMigrationsRedlock()
+  // lock for 15 minutes
+  const ttl = 1000 * 60 * 15
 
-export const migrate = async (options?: MigrationOptions) => {
-  await runMigrations(CouchDB, MIGRATIONS, options)
+  let migrationLock
+
+  // acquire lock
+  try {
+    migrationLock = await redlock.lock("migrations", ttl)
+  } catch (e: any) {
+    if (e.name === "LockError") {
+      return
+    } else {
+      throw e
+    }
+  }
+
+  // run migrations
+  try {
+    await migrations.runMigrations(MIGRATIONS, options)
+  } finally {
+    // release lock
+    try {
+      await migrationLock.unlock()
+    } catch (e) {
+      console.error("unable to release migration lock")
+    }
+  }
 }

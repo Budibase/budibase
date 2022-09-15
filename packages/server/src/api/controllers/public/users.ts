@@ -4,29 +4,8 @@ import {
   readGlobalUser,
   saveGlobalUser,
 } from "../../../utilities/workerRequests"
+import { publicApiUserFix } from "../../../utilities/users"
 import { search as stringSearch } from "./utils"
-
-const { getProdAppID } = require("@budibase/backend-core/db")
-
-function fixUser(ctx: any) {
-  if (!ctx.request.body) {
-    return ctx
-  }
-  if (!ctx.request.body._id && ctx.params.userId) {
-    ctx.request.body._id = ctx.params.userId
-  }
-  if (!ctx.request.body.roles) {
-    ctx.request.body.roles = {}
-  } else {
-    const newRoles: { [key: string]: string } = {}
-    for (let [appId, role] of Object.entries(ctx.request.body.roles)) {
-      // @ts-ignore
-      newRoles[getProdAppID(appId)] = role
-    }
-    ctx.request.body.roles = newRoles
-  }
-  return ctx
-}
 
 function getUser(ctx: any, userId?: string) {
   if (userId) {
@@ -45,7 +24,7 @@ export async function search(ctx: any, next: any) {
 }
 
 export async function create(ctx: any, next: any) {
-  const response = await saveGlobalUser(fixUser(ctx))
+  const response = await saveGlobalUser(publicApiUserFix(ctx))
   ctx.body = await getUser(ctx, response._id)
   await next()
 }
@@ -61,7 +40,7 @@ export async function update(ctx: any, next: any) {
     ...ctx.request.body,
     _rev: user._rev,
   }
-  const response = await saveGlobalUser(fixUser(ctx))
+  const response = await saveGlobalUser(publicApiUserFix(ctx))
   ctx.body = await getUser(ctx, response._id)
   await next()
 }

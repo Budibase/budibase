@@ -1,11 +1,19 @@
 {
   "baseUrl": "http://localhost:4100",
-  "video": false,
+  "video": true,
   "projectId": "bmbemn",
+  "reporter": "cypress-multi-reporters",
+  "reporterOptions": {
+    "configFile": "reporterConfig.json"
+  },
   "env": {
     "PORT": "4100",
     "WORKER_PORT": "4200",
     "JWT_SECRET": "test",
     "HOST_IP": ""
+  },
+  "retries": {
+    "runMode": 1,
+    "openMode": 0
   }
 }

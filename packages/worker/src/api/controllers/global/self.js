@@ -13,9 +13,9 @@ const {
 } = require("@budibase/backend-core/utils")
 const { encrypt } = require("@budibase/backend-core/encryption")
 const { newid } = require("@budibase/backend-core/utils")
-const { getUser } = require("../../utilities")
+const { users } = require("../../../sdk")
 const { Cookies } = require("@budibase/backend-core/constants")
-const { featureFlags } = require("@budibase/backend-core")
+const { events, featureFlags } = require("@budibase/backend-core")
 
 function newApiKey() {
   return encrypt(`${getTenantId()}${SEPARATOR}${newid()}`)
@@ -75,8 +75,8 @@ const checkCurrentApp = ctx => {
 const addSessionAttributesToUser = ctx => {
   ctx.body.account = ctx.user.account
   ctx.body.license = ctx.user.license
-  ctx.body.budibaseAccess = ctx.user.budibaseAccess
-  ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
+  ctx.body.budibaseAccess = !!ctx.user.budibaseAccess
+  ctx.body.accountPortalAccess = !!ctx.user.accountPortalAccess
   ctx.body.csrfToken = ctx.user.csrfToken
 }
 
@@ -104,7 +104,7 @@ exports.getSelf = async ctx => {
   checkCurrentApp(ctx)
 
   // get the main body of the user
-  ctx.body = await getUser(userId)
+  ctx.body = await users.getUser(userId)
 
   // add the feature flags for this tenant
   const tenantId = getTenantId()
@@ -116,8 +116,10 @@ exports.getSelf = async ctx => {
 exports.updateSelf = async ctx => {
   const db = getGlobalDB()
   const user = await db.get(ctx.user._id)
+  let passwordChange = false
   if (ctx.request.body.password) {
     // changing password
+    passwordChange = true
     ctx.request.body.password = await hash(ctx.request.body.password)
     // Log all other sessions out apart from the current one
     await platformLogout({
@@ -139,5 +141,13 @@ exports.updateSelf = async ctx => {
   ctx.body = {
     _id: response.id,
     _rev: response.rev,
+  }
+
+  // remove the old password from the user before sending events
+  user._rev = response.rev
+  delete user.password
+  await events.user.updated(user)
+  if (passwordChange) {
+    await events.user.passwordUpdated(user)
   }
 }

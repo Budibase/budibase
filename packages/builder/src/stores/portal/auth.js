@@ -2,6 +2,8 @@ import { derived, writable, get } from "svelte/store"
 import { API } from "api"
 import { admin } from "stores/portal"
 import analytics from "analytics"
+import { FEATURE_FLAGS } from "helpers/featureFlags"
+import { Constants } from "@budibase/frontend-core"
 
 export function createAuthStore() {
   const auth = writable({
@@ -10,11 +12,13 @@ export function createAuthStore() {
     tenantSet: false,
     loaded: false,
     postLogout: false,
+    groupsEnabled: false,
   })
   const store = derived(auth, $store => {
     let initials = null
     let isAdmin = false
     let isBuilder = false
+    let groupsEnabled = false
     if ($store.user) {
       const user = $store.user
       if (user.firstName) {
@@ -29,6 +33,9 @@ export function createAuthStore() {
       }
       isAdmin = !!user.admin?.global
       isBuilder = !!user.builder?.global
+      groupsEnabled =
+        user?.license.features.includes(Constants.Features.USER_GROUPS) &&
+        user?.featureFlags.includes(FEATURE_FLAGS.USER_GROUPS)
     }
     return {
       user: $store.user,
@@ -39,6 +46,7 @@ export function createAuthStore() {
       initials,
       isAdmin,
       isBuilder,
+      groupsEnabled,
     }
   })
 
@@ -57,16 +65,21 @@ export function createAuthStore() {
       analytics
         .activate()
         .then(() => {
-          analytics.identify(user._id, user)
-          analytics.showChat({
-            email: user.email,
-            created_at: (user.createdAt || Date.now()) / 1000,
-            name: user.account?.name,
-            user_id: user._id,
-            tenant: user.tenantId,
-            "Company size": user.account?.size,
-            "Job role": user.account?.profession,
-          })
+          analytics.identify(user._id)
+          analytics.showChat(
+            {
+              email: user.email,
+              created_at: (user.createdAt || Date.now()) / 1000,
+              name: user.account?.name,
+              user_id: user._id,
+              tenant: user.tenantId,
+              admin: user?.admin?.global,
+              builder: user?.builder?.global,
+              "Company size": user.account?.size,
+              "Job role": user.account?.profession,
+            },
+            !!user?.account
+          )
         })
         .catch(() => {
           // This request may fail due to browser extensions blocking requests

@@ -2,7 +2,7 @@ const linkRows = require("../../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../../constants")
 const { attachmentsRelativeURL } = require("../index")
-const { processFormulas } = require("./utils")
+const { processFormulas, fixAutoColumnSubType } = require("./utils")
 const { deleteFiles } = require("../../utilities/fileSystem/utilities")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
@@ -11,6 +11,7 @@ const {
   dbExists,
 } = require("@budibase/backend-core/db")
 const { getAppId } = require("@budibase/backend-core/context")
+const { InternalTables } = require("../../db/utils")
 
 const BASE_AUTO_ID = 1
 
@@ -137,21 +138,23 @@ function processAutoColumn(
   opts = { reprocessing: false, noAutoRelationships: false }
 ) {
   let noUser = !user || !user.userId
+  let isUserTable = table._id === InternalTables.USER_METADATA
   let now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
   const creating = !row._rev
+  // check its not user table, or whether any of the processing options have been disabled
+  const shouldUpdateUserFields =
+    !isUserTable && !opts.reprocessing && !opts.noAutoRelationships && !noUser
   for (let [key, schema] of Object.entries(table.schema)) {
     if (!schema.autocolumn) {
       continue
     }
+    if (!schema.subtype) {
+      schema = fixAutoColumnSubType(schema)
+    }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (
-          creating &&
-          !opts.reprocessing &&
-          !opts.noAutoRelationships &&
-          !noUser
-        ) {
+        if (creating && shouldUpdateUserFields) {
           row[key] = [user.userId]
         }
         break
@@ -161,7 +164,7 @@ function processAutoColumn(
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        if (!opts.reprocessing && !opts.noAutoRelationships && !noUser) {
+        if (shouldUpdateUserFields) {
           row[key] = [user.userId]
         }
         break
@@ -179,7 +182,7 @@ function processAutoColumn(
   return { table, row }
 }
 exports.processAutoColumn = processAutoColumn
-
+exports.fixAutoColumnSubType = fixAutoColumnSubType
 exports.processFormulas = processFormulas
 
 /**
@@ -275,7 +278,7 @@ exports.outputProcessing = async (table, rows, opts = { squash: true }) => {
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
       for (let row of enriched) {
-        if (row[property] == null || row[property].length === 0) {
+        if (row[property] == null || !Array.isArray(row[property])) {
           continue
         }
         row[property].forEach(attachment => {

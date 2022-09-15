@@ -1,5 +1,5 @@
 import { generateQueryID, getQueryParams, isProdAppID } from "../../../db/utils"
-import { BaseQueryVerbs } from "../../../constants"
+import { BaseQueryVerbs, FieldTypes } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
@@ -7,6 +7,9 @@ import { invalidateDynamicVariables } from "../../../threads/utils"
 import { QUERY_THREAD_TIMEOUT } from "../../../environment"
 import { getAppDB } from "@budibase/backend-core/context"
 import { quotas } from "@budibase/pro"
+import { events } from "@budibase/backend-core"
+import { getCookie } from "@budibase/backend-core/utils"
+import { Cookies, Configs } from "@budibase/backend-core/constants"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
@@ -80,11 +83,18 @@ export async function save(ctx: any) {
   const db = getAppDB()
   const query = ctx.request.body
 
+  const datasource = await db.get(query.datasourceId)
+
+  let eventFn
   if (!query._id) {
     query._id = generateQueryID(query.datasourceId)
+    eventFn = () => events.query.created(datasource, query)
+  } else {
+    eventFn = () => events.query.updated(datasource, query)
   }
 
   const response = await db.put(query)
+  await eventFn()
   query._rev = response.rev
 
   ctx.body = query
@@ -102,14 +112,31 @@ export async function find(ctx: any) {
   ctx.body = query
 }
 
+//Required to discern between OIDC OAuth config entries
+function getOAuthConfigCookieId(ctx: any) {
+  if (ctx.user.providerType === Configs.OIDC) {
+    return getCookie(ctx, Cookies.OIDC_CONFIG)
+  }
+}
+
+function getAuthConfig(ctx: any) {
+  const authCookie = getCookie(ctx, Cookies.Auth)
+  let authConfigCtx: any = {}
+  authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
+  authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null
+  return authConfigCtx
+}
+
 export async function preview(ctx: any) {
   const db = getAppDB()
 
   const datasource = await db.get(ctx.request.body.datasourceId)
+  const query = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
-  const { fields, parameters, queryVerb, transformer, queryId } =
-    ctx.request.body
+  const { fields, parameters, queryVerb, transformer, queryId } = query
+
+  const authConfigCtx: any = getAuthConfig(ctx)
 
   try {
     const runFn = () =>
@@ -121,12 +148,43 @@ export async function preview(ctx: any) {
         parameters,
         transformer,
         queryId,
+        ctx: {
+          user: ctx.user,
+          auth: { ...authConfigCtx },
+        },
       })
-
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
+    const schemaFields: any = {}
+    if (rows?.length > 0) {
+      for (let key of [...new Set(keys)] as string[]) {
+        const field = rows[0][key]
+        let type = typeof field,
+          fieldType = FieldTypes.STRING
+        if (field)
+          switch (type) {
+            case "boolean":
+              schemaFields[key] = FieldTypes.BOOLEAN
+              break
+            case "object":
+              if (field instanceof Date) {
+                fieldType = FieldTypes.DATETIME
+              } else if (Array.isArray(field)) {
+                fieldType = FieldTypes.ARRAY
+              } else {
+                fieldType = FieldTypes.JSON
+              }
+              break
+            case "number":
+              fieldType = FieldTypes.NUMBER
+              break
+          }
+        schemaFields[key] = fieldType
+      }
+    }
+    await events.query.previewed(datasource, query)
     ctx.body = {
       rows,
-      schemaFields: [...new Set(keys)],
+      schemaFields,
       info,
       extra,
     }
@@ -135,12 +193,19 @@ export async function preview(ctx: any) {
   }
 }
 
-async function execute(ctx: any, opts = { rowsOnly: false }) {
+async function execute(
+  ctx: any,
+  opts: any = { rowsOnly: false, isAutomation: false }
+) {
   const db = getAppDB()
 
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
 
+  let authConfigCtx: any = {}
+  if (!opts.isAutomation) {
+    authConfigCtx = getAuthConfig(ctx)
+  }
   const enrichedParameters = ctx.request.body.parameters || {}
   // make sure parameters are fully enriched with defaults
   if (query && query.parameters) {
@@ -163,6 +228,10 @@ async function execute(ctx: any, opts = { rowsOnly: false }) {
         parameters: enrichedParameters,
         transformer: query.transformer,
         queryId: ctx.params.queryId,
+        ctx: {
+          user: ctx.user,
+          auth: { ...authConfigCtx },
+        },
       })
 
     const { rows, pagination, extra } = await quotas.addQuery(runFn)
@@ -177,11 +246,14 @@ async function execute(ctx: any, opts = { rowsOnly: false }) {
 }
 
 export async function executeV1(ctx: any) {
-  return execute(ctx, { rowsOnly: true })
+  return execute(ctx, { rowsOnly: true, isAutomation: false })
 }
 
-export async function executeV2(ctx: any) {
-  return execute(ctx, { rowsOnly: false })
+export async function executeV2(
+  ctx: any,
+  { isAutomation }: { isAutomation?: boolean } = {}
+) {
+  return execute(ctx, { rowsOnly: false, isAutomation })
 }
 
 const removeDynamicVariables = async (queryId: any) => {
@@ -207,8 +279,12 @@ const removeDynamicVariables = async (queryId: any) => {
 
 export async function destroy(ctx: any) {
   const db = getAppDB()
-  await removeDynamicVariables(ctx.params.queryId)
+  const queryId = ctx.params.queryId
+  await removeDynamicVariables(queryId)
+  const query = await db.get(queryId)
+  const datasource = await db.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200
+  await events.query.deleted(datasource, query)
 }

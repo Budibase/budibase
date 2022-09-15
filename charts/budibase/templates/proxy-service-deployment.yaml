@@ -30,7 +30,10 @@ spec:
         name: proxy-service
         ports:
         - containerPort: {{ .Values.services.proxy.port }}
-        resources: {}
+        {{ with .Values.services.proxy.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
         volumeMounts:
     {{- with .Values.affinity }}
       affinity:
@@ -40,6 +43,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      {{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
       volumes:
