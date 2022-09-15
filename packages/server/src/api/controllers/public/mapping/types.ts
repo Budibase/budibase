@@ -18,4 +18,4 @@ export type CreateUserParams = components["schemas"]["user"]
 
 export type SearchInputParams =
   | components["schemas"]["nameSearch"]
-  | components["schemas"]["querySearch"]
+  | components["schemas"]["rowSearch"]

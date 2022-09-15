@@ -14,6 +14,7 @@
     "skipLibCheck": true,
     "paths": {
       "@budibase/types": ["../packages/types/src"],
+      "@budibase/server/*": ["../packages/server/src/*"],
     }
   },
   "ts-node": {
