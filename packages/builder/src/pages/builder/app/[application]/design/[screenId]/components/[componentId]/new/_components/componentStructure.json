@@ -23,7 +23,8 @@
       "dataprovider",
       "repeater",
       "table",
-      "dynamicfilter"
+      "dynamicfilter",
+      "daterangepicker"
     ]
   },
   {
@@ -60,7 +61,6 @@
       "booleanfield",
       "longformfield",
       "attachmentfield",
-      "daterangepicker",
       "jsonfield",
       "relationshipfield",
       "datetimefield",
@@ -81,4 +81,3 @@
     ]
   }
 ]
-

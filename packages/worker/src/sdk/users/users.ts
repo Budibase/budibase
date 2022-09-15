@@ -11,7 +11,6 @@ import {
   HTTPError,
   migrations,
   sessions,
-  StaticDatabases,
   tenancy,
   users as usersCore,
   utils,
@@ -268,14 +267,17 @@ export const addTenant = async (
 }
 
 const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
+  const lcEmails = emails.map(email => email.toLowerCase())
   const params = {
-    keys: emails,
+    keys: lcEmails,
     include_docs: true,
   }
+
   const opts = {
     arrayResponse: true,
   }
-  return dbUtils.queryGlobalView<User>(
+
+  return dbUtils.queryGlobalView(
     ViewName.USER_BY_EMAIL,
     params,
     undefined,
@@ -286,31 +288,35 @@ const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
 const getExistingPlatformUsers = async (
   emails: string[]
 ): Promise<PlatformUserByEmail[]> => {
-  return dbUtils.doWithDB(
-    StaticDatabases.PLATFORM_INFO.name,
-    async (infoDb: any) => {
-      const response: AllDocsResponse<PlatformUserByEmail> =
-        await infoDb.allDocs({
-          keys: emails,
-          include_docs: true,
-        })
-      return response.rows
-        .filter(row => row.doc && (row.error !== "not_found") !== null)
-        .map((row: any) => row.doc)
-    }
-  )
+  const lcEmails = emails.map(email => email.toLowerCase())
+  const params = {
+    keys: lcEmails,
+    include_docs: true,
+  }
+
+  const opts = {
+    arrayResponse: true,
+  }
+  return dbUtils.queryPlatformView(
+    ViewName.PLATFORM_USERS_LOWERCASE,
+    params,
+    opts
+  ) as Promise<PlatformUserByEmail[]>
 }
 
 const getExistingAccounts = async (
   emails: string[]
 ): Promise<AccountMetadata[]> => {
+  const lcEmails = emails.map(email => email.toLowerCase())
   const params = {
-    keys: emails,
+    keys: lcEmails,
     include_docs: true,
   }
+
   const opts = {
     arrayResponse: true,
   }
+
   return dbUtils.queryPlatformView(
     ViewName.ACCOUNT_BY_EMAIL,
     params,
@@ -337,7 +343,7 @@ const searchExistingEmails = async (emails: string[]) => {
   const existingAccounts = await getExistingAccounts(emails)
   matchedEmails.push(...existingAccounts.map(account => account.email))
 
-  return [...new Set(matchedEmails)]
+  return [...new Set(matchedEmails.map(email => email.toLowerCase()))]
 }
 
 export const bulkCreate = async (
@@ -356,8 +362,10 @@ export const bulkCreate = async (
 
   for (const newUser of newUsersRequested) {
     if (
-      newUsers.find((x: any) => x.email === newUser.email) ||
-      existingEmails.includes(newUser.email)
+      newUsers.find(
+        (x: User) => x.email.toLowerCase() === newUser.email.toLowerCase()
+      ) ||
+      existingEmails.includes(newUser.email.toLowerCase())
     ) {
       unsuccessful.push({
         email: newUser.email,

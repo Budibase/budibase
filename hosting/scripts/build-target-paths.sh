@@ -9,7 +9,11 @@ if [[ "${TARGETBUILD}" = "aas" ]]; then
     chown -R couchdb:couchdb $DATA_DIR/couch/
     apt update
     apt-get install -y openssh-server
-    sed -i "s/#Port 22/Port 2222/" /etc/ssh/sshd_config
+    echo "root:Docker!" | chpasswd
+    mkdir -p /tmp
+    chmod +x /tmp/ssh_setup.sh \
+        && (sleep 1;/tmp/ssh_setup.sh 2>&1 > /dev/null)
+    cp /etc/sshd_config /etc/ssh/sshd_config
     /etc/init.d/ssh restart
     sed -i "s#DATA_DIR#/home#g" /opt/clouseau/clouseau.ini
     sed -i "s#DATA_DIR#/home#g" /opt/couchdb/etc/local.ini
