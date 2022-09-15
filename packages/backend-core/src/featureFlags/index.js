@@ -31,20 +31,26 @@ const TENANT_FEATURE_FLAGS = getFeatureFlags()
 
 exports.isEnabled = featureFlag => {
   const tenantId = tenancy.getTenantId()
-
-  return (
-    TENANT_FEATURE_FLAGS &&
-    TENANT_FEATURE_FLAGS[tenantId] &&
-    TENANT_FEATURE_FLAGS[tenantId].includes(featureFlag)
-  )
+  const flags = exports.getTenantFeatureFlags(tenantId)
+  return flags.includes(featureFlag)
 }
 
 exports.getTenantFeatureFlags = tenantId => {
-  if (TENANT_FEATURE_FLAGS && TENANT_FEATURE_FLAGS[tenantId]) {
-    return TENANT_FEATURE_FLAGS[tenantId]
+  const flags = []
+
+  if (TENANT_FEATURE_FLAGS) {
+    const globalFlags = TENANT_FEATURE_FLAGS["*"]
+    const tenantFlags = TENANT_FEATURE_FLAGS[tenantId]
+
+    if (globalFlags) {
+      flags.push(...globalFlags)
+    }
+    if (tenantFlags) {
+      flags.push(...tenantFlags)
+    }
   }
 
-  return []
+  return flags
 }
 
 exports.FeatureFlag = {

@@ -206,12 +206,7 @@ const _deployApp = async function (ctx: any) {
 
   console.log("Deploying app...")
 
-  let app
-  if (await isFirstDeploy()) {
-    app = await quotas.addPublishedApp(() => deployApp(deployment))
-  } else {
-    app = await deployApp(deployment)
-  }
+  let app = await deployApp(deployment)
 
   await events.app.published(app)
   ctx.body = deployment

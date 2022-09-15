@@ -2,28 +2,12 @@ const redis = require("../redis/init")
 const { v4: uuidv4 } = require("uuid")
 const { logWarn } = require("../logging")
 const env = require("../environment")
-
-interface CreateSession {
-  sessionId: string
-  tenantId: string
-  csrfToken?: string
-}
-
-interface Session extends CreateSession {
-  userId: string
-  lastAccessedAt: string
-  createdAt: string
-  // make optional attributes required
-  csrfToken: string
-}
-
-interface SessionKey {
-  key: string
-}
-
-interface ScannedSession {
-  value: Session
-}
+import {
+  Session,
+  ScannedSession,
+  SessionKey,
+  CreateSession,
+} from "@budibase/types"
 
 // a week in seconds
 const EXPIRY_SECONDS = 86400 * 7

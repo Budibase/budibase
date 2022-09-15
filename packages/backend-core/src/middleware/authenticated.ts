@@ -106,6 +106,7 @@ export = (
             user = await getUser(userId, session.tenantId)
           }
           user.csrfToken = session.csrfToken
+
           if (session?.lastAccessedAt < timeMinusOneMinute()) {
             // make sure we denote that the session is still in use
             await updateSessionTTL(session)
