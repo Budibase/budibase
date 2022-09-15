@@ -19,43 +19,28 @@ export default class TableApi {
     return this.create(generateTable())
   }
 
-  set appId(appId: string) {
-    this.headers = {
-      "x-budibase-app-id": appId,
-    }
-  }
-
   async create(body: CreateTableParams): Promise<[Response, Table]> {
     const response = await this.api.post(`/tables`, {
       body,
-      headers: this.headers,
     })
     const json = await response.json()
     return [response, json.data]
   }
 
   async read(id: string): Promise<[Response, Table]> {
-    const response = await this.api.get(`/tables/${id}`, {
-      headers: this.headers,
-    })
+    const response = await this.api.get(`/tables/${id}`)
     const json = await response.json()
     return [response, json.data]
   }
 
   async search(body: SearchInputParams): Promise<[Response, Table]> {
-    const response = await this.api.post(`/tables/search`, {
-      body,
-      headers: this.headers,
-    })
+    const response = await this.api.post(`/tables/search`, { body })
     const json = await response.json()
     return [response, json.data]
   }
 
   async update(id: string, body: Table): Promise<[Response, Table]> {
-    const response = await this.api.put(`/tables/${id}`, {
-      body,
-      headers: this.headers,
-    })
+    const response = await this.api.put(`/tables/${id}`, { body })
     const json = await response.json()
     return [response, json.data]
   }

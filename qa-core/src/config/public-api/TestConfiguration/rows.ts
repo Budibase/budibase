@@ -15,25 +15,16 @@ export default class RowApi {
     this.api = apiClient
   }
 
-  set appId(appId: string) {
-    this.headers = {
-      "x-budibase-app-id": appId,
-    }
-  }
-
   async create(body: CreateRowParams): Promise<[Response, Row]> {
     const response = await this.api.post(`/tables/${this.tableId}/rows`, {
       body,
-      headers: this.headers,
     })
     const json = await response.json()
     return [response, json.data]
   }
 
   async read(id: string): Promise<[Response, Row]> {
-    const response = await this.api.get(`/tables/${this.tableId}/rows/${id}`, {
-      headers: this.headers,
-    })
+    const response = await this.api.get(`/tables/${this.tableId}/rows/${id}`)
     const json = await response.json()
     return [response, json.data]
   }
@@ -41,7 +32,7 @@ export default class RowApi {
   async search(body: SearchInputParams): Promise<[Response, Row]> {
     const response = await this.api.post(
       `/tables/${this.tableId}/rows/search`,
-      { body, headers: this.headers }
+      { body }
     )
     const json = await response.json()
     return [response, json.data]
@@ -50,7 +41,6 @@ export default class RowApi {
   async update(id: string, body: Row): Promise<[Response, Row]> {
     const response = await this.api.put(`/tables/${this.tableId}/rows/${id}`, {
       body,
-      headers: this.headers,
     })
     const json = await response.json()
     return [response, json.data]

@@ -9,6 +9,8 @@ describe("Public API - /users endpoints", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
+    const [response, user] = await config.users.seed()
+    config.context = user
   })
 
   afterAll(async () => {
@@ -17,7 +19,6 @@ describe("Public API - /users endpoints", () => {
 
   it("POST - Create a user", async () => {
     const [response, user] = await config.users.create(generateUser())
-    config.context = user
     expect(response).toHaveStatusCode(200)
   })
 
