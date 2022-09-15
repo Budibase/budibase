@@ -472,7 +472,6 @@ const destroyApp = async (ctx: any) => {
   const result = await db.destroy()
 
   if (isUnpublish) {
-    await quotas.removePublishedApp()
     await events.app.unpublished(app)
   } else {
     await quotas.removeApp()

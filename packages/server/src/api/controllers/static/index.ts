@@ -18,7 +18,6 @@ const { DocumentType } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
-
 const fs = require("fs")
 const {
   downloadTarballDirect,

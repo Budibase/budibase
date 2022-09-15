@@ -38,7 +38,11 @@
     try {
       await groups.actions.save(group)
     } catch (error) {
-      notifications.error(`Failed to save group`)
+      if (error.status === 400) {
+        notifications.error(error.message)
+      } else {
+        notifications.error(`Failed to save group`)
+      }
     }
   }
 

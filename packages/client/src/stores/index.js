@@ -17,6 +17,7 @@ export { devToolsStore } from "./devTools"
 export { componentStore } from "./components"
 export { uploadStore } from "./uploads.js"
 export { rowSelectionStore } from "./rowSelection.js"
+export { environmentStore } from "./environment"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"
