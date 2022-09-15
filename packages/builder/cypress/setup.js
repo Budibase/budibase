@@ -22,12 +22,6 @@ process.env.COUCH_DB_PASSWORD = "budibase"
 process.env.INTERNAL_API_KEY = "budibase"
 process.env.ALLOW_DEV_AUTOMATIONS = 1
 
-// TODO: inject at the qa-core level
-process.env.BB_ADMIN_USER_EMAIL = "qa@budibase.com"
-process.env.BB_ADMIN_USER_PASSWORD = "budibase"
-process.env.ENCRYPTED_TEST_PUBLIC_API_KEY =
-  "a65722f06bee5caeadc5d7ca2f543a43-d610e627344210c643bb726f"
-
 // Stop info logs polluting test outputs
 process.env.LOG_LEVEL = "error"
 

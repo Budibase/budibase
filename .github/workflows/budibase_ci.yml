@@ -54,11 +54,11 @@ jobs:
         verbose: true 
 
     # TODO: parallelise this
-    # - name: Cypress run
-    #   uses: cypress-io/github-action@v2
-    #   with:
-    #     install: false
-    #     command: yarn test:e2e:ci
+    - name: Cypress run
+      uses: cypress-io/github-action@v2
+      with:
+        install: false
+        command: yarn test:e2e:ci
 
     - name: QA Core Integration Tests
       run: | 
