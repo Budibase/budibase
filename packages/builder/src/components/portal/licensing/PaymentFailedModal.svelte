@@ -38,7 +38,7 @@
         window.location.href = upgradeUrl
       }}
     >
-      <Body>The payment for your business plan subscription has failed</Body>
+      <Body>The payment for your subscription has failed</Body>
       <Body>
         Please upgrade your billing details before your account gets downgraded
         to the free plan
@@ -56,7 +56,7 @@
     </ModalContent>
   {:else}
     <ModalContent title={paymentFailedTitle} size="M" showCancelButton={false}>
-      <Body>The payment for your business plan subscription has failed</Body>
+      <Body>The payment for your subscription has failed</Body>
       <Body>
         Please upgrade your billing details before your account gets downgraded
         to the free plan
