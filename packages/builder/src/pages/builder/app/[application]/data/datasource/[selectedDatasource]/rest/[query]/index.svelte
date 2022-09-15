@@ -28,25 +28,25 @@
   import { onMount } from "svelte"
   import restUtils from "helpers/data/utils"
   import {
-    RestBodyTypes as bodyTypes,
-    SchemaTypeOptions,
     PaginationLocations,
     PaginationTypes,
+    RawRestBodyTypes,
+    RestBodyTypes as bodyTypes,
+    SchemaTypeOptions,
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
   import DynamicVariableModal from "../../_components/DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
-  import { RawRestBodyTypes } from "constants/backend"
 
   import {
     getRestBindings,
-    toBindingsArray,
-    runtimeToReadableBinding,
     readableToRuntimeBinding,
-    runtimeToReadableMap,
     readableToRuntimeMap,
+    runtimeToReadableBinding,
+    runtimeToReadableMap,
+    toBindingsArray,
   } from "builderStore/dataBinding"
 
   let query, datasource
@@ -95,7 +95,7 @@
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
   function getSelectedQuery() {
-    const cloneQuery = cloneDeep(
+    return cloneDeep(
       $queries.list.find(q => q._id === $queries.selected) || {
         datasourceId: $params.selectedDatasource,
         parameters: [],
@@ -107,7 +107,6 @@
         queryVerb: "read",
       }
     )
-    return cloneQuery
   }
 
   function checkQueryName(inputUrl = null) {
@@ -121,14 +120,15 @@
     if (!base) {
       return base
     }
-    const qs = restUtils.buildQueryString(
+    let qs = restUtils.buildQueryString(
       runtimeToReadableMap(mergedBindings, qsObj)
     )
     let newUrl = base
     if (base.includes("?")) {
-      newUrl = base.split("?")[0]
+      const split = base.split("?")
+      newUrl = split[0]
     }
-    return qs.length > 0 ? `${newUrl}?${qs}` : newUrl
+    return qs.length === 0 ? newUrl : `${newUrl}?${qs}`
   }
 
   function buildQuery() {
@@ -314,6 +314,25 @@
     }
   }
 
+  const paramsChanged = evt => {
+    breakQs = {}
+    for (let param of evt.detail) {
+      breakQs[param.name] = param.value
+    }
+  }
+
+  const urlChanged = evt => {
+    breakQs = {}
+    const qs = evt.target.value.split("?")[1]
+    if (qs && qs.length > 0) {
+      const parts = qs.split("&")
+      for (let part of parts) {
+        const [key, value] = part.split("=")
+        breakQs[key] = value
+      }
+    }
+  }
+
   onMount(async () => {
     query = getSelectedQuery()
 
@@ -426,7 +445,11 @@
             />
           </div>
           <div class="url">
-            <Input bind:value={url} placeholder="http://www.api.com/endpoint" />
+            <Input
+              on:blur={urlChanged}
+              bind:value={url}
+              placeholder="http://www.api.com/endpoint"
+            />
           </div>
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>
           <Button
@@ -456,13 +479,16 @@
             />
           </Tab>
           <Tab title="Params">
-            <KeyValueBuilder
-              bind:object={breakQs}
-              name="param"
-              headings
-              bindings={mergedBindings}
-              bindingDrawerLeft="260px"
-            />
+            {#key breakQs}
+              <KeyValueBuilder
+                on:change={paramsChanged}
+                object={breakQs}
+                name="param"
+                headings
+                bindings={mergedBindings}
+                bindingDrawerLeft="260px"
+              />
+            {/key}
           </Tab>
           <Tab title="Headers">
             <KeyValueBuilder

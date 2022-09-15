@@ -307,9 +307,13 @@ export const uploadDirectory = async (
   return files
 }
 
-exports.downloadTarballDirect = async (url: string, path: string) => {
+exports.downloadTarballDirect = async (
+  url: string,
+  path: string,
+  headers = {}
+) => {
   path = sanitizeKey(path)
-  const response = await fetch(url)
+  const response = await fetch(url, { headers })
   if (!response.ok) {
     throw new Error(`unexpected response ${response.statusText}`)
   }

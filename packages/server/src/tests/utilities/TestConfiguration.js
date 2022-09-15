@@ -560,7 +560,7 @@ class TestConfiguration {
 
   async createQuery(config = null) {
     if (!this.datasource && !config) {
-      throw "No data source created for query."
+      throw "No datasource created for query."
     }
     config = config || basicQuery(this.datasource._id)
     return this._req(config, null, controllers.query.save)

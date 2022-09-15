@@ -1,7 +1,6 @@
 <script>
   import { getContext } from "svelte"
   import { ProgressCircle, Pagination } from "@budibase/bbui"
-  import Placeholder from "./Placeholder.svelte"
   import { fetchData, LuceneUtils } from "@budibase/frontend-core"
 
   export let dataSource
@@ -133,11 +132,7 @@
         <ProgressCircle />
       </div>
     {:else}
-      {#if $component.emptyState}
-        <Placeholder />
-      {:else}
-        <slot />
-      {/if}
+      <slot />
       {#if paginate && $fetch.supportsPagination}
         <div class="pagination">
           <Pagination

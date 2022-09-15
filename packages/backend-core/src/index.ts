@@ -17,6 +17,7 @@ import * as dbConstants from "./db/constants"
 import * as logging from "./logging"
 import pino from "./pino"
 import * as middleware from "./middleware"
+import plugins from "./plugin"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"
@@ -55,6 +56,7 @@ const core = {
   errors,
   logging,
   roles,
+  plugins,
   ...pino,
   ...errorClasses,
   middleware,
