@@ -7,8 +7,8 @@
 
   const userBindings = getUserBindings()
 
-  let internalBindings = queryBindings.reduce((acc, doof) => {
-    acc[doof.name] = doof.default
+  let internalBindings = queryBindings.reduce((acc, binding) => {
+    acc[binding.name] = binding.default
     return acc
   }, {})
 
