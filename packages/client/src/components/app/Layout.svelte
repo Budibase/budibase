@@ -9,7 +9,14 @@
   import licensing from "../../licensing"
 
   const sdk = getContext("sdk")
-  const { routeStore, styleable, linkable, builderStore, currentRole } = sdk
+  const {
+    routeStore,
+    styleable,
+    linkable,
+    builderStore,
+    currentRole,
+    environmentStore,
+  } = sdk
   const component = getContext("component")
   const context = getContext("context")
 
@@ -228,7 +235,7 @@
     </div>
   {/if}
 
-  {#if !$builderStore.inBuilder && licensing.logoEnabled()}
+  {#if !$builderStore.inBuilder && licensing.logoEnabled() && $environmentStore.cloud}
     <MadeInBudibase />
   {/if}
 
