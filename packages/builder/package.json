@@ -9,6 +9,7 @@
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
+    "test": "jest",
     "cy:setup": "ts-node ./cypress/ts/setup.ts",
     "cy:setup:ci": "node ./cypress/setup.js",
     "cy:open": "cypress open",
@@ -36,7 +37,8 @@
       "components(.*)$": "<rootDir>/src/components$1",
       "builderStore(.*)$": "<rootDir>/src/builderStore$1",
       "stores(.*)$": "<rootDir>/src/stores$1",
-      "analytics(.*)$": "<rootDir>/src/analytics$1"
+      "analytics(.*)$": "<rootDir>/src/analytics$1",
+      "constants/backend": "<rootDir>/src/constants/backend/index.js"
     },
     "moduleFileExtensions": [
       "js",

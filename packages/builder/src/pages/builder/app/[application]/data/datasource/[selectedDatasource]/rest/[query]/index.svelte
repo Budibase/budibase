@@ -347,7 +347,6 @@
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
     breakQs = restUtils.breakQueryString(qs)
-    console.log(breakQs)
     breakQs = runtimeToReadableMap(mergedBindings, breakQs)
 
     const path = query.fields.path
