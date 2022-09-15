@@ -32,7 +32,6 @@ export function breakQueryString(qs) {
   let paramObj = {}
   for (let param of params) {
     const split = param.split("=")
-    console.log(split[1])
     paramObj[split[0]] = decodeURIComponent(split.slice(1).join("="))
   }
   return paramObj
