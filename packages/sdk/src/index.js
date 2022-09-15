@@ -45,7 +45,7 @@ const promisify = apiName => {
 }
 
 export const ApplicationsApi = promisify("ApplicationsApi")
-export const QueriesApi = new BudibaseApi.QueriesApi(ApiClient)
+export const QueriesApi = promisify("QueriesApi")
 export const RowsApi = promisify("RowsApi")
 export const TablesApi = promisify("TablesApi")
 export const UsersApi = promisify("UsersApi")
