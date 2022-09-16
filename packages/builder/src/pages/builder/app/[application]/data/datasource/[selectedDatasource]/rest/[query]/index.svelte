@@ -714,6 +714,7 @@
   .url-block {
     display: flex;
     gap: var(--spacing-s);
+    z-index: 200;
   }
   .verb {
     flex: 1;

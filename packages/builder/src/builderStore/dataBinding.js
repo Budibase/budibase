@@ -9,14 +9,14 @@ import {
 import { store } from "builderStore"
 import {
   queries as queriesStores,
-  tables as tablesStore,
   roles as rolesStore,
+  tables as tablesStore,
 } from "stores/backend"
 import {
-  makePropSafe,
-  isJSBinding,
   decodeJSBinding,
   encodeJSBinding,
+  isJSBinding,
+  makePropSafe,
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
@@ -128,8 +128,7 @@ export const readableToRuntimeMap = (bindings, ctx) => {
     return {}
   }
   return Object.keys(ctx).reduce((acc, key) => {
-    let parsedQuery = readableToRuntimeBinding(bindings, ctx[key])
-    acc[key] = parsedQuery
+    acc[key] = readableToRuntimeBinding(bindings, ctx[key])
     return acc
   }, {})
 }
@@ -142,8 +141,7 @@ export const runtimeToReadableMap = (bindings, ctx) => {
     return {}
   }
   return Object.keys(ctx).reduce((acc, key) => {
-    let parsedQuery = runtimeToReadableBinding(bindings, ctx[key])
-    acc[key] = parsedQuery
+    acc[key] = runtimeToReadableBinding(bindings, ctx[key])
     return acc
   }, {})
 }
@@ -389,7 +387,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
 /**
  * Gets all bindable properties from the logged in user.
  */
-const getUserBindings = () => {
+export const getUserBindings = () => {
   let bindings = []
   const { schema } = getSchemaForTable(TableNames.USERS)
   const keys = Object.keys(schema).sort()
