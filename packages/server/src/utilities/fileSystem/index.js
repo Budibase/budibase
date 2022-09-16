@@ -412,6 +412,7 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
       return require(filename)
     } else {
       console.log(`Updating plugin: ${name}`)
+      delete require.cache[require.resolve(filename)]
       fs.unlinkSync(filename)
     }
   }
