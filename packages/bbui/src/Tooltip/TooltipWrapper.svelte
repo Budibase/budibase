@@ -47,7 +47,7 @@
     display: flex;
     justify-content: center;
     top: 15px;
-    z-index: 100;
+    z-index: 200;
     width: 160px;
   }
   .icon {
