@@ -217,7 +217,7 @@
       <Body>Add users and control who gets access to your published apps</Body>
     </Layout>
     <Divider />
-    <div className="controls">
+    <div class="controls">
       <ButtonGroup>
         <Button
           dataCy="add-user"
@@ -235,7 +235,7 @@
           Import users
         </Button>
       </ButtonGroup>
-      <div className="controls-right">
+      <div class="controls-right">
         <Search bind:value={searchEmail} placeholder="Search" />
         {#if selectedRows.length > 0}
           <DeleteRowsButton
