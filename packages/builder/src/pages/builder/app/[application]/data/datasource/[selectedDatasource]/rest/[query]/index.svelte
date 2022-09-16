@@ -60,14 +60,20 @@
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
-  $: customRequestBindings = toBindingsArray(requestBindings, "Binding")
+  $: customRequestBindings = toBindingsArray(
+    requestBindings,
+    "Binding",
+    "Bindings"
+  )
   $: globalDynamicRequestBindings = toBindingsArray(
     globalDynamicBindings,
+    "Dynamic",
     "Dynamic"
   )
   $: dataSourceStaticBindings = toBindingsArray(
     staticVariables,
-    "Datasource.Static"
+    "Datasource.Static",
+    "Datasource Static"
   )
 
   $: mergedBindings = [
