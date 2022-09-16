@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "allowJs": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "types": ["node", "jest"],
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "paths": {
+      "@budibase/types": ["../packages/types/src"],
+      "@budibase/server/*": ["../packages/server/src/*"],
+    }
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
+  "references": [
+    { "path": "../packages/types" },
+  ],
+  "include": [
+    "src/**/*",
+    "package.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
