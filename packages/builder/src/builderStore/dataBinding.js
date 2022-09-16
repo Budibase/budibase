@@ -82,6 +82,7 @@ export const getAuthBindings = () => {
       readableBinding: fieldBinding.readable,
       fieldSchema: { type: "string", name: fieldBinding.key },
       providerId: "user",
+      category: "Current User",
     }
   })
   return bindings
@@ -93,7 +94,7 @@ export const getAuthBindings = () => {
  * @param {string} prefix A contextual string prefix/path for a user readable binding
  * @return {object[]} An array containing readable/runtime binding objects
  */
-export const toBindingsArray = (valueMap, prefix) => {
+export const toBindingsArray = (valueMap, prefix, category) => {
   if (!valueMap) {
     return []
   }
@@ -101,11 +102,20 @@ export const toBindingsArray = (valueMap, prefix) => {
     if (!binding || !valueMap[binding]) {
       return acc
     }
-    acc.push({
+
+    let config = {
       type: "context",
       runtimeBinding: binding,
       readableBinding: `${prefix}.${binding}`,
-    })
+      icon: "Brackets",
+    }
+
+    if (category) {
+      config.category = category
+    }
+
+    acc.push(config)
+
     return acc
   }, [])
 }
