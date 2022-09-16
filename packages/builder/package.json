@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "1.3.19-alpha.5",
+  "version": "1.3.21-alpha.0",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
+    "test": "jest",
     "cy:setup": "ts-node ./cypress/ts/setup.ts",
     "cy:setup:ci": "node ./cypress/setup.js",
     "cy:open": "cypress open",
@@ -36,7 +37,8 @@
       "components(.*)$": "<rootDir>/src/components$1",
       "builderStore(.*)$": "<rootDir>/src/builderStore$1",
       "stores(.*)$": "<rootDir>/src/stores$1",
-      "analytics(.*)$": "<rootDir>/src/analytics$1"
+      "analytics(.*)$": "<rootDir>/src/analytics$1",
+      "constants/backend": "<rootDir>/src/constants/backend/index.js"
     },
     "moduleFileExtensions": [
       "js",
@@ -69,10 +71,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "1.3.19-alpha.5",
-    "@budibase/client": "1.3.19-alpha.5",
-    "@budibase/frontend-core": "1.3.19-alpha.5",
-    "@budibase/string-templates": "1.3.19-alpha.5",
+    "@budibase/bbui": "1.3.21-alpha.0",
+    "@budibase/client": "1.3.21-alpha.0",
+    "@budibase/frontend-core": "1.3.21-alpha.0",
+    "@budibase/string-templates": "1.3.21-alpha.0",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
