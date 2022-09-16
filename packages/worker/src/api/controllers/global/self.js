@@ -80,16 +80,15 @@ const addSessionAttributesToUser = ctx => {
   ctx.body.csrfToken = ctx.user.csrfToken
 }
 
-/**
- * Remove the attributes that are session based from the current user,
- * so that stale values are not written to the db
- */
-const removeSessionAttributesFromUser = ctx => {
-  delete ctx.request.body.csrfToken
-  delete ctx.request.body.account
-  delete ctx.request.body.accountPortalAccess
-  delete ctx.request.body.budibaseAccess
-  delete ctx.request.body.license
+const sanitiseUserUpdate = ctx => {
+  const allowed = ["firstName", "lastName", "password", "forceResetPassword"]
+  const resp = {}
+  for (let [key, value] of Object.entries(ctx.request.body)) {
+    if (allowed.includes(key)) {
+      resp[key] = value
+    }
+  }
+  return resp
 }
 
 exports.getSelf = async ctx => {
@@ -117,10 +116,12 @@ exports.updateSelf = async ctx => {
   const db = getGlobalDB()
   const user = await db.get(ctx.user._id)
   let passwordChange = false
-  if (ctx.request.body.password) {
+
+  const userUpdateObj = sanitiseUserUpdate(ctx)
+  if (userUpdateObj.password) {
     // changing password
     passwordChange = true
-    ctx.request.body.password = await hash(ctx.request.body.password)
+    userUpdateObj.password = await hash(userUpdateObj.password)
     // Log all other sessions out apart from the current one
     await platformLogout({
       ctx,
@@ -128,14 +129,10 @@ exports.updateSelf = async ctx => {
       keepActiveSession: true,
     })
   }
-  // don't allow sending up an ID/Rev, always use the existing one
-  delete ctx.request.body._id
-  delete ctx.request.body._rev
-  removeSessionAttributesFromUser(ctx)
 
   const response = await db.put({
     ...user,
-    ...ctx.request.body,
+    ...userUpdateObj,
   })
   await userCache.invalidateUser(user._id)
   ctx.body = {
