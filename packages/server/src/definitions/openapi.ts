@@ -278,58 +278,7 @@ export interface paths {
       };
       requestBody: {
         content: {
-          "application/json": {
-            query: {
-              /** @description Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used. */
-              allOr?: boolean;
-              /**
-               * @description A map of field name to the string to search for, this will look for rows that have a value starting with the string value.
-               * @example [object Object]
-               */
-              string?: { [key: string]: string };
-              /** @description A fuzzy search, only supported by internal tables. */
-              fuzzy?: { [key: string]: unknown };
-              /**
-               * @description Searches within a range, the format of this must be in the format of an object with a "low" and "high" property.
-               * @example [object Object]
-               */
-              range?: { [key: string]: unknown };
-              /** @description Searches for rows that have a column value that is exactly the value set. */
-              equal?: { [key: string]: unknown };
-              /** @description Searches for any row which does not contain the specified column value. */
-              notEqual?: { [key: string]: unknown };
-              /**
-               * @description Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.
-               * @example [object Object]
-               */
-              empty?: { [key: string]: unknown };
-              /** @description Searches for rows which have the specified column. */
-              notEmpty?: { [key: string]: unknown };
-              /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
-              oneOf?: { [key: string]: unknown };
-            };
-            /** @description Enables pagination, by default this is disabled. */
-            paginate?: boolean;
-            /** @description If retrieving another page, the bookmark from the previous request must be supplied. */
-            bookmark?: string | number;
-            /** @description The maximum number of rows to return, useful when paginating, for internal tables this will be limited to 1000, for SQL tables it will be 5000. */
-            limit?: number;
-            /** @description A set of parameters describing the sort behaviour of the search. */
-            sort?: {
-              /**
-               * @description The order of the sort, by default this is ascending.
-               * @enum {string}
-               */
-              order?: "ascending" | "descending";
-              /** @description The name of the column by which the rows will be sorted. */
-              column?: string;
-              /**
-               * @description Defines whether the column should be treated as a string or as numbers when sorting.
-               * @enum {string}
-               */
-              type?: "string" | "number";
-            };
-          };
+          "application/json": components["schemas"]["rowSearch"];
         };
       };
     };
@@ -344,7 +293,7 @@ export interface paths {
         };
       };
       responses: {
-        /** Returns the created table, including the ID which has been generated for it. This can be internal or external data sources. */
+        /** Returns the created table, including the ID which has been generated for it. This can be internal or external datasources. */
         200: {
           content: {
             "application/json": components["schemas"]["tableOutput"];
@@ -965,7 +914,7 @@ export interface components {
     query: {
       /** @description The ID of the query. */
       _id: string;
-      /** @description The ID of the data source the query belongs to. */
+      /** @description The ID of the datasource the query belongs to. */
       datasourceId?: string;
       /** @description The bindings which are required to perform this query. */
       parameters?: string[];
@@ -989,7 +938,7 @@ export interface components {
       data: {
         /** @description The ID of the query. */
         _id: string;
-        /** @description The ID of the data source the query belongs to. */
+        /** @description The ID of the datasource the query belongs to. */
         datasourceId?: string;
         /** @description The bindings which are required to perform this query. */
         parameters?: string[];
@@ -1104,6 +1053,58 @@ export interface components {
         /** @description The ID of the user. */
         _id: string;
       }[];
+    };
+    rowSearch: {
+      query: {
+        /** @description Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used. */
+        allOr?: boolean;
+        /**
+         * @description A map of field name to the string to search for, this will look for rows that have a value starting with the string value.
+         * @example [object Object]
+         */
+        string?: { [key: string]: string };
+        /** @description A fuzzy search, only supported by internal tables. */
+        fuzzy?: { [key: string]: unknown };
+        /**
+         * @description Searches within a range, the format of this must be in the format of an object with a "low" and "high" property.
+         * @example [object Object]
+         */
+        range?: { [key: string]: unknown };
+        /** @description Searches for rows that have a column value that is exactly the value set. */
+        equal?: { [key: string]: unknown };
+        /** @description Searches for any row which does not contain the specified column value. */
+        notEqual?: { [key: string]: unknown };
+        /**
+         * @description Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.
+         * @example [object Object]
+         */
+        empty?: { [key: string]: unknown };
+        /** @description Searches for rows which have the specified column. */
+        notEmpty?: { [key: string]: unknown };
+        /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
+        oneOf?: { [key: string]: unknown };
+      };
+      /** @description Enables pagination, by default this is disabled. */
+      paginate?: boolean;
+      /** @description If retrieving another page, the bookmark from the previous request must be supplied. */
+      bookmark?: string | number;
+      /** @description The maximum number of rows to return, useful when paginating, for internal tables this will be limited to 1000, for SQL tables it will be 5000. */
+      limit?: number;
+      /** @description A set of parameters describing the sort behaviour of the search. */
+      sort?: {
+        /**
+         * @description The order of the sort, by default this is ascending.
+         * @enum {string}
+         */
+        order?: "ascending" | "descending";
+        /** @description The name of the column by which the rows will be sorted. */
+        column?: string;
+        /**
+         * @description Defines whether the column should be treated as a string or as numbers when sorting.
+         * @enum {string}
+         */
+        type?: "string" | "number";
+      };
     };
     nameSearch: {
       /** @description The name to be used when searching - this will be used in a case insensitive starts with match. */

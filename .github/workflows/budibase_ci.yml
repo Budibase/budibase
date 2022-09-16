@@ -59,3 +59,9 @@ jobs:
       with:
         install: false
         command: yarn test:e2e:ci
+
+    - name: QA Core Integration Tests
+      run: | 
+        cd qa-core
+        yarn
+        yarn api:test:ci

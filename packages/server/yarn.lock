@@ -1094,12 +1094,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.3.15-alpha.7":
-  version "1.3.15-alpha.7"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.3.15-alpha.7.tgz#322e842c9371c807f89b71ee2aed4ab4479b6d27"
-  integrity sha512-eymmLjHhEzBQEztmVRqLpAw4YzZ4xDBAtA1lnJ50AZs/ZlHE+W4BR6LX2jGvIhYK2QDGbNQtXDzkut+0Sacj0w==
+"@budibase/backend-core@1.3.19-alpha.6":
+  version "1.3.19-alpha.6"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.3.19-alpha.6.tgz#12f22db2b09ea7586cafb2eb2c375914c8467188"
+  integrity sha512-Kp9OaU80fZO1fEi/EA45eSz3zFYWzQHBfuy7XKzJ0MBKYPCvPteIXcXaANeUoHJE9rDGVUHM9nxLxnSfRUGy0Q==
   dependencies:
-    "@budibase/types" "1.3.15-alpha.7"
+    "@budibase/types" "1.3.19-alpha.6"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -1180,13 +1180,13 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.3.15-alpha.7":
-  version "1.3.15-alpha.7"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.3.15-alpha.7.tgz#3743a26fb99d58070c8ab2741ee912a4d973baf7"
-  integrity sha512-RerlV0A6wSU3mSOtY5ET4WR5Qaga1WNfUeG8Lqzx3z09vC23YuB0qvpadpKoUKUanzCyprrU4zBrLED8973stQ==
+"@budibase/pro@1.3.19-alpha.6":
+  version "1.3.19-alpha.6"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.3.19-alpha.6.tgz#a30340dbd6aa52658312155a5ce0828d0cfc4621"
+  integrity sha512-ntyjKIoiAcCIPJAjwmZ19kcHOiduIcuia3htd5njzSNYrPerqmAty8g5oiBrjeK5ckMd8J3VQeCUdk0Lq1Mdfw==
   dependencies:
-    "@budibase/backend-core" "1.3.15-alpha.7"
-    "@budibase/types" "1.3.15-alpha.7"
+    "@budibase/backend-core" "1.3.19-alpha.6"
+    "@budibase/types" "1.3.19-alpha.6"
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
@@ -1209,10 +1209,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@1.3.15-alpha.7":
-  version "1.3.15-alpha.7"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.3.15-alpha.7.tgz#c69a38194786ea66a2c6137aa961292902472ee9"
-  integrity sha512-9XW5Qr0FxXRO5rC1SlwS8dcDDPYGEG5+tJcrQ0gzk+5uzQfYIB/crhB0z++9vAwkBEm09XKbjBvdf4w5haEi2w==
+"@budibase/types@1.3.19-alpha.6":
+  version "1.3.19-alpha.6"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.3.19-alpha.6.tgz#55ee8c67c2d4bc5ddf009ed1b22094e70d38f8ad"
+  integrity sha512-ApDkaWDpD4BmsmmzxqnSBcj2Q4PGBzkh+49MFZb8F+pdzcDHUQzbVwzVgfBVUS2lHhmZSfBM4sGsfGsBMd+Izw==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -2325,6 +2325,11 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
+"@socket.io/component-emitter@~3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@socket.io/component-emitter/-/component-emitter-3.1.0.tgz#96116f2a912e0c02817345b3c10751069920d553"
+  integrity sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==
+
 "@spectrum-css/actionbutton@^1.0.1":
   version "1.1.14"
   resolved "https://registry.yarnpkg.com/@spectrum-css/actionbutton/-/actionbutton-1.1.14.tgz#4e12eb7f482fb5944c3d97547591964baebeb1d4"
@@ -2676,11 +2681,6 @@
   resolved "https://registry.yarnpkg.com/@types/caseless/-/caseless-0.12.2.tgz#f65d3d6389e01eeb458bd54dc8f52b95a9463bc8"
   integrity sha512-6ckxMjBBD8URvjB6J3NcnuAn5Pkl7t3TizAg+xdlzzQGSPSmBcXf8KoIH0ua/i+tio+ZRUHEXp0HEmvaR4kt0w==
 
-"@types/component-emitter@^1.2.10":
-  version "1.2.11"
-  resolved "https://registry.yarnpkg.com/@types/component-emitter/-/component-emitter-1.2.11.tgz#50d47d42b347253817a39709fef03ce66a108506"
-  integrity sha512-SRXjM+tfsSlA9VuG8hGO2nft2p8zjXCK1VcC6N4NXbBbYbSia9kzCChYQajIjzIqOOOuh5Ock6MmV2oux4jDZQ==
-
 "@types/connect@*":
   version "3.4.35"
   resolved "https://registry.yarnpkg.com/@types/connect/-/connect-3.4.35.tgz#5fcf6ae445e4021d1fc2219a4873cc73a3bb2ad1"
@@ -2927,9 +2927,9 @@
   integrity sha512-QpLcX9ZSsq3YYUUnD3nFDY8H7wctAhQj/TFKL8Ya8v5fMm3CFXxo8zStsLAl780ltoYoo1WvKUVGBQK+1ifr7g==
 
 "@types/node@>=10.0.0":
-  version "18.7.6"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.7.6.tgz#31743bc5772b6ac223845e18c3fc26f042713c83"
-  integrity sha512-EdxgKRXgYsNITy5mjjXjVE/CS8YENSdhiagGrLqjG0pvA2owgJ6i4l7wy/PFZGC0B1/H20lWKN7ONVDNYDZm7A==
+  version "18.7.18"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.7.18.tgz#633184f55c322e4fb08612307c274ee6d5ed3154"
+  integrity sha512-m+6nTEOadJZuTPkKR/SYK3A2d7FZrgElol9UP1Kae90VVU4a6mxnPuLiIW1m4Cq4gZ/nWb9GrdVXJCoCazDAbg==
 
 "@types/node@>=8.0.0 <15":
   version "14.18.21"
@@ -4800,7 +4800,7 @@ commoner@^0.10.1:
     q "^1.1.2"
     recast "^0.11.17"
 
-component-emitter@^1.2.0, component-emitter@^1.2.1, component-emitter@~1.3.0:
+component-emitter@^1.2.0, component-emitter@^1.2.1:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/component-emitter/-/component-emitter-1.3.0.tgz#16e4070fba8ae29b679f2215853ee181ab2eabc0"
   integrity sha512-Rd3se6QB+sO1TwqZjscQrurpEPIfO0/yYnSin6Q/rD3mOutHvUrCAhJub3r90uNb+SESBuE0QYoB90YdfatsRg==
@@ -12849,26 +12849,25 @@ socket.io-adapter@~2.4.0:
   resolved "https://registry.yarnpkg.com/socket.io-adapter/-/socket.io-adapter-2.4.0.tgz#b50a4a9ecdd00c34d4c8c808224daa1a786152a6"
   integrity sha512-W4N+o69rkMEGVuk2D/cvca3uYsvGlMwsySWV447y99gUPghxq42BxqLNMndb+a1mm/5/7NeXVQS7RLa2XyXvYg==
 
-socket.io-parser@~4.0.4:
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/socket.io-parser/-/socket.io-parser-4.0.5.tgz#cb404382c32324cc962f27f3a44058cf6e0552df"
-  integrity sha512-sNjbT9dX63nqUFIOv95tTVm6elyIU4RvB1m8dOeZt+IgWwcWklFDOdmGcfo3zSiRsnR/3pJkjY5lfoGqEe4Eig==
+socket.io-parser@~4.2.0:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/socket.io-parser/-/socket.io-parser-4.2.1.tgz#01c96efa11ded938dcb21cbe590c26af5eff65e5"
+  integrity sha512-V4GrkLy+HeF1F/en3SpUaM+7XxYXpuMUWLGde1kSSh5nQMN4hLrbPIkD+otwh6q9R6NOQBN4AMaOZ2zVjui82g==
   dependencies:
-    "@types/component-emitter" "^1.2.10"
-    component-emitter "~1.3.0"
+    "@socket.io/component-emitter" "~3.1.0"
     debug "~4.3.1"
 
 socket.io@^4.5.1:
-  version "4.5.1"
-  resolved "https://registry.yarnpkg.com/socket.io/-/socket.io-4.5.1.tgz#aa7e73f8a6ce20ee3c54b2446d321bbb6b1a9029"
-  integrity sha512-0y9pnIso5a9i+lJmsCdtmTTgJFFSvNQKDnPQRz28mGNnxbmqYg2QPtJTLFxhymFZhAIn50eHAKzJeiNaKr+yUQ==
+  version "4.5.2"
+  resolved "https://registry.yarnpkg.com/socket.io/-/socket.io-4.5.2.tgz#1eb25fd380ab3d63470aa8279f8e48d922d443ac"
+  integrity sha512-6fCnk4ARMPZN448+SQcnn1u8OHUC72puJcNtSgg2xS34Cu7br1gQ09YKkO1PFfDn/wyUE9ZgMAwosJed003+NQ==
   dependencies:
     accepts "~1.3.4"
     base64id "~2.0.0"
     debug "~4.3.2"
     engine.io "~6.2.0"
     socket.io-adapter "~2.4.0"
-    socket.io-parser "~4.0.4"
+    socket.io-parser "~4.2.0"
 
 sonic-boom@^1.0.2:
   version "1.4.1"

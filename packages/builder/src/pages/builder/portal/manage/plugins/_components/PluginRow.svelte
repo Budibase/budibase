@@ -20,6 +20,8 @@
       ? plugin.schema.schema.icon || "Book"
       : plugin.schema.schema.icon || "Beaker"
 
+  $: friendlyName = plugin?.schema?.schema?.friendlyName
+
   function pluginDeleted() {
     if (detailsModal) {
       detailsModal.hide()
@@ -40,6 +42,9 @@
           weight="800"
         >
           {plugin.name}
+        </Body>
+        <Body size="XS" color="var(--spectrum-global-color-gray-900)">
+          {friendlyName}
         </Body>
       </div>
     </div>
@@ -63,6 +68,11 @@
     <div class="details-row">
       <Label size="M">Name</Label>
       <Input disabled value={plugin.name} />
+    </div>
+
+    <div class="details-row">
+      <Label size="M">Friendly name</Label>
+      <Input disabled value={friendlyName} />
     </div>
 
     <div class="details-row">
@@ -127,7 +137,7 @@
 
   .details-row {
     display: grid;
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: 70px 1fr;
     grid-gap: var(--spacing-l) var(--spacing-l);
     align-items: center;
   }

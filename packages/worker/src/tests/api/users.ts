@@ -2,10 +2,9 @@ import {
   BulkCreateUsersRequest,
   BulkCreateUsersResponse,
   BulkDeleteUsersRequest,
-  CreateUserResponse,
+  BulkDeleteUsersResponse,
   InviteUsersRequest,
   User,
-  UserDetails,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 
