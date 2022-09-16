@@ -7,7 +7,7 @@ import {
   InviteUserRequest,
   InviteUsersRequest,
   User,
-  groupUser,
+  GroupUser,
   UserGroup,
 } from "@budibase/types"
 import {
@@ -247,7 +247,7 @@ export const inviteAccept = async (ctx: any) => {
             // group was probably deleted
           }
         }
-        const groupUser: groupUser = { _id: saved._id, email: saved.email }
+        const groupUser: GroupUser = { _id: saved._id, email: saved.email }
         await groupUtils.bulkSaveGroupUsers(groups, [groupUser])
       }
 
