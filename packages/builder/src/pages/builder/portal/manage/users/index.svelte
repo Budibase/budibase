@@ -161,10 +161,10 @@
     userData = await removingDuplicities({ groups, users })
     if (!userData.users.length) return
 
-    return createUser()
+    return createUsers()
   }
 
-  async function createUser() {
+  async function createUsers() {
     try {
       await users.create(await removingDuplicities(userData))
       notifications.success("Successfully created user")
@@ -179,7 +179,7 @@
     if (onboardingType === "emailOnboarding") {
       createUserFlow()
     } else {
-      await createUser()
+      await createUsers()
     }
   }
 
@@ -217,14 +217,15 @@
       <Body>Add users and control who gets access to your published apps</Body>
     </Layout>
     <Divider />
-    <div class="controls">
+    <div className="controls">
       <ButtonGroup>
         <Button
           dataCy="add-user"
           on:click={createUserModal.show}
           icon="UserAdd"
-          cta>Add users</Button
-        >
+          cta
+          >Add users
+        </Button>
         <Button
           on:click={importUsersModal.show}
           icon="Import"
@@ -234,7 +235,7 @@
           Import users
         </Button>
       </ButtonGroup>
-      <div class="controls-right">
+      <div className="controls-right">
         <Search bind:value={searchEmail} placeholder="Search" />
         {#if selectedRows.length > 0}
           <DeleteRowsButton
@@ -311,6 +312,7 @@
     justify-content: space-between;
     align-items: center;
   }
+
   .controls-right {
     display: flex;
     flex-direction: row;
@@ -318,6 +320,7 @@
     align-items: center;
     gap: var(--spacing-xl);
   }
+
   .controls-right :global(.spectrum-Search) {
     width: 200px;
   }

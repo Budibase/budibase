@@ -2,7 +2,7 @@ import { Event, Identity, Group, IdentityType } from "@budibase/types"
 import { EventProcessor } from "./types"
 import env from "../../environment"
 import * as analytics from "../analytics"
-import PosthogProcessor from "./PosthogProcessor"
+import PosthogProcessor from "./posthog"
 
 /**
  * Events that are always captured.
@@ -32,7 +32,7 @@ export default class AnalyticsProcessor implements EventProcessor {
       return
     }
     if (this.posthog) {
-      this.posthog.processEvent(event, identity, properties, timestamp)
+      await this.posthog.processEvent(event, identity, properties, timestamp)
     }
   }
 
@@ -45,14 +45,14 @@ export default class AnalyticsProcessor implements EventProcessor {
       return
     }
     if (this.posthog) {
-      this.posthog.identify(identity, timestamp)
+      await this.posthog.identify(identity, timestamp)
     }
   }
 
   async identifyGroup(group: Group, timestamp?: string | number) {
     // Group indentifications (tenant and installation) always on
     if (this.posthog) {
-      this.posthog.identifyGroup(group, timestamp)
+      await this.posthog.identifyGroup(group, timestamp)
     }
   }
 

@@ -11,7 +11,7 @@ import { storeLog } from "../automations/logging"
 import { Automation, AutomationStep, AutomationStatus } from "@budibase/types"
 import {
   LoopStep,
-  LoopStepTypes,
+  LoopStepType,
   LoopInput,
   AutomationEvent,
   TriggerOutput,
@@ -35,12 +35,12 @@ function typecastForLooping(loopStep: LoopStep, input: LoopInput) {
   }
   try {
     switch (loopStep.inputs.option) {
-      case LoopStepTypes.ARRAY:
+      case LoopStepType.ARRAY:
         if (typeof input.binding === "string") {
           return JSON.parse(input.binding)
         }
         break
-      case LoopStepTypes.STRING:
+      case LoopStepType.STRING:
         if (Array.isArray(input.binding)) {
           return input.binding.join(",")
         }
@@ -133,27 +133,34 @@ class Orchestrator {
     return metadata
   }
 
+  async stopCron(reason: string) {
+    if (!this._repeat) {
+      return
+    }
+    logWarn(
+      `CRON disabled reason=${reason} - ${this._appId}/${this._automation._id}`
+    )
+    const automation = this._automation
+    const trigger = automation.definition.trigger
+    await disableCron(this._repeat?.jobId, this._repeat?.jobKey)
+    this.updateExecutionOutput(
+      trigger.id,
+      trigger.stepId,
+      {},
+      {
+        status: AutomationStatus.STOPPED_ERROR,
+        success: false,
+      }
+    )
+    await storeLog(automation, this.executionOutput)
+  }
+
   async checkIfShouldStop(metadata: AutomationMetadata): Promise<boolean> {
     if (!metadata.errorCount || !this._repeat) {
       return false
     }
-    const automation = this._automation
-    const trigger = automation.definition.trigger
     if (metadata.errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
-      logWarn(
-        `CRON disabled due to errors - ${this._appId}/${this._automation._id}`
-      )
-      await disableCron(this._repeat?.jobId, this._repeat?.jobKey)
-      this.updateExecutionOutput(
-        trigger.id,
-        trigger.stepId,
-        {},
-        {
-          status: AutomationStatus.STOPPED_ERROR,
-          success: false,
-        }
-      )
-      await storeLog(automation, this.executionOutput)
+      await this.stopCron("errors")
       return true
     }
     return false
@@ -451,6 +458,9 @@ class Orchestrator {
 
 export function execute(input: AutomationEvent, callback: WorkerCallback) {
   const appId = input.data.event.appId
+  if (!appId) {
+    throw new Error("Unable to execute, event doesn't contain app ID.")
+  }
   doInAppContext(appId, async () => {
     const automationOrchestrator = new Orchestrator(
       input.data.automation,
@@ -463,5 +473,20 @@ export function execute(input: AutomationEvent, callback: WorkerCallback) {
     } catch (err) {
       callback(err)
     }
+  })
+}
+
+export const removeStalled = async (input: AutomationEvent) => {
+  const appId = input.data.event.appId
+  if (!appId) {
+    throw new Error("Unable to execute, event doesn't contain app ID.")
+  }
+  await doInAppContext(appId, async () => {
+    const automationOrchestrator = new Orchestrator(
+      input.data.automation,
+      input.data.event,
+      input.opts
+    )
+    await automationOrchestrator.stopCron("stalled")
   })
 }

@@ -24,7 +24,6 @@
   export let secondaryAction = undefined
   export let secondaryButtonWarning = false
   export let dataCy = null
-
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
   $: confirmDisabled = disabled || loading
@@ -88,12 +87,11 @@
     <section class="spectrum-Dialog-content content-grid">
       <slot />
     </section>
-    {#if showCancelButton || showConfirmButton}
+    {#if showCancelButton || showConfirmButton || $$slots.footer}
       <div
         class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter"
       >
         <slot name="footer" />
-
         {#if showSecondaryButton && secondaryButtonText && secondaryAction}
           <div class="secondary-action">
             <Button

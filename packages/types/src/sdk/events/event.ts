@@ -135,7 +135,6 @@ export enum Event {
   // LICENSE
   LICENSE_UPGRADED = "license:upgraded",
   LICENSE_DOWNGRADED = "license:downgraded",
-  LICENSE_UPDATED = "license:updated",
   LICENSE_ACTIVATED = "license:activated",
 
   // ACCOUNT
@@ -159,6 +158,11 @@ export enum Event {
   USER_GROUP_USERS_REMOVED = "user_group:users_deleted",
   USER_GROUP_PERMISSIONS_EDITED = "user_group:permissions_edited",
   USER_GROUP_ONBOARDING = "user_group:onboarding_added",
+
+  // PLUGIN
+  PLUGIN_INIT = "plugin:init",
+  PLUGIN_IMPORTED = "plugin:imported",
+  PLUGIN_DELETED = "plugin:deleted",
 }
 
 // properties added at the final stage of the event pipeline

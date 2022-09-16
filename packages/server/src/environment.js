@@ -13,10 +13,7 @@ function isJest() {
 }
 
 function isDev() {
-  return (
-    process.env.NODE_ENV !== "production" &&
-    process.env.BUDIBASE_ENVIRONMENT !== "production"
-  )
+  return process.env.NODE_ENV !== "production"
 }
 
 function isCypress() {
@@ -40,8 +37,8 @@ function parseIntSafe(number) {
 let inThread = false
 
 module.exports = {
-  // important
-  PORT: process.env.PORT || process.env.APP_PORT,
+  // important - prefer app port to generic port
+  PORT: process.env.APP_PORT || process.env.PORT,
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,
@@ -63,6 +60,7 @@ module.exports = {
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   TEMPLATE_REPOSITORY: process.env.TEMPLATE_REPOSITORY || "app",
   DISABLE_AUTO_PROD_APP_SYNC: process.env.DISABLE_AUTO_PROD_APP_SYNC,
+  SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   // minor
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
@@ -76,6 +74,7 @@ module.exports = {
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
+  PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,

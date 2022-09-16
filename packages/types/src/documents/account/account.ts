@@ -22,11 +22,6 @@ export const isCreatePasswordAccount = (
   account: CreateAccount
 ): account is CreatePassswordAccount => account.authType === AuthType.PASSWORD
 
-export interface UpdateAccount {
-  stripeCustomerId?: string
-  licenseKey?: string
-}
-
 export interface Account extends CreateAccount {
   // generated
   accountId: string
@@ -38,6 +33,7 @@ export interface Account extends CreateAccount {
   tier: string // deprecated
   stripeCustomerId?: string
   licenseKey?: string
+  licenseKeyActivatedAt?: number
 }
 
 export interface PasswordAccount extends Account {

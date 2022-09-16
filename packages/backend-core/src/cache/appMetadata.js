@@ -1,6 +1,6 @@
 const redis = require("../redis/init")
 const { doWithDB } = require("../db")
-const { DocumentTypes } = require("../db/constants")
+const { DocumentType } = require("../db/constants")
 
 const AppState = {
   INVALID: "invalid",
@@ -14,7 +14,7 @@ const populateFromDB = async appId => {
   return doWithDB(
     appId,
     db => {
-      return db.get(DocumentTypes.APP_METADATA)
+      return db.get(DocumentType.APP_METADATA)
     },
     { skip_setup: true }
   )

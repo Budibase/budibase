@@ -8,7 +8,6 @@
     selectedLayout,
     currentAsset,
   } from "builderStore"
-  import iframeTemplate from "./iframeTemplate"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ProgressCircle,
@@ -39,12 +38,6 @@
     ERROR: "error",
     BUDIBASE: "type",
   }
-
-  // Construct iframe template
-  $: template = iframeTemplate.replace(
-    /\{\{ CLIENT_LIB_PATH }}/,
-    $store.clientLibPath
-  )
 
   const placeholderScreen = new Screen()
     .name("Screen Placeholder")
@@ -92,6 +85,8 @@
         ? [$store.componentToPaste?._id]
         : [],
     isBudibaseEvent: true,
+    usedPlugins: $store.usedPlugins,
+    location: window.location,
   }
 
   // Refresh the preview when required
@@ -151,7 +146,11 @@
       } else if (type === "update-prop") {
         await store.actions.components.updateSetting(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
+        // Legacy type, can be deleted in future
         confirmDeleteComponent(data.id)
+      } else if (type === "key-down") {
+        const { key, ctrlKey } = data
+        document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
       } else if (type === "duplicate-component" && data.id) {
         const rootComponent = get(currentAsset).props
         const component = findComponent(rootComponent, data.id)
@@ -186,7 +185,7 @@
           $goto("./navigation")
         }
       } else if (type === "request-add-component") {
-        $goto(`./components/${$selectedComponent?._id}/new`)
+        toggleAddComponent()
       } else if (type === "highlight-setting") {
         store.actions.settings.highlight(data.setting)
 
@@ -230,9 +229,8 @@
     if (isAddingComponent) {
       $goto(`../${$selectedScreen._id}/components/${$selectedComponent?._id}`)
     } else {
-      $goto(
-        `../${$selectedScreen._id}/components/${$selectedComponent?._id}/new`
-      )
+      const id = $selectedComponent?._id || $selectedScreen?.props?._id
+      $goto(`../${$selectedScreen._id}/components/${id}/new`)
     }
   }
 
@@ -294,7 +292,7 @@
   <iframe
     title="componentPreview"
     bind:this={iframe}
-    srcdoc={template}
+    src="/app/preview"
     class:hidden={loading || error}
     class:tablet={$store.previewDevice === "tablet"}
     class:mobile={$store.previewDevice === "mobile"}

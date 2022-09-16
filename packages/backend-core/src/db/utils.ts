@@ -1,8 +1,9 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentTypes, UNICODE_MAX, ViewNames } from "./constants"
-import { getTenantId, getGlobalDBName, getGlobalDB } from "../tenancy"
+import { SEPARATOR, DocumentType, UNICODE_MAX, ViewName } from "./constants"
+import { getTenantId, getGlobalDB } from "../context"
+import { getGlobalDBName } from "../tenancy/utils"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
 import { getCouchInfo } from "./pouch"
@@ -58,7 +59,7 @@ export function getDocParams(
 /**
  * Retrieve the correct index for a view based on default design DB.
  */
-export function getQueryIndex(viewName: ViewNames) {
+export function getQueryIndex(viewName: ViewName) {
   return `database/${viewName}`
 }
 
@@ -67,7 +68,7 @@ export function getQueryIndex(viewName: ViewNames) {
  * @returns {string} The new workspace ID which the workspace doc can be stored under.
  */
 export function generateWorkspaceID() {
-  return `${DocumentTypes.WORKSPACE}${SEPARATOR}${newid()}`
+  return `${DocumentType.WORKSPACE}${SEPARATOR}${newid()}`
 }
 
 /**
@@ -76,8 +77,8 @@ export function generateWorkspaceID() {
 export function getWorkspaceParams(id = "", otherProps = {}) {
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.WORKSPACE}${SEPARATOR}${id}`,
-    endkey: `${DocumentTypes.WORKSPACE}${SEPARATOR}${id}${UNICODE_MAX}`,
+    startkey: `${DocumentType.WORKSPACE}${SEPARATOR}${id}`,
+    endkey: `${DocumentType.WORKSPACE}${SEPARATOR}${id}${UNICODE_MAX}`,
   }
 }
 
@@ -86,7 +87,7 @@ export function getWorkspaceParams(id = "", otherProps = {}) {
  * @returns {string} The new user ID which the user doc can be stored under.
  */
 export function generateGlobalUserID(id?: any) {
-  return `${DocumentTypes.USER}${SEPARATOR}${id || newid()}`
+  return `${DocumentType.USER}${SEPARATOR}${id || newid()}`
 }
 
 /**
@@ -102,8 +103,8 @@ export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
     // need to include this incase pagination
     startkey: startkey
       ? startkey
-      : `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
-    endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
+      : `${DocumentType.USER}${SEPARATOR}${globalId}`,
+    endkey: `${DocumentType.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
   }
 }
 
@@ -121,7 +122,7 @@ export function getUsersByAppParams(appId: any, otherProps: any = {}) {
  * @param ownerId The owner/user of the template, this could be global or a workspace level.
  */
 export function generateTemplateID(ownerId: any) {
-  return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
+  return `${DocumentType.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
 }
 
 export function generateAppUserID(prodAppId: string, userId: string) {
@@ -143,7 +144,7 @@ export function getTemplateParams(
   if (templateId) {
     final = templateId
   } else {
-    final = `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}`
+    final = `${DocumentType.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}`
   }
   return {
     ...otherProps,
@@ -157,14 +158,14 @@ export function getTemplateParams(
  * @returns {string} The new role ID which the role doc can be stored under.
  */
 export function generateRoleID(id: any) {
-  return `${DocumentTypes.ROLE}${SEPARATOR}${id || newid()}`
+  return `${DocumentType.ROLE}${SEPARATOR}${id || newid()}`
 }
 
 /**
  * Gets parameters for retrieving a role, this is a utility function for the getDocParams function.
  */
 export function getRoleParams(roleId = null, otherProps = {}) {
-  return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
+  return getDocParams(DocumentType.ROLE, roleId, otherProps)
 }
 
 export function getStartEndKeyURL(base: any, baseKey: any, tenantId = null) {
@@ -211,9 +212,9 @@ export async function getAllDbs(opts = { efficient: false }) {
     await addDbs(couchUrl)
   } else {
     // get prod apps
-    await addDbs(getStartEndKeyURL(couchUrl, DocumentTypes.APP, tenantId))
+    await addDbs(getStartEndKeyURL(couchUrl, DocumentType.APP, tenantId))
     // get dev apps
-    await addDbs(getStartEndKeyURL(couchUrl, DocumentTypes.APP_DEV, tenantId))
+    await addDbs(getStartEndKeyURL(couchUrl, DocumentType.APP_DEV, tenantId))
     // add global db name
     dbs.push(getGlobalDBName(tenantId))
   }
@@ -233,14 +234,18 @@ export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
   }
   let dbs = await getAllDbs({ efficient })
   const appDbNames = dbs.filter((dbName: any) => {
+    if (env.isTest() && !dbName) {
+      return false
+    }
+
     const split = dbName.split(SEPARATOR)
     // it is an app, check the tenantId
-    if (split[0] === DocumentTypes.APP) {
+    if (split[0] === DocumentType.APP) {
       // tenantId is always right before the UUID
       const possibleTenantId = split[split.length - 2]
 
       const noTenantId =
-        split.length === 2 || possibleTenantId === DocumentTypes.DEV
+        split.length === 2 || possibleTenantId === DocumentType.DEV
 
       return (
         (tenantId === DEFAULT_TENANT_ID && noTenantId) ||
@@ -250,7 +255,16 @@ export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
     return false
   })
   if (idsOnly) {
-    return appDbNames
+    const devAppIds = appDbNames.filter(appId => isDevAppID(appId))
+    const prodAppIds = appDbNames.filter(appId => !isDevAppID(appId))
+    switch (dev) {
+      case true:
+        return devAppIds
+      case false:
+        return prodAppIds
+      default:
+        return appDbNames
+    }
   }
   const appPromises = appDbNames.map((app: any) =>
     // skip setup otherwise databases could be re-created
@@ -326,7 +340,7 @@ export async function dbExists(dbName: any) {
 export const generateConfigID = ({ type, workspace, user }: any) => {
   const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
 
-  return `${DocumentTypes.CONFIG}${SEPARATOR}${scope}`
+  return `${DocumentType.CONFIG}${SEPARATOR}${scope}`
 }
 
 /**
@@ -340,8 +354,8 @@ export const getConfigParams = (
 
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.CONFIG}${SEPARATOR}${scope}`,
-    endkey: `${DocumentTypes.CONFIG}${SEPARATOR}${scope}${UNICODE_MAX}`,
+    startkey: `${DocumentType.CONFIG}${SEPARATOR}${scope}`,
+    endkey: `${DocumentType.CONFIG}${SEPARATOR}${scope}${UNICODE_MAX}`,
   }
 }
 
@@ -350,7 +364,7 @@ export const getConfigParams = (
  * @returns {string} The new dev info ID which info for dev (like api key) can be stored under.
  */
 export const generateDevInfoID = (userId: any) => {
-  return `${DocumentTypes.DEV_INFO}${SEPARATOR}${userId}`
+  return `${DocumentType.DEV_INFO}${SEPARATOR}${userId}`
 }
 
 /**

@@ -63,7 +63,11 @@
       $goto(`./${group._id}`)
       notifications.success(`User group created successfully`)
     } catch (error) {
-      notifications.error(`Failed to save user group`)
+      if (error.status === 400) {
+        notifications.error(error.message)
+      } else {
+        notifications.error(`Failed to save group`)
+      }
     }
   }
 

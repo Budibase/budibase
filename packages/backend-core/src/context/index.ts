@@ -1,11 +1,11 @@
 import env from "../environment"
-import { SEPARATOR, DocumentTypes } from "../db/constants"
+import { SEPARATOR, DocumentType } from "../db/constants"
 import cls from "./FunctionContext"
 import { dangerousGetDB, closeDB } from "../db"
 import { baseGlobalDBName } from "../tenancy/utils"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
-import { ContextKeys } from "./constants"
+import { ContextKey } from "./constants"
 import {
   updateUsing,
   closeWithUsing,
@@ -33,8 +33,8 @@ export const closeTenancy = async () => {
   }
   await closeDB(db)
   // clear from context now that database is closed/task is finished
-  cls.setOnContext(ContextKeys.TENANT_ID, null)
-  cls.setOnContext(ContextKeys.GLOBAL_DB, null)
+  cls.setOnContext(ContextKey.TENANT_ID, null)
+  cls.setOnContext(ContextKey.GLOBAL_DB, null)
 }
 
 // export const isDefaultTenant = () => {
@@ -54,7 +54,7 @@ export const getTenantIDFromAppID = (appId: string) => {
     return null
   }
   const split = appId.split(SEPARATOR)
-  const hasDev = split[1] === DocumentTypes.DEV
+  const hasDev = split[1] === DocumentType.DEV
   if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
     return null
   }
@@ -83,14 +83,14 @@ export const doInTenant = (tenantId: string | null, task: any) => {
       // invoke the task
       return await task()
     } finally {
-      await closeWithUsing(ContextKeys.TENANCY_IN_USE, () => {
+      await closeWithUsing(ContextKey.TENANCY_IN_USE, () => {
         return closeTenancy()
       })
     }
   }
 
-  const existing = cls.getFromContext(ContextKeys.TENANT_ID) === tenantId
-  return updateUsing(ContextKeys.TENANCY_IN_USE, existing, internal)
+  const existing = cls.getFromContext(ContextKey.TENANT_ID) === tenantId
+  return updateUsing(ContextKey.TENANCY_IN_USE, existing, internal)
 }
 
 export const doInAppContext = (appId: string, task: any) => {
@@ -108,7 +108,7 @@ export const doInAppContext = (appId: string, task: any) => {
       setAppTenantId(appId)
     }
     // set the app ID
-    cls.setOnContext(ContextKeys.APP_ID, appId)
+    cls.setOnContext(ContextKey.APP_ID, appId)
 
     // preserve the identity
     if (identity) {
@@ -118,14 +118,14 @@ export const doInAppContext = (appId: string, task: any) => {
       // invoke the task
       return await task()
     } finally {
-      await closeWithUsing(ContextKeys.APP_IN_USE, async () => {
+      await closeWithUsing(ContextKey.APP_IN_USE, async () => {
         await closeAppDBs()
         await closeTenancy()
       })
     }
   }
-  const existing = cls.getFromContext(ContextKeys.APP_ID) === appId
-  return updateUsing(ContextKeys.APP_IN_USE, existing, internal)
+  const existing = cls.getFromContext(ContextKey.APP_ID) === appId
+  return updateUsing(ContextKey.APP_IN_USE, existing, internal)
 }
 
 export const doInIdentityContext = (identity: IdentityContext, task: any) => {
@@ -135,7 +135,7 @@ export const doInIdentityContext = (identity: IdentityContext, task: any) => {
 
   async function internal(opts = { existing: false }) {
     if (!opts.existing) {
-      cls.setOnContext(ContextKeys.IDENTITY, identity)
+      cls.setOnContext(ContextKey.IDENTITY, identity)
       // set the tenant so that doInTenant will preserve identity
       if (identity.tenantId) {
         updateTenantId(identity.tenantId)
@@ -146,27 +146,27 @@ export const doInIdentityContext = (identity: IdentityContext, task: any) => {
       // invoke the task
       return await task()
     } finally {
-      await closeWithUsing(ContextKeys.IDENTITY_IN_USE, async () => {
+      await closeWithUsing(ContextKey.IDENTITY_IN_USE, async () => {
         setIdentity(null)
         await closeTenancy()
       })
     }
   }
 
-  const existing = cls.getFromContext(ContextKeys.IDENTITY)
-  return updateUsing(ContextKeys.IDENTITY_IN_USE, existing, internal)
+  const existing = cls.getFromContext(ContextKey.IDENTITY)
+  return updateUsing(ContextKey.IDENTITY_IN_USE, existing, internal)
 }
 
 export const getIdentity = (): IdentityContext | undefined => {
   try {
-    return cls.getFromContext(ContextKeys.IDENTITY)
+    return cls.getFromContext(ContextKey.IDENTITY)
   } catch (e) {
     // do nothing - identity is not in context
   }
 }
 
 export const updateTenantId = (tenantId: string | null) => {
-  cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
+  cls.setOnContext(ContextKey.TENANT_ID, tenantId)
   if (env.USE_COUCH) {
     setGlobalDB(tenantId)
   }
@@ -176,7 +176,7 @@ export const updateAppId = async (appId: string) => {
   try {
     // have to close first, before removing the databases from context
     await closeAppDBs()
-    cls.setOnContext(ContextKeys.APP_ID, appId)
+    cls.setOnContext(ContextKey.APP_ID, appId)
   } catch (err) {
     if (env.isTest()) {
       TEST_APP_ID = appId
@@ -189,12 +189,12 @@ export const updateAppId = async (appId: string) => {
 export const setGlobalDB = (tenantId: string | null) => {
   const dbName = baseGlobalDBName(tenantId)
   const db = dangerousGetDB(dbName)
-  cls.setOnContext(ContextKeys.GLOBAL_DB, db)
+  cls.setOnContext(ContextKey.GLOBAL_DB, db)
   return db
 }
 
 export const getGlobalDB = () => {
-  const db = cls.getFromContext(ContextKeys.GLOBAL_DB)
+  const db = cls.getFromContext(ContextKey.GLOBAL_DB)
   if (!db) {
     throw new Error("Global DB not found")
   }
@@ -202,7 +202,7 @@ export const getGlobalDB = () => {
 }
 
 export const isTenantIdSet = () => {
-  const tenantId = cls.getFromContext(ContextKeys.TENANT_ID)
+  const tenantId = cls.getFromContext(ContextKey.TENANT_ID)
   return !!tenantId
 }
 
@@ -210,7 +210,7 @@ export const getTenantId = () => {
   if (!isMultiTenant()) {
     return DEFAULT_TENANT_ID
   }
-  const tenantId = cls.getFromContext(ContextKeys.TENANT_ID)
+  const tenantId = cls.getFromContext(ContextKey.TENANT_ID)
   if (!tenantId) {
     throw new Error("Tenant id not found")
   }
@@ -218,7 +218,7 @@ export const getTenantId = () => {
 }
 
 export const getAppId = () => {
-  const foundId = cls.getFromContext(ContextKeys.APP_ID)
+  const foundId = cls.getFromContext(ContextKey.APP_ID)
   if (!foundId && env.isTest() && TEST_APP_ID) {
     return TEST_APP_ID
   } else {
@@ -231,7 +231,7 @@ export const getAppId = () => {
  * contained, dev or prod.
  */
 export const getAppDB = (opts?: any) => {
-  return getContextDB(ContextKeys.CURRENT_DB, opts)
+  return getContextDB(ContextKey.CURRENT_DB, opts)
 }
 
 /**
@@ -239,7 +239,7 @@ export const getAppDB = (opts?: any) => {
  * contained a development app ID, this will open the prod one.
  */
 export const getProdAppDB = (opts?: any) => {
-  return getContextDB(ContextKeys.PROD_DB, opts)
+  return getContextDB(ContextKey.PROD_DB, opts)
 }
 
 /**
@@ -247,5 +247,5 @@ export const getProdAppDB = (opts?: any) => {
  * contained a prod app ID, this will open the dev one.
  */
 export const getDevAppDB = (opts?: any) => {
-  return getContextDB(ContextKeys.DEV_DB, opts)
+  return getContextDB(ContextKey.DEV_DB, opts)
 }

@@ -3,7 +3,7 @@
   import Component from "./Component.svelte"
   import Provider from "./context/Provider.svelte"
   import { onMount, getContext } from "svelte"
-  import { enrichButtonActions } from "utils/buttonActions.js"
+  import { enrichButtonActions } from "../utils/buttonActions.js"
 
   export let params = {}
 
@@ -29,7 +29,9 @@
         ...$context,
         url: params,
       })
-      actions()
+      if (actions != null) {
+        actions()
+      }
     }
   })
 </script>

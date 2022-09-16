@@ -25,9 +25,12 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       BB_ADMIN_USER_EMAIL: ${BB_ADMIN_USER_EMAIL}
       BB_ADMIN_USER_PASSWORD: ${BB_ADMIN_USER_PASSWORD}
+      PLUGINS_DIR: ${PLUGINS_DIR}
     depends_on:
       - worker-service
       - redis-service
+#    volumes:
+#      - /some/path/to/plugins:/plugins
 
   worker-service:
     restart: unless-stopped
@@ -76,6 +79,9 @@ services:
       - "${MAIN_PORT}:10000"
     container_name: bbproxy
     image: budibase/proxy
+    environment:
+      - PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
+      - PROXY_RATE_LIMIT_API_PER_SECOND=20
     depends_on:
       - minio-service
       - worker-service
