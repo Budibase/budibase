@@ -13,12 +13,14 @@
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
+  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
   import { onMount } from "svelte"
-  import { templates } from "stores/portal"
+  import { templates, licensing } from "stores/portal"
 
   let loaded = $templates?.length
   let template
   let creationModal = false
+  let appLimitModal
   let creatingApp = false
 
   const welcomeBody =
@@ -29,6 +31,8 @@
   onMount(async () => {
     try {
       await templates.load()
+      await licensing.getQuotaUsage()
+      await licensing.getUsageMetrics()
       if ($templates?.length === 0) {
         notifications.error(
           "There was a problem loading quick start templates."
@@ -41,9 +45,13 @@
   })
 
   const initiateAppCreation = () => {
-    template = null
-    creationModal.show()
-    creatingApp = true
+    if ($licensing.usageMetrics.apps >= 100) {
+      appLimitModal.show()
+    } else {
+      template = null
+      creationModal.show()
+      creatingApp = true
+    }
   }
 
   const stopAppCreation = () => {
@@ -52,9 +60,13 @@
   }
 
   const initiateAppImport = () => {
-    template = { fromFile: true }
-    creationModal.show()
-    creatingApp = true
+    if ($licensing.usageMetrics.apps >= 100) {
+      appLimitModal.show()
+    } else {
+      template = { fromFile: true }
+      creationModal.show()
+      creatingApp = true
+    }
   }
 </script>
 
@@ -121,6 +133,7 @@
 >
   <CreateAppModal {template} />
 </Modal>
+<AppLimitModal bind:this={appLimitModal} />
 
 <style>
   .title .welcome > .buttons {

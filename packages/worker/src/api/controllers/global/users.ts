@@ -1,16 +1,21 @@
-import { EmailTemplatePurpose } from "../../../constants"
 import { checkInviteCode } from "../../../utilities/redis"
-import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
 import env from "../../../environment"
-import { CloudAccount, groupUser, User, UserGroup } from "@budibase/types"
+import {
+  BulkDeleteUsersRequest,
+  CloudAccount,
+  InviteUserRequest,
+  InviteUsersRequest,
+  User,
+  groupUser,
+  UserGroup,
+} from "@budibase/types"
 import {
   accounts,
   cache,
   errors,
   events,
   tenancy,
-  users as usersCore,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { groups as groupUtils } from "@budibase/pro"
@@ -46,8 +51,8 @@ export const bulkCreate = async (ctx: any) => {
   }
 
   try {
-    let response = await users.bulkCreate(newUsersRequested, groups)
-    await groupUtils.bulkSaveGroupUsers(groupsToSave, response)
+    const response = await users.bulkCreate(newUsersRequested, groups)
+    await groupUtils.bulkSaveGroupUsers(groupsToSave, response.successful)
 
     ctx.body = response
   } catch (err: any) {
@@ -138,17 +143,13 @@ export const destroy = async (ctx: any) => {
 }
 
 export const bulkDelete = async (ctx: any) => {
-  const { userIds } = ctx.request.body
+  const { userIds } = ctx.request.body as BulkDeleteUsersRequest
   if (userIds?.indexOf(ctx.user._id) !== -1) {
     ctx.throw(400, "Unable to delete self.")
   }
 
   try {
-    let usersResponse = await users.bulkDelete(userIds)
-
-    ctx.body = {
-      message: `${usersResponse.length} user(s) deleted`,
-    }
+    ctx.body = await users.bulkDelete(userIds)
   } catch (err) {
     ctx.throw(err)
   }
@@ -193,58 +194,27 @@ export const tenantUserLookup = async (ctx: any) => {
 }
 
 export const invite = async (ctx: any) => {
-  let { email, userInfo } = ctx.request.body
-  const existing = await usersCore.getGlobalUserByEmail(email)
-  if (existing) {
-    ctx.throw(400, "Email address already in use.")
+  const request = ctx.request.body as InviteUserRequest
+  const response = await users.invite([request])
+
+  // explicitly throw for single user invite
+  if (response.unsuccessful.length) {
+    const reason = response.unsuccessful[0].reason
+    if (reason === "Unavailable") {
+      ctx.throw(400, reason)
+    } else {
+      ctx.throw(500, reason)
+    }
   }
-  if (!userInfo) {
-    userInfo = {}
-  }
-  userInfo.tenantId = tenancy.getTenantId()
-  const opts: any = {
-    subject: "{{ company }} platform invitation",
-    info: userInfo,
-  }
-  await sendEmail(email, EmailTemplatePurpose.INVITATION, opts)
+
   ctx.body = {
     message: "Invitation has been sent.",
   }
-  await events.user.invited()
 }
 
 export const inviteMultiple = async (ctx: any) => {
-  let users = ctx.request.body
-  let existing = false
-  let existingEmail
-  for (let user of users) {
-    if (await usersCore.getGlobalUserByEmail(user.email)) {
-      existing = true
-      existingEmail = user.email
-      break
-    }
-  }
-
-  if (existing) {
-    ctx.throw(400, `${existingEmail} already exists`)
-  }
-
-  for (let i = 0; i < users.length; i++) {
-    let userInfo = users[i].userInfo
-    if (!userInfo) {
-      userInfo = {}
-    }
-    userInfo.tenantId = tenancy.getTenantId()
-    const opts: any = {
-      subject: "{{ company }} platform invitation",
-      info: userInfo,
-    }
-    await sendEmail(users[i].email, EmailTemplatePurpose.INVITATION, opts)
-  }
-
-  ctx.body = {
-    message: "Invitations have been sent.",
-  }
+  const request = ctx.request.body as InviteUsersRequest
+  ctx.body = await users.invite(request)
 }
 
 export const inviteAccept = async (ctx: any) => {

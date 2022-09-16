@@ -2,7 +2,7 @@ import { default as threadUtils } from "./utils"
 threadUtils.threadSetup()
 import { WorkerCallback, QueryEvent, QueryVariable } from "./definitions"
 const ScriptRunner = require("../utilities/scriptRunner")
-const { integrations } = require("../integrations")
+const { getIntegration } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 const {
@@ -62,7 +62,7 @@ class QueryRunner {
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
 
-    const Integration = integrations[datasourceClone.source]
+    const Integration = await getIntegration(datasourceClone.source)
     if (!Integration) {
       throw "Integration type does not exist."
     }

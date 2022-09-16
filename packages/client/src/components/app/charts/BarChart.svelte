@@ -16,6 +16,7 @@
   export let stacked
   export let yAxisUnits
   export let palette
+  export let c1, c2, c3, c4, c5
   export let horizontal
 
   $: options = setUpChart(
@@ -33,8 +34,12 @@
     stacked,
     yAxisUnits,
     palette,
-    horizontal
+    horizontal,
+    c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null,
+    customColor
   )
+
+  $: customColor = palette === "Custom"
 
   const setUpChart = (
     title,
@@ -51,7 +56,9 @@
     stacked,
     yAxisUnits,
     palette,
-    horizontal
+    horizontal,
+    colors,
+    customColor
   ) => {
     const allCols = [labelColumn, ...(valueColumns || [null])]
     if (
@@ -85,6 +92,7 @@
       .stacked(stacked)
       .palette(palette)
       .horizontal(horizontal)
+      .colors(customColor ? colors : null)
 
     // Add data
     let useDates = false

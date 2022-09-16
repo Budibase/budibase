@@ -4,13 +4,13 @@ export const UNICODE_MAX = "\ufff0"
 /**
  * Can be used to create a few different forms of querying a view.
  */
-export enum AutomationViewModes {
+export enum AutomationViewMode {
   ALL = "all",
   AUTOMATION = "automation",
   STATUS = "status",
 }
 
-export enum ViewNames {
+export enum ViewName {
   USER_BY_APP = "by_app",
   USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
@@ -18,16 +18,18 @@ export enum ViewNames {
   LINK = "by_link",
   ROUTING = "screen_routes",
   AUTOMATION_LOGS = "automation_logs",
+  ACCOUNT_BY_EMAIL = "account_by_email",
+  PLATFORM_USERS_LOWERCASE = "platform_users_lowercase",
 }
 
 export const DeprecatedViews = {
-  [ViewNames.USER_BY_EMAIL]: [
+  [ViewName.USER_BY_EMAIL]: [
     // removed due to inaccuracy in view doc filter logic
     "by_email",
   ],
 }
 
-export enum DocumentTypes {
+export enum DocumentType {
   USER = "us",
   GROUP = "gr",
   WORKSPACE = "workspace",
@@ -41,6 +43,7 @@ export enum DocumentTypes {
   MIGRATIONS = "migrations",
   DEV_INFO = "devinfo",
   AUTOMATION_LOG = "log_au",
+  ACCOUNT_METADATA = "acc_metadata",
 }
 
 export const StaticDatabases = {
@@ -62,6 +65,6 @@ export const StaticDatabases = {
   },
 }
 
-export const APP_PREFIX = exports.DocumentTypes.APP + exports.SEPARATOR
-export const APP_DEV = exports.DocumentTypes.APP_DEV + exports.SEPARATOR
+export const APP_PREFIX = DocumentType.APP + SEPARATOR
+export const APP_DEV = DocumentType.APP_DEV + SEPARATOR
 export const APP_DEV_PREFIX = APP_DEV

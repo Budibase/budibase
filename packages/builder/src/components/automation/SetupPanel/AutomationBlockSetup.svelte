@@ -79,7 +79,7 @@
           automationStore.actions.addTestDataToAutomation({
             body: {
               [key]: e.detail,
-              ...$automationStore.selectedAutomation.automation.testData.body,
+              ...$automationStore.selectedAutomation.automation.testData?.body,
             },
           })
         }

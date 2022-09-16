@@ -62,7 +62,7 @@
       csvString = e.target.result
       files = fileArray
 
-      userEmails = csvString.split("\n")
+      userEmails = csvString.split(/\r?\n/)
     })
     reader.readAsText(fileArray[0])
   }

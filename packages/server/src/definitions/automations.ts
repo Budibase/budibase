@@ -5,14 +5,14 @@ import {
   Document,
 } from "@budibase/types"
 
-export enum LoopStepTypes {
+export enum LoopStepType {
   ARRAY = "Array",
   STRING = "String",
 }
 
 export interface LoopStep extends AutomationStep {
   inputs: {
-    option: LoopStepTypes
+    option: LoopStepType
     [key: string]: any
   }
 }

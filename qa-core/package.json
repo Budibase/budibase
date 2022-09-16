@@ -1,0 +1,52 @@
+{
+  "name": "@budibase/qa-core",
+  "email": "hi@budibase.com",
+  "version": "0.0.1",
+  "main": "index.js",
+  "description": "Budibase Integration Test Suite",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Budibase/budibase.git"
+  },
+  "scripts": {
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "test:debug": "DEBUG=1 jest",
+    "api:server:setup": "env-cmd ts-node ../packages/builder/cypress/ts/setup.ts",
+    "api:server:setup:ci": "env-cmd node ../packages/builder/cypress/setup.js",
+    "api:test:ci": "start-server-and-test api:server:setup:ci http://localhost:4100/builder test",
+    "api:test": "start-server-and-test api:server:setup http://localhost:4100/builder test"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "@budibase/types": "<rootDir>/../packages/types/src",
+      "@budibase/server": "<rootDir>/../packages/server/src"
+    },
+    "setupFiles": [
+      "./scripts/jestSetup.js"
+    ],
+    "setupFilesAfterEnv": [
+      "./src/jest.extends.ts"
+    ]
+  },
+  "devDependencies": {
+    "@budibase/types": "1.3.4",
+    "@types/jest": "29.0.0",
+    "@types/node-fetch": "2.6.2",
+    "chance": "1.1.8",
+    "env-cmd": "^10.1.0",
+    "jest": "28.0.2",
+    "prettier": "2.7.1",
+    "start-server-and-test": "1.14.0",
+    "timekeeper": "2.2.0",
+    "ts-jest": "28.0.8",
+    "ts-node": "10.9.1",
+    "tsconfig-paths": "4.1.0",
+    "typescript": "4.7.3"
+  },
+  "dependencies": {
+    "node-fetch": "2"
+  }
+}

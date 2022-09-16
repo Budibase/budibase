@@ -9,6 +9,7 @@ import {
   rowSelectionStore,
   componentStore,
   currentRole,
+  environmentStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -27,6 +28,7 @@ export default {
   builderStore,
   uploadStore,
   componentStore,
+  environmentStore,
   currentRole,
   styleable,
   linkable,
