@@ -1,15 +1,15 @@
-const { DocumentType, getPluginParams } = require("../../db/utils")
-const { getComponentLibraryManifest } = require("../../utilities/fileSystem")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+import { DocumentType } from "../../db/utils"
+import { Plugin } from "@budibase/types"
+import { db as dbCore, context, tenancy } from "@budibase/backend-core"
+import { getComponentLibraryManifest } from "../../utilities/fileSystem"
 
-exports.fetchAppComponentDefinitions = async function (ctx) {
+exports.fetchAppComponentDefinitions = async function (ctx: any) {
   try {
-    const db = getAppDB()
+    const db = context.getAppDB()
     const app = await db.get(DocumentType.APP_METADATA)
 
     let componentManifests = await Promise.all(
-      app.componentLibraries.map(async library => {
+      app.componentLibraries.map(async (library: any) => {
         let manifest = await getComponentLibraryManifest(library)
         return {
           manifest,
@@ -17,7 +17,7 @@ exports.fetchAppComponentDefinitions = async function (ctx) {
         }
       })
     )
-    const definitions = {}
+    const definitions: { [key: string]: any } = {}
     for (let { manifest, library } of componentManifests) {
       for (let key of Object.keys(manifest)) {
         if (key === "features") {
@@ -33,16 +33,16 @@ exports.fetchAppComponentDefinitions = async function (ctx) {
     }
 
     // Add custom components
-    const globalDB = getGlobalDB()
+    const globalDB = tenancy.getGlobalDB()
     const response = await globalDB.allDocs(
-      getPluginParams(null, {
+      dbCore.getPluginParams(null, {
         include_docs: true,
       })
     )
     response.rows
-      .map(row => row.doc)
-      .filter(plugin => plugin.schema.type === "component")
-      .forEach(plugin => {
+      .map((row: any) => row.doc)
+      .filter((plugin: Plugin) => plugin.schema.type === "component")
+      .forEach((plugin: Plugin) => {
         const fullComponentName = `plugin/${plugin.name}`
         definitions[fullComponentName] = {
           component: fullComponentName,
