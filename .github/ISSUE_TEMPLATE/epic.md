@@ -13,11 +13,11 @@ Brief summary of what this Epic is, whether it's a larger project, goal, or user
 ## Spec
 Link to confluence spec
 
-### Teams and Stakeholders
+## Teams and Stakeholders
 Describe who needs to be kept up-to-date about this Epic, included in discussions, or updated along the way. Stakeholders can be both in Product/Engineering, as well as other teams like Customer Success who might want to keep customers updated on the Epic project.
 
 
-### Workflow
+## Workflow
 - [ ]  Spec Created and pasted above
 - [ ]  Product Review
 - [ ]  Designs created
