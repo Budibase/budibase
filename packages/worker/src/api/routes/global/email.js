@@ -10,7 +10,9 @@ const router = Router()
 function buildEmailSendValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    email: Joi.string().email(),
+    email: Joi.string().email({
+      multiple: true,
+      }),
     purpose: Joi.string().valid(...Object.values(EmailTemplatePurpose)),
     workspaceId: Joi.string().allow("", null),
     from: Joi.string().allow("", null),
