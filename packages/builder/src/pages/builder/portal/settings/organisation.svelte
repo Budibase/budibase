@@ -88,14 +88,14 @@
       <Heading size="S">Information</Heading>
       <Body size="S">Here you can update your logo and organization name.</Body>
     </Layout>
-    <div className="fields">
-      <div className="field">
+    <div class="fields">
+      <div class="field">
         <Label size="L">Org. name</Label>
         <Input thin bind:value={$values.company} />
       </div>
-      <div className="field logo">
+      <div class="field logo">
         <Label size="L">Logo</Label>
-        <div className="file">
+        <div class="file">
           <Dropzone
             value={[$values.logo]}
             on:change={e => {
@@ -115,13 +115,14 @@
         <Heading size="S">Platform</Heading>
         <Body size="S">Here you can set up general platform settings.</Body>
       </Layout>
-      <div className="fields">
-        <div className="field">
+      <div class="fields">
+        <div class="field">
           <Label
             size="L"
             tooltip={"Update the Platform URL to match your Budibase web URL. This keeps email templates and authentication configs up to date."}
-            >Platform URL</Label
           >
+            Platform URL
+          </Label>
           <Input thin bind:value={$values.platformUrl} />
         </div>
       </div>

@@ -113,13 +113,6 @@ exports.loadHandlebarsFile = path => {
 }
 
 /**
- * Same as above just with a different name.
- */
-exports.loadJSFile = (directory, name) => {
-  return fs.readFileSync(join(directory, name), "utf8")
-}
-
-/**
  * When return a file from the API need to write the file to the system temporarily so we
  * can create a read stream to send.
  * @param {string} contents the contents of the file which is to be returned from the API.
@@ -412,6 +405,7 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
       return require(filename)
     } else {
       console.log(`Updating plugin: ${name}`)
+      delete require.cache[require.resolve(filename)]
       fs.unlinkSync(filename)
     }
   }

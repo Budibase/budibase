@@ -63,6 +63,7 @@ typings/
 
 # dotenv environment variables file
 .env
+!qa-core/.env
 !hosting/.env
 hosting/.generated-nginx.dev.conf
 hosting/proxy/.generated-nginx.prod.conf

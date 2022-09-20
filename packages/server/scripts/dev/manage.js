@@ -72,6 +72,9 @@ async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
   await init()
   await compose.upAll(CONFIG)
+
+  // We always ensure to restart the proxy service in case of nginx conf changes
+  await compose.restartOne("proxy-service", CONFIG)
 }
 
 async function down() {
