@@ -7,8 +7,6 @@ import {
   InviteUserRequest,
   InviteUsersRequest,
   User,
-  GroupUser,
-  UserGroup,
 } from "@budibase/types"
 import {
   accounts,
@@ -18,7 +16,6 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
-import { groups as groupUtils } from "@budibase/pro"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -40,21 +37,8 @@ export const bulkCreate = async (ctx: any) => {
     )
   }
 
-  const db = tenancy.getGlobalDB()
-  let groupsToSave: any[] = []
-
-  if (groups.length) {
-    for (const groupId of groups) {
-      let oldGroup = await db.get(groupId)
-      groupsToSave.push(oldGroup)
-    }
-  }
-
   try {
-    const response = await users.bulkCreate(newUsersRequested, groups)
-    await groupUtils.bulkSaveGroupUsers(groupsToSave, response.successful)
-
-    ctx.body = response
+    ctx.body = await users.bulkCreate(newUsersRequested, groups)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -233,24 +217,6 @@ export const inviteAccept = async (ctx: any) => {
       const db = tenancy.getGlobalDB()
       const user = await db.get(saved._id)
       await events.user.inviteAccepted(user)
-
-      // add user to groups if required
-      if (info.groups?.length) {
-        let groups: UserGroup[] = []
-        for (const groupId of info.groups) {
-          try {
-            let group: UserGroup = await db.get(groupId)
-            if (group) {
-              groups.push(group)
-            }
-          } catch (error) {
-            // group was probably deleted
-          }
-        }
-        const groupUser: GroupUser = { _id: saved._id, email: saved.email }
-        await groupUtils.bulkSaveGroupUsers(groups, [groupUser])
-      }
-
       return saved
     })
   } catch (err: any) {
