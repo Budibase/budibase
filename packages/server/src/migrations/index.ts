@@ -6,8 +6,6 @@ import env from "../environment"
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
 import * as quota1 from "./functions/quotas1"
 import * as appUrls from "./functions/appUrls"
-import * as developerQuota from "./functions/developerQuota"
-import * as publishedAppsQuota from "./functions/publishedAppsQuota"
 import * as backfill from "./functions/backfill"
 
 /**
@@ -39,20 +37,6 @@ export const buildMigrations = () => {
           ...definition,
           appOpts: { all: true },
           fn: appUrls.run,
-        })
-        break
-      }
-      case MigrationName.DEVELOPER_QUOTA: {
-        serverMigrations.push({
-          ...definition,
-          fn: developerQuota.run,
-        })
-        break
-      }
-      case MigrationName.PUBLISHED_APP_QUOTA: {
-        serverMigrations.push({
-          ...definition,
-          fn: publishedAppsQuota.run,
         })
         break
       }

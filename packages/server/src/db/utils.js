@@ -370,6 +370,10 @@ exports.getMemoryViewParams = (otherProps = {}) => {
   return getDocParams(DocumentType.MEM_VIEW, null, otherProps)
 }
 
+exports.generatePluginID = name => {
+  return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
+}
+
 /**
  * This can be used with the db.allDocs to get a list of IDs
  */

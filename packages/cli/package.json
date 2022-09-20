@@ -1,6 +1,6 @@
 {
   "name": "@budibase/cli",
-  "version": "1.2.44-alpha.8",
+  "version": "1.4.3-alpha.1",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "src/index.js",
   "bin": {
@@ -26,14 +26,16 @@
     "outputPath": "build"
   },
   "dependencies": {
-    "@budibase/backend-core": "1.2.41-alpha.5",
+    "@budibase/backend-core": "1.4.3-alpha.1",
     "axios": "0.21.2",
     "chalk": "4.1.0",
     "cli-progress": "3.11.2",
     "commander": "7.1.0",
     "docker-compose": "0.23.6",
     "dotenv": "16.0.1",
+    "download": "8.0.0",
     "inquirer": "8.0.0",
+    "joi": "17.6.0",
     "lookpath": "1.1.0",
     "node-fetch": "2",
     "pkg": "5.7.0",

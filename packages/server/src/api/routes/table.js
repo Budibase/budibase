@@ -55,7 +55,7 @@ router
    * @apiParam (Body) {string} [_rev] If updating an existing internal table then the revision must also be specified.
    * @apiParam (Body) {string} type] This should either be "internal" or "external" depending on the table type -
    * this will default to internal.
-   * @apiParam (Body) {string} [sourceId] If creating an external table then this should be set to the data source ID. If
+   * @apiParam (Body) {string} [sourceId] If creating an external table then this should be set to the datasource ID. If
    * building an internal table this does not need to be set, although it will be returned as "bb_internal".
    * @apiParam (Body) {string} name The name of the table, this will be used in the UI. To rename the table simply
    * supply the table structure to this endpoint with the name changed.

@@ -1,4 +1,5 @@
 import { dangerousGetDB, closeDB } from "."
+import { DocumentType } from "./constants"
 
 class Replication {
   source: any
@@ -53,6 +54,14 @@ class Replication {
     return this.replication
   }
 
+  appReplicateOpts() {
+    return {
+      filter: (doc: any) => {
+        return doc._id !== DocumentType.APP_METADATA
+      },
+    }
+  }
+
   /**
    * Rollback the target DB back to the state of the source DB
    */
@@ -60,6 +69,7 @@ class Replication {
     await this.target.destroy()
     // Recreate the DB again
     this.target = dangerousGetDB(this.target.name)
+    // take the opportunity to remove deleted tombstones
     await this.replicate()
   }
 

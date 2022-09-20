@@ -11,8 +11,6 @@
 <script>
   import { getContext, setContext, onMount, onDestroy } from "svelte"
   import { writable, get } from "svelte/store"
-  import * as AppComponents from "components/app"
-  import Router from "./Router.svelte"
   import {
     enrichProps,
     propsAreSame,
@@ -127,7 +125,9 @@
   // Empty components are those which accept children but do not have any.
   // Empty states can be shown for these components, but can be disabled
   // in the component manifest.
-  $: empty = interactive && !children.length && hasChildren
+  $: empty =
+    (interactive && !children.length && hasChildren) ||
+    hasMissingRequiredSettings
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
@@ -169,14 +169,14 @@
     missingRequiredSettings,
   })
 
-  const initialise = instance => {
+  const initialise = (instance, force = false) => {
     if (instance == null) {
       return
     }
 
     // Ensure we're processing a new instance
     const instanceKey = Helpers.hashString(JSON.stringify(instance))
-    if (instanceKey === lastInstanceKey) {
+    if (instanceKey === lastInstanceKey && !force) {
       return
     } else {
       lastInstanceKey = instanceKey
@@ -184,7 +184,7 @@
 
     // Pull definition and constructor
     const component = instance._component
-    constructor = getComponentConstructor(component)
+    constructor = componentStore.actions.getComponentConstructor(component)
     definition = componentStore.actions.getComponentDefinition(component)
     if (!definition) {
       return
@@ -239,16 +239,6 @@
     enrichComponentSettings(get(context), settingsDefinitionMap, {
       force: true,
     })
-  }
-
-  // Gets the component constructor for the specified component
-  const getComponentConstructor = component => {
-    const split = component?.split("/")
-    const name = split?.[split.length - 1]
-    if (name === "screenslot" && !insideScreenslot) {
-      return Router
-    }
-    return AppComponents[name]
   }
 
   const getSettingsDefinitionMap = settingsDefinition => {
@@ -423,9 +413,11 @@
       !componentStore.actions.isComponentRegistered(id)
     ) {
       componentStore.actions.registerInstance(id, {
+        component: instance._component,
         getSettings: () => cachedSettings,
         getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
         getDataContext: () => get(context),
+        reload: () => initialise(instance, true),
       })
     }
   })
