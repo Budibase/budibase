@@ -3,7 +3,7 @@ import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
 import { SEPARATOR, DocumentType, UNICODE_MAX, ViewName } from "./constants"
 import { getTenantId, getGlobalDB } from "../context"
-import { getGlobalDBName } from "../tenancy"
+import { getGlobalDBName } from "./tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
 import { getCouchInfo } from "./pouch"
@@ -16,6 +16,7 @@ import * as events from "../events"
 export * from "./constants"
 export * from "./conversions"
 export { default as Replication } from "./Replication"
+export * from "./tenancy"
 
 /**
  * Generates a new app ID.
