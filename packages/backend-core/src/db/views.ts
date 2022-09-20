@@ -1,5 +1,6 @@
 import { DocumentType, ViewName, DeprecatedViews, SEPARATOR } from "./utils"
 import { getGlobalDB } from "../context"
+import PouchDB from "pouchdb"
 import { StaticDatabases } from "./constants"
 import { doWithDB } from "./"
 
@@ -201,13 +202,13 @@ export const queryView = async <T>(
   try {
     let response = await db.query<T, T>(`database/${viewName}`, params)
     const rows = response.rows
-    const docs = rows.map((resp: any) =>
-      params.include_docs ? resp.doc : resp.value
-    )
+    const docs = rows.map(row => (params.include_docs ? row.doc : row.value))
 
+    // if arrayResponse has been requested, always return array regardless of length
     if (opts?.arrayResponse) {
       return docs
     } else {
+      // return the single document if there is only one
       return docs.length <= 1 ? docs[0] : docs
     }
   } catch (err: any) {

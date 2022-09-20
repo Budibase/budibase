@@ -34,6 +34,7 @@ export { default as Layout } from "./Layout/Layout.svelte"
 export { default as Page } from "./Layout/Page.svelte"
 export { default as Link } from "./Link/Link.svelte"
 export { default as Tooltip } from "./Tooltip/Tooltip.svelte"
+export { default as TooltipWrapper } from "./Tooltip/TooltipWrapper.svelte"
 export { default as Menu } from "./Menu/Menu.svelte"
 export { default as MenuSection } from "./Menu/Section.svelte"
 export { default as MenuSeparator } from "./Menu/Separator.svelte"
@@ -94,7 +95,7 @@ export { default as clickOutside } from "./Actions/click_outside"
 
 // Stores
 export { notifications, createNotificationStore } from "./Stores/notifications"
-export { banner } from "./Stores/banner"
+export { banner, BANNER_TYPES } from "./Stores/banner"
 
 // Helpers
 export * as Helpers from "./helpers"

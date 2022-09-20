@@ -57,6 +57,7 @@ export const Cookies = {
   Auth: "budibase:auth",
   CurrentApp: "budibase:currentapp",
   ReturnUrl: "budibase:returnurl",
+  AccountReturnUrl: "budibase:account:returnurl",
 }
 
 // Table names

@@ -26,10 +26,17 @@ const bullboard = require("./automations/bullboard")
 const { logAlert } = require("@budibase/backend-core/logging")
 const { pinoSettings } = require("@budibase/backend-core")
 const { Thread } = require("./threads")
+const fs = require("fs")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
-import { createAdminUser, getChecklist } from "./utilities/workerRequests"
+import {
+  createAdminUser,
+  generateApiKey,
+  getChecklist,
+} from "./utilities/workerRequests"
+import { watch } from "./watch"
+import { initialise as initialiseWebsockets } from "./websocket"
 
 const app = new Koa()
 
@@ -74,6 +81,7 @@ if (env.isProd()) {
 
 const server = http.createServer(app.callback())
 destroyable(server)
+initialiseWebsockets(server)
 
 let shuttingDown = false,
   errCode = 0
@@ -123,11 +131,16 @@ module.exports = server.listen(env.PORT || 0, async () => {
     if (!checklist?.adminUser?.checked) {
       try {
         const tenantId = tenancy.getTenantId()
-        await createAdminUser(
+        const user = await createAdminUser(
           env.BB_ADMIN_USER_EMAIL,
           env.BB_ADMIN_USER_PASSWORD,
           tenantId
         )
+        // Need to set up an API key for automated integration tests
+        if (env.isTest()) {
+          await generateApiKey(user._id)
+        }
+
         console.log(
           "Admin account automatically created for",
           env.BB_ADMIN_USER_EMAIL
@@ -137,6 +150,16 @@ module.exports = server.listen(env.PORT || 0, async () => {
         shutdown()
       }
     }
+  }
+
+  // monitor plugin directory if required
+  if (
+    env.SELF_HOSTED &&
+    !env.MULTI_TENANCY &&
+    env.PLUGINS_DIR &&
+    fs.existsSync(env.PLUGINS_DIR)
+  ) {
+    watch()
   }
 
   // check for version updates

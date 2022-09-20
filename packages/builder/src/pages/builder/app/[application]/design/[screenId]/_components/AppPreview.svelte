@@ -85,6 +85,8 @@
         ? [$store.componentToPaste?._id]
         : [],
     isBudibaseEvent: true,
+    usedPlugins: $store.usedPlugins,
+    location: window.location,
   }
 
   // Refresh the preview when required

@@ -153,3 +153,11 @@ exports.getChecklist = async () => {
   )
   return checkResponse(response, "get checklist")
 }
+
+exports.generateApiKey = async userId => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + "/api/global/self/api_key"),
+    request(null, { method: "POST", body: { userId } })
+  )
+  return checkResponse(response, "generate API key")
+}

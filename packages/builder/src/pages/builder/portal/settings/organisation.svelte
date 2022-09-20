@@ -120,8 +120,9 @@
           <Label
             size="L"
             tooltip={"Update the Platform URL to match your Budibase web URL. This keeps email templates and authentication configs up to date."}
-            >Platform URL</Label
           >
+            Platform URL
+          </Label>
           <Input thin bind:value={$values.platformUrl} />
         </div>
       </div>
@@ -150,15 +151,18 @@
     display: grid;
     grid-gap: var(--spacing-m);
   }
+
   .field {
     display: grid;
     grid-template-columns: 100px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
   }
+
   .file {
     max-width: 30ch;
   }
+
   .logo {
     align-items: start;
   }

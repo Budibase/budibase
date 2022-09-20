@@ -124,11 +124,15 @@ spec:
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         {{ if .Values.globals.bbAdminUserEmail }}
         - name: BB_ADMIN_USER_EMAIL
-          value: { { .Values.globals.bbAdminUserEmail | quote } }
+          value: {{ .Values.globals.bbAdminUserEmail | quote }}
         {{ end }}
         {{ if .Values.globals.bbAdminUserPassword }}
         - name: BB_ADMIN_USER_PASSWORD
-          value: { { .Values.globals.bbAdminUserPassword | quote } }
+          value: {{ .Values.globals.bbAdminUserPassword | quote }}
+        {{ end }}
+        {{ if .Values.globals.pluginsDir }}
+        - name: PLUGINS_DIR
+          value: {{ .Values.globals.pluginsDir | quote }}
         {{ end }}
         {{ if .Values.services.apps.nodeDebug }}
         - name: NODE_DEBUG
@@ -158,7 +162,10 @@ spec:
         name: bbapps
         ports:
         - containerPort: {{ .Values.services.apps.port }}
-        resources: {}
+        {{ with .Values.services.apps.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

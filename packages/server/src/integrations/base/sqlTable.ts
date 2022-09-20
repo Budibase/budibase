@@ -96,7 +96,9 @@ function generateSchema(
     const deletedColumns = Object.entries(oldTable.schema)
       .filter(
         ([key, schema]) =>
-          schema.type !== FieldTypes.LINK && table.schema[key] == null
+          schema.type !== FieldTypes.LINK &&
+          schema.type !== FieldTypes.FORMULA &&
+          table.schema[key] == null
       )
       .map(([key]) => key)
     deletedColumns.forEach(key => {

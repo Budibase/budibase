@@ -15,9 +15,11 @@ const {
   streamUpload,
   deleteFolder,
   downloadTarball,
+  downloadTarballDirect,
   deleteFiles,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
+const { checkSlashesInUrl } = require("../")
 const env = require("../../environment")
 const {
   USER_METDATA_PREFIX,
@@ -26,9 +28,12 @@ const {
 } = require("../../db/utils")
 const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
+const tar = require("tar")
+const fetch = require("node-fetch")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
+const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 
 /**
  * The single stack system (Cloud and Builder) should not make use of the file system where possible,
@@ -335,6 +340,123 @@ exports.cleanup = appIds => {
   }
 }
 
+const createTempFolder = item => {
+  const path = join(budibaseTempDir(), item)
+  try {
+    // remove old tmp directories automatically - don't combine
+    if (fs.existsSync(path)) {
+      fs.rmSync(path, { recursive: true, force: true })
+    }
+    fs.mkdirSync(path)
+  } catch (err) {
+    throw new Error(`Path cannot be created: ${err.message}`)
+  }
+
+  return path
+}
+exports.createTempFolder = createTempFolder
+
+const extractTarball = async (fromFilePath, toPath) => {
+  await tar.extract({
+    file: fromFilePath,
+    C: toPath,
+  })
+}
+exports.extractTarball = extractTarball
+
+const getPluginMetadata = async path => {
+  let metadata = {}
+  try {
+    const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
+    const schema = fs.readFileSync(join(path, "schema.json"), "utf8")
+
+    metadata.schema = JSON.parse(schema)
+    metadata.package = JSON.parse(pkg)
+
+    if (
+      !metadata.package.name ||
+      !metadata.package.version ||
+      !metadata.package.description
+    ) {
+      throw new Error(
+        "package.json is missing one of 'name', 'version' or 'description'."
+      )
+    }
+  } catch (err) {
+    throw new Error(
+      `Unable to process schema.json/package.json in plugin. ${err.message}`
+    )
+  }
+
+  return { metadata, directory: path }
+}
+exports.getPluginMetadata = getPluginMetadata
+
+exports.getDatasourcePlugin = async (name, url, hash) => {
+  if (!fs.existsSync(DATASOURCE_PATH)) {
+    fs.mkdirSync(DATASOURCE_PATH)
+  }
+  const filename = join(DATASOURCE_PATH, name)
+  const metadataName = `${filename}.bbmetadata`
+  if (fs.existsSync(filename)) {
+    const currentHash = fs.readFileSync(metadataName, "utf8")
+    // if hash is the same return the file, otherwise remove it and re-download
+    if (currentHash === hash) {
+      return require(filename)
+    } else {
+      console.log(`Updating plugin: ${name}`)
+      delete require.cache[require.resolve(filename)]
+      fs.unlinkSync(filename)
+    }
+  }
+  const fullUrl = checkSlashesInUrl(
+    `${env.MINIO_URL}/${ObjectStoreBuckets.PLUGINS}/${url}`
+  )
+  const response = await fetch(fullUrl)
+  if (response.status === 200) {
+    const content = await response.text()
+    fs.writeFileSync(filename, content)
+    fs.writeFileSync(metadataName, hash)
+    return require(filename)
+  } else {
+    throw new Error(
+      `Unable to retrieve plugin - reason: ${await response.text()}`
+    )
+  }
+}
+
+/**
+ * Find for a file recursively from start path applying filter, return first match
+ */
+exports.findFileRec = (startPath, filter) => {
+  if (!fs.existsSync(startPath)) {
+    return
+  }
+
+  const files = fs.readdirSync(startPath)
+  for (let i = 0, len = files.length; i < len; i++) {
+    const filename = join(startPath, files[i])
+    const stat = fs.lstatSync(filename)
+
+    if (stat.isDirectory()) {
+      return exports.findFileRec(filename, filter)
+    } else if (filename.endsWith(filter)) {
+      return filename
+    }
+  }
+}
+
+/**
+ * Remove a folder which is not empty from the file system
+ */
+exports.deleteFolderFileSystem = path => {
+  if (!fs.existsSync(path)) {
+    return
+  }
+
+  fs.rmSync(path, { recursive: true, force: true })
+}
+
 /**
  * Full function definition for below can be found in the utilities.
  */
@@ -342,5 +464,6 @@ exports.upload = upload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
 exports.deleteFiles = deleteFiles
+exports.downloadTarballDirect = downloadTarballDirect
 exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
 exports.NODE_MODULES_PATH = NODE_MODULES_PATH
