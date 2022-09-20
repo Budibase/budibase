@@ -56,7 +56,7 @@
         {
           title: "Plugins",
           href: "/builder/portal/manage/plugins",
-          badge: "New",
+          badge: "Beta",
         },
 
         {
