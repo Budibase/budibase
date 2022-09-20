@@ -15,6 +15,11 @@ import {
 } from "../definitions/datasource"
 import { get } from "lodash"
 import qs from "querystring"
+const fetch = require("node-fetch")
+const { formatBytes } = require("../utilities")
+const { performance } = require("perf_hooks")
+const FormData = require("form-data")
+const { URLSearchParams } = require("url")
 
 const BodyTypes = {
   NONE: "none",
@@ -51,375 +56,365 @@ const coreFields = {
   },
 }
 
-module RestModule {
-  const fetch = require("node-fetch")
-  const { formatBytes } = require("../utilities")
-  const { performance } = require("perf_hooks")
-  const FormData = require("form-data")
-  const { URLSearchParams } = require("url")
-  const {
-    parseStringPromise: xmlParser,
-    Builder: XmlBuilder,
-  } = require("xml2js")
+const { parseStringPromise: xmlParser, Builder: XmlBuilder } = require("xml2js")
 
-  const SCHEMA: Integration = {
-    docs: "https://github.com/node-fetch/node-fetch",
-    description:
-      "With the REST API datasource, you can connect, query and pull data from multiple REST APIs. You can then use the retrieved data to build apps.",
-    friendlyName: "REST API",
-    type: "API",
-    datasource: {
-      url: {
-        type: DatasourceFieldType.STRING,
-        default: "",
-        required: false,
-        deprecated: true,
-      },
-      defaultHeaders: {
-        type: DatasourceFieldType.OBJECT,
-        required: false,
-        default: {},
-      },
-      legacyHttpParser: {
-        display: "Legacy HTTP Support",
-        type: DatasourceFieldType.BOOLEAN,
-        required: false,
-        default: false,
-      },
+const SCHEMA: Integration = {
+  docs: "https://github.com/node-fetch/node-fetch",
+  description:
+    "With the REST API datasource, you can connect, query and pull data from multiple REST APIs. You can then use the retrieved data to build apps.",
+  friendlyName: "REST API",
+  type: "API",
+  datasource: {
+    url: {
+      type: DatasourceFieldType.STRING,
+      default: "",
+      required: false,
+      deprecated: true,
     },
-    query: {
-      create: {
-        readable: true,
-        displayName: "POST",
-        type: QueryType.FIELDS,
-        fields: coreFields,
-      },
-      read: {
-        displayName: "GET",
-        readable: true,
-        type: QueryType.FIELDS,
-        fields: coreFields,
-      },
-      update: {
-        displayName: "PUT",
-        readable: true,
-        type: QueryType.FIELDS,
-        fields: coreFields,
-      },
-      patch: {
-        displayName: "PATCH",
-        readable: true,
-        type: QueryType.FIELDS,
-        fields: coreFields,
-      },
-      delete: {
-        displayName: "DELETE",
-        type: QueryType.FIELDS,
-        fields: coreFields,
-      },
+    defaultHeaders: {
+      type: DatasourceFieldType.OBJECT,
+      required: false,
+      default: {},
     },
+    legacyHttpParser: {
+      display: "Legacy HTTP Support",
+      type: DatasourceFieldType.BOOLEAN,
+      required: false,
+      default: false,
+    },
+  },
+  query: {
+    create: {
+      readable: true,
+      displayName: "POST",
+      type: QueryType.FIELDS,
+      fields: coreFields,
+    },
+    read: {
+      displayName: "GET",
+      readable: true,
+      type: QueryType.FIELDS,
+      fields: coreFields,
+    },
+    update: {
+      displayName: "PUT",
+      readable: true,
+      type: QueryType.FIELDS,
+      fields: coreFields,
+    },
+    patch: {
+      displayName: "PATCH",
+      readable: true,
+      type: QueryType.FIELDS,
+      fields: coreFields,
+    },
+    delete: {
+      displayName: "DELETE",
+      type: QueryType.FIELDS,
+      fields: coreFields,
+    },
+  },
+}
+
+class RestIntegration implements IntegrationBase {
+  private config: RestConfig
+  private headers: {
+    [key: string]: string
+  } = {}
+  private startTimeMs: number = performance.now()
+
+  constructor(config: RestConfig) {
+    this.config = config
   }
 
-  class RestIntegration implements IntegrationBase {
-    private config: RestConfig
-    private headers: {
-      [key: string]: string
-    } = {}
-    private startTimeMs: number = performance.now()
-
-    constructor(config: RestConfig) {
-      this.config = config
+  async parseResponse(response: any, pagination: PaginationConfig | null) {
+    let data, raw, headers
+    const contentType = response.headers.get("content-type") || ""
+    try {
+      if (contentType.includes("application/json")) {
+        data = await response.json()
+        raw = JSON.stringify(data)
+      } else if (
+        contentType.includes("text/xml") ||
+        contentType.includes("application/xml")
+      ) {
+        const rawXml = await response.text()
+        data =
+          (await xmlParser(rawXml, {
+            explicitArray: false,
+            trim: true,
+            explicitRoot: false,
+          })) || {}
+        // there is only one structure, its an array, return the array so it appears as rows
+        const keys = Object.keys(data)
+        if (keys.length === 1 && Array.isArray(data[keys[0]])) {
+          data = data[keys[0]]
+        }
+        raw = rawXml
+      } else {
+        data = await response.text()
+        raw = data
+      }
+    } catch (err) {
+      throw "Failed to parse response body."
+    }
+    const size = formatBytes(
+      response.headers.get("content-length") || Buffer.byteLength(raw, "utf8")
+    )
+    const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
+    headers = response.headers.raw()
+    for (let [key, value] of Object.entries(headers)) {
+      headers[key] = Array.isArray(value) ? value[0] : value
     }
 
-    async parseResponse(response: any, pagination: PaginationConfig | null) {
-      let data, raw, headers
-      const contentType = response.headers.get("content-type") || ""
-      try {
-        if (contentType.includes("application/json")) {
-          data = await response.json()
-          raw = JSON.stringify(data)
-        } else if (
-          contentType.includes("text/xml") ||
-          contentType.includes("application/xml")
-        ) {
-          const rawXml = await response.text()
-          data =
-            (await xmlParser(rawXml, {
-              explicitArray: false,
-              trim: true,
-              explicitRoot: false,
-            })) || {}
-          // there is only one structure, its an array, return the array so it appears as rows
-          const keys = Object.keys(data)
-          if (keys.length === 1 && Array.isArray(data[keys[0]])) {
-            data = data[keys[0]]
-          }
-          raw = rawXml
-        } else {
-          data = await response.text()
-          raw = data
-        }
-      } catch (err) {
-        throw "Failed to parse response body."
-      }
-      const size = formatBytes(
-        response.headers.get("content-length") || Buffer.byteLength(raw, "utf8")
-      )
-      const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
-      headers = response.headers.raw()
-      for (let [key, value] of Object.entries(headers)) {
-        headers[key] = Array.isArray(value) ? value[0] : value
+    // Check if a pagination cursor exists in the response
+    let nextCursor = null
+    if (pagination?.responseParam) {
+      nextCursor = get(data, pagination.responseParam)
+    }
+
+    return {
+      data,
+      info: {
+        code: response.status,
+        size,
+        time,
+      },
+      extra: {
+        raw,
+        headers,
+      },
+      pagination: {
+        cursor: nextCursor,
+      },
+    }
+  }
+
+  getUrl(
+    path: string,
+    queryString: string,
+    pagination: PaginationConfig | null,
+    paginationValues: PaginationValues | null
+  ): string {
+    // Add pagination params to query string if required
+    if (pagination?.location === "query" && paginationValues) {
+      const { pageParam, sizeParam } = pagination
+      const params = new URLSearchParams()
+
+      // Append page number or cursor param if configured
+      if (pageParam && paginationValues.page != null) {
+        params.append(pageParam, paginationValues.page)
       }
 
-      // Check if a pagination cursor exists in the response
-      let nextCursor = null
-      if (pagination?.responseParam) {
-        nextCursor = get(data, pagination.responseParam)
+      // Append page size param if configured
+      if (sizeParam && paginationValues.limit != null) {
+        params.append(sizeParam, paginationValues.limit)
       }
 
-      return {
-        data,
-        info: {
-          code: response.status,
-          size,
-          time,
-        },
-        extra: {
-          raw,
-          headers,
-        },
-        pagination: {
-          cursor: nextCursor,
-        },
+      // Prepend query string with pagination params
+      let paginationString = params.toString()
+      if (paginationString) {
+        queryString = `${paginationString}&${queryString}`
       }
     }
 
-    getUrl(
-      path: string,
-      queryString: string,
-      pagination: PaginationConfig | null,
-      paginationValues: PaginationValues | null
-    ): string {
-      // Add pagination params to query string if required
-      if (pagination?.location === "query" && paginationValues) {
-        const { pageParam, sizeParam } = pagination
-        const params = new URLSearchParams()
-
-        // Append page number or cursor param if configured
-        if (pageParam && paginationValues.page != null) {
-          params.append(pageParam, paginationValues.page)
-        }
-
-        // Append page size param if configured
-        if (sizeParam && paginationValues.limit != null) {
-          params.append(sizeParam, paginationValues.limit)
-        }
-
-        // Prepend query string with pagination params
-        let paginationString = params.toString()
-        if (paginationString) {
-          queryString = `${paginationString}&${queryString}`
-        }
-      }
-
-      // make sure the query string is fully encoded
-      const main = `${path}?${qs.encode(qs.decode(queryString))}`
-      let complete = main
-      if (this.config.url && !main.startsWith("http")) {
-        complete = !this.config.url ? main : `${this.config.url}/${main}`
-      }
-      if (!complete.startsWith("http")) {
-        complete = `http://${complete}`
-      }
-      return complete
+    // make sure the query string is fully encoded
+    const main = `${path}?${qs.encode(qs.decode(queryString))}`
+    let complete = main
+    if (this.config.url && !main.startsWith("http")) {
+      complete = !this.config.url ? main : `${this.config.url}/${main}`
     }
+    if (!complete.startsWith("http")) {
+      complete = `http://${complete}`
+    }
+    return complete
+  }
 
-    addBody(
-      bodyType: string,
-      body: string | any,
-      input: any,
-      pagination: PaginationConfig | null,
-      paginationValues: PaginationValues | null
-    ) {
-      if (!input.headers) {
-        input.headers = {}
-      }
-      if (bodyType === BodyTypes.NONE) {
-        return input
-      }
-      let error,
-        object: any = {},
-        string = ""
-      try {
-        if (body) {
-          string = typeof body !== "string" ? JSON.stringify(body) : body
-          object = typeof body === "object" ? body : JSON.parse(body)
-        }
-      } catch (err) {
-        error = err
-      }
-
-      // Util to add pagination values to a certain body type
-      const addPaginationToBody = (insertFn: Function) => {
-        if (pagination?.location === "body") {
-          if (pagination?.pageParam && paginationValues?.page != null) {
-            insertFn(pagination.pageParam, paginationValues.page)
-          }
-          if (pagination?.sizeParam && paginationValues?.limit != null) {
-            insertFn(pagination.sizeParam, paginationValues.limit)
-          }
-        }
-      }
-
-      switch (bodyType) {
-        case BodyTypes.TEXT:
-          // content type defaults to plaintext
-          input.body = string
-          break
-        case BodyTypes.ENCODED:
-          const params = new URLSearchParams()
-          for (let [key, value] of Object.entries(object)) {
-            params.append(key, value)
-          }
-          addPaginationToBody((key: string, value: any) => {
-            params.append(key, value)
-          })
-          input.body = params
-          break
-        case BodyTypes.FORM_DATA:
-          const form = new FormData()
-          for (let [key, value] of Object.entries(object)) {
-            form.append(key, value)
-          }
-          addPaginationToBody((key: string, value: any) => {
-            form.append(key, value)
-          })
-          input.body = form
-          break
-        case BodyTypes.XML:
-          if (object != null && Object.keys(object).length) {
-            string = new XmlBuilder().buildObject(object)
-          }
-          input.body = string
-          input.headers["Content-Type"] = "application/xml"
-          break
-        case BodyTypes.JSON:
-          // if JSON error, throw it
-          if (error) {
-            throw "Invalid JSON for request body"
-          }
-          addPaginationToBody((key: string, value: any) => {
-            object[key] = value
-          })
-          input.body = JSON.stringify(object)
-          input.headers["Content-Type"] = "application/json"
-          break
-      }
+  addBody(
+    bodyType: string,
+    body: string | any,
+    input: any,
+    pagination: PaginationConfig | null,
+    paginationValues: PaginationValues | null
+  ) {
+    if (!input.headers) {
+      input.headers = {}
+    }
+    if (bodyType === BodyTypes.NONE) {
       return input
     }
+    let error,
+      object: any = {},
+      string = ""
+    try {
+      if (body) {
+        string = typeof body !== "string" ? JSON.stringify(body) : body
+        object = typeof body === "object" ? body : JSON.parse(body)
+      }
+    } catch (err) {
+      error = err
+    }
 
-    getAuthHeaders(authConfigId: string): { [key: string]: any } {
-      let headers: any = {}
-
-      if (this.config.authConfigs && authConfigId) {
-        const authConfig = this.config.authConfigs.filter(
-          c => c._id === authConfigId
-        )[0]
-        // check the config still exists before proceeding
-        // if not - do nothing
-        if (authConfig) {
-          let config
-          switch (authConfig.type) {
-            case AuthType.BASIC:
-              config = authConfig.config as BasicAuthConfig
-              headers.Authorization = `Basic ${Buffer.from(
-                `${config.username}:${config.password}`
-              ).toString("base64")}`
-              break
-            case AuthType.BEARER:
-              config = authConfig.config as BearerAuthConfig
-              headers.Authorization = `Bearer ${config.token}`
-              break
-          }
+    // Util to add pagination values to a certain body type
+    const addPaginationToBody = (insertFn: Function) => {
+      if (pagination?.location === "body") {
+        if (pagination?.pageParam && paginationValues?.page != null) {
+          insertFn(pagination.pageParam, paginationValues.page)
+        }
+        if (pagination?.sizeParam && paginationValues?.limit != null) {
+          insertFn(pagination.sizeParam, paginationValues.limit)
         }
       }
-
-      return headers
     }
 
-    async _req(query: RestQuery) {
-      const {
-        path = "",
-        queryString = "",
-        headers = {},
-        method = "GET",
-        disabledHeaders,
-        bodyType,
-        requestBody,
-        authConfigId,
-        pagination,
-        paginationValues,
-      } = query
-      const authHeaders = this.getAuthHeaders(authConfigId)
+    switch (bodyType) {
+      case BodyTypes.TEXT:
+        // content type defaults to plaintext
+        input.body = string
+        break
+      case BodyTypes.ENCODED:
+        const params = new URLSearchParams()
+        for (let [key, value] of Object.entries(object)) {
+          params.append(key, value)
+        }
+        addPaginationToBody((key: string, value: any) => {
+          params.append(key, value)
+        })
+        input.body = params
+        break
+      case BodyTypes.FORM_DATA:
+        const form = new FormData()
+        for (let [key, value] of Object.entries(object)) {
+          form.append(key, value)
+        }
+        addPaginationToBody((key: string, value: any) => {
+          form.append(key, value)
+        })
+        input.body = form
+        break
+      case BodyTypes.XML:
+        if (object != null && Object.keys(object).length) {
+          string = new XmlBuilder().buildObject(object)
+        }
+        input.body = string
+        input.headers["Content-Type"] = "application/xml"
+        break
+      case BodyTypes.JSON:
+        // if JSON error, throw it
+        if (error) {
+          throw "Invalid JSON for request body"
+        }
+        addPaginationToBody((key: string, value: any) => {
+          object[key] = value
+        })
+        input.body = JSON.stringify(object)
+        input.headers["Content-Type"] = "application/json"
+        break
+    }
+    return input
+  }
 
-      this.headers = {
-        ...this.config.defaultHeaders,
-        ...headers,
-        ...authHeaders,
-      }
+  getAuthHeaders(authConfigId: string): { [key: string]: any } {
+    let headers: any = {}
 
-      if (disabledHeaders) {
-        for (let headerKey of Object.keys(this.headers)) {
-          if (disabledHeaders[headerKey]) {
-            delete this.headers[headerKey]
-          }
+    if (this.config.authConfigs && authConfigId) {
+      const authConfig = this.config.authConfigs.filter(
+        c => c._id === authConfigId
+      )[0]
+      // check the config still exists before proceeding
+      // if not - do nothing
+      if (authConfig) {
+        let config
+        switch (authConfig.type) {
+          case AuthType.BASIC:
+            config = authConfig.config as BasicAuthConfig
+            headers.Authorization = `Basic ${Buffer.from(
+              `${config.username}:${config.password}`
+            ).toString("base64")}`
+            break
+          case AuthType.BEARER:
+            config = authConfig.config as BearerAuthConfig
+            headers.Authorization = `Bearer ${config.token}`
+            break
         }
       }
+    }
 
-      let input: any = { method, headers: this.headers }
-      input = this.addBody(
-        bodyType,
-        requestBody,
-        input,
-        pagination,
-        paginationValues
-      )
+    return headers
+  }
 
-      if (this.config.legacyHttpParser) {
-        // https://github.com/nodejs/node/issues/43798
-        input.extraHttpOptions = { insecureHTTPParser: true }
+  async _req(query: RestQuery) {
+    const {
+      path = "",
+      queryString = "",
+      headers = {},
+      method = "GET",
+      disabledHeaders,
+      bodyType,
+      requestBody,
+      authConfigId,
+      pagination,
+      paginationValues,
+    } = query
+    const authHeaders = this.getAuthHeaders(authConfigId)
+
+    this.headers = {
+      ...this.config.defaultHeaders,
+      ...headers,
+      ...authHeaders,
+    }
+
+    if (disabledHeaders) {
+      for (let headerKey of Object.keys(this.headers)) {
+        if (disabledHeaders[headerKey]) {
+          delete this.headers[headerKey]
+        }
       }
-
-      this.startTimeMs = performance.now()
-      const url = this.getUrl(path, queryString, pagination, paginationValues)
-      const response = await fetch(url, input)
-      return await this.parseResponse(response, pagination)
     }
 
-    async create(opts: RestQuery) {
-      return this._req({ ...opts, method: "POST" })
+    let input: any = { method, headers: this.headers }
+    input = this.addBody(
+      bodyType,
+      requestBody,
+      input,
+      pagination,
+      paginationValues
+    )
+
+    if (this.config.legacyHttpParser) {
+      // https://github.com/nodejs/node/issues/43798
+      input.extraHttpOptions = { insecureHTTPParser: true }
     }
 
-    async read(opts: RestQuery) {
-      return this._req({ ...opts, method: "GET" })
-    }
-
-    async update(opts: RestQuery) {
-      return this._req({ ...opts, method: "PUT" })
-    }
-
-    async patch(opts: RestQuery) {
-      return this._req({ ...opts, method: "PATCH" })
-    }
-
-    async delete(opts: RestQuery) {
-      return this._req({ ...opts, method: "DELETE" })
-    }
+    this.startTimeMs = performance.now()
+    const url = this.getUrl(path, queryString, pagination, paginationValues)
+    const response = await fetch(url, input)
+    return await this.parseResponse(response, pagination)
   }
 
-  module.exports = {
-    schema: SCHEMA,
-    integration: RestIntegration,
-    AuthType,
+  async create(opts: RestQuery) {
+    return this._req({ ...opts, method: "POST" })
   }
+
+  async read(opts: RestQuery) {
+    return this._req({ ...opts, method: "GET" })
+  }
+
+  async update(opts: RestQuery) {
+    return this._req({ ...opts, method: "PUT" })
+  }
+
+  async patch(opts: RestQuery) {
+    return this._req({ ...opts, method: "PATCH" })
+  }
+
+  async delete(opts: RestQuery) {
+    return this._req({ ...opts, method: "DELETE" })
+  }
+}
+
+export default {
+  schema: SCHEMA,
+  integration: RestIntegration,
+  AuthType,
 }

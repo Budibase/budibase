@@ -11,8 +11,8 @@ filterTests(["all"], () => {
       const queryName = "Cypress Test Query"
       const queryRename = "CT Query Rename"
 
-      xit("Should add PostgreSQL data source without configuration", () => {
-        // Select PostgreSQL data source
+      xit("Should add PostgreSQL datasource without configuration", () => {
+        // Select PostgreSQL datasource
         cy.selectExternalDatasource(datasource)
         // Attempt to fetch tables without applying configuration
         cy.intercept("**/datasources").as("datasource")
@@ -27,8 +27,8 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button").contains("Skip table fetch").click({ force: true })
       })
 
-      it("should add PostgreSQL data source and fetch tables", () => {
-        // Add & configure PostgreSQL data source
+      it("should add PostgreSQL datasource and fetch tables", () => {
+        // Add & configure PostgreSQL datasource
         cy.selectExternalDatasource(datasource)
         cy.intercept("**/datasources").as("datasource")
         cy.addDatasourceConfig(datasource)
@@ -162,7 +162,7 @@ filterTests(["all"], () => {
         switchSchema("randomText")
 
         // No tables displayed
-        cy.get(".spectrum-Body", { timeout: 5000 }).eq(2).should("contain", "No tables found")
+        cy.get(".spectrum-Body", { timeout: 10000 }).eq(2, { timeout: 10000 }).should("contain", "No tables found")
 
         // Previously created query should be visible
         cy.get(".spectrum-Table").should("contain", queryName)
@@ -173,7 +173,7 @@ filterTests(["all"], () => {
         switchSchema("1")
 
         // Confirm tables exist - Check for specific one
-        cy.get(".spectrum-Table", { timeout: 5000 }).eq(0).should("contain", "test")
+        cy.get(".spectrum-Table", { timeout: 20000 }).eq(0).should("contain", "test")
         cy.get(".spectrum-Table")
           .eq(0)
           .find(".spectrum-Table-row")
@@ -187,7 +187,7 @@ filterTests(["all"], () => {
         switchSchema("public")
 
         // Confirm tables exist - again
-        cy.get(".spectrum-Table", { timeout: 5000 }).eq(0).should("contain", "REGIONS")
+        cy.get(".spectrum-Table", { timeout: 20000 }).eq(0).should("contain", "REGIONS")
         cy.get(".spectrum-Table")
           .eq(0)
           .find(".spectrum-Table-row")

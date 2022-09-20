@@ -16,6 +16,11 @@ const { newid } = require("@budibase/backend-core/utils")
 const { users } = require("../../../sdk")
 const { Cookies } = require("@budibase/backend-core/constants")
 const { events, featureFlags } = require("@budibase/backend-core")
+const env = require("../../../environment")
+
+function newTestApiKey() {
+  return env.ENCRYPTED_TEST_PUBLIC_API_KEY
+}
 
 function newApiKey() {
   return encrypt(`${getTenantId()}${SEPARATOR}${newid()}`)
@@ -29,15 +34,25 @@ function cleanupDevInfo(info) {
 }
 
 exports.generateAPIKey = async ctx => {
+  let userId
+  let apiKey
+  if (env.isTest() && ctx.request.body.userId) {
+    userId = ctx.request.body.userId
+    apiKey = newTestApiKey()
+  } else {
+    userId = ctx.user._id
+    apiKey = newApiKey()
+  }
+
   const db = getGlobalDB()
-  const id = generateDevInfoID(ctx.user._id)
+  const id = generateDevInfoID(userId)
   let devInfo
   try {
     devInfo = await db.get(id)
   } catch (err) {
-    devInfo = { _id: id, userId: ctx.user._id }
+    devInfo = { _id: id, userId }
   }
-  devInfo.apiKey = await newApiKey()
+  devInfo.apiKey = await apiKey
   await db.put(devInfo)
   ctx.body = cleanupDevInfo(devInfo)
 }
@@ -141,6 +156,7 @@ exports.updateSelf = async ctx => {
   }
 
   // remove the old password from the user before sending events
+  user._rev = response.rev
   delete user.password
   await events.user.updated(user)
   if (passwordChange) {

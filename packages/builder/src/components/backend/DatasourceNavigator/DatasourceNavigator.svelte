@@ -13,7 +13,7 @@
     customQueryIconColor,
     customQueryText,
   } from "helpers/data/utils"
-  import ICONS from "./icons"
+  import { getIcon } from "./icons"
   import { notifications } from "@budibase/bbui"
 
   let openDataSources = []
@@ -32,8 +32,8 @@
     : []
   $: openDataSource = enrichedDataSources.find(x => x.open)
   $: {
-    // Ensure the open data source is always included in the list of open
-    // data sources
+    // Ensure the open datasource is always included in the list of open
+    // datasources
     if (openDataSource) {
       openNode(openDataSource)
     }
@@ -79,7 +79,7 @@
   })
 
   const containsActiveEntity = datasource => {
-    // If we're view a query then the data source ID is in the URL
+    // If we're view a query then the datasource ID is in the URL
     if ($params.selectedDatasource === datasource._id) {
       return true
     }
@@ -124,7 +124,7 @@
       >
         <div class="datasource-icon" slot="icon">
           <svelte:component
-            this={ICONS[datasource.source]}
+            this={getIcon(datasource.source, datasource.schema)}
             height="18"
             width="18"
           />

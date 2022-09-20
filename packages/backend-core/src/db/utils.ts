@@ -3,7 +3,7 @@ import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
 import { SEPARATOR, DocumentType, UNICODE_MAX, ViewName } from "./constants"
 import { getTenantId, getGlobalDB } from "../context"
-import { getGlobalDBName } from "../tenancy/utils"
+import { getGlobalDBName } from "./tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
 import { getCouchInfo } from "./pouch"
@@ -16,6 +16,7 @@ import * as events from "../events"
 export * from "./constants"
 export * from "./conversions"
 export { default as Replication } from "./Replication"
+export * from "./tenancy"
 
 /**
  * Generates a new app ID.
@@ -365,6 +366,21 @@ export const getConfigParams = (
  */
 export const generateDevInfoID = (userId: any) => {
   return `${DocumentType.DEV_INFO}${SEPARATOR}${userId}`
+}
+
+/**
+ * Generates a new plugin ID - to be used in the global DB.
+ * @returns {string} The new plugin ID which a plugin metadata document can be stored under.
+ */
+export const generatePluginID = (name: string) => {
+  return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
+}
+
+/**
+ * Gets parameters for retrieving automations, this is a utility function for the getDocParams function.
+ */
+export const getPluginParams = (pluginId?: string | null, otherProps = {}) => {
+  return getDocParams(DocumentType.PLUGIN, pluginId, otherProps)
 }
 
 /**

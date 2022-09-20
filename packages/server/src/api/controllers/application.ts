@@ -472,7 +472,6 @@ const destroyApp = async (ctx: any) => {
   const result = await db.destroy()
 
   if (isUnpublish) {
-    await quotas.removePublishedApp()
     await events.app.unpublished(app)
   } else {
     await quotas.removeApp()
@@ -572,7 +571,7 @@ export const sync = async (ctx: any, next: any) => {
   }
 }
 
-const updateAppPackage = async (appPackage: any, appId: any) => {
+export const updateAppPackage = async (appPackage: any, appId: any) => {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await db.get(DocumentType.APP_METADATA)

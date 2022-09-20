@@ -35,7 +35,10 @@ spec:
         name: redis-service
         ports:
         - containerPort: {{ .Values.services.redis.port }}
-        resources: {}
+        {{ with .Values.services.redis.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
         volumeMounts:
         - mountPath: /data
           name: redis-data

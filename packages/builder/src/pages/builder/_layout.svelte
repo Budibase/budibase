@@ -1,6 +1,6 @@
 <script>
   import { isActive, redirect, params } from "@roxi/routify"
-  import { admin, auth } from "stores/portal"
+  import { admin, auth, licensing } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "api"
@@ -62,6 +62,10 @@
     try {
       await auth.getSelf()
       await admin.init()
+
+      if ($auth.user) {
+        await licensing.init()
+      }
 
       // Set init info if present
       if ($params["?template"]) {

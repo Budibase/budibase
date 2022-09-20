@@ -1,37 +1,35 @@
 import env from "../../environment"
-import { quotas } from "@budibase/pro"
 import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
 import {
-  tenancy,
-  utils,
-  db as dbUtils,
-  constants,
-  cache,
-  users as usersCore,
-  deprovisioning,
-  sessions,
-  HTTPError,
   accounts,
-  migrations,
-  StaticDatabases,
-  ViewName,
+  cache,
+  constants,
+  db as dbUtils,
+  deprovisioning,
   events,
+  HTTPError,
+  migrations,
+  sessions,
+  tenancy,
+  users as usersCore,
+  utils,
+  ViewName,
 } from "@budibase/backend-core"
 import {
-  MigrationType,
-  PlatformUserByEmail,
-  User,
-  BulkCreateUsersResponse,
-  CreateUserResponse,
-  BulkDeleteUsersResponse,
-  CloudAccount,
-  AllDocsResponse,
-  RowResponse,
-  BulkDocsResponse,
   AccountMetadata,
+  AllDocsResponse,
+  BulkCreateUsersResponse,
+  BulkDeleteUsersResponse,
+  BulkDocsResponse,
+  CloudAccount,
+  CreateUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
+  MigrationType,
+  PlatformUserByEmail,
+  RowResponse,
+  User,
 } from "@budibase/types"
 import { groups as groupUtils } from "@budibase/pro"
 import { sendEmail } from "../../utilities/email"
@@ -120,7 +118,7 @@ interface SaveUserOpts {
 }
 
 const buildUser = async (
-  user: any,
+  user: User,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
@@ -230,16 +228,7 @@ export const save = async (
 
   try {
     // save the user to db
-    let response
-    const putUserFn = () => {
-      return db.put(builtUser)
-    }
-
-    if (eventHelpers.isAddingBuilder(builtUser, dbUser)) {
-      response = await quotas.addDeveloper(putUserFn)
-    } else {
-      response = await putUserFn()
-    }
+    let response = await db.put(builtUser)
     builtUser._rev = response.rev
 
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
@@ -388,13 +377,8 @@ export const bulkCreate = async (
     newUsers.push(newUser)
   }
 
-  // Figure out how many builders we are adding and create the promises
-  // array that will be called by bulkDocs
-  let builderCount = 0
+  // create the promises array that will be called by bulkDocs
   newUsers.forEach((user: any) => {
-    if (eventHelpers.isAddingBuilder(user, null)) {
-      builderCount++
-    }
     usersToSave.push(
       buildUser(
         user,
@@ -408,14 +392,14 @@ export const bulkCreate = async (
   })
 
   const usersToBulkSave = await Promise.all(usersToSave)
-  await quotas.addDevelopers(() => db.bulkDocs(usersToBulkSave), builderCount)
+  await db.bulkDocs(usersToBulkSave)
 
   // Post processing of bulk added users, i.e events and cache operations
   for (const user of usersToBulkSave) {
     // TODO: Refactor to bulk insert users into the info db
     // instead of relying on looping tenant creation
     await addTenant(tenantId, user._id, user.email)
-    await eventHelpers.handleSaveEvents(user, null)
+    await eventHelpers.handleSaveEvents(user, undefined)
     await apps.syncUserInApps(user._id)
   }
 
@@ -475,8 +459,6 @@ export const bulkDelete = async (
   }
 
   let groupsToModify: any = {}
-  let builderCount = 0
-
   // Get users and delete
   const allDocsResponse: AllDocsResponse<User> = await db.allDocs({
     include_docs: true,
@@ -497,11 +479,6 @@ export const bulkDelete = async (
         }
       }
 
-      // Also figure out how many builders are being deleted
-      if (eventHelpers.isAddingBuilder(user.doc, null)) {
-        builderCount++
-      }
-
       return user.doc
     }
   )
@@ -519,7 +496,6 @@ export const bulkDelete = async (
   for (let user of usersToDelete) {
     await bulkDeleteProcessing(user)
   }
-  await quotas.removeDevelopers(builderCount)
 
   // Build Response
   // index users by id
@@ -574,7 +550,6 @@ export const destroy = async (id: string, currentUser: any) => {
   }
 
   await eventHelpers.handleDeleteEvents(dbUser)
-  await quotas.removeUser(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "deletion" })
   // let server know to sync user
