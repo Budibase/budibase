@@ -2,7 +2,7 @@ import { derived, writable, get } from "svelte/store"
 import { API } from "api"
 import { admin } from "stores/portal"
 import analytics from "analytics"
-import { FEATURE_FLAGS } from "helpers/featureFlags"
+import { TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 import { Constants } from "@budibase/frontend-core"
 
 export function createAuthStore() {
@@ -35,7 +35,7 @@ export function createAuthStore() {
       isBuilder = !!user.builder?.global
       groupsEnabled =
         user?.license.features.includes(Constants.Features.USER_GROUPS) &&
-        user?.featureFlags.includes(FEATURE_FLAGS.USER_GROUPS)
+        user?.featureFlags.includes(TENANT_FEATURE_FLAGS.USER_GROUPS)
     }
     return {
       user: $store.user,

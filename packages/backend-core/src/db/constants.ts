@@ -20,6 +20,7 @@ export enum ViewName {
   AUTOMATION_LOGS = "automation_logs",
   ACCOUNT_BY_EMAIL = "account_by_email",
   PLATFORM_USERS_LOWERCASE = "platform_users_lowercase",
+  USER_BY_GROUP = "by_group_user",
 }
 
 export const DeprecatedViews = {
