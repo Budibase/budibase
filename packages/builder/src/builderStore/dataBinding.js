@@ -393,20 +393,25 @@ export const getUserBindings = () => {
   const { schema } = getSchemaForTable(TableNames.USERS)
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
-  keys.forEach(key => {
+
+  bindings = keys.reduce((acc, key) => {
     const fieldSchema = schema[key]
-    bindings.push({
-      type: "context",
-      runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
-      readableBinding: `Current User.${key}`,
-      // Field schema and provider are required to construct relationship
-      // datasource options, based on bindable properties
-      fieldSchema,
-      providerId: "user",
-      category: "Current User",
-      icon: "User",
-    })
-  })
+    if (fieldSchema.type !== "link") {
+      acc.push({
+        type: "context",
+        runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
+        readableBinding: `Current User.${key}`,
+        // Field schema and provider are required to construct relationship
+        // datasource options, based on bindable properties
+        fieldSchema,
+        providerId: "user",
+        category: "Current User",
+        icon: "User",
+      })
+    }
+    return acc
+  }, [])
+
   return bindings
 }
 
