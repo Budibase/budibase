@@ -9,14 +9,14 @@ import {
 import { store } from "builderStore"
 import {
   queries as queriesStores,
-  roles as rolesStore,
   tables as tablesStore,
+  roles as rolesStore,
 } from "stores/backend"
 import {
+  makePropSafe,
+  isJSBinding,
   decodeJSBinding,
   encodeJSBinding,
-  isJSBinding,
-  makePropSafe,
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
@@ -71,11 +71,11 @@ export const getAuthBindings = () => {
       runtime: `${safeUser}.${safeOAuth2}.${safeAccessToken}`,
       readable: `Current User.OAuthToken`,
       key: "accessToken",
+      display: { name: "OAuthToken" },
     },
   ]
 
-  bindings = Object.keys(authBindings).map(key => {
-    const fieldBinding = authBindings[key]
+  bindings = authBindings.map(fieldBinding => {
     return {
       type: "context",
       runtimeBinding: fieldBinding.runtime,
@@ -83,6 +83,7 @@ export const getAuthBindings = () => {
       fieldSchema: { type: "string", name: fieldBinding.key },
       providerId: "user",
       category: "Current User",
+      display: fieldBinding.display,
     }
   })
   return bindings
@@ -404,7 +405,7 @@ export const getUserBindings = () => {
       providerId: "user",
       category: "Current User",
       icon: "User",
-      display: fieldSchema,
+      display: fieldSchema.fieldName,
     })
   })
   return bindings
