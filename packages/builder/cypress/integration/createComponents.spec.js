@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require("../support/interact")
 
 filterTests(["all"], () => {
-  context("Create Components", () => {
+  xcontext("Create Components", () => {
     let headlineId
 
     before(() => {
