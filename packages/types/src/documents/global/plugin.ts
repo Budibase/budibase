@@ -23,6 +23,7 @@ export interface Plugin extends Document {
   jsUrl?: string
   source: PluginSource
   package: { [key: string]: any }
+  hash: string
   schema: {
     type: PluginType
     [key: string]: any

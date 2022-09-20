@@ -44,6 +44,7 @@ export enum DocumentType {
   DEV_INFO = "devinfo",
   AUTOMATION_LOG = "log_au",
   ACCOUNT_METADATA = "acc_metadata",
+  PLUGIN = "plg",
 }
 
 export const StaticDatabases = {
