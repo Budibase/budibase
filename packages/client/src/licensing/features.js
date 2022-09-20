@@ -1,5 +1,6 @@
-import { isFreePlan } from "./utils.js"
+// import { isFreePlan } from "./utils.js"
 
 export const logoEnabled = () => {
-  return isFreePlan()
+  return false
+  // return isFreePlan()
 }
