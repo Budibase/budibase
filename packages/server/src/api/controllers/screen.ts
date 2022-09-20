@@ -1,17 +1,16 @@
-const {
-  getScreenParams,
-  generateScreenID,
-  getPluginParams,
-  DocumentType,
-} = require("../../db/utils")
-const { AccessController } = require("@budibase/backend-core/roles")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { events } = require("@budibase/backend-core")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-const { updateAppPackage } = require("./application")
+import { getScreenParams, generateScreenID, DocumentType } from "../../db/utils"
+import {
+  events,
+  context,
+  tenancy,
+  db as dbCore,
+  roles,
+} from "@budibase/backend-core"
+import { updateAppPackage } from "./application"
+import { Plugin, ScreenProps } from "@budibase/types"
 
-exports.fetch = async ctx => {
-  const db = getAppDB()
+exports.fetch = async (ctx: any) => {
+  const db = context.getAppDB()
 
   const screens = (
     await db.allDocs(
@@ -19,16 +18,16 @@ exports.fetch = async ctx => {
         include_docs: true,
       })
     )
-  ).rows.map(element => element.doc)
+  ).rows.map((el: any) => el.doc)
 
-  ctx.body = await new AccessController().checkScreensAccess(
+  ctx.body = await new roles.AccessController().checkScreensAccess(
     screens,
     ctx.user.role._id
   )
 }
 
-exports.save = async ctx => {
-  const db = getAppDB()
+exports.save = async (ctx: any) => {
+  const db = context.getAppDB()
   let screen = ctx.request.body
 
   let eventFn
@@ -40,19 +39,19 @@ exports.save = async ctx => {
   const response = await db.put(screen)
 
   // Find any custom components being used
-  let pluginNames = []
+  let pluginNames: string[] = []
   let pluginAdded = false
   findPlugins(screen.props, pluginNames)
   if (pluginNames.length) {
-    const globalDB = getGlobalDB()
+    const globalDB = tenancy.getGlobalDB()
     const pluginsResponse = await globalDB.allDocs(
-      getPluginParams(null, {
+      dbCore.getPluginParams(null, {
         include_docs: true,
       })
     )
     const requiredPlugins = pluginsResponse.rows
-      .map(row => row.doc)
-      .filter(plugin => {
+      .map((row: any) => row.doc)
+      .filter((plugin: Plugin) => {
         return (
           plugin.schema.type === "component" &&
           pluginNames.includes(`plugin/${plugin.name}`)
@@ -63,8 +62,8 @@ exports.save = async ctx => {
     const application = await db.get(DocumentType.APP_METADATA)
     let usedPlugins = application.usedPlugins || []
 
-    requiredPlugins.forEach(plugin => {
-      if (!usedPlugins.find(x => x._id === plugin._id)) {
+    requiredPlugins.forEach((plugin: Plugin) => {
+      if (!usedPlugins.find((x: Plugin) => x._id === plugin._id)) {
         pluginAdded = true
         usedPlugins.push({
           _id: plugin._id,
@@ -93,8 +92,8 @@ exports.save = async ctx => {
   }
 }
 
-exports.destroy = async ctx => {
-  const db = getAppDB()
+exports.destroy = async (ctx: any) => {
+  const db = context.getAppDB()
   const id = ctx.params.screenId
   const screen = await db.get(id)
 
@@ -107,7 +106,7 @@ exports.destroy = async ctx => {
   ctx.status = 200
 }
 
-const findPlugins = (component, foundPlugins) => {
+const findPlugins = (component: ScreenProps, foundPlugins: string[]) => {
   if (!component) {
     return
   }

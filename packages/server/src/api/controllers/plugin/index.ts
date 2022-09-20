@@ -1,22 +1,16 @@
-import { ObjectStoreBuckets } from "../../../constants"
-import { loadJSFile } from "../../../utilities/fileSystem"
 import { npmUpload, urlUpload, githubUpload, fileUpload } from "./uploaders"
 import { getGlobalDB } from "@budibase/backend-core/tenancy"
 import { validate } from "@budibase/backend-core/plugins"
-import { generatePluginID, getPluginParams } from "../../../db/utils"
-import {
-  uploadDirectory,
-  deleteFolder,
-} from "@budibase/backend-core/objectStore"
-import { PluginType, FileType, PluginSource, Plugin } from "@budibase/types"
+import { PluginType, FileType, PluginSource } from "@budibase/types"
 import env from "../../../environment"
 import { ClientAppSocket } from "../../../websocket"
-import { events } from "@budibase/backend-core"
+import { db as dbCore } from "@budibase/backend-core"
+import { plugins } from "@budibase/pro"
 
 export async function getPlugins(type?: PluginType) {
   const db = getGlobalDB()
   const response = await db.allDocs(
-    getPluginParams(null, {
+    dbCore.getPluginParams(null, {
       include_docs: true,
     })
   )
@@ -37,7 +31,7 @@ export async function upload(ctx: any) {
     let docs = []
     // can do single or multiple plugins
     for (let plugin of plugins) {
-      const doc = await processPlugin(plugin, PluginSource.FILE)
+      const doc = await processUploadedPlugin(plugin, PluginSource.FILE)
       docs.push(doc)
     }
     ctx.body = {
@@ -91,18 +85,19 @@ export async function create(ctx: any) {
       )
     }
 
-    const doc = await storePlugin(metadata, directory, source)
+    const doc = await plugins.storePlugin(metadata, directory, source)
 
+    ClientAppSocket.emit("plugins-update", { name, hash: doc.hash })
     ctx.body = {
       message: "Plugin uploaded successfully",
       plugins: [doc],
     }
+    ctx.body = { plugin: doc }
   } catch (err: any) {
     const errMsg = err?.message ? err?.message : err
 
     ctx.throw(400, `Failed to import plugin: ${errMsg}`)
   }
-  ctx.status = 200
 }
 
 export async function fetch(ctx: any) {
@@ -110,99 +105,21 @@ export async function fetch(ctx: any) {
 }
 
 export async function destroy(ctx: any) {
-  const db = getGlobalDB()
   const { pluginId } = ctx.params
 
   try {
-    const plugin: Plugin = await db.get(pluginId)
-    const bucketPath = `${plugin.name}/`
-    await deleteFolder(ObjectStoreBuckets.PLUGINS, bucketPath)
+    await plugins.deletePlugin(pluginId)
 
-    await db.remove(pluginId, plugin._rev)
-    await events.plugin.deleted(plugin)
+    ctx.body = { message: `Plugin ${ctx.params.pluginId} deleted.` }
   } catch (err: any) {
-    const errMsg = err?.message ? err?.message : err
-
-    ctx.throw(400, `Failed to delete plugin: ${errMsg}`)
+    ctx.throw(400, err.message)
   }
-
-  ctx.message = `Plugin ${ctx.params.pluginId} deleted.`
-  ctx.status = 200
 }
 
-export async function storePlugin(
-  metadata: any,
-  directory: any,
+export async function processUploadedPlugin(
+  plugin: FileType,
   source?: PluginSource
 ) {
-  const db = getGlobalDB()
-  const version = metadata.package.version,
-    name = metadata.package.name,
-    description = metadata.package.description,
-    hash = metadata.schema.hash
-
-  // first open the tarball into tmp directory
-  const bucketPath = `${name}/`
-  const files = await uploadDirectory(
-    ObjectStoreBuckets.PLUGINS,
-    directory,
-    bucketPath
-  )
-  const jsFile = files.find((file: any) => file.name.endsWith(".js"))
-  if (!jsFile) {
-    throw new Error(`Plugin missing .js file.`)
-  }
-  // validate the JS for a datasource
-  if (metadata.schema.type === PluginType.DATASOURCE) {
-    const js = loadJSFile(directory, jsFile.name)
-    // TODO: this isn't safe - but we need full node environment
-    // in future we should do this in a thread for safety
-    try {
-      eval(js)
-    } catch (err: any) {
-      const message = err?.message ? err.message : JSON.stringify(err)
-      throw new Error(`JS invalid: ${message}`)
-    }
-  }
-  const jsFileName = jsFile.name
-  const pluginId = generatePluginID(name)
-
-  // overwrite existing docs entirely if they exist
-  let rev
-  try {
-    const existing = await db.get(pluginId)
-    rev = existing._rev
-  } catch (err) {
-    rev = undefined
-  }
-  let doc: Plugin = {
-    _id: pluginId,
-    _rev: rev,
-    ...metadata,
-    name,
-    version,
-    hash,
-    description,
-    jsUrl: `${bucketPath}${jsFileName}`,
-  }
-
-  if (source) {
-    doc = {
-      ...doc,
-      source,
-    }
-  }
-
-  const response = await db.put(doc)
-  await events.plugin.imported(doc)
-  ClientAppSocket.emit("plugin-update", { name, hash })
-  return {
-    ...doc,
-    _rev: response.rev,
-  }
-}
-
-export async function processPlugin(plugin: FileType, source?: PluginSource) {
   const { metadata, directory } = await fileUpload(plugin)
   validate(metadata?.schema)
 
@@ -211,5 +128,7 @@ export async function processPlugin(plugin: FileType, source?: PluginSource) {
     throw new Error("Only component plugins are supported outside of self-host")
   }
 
-  return await storePlugin(metadata, directory, source)
+  const doc = await plugins.storePlugin(metadata, directory, source)
+  ClientAppSocket.emit("plugins-update", { name: doc.name, hash: doc.hash })
+  return doc
 }
