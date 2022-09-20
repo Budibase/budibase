@@ -21,6 +21,7 @@ const createBuilderStore = () => {
     hiddenComponentIds: [],
     gridStyles: null,
     clearGridNextLoad: false,
+    usedPlugins: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -105,6 +106,20 @@ const createBuilderStore = () => {
         state.clearGridNextLoad = true
         return state
       })
+    },
+    updateUsedPlugin: (name, hash) => {
+      // Check if we used this plugin
+      const used = get(store)?.usedPlugins?.find(x => x.name === name)
+      if (used) {
+        store.update(state => {
+          state.usedPlugins = state.usedPlugins.filter(x => x.name !== name)
+          state.usedPlugins.push({
+            ...used,
+            hash,
+          })
+          return state
+        })
+      }
     },
   }
   return {

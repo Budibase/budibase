@@ -65,7 +65,7 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
  * The tenancy modules should not be used here and it should be assumed that the tenancy context
  * has not yet been populated.
  */
-module.exports = (
+export = (
   noAuthPatterns = [],
   opts: { publicAllowed: boolean; populateUser?: Function } = {
     publicAllowed: false,
@@ -106,6 +106,7 @@ module.exports = (
             user = await getUser(userId, session.tenantId)
           }
           user.csrfToken = session.csrfToken
+
           if (session?.lastAccessedAt < timeMinusOneMinute()) {
             // make sure we denote that the session is still in use
             await updateSessionTTL(session)

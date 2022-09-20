@@ -74,11 +74,11 @@ filterTests(["smoke", "all"], () => {
                 .contains("Update role")
                 .click({ force: true })
             })
-            cy.reload({ timeout: 5000 })
+            cy.reload()
             cy.wait(1000)
         }
         // Confirm roles exist within Configure roles table
-        cy.get(interact.SPECTRUM_TABLE, { timeout: 2000 })
+        cy.get(interact.SPECTRUM_TABLE, { timeout: 20000 })
           .eq(0)
           .within(assginedRoles => {
             expect(assginedRoles).to.contain("Admin")
@@ -180,7 +180,7 @@ filterTests(["smoke", "all"], () => {
       cy.reload()
 
       // Confirm details have been saved
-      cy.get(interact.FIELD, { timeout: 1000 }).eq(1).within(() => {
+      cy.get(interact.FIELD, { timeout: 20000 }).eq(1).within(() => {
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', "bb")
       })
       cy.get(interact.FIELD, { timeout: 1000 }).eq(2).within(() => {

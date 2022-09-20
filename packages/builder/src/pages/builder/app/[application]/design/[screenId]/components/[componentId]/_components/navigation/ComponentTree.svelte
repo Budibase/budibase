@@ -68,7 +68,8 @@
     closedNodes = closedNodes
   }
 
-  const onDrop = async () => {
+  const onDrop = async e => {
+    e.stopPropagation()
     try {
       await dndStore.actions.drop()
     } catch (error) {

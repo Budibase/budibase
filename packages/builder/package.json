@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "1.2.44-alpha.8",
+  "version": "1.4.3-alpha.1",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
+    "test": "jest",
     "cy:setup": "ts-node ./cypress/ts/setup.ts",
     "cy:setup:ci": "node ./cypress/setup.js",
     "cy:open": "cypress open",
@@ -36,7 +37,8 @@
       "components(.*)$": "<rootDir>/src/components$1",
       "builderStore(.*)$": "<rootDir>/src/builderStore$1",
       "stores(.*)$": "<rootDir>/src/stores$1",
-      "analytics(.*)$": "<rootDir>/src/analytics$1"
+      "analytics(.*)$": "<rootDir>/src/analytics$1",
+      "constants/backend": "<rootDir>/src/constants/backend/index.js"
     },
     "moduleFileExtensions": [
       "js",
@@ -69,10 +71,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "1.2.44-alpha.8",
-    "@budibase/client": "1.2.44-alpha.8",
-    "@budibase/frontend-core": "1.2.44-alpha.8",
-    "@budibase/string-templates": "1.2.44-alpha.8",
+    "@budibase/bbui": "1.4.3-alpha.1",
+    "@budibase/client": "1.4.3-alpha.1",
+    "@budibase/frontend-core": "1.4.3-alpha.1",
+    "@budibase/string-templates": "1.4.3-alpha.1",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
@@ -96,7 +98,7 @@
     "@babel/runtime": "^7.13.10",
     "@rollup/plugin-replace": "^2.4.2",
     "@roxi/routify": "2.18.5",
-    "@sveltejs/vite-plugin-svelte": "1.0.0-next.19",
+    "@sveltejs/vite-plugin-svelte": "1.0.1",
     "@testing-library/jest-dom": "^5.11.10",
     "@testing-library/svelte": "^3.0.0",
     "babel-jest": "^26.6.3",
@@ -118,7 +120,7 @@
     "ts-node": "^10.4.0",
     "tsconfig-paths": "4.0.0",
     "typescript": "^4.5.5",
-    "vite": "^2.1.5"
+    "vite": "^3.0.8"
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
 }
