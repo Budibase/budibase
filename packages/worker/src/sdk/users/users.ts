@@ -31,7 +31,6 @@ import {
   RowResponse,
   User,
 } from "@budibase/types"
-import { groups as groupUtils } from "@budibase/pro"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
 
@@ -458,7 +457,6 @@ export const bulkDelete = async (
     })
   }
 
-  let groupsToModify: any = {}
   // Get users and delete
   const allDocsResponse: AllDocsResponse<User> = await db.allDocs({
     include_docs: true,
@@ -466,19 +464,6 @@ export const bulkDelete = async (
   })
   const usersToDelete: User[] = allDocsResponse.rows.map(
     (user: RowResponse<User>) => {
-      // if we find a user that has an associated group, add it to
-      // an array so we can easily use allDocs on them later.
-      // This prevents us having to re-loop over all the users
-      if (user.doc.userGroups) {
-        for (let groupId of user.doc.userGroups) {
-          if (!Object.keys(groupsToModify).includes(groupId)) {
-            groupsToModify[groupId] = [user.id]
-          } else {
-            groupsToModify[groupId] = [...groupsToModify[groupId], user.id]
-          }
-        }
-      }
-
       return user.doc
     }
   )
@@ -491,8 +476,6 @@ export const bulkDelete = async (
     }))
   )
 
-  // Deletion post processing
-  await groupUtils.bulkDeleteGroupUsers(groupsToModify)
   for (let user of usersToDelete) {
     await bulkDeleteProcessing(user)
   }
@@ -526,7 +509,6 @@ export const destroy = async (id: string, currentUser: any) => {
   const db = tenancy.getGlobalDB()
   const dbUser = await db.get(id)
   const userId = dbUser._id as string
-  let groups = dbUser.userGroups
 
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     // root account holder can't be deleted from inside budibase
@@ -544,10 +526,6 @@ export const destroy = async (id: string, currentUser: any) => {
   await deprovisioning.removeUserFromInfoDB(dbUser)
 
   await db.remove(userId, dbUser._rev)
-
-  if (groups) {
-    await groupUtils.deleteGroupUsers(groups, dbUser)
-  }
 
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
