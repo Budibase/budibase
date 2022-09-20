@@ -1,0 +1,35 @@
+{
+    "name": "@types/http-assert",
+    "version": "1.5.3",
+    "description": "TypeScript definitions for http-assert",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/http-assert",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "jKey Lu",
+            "url": "https://github.com/jkeylu",
+            "githubUsername": "jkeylu"
+        },
+        {
+            "name": "Peter Squicciarini",
+            "url": "https://github.com/stripedpajamas",
+            "githubUsername": "stripedpajamas"
+        },
+        {
+            "name": "Alex Bulanov",
+            "url": "https://github.com/sapfear",
+            "githubUsername": "sapfear"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/http-assert"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "7ad91b3d116c75bc8d2d07998ed8070e21592e70b3b42d86884d6168e8c7dc2b",
+    "typeScriptVersion": "3.7"
+}
