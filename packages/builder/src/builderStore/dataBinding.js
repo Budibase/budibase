@@ -405,7 +405,6 @@ export const getUserBindings = () => {
       providerId: "user",
       category: "Current User",
       icon: "User",
-      display: fieldSchema.fieldName,
     })
   })
   return bindings
