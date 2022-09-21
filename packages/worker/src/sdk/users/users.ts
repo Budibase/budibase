@@ -19,8 +19,7 @@ import {
 import {
   AccountMetadata,
   AllDocsResponse,
-  BulkCreateUsersResponse,
-  BulkDeleteUsersResponse,
+  BulkUserResponse,
   CloudAccount,
   CreateUserResponse,
   InviteUsersRequest,
@@ -347,7 +346,7 @@ const searchExistingEmails = async (emails: string[]) => {
 export const bulkCreate = async (
   newUsersRequested: User[],
   groups: string[]
-): Promise<BulkCreateUsersResponse> => {
+): Promise<BulkUserResponse["created"]> => {
   const db = tenancy.getGlobalDB()
   const tenantId = tenancy.getTenantId()
 
@@ -436,10 +435,10 @@ const getAccountHolderFromUserIds = async (
 
 export const bulkDelete = async (
   userIds: string[]
-): Promise<BulkDeleteUsersResponse> => {
+): Promise<BulkUserResponse["deleted"]> => {
   const db = tenancy.getGlobalDB()
 
-  const response: BulkDeleteUsersResponse = {
+  const response: BulkUserResponse["deleted"] = {
     successful: [],
     unsuccessful: [],
   }
