@@ -67,11 +67,13 @@ export function createGroupsStore() {
 
     addApp: async (groupId, appId, roleId) => {
       await API.addAppsToGroup(groupId, [{ appId, roleId }])
+      // refresh the group roles
       await getGroup(groupId)
     },
 
     removeApp: async (groupId, appId) => {
       await API.removeAppsFromGroup(groupId, [{ appId }])
+      // refresh the group roles
       await getGroup(groupId)
     },
   }
