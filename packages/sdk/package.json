@@ -1,6 +1,6 @@
 {
   "name": "@budibase/sdk",
-  "version": "1.3.19-alpha.6",
+  "version": "1.4.3-alpha.0",
   "description": "Budibase Public API SDK",
   "author": "Budibase",
   "license": "MPL-2.0",
@@ -8,8 +8,7 @@
   "type": "module",
   "scripts": {
     "generate": "cd scripts && bash generate-sdk.sh",
-    "build": "yarn run generate && rollup -c",
-    "dev:builder": "yarn run build"
+    "build:sdk": "yarn run generate && rollup -c"
   },
   "dependencies": {
     "superagent": "^5.3.0"
