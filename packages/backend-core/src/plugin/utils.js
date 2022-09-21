@@ -75,6 +75,15 @@ function validateDatasource(schema) {
         })
         .unknown(true)
         .required(),
+      extra: joi.object().pattern(
+        joi.string(),
+        joi.object({
+          type: joi.string().required(),
+          displayName: joi.string().required(),
+          required: joi.boolean(),
+          data: joi.object(),
+        })
+      ),
     }),
   })
   runJoi(validator, schema)
