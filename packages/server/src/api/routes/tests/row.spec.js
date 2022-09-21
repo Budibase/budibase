@@ -5,10 +5,12 @@ const { doInAppContext } = require("@budibase/backend-core/context")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
 const {
   quotas,
+} = require("@budibase/pro")
+const {
   QuotaUsageType,
   StaticQuotaName,
   MonthlyQuotaName,
-} = require("@budibase/pro")
+} = require("@budibase/types")
 
 describe("/rows", () => {
   let request = setup.getRequest()
