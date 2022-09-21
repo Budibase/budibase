@@ -43,12 +43,12 @@
     "@babel/helper-validator-identifier" "^7.16.7"
     to-fast-properties "^2.0.0"
 
-"@budibase/backend-core@^1.4.5":
-  version "1.4.5"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.4.5.tgz#f5dc86caa9888ead60587b519cee8ce493cd0d66"
-  integrity sha512-FrN6mhakFirXBra2MXhExnElfwuLj8HZyghj2ohJk02nQIy//r4zyXjQnz/hwegSUjIt9hm1BaBzHR2v8ayOUg==
+"@budibase/backend-core@^1.4.6":
+  version "1.4.6"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.4.6.tgz#16428077136c8dc50d08807db037f3c46809ff36"
+  integrity sha512-U6c0LGf7aT5m5KhS2NMsesq5dEo4qNabUdjZ82Zk1SI0ZmtfHXDPW7pmtpNXQbVSFOQ1ZfZOSuF6FK0aCPZDKQ==
   dependencies:
-    "@budibase/types" "^1.4.5"
+    "@budibase/types" "^1.4.6"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -104,10 +104,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^1.4.5":
-  version "1.4.5"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.4.5.tgz#b7128d8fb686911f782fca40b7145ac1236567b3"
-  integrity sha512-W4snh+EK/PTC6km6X88os8hXL1XqDpx1hmSQHXixbBsh8R6/zAOskxcP0vRDGr9ziql2vC9Angtg2QXM7e3E3Q==
+"@budibase/string-templates@^1.4.6":
+  version "1.4.6"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.4.6.tgz#0e4ad2430b684b018962cad471638c85689ed51a"
+  integrity sha512-6ipioRW7C0LQuV1pAQMtpcF4NGXKZsnyNEi+9u+2zXc9ggR4LmUgCqeT3nJm1w4AmAxW3GU6Fz3+91QXMwDMKA==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
@@ -116,10 +116,10 @@
     lodash "^4.17.20"
     vm2 "^3.9.4"
 
-"@budibase/types@^1.4.5":
-  version "1.4.5"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.4.5.tgz#80adaddd3b405d7490e1eba58db7af57502e2b8f"
-  integrity sha512-8LsW8sK0bfqCZG3HqR3zkziCYAMPjRUmQhiQn4BIyV2UqSeRVwAhNU3r7DefkVzTnANFgWOvarmWW772IYgplw==
+"@budibase/types@^1.4.6":
+  version "1.4.6"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.4.6.tgz#57cf91a47b9b55f56ae68a39194f1a737b6f737c"
+  integrity sha512-KUIj6S5WoAHjueMBND9WeEuQGqSOJy6FApem/Ml3ro9JbdedOjBvUT3XALtLELcxBgeMmbgDO1UvdaFC6RnXZw==
 
 "@eslint/eslintrc@^0.4.3":
   version "0.4.3"
