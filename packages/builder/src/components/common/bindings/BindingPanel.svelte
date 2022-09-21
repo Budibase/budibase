@@ -43,7 +43,7 @@
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
-  let initialValueJS = value?.startsWith("{{ js ")
+  let initialValueJS = typeof value === "string" && value?.startsWith("{{ js ")
   let mode = initialValueJS ? "JavaScript" : "Handlebars"
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
