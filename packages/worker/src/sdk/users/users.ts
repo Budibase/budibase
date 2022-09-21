@@ -21,7 +21,6 @@ import {
   AllDocsResponse,
   BulkCreateUsersResponse,
   BulkDeleteUsersResponse,
-  BulkDocsResponse,
   CloudAccount,
   CreateUserResponse,
   InviteUsersRequest,
@@ -391,7 +390,7 @@ export const bulkCreate = async (
   })
 
   const usersToBulkSave = await Promise.all(usersToSave)
-  await db.bulkDocs(usersToBulkSave)
+  await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
 
   // Post-processing of bulk added users, e.g. events and cache operations
   for (const user of usersToBulkSave) {
@@ -469,13 +468,11 @@ export const bulkDelete = async (
   )
 
   // Delete from DB
-  const dbResponse: BulkDocsResponse = await db.bulkDocs(
-    usersToDelete.map(user => ({
-      ...user,
-      _deleted: true,
-    }))
-  )
-
+  const toDelete = usersToDelete.map(user => ({
+    ...user,
+    _deleted: true,
+  }))
+  const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
   for (let user of usersToDelete) {
     await bulkDeleteProcessing(user)
   }
