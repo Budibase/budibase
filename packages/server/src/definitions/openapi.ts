@@ -5,67 +5,67 @@
 
 export interface paths {
   "/applications": {
-    post: operations["createApplication"];
+    post: operations["create"];
   };
   "/applications/{appId}": {
-    get: operations["getApplicationById"];
-    put: operations["updateApplication"];
-    delete: operations["deleteApplication"];
+    get: operations["getById"];
+    put: operations["update"];
+    delete: operations["delete"];
   };
   "/applications/search": {
     /** Based on application properties (currently only name) search for applications. */
-    post: operations["searchApplications"];
+    post: operations["search"];
   };
   "/queries/{queryId}": {
     /** Queries which have been created within a Budibase app can be executed using this, */
-    post: operations["executeQuery"];
+    post: operations["execute"];
   };
   "/queries/search": {
     /** Based on query properties (currently only name) search for queries. */
-    post: operations["searchQueries"];
+    post: operations["search"];
   };
   "/tables/{tableId}/rows": {
     /** Creates a row within the specified table. */
-    post: operations["createRow"];
+    post: operations["create"];
   };
   "/tables/{tableId}/rows/{rowId}": {
     /** This gets a single row, it will be enriched with the full related rows, rather than the squashed "primaryDisplay" format returned by the search endpoint. */
-    get: operations["getRowById"];
+    get: operations["getById"];
     /** Updates a row within the specified table. */
-    put: operations["updateRow"];
+    put: operations["update"];
     /** Deletes a row within the specified table. */
-    delete: operations["deleteRow"];
+    delete: operations["delete"];
   };
   "/tables/{tableId}/rows/search": {
-    post: operations["searchRows"];
+    post: operations["search"];
   };
   "/tables": {
     /** Create a table, this could be internal or external. */
-    post: operations["createTable"];
+    post: operations["create"];
   };
   "/tables/{tableId}": {
     /** Lookup a table, this could be internal or external. */
-    get: operations["getTableById"];
+    get: operations["getById"];
     /** Update a table, this could be internal or external. */
-    put: operations["updateTable"];
+    put: operations["update"];
     /** Delete a table, this could be internal or external. */
-    delete: operations["deleteTable"];
+    delete: operations["delete"];
   };
   "/tables/search": {
     /** Based on table properties (currently only name) search for tables. This could be an internal or an external table. */
-    post: operations["searchTables"];
+    post: operations["search"];
   };
   "/users": {
-    post: operations["createUser"];
+    post: operations["create"];
   };
   "/users/{userId}": {
-    get: operations["getUserById"];
-    put: operations["updateUser"];
-    delete: operations["deleteUser"];
+    get: operations["getById"];
+    put: operations["update"];
+    delete: operations["delete"];
   };
   "/users/search": {
     /** Based on user properties (currently only name) search for users. */
-    post: operations["searchUsers"];
+    post: operations["search"];
   };
 }
 
@@ -704,87 +704,81 @@ export interface components {
 }
 
 export interface operations {
-  createApplication: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
+  create: {
     responses: {
-      /** Returns the created application. */
+      /** Returns the created user. */
       200: {
         content: {
-          "application/json": components["schemas"]["applicationOutput"];
+          "application/json": components["schemas"]["userOutput"];
         };
       };
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["application"];
+        "application/json": components["schemas"]["user"];
       };
     };
   };
-  getApplicationById: {
+  getById: {
     parameters: {
       path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
+        /** The ID of the user which this request is targeting. */
+        userId: components["parameters"]["userId"];
       };
     };
     responses: {
-      /** Returns the retrieved application. */
+      /** Returns the retrieved user. */
       200: {
         content: {
-          "application/json": components["schemas"]["applicationOutput"];
+          "application/json": components["schemas"]["userOutput"];
         };
       };
     };
   };
-  updateApplication: {
+  update: {
     parameters: {
       path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
+        /** The ID of the user which this request is targeting. */
+        userId: components["parameters"]["userId"];
       };
     };
     responses: {
-      /** Returns the updated application. */
+      /** Returns the updated user. */
       200: {
         content: {
-          "application/json": components["schemas"]["applicationOutput"];
+          "application/json": components["schemas"]["userOutput"];
         };
       };
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["application"];
+        "application/json": components["schemas"]["user"];
       };
     };
   };
-  deleteApplication: {
+  delete: {
     parameters: {
       path: {
-        /** The ID of the app which this request is targeting. */
-        appId: components["parameters"]["appIdUrl"];
+        /** The ID of the user which this request is targeting. */
+        userId: components["parameters"]["userId"];
       };
     };
     responses: {
-      /** Returns the deleted application. */
+      /** Returns the deleted user. */
       200: {
         content: {
-          "application/json": components["schemas"]["applicationOutput"];
+          "application/json": components["schemas"]["userOutput"];
         };
       };
     };
   };
-  /** Based on application properties (currently only name) search for applications. */
-  searchApplications: {
+  /** Based on user properties (currently only name) search for users. */
+  search: {
     responses: {
-      /** Returns the applications that were found based on the search parameters. */
+      /** Returns the found users based on search parameters. */
       200: {
         content: {
-          "application/json": components["schemas"]["applicationSearch"];
+          "application/json": components["schemas"]["userSearch"];
         };
       };
     };
@@ -795,7 +789,7 @@ export interface operations {
     };
   };
   /** Queries which have been created within a Budibase app can be executed using this, */
-  executeQuery: {
+  execute: {
     parameters: {
       path: {
         /** The ID of the query which this request is targeting. */
@@ -817,349 +811,6 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["executeQuery"];
-      };
-    };
-  };
-  /** Based on query properties (currently only name) search for queries. */
-  searchQueries: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the queries found based on the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["querySearch"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["nameSearch"];
-      };
-    };
-  };
-  /** Creates a row within the specified table. */
-  createRow: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the created row, including the ID which has been generated for it. This can be found in the Budibase portal, viewed under the developer information. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rowOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["row"];
-      };
-    };
-  };
-  /** This gets a single row, it will be enriched with the full related rows, rather than the squashed "primaryDisplay" format returned by the search endpoint. */
-  getRowById: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-        /** The ID of the row which this request is targeting. */
-        rowId: components["parameters"]["rowId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the retrieved row. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rowOutput"];
-        };
-      };
-    };
-  };
-  /** Updates a row within the specified table. */
-  updateRow: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-        /** The ID of the row which this request is targeting. */
-        rowId: components["parameters"]["rowId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the created row, including the ID which has been generated for it. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rowOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["row"];
-      };
-    };
-  };
-  /** Deletes a row within the specified table. */
-  deleteRow: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-        /** The ID of the row which this request is targeting. */
-        rowId: components["parameters"]["rowId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the deleted row, including the ID which has been generated for it. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["rowOutput"];
-        };
-      };
-    };
-  };
-  searchRows: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** The response will contain an array of rows that match the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["searchOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["rowSearch"];
-      };
-    };
-  };
-  /** Create a table, this could be internal or external. */
-  createTable: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the created table, including the ID which has been generated for it. This can be internal or external datasources. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["table"];
-      };
-    };
-  };
-  /** Lookup a table, this could be internal or external. */
-  getTableById: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the retrieved table. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableOutput"];
-        };
-      };
-    };
-  };
-  /** Update a table, this could be internal or external. */
-  updateTable: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the updated table. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["table"];
-      };
-    };
-  };
-  /** Delete a table, this could be internal or external. */
-  deleteTable: {
-    parameters: {
-      path: {
-        /** The ID of the table which this request is targeting. */
-        tableId: components["parameters"]["tableId"];
-      };
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the deleted table. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableOutput"];
-        };
-      };
-    };
-  };
-  /** Based on table properties (currently only name) search for tables. This could be an internal or an external table. */
-  searchTables: {
-    parameters: {
-      header: {
-        /** The ID of the app which this request is targeting. */
-        "x-budibase-app-id": components["parameters"]["appId"];
-      };
-    };
-    responses: {
-      /** Returns the found tables, based on the search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["tableSearch"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["nameSearch"];
-      };
-    };
-  };
-  createUser: {
-    responses: {
-      /** Returns the created user. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["user"];
-      };
-    };
-  };
-  getUserById: {
-    parameters: {
-      path: {
-        /** The ID of the user which this request is targeting. */
-        userId: components["parameters"]["userId"];
-      };
-    };
-    responses: {
-      /** Returns the retrieved user. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userOutput"];
-        };
-      };
-    };
-  };
-  updateUser: {
-    parameters: {
-      path: {
-        /** The ID of the user which this request is targeting. */
-        userId: components["parameters"]["userId"];
-      };
-    };
-    responses: {
-      /** Returns the updated user. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userOutput"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["user"];
-      };
-    };
-  };
-  deleteUser: {
-    parameters: {
-      path: {
-        /** The ID of the user which this request is targeting. */
-        userId: components["parameters"]["userId"];
-      };
-    };
-    responses: {
-      /** Returns the deleted user. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userOutput"];
-        };
-      };
-    };
-  };
-  /** Based on user properties (currently only name) search for users. */
-  searchUsers: {
-    responses: {
-      /** Returns the found users based on search parameters. */
-      200: {
-        content: {
-          "application/json": components["schemas"]["userSearch"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["nameSearch"];
       };
     };
   };
