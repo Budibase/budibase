@@ -1,8 +1,9 @@
 import { checkInviteCode } from "../../../utilities/redis"
-import { users } from "../../../sdk"
+import { users as userSdk } from "../../../sdk"
 import env from "../../../environment"
 import {
-  BulkDeleteUsersRequest,
+  BulkUserRequest,
+  BulkUserResponse,
   CloudAccount,
   InviteUserRequest,
   InviteUsersRequest,
@@ -21,27 +22,43 @@ const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
   try {
-    ctx.body = await users.save(ctx.request.body)
+    ctx.body = await userSdk.save(ctx.request.body)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
 }
 
-export const bulkCreate = async (ctx: any) => {
-  let { users: newUsersRequested, groups } = ctx.request.body
+const bulkDelete = async (userIds: string[], currentUserId: string) => {
+  if (userIds?.indexOf(currentUserId) !== -1) {
+    throw new Error("Unable to delete self.")
+  }
+  return await userSdk.bulkDelete(userIds)
+}
 
-  if (!env.SELF_HOSTED && newUsersRequested.length > MAX_USERS_UPLOAD_LIMIT) {
-    ctx.throw(
-      400,
+const bulkCreate = async (users: User[], groupIds: string[]) => {
+  if (!env.SELF_HOSTED && users.length > MAX_USERS_UPLOAD_LIMIT) {
+    throw new Error(
       "Max limit for upload is 1000 users. Please reduce file size and try again."
     )
   }
+  return await userSdk.bulkCreate(users, groupIds)
+}
 
+export const bulkUpdate = async (ctx: any) => {
+  const currentUserId = ctx.user._id
+  const input = ctx.request.body as BulkUserRequest
+  let created, deleted
   try {
-    ctx.body = await users.bulkCreate(newUsersRequested, groups)
+    if (input.create) {
+      created = await bulkCreate(input.create.users, input.create.groups)
+    }
+    if (input.delete) {
+      deleted = await bulkDelete(input.delete.userIds, currentUserId)
+    }
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(400, err?.message || err)
   }
+  ctx.body = { created, deleted } as BulkUserResponse
 }
 
 const parseBooleanParam = (param: any) => {
@@ -85,7 +102,7 @@ export const adminUser = async (ctx: any) => {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
       // stuck in a cycle
       await cache.bustCache(cache.CacheKeys.CHECKLIST)
-      const finalUser = await users.save(user, {
+      const finalUser = await userSdk.save(user, {
         hashPassword,
         requirePassword,
       })
@@ -107,7 +124,7 @@ export const adminUser = async (ctx: any) => {
 export const countByApp = async (ctx: any) => {
   const appId = ctx.params.appId
   try {
-    ctx.body = await users.countUsersByApp(appId)
+    ctx.body = await userSdk.countUsersByApp(appId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -119,28 +136,15 @@ export const destroy = async (ctx: any) => {
     ctx.throw(400, "Unable to delete self.")
   }
 
-  await users.destroy(id, ctx.user)
+  await userSdk.destroy(id, ctx.user)
 
   ctx.body = {
     message: `User ${id} deleted.`,
   }
 }
 
-export const bulkDelete = async (ctx: any) => {
-  const { userIds } = ctx.request.body as BulkDeleteUsersRequest
-  if (userIds?.indexOf(ctx.user._id) !== -1) {
-    ctx.throw(400, "Unable to delete self.")
-  }
-
-  try {
-    ctx.body = await users.bulkDelete(userIds)
-  } catch (err) {
-    ctx.throw(err)
-  }
-}
-
 export const search = async (ctx: any) => {
-  const paginated = await users.paginatedUsers(ctx.request.body)
+  const paginated = await userSdk.paginatedUsers(ctx.request.body)
   // user hashed password shouldn't ever be returned
   for (let user of paginated.data) {
     if (user) {
@@ -152,7 +156,7 @@ export const search = async (ctx: any) => {
 
 // called internally by app server user fetch
 export const fetch = async (ctx: any) => {
-  const all = await users.allUsers()
+  const all = await userSdk.allUsers()
   // user hashed password shouldn't ever be returned
   for (let user of all) {
     if (user) {
@@ -164,7 +168,7 @@ export const fetch = async (ctx: any) => {
 
 // called internally by app server user find
 export const find = async (ctx: any) => {
-  ctx.body = await users.getUser(ctx.params.id)
+  ctx.body = await userSdk.getUser(ctx.params.id)
 }
 
 export const tenantUserLookup = async (ctx: any) => {
@@ -179,7 +183,7 @@ export const tenantUserLookup = async (ctx: any) => {
 
 export const invite = async (ctx: any) => {
   const request = ctx.request.body as InviteUserRequest
-  const response = await users.invite([request])
+  const response = await userSdk.invite([request])
 
   // explicitly throw for single user invite
   if (response.unsuccessful.length) {
@@ -198,7 +202,7 @@ export const invite = async (ctx: any) => {
 
 export const inviteMultiple = async (ctx: any) => {
   const request = ctx.request.body as InviteUsersRequest
-  ctx.body = await users.invite(request)
+  ctx.body = await userSdk.invite(request)
 }
 
 export const inviteAccept = async (ctx: any) => {
@@ -207,7 +211,7 @@ export const inviteAccept = async (ctx: any) => {
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
     ctx.body = await tenancy.doInTenant(info.tenantId, async () => {
-      const saved = await users.save({
+      const saved = await userSdk.save({
         firstName,
         lastName,
         password,
