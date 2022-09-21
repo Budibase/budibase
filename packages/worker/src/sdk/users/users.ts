@@ -393,7 +393,7 @@ export const bulkCreate = async (
   const usersToBulkSave = await Promise.all(usersToSave)
   await db.bulkDocs(usersToBulkSave)
 
-  // Post processing of bulk added users, i.e events and cache operations
+  // Post-processing of bulk added users, e.g. events and cache operations
   for (const user of usersToBulkSave) {
     // TODO: Refactor to bulk insert users into the info db
     // instead of relying on looping tenant creation
