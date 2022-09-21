@@ -64,6 +64,16 @@ export function createGroupsStore() {
       // refresh the group enrichment
       await getGroup(groupId)
     },
+
+    addApp: async (groupId, appId, roleId) => {
+      await API.addAppsToGroup(groupId, [{ appId, roleId }])
+      await getGroup(groupId)
+    },
+
+    removeApp: async (groupId, appId) => {
+      await API.removeAppsFromGroup(groupId, [{ appId }])
+      await getGroup(groupId)
+    },
   }
 
   return {

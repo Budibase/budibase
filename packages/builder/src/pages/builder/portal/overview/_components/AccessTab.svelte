@@ -35,13 +35,16 @@
   })
 
   let assignmentModal
-  let appGroups = []
-  let appUsers = []
+  let appGroups
+  let appUsers
 
   $: fixedAppId = apps.getProdAppID(app.devId)
   $: appUsers = $usersFetch.rows
-  $: appGroups = $groups.filter(x => {
-    return x.apps.includes(app.appId)
+  $: appGroups = $groups.filter(group => {
+    if (!group.roles) {
+      return false
+    }
+    return Object.keys(group.roles).includes(fixedAppId)
   })
 
   async function removeUser(user) {
@@ -58,16 +61,8 @@
   }
 
   async function removeGroup(group) {
-    const filteredApps = group.apps.filter(
-      x => apps.extractAppId(x) !== app.appId
-    )
-    const filteredRoles = { ...group.roles }
-    delete filteredRoles[fixedAppId]
-    await groups.actions.save({
-      ...group,
-      apps: filteredApps,
-      roles: { ...filteredRoles },
-    })
+    await groups.actions.removeApp(group._id, fixedAppId)
+    await groups.actions.init()
     await usersFetch.refresh()
   }
 
@@ -77,8 +72,8 @@
   }
 
   async function updateGroupRole(role, group) {
-    group.roles[fixedAppId] = role
-    await groups.actions.save(group)
+    await groups.actions.addApp(group._id, fixedAppId, role)
+    await usersFetch.refresh()
   }
 
   onMount(async () => {
@@ -99,10 +94,10 @@
         <Heading>Access</Heading>
         <div class="subtitle">
           <Body size="S">
-            Assign users to your app and define their access here
+            Assign users/groups to your app and define their access here
           </Body>
           <Button on:click={assignmentModal.show} icon="User" cta>
-            Assign users
+            Assign access
           </Button>
         </div>
       </div>
@@ -173,7 +168,7 @@
           <Heading>No users assigned</Heading>
           <div class="opacity">
             <Body size="S">
-              Assign users to your app and set their access here
+              Assign users/groups to your app and set their access here
             </Body>
           </div>
           <div class="padding">
@@ -182,7 +177,7 @@
               cta
               icon="UserArrow"
             >
-              Assign Users
+              Assign access
             </Button>
           </div>
         </Layout>

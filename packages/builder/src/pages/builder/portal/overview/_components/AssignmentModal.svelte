@@ -72,14 +72,7 @@
         if (!group) {
           continue
         }
-        await groups.actions.save({
-          ...group,
-          apps: [...group.apps, app.appId],
-          roles: {
-            ...group.roles,
-            [fixedAppId]: data.role,
-          },
-        })
+        await groups.actions.addApp(group._id, fixedAppId, data.role)
       }
       // Assign user
       else if (data.id.startsWith(us_prefix)) {
@@ -96,7 +89,6 @@
 
     // Refresh data when completed
     await usersFetch.refresh()
-    await groups.actions.init()
     dispatch("update")
   }
 
@@ -121,7 +113,8 @@
     search = search?.toLowerCase()
     return (allGroups || []).filter(group => {
       // Filter out assigned groups
-      if (group.apps.includes(appId)) {
+      const appIds = Object.keys(group.roles || {})
+      if (appIds.includes(appId)) {
         return false
       }
 

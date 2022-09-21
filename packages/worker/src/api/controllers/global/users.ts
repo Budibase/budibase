@@ -17,6 +17,7 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
+import { groups } from "@budibase/pro"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -41,7 +42,18 @@ const bulkCreate = async (users: User[], groupIds: string[]) => {
       "Max limit for upload is 1000 users. Please reduce file size and try again."
     )
   }
-  return await userSdk.bulkCreate(users, groupIds)
+  const created = await userSdk.bulkCreate(users, groupIds)
+  const success = created?.successful
+  // now update the groups
+  if (Array.isArray(success) && groupIds) {
+    const groupPromises = []
+    const createdUserIds = success.map(user => user._id)
+    for (let groupId of groupIds) {
+      groupPromises.push(groups.addUsers(groupId, createdUserIds))
+    }
+    await Promise.all(groupPromises)
+  }
+  return created
 }
 
 export const bulkUpdate = async (ctx: any) => {

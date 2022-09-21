@@ -41,7 +41,7 @@
   $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
   $: filtered = $users.data
-  $: groupApps = $apps.filter(x => group?.apps.includes(x.appId))
+  $: groupApps = $apps.filter(app => group?.roles?.includes(app.appId))
   $: {
     if (loaded && !group?._id) {
       $goto("./")
