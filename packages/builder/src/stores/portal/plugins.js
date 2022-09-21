@@ -34,8 +34,7 @@ export function createPluginsStore() {
     }
 
     let res = await API.createPlugin(pluginData)
-
-    let newPlugin = res.plugins[0]
+    let newPlugin = res.plugin
     update(state => {
       const currentIdx = state.findIndex(plugin => plugin._id === newPlugin._id)
       if (currentIdx >= 0) {
