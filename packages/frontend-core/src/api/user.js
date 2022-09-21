@@ -89,7 +89,7 @@ export const buildUserEndpoints = API => ({
    * @param groups the array of group ids to add all users to
    */
   createUsers: async ({ users, groups }) => {
-    return await API.post({
+    const res = await API.post({
       url: "/api/global/users/bulk",
       body: {
         create: {
@@ -98,6 +98,8 @@ export const buildUserEndpoints = API => ({
         },
       },
     })
+    console.log(res)
+    return res.created
   },
 
   /**
@@ -115,7 +117,7 @@ export const buildUserEndpoints = API => ({
    * @param userIds the ID of the user to delete
    */
   deleteUsers: async userIds => {
-    return await API.post({
+    const res = await API.post({
       url: `/api/global/users/bulk`,
       body: {
         delete: {
@@ -123,6 +125,7 @@ export const buildUserEndpoints = API => ({
         },
       },
     })
+    return res.deleted
   },
 
   /**

@@ -73,19 +73,19 @@ export const buildGroupsEndpoints = API => {
     /**
      * Adds apps to a group
      * @param groupId The group to update
-     * @param appIds The app IDs to be added
+     * @param appArray Array of objects, containing the appId and roleId to be added
      */
-    addAppsToGroup: async (groupId, appIds) => {
-      return updateGroupResource(groupId, "apps", "add", appIds)
+    addAppsToGroup: async (groupId, appArray) => {
+      return updateGroupResource(groupId, "apps", "add", appArray)
     },
 
     /**
      * Removes apps from a group
      * @param groupId The group to update
-     * @param appIds The app IDs to be removed
+     * @param appArray Array of objects, containing the appId to be removed
      */
-    removeAppsFromGroup: async (groupId, appIds) => {
-      return updateGroupResource(groupId, "apps", "remove", appIds)
+    removeAppsFromGroup: async (groupId, appArray) => {
+      return updateGroupResource(groupId, "apps", "remove", appArray)
     },
   }
 }
