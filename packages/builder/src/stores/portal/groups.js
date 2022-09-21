@@ -55,12 +55,6 @@ export function createGroupsStore() {
         return
       }
 
-      // Update group
-      await actions.save({
-        ...group,
-        users: [...group.users, { _id: userId, email: user.email }],
-      })
-
       // Update user
       let userGroups = user.userGroups || []
       userGroups.push(groupId)
@@ -77,12 +71,6 @@ export function createGroupsStore() {
       if (!group?._id || !user?._id) {
         return
       }
-
-      // Update group
-      await actions.save({
-        ...group,
-        users: group.users.filter(x => x._id !== userId),
-      })
 
       // Update user
       await users.save({

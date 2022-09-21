@@ -44,6 +44,7 @@
     importUsersModal
   let searchEmail = undefined
   let selectedRows = []
+  let bulkSaveResponse
   let customRenderers = [
     { column: "userGroups", component: GroupsTableRenderer },
     { column: "apps", component: AppsTableRenderer },
@@ -166,10 +167,11 @@
 
   async function createUsers() {
     try {
-      await users.create(await removingDuplicities(userData))
+      bulkSaveResponse = await users.create(await removingDuplicities(userData))
       notifications.success("Successfully created user")
       await groups.actions.init()
       passwordModal.show()
+      await fetch.refresh()
     } catch (error) {
       notifications.error("Error creating user")
     }
@@ -177,7 +179,7 @@
 
   async function chooseCreationType(onboardingType) {
     if (onboardingType === "emailOnboarding") {
-      createUserFlow()
+      await createUserFlow()
     } else {
       await createUsers()
     }
@@ -292,7 +294,10 @@
 </Modal>
 
 <Modal bind:this={passwordModal}>
-  <PasswordModal userData={userData.users} />
+  <PasswordModal
+    createUsersResponse={bulkSaveResponse}
+    userData={userData.users}
+  />
 </Modal>
 
 <Modal bind:this={importUsersModal}>
