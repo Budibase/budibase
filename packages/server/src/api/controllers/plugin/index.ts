@@ -129,6 +129,6 @@ export async function processUploadedPlugin(
   }
 
   const doc = await plugins.storePlugin(metadata, directory, source)
-  ClientAppSocket.emit("plugins-update", { name: doc.name, hash: doc.hash })
+  ClientAppSocket.emit("plugin-update", { name: doc.name, hash: doc.hash })
   return doc
 }
