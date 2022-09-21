@@ -37,6 +37,7 @@ export interface Account extends CreateAccount {
   // licensing
   tier: string // deprecated
   planType?: PlanType
+  planTier?: number
   stripeCustomerId?: string
   licenseKey?: string
   licenseKeyActivatedAt?: number
