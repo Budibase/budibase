@@ -1,5 +1,5 @@
 import { DEFAULT_TENANT_ID } from "../constants"
-import { StaticDatabases, SEPARATOR } from "../db/constants"
+import { StaticDatabases, SEPARATOR } from "./constants"
 import { getTenantId } from "../context"
 
 export const getGlobalDBName = (tenantId?: string) => {

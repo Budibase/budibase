@@ -1,7 +1,7 @@
 import { doWithDB } from "../db"
 import { queryPlatformView } from "../db/views"
 import { StaticDatabases, ViewName } from "../db/constants"
-import { getGlobalDBName } from "./utils"
+import { getGlobalDBName } from "../db/tenancy"
 import {
   getTenantId,
   DEFAULT_TENANT_ID,
@@ -9,7 +9,7 @@ import {
   getTenantIDFromAppID,
 } from "../context"
 import env from "../environment"
-import { PlatformUser, PlatformUserByEmail } from "@budibase/types"
+import { PlatformUser } from "@budibase/types"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name

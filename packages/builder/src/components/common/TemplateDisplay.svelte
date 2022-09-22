@@ -97,7 +97,7 @@
               backgroundColour={templateEntry.background}
               icon={templateEntry.icon}
             >
-              {#if $licensing?.usageMetrics?.apps < 100}
+              {#if !($licensing?.usageMetrics?.apps >= 100)}
                 <Button
                   cta
                   on:click={() => {
