@@ -65,6 +65,7 @@ function validateDatasource(schema) {
       friendlyName: joi.string().required(),
       type: joi.string().allow(...DATASOURCE_TYPES),
       description: joi.string().required(),
+      iconUrl: joi.string().optional(),
       datasource: joi.object().pattern(joi.string(), fieldValidator).required(),
       query: joi
         .object({
