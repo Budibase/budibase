@@ -30,7 +30,7 @@ function cleanupDevInfo(info: any) {
   return info
 }
 
-exports.generateAPIKey = async (ctx: any) => {
+export async function generateAPIKey(ctx: any) {
   let userId
   let apiKey
   if (env.isTest() && ctx.request.body.userId) {
@@ -54,7 +54,7 @@ exports.generateAPIKey = async (ctx: any) => {
   ctx.body = cleanupDevInfo(devInfo)
 }
 
-exports.fetchAPIKey = async (ctx: any) => {
+export async function fetchAPIKey(ctx: any) {
   const db = tenancy.getGlobalDB()
   const id = dbCore.generateDevInfoID(ctx.user._id)
   let devInfo
@@ -103,7 +103,7 @@ const sanitiseUserUpdate = (ctx: any) => {
   return resp
 }
 
-exports.getSelf = async (ctx: any) => {
+export async function getSelf(ctx: any) {
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
   }
@@ -124,7 +124,7 @@ exports.getSelf = async (ctx: any) => {
   addSessionAttributesToUser(ctx)
 }
 
-exports.updateSelf = async (ctx: any) => {
+export async function updateSelf(ctx: any) {
   const db = tenancy.getGlobalDB()
   const user = await db.get(ctx.user._id)
   let passwordChange = false

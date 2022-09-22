@@ -1,7 +1,7 @@
 <script>
   import { Layout, Toggle } from "@budibase/bbui"
   import DevToolsStat from "./DevToolsStat.svelte"
-  import { componentStore } from "stores/index.js"
+  import { componentStore } from "stores/index.ts"
   import { getSettingsDefinition } from "utils/componentProps.js"
 
   let showEnrichedSettings = true

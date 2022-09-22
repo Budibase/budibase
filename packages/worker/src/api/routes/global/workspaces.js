@@ -4,7 +4,7 @@ const { joiValidator } = require("@budibase/backend-core/auth")
 const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 
-const router = Router()
+const router = new Router()
 
 function buildWorkspaceSaveValidation() {
   // prettier-ignore
