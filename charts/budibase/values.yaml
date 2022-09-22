@@ -76,6 +76,7 @@ affinity: {}
 globals:
   appVersion: "latest"
   budibaseEnv: PRODUCTION
+  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS"
   enableAnalytics: "1"
   sentryDSN: ""
   posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
