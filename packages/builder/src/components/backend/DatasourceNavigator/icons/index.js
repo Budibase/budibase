@@ -16,6 +16,7 @@ import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Custom from "./Custom.svelte"
+import UserProvided from "./UserProvided.svelte"
 
 const ICONS = {
   BUDIBASE: Budibase,
@@ -36,14 +37,17 @@ const ICONS = {
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
   CUSTOM: Custom,
+  USER_PROVIDED: UserProvided,
 }
 
 export default ICONS
 
-export function getIcon(integrationType, schema) {
+export function getIcon(integrationType, schema, iconUrl) {
+  if (iconUrl || schema?.iconUrl) {
+    return ICONS.USER_PROVIDED
+  }
   if (schema?.custom || !ICONS[integrationType]) {
     return ICONS.CUSTOM
-  } else {
-    return ICONS[integrationType]
   }
+  return ICONS[integrationType]
 }

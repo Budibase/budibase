@@ -20,6 +20,7 @@
       this={getIcon(integrationType, schema)}
       height="20"
       width="20"
+      iconUrl={schema?.iconUrl}
     />
     <div class="text">
       <Heading size="XXS">{schema.friendlyName}</Heading>
