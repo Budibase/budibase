@@ -15,7 +15,10 @@
   } from "helpers/data/utils"
   import { getIcon } from "./icons"
   import { notifications } from "@budibase/bbui"
+  import { API } from "api"
+  import { IntegrationTypes } from "constants/backend"
 
+  let customIntegrations = {}
   let openDataSources = []
   $: enrichedDataSources = Array.isArray($datasources.list)
     ? $datasources.list.map(datasource => {
@@ -37,6 +40,36 @@
     if (openDataSource) {
       openNode(openDataSource)
     }
+  }
+
+  async function fetchCustomIntegrations() {
+    let newIntegrations = {
+      [IntegrationTypes.INTERNAL]: { datasource: {}, name: "INTERNAL/CSV" },
+    }
+    try {
+      const integrationList = await API.getIntegrations()
+      newIntegrations = {
+        ...newIntegrations,
+        ...integrationList,
+      }
+    } catch (error) {
+      notifications.error("Error fetching integrations")
+    }
+    customIntegrations = Object.entries(newIntegrations).filter(
+      entry => entry[1].custom
+    )
+    for (let customIntegration of customIntegrations) {
+      let matchIndex = -1
+      for (let datasource of enrichedDataSources) {
+        if (datasource.source === customIntegration[0]) {
+          datasource["iconUrl"] = customIntegration[1].iconUrl
+        }
+      }
+      if (matchIndex === -1) {
+        continue
+      }
+    }
+    enrichedDataSources = [...enrichedDataSources]
   }
 
   function selectDatasource(datasource) {
@@ -73,6 +106,7 @@
     try {
       await datasources.fetch()
       await queries.fetch()
+      await fetchCustomIntegrations()
     } catch (error) {
       notifications.error("Error fetching datasources and queries")
     }
@@ -124,9 +158,14 @@
       >
         <div class="datasource-icon" slot="icon">
           <svelte:component
-            this={getIcon(datasource.source, datasource.schema)}
+            this={getIcon(
+              datasource.source,
+              datasource.schema,
+              datasource.iconUrl
+            )}
             height="18"
             width="18"
+            iconUrl={datasource.iconUrl}
           />
         </div>
         {#if datasource._id !== BUDIBASE_INTERNAL_DB}
