@@ -15,7 +15,7 @@ A package that handles all common components across the Budibase organisation. Y
 1. Create a file: `Headline.svelte`
 2. Create a Svench file: `Headline.svench`
 3. Build component and add variants to the Svench file.
-4. Once done, re-export the file in `src/index.ts`.
+4. Once done, re-export the file in `src/index.js`.
 5. Publish, update the package in the main project and profit. 
 
 ## Guidelines
