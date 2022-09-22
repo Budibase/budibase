@@ -113,7 +113,7 @@
     search = search?.toLowerCase()
     return (allGroups || []).filter(group => {
       // Filter out assigned groups
-      const appIds = groups.actions.getGroupApps(group)
+      const appIds = groups.actions.getGroupAppIds(group)
       if (appIds.includes(appId)) {
         return false
       }

@@ -44,7 +44,7 @@
     if (!group.roles) {
       return false
     }
-    return groups.actions.getGroupApps(group).includes(fixedAppId)
+    return groups.actions.getGroupAppIds(group).includes(fixedAppId)
   })
 
   async function removeUser(user) {
@@ -114,7 +114,9 @@
                 autoWidth
                 quiet
                 value={group.roles[
-                  groups.actions.getGroupApps(group).find(x => x === fixedAppId)
+                  groups.actions
+                    .getGroupAppIds(group)
+                    .find(x => x === fixedAppId)
                 ]}
                 allowPublic={false}
               />

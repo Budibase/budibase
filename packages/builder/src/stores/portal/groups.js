@@ -77,7 +77,7 @@ export function createGroupsStore() {
       await getGroup(groupId)
     },
 
-    getGroupApps: group => {
+    getGroupAppIds: group => {
       return Object.keys(group?.roles || {})
     },
   }
