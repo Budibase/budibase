@@ -30,6 +30,7 @@ interface MySQLConfig {
   ssl?: { [key: string]: any }
   rejectUnauthorized: boolean
   typeCast: Function
+  multipleStatements: boolean
 }
 
 const SCHEMA: Integration = {
@@ -136,6 +137,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     delete config.rejectUnauthorized
     this.config = {
       ...config,
+      multipleStatements: true,
       typeCast: function (field: any, next: any) {
         if (
           field.type == "DATETIME" ||
