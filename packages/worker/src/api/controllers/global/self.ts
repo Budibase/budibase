@@ -10,6 +10,8 @@ import {
   encryption,
 } from "@budibase/backend-core"
 import env from "../../../environment"
+import { groups } from "@budibase/pro"
+import { enrichUserRolesFromGroups } from "../../../../../../../budibase-pro/packages/pro/src/sdk/groups"
 const { hash, platformLogout, getCookie, clearCookie, newid } = utils
 const { user: userCache } = cache
 
@@ -115,7 +117,8 @@ export async function getSelf(ctx: any) {
   checkCurrentApp(ctx)
 
   // get the main body of the user
-  ctx.body = await users.getUser(userId)
+  const user = await users.getUser(userId)
+  ctx.body = await groups.enrichUserRolesFromGroups(user)
 
   // add the feature flags for this tenant
   const tenantId = tenancy.getTenantId()
