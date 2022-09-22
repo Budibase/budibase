@@ -19,7 +19,7 @@ const ignoredWarnings = [
 ]
 
 export default {
-  input: "src/index.ts",
+  input: "src/index.js",
   output: [
     {
       sourcemap: false,

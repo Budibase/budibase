@@ -2,6 +2,9 @@ import { outputProcessing } from "../../utilities/rowProcessor"
 import { InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
 import { roles, context } from "@budibase/backend-core"
+import { groups } from "@budibase/pro"
+
+const PUBLIC_ROLE = roles.BUILTIN_ROLE_IDS.PUBLIC
 
 /**
  * Add the attributes that are session based to the current user.
@@ -26,8 +29,14 @@ export async function fetchSelf(ctx: any) {
   // forward the csrf token from the session
   user.csrfToken = ctx.user.csrfToken
 
-  if (context.getAppId()) {
+  const appId = context.getAppId()
+  if (appId) {
     const db = context.getAppDB()
+    // check for group permissions
+    if (!user.roleId || user.roleId === PUBLIC_ROLE) {
+      const groupRoleId = await groups.getGroupRoleId(user, appId)
+      user.roleId = groupRoleId || user.roleId
+    }
     // remove the full roles structure
     delete user.roles
     try {
@@ -43,7 +52,7 @@ export async function fetchSelf(ctx: any) {
     } catch (err: any) {
       let response
       // user didn't exist in app, don't pretend they do
-      if (user.roleId === roles.BUILTIN_ROLE_IDS.PUBLIC) {
+      if (user.roleId === PUBLIC_ROLE) {
         response = {}
       }
       // user has a role of some sort, return them
