@@ -53,7 +53,7 @@
           : publishedApps.filter(app => {
               return userGroups.find(group => {
                 return groups.actions
-                  .getGroupApps(group)
+                  .getGroupAppIds(group)
                   .map(role => apps.extractAppId(role))
                   .includes(app.appId)
               })
