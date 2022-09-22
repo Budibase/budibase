@@ -52,7 +52,8 @@
           ? publishedApps
           : publishedApps.filter(app => {
               return userGroups.find(group => {
-                return Object.keys(group.roles)
+                return groups.actions
+                  .getGroupApps(group)
                   .map(role => apps.extractAppId(role))
                   .includes(app.appId)
               })
