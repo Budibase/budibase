@@ -3,12 +3,8 @@ import { doWithDB } from "../db"
 import { DocumentType, StaticDatabases } from "../db/constants"
 import { getAllApps } from "../db/utils"
 import environment from "../environment"
-import {
-  doInTenant,
-  getTenantIds,
-  getGlobalDBName,
-  getTenantId,
-} from "../tenancy"
+import { doInTenant, getTenantIds, getTenantId } from "../tenancy"
+import { getGlobalDBName } from "../db/tenancy"
 import * as context from "../context"
 import { DEFINITIONS } from "."
 import {

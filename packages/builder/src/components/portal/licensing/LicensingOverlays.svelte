@@ -8,6 +8,7 @@
   import { ExpiringKeys } from "./constants"
   import { getBanners } from "./licensingBanners"
   import { banner } from "@budibase/bbui"
+  import { FEATURE_FLAGS, isEnabled } from "../../../helpers/featureFlags"
 
   const oneDayInSeconds = 86400
 
@@ -81,7 +82,12 @@
     }
   }
 
-  $: if (userLoaded && licensingLoaded && loaded) {
+  $: if (
+    userLoaded &&
+    licensingLoaded &&
+    loaded &&
+    isEnabled(FEATURE_FLAGS.LICENSING)
+  ) {
     queuedModals = processModals()
     queuedBanners = getBanners()
     showNextModal()
