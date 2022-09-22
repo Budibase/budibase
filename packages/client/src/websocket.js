@@ -1,12 +1,13 @@
-import { builderStore } from "./stores/index.js"
+import { builderStore, environmentStore } from "./stores/index.js"
 import { get } from "svelte/store"
 import { io } from "socket.io-client"
 
 export const initWebsocket = () => {
   const { inBuilder, location } = get(builderStore)
+  const { cloud } = get(environmentStore)
 
   // Only connect when we're inside the builder preview, for now
-  if (!inBuilder || !location) {
+  if (!inBuilder || !location || cloud) {
     return
   }
 
