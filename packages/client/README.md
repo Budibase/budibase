@@ -8,7 +8,7 @@ their settings, and know how to correctly interact with them.
 
 ### Component Definitions
 
-The object key is the name of the component, as exported by `index.js`.
+The object key is the name of the component, as exported by `index.ts`.
 
 - **name** - the name displayed in the builder
 - **description** - not currently used

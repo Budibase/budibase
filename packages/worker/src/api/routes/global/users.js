@@ -8,7 +8,7 @@ const { users } = require("../validation")
 const selfController = require("../../controllers/global/self")
 const { builderOrAdmin } = require("@budibase/backend-core/auth")
 
-const router = Router()
+const router = new Router()
 
 function buildAdminInitValidation() {
   return joiValidator.body(
