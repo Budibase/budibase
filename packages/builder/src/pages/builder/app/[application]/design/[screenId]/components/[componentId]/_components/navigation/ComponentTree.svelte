@@ -84,12 +84,11 @@
           pathComp?._component
         )
         if (pathCompDef?.illegalChildren?.indexOf(compTypeName) > -1) {
-          console.log(pathComp)
-          const errb = new Error(
+          const err = new Error(
             `${compDef.name} cannot be a child of ${pathCompDef.name} (${pathComp._instanceName})`
           )
-          errb.name = "IllegalChildError"
-          throw errb
+          err.name = "IllegalChildError"
+          throw err
         }
       })
 
