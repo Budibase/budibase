@@ -100,9 +100,33 @@
     }
     if (
       operator === Constants.OperatorOptions.In.value &&
-      !Array.isArray(expression.value)
+      !Array.isArray(expression.value) &&
+      expression.valueType === "Value"
     ) {
       if (expression.value) {
+        expression.value = [expression.value]
+      } else {
+        expression.value = []
+      }
+    } else if (
+      operator !== Constants.OperatorOptions.In.value &&
+      Array.isArray(expression.value)
+    ) {
+      expression.value = null
+    }
+  }
+
+  const onValueTypeChange = (expression, valueType) => {
+    if (Array.isArray(expression.value) && valueType === "Binding") {
+      expression.value = null
+    } else if (
+      expression.operator === Constants.OperatorOptions.In.value &&
+      !Array.isArray(expression.value) &&
+      valueType === "Value"
+    ) {
+      if (typeof expression.value === "string") {
+        expression.value = expression.value.split(",")
+      } else if (expression.value) {
         expression.value = [expression.value]
       } else {
         expression.value = []
@@ -167,6 +191,7 @@
                 options={valueTypeOptions}
                 bind:value={filter.valueType}
                 placeholder={null}
+                on:change={e => onValueTypeChange(filter, e.detail)}
               />
               {#if filter.valueType === "Binding"}
                 <DrawerBindableInput
