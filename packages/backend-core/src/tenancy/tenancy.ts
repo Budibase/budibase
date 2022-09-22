@@ -121,7 +121,7 @@ export const getTenantUser = async (
   return response
 }
 
-export const isUserInAppTenant = (appId: string, user: any) => {
+export const isUserInAppTenant = (appId: string, user?: any) => {
   let userTenantId
   if (user) {
     userTenantId = user.tenantId || DEFAULT_TENANT_ID
