@@ -177,17 +177,17 @@
 
 {#if loaded}
   <Layout noPadding>
-    <Layout noPadding gap="S">
+    <Layout noPadding gap="XS">
       <Heading>Usage</Heading>
-      <Body
-        >Get information about your current usage within Budibase.
+      <Body>
+        Get information about your current usage within Budibase.
         {#if accountPortalAccess}
           To upgrade your plan and usage limits visit your <Link
             on:click={goToAccountPortal}
             size="L">Account</Link
           >
         {:else}
-          To upgrade your plan and usage limits contact your account holder
+          To upgrade your plan and usage limits contact your account holder.
         {/if}
       </Body>
     </Layout>

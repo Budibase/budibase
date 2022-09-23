@@ -99,10 +99,12 @@
         </div>
       </Tags>
     {/if}
-    <Body>Easily assign and manage your users' access with user groups</Body>
-    {#if !$auth.accountPortalAccess}
-      <Body>Contact your account holder to upgrade</Body>
-    {/if}
+    <Body>
+      Easily assign and manage your users' access with user groups.
+      {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled}
+        Contact your account holder to upgrade your plan.
+      {/if}
+    </Body>
   </Layout>
   <Divider />
   <div class="controls">
@@ -147,7 +149,6 @@
     data={filteredGroups}
     allowEditColumns={false}
     allowEditRows={false}
-    showHeaderBorder={false}
     {customRenderers}
   />
 </Layout>
