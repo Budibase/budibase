@@ -14,7 +14,7 @@
   import { onMount } from "svelte"
 
   import RoleSelect from "components/common/RoleSelect.svelte"
-  import { users, groups, apps, auth } from "stores/portal"
+  import { users, groups, apps, licensing } from "stores/portal"
   import AssignmentModal from "./AssignmentModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { roles } from "stores/backend"
@@ -156,7 +156,7 @@
           >
         </div>
       </div>
-      {#if $auth.groupsEnabled && appGroups.length}
+      {#if $licensing.groupsEnabled && appGroups.length}
         <List title="User Groups">
           {#each appGroups as group}
             <ListItem
