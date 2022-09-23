@@ -90,16 +90,13 @@
     if (inSchema(toTable, toRelate.name, originalToName)) {
       errObj.toCol = colError
     }
-    if (
-      fromPrimary &&
-      fromRelate.fieldName &&
-      plusTables.filter(table => table.name === fromTable?.name)[0]?.schema[
-        fromPrimary
-      ]?.type !==
-        plusTables.filter(table => table.name === toTable?.name)[0]?.schema[
-          fromRelate.fieldName
-        ]?.type
-    ) {
+
+    let fromType, toType
+    if (fromPrimary && fromRelate.fieldName) {
+      fromType = fromTable?.schema[fromPrimary]?.type
+      toType = toTable?.schema[fromRelate.fieldName]?.type
+    }
+    if (fromType && toType && fromType !== toType) {
       errObj.foreign =
         "Column type of the foreign key must match the primary key"
     }
