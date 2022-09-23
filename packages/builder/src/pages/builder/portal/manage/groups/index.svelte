@@ -9,7 +9,7 @@
     Tags,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth } from "stores/portal"
+  import { groups, auth, licensing } from "stores/portal"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
@@ -53,7 +53,7 @@
 
   onMount(async () => {
     try {
-      if ($auth.groupsEnabled) {
+      if ($licensing.groupsEnabled) {
         await groups.actions.init()
       }
     } catch (error) {
@@ -66,7 +66,7 @@
   <Layout gap="XS" noPadding>
     <div style="display: flex;">
       <Heading size="M">User groups</Heading>
-      {#if !$auth.groupsEnabled}
+      {#if !$licensing.groupsEnabled}
         <Tags>
           <div class="tags">
             <div class="tag">
@@ -77,19 +77,25 @@
       {/if}
     </div>
     <Body>Easily assign and manage your users access with User Groups</Body>
+    {#if !$auth.accountPortalAccess}
+      <Body>Contact your account holder to upgrade</Body>
+    {/if}
   </Layout>
   <div class="align-buttons">
-    <Button
-      newStyles
-      icon={$auth.groupsEnabled ? "UserGroup" : ""}
-      cta={$auth.groupsEnabled}
-      on:click={$auth.groupsEnabled
-        ? showCreateGroupModal
-        : window.open("https://budibase.com/pricing/", "_blank")}
-    >
-      {$auth.groupsEnabled ? "Create user group" : "Upgrade Account"}
-    </Button>
-    {#if !$auth.groupsEnabled}
+    {#if $licensing.groupsEnabled}
+      <!--Show the group create button-->
+      <Button newStyles icon={"UserGroup"} cta on:click={showCreateGroupModal}>
+        Create user group
+      </Button>
+    {:else}
+      <Button
+        newStyles
+        disabled={!$auth.accountPortalAccess}
+        on:click={$licensing.goToUpgradePage()}
+      >
+        Upgrade
+      </Button>
+      <!--Show the view plans button-->
       <Button
         newStyles
         secondary
@@ -100,7 +106,7 @@
     {/if}
   </div>
 
-  {#if $auth.groupsEnabled && $groups.length}
+  {#if $licensing.groupsEnabled && $groups.length}
     <div class="groupTable">
       {#each $groups as group}
         <div>

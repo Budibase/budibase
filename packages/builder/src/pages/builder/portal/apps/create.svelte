@@ -31,8 +31,8 @@
   onMount(async () => {
     try {
       await templates.load()
-      await licensing.getQuotaUsage()
-      await licensing.getUsageMetrics()
+      // always load latest
+      await licensing.init()
       if ($templates?.length === 0) {
         notifications.error(
           "There was a problem loading quick start templates."

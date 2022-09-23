@@ -8,7 +8,7 @@
     notifications,
   } from "@budibase/bbui"
   import { roles } from "stores/backend"
-  import { groups, users, auth } from "stores/portal"
+  import { groups, users, licensing } from "stores/portal"
   import { RoleUtils } from "@budibase/frontend-core"
   import { createPaginationStore } from "helpers/pagination"
 
@@ -32,7 +32,7 @@
   $: valid =
     appData?.length && !appData?.some(x => !x.id?.length || !x.role?.length)
   $: optionSections = {
-    ...($auth.groupsEnabled &&
+    ...($licensing.groupsEnabled &&
       filteredGroups.length && {
         ["User groups"]: {
           data: filteredGroups,

@@ -23,7 +23,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { fetchData } from "helpers"
-  import { users, auth, groups, apps } from "stores/portal"
+  import { users, auth, groups, apps, licensing } from "stores/portal"
   import { roles } from "stores/backend"
   import { Constants } from "@budibase/frontend-core"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
@@ -284,7 +284,7 @@
       </Layout>
     </Layout>
 
-    {#if $auth.groupsEnabled}
+    {#if $licensing.groupsEnabled}
       <!-- User groups -->
       <Layout gap="S" noPadding>
         <div class="tableTitle">
