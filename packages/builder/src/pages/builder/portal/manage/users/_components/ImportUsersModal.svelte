@@ -6,7 +6,7 @@
     Multiselect,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth, admin } from "stores/portal"
+  import { groups, licensing, admin } from "stores/portal"
   import { emailValidator } from "helpers/validation"
   import { Constants } from "@budibase/frontend-core"
 
@@ -92,7 +92,7 @@
     options={Constants.BuilderRoleDescriptions}
   />
 
-  {#if $auth.groupsEnabled}
+  {#if $licensing.groupsEnabled}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"
