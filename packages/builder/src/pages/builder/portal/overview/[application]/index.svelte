@@ -23,7 +23,7 @@
   import AccessTab from "../_components/AccessTab.svelte"
   import { API } from "api"
   import { store } from "builderStore"
-  import { apps, auth } from "stores/portal"
+  import { apps, auth, groups } from "stores/portal"
   import analytics, { Events, EventSource } from "analytics"
   import { AppStatus } from "constants"
   import AppLockModal from "components/common/AppLockModal.svelte"
@@ -192,6 +192,7 @@
     try {
       await API.syncApp(application)
       deployments = await fetchDeployments()
+      await groups.actions.init()
       if (!apps.length) {
         await apps.load()
       }

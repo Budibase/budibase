@@ -78,8 +78,6 @@
 
   onMount(async () => {
     try {
-      await groups.actions.init()
-      await apps.load()
       await roles.fetch()
     } catch (error) {
       notifications.error(error)
