@@ -65,6 +65,9 @@
     }
   }
 
+  $: showDropzone =
+    (!maximum || (maximum && value?.length < maximum)) && !disabled
+
   async function processFileList(fileList) {
     if (
       handleFileTooLarge &&
@@ -211,7 +214,7 @@
       {/each}
     {/if}
   {/if}
-  {#if !maximum || (maximum && value?.length < maximum)}
+  {#if showDropzone}
     <div
       class="spectrum-Dropzone"
       class:is-invalid={!!error}
