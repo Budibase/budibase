@@ -83,6 +83,18 @@
   }
 
   $: if (
+    !licensingLoaded &&
+    Object.keys($licensing?.usageMetrics).length &&
+    isEnabled(FEATURE_FLAGS.LICENSING)
+  ) {
+    licensingLoaded = true
+  }
+
+  $: if (!userLoaded && $auth.user && isEnabled(FEATURE_FLAGS.LICENSING)) {
+    userLoaded = true
+  }
+
+  $: if (
     userLoaded &&
     licensingLoaded &&
     loaded &&
@@ -95,17 +107,6 @@
   }
 
   onMount(async () => {
-    auth.subscribe(state => {
-      if (state.user && !userLoaded) {
-        userLoaded = true
-      }
-    })
-
-    licensing.subscribe(state => {
-      if (state.usageMetrics && !licensingLoaded) {
-        licensingLoaded = true
-      }
-    })
     loaded = true
   })
 </script>
