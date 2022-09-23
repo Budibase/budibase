@@ -94,7 +94,7 @@
         <Heading>Access</Heading>
         <div class="subtitle">
           <Body size="S">
-            Assign users/groups to your app and define their access here
+            Assign users and groups to your app and define their access here
           </Body>
           <Button on:click={assignmentModal.show} icon="User" cta>
             Assign access
