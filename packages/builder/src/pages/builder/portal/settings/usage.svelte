@@ -147,7 +147,8 @@
 
   const init = async () => {
     try {
-      await licensing.getQuotaUsage()
+      // always load latest
+      await licensing.init()
     } catch (e) {
       console.error(e)
       notifications.error(e)

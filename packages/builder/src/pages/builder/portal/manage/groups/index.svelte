@@ -13,7 +13,7 @@
     Search,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth } from "stores/portal"
+  import { groups, auth, licensing } from "stores/portal"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"
@@ -78,7 +78,9 @@
 
   onMount(async () => {
     try {
-      await groups.actions.init()
+      if ($licensing.groupsEnabled) {
+        await groups.actions.init()
+      }
     } catch (error) {
       notifications.error("Error getting user groups")
     }
@@ -88,7 +90,7 @@
 <Layout noPadding gap="M">
   <Layout gap="XS" noPadding>
     <Heading size="M">User groups</Heading>
-    {#if !$auth.groupsEnabled}
+    {#if !$licensing.groupsEnabled}
       <Tags>
         <div class="tags">
           <div class="tag">
@@ -98,21 +100,32 @@
       </Tags>
     {/if}
     <Body>Easily assign and manage your users' access with user groups</Body>
+    {#if !$auth.accountPortalAccess}
+      <Body>Contact your account holder to upgrade</Body>
+    {/if}
   </Layout>
   <Divider />
   <div class="controls">
     <ButtonGroup>
-      <Button
-        newStyles
-        icon={$auth.groupsEnabled ? "UserGroup" : ""}
-        cta={$auth.groupsEnabled}
-        on:click={$auth.groupsEnabled
-          ? showCreateGroupModal
-          : window.open("https://budibase.com/pricing/", "_blank")}
-      >
-        {$auth.groupsEnabled ? "Create user group" : "Upgrade Account"}
-      </Button>
-      {#if !$auth.groupsEnabled}
+      {#if $licensing.groupsEnabled}
+        <!--Show the group create button-->
+        <Button
+          newStyles
+          icon={"UserGroup"}
+          cta
+          on:click={showCreateGroupModal}
+        >
+          Create user group
+        </Button>
+      {:else}
+        <Button
+          newStyles
+          disabled={!$auth.accountPortalAccess}
+          on:click={$licensing.goToUpgradePage()}
+        >
+          Upgrade
+        </Button>
+        <!--Show the view plans button-->
         <Button
           newStyles
           secondary

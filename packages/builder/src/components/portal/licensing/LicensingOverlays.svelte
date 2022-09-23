@@ -43,7 +43,7 @@
       {
         key: ExpiringKeys.LICENSING_PAYMENT_FAILED,
         criteria: () => {
-          return $licensing.accountPastDue && !$licensing.isFreePlan()
+          return $licensing.accountPastDue && !$licensing.isFreePlan
         },
         action: () => {
           paymentFailedModal.show()
