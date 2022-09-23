@@ -39,6 +39,7 @@
   $: fixedAppId = apps.getProdAppID(app.devId)
   $: availableUsers = getAvailableUsers($usersFetch.rows, appUsers, data)
   $: availableGroups = getAvailableGroups($groups, app.appId, search, data)
+  $: console.log(availableGroups)
   $: valid = data?.length && !data?.some(x => !x.id?.length || !x.role?.length)
   $: optionSections = {
     ...($licensing.groupsEnabled &&
@@ -114,7 +115,7 @@
     return (allGroups || []).filter(group => {
       // Filter out assigned groups
       const appIds = groups.actions.getGroupAppIds(group)
-      if (appIds.includes(appId)) {
+      if (appIds.includes(`app_${appId}`)) {
         return false
       }
 
