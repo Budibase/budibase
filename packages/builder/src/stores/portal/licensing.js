@@ -15,7 +15,7 @@ export const createLicensingStore = () => {
     // features
     groupsEnabled: false,
     // the currently used quotas from the db
-    quotaUsage: {},
+    quotaUsage: undefined,
     // derived quota metrics for percentages used
     usageMetrics: {},
     // quota reset
