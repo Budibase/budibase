@@ -42,7 +42,7 @@
   $: group = $groups.find(x => x._id === groupId)
   $: filtered = $users.data
   $: groupApps = $apps.filter(app =>
-    groups.actions.getGroupAppIds(group).includes(app.appId)
+    groups.actions.getGroupAppIds(group).includes(`app_${app.appId}`)
   )
   $: {
     if (loaded && !group?._id) {
