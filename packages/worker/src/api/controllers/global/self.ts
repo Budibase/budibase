@@ -1,4 +1,4 @@
-import { users } from "../../../sdk"
+import sdk from "../../../sdk"
 import {
   events,
   featureFlags,
@@ -116,7 +116,7 @@ export async function getSelf(ctx: any) {
   checkCurrentApp(ctx)
 
   // get the main body of the user
-  const user = await users.getUser(userId)
+  const user = await sdk.users.getUser(userId)
   ctx.body = await groups.enrichUserRolesFromGroups(user)
 
   // add the feature flags for this tenant
