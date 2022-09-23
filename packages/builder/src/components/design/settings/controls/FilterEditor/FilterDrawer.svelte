@@ -27,6 +27,7 @@
   export let panel = ClientBindingPanel
   export let allowBindings = true
   export let allOr = false
+  export let fillWidth = false
 
   $: dispatch("change", filters)
   $: enrichedSchemaFields = getFields(schemaFields || [])
@@ -177,6 +178,7 @@
                   {panel}
                   {bindings}
                   on:change={event => (filter.value = event.detail)}
+                  {fillWidth}
                 />
               {:else if ["string", "longform", "number", "formula"].includes(filter.type)}
                 <Input disabled={filter.noValue} bind:value={filter.value} />

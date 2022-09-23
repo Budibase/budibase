@@ -80,7 +80,7 @@ exports.definition = {
         },
         success: {
           type: "boolean",
-          description: "Whether the deletion was successful",
+          description: "Whether the query was successful",
         },
       },
       required: ["rows", "success"],
