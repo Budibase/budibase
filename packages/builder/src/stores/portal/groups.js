@@ -1,7 +1,6 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
-import { auth } from "stores/portal"
-import { Constants } from "@budibase/frontend-core"
+import { licensing } from "stores/portal"
 
 export function createGroupsStore() {
   const store = writable([])
@@ -10,9 +9,7 @@ export function createGroupsStore() {
     init: async () => {
       // only init if these is a groups license, just to be sure but the feature will be blocked
       // on the backend anyway
-      if (
-        get(auth).user.license.features.includes(Constants.Features.USER_GROUPS)
-      ) {
+      if (get(licensing).groupsEnabled) {
         const users = await API.getGroups()
         store.set(users)
       }
