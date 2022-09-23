@@ -43,7 +43,7 @@
   $: schema = {
     name: {},
     users: { sortable: false },
-    roles: { sortable: false },
+    roles: { sortable: false, displayName: "Apps" },
   }
   $: filteredGroups = filterGroups($groups, searchString)
 
