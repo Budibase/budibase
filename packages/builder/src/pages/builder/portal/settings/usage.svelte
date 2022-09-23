@@ -176,7 +176,7 @@
 </script>
 
 {#if loaded}
-  <Layout>
+  <Layout noPadding>
     <Layout noPadding gap="S">
       <Heading>Usage</Heading>
       <Body
