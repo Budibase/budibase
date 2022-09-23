@@ -8,7 +8,6 @@
   import { ExpiringKeys } from "./constants"
   import { getBanners } from "./licensingBanners"
   import { banner } from "@budibase/bbui"
-  import { FEATURE_FLAGS, isEnabled } from "../../../helpers/featureFlags"
 
   const oneDayInSeconds = 86400
 
@@ -18,8 +17,8 @@
   let paymentFailedModal
   let accountDowngradeModal
   let userLoaded = false
-  let loaded = false
   let licensingLoaded = false
+  let domLoaded = false
   let currentModalCfg = null
 
   const processModals = () => {
@@ -82,12 +81,17 @@
     }
   }
 
+  $: if (!userLoaded && $auth.user) {
+    userLoaded = true
+  }
+
   $: if (
     userLoaded &&
-    licensingLoaded &&
-    loaded &&
-    isEnabled(FEATURE_FLAGS.LICENSING)
+    $licensing.usageMetrics &&
+    domLoaded &&
+    !licensingLoaded
   ) {
+    licensingLoaded = true
     queuedModals = processModals()
     queuedBanners = getBanners()
     showNextModal()
@@ -95,18 +99,7 @@
   }
 
   onMount(async () => {
-    auth.subscribe(state => {
-      if (state.user && !userLoaded) {
-        userLoaded = true
-      }
-    })
-
-    licensing.subscribe(state => {
-      if (state.usageMetrics && !licensingLoaded) {
-        licensingLoaded = true
-      }
-    })
-    loaded = true
+    domLoaded = true
   })
 </script>
 
