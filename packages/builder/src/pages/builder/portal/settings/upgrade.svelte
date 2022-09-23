@@ -13,6 +13,7 @@
   import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
   import { processStringSync } from "@budibase/string-templates"
+  import DeleteLicenseKeyModal from "../../../../components/portal/licensing/DeleteLicenseKeyModal.svelte"
   import { API } from "api"
   import { onMount } from "svelte"
 
@@ -26,6 +27,7 @@
   let licenseKeyDisabled = false
   let licenseKeyType = "text"
   let licenseKey = ""
+  let deleteLicenseKeyModal
 
   // Make sure page can't be visited directly in cloud
   $: {
@@ -40,6 +42,20 @@
       await auth.getSelf()
       await setLicenseInfo()
       notifications.success("Successfully activated")
+    } catch (e) {
+      notifications.error(e.message)
+    }
+  }
+
+  const destroy = async () => {
+    try {
+      await API.deleteLicenseKey({ licenseKey })
+      await auth.getSelf()
+      await setLicenseInfo()
+      // reset the form
+      licenseKey = ""
+      licenseKeyDisabled = false
+      notifications.success("Successfully deleted")
     } catch (e) {
       notifications.error(e.message)
     }
@@ -76,6 +92,10 @@
 </script>
 
 {#if $auth.isAdmin}
+  <DeleteLicenseKeyModal
+    bind:this={deleteLicenseKeyModal}
+    onConfirm={destroy}
+  />
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <Heading size="M">Upgrade</Heading>
@@ -107,10 +127,19 @@
           />
         </div>
       </div>
-      <div>
-        <Button cta on:click={activate} disabled={activateDisabled}
-          >Activate</Button
-        >
+      <div class="button-container">
+        <div class="action-button">
+          <Button cta on:click={activate} disabled={activateDisabled}
+            >Activate</Button
+          >
+        </div>
+        <div class="action-button">
+          {#if licenseInfo?.licenseKey}
+            <Button warning on:click={() => deleteLicenseKeyModal.show()}
+              >Delete</Button
+            >
+          {/if}
+        </div>
       </div>
     </Layout>
     <Divider />
@@ -149,5 +178,11 @@
     grid-template-columns: 100px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+  .action-button {
+    margin-right: 10px;
+  }
+  .button-container {
+    display: flex;
   }
 </style>

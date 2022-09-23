@@ -13,7 +13,7 @@
     Search,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth, licensing } from "stores/portal"
+  import { groups, auth, licensing, admin } from "stores/portal"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"
@@ -78,6 +78,8 @@
 
   onMount(async () => {
     try {
+      // always load latest
+      await licensing.init()
       if ($licensing.groupsEnabled) {
         await groups.actions.init()
       }
@@ -101,7 +103,7 @@
     {/if}
     <Body>
       Easily assign and manage your users' access with user groups.
-      {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled}
+      {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
         Contact your account holder to upgrade your plan.
       {/if}
     </Body>
@@ -122,7 +124,7 @@
       {:else}
         <Button
           newStyles
-          disabled={!$auth.accountPortalAccess}
+          disabled={!$auth.accountPortalAccess && $admin.cloud}
           on:click={$licensing.goToUpgradePage()}
         >
           Upgrade
