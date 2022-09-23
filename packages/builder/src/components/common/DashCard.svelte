@@ -30,7 +30,7 @@
     background: var(--spectrum-alias-background-color-primary);
     border-radius: var(--border-radius-s);
     overflow: hidden;
-    min-height: 150px;
+    min-height: 170px;
   }
   .dash-card-header {
     padding: var(--spacing-xl) var(--spectrum-global-dimension-static-size-400);

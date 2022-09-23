@@ -256,7 +256,7 @@
   .overview-tab .top {
     display: grid;
     grid-gap: var(--spectrum-alias-grid-gutter-medium);
-    grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   }
 
   .access-tab-content {
@@ -276,7 +276,7 @@
   }
   .access-tab-content .text {
     color: var(--spectrum-global-color-gray-600);
-    margin-top: var(--spacing-s);
+    margin-top: var(--spacing-xl);
   }
 
   .overview-tab .bottom,
@@ -284,23 +284,6 @@
     display: grid;
     grid-gap: var(--spectrum-alias-grid-gutter-large);
     grid-template-columns: 1fr 1fr;
-  }
-
-  @media (max-width: 1000px) {
-    .overview-tab .top {
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .overview-tab .bottom {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 800px) {
-    .overview-tab .top,
-    .overview-tab .bottom {
-      grid-template-columns: 1fr;
-    }
   }
 
   .status-display {
