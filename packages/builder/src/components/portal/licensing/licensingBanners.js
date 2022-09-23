@@ -113,7 +113,7 @@ const buildPaymentFailedBanner = () => {
     key: "payment_Failed",
     type: BANNER_TYPES.NEGATIVE,
     criteria: () => {
-      return get(licensing)?.accountPastDue && !get(licensing).isFreePlan()
+      return get(licensing)?.accountPastDue && !get(licensing).isFreePlan
     },
     message: `Payment Failed - Please update your billing details or your account will be downgrades in 
     ${get(licensing)?.pastDueDaysRemaining} day${

@@ -7,7 +7,7 @@
     Icon,
   } from "@budibase/bbui"
   import { roles } from "stores/backend"
-  import { groups, users, auth, apps } from "stores/portal"
+  import { groups, users, licensing, apps } from "stores/portal"
   import { Constants, RoleUtils, fetchData } from "@budibase/frontend-core"
   import { API } from "api"
   import { createEventDispatcher } from "svelte"
@@ -41,7 +41,7 @@
   $: availableGroups = getAvailableGroups($groups, app.appId, search, data)
   $: valid = data?.length && !data?.some(x => !x.id?.length || !x.role?.length)
   $: optionSections = {
-    ...($auth.groupsEnabled &&
+    ...($licensing.groupsEnabled &&
       availableGroups.length && {
         ["User groups"]: {
           data: availableGroups,

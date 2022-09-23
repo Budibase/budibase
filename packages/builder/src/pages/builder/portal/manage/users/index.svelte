@@ -14,7 +14,7 @@
     Divider,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import { users, groups, auth } from "stores/portal"
+  import { users, groups, auth, licensing } from "stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
@@ -60,11 +60,8 @@
     role: {
       sortable: false,
     },
-    ...($auth.groupsEnabled && {
-      userGroups: {
-        sortable: false,
-        displayName: "User groups",
-      },
+    ...($licensing.groupsEnabled && {
+      userGroups: { sortable: false, displayName: "Groups" },
     }),
     apps: {
       sortable: false,

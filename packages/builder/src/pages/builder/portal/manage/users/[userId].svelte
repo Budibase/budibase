@@ -23,14 +23,13 @@
     StatusLight,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { users, auth, groups, apps } from "stores/portal"
+  import { users, auth, groups, apps, licensing } from "stores/portal"
   import { roles } from "stores/backend"
-  import { Constants } from "@budibase/frontend-core"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
-  import { RoleUtils } from "@budibase/frontend-core"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"
   import GroupIcon from "../groups/_components/GroupIcon.svelte"
+  import { Constants, RoleUtils } from "@budibase/frontend-core"
 
   export let userId
 
@@ -256,7 +255,7 @@
       </Layout>
     </Layout>
 
-    {#if $auth.groupsEnabled}
+    {#if $licensing.groupsEnabled}
       <!-- User groups -->
       <Layout gap="S" noPadding>
         <div class="tableTitle">
