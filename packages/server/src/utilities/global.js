@@ -75,8 +75,9 @@ exports.getRawGlobalUser = async userId => {
 }
 
 exports.getGlobalUser = async userId => {
+  const appId = getAppId()
   let user = await exports.getRawGlobalUser(userId)
-  return processUser(user)
+  return processUser(user, { appId })
 }
 
 exports.getGlobalUsers = async (users = null) => {
