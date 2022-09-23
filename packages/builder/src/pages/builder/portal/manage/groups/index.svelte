@@ -17,7 +17,7 @@
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"
-  import AppsTableRenderer from "../users/_components/AppsTableRenderer.svelte"
+  import GroupAppsTableRenderer from "./_components/GroupAppsTableRenderer.svelte"
   import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { goto } from "@roxi/routify"
@@ -37,13 +37,13 @@
   let customRenderers = [
     { column: "name", component: GroupNameTableRenderer },
     { column: "users", component: UsersTableRenderer },
-    { column: "apps", component: AppsTableRenderer },
+    { column: "roles", component: GroupAppsTableRenderer },
   ]
 
   $: schema = {
     name: {},
     users: { sortable: false },
-    apps: { sortable: false },
+    roles: { sortable: false },
   }
   $: filteredGroups = filterGroups($groups, searchString)
 
