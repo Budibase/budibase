@@ -6,7 +6,7 @@ const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 
 exports.getFullUser = async (ctx, userId) => {
   const global = await getGlobalUser(userId)
-  let metadata
+  let metadata = {}
   try {
     // this will throw an error if the db doesn't exist, or there is no appId
     const db = getAppDB()
