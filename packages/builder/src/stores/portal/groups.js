@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
-import { auth } from "stores/portal"
+import { licensing } from "stores/portal"
 
 export function createGroupsStore() {
   const store = writable([])
@@ -26,7 +26,7 @@ export function createGroupsStore() {
     init: async () => {
       // only init if there is a groups license, just to be sure but the feature will be blocked
       // on the backend anyway
-      if (get(auth).groupsEnabled) {
+      if (get(licensing).groupsEnabled) {
         const groups = await API.getGroups()
         store.set(groups)
       }
