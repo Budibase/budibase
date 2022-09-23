@@ -31,6 +31,7 @@ import {
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
+import { groups as groupsSdk } from "@budibase/pro"
 
 const PAGE_LIMIT = 8
 
@@ -347,7 +348,6 @@ export const bulkCreate = async (
   newUsersRequested: User[],
   groups: string[]
 ): Promise<BulkUserResponse["created"]> => {
-  const db = tenancy.getGlobalDB()
   const tenantId = tenancy.getTenantId()
 
   let usersToSave: any[] = []
@@ -406,6 +406,16 @@ export const bulkCreate = async (
       email: user.email,
     }
   })
+
+  // now update the groups
+  if (Array.isArray(saved) && groups) {
+    const groupPromises = []
+    const createdUserIds = saved.map(user => user._id)
+    for (let groupId of groups) {
+      groupPromises.push(groupsSdk.addUsers(groupId, createdUserIds))
+    }
+    await Promise.all(groupPromises)
+  }
 
   return {
     successful: saved,

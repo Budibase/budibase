@@ -98,7 +98,6 @@ export const buildUserEndpoints = API => ({
         },
       },
     })
-    console.log(res)
     return res.created
   },
 
