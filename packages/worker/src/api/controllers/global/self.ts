@@ -11,7 +11,6 @@ import {
 } from "@budibase/backend-core"
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
-import { enrichUserRolesFromGroups } from "../../../../../../../budibase-pro/packages/pro/src/sdk/groups"
 const { hash, platformLogout, getCookie, clearCookie, newid } = utils
 const { user: userCache } = cache
 
