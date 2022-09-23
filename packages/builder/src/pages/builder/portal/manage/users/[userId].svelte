@@ -68,11 +68,13 @@
       })
     }
     return availableApps.map(app => {
+      const prodAppId = apps.getProdAppID(app.appId)
+      console.log(prodAppId)
       return {
         name: app.name,
         devId: app.devId,
         icon: app.icon,
-        role: privileged ? Constants.Roles.ADMIN : roles[app.appId],
+        role: privileged ? Constants.Roles.ADMIN : roles[prodAppId],
       }
     })
   }
