@@ -17,7 +17,7 @@ export const createLicensingStore = () => {
     // the currently used quotas from the db
     quotaUsage: undefined,
     // derived quota metrics for percentages used
-    usageMetrics: {},
+    usageMetrics: undefined,
     // quota reset
     quotaResetDaysRemaining: undefined,
     quotaResetDate: undefined,

@@ -18,8 +18,8 @@
   let paymentFailedModal
   let accountDowngradeModal
   let userLoaded = false
-  let loaded = false
   let licensingLoaded = false
+  let domLoaded = false
   let currentModalCfg = null
 
   const processModals = () => {
@@ -82,12 +82,18 @@
     }
   }
 
+  $: if (!userLoaded && $auth.user) {
+    userLoaded = true
+  }
+
   $: if (
     userLoaded &&
-    licensingLoaded &&
-    loaded &&
+    $licensing.usageMetrics &&
+    domLoaded &&
+    !licensingLoaded &&
     isEnabled(TENANT_FEATURE_FLAGS.LICENSING)
   ) {
+    licensingLoaded = true
     queuedModals = processModals()
     queuedBanners = getBanners()
     showNextModal()
@@ -95,18 +101,7 @@
   }
 
   onMount(async () => {
-    auth.subscribe(state => {
-      if (state.user && !userLoaded) {
-        userLoaded = true
-      }
-    })
-
-    licensing.subscribe(state => {
-      if (state.usageMetrics && !licensingLoaded) {
-        licensingLoaded = true
-      }
-    })
-    loaded = true
+    domLoaded = true
   })
 </script>
 
