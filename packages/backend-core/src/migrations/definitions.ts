@@ -33,4 +33,8 @@ export const DEFINITIONS: MigrationDefinition[] = [
     type: MigrationType.GLOBAL,
     name: MigrationName.GLOBAL_INFO_SYNC_USERS,
   },
+  {
+    type: MigrationType.GLOBAL,
+    name: MigrationName.PLUGIN_COUNT,
+  },
 ]
