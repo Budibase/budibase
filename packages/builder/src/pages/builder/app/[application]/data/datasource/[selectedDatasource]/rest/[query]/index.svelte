@@ -592,7 +592,7 @@
     </div>
     <div class="bottom">
       <Layout paddingY="S" gap="S">
-        <Divider size="S" />
+        <Divider />
         {#if !response && Object.keys(schema).length === 0}
           <Heading size="M">Response</Heading>
           <div class="placeholder">

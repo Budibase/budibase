@@ -19,3 +19,24 @@ export const sequential = fn => {
     }
   }
 }
+
+/**
+ * Utility to debounce an async function and ensure a minimum delay between
+ * invocations is enforced.
+ * @param callback an async function to run
+ * @param minDelay the minimum delay between invocations
+ * @returns {Promise} a debounced version of the callback
+ */
+export const debounce = (callback, minDelay = 1000) => {
+  let timeout
+  return async (...params) => {
+    return new Promise(resolve => {
+      if (timeout) {
+        clearTimeout(timeout)
+      }
+      timeout = setTimeout(async () => {
+        resolve(await callback(...params))
+      }, minDelay)
+    })
+  }
+}

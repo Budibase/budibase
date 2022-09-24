@@ -8,7 +8,7 @@ const { users } = require("../validation")
 const selfController = require("../../controllers/global/self")
 const { builderOrAdmin } = require("@budibase/backend-core/auth")
 
-const router = Router()
+const router = new Router()
 
 function buildAdminInitValidation() {
   return joiValidator.body(
@@ -56,24 +56,17 @@ router
     controller.save
   )
   .post(
-    "/api/global/users/bulkCreate",
+    "/api/global/users/bulk",
     adminOnly,
-    users.buildUserBulkSaveValidation(),
-    controller.bulkCreate
+    users.buildUserBulkUserValidation(),
+    controller.bulkUpdate
   )
 
   .get("/api/global/users", builderOrAdmin, controller.fetch)
   .post("/api/global/users/search", builderOrAdmin, controller.search)
   .delete("/api/global/users/:id", adminOnly, controller.destroy)
-  .post("/api/global/users/bulkDelete", adminOnly, controller.bulkDelete)
   .get("/api/global/users/count/:appId", builderOrAdmin, controller.countByApp)
   .get("/api/global/roles/:appId")
-  .post(
-    "/api/global/users/invite",
-    adminOnly,
-    buildInviteValidation(),
-    controller.invite
-  )
   .post(
     "/api/global/users/invite",
     adminOnly,

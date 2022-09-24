@@ -97,16 +97,16 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("bulkCreate", () => {
+  describe("bulk (create)", () => {
     it("should ignore users existing in the same tenant", async () => {
       const user = await config.createUser()
       jest.clearAllMocks()
 
       const response = await api.users.bulkCreateUsers([user])
 
-      expect(response.successful.length).toBe(0)
-      expect(response.unsuccessful.length).toBe(1)
-      expect(response.unsuccessful[0].email).toBe(user.email)
+      expect(response.created?.successful.length).toBe(0)
+      expect(response.created?.unsuccessful.length).toBe(1)
+      expect(response.created?.unsuccessful[0].email).toBe(user.email)
       expect(events.user.created).toBeCalledTimes(0)
     })
 
@@ -117,9 +117,9 @@ describe("/api/global/users", () => {
       await tenancy.doInTenant(TENANT_1, async () => {
         const response = await api.users.bulkCreateUsers([user])
 
-        expect(response.successful.length).toBe(0)
-        expect(response.unsuccessful.length).toBe(1)
-        expect(response.unsuccessful[0].email).toBe(user.email)
+        expect(response.created?.successful.length).toBe(0)
+        expect(response.created?.unsuccessful.length).toBe(1)
+        expect(response.created?.unsuccessful[0].email).toBe(user.email)
         expect(events.user.created).toBeCalledTimes(0)
       })
     })
@@ -132,24 +132,24 @@ describe("/api/global/users", () => {
 
       const response = await api.users.bulkCreateUsers([user])
 
-      expect(response.successful.length).toBe(0)
-      expect(response.unsuccessful.length).toBe(1)
-      expect(response.unsuccessful[0].email).toBe(user.email)
+      expect(response.created?.successful.length).toBe(0)
+      expect(response.created?.unsuccessful.length).toBe(1)
+      expect(response.created?.unsuccessful[0].email).toBe(user.email)
       expect(events.user.created).toBeCalledTimes(0)
     })
 
-    it("should be able to bulkCreate users", async () => {
+    it("should be able to bulk create users", async () => {
       const builder = structures.users.builderUser()
       const admin = structures.users.adminUser()
       const user = structures.users.user()
 
       const response = await api.users.bulkCreateUsers([builder, admin, user])
 
-      expect(response.successful.length).toBe(3)
-      expect(response.successful[0].email).toBe(builder.email)
-      expect(response.successful[1].email).toBe(admin.email)
-      expect(response.successful[2].email).toBe(user.email)
-      expect(response.unsuccessful.length).toBe(0)
+      expect(response.created?.successful.length).toBe(3)
+      expect(response.created?.successful[0].email).toBe(builder.email)
+      expect(response.created?.successful[1].email).toBe(admin.email)
+      expect(response.created?.successful[2].email).toBe(user.email)
+      expect(response.created?.unsuccessful.length).toBe(0)
       expect(events.user.created).toBeCalledTimes(3)
       expect(events.user.permissionAdminAssigned).toBeCalledTimes(1)
       expect(events.user.permissionBuilderAssigned).toBeCalledTimes(2)
@@ -420,33 +420,30 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("bulkDelete", () => {
-    it("should not be able to bulkDelete current user", async () => {
+  describe("bulk (delete)", () => {
+    it("should not be able to bulk delete current user", async () => {
       const user = await config.defaultUser!
-      const request = { userIds: [user._id!] }
 
-      const response = await api.users.bulkDeleteUsers(request, 400)
+      const response = await api.users.bulkDeleteUsers([user._id!], 400)
 
-      expect(response.body.message).toBe("Unable to delete self.")
+      expect(response.message).toBe("Unable to delete self.")
       expect(events.user.deleted).not.toBeCalled()
     })
 
-    it("should not be able to bulkDelete account owner", async () => {
+    it("should not be able to bulk delete account owner", async () => {
       const user = await config.createUser()
       const account = structures.accounts.cloudAccount()
       account.budibaseUserId = user._id!
       mocks.accounts.getAccountByTenantId.mockReturnValue(account)
 
-      const request = { userIds: [user._id!] }
+      const response = await api.users.bulkDeleteUsers([user._id!])
 
-      const response = await api.users.bulkDeleteUsers(request)
-
-      expect(response.body.successful.length).toBe(0)
-      expect(response.body.unsuccessful.length).toBe(1)
-      expect(response.body.unsuccessful[0].reason).toBe(
+      expect(response.deleted?.successful.length).toBe(0)
+      expect(response.deleted?.unsuccessful.length).toBe(1)
+      expect(response.deleted?.unsuccessful[0].reason).toBe(
         "Account holder cannot be deleted"
       )
-      expect(response.body.unsuccessful[0]._id).toBe(user._id)
+      expect(response.deleted?.unsuccessful[0]._id).toBe(user._id)
       expect(events.user.deleted).not.toBeCalled()
     })
 
@@ -462,12 +459,14 @@ describe("/api/global/users", () => {
         admin,
         user,
       ])
-      const request = { userIds: createdUsers.successful.map(u => u._id!) }
 
-      const response = await api.users.bulkDeleteUsers(request)
+      const toDelete = createdUsers.created?.successful.map(
+        u => u._id!
+      ) as string[]
+      const response = await api.users.bulkDeleteUsers(toDelete)
 
-      expect(response.body.successful.length).toBe(3)
-      expect(response.body.unsuccessful.length).toBe(0)
+      expect(response.deleted?.successful.length).toBe(3)
+      expect(response.deleted?.unsuccessful.length).toBe(0)
       expect(events.user.deleted).toBeCalledTimes(3)
       expect(events.user.permissionAdminRemoved).toBeCalledTimes(1)
       expect(events.user.permissionBuilderRemoved).toBeCalledTimes(2)

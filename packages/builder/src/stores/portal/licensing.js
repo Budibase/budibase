@@ -3,7 +3,7 @@ import { API } from "api"
 import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "components/portal/licensing/constants"
-import { FEATURE_FLAGS, isEnabled } from "../../helpers/featureFlags"
+import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
 
 export const createLicensingStore = () => {
   const DEFAULT = {
@@ -75,7 +75,7 @@ export const createLicensingStore = () => {
       })
     },
     setUsageMetrics: () => {
-      if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+      if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
         const quota = get(store).quotaUsage
         const license = get(auth).user.license
         const now = new Date()

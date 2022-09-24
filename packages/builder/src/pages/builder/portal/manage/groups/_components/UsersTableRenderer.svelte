@@ -1,16 +1,13 @@
 <script>
   import { Icon } from "@budibase/bbui"
-
   export let value
 </script>
 
 <div class="align">
   <div class="spacing">
-    <Icon name="UserGroup" />
+    <Icon name="User" />
   </div>
-  <div class="opacity">
-    {value?.length || 0}
-  </div>
+  {parseInt(value?.length) || 0}
 </div>
 
 <style>
@@ -18,9 +15,7 @@
     display: flex;
     overflow: hidden;
   }
-  .opacity {
-    opacity: 0.8;
-  }
+
   .spacing {
     margin-right: var(--spacing-m);
   }

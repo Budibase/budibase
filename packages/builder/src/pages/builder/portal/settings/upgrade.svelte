@@ -101,18 +101,16 @@
       <Heading size="M">Upgrade</Heading>
       <Body size="M">
         {#if license.plan.type === "free"}
-          Upgrade your budibase installation to unlock additional features. To
-          subscribe to a plan visit your <Link size="L" href={upgradeUrl}
-            >Account</Link
-          >.
+          Upgrade your Budibase installation to unlock additional features. To
+          subscribe to a plan visit your
+          <Link size="L" href={upgradeUrl}>Account</Link>.
         {:else}
-          To manage your plan visit your <Link size="L" href={upgradeUrl}
-            >Account</Link
-          >.
+          To manage your plan visit your
+          <Link size="L" href={upgradeUrl}>Account</Link>.
         {/if}
       </Body>
     </Layout>
-    <Divider size="S" />
+    <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">Activate</Heading>
       <Body size="S">Enter your license key below to activate your plan</Body>
@@ -120,7 +118,7 @@
     <Layout noPadding>
       <div class="fields">
         <div class="field">
-          <Label size="L">License Key</Label>
+          <Label size="L">License key</Label>
           <Input
             thin
             bind:value={licenseKey}
@@ -144,7 +142,7 @@
         </div>
       </div>
     </Layout>
-    <Divider size="S" />
+    <Divider />
     <Layout gap="L" noPadding>
       <Layout gap="S" noPadding>
         <Heading size="S">Plan</Heading>
