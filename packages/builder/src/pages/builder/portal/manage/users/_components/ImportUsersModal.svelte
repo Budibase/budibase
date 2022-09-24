@@ -72,7 +72,6 @@
   size="M"
   title="Import users"
   confirmText="Done"
-  showCancelButton={false}
   cancelText="Cancel"
   showCloseIcon={false}
   onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
