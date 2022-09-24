@@ -127,7 +127,7 @@
   }
 
   const initiateAppCreation = async () => {
-    if ($licensing.usageMetrics.apps >= 100) {
+    if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
     } else if ($apps?.length) {
       $goto("/builder/portal/apps/create")
