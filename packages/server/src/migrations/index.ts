@@ -70,12 +70,14 @@ export const buildMigrations = () => {
         break
       }
       case MigrationName.PLUGIN_COUNT: {
-        serverMigrations.push({
-          ...definition,
-          fn: pluginCount.run,
-          silent: !!env.SELF_HOSTED,
-          preventRetry: false,
-        })
+        if (env.SELF_HOSTED) {
+          serverMigrations.push({
+            ...definition,
+            fn: pluginCount.run,
+            silent: !!env.SELF_HOSTED,
+            preventRetry: false,
+          })
+        }
       }
     }
   }
