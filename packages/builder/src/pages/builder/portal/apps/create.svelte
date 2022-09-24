@@ -45,7 +45,7 @@
   })
 
   const initiateAppCreation = () => {
-    if ($licensing.usageMetrics.apps >= 100) {
+    if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
     } else {
       template = null
@@ -60,7 +60,7 @@
   }
 
   const initiateAppImport = () => {
-    if ($licensing.usageMetrics.apps >= 100) {
+    if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
     } else {
       template = { fromFile: true }
