@@ -12,7 +12,13 @@ function buildEmailSendValidation() {
   return joiValidator.body(Joi.object({
     email: Joi.string().email({
       multiple: true,
-      }),
+    }),
+    cc: Joi.string().email({
+      multiple: true,
+    }).allow("", null),
+    bcc: Joi.string().email({
+      multiple: true,
+    }).allow("", null),
     purpose: Joi.string().valid(...Object.values(EmailTemplatePurpose)),
     workspaceId: Joi.string().allow("", null),
     from: Joi.string().allow("", null),
