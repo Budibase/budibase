@@ -27,7 +27,7 @@ jobs:
       couchdb:
         image: ibmcom/couchdb3
         env:
-          COUCHDB_PASSWORD: budibase          
+          COUCHDB_PASSWORD: budibase
           COUCHDB_USER: budibase
         ports:
           - 4567:5984
