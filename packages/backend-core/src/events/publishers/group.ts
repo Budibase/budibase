@@ -40,9 +40,9 @@ export async function usersAdded(count: number, group: UserGroup) {
   await publishEvent(Event.USER_GROUP_USERS_ADDED, properties)
 }
 
-export async function usersDeleted(emails: string[], group: UserGroup) {
+export async function usersDeleted(count: number, group: UserGroup) {
   const properties: GroupUsersDeletedEvent = {
-    count: emails.length,
+    count,
     groupId: group._id as string,
   }
   await publishEvent(Event.USER_GROUP_USERS_REMOVED, properties)

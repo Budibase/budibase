@@ -54,7 +54,15 @@ async function checkResponse(response, errorMsg, { ctx } = {}) {
 exports.request = request
 
 // have to pass in the tenant ID as this could be coming from an automation
-exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
+exports.sendSmtpEmail = async (
+  to,
+  from,
+  subject,
+  contents,
+  cc,
+  bcc,
+  automation
+) => {
   // tenant ID will be set in header
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
@@ -65,6 +73,8 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
         from,
         contents,
         subject,
+        cc,
+        bcc,
         purpose: "custom",
         automation,
       },

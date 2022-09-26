@@ -10,15 +10,31 @@ const defaultCacheFn = key => {
   temporalStore.actions.setExpiring(key, {}, oneDayInSeconds)
 }
 
-const defaultAction = key => {
+const upgradeAction = key => {
+  return defaultNavigateAction(
+    key,
+    "Upgrade Plan",
+    `${get(admin).accountPortalUrl}/portal/upgrade`
+  )
+}
+
+const billingAction = key => {
+  return defaultNavigateAction(
+    key,
+    "Billing",
+    `${get(admin).accountPortalUrl}/portal/billing`
+  )
+}
+
+const defaultNavigateAction = (key, actionText, url) => {
   if (!get(auth).user.accountPortalAccess) {
     return {}
   }
   return {
-    extraButtonText: "Upgrade Plan",
+    extraButtonText: actionText,
     extraButtonAction: () => {
       defaultCacheFn(key)
-      window.location.href = `${get(admin).accountPortalUrl}/portal/upgrade`
+      window.location.href = url
     },
   }
 }
@@ -65,7 +81,7 @@ const buildUsageInfoBanner = (
     ? bannerConfig
     : {
         ...bannerConfig,
-        ...defaultAction(cacheKey),
+        ...upgradeAction(cacheKey),
       }
 }
 
@@ -84,7 +100,7 @@ const buildDayPassBanner = () => {
           ? ""
           : "Please contact your account holder to upgrade."
       }`,
-      ...defaultAction(),
+      ...upgradeAction(),
       showCloseButton: false,
     }
   }
@@ -113,13 +129,13 @@ const buildPaymentFailedBanner = () => {
     key: "payment_Failed",
     type: BANNER_TYPES.NEGATIVE,
     criteria: () => {
-      return get(licensing)?.accountPastDue && !get(licensing).isFreePlan()
+      return get(licensing)?.accountPastDue && !get(licensing).isFreePlan
     },
-    message: `Payment Failed - Please update your billing details or your account will be downgrades in 
+    message: `Payment Failed - Please update your billing details or your account will be downgraded in 
     ${get(licensing)?.pastDueDaysRemaining} day${
       get(licensing)?.pastDueDaysRemaining == 1 ? "" : "s"
     }`,
-    ...defaultAction(),
+    ...billingAction(),
     showCloseButton: false,
     tooltip: get(licensing).pastDueEndDate,
   }

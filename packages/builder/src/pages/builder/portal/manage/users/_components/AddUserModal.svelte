@@ -8,7 +8,7 @@
     Layout,
     Icon,
   } from "@budibase/bbui"
-  import { groups, auth } from "stores/portal"
+  import { groups, licensing } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
 
@@ -117,7 +117,7 @@
     </div>
   </Layout>
 
-  {#if $auth.groupsEnabled}
+  {#if $licensing.groupsEnabled}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"

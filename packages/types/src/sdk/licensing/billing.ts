@@ -12,6 +12,9 @@ export interface Subscription {
   cancelAt: number | null | undefined
   currentPeriodStart: number
   currentPeriodEnd: number
+  status: string
+  pastDueAt?: number | null
+  downgradeAt?: number
 }
 
 export interface Billing {

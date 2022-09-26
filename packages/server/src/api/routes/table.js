@@ -9,7 +9,7 @@ const {
 } = require("@budibase/backend-core/permissions")
 const { tableValidator } = require("./utils/validators")
 
-const router = Router()
+const router = new Router()
 
 router
   /**
