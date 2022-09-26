@@ -32,7 +32,8 @@ describe("Public API - /rows endpoints", () => {
     expect(row._id).toBeDefined()
   })
 
-  it("POST - Search rows", async () => {
+  // search really isn't supported
+  xit("POST - Search rows", async () => {
     const [response, rows] = await config.rows.search({
       query: {
         string: {

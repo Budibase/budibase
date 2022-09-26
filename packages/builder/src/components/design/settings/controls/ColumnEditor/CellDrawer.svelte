@@ -32,6 +32,8 @@
           {
             readableBinding: "Value",
             runtimeBinding: "[value]",
+            category: `Column: ${column.name}`,
+            icon: "TableColumnMerge",
           },
         ]}
       />
