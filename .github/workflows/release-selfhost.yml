@@ -3,10 +3,6 @@ name: Budibase Release Selfhost
 on:
  workflow_dispatch:
 
-env:
-  BRANCH: ${{ github.event.pull_request.head.ref }}
-  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-
 jobs:
   release:
     runs-on: ubuntu-latest
