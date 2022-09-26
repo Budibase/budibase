@@ -45,7 +45,7 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">Plugins</Heading>
-    <Body>Add your own custom datasources and components</Body>
+    <Body>Add your own custom datasources and components.</Body>
   </Layout>
   <Divider size="S" />
   <Layout noPadding>

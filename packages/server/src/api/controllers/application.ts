@@ -47,14 +47,9 @@ import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
 import { errors, events, migrations } from "@budibase/backend-core"
-import {
-  App,
-  Layout,
-  Screen,
-  MigrationType,
-  AppNavigation,
-} from "@budibase/types"
+import { App, Layout, Screen, MigrationType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
+import { groups } from "@budibase/pro"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -501,6 +496,7 @@ const preDestroyApp = async (ctx: any) => {
 
 const postDestroyApp = async (ctx: any) => {
   const rowCount = ctx.rowCount
+  await groups.cleanupApp(ctx.params.appId)
   if (rowCount) {
     await quotas.removeRows(rowCount)
   }

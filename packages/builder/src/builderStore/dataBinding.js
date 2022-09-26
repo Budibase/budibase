@@ -9,14 +9,14 @@ import {
 import { store } from "builderStore"
 import {
   queries as queriesStores,
-  roles as rolesStore,
   tables as tablesStore,
+  roles as rolesStore,
 } from "stores/backend"
 import {
+  makePropSafe,
+  isJSBinding,
   decodeJSBinding,
   encodeJSBinding,
-  isJSBinding,
-  makePropSafe,
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
@@ -71,17 +71,19 @@ export const getAuthBindings = () => {
       runtime: `${safeUser}.${safeOAuth2}.${safeAccessToken}`,
       readable: `Current User.OAuthToken`,
       key: "accessToken",
+      display: { name: "OAuthToken" },
     },
   ]
 
-  bindings = Object.keys(authBindings).map(key => {
-    const fieldBinding = authBindings[key]
+  bindings = authBindings.map(fieldBinding => {
     return {
       type: "context",
       runtimeBinding: fieldBinding.runtime,
       readableBinding: fieldBinding.readable,
       fieldSchema: { type: "string", name: fieldBinding.key },
       providerId: "user",
+      category: "Current User",
+      display: fieldBinding.display,
     }
   })
   return bindings
@@ -93,7 +95,7 @@ export const getAuthBindings = () => {
  * @param {string} prefix A contextual string prefix/path for a user readable binding
  * @return {object[]} An array containing readable/runtime binding objects
  */
-export const toBindingsArray = (valueMap, prefix) => {
+export const toBindingsArray = (valueMap, prefix, category) => {
   if (!valueMap) {
     return []
   }
@@ -101,11 +103,20 @@ export const toBindingsArray = (valueMap, prefix) => {
     if (!binding || !valueMap[binding]) {
       return acc
     }
-    acc.push({
+
+    let config = {
       type: "context",
       runtimeBinding: binding,
       readableBinding: `${prefix}.${binding}`,
-    })
+      icon: "Brackets",
+    }
+
+    if (category) {
+      config.category = category
+    }
+
+    acc.push(config)
+
     return acc
   }, [])
 }
@@ -382,21 +393,25 @@ export const getUserBindings = () => {
   const { schema } = getSchemaForTable(TableNames.USERS)
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
-  keys.forEach(key => {
+
+  bindings = keys.reduce((acc, key) => {
     const fieldSchema = schema[key]
-    bindings.push({
-      type: "context",
-      runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
-      readableBinding: `Current User.${key}`,
-      // Field schema and provider are required to construct relationship
-      // datasource options, based on bindable properties
-      fieldSchema,
-      providerId: "user",
-      category: "Current User",
-      icon: "User",
-      display: fieldSchema,
-    })
-  })
+    if (fieldSchema.type !== "link") {
+      acc.push({
+        type: "context",
+        runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
+        readableBinding: `Current User.${key}`,
+        // Field schema and provider are required to construct relationship
+        // datasource options, based on bindable properties
+        fieldSchema,
+        providerId: "user",
+        category: "Current User",
+        icon: "User",
+      })
+    }
+    return acc
+  }, [])
+
   return bindings
 }
 
