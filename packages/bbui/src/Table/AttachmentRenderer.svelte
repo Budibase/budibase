@@ -20,6 +20,9 @@
       target="_blank"
       download={attachment.name}
       href={attachment.url}
+      on:click={e => {
+        e.stopPropagation()
+      }}
     >
       <div class="center" title={attachment.name}>
         <img src={attachment.url} alt={attachment.extension} />
@@ -32,6 +35,9 @@
         target="_blank"
         download={attachment.name}
         href={attachment.url}
+        on:click={e => {
+          e.stopPropagation()
+        }}
       >
         {attachment.extension}
       </Link>
