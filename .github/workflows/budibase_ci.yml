@@ -51,16 +51,16 @@ jobs:
     - run: yarn bootstrap
     - run: yarn lint
     - run: yarn build
-    - run: yarn test
-      env:
-        CI: true
-        name: Budibase CI
-    - uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        files: ./packages/server/coverage/clover.xml
-        name: codecov-umbrella
-        verbose: true 
+    # - run: yarn test
+    #   env:
+    #     CI: true
+    #     name: Budibase CI
+    # - uses: codecov/codecov-action@v1
+    #   with:
+    #     token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+    #     files: ./packages/server/coverage/clover.xml
+    #     name: codecov-umbrella
+    #     verbose: true 
 
     - name: QA Core Integration Tests
       run: | 
