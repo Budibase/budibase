@@ -39,12 +39,14 @@
   disabled={confirmDisabled}
 >
   {#if !selectingRole}
-    <Body>Select the app to add to the <i>"{group.name}"</i> group.</Body>
+    <Body
+      >Select an app to assign roles for members of <i>"{group.name}"</i></Body
+    >
     <Select bind:value={selectedApp} options={appOptions} />
   {:else}
     <Body
-      >Pick the role this group will appear as in the <i>"{selectedApp.name}"</i
-      > app.</Body
+      >Select the role that all members of "<i>{group.name}</i>" will have for
+      <i>"{selectedApp.name}"</i></Body
     >
     <RoleSelect allowPublic={false} bind:value={selectedRoleId} />
   {/if}
