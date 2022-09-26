@@ -1872,7 +1872,7 @@
         }
       },
       "delete": {
-        "operationId": "delete",
+        "operationId": "destroy",
         "summary": "Delete an application",
         "tags": [
           "applications"
@@ -2160,7 +2160,7 @@
         }
       },
       "delete": {
-        "operationId": "delete",
+        "operationId": "destroy",
         "summary": "Delete a row",
         "description": "Deletes a row within the specified table.",
         "tags": [
@@ -2371,7 +2371,7 @@
         }
       },
       "delete": {
-        "operationId": "delete",
+        "operationId": "destroy",
         "summary": "Delete a table",
         "description": "Delete a table, this could be internal or external.",
         "tags": [
@@ -2556,7 +2556,7 @@
         }
       },
       "delete": {
-        "operationId": "delete",
+        "operationId": "destroy",
         "summary": "Delete a user",
         "tags": [
           "users"

@@ -75,7 +75,7 @@ write.push(
  * @openapi
  * /applications/{appId}:
  *   delete:
- *     operationId: delete
+ *     operationId: destroy
  *     summary: Delete an application
  *     tags:
  *       - applications

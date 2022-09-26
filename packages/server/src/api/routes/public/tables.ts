@@ -83,7 +83,7 @@ write.push(
  * @openapi
  * /tables/{tableId}:
  *   delete:
- *     operationId: delete
+ *     operationId: destroy
  *     summary: Delete a table
  *     description: Delete a table, this could be internal or external.
  *     tags:

@@ -10,7 +10,7 @@ export interface paths {
   "/applications/{appId}": {
     get: operations["getById"];
     put: operations["update"];
-    delete: operations["delete"];
+    delete: operations["destroy"];
   };
   "/applications/search": {
     /** Based on application properties (currently only name) search for applications. */
@@ -34,7 +34,7 @@ export interface paths {
     /** Updates a row within the specified table. */
     put: operations["update"];
     /** Deletes a row within the specified table. */
-    delete: operations["delete"];
+    delete: operations["destroy"];
   };
   "/tables/{tableId}/rows/search": {
     post: operations["search"];
@@ -49,7 +49,7 @@ export interface paths {
     /** Update a table, this could be internal or external. */
     put: operations["update"];
     /** Delete a table, this could be internal or external. */
-    delete: operations["delete"];
+    delete: operations["destroy"];
   };
   "/tables/search": {
     /** Based on table properties (currently only name) search for tables. This could be an internal or an external table. */
@@ -61,7 +61,7 @@ export interface paths {
   "/users/{userId}": {
     get: operations["getById"];
     put: operations["update"];
-    delete: operations["delete"];
+    delete: operations["destroy"];
   };
   "/users/search": {
     /** Based on user properties (currently only name) search for users. */
@@ -756,7 +756,7 @@ export interface operations {
       };
     };
   };
-  delete: {
+  destroy: {
     parameters: {
       path: {
         /** The ID of the user which this request is targeting. */
