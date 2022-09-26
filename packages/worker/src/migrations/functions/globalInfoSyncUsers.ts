@@ -1,5 +1,5 @@
 import { User } from "@budibase/types"
-import * as sdk from "../../sdk"
+import sdk from "../../sdk"
 
 /**
  * Date:

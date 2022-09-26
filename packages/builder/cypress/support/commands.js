@@ -402,8 +402,8 @@ Cypress.Commands.add("searchForApplication", appName => {
         // Searches for the app
         cy.get(".filter").then(() => {
           cy.get(".spectrum-Textfield").within(() => {
-            cy.get("input").eq(0).clear()
-            cy.get("input").eq(0).type(appName)
+            cy.get("input").eq(0).clear({ force: true })
+            cy.get("input").eq(0).type(appName, { force: true })
           })
         })
       }
