@@ -6,7 +6,24 @@ import {
 } from "./db/utils"
 import { queryGlobalView } from "./db/views"
 import { UNICODE_MAX } from "./db/constants"
-import { User } from "@budibase/types"
+import { BulkDocsResponse, User } from "@budibase/types"
+import { getGlobalDB } from "./context"
+import PouchDB from "pouchdb"
+
+export const bulkGetGlobalUsersById = async (userIds: string[]) => {
+  const db = getGlobalDB() as PouchDB.Database
+  return (
+    await db.allDocs({
+      keys: userIds,
+      include_docs: true,
+    })
+  ).rows.map(row => row.doc) as User[]
+}
+
+export const bulkUpdateGlobalUsers = async (users: User[]) => {
+  const db = getGlobalDB() as PouchDB.Database
+  return (await db.bulkDocs(users)) as BulkDocsResponse
+}
 
 /**
  * Given an email address this will use a view to search through
