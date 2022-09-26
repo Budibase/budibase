@@ -87,7 +87,7 @@ export const createLicensingStore = () => {
           return keys.reduce((acc, key) => {
             const quotaLimit = license[key].value
             const quotaUsed = (quota[key] / quotaLimit) * 100
-            acc[key] = quotaLimit > -1 ? Math.round(quotaUsed) : -1
+            acc[key] = quotaLimit > -1 ? Math.floor(quotaUsed) : -1
             return acc
           }, {})
         }
