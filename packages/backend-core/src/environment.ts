@@ -16,6 +16,15 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
+const DefaultBucketName = {
+  BACKUPS: "backups",
+  APPS: "prod-budi-app-assets",
+  TEMPLATES: "templates",
+  GLOBAL: "global",
+  CLOUD: "prod-budi-tenant-uploads",
+  PLUGINS: "plugins",
+}
+
 const env = {
   isTest,
   isDev,
@@ -45,13 +54,17 @@ const env = {
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
-  BACKUPS_BUCKET_NAME: process.env.BACKUPS_BUCKET_NAME || "backups",
-  APPS_BUCKET_NAME: process.env.APPS_BUCKET_NAME || "prod-budi-app-assets",
-  TEMPLATES_BUCKET_NAME: process.env.TEMPLATES_BUCKET_NAME || "templates",
-  GLOBAL_BUCKET_NAME: process.env.GLOBAL_BUCKET_NAME || "global",
+  BACKUPS_BUCKET_NAME:
+    process.env.BACKUPS_BUCKET_NAME || DefaultBucketName.BACKUPS,
+  APPS_BUCKET_NAME: process.env.APPS_BUCKET_NAME || DefaultBucketName.APPS,
+  TEMPLATES_BUCKET_NAME:
+    process.env.TEMPLATES_BUCKET_NAME || DefaultBucketName.TEMPLATES,
+  GLOBAL_BUCKET_NAME:
+    process.env.GLOBAL_BUCKET_NAME || DefaultBucketName.GLOBAL,
   GLOBAL_CLOUD_BUCKET_NAME:
-    process.env.GLOBAL_CLOUD_BUCKET_NAME || "prod-budi-tenant-uploads",
-  PLUGIN_BUCKET_NAME: process.env.PLUGIN_BUCKET_NAME || "plugins",
+    process.env.GLOBAL_CLOUD_BUCKET_NAME || DefaultBucketName.CLOUD,
+  PLUGIN_BUCKET_NAME:
+    process.env.PLUGIN_BUCKET_NAME || DefaultBucketName.PLUGINS,
   USE_COUCH: process.env.USE_COUCH || true,
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
