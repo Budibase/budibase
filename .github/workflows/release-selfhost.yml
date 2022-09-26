@@ -54,9 +54,6 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           SELFHOST_TAG: latest
 
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
-
       - name: Bootstrap and build (CLI)
         run: |
           yarn
