@@ -42,7 +42,7 @@
   $: group = $groups.find(x => x._id === groupId)
   $: filtered = $users.data
   $: groupApps = $apps.filter(app =>
-    groups.actions.getGroupAppIds(group).includes(`app_${app.appId}`)
+    groups.actions.getGroupAppIds(group).includes(apps.getProdAppID(app.appId))
   )
   $: {
     if (loaded && !group?._id) {
@@ -70,7 +70,7 @@
   }
 
   const getRoleLabel = appId => {
-    const roleId = group?.roles?.[`app_${appId}`]
+    const roleId = group?.roles?.[apps.getProdAppID(appId)]
     const role = $roles.find(x => x._id === roleId)
     return role?.name || "Custom role"
   }
@@ -197,7 +197,7 @@
                 <StatusLight
                   square
                   color={RoleUtils.getRoleColour(
-                    group.roles[`app_${app.appId}`]
+                    group.roles[apps.getProdAppID(app.appId)]
                   )}
                 >
                   {getRoleLabel(app.appId)}
