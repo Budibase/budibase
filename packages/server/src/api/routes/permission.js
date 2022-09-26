@@ -4,7 +4,7 @@ const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("@budibase/backend-core/permissions")
 const { permissionValidator } = require("./utils/validators")
 
-const router = Router()
+const router = new Router()
 
 router
   .get("/api/permission/builtin", authorized(BUILDER), controller.fetchBuiltin)

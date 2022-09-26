@@ -6,28 +6,31 @@ export interface CreateUserResponse {
   email: string
 }
 
-export interface BulkCreateUsersRequest {
-  users: User[]
-  groups: any[]
-}
-
 export interface UserDetails {
   _id: string
   email: string
 }
 
-export interface BulkCreateUsersResponse {
-  successful: UserDetails[]
-  unsuccessful: { email: string; reason: string }[]
+export interface BulkUserRequest {
+  delete?: {
+    userIds: string[]
+  }
+  create?: {
+    users: User[]
+    groups: any[]
+  }
 }
 
-export interface BulkDeleteUsersRequest {
-  userIds: string[]
-}
-
-export interface BulkDeleteUsersResponse {
-  successful: UserDetails[]
-  unsuccessful: { _id: string; email: string; reason: string }[]
+export interface BulkUserResponse {
+  created?: {
+    successful: UserDetails[]
+    unsuccessful: { email: string; reason: string }[]
+  }
+  deleted?: {
+    successful: UserDetails[]
+    unsuccessful: { _id: string; email: string; reason: string }[]
+  }
+  message?: string
 }
 
 export interface InviteUserRequest {

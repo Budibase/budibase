@@ -1,14 +1,31 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
-import { auth } from "stores/portal"
+import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "components/portal/licensing/constants"
-import { FEATURE_FLAGS, isEnabled } from "../../helpers/featureFlags"
+import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
 
 export const createLicensingStore = () => {
   const DEFAULT = {
-    plans: {},
-    usageMetrics: {},
+    // navigation
+    goToUpgradePage: () => {},
+    // the top level license
+    license: undefined,
+    isFreePlan: true,
+    // features
+    groupsEnabled: false,
+    // the currently used quotas from the db
+    quotaUsage: undefined,
+    // derived quota metrics for percentages used
+    usageMetrics: undefined,
+    // quota reset
+    quotaResetDaysRemaining: undefined,
+    quotaResetDate: undefined,
+    // failed payments
+    accountPastDue: undefined,
+    pastDueEndDate: undefined,
+    pastDueDaysRemaining: undefined,
+    accountDowngraded: undefined,
   }
   const oneDayInMilliseconds = 86400000
 
@@ -16,10 +33,39 @@ export const createLicensingStore = () => {
 
   const actions = {
     init: async () => {
-      await actions.getQuotaUsage()
-      await actions.getUsageMetrics()
+      actions.setNavigation()
+      actions.setLicense()
+      await actions.setQuotaUsage()
+      actions.setUsageMetrics()
     },
-    getQuotaUsage: async () => {
+    setNavigation: () => {
+      const upgradeUrl = `${get(admin).accountPortalUrl}/portal/upgrade`
+      const goToUpgradePage = () => {
+        window.location.href = upgradeUrl
+      }
+      store.update(state => {
+        return {
+          ...state,
+          goToUpgradePage,
+        }
+      })
+    },
+    setLicense: () => {
+      const license = get(auth).user.license
+      const isFreePlan = license?.plan.type === Constants.PlanType.FREE
+      const groupsEnabled = license.features.includes(
+        Constants.Features.USER_GROUPS
+      )
+      store.update(state => {
+        return {
+          ...state,
+          license,
+          isFreePlan,
+          groupsEnabled,
+        }
+      })
+    },
+    setQuotaUsage: async () => {
       const quotaUsage = await API.getQuotaUsage()
       store.update(state => {
         return {
@@ -28,8 +74,8 @@ export const createLicensingStore = () => {
         }
       })
     },
-    getUsageMetrics: async () => {
-      if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+    setUsageMetrics: () => {
+      if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
         const quota = get(store).quotaUsage
         const license = get(auth).user.license
         const now = new Date()
@@ -41,7 +87,7 @@ export const createLicensingStore = () => {
           return keys.reduce((acc, key) => {
             const quotaLimit = license[key].value
             const quotaUsed = (quota[key] / quotaLimit) * 100
-            acc[key] = quotaLimit > -1 ? Math.round(quotaUsed) : -1
+            acc[key] = quotaLimit > -1 ? Math.floor(quotaUsed) : -1
             return acc
           }, {})
         }
@@ -97,9 +143,6 @@ export const createLicensingStore = () => {
             accountPastDue: pastDueAtMilliseconds != null,
             pastDueEndDate,
             pastDueDaysRemaining,
-            isFreePlan: () => {
-              return license?.plan.type === Constants.PlanType.FREE
-            },
           }
         })
       }
