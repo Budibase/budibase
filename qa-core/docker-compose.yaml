@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  qa-core-couchdb:
+    # platform: linux/amd64
+    container_name: budi-couchdb-qa
+    restart: on-failure
+    image: ibmcom/couchdb3
+    environment:
+      - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
+      - COUCHDB_USER=${COUCH_DB_USER}
+    ports:
+      - "4567:5984"

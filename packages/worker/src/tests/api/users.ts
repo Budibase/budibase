@@ -1,8 +1,6 @@
 import {
-  BulkCreateUsersRequest,
-  BulkCreateUsersResponse,
-  BulkDeleteUsersRequest,
-  BulkDeleteUsersResponse,
+  BulkUserResponse,
+  BulkUserRequest,
   InviteUsersRequest,
   User,
 } from "@budibase/types"
@@ -69,24 +67,26 @@ export class UserAPI {
   // BULK
 
   bulkCreateUsers = async (users: User[], groups: any[] = []) => {
-    const body: BulkCreateUsersRequest = { users, groups }
+    const body: BulkUserRequest = { create: { users, groups } }
     const res = await this.request
-      .post(`/api/global/users/bulkCreate`)
+      .post(`/api/global/users/bulk`)
       .send(body)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
 
-    return res.body as BulkCreateUsersResponse
+    return res.body as BulkUserResponse
   }
 
-  bulkDeleteUsers = (body: BulkDeleteUsersRequest, status?: number) => {
-    return this.request
-      .post(`/api/global/users/bulkDelete`)
+  bulkDeleteUsers = async (userIds: string[], status?: number) => {
+    const body: BulkUserRequest = { delete: { userIds } }
+    const res = await this.request
+      .post(`/api/global/users/bulk`)
       .send(body)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
+    return res.body as BulkUserResponse
   }
 
   // USER

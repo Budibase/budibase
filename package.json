@@ -26,6 +26,7 @@
     "bootstrap": "lerna bootstrap && lerna link && ./scripts/link-dependencies.sh",
     "build": "lerna run build",
     "build:dev": "lerna run prebuild && tsc --build --watch --preserveWatchOutput",
+    "build:sdk": "lerna run build:sdk",
     "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
     "release": "lerna publish ${RELEASE_VERSION_TYPE:-patch} --yes --force-publish && yarn release:pro",
     "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop --exact && yarn release:pro:develop",

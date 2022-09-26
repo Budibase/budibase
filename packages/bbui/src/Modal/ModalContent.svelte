@@ -79,7 +79,7 @@
         {/if}
       </h1>
       {#if showDivider}
-        <Divider size="M" />
+        <Divider />
       {/if}
     {/if}
 

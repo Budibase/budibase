@@ -173,7 +173,7 @@
   </Body>
 </ConfirmDialog>
 
-<Divider size="S" />
+<Divider />
 <div class="query-header">
   <Heading size="S">Tables</Heading>
   <div class="table-buttons">
@@ -209,7 +209,7 @@
 {:else}
   <Body size="S"><i>No tables found.</i></Body>
 {/if}
-<Divider size="S" />
+<Divider />
 <div class="query-header">
   <Heading size="S">Relationships</Heading>
   <Button primary on:click={() => openRelationshipModal()}>

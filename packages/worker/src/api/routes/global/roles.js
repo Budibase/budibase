@@ -2,7 +2,7 @@ const Router = require("@koa/router")
 const controller = require("../../controllers/global/roles")
 const { builderOrAdmin } = require("@budibase/backend-core/auth")
 
-const router = Router()
+const router = new Router()
 
 router
   .get("/api/global/roles", builderOrAdmin, controller.fetch)
