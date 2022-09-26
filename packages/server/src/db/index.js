@@ -1,5 +1,5 @@
 const core = require("@budibase/backend-core")
-// const env = require("../environment")
+const env = require("../environment")
 
 exports.init = () => {
   const dbConfig = {
@@ -7,10 +7,10 @@ exports.init = () => {
     find: true,
   }
 
-  // if (env.isTest()) {
-  //   dbConfig.inMemory = true
-  //   dbConfig.allDbs = true
-  // }
+  if (env.isTest() && !env.COUCH_DB_URL) {
+    dbConfig.inMemory = true
+    dbConfig.allDbs = true
+  }
 
   core.init({ db: dbConfig })
 }
