@@ -8,7 +8,7 @@ exports.fetch = async function (ctx) {
   const defs = await getDefinitions()
 
   // for google sheets integration google verification
-  if (featureFlags.isEnabled(featureFlags.FeatureFlag.GOOGLE_SHEETS)) {
+  if (featureFlags.isEnabled(featureFlags.TenantFeatureFlag.GOOGLE_SHEETS)) {
     defs[SourceName.GOOGLE_SHEETS] = googlesheets.schema
   }
 

@@ -4,7 +4,7 @@ const env = require("../../environment")
 const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("@budibase/backend-core/permissions")
 
-const router = Router()
+const router = new Router()
 
 function redirectPath(path) {
   router

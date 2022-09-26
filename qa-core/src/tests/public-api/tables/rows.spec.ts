@@ -32,7 +32,7 @@ describe("Public API - /rows endpoints", () => {
     expect(row._id).toBeDefined()
   })
 
-  it("POST - Search rows", async () => {
+  /*it("POST - Search rows", async () => {
     const [response, rows] = await config.rows.search({
       query: {
         string: {
@@ -41,10 +41,11 @@ describe("Public API - /rows endpoints", () => {
       },
     })
     expect(response).toHaveStatusCode(200)
+    expect(rows.length).toEqual(1)
     expect(rows[0]._id).toEqual(config.context._id)
     expect(rows[0].tableId).toEqual(config.context.tableId)
     expect(rows[0].testColumn).toEqual(config.context.testColumn)
-  })
+  })*/
 
   it("GET - Retrieve a row", async () => {
     const [response, row] = await config.rows.read(config.context._id)

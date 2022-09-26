@@ -19,9 +19,7 @@ import {
 import {
   AccountMetadata,
   AllDocsResponse,
-  BulkCreateUsersResponse,
-  BulkDeleteUsersResponse,
-  BulkDocsResponse,
+  BulkUserResponse,
   CloudAccount,
   CreateUserResponse,
   InviteUsersRequest,
@@ -31,9 +29,9 @@ import {
   RowResponse,
   User,
 } from "@budibase/types"
-import { groups as groupUtils } from "@budibase/pro"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
+import { groups as groupsSdk } from "@budibase/pro"
 
 const PAGE_LIMIT = 8
 
@@ -349,8 +347,7 @@ const searchExistingEmails = async (emails: string[]) => {
 export const bulkCreate = async (
   newUsersRequested: User[],
   groups: string[]
-): Promise<BulkCreateUsersResponse> => {
-  const db = tenancy.getGlobalDB()
+): Promise<BulkUserResponse["created"]> => {
   const tenantId = tenancy.getTenantId()
 
   let usersToSave: any[] = []
@@ -392,9 +389,9 @@ export const bulkCreate = async (
   })
 
   const usersToBulkSave = await Promise.all(usersToSave)
-  await db.bulkDocs(usersToBulkSave)
+  await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
 
-  // Post processing of bulk added users, i.e events and cache operations
+  // Post-processing of bulk added users, e.g. events and cache operations
   for (const user of usersToBulkSave) {
     // TODO: Refactor to bulk insert users into the info db
     // instead of relying on looping tenant creation
@@ -409,6 +406,16 @@ export const bulkCreate = async (
       email: user.email,
     }
   })
+
+  // now update the groups
+  if (Array.isArray(saved) && groups) {
+    const groupPromises = []
+    const createdUserIds = saved.map(user => user._id)
+    for (let groupId of groups) {
+      groupPromises.push(groupsSdk.addUsers(groupId, createdUserIds))
+    }
+    await Promise.all(groupPromises)
+  }
 
   return {
     successful: saved,
@@ -438,10 +445,10 @@ const getAccountHolderFromUserIds = async (
 
 export const bulkDelete = async (
   userIds: string[]
-): Promise<BulkDeleteUsersResponse> => {
+): Promise<BulkUserResponse["deleted"]> => {
   const db = tenancy.getGlobalDB()
 
-  const response: BulkDeleteUsersResponse = {
+  const response: BulkUserResponse["deleted"] = {
     successful: [],
     unsuccessful: [],
   }
@@ -458,7 +465,6 @@ export const bulkDelete = async (
     })
   }
 
-  let groupsToModify: any = {}
   // Get users and delete
   const allDocsResponse: AllDocsResponse<User> = await db.allDocs({
     include_docs: true,
@@ -466,33 +472,16 @@ export const bulkDelete = async (
   })
   const usersToDelete: User[] = allDocsResponse.rows.map(
     (user: RowResponse<User>) => {
-      // if we find a user that has an associated group, add it to
-      // an array so we can easily use allDocs on them later.
-      // This prevents us having to re-loop over all the users
-      if (user.doc.userGroups) {
-        for (let groupId of user.doc.userGroups) {
-          if (!Object.keys(groupsToModify).includes(groupId)) {
-            groupsToModify[groupId] = [user.id]
-          } else {
-            groupsToModify[groupId] = [...groupsToModify[groupId], user.id]
-          }
-        }
-      }
-
       return user.doc
     }
   )
 
   // Delete from DB
-  const dbResponse: BulkDocsResponse = await db.bulkDocs(
-    usersToDelete.map(user => ({
-      ...user,
-      _deleted: true,
-    }))
-  )
-
-  // Deletion post processing
-  await groupUtils.bulkDeleteGroupUsers(groupsToModify)
+  const toDelete = usersToDelete.map(user => ({
+    ...user,
+    _deleted: true,
+  }))
+  const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
   for (let user of usersToDelete) {
     await bulkDeleteProcessing(user)
   }
@@ -526,7 +515,6 @@ export const destroy = async (id: string, currentUser: any) => {
   const db = tenancy.getGlobalDB()
   const dbUser = await db.get(id)
   const userId = dbUser._id as string
-  let groups = dbUser.userGroups
 
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     // root account holder can't be deleted from inside budibase
@@ -544,10 +532,6 @@ export const destroy = async (id: string, currentUser: any) => {
   await deprovisioning.removeUserFromInfoDB(dbUser)
 
   await db.remove(userId, dbUser._rev)
-
-  if (groups) {
-    await groupUtils.deleteGroupUsers(groups, dbUser)
-  }
 
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
