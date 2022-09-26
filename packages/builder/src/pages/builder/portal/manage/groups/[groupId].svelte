@@ -25,6 +25,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
+  import AppAddModal from "./_components/AppAddModal.svelte"
 
   export let groupId
 
@@ -34,8 +35,7 @@
   let prevSearch = undefined
   let pageInfo = createPaginationStore()
   let loaded = false
-  let editModal
-  let deleteModal
+  let editModal, deleteModal, appAddModal
 
   $: page = $pageInfo.page
   $: fetchUsers(page, searchTerm)
@@ -182,7 +182,14 @@
     </Layout>
 
     <Layout noPadding gap="S">
-      <Heading size="S">Apps</Heading>
+      <div class="header">
+        <Heading size="S">Apps</Heading>
+        <div>
+          <Button on:click={appAddModal.show()} icon="ExperienceAdd" cta>
+            Add app
+          </Button>
+        </div>
+      </div>
       <List>
         {#if groupApps.length}
           {#each groupApps as app}
@@ -203,6 +210,18 @@
                   {getRoleLabel(app.appId)}
                 </StatusLight>
               </div>
+              <Icon
+                on:click={e => {
+                  groups.actions.removeApp(
+                    groupId,
+                    apps.getProdAppID(app.appId)
+                  )
+                  e.stopPropagation()
+                }}
+                hoverable
+                size="S"
+                name="Close"
+              />
             </ListItem>
           {/each}
         {:else}
@@ -216,6 +235,11 @@
 <Modal bind:this={editModal}>
   <CreateEditGroupModal {group} {saveGroup} />
 </Modal>
+
+<Modal bind:this={appAddModal}>
+  <AppAddModal {group} />
+</Modal>
+
 <ConfirmDialog
   bind:this={deleteModal}
   title="Delete user group"
