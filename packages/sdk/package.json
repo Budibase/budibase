@@ -1,6 +1,6 @@
 {
   "name": "@budibase/sdk",
-  "version": "1.4.19",
+  "version": "2.0.0",
   "description": "Budibase Public API SDK",
   "author": "Budibase",
   "license": "MPL-2.0",
