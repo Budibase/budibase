@@ -42,7 +42,7 @@
   $: group = $groups.find(x => x._id === groupId)
   $: filtered = $users.data
   $: groupApps = $apps.filter(app =>
-    groups.actions.getGroupAppIds(group).includes(apps.getProdAppID(app.appId))
+    groups.actions.getGroupAppIds(group).includes(apps.getProdAppID(app.devId))
   )
   $: {
     if (loaded && !group?._id) {
@@ -204,17 +204,17 @@
                 <StatusLight
                   square
                   color={RoleUtils.getRoleColour(
-                    group.roles[apps.getProdAppID(app.appId)]
+                    group.roles[apps.getProdAppID(app.devId)]
                   )}
                 >
-                  {getRoleLabel(app.appId)}
+                  {getRoleLabel(app.devId)}
                 </StatusLight>
               </div>
               <Icon
                 on:click={e => {
                   groups.actions.removeApp(
                     groupId,
-                    apps.getProdAppID(app.appId)
+                    apps.getProdAppID(app.devId)
                   )
                   e.stopPropagation()
                 }}
