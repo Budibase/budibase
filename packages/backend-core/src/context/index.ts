@@ -226,6 +226,10 @@ export const getAppId = () => {
   }
 }
 
+export const isTenancyEnabled = () => {
+  return env.MULTI_TENANCY
+}
+
 /**
  * Opens the app database based on whatever the request
  * contained, dev or prod.
