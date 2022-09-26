@@ -10,13 +10,13 @@
     label: app.name,
     value: app,
   }))
-  $: prodAppId = selectedApp ? apps.getProdAppID(selectedApp.appId) : ""
   $: confirmDisabled =
     (!selectingRole && !selectedApp) || (selectingRole && !selectedRoleId)
   let selectedApp, selectedRoleId
   let selectingRole = false
 
   async function appSelected() {
+    const prodAppId = apps.getProdAppID(selectedApp.devId)
     if (!selectingRole) {
       selectingRole = true
       await roles.fetchByAppId(prodAppId)
