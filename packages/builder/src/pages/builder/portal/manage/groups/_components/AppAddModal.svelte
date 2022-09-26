@@ -32,8 +32,8 @@
   onConfirm={appSelected}
   size="M"
   title="Add app to group"
-  confirmText="Next"
-  showSecondaryButton
+  confirmText={selectingRole ? "Confirm" : "Next"}
+  showSecondaryButton={selectingRole}
   secondaryButtonText="Back"
   secondaryAction={() => (selectingRole = false)}
   disabled={confirmDisabled}
