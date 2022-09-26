@@ -31,8 +31,8 @@
   onMount(async () => {
     try {
       await templates.load()
-      await licensing.getQuotaUsage()
-      await licensing.getUsageMetrics()
+      // always load latest
+      await licensing.init()
       if ($templates?.length === 0) {
         notifications.error(
           "There was a problem loading quick start templates."
@@ -45,7 +45,7 @@
   })
 
   const initiateAppCreation = () => {
-    if ($licensing.usageMetrics.apps >= 100) {
+    if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
     } else {
       template = null
@@ -60,7 +60,7 @@
   }
 
   const initiateAppImport = () => {
-    if ($licensing.usageMetrics.apps >= 100) {
+    if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
     } else {
       template = { fromFile: true }
@@ -117,7 +117,7 @@
       </div>
     </div>
 
-    <Divider size="S" />
+    <Divider />
 
     {#if loaded && $templates?.length}
       <TemplateDisplay templates={$templates} />

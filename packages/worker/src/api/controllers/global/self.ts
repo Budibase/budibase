@@ -1,39 +1,37 @@
-const {
-  getGlobalDB,
-  getTenantId,
-  isUserInAppTenant,
-} = require("@budibase/backend-core/tenancy")
-const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
-const { user: userCache } = require("@budibase/backend-core/cache")
-const {
-  hash,
-  platformLogout,
-  getCookie,
-  clearCookie,
-} = require("@budibase/backend-core/utils")
-const { encrypt } = require("@budibase/backend-core/encryption")
-const { newid } = require("@budibase/backend-core/utils")
-const { users } = require("../../../sdk")
-const { Cookies } = require("@budibase/backend-core/constants")
-const { events, featureFlags } = require("@budibase/backend-core")
-const env = require("../../../environment")
+import sdk from "../../../sdk"
+import {
+  events,
+  featureFlags,
+  tenancy,
+  constants,
+  db as dbCore,
+  utils,
+  cache,
+  encryption,
+} from "@budibase/backend-core"
+import env from "../../../environment"
+import { groups } from "@budibase/pro"
+const { hash, platformLogout, getCookie, clearCookie, newid } = utils
+const { user: userCache } = cache
 
 function newTestApiKey() {
   return env.ENCRYPTED_TEST_PUBLIC_API_KEY
 }
 
 function newApiKey() {
-  return encrypt(`${getTenantId()}${SEPARATOR}${newid()}`)
+  return encryption.encrypt(
+    `${tenancy.getTenantId()}${dbCore.SEPARATOR}${newid()}`
+  )
 }
 
-function cleanupDevInfo(info) {
+function cleanupDevInfo(info: any) {
   // user doesn't need to aware of dev doc info
   delete info._id
   delete info._rev
   return info
 }
 
-exports.generateAPIKey = async ctx => {
+export async function generateAPIKey(ctx: any) {
   let userId
   let apiKey
   if (env.isTest() && ctx.request.body.userId) {
@@ -44,8 +42,8 @@ exports.generateAPIKey = async ctx => {
     apiKey = newApiKey()
   }
 
-  const db = getGlobalDB()
-  const id = generateDevInfoID(userId)
+  const db = tenancy.getGlobalDB()
+  const id = dbCore.generateDevInfoID(userId)
   let devInfo
   try {
     devInfo = await db.get(id)
@@ -57,9 +55,9 @@ exports.generateAPIKey = async ctx => {
   ctx.body = cleanupDevInfo(devInfo)
 }
 
-exports.fetchAPIKey = async ctx => {
-  const db = getGlobalDB()
-  const id = generateDevInfoID(ctx.user._id)
+export async function fetchAPIKey(ctx: any) {
+  const db = tenancy.getGlobalDB()
+  const id = dbCore.generateDevInfoID(ctx.user._id)
   let devInfo
   try {
     devInfo = await db.get(id)
@@ -74,20 +72,20 @@ exports.fetchAPIKey = async ctx => {
   ctx.body = cleanupDevInfo(devInfo)
 }
 
-const checkCurrentApp = ctx => {
-  const appCookie = getCookie(ctx, Cookies.CurrentApp)
-  if (appCookie && !isUserInAppTenant(appCookie.appId)) {
+const checkCurrentApp = (ctx: any) => {
+  const appCookie = getCookie(ctx, constants.Cookies.CurrentApp)
+  if (appCookie && !tenancy.isUserInAppTenant(appCookie.appId)) {
     // there is a currentapp cookie from another tenant
     // remove the cookie as this is incompatible with the builder
     // due to builder and admin permissions being removed
-    clearCookie(ctx, Cookies.CurrentApp)
+    clearCookie(ctx, constants.Cookies.CurrentApp)
   }
 }
 
 /**
  * Add the attributes that are session based to the current user.
  */
-const addSessionAttributesToUser = ctx => {
+const addSessionAttributesToUser = (ctx: any) => {
   ctx.body.account = ctx.user.account
   ctx.body.license = ctx.user.license
   ctx.body.budibaseAccess = !!ctx.user.budibaseAccess
@@ -95,9 +93,9 @@ const addSessionAttributesToUser = ctx => {
   ctx.body.csrfToken = ctx.user.csrfToken
 }
 
-const sanitiseUserUpdate = ctx => {
+const sanitiseUserUpdate = (ctx: any) => {
   const allowed = ["firstName", "lastName", "password", "forceResetPassword"]
-  const resp = {}
+  const resp: { [key: string]: any } = {}
   for (let [key, value] of Object.entries(ctx.request.body)) {
     if (allowed.includes(key)) {
       resp[key] = value
@@ -106,7 +104,7 @@ const sanitiseUserUpdate = ctx => {
   return resp
 }
 
-exports.getSelf = async ctx => {
+export async function getSelf(ctx: any) {
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
   }
@@ -118,17 +116,18 @@ exports.getSelf = async ctx => {
   checkCurrentApp(ctx)
 
   // get the main body of the user
-  ctx.body = await users.getUser(userId)
+  const user = await sdk.users.getUser(userId)
+  ctx.body = await groups.enrichUserRolesFromGroups(user)
 
   // add the feature flags for this tenant
-  const tenantId = getTenantId()
+  const tenantId = tenancy.getTenantId()
   ctx.body.featureFlags = featureFlags.getTenantFeatureFlags(tenantId)
 
   addSessionAttributesToUser(ctx)
 }
 
-exports.updateSelf = async ctx => {
-  const db = getGlobalDB()
+export async function updateSelf(ctx: any) {
+  const db = tenancy.getGlobalDB()
   const user = await db.get(ctx.user._id)
   let passwordChange = false
 

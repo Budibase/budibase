@@ -156,6 +156,8 @@ export default class DataFetch {
       schema,
       query,
       loading: true,
+      cursors: [],
+      cursor: null,
     }))
 
     // Actually fetch data

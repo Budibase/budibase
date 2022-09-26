@@ -9,7 +9,7 @@ const {
   PermissionLevels,
 } = require("@budibase/backend-core/permissions")
 
-const router = Router()
+const router = new Router()
 
 router
   .get("/api/views/export", authorized(BUILDER), viewController.exportView)

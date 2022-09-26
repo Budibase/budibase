@@ -6,6 +6,7 @@ export interface AccountPlan {
 export enum PlanType {
   FREE = "free",
   PRO = "pro",
+  TEAM = "team",
   BUSINESS = "business",
   ENTERPRISE = "enterprise",
 }
