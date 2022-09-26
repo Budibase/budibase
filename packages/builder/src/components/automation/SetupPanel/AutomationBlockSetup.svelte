@@ -113,8 +113,9 @@
 
     // Extract all outputs from all previous steps as available bindins
     let bindings = []
+    let loopBlockCount = 0
     for (let idx = 0; idx < blockIdx; idx++) {
-      let wasLoopBlock = allSteps[idx]?.stepId === ActionStepID.LOOP
+      let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
       let isLoopBlock =
         allSteps[idx]?.stepId === ActionStepID.LOOP &&
         allSteps.find(x => x.blockToLoop === block.id)
@@ -122,7 +123,8 @@
       // If the previous block was a loop block, decerement the index so the following
       // steps are in the correct order
       if (wasLoopBlock) {
-        blockIdx--
+        loopBlockCount++
+        continue
       }
 
       let schema = allSteps[idx]?.schema?.outputs?.properties ?? {}
@@ -143,8 +145,8 @@
           let runtimeName = isLoopBlock
             ? `loop.${name}`
             : block.name.startsWith("JS")
-            ? `steps[${idx}].${name}`
-            : `steps.${idx}.${name}`
+            ? `steps[${idx - loopBlockCount}].${name}`
+            : `steps.${idx - loopBlockCount}.${name}`
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
           return {
             label: runtime,
@@ -155,7 +157,7 @@
                 ? "Trigger outputs"
                 : isLoopBlock
                 ? "Loop Outputs"
-                : `Step ${idx} outputs`,
+                : `Step ${idx - loopBlockCount} outputs`,
             path: runtime,
           }
         })
@@ -229,6 +231,7 @@
             {bindings}
             {schemaFields}
             panel={AutomationBindingPanel}
+            fillWidth
           />
         </Drawer>
       {:else if value.customType === "password"}
