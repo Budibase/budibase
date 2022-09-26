@@ -1417,7 +1417,7 @@ paths:
                 application:
                   $ref: "#/components/examples/application"
     delete:
-      operationId: delete
+      operationId: destroy
       summary: Delete an application
       tags:
         - applications
@@ -1592,7 +1592,7 @@ paths:
                 row:
                   $ref: "#/components/examples/row"
     delete:
-      operationId: delete
+      operationId: destroy
       summary: Delete a row
       description: Deletes a row within the specified table.
       tags:
@@ -1717,7 +1717,7 @@ paths:
                 table:
                   $ref: "#/components/examples/table"
     delete:
-      operationId: delete
+      operationId: destroy
       summary: Delete a table
       description: Delete a table, this could be internal or external.
       tags:
@@ -1827,7 +1827,7 @@ paths:
                 user:
                   $ref: "#/components/examples/user"
     delete:
-      operationId: delete
+      operationId: destroy
       summary: Delete a user
       tags:
         - users

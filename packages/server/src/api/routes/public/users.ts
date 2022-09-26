@@ -65,7 +65,7 @@ write.push(new Endpoint("put", "/users/:userId", controller.update))
  * @openapi
  * /users/{userId}:
  *   delete:
- *     operationId: delete
+ *     operationId: destroy
  *     summary: Delete a user
  *     tags:
  *       - users
