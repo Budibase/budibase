@@ -299,7 +299,7 @@ const performAppCreate = async (ctx: any) => {
     })
 
     // Migrate navigation settings and screens if required
-    if (existing && !existing.navigation) {
+    if (existing) {
       const navigation = await migrateAppNavigation()
       if (navigation) {
         newApplication.navigation = navigation
@@ -597,7 +597,7 @@ const migrateAppNavigation = async () => {
   // Migrate all screens, removing custom layouts
   for (let screen of screens) {
     if (!screen.layoutId) {
-      return
+      continue
     }
     const layout = layouts.find(layout => layout._id === screen.layoutId)
     screen.layoutId = undefined
@@ -611,7 +611,7 @@ const migrateAppNavigation = async () => {
   const layout = layouts?.find(
     (layout: Layout) => layout._id === BASE_LAYOUT_PROP_IDS.PRIVATE
   )
-  if (layout) {
+  if (layout && !existing.navigation) {
     let navigationSettings: any = {
       navigation: "Top",
       title: name,
