@@ -1,0 +1,5072 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>SuperAgent — elegant API for AJAX in Node and browsers</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/3.0.0/tocbot.css">
+    <link rel="stylesheet" href="docs/style.css">
+  </head>
+  <body>
+    <ul id="menu"></ul>
+    <div id="content">
+    <section class="suite">
+      <h1>Agent</h1>
+      <dl>
+        <dt>should remember defaults</dt>
+        <dd><pre><code>if (typeof Promise === &#x27;undefined&#x27;) {
+  return;
+}
+let called = 0;
+let event_called = 0;
+const agent = request
+  .agent()
+  .accept(&#x27;json&#x27;)
+  .use(() =&#x3E; {
+    called++;
+  })
+  .once(&#x27;request&#x27;, () =&#x3E; {
+    event_called++;
+  })
+  .query({ hello: &#x27;world&#x27; })
+  .set(&#x27;X-test&#x27;, &#x27;testing&#x27;);
+assert.equal(0, called);
+assert.equal(0, event_called);
+return agent
+  .get(&#x60;${base}/echo&#x60;)
+  .then(res =&#x3E; {
+    assert.equal(1, called);
+    assert.equal(1, event_called);
+    assert.equal(&#x27;application/json&#x27;, res.headers.accept);
+    assert.equal(&#x27;testing&#x27;, res.headers[&#x27;x-test&#x27;]);
+    return agent.get(&#x60;${base}/querystring&#x60;);
+  })
+  .then(res =&#x3E; {
+    assert.equal(2, called);
+    assert.equal(2, event_called);
+    assert.deepEqual({ hello: &#x27;world&#x27; }, res.body);
+  });</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request</h1>
+      <dl>
+        <section class="suite">
+          <h1>res.statusCode</h1>
+          <dl>
+            <dt>should set statusCode</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/login&#x60;, (err, res) =&#x3E; {
+        try {
+          assert.strictEqual(res.statusCode, 200);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>should allow the send shorthand</h1>
+          <dl>
+            <dt>with callback in the method call</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/login&#x60;, (err, res) =&#x3E; {
+        assert.equal(res.status, 200);
+        done();
+      });
+    }</code></pre></dd>
+            <dt>with data in the method call</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.post(&#x60;${uri}/echo&#x60;, { foo: &#x27;bar&#x27; }).end((err, res) =&#x3E; {
+        assert.equal(&#x27;{&#x22;foo&#x22;:&#x22;bar&#x22;}&#x27;, res.text);
+        done();
+      });
+    }</code></pre></dd>
+            <dt>with callback and data in the method call</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.post(&#x60;${uri}/echo&#x60;, { foo: &#x27;bar&#x27; }, (err, res) =&#x3E; {
+        assert.equal(&#x27;{&#x22;foo&#x22;:&#x22;bar&#x22;}&#x27;, res.text);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with a callback</h1>
+          <dl>
+            <dt>should invoke .end()</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/login&#x60;, (err, res) =&#x3E; {
+        try {
+          assert.equal(res.status, 200);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.end()</h1>
+          <dl>
+            <dt>should issue a request</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/login&#x60;).end((err, res) =&#x3E; {
+        try {
+          assert.equal(res.status, 200);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+    }</code></pre></dd>
+            <dt>is optional with a promise</dt>
+            <dd><pre><code>if (typeof Promise === &#x27;undefined&#x27;) {
+  return;
+}
+return request
+  .get(&#x60;${uri}/login&#x60;)
+  .then(res =&#x3E; res.status)
+  .then()
+  .then(status =&#x3E; {
+    assert.equal(200, status, &#x27;Real promises pass results through&#x27;);
+  });</code></pre></dd>
+            <dt>called only once with a promise</dt>
+            <dd><pre><code>if (typeof Promise === &#x27;undefined&#x27;) {
+  return;
+}
+const req = request.get(&#x60;${uri}/unique&#x60;);
+return Promise.all([req, req, req]).then(results =&#x3E; {
+  results.forEach(item =&#x3E; {
+    assert.equal(
+      item.body,
+      results[0].body,
+      &#x27;It should keep returning the same result after being called once&#x27;
+    );
+  });
+});</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>res.error</h1>
+          <dl>
+            <dt>ok</dt>
+            <dd><pre><code>done =&#x3E; {
+      let calledErrorEvent = false;
+      let calledOKHandler = false;
+      request
+        .get(&#x60;${uri}/error&#x60;)
+        .ok(res =&#x3E; {
+          assert.strictEqual(500, res.status);
+          calledOKHandler = true;
+          return true;
+        })
+        .on(&#x27;error&#x27;, err =&#x3E; {
+          calledErrorEvent = true;
+        })
+        .end((err, res) =&#x3E; {
+          try {
+            assert.ifError(err);
+            assert.strictEqual(res.status, 500);
+            assert(!calledErrorEvent);
+            assert(calledOKHandler);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should should be an Error object</dt>
+            <dd><pre><code>done =&#x3E; {
+      let calledErrorEvent = false;
+      request
+        .get(&#x60;${uri}/error&#x60;)
+        .on(&#x27;error&#x27;, err =&#x3E; {
+          assert.strictEqual(err.status, 500);
+          calledErrorEvent = true;
+        })
+        .end((err, res) =&#x3E; {
+          try {
+            if (NODE) {
+              res.error.message.should.equal(&#x27;cannot GET /error (500)&#x27;);
+            } else {
+              res.error.message.should.equal(&#x60;cannot GET ${uri}/error (500)&#x60;);
+            }
+            assert.strictEqual(res.error.status, 500);
+            assert(err, &#x27;should have an error for 500&#x27;);
+            assert.equal(err.message, &#x27;Internal Server Error&#x27;);
+            assert(calledErrorEvent);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>with .then() promise</dt>
+            <dd><pre><code>if (typeof Promise === &#x27;undefined&#x27;) {
+  return;
+}
+return request.get(&#x60;${uri}/error&#x60;).then(
+  () =&#x3E; {
+    assert.fail();
+  },
+  err =&#x3E; {
+    assert.equal(err.message, &#x27;Internal Server Error&#x27;);
+  }
+);</code></pre></dd>
+            <dt>with .ok() returning false</dt>
+            <dd><pre><code>if (typeof Promise === &#x27;undefined&#x27;) {
+  return;
+}
+return request
+  .get(&#x60;${uri}/echo&#x60;)
+  .ok(() =&#x3E; false)
+  .then(
+    () =&#x3E; {
+      assert.fail();
+    },
+    err =&#x3E; {
+      assert.equal(200, err.response.status);
+      assert.equal(err.message, &#x27;OK&#x27;);
+    }
+  );</code></pre></dd>
+            <dt>with .ok() throwing an Error</dt>
+            <dd><pre><code>if (typeof Promise === &#x27;undefined&#x27;) {
+  return;
+}
+return request
+  .get(&#x60;${uri}/echo&#x60;)
+  .ok(() =&#x3E; {
+    throw new Error(&#x27;boom&#x27;);
+  })
+  .then(
+    () =&#x3E; {
+      assert.fail();
+    },
+    err =&#x3E; {
+      assert.equal(200, err.response.status);
+      assert.equal(err.message, &#x27;boom&#x27;);
+    }
+  );</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>res.header</h1>
+          <dl>
+            <dt>should be an object</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/login&#x60;).end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;Express&#x27;, res.header[&#x27;x-powered-by&#x27;]);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>set headers</h1>
+          <dl>
+            <dt>should only set headers for ownProperties of header</dt>
+            <dd><pre><code>done =&#x3E; {
+      try {
+        request
+          .get(&#x60;${uri}/echo-headers&#x60;)
+          .set(&#x27;valid&#x27;, &#x27;ok&#x27;)
+          .end((err, res) =&#x3E; {
+            if (
+              !err &#x26;&#x26;
+              res.body &#x26;&#x26;
+              res.body.valid &#x26;&#x26;
+              !res.body.hasOwnProperty(&#x27;invalid&#x27;)
+            ) {
+              return done();
+            }
+            done(err || new Error(&#x27;fail&#x27;));
+          });
+      } catch (err) {
+        done(err);
+      }
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>res.charset</h1>
+          <dl>
+            <dt>should be set when present</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/login&#x60;).end((err, res) =&#x3E; {
+        try {
+          res.charset.should.equal(&#x27;utf-8&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>res.statusType</h1>
+          <dl>
+            <dt>should provide the first digit</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/login&#x60;).end((err, res) =&#x3E; {
+        try {
+          assert(!err, &#x27;should not have an error for success responses&#x27;);
+          assert.equal(200, res.status);
+          assert.equal(2, res.statusType);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>res.type</h1>
+          <dl>
+            <dt>should provide the mime-type void of params</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/login&#x60;).end((err, res) =&#x3E; {
+        try {
+          res.type.should.equal(&#x27;text/html&#x27;);
+          res.charset.should.equal(&#x27;utf-8&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.set(field, val)</h1>
+          <dl>
+            <dt>should set the header field</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .set(&#x27;X-Foo&#x27;, &#x27;bar&#x27;)
+        .set(&#x27;X-Bar&#x27;, &#x27;baz&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            assert.equal(&#x27;bar&#x27;, res.header[&#x27;x-foo&#x27;]);
+            assert.equal(&#x27;baz&#x27;, res.header[&#x27;x-bar&#x27;]);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.set(obj)</h1>
+          <dl>
+            <dt>should set the header fields</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .set({ &#x27;X-Foo&#x27;: &#x27;bar&#x27;, &#x27;X-Bar&#x27;: &#x27;baz&#x27; })
+        .end((err, res) =&#x3E; {
+          try {
+            assert.equal(&#x27;bar&#x27;, res.header[&#x27;x-foo&#x27;]);
+            assert.equal(&#x27;baz&#x27;, res.header[&#x27;x-bar&#x27;]);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.type(str)</h1>
+          <dl>
+            <dt>should set the Content-Type</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .type(&#x27;text/x-foo&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            res.header[&#x27;content-type&#x27;].should.equal(&#x27;text/x-foo&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should map &#x22;json&#x22;</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .type(&#x27;json&#x27;)
+        .send(&#x27;{&#x22;a&#x22;: 1}&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            res.should.be.json();
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should map &#x22;html&#x22;</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .type(&#x27;html&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            res.header[&#x27;content-type&#x27;].should.equal(&#x27;text/html&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.accept(str)</h1>
+          <dl>
+            <dt>should set Accept</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/echo&#x60;)
+        .accept(&#x27;text/x-foo&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            res.header.accept.should.equal(&#x27;text/x-foo&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should map &#x22;json&#x22;</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/echo&#x60;)
+        .accept(&#x27;json&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            res.header.accept.should.equal(&#x27;application/json&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should map &#x22;xml&#x22;</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/echo&#x60;)
+        .accept(&#x27;xml&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            // Mime module keeps changing this :(
+            assert(
+              res.header.accept == &#x27;application/xml&#x27; ||
+                res.header.accept == &#x27;text/xml&#x27;
+            );
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should map &#x22;html&#x22;</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/echo&#x60;)
+        .accept(&#x27;html&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            res.header.accept.should.equal(&#x27;text/html&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.send(str)</h1>
+          <dl>
+            <dt>should write the string</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .type(&#x27;json&#x27;)
+        .send(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.send(Object)</h1>
+          <dl>
+            <dt>should default to json</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .send({ name: &#x27;tobi&#x27; })
+        .end((err, res) =&#x3E; {
+          try {
+            res.should.be.json();
+            res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <section class="suite">
+              <h1>when called several times</h1>
+              <dl>
+                <dt>should merge the objects</dt>
+                <dd><pre><code>done =&#x3E; {
+        request
+          .post(&#x60;${uri}/echo&#x60;)
+          .send({ name: &#x27;tobi&#x27; })
+          .send({ age: 1 })
+          .end((err, res) =&#x3E; {
+            try {
+              res.should.be.json();
+              if (NODE) {
+                res.buffered.should.be.true();
+              }
+              res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;,&#x22;age&#x22;:1}&#x27;);
+              done();
+            } catch (err2) {
+              done(err2);
+            }
+          });
+      }</code></pre></dd>
+              </dl>
+            </section>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.end(fn)</h1>
+          <dl>
+            <dt>should check arity</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .send({ name: &#x27;tobi&#x27; })
+        .end((err, res) =&#x3E; {
+          try {
+            assert.ifError(err);
+            res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should emit request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.post(&#x60;${uri}/echo&#x60;);
+      req.on(&#x27;request&#x27;, request =&#x3E; {
+        assert.equal(req, request);
+        done();
+      });
+      req.end();
+    }</code></pre></dd>
+            <dt>should emit response</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .send({ name: &#x27;tobi&#x27; })
+        .on(&#x27;response&#x27;, res =&#x3E; {
+          res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
+          done();
+        })
+        .end();
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.then(fulfill, reject)</h1>
+          <dl>
+            <dt>should support successful fulfills with .then(fulfill)</dt>
+            <dd><pre><code>done =&#x3E; {
+      if (typeof Promise === &#x27;undefined&#x27;) {
+        return done();
+      }
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .send({ name: &#x27;tobi&#x27; })
+        .then(res =&#x3E; {
+          res.type.should.equal(&#x27;application/json&#x27;);
+          res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should reject an error with .then(null, reject)</dt>
+            <dd><pre><code>done =&#x3E; {
+      if (typeof Promise === &#x27;undefined&#x27;) {
+        return done();
+      }
+      request.get(&#x60;${uri}/error&#x60;).then(null, err =&#x3E; {
+        assert.equal(err.status, 500);
+        assert.equal(err.response.text, &#x27;boom&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.catch(reject)</h1>
+          <dl>
+            <dt>should reject an error with .catch(reject)</dt>
+            <dd><pre><code>done =&#x3E; {
+      if (typeof Promise === &#x27;undefined&#x27;) {
+        return done();
+      }
+      request.get(&#x60;${uri}/error&#x60;).catch(err =&#x3E; {
+        assert.equal(err.status, 500);
+        assert.equal(err.response.text, &#x27;boom&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.abort()</h1>
+          <dl>
+            <dt>should abort the request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.get(&#x60;${uri}/delay/3000&#x60;);
+      req.end((err, res) =&#x3E; {
+        try {
+          assert(false, &#x27;should not complete the request&#x27;);
+        } catch (err2) {
+          done(err2);
+        }
+      });
+      req.on(&#x27;error&#x27;, error =&#x3E; {
+        done(error);
+      });
+      req.on(&#x27;abort&#x27;, done);
+      setTimeout(() =&#x3E; {
+        req.abort();
+      }, 500);
+    }</code></pre></dd>
+            <dt>should abort the promise</dt>
+            <dd><pre><code>const req = request.get(&#x60;${uri}/delay/3000&#x60;);
+setTimeout(() =&#x3E; {
+  req.abort();
+}, 10);
+return req.then(
+  () =&#x3E; {
+    assert.fail(&#x27;should not complete the request&#x27;);
+  },
+  err =&#x3E; {
+    assert.equal(&#x27;ABORTED&#x27;, err.code);
+  }
+);</code></pre></dd>
+            <dt>should allow chaining .abort() several times</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.get(&#x60;${uri}/delay/3000&#x60;);
+      req.end((err, res) =&#x3E; {
+        try {
+          assert(false, &#x27;should not complete the request&#x27;);
+        } catch (err2) {
+          done(err2);
+        }
+      });
+      // This also verifies only a single &#x27;done&#x27; event is emitted
+      req.on(&#x27;abort&#x27;, done);
+      setTimeout(() =&#x3E; {
+        req
+          .abort()
+          .abort()
+          .abort();
+      }, 1000);
+    }</code></pre></dd>
+            <dt>should not allow abort then end</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/delay/3000&#x60;)
+        .abort()
+        .end((err, res) =&#x3E; {
+          done(err ? undefined : new Error(&#x27;Expected abort error&#x27;));
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.toJSON()</h1>
+          <dl>
+            <dt>should describe the request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.post(&#x60;${uri}/echo&#x60;).send({ foo: &#x27;baz&#x27; });
+      req.end((err, res) =&#x3E; {
+        try {
+          const json = req.toJSON();
+          assert.equal(&#x27;POST&#x27;, json.method);
+          assert(/\/echo$/.test(json.url));
+          assert.equal(&#x27;baz&#x27;, json.data.foo);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.options()</h1>
+          <dl>
+            <dt>should allow request body</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .options(&#x60;${uri}/options/echo/body&#x60;)
+        .send({ foo: &#x27;baz&#x27; })
+        .end((err, res) =&#x3E; {
+          try {
+            assert.equal(err, null);
+            assert.strictEqual(res.body.foo, &#x27;baz&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.sortQuery()</h1>
+          <dl>
+            <dt>nop with no querystring</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/url&#x60;)
+        .sortQuery()
+        .end((err, res) =&#x3E; {
+          try {
+            assert.equal(res.text, &#x27;/url&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should sort the request querystring</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/url&#x60;)
+        .query(&#x27;search=Manny&#x27;)
+        .query(&#x27;order=desc&#x27;)
+        .sortQuery()
+        .end((err, res) =&#x3E; {
+          try {
+            assert.equal(res.text, &#x27;/url?order=desc&#x26;search=Manny&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should allow disabling sorting</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/url&#x60;)
+        .query(&#x27;search=Manny&#x27;)
+        .query(&#x27;order=desc&#x27;)
+        .sortQuery() // take default of true
+        .sortQuery(false) // override it in later call
+        .end((err, res) =&#x3E; {
+          try {
+            assert.equal(res.text, &#x27;/url?search=Manny&#x26;order=desc&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should sort the request querystring using customized function</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/url&#x60;)
+        .query(&#x27;name=Nick&#x27;)
+        .query(&#x27;search=Manny&#x27;)
+        .query(&#x27;order=desc&#x27;)
+        .sortQuery((a, b) =&#x3E; a.length - b.length)
+        .end((err, res) =&#x3E; {
+          try {
+            assert.equal(res.text, &#x27;/url?name=Nick&#x26;order=desc&#x26;search=Manny&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.set(&#x22;Content-Type&#x22;, contentType)</h1>
+      <dl>
+        <dt>should work with just the contentType component</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .set(&#x27;Content-Type&#x27;, &#x27;application/json&#x27;)
+      .send({ name: &#x27;tobi&#x27; })
+      .end((err, res) =&#x3E; {
+        assert(!err);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work with the charset component</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .set(&#x27;Content-Type&#x27;, &#x27;application/json; charset=utf-8&#x27;)
+      .send({ name: &#x27;tobi&#x27; })
+      .end((err, res) =&#x3E; {
+        assert(!err);
+        done();
+      });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.send(Object) as &#x22;form&#x22;</h1>
+      <dl>
+        <section class="suite">
+          <h1>with req.type() set to form</h1>
+          <dl>
+            <dt>should send x-www-form-urlencoded data</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .type(&#x27;form&#x27;)
+        .send({ name: &#x27;tobi&#x27; })
+        .end((err, res) =&#x3E; {
+          res.header[&#x27;content-type&#x27;].should.equal(
+            &#x27;application/x-www-form-urlencoded&#x27;
+          );
+          res.text.should.equal(&#x27;name=tobi&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>when called several times</h1>
+          <dl>
+            <dt>should merge the objects</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .type(&#x27;form&#x27;)
+        .send({ name: { first: &#x27;tobi&#x27;, last: &#x27;holowaychuk&#x27; } })
+        .send({ age: &#x27;1&#x27; })
+        .end((err, res) =&#x3E; {
+          res.header[&#x27;content-type&#x27;].should.equal(
+            &#x27;application/x-www-form-urlencoded&#x27;
+          );
+          res.text.should.equal(
+            &#x27;name%5Bfirst%5D=tobi&#x26;name%5Blast%5D=holowaychuk&#x26;age=1&#x27;
+          );
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.attach</h1>
+      <dl>
+        <dt>ignores null file</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x27;/echo&#x27;)
+      .attach(&#x27;image&#x27;, null)
+      .end((err, res) =&#x3E; {
+        done();
+      });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.field</h1>
+      <dl>
+        <dt>allow bools</dt>
+        <dd><pre><code>done =&#x3E; {
+    if (!formDataSupported) {
+      return done();
+    }
+    request
+      .post(&#x60;${base}/formecho&#x60;)
+      .field(&#x27;bools&#x27;, true)
+      .field(&#x27;strings&#x27;, &#x27;true&#x27;)
+      .end((err, res) =&#x3E; {
+        assert.ifError(err);
+        assert.deepStrictEqual(res.body, { bools: &#x27;true&#x27;, strings: &#x27;true&#x27; });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>allow objects</dt>
+        <dd><pre><code>done =&#x3E; {
+    if (!formDataSupported) {
+      return done();
+    }
+    request
+      .post(&#x60;${base}/formecho&#x60;)
+      .field({ bools: true, strings: &#x27;true&#x27; })
+      .end((err, res) =&#x3E; {
+        assert.ifError(err);
+        assert.deepStrictEqual(res.body, { bools: &#x27;true&#x27;, strings: &#x27;true&#x27; });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>works with arrays in objects</dt>
+        <dd><pre><code>done =&#x3E; {
+    if (!formDataSupported) {
+      return done();
+    }
+    request
+      .post(&#x60;${base}/formecho&#x60;)
+      .field({ numbers: [1, 2, 3] })
+      .end((err, res) =&#x3E; {
+        assert.ifError(err);
+        assert.deepStrictEqual(res.body, { numbers: [&#x27;1&#x27;, &#x27;2&#x27;, &#x27;3&#x27;] });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>works with arrays</dt>
+        <dd><pre><code>done =&#x3E; {
+    if (!formDataSupported) {
+      return done();
+    }
+    request
+      .post(&#x60;${base}/formecho&#x60;)
+      .field(&#x27;letters&#x27;, [&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;])
+      .end((err, res) =&#x3E; {
+        assert.ifError(err);
+        assert.deepStrictEqual(res.body, { letters: [&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;] });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>throw when empty</dt>
+        <dd><pre><code>should.throws(() =&#x3E; {
+  request.post(&#x60;${base}/echo&#x60;).field();
+}, /name/);
+should.throws(() =&#x3E; {
+  request.post(&#x60;${base}/echo&#x60;).field(&#x27;name&#x27;);
+}, /val/);</code></pre></dd>
+        <dt>cannot be mixed with send()</dt>
+        <dd><pre><code>assert.throws(() =&#x3E; {
+  request
+    .post(&#x27;/echo&#x27;)
+    .field(&#x27;form&#x27;, &#x27;data&#x27;)
+    .send(&#x27;hi&#x27;);
+});
+assert.throws(() =&#x3E; {
+  request
+    .post(&#x27;/echo&#x27;)
+    .send(&#x27;hi&#x27;)
+    .field(&#x27;form&#x27;, &#x27;data&#x27;);
+});</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.send(Object) as &#x22;json&#x22;</h1>
+      <dl>
+        <dt>should default to json</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .send({ name: &#x27;tobi&#x27; })
+      .end((err, res) =&#x3E; {
+        res.should.be.json();
+        res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work with arrays</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .send([1, 2, 3])
+      .end((err, res) =&#x3E; {
+        res.should.be.json();
+        res.text.should.equal(&#x27;[1,2,3]&#x27;);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work with value null</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .type(&#x27;json&#x27;)
+      .send(&#x27;null&#x27;)
+      .end((err, res) =&#x3E; {
+        res.should.be.json();
+        assert.strictEqual(res.body, null);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work with value false</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .type(&#x27;json&#x27;)
+      .send(&#x27;false&#x27;)
+      .end((err, res) =&#x3E; {
+        res.should.be.json();
+        res.body.should.equal(false);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work with value 0</dt>
+        <dd><pre><code>done =&#x3E; {
+      // fails in IE9
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .type(&#x27;json&#x27;)
+        .send(&#x27;0&#x27;)
+        .end((err, res) =&#x3E; {
+          res.should.be.json();
+          res.body.should.equal(0);
+          done();
+        });
+    }</code></pre></dd>
+        <dt>should work with empty string value</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .type(&#x27;json&#x27;)
+      .send(&#x27;&#x22;&#x22;&#x27;)
+      .end((err, res) =&#x3E; {
+        res.should.be.json();
+        res.body.should.equal(&#x27;&#x27;);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work with GET</dt>
+        <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${uri}/echo&#x60;)
+        .send({ tobi: &#x27;ferret&#x27; })
+        .end((err, res) =&#x3E; {
+          try {
+            res.should.be.json();
+            res.text.should.equal(&#x27;{&#x22;tobi&#x22;:&#x22;ferret&#x22;}&#x27;);
+            ({ tobi: &#x27;ferret&#x27; }.should.eql(res.body));
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+        <dt>should work with vendor MIME type</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .set(&#x27;Content-Type&#x27;, &#x27;application/vnd.example+json&#x27;)
+      .send({ name: &#x27;vendor&#x27; })
+      .end((err, res) =&#x3E; {
+        res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;vendor&#x22;}&#x27;);
+        ({ name: &#x27;vendor&#x27; }.should.eql(res.body));
+        done();
+      });
+  }</code></pre></dd>
+        <section class="suite">
+          <h1>when called several times</h1>
+          <dl>
+            <dt>should merge the objects</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${uri}/echo&#x60;)
+        .send({ name: &#x27;tobi&#x27; })
+        .send({ age: 1 })
+        .end((err, res) =&#x3E; {
+          res.should.be.json();
+          res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;,&#x22;age&#x22;:1}&#x27;);
+          ({ name: &#x27;tobi&#x27;, age: 1 }.should.eql(res.body));
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>res.body</h1>
+      <dl>
+        <section class="suite">
+          <h1>application/json</h1>
+          <dl>
+            <dt>should parse the body</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/json&#x60;).end((err, res) =&#x3E; {
+        res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;manny&#x22;}&#x27;);
+        res.body.should.eql({ name: &#x27;manny&#x27; });
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>HEAD requests</h1>
+          <dl>
+            <dt>should not throw a parse error</dt>
+            <dd><pre><code>done =&#x3E; {
+        request.head(&#x60;${uri}/json&#x60;).end((err, res) =&#x3E; {
+          try {
+            assert.strictEqual(err, null);
+            assert.strictEqual(res.text, undefined);
+            assert.strictEqual(Object.keys(res.body).length, 0);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+      }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>Invalid JSON response</h1>
+          <dl>
+            <dt>should return the raw response</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/invalid-json&#x60;).end((err, res) =&#x3E; {
+        assert.deepEqual(
+          err.rawResponse,
+          &#x22;)]}&#x27;, {&#x27;header&#x27;:{&#x27;code&#x27;:200,&#x27;text&#x27;:&#x27;OK&#x27;,&#x27;version&#x27;:&#x27;1.0&#x27;},&#x27;data&#x27;:&#x27;some data&#x27;}&#x22;
+        );
+        done();
+      });
+    }</code></pre></dd>
+            <dt>should return the http status code</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${uri}/invalid-json-forbidden&#x60;).end((err, res) =&#x3E; {
+        assert.equal(err.statusCode, 403);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>No content</h1>
+          <dl>
+            <dt>should not throw a parse error</dt>
+            <dd><pre><code>done =&#x3E; {
+        request.get(&#x60;${uri}/no-content&#x60;).end((err, res) =&#x3E; {
+          try {
+            assert.strictEqual(err, null);
+            assert.strictEqual(res.text, &#x27;&#x27;);
+            assert.strictEqual(Object.keys(res.body).length, 0);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+      }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>application/json+hal</h1>
+          <dl>
+            <dt>should parse the body</dt>
+            <dd><pre><code>done =&#x3E; {
+        request.get(&#x60;${uri}/json-hal&#x60;).end((err, res) =&#x3E; {
+          if (err) return done(err);
+          res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;hal 5000&#x22;}&#x27;);
+          res.body.should.eql({ name: &#x27;hal 5000&#x27; });
+          done();
+        });
+      }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>vnd.collection+json</h1>
+          <dl>
+            <dt>should parse the body</dt>
+            <dd><pre><code>done =&#x3E; {
+        request.get(&#x60;${uri}/collection-json&#x60;).end((err, res) =&#x3E; {
+          res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;chewbacca&#x22;}&#x27;);
+          res.body.should.eql({ name: &#x27;chewbacca&#x27; });
+          done();
+        });
+      }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request</h1>
+      <dl>
+        <section class="suite">
+          <h1>on redirect</h1>
+          <dl>
+            <dt>should retain header fields</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/header&#x60;)
+        .set(&#x27;X-Foo&#x27;, &#x27;bar&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            assert(res.body);
+            res.body.should.have.property(&#x27;x-foo&#x27;, &#x27;bar&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should preserve timeout across redirects</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/movies/random&#x60;)
+        .timeout(250)
+        .end((err, res) =&#x3E; {
+          try {
+            assert(err instanceof Error, &#x27;expected an error&#x27;);
+            err.should.have.property(&#x27;timeout&#x27;, 250);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should successfully redirect after retry on error</dt>
+            <dd><pre><code>done =&#x3E; {
+      const id = Math.random() * 1000000 * Date.now();
+      request
+        .get(&#x60;${base}/error/redirect/${id}&#x60;)
+        .retry(2)
+        .end((err, res) =&#x3E; {
+          assert(res.ok, &#x27;response should be ok&#x27;);
+          assert(res.text, &#x27;first movie page&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should preserve retries across redirects</dt>
+            <dd><pre><code>done =&#x3E; {
+      const id = Math.random() * 1000000 * Date.now();
+      request
+        .get(&#x60;${base}/error/redirect-error${id}&#x60;)
+        .retry(2)
+        .end((err, res) =&#x3E; {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(2, err.retries, &#x27;expected an error with .retries&#x27;);
+          assert.equal(500, err.status, &#x27;expected an error status of 500&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 303</h1>
+          <dl>
+            <dt>should redirect with same method</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .put(&#x60;${base}/redirect-303&#x60;)
+        .send({ msg: &#x27;hello&#x27; })
+        .redirects(1)
+        .on(&#x27;redirect&#x27;, res =&#x3E; {
+          res.headers.location.should.equal(&#x27;/reply-method&#x27;);
+        })
+        .end((err, res) =&#x3E; {
+          if (err) {
+            done(err);
+            return;
+          }
+          res.text.should.equal(&#x27;method=get&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 307</h1>
+          <dl>
+            <dt>should redirect with same method</dt>
+            <dd><pre><code>done =&#x3E; {
+      if (isMSIE) return done(); // IE9 broken
+      request
+        .put(&#x60;${base}/redirect-307&#x60;)
+        .send({ msg: &#x27;hello&#x27; })
+        .redirects(1)
+        .on(&#x27;redirect&#x27;, res =&#x3E; {
+          res.headers.location.should.equal(&#x27;/reply-method&#x27;);
+        })
+        .end((err, res) =&#x3E; {
+          if (err) {
+            done(err);
+            return;
+          }
+          res.text.should.equal(&#x27;method=put&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 308</h1>
+          <dl>
+            <dt>should redirect with same method</dt>
+            <dd><pre><code>done =&#x3E; {
+      if (isMSIE) return done(); // IE9 broken
+      request
+        .put(&#x60;${base}/redirect-308&#x60;)
+        .send({ msg: &#x27;hello&#x27; })
+        .redirects(1)
+        .on(&#x27;redirect&#x27;, res =&#x3E; {
+          res.headers.location.should.equal(&#x27;/reply-method&#x27;);
+        })
+        .end((err, res) =&#x3E; {
+          if (err) {
+            done(err);
+            return;
+          }
+          res.text.should.equal(&#x27;method=put&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request</h1>
+      <dl>
+        <dt>Request inheritance</dt>
+        <dd><pre><code>assert(request.get(&#x60;${uri}/&#x60;) instanceof request.Request);</code></pre></dd>
+        <dt>request() simple GET without callback</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x27;test/test.request.js&#x27;).end();
+    next();
+  }</code></pre></dd>
+        <dt>request() simple GET</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/ok&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(res instanceof request.Response, &#x27;respond with Response&#x27;);
+        assert(res.ok, &#x27;response should be ok&#x27;);
+        assert(res.text, &#x27;res.text&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() simple HEAD</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.head(&#x60;${uri}/ok&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(res instanceof request.Response, &#x27;respond with Response&#x27;);
+        assert(res.ok, &#x27;response should be ok&#x27;);
+        assert(!res.text, &#x27;res.text&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() GET 5xx</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/error&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(err);
+        assert.equal(err.message, &#x27;Internal Server Error&#x27;);
+        assert(!res.ok, &#x27;response should not be ok&#x27;);
+        assert(res.error, &#x27;response should be an error&#x27;);
+        assert(!res.clientError, &#x27;response should not be a client error&#x27;);
+        assert(res.serverError, &#x27;response should be a server error&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() GET 4xx</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/notfound&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(err);
+        assert.equal(err.message, &#x27;Not Found&#x27;);
+        assert(!res.ok, &#x27;response should not be ok&#x27;);
+        assert(res.error, &#x27;response should be an error&#x27;);
+        assert(res.clientError, &#x27;response should be a client error&#x27;);
+        assert(!res.serverError, &#x27;response should not be a server error&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() GET 404 Not Found</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/notfound&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(err);
+        assert(res.notFound, &#x27;response should be .notFound&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() GET 400 Bad Request</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/bad-request&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(err);
+        assert(res.badRequest, &#x27;response should be .badRequest&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() GET 401 Bad Request</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/unauthorized&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(err);
+        assert(res.unauthorized, &#x27;response should be .unauthorized&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() GET 406 Not Acceptable</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/not-acceptable&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(err);
+        assert(res.notAcceptable, &#x27;response should be .notAcceptable&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() GET 204 No Content</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/no-content&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.ifError(err);
+        assert(res.noContent, &#x27;response should be .noContent&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() DELETE 204 No Content</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;DELETE&#x27;, &#x60;${uri}/no-content&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.ifError(err);
+        assert(res.noContent, &#x27;response should be .noContent&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() header parsing</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/notfound&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(err);
+        assert.equal(&#x27;text/html; charset=utf-8&#x27;, res.header[&#x27;content-type&#x27;]);
+        assert.equal(&#x27;Express&#x27;, res.header[&#x27;x-powered-by&#x27;]);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request() .status</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/notfound&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(err);
+        assert.equal(404, res.status, &#x27;response .status&#x27;);
+        assert.equal(4, res.statusType, &#x27;response .statusType&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>get()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(&#x60;${uri}/notfound&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert(err);
+        assert.equal(404, res.status, &#x27;response .status&#x27;);
+        assert.equal(4, res.statusType, &#x27;response .statusType&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>put()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.put(&#x60;${uri}/user/12&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;updated&#x27;, res.text, &#x27;response text&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>put().send()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .put(&#x60;${uri}/user/13/body&#x60;)
+      .send({ user: &#x27;new&#x27; })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;received new&#x27;, res.text, &#x27;response text&#x27;);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>post()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.post(&#x60;${uri}/user&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;created&#x27;, res.text, &#x27;response text&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>del()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.del(&#x60;${uri}/user/12&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;deleted&#x27;, res.text, &#x27;response text&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>delete()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.delete(&#x60;${uri}/user/12&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;deleted&#x27;, res.text, &#x27;response text&#x27;);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>post() data</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/todo/item&#x60;)
+      .type(&#x27;application/octet-stream&#x27;)
+      .send(&#x27;tobi&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;added &#x22;tobi&#x22;&#x27;, res.text, &#x27;response text&#x27;);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .type()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/user/12/pet&#x60;)
+      .type(&#x27;urlencoded&#x27;)
+      .send(&#x27;pet=tobi&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;added pet &#x22;tobi&#x22;&#x27;, res.text, &#x27;response text&#x27;);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .type() with alias</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/user/12/pet&#x60;)
+      .type(&#x27;application/x-www-form-urlencoded&#x27;)
+      .send(&#x27;pet=tobi&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;added pet &#x22;tobi&#x22;&#x27;, res.text, &#x27;response text&#x27;);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .get() with no data or callback</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(&#x60;${uri}/echo-header/content-type&#x60;);
+    next();
+  }</code></pre></dd>
+        <dt>request .send() with no data only</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/user/5/pet&#x60;)
+      .type(&#x27;urlencoded&#x27;)
+      .send(&#x27;pet=tobi&#x27;);
+    next();
+  }</code></pre></dd>
+        <dt>request .send() with callback only</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/echo-header/accept&#x60;)
+      .set(&#x27;Accept&#x27;, &#x27;foo/bar&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;foo/bar&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .accept() with json</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/echo-header/accept&#x60;)
+      .accept(&#x27;json&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;application/json&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .accept() with application/json</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/echo-header/accept&#x60;)
+      .accept(&#x27;application/json&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;application/json&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .accept() with xml</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/echo-header/accept&#x60;)
+      .accept(&#x27;xml&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          // We can&#x27;t depend on mime module to be consistent with this
+          assert(res.text == &#x27;application/xml&#x27; || res.text == &#x27;text/xml&#x27;);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .accept() with application/xml</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/echo-header/accept&#x60;)
+      .accept(&#x27;application/xml&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;application/xml&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .end()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .put(&#x60;${uri}/echo-header/content-type&#x60;)
+      .set(&#x27;Content-Type&#x27;, &#x27;text/plain&#x27;)
+      .send(&#x27;wahoo&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;text/plain&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .send()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .put(&#x60;${uri}/echo-header/content-type&#x60;)
+      .set(&#x27;Content-Type&#x27;, &#x27;text/plain&#x27;)
+      .send(&#x27;wahoo&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;text/plain&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .set()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .put(&#x60;${uri}/echo-header/content-type&#x60;)
+      .set(&#x27;Content-Type&#x27;, &#x27;text/plain&#x27;)
+      .send(&#x27;wahoo&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;text/plain&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>request .set(object)</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .put(&#x60;${uri}/echo-header/content-type&#x60;)
+      .set({ &#x27;Content-Type&#x27;: &#x27;text/plain&#x27; })
+      .send(&#x27;wahoo&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;text/plain&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>POST urlencoded</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/pet&#x60;)
+      .type(&#x27;urlencoded&#x27;)
+      .send({ name: &#x27;Manny&#x27;, species: &#x27;cat&#x27; })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;added Manny the cat&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>POST json</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/pet&#x60;)
+      .type(&#x27;json&#x27;)
+      .send({ name: &#x27;Manny&#x27;, species: &#x27;cat&#x27; })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;added Manny the cat&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>POST json array</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .send([1, 2, 3])
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(
+            &#x27;application/json&#x27;,
+            res.header[&#x27;content-type&#x27;].split(&#x27;;&#x27;)[0]
+          );
+          assert.equal(&#x27;[1,2,3]&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>POST json default</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/pet&#x60;)
+      .send({ name: &#x27;Manny&#x27;, species: &#x27;cat&#x27; })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;added Manny the cat&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>POST json contentType charset</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .set(&#x27;Content-Type&#x27;, &#x27;application/json; charset=UTF-8&#x27;)
+      .send({ data: [&#x27;data1&#x27;, &#x27;data2&#x27;] })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;{&#x22;data&#x22;:[&#x22;data1&#x22;,&#x22;data2&#x22;]}&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>POST json contentType vendor</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .set(&#x27;Content-Type&#x27;, &#x27;application/vnd.example+json&#x27;)
+      .send({ data: [&#x27;data1&#x27;, &#x27;data2&#x27;] })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;{&#x22;data&#x22;:[&#x22;data1&#x22;,&#x22;data2&#x22;]}&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>POST multiple .send() calls</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/pet&#x60;)
+      .send({ name: &#x27;Manny&#x27; })
+      .send({ species: &#x27;cat&#x27; })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;added Manny the cat&#x27;, res.text);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>POST multiple .send() strings</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/echo&#x60;)
+      .send(&#x27;user[name]=tj&#x27;)
+      .send(&#x27;user[email]=tj@vision-media.ca&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(
+            &#x27;application/x-www-form-urlencoded&#x27;,
+            res.header[&#x27;content-type&#x27;].split(&#x27;;&#x27;)[0]
+          );
+          assert.equal(
+            res.text,
+            &#x27;user[name]=tj&#x26;user[email]=tj@vision-media.ca&#x27;
+          );
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>POST with no data</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .post(&#x60;${uri}/empty-body&#x60;)
+      .send()
+      .end((err, res) =&#x3E; {
+        try {
+          assert.ifError(err);
+          assert(res.noContent, &#x27;response should be .noContent&#x27;);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET .type</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(&#x60;${uri}/pets&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;application/json&#x27;, res.type);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>GET Content-Type params</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(&#x60;${uri}/text&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;utf-8&#x27;, res.charset);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>GET json</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(&#x60;${uri}/pets&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.deepEqual(res.body, [&#x27;tobi&#x27;, &#x27;loki&#x27;, &#x27;jane&#x27;]);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>GET json-seq</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/json-seq&#x60;)
+      .buffer()
+      .end((err, res) =&#x3E; {
+        try {
+          assert.ifError(err);
+          assert.deepEqual(res.text, &#x27;\u001E{&#x22;id&#x22;:1}\n\u001E{&#x22;id&#x22;:2}\n&#x27;);
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET x-www-form-urlencoded</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(&#x60;${uri}/foo&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.deepEqual(res.body, { foo: &#x27;bar&#x27; });
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>GET shorthand</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(&#x60;${uri}/foo&#x60;, (err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;foo=bar&#x27;, res.text);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>POST shorthand</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.post(&#x60;${uri}/user/0/pet&#x60;, { pet: &#x27;tobi&#x27; }, (err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;added pet &#x22;tobi&#x22;&#x27;, res.text);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>POST shorthand without callback</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.post(&#x60;${uri}/user/0/pet&#x60;, { pet: &#x27;tobi&#x27; }).end((err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;added pet &#x22;tobi&#x22;&#x27;, res.text);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>GET querystring object with array</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/querystring&#x60;)
+      .query({ val: [&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;] })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.deepEqual(res.body, { val: [&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;] });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET querystring object with array and primitives</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/querystring&#x60;)
+      .query({ array: [&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;], string: &#x27;foo&#x27;, number: 10 })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.deepEqual(res.body, {
+            array: [&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;],
+            string: &#x27;foo&#x27;,
+            number: 10
+          });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET querystring object with two arrays</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/querystring&#x60;)
+      .query({ array1: [&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;], array2: [1, 2, 3] })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.deepEqual(res.body, {
+            array1: [&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;],
+            array2: [1, 2, 3]
+          });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET querystring object</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/querystring&#x60;)
+      .query({ search: &#x27;Manny&#x27; })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.deepEqual(res.body, { search: &#x27;Manny&#x27; });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET querystring append original</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/querystring?search=Manny&#x60;)
+      .query({ range: &#x27;1..5&#x27; })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.deepEqual(res.body, { search: &#x27;Manny&#x27;, range: &#x27;1..5&#x27; });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET querystring multiple objects</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/querystring&#x60;)
+      .query({ search: &#x27;Manny&#x27; })
+      .query({ range: &#x27;1..5&#x27; })
+      .query({ order: &#x27;desc&#x27; })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.deepEqual(res.body, {
+            search: &#x27;Manny&#x27;,
+            range: &#x27;1..5&#x27;,
+            order: &#x27;desc&#x27;
+          });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET querystring with strings</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/querystring&#x60;)
+      .query(&#x27;search=Manny&#x27;)
+      .query(&#x27;range=1..5&#x27;)
+      .query(&#x27;order=desc&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.deepEqual(res.body, {
+            search: &#x27;Manny&#x27;,
+            range: &#x27;1..5&#x27;,
+            order: &#x27;desc&#x27;
+          });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET querystring with strings and objects</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/querystring&#x60;)
+      .query(&#x27;search=Manny&#x27;)
+      .query({ order: &#x27;desc&#x27;, range: &#x27;1..5&#x27; })
+      .end((err, res) =&#x3E; {
+        try {
+          assert.deepEqual(res.body, {
+            search: &#x27;Manny&#x27;,
+            range: &#x27;1..5&#x27;,
+            order: &#x27;desc&#x27;
+          });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>GET shorthand payload goes to querystring</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(
+      &#x60;${uri}/querystring&#x60;,
+      { foo: &#x27;FOO&#x27;, bar: &#x27;BAR&#x27; },
+      (err, res) =&#x3E; {
+        try {
+          assert.deepEqual(res.body, { foo: &#x27;FOO&#x27;, bar: &#x27;BAR&#x27; });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      }
+    );
+  }</code></pre></dd>
+        <dt>HEAD shorthand payload goes to querystring</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.head(
+      &#x60;${uri}/querystring-in-header&#x60;,
+      { foo: &#x27;FOO&#x27;, bar: &#x27;BAR&#x27; },
+      (err, res) =&#x3E; {
+        try {
+          assert.deepEqual(JSON.parse(res.headers.query), {
+            foo: &#x27;FOO&#x27;,
+            bar: &#x27;BAR&#x27;
+          });
+          next();
+        } catch (err2) {
+          next(err2);
+        }
+      }
+    );
+  }</code></pre></dd>
+        <dt>request(method, url)</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x27;GET&#x27;, &#x60;${uri}/foo&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;bar&#x27;, res.body.foo);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request(url)</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x60;${uri}/foo&#x60;).end((err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;bar&#x27;, res.body.foo);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request(url, fn)</dt>
+        <dd><pre><code>next =&#x3E; {
+    request(&#x60;${uri}/foo&#x60;, (err, res) =&#x3E; {
+      try {
+        assert.equal(&#x27;bar&#x27;, res.body.foo);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>req.timeout(ms)</dt>
+        <dd><pre><code>next =&#x3E; {
+    const req = request.get(&#x60;${uri}/delay/3000&#x60;).timeout(1000);
+    req.end((err, res) =&#x3E; {
+      try {
+        assert(err, &#x27;error missing&#x27;);
+        assert.equal(1000, err.timeout, &#x27;err.timeout missing&#x27;);
+        assert.equal(
+          &#x27;Timeout of 1000ms exceeded&#x27;,
+          err.message,
+          &#x27;err.message incorrect&#x27;
+        );
+        assert.equal(null, res);
+        assert(req.timedout, true);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>req.timeout(ms) with redirect</dt>
+        <dd><pre><code>next =&#x3E; {
+    const req = request.get(&#x60;${uri}/delay/const&#x60;).timeout(1000);
+    req.end((err, res) =&#x3E; {
+      try {
+        assert(err, &#x27;error missing&#x27;);
+        assert.equal(1000, err.timeout, &#x27;err.timeout missing&#x27;);
+        assert.equal(
+          &#x27;Timeout of 1000ms exceeded&#x27;,
+          err.message,
+          &#x27;err.message incorrect&#x27;
+        );
+        assert.equal(null, res);
+        assert(req.timedout, true);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>request event</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/foo&#x60;)
+      .on(&#x27;request&#x27;, req =&#x3E; {
+        try {
+          assert.equal(&#x60;${uri}/foo&#x60;, req.url);
+          next();
+        } catch (err) {
+          next(err);
+        }
+      })
+      .end();
+  }</code></pre></dd>
+        <dt>response event</dt>
+        <dd><pre><code>next =&#x3E; {
+    request
+      .get(&#x60;${uri}/foo&#x60;)
+      .on(&#x27;response&#x27;, res =&#x3E; {
+        try {
+          assert.equal(&#x27;bar&#x27;, res.body.foo);
+          next();
+        } catch (err) {
+          next(err);
+        }
+      })
+      .end();
+  }</code></pre></dd>
+        <dt>response should set statusCode</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(&#x60;${uri}/ok&#x60;, (err, res) =&#x3E; {
+      try {
+        assert.strictEqual(res.statusCode, 200);
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+        <dt>req.toJSON()</dt>
+        <dd><pre><code>next =&#x3E; {
+    request.get(&#x60;${uri}/ok&#x60;).end((err, res) =&#x3E; {
+      try {
+        const j = (res.request || res.req).toJSON();
+        [&#x27;url&#x27;, &#x27;method&#x27;, &#x27;data&#x27;, &#x27;headers&#x27;].forEach(prop =&#x3E; {
+          assert(j.hasOwnProperty(prop));
+        });
+        next();
+      } catch (err2) {
+        next(err2);
+      }
+    });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>.retry(count)</h1>
+      <dl>
+        <dt>should not retry if passed &#x22;0&#x22;</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/error&#x60;)
+      .retry(0)
+      .end((err, res) =&#x3E; {
+        try {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(
+            undefined,
+            err.retries,
+            &#x27;expected an error without .retries&#x27;
+          );
+          assert.equal(500, err.status, &#x27;expected an error status of 500&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should not retry if passed an invalid number</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/error&#x60;)
+      .retry(-2)
+      .end((err, res) =&#x3E; {
+        try {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(
+            undefined,
+            err.retries,
+            &#x27;expected an error without .retries&#x27;
+          );
+          assert.equal(500, err.status, &#x27;expected an error status of 500&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should not retry if passed undefined</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/error&#x60;)
+      .retry(undefined)
+      .end((err, res) =&#x3E; {
+        try {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(
+            undefined,
+            err.retries,
+            &#x27;expected an error without .retries&#x27;
+          );
+          assert.equal(500, err.status, &#x27;expected an error status of 500&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should handle server error after repeat attempt</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/error&#x60;)
+      .retry(2)
+      .end((err, res) =&#x3E; {
+        try {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(2, err.retries, &#x27;expected an error with .retries&#x27;);
+          assert.equal(500, err.status, &#x27;expected an error status of 500&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should retry if passed nothing</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/error&#x60;)
+      .retry()
+      .end((err, res) =&#x3E; {
+        try {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(1, err.retries, &#x27;expected an error with .retries&#x27;);
+          assert.equal(500, err.status, &#x27;expected an error status of 500&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should retry if passed &#x22;true&#x22;</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/error&#x60;)
+      .retry(true)
+      .end((err, res) =&#x3E; {
+        try {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(1, err.retries, &#x27;expected an error with .retries&#x27;);
+          assert.equal(500, err.status, &#x27;expected an error status of 500&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should handle successful request after repeat attempt from server error</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/error/ok/${uniqid()}&#x60;)
+      .query({ qs: &#x27;present&#x27; })
+      .retry(2)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.ifError(err);
+          assert(res.ok, &#x27;response should be ok&#x27;);
+          assert(res.text, &#x27;res.text&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should handle server timeout error after repeat attempt</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/delay/400&#x60;)
+      .timeout(200)
+      .retry(2)
+      .end((err, res) =&#x3E; {
+        try {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(2, err.retries, &#x27;expected an error with .retries&#x27;);
+          assert.equal(
+            &#x27;number&#x27;,
+            typeof err.timeout,
+            &#x27;expected an error with .timeout&#x27;
+          );
+          assert.equal(&#x27;ECONNABORTED&#x27;, err.code, &#x27;expected abort error code&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should handle successful request after repeat attempt from server timeout</dt>
+        <dd><pre><code>done =&#x3E; {
+    const url = &#x60;/delay/1200/ok/${uniqid()}?built=in&#x60;;
+    request
+      .get(base + url)
+      .query(&#x27;string=ified&#x27;)
+      .query({ json: &#x27;ed&#x27; })
+      .timeout(600)
+      .retry(2)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.ifError(err);
+          assert(res.ok, &#x27;response should be ok&#x27;);
+          assert.equal(res.text, &#x60;ok = ${url}&#x26;string=ified&#x26;json=ed&#x60;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should correctly abort a retry attempt</dt>
+        <dd><pre><code>done =&#x3E; {
+    let aborted = false;
+    const req = request
+      .get(&#x60;${base}/delay/400&#x60;)
+      .timeout(200)
+      .retry(2);
+    req.end((err, res) =&#x3E; {
+      try {
+        assert(false, &#x27;should not complete the request&#x27;);
+      } catch (err2) {
+        done(err2);
+      }
+    });
+    req.on(&#x27;abort&#x27;, () =&#x3E; {
+      aborted = true;
+    });
+    setTimeout(() =&#x3E; {
+      req.abort();
+      setTimeout(() =&#x3E; {
+        try {
+          assert(aborted, &#x27;should be aborted&#x27;);
+          done();
+        } catch (err) {
+          done(err);
+        }
+      }, 150);
+    }, 150);
+  }</code></pre></dd>
+        <dt>should correctly retain header fields</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/error/ok/${uniqid()}&#x60;)
+      .query({ qs: &#x27;present&#x27; })
+      .retry(2)
+      .set(&#x27;X-Foo&#x27;, &#x27;bar&#x27;)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.ifError(err);
+          assert(res.body);
+          res.body.should.have.property(&#x27;x-foo&#x27;, &#x27;bar&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should not retry on 4xx responses</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/bad-request&#x60;)
+      .retry(2)
+      .end((err, res) =&#x3E; {
+        try {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(0, err.retries, &#x27;expected an error with 0 .retries&#x27;);
+          assert.equal(400, err.status, &#x27;expected an error status of 400&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should execute callback on retry if passed</dt>
+        <dd><pre><code>done =&#x3E; {
+    let callbackCallCount = 0;
+    function retryCallback(request) {
+      callbackCallCount++;
+    }
+    request
+      .get(&#x60;${base}/error&#x60;)
+      .retry(2, retryCallback)
+      .end((err, res) =&#x3E; {
+        try {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(2, err.retries, &#x27;expected an error with .retries&#x27;);
+          assert.equal(500, err.status, &#x27;expected an error status of 500&#x27;);
+          assert.equal(
+            2,
+            callbackCallCount,
+            &#x27;expected the callback to be called on each retry&#x27;
+          );
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>.timeout(ms)</h1>
+      <dl>
+        <section class="suite">
+          <h1>when timeout is exceeded</h1>
+          <dl>
+            <dt>should error</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/delay/500&#x60;)
+        .timeout(150)
+        .end((err, res) =&#x3E; {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(
+            &#x27;number&#x27;,
+            typeof err.timeout,
+            &#x27;expected an error with .timeout&#x27;
+          );
+          assert.equal(&#x27;ECONNABORTED&#x27;, err.code, &#x27;expected abort error code&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should handle gzip timeout</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/delay/zip&#x60;)
+        .timeout(150)
+        .end((err, res) =&#x3E; {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(
+            &#x27;number&#x27;,
+            typeof err.timeout,
+            &#x27;expected an error with .timeout&#x27;
+          );
+          assert.equal(&#x27;ECONNABORTED&#x27;, err.code, &#x27;expected abort error code&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should handle buffer timeout</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/delay/json&#x60;)
+        .buffer(true)
+        .timeout(150)
+        .end((err, res) =&#x3E; {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(
+            &#x27;number&#x27;,
+            typeof err.timeout,
+            &#x27;expected an error with .timeout&#x27;
+          );
+          assert.equal(&#x27;ECONNABORTED&#x27;, err.code, &#x27;expected abort error code&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should error on deadline</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/delay/500&#x60;)
+        .timeout({ deadline: 150 })
+        .end((err, res) =&#x3E; {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(
+            &#x27;number&#x27;,
+            typeof err.timeout,
+            &#x27;expected an error with .timeout&#x27;
+          );
+          assert.equal(&#x27;ECONNABORTED&#x27;, err.code, &#x27;expected abort error code&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should support setting individual options</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/delay/500&#x60;)
+        .timeout({ deadline: 10 })
+        .timeout({ response: 99999 })
+        .end((err, res) =&#x3E; {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(&#x27;ECONNABORTED&#x27;, err.code, &#x27;expected abort error code&#x27;);
+          assert.equal(&#x27;ETIME&#x27;, err.errno);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should error on response</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/delay/500&#x60;)
+        .timeout({ response: 150 })
+        .end((err, res) =&#x3E; {
+          assert(err, &#x27;expected an error&#x27;);
+          assert.equal(
+            &#x27;number&#x27;,
+            typeof err.timeout,
+            &#x27;expected an error with .timeout&#x27;
+          );
+          assert.equal(&#x27;ECONNABORTED&#x27;, err.code, &#x27;expected abort error code&#x27;);
+          assert.equal(&#x27;ETIMEDOUT&#x27;, err.errno);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should accept slow body with fast response</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/delay/slowbody&#x60;)
+        .timeout({ response: 1000 })
+        .on(&#x27;progress&#x27;, () =&#x3E; {
+          // This only makes the test faster without relying on arbitrary timeouts
+          request.get(&#x60;${base}/delay/slowbody/finish&#x60;).end();
+        })
+        .end(done);
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request</h1>
+      <dl>
+        <section class="suite">
+          <h1>use</h1>
+          <dl>
+            <dt>should use plugin success</dt>
+            <dd><pre><code>done =&#x3E; {
+      const now = &#x60;${Date.now()}&#x60;;
+      function uuid(req) {
+        req.set(&#x27;X-UUID&#x27;, now);
+        return req;
+      }
+      function prefix(req) {
+        req.url = uri + req.url;
+        return req;
+      }
+      request
+        .get(&#x27;/echo&#x27;)
+        .use(uuid)
+        .use(prefix)
+        .end((err, res) =&#x3E; {
+          assert.strictEqual(res.statusCode, 200);
+          assert.equal(res.get(&#x27;X-UUID&#x27;), now);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>subclass</h1>
+      <dl>
+        <dt>should be an instance of Request</dt>
+        <dd><pre><code>const req = request.get(&#x27;/&#x27;);
+assert(req instanceof request.Request);</code></pre></dd>
+        <dt>should use patched subclass</dt>
+        <dd><pre><code>assert(OriginalRequest);
+let constructorCalled;
+let sendCalled;
+function NewRequest(...args) {
+  constructorCalled = true;
+  OriginalRequest.apply(this, args);
+}
+NewRequest.prototype = Object.create(OriginalRequest.prototype);
+NewRequest.prototype.send = function() {
+  sendCalled = true;
+  return this;
+};
+request.Request = NewRequest;
+const req = request.get(&#x27;/&#x27;).send();
+assert(constructorCalled);
+assert(sendCalled);
+assert(req instanceof NewRequest);
+assert(req instanceof OriginalRequest);</code></pre></dd>
+        <dt>should use patched subclass in agent too</dt>
+        <dd><pre><code>if (!request.agent) return; // Node-only
+function NewRequest(...args) {
+  OriginalRequest.apply(this, args);
+}
+NewRequest.prototype = Object.create(OriginalRequest.prototype);
+request.Request = NewRequest;
+const req = request.agent().del(&#x27;/&#x27;);
+assert(req instanceof NewRequest);
+assert(req instanceof OriginalRequest);</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request</h1>
+      <dl>
+        <section class="suite">
+          <h1>persistent agent</h1>
+          <dl>
+            <dt>should gain a session on POST</dt>
+            <dd><pre><code>agent3.post(&#x60;${base}/signin&#x60;).then(res =&#x3E; {
+        res.should.have.status(200);
+        should.not.exist(res.headers[&#x27;set-cookie&#x27;]);
+        res.text.should.containEql(&#x27;dashboard&#x27;);
+      })</code></pre></dd>
+            <dt>should start with empty session (set cookies)</dt>
+            <dd><pre><code>done =&#x3E; {
+      agent1.get(&#x60;${base}/dashboard&#x60;).end((err, res) =&#x3E; {
+        should.exist(err);
+        res.should.have.status(401);
+        should.exist(res.headers[&#x27;set-cookie&#x27;]);
+        done();
+      });
+    }</code></pre></dd>
+            <dt>should gain a session (cookies already set)</dt>
+            <dd><pre><code>agent1.post(&#x60;${base}/signin&#x60;).then(res =&#x3E; {
+        res.should.have.status(200);
+        should.not.exist(res.headers[&#x27;set-cookie&#x27;]);
+        res.text.should.containEql(&#x27;dashboard&#x27;);
+      })</code></pre></dd>
+            <dt>should persist cookies across requests</dt>
+            <dd><pre><code>agent1.get(&#x60;${base}/dashboard&#x60;).then(res =&#x3E; {
+        res.should.have.status(200);
+      })</code></pre></dd>
+            <dt>should have the cookie set in the end callback</dt>
+            <dd><pre><code>agent4
+        .post(&#x60;${base}/setcookie&#x60;)
+        .then(() =&#x3E; agent4.get(&#x60;${base}/getcookie&#x60;))
+        .then(res =&#x3E; {
+          res.should.have.status(200);
+          assert.strictEqual(res.text, &#x27;jar&#x27;);
+        })</code></pre></dd>
+            <dt>should not share cookies</dt>
+            <dd><pre><code>done =&#x3E; {
+      agent2.get(&#x60;${base}/dashboard&#x60;).end((err, res) =&#x3E; {
+        should.exist(err);
+        res.should.have.status(401);
+        done();
+      });
+    }</code></pre></dd>
+            <dt>should not lose cookies between agents</dt>
+            <dd><pre><code>agent1.get(&#x60;${base}/dashboard&#x60;).then(res =&#x3E; {
+        res.should.have.status(200);
+      })</code></pre></dd>
+            <dt>should be able to follow redirects</dt>
+            <dd><pre><code>agent1.get(base).then(res =&#x3E; {
+        res.should.have.status(200);
+        res.text.should.containEql(&#x27;dashboard&#x27;);
+      })</code></pre></dd>
+            <dt>should be able to post redirects</dt>
+            <dd><pre><code>agent1
+        .post(&#x60;${base}/redirect&#x60;)
+        .send({ foo: &#x27;bar&#x27;, baz: &#x27;blaaah&#x27; })
+        .then(res =&#x3E; {
+          res.should.have.status(200);
+          res.text.should.containEql(&#x27;simple&#x27;);
+          res.redirects.should.eql([&#x60;${base}/simple&#x60;]);
+        })</code></pre></dd>
+            <dt>should be able to limit redirects</dt>
+            <dd><pre><code>done =&#x3E; {
+      agent1
+        .get(base)
+        .redirects(0)
+        .end((err, res) =&#x3E; {
+          should.exist(err);
+          res.should.have.status(302);
+          res.redirects.should.eql([]);
+          res.header.location.should.equal(&#x27;/dashboard&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should be able to create a new session (clear cookie)</dt>
+            <dd><pre><code>agent1.post(&#x60;${base}/signout&#x60;).then(res =&#x3E; {
+        res.should.have.status(200);
+        should.exist(res.headers[&#x27;set-cookie&#x27;]);
+      })</code></pre></dd>
+            <dt>should regenerate with an empty session</dt>
+            <dd><pre><code>done =&#x3E; {
+      agent1.get(&#x60;${base}/dashboard&#x60;).end((err, res) =&#x3E; {
+        should.exist(err);
+        res.should.have.status(401);
+        should.not.exist(res.headers[&#x27;set-cookie&#x27;]);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>Basic auth</h1>
+      <dl>
+        <section class="suite">
+          <h1>when credentials are present in url</h1>
+          <dl>
+            <dt>should set Authorization</dt>
+            <dd><pre><code>done =&#x3E; {
+      const new_url = URL.parse(base);
+      new_url.auth = &#x27;tobi:learnboost&#x27;;
+      new_url.pathname = &#x27;/basic-auth&#x27;;
+      request.get(URL.format(new_url)).end((err, res) =&#x3E; {
+        res.status.should.equal(200);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.auth(user, pass)</h1>
+          <dl>
+            <dt>should set Authorization</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/basic-auth&#x60;)
+        .auth(&#x27;tobi&#x27;, &#x27;learnboost&#x27;)
+        .end((err, res) =&#x3E; {
+          res.status.should.equal(200);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.auth(user + &#x22;:&#x22; + pass)</h1>
+          <dl>
+            <dt>should set authorization</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/basic-auth/again&#x60;)
+        .auth(&#x27;tobi&#x27;)
+        .end((err, res) =&#x3E; {
+          res.status.should.eql(200);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>[node] request</h1>
+      <dl>
+        <dt>should send body with .get().send()</dt>
+        <dd><pre><code>next =&#x3E; {
+      request
+        .get(&#x60;${base}/echo&#x60;)
+        .set(&#x27;Content-Type&#x27;, &#x27;text/plain&#x27;)
+        .send(&#x27;wahoo&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            assert.equal(&#x27;wahoo&#x27;, res.text);
+            next();
+          } catch (err2) {
+            next(err2);
+          }
+        });
+    }</code></pre></dd>
+        <section class="suite">
+          <h1>with an url</h1>
+          <dl>
+            <dt>should preserve the encoding of the url</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/url?a=(b%29&#x60;).end((err, res) =&#x3E; {
+        assert.equal(&#x27;/url?a=(b%29&#x27;, res.text);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with an object</h1>
+          <dl>
+            <dt>should format the url</dt>
+            <dd><pre><code>request.get(url.parse(&#x60;${base}/login&#x60;)).then(res =&#x3E; {
+        assert(res.ok);
+      })</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>without a schema</h1>
+          <dl>
+            <dt>should default to http</dt>
+            <dd><pre><code>request.get(&#x27;localhost:5000/login&#x27;).then(res =&#x3E; {
+        assert.equal(res.status, 200);
+      })</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>res.toJSON()</h1>
+          <dl>
+            <dt>should describe the response</dt>
+            <dd><pre><code>request
+        .post(&#x60;${base}/echo&#x60;)
+        .send({ foo: &#x27;baz&#x27; })
+        .then(res =&#x3E; {
+          const obj = res.toJSON();
+          assert.equal(&#x27;object&#x27;, typeof obj.header);
+          assert.equal(&#x27;object&#x27;, typeof obj.req);
+          assert.equal(200, obj.status);
+          assert.equal(&#x27;{&#x22;foo&#x22;:&#x22;baz&#x22;}&#x27;, obj.text);
+        })</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>res.links</h1>
+          <dl>
+            <dt>should default to an empty object</dt>
+            <dd><pre><code>request.get(&#x60;${base}/login&#x60;).then(res =&#x3E; {
+        res.links.should.eql({});
+      })</code></pre></dd>
+            <dt>should parse the Link header field</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/links&#x60;).end((err, res) =&#x3E; {
+        res.links.next.should.equal(
+          &#x27;https://api.github.com/repos/visionmedia/mocha/issues?page=2&#x27;
+        );
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.unset(field)</h1>
+          <dl>
+            <dt>should remove the header field</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .unset(&#x27;User-Agent&#x27;)
+        .end((err, res) =&#x3E; {
+          assert.equal(void 0, res.header[&#x27;user-agent&#x27;]);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>case-insensitive</h1>
+          <dl>
+            <dt>should set/get header fields case-insensitively</dt>
+            <dd><pre><code>const r = request.post(&#x60;${base}/echo&#x60;);
+r.set(&#x27;MiXeD&#x27;, &#x27;helloes&#x27;);
+assert.strictEqual(r.get(&#x27;mixed&#x27;), &#x27;helloes&#x27;);</code></pre></dd>
+            <dt>should unset header fields case-insensitively</dt>
+            <dd><pre><code>const r = request.post(&#x60;${base}/echo&#x60;);
+r.set(&#x27;MiXeD&#x27;, &#x27;helloes&#x27;);
+r.unset(&#x27;MIXED&#x27;);
+assert.strictEqual(r.get(&#x27;mixed&#x27;), undefined);</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.write(str)</h1>
+          <dl>
+            <dt>should write the given data</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.post(&#x60;${base}/echo&#x60;);
+      req.set(&#x27;Content-Type&#x27;, &#x27;application/json&#x27;);
+      assert.equal(&#x27;boolean&#x27;, typeof req.write(&#x27;{&#x22;name&#x22;&#x27;));
+      assert.equal(&#x27;boolean&#x27;, typeof req.write(&#x27;:&#x22;tobi&#x22;}&#x27;));
+      req.end((err, res) =&#x3E; {
+        res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.pipe(stream)</h1>
+          <dl>
+            <dt>should pipe the response to the given stream</dt>
+            <dd><pre><code>done =&#x3E; {
+      const stream = new EventEmitter();
+      stream.buf = &#x27;&#x27;;
+      stream.writable = true;
+      stream.write = function(chunk) {
+        this.buf += chunk;
+      };
+      stream.end = function() {
+        this.buf.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
+        done();
+      };
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .send(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;)
+        .pipe(stream);
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.buffer()</h1>
+          <dl>
+            <dt>should enable buffering</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/custom&#x60;)
+        .buffer()
+        .end((err, res) =&#x3E; {
+          assert.ifError(err);
+          assert.equal(&#x27;custom stuff&#x27;, res.text);
+          assert(res.buffered);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should take precedence over request.buffer[&#x27;someMimeType&#x27;] = false</dt>
+            <dd><pre><code>done =&#x3E; {
+      const type = &#x27;application/barbaz&#x27;;
+      const send = &#x27;some text&#x27;;
+      request.buffer[type] = false;
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .type(type)
+        .send(send)
+        .buffer()
+        .end((err, res) =&#x3E; {
+          delete request.buffer[type];
+          assert.ifError(err);
+          assert.equal(res.type, type);
+          assert.equal(send, res.text);
+          assert(res.buffered);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.buffer(false)</h1>
+          <dl>
+            <dt>should disable buffering</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .type(&#x27;application/x-dog&#x27;)
+        .send(&#x27;hello this is dog&#x27;)
+        .buffer(false)
+        .end((err, res) =&#x3E; {
+          assert.ifError(err);
+          assert.equal(null, res.text);
+          res.body.should.eql({});
+          let buf = &#x27;&#x27;;
+          res.setEncoding(&#x27;utf8&#x27;);
+          res.on(&#x27;data&#x27;, chunk =&#x3E; {
+            buf += chunk;
+          });
+          res.on(&#x27;end&#x27;, () =&#x3E; {
+            buf.should.equal(&#x27;hello this is dog&#x27;);
+            done();
+          });
+        });
+    }</code></pre></dd>
+            <dt>should take precedence over request.buffer[&#x27;someMimeType&#x27;] = true</dt>
+            <dd><pre><code>done =&#x3E; {
+      const type = &#x27;application/foobar&#x27;;
+      const send = &#x27;hello this is a dog&#x27;;
+      request.buffer[type] = true;
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .type(type)
+        .send(send)
+        .buffer(false)
+        .end((err, res) =&#x3E; {
+          delete request.buffer[type];
+          assert.ifError(err);
+          assert.equal(null, res.text);
+          assert.equal(res.type, type);
+          assert(!res.buffered);
+          res.body.should.eql({});
+          let buf = &#x27;&#x27;;
+          res.setEncoding(&#x27;utf8&#x27;);
+          res.on(&#x27;data&#x27;, chunk =&#x3E; {
+            buf += chunk;
+          });
+          res.on(&#x27;end&#x27;, () =&#x3E; {
+            buf.should.equal(send);
+            done();
+          });
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.withCredentials()</h1>
+          <dl>
+            <dt>should not throw an error when using the client-side &#x22;withCredentials&#x22; method</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/custom&#x60;)
+        .withCredentials()
+        .end((err, res) =&#x3E; {
+          assert.ifError(err);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.agent()</h1>
+          <dl>
+            <dt>should return the defaut agent</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.post(&#x60;${base}/echo&#x60;);
+      req.agent().should.equal(false);
+      done();
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.agent(undefined)</h1>
+          <dl>
+            <dt>should set an agent to undefined and ensure it is chainable</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.get(&#x60;${base}/echo&#x60;);
+      const ret = req.agent(undefined);
+      ret.should.equal(req);
+      assert.strictEqual(req.agent(), undefined);
+      done();
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>.agent(new http.Agent())</h1>
+          <dl>
+            <dt>should set passed agent</dt>
+            <dd><pre><code>done =&#x3E; {
+      const http = require(&#x27;http&#x27;);
+      const req = request.get(&#x60;${base}/echo&#x60;);
+      const agent = new http.Agent();
+      const ret = req.agent(agent);
+      ret.should.equal(req);
+      req.agent().should.equal(agent);
+      done();
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with a content type other than application/json or text/*</h1>
+          <dl>
+            <dt>should still use buffering</dt>
+            <dd><pre><code>return request
+  .post(&#x60;${base}/echo&#x60;)
+  .type(&#x27;application/x-dog&#x27;)
+  .send(&#x27;hello this is dog&#x27;)
+  .then(res =&#x3E; {
+    assert.equal(null, res.text);
+    assert.equal(res.body.toString(), &#x27;hello this is dog&#x27;);
+    res.buffered.should.be.true;
+  });</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>content-length</h1>
+          <dl>
+            <dt>should be set to the byte length of a non-buffer object</dt>
+            <dd><pre><code>done =&#x3E; {
+      const decoder = new StringDecoder(&#x27;utf8&#x27;);
+      let img = fs.readFileSync(&#x60;${__dirname}/fixtures/test.png&#x60;);
+      img = decoder.write(img);
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .type(&#x27;application/x-image&#x27;)
+        .send(img)
+        .buffer(false)
+        .end((err, res) =&#x3E; {
+          assert.ifError(err);
+          assert(!res.buffered);
+          assert.equal(res.header[&#x27;content-length&#x27;], Buffer.byteLength(img));
+          done();
+        });
+    }</code></pre></dd>
+            <dt>should be set to the length of a buffer object</dt>
+            <dd><pre><code>done =&#x3E; {
+      const img = fs.readFileSync(&#x60;${__dirname}/fixtures/test.png&#x60;);
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .type(&#x27;application/x-image&#x27;)
+        .send(img)
+        .buffer(true)
+        .end((err, res) =&#x3E; {
+          assert.ifError(err);
+          assert(res.buffered);
+          assert.equal(res.header[&#x27;content-length&#x27;], img.length);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.buffer[&#x27;someMimeType&#x27;]</h1>
+      <dl>
+        <dt>should respect that agent.buffer(true) takes precedent</dt>
+        <dd><pre><code>done =&#x3E; {
+    const agent = request.agent();
+    agent.buffer(true);
+    const type = &#x27;application/somerandomtype&#x27;;
+    const send = &#x27;somerandomtext&#x27;;
+    request.buffer[type] = false;
+    agent
+      .post(&#x60;${base}/echo&#x60;)
+      .type(type)
+      .send(send)
+      .end((err, res) =&#x3E; {
+        delete request.buffer[type];
+        assert.ifError(err);
+        assert.equal(res.type, type);
+        assert.equal(send, res.text);
+        assert(res.buffered);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should respect that agent.buffer(false) takes precedent</dt>
+        <dd><pre><code>done =&#x3E; {
+    const agent = request.agent();
+    agent.buffer(false);
+    const type = &#x27;application/barrr&#x27;;
+    const send = &#x27;some random text2&#x27;;
+    request.buffer[type] = true;
+    agent
+      .post(&#x60;${base}/echo&#x60;)
+      .type(type)
+      .send(send)
+      .end((err, res) =&#x3E; {
+        delete request.buffer[type];
+        assert.ifError(err);
+        assert.equal(null, res.text);
+        assert.equal(res.type, type);
+        assert(!res.buffered);
+        res.body.should.eql({});
+        let buf = &#x27;&#x27;;
+        res.setEncoding(&#x27;utf8&#x27;);
+        res.on(&#x27;data&#x27;, chunk =&#x3E; {
+          buf += chunk;
+        });
+        res.on(&#x27;end&#x27;, () =&#x3E; {
+          buf.should.equal(send);
+          done();
+        });
+      });
+  }</code></pre></dd>
+        <dt>should disable buffering for that mimetype when false</dt>
+        <dd><pre><code>done =&#x3E; {
+    const type = &#x27;application/bar&#x27;;
+    const send = &#x27;some random text&#x27;;
+    request.buffer[type] = false;
+    request
+      .post(&#x60;${base}/echo&#x60;)
+      .type(type)
+      .send(send)
+      .end((err, res) =&#x3E; {
+        delete request.buffer[type];
+        assert.ifError(err);
+        assert.equal(null, res.text);
+        assert.equal(res.type, type);
+        assert(!res.buffered);
+        res.body.should.eql({});
+        let buf = &#x27;&#x27;;
+        res.setEncoding(&#x27;utf8&#x27;);
+        res.on(&#x27;data&#x27;, chunk =&#x3E; {
+          buf += chunk;
+        });
+        res.on(&#x27;end&#x27;, () =&#x3E; {
+          buf.should.equal(send);
+          done();
+        });
+      });
+  }</code></pre></dd>
+        <dt>should enable buffering for that mimetype when true</dt>
+        <dd><pre><code>done =&#x3E; {
+    const type = &#x27;application/baz&#x27;;
+    const send = &#x27;woooo&#x27;;
+    request.buffer[type] = true;
+    request
+      .post(&#x60;${base}/echo&#x60;)
+      .type(type)
+      .send(send)
+      .end((err, res) =&#x3E; {
+        delete request.buffer[type];
+        assert.ifError(err);
+        assert.equal(res.type, type);
+        assert.equal(send, res.text);
+        assert(res.buffered);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should fallback to default handling for that mimetype when undefined</dt>
+        <dd><pre><code>const type = &#x27;application/bazzz&#x27;;
+const send = &#x27;woooooo&#x27;;
+return request
+  .post(&#x60;${base}/echo&#x60;)
+  .type(type)
+  .send(send)
+  .then(res =&#x3E; {
+    assert.equal(res.type, type);
+    assert.equal(send, res.body.toString());
+    assert(res.buffered);
+  });</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>exports</h1>
+      <dl>
+        <dt>should expose .protocols</dt>
+        <dd><pre><code>Object.keys(request.protocols).should.eql([&#x27;http:&#x27;, &#x27;https:&#x27;, &#x27;http2:&#x27;]);</code></pre></dd>
+        <dt>should expose .serialize</dt>
+        <dd><pre><code>Object.keys(request.serialize).should.eql([
+  &#x27;application/x-www-form-urlencoded&#x27;,
+  &#x27;application/json&#x27;
+]);</code></pre></dd>
+        <dt>should expose .parse</dt>
+        <dd><pre><code>Object.keys(request.parse).should.eql([
+  &#x27;application/x-www-form-urlencoded&#x27;,
+  &#x27;application/json&#x27;,
+  &#x27;text&#x27;,
+  &#x27;application/octet-stream&#x27;,
+  &#x27;application/pdf&#x27;,
+  &#x27;image&#x27;
+]);</code></pre></dd>
+        <dt>should export .buffer</dt>
+        <dd><pre><code>Object.keys(request.buffer).should.eql([]);</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>flags</h1>
+      <dl>
+        <section class="suite">
+          <h1>with 4xx response</h1>
+          <dl>
+            <dt>should set res.error and res.clientError</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/notfound&#x60;).end((err, res) =&#x3E; {
+        assert(err);
+        assert(!res.ok, &#x27;response should not be ok&#x27;);
+        assert(res.error, &#x27;response should be an error&#x27;);
+        assert(res.clientError, &#x27;response should be a client error&#x27;);
+        assert(!res.serverError, &#x27;response should not be a server error&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with 5xx response</h1>
+          <dl>
+            <dt>should set res.error and res.serverError</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/error&#x60;).end((err, res) =&#x3E; {
+        assert(err);
+        assert(!res.ok, &#x27;response should not be ok&#x27;);
+        assert(!res.notFound, &#x27;response should not be notFound&#x27;);
+        assert(res.error, &#x27;response should be an error&#x27;);
+        assert(!res.clientError, &#x27;response should not be a client error&#x27;);
+        assert(res.serverError, &#x27;response should be a server error&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with 404 Not Found</h1>
+          <dl>
+            <dt>should res.notFound</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/notfound&#x60;).end((err, res) =&#x3E; {
+        assert(err);
+        assert(res.notFound, &#x27;response should be .notFound&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with 400 Bad Request</h1>
+          <dl>
+            <dt>should set req.badRequest</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/bad-request&#x60;).end((err, res) =&#x3E; {
+        assert(err);
+        assert(res.badRequest, &#x27;response should be .badRequest&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with 401 Bad Request</h1>
+          <dl>
+            <dt>should set res.unauthorized</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/unauthorized&#x60;).end((err, res) =&#x3E; {
+        assert(err);
+        assert(res.unauthorized, &#x27;response should be .unauthorized&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with 406 Not Acceptable</h1>
+          <dl>
+            <dt>should set res.notAcceptable</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/not-acceptable&#x60;).end((err, res) =&#x3E; {
+        assert(err);
+        assert(res.notAcceptable, &#x27;response should be .notAcceptable&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with 204 No Content</h1>
+          <dl>
+            <dt>should set res.noContent</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/no-content&#x60;).end((err, res) =&#x3E; {
+        assert(!err);
+        assert(res.noContent, &#x27;response should be .noContent&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with 201 Created</h1>
+          <dl>
+            <dt>should set res.created</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.post(&#x60;${base}/created&#x60;).end((err, res) =&#x3E; {
+        assert(!err);
+        assert(res.created, &#x27;response should be .created&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>with 422 Unprocessable Entity</h1>
+          <dl>
+            <dt>should set res.unprocessableEntity</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.post(&#x60;${base}/unprocessable-entity&#x60;).end((err, res) =&#x3E; {
+        assert(err);
+        assert(
+          res.unprocessableEntity,
+          &#x27;response should be .unprocessableEntity&#x27;
+        );
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>Merging objects</h1>
+      <dl>
+        <dt>Don&#x27;t mix Buffer and JSON</dt>
+        <dd><pre><code>assert.throws(() =&#x3E; {
+  request
+    .post(&#x27;/echo&#x27;)
+    .send(Buffer.from(&#x27;some buffer&#x27;))
+    .send({ allowed: false });
+});</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.send(String)</h1>
+      <dl>
+        <dt>should default to &#x22;form&#x22;</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${base}/echo&#x60;)
+      .send(&#x27;user[name]=tj&#x27;)
+      .send(&#x27;user[email]=tj@vision-media.ca&#x27;)
+      .end((err, res) =&#x3E; {
+        res.header[&#x27;content-type&#x27;].should.equal(
+          &#x27;application/x-www-form-urlencoded&#x27;
+        );
+        res.body.should.eql({
+          user: { name: &#x27;tj&#x27;, email: &#x27;tj@vision-media.ca&#x27; }
+        });
+        done();
+      });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>res.body</h1>
+      <dl>
+        <section class="suite">
+          <h1>application/x-www-form-urlencoded</h1>
+          <dl>
+            <dt>should parse the body</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/form-data&#x60;).end((err, res) =&#x3E; {
+        res.text.should.equal(&#x27;pet[name]=manny&#x27;);
+        res.body.should.eql({ pet: { name: &#x27;manny&#x27; } });
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>https</h1>
+      <dl>
+        <section class="suite">
+          <h1>certificate authority</h1>
+          <dl>
+            <section class="suite">
+              <h1>request</h1>
+              <dl>
+                <dt>should give a good response</dt>
+                <dd><pre><code>done =&#x3E; {
+        request
+          .get(testEndpoint)
+          .ca(ca)
+          .end((err, res) =&#x3E; {
+            assert.ifError(err);
+            assert(res.ok);
+            assert.strictEqual(&#x27;Safe and secure!&#x27;, res.text);
+            done();
+          });
+      }</code></pre></dd>
+                <dt>should reject unauthorized response</dt>
+                <dd><pre><code>return request
+  .get(testEndpoint)
+  .trustLocalhost(false)
+  .then(
+    () =&#x3E; {
+      throw new Error(&#x27;Allows MITM&#x27;);
+    },
+    () =&#x3E; {}
+  );</code></pre></dd>
+                <dt>should trust localhost unauthorized response</dt>
+                <dd><pre><code>return request.get(testEndpoint).trustLocalhost(true);</code></pre></dd>
+                <dt>should trust overriden localhost unauthorized response</dt>
+                <dd><pre><code>return request
+  .get(&#x60;https://example.com:${server.address().port}&#x60;)
+  .connect(&#x27;127.0.0.1&#x27;)
+  .trustLocalhost();</code></pre></dd>
+              </dl>
+            </section>
+            <section class="suite">
+              <h1>.agent</h1>
+              <dl>
+                <dt>should be able to make multiple requests without redefining the certificate</dt>
+                <dd><pre><code>done =&#x3E; {
+        const agent = request.agent({ ca });
+        agent.get(testEndpoint).end((err, res) =&#x3E; {
+          assert.ifError(err);
+          assert(res.ok);
+          assert.strictEqual(&#x27;Safe and secure!&#x27;, res.text);
+          agent.get(url.parse(testEndpoint)).end((err, res) =&#x3E; {
+            assert.ifError(err);
+            assert(res.ok);
+            assert.strictEqual(&#x27;Safe and secure!&#x27;, res.text);
+            done();
+          });
+        });
+      }</code></pre></dd>
+              </dl>
+            </section>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>client certificates</h1>
+          <dl>
+            <section class="suite">
+              <h1>request</h1>
+              <dl>
+              </dl>
+            </section>
+            <section class="suite">
+              <h1>.agent</h1>
+              <dl>
+              </dl>
+            </section>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>res.body</h1>
+      <dl>
+        <section class="suite">
+          <h1>image/png</h1>
+          <dl>
+            <dt>should parse the body</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/image&#x60;).end((err, res) =&#x3E; {
+        res.type.should.equal(&#x27;image/png&#x27;);
+        Buffer.isBuffer(res.body).should.be.true();
+        (res.body.length - img.length).should.equal(0);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>application/octet-stream</h1>
+          <dl>
+            <dt>should parse the body</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/image-as-octets&#x60;)
+        .buffer(true) // that&#x27;s tech debt :(
+        .end((err, res) =&#x3E; {
+          res.type.should.equal(&#x27;application/octet-stream&#x27;);
+          Buffer.isBuffer(res.body).should.be.true();
+          (res.body.length - img.length).should.equal(0);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>application/octet-stream</h1>
+          <dl>
+            <dt>should parse the body (using responseType)</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/image-as-octets&#x60;)
+        .responseType(&#x27;blob&#x27;)
+        .end((err, res) =&#x3E; {
+          res.type.should.equal(&#x27;application/octet-stream&#x27;);
+          Buffer.isBuffer(res.body).should.be.true();
+          (res.body.length - img.length).should.equal(0);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>zlib</h1>
+      <dl>
+        <dt>should deflate the content</dt>
+        <dd><pre><code>done =&#x3E; {
+    request.get(base).end((err, res) =&#x3E; {
+      res.should.have.status(200);
+      res.text.should.equal(subject);
+      res.headers[&#x27;content-length&#x27;].should.be.below(subject.length);
+      done();
+    });
+  }</code></pre></dd>
+        <dt>should protect from zip bombs</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(base)
+      .buffer(true)
+      .maxResponseSize(1)
+      .end((err, res) =&#x3E; {
+        try {
+          assert.equal(&#x27;Maximum response size reached&#x27;, err &#x26;&#x26; err.message);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+  }</code></pre></dd>
+        <dt>should ignore trailing junk</dt>
+        <dd><pre><code>done =&#x3E; {
+    request.get(&#x60;${base}/junk&#x60;).end((err, res) =&#x3E; {
+      res.should.have.status(200);
+      res.text.should.equal(subject);
+      done();
+    });
+  }</code></pre></dd>
+        <dt>should ignore missing data</dt>
+        <dd><pre><code>done =&#x3E; {
+    request.get(&#x60;${base}/chopped&#x60;).end((err, res) =&#x3E; {
+      assert.equal(undefined, err);
+      res.should.have.status(200);
+      res.text.should.startWith(subject);
+      done();
+    });
+  }</code></pre></dd>
+        <dt>should handle corrupted responses</dt>
+        <dd><pre><code>done =&#x3E; {
+    request.get(&#x60;${base}/corrupt&#x60;).end((err, res) =&#x3E; {
+      assert(err, &#x27;missing error&#x27;);
+      assert(!res, &#x27;response should not be defined&#x27;);
+      done();
+    });
+  }</code></pre></dd>
+        <dt>should handle no content with gzip header</dt>
+        <dd><pre><code>done =&#x3E; {
+    request.get(&#x60;${base}/nocontent&#x60;).end((err, res) =&#x3E; {
+      assert.ifError(err);
+      assert(res);
+      res.should.have.status(204);
+      res.text.should.equal(&#x27;&#x27;);
+      res.headers.should.not.have.property(&#x27;content-length&#x27;);
+      done();
+    });
+  }</code></pre></dd>
+        <section class="suite">
+          <h1>without encoding set</h1>
+          <dl>
+            <dt>should buffer if asked</dt>
+            <dd><pre><code>return request
+  .get(&#x60;${base}/binary&#x60;)
+  .buffer(true)
+  .then(res =&#x3E; {
+    res.should.have.status(200);
+    assert(res.headers[&#x27;content-length&#x27;]);
+    assert(res.body.byteLength);
+    assert.equal(subject, res.body.toString());
+  });</code></pre></dd>
+            <dt>should emit buffers</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/binary&#x60;).end((err, res) =&#x3E; {
+        res.should.have.status(200);
+        res.headers[&#x27;content-length&#x27;].should.be.below(subject.length);
+        res.on(&#x27;data&#x27;, chunk =&#x3E; {
+          chunk.should.have.length(subject.length);
+        });
+        res.on(&#x27;end&#x27;, done);
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>Multipart</h1>
+      <dl>
+        <section class="suite">
+          <h1>#field(name, value)</h1>
+          <dl>
+            <dt>should set a multipart field value</dt>
+            <dd><pre><code>const req = request.post(&#x60;${base}/echo&#x60;);
+req.field(&#x27;user[name]&#x27;, &#x27;tobi&#x27;);
+req.field(&#x27;user[age]&#x27;, &#x27;2&#x27;);
+req.field(&#x27;user[species]&#x27;, &#x27;ferret&#x27;);
+return req.then(res =&#x3E; {
+  res.body[&#x27;user[name]&#x27;].should.equal(&#x27;tobi&#x27;);
+  res.body[&#x27;user[age]&#x27;].should.equal(&#x27;2&#x27;);
+  res.body[&#x27;user[species]&#x27;].should.equal(&#x27;ferret&#x27;);
+});</code></pre></dd>
+            <dt>should work with file attachments</dt>
+            <dd><pre><code>const req = request.post(&#x60;${base}/echo&#x60;);
+req.field(&#x27;name&#x27;, &#x27;Tobi&#x27;);
+req.attach(&#x27;document&#x27;, &#x27;test/node/fixtures/user.html&#x27;);
+req.field(&#x27;species&#x27;, &#x27;ferret&#x27;);
+return req.then(res =&#x3E; {
+  res.body.name.should.equal(&#x27;Tobi&#x27;);
+  res.body.species.should.equal(&#x27;ferret&#x27;);
+  const html = res.files.document;
+  html.name.should.equal(&#x27;user.html&#x27;);
+  html.type.should.equal(&#x27;text/html&#x27;);
+  read(html.path).should.equal(&#x27;&#x3C;h1&#x3E;name&#x3C;/h1&#x3E;&#x27;);
+});</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>#attach(name, path)</h1>
+          <dl>
+            <dt>should attach a file</dt>
+            <dd><pre><code>const req = request.post(&#x60;${base}/echo&#x60;);
+req.attach(&#x27;one&#x27;, &#x27;test/node/fixtures/user.html&#x27;);
+req.attach(&#x27;two&#x27;, &#x27;test/node/fixtures/user.json&#x27;);
+req.attach(&#x27;three&#x27;, &#x27;test/node/fixtures/user.txt&#x27;);
+return req.then(res =&#x3E; {
+  const html = res.files.one;
+  const json = res.files.two;
+  const text = res.files.three;
+  html.name.should.equal(&#x27;user.html&#x27;);
+  html.type.should.equal(&#x27;text/html&#x27;);
+  read(html.path).should.equal(&#x27;&#x3C;h1&#x3E;name&#x3C;/h1&#x3E;&#x27;);
+  json.name.should.equal(&#x27;user.json&#x27;);
+  json.type.should.equal(&#x27;application/json&#x27;);
+  read(json.path).should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
+  text.name.should.equal(&#x27;user.txt&#x27;);
+  text.type.should.equal(&#x27;text/plain&#x27;);
+  read(text.path).should.equal(&#x27;Tobi&#x27;);
+});</code></pre></dd>
+            <section class="suite">
+              <h1>when a file does not exist</h1>
+              <dl>
+                <dt>should fail the request with an error</dt>
+                <dd><pre><code>done =&#x3E; {
+        const req = request.post(&#x60;${base}/echo&#x60;);
+        req.attach(&#x27;name&#x27;, &#x27;foo&#x27;);
+        req.attach(&#x27;name2&#x27;, &#x27;bar&#x27;);
+        req.attach(&#x27;name3&#x27;, &#x27;baz&#x27;);
+        req.end((err, res) =&#x3E; {
+          assert.ok(Boolean(err), &#x27;Request should have failed.&#x27;);
+          err.code.should.equal(&#x27;ENOENT&#x27;);
+          err.message.should.containEql(&#x27;ENOENT&#x27;);
+          err.path.should.equal(&#x27;foo&#x27;);
+          done();
+        });
+      }</code></pre></dd>
+                <dt>promise should fail</dt>
+                <dd><pre><code>return request
+  .post(&#x60;${base}/echo&#x60;)
+  .field({ a: 1, b: 2 })
+  .attach(&#x27;c&#x27;, &#x27;does-not-exist.txt&#x27;)
+  .then(
+    res =&#x3E; assert.fail(&#x27;It should not allow this&#x27;),
+    err =&#x3E; {
+      err.code.should.equal(&#x27;ENOENT&#x27;);
+      err.path.should.equal(&#x27;does-not-exist.txt&#x27;);
+    }
+  );</code></pre></dd>
+                <dt>should report ECONNREFUSED via the callback</dt>
+                <dd><pre><code>done =&#x3E; {
+        request
+          .post(&#x27;http://127.0.0.1:1&#x27;) // nobody is listening there
+          .attach(&#x27;name&#x27;, &#x27;file-does-not-exist&#x27;)
+          .end((err, res) =&#x3E; {
+            assert.ok(Boolean(err), &#x27;Request should have failed&#x27;);
+            err.code.should.equal(&#x27;ECONNREFUSED&#x27;);
+            done();
+          });
+      }</code></pre></dd>
+                <dt>should report ECONNREFUSED via Promise</dt>
+                <dd><pre><code>return request
+  .post(&#x27;http://127.0.0.1:1&#x27;) // nobody is listening there
+  .attach(&#x27;name&#x27;, &#x27;file-does-not-exist&#x27;)
+  .then(
+    res =&#x3E; assert.fail(&#x27;Request should have failed&#x27;),
+    err =&#x3E; err.code.should.equal(&#x27;ECONNREFUSED&#x27;)
+  );</code></pre></dd>
+              </dl>
+            </section>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>#attach(name, path, filename)</h1>
+          <dl>
+            <dt>should use the custom filename</dt>
+            <dd><pre><code>request
+        .post(&#x60;${base}/echo&#x60;)
+        .attach(&#x27;document&#x27;, &#x27;test/node/fixtures/user.html&#x27;, &#x27;doc.html&#x27;)
+        .then(res =&#x3E; {
+          const html = res.files.document;
+          html.name.should.equal(&#x27;doc.html&#x27;);
+          html.type.should.equal(&#x27;text/html&#x27;);
+          read(html.path).should.equal(&#x27;&#x3C;h1&#x3E;name&#x3C;/h1&#x3E;&#x27;);
+        })</code></pre></dd>
+            <dt>should fire progress event</dt>
+            <dd><pre><code>done =&#x3E; {
+      let loaded = 0;
+      let total = 0;
+      let uploadEventWasFired = false;
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .attach(&#x27;document&#x27;, &#x27;test/node/fixtures/user.html&#x27;)
+        .on(&#x27;progress&#x27;, event =&#x3E; {
+          total = event.total;
+          loaded = event.loaded;
+          if (event.direction === &#x27;upload&#x27;) {
+            uploadEventWasFired = true;
+          }
+        })
+        .end((err, res) =&#x3E; {
+          if (err) return done(err);
+          const html = res.files.document;
+          html.name.should.equal(&#x27;user.html&#x27;);
+          html.type.should.equal(&#x27;text/html&#x27;);
+          read(html.path).should.equal(&#x27;&#x3C;h1&#x3E;name&#x3C;/h1&#x3E;&#x27;);
+          total.should.equal(223);
+          loaded.should.equal(223);
+          uploadEventWasFired.should.equal(true);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>filesystem errors should be caught</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .attach(&#x27;filedata&#x27;, &#x27;test/node/fixtures/non-existent-file.ext&#x27;)
+        .end((err, res) =&#x3E; {
+          assert.ok(Boolean(err), &#x27;Request should have failed.&#x27;);
+          err.code.should.equal(&#x27;ENOENT&#x27;);
+          err.path.should.equal(&#x27;test/node/fixtures/non-existent-file.ext&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>#field(name, val)</h1>
+          <dl>
+            <dt>should set a multipart field value</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .field(&#x27;first-name&#x27;, &#x27;foo&#x27;)
+        .field(&#x27;last-name&#x27;, &#x27;bar&#x27;)
+        .end((err, res) =&#x3E; {
+          if (err) done(err);
+          res.should.be.ok();
+          res.body[&#x27;first-name&#x27;].should.equal(&#x27;foo&#x27;);
+          res.body[&#x27;last-name&#x27;].should.equal(&#x27;bar&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>#field(object)</h1>
+          <dl>
+            <dt>should set multiple multipart fields</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${base}/echo&#x60;)
+        .field({ &#x27;first-name&#x27;: &#x27;foo&#x27;, &#x27;last-name&#x27;: &#x27;bar&#x27; })
+        .end((err, res) =&#x3E; {
+          if (err) done(err);
+          res.should.be.ok();
+          res.body[&#x27;first-name&#x27;].should.equal(&#x27;foo&#x27;);
+          res.body[&#x27;last-name&#x27;].should.equal(&#x27;bar&#x27;);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>with network error</h1>
+      <dl>
+        <dt>should error</dt>
+        <dd><pre><code>request.get(&#x60;http://localhost:${this.port}/&#x60;).end((err, res) =&#x3E; {
+  assert(err, &#x27;expected an error&#x27;);
+  done();
+});</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request</h1>
+      <dl>
+        <section class="suite">
+          <h1>not modified</h1>
+          <dl>
+            <dt>should start with 200</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/if-mod&#x60;).end((err, res) =&#x3E; {
+        res.should.have.status(200);
+        res.text.should.match(/^\d+$/);
+        ts = Number(res.text);
+        done();
+      });
+    }</code></pre></dd>
+            <dt>should then be 304</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/if-mod&#x60;)
+        .set(&#x27;If-Modified-Since&#x27;, new Date(ts).toUTCString())
+        .end((err, res) =&#x3E; {
+          res.should.have.status(304);
+          // res.text.should.be.empty
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.parse(fn)</h1>
+      <dl>
+        <dt>should take precedence over default parsers</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/manny&#x60;)
+      .parse(request.parse[&#x27;application/json&#x27;])
+      .end((err, res) =&#x3E; {
+        assert(res.ok);
+        assert.equal(&#x27;{&#x22;name&#x22;:&#x22;manny&#x22;}&#x27;, res.text);
+        assert.equal(&#x27;manny&#x27;, res.body.name);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should be the only parser</dt>
+        <dd><pre><code>request
+      .get(&#x60;${base}/image&#x60;)
+      .buffer(false)
+      .parse((res, fn) =&#x3E; {
+        res.on(&#x27;data&#x27;, () =&#x3E; {});
+      })
+      .then(res =&#x3E; {
+        assert(res.ok);
+        assert.strictEqual(res.text, undefined);
+        res.body.should.eql({});
+      })</code></pre></dd>
+        <dt>should emit error if parser throws</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/manny&#x60;)
+      .parse(() =&#x3E; {
+        throw new Error(&#x27;I am broken&#x27;);
+      })
+      .on(&#x27;error&#x27;, err =&#x3E; {
+        err.message.should.equal(&#x27;I am broken&#x27;);
+        done();
+      })
+      .end();
+  }</code></pre></dd>
+        <dt>should emit error if parser returns an error</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/manny&#x60;)
+      .parse((res, fn) =&#x3E; {
+        fn(new Error(&#x27;I am broken&#x27;));
+      })
+      .on(&#x27;error&#x27;, err =&#x3E; {
+        err.message.should.equal(&#x27;I am broken&#x27;);
+        done();
+      })
+      .end();
+  }</code></pre></dd>
+        <dt>should not emit error on chunked json</dt>
+        <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/chunked-json&#x60;).end(err =&#x3E; {
+        assert.ifError(err);
+        done();
+      });
+    }</code></pre></dd>
+        <dt>should not emit error on aborted chunked json</dt>
+        <dd><pre><code>done =&#x3E; {
+      const req = request.get(&#x60;${base}/chunked-json&#x60;);
+      req.end(err =&#x3E; {
+        assert.ifError(err);
+        done();
+      });
+      setTimeout(() =&#x3E; {
+        req.abort();
+      }, 50);
+    }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>pipe on redirect</h1>
+      <dl>
+        <dt>should follow Location</dt>
+        <dd><pre><code>done =&#x3E; {
+    const stream = fs.createWriteStream(destPath);
+    const redirects = [];
+    const req = request
+      .get(base)
+      .on(&#x27;redirect&#x27;, res =&#x3E; {
+        redirects.push(res.headers.location);
+      })
+      .connect({
+        inapplicable: &#x27;should be ignored&#x27;
+      });
+    stream.on(&#x27;finish&#x27;, () =&#x3E; {
+      redirects.should.eql([&#x27;/movies&#x27;, &#x27;/movies/all&#x27;, &#x27;/movies/all/0&#x27;]);
+      fs.readFileSync(destPath, &#x27;utf8&#x27;).should.eql(&#x27;first movie page&#x27;);
+      done();
+    });
+    req.pipe(stream);
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request pipe</h1>
+      <dl>
+        <dt>should act as a writable stream</dt>
+        <dd><pre><code>done =&#x3E; {
+    const req = request.post(base);
+    const stream = fs.createReadStream(&#x27;test/node/fixtures/user.json&#x27;);
+    req.type(&#x27;json&#x27;);
+    req.on(&#x27;response&#x27;, res =&#x3E; {
+      res.body.should.eql({ name: &#x27;tobi&#x27; });
+      done();
+    });
+    stream.pipe(req);
+  }</code></pre></dd>
+        <dt>end() stops piping</dt>
+        <dd><pre><code>done =&#x3E; {
+    const stream = fs.createWriteStream(destPath);
+    request.get(base).end((err, res) =&#x3E; {
+      try {
+        res.pipe(stream);
+        return done(new Error(&#x27;Did not prevent nonsense pipe&#x27;));
+      } catch (err2) {
+        /* expected error */
+      }
+      done();
+    });
+  }</code></pre></dd>
+        <dt>should act as a readable stream</dt>
+        <dd><pre><code>done =&#x3E; {
+    const stream = fs.createWriteStream(destPath);
+    let responseCalled = false;
+    const req = request.get(base);
+    req.type(&#x27;json&#x27;);
+    req.on(&#x27;response&#x27;, res =&#x3E; {
+      res.status.should.eql(200);
+      responseCalled = true;
+    });
+    stream.on(&#x27;finish&#x27;, () =&#x3E; {
+      JSON.parse(fs.readFileSync(destPath, &#x27;utf8&#x27;)).should.eql({
+        name: &#x27;tobi&#x27;
+      });
+      responseCalled.should.be.true();
+      done();
+    });
+    req.pipe(stream);
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.query(String)</h1>
+      <dl>
+        <dt>should support passing in a string</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .del(base)
+      .query(&#x27;name=t%F6bi&#x27;)
+      .end((err, res) =&#x3E; {
+        res.body.should.eql({ name: &#x27;t%F6bi&#x27; });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work with url query-string and string for query</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .del(&#x60;${base}/?name=tobi&#x60;)
+      .query(&#x27;age=2%20&#x27;)
+      .end((err, res) =&#x3E; {
+        res.body.should.eql({ name: &#x27;tobi&#x27;, age: &#x27;2 &#x27; });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should support compound elements in a string</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .del(base)
+      .query(&#x27;name=t%F6bi&#x26;age=2&#x27;)
+      .end((err, res) =&#x3E; {
+        res.body.should.eql({ name: &#x27;t%F6bi&#x27;, age: &#x27;2&#x27; });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work when called multiple times with a string</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .del(base)
+      .query(&#x27;name=t%F6bi&#x27;)
+      .query(&#x27;age=2%F6&#x27;)
+      .end((err, res) =&#x3E; {
+        res.body.should.eql({ name: &#x27;t%F6bi&#x27;, age: &#x27;2%F6&#x27; });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work with normal &#x60;query&#x60; object and query string</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .del(base)
+      .query(&#x27;name=t%F6bi&#x27;)
+      .query({ age: &#x27;2&#x27; })
+      .end((err, res) =&#x3E; {
+        res.body.should.eql({ name: &#x27;t%F6bi&#x27;, age: &#x27;2&#x27; });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should not encode raw backticks, but leave encoded ones as is</dt>
+        <dd><pre><code>return Promise.all([
+  request
+    .get(&#x60;${base}/raw-query&#x60;)
+    .query(&#x27;name=&#x60;t%60bi&#x60;&#x26;age&#x60;=2&#x27;)
+    .then(res =&#x3E; {
+      res.text.should.eql(&#x27;name=&#x60;t%60bi&#x60;&#x26;age&#x60;=2&#x27;);
+    }),
+  request.get(base + &#x27;/raw-query?&#x60;age%60&#x60;=2%60&#x60;&#x27;).then(res =&#x3E; {
+    res.text.should.eql(&#x27;&#x60;age%60&#x60;=2%60&#x60;&#x27;);
+  }),
+  request
+    .get(&#x60;${base}/raw-query&#x60;)
+    .query(&#x27;name=&#x60;t%60bi&#x60;&#x27;)
+    .query(&#x27;age&#x60;=2&#x27;)
+    .then(res =&#x3E; {
+      res.text.should.eql(&#x27;name=&#x60;t%60bi&#x60;&#x26;age&#x60;=2&#x27;);
+    })
+]);</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.query(Object)</h1>
+      <dl>
+        <dt>should construct the query-string</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .del(base)
+      .query({ name: &#x27;tobi&#x27; })
+      .query({ order: &#x27;asc&#x27; })
+      .query({ limit: [&#x27;1&#x27;, &#x27;2&#x27;] })
+      .end((err, res) =&#x3E; {
+        res.body.should.eql({ name: &#x27;tobi&#x27;, order: &#x27;asc&#x27;, limit: [&#x27;1&#x27;, &#x27;2&#x27;] });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should encode raw backticks</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .get(&#x60;${base}/raw-query&#x60;)
+      .query({ name: &#x27;&#x60;tobi&#x60;&#x27; })
+      .query({ &#x27;orde%60r&#x27;: null })
+      .query({ &#x27;&#x60;limit&#x60;&#x27;: [&#x27;%602&#x60;&#x27;] })
+      .end((err, res) =&#x3E; {
+        res.text.should.eql(&#x27;name=%60tobi%60&#x26;orde%2560r&#x26;%60limit%60=%25602%60&#x27;);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should not error on dates</dt>
+        <dd><pre><code>done =&#x3E; {
+    const date = new Date(0);
+    request
+      .del(base)
+      .query({ at: date })
+      .end((err, res) =&#x3E; {
+        assert.equal(date.toISOString(), res.body.at);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should work after setting header fields</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .del(base)
+      .set(&#x27;Foo&#x27;, &#x27;bar&#x27;)
+      .set(&#x27;Bar&#x27;, &#x27;baz&#x27;)
+      .query({ name: &#x27;tobi&#x27; })
+      .query({ order: &#x27;asc&#x27; })
+      .query({ limit: [&#x27;1&#x27;, &#x27;2&#x27;] })
+      .end((err, res) =&#x3E; {
+        res.body.should.eql({ name: &#x27;tobi&#x27;, order: &#x27;asc&#x27;, limit: [&#x27;1&#x27;, &#x27;2&#x27;] });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should append to the original query-string</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .del(&#x60;${base}/?name=tobi&#x60;)
+      .query({ order: &#x27;asc&#x27; })
+      .end((err, res) =&#x3E; {
+        res.body.should.eql({ name: &#x27;tobi&#x27;, order: &#x27;asc&#x27; });
+        done();
+      });
+  }</code></pre></dd>
+        <dt>should retain the original query-string</dt>
+        <dd><pre><code>done =&#x3E; {
+    request.del(&#x60;${base}/?name=tobi&#x60;).end((err, res) =&#x3E; {
+      res.body.should.eql({ name: &#x27;tobi&#x27; });
+      done();
+    });
+  }</code></pre></dd>
+        <dt>should keep only keys with null querystring values</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .del(&#x60;${base}/url&#x60;)
+      .query({ nil: null })
+      .end((err, res) =&#x3E; {
+        res.text.should.equal(&#x27;/url?nil&#x27;);
+        done();
+      });
+  }</code></pre></dd>
+        <dt>query-string should be sent on pipe</dt>
+        <dd><pre><code>done =&#x3E; {
+    const req = request.put(&#x60;${base}/?name=tobi&#x60;);
+    const stream = fs.createReadStream(&#x27;test/node/fixtures/user.json&#x27;);
+    req.on(&#x27;response&#x27;, res =&#x3E; {
+      res.body.should.eql({ name: &#x27;tobi&#x27; });
+      done();
+    });
+    stream.pipe(req);
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request.get</h1>
+      <dl>
+        <section class="suite">
+          <h1>on 301 redirect</h1>
+          <dl>
+            <dt>should follow Location with a GET request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.get(&#x60;${base}/test-301&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;GET&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 302 redirect</h1>
+          <dl>
+            <dt>should follow Location with a GET request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.get(&#x60;${base}/test-302&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;GET&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 303 redirect</h1>
+          <dl>
+            <dt>should follow Location with a GET request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.get(&#x60;${base}/test-303&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;GET&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 307 redirect</h1>
+          <dl>
+            <dt>should follow Location with a GET request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.get(&#x60;${base}/test-307&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;GET&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 308 redirect</h1>
+          <dl>
+            <dt>should follow Location with a GET request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.get(&#x60;${base}/test-308&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;GET&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request.post</h1>
+      <dl>
+        <section class="suite">
+          <h1>on 301 redirect</h1>
+          <dl>
+            <dt>should follow Location with a GET request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.post(&#x60;${base}/test-301&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;GET&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 302 redirect</h1>
+          <dl>
+            <dt>should follow Location with a GET request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.post(&#x60;${base}/test-302&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;GET&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 303 redirect</h1>
+          <dl>
+            <dt>should follow Location with a GET request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.post(&#x60;${base}/test-303&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;GET&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 307 redirect</h1>
+          <dl>
+            <dt>should follow Location with a POST request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.post(&#x60;${base}/test-307&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;POST&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on 308 redirect</h1>
+          <dl>
+            <dt>should follow Location with a POST request</dt>
+            <dd><pre><code>done =&#x3E; {
+      const req = request.post(&#x60;${base}/test-308&#x60;).redirects(1);
+      req.end((err, res) =&#x3E; {
+        req.req._headers.host.should.eql(&#x60;localhost:${server2.address().port}&#x60;);
+        res.status.should.eql(200);
+        res.text.should.eql(&#x27;POST&#x27;);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request</h1>
+      <dl>
+        <section class="suite">
+          <h1>on redirect</h1>
+          <dl>
+            <dt>should merge cookies if agent is used</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .agent()
+        .get(&#x60;${base}/cookie-redirect&#x60;)
+        .set(&#x27;Cookie&#x27;, &#x27;orig=1; replaced=not&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            assert.ifError(err);
+            assert(/orig=1/.test(res.text), &#x27;orig=1/.test&#x27;);
+            assert(/replaced=yes/.test(res.text), &#x27;replaced=yes/.test&#x27;);
+            assert(/from-redir=1/.test(res.text), &#x27;from-redir=1&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should not merge cookies if agent is not used</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/cookie-redirect&#x60;)
+        .set(&#x27;Cookie&#x27;, &#x27;orig=1; replaced=not&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            assert.ifError(err);
+            assert(/orig=1/.test(res.text), &#x27;/orig=1&#x27;);
+            assert(/replaced=not/.test(res.text), &#x27;/replaced=not&#x27;);
+            assert(!/replaced=yes/.test(res.text), &#x27;!/replaced=yes&#x27;);
+            assert(!/from-redir/.test(res.text), &#x27;!/from-redir&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should have previously set cookie for subsquent requests when agent is used</dt>
+            <dd><pre><code>done =&#x3E; {
+      const agent = request.agent();
+      agent.get(&#x60;${base}/set-cookie&#x60;).end(err =&#x3E; {
+        assert.ifError(err);
+        agent
+          .get(&#x60;${base}/show-cookies&#x60;)
+          .set({ Cookie: &#x27;orig=1&#x27; })
+          .end((err, res) =&#x3E; {
+            try {
+              assert.ifError(err);
+              assert(/orig=1/.test(res.text), &#x27;orig=1/.test&#x27;);
+              assert(/persist=123/.test(res.text), &#x27;persist=123&#x27;);
+              done();
+            } catch (err2) {
+              done(err2);
+            }
+          });
+      });
+    }</code></pre></dd>
+            <dt>should follow Location</dt>
+            <dd><pre><code>done =&#x3E; {
+      const redirects = [];
+      request
+        .get(base)
+        .on(&#x27;redirect&#x27;, res =&#x3E; {
+          redirects.push(res.headers.location);
+        })
+        .end((err, res) =&#x3E; {
+          try {
+            const arr = [&#x27;/movies&#x27;, &#x27;/movies/all&#x27;, &#x27;/movies/all/0&#x27;];
+            redirects.should.eql(arr);
+            res.text.should.equal(&#x27;first movie page&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should follow Location with IP override</dt>
+            <dd><pre><code>const redirects = [];
+const url = URL.parse(base);
+return request
+  .get(&#x60;http://redir.example.com:${url.port || &#x27;80&#x27;}${url.pathname}&#x60;)
+  .connect({
+    &#x27;*&#x27;: url.hostname
+  })
+  .on(&#x27;redirect&#x27;, res =&#x3E; {
+    redirects.push(res.headers.location);
+  })
+  .then(res =&#x3E; {
+    const arr = [&#x27;/movies&#x27;, &#x27;/movies/all&#x27;, &#x27;/movies/all/0&#x27;];
+    redirects.should.eql(arr);
+    res.text.should.equal(&#x27;first movie page&#x27;);
+  });</code></pre></dd>
+            <dt>should not follow on HEAD by default</dt>
+            <dd><pre><code>const redirects = [];
+return request
+  .head(base)
+  .ok(() =&#x3E; true)
+  .on(&#x27;redirect&#x27;, res =&#x3E; {
+    redirects.push(res.headers.location);
+  })
+  .then(res =&#x3E; {
+    redirects.should.eql([]);
+    res.status.should.equal(302);
+  });</code></pre></dd>
+            <dt>should follow on HEAD when redirects are set</dt>
+            <dd><pre><code>done =&#x3E; {
+      const redirects = [];
+      request
+        .head(base)
+        .redirects(10)
+        .on(&#x27;redirect&#x27;, res =&#x3E; {
+          redirects.push(res.headers.location);
+        })
+        .end((err, res) =&#x3E; {
+          try {
+            const arr = [];
+            arr.push(&#x27;/movies&#x27;);
+            arr.push(&#x27;/movies/all&#x27;);
+            arr.push(&#x27;/movies/all/0&#x27;);
+            redirects.should.eql(arr);
+            assert(!res.text);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should remove Content-* fields</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .post(&#x60;${base}/header&#x60;)
+        .type(&#x27;txt&#x27;)
+        .set(&#x27;X-Foo&#x27;, &#x27;bar&#x27;)
+        .set(&#x27;X-Bar&#x27;, &#x27;baz&#x27;)
+        .send(&#x27;hey&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            assert(res.body);
+            res.body.should.have.property(&#x27;x-foo&#x27;, &#x27;bar&#x27;);
+            res.body.should.have.property(&#x27;x-bar&#x27;, &#x27;baz&#x27;);
+            res.body.should.not.have.property(&#x27;content-type&#x27;);
+            res.body.should.not.have.property(&#x27;content-length&#x27;);
+            res.body.should.not.have.property(&#x27;transfer-encoding&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should retain cookies</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/header&#x60;)
+        .set(&#x27;Cookie&#x27;, &#x27;foo=bar;&#x27;)
+        .end((err, res) =&#x3E; {
+          try {
+            assert(res.body);
+            res.body.should.have.property(&#x27;cookie&#x27;, &#x27;foo=bar;&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should not resend query parameters</dt>
+            <dd><pre><code>done =&#x3E; {
+      const redirects = [];
+      const query = [];
+      request
+        .get(&#x60;${base}/?foo=bar&#x60;)
+        .on(&#x27;redirect&#x27;, res =&#x3E; {
+          query.push(res.headers.query);
+          redirects.push(res.headers.location);
+        })
+        .end((err, res) =&#x3E; {
+          try {
+            const arr = [];
+            arr.push(&#x27;/movies&#x27;);
+            arr.push(&#x27;/movies/all&#x27;);
+            arr.push(&#x27;/movies/all/0&#x27;);
+            redirects.should.eql(arr);
+            res.text.should.equal(&#x27;first movie page&#x27;);
+            query.should.eql([&#x27;{&#x22;foo&#x22;:&#x22;bar&#x22;}&#x27;, &#x27;{}&#x27;, &#x27;{}&#x27;]);
+            res.headers.query.should.eql(&#x27;{}&#x27;);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+            <dt>should handle no location header</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/bad-redirect&#x60;).end((err, res) =&#x3E; {
+        try {
+          err.message.should.equal(&#x27;No location header for redirect&#x27;);
+          done();
+        } catch (err2) {
+          done(err2);
+        }
+      });
+    }</code></pre></dd>
+            <section class="suite">
+              <h1>when relative</h1>
+              <dl>
+                <dt>should redirect to a sibling path</dt>
+                <dd><pre><code>done =&#x3E; {
+        const redirects = [];
+        request
+          .get(&#x60;${base}/relative&#x60;)
+          .on(&#x27;redirect&#x27;, res =&#x3E; {
+            redirects.push(res.headers.location);
+          })
+          .end((err, res) =&#x3E; {
+            try {
+              redirects.should.eql([&#x27;tobi&#x27;]);
+              res.text.should.equal(&#x27;tobi&#x27;);
+              done();
+            } catch (err2) {
+              done(err2);
+            }
+          });
+      }</code></pre></dd>
+                <dt>should redirect to a parent path</dt>
+                <dd><pre><code>done =&#x3E; {
+        const redirects = [];
+        request
+          .get(&#x60;${base}/relative/sub&#x60;)
+          .on(&#x27;redirect&#x27;, res =&#x3E; {
+            redirects.push(res.headers.location);
+          })
+          .end((err, res) =&#x3E; {
+            try {
+              redirects.should.eql([&#x27;../tobi&#x27;]);
+              res.text.should.equal(&#x27;tobi&#x27;);
+              done();
+            } catch (err2) {
+              done(err2);
+            }
+          });
+      }</code></pre></dd>
+              </dl>
+            </section>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>req.redirects(n)</h1>
+          <dl>
+            <dt>should alter the default number of redirects to follow</dt>
+            <dd><pre><code>done =&#x3E; {
+      const redirects = [];
+      request
+        .get(base)
+        .redirects(2)
+        .on(&#x27;redirect&#x27;, res =&#x3E; {
+          redirects.push(res.headers.location);
+        })
+        .end((err, res) =&#x3E; {
+          try {
+            const arr = [];
+            assert(res.redirect, &#x27;res.redirect&#x27;);
+            arr.push(&#x27;/movies&#x27;);
+            arr.push(&#x27;/movies/all&#x27;);
+            redirects.should.eql(arr);
+            res.text.should.match(/Moved Temporarily|Found/);
+            done();
+          } catch (err2) {
+            done(err2);
+          }
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>on POST</h1>
+          <dl>
+            <dt>should redirect as GET</dt>
+            <dd><pre><code>const redirects = [];
+return request
+  .post(&#x60;${base}/movie&#x60;)
+  .send({ name: &#x27;Tobi&#x27; })
+  .redirects(2)
+  .on(&#x27;redirect&#x27;, res =&#x3E; {
+    redirects.push(res.headers.location);
+  })
+  .then(res =&#x3E; {
+    redirects.should.eql([&#x27;/movies/all/0&#x27;]);
+    res.text.should.equal(&#x27;first movie page&#x27;);
+  });</code></pre></dd>
+            <dt>using multipart/form-data should redirect as GET</dt>
+            <dd><pre><code>const redirects = [];
+request
+  .post(&#x60;${base}/movie&#x60;)
+  .type(&#x27;form&#x27;)
+  .field(&#x27;name&#x27;, &#x27;Tobi&#x27;)
+  .redirects(2)
+  .on(&#x27;redirect&#x27;, res =&#x3E; {
+    redirects.push(res.headers.location);
+  })
+  .then(res =&#x3E; {
+    redirects.should.eql([&#x27;/movies/all/0&#x27;]);
+    res.text.should.equal(&#x27;first movie page&#x27;);
+  });</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>response</h1>
+      <dl>
+        <dt>should act as a readable stream</dt>
+        <dd><pre><code>done =&#x3E; {
+    const req = request.get(base).buffer(false);
+    req.end((err, res) =&#x3E; {
+      if (err) return done(err);
+      let trackEndEvent = 0;
+      let trackCloseEvent = 0;
+      res.on(&#x27;end&#x27;, () =&#x3E; {
+        trackEndEvent++;
+        trackEndEvent.should.equal(1);
+        if (!process.env.HTTP2_TEST) {
+          trackCloseEvent.should.equal(0); // close should not have been called
+        }
+        done();
+      });
+      res.on(&#x27;close&#x27;, () =&#x3E; {
+        trackCloseEvent++;
+      });
+      (() =&#x3E; {
+        res.pause();
+      }).should.not.throw();
+      (() =&#x3E; {
+        res.resume();
+      }).should.not.throw();
+      (() =&#x3E; {
+        res.destroy();
+      }).should.not.throw();
+    });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.serialize(fn)</h1>
+      <dl>
+        <dt>should take precedence over default parsers</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${base}/echo&#x60;)
+      .send({ foo: 123 })
+      .serialize(data =&#x3E; &#x27;{&#x22;bar&#x22;:456}&#x27;)
+      .end((err, res) =&#x3E; {
+        assert.ifError(err);
+        assert.equal(&#x27;{&#x22;bar&#x22;:456}&#x27;, res.text);
+        assert.equal(456, res.body.bar);
+        done();
+      });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request.get().set()</h1>
+      <dl>
+        <dt>should set host header after get()</dt>
+        <dd><pre><code>done =&#x3E; {
+    app.get(&#x27;/&#x27;, (req, res) =&#x3E; {
+      assert.equal(req.hostname, &#x27;example.com&#x27;);
+      res.end();
+    });
+    server = http.createServer(app);
+    server.listen(0, function listening() {
+      request
+        .get(&#x60;http://localhost:${server.address().port}&#x60;)
+        .set(&#x27;host&#x27;, &#x27;example.com&#x27;)
+        .then(() =&#x3E; {
+          return request
+            .get(&#x60;http://example.com:${server.address().port}&#x60;)
+            .connect({
+              &#x27;example.com&#x27;: &#x27;localhost&#x27;,
+              &#x27;*&#x27;: &#x27;fail&#x27;
+            });
+        })
+        .then(() =&#x3E; done(), done);
+    });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>res.toError()</h1>
+      <dl>
+        <dt>should return an Error</dt>
+        <dd><pre><code>done =&#x3E; {
+    request.get(base).end((err, res) =&#x3E; {
+      var err = res.toError();
+      assert.equal(err.status, 400);
+      assert.equal(err.method, &#x27;GET&#x27;);
+      assert.equal(err.path, &#x27;/&#x27;);
+      assert.equal(err.message, &#x27;cannot GET / (400)&#x27;);
+      assert.equal(err.text, &#x27;invalid json&#x27;);
+      done();
+    });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>[unix-sockets] http</h1>
+      <dl>
+        <section class="suite">
+          <h1>request</h1>
+          <dl>
+            <dt>path: / (root)</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/&#x60;).end((err, res) =&#x3E; {
+        assert(res.ok);
+        assert.strictEqual(&#x27;root ok!&#x27;, res.text);
+        done();
+      });
+    }</code></pre></dd>
+            <dt>path: /request/path</dt>
+            <dd><pre><code>done =&#x3E; {
+      request.get(&#x60;${base}/request/path&#x60;).end((err, res) =&#x3E; {
+        assert(res.ok);
+        assert.strictEqual(&#x27;request path ok!&#x27;, res.text);
+        done();
+      });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>[unix-sockets] https</h1>
+      <dl>
+        <section class="suite">
+          <h1>request</h1>
+          <dl>
+            <dt>path: / (root)</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/&#x60;)
+        .ca(cacert)
+        .end((err, res) =&#x3E; {
+          assert.ifError(err);
+          assert(res.ok);
+          assert.strictEqual(&#x27;root ok!&#x27;, res.text);
+          done();
+        });
+    }</code></pre></dd>
+            <dt>path: /request/path</dt>
+            <dd><pre><code>done =&#x3E; {
+      request
+        .get(&#x60;${base}/request/path&#x60;)
+        .ca(cacert)
+        .end((err, res) =&#x3E; {
+          assert.ifError(err);
+          assert(res.ok);
+          assert.strictEqual(&#x27;request path ok!&#x27;, res.text);
+          done();
+        });
+    }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.get()</h1>
+      <dl>
+        <dt>should set a default user-agent</dt>
+        <dd><pre><code>request.get(&#x60;${base}/ua&#x60;).then(res =&#x3E; {
+      assert(res.headers);
+      assert(res.headers[&#x27;user-agent&#x27;]);
+      assert(
+        /^node-superagent\/\d+\.\d+\.\d+(?:-[a-z]+\.\d+|$)/.test(
+          res.headers[&#x27;user-agent&#x27;]
+        )
+      );
+    })</code></pre></dd>
+        <dt>should be able to override user-agent</dt>
+        <dd><pre><code>request
+      .get(&#x60;${base}/ua&#x60;)
+      .set(&#x27;User-Agent&#x27;, &#x27;foo/bar&#x27;)
+      .then(res =&#x3E; {
+        assert(res.headers);
+        assert.equal(res.headers[&#x27;user-agent&#x27;], &#x27;foo/bar&#x27;);
+      })</code></pre></dd>
+        <dt>should be able to wipe user-agent</dt>
+        <dd><pre><code>request
+      .get(&#x60;${base}/ua&#x60;)
+      .unset(&#x27;User-Agent&#x27;)
+      .then(res =&#x3E; {
+        assert(res.headers);
+        assert.equal(res.headers[&#x27;user-agent&#x27;], void 0);
+      })</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>utils.type(str)</h1>
+      <dl>
+        <dt>should return the mime type</dt>
+        <dd><pre><code>utils
+  .type(&#x27;application/json; charset=utf-8&#x27;)
+  .should.equal(&#x27;application/json&#x27;);
+utils.type(&#x27;application/json&#x27;).should.equal(&#x27;application/json&#x27;);</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>utils.params(str)</h1>
+      <dl>
+        <dt>should return the field parameters</dt>
+        <dd><pre><code>const obj = utils.params(&#x27;application/json; charset=utf-8; foo  = bar&#x27;);
+obj.charset.should.equal(&#x27;utf-8&#x27;);
+obj.foo.should.equal(&#x27;bar&#x27;);
+utils.params(&#x27;application/json&#x27;).should.eql({});</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>utils.parseLinks(str)</h1>
+      <dl>
+        <dt>should parse links</dt>
+        <dd><pre><code>const str =
+  &#x27;&#x3C;https://api.github.com/repos/visionmedia/mocha/issues?page=2&#x3E;; rel=&#x22;next&#x22;, &#x3C;https://api.github.com/repos/visionmedia/mocha/issues?page=5&#x3E;; rel=&#x22;last&#x22;&#x27;;
+const ret = utils.parseLinks(str);
+ret.next.should.equal(
+  &#x27;https://api.github.com/repos/visionmedia/mocha/issues?page=2&#x27;
+);
+ret.last.should.equal(
+  &#x27;https://api.github.com/repos/visionmedia/mocha/issues?page=5&#x27;
+);</code></pre></dd>
+      </dl>
+    </section>
+    </div>
+    <a href="http://github.com/visionmedia/superagent"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png" alt="Fork me on GitHub"></a>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+      $('code').each(function(){
+        $(this).html(highlight($(this).text()));
+      });
+
+      function highlight(js) {
+        return js
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/('.*?')/gm, '<span class="string">$1</span>')
+          .replace(/(\d+\.\d+)/gm, '<span class="number">$1</span>')
+          .replace(/(\d+)/gm, '<span class="number">$1</span>')
+          .replace(/\bnew *(\w+)/gm, '<span class="keyword">new</span> <span class="init">$1</span>')
+          .replace(/\b(function|new|throw|return|var|if|else)\b/gm, '<span class="keyword">$1</span>')
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/3.0.0/tocbot.js"></script>
+    <script>
+      // Only use tocbot for main docs, not test docs
+      if (document.querySelector('#superagent')) {
+        tocbot.init({
+          // Where to render the table of contents.
+          tocSelector: '#menu',
+          // Where to grab the headings to build the table of contents.
+          contentSelector: '#content',
+          // Which headings to grab inside of the contentSelector element.
+          headingSelector: 'h2',
+          smoothScroll: false
+        });
+      }
+    </script>
+  </body>
+</html>
