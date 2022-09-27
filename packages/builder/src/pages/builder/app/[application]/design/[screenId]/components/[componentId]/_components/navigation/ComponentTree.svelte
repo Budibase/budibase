@@ -79,25 +79,20 @@
       const compTypeName = compDef.name.toLowerCase()
       const path = findComponentPath(currentScreen.props, component._id)
 
-      path.forEach(pathComp => {
+      for (let pathComp of path) {
         const pathCompDef = store.actions.components.getDefinition(
           pathComp?._component
         )
         if (pathCompDef?.illegalChildren?.indexOf(compTypeName) > -1) {
-          const err = new Error(
+          notifications.warning(
             `${compDef.name} cannot be a child of ${pathCompDef.name} (${pathComp._instanceName})`
           )
-          err.name = "IllegalChildError"
-          throw err
+          return
         }
-      })
+      }
 
       await dndStore.actions.drop()
     } catch (error) {
-      if (error.name === "IllegalChildError") {
-        notifications.warning(error.message)
-        return
-      }
       console.error(error)
       notifications.error("Error saving component")
     }
