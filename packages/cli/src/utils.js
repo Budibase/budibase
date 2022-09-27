@@ -88,3 +88,11 @@ exports.moveDirectory = (oldPath, newPath) => {
 exports.capitaliseFirstLetter = str => {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
+
+exports.stringifyToDotEnv = json => {
+  let str = ""
+  for (let [key, value] of Object.entries(json)) {
+    str += `${key}=${value}\n`
+  }
+  return str
+}

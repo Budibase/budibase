@@ -1,5 +1,5 @@
 const { number } = require("../questions")
-const { success } = require("../utils")
+const { success, stringifyToDotEnv } = require("../utils")
 const fs = require("fs")
 const path = require("path")
 const randomString = require("randomstring")
@@ -40,27 +40,38 @@ function getSingleCompose(port) {
 }
 
 function getEnv(port) {
-  return `
-# Use the main port in the builder for your self hosting URL, e.g. localhost:10000
-MAIN_PORT=${port}
-
-# This section contains all secrets pertaining to the system
-JWT_SECRET=${randomString.generate()}
-MINIO_ACCESS_KEY=${randomString.generate()}
-MINIO_SECRET_KEY=${randomString.generate()}
-COUCH_DB_PASSWORD=${randomString.generate()}
-COUCH_DB_USER=${randomString.generate()}
-REDIS_PASSWORD=${randomString.generate()}
-INTERNAL_API_KEY=${randomString.generate()}
-
-# This section contains variables that do not need to be altered under normal circumstances
-APP_PORT=4002
-WORKER_PORT=4003
-MINIO_PORT=4004
-COUCH_DB_PORT=4005
-REDIS_PORT=6379
-WATCHTOWER_PORT=6161
-BUDIBASE_ENVIRONMENT=PRODUCTION`
+  const partOne = stringifyToDotEnv({
+    MAIN_PORT: port,
+  })
+  const secrets = [
+    "JWT_SECRET",
+    "MINIO_ACCESS_KEY",
+    "MINIO_SECRET_KEY",
+    "COUCH_DB_PASSWORD",
+    "COUCH_DB_USER",
+    "REDIS_PASSWORD",
+    "INTERNAL_API_KEY",
+  ]
+  const partTwoObj = {}
+  secrets.forEach(secret => (partTwoObj[secret] = randomString.generate()))
+  const partTwo = stringifyToDotEnv(partTwoObj)
+  const partThree = stringifyToDotEnv({
+    APP_PORT: 4002,
+    WORKER_PORT: 4003,
+    MINIO_PORT: 4004,
+    COUCH_DB_PORT: 4005,
+    REDIS_PORT: 6379,
+    WATCHTOWER_PORT: 6161,
+    BUDIBASE_ENVIRONMENT: "PRODUCTION",
+  })
+  return [
+    "# Use the main port in the builder for your self hosting URL, e.g. localhost:10000",
+    partOne,
+    "# This section contains all secrets pertaining to the system",
+    partTwo,
+    "# This section contains variables that do not need to be altered under normal circumstances",
+    partThree,
+  ].join("\n")
 }
 
 module.exports.filePath = ENV_PATH
