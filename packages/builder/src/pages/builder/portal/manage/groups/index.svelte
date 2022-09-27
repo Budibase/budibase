@@ -90,16 +90,14 @@
 
 <Layout noPadding gap="M">
   <Layout gap="XS" noPadding>
-    <Heading size="M">User groups</Heading>
-    {#if !$licensing.groupsEnabled}
-      <Tags>
-        <div class="tags">
-          <div class="tag">
-            <Tag icon="LockClosed">Pro plan</Tag>
-          </div>
-        </div>
-      </Tags>
-    {/if}
+    <div class="title">
+      <Heading size="M">User groups</Heading>
+      {#if !$licensing.groupsEnabled}
+        <Tags>
+          <Tag icon="LockClosed">Pro plan</Tag>
+        </Tags>
+      {/if}
+    </div>
     <Body>
       Easily assign and manage your users' access with user groups.
       {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
@@ -123,6 +121,7 @@
       {:else}
         <Button
           newStyles
+          primary
           disabled={!$auth.accountPortalAccess && $admin.cloud}
           on:click={$licensing.goToUpgradePage()}
         >
@@ -140,18 +139,22 @@
         </Button>
       {/if}
     </ButtonGroup>
-    <div class="controls-right">
-      <Search bind:value={searchString} placeholder="Search" />
-    </div>
+    {#if $licensing.groupsEnabled}
+      <div class="controls-right">
+        <Search bind:value={searchString} placeholder="Search" />
+      </div>
+    {/if}
   </div>
-  <Table
-    on:click={({ detail }) => $goto(`./${detail._id}`)}
-    {schema}
-    data={filteredGroups}
-    allowEditColumns={false}
-    allowEditRows={false}
-    {customRenderers}
-  />
+  {#if $licensing.groupsEnabled}
+    <Table
+      on:click={({ detail }) => $goto(`./${detail._id}`)}
+      {schema}
+      data={filteredGroups}
+      allowEditColumns={false}
+      allowEditRows={false}
+      {customRenderers}
+    />
+  {/if}
 </Layout>
 
 <Modal bind:this={modal}>
@@ -175,8 +178,11 @@
   .controls-right :global(.spectrum-Search) {
     width: 200px;
   }
-  .tag {
-    margin-top: var(--spacing-xs);
-    margin-left: var(--spacing-m);
+  .title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--spacing-m);
   }
 </style>
