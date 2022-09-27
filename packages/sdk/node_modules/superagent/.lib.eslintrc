@@ -1,0 +1,24 @@
+{
+  "extends": ["eslint:recommended", "plugin:node/recommended"],
+  "env": {
+    "browser": true
+  },
+  "rules": {
+    "node/no-deprecated-api": "off",
+    "no-console": "off",
+    "no-unused-vars": "off",
+    "no-empty": "off",
+    "node/no-unsupported-features/node-builtins": "off",
+    "no-func-assign": "off",
+    "no-global-assign": ["error", {"exceptions": ["exports"]}],
+    "node/no-exports-assign": "off"
+  },
+  "overrides": [
+    {
+      "files": [ "lib/client.js" ],
+      "globals": {
+        "ActiveXObject": "readable"
+      }
+    }
+  ]
+}
