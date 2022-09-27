@@ -10,6 +10,21 @@ const VOL_NAME = "budibase_data"
 const COMPOSE_PATH = path.resolve("./docker-compose.yaml")
 const ENV_PATH = path.resolve("./.env")
 
+function getSecrets() {
+  const secrets = [
+    "JWT_SECRET",
+    "MINIO_ACCESS_KEY",
+    "MINIO_SECRET_KEY",
+    "COUCH_DB_PASSWORD",
+    "COUCH_DB_USER",
+    "REDIS_PASSWORD",
+    "INTERNAL_API_KEY",
+  ]
+  const obj = {}
+  secrets.forEach(secret => (obj[secret] = randomString.generate()))
+  return obj
+}
+
 function getSingleCompose(port) {
   const singleComposeObj = {
     version: "3",
@@ -18,15 +33,7 @@ function getSingleCompose(port) {
         restart: "unless-stopped",
         image: SINGLE_IMAGE,
         ports: [`${port}:80`],
-        environment: {
-          JWT_SECRET: randomString.generate(),
-          MINIO_ACCESS_KEY: randomString.generate(),
-          MINIO_SECRET_KEY: randomString.generate(),
-          REDIS_PASSWORD: randomString.generate(),
-          COUCHDB_USER: "admin",
-          COUCH_DB_PASSWORD: randomString.generate(),
-          INTERNAL_API_KEY: randomString.generate(),
-        },
+        environment: getSecrets(),
         volumes: [`${VOL_NAME}:/data`],
       },
     },
@@ -43,18 +50,7 @@ function getEnv(port) {
   const partOne = stringifyToDotEnv({
     MAIN_PORT: port,
   })
-  const secrets = [
-    "JWT_SECRET",
-    "MINIO_ACCESS_KEY",
-    "MINIO_SECRET_KEY",
-    "COUCH_DB_PASSWORD",
-    "COUCH_DB_USER",
-    "REDIS_PASSWORD",
-    "INTERNAL_API_KEY",
-  ]
-  const partTwoObj = {}
-  secrets.forEach(secret => (partTwoObj[secret] = randomString.generate()))
-  const partTwo = stringifyToDotEnv(partTwoObj)
+  const partTwo = stringifyToDotEnv(getSecrets())
   const partThree = stringifyToDotEnv({
     APP_PORT: 4002,
     WORKER_PORT: 4003,
