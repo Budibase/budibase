@@ -11,7 +11,7 @@
 
   const paymentFailedTitle = "Payment failed"
   $: accountUrl = $admin.accountPortalUrl
-  $: upgradeUrl = `${accountUrl}/portal/upgrade`
+  $: billingUrl = `${accountUrl}/portal/billing`
 
   export function show() {
     paymentFailedModal.show()
@@ -33,14 +33,14 @@
     <ModalContent
       title={paymentFailedTitle}
       size="M"
-      confirmText="Upgrade"
+      confirmText="Billing"
       onConfirm={() => {
-        window.location.href = upgradeUrl
+        window.location.href = billingUrl
       }}
     >
       <Body>The payment for your subscription has failed</Body>
       <Body>
-        Please upgrade your billing details before your account gets downgraded
+        Please update your billing details before your account gets downgraded
         to the free plan
       </Body>
       <Body weight={800}>

@@ -247,7 +247,7 @@
                       return
                     }
                     hoverTarget = {
-                      title: binding.display.name || binding.fieldSchema.name,
+                      title: binding.display?.name || binding.fieldSchema.name,
                       description: binding.description,
                     }
                     popover.show()

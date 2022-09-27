@@ -477,9 +477,10 @@
   .appTable :global(> div) {
     border-bottom: var(--border-light);
   }
+
   @media (max-width: 640px) {
     .appTable {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto !important;
     }
   }
   .empty-wrapper {
