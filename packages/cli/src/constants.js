@@ -11,6 +11,7 @@ exports.CommandWords = {
 exports.InitTypes = {
   QUICK: "quick",
   DIGITAL_OCEAN: "do",
+  SINGLE: "single",
 }
 
 exports.AnalyticsEvents = {
