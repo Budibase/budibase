@@ -55,18 +55,20 @@
           Add plugin
         </Button>
       </div>
-      <div class="filters">
-        <div class="select">
-          <Select
-            bind:value={filter}
-            placeholder={null}
-            options={filterOptions}
-            autoWidth
-            quiet
-          />
+      {#if filteredPlugins?.length}
+        <div class="filters">
+          <div class="select">
+            <Select
+              bind:value={filter}
+              placeholder={null}
+              options={filterOptions}
+              autoWidth
+              quiet
+            />
+          </div>
+          <Search bind:value={searchTerm} placeholder="Search plugins" />
         </div>
-        <Search bind:value={searchTerm} placeholder="Search plugins" />
-      </div>
+      {/if}
     </div>
     {#if filteredPlugins?.length}
       <Layout noPadding gap="S">
