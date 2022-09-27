@@ -13,7 +13,7 @@ const {
 const { confirmation } = require("../questions")
 const fs = require("fs")
 const compose = require("docker-compose")
-const makeEnv = require("./makeEnv")
+const makeFiles = require("./makeFiles")
 const axios = require("axios")
 const { captureEvent } = require("../events")
 const yaml = require("yaml")
@@ -45,7 +45,7 @@ async function checkDockerConfigured() {
 }
 
 function checkInitComplete() {
-  if (!fs.existsSync(makeEnv.filePath)) {
+  if (!fs.existsSync(makeFiles.filePath)) {
     throw "Please run the hosting --init command before any other hosting command."
   }
 }
@@ -77,12 +77,12 @@ async function init(type) {
     type,
   })
   await downloadFiles()
-  const config = isQuick ? makeEnv.QUICK_CONFIG : {}
+  const config = isQuick ? makeFiles.QUICK_CONFIG : {}
   if (type === InitTypes.DIGITAL_OCEAN) {
     try {
       const output = await axios.get(DO_USER_DATA_URL)
       const response = parseEnv(output.data)
-      for (let [key, value] of Object.entries(makeEnv.ConfigMap)) {
+      for (let [key, value] of Object.entries(makeFiles.ConfigMap)) {
         if (response[key]) {
           config[value] = response[key]
         }
@@ -91,7 +91,7 @@ async function init(type) {
       // don't need to handle error, just don't do anything
     }
   }
-  await makeEnv.make(config)
+  await makeFiles.makeEnv(config)
 }
 
 async function start() {
@@ -102,7 +102,7 @@ async function start() {
       "Starting services, this may take a moment - first time this may take a few minutes to download images."
     )
   )
-  const port = makeEnv.get("MAIN_PORT")
+  const port = makeFiles.getEnvProperty("MAIN_PORT")
   await handleError(async () => {
     // need to log as it makes it more clear
     await compose.upAll({ cwd: "./", log: true })
@@ -177,9 +177,12 @@ async function watchPlugins(pluginPath) {
   }
   const dockerYaml = fs.readFileSync(dockerFilePath, "utf8")
   const parsedYaml = yaml.parse(dockerYaml)
-  let service
-  if (parsedYaml["services"]["app-service"]) {
-    service = parsedYaml["services"]["app-service"]
+  let service,
+    serviceList = Object.keys(parsedYaml.services)
+  if (parsedYaml.services["app-service"]) {
+    service = parsedYaml.services["app-service"]
+  } else if (serviceList.length === 1) {
+    service = parsedYaml.services[serviceList[0]]
   }
   if (!service) {
     console.log(
