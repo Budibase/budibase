@@ -78,7 +78,7 @@ function isBuiltin(role) {
  */
 exports.builtinRoleToNumber = id => {
   const builtins = exports.getBuiltinRoles()
-  const MAX = Object.values(BUILTIN_IDS).length + 1
+  const MAX = Object.values(builtins).length + 1
   if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
     return MAX
   }
@@ -92,6 +92,22 @@ exports.builtinRoleToNumber = id => {
     count++
   } while (role !== null)
   return count
+}
+
+/**
+ * Converts any role to a number, but has to be async to get the roles from db.
+ */
+exports.roleToNumber = async id => {
+  if (exports.isBuiltin(id)) {
+    return exports.builtinRoleToNumber(id)
+  }
+  const hierarchy = await exports.getUserRoleHierarchy(id)
+  for (let role of hierarchy) {
+    if (isBuiltin(role.inherits)) {
+      return exports.builtinRoleToNumber(role.inherits) + 1
+    }
+  }
+  return 0
 }
 
 /**
@@ -172,7 +188,7 @@ async function getAllUserRoles(userRoleId) {
  * to determine if a user can access something that requires a specific role.
  * @param {string} userRoleId The user's role ID, this can be found in their access token.
  * @param {object} opts Various options, such as whether to only retrieve the IDs (default true).
- * @returns {Promise<string[]>} returns an ordered array of the roles, with the first being their
+ * @returns {Promise<string[]|object[]>} returns an ordered array of the roles, with the first being their
  * highest level of access and the last being the lowest level.
  */
 exports.getUserRoleHierarchy = async (userRoleId, opts = { idOnly: true }) => {

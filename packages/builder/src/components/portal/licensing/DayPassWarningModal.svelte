@@ -12,7 +12,10 @@
 
   $: daysRemaining = $licensing.quotaResetDaysRemaining
   $: quotaResetDate = $licensing.quotaResetDate
-  $: dayPassesUsed = $licensing.usageMetrics?.dayPasses
+  $: dayPassesUsed =
+    $licensing.usageMetrics?.dayPasses > 100
+      ? 100
+      : $licensing.usageMetrics?.dayPasses
   $: dayPassesTitle =
     dayPassesUsed >= 100
       ? "You have run out of Day Passes"

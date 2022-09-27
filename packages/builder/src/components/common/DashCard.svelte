@@ -30,13 +30,14 @@
     background: var(--spectrum-alias-background-color-primary);
     border-radius: var(--border-radius-s);
     overflow: hidden;
-    min-height: 150px;
+    min-height: 170px;
   }
   .dash-card-header {
     padding: var(--spacing-xl) var(--spectrum-global-dimension-static-size-400);
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     display: flex;
     justify-content: space-between;
+    transition: background-color 130ms ease-out;
   }
   .dash-card-body {
     padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);

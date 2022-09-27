@@ -13,6 +13,8 @@ export enum QuotaType {
 export enum StaticQuotaName {
   ROWS = "rows",
   APPS = "apps",
+  USER_GROUPS = "userGroups",
+  PLUGINS = "plugins",
 }
 
 export enum MonthlyQuotaName {
@@ -22,7 +24,6 @@ export enum MonthlyQuotaName {
 }
 
 export enum ConstantQuotaName {
-  QUERY_TIMEOUT_SECONDS = "queryTimeoutSeconds",
   AUTOMATION_LOG_RETENTION_DAYS = "automationLogRetentionDays",
 }
 
@@ -54,6 +55,7 @@ export const isConstantQuota = (
 export type PlanQuotas = {
   [PlanType.FREE]: Quotas
   [PlanType.PRO]: Quotas
+  [PlanType.TEAM]: Quotas
   [PlanType.BUSINESS]: Quotas
   [PlanType.ENTERPRISE]: Quotas
 }
@@ -68,10 +70,11 @@ export type Quotas = {
     [QuotaUsageType.STATIC]: {
       [StaticQuotaName.ROWS]: Quota
       [StaticQuotaName.APPS]: Quota
+      [StaticQuotaName.USER_GROUPS]: Quota
+      [StaticQuotaName.PLUGINS]: Quota
     }
   }
   [QuotaType.CONSTANT]: {
-    [ConstantQuotaName.QUERY_TIMEOUT_SECONDS]: Quota
     [ConstantQuotaName.AUTOMATION_LOG_RETENTION_DAYS]: Quota
   }
 }

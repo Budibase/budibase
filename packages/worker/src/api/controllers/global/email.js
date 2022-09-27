@@ -10,6 +10,8 @@ exports.sendEmail = async ctx => {
     contents,
     from,
     subject,
+    cc,
+    bcc,
     automation,
   } = ctx.request.body
   let user
@@ -23,6 +25,8 @@ exports.sendEmail = async ctx => {
     contents,
     from,
     subject,
+    cc,
+    bcc,
     automation,
   })
   ctx.body = {
