@@ -84,3 +84,7 @@ exports.moveDirectory = (oldPath, newPath) => {
   }
   fs.rmdirSync(oldPath)
 }
+
+exports.capitaliseFirstLetter = str => {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}

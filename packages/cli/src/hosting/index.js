@@ -1,11 +1,13 @@
 const Command = require("../structures/Command")
 const { CommandWords, InitTypes, AnalyticsEvents } = require("../constants")
 const { lookpath } = require("lookpath")
+const { resolve } = require("path")
 const {
   downloadFile,
   logErrorToFile,
   success,
   info,
+  error,
   parseEnv,
 } = require("../utils")
 const { confirmation } = require("../questions")
@@ -14,6 +16,7 @@ const compose = require("docker-compose")
 const makeEnv = require("./makeEnv")
 const axios = require("axios")
 const { captureEvent } = require("../events")
+const yaml = require("yaml")
 
 const BUDIBASE_SERVICES = ["app-service", "worker-service", "proxy-service"]
 const ERROR_FILE = "docker-error.log"
@@ -154,11 +157,58 @@ async function update() {
   })
 }
 
+async function watchPlugins(pluginPath) {
+  const PLUGIN_PATH = "/plugins"
+  // get absolute path
+  pluginPath = resolve(pluginPath)
+  if (!fs.existsSync(pluginPath)) {
+    console.log(
+      error(
+        `The directory "${pluginPath}" does not exist, please create and then try again.`
+      )
+    )
+    return
+  }
+  const opts = ["docker-compose.yaml", "docker-compose.yml"]
+  let dockerFilePath = opts.find(name => fs.existsSync(name))
+  if (!dockerFilePath) {
+    console.log(error("Unable to locate docker-compose YAML."))
+    return
+  }
+  const dockerYaml = fs.readFileSync(dockerFilePath, "utf8")
+  const parsedYaml = yaml.parse(dockerYaml)
+  let service
+  if (parsedYaml["services"]["app-service"]) {
+    service = parsedYaml["services"]["app-service"]
+  }
+  if (!service) {
+    console.log(
+      error(
+        "Unable to locate service within compose file, is it a valid Budibase configuration?"
+      )
+    )
+    return
+  }
+  // set environment variable
+  service.environment["PLUGINS_DIR"] = PLUGIN_PATH
+  // add volumes to parsed yaml
+  if (!service.volumes) {
+    service.volumes = []
+  }
+  const found = service.volumes.find(vol => vol.includes(PLUGIN_PATH))
+  if (found) {
+    service.volumes.splice(service.volumes.indexOf(found), 1)
+  }
+  service.volumes.push(`${pluginPath}:${PLUGIN_PATH}`)
+  fs.writeFileSync(dockerFilePath, yaml.stringify(parsedYaml))
+  console.log(success("Docker compose configuration has been updated!"))
+}
+
 const command = new Command(`${CommandWords.HOSTING}`)
   .addHelp("Controls self hosting on the Budibase platform.")
   .addSubOption(
     "--init [type]",
-    "Configure a self hosted platform in current directory, type can be unspecified or 'quick'.",
+    "Configure a self hosted platform in current directory, type can be unspecified, 'quick' or 'single'.",
     init
   )
   .addSubOption(
@@ -181,5 +231,11 @@ const command = new Command(`${CommandWords.HOSTING}`)
     "Update the Budibase images to the latest version.",
     update
   )
+  .addSubOption(
+    "--watch-plugin-dir [directory]",
+    "Add plugin directory watching to a Budibase install.",
+    watchPlugins
+  )
+  .addSubOption("--dev", "")
 
 exports.command = command

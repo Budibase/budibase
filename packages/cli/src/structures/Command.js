@@ -1,4 +1,9 @@
-const { getSubHelpDescription, getHelpDescription, error } = require("../utils")
+const {
+  getSubHelpDescription,
+  getHelpDescription,
+  error,
+  capitaliseFirstLetter,
+} = require("../utils")
 
 class Command {
   constructor(command, func = null) {
@@ -6,6 +11,15 @@ class Command {
     this.command = command
     this.opts = []
     this.func = func
+  }
+
+  convertToCommander(lookup) {
+    const parts = lookup.toLowerCase().split("-")
+    // camel case, separate out first
+    const first = parts.shift()
+    return [first]
+      .concat(parts.map(part => capitaliseFirstLetter(part)))
+      .join("")
   }
 
   addHelp(help) {
@@ -38,7 +52,9 @@ class Command {
       try {
         let executed = false
         for (let opt of thisCmd.opts) {
-          const lookup = opt.command.split(" ")[0].replace("--", "")
+          let lookup = opt.command.split(" ")[0].replace("--", "")
+          // need to handle how commander converts watch-plugin-dir to watchPluginDir
+          lookup = this.convertToCommander(lookup)
           if (!executed && options[lookup]) {
             const input =
               Object.keys(options).length > 1 ? options : options[lookup]
