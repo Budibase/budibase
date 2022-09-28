@@ -9,8 +9,8 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "test": "jest --runInBand",
-    "test:watch": "jest --watch",
+    "test": "env-cmd jest --runInBand",
+    "test:watch": "env-cmd jest --watch",
     "test:debug": "DEBUG=1 jest",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",

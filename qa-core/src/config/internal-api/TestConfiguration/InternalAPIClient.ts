@@ -12,7 +12,6 @@ interface ApiOptions {
 class InternalAPIClient {
   host: string
   appId?: string
-  csrfToken?: string
   cookie?: string
 
   constructor(appId?: string) {
