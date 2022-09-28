@@ -16,6 +16,7 @@
   export let appendTo = undefined
   export let timeOnly = false
   export let ignoreTimezones = false
+  export let time24hr = false
 
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
@@ -37,6 +38,7 @@
     enableTime: timeOnly || enableTime || false,
     noCalendar: timeOnly || false,
     altInput: true,
+    time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
     appendTo,
@@ -49,6 +51,12 @@
     },
   }
 
+  $: redrawOptions = {
+    timeOnly,
+    enableTime,
+    time24hr,
+  }
+
   const handleChange = event => {
     const [dates] = event.detail
     const noTimezone = enableTime && !timeOnly && ignoreTimezones
@@ -59,6 +67,13 @@
 
     // If time only set date component to 2000-01-01
     if (timeOnly) {
+      // Classic flackpickr causing issues.
+      // When selecting a value for the first time for a "time only" field,
+      // the time is always offset by 1 hour for some reason (regardless of time
+      // zone) so we need to correct it.
+      if (!value && newValue) {
+        newValue = new Date(dates[0].getTime() + 60 * 60 * 1000).toISOString()
+      }
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
 
@@ -142,7 +157,7 @@
   }
 </script>
 
-{#key timeOnly}
+{#key redrawOptions}
   <Flatpickr
     bind:flatpickr
     value={parseDate(value)}

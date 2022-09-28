@@ -52,7 +52,7 @@
       )
 
       newBlock.inputs = {
-        fields: Object.keys(parameters.fields).reduce((fields, key) => {
+        fields: Object.keys(parameters.fields ?? {}).reduce((fields, key) => {
           fields[key] = "string"
           return fields
         }, {}),

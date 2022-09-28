@@ -27,6 +27,8 @@ spec:
     spec:
       containers:
       - env:
+        - name: BUDIBASE_ENVIRONMENT
+          value: {{ .Values.globals.budibaseEnv }}
         - name: DEPLOYMENT_ENVIRONMENT
           value: "kubernetes"
         - name: CLUSTER_PORT
@@ -75,6 +77,8 @@ spec:
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: PLUGIN_BUCKET_NAME
+          value: {{ .Values.services.objectStore.pluginBucketName | default "plugins" | quote }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
@@ -125,6 +129,19 @@ spec:
           value: {{ .Values.globals.google.secret | quote }}
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        {{ if .Values.globals.elasticApmEnabled }}
+        - name: ELASTIC_APM_ENABLED
+          value: {{ .Values.globals.elasticApmEnabled | quote }}
+        {{ end }}
+        {{ if .Values.globals.elasticApmSecretToken }}
+        - name: ELASTIC_APM_SECRET_TOKEN
+          value: {{ .Values.globals.elasticApmSecretToken | quote }}
+        {{ end }}
+        {{ if .Values.globals.elasticApmServerUrl }}
+        - name: ELASTIC_APM_SERVER_URL
+          value: {{ .Values.globals.elasticApmServerUrl | quote }}
+        {{ end }}
+
         image: budibase/worker:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
         livenessProbe:
@@ -136,7 +153,10 @@ spec:
         name: bbworker
         ports:
         - containerPort: {{ .Values.services.worker.port }}
-        resources: {}
+        {{ with .Values.services.worker.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

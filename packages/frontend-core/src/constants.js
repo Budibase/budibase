@@ -39,12 +39,16 @@ export const OperatorOptions = {
     label: "Contains",
   },
   NotContains: {
-    value: "notEqual",
+    value: "notContains",
     label: "Does Not Contain",
   },
   In: {
     value: "oneOf",
     label: "Is in",
+  },
+  ContainsAny: {
+    value: "containsAny",
+    label: "Has any",
   },
 }
 
@@ -53,6 +57,7 @@ export const Cookies = {
   Auth: "budibase:auth",
   CurrentApp: "budibase:currentapp",
   ReturnUrl: "budibase:returnurl",
+  AccountReturnUrl: "budibase:account:returnurl",
 }
 
 // Table names
@@ -60,25 +65,31 @@ export const TableNames = {
   USERS: "ta_users",
 }
 
-export const BbRoles = [
-  { label: "App User", value: "appUser" },
-  { label: "Developer", value: "developer" },
-  { label: "Admin", value: "admin" },
+export const BudibaseRoles = {
+  AppUser: "appUser",
+  Developer: "developer",
+  Admin: "admin",
+}
+
+export const BudibaseRoleOptions = [
+  { label: "App User", value: BudibaseRoles.AppUser },
+  { label: "Developer", value: BudibaseRoles.Developer },
+  { label: "Admin", value: BudibaseRoles.Admin },
 ]
 
 export const BuilderRoleDescriptions = [
   {
-    value: "appUser",
+    value: BudibaseRoles.AppUser,
     icon: "User",
     label: "App user - Only has access to published apps",
   },
   {
-    value: "developer",
+    value: BudibaseRoles.Developer,
     icon: "Hammer",
     label: "Developer - Access to the app builder",
   },
   {
-    value: "admin",
+    value: BudibaseRoles.Admin,
     icon: "Draw",
     label: "Admin - Full access",
   },

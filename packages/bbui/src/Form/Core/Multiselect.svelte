@@ -23,7 +23,7 @@
   $: toggleOption = makeToggleOption(selectedLookupMap, value)
 
   const getFieldText = (value, map, placeholder) => {
-    if (value?.length) {
+    if (Array.isArray(value) && value.length > 0) {
       if (!map) {
         return ""
       }
@@ -36,7 +36,7 @@
 
   const getSelectedLookupMap = value => {
     let map = {}
-    if (value?.length) {
+    if (Array.isArray(value) && value.length > 0) {
       value.forEach(option => {
         if (option) {
           map[option] = true

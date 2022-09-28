@@ -9,12 +9,16 @@ import * as installation from "./installation"
 import env from "./environment"
 import tenancy from "./tenancy"
 import featureFlags from "./featureFlags"
-import sessions from "./security/sessions"
+import * as sessions from "./security/sessions"
 import deprovisioning from "./context/deprovision"
 import auth from "./auth"
 import constants from "./constants"
 import * as dbConstants from "./db/constants"
-import logging from "./logging"
+import * as logging from "./logging"
+import pino from "./pino"
+import * as middleware from "./middleware"
+import plugins from "./plugin"
+import encryption from "./security/encryption"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"
@@ -53,7 +57,11 @@ const core = {
   errors,
   logging,
   roles,
+  plugins,
+  ...pino,
   ...errorClasses,
+  middleware,
+  encryption,
 }
 
 export = core

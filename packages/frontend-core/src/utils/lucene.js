@@ -32,9 +32,9 @@ export const getValidOperatorsForType = type => {
   } else if (type === "number") {
     return numOps
   } else if (type === "options") {
-    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
+    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   } else if (type === "array") {
-    return [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty]
+    return [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
   } else if (type === "boolean") {
     return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === "longform") {
@@ -72,12 +72,25 @@ const cleanupQuery = query => {
       continue
     }
     for (let [key, value] of Object.entries(query[filterField])) {
-      if (!value || value === "") {
+      if (value == null || value === "") {
         delete query[filterField][key]
       }
     }
   }
   return query
+}
+
+/**
+ * Removes a numeric prefix on field names designed to give fields uniqueness
+ */
+const removeKeyNumbering = key => {
+  if (typeof key === "string" && key.match(/\d[0-9]*:/g) != null) {
+    const parts = key.split(":")
+    parts.shift()
+    return parts.join(":")
+  } else {
+    return key
+  }
 }
 
 /**
@@ -96,6 +109,7 @@ export const buildLuceneQuery = filter => {
     contains: {},
     notContains: {},
     oneOf: {},
+    containsAny: {},
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
@@ -103,7 +117,11 @@ export const buildLuceneQuery = filter => {
       const isHbs =
         typeof value === "string" && value.match(HBS_REGEX)?.length > 0
       // Parse all values into correct types
-      if (type === "datetime") {
+      if (operator === "allOr") {
+        query.allOr = true
+        return
+      }
+      if (type === "datetime" && !isHbs) {
         // Ensure date value is a valid date and parse into correct format
         if (!value) {
           return
@@ -114,7 +132,7 @@ export const buildLuceneQuery = filter => {
           return
         }
       }
-      if (type === "number" && !Array.isArray(value)) {
+      if (type === "number" && typeof value === "string") {
         if (operator === "oneOf") {
           value = value.split(",").map(item => parseFloat(item))
         } else if (!isHbs) {
@@ -123,6 +141,13 @@ export const buildLuceneQuery = filter => {
       }
       if (type === "boolean") {
         value = `${value}`?.toLowerCase() === "true"
+      }
+      if (
+        ["contains", "notContains", "containsAny"].includes(operator) &&
+        type === "array" &&
+        typeof value === "string"
+      ) {
+        value = value.split(",")
       }
       if (operator.startsWith("range")) {
         const minint =
@@ -174,7 +199,7 @@ export const runLuceneQuery = (docs, query) => {
     return docs
   }
 
-  // make query consistent first
+  // Make query consistent first
   query = cleanupQuery(query)
 
   // Iterates over a set of filters and evaluates a fail function against a doc
@@ -182,7 +207,7 @@ export const runLuceneQuery = (docs, query) => {
     const filters = Object.entries(query[type] || {})
     for (let i = 0; i < filters.length; i++) {
       const [key, testValue] = filters[i]
-      const docValue = Helpers.deepGet(doc, key)
+      const docValue = Helpers.deepGet(doc, removeKeyNumbering(key))
       if (failFn(docValue, testValue)) {
         return false
       }
@@ -206,7 +231,12 @@ export const runLuceneQuery = (docs, query) => {
 
   // Process a range match
   const rangeMatch = match("range", (docValue, testValue) => {
-    return !docValue || docValue < testValue.low || docValue > testValue.high
+    return (
+      docValue == null ||
+      docValue === "" ||
+      docValue < testValue.low ||
+      docValue > testValue.high
+    )
   })
 
   // Process an equal match (fails if the value is different)
@@ -240,6 +270,18 @@ export const runLuceneQuery = (docs, query) => {
     return !testValue?.includes(docValue)
   })
 
+  const containsAny = match("containsAny", (docValue, testValue) => {
+    return !docValue?.includes(...testValue)
+  })
+
+  const contains = match("contains", (docValue, testValue) => {
+    return !testValue?.every(item => docValue?.includes(item))
+  })
+
+  const notContains = match("notContains", (docValue, testValue) => {
+    return testValue?.every(item => docValue?.includes(item))
+  })
+
   // Match a document against all criteria
   const docMatch = doc => {
     return (
@@ -250,7 +292,10 @@ export const runLuceneQuery = (docs, query) => {
       notEqualMatch(doc) &&
       emptyMatch(doc) &&
       notEmptyMatch(doc) &&
-      oneOf(doc)
+      oneOf(doc) &&
+      contains(doc) &&
+      containsAny(doc) &&
+      notContains(doc)
     )
   }
 

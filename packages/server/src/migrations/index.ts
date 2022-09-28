@@ -6,9 +6,8 @@ import env from "../environment"
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
 import * as quota1 from "./functions/quotas1"
 import * as appUrls from "./functions/appUrls"
-import * as developerQuota from "./functions/developerQuota"
-import * as publishedAppsQuota from "./functions/publishedAppsQuota"
 import * as backfill from "./functions/backfill"
+import * as pluginCount from "./functions/pluginCount"
 
 /**
  * Populate the migration function and additional configuration from
@@ -42,20 +41,6 @@ export const buildMigrations = () => {
         })
         break
       }
-      case MigrationName.DEVELOPER_QUOTA: {
-        serverMigrations.push({
-          ...definition,
-          fn: developerQuota.run,
-        })
-        break
-      }
-      case MigrationName.PUBLISHED_APP_QUOTA: {
-        serverMigrations.push({
-          ...definition,
-          fn: publishedAppsQuota.run,
-        })
-        break
-      }
       case MigrationName.EVENT_APP_BACKFILL: {
         serverMigrations.push({
           ...definition,
@@ -83,6 +68,16 @@ export const buildMigrations = () => {
           preventRetry: !!env.SELF_HOSTED, // only ever run once
         })
         break
+      }
+      case MigrationName.PLUGIN_COUNT: {
+        if (env.SELF_HOSTED) {
+          serverMigrations.push({
+            ...definition,
+            fn: pluginCount.run,
+            silent: !!env.SELF_HOSTED,
+            preventRetry: false,
+          })
+        }
       }
     }
   }

@@ -162,3 +162,11 @@ exports.convertBookmark = bookmark => {
   }
   return bookmark
 }
+
+exports.isQsTrue = param => {
+  if (typeof param === "string") {
+    return param.toLowerCase() === "true"
+  } else {
+    return param === true
+  }
+}

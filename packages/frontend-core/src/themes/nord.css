@@ -28,6 +28,7 @@
   --spectrum-global-color-static-blue-600: #5680b4;
   --spectrum-global-color-static-blue-700: #4e79af;
   --spectrum-global-color-static-blue-800: #4a73a6;
+  --spectrum-global-color-static-blue: var(--spectrum-global-color-blue-600);
 
   --spectrum-global-color-gray-50: #2e3440;
   --spectrum-global-color-gray-75: #353b4a;
@@ -43,4 +44,7 @@
 
   --spectrum-alias-highlight-hover: rgba(169, 177, 193, 0.1);
   --spectrum-alias-highlight-active: rgba(169, 177, 193, 0.1);
+  --spectrum-alias-background-color-hover-overlay: rgba(169, 177, 193, 0.1);
+
+  --modal-background: var(--spectrum-global-color-gray-50);
 }

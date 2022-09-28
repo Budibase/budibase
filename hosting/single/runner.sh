@@ -1,9 +1,36 @@
 #!/bin/bash
-declare -a ENV_VARS=("COUCHDB_USER" "COUCHDB_PASSWORD" "MINIO_ACCESS_KEY" "MINIO_SECRET_KEY" "INTERNAL_API_KEY" "JWT_SECRET" "REDIS_PASSWORD")
-if [ -f "/data/.env" ]; then
-    export $(cat /data/.env | xargs)
+declare -a ENV_VARS=("COUCHDB_USER" "COUCHDB_PASSWORD" "DATA_DIR" "MINIO_ACCESS_KEY" "MINIO_SECRET_KEY" "INTERNAL_API_KEY" "JWT_SECRET" "REDIS_PASSWORD")
+declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONMENT" "CLUSTER_PORT" "DEPLOYMENT_ENVIRONMENT" "MINIO_URL" "NODE_ENV" "POSTHOG_TOKEN" "REDIS_URL" "SELF_HOSTED" "WORKER_PORT" "WORKER_URL" "TENANT_FEATURE_FLAGS" "ACCOUNT_PORTAL_URL")
+# Check the env vars set in Dockerfile have come through, AAS seems to drop them
+[[ -z "${APP_PORT}" ]] && export APP_PORT=4001
+[[ -z "${ARCHITECTURE}" ]] && export ARCHITECTURE=amd
+[[ -z "${BUDIBASE_ENVIRONMENT}" ]] && export BUDIBASE_ENVIRONMENT=PRODUCTION
+[[ -z "${CLUSTER_PORT}" ]] && export CLUSTER_PORT=80
+[[ -z "${DEPLOYMENT_ENVIRONMENT}" ]] && export DEPLOYMENT_ENVIRONMENT=docker
+[[ -z "${MINIO_URL}" ]] && export MINIO_URL=http://localhost:9000
+[[ -z "${NODE_ENV}" ]] && export NODE_ENV=production
+[[ -z "${POSTHOG_TOKEN}" ]] && export POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
+[[ -z "${TENANT_FEATURE_FLAGS}" ]] && export TENANT_FEATURE_FLAGS="*:LICENSING,*:USER_GROUPS"
+[[ -z "${ACCOUNT_PORTAL_URL}" ]] && export ACCOUNT_PORTAL_URL=https://account.budibase.app
+[[ -z "${REDIS_URL}" ]] && export REDIS_URL=localhost:6379
+[[ -z "${SELF_HOSTED}" ]] && export SELF_HOSTED=1
+[[ -z "${WORKER_PORT}" ]] && export WORKER_PORT=4002
+[[ -z "${WORKER_URL}" ]] && export WORKER_URL=http://localhost:4002
+[[ -z "${APPS_URL}" ]] && export APPS_URL=http://localhost:4001
+#  export CUSTOM_DOMAIN=budi001.custom.com
+# Azure App Service customisations
+if [[ "${TARGETBUILD}" = "aas" ]]; then
+    DATA_DIR=/home
+    /etc/init.d/ssh start
+else
+    DATA_DIR=${DATA_DIR:-/data}
 fi
-# first randomise any unset environment variables
+
+if [ -f "${DATA_DIR}/.env" ]; then
+    # Read in the .env file and export the variables
+    for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
+fi
+# randomise any unset environment variables
 for ENV_VAR in "${ENV_VARS[@]}"
 do
     temp=$(eval "echo \$$ENV_VAR")
@@ -14,21 +41,33 @@ done
 if [[ -z "${COUCH_DB_URL}" ]]; then
     export COUCH_DB_URL=http://$COUCHDB_USER:$COUCHDB_PASSWORD@localhost:5984
 fi
-if [ ! -f "/data/.env" ]; then
-    touch /data/.env
+if [ ! -f "${DATA_DIR}/.env" ]; then
+    touch ${DATA_DIR}/.env
     for ENV_VAR in "${ENV_VARS[@]}"
     do
         temp=$(eval "echo \$$ENV_VAR")
-        echo "$ENV_VAR=$temp" >> /data/.env
+        echo "$ENV_VAR=$temp" >> ${DATA_DIR}/.env
     done
+    for ENV_VAR in "${DOCKER_VARS[@]}"
+    do
+        temp=$(eval "echo \$$ENV_VAR")
+        echo "$ENV_VAR=$temp" >> ${DATA_DIR}/.env
+    done
+    echo "COUCH_DB_URL=${COUCH_DB_URL}" >> ${DATA_DIR}/.env
 fi
 
+# Read in the .env file and export the variables
+for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
+ln -s ${DATA_DIR}/.env /app/.env
+ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
-mkdir -p /data/couch/{dbs,views} /home/couch/{dbs,views}
-chown -R couchdb:couchdb /data/couch /home/couch
+mkdir -p ${DATA_DIR}/couch/{dbs,views}
+mkdir -p ${DATA_DIR}/minio
+mkdir -p ${DATA_DIR}/search
+chown -R couchdb:couchdb ${DATA_DIR}/couch
 redis-server --requirepass $REDIS_PASSWORD &
 /opt/clouseau/bin/clouseau &
-/minio/minio server /data/minio &
+/minio/minio server ${DATA_DIR}/minio &
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then

@@ -18,14 +18,6 @@ export const DEFINITIONS: MigrationDefinition[] = [
     name: MigrationName.APP_URLS,
   },
   {
-    type: MigrationType.GLOBAL,
-    name: MigrationName.DEVELOPER_QUOTA,
-  },
-  {
-    type: MigrationType.GLOBAL,
-    name: MigrationName.PUBLISHED_APP_QUOTA,
-  },
-  {
     type: MigrationType.APP,
     name: MigrationName.EVENT_APP_BACKFILL,
   },
@@ -36,5 +28,13 @@ export const DEFINITIONS: MigrationDefinition[] = [
   {
     type: MigrationType.INSTALLATION,
     name: MigrationName.EVENT_INSTALLATION_BACKFILL,
+  },
+  {
+    type: MigrationType.GLOBAL,
+    name: MigrationName.GLOBAL_INFO_SYNC_USERS,
+  },
+  {
+    type: MigrationType.GLOBAL,
+    name: MigrationName.PLUGIN_COUNT,
   },
 ]

@@ -9,14 +9,13 @@
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Detail from "../../Typography/Detail.svelte"
   import Search from "./Search.svelte"
+  import IconAvatar from "../../Icon/IconAvatar.svelte"
 
   export let primaryLabel = ""
   export let primaryValue = null
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
-  export let readonly = false
-  export let updateOnChange = true
   export let error = null
   export let secondaryOptions = []
   export let primaryOptions = []
@@ -35,6 +34,7 @@
   export let isOptionSelected = () => false
   export let isPlaceholder = false
   export let placeholderOption = null
+  export let showClearIcon = true
 
   const dispatch = createEventDispatcher()
   let primaryOpen = false
@@ -50,17 +50,11 @@
   }
 
   const updateValue = newValue => {
-    if (readonly) {
-      return
-    }
     dispatch("change", newValue)
   }
 
   const onClickSecondary = () => {
     dispatch("click")
-    if (readonly) {
-      return
-    }
     secondaryOpen = true
   }
 
@@ -80,24 +74,15 @@
   }
 
   const onBlur = event => {
-    if (readonly) {
-      return
-    }
     focus = false
     updateValue(event.target.value)
   }
 
   const onInput = event => {
-    if (readonly || !updateOnChange) {
-      return
-    }
     updateValue(event.target.value)
   }
 
   const updateValueOnEnter = event => {
-    if (readonly) {
-      return
-    }
     if (event.key === "Enter") {
       updateValue(event.target.value)
     }
@@ -140,11 +125,12 @@
       value={primaryLabel || ""}
       placeholder={placeholder || ""}
       {disabled}
-      {readonly}
+      readonly
       class="spectrum-Textfield-input spectrum-InputGroup-input"
       class:labelPadding={iconData}
+      class:open={primaryOpen}
     />
-    {#if primaryValue}
+    {#if primaryValue && showClearIcon}
       <button
         on:click={() => onClearPrimary()}
         type="reset"
@@ -198,7 +184,7 @@
           </li>
         {/if}
         {#each groupTitles as title}
-          <div class="spectrum-Menu-item">
+          <div class="spectrum-Menu-item title">
             <Detail>{title}</Detail>
           </div>
           {#if primaryOptions}
@@ -218,19 +204,11 @@
                   })}
               >
                 {#if primaryOptions[title].getIcon(option)}
-                  <div
-                    style="background: {primaryOptions[title].getColour(
-                      option
-                    )};"
-                    class="circle"
-                  >
-                    <div>
-                      <Icon
-                        size="S"
-                        name={primaryOptions[title].getIcon(option)}
-                      />
-                    </div>
-                  </div>
+                  <IconAvatar
+                    size="S"
+                    icon={primaryOptions[title].getIcon(option)}
+                    background={primaryOptions[title].getColour(option)}
+                  />
                 {:else if getPrimaryOptionColour(option, idx)}
                   <span class="option-left">
                     <StatusLight
@@ -240,12 +218,13 @@
                   </span>
                 {/if}
                 <span class="spectrum-Menu-itemLabel">
-                  <span
+                  <div
+                    class="primary-text"
                     class:spacing-group={primaryOptions[title].getIcon(option)}
                   >
                     {primaryOptions[title].getLabel(option)}
                     <span />
-                  </span>
+                  </div>
                   <svg
                     class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
                     focusable="false"
@@ -349,6 +328,11 @@
 </div>
 
 <style>
+  .primary-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .spacing-group {
     margin-left: var(--spacing-m);
   }
@@ -379,25 +363,6 @@
   }
   .option-right {
     padding-left: 8px;
-  }
-
-  .circle {
-    border-radius: 50%;
-    height: 28px;
-    color: white;
-    font-weight: bold;
-    line-height: 48px;
-    font-size: 1.2em;
-    width: 28px;
-    position: relative;
-  }
-
-  .circle > div {
-    position: absolute;
-    text-decoration: none;
-    top: 50%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-50%);
   }
 
   .iconPadding {
@@ -432,5 +397,19 @@
 
   .spectrum-Search-clearButton {
     position: absolute;
+  }
+
+  /* Fix focus borders to show only when opened */
+  .spectrum-Textfield-input {
+    border-color: var(--spectrum-global-color-gray-400) !important;
+    border-right-width: 1px;
+  }
+  .spectrum-Textfield-input.open {
+    border-color: var(--spectrum-global-color-blue-400) !important;
+  }
+
+  /* Fix being able to hover and select titles */
+  .spectrum-Menu-item.title {
+    pointer-events: none;
   }
 </style>

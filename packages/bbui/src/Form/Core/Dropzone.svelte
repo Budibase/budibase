@@ -17,6 +17,7 @@
   export let disabled = false
   export let fileSizeLimit = BYTES_IN_MB * 20
   export let processFiles = null
+  export let deleteAttachments = null
   export let handleFileTooLarge = null
   export let handleTooManyFiles = null
   export let gallery = true
@@ -64,6 +65,9 @@
     }
   }
 
+  $: showDropzone =
+    (!maximum || (maximum && value?.length < maximum)) && !disabled
+
   async function processFileList(fileList) {
     if (
       handleFileTooLarge &&
@@ -94,6 +98,11 @@
       "change",
       value.filter((x, idx) => idx !== selectedImageIdx)
     )
+    if (deleteAttachments) {
+      await deleteAttachments(
+        value.filter((x, idx) => idx === selectedImageIdx).map(item => item.key)
+      )
+    }
     selectedImageIdx = 0
   }
 
@@ -133,7 +142,13 @@
         <div class="title">
           <div class="filename">
             {#if selectedUrl}
-              <Link href={selectedUrl}>{selectedImage.name}</Link>
+              <Link
+                target="_blank"
+                download={selectedImage.name}
+                href={selectedUrl}
+              >
+                {selectedImage.name}
+              </Link>
             {:else}
               {selectedImage.name}
             {/if}
@@ -199,7 +214,7 @@
       {/each}
     {/if}
   {/if}
-  {#if !maximum || (maximum && value?.length < maximum)}
+  {#if showDropzone}
     <div
       class="spectrum-Dropzone"
       class:is-invalid={!!error}

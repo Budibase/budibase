@@ -14,7 +14,7 @@ const {
   FieldTypes,
   RelationshipTypes,
 } = require("../../../constants")
-const { makeExternalQuery } = require("../../../integrations/base/utils")
+const { makeExternalQuery } = require("../../../integrations/base/query")
 const { cloneDeep } = require("lodash/fp")
 const csvParser = require("../../../utilities/csvParser")
 const { handleRequest } = require("../row/external")

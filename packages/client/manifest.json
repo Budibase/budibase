@@ -8,7 +8,8 @@
     "devicePreview": true,
     "messagePassing": true,
     "rowSelection": true,
-    "continueIfAction": true
+    "continueIfAction": true,
+    "showNotificationAction": true
   },
   "layout": {
     "name": "Layout",
@@ -237,6 +238,11 @@
         "showInBar": true,
         "barIcon": "ModernGridView",
         "barTitle": "Wrap"
+      },
+      {
+        "type": "event",
+        "label": "On Click",
+        "key": "onClick"
       }
     ]
   },
@@ -538,7 +544,8 @@
         "values": [
           {
             "label": "Row Index",
-            "key": "index"
+            "key": "index",
+            "type": "number"
           }
         ]
       }
@@ -1466,10 +1473,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1481,6 +1489,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -1581,10 +1634,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1596,6 +1650,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "select",
@@ -1695,10 +1794,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1710,6 +1810,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "select",
@@ -1800,10 +1945,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1815,6 +1961,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -1882,10 +2073,11 @@
       },
       {
         "type": "select",
-        "label": "Colours",
+        "label": "Colors",
         "key": "palette",
         "defaultValue": "Palette 1",
         "options": [
+          "Custom",
           "Palette 1",
           "Palette 2",
           "Palette 3",
@@ -1897,6 +2089,51 @@
           "Palette 9",
           "Palette 10"
         ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
       },
       {
         "type": "boolean",
@@ -2078,19 +2315,23 @@
         "values": [
           {
             "label": "Value",
-            "key": "__value"
+            "key": "__value",
+            "type": "object"
           },
           {
             "label": "Valid",
-            "key": "__valid"
+            "key": "__valid",
+            "type": "boolean"
           },
           {
             "label": "Current Step",
-            "key": "__currentStep"
+            "key": "__currentStep",
+            "type": "number"
           },
           {
             "label": "Current Step Valid",
-            "key": "__currentStepValid"
+            "key": "__currentStepValid",
+            "type": "boolean"
           }
         ]
       },
@@ -2877,6 +3118,12 @@
       },
       {
         "type": "boolean",
+        "label": "24-Hour time",
+        "key": "time24hr",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Ignore time zones",
         "key": "ignoreTimezones",
         "defaultValue": false
@@ -3308,23 +3555,28 @@
       "values": [
         {
           "label": "Rows",
-          "key": "rows"
+          "key": "rows",
+          "type": "array"
         },
         {
           "label": "Extra Info",
-          "key": "info"
+          "key": "info",
+          "type": "string"
         },
         {
           "label": "Rows Length",
-          "key": "rowsLength"
+          "key": "rowsLength",
+          "type": "number"
         },
         {
           "label": "Schema",
-          "key": "schema"
+          "key": "schema",
+          "type": "object"
         },
         {
           "label": "Page Number",
-          "key": "pageNumber"
+          "key": "pageNumber",
+          "type": "number"
         }
       ]
     }
@@ -4086,23 +4338,28 @@
         "values": [
           {
             "label": "Rows",
-            "key": "rows"
+            "key": "rows",
+            "type": "array"
           },
           {
             "label": "Extra Info",
-            "key": "info"
+            "key": "info",
+            "type": "string"
           },
           {
             "label": "Rows Length",
-            "key": "rowsLength"
+            "key": "rowsLength",
+            "type": "number"
           },
           {
             "label": "Schema",
-            "key": "schema"
+            "key": "schema",
+            "type": "object"
           },
           {
             "label": "Page Number",
-            "key": "pageNumber"
+            "key": "pageNumber",
+            "type": "number"
           }
         ]
       },
@@ -4112,7 +4369,8 @@
         "values": [
           {
             "label": "Row Index",
-            "key": "index"
+            "key": "index",
+            "type": "number"
           }
         ]
       },

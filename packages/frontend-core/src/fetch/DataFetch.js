@@ -136,14 +136,12 @@ export default class DataFetch {
     }
 
     // Determine what sort type to use
-    if (!this.options.sortType) {
-      let sortType = "string"
-      if (sortColumn) {
-        const type = schema?.[sortColumn]?.type
-        sortType = type === "number" ? "number" : "string"
-      }
-      this.options.sortType = sortType
+    let sortType = "string"
+    if (sortColumn) {
+      const type = schema?.[sortColumn]?.type
+      sortType = type === "number" ? "number" : "string"
     }
+    this.options.sortType = sortType
 
     // Build the lucene query
     let query = this.options.query
@@ -158,6 +156,8 @@ export default class DataFetch {
       schema,
       query,
       loading: true,
+      cursors: [],
+      cursor: null,
     }))
 
     // Actually fetch data
@@ -170,6 +170,7 @@ export default class DataFetch {
       rows: page.rows,
       info: page.info,
       cursors: paginate && page.hasNextPage ? [null, page.cursor] : [null],
+      error: page.error,
     }))
   }
 
@@ -182,7 +183,7 @@ export default class DataFetch {
     const features = get(this.featureStore)
 
     // Get the actual data
-    let { rows, info, hasNextPage, cursor } = await this.getData()
+    let { rows, info, hasNextPage, cursor, error } = await this.getData()
 
     // If we don't support searching, do a client search
     if (!features.supportsSearch) {
@@ -204,6 +205,7 @@ export default class DataFetch {
       info,
       hasNextPage,
       cursor,
+      error,
     }
   }
 
@@ -345,8 +347,14 @@ export default class DataFetch {
       return
     }
     this.store.update($store => ({ ...$store, loading: true }))
-    const { rows, info } = await this.getPage()
-    this.store.update($store => ({ ...$store, rows, info, loading: false }))
+    const { rows, info, error } = await this.getPage()
+    this.store.update($store => ({
+      ...$store,
+      rows,
+      info,
+      loading: false,
+      error,
+    }))
   }
 
   /**
@@ -386,7 +394,7 @@ export default class DataFetch {
       cursor: nextCursor,
       pageNumber: $store.pageNumber + 1,
     }))
-    const { rows, info, hasNextPage, cursor } = await this.getPage()
+    const { rows, info, hasNextPage, cursor, error } = await this.getPage()
 
     // Update state
     this.store.update($store => {
@@ -400,6 +408,7 @@ export default class DataFetch {
         info,
         cursors,
         loading: false,
+        error,
       }
     })
   }
@@ -421,7 +430,7 @@ export default class DataFetch {
       cursor: prevCursor,
       pageNumber: $store.pageNumber - 1,
     }))
-    const { rows, info } = await this.getPage()
+    const { rows, info, error } = await this.getPage()
 
     // Update state
     this.store.update($store => {
@@ -430,6 +439,7 @@ export default class DataFetch {
         rows,
         info,
         loading: false,
+        error,
       }
     })
   }
