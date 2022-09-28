@@ -127,7 +127,7 @@
   }
 
   const initiateAppCreation = async () => {
-    if ($licensing.usageMetrics.apps >= 100) {
+    if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
     } else if ($apps?.length) {
       $goto("/builder/portal/apps/create")
@@ -229,9 +229,8 @@
     try {
       await apps.load()
       await templates.load()
-
-      await licensing.getQuotaUsage()
-      await licensing.getUsageMetrics()
+      // always load latest
+      await licensing.init()
 
       if ($templates?.length === 0) {
         notifications.error(
@@ -361,7 +360,7 @@
                   </Button>
                 {/if}
                 <div class="filter">
-                  {#if $auth.groupsEnabled}
+                  {#if $licensing.groupsEnabled}
                     <AccessFilter on:change={accessFilterAction} />
                   {/if}
                   <Select

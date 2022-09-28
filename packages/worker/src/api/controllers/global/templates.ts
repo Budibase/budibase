@@ -1,20 +1,19 @@
-const { generateTemplateID } = require("@budibase/backend-core/db")
-const {
+import {
   TemplateMetadata,
   TemplateBindings,
   GLOBAL_OWNER,
-} = require("../../../constants")
-const { getTemplates } = require("../../../constants/templates")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+} from "../../../constants"
+import { getTemplates } from "../../../constants/templates"
+import { tenancy, db as dbCore } from "@budibase/backend-core"
 
-exports.save = async ctx => {
-  const db = getGlobalDB()
+export async function save(ctx: any) {
+  const db = tenancy.getGlobalDB()
   let template = ctx.request.body
   if (!template.ownerId) {
     template.ownerId = GLOBAL_OWNER
   }
   if (!template._id) {
-    template._id = generateTemplateID(template.ownerId)
+    template._id = dbCore.generateTemplateID(template.ownerId)
   }
 
   const response = await db.put(template)
@@ -24,9 +23,9 @@ exports.save = async ctx => {
   }
 }
 
-exports.definitions = async ctx => {
-  const bindings = {}
-  const info = {}
+export async function definitions(ctx: any) {
+  const bindings: any = {}
+  const info: any = {}
   for (let template of TemplateMetadata.email) {
     bindings[template.purpose] = template.bindings
     info[template.purpose] = {
@@ -45,30 +44,33 @@ exports.definitions = async ctx => {
   }
 }
 
-exports.fetch = async ctx => {
+export async function fetch(ctx: any) {
   ctx.body = await getTemplates()
 }
 
-exports.fetchByType = async ctx => {
+export async function fetchByType(ctx: any) {
+  // @ts-ignore
   ctx.body = await getTemplates({
     type: ctx.params.type,
   })
 }
 
-exports.fetchByOwner = async ctx => {
+export async function fetchByOwner(ctx: any) {
+  // @ts-ignore
   ctx.body = await getTemplates({
     ownerId: ctx.params.ownerId,
   })
 }
 
-exports.find = async ctx => {
+export async function find(ctx: any) {
+  // @ts-ignore
   ctx.body = await getTemplates({
     id: ctx.params.id,
   })
 }
 
-exports.destroy = async ctx => {
-  const db = getGlobalDB()
+export async function destroy(ctx: any) {
+  const db = tenancy.getGlobalDB()
   await db.remove(ctx.params.id, ctx.params.rev)
   ctx.message = `Template ${ctx.params.id} deleted.`
   ctx.status = 200

@@ -52,7 +52,8 @@
           ? publishedApps
           : publishedApps.filter(app => {
               return userGroups.find(group => {
-                return Object.keys(group.roles)
+                return groups.actions
+                  .getGroupAppIds(group)
                   .map(role => apps.extractAppId(role))
                   .includes(app.appId)
               })
@@ -132,7 +133,7 @@
             </Body>
           </Layout>
           <Divider />
-          {#if $licensing.usageMetrics.dayPasses >= 100}
+          {#if $licensing.usageMetrics?.dayPasses >= 100}
             <div>
               <Layout gap="S" justifyItems="center">
                 <img class="spaceman" alt="spaceman" src={Spaceman} />

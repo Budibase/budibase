@@ -1370,6 +1370,7 @@ security:
 paths:
   /applications:
     post:
+      operationId: create
       summary: Create an application
       tags:
         - applications
@@ -1393,6 +1394,7 @@ paths:
                   $ref: "#/components/examples/application"
   "/applications/{appId}":
     put:
+      operationId: update
       summary: Update an application
       tags:
         - applications
@@ -1415,6 +1417,7 @@ paths:
                 application:
                   $ref: "#/components/examples/application"
     delete:
+      operationId: destroy
       summary: Delete an application
       tags:
         - applications
@@ -1431,6 +1434,7 @@ paths:
                 application:
                   $ref: "#/components/examples/application"
     get:
+      operationId: getById
       summary: Retrieve an application
       tags:
         - applications
@@ -1448,6 +1452,7 @@ paths:
                   $ref: "#/components/examples/application"
   /applications/search:
     post:
+      operationId: search
       summary: Search for applications
       description: Based on application properties (currently only name) search for
         applications.
@@ -1472,6 +1477,7 @@ paths:
                   $ref: "#/components/examples/applications"
   "/queries/{queryId}":
     post:
+      operationId: execute
       summary: Execute a query
       description: Queries which have been created within a Budibase app can be
         executed using this,
@@ -1500,6 +1506,7 @@ paths:
                   $ref: "#/components/examples/sqlResponse"
   /queries/search:
     post:
+      operationId: search
       summary: Search for queries
       description: Based on query properties (currently only name) search for queries.
       tags:
@@ -1524,6 +1531,7 @@ paths:
                   $ref: "#/components/examples/queries"
   "/tables/{tableId}/rows":
     post:
+      operationId: create
       summary: Create a row
       description: Creates a row within the specified table.
       tags:
@@ -1554,6 +1562,7 @@ paths:
                   $ref: "#/components/examples/row"
   "/tables/{tableId}/rows/{rowId}":
     put:
+      operationId: update
       summary: Update a row
       description: Updates a row within the specified table.
       tags:
@@ -1583,6 +1592,7 @@ paths:
                 row:
                   $ref: "#/components/examples/row"
     delete:
+      operationId: destroy
       summary: Delete a row
       description: Deletes a row within the specified table.
       tags:
@@ -1603,6 +1613,7 @@ paths:
                 row:
                   $ref: "#/components/examples/row"
     get:
+      operationId: getById
       summary: Retrieve a row
       description: This gets a single row, it will be enriched with the full related
         rows, rather than the squashed "primaryDisplay" format returned by the
@@ -1625,6 +1636,7 @@ paths:
                   $ref: "#/components/examples/enrichedRow"
   "/tables/{tableId}/rows/search":
     post:
+      operationId: search
       summary: Search for rows
       tags:
         - rows
@@ -1650,6 +1662,7 @@ paths:
                   $ref: "#/components/examples/rows"
   /tables:
     post:
+      operationId: create
       summary: Create a table
       description: Create a table, this could be internal or external.
       tags:
@@ -1677,6 +1690,7 @@ paths:
                   $ref: "#/components/examples/table"
   "/tables/{tableId}":
     put:
+      operationId: update
       summary: Update a table
       description: Update a table, this could be internal or external.
       tags:
@@ -1703,6 +1717,7 @@ paths:
                 table:
                   $ref: "#/components/examples/table"
     delete:
+      operationId: destroy
       summary: Delete a table
       description: Delete a table, this could be internal or external.
       tags:
@@ -1721,6 +1736,7 @@ paths:
                 table:
                   $ref: "#/components/examples/table"
     get:
+      operationId: getById
       summary: Retrieve a table
       description: Lookup a table, this could be internal or external.
       tags:
@@ -1740,6 +1756,7 @@ paths:
                   $ref: "#/components/examples/table"
   /tables/search:
     post:
+      operationId: search
       summary: Search for tables
       description: Based on table properties (currently only name) search for tables.
         This could be an internal or an external table.
@@ -1765,6 +1782,7 @@ paths:
                   $ref: "#/components/examples/tables"
   /users:
     post:
+      operationId: create
       summary: Create a user
       tags:
         - users
@@ -1786,6 +1804,7 @@ paths:
                   $ref: "#/components/examples/user"
   "/users/{userId}":
     put:
+      operationId: update
       summary: Update a user
       tags:
         - users
@@ -1808,6 +1827,7 @@ paths:
                 user:
                   $ref: "#/components/examples/user"
     delete:
+      operationId: destroy
       summary: Delete a user
       tags:
         - users
@@ -1824,6 +1844,7 @@ paths:
                 user:
                   $ref: "#/components/examples/user"
     get:
+      operationId: getById
       summary: Retrieve a user
       tags:
         - users
@@ -1841,6 +1862,7 @@ paths:
                   $ref: "#/components/examples/user"
   /users/search:
     post:
+      operationId: search
       summary: Search for users
       description: Based on user properties (currently only name) search for users.
       tags:

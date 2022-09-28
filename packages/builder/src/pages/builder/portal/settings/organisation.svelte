@@ -83,7 +83,7 @@
         analytics.
       </Body>
     </Layout>
-    <Divider size="S" />
+    <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">Information</Heading>
       <Body size="S">Here you can update your logo and organization name.</Body>
@@ -110,7 +110,7 @@
       </div>
     </div>
     {#if !$admin.cloud}
-      <Divider size="S" />
+      <Divider />
       <Layout gap="XS" noPadding>
         <Heading size="S">Platform</Heading>
         <Body size="S">Here you can set up general platform settings.</Body>
@@ -128,7 +128,7 @@
       </div>
     {/if}
     {#if !$admin.cloud}
-      <Divider size="S" />
+      <Divider />
       <Layout gap="XS" noPadding>
         <Heading size="S">Analytics</Heading>
         <Body size="S">Choose whether to opt-in or opt-out of analytics.</Body>

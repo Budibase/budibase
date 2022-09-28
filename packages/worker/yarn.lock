@@ -291,12 +291,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.4.16":
-  version "1.4.16"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.4.16.tgz#71d5e50db4b8c669f4d353563a78b30cc1d39e86"
-  integrity sha512-uFq49pw/P8QUjT9YEBmaXj04zwjYHLxKGp2bcG8dnzE7BGXfCbvMbgO732brYhk1hRvCUw5DbAjEIFTDj6VZFA==
+"@budibase/backend-core@2.0.5":
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.0.5.tgz#e720ad8a0fd0eb0157d8ec332e530b481fd5b912"
+  integrity sha512-uY/YQgZ1xTm3npzWNRgZQBY/nj2ZxSkGtGbgK4NyWwZzvVUwd9vfNAIdKf7crECMJncH1x4H9TalQoFXb/cmbA==
   dependencies:
-    "@budibase/types" "^1.4.16"
+    "@budibase/types" "^2.0.5"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -327,21 +327,21 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/pro@1.4.16":
-  version "1.4.16"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.4.16.tgz#746db325e5704b222b42567eea7babd528a0d6a6"
-  integrity sha512-6nWEKzpFWUP+zTzeCVDzQqUMZNTsH3ACZ9jnZ0tj5RiREakux3UOwvQAWwzbQu4p7myru44s4sQeuVjgg6aufw==
+"@budibase/pro@2.0.5":
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.0.5.tgz#50c536f3e65db335e728379d2a931f295dfb0cd8"
+  integrity sha512-wG3yhwiHXFas3PooiAblRZBajjeWgVPnd65V9HTyac2OCdkSQLyD2djoSfwow+N3Vhe8CApNKMfLL/V7/s9EUg==
   dependencies:
-    "@budibase/backend-core" "1.4.16"
-    "@budibase/types" "1.4.16"
+    "@budibase/backend-core" "2.0.5"
+    "@budibase/types" "2.0.5"
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
 
-"@budibase/types@1.4.16", "@budibase/types@^1.4.16":
-  version "1.4.16"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.4.16.tgz#18165147d0e145c855354f558062a080df939a19"
-  integrity sha512-evA9FeSkJOTXodrY+1X1JXSNYcNdlGEvVqpY6ePhmqsCTuefYS5BPsNsHOshcj49eZk6iraUM5Lm8TNQRstu1Q==
+"@budibase/types@2.0.5", "@budibase/types@^2.0.5":
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.0.5.tgz#852c86611f237640b59d8dc4ae0c8c5fec491cf1"
+  integrity sha512-MnnDEB22kbXRsztmHPgvFDSYavpb0qm6H6Y/3UHXKqyFEg/KRpiF1p7lYsN+FAUDAWxpFgI+kp2Yw6gWyA5FLQ==
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
