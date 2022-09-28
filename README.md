@@ -65,7 +65,7 @@ Budibase is open-source - licensed as GPL v3. This should fill you with confiden
 <br /><br />
 
 ### Load data or start from scratch
-Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, MySQL, Airtable, S3, DynamoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, MySQL, Airtable, S3, DynamoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no datasources. [Request new datasources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
   <img alt="Budibase data" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970242/Out%20of%20beta%20launch/data_n1tlhf.png">
@@ -135,12 +135,17 @@ You can learn more about the Budibase API at the following places:
 
 ## 🏁 Get started
 
-<a href="https://docs.budibase.com/docs/hosting-methods"><img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" /></a>
-
 Deploy Budibase self-hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
 Or use Budibase Cloud if you don't need to self-host, and would like to get started quickly.
 
 ### [Get started with self-hosting Budibase](https://docs.budibase.com/docs/hosting-methods)
+
+- [Docker - single ARM compatible image](https://docs.budibase.com/docs/docker)
+- [Docker Compose](https://docs.budibase.com/docs/docker-compose)
+- [Kubernetes](https://docs.budibase.com/docs/kubernetes-k8s)
+- [Digital Ocean](https://docs.budibase.com/docs/digitalocean)
+- [Portainer](https://docs.budibase.com/docs/portainer)
+
 
 ### [Get started with Budibase Cloud](https://budibase.com)
 
@@ -164,7 +169,7 @@ If you have a question or would like to talk with other Budibase users and join 
 
 ## ❗ Code of conduct
 
-Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md). Please read it.
+Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/docs/CODE_OF_CONDUCT.md). Please read it.
 <br />
 
 
@@ -174,6 +179,7 @@ Budibase is dedicated to providing a welcoming, diverse, and harrassment-free ex
 ## 🙌 Contributing to Budibase
 
 From opening a bug report to creating a pull request: every contribution is appreciated and welcomed. If you're planning to implement a new feature or change the API please create an issue first. This way we can ensure your work is not in vain.
+Environment setup instructions are available for [Debian](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-DEBIAN.md) and [MacOSX](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-MACOSX.md)
 
 ### Not Sure Where to Start?
 A good place to start contributing, is the [First time issues project](https://github.com/Budibase/budibase/projects/22).
@@ -187,7 +193,7 @@ Budibase is a monorepo managed by lerna. Lerna manages the building and publishi
 
 - [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server) - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
-For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
+For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/docs/CONTRIBUTING.md)
 
 <br /><br />
 
@@ -202,7 +208,7 @@ Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3
 
 [![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
 
-If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
+If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/docs/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 <br /><br />
 

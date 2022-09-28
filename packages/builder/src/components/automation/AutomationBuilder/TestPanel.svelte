@@ -1,12 +1,12 @@
 <script>
-  import { Icon, Divider, Tabs, Tab, TextArea, Label } from "@budibase/bbui"
-  import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
+  import { Icon, Divider } from "@budibase/bbui"
+  import TestDisplay from "./TestDisplay.svelte"
   import { automationStore } from "builderStore"
+  import { ActionStepID } from "constants/backend/automations"
 
   export let automation
 
-  let showParameters
-  let blocks
+  let blocks, testResults
 
   $: {
     blocks = []
@@ -16,14 +16,12 @@
       }
       blocks = blocks
         .concat(automation.definition.steps || [])
-        .filter(x => x.stepId !== "LOOP")
+        .filter(x => x.stepId !== ActionStepID.LOOP)
+    } else if ($automationStore.selectedAutomation) {
+      automation = $automationStore.selectedAutomation
     }
   }
-
-  $: testResults =
-    $automationStore.selectedAutomation?.testResults?.steps.filter(
-      x => x.stepId !== "LOOP" || []
-    )
+  $: testResults = $automationStore.selectedAutomation?.testResults
 </script>
 
 <div class="title">
@@ -34,7 +32,7 @@
   <div style="padding-right: var(--spacing-xl)">
     <Icon
       on:click={async () => {
-        $automationStore.selectedAutomation.automation.showTestPanel = false
+        $automationStore.showTestPanel = false
       }}
       hoverable
       name="Close"
@@ -44,59 +42,9 @@
 
 <Divider />
 
-<div class="container">
-  {#each blocks as block, idx}
-    <div class="block">
-      {#if block.stepId !== "LOOP"}
-        <FlowItemHeader showTestStatus={true} bind:showParameters {block} />
-        {#if showParameters && showParameters[block.id]}
-          <Divider noMargin />
-          {#if testResults?.[idx]?.outputs.iterations}
-            <div style="display: flex; padding: 10px 10px 0px 12px;">
-              <Icon name="Reuse" />
-              <div style="margin-left: 10px;">
-                <Label>
-                  This loop ran {testResults?.[idx]?.outputs.iterations} times.</Label
-                >
-              </div>
-            </div>
-          {/if}
-
-          <div class="tabs">
-            <Tabs quiet noPadding selected="Input">
-              <Tab title="Input">
-                <div style="padding: 10px 10px 10px 10px;">
-                  <TextArea
-                    minHeight="80px"
-                    disabled
-                    value={JSON.stringify(testResults?.[idx]?.inputs, null, 2)}
-                  />
-                </div></Tab
-              >
-              <Tab title="Output">
-                <div style="padding: 10px 10px 10px 10px;">
-                  <TextArea
-                    minHeight="100px"
-                    disabled
-                    value={JSON.stringify(testResults?.[idx]?.outputs, null, 2)}
-                  />
-                </div>
-              </Tab>
-            </Tabs>
-          </div>
-        {/if}
-      {/if}
-    </div>
-    {#if blocks.length - 1 !== idx}
-      <div class="separator" />
-    {/if}
-  {/each}
-</div>
+<TestDisplay {automation} {testResults} />
 
 <style>
-  .container {
-    padding: 0px 30px 0px 30px;
-  }
   .title {
     display: flex;
     flex-direction: row;
@@ -104,15 +52,6 @@
     gap: var(--spacing-xs);
     padding-left: var(--spacing-xl);
     justify-content: space-between;
-  }
-
-  .tabs {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    position: relative;
-    flex: 1 1 auto;
   }
 
   .title-text {
@@ -123,24 +62,5 @@
 
   .title :global(h1) {
     flex: 1 1 auto;
-  }
-
-  .block {
-    display: inline-block;
-    width: 400px;
-    font-size: 16px;
-    background-color: var(--background);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px 4px 4px 4px;
-  }
-
-  .separator {
-    width: 1px;
-    height: 40px;
-    border-left: 1px dashed var(--grey-4);
-    color: var(--grey-4);
-    /* center horizontally */
-    text-align: center;
-    margin-left: 50%;
   }
 </style>

@@ -1,7 +1,11 @@
+const { Event } = require("@budibase/types")
+
 exports.CommandWords = {
+  BACKUPS: "backups",
   HOSTING: "hosting",
   ANALYTICS: "analytics",
   HELP: "help",
+  PLUGIN: "plugins",
 }
 
 exports.InitTypes = {
@@ -10,11 +14,10 @@ exports.InitTypes = {
 }
 
 exports.AnalyticsEvents = {
-  OptOut: "analytics_opt_out",
-  OptIn: "analytics_opt_in",
-  SelfHostInit: "hosting_init",
+  OptOut: "analytics:opt:out",
+  OptIn: "analytics:opt:in",
+  SelfHostInit: "hosting:init",
+  PluginInit: Event.PLUGIN_INIT,
 }
 
-exports.BUDIBASE_POSTHOG_URL = "https://app.posthog.com"
-exports.BUDIBASE_POSTHOG_TOKEN =
-  "phc_yGOn4i7jWKaCTapdGR6lfA4AvmuEQ2ijn5zAVSFYPlS"
+exports.POSTHOG_TOKEN = "phc_yGOn4i7jWKaCTapdGR6lfA4AvmuEQ2ijn5zAVSFYPlS"

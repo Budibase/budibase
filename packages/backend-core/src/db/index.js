@@ -1,15 +1,26 @@
 const pouch = require("./pouch")
 const env = require("../environment")
 
+const openDbs = []
 let PouchDB
 let initialised = false
 const dbList = new Set()
 
+if (env.MEMORY_LEAK_CHECK) {
+  setInterval(() => {
+    console.log("--- OPEN DBS ---")
+    console.log(openDbs)
+  }, 5000)
+}
+
 const put =
   dbPut =>
   async (doc, options = {}) => {
-    // TODO: add created / updated
-    return await dbPut(doc, options)
+    if (!doc.createdAt) {
+      doc.createdAt = new Date().toISOString()
+    }
+    doc.updatedAt = new Date().toISOString()
+    return dbPut(doc, options)
   }
 
 const checkInitialised = () => {
@@ -32,6 +43,9 @@ exports.dangerousGetDB = (dbName, opts) => {
     dbList.add(dbName)
   }
   const db = new PouchDB(dbName, opts)
+  if (env.MEMORY_LEAK_CHECK) {
+    openDbs.push(db.name)
+  }
   const dbPut = db.put
   db.put = put(dbPut)
   return db
@@ -42,6 +56,9 @@ exports.dangerousGetDB = (dbName, opts) => {
 exports.closeDB = async db => {
   if (!db || env.isTest()) {
     return
+  }
+  if (env.MEMORY_LEAK_CHECK) {
+    openDbs.splice(openDbs.indexOf(db.name), 1)
   }
   try {
     // specifically await so that if there is an error, it can be ignored
@@ -54,7 +71,7 @@ exports.closeDB = async db => {
 // we have to use a callback for this so that we can close
 // the DB when we're done, without this manual requests would
 // need to close the database when done with it to avoid memory leaks
-exports.doWithDB = async (dbName, cb, opts) => {
+exports.doWithDB = async (dbName, cb, opts = {}) => {
   const db = exports.dangerousGetDB(dbName, opts)
   // need this to be async so that we can correctly close DB after all
   // async operations have been completed

@@ -4,7 +4,7 @@ const { generateGlobalUserID } = require("../../db/utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
-const { getGlobalUserByEmail } = require("../../utils")
+const users = require("../../users")
 const { getGlobalDB, getTenantId } = require("../../tenancy")
 const fetch = require("node-fetch")
 
@@ -52,7 +52,7 @@ exports.authenticateThirdParty = async function (
 
   // fallback to loading by email
   if (!dbUser) {
-    dbUser = await getGlobalUserByEmail(thirdPartyUser.email)
+    dbUser = await users.getGlobalUserByEmail(thirdPartyUser.email)
   }
 
   // exit early if there is still no user and auto creation is disabled
@@ -79,14 +79,14 @@ exports.authenticateThirdParty = async function (
   dbUser.forceResetPassword = false
 
   // create or sync the user
-  let response
   try {
-    response = await saveUserFn(dbUser, getTenantId(), false, false)
+    await saveUserFn(dbUser, false, false)
   } catch (err) {
     return authError(done, err)
   }
 
-  dbUser._rev = response.rev
+  // now that we're sure user exists, load them from the db
+  dbUser = await db.get(dbUser._id)
 
   // authenticate
   const sessionId = newid()

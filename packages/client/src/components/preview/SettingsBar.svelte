@@ -6,7 +6,7 @@
   import { builderStore, componentStore } from "stores"
   import { domDebounce } from "utils/domDebounce"
 
-  const verticalOffset = 28
+  const verticalOffset = 36
   const horizontalOffset = 2
 
   let top = 0
@@ -37,7 +37,7 @@
     }
     const id = $builderStore.selectedComponentId
     const parent = document.getElementsByClassName(id)?.[0]
-    const element = parent?.childNodes?.[0]
+    const element = parent?.children?.[0]
 
     // The settings bar is higher in the dom tree than the selection indicators
     // as we want to be able to render the settings bar wider than the screen,

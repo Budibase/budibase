@@ -14,7 +14,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let sort = false
-
+  export let autoWidth = false
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
@@ -33,6 +33,7 @@
     {sort}
     {getOptionLabel}
     {getOptionValue}
+    {autoWidth}
     on:change={onChange}
     on:click
   />

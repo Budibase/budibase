@@ -1,54 +1,22 @@
 const core = require("@budibase/backend-core")
-const { getScopedConfig } = require("@budibase/backend-core/db")
-const { google } = require("@budibase/backend-core/middleware")
-const { oidc } = require("@budibase/backend-core/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
-const {
-  setCookie,
-  getCookie,
-  clearCookie,
-  getGlobalUserByEmail,
-  hash,
-  platformLogout,
-} = core.utils
+const { setCookie, getCookie, clearCookie, hash, platformLogout } = core.utils
 const { Cookies, Headers } = core.constants
-const { passport } = core.auth
+const { passport, ssoCallbackUrl, google, oidc } = core.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
-const {
-  getGlobalDB,
-  getTenantId,
-  isMultiTenant,
-} = require("@budibase/backend-core/tenancy")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
-import { users } from "@budibase/pro"
-
-const ssoCallbackUrl = async (config: any, type: any) => {
-  // incase there is a callback URL from before
-  if (config && config.callbackURL) {
-    return config.callbackURL
-  }
-
-  const db = getGlobalDB()
-  const publicConfig = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
-  })
-
-  let callbackUrl = `/api/global/auth`
-  if (isMultiTenant()) {
-    callbackUrl += `/${getTenantId()}`
-  }
-  callbackUrl += `/${type}/callback`
-
-  return `${publicConfig.platformUrl}${callbackUrl}`
-}
+import { events, users as usersCore, context } from "@budibase/backend-core"
+import sdk from "../../../sdk"
+import { User } from "@budibase/types"
 
 export const googleCallbackUrl = async (config: any) => {
-  return ssoCallbackUrl(config, "google")
+  return ssoCallbackUrl(getGlobalDB(), config, "google")
 }
 
 export const oidcCallbackUrl = async (config: any) => {
-  return ssoCallbackUrl(config, "oidc")
+  return ssoCallbackUrl(getGlobalDB(), config, "oidc")
 }
 
 async function authInternal(ctx: any, user: any, err = null, info = null) {
@@ -75,8 +43,11 @@ async function authInternal(ctx: any, user: any, err = null, info = null) {
 export const authenticate = async (ctx: any, next: any) => {
   return passport.authenticate(
     "local",
-    async (err: any, user: any, info: any) => {
+    async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
+      await context.identity.doInUserContext(user, async () => {
+        await events.auth.login("local")
+      })
       ctx.status = 200
     }
   )(ctx, next)
@@ -110,13 +81,14 @@ export const reset = async (ctx: any) => {
     )
   }
   try {
-    const user = await getGlobalUserByEmail(email)
+    const user = (await usersCore.getGlobalUserByEmail(email)) as User
     // only if user exists, don't error though if they don't
     if (user) {
       await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, {
         user,
         subject: "{{ company }} platform password reset",
       })
+      await events.user.passwordResetRequested(user)
     }
   } catch (err) {
     console.log(err)
@@ -141,7 +113,11 @@ export const resetUpdate = async (ctx: any) => {
     ctx.body = {
       message: "password reset successfully.",
     }
+    // remove password from the user before sending events
+    delete user.password
+    await events.user.passwordReset(user)
   } catch (err) {
+    console.error(err)
     ctx.throw(400, "Cannot reset password.")
   }
 }
@@ -191,10 +167,16 @@ export const googlePreAuth = async (ctx: any, next: any) => {
     workspace: ctx.query.workspace,
   })
   let callbackUrl = await exports.googleCallbackUrl(config)
-  const strategy = await google.strategyFactory(config, callbackUrl, users.save)
+  const strategy = await google.strategyFactory(
+    config,
+    callbackUrl,
+    sdk.users.save
+  )
 
   return passport.authenticate(strategy, {
     scope: ["profile", "email"],
+    accessType: "offline",
+    prompt: "consent",
   })(ctx, next)
 }
 
@@ -206,20 +188,26 @@ export const googleAuth = async (ctx: any, next: any) => {
     workspace: ctx.query.workspace,
   })
   const callbackUrl = await exports.googleCallbackUrl(config)
-  const strategy = await google.strategyFactory(config, callbackUrl, users.save)
+  const strategy = await google.strategyFactory(
+    config,
+    callbackUrl,
+    sdk.users.save
+  )
 
   return passport.authenticate(
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
-    async (err: any, user: any, info: any) => {
+    async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
-
+      await context.identity.doInUserContext(user, async () => {
+        await events.auth.login("google-internal")
+      })
       ctx.redirect("/")
     }
   )(ctx, next)
 }
 
-async function oidcStrategyFactory(ctx: any, configId: any) {
+export const oidcStrategyFactory = async (ctx: any, configId: any) => {
   const db = getGlobalDB()
   const config = await core.db.getScopedConfig(db, {
     type: Configs.OIDC,
@@ -229,7 +217,12 @@ async function oidcStrategyFactory(ctx: any, configId: any) {
   const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
   let callbackUrl = await exports.oidcCallbackUrl(chosenConfig)
 
-  return oidc.strategyFactory(chosenConfig, callbackUrl, users.save)
+  //Remote Config
+  const enrichedConfig = await oidc.fetchStrategyConfig(
+    chosenConfig,
+    callbackUrl
+  )
+  return oidc.strategyFactory(enrichedConfig, sdk.users.save)
 }
 
 /**
@@ -242,9 +235,22 @@ export const oidcPreAuth = async (ctx: any, next: any) => {
 
   setCookie(ctx, configId, Cookies.OIDC_CONFIG)
 
+  const db = getGlobalDB()
+  const config = await core.db.getScopedConfig(db, {
+    type: Configs.OIDC,
+    group: ctx.query.group,
+  })
+
+  const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
+
+  let authScopes =
+    chosenConfig.scopes?.length > 0
+      ? chosenConfig.scopes
+      : ["profile", "email", "offline_access"]
+
   return passport.authenticate(strategy, {
     // required 'openid' scope is added by oidc strategy factory
-    scope: ["profile", "email"],
+    scope: authScopes,
   })(ctx, next)
 }
 
@@ -257,7 +263,9 @@ export const oidcAuth = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-
+      await context.identity.doInUserContext(user, async () => {
+        await events.auth.login("oidc")
+      })
       ctx.redirect("/")
     }
   )(ctx, next)

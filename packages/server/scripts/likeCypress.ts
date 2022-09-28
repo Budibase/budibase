@@ -10,7 +10,7 @@ const WORKER_PORT = "4200"
 
 // @ts-ignore
 process.env.NODE_ENV = "cypress"
-process.env.ENABLE_ANALYTICS = "false"
+process.env.ENABLE_ANALYTICS = "0"
 process.env.JWT_SECRET = "budibase"
 process.env.COUCH_URL = `leveldb://${tmpdir}/.data/`
 process.env.SELF_HOSTED = "1"

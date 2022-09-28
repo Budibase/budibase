@@ -29,14 +29,9 @@ describe("Run through some parts of the automations system", () => {
   afterAll(setup.afterAll)
 
   it("should be able to init in builder", async () => {
-    await triggers.externalTrigger(basicAutomation(), { a: 1 })
+    await triggers.externalTrigger(basicAutomation(), { a: 1, appId: "app_123" })
     await wait(100)
-    expect(thread).toHaveBeenCalled()
-  })
-
-  it("should be able to init in prod", async () => {
-    await triggers.externalTrigger(basicAutomation(), { a: 1 })
-    await wait(100)
+    expect(thread.execute).toHaveBeenCalled()
   })
 
   it("should check coercion", async () => {
@@ -52,7 +47,7 @@ describe("Run through some parts of the automations system", () => {
       }
     })
     await wait(100)
-    expect(thread).toHaveBeenCalledWith(makePartial({
+    expect(thread.execute).toHaveBeenCalledWith(makePartial({
       data: {
         event: {
           fields: {

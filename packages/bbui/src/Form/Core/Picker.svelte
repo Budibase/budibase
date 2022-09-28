@@ -6,12 +6,15 @@
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Search from "./Search.svelte"
+  import Icon from "../../Icon/Icon.svelte"
+  import StatusLight from "../../StatusLight/StatusLight.svelte"
 
   export let id = null
   export let disabled = false
   export let error = null
   export let fieldText = ""
   export let fieldIcon = ""
+  export let fieldColour = ""
   export let isPlaceholder = false
   export let placeholderOption = null
   export let options = []
@@ -20,6 +23,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
+  export let getOptionColour = () => null
   export let open = false
   export let readonly = false
   export let quiet = false
@@ -83,11 +87,15 @@
     on:mousedown={onClick}
   >
     {#if fieldIcon}
-      <span class="icon-Placeholder-Padding">
-        <img src={fieldIcon} alt="icon" width="20" height="15" />
+      <span class="option-extra">
+        <Icon name={fieldIcon} />
       </span>
     {/if}
-
+    {#if fieldColour}
+      <span class="option-extra">
+        <StatusLight square color={fieldColour} />
+      </span>
+    {/if}
     <span
       class="spectrum-Picker-label"
       class:is-placeholder={isPlaceholder}
@@ -158,13 +166,13 @@
               on:click={() => onSelectOption(getOptionValue(option, idx))}
             >
               {#if getOptionIcon(option, idx)}
-                <span class="icon-Padding">
-                  <img
-                    src={getOptionIcon(option, idx)}
-                    alt="icon"
-                    width="20"
-                    height="15"
-                  />
+                <span class="option-extra">
+                  <Icon name={getOptionIcon(option, idx)} />
+                </span>
+              {/if}
+              {#if getOptionColour(option, idx)}
+                <span class="option-extra">
+                  <StatusLight square color={getOptionColour(option, idx)} />
                 </span>
               {/if}
               <span class="spectrum-Menu-itemLabel">
@@ -199,6 +207,10 @@
   }
   .spectrum-Picker {
     width: 100%;
+    box-shadow: none;
+  }
+  .spectrum-Picker-label.auto-width {
+    margin-right: var(--spacing-xs);
   }
   .spectrum-Picker-label:not(.auto-width) {
     overflow: hidden;
@@ -212,14 +224,19 @@
   .spectrum-Picker-label.auto-width.is-placeholder {
     padding-right: 2px;
   }
+  .auto-width .spectrum-Menu-item {
+    padding-right: var(--spacing-xl);
+  }
 
-  .icon-Padding {
-    padding-right: 10px;
+  /* Icon and colour alignment */
+  .spectrum-Menu-checkmark {
+    align-self: center;
+    margin-top: 0;
   }
-  .icon-Placeholder-Padding {
-    padding-top: 5px;
-    padding-right: 10px;
+  .option-extra {
+    padding-right: 8px;
   }
+
   .spectrum-Popover :global(.spectrum-Search) {
     margin-top: -1px;
     margin-left: -1px;

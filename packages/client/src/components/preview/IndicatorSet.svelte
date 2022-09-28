@@ -13,6 +13,8 @@
   let indicators = []
   let interval
   let text
+  let icon
+
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
 
@@ -57,6 +59,9 @@
       if (prefix) {
         text = `${prefix} ${text}`
       }
+      if (parents[0].dataset.icon) {
+        icon = parents[0].dataset.icon
+      }
     }
 
     // Batch reads to minimize reflow
@@ -66,8 +71,8 @@
     // Extract valid children
     // Sanity limit of 100 active indicators
     const children = Array.from(parents)
-      .map(parent => parent?.childNodes?.[0])
-      .filter(node => node?.nodeType === 1)
+      .map(parent => parent?.children?.[0])
+      .filter(x => x != null)
       .slice(0, 100)
 
     // If there aren't any nodes then reset
@@ -121,6 +126,7 @@
       width={indicator.width}
       height={indicator.height}
       text={idx === 0 ? text : null}
+      icon={idx === 0 ? icon : null}
       {transition}
       {zIndex}
       {color}

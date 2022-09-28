@@ -11,6 +11,7 @@
   export let schema
   export let table
   export let disableValidation = false
+  export let editAutoColumns = false
 
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
@@ -183,7 +184,8 @@
           fieldId,
           value: initialValue,
           error: initialError,
-          disabled: disabled || fieldDisabled || isAutoColumn,
+          disabled:
+            disabled || fieldDisabled || (isAutoColumn && !editAutoColumns),
           defaultValue,
           validator,
           lastUpdate: Date.now(),
@@ -202,14 +204,11 @@
 
       return fieldInfo
     },
-    validate: (onlyCurrentStep = false) => {
+    validate: () => {
       let valid = true
       let validationFields = fields
 
-      // Reduce fields to only the current step if required
-      if (onlyCurrentStep) {
-        validationFields = fields.filter(f => get(f).step === get(currentStep))
-      }
+      validationFields = fields.filter(f => get(f).step === get(currentStep))
 
       // Validate fields and check if any are invalid
       validationFields.forEach(field => {
@@ -269,7 +268,7 @@
 
       // Skip if the value is the same
       if (!skipCheck && fieldState.value === value) {
-        return
+        return false
       }
 
       // Update field state
@@ -373,7 +372,7 @@
     formState,
     formApi,
 
-    // Data source is needed by attachment fields to be able to upload files
+    // Datasource is needed by attachment fields to be able to upload files
     // to the correct table ID
     dataSource,
   })

@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(["smoke", "all"], () => {
   context("Create a Table", () => {
@@ -9,9 +10,8 @@ filterTests(["smoke", "all"], () => {
 
     it("should create a new Table", () => {
       cy.createTable("dog")
-      cy.wait(1000)
       // Check if Table exists
-      cy.get(".table-title h1").should("have.text", "dog")
+      cy.get(interact.TABLE_TITLE_H1, { timeout: 1000 }).should("have.text", "dog")
     })
 
     it("adds a new column to the table", () => {
@@ -25,13 +25,13 @@ filterTests(["smoke", "all"], () => {
     })
 
     it("updates a column on the table", () => {
-      cy.get(".title").click()
-      cy.get(".spectrum-Table-editIcon > use").click()
-      cy.get(".modal-inner-wrapper").within(() => {
+      cy.get(interact.TABLE_TITLE).click()
+      cy.get(interact.SPECTRUM_TABLE_EDIT).click()
+      cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
 
       cy.get("input").eq(0).type("updated", { force: true })
       // Unset table display column
-      cy.get(".spectrum-Switch-input").eq(1).click()
+      cy.get(interact.SPECTRUM_SWITCH_INPUT).eq(1).click()
       cy.contains("Save Column").click()
       })
       cy.contains("nameupdated ").should("contain", "nameupdated")
@@ -39,17 +39,17 @@ filterTests(["smoke", "all"], () => {
 
     it("edits a row", () => {
       cy.contains("button", "Edit").click({ force: true })
-      cy.wait(1000)
-      cy.get(".spectrum-Modal input").clear()
-      cy.get(".spectrum-Modal input").type("Updated")
+      cy.wait(500)
+      cy.get(interact.SPECTRUM_MODAL_INPUT).clear()
+      cy.get(interact.SPECTRUM_MODAL_INPUT).type("Updated")
       cy.contains("Save").click()
       cy.contains("Updated").should("have.text", "Updated")
     })
 
     it("deletes a row", () => {
-      cy.get(".spectrum-Checkbox-input").check({ force: true })
-      cy.contains("Delete 1 row(s)").click()
-      cy.get(".spectrum-Modal").contains("Delete").click()
+      cy.get(interact.SPECTRUM_CHECKBOX_INPUT).check({ force: true })
+      cy.contains("Delete 1 row").click()
+      cy.get(interact.SPECTRUM_MODAL).contains("Delete").click()
       cy.contains("RoverUpdated").should("not.exist")
     })
 
@@ -62,51 +62,49 @@ filterTests(["smoke", "all"], () => {
           cy.addRow([i])
         }
         cy.reload()
-        cy.wait(2000)
-        cy.get(".spectrum-Pagination").within(() => {
-          cy.get(".spectrum-ActionButton").eq(1).click()
+        cy.get(interact.SPECTRUM_PAGINATION, { timeout: 2000 }).within(() => {
+          cy.get(interact.SPECTRUM_ACTION_BUTTON).eq(1).click()
         })
-        cy.get(".spectrum-Pagination").within(() => {
-          cy.get(".spectrum-Body--secondary").contains("Page 2")
+        cy.get(interact.SPECTRUM_PAGINATION).within(() => {
+          cy.get(interact.SPECTRUM_BODY_SECOND).contains("Page 2")
         })
       })
 
       xit("Deletes rows and checks pagination", () => {
         // Delete rows, removing second page from table
-        cy.get(".spectrum-Checkbox-input").check({ force: true })
-        cy.get(".popovers").within(() => {
-          cy.get(".spectrum-Button").click({ force: true })
+        cy.get(interact.SPECTRUM_CHECKBOX_INPUT).check({ force: true })
+        cy.get(interact.POPOVERS).within(() => {
+          cy.get(interact.SPECTRUM_BUTTON).click({ force: true })
         })
-        cy.get(".spectrum-Dialog-grid").contains("Delete").click({ force: true })
-        cy.wait(1000)
+        cy.get(interact.SPECTRUM_DIALOG_GRID).contains("Delete").click({ force: true })
 
         // Confirm table only has one page
-        cy.get(".spectrum-Pagination").within(() => {
-          cy.get(".spectrum-ActionButton").eq(1).should("not.be.enabled")
+        cy.get(interact.SPECTRUM_PAGINATION, { timeout: 1000 }).within(() => {
+          cy.get(interact.SPECTRUM_ACTION_BUTTON).eq(1).should("not.be.enabled")
         })
       })
     }
 
     it("deletes a column", () => {
       const columnName = "nameupdated"
-      cy.get(".title").click()
-      cy.get(".spectrum-Table-editIcon > use").click()
+      cy.get(interact.TABLE_TITLE).click()
+      cy.get(interact.SPECTRUM_TABLE_EDIT).click()
       cy.contains("Delete").click()
-      cy.get('[data-cy="delete-column-confirm"]').type(columnName)
+      cy.get(interact.DELETE_COLUMN_CONFIRM).type(columnName)
       cy.contains("Delete Column").click()
       cy.contains("nameupdated").should("not.exist")
     })
 
     it("deletes a table", () => {
-      cy.get(".nav-item")
+      cy.get(interact.NAV_ITEM)
         .contains("dog")
-        .parents(".nav-item")
+        .parents(interact.NAV_ITEM)
         .first()
         .within(() => {
-          cy.get(".actions .spectrum-Icon").click({ force: true })
+          cy.get(interact.ACTION_SPECTRUM_ICON).click({ force: true })
         })
-      cy.get(".spectrum-Menu > :nth-child(2)").click()
-      cy.get('[data-cy="delete-table-confirm"]').type("dog")
+      cy.get(interact.SPECTRUM_MENU_CHILD2).click()
+      cy.get(interact.DELETE_TABLE_CONFIRM).type("dog")
       cy.contains("Delete Table").click()
       cy.contains("dog").should("not.exist")
     })

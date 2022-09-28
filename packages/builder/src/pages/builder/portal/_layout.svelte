@@ -13,14 +13,13 @@
     notifications,
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
-  import { organisation, auth } from "stores/portal"
-  import { admin as adminStore } from "stores/portal"
+  import { organisation, auth, admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
-  import { isEnabled, FEATURE_FLAGS } from "../../../helpers/featureFlags"
+  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   let loaded = false
   let userInfoModal
@@ -37,14 +36,7 @@
         href: "/builder/portal/apps",
       },
     ]
-    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
-      menu = menu.concat([
-        {
-          title: "Usage",
-          href: "/builder/portal/settings/usage",
-        },
-      ])
-    }
+
     if (admin) {
       menu = menu.concat([
         {
@@ -52,8 +44,21 @@
           href: "/builder/portal/manage/users",
           heading: "Manage",
         },
+        isEnabled(TENANT_FEATURE_FLAGS.USER_GROUPS)
+          ? {
+              title: "User Groups",
+              href: "/builder/portal/manage/groups",
+              badge: "New",
+            }
+          : undefined,
         { title: "Auth", href: "/builder/portal/manage/auth" },
         { title: "Email", href: "/builder/portal/manage/email" },
+        {
+          title: "Plugins",
+          href: "/builder/portal/manage/plugins",
+          badge: "Beta",
+        },
+
         {
           title: "Organisation",
           href: "/builder/portal/settings/organisation",
@@ -72,13 +77,6 @@
             href: "/builder/portal/settings/update",
           },
         ])
-
-        if (isEnabled(FEATURE_FLAGS.LICENSING)) {
-          menu = menu.concat({
-            title: "Upgrade",
-            href: "/builder/portal/settings/upgrade",
-          })
-        }
       }
     } else {
       menu = menu.concat([
@@ -91,14 +89,62 @@
     }
 
     // add link to account portal if the user has access
-    if ($auth?.user?.accountPortalAccess) {
+    let accountSectionAdded = false
+
+    // link out to account-portal if account holder in cloud or always in self-host
+    if ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin)) {
+      accountSectionAdded = true
       menu = menu.concat([
         {
           title: "Account",
           href: $adminStore.accountPortalUrl,
+          heading: "Account",
         },
       ])
     }
+
+    if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
+      // always show usage in self-host or cloud if licensing enabled
+      menu = menu.concat([
+        {
+          title: "Usage",
+          href: "/builder/portal/settings/usage",
+          heading: accountSectionAdded ? "" : "Account",
+        },
+      ])
+
+      // show the relevant hosting upgrade page
+      if ($adminStore.cloud && $auth?.user?.accountPortalAccess) {
+        menu = menu.concat([
+          {
+            title: "Upgrade",
+            href: $adminStore.accountPortalUrl + "/portal/upgrade",
+            badge: "New",
+          },
+        ])
+      } else if (!$adminStore.cloud && admin) {
+        menu = menu.concat({
+          title: "Upgrade",
+          href: "/builder/portal/settings/upgrade",
+          badge: "New",
+        })
+      }
+
+      // show the billing page to licensed account holders in cloud
+      if (
+        $auth?.user?.accountPortalAccess &&
+        $auth.user.account.stripeCustomerId
+      ) {
+        menu = menu.concat([
+          {
+            title: "Billing",
+            href: $adminStore.accountPortalUrl + "/portal/billing",
+          },
+        ])
+      }
+    }
+
+    menu = menu.filter(item => !!item)
     return menu
   }
 
@@ -149,11 +195,12 @@
         </div>
         <div class="menu">
           <Navigation>
-            {#each menu as { title, href, heading }}
+            {#each menu as { title, href, heading, badge }}
               <Item
                 on:click={hideMobileMenu}
                 selected={$isActive(href)}
                 {href}
+                {badge}
                 {heading}>{title}</Item
               >
             {/each}

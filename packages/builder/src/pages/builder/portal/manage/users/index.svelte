@@ -1,116 +1,328 @@
 <script>
-  import { goto } from "@roxi/routify"
   import {
     Heading,
     Body,
-    Divider,
     Button,
     ButtonGroup,
-    Search,
     Table,
-    Label,
     Layout,
     Modal,
+    ModalContent,
+    Search,
     notifications,
+    Pagination,
+    Divider,
   } from "@budibase/bbui"
-  import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
-  import { users } from "stores/portal"
+  import { users, groups, auth, licensing } from "stores/portal"
   import { onMount } from "svelte"
+  import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
+  import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
+  import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
+  import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
+  import { goto } from "@roxi/routify"
+  import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
+  import PasswordModal from "./_components/PasswordModal.svelte"
+  import ImportUsersModal from "./_components/ImportUsersModal.svelte"
+  import { get } from "svelte/store"
+  import { Constants, Utils, fetchData } from "@budibase/frontend-core"
+  import { API } from "api"
 
-  const schema = {
-    email: {},
-    developmentAccess: { displayName: "Development Access", type: "boolean" },
-    adminAccess: { displayName: "Admin Access", type: "boolean" },
-    // role: { type: "options" },
-    group: {},
-    // access: {},
-    // group: {}
+  const fetch = fetchData({
+    API,
+    datasource: {
+      type: "user",
+    },
+  })
+
+  let loaded = false
+  let enrichedUsers = []
+  let createUserModal,
+    inviteConfirmationModal,
+    onboardingTypeModal,
+    passwordModal,
+    importUsersModal
+  let searchEmail = undefined
+  let selectedRows = []
+  let bulkSaveResponse
+  let customRenderers = [
+    { column: "userGroups", component: GroupsTableRenderer },
+    { column: "apps", component: AppsTableRenderer },
+    { column: "role", component: RoleTableRenderer },
+  ]
+  let userData = []
+
+  $: debouncedUpdateFetch(searchEmail)
+  $: schema = {
+    email: {
+      sortable: false,
+    },
+    role: {
+      sortable: false,
+    },
+    ...($licensing.groupsEnabled && {
+      userGroups: { sortable: false, displayName: "Groups" },
+    }),
+    apps: {
+      sortable: false,
+    },
+  }
+  $: {
+    enrichedUsers = $fetch.rows?.map(user => {
+      let userGroups = []
+      $groups.forEach(group => {
+        if (group.users) {
+          group.users?.forEach(y => {
+            if (y._id === user._id) {
+              userGroups.push(group)
+            }
+          })
+        }
+      })
+      return {
+        ...user,
+        name: user.firstName ? user.firstName + " " + user.lastName : "",
+        userGroups,
+        apps: [...new Set(Object.keys(user.roles))],
+      }
+    })
   }
 
-  let search
-  let email
-  $: filteredUsers = $users
-    .filter(user => user.email.includes(search || ""))
-    .map(user => ({
-      ...user,
-      group: ["All users"],
-      developmentAccess: !!user.builder?.global,
-      adminAccess: !!user.admin?.global,
+  const updateFetch = email => {
+    fetch.update({
+      query: {
+        email,
+      },
+    })
+  }
+  const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
+
+  const showOnboardingTypeModal = async addUsersData => {
+    userData = await removingDuplicities(addUsersData)
+    if (!userData?.users?.length) return
+
+    onboardingTypeModal.show()
+  }
+
+  async function createUserFlow() {
+    const payload = userData?.users?.map(user => ({
+      email: user.email,
+      builder: user.role === Constants.BudibaseRoles.Developer,
+      admin: user.role === Constants.BudibaseRoles.Admin,
+      groups: userData.groups,
     }))
+    try {
+      const res = await users.invite(payload)
+      notifications.success(res.message)
+      inviteConfirmationModal.show()
+    } catch (error) {
+      notifications.error("Error inviting user")
+    }
+  }
 
-  let createUserModal
-  let basicOnboardingModal
+  const removingDuplicities = async userData => {
+    const currentUserEmails = (await users.fetch())?.map(x => x.email) || []
+    const newUsers = []
 
-  function openBasicOnboardingModal() {
-    createUserModal.hide()
-    basicOnboardingModal.show()
+    for (const user of userData?.users) {
+      const { email } = user
+
+      if (
+        newUsers.find(x => x.email === email) ||
+        currentUserEmails.includes(email)
+      )
+        continue
+
+      newUsers.push(user)
+    }
+
+    if (!newUsers.length)
+      notifications.info("Duplicated! There is no new users to add.")
+    return { ...userData, users: newUsers }
+  }
+
+  const createUsersFromCsv = async userCsvData => {
+    const { userEmails, usersRole, userGroups: groups } = userCsvData
+
+    const users = []
+    for (const email of userEmails) {
+      const newUser = {
+        email: email,
+        role: usersRole,
+        password: Math.random().toString(36).substring(2, 22),
+        forceResetPassword: true,
+      }
+
+      users.push(newUser)
+    }
+
+    userData = await removingDuplicities({ groups, users })
+    if (!userData.users.length) return
+
+    return createUsers()
+  }
+
+  async function createUsers() {
+    try {
+      bulkSaveResponse = await users.create(await removingDuplicities(userData))
+      notifications.success("Successfully created user")
+      await groups.actions.init()
+      passwordModal.show()
+      await fetch.refresh()
+    } catch (error) {
+      notifications.error("Error creating user")
+    }
+  }
+
+  async function chooseCreationType(onboardingType) {
+    if (onboardingType === "emailOnboarding") {
+      await createUserFlow()
+    } else {
+      await createUsers()
+    }
+  }
+
+  const deleteRows = async () => {
+    try {
+      let ids = selectedRows.map(user => user._id)
+      if (ids.includes(get(auth).user._id)) {
+        notifications.error("You cannot delete yourself")
+        return
+      }
+      await users.bulkDelete(ids)
+      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+      selectedRows = []
+      await fetch.refresh()
+    } catch (error) {
+      notifications.error("Error deleting rows")
+    }
   }
 
   onMount(async () => {
     try {
-      await users.init()
+      loaded = false
+      await groups.actions.init()
+      loaded = true
     } catch (error) {
-      notifications.error("Error getting user list")
+      notifications.error("Error fetching User Group data")
     }
   })
 </script>
 
-<Layout noPadding>
-  <Layout gap="XS" noPadding>
-    <Heading>Users</Heading>
-    <Body>
-      Each user is assigned to a group that contains apps and permissions. In
-      this section, you can add users, or edit and delete an existing user.
-    </Body>
-  </Layout>
-  <Divider size="S" />
-  <Layout gap="S" noPadding>
-    <div class="users-heading">
-      <Heading size="S">Users</Heading>
+{#if loaded && $fetch.loaded}
+  <Layout noPadding gap="M">
+    <Layout gap="XS" noPadding>
+      <Heading>Users</Heading>
+      <Body>Add users and control who gets access to your published apps.</Body>
+    </Layout>
+    <Divider />
+    <div class="controls">
       <ButtonGroup>
-        <Button disabled secondary>Import users</Button>
-        <Button primary dataCy="add-user" on:click={createUserModal.show}
-          >Add user</Button
+        <Button
+          dataCy="add-user"
+          on:click={createUserModal.show}
+          icon="UserAdd"
+          cta
+          >Add users
+        </Button>
+        <Button
+          on:click={importUsersModal.show}
+          icon="Import"
+          secondary
+          newStyles
         >
+          Import users
+        </Button>
       </ButtonGroup>
-    </div>
-    <div class="field">
-      <Label size="L">Search / filter</Label>
-      <Search bind:value={search} placeholder="" />
+      <div class="controls-right">
+        <Search bind:value={searchEmail} placeholder="Search" />
+        {#if selectedRows.length > 0}
+          <DeleteRowsButton
+            item="user"
+            on:updaterows
+            {selectedRows}
+            {deleteRows}
+          />
+        {/if}
+      </div>
     </div>
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
-      data={filteredUsers || $users}
+      bind:selectedRows
+      data={enrichedUsers}
       allowEditColumns={false}
       allowEditRows={false}
-      allowSelectRows={false}
-      customRenderers={[{ column: "group", component: TagsRenderer }]}
+      allowSelectRows={true}
+      {customRenderers}
     />
+    <div class="pagination">
+      <Pagination
+        page={$fetch.pageNumber + 1}
+        hasPrevPage={$fetch.loading ? false : $fetch.hasPrevPage}
+        hasNextPage={$fetch.loading ? false : $fetch.hasNextPage}
+        goToPrevPage={fetch.prevPage}
+        goToNextPage={fetch.nextPage}
+      />
+    </div>
   </Layout>
-</Layout>
+{/if}
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal on:change={openBasicOnboardingModal} />
+  <AddUserModal {showOnboardingTypeModal} />
 </Modal>
-<Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
+
+<Modal bind:this={inviteConfirmationModal}>
+  <ModalContent
+    showCancelButton={false}
+    title="Invites sent!"
+    confirmText="Done"
+  >
+    <Body size="S">
+      Your users should now recieve an email invite to get access to their
+      Budibase account
+    </Body>
+  </ModalContent>
+</Modal>
+
+<Modal bind:this={onboardingTypeModal}>
+  <OnboardingTypeModal {chooseCreationType} />
+</Modal>
+
+<Modal bind:this={passwordModal}>
+  <PasswordModal
+    createUsersResponse={bulkSaveResponse}
+    userData={userData.users}
+  />
+</Modal>
+
+<Modal bind:this={importUsersModal}>
+  <ImportUsersModal {createUsersFromCsv} />
+</Modal>
 
 <style>
-  .field {
+  .pagination {
     display: flex;
-    align-items: center;
     flex-direction: row;
-    grid-gap: var(--spacing-m);
+    justify-content: flex-end;
   }
-  .field > :global(*) + :global(*) {
-    margin-left: var(--spacing-m);
-  }
-  .users-heading {
+
+  .controls {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .controls-right {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+
+  .controls-right :global(.spectrum-Search) {
+    width: 200px;
   }
 </style>

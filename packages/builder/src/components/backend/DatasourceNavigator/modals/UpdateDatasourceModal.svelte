@@ -2,7 +2,6 @@
   import { datasources } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import { Input, ModalContent, Modal } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
 
   let error = ""
   let modal
@@ -35,7 +34,6 @@
     }
     await datasources.save(updatedDatasource)
     notifications.success(`Datasource ${name} updated successfully.`)
-    analytics.captureEvent(Events.DATASOURCE.UPDATED, updatedDatasource)
     hide()
   }
 </script>

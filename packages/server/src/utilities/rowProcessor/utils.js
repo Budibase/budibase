@@ -65,3 +65,28 @@ exports.processFormulas = (
   }
   return single ? rows[0] : rows
 }
+
+/**
+ * Processes any date columns and ensures that those without the ignoreTimezones
+ * flag set are parsed as UTC rather than local time.
+ */
+exports.processDates = (table, rows) => {
+  let datesWithTZ = []
+  for (let [column, schema] of Object.entries(table.schema)) {
+    if (schema.type !== FieldTypes.DATETIME) {
+      continue
+    }
+    if (!schema.timeOnly && !schema.ignoreTimezones) {
+      datesWithTZ.push(column)
+    }
+  }
+
+  for (let row of rows) {
+    for (let col of datesWithTZ) {
+      if (row[col] && typeof row[col] === "string" && !row[col].endsWith("Z")) {
+        row[col] = new Date(row[col]).toISOString()
+      }
+    }
+  }
+  return rows
+}

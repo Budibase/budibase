@@ -15,16 +15,13 @@ import {
   getLayoutParams,
   getScreenParams,
   generateDevAppID,
-  DocumentTypes,
+  DocumentType,
   AppStatus,
 } from "../../db/utils"
 const {
   BUILTIN_ROLE_IDS,
   AccessController,
 } = require("@budibase/backend-core/roles")
-import { BASE_LAYOUTS } from "../../constants/layouts"
-import { cloneDeep } from "lodash/fp"
-const { processObject } = require("@budibase/string-templates")
 const { CacheKeys, bustCache } = require("@budibase/backend-core/cache")
 const {
   getAllApps,
@@ -45,20 +42,20 @@ const { getTenantId, isMultiTenant } = require("@budibase/backend-core/tenancy")
 import { syncGlobalUsers } from "./user"
 const { app: appCache } = require("@budibase/backend-core/cache")
 import { cleanupAutomations } from "../../automations/utils"
-const {
-  getAppDB,
-  getProdAppDB,
-  updateAppId,
-} = require("@budibase/backend-core/context")
+import { context } from "@budibase/backend-core"
+import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
-import { errors } from "@budibase/backend-core"
+import { errors, events, migrations } from "@budibase/backend-core"
+import { App, Layout, Screen, MigrationType } from "@budibase/types"
+import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
+import { groups } from "@budibase/pro"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
 // utility function, need to do away with this
 async function getLayouts() {
-  const db = getAppDB()
+  const db = context.getAppDB()
   return (
     await db.allDocs(
       getLayoutParams(null, {
@@ -69,7 +66,7 @@ async function getLayouts() {
 }
 
 async function getScreens() {
-  const db = getAppDB()
+  const db = context.getAppDB()
   return (
     await db.allDocs(
       getScreenParams(null, {
@@ -132,9 +129,9 @@ async function createInstance(template: any) {
   const tenantId = isMultiTenant() ? getTenantId() : null
   const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
-  await updateAppId(appId)
+  await context.updateAppId(appId)
 
-  const db = getAppDB()
+  const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
     // view collation information, read before writing any complex views:
@@ -191,7 +188,7 @@ export const fetch = async (ctx: any) => {
     }
   }
 
-  ctx.body = apps
+  ctx.body = await checkAppMetadata(apps)
 }
 
 export const fetchAppDefinition = async (ctx: any) => {
@@ -210,8 +207,8 @@ export const fetchAppDefinition = async (ctx: any) => {
 }
 
 export const fetchAppPackage = async (ctx: any) => {
-  const db = getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  const db = context.getAppDB()
+  const application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
 
@@ -234,7 +231,7 @@ const performAppCreate = async (ctx: any) => {
   const apps = await getAllApps({ dev: true })
   const name = ctx.request.body.name
   checkAppName(ctx, apps, name)
-  const url = exports.getAppUrl(ctx)
+  const url = getAppUrl(ctx)
   checkAppUrl(ctx, apps, url)
 
   const { useTemplate, templateKey, templateString } = ctx.request.body
@@ -248,40 +245,72 @@ const performAppCreate = async (ctx: any) => {
   }
   const instance = await createInstance(instanceConfig)
   const appId = instance._id
+  const db = context.getAppDB()
 
-  const db = getAppDB()
-  let _rev
-  try {
-    // if template there will be an existing doc
-    const existing = await db.get(DocumentTypes.APP_METADATA)
-    _rev = existing._rev
-  } catch (err) {
-    // nothing to do
-  }
-  const newApplication = {
-    _id: DocumentTypes.APP_METADATA,
-    _rev,
-    appId: instance._id,
+  let newApplication: App = {
+    _id: DocumentType.APP_METADATA,
+    _rev: undefined,
+    appId,
     type: "app",
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
     name: name,
     url: url,
-    template: ctx.request.body.template,
-    instance: instance,
+    template: templateKey,
+    instance,
     tenantId: getTenantId(),
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     status: AppStatus.DEV,
+    navigation: {
+      navigation: "Top",
+      title: name,
+      navWidth: "Large",
+      navBackground: "var(--spectrum-global-color-gray-100)",
+      links: [
+        {
+          url: "/home",
+          text: "Home",
+        },
+      ],
+    },
+    theme: "spectrum--light",
+    customTheme: {
+      buttonBorderRadius: "16px",
+    },
   }
+
+  // If we used a template or imported an app there will be an existing doc.
+  // Fetch and migrate some metadata from the existing app.
+  try {
+    const existing: App = await db.get(DocumentType.APP_METADATA)
+    const keys: (keyof App)[] = [
+      "_rev",
+      "navigation",
+      "theme",
+      "customTheme",
+      "icon",
+    ]
+    keys.forEach(key => {
+      if (existing[key]) {
+        // @ts-ignore
+        newApplication[key] = existing[key]
+      }
+    })
+
+    // Migrate navigation settings and screens if required
+    if (existing) {
+      const navigation = await migrateAppNavigation()
+      if (navigation) {
+        newApplication.navigation = navigation
+      }
+    }
+  } catch (err) {
+    // Nothing to do
+  }
+
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
-
-  // Only create the default home screens and layout if we aren't importing
-  // an app
-  if (useTemplate !== "true") {
-    await createEmptyAppPackage(ctx, newApplication)
-  }
 
   /* istanbul ignore next */
   if (!env.isTest()) {
@@ -292,10 +321,42 @@ const performAppCreate = async (ctx: any) => {
   return newApplication
 }
 
-const appPostCreate = async (ctx: any, appId: string) => {
+const creationEvents = async (request: any, app: App) => {
+  let creationFns: ((app: App) => Promise<void>)[] = []
+
+  const body = request.body
+  if (body.useTemplate === "true") {
+    // from template
+    if (body.templateKey && body.templateKey !== "undefined") {
+      creationFns.push(a => events.app.templateImported(a, body.templateKey))
+    }
+    // from file
+    else if (request.files?.templateFile) {
+      creationFns.push(a => events.app.fileImported(a))
+    }
+    // unknown
+    else {
+      console.error("Could not determine template creation event")
+    }
+  }
+  creationFns.push(a => events.app.created(a))
+
+  for (let fn of creationFns) {
+    await fn(app)
+  }
+}
+
+const appPostCreate = async (ctx: any, app: App) => {
+  const tenantId = getTenantId()
+  await migrations.backPopulateMigrations({
+    type: MigrationType.APP,
+    tenantId,
+    appId: app.appId,
+  })
+  await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
-    const { rows } = await getUniqueRows([appId])
+    const { rows } = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
@@ -305,7 +366,7 @@ const appPostCreate = async (ctx: any, appId: string) => {
           // this import resulted in row usage exceeding the quota
           // delete the app
           // skip pre and post steps as no rows have been added to quotas yet
-          ctx.params.appId = appId
+          ctx.params.appId = app.appId
           await destroyApp(ctx)
         }
         throw err
@@ -316,7 +377,7 @@ const appPostCreate = async (ctx: any, appId: string) => {
 
 export const create = async (ctx: any) => {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
-  await appPostCreate(ctx, newApplication.appId)
+  await appPostCreate(ctx, newApplication)
   await bustCache(CacheKeys.CHECKLIST)
   ctx.body = newApplication
   ctx.status = 200
@@ -331,21 +392,22 @@ export const update = async (ctx: any) => {
   if (name) {
     checkAppName(ctx, apps, name, ctx.params.appId)
   }
-  const url = await exports.getAppUrl(ctx)
+  const url = getAppUrl(ctx)
   if (url) {
     checkAppUrl(ctx, apps, url, ctx.params.appId)
     ctx.request.body.url = url
   }
 
-  const data = await updateAppPackage(ctx.request.body, ctx.params.appId)
+  const app = await updateAppPackage(ctx.request.body, ctx.params.appId)
+  await events.app.updated(app)
   ctx.status = 200
-  ctx.body = data
+  ctx.body = app
 }
 
 export const updateClient = async (ctx: any) => {
   // Get current app version
-  const db = getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  const db = context.getAppDB()
+  const application = await db.get(DocumentType.APP_METADATA)
   const currentVersion = application.version
 
   // Update client library and manifest
@@ -355,19 +417,21 @@ export const updateClient = async (ctx: any) => {
   }
 
   // Update versions in app package
+  const updatedToVersion = packageJson.version
   const appPackageUpdates = {
-    version: packageJson.version,
+    version: updatedToVersion,
     revertableVersion: currentVersion,
   }
-  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  await events.app.versionUpdated(app, currentVersion, updatedToVersion)
   ctx.status = 200
-  ctx.body = data
+  ctx.body = app
 }
 
 export const revertClient = async (ctx: any) => {
   // Check app can be reverted
-  const db = getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  const db = context.getAppDB()
+  const application = await db.get(DocumentType.APP_METADATA)
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
   }
@@ -378,13 +442,16 @@ export const revertClient = async (ctx: any) => {
   }
 
   // Update versions in app package
+  const currentVersion = application.version
+  const revertedToVersion = application.revertableVersion
   const appPackageUpdates = {
-    version: application.revertableVersion,
+    version: revertedToVersion,
     revertableVersion: null,
   }
-  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  await events.app.versionReverted(app, currentVersion, revertedToVersion)
   ctx.status = 200
-  ctx.body = data
+  ctx.body = app
 }
 
 const destroyApp = async (ctx: any) => {
@@ -395,13 +462,15 @@ const destroyApp = async (ctx: any) => {
     appId = getProdAppID(appId)
   }
 
-  const db = isUnpublish ? getProdAppDB() : getAppDB()
+  const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
+  const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
 
   if (isUnpublish) {
-    await quotas.removePublishedApp()
+    await events.app.unpublished(app)
   } else {
     await quotas.removeApp()
+    await events.app.deleted(app)
   }
 
   /* istanbul ignore next */
@@ -427,6 +496,7 @@ const preDestroyApp = async (ctx: any) => {
 
 const postDestroyApp = async (ctx: any) => {
   const rowCount = ctx.rowCount
+  await groups.cleanupApp(ctx.params.appId)
   if (rowCount) {
     await quotas.removeRows(rowCount)
   }
@@ -460,7 +530,7 @@ export const sync = async (ctx: any, next: any) => {
 
   try {
     // specific case, want to make sure setup is skipped
-    const prodDb = getProdAppDB({ skip_setup: true })
+    const prodDb = context.getProdAppDB({ skip_setup: true })
     const info = await prodDb.info()
     if (info.error) throw info.error
   } catch (err) {
@@ -478,11 +548,7 @@ export const sync = async (ctx: any, next: any) => {
   })
   let error
   try {
-    await replication.replicate({
-      filter: function (doc: any) {
-        return doc._id !== DocumentTypes.APP_METADATA
-      },
-    })
+    await replication.replicate(replication.appReplicateOpts())
   } catch (err) {
     error = err
   } finally {
@@ -501,33 +567,75 @@ export const sync = async (ctx: any, next: any) => {
   }
 }
 
-const updateAppPackage = async (appPackage: any, appId: any) => {
-  const db = getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+export const updateAppPackage = async (appPackage: any, appId: any) => {
+  return context.doInAppContext(appId, async () => {
+    const db = context.getAppDB()
+    const application = await db.get(DocumentType.APP_METADATA)
 
-  const newAppPackage = { ...application, ...appPackage }
-  if (appPackage._rev !== application._rev) {
-    newAppPackage._rev = application._rev
-  }
+    const newAppPackage = { ...application, ...appPackage }
+    if (appPackage._rev !== application._rev) {
+      newAppPackage._rev = application._rev
+    }
 
-  // the locked by property is attached by server but generated from
-  // Redis, shouldn't ever store it
-  delete newAppPackage.lockedBy
+    // the locked by property is attached by server but generated from
+    // Redis, shouldn't ever store it
+    delete newAppPackage.lockedBy
 
-  const response = await db.put(newAppPackage)
-  // remove any cached metadata, so that it will be updated
-  await appCache.invalidateAppMetadata(appId)
-  return response
+    await db.put(newAppPackage)
+    // remove any cached metadata, so that it will be updated
+    await appCache.invalidateAppMetadata(appId)
+    return newAppPackage
+  })
 }
 
-const createEmptyAppPackage = async (ctx: any, app: any) => {
-  const db = getAppDB()
+const migrateAppNavigation = async () => {
+  const db = context.getAppDB()
+  const existing: App = await db.get(DocumentType.APP_METADATA)
+  const layouts: Layout[] = await getLayouts()
+  const screens: Screen[] = await getScreens()
 
-  let screensAndLayouts = []
-  for (let layout of BASE_LAYOUTS) {
-    const cloned = cloneDeep(layout)
-    screensAndLayouts.push(await processObject(cloned, app))
+  // Migrate all screens, removing custom layouts
+  for (let screen of screens) {
+    if (!screen.layoutId) {
+      continue
+    }
+    const layout = layouts.find(layout => layout._id === screen.layoutId)
+    screen.layoutId = undefined
+    screen.showNavigation = layout?.props.navigation !== "None"
+    screen.width = layout?.props.width || "Large"
+    await db.put(screen)
   }
 
-  await db.bulkDocs(screensAndLayouts)
+  // Migrate layout navigation settings
+  const { name, customTheme } = existing
+  const layout = layouts?.find(
+    (layout: Layout) => layout._id === BASE_LAYOUT_PROP_IDS.PRIVATE
+  )
+  if (layout && !existing.navigation) {
+    let navigationSettings: any = {
+      navigation: "Top",
+      title: name,
+      navWidth: "Large",
+      navBackground:
+        customTheme?.navBackground || "var(--spectrum-global-color-gray-50)",
+      navTextColor:
+        customTheme?.navTextColor || "var(--spectrum-global-color-gray-800)",
+    }
+    if (layout) {
+      navigationSettings.hideLogo = layout.props.hideLogo
+      navigationSettings.hideTitle = layout.props.hideTitle
+      navigationSettings.title = layout.props.title || name
+      navigationSettings.logoUrl = layout.props.logoUrl
+      navigationSettings.links = layout.props.links
+      navigationSettings.navigation = layout.props.navigation || "Top"
+      navigationSettings.sticky = layout.props.sticky
+      navigationSettings.navWidth = layout.props.width || "Large"
+      if (navigationSettings.navigation === "None") {
+        navigationSettings.navigation = "Top"
+      }
+    }
+    return navigationSettings
+  } else {
+    return null
+  }
 }

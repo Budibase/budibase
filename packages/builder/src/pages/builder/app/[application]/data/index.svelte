@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { redirect } from "@roxi/routify"
   import { onMount } from "svelte"
   import { admin } from "stores/portal"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
@@ -14,10 +14,9 @@
     if (!setupComplete && !$admin.isDev) {
       modal.show()
     } else {
-      $goto("./table")
+      $redirect("./table")
     }
   })
 </script>
 
 <CreateDatasourceModal bind:modal />
-<!-- routify:options index=false -->

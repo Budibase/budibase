@@ -2,6 +2,8 @@ const chalk = require("chalk")
 const fs = require("fs")
 const axios = require("axios")
 const path = require("path")
+const progress = require("cli-progress")
+const { join } = require("path")
 
 exports.downloadFile = async (url, filePath) => {
   filePath = path.resolve(filePath)
@@ -55,4 +57,30 @@ exports.parseEnv = env => {
     }
   }
   return result
+}
+
+exports.progressBar = total => {
+  const bar = new progress.SingleBar({}, progress.Presets.shades_classic)
+  bar.start(total, 0)
+  return bar
+}
+
+exports.checkSlashesInUrl = url => {
+  return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
+}
+
+exports.moveDirectory = (oldPath, newPath) => {
+  const files = fs.readdirSync(oldPath)
+  // check any file exists already
+  for (let file of files) {
+    if (fs.existsSync(join(newPath, file))) {
+      throw new Error(
+        "Unable to remove top level directory - some skeleton files already exist."
+      )
+    }
+  }
+  for (let file of files) {
+    fs.renameSync(join(oldPath, file), join(newPath, file))
+  }
+  fs.rmdirSync(oldPath)
 }

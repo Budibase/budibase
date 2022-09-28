@@ -1,7 +1,7 @@
 import { writable, get } from "svelte/store"
 import { datasources, integrations, tables, views } from "./"
 import { API } from "api"
-import { duplicateName } from "../../helpers/duplicate"
+import { duplicateName } from "helpers/duplicate"
 
 const sortQueries = queryList => {
   queryList.sort((q1, q2) => {
@@ -90,8 +90,8 @@ export function createQueriesStore() {
       // Assume all the fields are strings and create a basic schema from the
       // unique fields returned by the server
       const schema = {}
-      for (let field of result.schemaFields) {
-        schema[field] = "string"
+      for (let [field, type] of Object.entries(result.schemaFields)) {
+        schema[field] = type || "string"
       }
       return { ...result, schema, rows: result.rows || [] }
     },

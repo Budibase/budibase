@@ -1,35 +1,31 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { Icon, ActionGroup, Tabs, Tab, notifications } from "@budibase/bbui"
+  import { Icon, Tabs, Tab, Heading, notifications } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import DeployNavigation from "components/deploy/DeployNavigation.svelte"
   import { API } from "api"
-  import { auth, admin } from "stores/portal"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
-  import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
-  import UpgradeModal from "components/upgrade/UpgradeModal.svelte"
   import { onMount, onDestroy } from "svelte"
 
   export let application
 
   // Get Package and set store
   let promise = getPackage()
+  // let betaAccess = false
 
   // Sync once when you load the app
   let hasSynced = false
+
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
 
-  const previewApp = () => {
-    window.open(`/${application}`)
-  }
-
   async function getPackage() {
     try {
+      store.actions.reset()
       const pkg = await API.fetchAppPackage(application)
       await store.actions.initialise(pkg)
       await automationStore.actions.fetch()
@@ -62,6 +58,9 @@
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
+        // check if user has beta access
+        // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
+        // betaAccess = betaResponse.access
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }
@@ -70,7 +69,10 @@
   })
 
   onDestroy(() => {
-    store.actions.reset()
+    store.update(state => {
+      state.appId = null
+      return state
+    })
   })
 </script>
 
@@ -81,37 +83,31 @@
   <div class="root">
     <div class="top-nav">
       <div class="topleftnav">
-        <button class="home-logo">
-          <img
-            src={Logo}
-            alt="budibase icon"
-            on:click={() => $goto(`../../portal/`)}
-          />
-        </button>
-
-        <div class="tabs">
-          <Tabs {selected}>
-            {#each $layout.children as { path, title }}
-              <Tab
-                quiet
-                selected={$isActive(path)}
-                on:click={topItemNavigate(path)}
-                title={capitalise(title)}
-              />
-            {/each}
-          </Tabs>
-        </div>
-
-        <!-- This gets all indexable subroutes and sticks them in the top nav. -->
-        <ActionGroup />
+        <Icon
+          size="M"
+          name="ArrowLeft"
+          hoverable
+          on:click={() => $goto("../../portal/apps")}
+        />
+        <Heading size="XS">{$store.name || "App"}</Heading>
+      </div>
+      <div class="topcenternav">
+        <Tabs {selected} size="M">
+          {#each $layout.children as { path, title }}
+            <Tab
+              quiet
+              selected={$isActive(path)}
+              on:click={topItemNavigate(path)}
+              title={capitalise(title)}
+            />
+          {/each}
+        </Tabs>
       </div>
       <div class="toprightnav">
-        {#if $admin.cloud && $auth.user.account}
-          <UpgradeModal />
-        {/if}
-        <VersionModal />
+        <div class="version">
+          <VersionModal />
+        </div>
         <RevertModal />
-        <Icon name="Play" hoverable on:click={previewApp} />
         <DeployNavigation {application} />
       </div>
     </div>
@@ -137,14 +133,39 @@
   }
 
   .top-nav {
-    flex: 0 0 auto;
+    flex: 0 0 60px;
     background: var(--background);
     padding: 0 var(--spacing-xl);
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    flex-direction: row;
     box-sizing: border-box;
-    justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
     border-bottom: var(--border-light);
+  }
+
+  .topleftnav {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+  .topleftnav :global(.spectrum-Heading) {
+    flex: 1 1 auto;
+    width: 0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topcenternav {
+    display: flex;
+    position: relative;
+    margin-bottom: -2px;
+  }
+  .topcenternav :global(.spectrum-Tabs-itemLabel) {
+    font-weight: 600;
   }
 
   .toprightnav {
@@ -155,34 +176,7 @@
     gap: var(--spacing-xl);
   }
 
-  .topleftnav {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-  }
-
-  .tabs {
-    display: flex;
-    position: relative;
-    margin-bottom: -1px;
-  }
-
-  .home-logo {
-    border-style: none;
-    background-color: rgba(0, 0, 0, 0);
-    cursor: pointer;
-    outline: none;
-    padding: 0 10px 0 0;
-    align-items: center;
-    height: 32px;
-  }
-
-  .home-logo:active {
-    outline: none;
-  }
-
-  .home-logo img {
-    height: 30px;
+  .version {
+    margin-right: var(--spacing-s);
   }
 </style>

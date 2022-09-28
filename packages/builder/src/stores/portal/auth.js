@@ -6,6 +6,7 @@ import analytics from "analytics"
 export function createAuthStore() {
   const auth = writable({
     user: null,
+    accountPortalAccess: false,
     tenantId: "default",
     tenantSet: false,
     loaded: false,
@@ -32,6 +33,7 @@ export function createAuthStore() {
     }
     return {
       user: $store.user,
+      accountPortalAccess: $store.accountPortalAccess,
       tenantId: $store.tenantId,
       tenantSet: $store.tenantSet,
       loaded: $store.loaded,
@@ -46,6 +48,7 @@ export function createAuthStore() {
     auth.update(store => {
       store.loaded = true
       store.user = user
+      store.accountPortalAccess = user?.accountPortalAccess
       if (user) {
         store.tenantId = user.tenantId || "default"
         store.tenantSet = true
@@ -57,16 +60,21 @@ export function createAuthStore() {
       analytics
         .activate()
         .then(() => {
-          analytics.identify(user._id, user)
-          analytics.showChat({
-            email: user.email,
-            created_at: (user.createdAt || Date.now()) / 1000,
-            name: user.account?.name,
-            user_id: user._id,
-            tenant: user.tenantId,
-            "Company size": user.account?.size,
-            "Job role": user.account?.profession,
-          })
+          analytics.identify(user._id)
+          analytics.showChat(
+            {
+              email: user.email,
+              created_at: (user.createdAt || Date.now()) / 1000,
+              name: user.account?.name,
+              user_id: user._id,
+              tenant: user.tenantId,
+              admin: user?.admin?.global,
+              builder: user?.builder?.global,
+              "Company size": user.account?.size,
+              "Job role": user.account?.profession,
+            },
+            !!user?.account
+          )
         })
         .catch(() => {
           // This request may fail due to browser extensions blocking requests

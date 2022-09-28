@@ -1,9 +1,15 @@
-const redis = require("../redis/authRedis")
-const env = require("../environment")
-const { getTenantId } = require("../context")
+const BaseCache = require("./base")
+
+const GENERIC = new BaseCache()
 
 exports.CacheKeys = {
   CHECKLIST: "checklist",
+  INSTALLATION: "installation",
+  ANALYTICS_ENABLED: "analyticsEnabled",
+  UNIQUE_TENANT_ID: "uniqueTenantId",
+  EVENTS: "events",
+  BACKFILL_METADATA: "backfillMetadata",
+  EVENTS_RATE_LIMIT: "eventsRateLimit",
 }
 
 exports.TTL = {
@@ -12,38 +18,13 @@ exports.TTL = {
   ONE_DAY: 86400,
 }
 
-function generateTenantKey(key) {
-  const tenantId = getTenantId()
-  return `${key}:${tenantId}`
+function performExport(funcName) {
+  return (...args) => GENERIC[funcName](...args)
 }
 
-exports.withCache = async (key, ttl, fetchFn) => {
-  key = generateTenantKey(key)
-  const client = await redis.getCacheClient()
-  const cachedValue = await client.get(key)
-  if (cachedValue) {
-    return cachedValue
-  }
-
-  try {
-    const fetchedValue = await fetchFn()
-
-    if (!env.isTest()) {
-      await client.store(key, fetchedValue, ttl)
-    }
-    return fetchedValue
-  } catch (err) {
-    console.error("Error fetching before cache - ", err)
-    throw err
-  }
-}
-
-exports.bustCache = async key => {
-  const client = await redis.getCacheClient()
-  try {
-    await client.delete(generateTenantKey(key))
-  } catch (err) {
-    console.error("Error busting cache - ", err)
-    throw err
-  }
-}
+exports.keys = performExport("keys")
+exports.get = performExport("get")
+exports.store = performExport("store")
+exports.delete = performExport("delete")
+exports.withCache = performExport("withCache")
+exports.bustCache = performExport("bustCache")

@@ -1,15 +1,23 @@
 import { svelte } from "@sveltejs/vite-plugin-svelte"
 import replace from "@rollup/plugin-replace"
+import { defineConfig, loadEnv } from "vite"
 
 import path from "path"
 
-export default ({ mode }) => {
+export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
+  const env = loadEnv(mode, process.cwd())
   return {
     server: {
       fs: {
         strict: false,
       },
+      hmr: {
+        protocol: env.VITE_HMR_PROTOCOL || "ws",
+        clientPort: env.VITE_HMR_CLIENT_PORT || 3000,
+        path: env.VITE_HMR_PATH || "/",
+      },
+      port: 3000,
     },
     base: "/builder/",
     build: {
@@ -31,7 +39,6 @@ export default ({ mode }) => {
         "process.env.INTERCOM_TOKEN": JSON.stringify(
           process.env.INTERCOM_TOKEN
         ),
-        "process.env.POSTHOG_URL": JSON.stringify(process.env.POSTHOG_URL),
         "process.env.SENTRY_DSN": JSON.stringify(process.env.SENTRY_DSN),
       }),
     ],
@@ -80,4 +87,4 @@ export default ({ mode }) => {
       ],
     },
   }
-}
+})

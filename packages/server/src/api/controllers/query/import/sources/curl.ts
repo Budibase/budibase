@@ -71,6 +71,10 @@ export class Curl extends ImportSource {
     }
   }
 
+  getImportSource(): string {
+    return "curl"
+  }
+
   getQueries = async (datasourceId: string): Promise<Query[]> => {
     const url = this.getUrl()
     const name = url.pathname

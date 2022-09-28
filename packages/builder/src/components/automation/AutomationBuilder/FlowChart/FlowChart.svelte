@@ -12,6 +12,7 @@
     notifications,
     Modal,
   } from "@budibase/bbui"
+  import { ActionStepID } from "constants/backend/automations"
 
   export let automation
   let testDataModal
@@ -65,7 +66,7 @@
           <ActionButton
             disabled={!$automationStore.selectedAutomation?.testResults}
             on:click={() => {
-              $automationStore.selectedAutomation.automation.showTestPanel = true
+              $automationStore.showTestPanel = true
             }}
             size="M">Test Details</ActionButton
           >
@@ -82,7 +83,7 @@
       in:fly|local={{ x: 500, duration: 500 }}
       out:fly|local={{ x: 500, duration: 500 }}
     >
-      {#if block.stepId !== "LOOP"}
+      {#if block.stepId !== ActionStepID.LOOP}
         <FlowItem {testDataModal} {block} />
       {/if}
     </div>

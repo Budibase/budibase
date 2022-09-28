@@ -13,7 +13,7 @@ const {
 } = require("../../middleware/appInfo")
 const { automationValidator } = require("./utils/validators")
 
-const router = Router()
+const router = new Router()
 
 router
   .get(
@@ -50,6 +50,16 @@ router
     authorized(BUILDER),
     automationValidator(false),
     controller.create
+  )
+  .post(
+    "/api/automations/logs/search",
+    authorized(BUILDER),
+    controller.logSearch
+  )
+  .delete(
+    "/api/automations/logs",
+    authorized(BUILDER),
+    controller.clearLogError
   )
   .delete(
     "/api/automations/:id/:rev",

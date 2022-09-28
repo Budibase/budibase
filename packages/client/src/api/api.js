@@ -23,9 +23,9 @@ export const API = createAPIClient({
     }
 
     // Add role header
-    const role = get(devToolsStore).role
-    if (role) {
-      headers["x-budibase-role"] = role
+    const devToolsState = get(devToolsStore)
+    if (devToolsState.enabled && devToolsState.role) {
+      headers["x-budibase-role"] = devToolsState.role
     }
   },
 
@@ -34,7 +34,11 @@ export const API = createAPIClient({
   // Or we could check error.status and redirect to login on a 403 etc.
   onError: error => {
     const { status, method, url, message, handled } = error || {}
-    const ignoreErrorUrls = ["bbtel", "/api/global/self"]
+    const ignoreErrorUrls = [
+      "bbtel",
+      "/api/global/self",
+      "/api/tables/ta_users",
+    ]
 
     // Log any errors that we haven't manually handled
     if (!handled) {
@@ -54,7 +58,16 @@ export const API = createAPIClient({
         }
       }
       if (!ignore) {
-        notificationStore.actions.error(message)
+        const validationErrors = error?.json?.validationErrors
+        if (validationErrors) {
+          for (let field in validationErrors) {
+            notificationStore.actions.error(
+              `${field} ${validationErrors[field]}`
+            )
+          }
+        } else {
+          notificationStore.actions.error(message)
+        }
       }
     }
 

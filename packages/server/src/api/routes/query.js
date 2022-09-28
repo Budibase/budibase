@@ -16,7 +16,7 @@ const {
   generateQueryValidation,
 } = require("../controllers/query/validation")
 
-const router = Router()
+const router = new Router()
 
 router
   .get("/api/queries", authorized(BUILDER), queryController.fetch)

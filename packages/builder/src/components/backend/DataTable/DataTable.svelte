@@ -14,7 +14,13 @@
   import Table from "./Table.svelte"
   import { TableNames } from "constants"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
-  import { Pagination, Heading, Body, Layout } from "@budibase/bbui"
+  import {
+    Pagination,
+    Heading,
+    Body,
+    Layout,
+    notifications,
+  } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
 
@@ -29,6 +35,13 @@
   $: fetch = createFetch(id)
   $: hasCols = checkHasCols(schema)
   $: hasRows = !!$fetch.rows?.length
+  $: showError($fetch.error)
+
+  const showError = error => {
+    if (error) {
+      notifications.error(error?.message || "Unable to fetch data.")
+    }
+  }
 
   const enrichSchema = schema => {
     let tempSchema = { ...schema }
@@ -154,6 +167,7 @@
         {/if}
         <HideAutocolumnButton bind:hideAutocolumns />
         <ImportButton
+          disabled={$tables.selected?._id === "ta_users"}
           tableId={$tables.selected?._id}
           on:updaterows={onUpdateRows}
         />

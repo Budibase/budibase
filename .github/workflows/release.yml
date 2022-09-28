@@ -16,11 +16,21 @@ on:
       - 'package.json'
       - 'yarn.lock'
  workflow_dispatch:
+  inputs:
+    versioning:
+      type: choice
+      description: "Versioning type: patch, minor, major"
+      default: patch
+      options:
+        - patch
+        - minor
+        - major
+      required: true
 
 env:
-  POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
+  # Posthog token used by ui at build time 
+  POSTHOG_TOKEN: phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
-  POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
   SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
   PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
@@ -46,6 +56,7 @@ jobs:
       - run: yarn bootstrap
       - run: yarn lint
       - run: yarn build
+      - run: yarn build:sdk
       - run: yarn test
 
       - name: Configure AWS Credentials
@@ -58,6 +69,7 @@ jobs:
       - name: Publish budibase packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_VERSION_TYPE: ${{ github.event.inputs.versioning }}
         run: |
           # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
           git config --global user.name "Budibase Release Bot"

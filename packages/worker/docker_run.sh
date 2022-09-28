@@ -1,3 +1,5 @@
+#!/bin/sh
+
 if [[ -z $CLUSTER_MODE ]]; then
   yarn run:docker
 else

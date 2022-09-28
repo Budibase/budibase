@@ -17,7 +17,9 @@ const {
   checkBuilderEndpoint,
 } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
+const { basicScreen, basicLayout } = setup.structures
 const { AppStatus } = require("../../../db/utils")
+const { events } = require("@budibase/backend-core")
 
 describe("/applications", () => {
   let request = setup.getRequest()
@@ -28,17 +30,48 @@ describe("/applications", () => {
   beforeEach(async () => {
     await clearAllApps()
     await config.init()
+    jest.clearAllMocks()
   })
 
   describe("create", () => {
-    it("returns a success message when the application is successfully created", async () => {
+    it("creates empty app", async () => {
       const res = await request
         .post("/api/applications")
-        .send({ name: "My App" })
+        .field("name", "My App")
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
+      expect(events.app.created).toBeCalledTimes(1)
+    })
+
+    it("creates app from template", async () => {
+      const res = await request
+        .post("/api/applications")
+        .field("name", "My App")
+        .field("useTemplate", "true")
+        .field("templateKey", "test")
+        .field("templateString", "{}") // override the file download
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body._id).toBeDefined()
+      expect(events.app.created).toBeCalledTimes(1)
+      expect(events.app.templateImported).toBeCalledTimes(1)
+    })
+
+    it("creates app from file", async () => {
+      const res = await request
+        .post("/api/applications")
+        .field("name", "My App")
+        .field("useTemplate", "true")
+        .set(config.defaultHeaders())
+        .attach("templateFile", "src/api/routes/tests/data/export.txt")
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body._id).toBeDefined()
+      expect(events.app.created).toBeCalledTimes(1)
+      expect(events.app.fileImported).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -48,6 +81,31 @@ describe("/applications", () => {
         url: `/api/applications`,
         body: { name: "My App" },
       })
+    })
+
+    it("migrates navigation settings from old apps", async () => {
+      const res = await request
+        .post("/api/applications")
+        .field("name", "Old App")
+        .field("useTemplate", "true")
+        .set(config.defaultHeaders())
+        .attach("templateFile", "src/api/routes/tests/data/old-app.txt")
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body._id).toBeDefined()
+      expect(res.body.navigation).toBeDefined()
+      expect(res.body.navigation.hideLogo).toBe(true)
+      expect(res.body.navigation.title).toBe("Custom Title")
+      expect(res.body.navigation.hideLogo).toBe(true)
+      expect(res.body.navigation.navigation).toBe("Left")
+      expect(res.body.navigation.navBackground).toBe(
+        "var(--spectrum-global-color-blue-600)"
+      )
+      expect(res.body.navigation.navTextColor).toBe(
+        "var(--spectrum-global-color-gray-50)"
+      )
+      expect(events.app.created).toBeCalledTimes(1)
+      expect(events.app.fileImported).toBeCalledTimes(1)
     })
   })
 
@@ -74,8 +132,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      // should have empty packages
-      expect(res.body.layouts.length).toEqual(2)
+      expect(res.body.libraries.length).toEqual(1)
     })
   })
 
@@ -87,7 +144,7 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.application).toBeDefined()
-      expect(res.body.layouts.length).toEqual(2)
+      expect(res.body.application.appId).toEqual(config.getAppId())
     })
   })
 
@@ -101,7 +158,32 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body.rev).toBeDefined()
+      expect(res.body._rev).toBeDefined()
+      expect(events.app.updated).toBeCalledTimes(1)
+    })
+  })
+
+  describe("delete", () => {
+    it("should delete app", async () => {
+      await config.createApp("to-delete")
+      const appId = config.getAppId()
+      await request
+        .delete(`/api/applications/${appId}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.deleted).toBeCalledTimes(1)
+    })
+
+    it("should unpublish app", async () => {
+      await config.createApp("to-unpublish")
+      const appId = config.getProdAppId()
+      await request
+        .delete(`/api/applications/${appId}?unpublish=true`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.unpublished).toBeCalledTimes(1)
     })
   })
 
@@ -113,6 +195,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
+      expect(events.app.versionUpdated).toBeCalledTimes(1)
     })
     it("should be able to revert the app client library version", async () => {
       // We need to first update the version so that we can then revert
@@ -126,6 +209,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
+      expect(events.app.versionReverted).toBeCalledTimes(1)
     })
   })
 
@@ -141,7 +225,7 @@ describe("/applications", () => {
         .set(headers)
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body.rev).toBeDefined()
+      expect(res.body._rev).toBeDefined()
       // retrieve the app to check it
       const getRes = await request
         .get(`/api/applications/${config.getAppId()}/appPackage`)

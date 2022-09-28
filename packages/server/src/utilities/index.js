@@ -59,6 +59,7 @@ exports.clientLibraryPath = (appId, version) => {
     let url = `${exports.objectStoreUrl()}/${sanitizeKey(
       appId
     )}/budibase-client.js`
+
     // append app version to bust the cache
     if (version) {
       url += `?v=${version}`
@@ -160,4 +161,12 @@ exports.convertBookmark = bookmark => {
     return parseFloat(bookmark)
   }
   return bookmark
+}
+
+exports.isQsTrue = param => {
+  if (typeof param === "string") {
+    return param.toLowerCase() === "true"
+  } else {
+    return param === true
+  }
 }

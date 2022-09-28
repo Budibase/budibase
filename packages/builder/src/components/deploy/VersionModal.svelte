@@ -1,11 +1,11 @@
 <script>
   import {
-    Icon,
     Modal,
     notifications,
     ModalContent,
     Body,
     Button,
+    StatusLight,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { API } from "api"
@@ -67,10 +67,10 @@
   }
 </script>
 
-{#if !hideIcon}
-  <div class="icon-wrapper" class:highlight={updateAvailable}>
-    <Icon name="Refresh" hoverable on:click={updateModal.show} />
-  </div>
+{#if !hideIcon && updateAvailable}
+  <StatusLight hoverable on:click={updateModal.show} notice>
+    Update available
+  </StatusLight>
 {/if}
 <Modal bind:this={updateModal}>
   <ModalContent
@@ -106,12 +106,3 @@
     {/if}
   </ModalContent>
 </Modal>
-
-<style>
-  .icon-wrapper {
-    display: contents;
-  }
-  .icon-wrapper.highlight :global(svg) {
-    color: var(--spectrum-global-color-blue-600);
-  }
-</style>

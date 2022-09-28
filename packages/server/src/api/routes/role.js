@@ -4,7 +4,7 @@ const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("@budibase/backend-core/permissions")
 const { roleValidator } = require("./utils/validators")
 
-const router = Router()
+const router = new Router()
 
 router
   .post("/api/roles", authorized(BUILDER), roleValidator(), controller.save)

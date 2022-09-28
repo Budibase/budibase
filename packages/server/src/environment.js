@@ -1,19 +1,19 @@
 const { join } = require("path")
 
 function isTest() {
+  return isCypress() || isJest()
+}
+
+function isJest() {
   return (
     process.env.NODE_ENV === "jest" ||
-    process.env.NODE_ENV === "cypress" ||
     (process.env.JEST_WORKER_ID != null &&
       process.env.JEST_WORKER_ID !== "null")
   )
 }
 
 function isDev() {
-  return (
-    process.env.NODE_ENV !== "production" &&
-    process.env.BUDIBASE_ENVIRONMENT !== "production"
-  )
+  return process.env.NODE_ENV !== "production"
 }
 
 function isCypress() {
@@ -37,8 +37,8 @@ function parseIntSafe(number) {
 let inThread = false
 
 module.exports = {
-  // important
-  PORT: process.env.PORT || process.env.APP_PORT,
+  // important - prefer app port to generic port
+  PORT: process.env.APP_PORT || process.env.PORT,
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,
@@ -60,20 +60,26 @@ module.exports = {
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   TEMPLATE_REPOSITORY: process.env.TEMPLATE_REPOSITORY || "app",
   DISABLE_AUTO_PROD_APP_SYNC: process.env.DISABLE_AUTO_PROD_APP_SYNC,
+  SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   // minor
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
   LOG_LEVEL: process.env.LOG_LEVEL,
-  AUTOMATION_MAX_ITERATIONS: process.env.AUTOMATION_MAX_ITERATIONS,
+  ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
+  AUTOMATION_MAX_ITERATIONS:
+    parseIntSafe(process.env.AUTOMATION_MAX_ITERATIONS) || 200,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
-  POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   QUERY_THREAD_TIMEOUT: parseIntSafe(process.env.QUERY_THREAD_TIMEOUT),
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
+  BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
+  BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
+  PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
+  DISABLE_AUTOMATION_LOGS: process.env.DISABLE_AUTOMATION_LOGS,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   SELF_HOSTED: process.env.SELF_HOSTED,
@@ -84,6 +90,7 @@ module.exports = {
     module.exports[key] = value
   },
   isTest,
+  isJest,
   isCypress,
   isDev,
   isProd: () => {

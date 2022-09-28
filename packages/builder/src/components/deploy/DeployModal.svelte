@@ -31,9 +31,6 @@
 
       published = await API.deployAppChanges()
 
-      analytics.captureEvent(Events.APP.PUBLISHED, {
-        appId: $store.appId,
-      })
       if (typeof onOk === "function") {
         await onOk()
       }
@@ -49,7 +46,7 @@
 
   const viewApp = () => {
     if (published) {
-      analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+      analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
         appId: $store.appId,
         eventSource: EventSource.PORTAL,
       })
@@ -58,7 +55,7 @@
   }
 </script>
 
-<Button secondary on:click={publishModal.show}>Publish</Button>
+<Button cta on:click={publishModal.show}>Publish</Button>
 <Modal bind:this={feedbackModal}>
   <ModalContent
     title="Enjoying Budibase?"
@@ -101,7 +98,7 @@
     confirmText="Done"
     cancelText="View App"
     onCancel={viewApp}
-    dataCy={"deploy-app-success-modal"}
+    dataCy="deploy-app-success-modal"
   >
     <div slot="header" class="app-published-header">
       <svg

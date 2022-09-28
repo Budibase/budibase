@@ -1,6 +1,7 @@
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
-
+const { ssoCallbackUrl } = require("./utils")
 const { authenticateThirdParty } = require("./third-party-common")
+const { Configs } = require("../../../constants")
 
 const buildVerifyFn = saveUserFn => {
   return (accessToken, refreshToken, profile, done) => {
@@ -11,8 +12,8 @@ const buildVerifyFn = saveUserFn => {
       profile: profile,
       email: profile._json.email,
       oauth2: {
-        accessToken: accessToken,
-        refreshToken: refreshToken,
+        accessToken,
+        refreshToken,
       },
     }
 
@@ -57,5 +58,10 @@ exports.strategyFactory = async function (config, callbackUrl, saveUserFn) {
     )
   }
 }
+
+exports.getCallbackUrl = async function (db, config) {
+  return ssoCallbackUrl(db, config, Configs.GOOGLE)
+}
+
 // expose for testing
 exports.buildVerifyFn = buildVerifyFn

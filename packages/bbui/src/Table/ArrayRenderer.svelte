@@ -5,7 +5,7 @@
 
   const displayLimit = 5
 
-  $: badges = value?.slice(0, displayLimit) ?? []
+  $: badges = Array.isArray(value) ? value.slice(0, displayLimit) : []
   $: leftover = (value?.length ?? 0) - badges.length
 </script>
 

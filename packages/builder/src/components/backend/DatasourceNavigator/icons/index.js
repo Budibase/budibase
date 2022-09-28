@@ -14,8 +14,10 @@ import Oracle from "./Oracle.svelte"
 import GoogleSheets from "./GoogleSheets.svelte"
 import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
+import Snowflake from "./Snowflake.svelte"
+import Custom from "./Custom.svelte"
 
-export default {
+const ICONS = {
   BUDIBASE: Budibase,
   POSTGRES: Postgres,
   DYNAMODB: DynamoDB,
@@ -30,6 +32,18 @@ export default {
   REST: Rest,
   ORACLE: Oracle,
   GOOGLE_SHEETS: GoogleSheets,
-  FIREBASE: Firebase,
+  FIRESTORE: Firebase,
   REDIS: Redis,
+  SNOWFLAKE: Snowflake,
+  CUSTOM: Custom,
+}
+
+export default ICONS
+
+export function getIcon(integrationType, schema) {
+  if (schema?.custom || !ICONS[integrationType]) {
+    return ICONS.CUSTOM
+  } else {
+    return ICONS[integrationType]
+  }
 }

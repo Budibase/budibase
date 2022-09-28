@@ -1,4 +1,5 @@
 const google = require("../google")
+const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 const { Cookies, Configs } = require("../../../constants")
 const { clearCookie, getCookie } = require("../../../utils")
 const { getScopedConfig, getPlatformUrl } = require("../../../db/utils")
@@ -46,19 +47,20 @@ async function postAuth(passport, ctx, next) {
   const platformUrl = await getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
-  const strategy = await google.strategyFactory(
-    config,
-    callbackUrl,
-    (accessToken, refreshToken, profile, done) => {
-      clearCookie(ctx, Cookies.DatasourceAuth)
-      done(null, { refreshToken })
-    }
-  )
-
   const authStateCookie = getCookie(ctx, Cookies.DatasourceAuth)
 
   return passport.authenticate(
-    strategy,
+    new GoogleStrategy(
+      {
+        clientID: config.clientID,
+        clientSecret: config.clientSecret,
+        callbackURL: callbackUrl,
+      },
+      (accessToken, refreshToken, profile, done) => {
+        clearCookie(ctx, Cookies.DatasourceAuth)
+        done(null, { accessToken, refreshToken })
+      }
+    ),
     { successRedirect: "/", failureRedirect: "/error" },
     async (err, tokens) => {
       // update the DB for the datasource with all the user info
