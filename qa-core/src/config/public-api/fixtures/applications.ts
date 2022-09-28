@@ -1,4 +1,4 @@
-import generator from "../TestConfiguration/generator"
+import generator from "../../generator"
 import {
   Application,
   CreateApplicationParams,

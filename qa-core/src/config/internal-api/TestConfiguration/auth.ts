@@ -17,6 +17,12 @@ export default class AuthApi {
         password: "budibase"
       }
     })
-    return [response, response.headers.get("set-cookie")]
+    const cookie = response.headers.get("set-cookie")
+    this.api.cookie = cookie as any
+    return [response, cookie]
+  }
+
+  async logout(): Promise<any> {
+    return this.api.post(`/global/auth/default/logout`)
   }
 }

@@ -13,6 +13,7 @@ class InternalAPIClient {
   host: string
   appId?: string
   csrfToken?: string
+  cookie?: string
 
   constructor(appId?: string) {
     if (!env.BUDIBASE_SERVER_URL) {
@@ -32,9 +33,9 @@ class InternalAPIClient {
         body: JSON.stringify(options.body),
         headers: {
           "x-budibase-app-id": this.appId,
-          "x-csrf-token": this.csrfToken,
           "Content-Type": "application/json",
           Accept: "application/json",
+          cookie: this.cookie,
           ...options.headers,
         },
         credentials: "include",

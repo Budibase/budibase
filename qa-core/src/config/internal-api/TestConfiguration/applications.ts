@@ -11,12 +11,18 @@ export default class AppApi {
     this.api = apiClient
   }
 
+  async fetch(): Promise<[Response, Application[]]> {
+    const response = await this.api.get(`/applications?status=all`)
+    const json = await response.json()
+    return [response, json]
+  }
+
   async create(
     body: any
   ): Promise<[Response, Application]> {
     const response = await this.api.post(`/applications`, { body })
     const json = await response.json()
-    return [response, json.data]
+    return [response, json]
   }
 
   async read(id: string): Promise<[Response, Application]> {
