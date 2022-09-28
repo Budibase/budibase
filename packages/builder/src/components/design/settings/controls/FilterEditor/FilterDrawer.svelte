@@ -68,7 +68,7 @@
     return schemaFields.find(field => field.name === filter.field)
   }
 
-  const validateTypes = filter => {
+  const santizeTypes = filter => {
     // Update type based on field
     const fieldSchema = enrichedSchemaFields.find(x => x.name === filter.field)
     filter.type = fieldSchema?.type
@@ -77,7 +77,7 @@
     filter.externalType = getSchema(filter)?.externalType
   }
 
-  const validateOperator = filter => {
+  const santizeOperator = filter => {
     // Ensure a valid operator is selected
     const operators = getValidOperatorsForType(filter.type).map(x => x.value)
     if (!operators.includes(filter.operator)) {
@@ -92,7 +92,7 @@
     filter.noValue = noValueOptions.includes(filter.operator)
   }
 
-  const validateValue = filter => {
+  const santizeValue = filter => {
     // Check if the operator allows a value at all
     if (filter.noValue) {
       filter.value = null
@@ -110,18 +110,18 @@
   }
 
   const onFieldChange = filter => {
-    validateTypes(filter)
-    validateOperator(filter)
-    validateValue(filter)
+    santizeTypes(filter)
+    santizeOperator(filter)
+    santizeValue(filter)
   }
 
   const onOperatorChange = filter => {
-    validateOperator(filter)
-    validateValue(filter)
+    santizeOperator(filter)
+    santizeValue(filter)
   }
 
   const onValueTypeChange = filter => {
-    validateValue(filter)
+    santizeValue(filter)
   }
 
   const getFieldOptions = field => {
