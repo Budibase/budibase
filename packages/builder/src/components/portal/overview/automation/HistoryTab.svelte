@@ -8,6 +8,7 @@
   import { onMount } from "svelte"
   import dayjs from "dayjs"
   import { auth, admin } from "stores/portal"
+  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
 
   const ERROR = "error",
     SUCCESS = "success",
@@ -28,7 +29,6 @@
 
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
-  $: cloudHosted = $admin.cloud
 
   const timeOptions = [
     { value: "1-w", label: "Past week" },
@@ -141,8 +141,11 @@
           bind:value={timeRange}
           options={timeOptions}
           isOptionEnabled={x => {
-            if (cloudHosted) {
-              return licensePlan?.type === "free" && "1-w" !== x.value
+            if (
+              isEnabled(TENANT_FEATURE_FLAGS.LICENSING) &&
+              licensePlan?.type === "free"
+            ) {
+              return "1-w" !== x.value
             }
             return true
           }}
@@ -156,7 +159,7 @@
           options={statusOptions}
         />
       </div>
-      {#if cloudHosted && licensePlan?.type === "free"}
+      {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING) && licensePlan?.type === "free"}
         <div class="pro-upgrade">
           <div class="pro-copy">Store up to 30 days of automations</div>
           <Button
