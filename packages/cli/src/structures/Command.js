@@ -39,10 +39,7 @@ class Command {
       command = command.description(getHelpDescription(thisCmd.help))
     }
     for (let opt of thisCmd.opts) {
-      command = command.option(
-        `${opt.command}`,
-        getSubHelpDescription(opt.help)
-      )
+      command = command.option(opt.command, getSubHelpDescription(opt.help))
     }
     command.helpOption(
       "--help",
@@ -50,19 +47,25 @@ class Command {
     )
     command.action(async options => {
       try {
-        let executed = false
+        let executed = false,
+          found = false
         for (let opt of thisCmd.opts) {
           let lookup = opt.command.split(" ")[0].replace("--", "")
           // need to handle how commander converts watch-plugin-dir to watchPluginDir
           lookup = this.convertToCommander(lookup)
-          if (!executed && options[lookup]) {
+          found = !executed && options[lookup]
+          if (found && opt.func) {
             const input =
               Object.keys(options).length > 1 ? options : options[lookup]
             await opt.func(input)
             executed = true
           }
         }
-        if (!executed) {
+        if (found && !executed) {
+          console.log(
+            error(`${Object.keys(options)[0]} is an option, not an operation.`)
+          )
+        } else if (!executed) {
           console.log(error(`Unknown ${this.command} option.`))
           command.help()
         }

@@ -4,6 +4,7 @@ const fs = require("fs")
 const path = require("path")
 const randomString = require("randomstring")
 const yaml = require("yaml")
+const { getAppService } = require("./utils")
 
 const SINGLE_IMAGE = "budibase/budibase:latest"
 const VOL_NAME = "budibase_data"
@@ -16,12 +17,13 @@ function getSecrets() {
     "MINIO_ACCESS_KEY",
     "MINIO_SECRET_KEY",
     "COUCH_DB_PASSWORD",
-    "COUCH_DB_USER",
     "REDIS_PASSWORD",
     "INTERNAL_API_KEY",
   ]
   const obj = {}
   secrets.forEach(secret => (obj[secret] = randomString.generate()))
+  // hard code to admin
+  obj["COUCH_DB_USER"] = "admin"
   return obj
 }
 
@@ -70,10 +72,13 @@ function getEnv(port) {
   ].join("\n")
 }
 
-module.exports.filePath = ENV_PATH
+exports.ENV_PATH = ENV_PATH
+exports.COMPOSE_PATH = COMPOSE_PATH
+
 module.exports.ConfigMap = {
   MAIN_PORT: "port",
 }
+
 module.exports.QUICK_CONFIG = {
   key: "budibase",
   port: 10000,
@@ -111,4 +116,15 @@ module.exports.getEnvProperty = property => {
     property = props[1]
   }
   return property.split("=")[1].split("\n")[0]
+}
+
+module.exports.getComposeProperty = property => {
+  const appService = getAppService(COMPOSE_PATH)
+  if (property === "port" && Array.isArray(appService.ports)) {
+    const port = appService.ports[0]
+    return port.split(":")[0]
+  } else if (appService.environment) {
+    return appService.environment[property]
+  }
+  return null
 }
