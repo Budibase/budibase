@@ -8,6 +8,7 @@
   export let size = "S"
   export let extraButtonText
   export let extraButtonAction
+  export let showCloseButton = true
 
   let show = true
 
@@ -39,22 +40,24 @@
         </button>
       {/if}
     </div>
-    <div class="spectrum-Toast-buttons">
-      <button
-        class="spectrum-ClearButton spectrum-ClearButton--overBackground spectrum-ClearButton--size{size}"
-        on:click={clear}
-      >
-        <div class="spectrum-ClearButton-fill">
-          <svg
-            class="spectrum-ClearButton-icon spectrum-Icon spectrum-UIIcon-Cross100"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Cross100" />
-          </svg>
-        </div>
-      </button>
-    </div>
+    {#if showCloseButton}
+      <div class="spectrum-Toast-buttons">
+        <button
+          class="spectrum-ClearButton spectrum-ClearButton--overBackground spectrum-ClearButton--size{size}"
+          on:click={clear}
+        >
+          <div class="spectrum-ClearButton-fill">
+            <svg
+              class="spectrum-ClearButton-icon spectrum-Icon spectrum-UIIcon-Cross100"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <use xlink:href="#spectrum-css-icon-Cross100" />
+            </svg>
+          </div>
+        </button>
+      </div>
+    {/if}
   </div>
 {/if}
 
@@ -62,5 +65,8 @@
   .spectrum-Toast {
     pointer-events: all;
     width: 100%;
+  }
+  .spectrum-Button {
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 </style>

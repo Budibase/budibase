@@ -74,6 +74,10 @@ module.exports = async (ctx, next) => {
       try {
         await getRole(roleHeader)
         roleId = roleHeader
+
+        // Delete admin and builder flags so that the specified role is honoured
+        delete ctx.user.builder
+        delete ctx.user.admin
       } catch (error) {
         // Swallow error and do nothing
       }
@@ -107,12 +111,14 @@ module.exports = async (ctx, next) => {
     ctx.appId = appId
     if (roleId) {
       ctx.roleId = roleId
+      const globalId = ctx.user ? ctx.user._id : undefined
       const userId = ctx.user ? generateUserMetadataID(ctx.user._id) : null
       ctx.user = {
         ...ctx.user,
         // override userID with metadata one
         _id: userId,
         userId,
+        globalId,
         roleId,
         role: await getRole(roleId),
       }

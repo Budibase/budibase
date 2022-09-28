@@ -15,6 +15,8 @@
   export let placeholder = null
   export let appendTo = undefined
   export let timeOnly = false
+  export let ignoreTimezones = false
+  export let time24hr = false
 
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
@@ -36,6 +38,7 @@
     enableTime: timeOnly || enableTime || false,
     noCalendar: timeOnly || false,
     altInput: true,
+    time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
     appendTo,
@@ -48,21 +51,50 @@
     },
   }
 
+  $: redrawOptions = {
+    timeOnly,
+    enableTime,
+    time24hr,
+  }
+
   const handleChange = event => {
     const [dates] = event.detail
+    const noTimezone = enableTime && !timeOnly && ignoreTimezones
     let newValue = dates[0]
     if (newValue) {
       newValue = newValue.toISOString()
     }
-    // if time only set date component to 2000-01-01
+
+    // If time only set date component to 2000-01-01
     if (timeOnly) {
+      // Classic flackpickr causing issues.
+      // When selecting a value for the first time for a "time only" field,
+      // the time is always offset by 1 hour for some reason (regardless of time
+      // zone) so we need to correct it.
+      if (!value && newValue) {
+        newValue = new Date(dates[0].getTime() + 60 * 60 * 1000).toISOString()
+      }
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
-    // date only, offset for timezone so always right date
+
+    // For date-only fields, construct a manual timestamp string without a time
+    // or time zone
     else if (!enableTime) {
-      const offset = dates[0].getTimezoneOffset() * 60000
-      newValue = new Date(dates[0].getTime() - offset).toISOString()
+      const year = dates[0].getFullYear()
+      const month = `${dates[0].getMonth() + 1}`.padStart(2, "0")
+      const day = `${dates[0].getDate()}`.padStart(2, "0")
+      newValue = `${year}-${month}-${day}T00:00:00.000`
     }
+
+    // For non-timezone-aware fields, create an ISO 8601 timestamp of the exact
+    // time picked, without timezone
+    else if (noTimezone) {
+      const offset = dates[0].getTimezoneOffset() * 60000
+      newValue = new Date(dates[0].getTime() - offset)
+        .toISOString()
+        .slice(0, -1)
+    }
+
     dispatch("change", newValue)
   }
 
@@ -112,10 +144,12 @@
       // Treat as numerical timestamp
       date = new Date(parseInt(val))
     }
+
     time = date.getTime()
     if (isNaN(time)) {
       return null
     }
+
     // By rounding to the nearest second we avoid locking up in an endless
     // loop in the builder, caused by potentially enriching {{ now }} to every
     // millisecond.
@@ -123,7 +157,7 @@
   }
 </script>
 
-{#key timeOnly}
+{#key redrawOptions}
   <Flatpickr
     bind:flatpickr
     value={parseDate(value)}

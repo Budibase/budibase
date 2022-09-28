@@ -4,6 +4,7 @@
 
   export let tooltip = ""
   export let size = "M"
+  export let disabled = true
 
   let showTooltip = false
 </script>
@@ -19,7 +20,7 @@
         on:mouseleave={() => (showTooltip = false)}
         on:focus
       >
-        <Icon name="InfoOutline" size="S" disabled={true} />
+        <Icon name="InfoOutline" size="S" {disabled} />
       </div>
       {#if showTooltip}
         <div class="tooltip">
@@ -39,7 +40,6 @@
     position: relative;
     display: flex;
     justify-content: center;
-    margin-top: 1px;
     margin-left: 5px;
     margin-right: 5px;
   }
@@ -48,14 +48,13 @@
     display: flex;
     justify-content: center;
     top: 15px;
-    z-index: 100;
+    z-index: 200;
     width: 160px;
   }
   .icon {
     transform: scale(0.75);
   }
   .icon-small {
-    margin-top: -2px;
-    margin-bottom: -5px;
+    margin-bottom: -2px;
   }
 </style>

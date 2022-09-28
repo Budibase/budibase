@@ -1,6 +1,4 @@
 <script>
-  import FlowItemHeader from "./FlowItemHeader.svelte"
-
   import { automationStore } from "builderStore"
   import {
     Icon,
@@ -12,10 +10,15 @@
     Select,
     ActionButton,
     notifications,
+    Label,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import ActionModal from "./ActionModal.svelte"
+  import FlowItemHeader from "./FlowItemHeader.svelte"
+  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
+  import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import { permissions } from "stores/backend"
 
   export let block
   export let testDataModal
@@ -24,9 +27,12 @@
   let actionModal
   let blockComplete
   let showLooping = false
+  let role
 
+  $: automationId = $automationStore.selectedAutomation?.automation._id
   $: showBindingPicker =
-    block.stepId === "CREATE_ROW" || block.stepId === "UPDATE_ROW"
+    block.stepId === ActionStepID.CREATE_ROW ||
+    block.stepId === ActionStepID.UPDATE_ROW
 
   $: isTrigger = block.type === "TRIGGER"
 
@@ -45,6 +51,33 @@
     $automationStore.selectedAutomation?.automation.definition.steps.find(
       x => x.blockToLoop === block.id
     )
+
+  $: isAppAction = block?.stepId === TriggerStepID.APP
+  $: isAppAction && setPermissions(role)
+  $: isAppAction && getPermissions(automationId)
+
+  async function setPermissions(role) {
+    if (!role || !automationId) {
+      return
+    }
+    await permissions.save({
+      level: "execute",
+      role,
+      resource: automationId,
+    })
+  }
+
+  async function getPermissions(automationId) {
+    if (!automationId) {
+      return
+    }
+    const perms = await permissions.forResource(automationId)
+    if (!perms["execute"]) {
+      role = "BASIC"
+    } else {
+      role = perms["execute"]
+    }
+  }
 
   async function removeLooping() {
     loopingSelected = false
@@ -129,7 +162,7 @@
             width="28px"
             height="28px"
             class="spectrum-Icon"
-            style="color:grey;"
+            style="color:var(--spectrum-global-color-gray-700);"
             focusable="false"
           >
             <use xlink:href="#spectrum-icon-18-Reuse" />
@@ -206,6 +239,10 @@
           </div>
         {/if}
 
+        {#if isAppAction}
+          <Label>Role</Label>
+          <RoleSelect bind:value={role} />
+        {/if}
         <AutomationBlockSetup
           schemaProperties={Object.entries(block.schema.inputs.properties)}
           {block}

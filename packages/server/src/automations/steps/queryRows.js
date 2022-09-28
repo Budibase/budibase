@@ -14,6 +14,16 @@ const SortOrdersPretty = {
   [SortOrders.DESCENDING]: "Descending",
 }
 
+const EmptyFilterOptions = {
+  RETURN_ALL: "all",
+  RETURN_NONE: "none",
+}
+
+const EmptyFilterOptionsPretty = {
+  [EmptyFilterOptions.RETURN_ALL]: "Return all table rows",
+  [EmptyFilterOptions.RETURN_NONE]: "Return no rows",
+}
+
 exports.definition = {
   description: "Query rows from the database",
   icon: "Search",
@@ -52,6 +62,12 @@ exports.definition = {
           title: "Limit",
           customType: "queryLimit",
         },
+        onEmptyFilter: {
+          pretty: Object.values(EmptyFilterOptionsPretty),
+          enum: Object.values(EmptyFilterOptions),
+          type: "string",
+          title: "When Filter Empty",
+        },
       },
       required: ["tableId"],
     },
@@ -64,7 +80,7 @@ exports.definition = {
         },
         success: {
           type: "boolean",
-          description: "Whether the deletion was successful",
+          description: "Whether the query was successful",
         },
       },
       required: ["rows", "success"],
@@ -82,8 +98,41 @@ async function getTable(appId, tableId) {
   return ctx.body
 }
 
+function typeCoercion(filters, table) {
+  if (!filters || !table) {
+    return filters
+  }
+  for (let key of Object.keys(filters)) {
+    if (typeof filters[key] === "object") {
+      for (let [property, value] of Object.entries(filters[key])) {
+        const column = table.schema[property]
+        // convert string inputs
+        if (!column || typeof value !== "string") {
+          continue
+        }
+        if (column.type === FieldTypes.NUMBER) {
+          filters[key][property] = parseFloat(value)
+        }
+      }
+    }
+  }
+  return filters
+}
+
+const hasNullFilters = filters =>
+  filters.length === 0 ||
+  filters.some(filter => filter.value === null || filter.value === "")
+
 exports.run = async function ({ inputs, appId }) {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs
+  if (!tableId) {
+    return {
+      success: false,
+      response: {
+        message: "You must select a table to query.",
+      },
+    }
+  }
   const table = await getTable(appId, tableId)
   let sortType = FieldTypes.STRING
   if (table && table.schema && table.schema[sortColumn] && sortColumn) {
@@ -96,17 +145,31 @@ exports.run = async function ({ inputs, appId }) {
       tableId,
     },
     body: {
-      sortOrder,
       sortType,
-      sort: sortColumn,
-      query: filters || {},
       limit,
+      sort: sortColumn,
+      query: typeCoercion(filters || {}, table),
+      // default to ascending, like data tab
+      sortOrder: sortOrder || SortOrders.ASCENDING,
     },
+    version: "1",
   })
   try {
-    await rowController.search(ctx)
+    let rows
+
+    if (
+      inputs.onEmptyFilter === EmptyFilterOptions.RETURN_NONE &&
+      inputs["filters-def"] &&
+      hasNullFilters(inputs["filters-def"])
+    ) {
+      rows = []
+    } else {
+      await rowController.search(ctx)
+      rows = ctx.body ? ctx.body.rows : []
+    }
+
     return {
-      rows: ctx.body ? ctx.body.rows : [],
+      rows,
       success: ctx.status === 200,
     }
   } catch (err) {

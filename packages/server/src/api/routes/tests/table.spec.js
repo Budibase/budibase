@@ -2,6 +2,7 @@ const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { getAppDB } = require("@budibase/backend-core/context")
 const setup = require("./utilities")
 const { basicTable } = setup.structures
+const { events } = require("@budibase/backend-core")
 
 describe("/tables", () => {
   let request = setup.getRequest()
@@ -14,24 +15,76 @@ describe("/tables", () => {
   })
 
   describe("create", () => {
-    it("returns a success message when the table is successfully created", async () => {
-      const res = await request
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    const createTable = (table) => {
+      if (!table) {
+        table = basicTable()
+      }
+      return request
         .post(`/api/tables`)
-        .send({
-          name: "TestTable",
-          key: "name",
-          schema: {
-            name: {type: "string"}
-          }
-        })
+        .send(table)
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
+
+    }
+
+    it("returns a success message when the table is successfully created", async () => {
+      const res = await createTable()
+
       expect(res.res.statusMessage).toEqual("Table TestTable saved successfully.")
       expect(res.body.name).toEqual("TestTable")
+      expect(events.table.created).toBeCalledTimes(1)
+      expect(events.table.created).toBeCalledWith(res.body)
     })
 
-    it("renames all the row fields for a table when a schema key is renamed", async () => {
+    it("creates a table via data import CSV", async () => {
+      const table = basicTable()
+      table.dataImport = {
+        csvString: "\"name\",\"description\"\n\"test-name\",\"test-desc\"",
+      }
+      table.dataImport.schema = table.schema
+
+      const res = await createTable(table)
+ 
+      expect(events.table.created).toBeCalledTimes(1)
+      expect(events.table.created).toBeCalledWith(res.body)
+      expect(events.table.imported).toBeCalledTimes(1)
+      expect(events.table.imported).toBeCalledWith(res.body, "csv")
+      expect(events.rows.imported).toBeCalledTimes(1)
+      expect(events.rows.imported).toBeCalledWith(res.body, "csv", 1)
+    })
+
+    it("should apply authorization to endpoint", async () => {
+      await checkBuilderEndpoint({
+        config,
+        method: "POST",
+        url: `/api/tables`,
+        body: basicTable()
+      })
+    })
+  })
+
+  describe("update", () => {
+    it("updates a table", async () => {
+      const testTable = await config.createTable()
+
+      const res = await request
+        .post(`/api/tables`)
+        .send(testTable)
+        .set(config.defaultHeaders())
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      expect(events.table.updated).toBeCalledTimes(1)
+      expect(events.table.updated).toBeCalledWith(res.body)
+    })
+
+    it("updates all the row fields for a table when a schema key is renamed", async () => {
       const testTable = await config.createTable()
 
       const testRow = await request
@@ -74,19 +127,44 @@ describe("/tables", () => {
       expect(res.body.name).toBeUndefined()
     })
 
-    it("should apply authorization to endpoint", async () => {
-      await checkBuilderEndpoint({
-        config,
-        method: "POST",
-        url: `/api/tables`,
-        body: {
-          name: "TestTable",
-          key: "name",
-          schema: {
-            name: {type: "string"}
-          }
-        }
+    describe("user table", () => {
+      it("should add roleId and email field when adjusting user table schema", async () => {
+        const res = await request
+          .post(`/api/tables`)
+          .send({
+            ...basicTable(),
+            _id: "ta_users",
+          })
+          .set(config.defaultHeaders())
+          .expect('Content-Type', /json/)
+          .expect(200)
+        expect(res.body.schema.email).toBeDefined()
+        expect(res.body.schema.roleId).toBeDefined()
       })
+    })
+  })
+
+  describe("import", () => {
+    it("imports rows successfully", async () => {
+      const table = await config.createTable()
+      const importRequest = {
+        dataImport: {
+          csvString: "\"name\",\"description\"\n\"test-name\",\"test-desc\"",
+          schema: table.schema
+        }
+      }
+      jest.clearAllMocks()
+
+      await request
+        .post(`/api/tables/${table._id}/import`)
+        .send(importRequest)
+        .set(config.defaultHeaders())
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      expect(events.table.created).not.toHaveBeenCalled()
+      expect(events.rows.imported).toBeCalledTimes(1)
+      expect(events.rows.imported).toBeCalledWith(table, "csv", 1)
     })
   })
 
@@ -153,22 +231,6 @@ describe("/tables", () => {
     })
   })
 
-  describe("updating user table", () => {
-    it("should add roleId and email field when adjusting user table schema", async () => {
-      const res = await request
-        .post(`/api/tables`)
-        .send({
-          ...basicTable(),
-          _id: "ta_users",
-        })
-        .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
-        .expect(200)
-      expect(res.body.schema.email).toBeDefined()
-      expect(res.body.schema.roleId).toBeDefined()
-    })
-  })
-
   describe("validate csv", () => {
     it("should be able to validate a CSV layout", async () => {
       const res = await request
@@ -205,6 +267,8 @@ describe("/tables", () => {
         .expect('Content-Type', /json/)
         .expect(200)
       expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
+      expect(events.table.deleted).toBeCalledTimes(1)
+      expect(events.table.deleted).toBeCalledWith(testTable)
     })
 
     it("deletes linked references to the table after deletion", async () => {

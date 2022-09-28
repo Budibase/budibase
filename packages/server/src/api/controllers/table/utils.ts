@@ -27,6 +27,7 @@ import viewTemplate from "../view/viewBuilder"
 const { getAppDB } = require("@budibase/backend-core/context")
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
+import { events } from "@budibase/backend-core"
 
 export async function clearColumns(table: any, columnNames: any) {
   const db = getAppDB()
@@ -150,8 +151,7 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
   await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
     tableId: table._id,
   })
-  let response = await db.put(table)
-  table._rev = response._rev
+  await events.rows.imported(table, "csv", finalData.length)
   return table
 }
 
@@ -247,7 +247,7 @@ class TableSaveFunctions {
   // after saving
   async after(table: any) {
     table = await handleSearchIndexes(table)
-    table = await handleDataImport(this.user, table, this.dataImport)
+    await handleDataImport(this.user, table, this.dataImport)
     return table
   }
 

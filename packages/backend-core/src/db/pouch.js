@@ -1,21 +1,42 @@
 const PouchDB = require("pouchdb")
 const env = require("../environment")
 
-function getUrlInfo() {
-  let url = env.COUCH_DB_URL
-  let username, password, host
-  const [protocol, rest] = url.split("://")
-  if (url.includes("@")) {
-    const hostParts = rest.split("@")
-    host = hostParts[1]
-    const authParts = hostParts[0].split(":")
-    username = authParts[0]
-    password = authParts[1]
-  } else {
-    host = rest
+exports.getUrlInfo = (url = env.COUCH_DB_URL) => {
+  let cleanUrl, username, password, host
+  if (url) {
+    // Ensure the URL starts with a protocol
+    const protoRegex = /^https?:\/\//i
+    if (!protoRegex.test(url)) {
+      url = `http://${url}`
+    }
+
+    // Split into protocol and remainder
+    const split = url.split("://")
+    const protocol = split[0]
+    const rest = split.slice(1).join("://")
+
+    // Extract auth if specified
+    if (url.includes("@")) {
+      // Split into host and remainder
+      let parts = rest.split("@")
+      host = parts[parts.length - 1]
+      let auth = parts.slice(0, -1).join("@")
+
+      // Split auth into username and password
+      if (auth.includes(":")) {
+        const authParts = auth.split(":")
+        username = authParts[0]
+        password = authParts.slice(1).join(":")
+      } else {
+        username = auth
+      }
+    } else {
+      host = rest
+    }
+    cleanUrl = `${protocol}://${host}`
   }
   return {
-    url: `${protocol}://${host}`,
+    url: cleanUrl,
     auth: {
       username,
       password,
@@ -24,7 +45,7 @@ function getUrlInfo() {
 }
 
 exports.getCouchInfo = () => {
-  const urlInfo = getUrlInfo()
+  const urlInfo = exports.getUrlInfo()
   let username
   let password
   if (env.COUCH_DB_USERNAME) {
@@ -78,6 +99,13 @@ exports.getPouch = (opts = {}) => {
     POUCH_DB_DEFAULTS = {
       prefix: undefined,
       adapter: "memory",
+    }
+  }
+
+  if (opts.onDisk) {
+    POUCH_DB_DEFAULTS = {
+      prefix: undefined,
+      adapter: "leveldb",
     }
   }
 

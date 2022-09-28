@@ -1,12 +1,10 @@
-name: Budibase Release Preprod
+name: Budibase Deploy Preprod
 
 on:
  workflow_dispatch:
 
 env:
-  POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
-  POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
   SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
 jobs:

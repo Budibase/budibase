@@ -2,6 +2,7 @@ jest.mock("../../../utilities/fileSystem/utilities")
 
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
+const { events } = require("@budibase/backend-core")
 
 describe("/backups", () => {
   let request = setup.getRequest()
@@ -21,6 +22,7 @@ describe("/backups", () => {
         .expect(200)
       expect(res.text).toBeDefined()
       expect(res.text.includes(`"db_name":"${config.getAppId()}"`)).toEqual(true)
+      expect(events.app.exported.mock.calls.length).toBe(1)
     })
 
     it("should apply authorization to endpoint", async () => {

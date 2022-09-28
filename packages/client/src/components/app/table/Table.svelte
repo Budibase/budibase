@@ -86,6 +86,7 @@
         sortable: false,
         divider: true,
         width: "auto",
+        preventSelectRow: true,
       }
     }
 

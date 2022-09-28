@@ -8,8 +8,24 @@ cd packages/string-templates
 yarn link
 cd -
 
+echo "Linking types"
+cd packages/types 
+yarn link
+cd -
+
+echo "Linking bbui"
+cd packages/bbui 
+yarn link
+cd -
+
+echo "Linking frontend-core"
+cd packages/frontend-core
+yarn link
+cd -
+
 if [ -d "../budibase-pro" ]; then
   cd ../budibase-pro
+  echo "Bootstrapping budibase-pro"
   yarn bootstrap
 
   cd packages/pro
@@ -18,6 +34,9 @@ if [ -d "../budibase-pro" ]; then
 
   echo "Linking backend-core to pro"
   yarn link '@budibase/backend-core'
+
+  echo "Linking types to pro"
+  yarn link '@budibase/types'
 
   cd ../../../budibase
 
@@ -31,17 +50,29 @@ if [ -d "../budibase-pro" ]; then
 fi
 
 if [ -d "../account-portal" ]; then
-  cd ../account-portal/packages/server
+  cd ../account-portal
+  echo "Bootstrapping account-portal"
+  yarn bootstrap
+  
+  cd packages/server
   echo "Linking backend-core to account-portal"
   yarn link "@budibase/backend-core"
 
   echo "Linking string-templates to account-portal"
   yarn link "@budibase/string-templates"
 
+  echo "Linking types to account-portal"
+  yarn link "@budibase/types"
+
   if [ -d "../../../budibase-pro" ]; then
     echo "Linking pro to account-portal"
     yarn link "@budibase/pro"
   fi
 
-  cd -
+  cd ../ui
+  echo "Linking bbui to account-portal"
+  yarn link "@budibase/bbui"
+
+   echo "Linking frontend-core to account-portal"
+    yarn link "@budibase/frontend-core"
 fi

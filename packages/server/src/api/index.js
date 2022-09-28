@@ -12,6 +12,7 @@ const { mainRoutes, staticRoutes, publicRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
 const { middleware: pro } = require("@budibase/pro")
+const { shutdown } = require("./routes/public")
 
 const router = new Router()
 
@@ -53,8 +54,8 @@ router
       noTenancyRequired: true,
     })
   )
-  .use(currentApp)
   .use(pro.licensing())
+  .use(currentApp)
   .use(auditLog)
 
 // error handling middleware
@@ -70,8 +71,9 @@ router.use(async (ctx, next) => {
       validationErrors: err.validation,
       error,
     }
-    if (env.NODE_ENV !== "jest") {
-      ctx.log.error(err)
+    ctx.log.error(err)
+    // unauthorised errors don't provide a useful trace
+    if (!env.isTest()) {
       console.trace(err)
     }
   }
@@ -90,4 +92,5 @@ router.use(publicRoutes.allowedMethods())
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
 
-module.exports = router
+module.exports.router = router
+module.exports.shutdown = shutdown

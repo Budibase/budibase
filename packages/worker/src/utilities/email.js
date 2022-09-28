@@ -174,7 +174,7 @@ exports.isEmailConfigured = async (workspaceId = null) => {
 exports.sendEmail = async (
   email,
   purpose,
-  { workspaceId, user, from, contents, subject, info, automation } = {}
+  { workspaceId, user, from, contents, subject, info, cc, bcc, automation } = {}
 ) => {
   const db = getGlobalDB()
   let config = (await getSmtpConfiguration(db, workspaceId, automation)) || {}
@@ -185,14 +185,22 @@ exports.sendEmail = async (
   // if there is a link code needed this will retrieve it
   const code = await getLinkCode(purpose, email, user, info)
   const context = await getSettingsTemplateContext(purpose, code)
-  const message = {
+
+  let message = {
     from: from || config.from,
-    to: email,
     html: await buildEmail(purpose, email, context, {
       user,
       contents,
     }),
   }
+
+  message = {
+    ...message,
+    to: email,
+    cc: cc,
+    bcc: bcc,
+  }
+
   if (subject || config.subject) {
     message.subject = await processString(subject || config.subject, context)
   }

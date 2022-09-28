@@ -1,4 +1,4 @@
-require("../../tests/utilities/dbConfig");
+require("../../../tests/utilities/TestConfiguration");
 const {
   generateAppID,
   getDevelopmentAppID,

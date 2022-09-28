@@ -7,18 +7,39 @@
   export let blockComplete
   export let showTestStatus = false
   export let showParameters = {}
+  export let testResult
+  export let isTrigger
 
-  $: testResult =
-    $automationStore.selectedAutomation?.testResults?.steps.filter(step =>
-      block.id ? step.id === block.id : step.stepId === block.stepId
-    )
-  $: isTrigger = block.type === "TRIGGER"
+  $: {
+    if (!testResult) {
+      testResult =
+        $automationStore.selectedAutomation?.testResults?.steps.filter(step =>
+          block.id ? step.id === block.id : step.stepId === block.stepId
+        )[0]
+    }
+  }
+  $: isTrigger = isTrigger || block.type === "TRIGGER"
+  $: status = updateStatus(testResult, isTrigger)
 
   async function onSelect(block) {
     await automationStore.update(state => {
       state.selectedBlock = block
       return state
     })
+  }
+
+  function updateStatus(results, isTrigger) {
+    if (!results) {
+      return {}
+    }
+    const lcStatus = results.outputs?.status?.toLowerCase()
+    if (lcStatus === "stopped" || lcStatus === "stopped_error") {
+      return { yellow: true, message: "Stopped" }
+    } else if (results.outputs?.success || isTrigger) {
+      return { positive: true, message: "Success" }
+    } else {
+      return { negative: true, message: "Error" }
+    }
   }
 </script>
 
@@ -43,7 +64,7 @@
           width="28px"
           height="28px"
           class="spectrum-Icon"
-          style="color:grey;"
+          style="color:var(--spectrum-global-color-gray-700);"
           focusable="false"
         >
           <use xlink:href="#spectrum-icon-18-{block.icon}" />
@@ -60,16 +81,13 @@
       </div>
     </div>
     <div class="blockTitle">
-      {#if showTestStatus && testResult && testResult[0]}
+      {#if showTestStatus && testResult}
         <div style="float: right;">
           <StatusLight
-            positive={isTrigger || testResult[0].outputs?.success}
-            negative={!testResult[0].outputs?.success}
-            ><Body size="XS"
-              >{testResult[0].outputs?.success || isTrigger
-                ? "Success"
-                : "Error"}</Body
-            ></StatusLight
+            positive={status?.positive}
+            yellow={status?.yellow}
+            negative={status?.negative}
+            ><Body size="XS">{status?.message}</Body></StatusLight
           >
         </div>
       {/if}
@@ -79,7 +97,7 @@
           onSelect(block)
         }}
       >
-        <Icon name={blockComplete ? "ChevronUp" : "ChevronDown"} />
+        <Icon hoverable name={blockComplete ? "ChevronUp" : "ChevronDown"} />
       </div>
     </div>
   </div>

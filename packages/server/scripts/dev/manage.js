@@ -54,6 +54,12 @@ async function init() {
       DISABLE_ACCOUNT_PORTAL: "",
       MULTI_TENANCY: "",
       DISABLE_THREADING: 1,
+      SERVICE: "app-service",
+      DEPLOYMENT_ENVIRONMENT: "development",
+      BB_ADMIN_USER_EMAIL: "",
+      BB_ADMIN_USER_PASSWORD: "",
+      PLUGINS_DIR: "",
+      TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {
@@ -67,6 +73,9 @@ async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
   await init()
   await compose.upAll(CONFIG)
+
+  // We always ensure to restart the proxy service in case of nginx conf changes
+  await compose.restartOne("proxy-service", CONFIG)
 }
 
 async function down() {

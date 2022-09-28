@@ -9,7 +9,9 @@ WORKDIR /app
 
 # copy files and install dependencies
 COPY . ./
-RUN yarn
+# handle node-gyp
+RUN apk add --no-cache --virtual .gyp python3 make g++ \
+    && yarn && apk del .gyp
 RUN yarn global add pm2
 
 EXPOSE 4001
@@ -19,4 +21,9 @@ EXPOSE 4001
 # which are actually needed to get this environment up and running
 ENV NODE_ENV=production
 ENV CLUSTER_MODE=${CLUSTER_MODE}
+ENV SERVICE=worker-service
+ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
+ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS
+ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
+
 CMD ["./docker_run.sh"]

@@ -16,31 +16,41 @@
     MenuItem,
     Icon,
     Helpers,
+    Modal,
   } from "@budibase/bbui"
   import OverviewTab from "../_components/OverviewTab.svelte"
   import SettingsTab from "../_components/SettingsTab.svelte"
+  import AccessTab from "../_components/AccessTab.svelte"
   import { API } from "api"
   import { store } from "builderStore"
-  import { apps, auth } from "stores/portal"
+  import { apps, auth, groups } from "stores/portal"
   import analytics, { Events, EventSource } from "analytics"
   import { AppStatus } from "constants"
   import AppLockModal from "components/common/AppLockModal.svelte"
   import EditableIcon from "components/common/EditableIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import HistoryTab from "components/portal/overview/automation/HistoryTab.svelte"
+  import ExportAppModal from "components/start/ExportAppModal.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
 
   export let application
 
-  let promise = getPackage()
   let loaded = false
   let deletionModal
   let unpublishModal
+  let exportModal
   let appName = ""
+  let deployments = []
+  let published
 
   // App
   $: filteredApps = $apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
+  $: loaded && !selectedApp && backToAppList()
+  $: isPublished =
+    selectedApp?.status === AppStatus.DEPLOYED && latestDeployments?.length > 0
+  $: appUrl = `${window.origin}/app${selectedApp?.url}`
 
   // Locking
   $: lockedBy = selectedApp?.lockedBy
@@ -52,19 +62,12 @@
   }`
 
   // App deployments
-  $: deployments = []
   $: latestDeployments = deployments
-    .filter(
-      deployment =>
-        deployment.status === "SUCCESS" && application === deployment.appId
-    )
+    .filter(x => x.status === "SUCCESS" && application === x.appId)
     .sort((a, b) => a.updatedAt > b.updatedAt)
 
-  $: isPublished =
-    selectedApp?.status === AppStatus.DEPLOYED && latestDeployments?.length > 0
-
-  $: appUrl = `${window.origin}/app${selectedApp?.url}`
-  $: tabs = ["Overview", "Automation History", "Backups", "Settings"]
+  // Tabs
+  $: tabs = ["Overview", "Automation History", "Backups", "Settings", "Access"]
   $: selectedTab = "Overview"
 
   const backToAppList = () => {
@@ -78,17 +81,6 @@
       selectedTab = tabKey
     } else {
       notifications.error("Invalid tab key")
-    }
-  }
-
-  async function getPackage() {
-    try {
-      const pkg = await API.fetchAppPackage(application)
-      await store.actions.initialise(pkg)
-      loaded = true
-      return pkg
-    } catch (error) {
-      notifications.error(`Error initialising app: ${error?.message}`)
     }
   }
 
@@ -115,7 +107,7 @@
 
   const viewApp = () => {
     if (isPublished) {
-      analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+      analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
         appId: $store.appId,
         eventSource: EventSource.PORTAL,
       })
@@ -138,10 +130,9 @@
     notifications.success("App ID copied to clipboard.")
   }
 
-  const exportApp = app => {
-    const id = isPublished ? app.prodId : app.devId
-    const appName = encodeURIComponent(app.name)
-    window.location = `/api/backups/export?appId=${id}&appname=${appName}`
+  const exportApp = opts => {
+    published = opts.published
+    exportModal.show()
   }
 
   const unpublishApp = app => {
@@ -154,9 +145,6 @@
       return
     }
     try {
-      analytics.captureEvent(Events.APP.UNPUBLISHED, {
-        appId: selectedApp.appId,
-      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
@@ -185,36 +173,52 @@
     appName = null
   }
 
-  onDestroy(() => {
-    store.actions.reset()
-  })
-
   onMount(async () => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("tab")) {
+      selectedTab = params.get("tab")
+    }
+
+    // Check app exists
     try {
+      const pkg = await API.fetchAppPackage(application)
+      await store.actions.initialise(pkg)
+    } catch (error) {
+      // Swallow
+      backToAppList()
+    }
+
+    // Initialise application
+    try {
+      await API.syncApp(application)
+      deployments = await fetchDeployments()
+      await groups.actions.init()
       if (!apps.length) {
         await apps.load()
       }
-      await API.syncApp(application)
-      deployments = await fetchDeployments()
     } catch (error) {
       notifications.error("Error initialising app overview")
     }
+    loaded = true
+  })
+
+  onDestroy(() => {
+    store.actions.reset()
   })
 </script>
 
+<Modal bind:this={exportModal} padding={false} width="600px">
+  <ExportAppModal app={selectedApp} {published} />
+</Modal>
+
 <span class="overview-wrap">
   <Page wide noPadding>
-    {#await promise}
-      <span class="page-header">
-        <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
-          Back
-        </ActionButton>
-      </span>
+    {#if !loaded || !selectedApp}
       <div class="loading">
         <ProgressCircle size="XL" />
       </div>
-    {:then _}
-      <Layout paddingX="XXL" paddingY="XXL" gap="XL">
+    {:else}
+      <Layout paddingX="XXL" paddingY="XL" gap="L">
         <span class="page-header" class:loaded>
           <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
             Back
@@ -269,18 +273,21 @@
               <span slot="control" class="app-overview-actions-icon">
                 <Icon hoverable name="More" />
               </span>
-              <MenuItem on:click={() => exportApp(selectedApp)} icon="Download">
-                Export
+              <MenuItem
+                on:click={() => exportApp({ published: false })}
+                icon="DownloadFromCloud"
+              >
+                Export latest
               </MenuItem>
               {#if isPublished}
                 <MenuItem
-                  on:click={() => unpublishApp(selectedApp)}
-                  icon="GlobeRemove"
+                  on:click={() => exportApp({ published: true })}
+                  icon="DownloadFromCloudOutline"
                 >
-                  Unpublish
+                  Export published
                 </MenuItem>
                 <MenuItem on:click={() => copyAppId(selectedApp)} icon="Copy">
-                  Copy App ID
+                  Copy app ID
                 </MenuItem>
               {/if}
               {#if !isPublished}
@@ -305,12 +312,18 @@
               app={selectedApp}
               deployments={latestDeployments}
               navigateTab={handleTabChange}
+              on:unpublish={e => unpublishApp(e.detail)}
             />
           </Tab>
-          {#if false}
+          <Tab title="Access">
+            <AccessTab app={selectedApp} />
+          </Tab>
+          {#if isPublished}
             <Tab title="Automation History">
-              <div class="container">Automation History contents</div>
+              <HistoryTab app={selectedApp} />
             </Tab>
+          {/if}
+          {#if false}
             <Tab title="Backups">
               <div class="container">Backups contents</div>
             </Tab>
@@ -346,9 +359,7 @@
       >
         Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
       </ConfirmDialog>
-    {:catch error}
-      <p>Something went wrong: {error.message}</p>
-    {/await}
+    {/if}
   </Page>
 </span>
 
@@ -401,7 +412,7 @@
     line-height: 1em;
     margin-bottom: var(--spacing-s);
   }
-  .tab-wrap :global(.spectrum-Tabs) {
+  .tab-wrap :global(> .spectrum-Tabs) {
     padding-left: var(--spectrum-alias-grid-gutter-large);
     padding-right: var(--spectrum-alias-grid-gutter-large);
   }

@@ -12,9 +12,11 @@ const {
 } = require("@budibase/backend-core/tenancy")
 const env = require("../environment")
 const { getAppId } = require("@budibase/backend-core/context")
+const { groups } = require("@budibase/pro")
 
 exports.updateAppRole = (user, { appId } = {}) => {
   appId = appId || getAppId()
+
   if (!user || !user.roles) {
     return user
   }
@@ -30,18 +32,34 @@ exports.updateAppRole = (user, { appId } = {}) => {
   // if a role wasn't found then either set as admin (builder) or public (everyone else)
   if (!user.roleId && user.builder && user.builder.global) {
     user.roleId = BUILTIN_ROLE_IDS.ADMIN
-  } else if (!user.roleId) {
+  } else if (!user.roleId && !user?.userGroups?.length) {
     user.roleId = BUILTIN_ROLE_IDS.PUBLIC
+  } else if (user?.userGroups?.length) {
+    user.roleId = null
   }
+
   delete user.roles
   return user
 }
 
-function processUser(user, { appId } = {}) {
+async function checkGroupRoles(user, { appId } = {}) {
+  if (user.roleId && user.roleId !== BUILTIN_ROLE_IDS.PUBLIC) {
+    return user
+  }
+  user.roleId = await groups.getGroupRoleId(user, appId)
+  return user
+}
+
+async function processUser(user, { appId } = {}) {
   if (user) {
     delete user.password
   }
-  return exports.updateAppRole(user, { appId })
+  user = await exports.updateAppRole(user, { appId })
+  if (!user.roleId && user?.userGroups?.length) {
+    user = await checkGroupRoles(user, { appId })
+  }
+
+  return user
 }
 
 exports.getCachedSelf = async (ctx, appId) => {
@@ -57,8 +75,9 @@ exports.getRawGlobalUser = async userId => {
 }
 
 exports.getGlobalUser = async userId => {
+  const appId = getAppId()
   let user = await exports.getRawGlobalUser(userId)
-  return processUser(user)
+  return processUser(user, { appId })
 }
 
 exports.getGlobalUsers = async (users = null) => {
@@ -89,6 +108,7 @@ exports.getGlobalUsers = async (users = null) => {
   if (!appId) {
     return globalUsers
   }
+
   return globalUsers.map(user => exports.updateAppRole(user))
 }
 

@@ -1,13 +1,14 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/users")
-const joiValidator = require("../../../middleware/joi-validator")
-const adminOnly = require("../../../middleware/adminOnly")
+const { joiValidator } = require("@budibase/backend-core/auth")
+const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const cloudRestricted = require("../../../middleware/cloudRestricted")
-const { buildUserSaveValidation } = require("../../utilities/validation")
+const { users } = require("../validation")
 const selfController = require("../../controllers/global/self")
+const { builderOrAdmin } = require("@budibase/backend-core/auth")
 
-const router = Router()
+const router = new Router()
 
 function buildAdminInitValidation() {
   return joiValidator.body(
@@ -29,6 +30,16 @@ function buildInviteValidation() {
   }).required())
 }
 
+function buildInviteMultipleValidation() {
+  // prettier-ignore
+  return joiValidator.body(Joi.array().required().items(
+    Joi.object({
+      email: Joi.string(),
+      userInfo: Joi.object().optional(),
+    })
+  ))
+}
+
 function buildInviteAcceptValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
@@ -41,11 +52,20 @@ router
   .post(
     "/api/global/users",
     adminOnly,
-    buildUserSaveValidation(),
+    users.buildUserSaveValidation(),
     controller.save
   )
-  .get("/api/global/users", adminOnly, controller.fetch)
+  .post(
+    "/api/global/users/bulk",
+    adminOnly,
+    users.buildUserBulkUserValidation(),
+    controller.bulkUpdate
+  )
+
+  .get("/api/global/users", builderOrAdmin, controller.fetch)
+  .post("/api/global/users/search", builderOrAdmin, controller.search)
   .delete("/api/global/users/:id", adminOnly, controller.destroy)
+  .get("/api/global/users/count/:appId", builderOrAdmin, controller.countByApp)
   .get("/api/global/roles/:appId")
   .post(
     "/api/global/users/invite",
@@ -53,6 +73,13 @@ router
     buildInviteValidation(),
     controller.invite
   )
+  .post(
+    "/api/global/users/multi/invite",
+    adminOnly,
+    buildInviteMultipleValidation(),
+    controller.inviteMultiple
+  )
+
   // non-global endpoints
   .post(
     "/api/global/users/invite/accept",
@@ -67,12 +94,12 @@ router
   )
   .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
-  .get("/api/global/users/:id", adminOnly, controller.find)
+  .get("/api/global/users/:id", builderOrAdmin, controller.find)
   // DEPRECATED - use new versions with self API
   .get("/api/global/users/self", selfController.getSelf)
   .post(
     "/api/global/users/self",
-    buildUserSaveValidation(true),
+    users.buildUserSaveValidation(true),
     selfController.updateSelf
   )
 

@@ -11,7 +11,6 @@
     TextArea,
     Dropzone,
   } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
   import { datasources, queries } from "stores/backend"
   import { writable } from "svelte/store"
 
@@ -72,11 +71,6 @@
       }
 
       notifications.success(`Imported successfully.`)
-      analytics.captureEvent(Events.QUERIES.REST.IMPORTED, {
-        importType: lastTouched,
-        newDatasource: createDatasource,
-      })
-
       return true
     } catch (error) {
       notifications.error("Error importing queries")

@@ -52,12 +52,16 @@
       reviewPendingDeployments(deployments, newDeployments)
       return newDeployments
     } catch (err) {
-      notifications.error("Error fetching deployment history")
+      notifications.error("Error fetching deployment overview")
     }
   }
 
+  const previewApp = () => {
+    window.open(`/${application}`)
+  }
+
   const viewApp = () => {
-    analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+    analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
       appId: selectedApp.appId,
       eventSource: EventSource.PORTAL,
     })
@@ -79,9 +83,6 @@
       return
     }
     try {
-      analytics.captureEvent(Events.APP.UNPUBLISHED, {
-        appId: selectedApp.appId,
-      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
@@ -177,7 +178,10 @@
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
-<DeployModal onOk={completePublish} />
+<div class="buttons">
+  <Button on:click={previewApp} newStyles secondary>Preview</Button>
+  <DeployModal onOk={completePublish} />
+</div>
 
 <style>
   .publish-popover-actions :global([data-cy="publish-popover-action"]) {
@@ -185,5 +189,12 @@
   }
   :global([data-cy="publish-popover-menu"]) {
     padding: 10px;
+  }
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

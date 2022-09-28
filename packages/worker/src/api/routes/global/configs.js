@@ -1,11 +1,11 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/configs")
-const joiValidator = require("../../../middleware/joi-validator")
-const adminOnly = require("../../../middleware/adminOnly")
+const { joiValidator } = require("@budibase/backend-core/auth")
+const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const { Configs } = require("../../../constants")
 
-const router = Router()
+const router = new Router()
 
 function smtpValidation() {
   // prettier-ignore
@@ -53,6 +53,7 @@ function oidcValidation() {
         name: Joi.string().allow("", null),
         uuid: Joi.string().required(),
         activated: Joi.boolean().required(),
+        scopes: Joi.array().optional()
       })
     ).required(true)
   }).unknown(true)
@@ -65,6 +66,8 @@ function buildConfigSaveValidation() {
     _rev: Joi.string().optional(),
     workspace: Joi.string().optional(),
     type: Joi.string().valid(...Object.values(Configs)).required(),
+    createdAt: Joi.string().optional(),
+    updatedAt: Joi.string().optional(),
     config: Joi.alternatives()
       .conditional("type", {
         switch: [
@@ -75,7 +78,7 @@ function buildConfigSaveValidation() {
           { is: Configs.OIDC, then: oidcValidation() }
         ],
       }),
-    }).required(),
+  }).required().unknown(true),
   )
 }
 
@@ -84,14 +87,14 @@ function buildUploadValidation() {
   return joiValidator.params(Joi.object({
     type: Joi.string().valid(...Object.values(Configs)).required(),
     name: Joi.string().required(),
-  }).required())
+  }).required().unknown(true))
 }
 
 function buildConfigGetValidation() {
   // prettier-ignore
   return joiValidator.params(Joi.object({
     type: Joi.string().valid(...Object.values(Configs)).required()
-  }).unknown(true).required())
+  }).required().unknown(true))
 }
 
 router

@@ -13,6 +13,10 @@
   // for fields rendered in things like search blocks.
   export let disableValidation = false
 
+  // Not exposed as a builder setting. Used internally to allow searching on
+  // auto columns.
+  export let editAutoColumns = false
+
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
@@ -37,7 +41,7 @@
     if (["user", "url"].includes(context.closestComponentId)) {
       return {}
     }
-    // Always inherit the closest data source
+    // Always inherit the closest datasource
     const closestContext = context[`${context.closestComponentId}`] || {}
     return closestContext || {}
   }
@@ -107,6 +111,7 @@
       {table}
       {initialValues}
       {disableValidation}
+      {editAutoColumns}
     >
       <slot />
     </InnerForm>

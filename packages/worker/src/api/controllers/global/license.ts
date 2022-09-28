@@ -24,6 +24,11 @@ export const getInfo = async (ctx: any) => {
   ctx.status = 200
 }
 
+export const deleteInfo = async (ctx: any) => {
+  await licensing.deleteLicenseInfo()
+  ctx.status = 200
+}
+
 export const getQuotaUsage = async (ctx: any) => {
   ctx.body = await quotas.getQuotaUsage()
 }

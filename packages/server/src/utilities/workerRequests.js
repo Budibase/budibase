@@ -54,7 +54,15 @@ async function checkResponse(response, errorMsg, { ctx } = {}) {
 exports.request = request
 
 // have to pass in the tenant ID as this could be coming from an automation
-exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
+exports.sendSmtpEmail = async (
+  to,
+  from,
+  subject,
+  contents,
+  cc,
+  bcc,
+  automation
+) => {
   // tenant ID will be set in header
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
@@ -65,6 +73,8 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
         from,
         contents,
         subject,
+        cc,
+        bcc,
         purpose: "custom",
         automation,
       },
@@ -136,4 +146,28 @@ exports.readGlobalUser = async ctx => {
     request(ctx, { method: "GET" })
   )
   return checkResponse(response, "get user", { ctx })
+}
+
+exports.createAdminUser = async (email, password, tenantId) => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + "/api/global/users/init"),
+    request(null, { method: "POST", body: { email, password, tenantId } })
+  )
+  return checkResponse(response, "create admin user")
+}
+
+exports.getChecklist = async () => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + "/api/global/configs/checklist"),
+    request(null, { method: "GET" })
+  )
+  return checkResponse(response, "get checklist")
+}
+
+exports.generateApiKey = async userId => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + "/api/global/self/api_key"),
+    request(null, { method: "POST", body: { userId } })
+  )
+  return checkResponse(response, "generate API key")
 }

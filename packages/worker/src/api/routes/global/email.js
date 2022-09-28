@@ -1,16 +1,24 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/email")
 const { EmailTemplatePurpose } = require("../../../constants")
-const joiValidator = require("../../../middleware/joi-validator")
-const adminOnly = require("../../../middleware/adminOnly")
+const { joiValidator } = require("@budibase/backend-core/auth")
+const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 
-const router = Router()
+const router = new Router()
 
 function buildEmailSendValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    email: Joi.string().email(),
+    email: Joi.string().email({
+      multiple: true,
+    }),
+    cc: Joi.string().email({
+      multiple: true,
+    }).allow("", null),
+    bcc: Joi.string().email({
+      multiple: true,
+    }).allow("", null),
     purpose: Joi.string().valid(...Object.values(EmailTemplatePurpose)),
     workspaceId: Joi.string().allow("", null),
     from: Joi.string().allow("", null),

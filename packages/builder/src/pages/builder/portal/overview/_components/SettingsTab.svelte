@@ -18,12 +18,10 @@
 
   let versionModal
   let updatingModal
-  let selfHostPath =
-    "https://docs.budibase.com/docs/hosting-methods#self-host-budibase"
 
   $: updateAvailable = clientPackage.version !== $store.version
   $: appUrl = `${window.origin}/app${app?.url}`
-  $: appDeployed = app.status === AppStatus.DEPLOYED
+  $: appDeployed = app?.status === AppStatus.DEPLOYED
 </script>
 
 <div class="settings-tab">
@@ -60,47 +58,34 @@
         </Layout>
       </span>
       <span class="version-section">
-        <Layout gap="XS" paddingY="XXL" paddingX="">
+        <Layout gap="XS" noPadding>
           <Heading size="S">App version</Heading>
           <Divider />
           <Body>
             {#if updateAvailable}
-              <p class="version-status">
+              <Body>
                 The app is currently using version
                 <strong>{$store.version}</strong>
-                but version <strong>{clientPackage.version}</strong> is available.
-              </p>
+                but version <strong>{clientPackage.version}</strong> is
+                available.
+                <br />
+                Updates can contain new features, performance improvements and bug
+                fixes.
+              </Body>
+              <div class="page-action">
+                <Button cta on:click={versionModal.show()}>Update app</Button>
+              </div>
             {:else}
-              <p class="version-status">
+              <div class="version-status">
                 The app is currently using version
                 <strong>{$store.version}</strong>. You're running the latest!
-              </p>
+              </div>
+              <div class="page-action">
+                <Button secondary on:click={versionModal.show()}>
+                  Revert app
+                </Button>
+              </div>
             {/if}
-
-            Updates can contain new features, performance improvements and bug
-            fixes.
-
-            <div class="page-action">
-              <Button cta on:click={versionModal.show()}>Update app</Button>
-            </div>
-          </Body>
-        </Layout>
-      </span>
-      <span class="selfhost-section">
-        <Layout gap="XS" paddingY="XXL" paddingX="">
-          <Heading size="S">Self-host Budibase</Heading>
-          <Divider />
-          <Body>
-            Self-host Budibase for free to get unlimited apps and more - and it
-            only takes a few minutes!
-            <div class="page-action">
-              <Button
-                secondary
-                on:click={() => {
-                  window.open(selfHostPath, "_blank")
-                }}>Self-host Budibase</Button
-              >
-            </div>
           </Body>
         </Layout>
       </span>

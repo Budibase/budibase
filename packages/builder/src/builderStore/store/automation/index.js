@@ -2,10 +2,10 @@ import { writable } from "svelte/store"
 import { API } from "api"
 import Automation from "./Automation"
 import { cloneDeep } from "lodash/fp"
-import analytics, { Events } from "analytics"
 
 const initialAutomationState = {
   automations: [],
+  showTestPanel: false,
   blockDefinitions: {
     TRIGGER: [],
     ACTION: [],
@@ -20,6 +20,17 @@ export const getAutomationStore = () => {
 }
 
 const automationActions = store => ({
+  definitions: async () => {
+    const response = await API.getAutomationDefinitions()
+    store.update(state => {
+      state.blockDefinitions = {
+        TRIGGER: response.trigger,
+        ACTION: response.action,
+      }
+      return state
+    })
+    return response
+  },
   fetch: async () => {
     const responses = await Promise.all([
       API.getAutomations(),
@@ -57,7 +68,19 @@ const automationActions = store => ({
       return state
     })
   },
-
+  duplicate: async automation => {
+    const response = await API.createAutomation({
+      ...automation,
+      name: `${automation.name} - copy`,
+      _id: undefined,
+      _ref: undefined,
+    })
+    store.update(state => {
+      state.automations = [...state.automations, response.automation]
+      store.actions.select(response.automation)
+      return state
+    })
+  },
   save: async automation => {
     const response = await API.updateAutomation(automation)
     store.update(state => {
@@ -110,6 +133,20 @@ const automationActions = store => ({
       return state
     })
   },
+  getLogs: async ({ automationId, startDate, status, page } = {}) => {
+    return await API.getAutomationLogs({
+      automationId,
+      startDate,
+      status,
+      page,
+    })
+  },
+  clearLogErrors: async ({ automationId, appId } = {}) => {
+    return await API.clearAutomationLogErrors({
+      automationId,
+      appId,
+    })
+  },
   addTestDataToAutomation: data => {
     store.update(state => {
       state.selectedAutomation.addTestData(data)
@@ -118,15 +155,11 @@ const automationActions = store => ({
   },
   addBlockToAutomation: (block, blockIdx) => {
     store.update(state => {
-      const newBlock = state.selectedAutomation.addBlock(
+      state.selectedBlock = state.selectedAutomation.addBlock(
         cloneDeep(block),
         blockIdx
       )
-      state.selectedBlock = newBlock
       return state
-    })
-    analytics.captureEvent(Events.AUTOMATION.BLOCK_ADDED, {
-      name: block.name,
     })
   },
   toggleFieldControl: value => {

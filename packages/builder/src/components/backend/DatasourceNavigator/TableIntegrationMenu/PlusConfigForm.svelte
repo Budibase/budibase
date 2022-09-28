@@ -8,6 +8,7 @@
     notifications,
     Modal,
     Table,
+    Toggle,
   } from "@budibase/bbui"
   import { datasources, integrations, tables } from "stores/backend"
   import CreateEditRelationship from "components/backend/Datasources/CreateEditRelationship.svelte"
@@ -15,6 +16,7 @@
   import ArrayRenderer from "components/common/renderers/ArrayRenderer.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { goto } from "@roxi/routify"
+  import ValuesList from "components/common/ValuesList.svelte"
 
   export let datasource
   export let save
@@ -31,6 +33,8 @@
   let createExternalTableModal
   let selectedFromRelationship, selectedToRelationship
   let confirmDialog
+  let specificTables = null
+  let requireSpecificTables = false
 
   $: integration = datasource && $integrations[datasource.source]
   $: plusTables = datasource?.plus
@@ -87,11 +91,15 @@
 
   async function updateDatasourceSchema() {
     try {
-      await datasources.updateSchema(datasource)
+      await datasources.updateSchema(datasource, specificTables)
       notifications.success(`Datasource ${name} tables updated successfully.`)
       await tables.fetch()
     } catch (error) {
-      notifications.error("Error updating datasource schema")
+      notifications.error(
+        `Error updating datasource schema ${
+          error?.message ? `: ${error.message}` : ""
+        }`
+      )
     }
   }
 
@@ -146,13 +154,26 @@
   warning={false}
   title="Confirm table fetch"
 >
+  <Toggle
+    bind:value={requireSpecificTables}
+    on:change={e => {
+      requireSpecificTables = e.detail
+      specificTables = null
+    }}
+    thin
+    text="Fetch listed tables only (one per line)"
+  />
+  {#if requireSpecificTables}
+    <ValuesList label="" bind:values={specificTables} />
+  {/if}
+  <br />
   <Body>
     If you have fetched tables from this database before, this action may
     overwrite any changes you made after your initial fetch.
   </Body>
 </ConfirmDialog>
 
-<Divider size="S" />
+<Divider />
 <div class="query-header">
   <Heading size="S">Tables</Heading>
   <div class="table-buttons">
@@ -188,7 +209,7 @@
 {:else}
   <Body size="S"><i>No tables found.</i></Body>
 {/if}
-<Divider size="S" />
+<Divider />
 <div class="query-header">
   <Heading size="S">Relationships</Heading>
   <Button primary on:click={() => openRelationshipModal()}>

@@ -9,17 +9,20 @@ const dispatchEvent = (type, data = {}) => {
 const createBuilderStore = () => {
   const initialState = {
     inBuilder: false,
-    layout: null,
     screen: null,
     selectedComponentId: null,
     editMode: false,
     previewId: null,
-    previewType: null,
-    selectedPath: [],
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
     isDragging: false,
+    navigation: null,
+    hiddenComponentIds: [],
+    usedPlugins: null,
+
+    // Legacy - allow the builder to specify a layout
+    layout: null,
   }
   const store = writable(initialState)
   const actions = {
@@ -38,8 +41,8 @@ const createBuilderStore = () => {
     updateProp: (prop, value) => {
       dispatchEvent("update-prop", { prop, value })
     },
-    deleteComponent: id => {
-      dispatchEvent("delete-component", { id })
+    keyDown: (key, ctrlKey) => {
+      dispatchEvent("key-down", { key, ctrlKey })
     },
     duplicateComponent: id => {
       dispatchEvent("duplicate-component", { id })
@@ -47,15 +50,12 @@ const createBuilderStore = () => {
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
-    pingEndUser: async () => {
+    analyticsPing: async () => {
       try {
-        await API.pingEndUser()
+        await API.analyticsPing({ source: "app" })
       } catch (error) {
         // Do nothing
       }
-    },
-    setSelectedPath: path => {
-      store.update(state => ({ ...state, selectedPath: path }))
     },
     moveComponent: (componentId, destinationComponentId, mode) => {
       dispatchEvent("move-component", {
@@ -75,6 +75,29 @@ const createBuilderStore = () => {
         return
       }
       store.update(state => ({ ...state, editMode: enabled }))
+    },
+    clickNav: () => {
+      dispatchEvent("click-nav")
+    },
+    requestAddComponent: () => {
+      dispatchEvent("request-add-component")
+    },
+    highlightSetting: setting => {
+      dispatchEvent("highlight-setting", { setting })
+    },
+    updateUsedPlugin: (name, hash) => {
+      // Check if we used this plugin
+      const used = get(store)?.usedPlugins?.find(x => x.name === name)
+      if (used) {
+        store.update(state => {
+          state.usedPlugins = state.usedPlugins.filter(x => x.name !== name)
+          state.usedPlugins.push({
+            ...used,
+            hash,
+          })
+          return state
+        })
+      }
     },
   }
   return {

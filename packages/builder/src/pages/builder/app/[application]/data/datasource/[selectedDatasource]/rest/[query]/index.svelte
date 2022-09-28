@@ -28,25 +28,60 @@
   import { onMount } from "svelte"
   import restUtils from "helpers/data/utils"
   import {
-    RestBodyTypes as bodyTypes,
-    SchemaTypeOptions,
     PaginationLocations,
     PaginationTypes,
+    RawRestBodyTypes,
+    RestBodyTypes as bodyTypes,
+    SchemaTypeOptions,
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
   import DynamicVariableModal from "../../_components/DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
-  import { RawRestBodyTypes } from "constants/backend"
+
+  import {
+    getRestBindings,
+    readableToRuntimeBinding,
+    readableToRuntimeMap,
+    runtimeToReadableBinding,
+    runtimeToReadableMap,
+    toBindingsArray,
+  } from "builderStore/dataBinding"
 
   let query, datasource
   let breakQs = {},
-    bindings = {}
+    requestBindings = {}
   let saveId, url
   let response, schema, enabledHeaders
   let authConfigId
-  let dynamicVariables, addVariableModal, varBinding
+  let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
+  let restBindings = getRestBindings()
+
+  $: staticVariables = datasource?.config?.staticVariables || {}
+
+  $: customRequestBindings = toBindingsArray(
+    requestBindings,
+    "Binding",
+    "Bindings"
+  )
+  $: globalDynamicRequestBindings = toBindingsArray(
+    globalDynamicBindings,
+    "Dynamic",
+    "Dynamic"
+  )
+  $: dataSourceStaticBindings = toBindingsArray(
+    staticVariables,
+    "Datasource.Static",
+    "Datasource Static"
+  )
+
+  $: mergedBindings = [
+    ...restBindings,
+    ...customRequestBindings,
+    ...globalDynamicRequestBindings,
+    ...dataSourceStaticBindings,
+  ]
 
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
@@ -62,6 +97,8 @@
   $: hasSchema =
     Object.keys(schema || {}).length !== 0 ||
     Object.keys(query?.schema || {}).length !== 0
+
+  $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -89,23 +126,33 @@
     if (!base) {
       return base
     }
-    const qs = restUtils.buildQueryString(qsObj)
+    let qs = restUtils.buildQueryString(
+      runtimeToReadableMap(mergedBindings, qsObj)
+    )
     let newUrl = base
     if (base.includes("?")) {
-      newUrl = base.split("?")[0]
+      const split = base.split("?")
+      newUrl = split[0]
     }
-    return qs.length > 0 ? `${newUrl}?${qs}` : newUrl
+    return qs.length === 0 ? newUrl : `${newUrl}?${qs}`
   }
 
   function buildQuery() {
-    const newQuery = { ...query }
-    const queryString = restUtils.buildQueryString(breakQs)
+    const newQuery = cloneDeep(query)
+    const queryString = restUtils.buildQueryString(runtimeUrlQueries)
+
+    newQuery.parameters = restUtils.keyValueToQueryParameters(requestBindings)
+    newQuery.fields.requestBody =
+      typeof newQuery.fields.requestBody === "object"
+        ? readableToRuntimeMap(mergedBindings, newQuery.fields.requestBody)
+        : readableToRuntimeBinding(mergedBindings, newQuery.fields.requestBody)
+
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
     newQuery.schema = restUtils.fieldsToSchema(schema)
-    newQuery.parameters = restUtils.keyValueToQueryParameters(bindings)
+
     return newQuery
   }
 
@@ -120,6 +167,13 @@
         datasource.config.dynamicVariables = rebuildVariables(saveId)
         datasource = await datasources.save(datasource)
       }
+      prettifyQueryRequestBody(
+        query,
+        requestBindings,
+        dynamicVariables,
+        staticVariables,
+        restBindings
+      )
     } catch (err) {
       notifications.error(`Error saving query`)
     }
@@ -127,7 +181,7 @@
 
   async function runQuery() {
     try {
-      response = await queries.preview(buildQuery(query))
+      response = await queries.preview(buildQuery())
       if (response.rows.length === 0) {
         notifications.info("Request did not return any data")
       } else {
@@ -186,11 +240,11 @@
   ]
 
   // convert dynamic variables list to simple key/val object
-  const getDynamicVariables = (datasource, queryId) => {
+  const getDynamicVariables = (datasource, queryId, matchFn) => {
     const variablesList = datasource?.config?.dynamicVariables
     if (variablesList && variablesList.length > 0) {
       const filtered = queryId
-        ? variablesList.filter(variable => variable.queryId === queryId)
+        ? variablesList.filter(variable => matchFn(variable, queryId))
         : variablesList
       return filtered.reduce(
         (acc, next) => ({ ...acc, [next.name]: next.value }),
@@ -236,6 +290,55 @@
     }
   }
 
+  const prettifyQueryRequestBody = (
+    query,
+    requestBindings,
+    dynamicVariables,
+    staticVariables,
+    restBindings
+  ) => {
+    let customRequestBindings = toBindingsArray(requestBindings, "Binding")
+    let dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
+    let dataSourceStaticBindings = toBindingsArray(
+      staticVariables,
+      "Datasource.Static"
+    )
+
+    const prettyBindings = [
+      ...restBindings,
+      ...customRequestBindings,
+      ...dynamicRequestBindings,
+      ...dataSourceStaticBindings,
+    ]
+
+    //Parse the body here as now all bindings have been updated.
+    if (query?.fields?.requestBody) {
+      query.fields.requestBody =
+        typeof query.fields.requestBody === "object"
+          ? runtimeToReadableMap(prettyBindings, query.fields.requestBody)
+          : runtimeToReadableBinding(prettyBindings, query.fields.requestBody)
+    }
+  }
+
+  const paramsChanged = evt => {
+    breakQs = {}
+    for (let param of evt.detail) {
+      breakQs[param.name] = param.value
+    }
+  }
+
+  const urlChanged = evt => {
+    breakQs = {}
+    const qs = evt.target.value.split("?")[1]
+    if (qs && qs.length > 0) {
+      const parts = qs.split("&")
+      for (let part of parts) {
+        const [key, value] = part.split("=")
+        breakQs[key] = value
+      }
+    }
+  }
+
   onMount(async () => {
     query = getSelectedQuery()
 
@@ -250,6 +353,8 @@
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
     breakQs = restUtils.breakQueryString(qs)
+    breakQs = runtimeToReadableMap(mergedBindings, breakQs)
+
     const path = query.fields.path
     if (
       datasourceUrl &&
@@ -260,7 +365,7 @@
     }
     url = buildUrl(query.fields.path, breakQs)
     schema = restUtils.schemaToFields(query.schema)
-    bindings = restUtils.queryParametersToKeyValue(query.parameters)
+    requestBindings = restUtils.queryParametersToKeyValue(query.parameters)
     authConfigId = getAuthConfigId()
     if (!query.fields.disabledHeaders) {
       query.fields.disabledHeaders = {}
@@ -290,7 +395,24 @@
     if (query && !query.fields.pagination) {
       query.fields.pagination = {}
     }
-    dynamicVariables = getDynamicVariables(datasource, query._id)
+    dynamicVariables = getDynamicVariables(
+      datasource,
+      query._id,
+      (variable, queryId) => variable.queryId === queryId
+    )
+    globalDynamicBindings = getDynamicVariables(
+      datasource,
+      query._id,
+      (variable, queryId) => variable.queryId !== queryId
+    )
+
+    prettifyQueryRequestBody(
+      query,
+      requestBindings,
+      globalDynamicBindings,
+      staticVariables,
+      restBindings
+    )
   })
 </script>
 
@@ -329,7 +451,11 @@
             />
           </div>
           <div class="url">
-            <Input bind:value={url} placeholder="http://www.api.com/endpoint" />
+            <Input
+              on:blur={urlChanged}
+              bind:value={url}
+              placeholder="http://www.api.com/endpoint"
+            />
           </div>
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>
           <Button
@@ -344,16 +470,31 @@
         <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
             <KeyValueBuilder
-              bind:object={bindings}
+              bind:object={requestBindings}
               tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
               name="binding"
               headings
               keyPlaceholder="Binding name"
               valuePlaceholder="Default"
+              bindings={[
+                ...restBindings,
+                ...globalDynamicRequestBindings,
+                ...dataSourceStaticBindings,
+              ]}
+              bindingDrawerLeft="260px"
             />
           </Tab>
           <Tab title="Params">
-            <KeyValueBuilder bind:object={breakQs} name="param" headings />
+            {#key breakQs}
+              <KeyValueBuilder
+                on:change={paramsChanged}
+                object={breakQs}
+                name="param"
+                headings
+                bindings={mergedBindings}
+                bindingDrawerLeft="260px"
+              />
+            {/key}
           </Tab>
           <Tab title="Headers">
             <KeyValueBuilder
@@ -362,6 +503,8 @@
               toggle
               name="header"
               headings
+              bindings={mergedBindings}
+              bindingDrawerLeft="260px"
             />
           </Tab>
           <Tab title="Body">
@@ -449,7 +592,7 @@
     </div>
     <div class="bottom">
       <Layout paddingY="S" gap="S">
-        <Divider size="S" />
+        <Divider />
         {#if !response && Object.keys(schema).length === 0}
           <Heading size="M">Response</Heading>
           <div class="placeholder">
@@ -571,6 +714,7 @@
   .url-block {
     display: flex;
     gap: var(--spacing-s);
+    z-index: 200;
   }
   .verb {
     flex: 1;

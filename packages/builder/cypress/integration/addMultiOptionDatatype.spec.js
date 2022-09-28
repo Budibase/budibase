@@ -16,20 +16,16 @@ filterTests(['all'], () => {
 
   it("should add form with multi select picker, containing 5 options", () => {
     cy.navigateToFrontend()
-    cy.wait(500)
     // Add data provider
-    cy.get(interact.CATEGORY_DATA).click()
-    cy.get(interact.COMPONENT_DATA_PROVIDER).click()
+    cy.searchAndAddComponent("Data Provider")
     cy.get(interact.DATASOURCE_PROP_CONTROL).click()
     cy.get(interact.DROPDOWN).contains("Multi Data").click()
-    cy.wait(500)
     // Add Form with schema to match table
-    cy.addComponent("Form", "Form")
+    cy.searchAndAddComponent("Form")
     cy.get(interact.DATASOURCE_PROP_CONTROL).click()
     cy.get(interact.DROPDOWN).contains("Multi Data").click()
-    cy.wait(500)
     // Add multi-select picker to form
-    cy.addComponent("Form", "Multi-select Picker").then(componentId => {
+    cy.searchAndAddComponent("Multi-select Picker").then(componentId => {
       cy.get(interact.DATASOURCE_FIELD_CONTROL).type("Test Data").type("{enter}")
       cy.wait(1000)
       cy.getComponent(componentId).contains("Choose some options").click()
@@ -41,7 +37,7 @@ filterTests(['all'], () => {
       }
       // Check items have been selected
       cy.getComponent(componentId)
-        .find(interact.SPECTRUM_Picker_LABEL)
+        .find(interact.SPECTRUM_PICKER_LABEL)
         .contains("(5)")
       })
     })

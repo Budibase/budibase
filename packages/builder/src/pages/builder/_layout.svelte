@@ -1,8 +1,9 @@
 <script>
   import { isActive, redirect, params } from "@roxi/routify"
-  import { admin, auth } from "stores/portal"
+  import { admin, auth, licensing } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
+  import { API } from "api"
 
   let loaded = false
 
@@ -53,11 +54,18 @@
       await auth.setOrganisation(urlTenantId)
     }
   }
+  async function analyticsPing() {
+    await API.analyticsPing({ source: "builder" })
+  }
 
   onMount(async () => {
     try {
       await auth.getSelf()
       await admin.init()
+
+      if ($auth.user) {
+        await licensing.init()
+      }
 
       // Set init info if present
       if ($params["?template"]) {
@@ -73,6 +81,9 @@
       // being logged in
     }
     loaded = true
+
+    // lastly
+    await analyticsPing()
   })
 
   $: {

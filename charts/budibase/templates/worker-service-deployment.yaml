@@ -27,6 +27,10 @@ spec:
     spec:
       containers:
       - env:
+        - name: BUDIBASE_ENVIRONMENT
+          value: {{ .Values.globals.budibaseEnv }}
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: "kubernetes"
         - name: CLUSTER_PORT
           value: {{ .Values.services.worker.port | quote }}
         {{ if .Values.services.couchdb.enabled }}
@@ -73,6 +77,8 @@ spec:
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: PLUGIN_BUCKET_NAME
+          value: {{ .Values.services.objectStore.pluginBucketName | default "plugins" | quote }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
@@ -91,6 +97,10 @@ spec:
           value: {{ .Values.globals.selfHosted | quote }}
         - name: SENTRY_DSN
           value: {{ .Values.globals.sentryDSN }}
+        - name: ENABLE_ANALYTICS
+          value: {{ .Values.globals.enableAnalytics | quote }}
+        - name: POSTHOG_TOKEN
+          value: {{ .Values.globals.posthogToken }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
@@ -117,12 +127,36 @@ spec:
           value: {{ .Values.globals.google.clientId | quote }}
         - name: GOOGLE_CLIENT_SECRET
           value: {{ .Values.globals.google.secret | quote }}
+        - name: TENANT_FEATURE_FLAGS
+          value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        {{ if .Values.globals.elasticApmEnabled }}
+        - name: ELASTIC_APM_ENABLED
+          value: {{ .Values.globals.elasticApmEnabled | quote }}
+        {{ end }}
+        {{ if .Values.globals.elasticApmSecretToken }}
+        - name: ELASTIC_APM_SECRET_TOKEN
+          value: {{ .Values.globals.elasticApmSecretToken | quote }}
+        {{ end }}
+        {{ if .Values.globals.elasticApmServerUrl }}
+        - name: ELASTIC_APM_SERVER_URL
+          value: {{ .Values.globals.elasticApmServerUrl | quote }}
+        {{ end }}
+
         image: budibase/worker:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.services.worker.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
         name: bbworker
         ports:
         - containerPort: {{ .Values.services.worker.port }}
-        resources: {}
+        {{ with .Values.services.worker.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -131,6 +165,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      {{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
 status: {}
