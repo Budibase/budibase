@@ -1,20 +1,18 @@
-const {
-  DocumentTypes,
-  SEPARATOR,
-  ViewNames,
-  getAllApps,
-} = require("./db/utils")
+const { DocumentType, SEPARATOR, ViewName, getAllApps } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { queryGlobalView } = require("./db/views")
 const { Headers, Cookies, MAX_VALID_DATE } = require("./constants")
 const env = require("./environment")
 const userCache = require("./cache/user")
-const { getUserSessions, invalidateSessions } = require("./security/sessions")
+const {
+  getSessionsForUser,
+  invalidateSessions,
+} = require("./security/sessions")
 const events = require("./events")
 const tenancy = require("./tenancy")
 
-const APP_PREFIX = DocumentTypes.APP + SEPARATOR
+const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
 function confirmAppId(possibleAppId) {
@@ -42,6 +40,18 @@ async function resolveAppUrl(ctx) {
   )[0]
 
   return app && app.appId ? app.appId : undefined
+}
+
+exports.isServingApp = ctx => {
+  // dev app
+  if (ctx.path.startsWith(`/${APP_PREFIX}`)) {
+    return true
+  }
+  // prod app
+  if (ctx.path.startsWith(PROD_APP_PREFIX)) {
+    return true
+  }
+  return false
 }
 
 /**
@@ -151,7 +161,7 @@ exports.isClient = ctx => {
 }
 
 const getBuilders = async () => {
-  const builders = await queryGlobalView(ViewNames.USER_BY_BUILDERS, {
+  const builders = await queryGlobalView(ViewName.USER_BY_BUILDERS, {
     include_docs: false,
   })
 
@@ -178,7 +188,7 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
   const currentSession = exports.getCookie(ctx, Cookies.Auth)
-  let sessions = await getUserSessions(userId)
+  let sessions = await getSessionsForUser(userId)
 
   if (keepActiveSession) {
     sessions = sessions.filter(
@@ -190,10 +200,8 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     exports.clearCookie(ctx, Cookies.CurrentApp)
   }
 
-  await invalidateSessions(
-    userId,
-    sessions.map(({ sessionId }) => sessionId)
-  )
+  const sessionIds = sessions.map(({ sessionId }) => sessionId)
+  await invalidateSessions(userId, { sessionIds, reason: "logout" })
   await events.auth.logout()
   await userCache.invalidateUser(userId)
 }

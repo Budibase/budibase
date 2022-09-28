@@ -1327,7 +1327,7 @@
             "type": "string"
           },
           "datasourceId": {
-            "description": "The ID of the data source the query belongs to.",
+            "description": "The ID of the datasource the query belongs to.",
             "type": "string"
           },
           "parameters": {
@@ -1386,7 +1386,7 @@
                   "type": "string"
                 },
                 "datasourceId": {
-                  "description": "The ID of the data source the query belongs to.",
+                  "description": "The ID of the datasource the query belongs to.",
                   "type": "string"
                 },
                 "parameters": {
@@ -1659,6 +1659,117 @@
           "data"
         ]
       },
+      "rowSearch": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "allOr": {
+                "type": "boolean",
+                "description": "Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used."
+              },
+              "string": {
+                "type": "object",
+                "example": {
+                  "columnName1": "value",
+                  "columnName2": "value"
+                },
+                "description": "A map of field name to the string to search for, this will look for rows that have a value starting with the string value.",
+                "additionalProperties": {
+                  "type": "string",
+                  "description": "The value to search for in the column."
+                }
+              },
+              "fuzzy": {
+                "type": "object",
+                "description": "A fuzzy search, only supported by internal tables."
+              },
+              "range": {
+                "type": "object",
+                "description": "Searches within a range, the format of this must be in the format of an object with a \"low\" and \"high\" property.",
+                "example": {
+                  "columnName1": {
+                    "low": 10,
+                    "high": 20
+                  }
+                }
+              },
+              "equal": {
+                "type": "object",
+                "description": "Searches for rows that have a column value that is exactly the value set."
+              },
+              "notEqual": {
+                "type": "object",
+                "description": "Searches for any row which does not contain the specified column value."
+              },
+              "empty": {
+                "type": "object",
+                "description": "Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.",
+                "example": {
+                  "columnName1": ""
+                }
+              },
+              "notEmpty": {
+                "type": "object",
+                "description": "Searches for rows which have the specified column."
+              },
+              "oneOf": {
+                "type": "object",
+                "description": "Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]."
+              }
+            }
+          },
+          "paginate": {
+            "type": "boolean",
+            "description": "Enables pagination, by default this is disabled."
+          },
+          "bookmark": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "description": "If retrieving another page, the bookmark from the previous request must be supplied."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "The maximum number of rows to return, useful when paginating, for internal tables this will be limited to 1000, for SQL tables it will be 5000."
+          },
+          "sort": {
+            "type": "object",
+            "description": "A set of parameters describing the sort behaviour of the search.",
+            "properties": {
+              "order": {
+                "type": "string",
+                "enum": [
+                  "ascending",
+                  "descending"
+                ],
+                "description": "The order of the sort, by default this is ascending."
+              },
+              "column": {
+                "type": "string",
+                "description": "The name of the column by which the rows will be sorted."
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "string",
+                  "number"
+                ],
+                "description": "Defines whether the column should be treated as a string or as numbers when sorting."
+              }
+            }
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
       "nameSearch": {
         "type": "object",
         "properties": {
@@ -1681,6 +1792,7 @@
   "paths": {
     "/applications": {
       "post": {
+        "operationId": "create",
         "summary": "Create an application",
         "tags": [
           "applications"
@@ -1721,6 +1833,7 @@
     },
     "/applications/{appId}": {
       "put": {
+        "operationId": "update",
         "summary": "Update an application",
         "tags": [
           "applications"
@@ -1759,6 +1872,7 @@
         }
       },
       "delete": {
+        "operationId": "destroy",
         "summary": "Delete an application",
         "tags": [
           "applications"
@@ -1787,6 +1901,7 @@
         }
       },
       "get": {
+        "operationId": "getById",
         "summary": "Retrieve an application",
         "tags": [
           "applications"
@@ -1817,6 +1932,7 @@
     },
     "/applications/search": {
       "post": {
+        "operationId": "search",
         "summary": "Search for applications",
         "description": "Based on application properties (currently only name) search for applications.",
         "tags": [
@@ -1853,6 +1969,7 @@
     },
     "/queries/{queryId}": {
       "post": {
+        "operationId": "execute",
         "summary": "Execute a query",
         "description": "Queries which have been created within a Budibase app can be executed using this,",
         "tags": [
@@ -1900,6 +2017,7 @@
     },
     "/queries/search": {
       "post": {
+        "operationId": "search",
         "summary": "Search for queries",
         "description": "Based on query properties (currently only name) search for queries.",
         "tags": [
@@ -1941,6 +2059,7 @@
     },
     "/tables/{tableId}/rows": {
       "post": {
+        "operationId": "create",
         "summary": "Create a row",
         "description": "Creates a row within the specified table.",
         "tags": [
@@ -1990,6 +2109,7 @@
     },
     "/tables/{tableId}/rows/{rowId}": {
       "put": {
+        "operationId": "update",
         "summary": "Update a row",
         "description": "Updates a row within the specified table.",
         "tags": [
@@ -2040,6 +2160,7 @@
         }
       },
       "delete": {
+        "operationId": "destroy",
         "summary": "Delete a row",
         "description": "Deletes a row within the specified table.",
         "tags": [
@@ -2075,6 +2196,7 @@
         }
       },
       "get": {
+        "operationId": "getById",
         "summary": "Retrieve a row",
         "description": "This gets a single row, it will be enriched with the full related rows, rather than the squashed \"primaryDisplay\" format returned by the search endpoint.",
         "tags": [
@@ -2112,6 +2234,7 @@
     },
     "/tables/{tableId}/rows/search": {
       "post": {
+        "operationId": "search",
         "summary": "Search for rows",
         "tags": [
           "rows"
@@ -2129,115 +2252,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "query"
-                ],
-                "properties": {
-                  "query": {
-                    "type": "object",
-                    "properties": {
-                      "allOr": {
-                        "type": "boolean",
-                        "description": "Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used."
-                      },
-                      "string": {
-                        "type": "object",
-                        "example": {
-                          "columnName1": "value",
-                          "columnName2": "value"
-                        },
-                        "description": "A map of field name to the string to search for, this will look for rows that have a value starting with the string value.",
-                        "additionalProperties": {
-                          "type": "string",
-                          "description": "The value to search for in the column."
-                        }
-                      },
-                      "fuzzy": {
-                        "type": "object",
-                        "description": "A fuzzy search, only supported by internal tables."
-                      },
-                      "range": {
-                        "type": "object",
-                        "description": "Searches within a range, the format of this must be in the format of an object with a \"low\" and \"high\" property.",
-                        "example": {
-                          "columnName1": {
-                            "low": 10,
-                            "high": 20
-                          }
-                        }
-                      },
-                      "equal": {
-                        "type": "object",
-                        "description": "Searches for rows that have a column value that is exactly the value set."
-                      },
-                      "notEqual": {
-                        "type": "object",
-                        "description": "Searches for any row which does not contain the specified column value."
-                      },
-                      "empty": {
-                        "type": "object",
-                        "description": "Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.",
-                        "example": {
-                          "columnName1": ""
-                        }
-                      },
-                      "notEmpty": {
-                        "type": "object",
-                        "description": "Searches for rows which have the specified column."
-                      },
-                      "oneOf": {
-                        "type": "object",
-                        "description": "Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]."
-                      }
-                    }
-                  },
-                  "paginate": {
-                    "type": "boolean",
-                    "description": "Enables pagination, by default this is disabled."
-                  },
-                  "bookmark": {
-                    "oneOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "integer"
-                      }
-                    ],
-                    "description": "If retrieving another page, the bookmark from the previous request must be supplied."
-                  },
-                  "limit": {
-                    "type": "integer",
-                    "description": "The maximum number of rows to return, useful when paginating, for internal tables this will be limited to 1000, for SQL tables it will be 5000."
-                  },
-                  "sort": {
-                    "type": "object",
-                    "description": "A set of parameters describing the sort behaviour of the search.",
-                    "properties": {
-                      "order": {
-                        "type": "string",
-                        "enum": [
-                          "ascending",
-                          "descending"
-                        ],
-                        "description": "The order of the sort, by default this is ascending."
-                      },
-                      "column": {
-                        "type": "string",
-                        "description": "The name of the column by which the rows will be sorted."
-                      },
-                      "type": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number"
-                        ],
-                        "description": "Defines whether the column should be treated as a string or as numbers when sorting."
-                      }
-                    }
-                  }
-                }
+                "$ref": "#/components/schemas/rowSearch"
               }
             }
           }
@@ -2263,6 +2278,7 @@
     },
     "/tables": {
       "post": {
+        "operationId": "create",
         "summary": "Create a table",
         "description": "Create a table, this could be internal or external.",
         "tags": [
@@ -2289,7 +2305,7 @@
         },
         "responses": {
           "200": {
-            "description": "Returns the created table, including the ID which has been generated for it. This can be internal or external data sources.",
+            "description": "Returns the created table, including the ID which has been generated for it. This can be internal or external datasources.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2308,6 +2324,7 @@
     },
     "/tables/{tableId}": {
       "put": {
+        "operationId": "update",
         "summary": "Update a table",
         "description": "Update a table, this could be internal or external.",
         "tags": [
@@ -2354,6 +2371,7 @@
         }
       },
       "delete": {
+        "operationId": "destroy",
         "summary": "Delete a table",
         "description": "Delete a table, this could be internal or external.",
         "tags": [
@@ -2386,6 +2404,7 @@
         }
       },
       "get": {
+        "operationId": "getById",
         "summary": "Retrieve a table",
         "description": "Lookup a table, this could be internal or external.",
         "tags": [
@@ -2420,6 +2439,7 @@
     },
     "/tables/search": {
       "post": {
+        "operationId": "search",
         "summary": "Search for tables",
         "description": "Based on table properties (currently only name) search for tables. This could be an internal or an external table.",
         "tags": [
@@ -2461,6 +2481,7 @@
     },
     "/users": {
       "post": {
+        "operationId": "create",
         "summary": "Create a user",
         "tags": [
           "users"
@@ -2496,6 +2517,7 @@
     },
     "/users/{userId}": {
       "put": {
+        "operationId": "update",
         "summary": "Update a user",
         "tags": [
           "users"
@@ -2534,6 +2556,7 @@
         }
       },
       "delete": {
+        "operationId": "destroy",
         "summary": "Delete a user",
         "tags": [
           "users"
@@ -2562,6 +2585,7 @@
         }
       },
       "get": {
+        "operationId": "getById",
         "summary": "Retrieve a user",
         "tags": [
           "users"
@@ -2592,6 +2616,7 @@
     },
     "/users/search": {
       "post": {
+        "operationId": "search",
         "summary": "Search for users",
         "description": "Based on user properties (currently only name) search for users.",
         "tags": [

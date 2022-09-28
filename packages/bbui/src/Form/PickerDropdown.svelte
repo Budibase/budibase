@@ -14,7 +14,6 @@
   export let disabled = false
   export let readonly = false
   export let error = null
-  export let updateOnChange = true
   export let getSecondaryOptionLabel = option =>
     extractProperty(option, "label")
   export let getSecondaryOptionValue = option =>
@@ -27,6 +26,7 @@
   export let primaryOptions = []
   export let secondaryOptions = []
   export let searchTerm
+  export let showClearIcon = true
 
   let primaryLabel
   let secondaryLabel
@@ -99,7 +99,6 @@
     {searchTerm}
     {autocomplete}
     {dataCy}
-    {updateOnChange}
     {error}
     {disabled}
     {readonly}
@@ -120,6 +119,7 @@
     {secondaryValue}
     {primaryLabel}
     {secondaryLabel}
+    {showClearIcon}
     on:pickprimary={onPickPrimary}
     on:picksecondary={onPickSecondary}
     on:search={updateSearchTerm}

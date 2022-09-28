@@ -11,7 +11,7 @@ const {
   datasourceQueryValidator,
 } = require("./utils/validators")
 
-const router = Router()
+const router = new Router()
 
 router
   .get("/api/datasources", authorized(BUILDER), datasourceController.fetch)

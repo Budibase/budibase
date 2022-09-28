@@ -15,7 +15,7 @@ import {
   getLayoutParams,
   getScreenParams,
   generateDevAppID,
-  DocumentTypes,
+  DocumentType,
   AppStatus,
 } from "../../db/utils"
 const {
@@ -47,7 +47,9 @@ import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
 import { errors, events, migrations } from "@budibase/backend-core"
-import { App, MigrationType } from "@budibase/types"
+import { App, Layout, Screen, MigrationType } from "@budibase/types"
+import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
+import { groups } from "@budibase/pro"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -206,7 +208,7 @@ export const fetchAppDefinition = async (ctx: any) => {
 
 export const fetchAppPackage = async (ctx: any) => {
   const db = context.getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  const application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
 
@@ -243,27 +245,19 @@ const performAppCreate = async (ctx: any) => {
   }
   const instance = await createInstance(instanceConfig)
   const appId = instance._id
-
   const db = context.getAppDB()
-  let _rev
-  try {
-    // if template there will be an existing doc
-    const existing = await db.get(DocumentTypes.APP_METADATA)
-    _rev = existing._rev
-  } catch (err) {
-    // nothing to do
-  }
-  const newApplication: App = {
-    _id: DocumentTypes.APP_METADATA,
-    _rev,
-    appId: instance._id,
+
+  let newApplication: App = {
+    _id: DocumentType.APP_METADATA,
+    _rev: undefined,
+    appId,
     type: "app",
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
     name: name,
     url: url,
-    template: ctx.request.body.template,
-    instance: instance,
+    template: templateKey,
+    instance,
     tenantId: getTenantId(),
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
@@ -285,6 +279,36 @@ const performAppCreate = async (ctx: any) => {
       buttonBorderRadius: "16px",
     },
   }
+
+  // If we used a template or imported an app there will be an existing doc.
+  // Fetch and migrate some metadata from the existing app.
+  try {
+    const existing: App = await db.get(DocumentType.APP_METADATA)
+    const keys: (keyof App)[] = [
+      "_rev",
+      "navigation",
+      "theme",
+      "customTheme",
+      "icon",
+    ]
+    keys.forEach(key => {
+      if (existing[key]) {
+        // @ts-ignore
+        newApplication[key] = existing[key]
+      }
+    })
+
+    // Migrate navigation settings and screens if required
+    if (existing) {
+      const navigation = await migrateAppNavigation()
+      if (navigation) {
+        newApplication.navigation = navigation
+      }
+    }
+  } catch (err) {
+    // Nothing to do
+  }
+
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
 
@@ -383,7 +407,7 @@ export const update = async (ctx: any) => {
 export const updateClient = async (ctx: any) => {
   // Get current app version
   const db = context.getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  const application = await db.get(DocumentType.APP_METADATA)
   const currentVersion = application.version
 
   // Update client library and manifest
@@ -407,7 +431,7 @@ export const updateClient = async (ctx: any) => {
 export const revertClient = async (ctx: any) => {
   // Check app can be reverted
   const db = context.getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  const application = await db.get(DocumentType.APP_METADATA)
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
   }
@@ -439,11 +463,10 @@ const destroyApp = async (ctx: any) => {
   }
 
   const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
-  const app = await db.get(DocumentTypes.APP_METADATA)
+  const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
 
   if (isUnpublish) {
-    await quotas.removePublishedApp()
     await events.app.unpublished(app)
   } else {
     await quotas.removeApp()
@@ -473,6 +496,7 @@ const preDestroyApp = async (ctx: any) => {
 
 const postDestroyApp = async (ctx: any) => {
   const rowCount = ctx.rowCount
+  await groups.cleanupApp(ctx.params.appId)
   if (rowCount) {
     await quotas.removeRows(rowCount)
   }
@@ -524,11 +548,7 @@ export const sync = async (ctx: any, next: any) => {
   })
   let error
   try {
-    await replication.replicate({
-      filter: function (doc: any) {
-        return doc._id !== DocumentTypes.APP_METADATA
-      },
-    })
+    await replication.replicate(replication.appReplicateOpts())
   } catch (err) {
     error = err
   } finally {
@@ -547,10 +567,10 @@ export const sync = async (ctx: any, next: any) => {
   }
 }
 
-const updateAppPackage = async (appPackage: any, appId: any) => {
+export const updateAppPackage = async (appPackage: any, appId: any) => {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
-    const application = await db.get(DocumentTypes.APP_METADATA)
+    const application = await db.get(DocumentType.APP_METADATA)
 
     const newAppPackage = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
@@ -566,4 +586,56 @@ const updateAppPackage = async (appPackage: any, appId: any) => {
     await appCache.invalidateAppMetadata(appId)
     return newAppPackage
   })
+}
+
+const migrateAppNavigation = async () => {
+  const db = context.getAppDB()
+  const existing: App = await db.get(DocumentType.APP_METADATA)
+  const layouts: Layout[] = await getLayouts()
+  const screens: Screen[] = await getScreens()
+
+  // Migrate all screens, removing custom layouts
+  for (let screen of screens) {
+    if (!screen.layoutId) {
+      continue
+    }
+    const layout = layouts.find(layout => layout._id === screen.layoutId)
+    screen.layoutId = undefined
+    screen.showNavigation = layout?.props.navigation !== "None"
+    screen.width = layout?.props.width || "Large"
+    await db.put(screen)
+  }
+
+  // Migrate layout navigation settings
+  const { name, customTheme } = existing
+  const layout = layouts?.find(
+    (layout: Layout) => layout._id === BASE_LAYOUT_PROP_IDS.PRIVATE
+  )
+  if (layout && !existing.navigation) {
+    let navigationSettings: any = {
+      navigation: "Top",
+      title: name,
+      navWidth: "Large",
+      navBackground:
+        customTheme?.navBackground || "var(--spectrum-global-color-gray-50)",
+      navTextColor:
+        customTheme?.navTextColor || "var(--spectrum-global-color-gray-800)",
+    }
+    if (layout) {
+      navigationSettings.hideLogo = layout.props.hideLogo
+      navigationSettings.hideTitle = layout.props.hideTitle
+      navigationSettings.title = layout.props.title || name
+      navigationSettings.logoUrl = layout.props.logoUrl
+      navigationSettings.links = layout.props.links
+      navigationSettings.navigation = layout.props.navigation || "Top"
+      navigationSettings.sticky = layout.props.sticky
+      navigationSettings.navWidth = layout.props.width || "Large"
+      if (navigationSettings.navigation === "None") {
+        navigationSettings.navigation = "Top"
+      }
+    }
+    return navigationSettings
+  } else {
+    return null
+  }
 }

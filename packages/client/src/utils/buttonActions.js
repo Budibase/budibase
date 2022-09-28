@@ -300,6 +300,14 @@ const continueIfHandler = action => {
   }
 }
 
+const showNotificationHandler = action => {
+  const { message, type, autoDismiss } = action.parameters
+  if (!message || !type) {
+    return
+  }
+  notificationStore.actions[type]?.(message, autoDismiss)
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
@@ -318,6 +326,7 @@ const handlerMap = {
   ["Upload File to S3"]: s3UploadHandler,
   ["Export Data"]: exportDataHandler,
   ["Continue if / Stop if"]: continueIfHandler,
+  ["Show Notification"]: showNotificationHandler,
 }
 
 const confirmTextMap = {
@@ -334,8 +343,8 @@ const confirmTextMap = {
  */
 export const enrichButtonActions = (actions, context) => {
   // Prevent button actions in the builder preview
-  if (!actions || get(builderStore).inBuilder) {
-    return () => {}
+  if (!actions?.length || get(builderStore).inBuilder) {
+    return null
   }
 
   // If this is a function then it has already been enriched

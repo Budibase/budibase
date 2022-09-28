@@ -1,7 +1,7 @@
 <script>
-  import { PickerDropdown, notifications } from "@budibase/bbui"
+  import { PickerDropdown } from "@budibase/bbui"
   import { groups } from "stores/portal"
-  import { onMount, createEventDispatcher } from "svelte"
+  import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -22,17 +22,9 @@
     if (!detail) return
 
     const groupSelected = $groups.find(x => x._id === detail)
-    const appIds = groupSelected?.apps.map(x => x.appId) || null
+    const appIds = groupSelected?.apps || null
     dispatch("change", appIds)
   }
-
-  onMount(async () => {
-    try {
-      await groups.actions.init()
-    } catch (error) {
-      notifications.error("Error")
-    }
-  })
 </script>
 
 <PickerDropdown

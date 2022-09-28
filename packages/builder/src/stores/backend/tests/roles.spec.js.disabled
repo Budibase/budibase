@@ -1,0 +1,34 @@
+import { get } from "svelte/store"
+import { API } from "api"
+
+jest.mock("api")
+
+import { createRolesStore } from "../roles"
+import { ROLES } from "./fixtures/roles"
+
+describe("Roles Store", () => {
+  let store = createRolesStore()
+
+  beforeEach( async() => {
+    store = createRolesStore()
+  })
+
+  it("fetches roles from backend", async () => {
+    API.getRoles.mockReturnValue({ json: () => ROLES})
+    await store.fetch()
+
+    expect(get(store)).toEqual(ROLES)
+  })
+
+  it("deletes a role", async () => {
+    API.getRoles.mockReturnValueOnce({ json: () => ROLES})
+    await store.fetch()
+
+    API.deleteRole.mockReturnValue({status: 200, message: `Role deleted.`})
+
+    const updatedRoles = [...ROLES.slice(1)]
+    await store.delete(ROLES[0])
+
+    expect(get(store)).toEqual(updatedRoles)
+  })
+})

@@ -6,6 +6,7 @@ import analytics from "analytics"
 export function createAuthStore() {
   const auth = writable({
     user: null,
+    accountPortalAccess: false,
     tenantId: "default",
     tenantSet: false,
     loaded: false,
@@ -32,6 +33,7 @@ export function createAuthStore() {
     }
     return {
       user: $store.user,
+      accountPortalAccess: $store.accountPortalAccess,
       tenantId: $store.tenantId,
       tenantSet: $store.tenantSet,
       loaded: $store.loaded,
@@ -46,6 +48,7 @@ export function createAuthStore() {
     auth.update(store => {
       store.loaded = true
       store.user = user
+      store.accountPortalAccess = user?.accountPortalAccess
       if (user) {
         store.tenantId = user.tenantId || "default"
         store.tenantSet = true
@@ -131,11 +134,6 @@ export function createAuthStore() {
       await setOrganisation(tenantId)
     },
     getSelf: async () => {
-      // for analytics, we need to make sure the environment has been loaded
-      // before setting the user
-      if (!get(admin).loaded) {
-        await admin.init()
-      }
       // We need to catch this locally as we never want this to fail, even
       // though normally we never want to swallow API errors at the store level.
       // We're either logged in or we aren't.

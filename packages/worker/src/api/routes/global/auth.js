@@ -4,7 +4,7 @@ const { joiValidator } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const { updateTenantId } = require("@budibase/backend-core/tenancy")
 
-const router = Router()
+const router = new Router()
 
 function buildAuthValidation() {
   // prettier-ignore

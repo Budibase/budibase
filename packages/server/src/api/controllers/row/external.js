@@ -53,7 +53,7 @@ exports.save = async ctx => {
 }
 
 exports.fetchView = async ctx => {
-  // there are no views in external data sources, shouldn't ever be called
+  // there are no views in external datasources, shouldn't ever be called
   // for now just fetch
   const split = ctx.params.viewName.split("all_")
   ctx.params.tableId = split[1] ? split[1] : split[0]
@@ -128,25 +128,35 @@ exports.search = async ctx => {
       [params.sort]: direction,
     }
   }
-  const rows = await handleRequest(DataSourceOperation.READ, tableId, {
-    filters: query,
-    sort,
-    paginate: paginateObj,
-  })
-  let hasNextPage = false
-  if (paginate && rows.length === limit) {
-    const nextRows = await handleRequest(DataSourceOperation.READ, tableId, {
+  try {
+    const rows = await handleRequest(DataSourceOperation.READ, tableId, {
       filters: query,
       sort,
-      paginate: {
-        limit: 1,
-        page: bookmark * limit + 1,
-      },
+      paginate: paginateObj,
     })
-    hasNextPage = nextRows.length > 0
+    let hasNextPage = false
+    if (paginate && rows.length === limit) {
+      const nextRows = await handleRequest(DataSourceOperation.READ, tableId, {
+        filters: query,
+        sort,
+        paginate: {
+          limit: 1,
+          page: bookmark * limit + 1,
+        },
+      })
+      hasNextPage = nextRows.length > 0
+    }
+    // need wrapper object for bookmarks etc when paginating
+    return { rows, hasNextPage, bookmark: bookmark + 1 }
+  } catch (err) {
+    if (err.message && err.message.includes("does not exist")) {
+      throw new Error(
+        `Table updated externally, please re-fetch - ${err.message}`
+      )
+    } else {
+      throw err
+    }
   }
-  // need wrapper object for bookmarks etc when paginating
-  return { rows, hasNextPage, bookmark: bookmark + 1 }
 }
 
 exports.validate = async () => {

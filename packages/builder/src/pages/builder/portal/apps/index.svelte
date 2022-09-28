@@ -15,26 +15,25 @@
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-  import ExportAppModal from "components/start/ExportAppModal.svelte"
+  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, templates, groups } from "stores/portal"
+  import { apps, auth, admin, templates, licensing } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
   import Logo from "assets/bb-space-man.svg"
   import AccessFilter from "./_components/AcessFilter.svelte"
-  import { Constants } from "@budibase/frontend-core"
 
   let sortBy = "name"
   let template
   let selectedApp
   let creationModal
   let updatingModal
-  let exportModal
+  let appLimitModal
   let creatingApp = false
   let loaded = $apps?.length || $templates?.length
   let searchTerm = ""
@@ -68,10 +67,6 @@
   $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
   $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
-
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -131,8 +126,10 @@
     return `${app.name} - Automation error (${errorCount(errors)})`
   }
 
-  const initiateAppCreation = () => {
-    if ($apps?.length) {
+  const initiateAppCreation = async () => {
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+    } else if ($apps?.length) {
       $goto("/builder/portal/apps/create")
     } else {
       template = null
@@ -232,6 +229,9 @@
     try {
       await apps.load()
       await templates.load()
+      // always load latest
+      await licensing.init()
+
       if ($templates?.length === 0) {
         notifications.error(
           "There was a problem loading quick start templates."
@@ -360,7 +360,7 @@
                   </Button>
                 {/if}
                 <div class="filter">
-                  {#if hasGroupsLicense && $groups.length}
+                  {#if $licensing.groupsEnabled}
                     <AccessFilter on:change={accessFilterAction} />
                   {/if}
                   <Select
@@ -412,9 +412,7 @@
   <UpdateAppModal app={selectedApp} />
 </Modal>
 
-<Modal bind:this={exportModal} padding={false} width="600px">
-  <ExportAppModal app={selectedApp} />
-</Modal>
+<AppLimitModal bind:this={appLimitModal} />
 
 <style>
   .appTable {
@@ -479,9 +477,10 @@
   .appTable :global(> div) {
     border-bottom: var(--border-light);
   }
+
   @media (max-width: 640px) {
     .appTable {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto !important;
     }
   }
   .empty-wrapper {

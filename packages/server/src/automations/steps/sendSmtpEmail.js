@@ -21,6 +21,14 @@ exports.definition = {
           type: "string",
           title: "Send From",
         },
+        cc: {
+          type: "string",
+          title: "CC",
+        },
+        bcc: {
+          type: "string",
+          title: "BCC",
+        },
         subject: {
           type: "string",
           title: "Email Subject",
@@ -49,13 +57,21 @@ exports.definition = {
 }
 
 exports.run = async function ({ inputs }) {
-  let { to, from, subject, contents } = inputs
+  let { to, from, subject, contents, cc, bcc } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"
   }
   to = to || undefined
   try {
-    let response = await sendSmtpEmail(to, from, subject, contents, true)
+    let response = await sendSmtpEmail(
+      to,
+      from,
+      subject,
+      contents,
+      cc,
+      bcc,
+      true
+    )
     return {
       success: true,
       response,

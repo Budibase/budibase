@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store"
+import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 
 const dispatchEvent = (type, data = {}) => {
@@ -18,6 +19,7 @@ const createBuilderStore = () => {
     isDragging: false,
     navigation: null,
     hiddenComponentIds: [],
+    usedPlugins: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -39,14 +41,21 @@ const createBuilderStore = () => {
     updateProp: (prop, value) => {
       dispatchEvent("update-prop", { prop, value })
     },
-    deleteComponent: id => {
-      dispatchEvent("delete-component", { id })
+    keyDown: (key, ctrlKey) => {
+      dispatchEvent("key-down", { key, ctrlKey })
     },
     duplicateComponent: id => {
       dispatchEvent("duplicate-component", { id })
     },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
+    },
+    analyticsPing: async () => {
+      try {
+        await API.analyticsPing({ source: "app" })
+      } catch (error) {
+        // Do nothing
+      }
     },
     moveComponent: (componentId, destinationComponentId, mode) => {
       dispatchEvent("move-component", {
@@ -75,6 +84,20 @@ const createBuilderStore = () => {
     },
     highlightSetting: setting => {
       dispatchEvent("highlight-setting", { setting })
+    },
+    updateUsedPlugin: (name, hash) => {
+      // Check if we used this plugin
+      const used = get(store)?.usedPlugins?.find(x => x.name === name)
+      if (used) {
+        store.update(state => {
+          state.usedPlugins = state.usedPlugins.filter(x => x.name !== name)
+          state.usedPlugins.push({
+            ...used,
+            hash,
+          })
+          return state
+        })
+      }
     },
   }
   return {

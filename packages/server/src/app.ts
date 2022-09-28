@@ -1,6 +1,15 @@
 // need to load environment first
-import { ExtendableContext } from "koa"
 import * as env from "./environment"
+
+// enable APM if configured
+if (process.env.ELASTIC_APM_ENABLED) {
+  const apm = require("elastic-apm-node").start({
+    serviceName: process.env.SERVICE,
+    environment: process.env.BUDIBASE_ENVIRONMENT,
+  })
+}
+
+import { ExtendableContext } from "koa"
 import db from "./db"
 db.init()
 const Koa = require("koa")
@@ -15,11 +24,19 @@ const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
 const { logAlert } = require("@budibase/backend-core/logging")
+const { pinoSettings } = require("@budibase/backend-core")
 const { Thread } = require("./threads")
+const fs = require("fs")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
-import { createAdminUser, getChecklist } from "./utilities/workerRequests"
+import {
+  createAdminUser,
+  generateApiKey,
+  getChecklist,
+} from "./utilities/workerRequests"
+import { watch } from "./watch"
+import { initialise as initialiseWebsockets } from "./websocket"
 
 const app = new Koa()
 
@@ -35,14 +52,7 @@ app.use(
   })
 )
 
-app.use(
-  pino({
-    prettyPrint: {
-      levelFirst: true,
-    },
-    level: env.LOG_LEVEL || "error",
-  })
-)
+app.use(pino(pinoSettings()))
 
 if (!env.isTest()) {
   const plugin = bullboard.init()
@@ -71,6 +81,7 @@ if (env.isProd()) {
 
 const server = http.createServer(app.callback())
 destroyable(server)
+initialiseWebsockets(server)
 
 let shuttingDown = false,
   errCode = 0
@@ -80,9 +91,7 @@ server.on("close", async () => {
     return
   }
   shuttingDown = true
-  if (!env.isTest()) {
-    console.log("Server Closed")
-  }
+  console.log("Server Closed")
   await automations.shutdown()
   await redis.shutdown()
   await events.shutdown()
@@ -122,11 +131,16 @@ module.exports = server.listen(env.PORT || 0, async () => {
     if (!checklist?.adminUser?.checked) {
       try {
         const tenantId = tenancy.getTenantId()
-        await createAdminUser(
+        const user = await createAdminUser(
           env.BB_ADMIN_USER_EMAIL,
           env.BB_ADMIN_USER_PASSWORD,
           tenantId
         )
+        // Need to set up an API key for automated integration tests
+        if (env.isTest()) {
+          await generateApiKey(user._id)
+        }
+
         console.log(
           "Admin account automatically created for",
           env.BB_ADMIN_USER_EMAIL
@@ -136,6 +150,16 @@ module.exports = server.listen(env.PORT || 0, async () => {
         shutdown()
       }
     }
+  }
+
+  // monitor plugin directory if required
+  if (
+    env.SELF_HOSTED &&
+    !env.MULTI_TENANCY &&
+    env.PLUGINS_DIR &&
+    fs.existsSync(env.PLUGINS_DIR)
+  ) {
+    watch()
   }
 
   // check for version updates
@@ -162,5 +186,9 @@ process.on("uncaughtException", err => {
 })
 
 process.on("SIGTERM", () => {
+  shutdown()
+})
+
+process.on("SIGINT", () => {
   shutdown()
 })

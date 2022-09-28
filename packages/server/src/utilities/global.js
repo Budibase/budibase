@@ -43,9 +43,10 @@ exports.updateAppRole = (user, { appId } = {}) => {
 }
 
 async function checkGroupRoles(user, { appId } = {}) {
-  let roleId = await groups.getGroupRoleId(user, appId)
-  user.roleId = roleId
-
+  if (user.roleId && user.roleId !== BUILTIN_ROLE_IDS.PUBLIC) {
+    return user
+  }
+  user.roleId = await groups.getGroupRoleId(user, appId)
   return user
 }
 
@@ -74,8 +75,9 @@ exports.getRawGlobalUser = async userId => {
 }
 
 exports.getGlobalUser = async userId => {
+  const appId = getAppId()
   let user = await exports.getRawGlobalUser(userId)
-  return processUser(user)
+  return processUser(user, { appId })
 }
 
 exports.getGlobalUsers = async (users = null) => {

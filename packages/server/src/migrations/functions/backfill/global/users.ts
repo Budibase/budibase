@@ -4,7 +4,7 @@ import { DEFAULT_TIMESTAMP } from ".."
 
 // manually define user doc params - normally server doesn't read users from the db
 const getUserParams = (props: any) => {
-  return dbUtils.getDocParams(dbUtils.DocumentTypes.USER, null, props)
+  return dbUtils.getDocParams(dbUtils.DocumentType.USER, null, props)
 }
 
 export const getUsers = async (globalDb: any): Promise<User[]> => {

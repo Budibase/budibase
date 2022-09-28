@@ -5,7 +5,7 @@ const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const { Configs } = require("../../../constants")
 
-const router = Router()
+const router = new Router()
 
 function smtpValidation() {
   // prettier-ignore
@@ -53,6 +53,7 @@ function oidcValidation() {
         name: Joi.string().allow("", null),
         uuid: Joi.string().required(),
         activated: Joi.boolean().required(),
+        scopes: Joi.array().optional()
       })
     ).required(true)
   }).unknown(true)

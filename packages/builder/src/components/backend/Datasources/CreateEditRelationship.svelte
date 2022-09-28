@@ -90,6 +90,16 @@
     if (inSchema(toTable, toRelate.name, originalToName)) {
       errObj.toCol = colError
     }
+
+    let fromType, toType
+    if (fromPrimary && fromRelate.fieldName) {
+      fromType = fromTable?.schema[fromPrimary]?.type
+      toType = toTable?.schema[fromRelate.fieldName]?.type
+    }
+    if (fromType && toType && fromType !== toType) {
+      errObj.foreign =
+        "Column type of the foreign key must match the primary key"
+    }
     errors = errObj
   }
 

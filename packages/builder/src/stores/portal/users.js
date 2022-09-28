@@ -26,12 +26,8 @@ export function createUsersStore() {
     return await API.getUsers()
   }
 
-  async function invite({ emails, builder, admin }) {
-    return API.inviteUsers({
-      emails,
-      builder,
-      admin,
-    })
+  async function invite(payload) {
+    return API.inviteUsers(payload)
   }
   async function acceptInvite(inviteCode, password) {
     return API.acceptInvite({
@@ -67,10 +63,14 @@ export function createUsersStore() {
 
       return body
     })
-    await API.createUsers({ users: mappedUsers, groups: data.groups })
+    const response = await API.createUsers({
+      users: mappedUsers,
+      groups: data.groups,
+    })
 
     // re-search from first page
     await search()
+    return response
   }
 
   async function del(id) {
@@ -83,7 +83,7 @@ export function createUsersStore() {
   }
 
   async function bulkDelete(userIds) {
-    await API.deleteUsers(userIds)
+    return API.deleteUsers(userIds)
   }
 
   async function save(user) {

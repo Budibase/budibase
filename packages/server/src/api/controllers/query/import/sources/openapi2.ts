@@ -1,5 +1,5 @@
 import { ImportInfo } from "./base"
-import { Query, QueryParameter } from "../../../../../definitions/datasource"
+import { Query, QueryParameter } from "@budibase/types"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
