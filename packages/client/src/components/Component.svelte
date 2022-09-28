@@ -453,6 +453,7 @@
     class:interactive
     class:editing
     class:block={isBlock}
+    class:explode={children.length && !isLayout && $builderStore.isDragging}
     data-id={id}
     data-name={name}
     data-icon={icon}
@@ -481,15 +482,19 @@
   .component {
     display: contents;
   }
-
+  .component :global(> *) {
+    transition: padding 250ms ease, border 250ms ease;
+  }
+  .component.explode :global(> *) {
+    padding: 12px 4px !important;
+    border: 2px dashed var(--spectrum-global-color-gray-400) !important;
+  }
   .interactive :global(*:hover) {
     cursor: pointer;
   }
-
   .draggable :global(*:hover) {
     cursor: grab;
   }
-
   .editing :global(*:hover) {
     cursor: auto;
   }
