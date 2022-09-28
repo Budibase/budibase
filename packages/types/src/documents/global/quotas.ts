@@ -6,52 +6,52 @@ export enum BreakdownQuotaName {
   AUTOMATIONS = "automations",
 }
 
-export const StoredByAppQuotaNames = [
+export const APP_QUOTA_NAMES = [
   StaticQuotaName.ROWS,
   MonthlyQuotaName.QUERIES,
   MonthlyQuotaName.AUTOMATIONS,
 ]
 
-export const NamesToBreakdown = [
+export const BREAKDOWN_QUOTA_NAMES = [
   MonthlyQuotaName.QUERIES,
   MonthlyQuotaName.AUTOMATIONS,
 ]
 
-export interface Breakdown {
+export interface UsageBreakdown {
   parent: MonthlyQuotaName
   values: {
     [key: string]: number
   }
 }
 
-export type Monthly = {
+export type MonthlyUsage = {
   [MonthlyQuotaName.QUERIES]: number
   [MonthlyQuotaName.AUTOMATIONS]: number
   [MonthlyQuotaName.DAY_PASSES]: number
   breakdown?: {
-    [key in BreakdownQuotaName]?: Breakdown
+    [key in BreakdownQuotaName]?: UsageBreakdown
   }
 }
 
-export interface UsageInternal {
+export interface BaseQuotaUsage {
   usageQuota: {
     [key in StaticQuotaName]: number
   }
   monthly: {
-    [key: string]: Monthly
+    [key: string]: MonthlyUsage
   }
 }
 
-export interface QuotaUsage extends UsageInternal {
+export interface QuotaUsage extends BaseQuotaUsage {
   _id: string
   _rev?: string
   quotaReset: string
   apps?: {
-    [key: string]: UsageInternal
+    [key: string]: BaseQuotaUsage
   }
 }
 
-export type QuotaValues = {
+export type UsageValues = {
   total: number
   app?: number
   breakdown?: number

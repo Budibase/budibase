@@ -34,13 +34,12 @@ describe("/rows", () => {
       .expect(status)
 
   const getRowUsage = async () => {
-    return config.doInContext(null, () =>
-      quotas.getCurrentUsageValue(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
-    )
+    const { total } = await config.doInContext(null, () => quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS))
+    return total
   }
 
   const getQueryUsage = async () => {
-    const { total } = await config.doInContext(null, () => quotas.getAllCurrentUsageValue(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
+    const { total } = await config.doInContext(null, () => quotas.getCurrentUsageValues(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
     return total
   }
 
