@@ -9,6 +9,7 @@ const read = [],
  * @openapi
  * /applications:
  *   post:
+ *     operationId: create
  *     summary: Create an application
  *     tags:
  *       - applications
@@ -41,6 +42,7 @@ write.push(
  * @openapi
  * /applications/{appId}:
  *   put:
+ *     operationId: update
  *     summary: Update an application
  *     tags:
  *       - applications
@@ -73,6 +75,7 @@ write.push(
  * @openapi
  * /applications/{appId}:
  *   delete:
+ *     operationId: destroy
  *     summary: Delete an application
  *     tags:
  *       - applications
@@ -95,6 +98,7 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
  * @openapi
  * /applications/{appId}:
  *   get:
+ *     operationId: getById
  *     summary: Retrieve an application
  *     tags:
  *       - applications
@@ -117,6 +121,7 @@ read.push(new Endpoint("get", "/applications/:appId", controller.read))
  * @openapi
  * /applications/search:
  *   post:
+ *     operationId: search
  *     summary: Search for applications
  *     description: Based on application properties (currently only name) search for applications.
  *     tags:

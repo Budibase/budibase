@@ -1,7 +1,8 @@
 import { getTenantId } from "@budibase/backend-core/tenancy"
 import { getAllApps } from "@budibase/backend-core/db"
 import { getUniqueRows } from "../../../utilities/usageQuota/rows"
-import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
+import { quotas } from "@budibase/pro"
+import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
 
 export const run = async () => {
   // get all rows in all apps

@@ -52,9 +52,9 @@ const checkAuthorizedResource = async (
 ) => {
   // get the user's roles
   const roleId = ctx.roleId || BUILTIN_ROLE_IDS.PUBLIC
-  const userRoles = await getUserRoleHierarchy(roleId, {
+  const userRoles = (await getUserRoleHierarchy(roleId, {
     idOnly: false,
-  })
+  })) as { _id: string }[]
   const permError = "User does not have permission"
   // check if the user has the required role
   if (resourceRoles.length > 0) {

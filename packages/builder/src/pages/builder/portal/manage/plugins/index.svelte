@@ -45,7 +45,7 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">Plugins</Heading>
-    <Body>Add your own custom datasources and components</Body>
+    <Body>Add your own custom datasources and components.</Body>
   </Layout>
   <Divider size="S" />
   <Layout noPadding>
@@ -55,18 +55,20 @@
           Add plugin
         </Button>
       </div>
-      <div class="filters">
-        <div class="select">
-          <Select
-            bind:value={filter}
-            placeholder={null}
-            options={filterOptions}
-            autoWidth
-            quiet
-          />
+      {#if filteredPlugins?.length}
+        <div class="filters">
+          <div class="select">
+            <Select
+              bind:value={filter}
+              placeholder={null}
+              options={filterOptions}
+              autoWidth
+              quiet
+            />
+          </div>
+          <Search bind:value={searchTerm} placeholder="Search plugins" />
         </div>
-        <Search bind:value={searchTerm} placeholder="Search plugins" />
-      </div>
+      {/if}
     </div>
     {#if filteredPlugins?.length}
       <Layout noPadding gap="S">

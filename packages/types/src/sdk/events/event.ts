@@ -133,9 +133,14 @@ export enum Event {
   AUTOMATION_TRIGGER_UPDATED = "automation:trigger:updated",
 
   // LICENSE
-  LICENSE_UPGRADED = "license:upgraded",
-  LICENSE_DOWNGRADED = "license:downgraded",
+  LICENSE_PLAN_CHANGED = "license:plan:changed",
+  LICENSE_TIER_CHANGED = "license:tier:changed",
   LICENSE_ACTIVATED = "license:activated",
+  LICENSE_PAYMENT_FAILED = "license:payment:failed",
+  LICENSE_PAYMENT_RECOVERED = "license:payment:recovered",
+  LICENSE_CHECKOUT_OPENED = "license:checkout:opened",
+  LICENSE_CHECKOUT_SUCCESS = "license:checkout:success",
+  LICENSE_PORTAL_OPENED = "license:portal:opened",
 
   // ACCOUNT
   ACCOUNT_CREATED = "account:created",

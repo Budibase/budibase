@@ -4,39 +4,63 @@
     Heading,
     Body,
     Button,
+    ButtonGroup,
     Modal,
     Tag,
     Tags,
+    Table,
+    Divider,
+    Search,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth } from "stores/portal"
+  import { groups, auth, licensing, admin } from "stores/portal"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
-  import UserGroupsRow from "./_components/UserGroupsRow.svelte"
   import { cloneDeep } from "lodash/fp"
+  import GroupAppsTableRenderer from "./_components/GroupAppsTableRenderer.svelte"
+  import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
+  import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
+  import { goto } from "@roxi/routify"
 
   const DefaultGroup = {
     name: "",
     icon: "UserGroup",
     color: "var(--spectrum-global-color-blue-600)",
     users: [],
-    apps: [],
     roles: {},
   }
-  let modal
-  let group = cloneDeep(DefaultGroup)
 
-  async function deleteGroup(group) {
-    try {
-      groups.actions.delete(group)
-    } catch (error) {
-      notifications.error(`Failed to delete group`)
+  let modal
+  let searchString
+  let group = cloneDeep(DefaultGroup)
+  let customRenderers = [
+    { column: "name", component: GroupNameTableRenderer },
+    { column: "users", component: UsersTableRenderer },
+    { column: "roles", component: GroupAppsTableRenderer },
+  ]
+
+  $: schema = {
+    name: {},
+    users: { sortable: false },
+    roles: { sortable: false, displayName: "Apps" },
+  }
+  $: filteredGroups = filterGroups($groups, searchString)
+
+  const filterGroups = (groups, searchString) => {
+    if (!searchString) {
+      return groups
     }
+    searchString = searchString.toLocaleLowerCase()
+    return groups?.filter(group => {
+      return group.name?.toLowerCase().includes(searchString)
+    })
   }
 
   async function saveGroup(group) {
     try {
-      await groups.actions.save(group)
+      group = await groups.actions.save(group)
+      $goto(`./${group._id}`)
+      notifications.success(`User group created successfully`)
     } catch (error) {
       if (error.status === 400) {
         notifications.error(error.message)
@@ -53,61 +77,83 @@
 
   onMount(async () => {
     try {
-      if ($auth.groupsEnabled) {
+      // always load latest
+      await licensing.init()
+      if ($licensing.groupsEnabled) {
         await groups.actions.init()
       }
     } catch (error) {
-      notifications.error("Error getting User groups")
+      notifications.error("Error getting user groups")
     }
   })
 </script>
 
-<Layout noPadding>
+<Layout noPadding gap="M">
   <Layout gap="XS" noPadding>
-    <div style="display: flex;">
+    <div class="title">
       <Heading size="M">User groups</Heading>
-      {#if !$auth.groupsEnabled}
+      {#if !$licensing.groupsEnabled}
         <Tags>
-          <div class="tags">
-            <div class="tag">
-              <Tag icon="LockClosed">Pro plan</Tag>
-            </div>
-          </div>
+          <Tag icon="LockClosed">Pro plan</Tag>
         </Tags>
       {/if}
     </div>
-    <Body>Easily assign and manage your users access with User Groups</Body>
+    <Body>
+      Easily assign and manage your users' access with user groups.
+      {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
+        Contact your account holder to upgrade your plan.
+      {/if}
+    </Body>
   </Layout>
-  <div class="align-buttons">
-    <Button
-      newStyles
-      icon={$auth.groupsEnabled ? "UserGroup" : ""}
-      cta={$auth.groupsEnabled}
-      on:click={$auth.groupsEnabled
-        ? showCreateGroupModal
-        : window.open("https://budibase.com/pricing/", "_blank")}
-    >
-      {$auth.groupsEnabled ? "Create user group" : "Upgrade Account"}
-    </Button>
-    {#if !$auth.groupsEnabled}
-      <Button
-        newStyles
-        secondary
-        on:click={() => {
-          window.open("https://budibase.com/pricing/", "_blank")
-        }}>View Plans</Button
-      >
+  <Divider />
+  <div class="controls">
+    <ButtonGroup>
+      {#if $licensing.groupsEnabled}
+        <!--Show the group create button-->
+        <Button
+          newStyles
+          icon={"UserGroup"}
+          cta
+          on:click={showCreateGroupModal}
+        >
+          Create user group
+        </Button>
+      {:else}
+        <Button
+          newStyles
+          primary
+          disabled={!$auth.accountPortalAccess && $admin.cloud}
+          on:click={$licensing.goToUpgradePage()}
+        >
+          Upgrade
+        </Button>
+        <!--Show the view plans button-->
+        <Button
+          newStyles
+          secondary
+          on:click={() => {
+            window.open("https://budibase.com/pricing/", "_blank")
+          }}
+        >
+          View Plans
+        </Button>
+      {/if}
+    </ButtonGroup>
+    {#if $licensing.groupsEnabled}
+      <div class="controls-right">
+        <Search bind:value={searchString} placeholder="Search" />
+      </div>
     {/if}
   </div>
-
-  {#if $auth.groupsEnabled && $groups.length}
-    <div class="groupTable">
-      {#each $groups as group}
-        <div>
-          <UserGroupsRow {saveGroup} {deleteGroup} {group} />
-        </div>
-      {/each}
-    </div>
+  {#if $licensing.groupsEnabled}
+    <Table
+      on:click={({ detail }) => $goto(`./${detail._id}`)}
+      {schema}
+      data={filteredGroups}
+      allowEditColumns={false}
+      allowEditRows={false}
+      {customRenderers}
+    />
   {/if}
 </Layout>
 
@@ -116,37 +162,27 @@
 </Modal>
 
 <style>
-  .align-buttons {
+  .controls {
     display: flex;
-    column-gap: var(--spacing-xl);
-  }
-  .tag {
-    margin-top: var(--spacing-xs);
-    margin-left: var(--spacing-m);
-  }
-
-  .groupTable {
-    display: grid;
-    grid-template-rows: auto;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
-    border-left: 1px solid var(--spectrum-alias-border-color-mid);
-    background: var(--spectrum-global-color-gray-50);
   }
-
-  .groupTable :global(> div) {
-    background: var(--bg-color);
-
-    height: 55px;
-    display: grid;
+  .controls-right {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
     align-items: center;
-    grid-gap: var(--spacing-xl);
-    grid-template-columns: 2fr 2fr 2fr auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0 var(--spacing-s);
-    border-top: 1px solid var(--spectrum-alias-border-color-mid);
-    border-right: 1px solid var(--spectrum-alias-border-color-mid);
+    gap: var(--spacing-xl);
+  }
+  .controls-right :global(.spectrum-Search) {
+    width: 200px;
+  }
+  .title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--spacing-m);
   }
 </style>

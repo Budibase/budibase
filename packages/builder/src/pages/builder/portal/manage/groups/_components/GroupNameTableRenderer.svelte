@@ -1,20 +1,13 @@
 <script>
-  import { Avatar } from "@budibase/bbui"
+  import GroupIcon from "./GroupIcon.svelte"
 
   export let value
+  export let row
 </script>
 
 <div class="align">
   {#if value}
-    <div class="spacing">
-      <Avatar
-        size="L"
-        initials={value
-          .split(" ")
-          .map(x => x[0])
-          .join("")}
-      />
-    </div>
+    <GroupIcon group={row} />
     {value}
   {:else}
     <div class="text">-</div>
@@ -26,12 +19,8 @@
     display: flex;
     align-items: center;
     overflow: hidden;
+    gap: var(--spacing-m);
   }
-
-  .spacing {
-    margin-right: var(--spacing-m);
-  }
-
   .text {
     opacity: 0.8;
   }

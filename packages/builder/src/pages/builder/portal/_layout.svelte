@@ -19,7 +19,7 @@
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
-  import { isEnabled, FEATURE_FLAGS } from "../../../helpers/featureFlags"
+  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   let loaded = false
   let userInfoModal
@@ -44,7 +44,7 @@
           href: "/builder/portal/manage/users",
           heading: "Manage",
         },
-        isEnabled(FEATURE_FLAGS.USER_GROUPS)
+        isEnabled(TENANT_FEATURE_FLAGS.USER_GROUPS)
           ? {
               title: "User Groups",
               href: "/builder/portal/manage/groups",
@@ -56,7 +56,7 @@
         {
           title: "Plugins",
           href: "/builder/portal/manage/plugins",
-          badge: "Beta",
+          badge: "New",
         },
 
         {
@@ -103,7 +103,7 @@
       ])
     }
 
-    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+    if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
       // always show usage in self-host or cloud if licensing enabled
       menu = menu.concat([
         {
