@@ -68,7 +68,7 @@ export function getQueryIndex(viewName: ViewName) {
  * Check if a given ID is that of a table.
  * @returns {boolean}
  */
-exports.isTableId = (id: string) => {
+export const isTableId = (id: string) => {
   // this includes datasource plus tables
   return (
     id &&
@@ -81,7 +81,7 @@ exports.isTableId = (id: string) => {
  * Check if a given ID is that of a datasource or datasource plus.
  * @returns {boolean}
  */
-exports.isDatasourceId = (id: string) => {
+export const isDatasourceId = (id: string) => {
   // this covers both datasources and datasource plus
   return id && id.startsWith(`${DocumentType.DATASOURCE}${SEPARATOR}`)
 }
