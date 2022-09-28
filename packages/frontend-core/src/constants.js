@@ -40,7 +40,7 @@ export const OperatorOptions = {
   },
   NotContains: {
     value: "notContains",
-    label: "Does Not Contain",
+    label: "Does not contain",
   },
   In: {
     value: "oneOf",
