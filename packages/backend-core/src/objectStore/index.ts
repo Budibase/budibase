@@ -182,6 +182,11 @@ export const streamUpload = async (
       ...extra,
       ContentType: "application/javascript",
     }
+  } else if (filename?.endsWith(".svg")) {
+    extra = {
+      ...extra,
+      ContentType: "image",
+    }
   }
 
   const params = {
