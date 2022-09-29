@@ -6,10 +6,11 @@ const axios = require("axios")
 const { parseEnv } = require("../utils")
 const { checkDockerConfigured, downloadFiles } = require("./utils")
 const { watchPlugins } = require("./watch")
+const { generateUser } = require("./genUser")
 
 const DO_USER_DATA_URL = "http://169.254.169.254/metadata/v1/user-data"
 
-async function getInitConfig(type, isQuick) {
+async function getInitConfig(type, isQuick, port) {
   const config = isQuick ? makeFiles.QUICK_CONFIG : {}
   if (type === InitTypes.DIGITAL_OCEAN) {
     try {
@@ -24,17 +25,23 @@ async function getInitConfig(type, isQuick) {
       // don't need to handle error, just don't do anything
     }
   }
+  // override port
+  if (port) {
+    config[makeFiles.ConfigMap.MAIN_PORT] = port
+  }
   return config
 }
 
 exports.init = async opts => {
-  let type, isSingle, watchDir
+  let type, isSingle, watchDir, genUser, port
   if (typeof opts === "string") {
     type = opts
   } else {
-    type = opts.init
-    isSingle = opts.single
-    watchDir = opts.watchPluginDir
+    type = opts["init"]
+    isSingle = opts["single"]
+    watchDir = opts["watchPluginDir"]
+    genUser = opts["genUser"]
+    port = opts["port"]
   }
   const isQuick = type === InitTypes.QUICK || type === InitTypes.DIGITAL_OCEAN
   await checkDockerConfigured()
@@ -50,14 +57,17 @@ exports.init = async opts => {
   captureEvent(AnalyticsEvents.SelfHostInit, {
     type,
   })
-  const config = await getInitConfig(type, isQuick)
+  const config = await getInitConfig(type, isQuick, port)
   if (!isSingle) {
     await downloadFiles()
     await makeFiles.makeEnv(config)
   } else {
     await makeFiles.makeSingleCompose(config)
-    if (watchDir) {
-      await watchPlugins(watchDir)
-    }
+  }
+  if (watchDir) {
+    await watchPlugins(watchDir)
+  }
+  if (genUser) {
+    await generateUser()
   }
 }

@@ -5,6 +5,7 @@ const { start } = require("./start")
 const { stop } = require("./stop")
 const { status } = require("./status")
 const { update } = require("./update")
+const { generateUser } = require("./genUser")
 const { watchPlugins } = require("./watch")
 
 const command = new Command(`${CommandWords.HOSTING}`)
@@ -38,6 +39,11 @@ const command = new Command(`${CommandWords.HOSTING}`)
     "--watch-plugin-dir [directory]",
     "Add plugin directory watching to a Budibase install.",
     watchPlugins
+  )
+  .addSubOption(
+    "--gen-user",
+    "Create an admin user automatically as part of first start.",
+    generateUser
   )
   .addSubOption("--single", "Specify this with init to use the single image.")
 
