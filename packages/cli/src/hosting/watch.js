@@ -1,7 +1,7 @@
 const { resolve } = require("path")
 const fs = require("fs")
-const { error, success } = require("../utils")
 const yaml = require("yaml")
+const { error, success } = require("../utils")
 const { getAppService } = require("./utils")
 
 exports.watchPlugins = async pluginPath => {
@@ -22,9 +22,7 @@ exports.watchPlugins = async pluginPath => {
     console.log(error("Unable to locate docker-compose YAML."))
     return
   }
-  const dockerYaml = fs.readFileSync(dockerFilePath, "utf8")
-  const parsedYaml = yaml.parse(dockerYaml)
-  const service = getAppService(dockerFilePath)
+  const { yaml: parsedYaml, service } = getAppService(dockerFilePath)
   if (!service) {
     console.log(
       error(

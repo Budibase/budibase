@@ -15,7 +15,8 @@ const BB_COMPOSE_SERVICES = ["app-service", "worker-service", "proxy-service"]
 const BB_SINGLE_SERVICE = ["budibase"]
 
 exports.update = async () => {
-  const isSingle = Object.keys(getServices(COMPOSE_PATH)).length === 1
+  const { services } = getServices(COMPOSE_PATH)
+  const isSingle = Object.keys(services).length === 1
   await checkDockerConfigured()
   checkInitComplete()
   if (
