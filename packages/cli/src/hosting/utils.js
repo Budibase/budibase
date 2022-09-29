@@ -1,7 +1,7 @@
 const { lookpath } = require("lookpath")
 const fs = require("fs")
 const makeFiles = require("./makeFiles")
-const { logErrorToFile, downloadFile } = require("../utils")
+const { logErrorToFile, downloadFile, error } = require("../utils")
 const yaml = require("yaml")
 
 const ERROR_FILE = "docker-error.log"
@@ -64,4 +64,24 @@ exports.getAppService = path => {
     service = services[serviceList[0]]
   }
   return { yaml, service }
+}
+
+exports.updateDockerComposeService = updateFn => {
+  const opts = ["docker-compose.yaml", "docker-compose.yml"]
+  const dockerFilePath = opts.find(name => fs.existsSync(name))
+  if (!dockerFilePath) {
+    console.log(error("Unable to locate docker-compose YAML."))
+    return
+  }
+  const { yaml: parsedYaml, service } = exports.getAppService(dockerFilePath)
+  if (!service) {
+    console.log(
+      error(
+        "Unable to locate service within compose file, is it a valid Budibase configuration?"
+      )
+    )
+    return
+  }
+  updateFn(service)
+  fs.writeFileSync(dockerFilePath, yaml.stringify(parsedYaml))
 }
