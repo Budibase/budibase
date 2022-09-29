@@ -226,28 +226,9 @@ const changeFormStepHandler = async (action, context) => {
 
 const closeScreenModalHandler = action => {
   let { url } = action.parameters
-  if (url) {
-    window.parent.addEventListener("message", event => {
-      const location = event.target.location
-      //remove any trailing slash
-      if (url.charAt(url.length - 1) === "/") {
-        url = url.substring(0, url.length - 1)
-      }
-      //need to reload if hash route has not changed
-      let shouldReload =
-        `#${url.substring(0, url.lastIndexOf("/"))}` ===
-        location.hash?.substring(0, location.hash.lastIndexOf("/"))
-
-      window.parent.location.href = `${location.origin}${location.pathname}#${url}`
-      if (shouldReload) {
-        window.parent.location.reload()
-      }
-    })
-  }
-
   // Emit this as a window event, so parent screens which are iframing us in
   // can close the modal
-  window.parent.postMessage({ type: "close-screen-modal" })
+  window.parent.postMessage({ type: "close-screen-modal", url })
 }
 
 const updateStateHandler = action => {
