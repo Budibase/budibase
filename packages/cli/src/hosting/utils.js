@@ -51,11 +51,11 @@ exports.handleError = async func => {
 exports.getServices = path => {
   const dockerYaml = fs.readFileSync(path, "utf8")
   const parsedYaml = yaml.parse(dockerYaml)
-  return parsedYaml.services
+  return { yaml: parsedYaml, services: parsedYaml.services }
 }
 
 exports.getAppService = path => {
-  const services = exports.getServices(path),
+  const { yaml, services } = exports.getServices(path),
     serviceList = Object.keys(services)
   let service
   if (services["app-service"]) {
@@ -63,5 +63,5 @@ exports.getAppService = path => {
   } else if (serviceList.length === 1) {
     service = services[serviceList[0]]
   }
-  return service
+  return { yaml, service }
 }

@@ -11,19 +11,24 @@ const VOL_NAME = "budibase_data"
 const COMPOSE_PATH = path.resolve("./docker-compose.yaml")
 const ENV_PATH = path.resolve("./.env")
 
-function getSecrets() {
+function getSecrets(opts = { single: false }) {
   const secrets = [
     "JWT_SECRET",
     "MINIO_ACCESS_KEY",
     "MINIO_SECRET_KEY",
-    "COUCH_DB_PASSWORD",
     "REDIS_PASSWORD",
     "INTERNAL_API_KEY",
   ]
   const obj = {}
   secrets.forEach(secret => (obj[secret] = randomString.generate()))
-  // hard code to admin
-  obj["COUCH_DB_USER"] = "admin"
+  // setup couch creds separately
+  if (opts && opts.single) {
+    obj["COUCHDB_USER"] = "admin"
+    obj["COUCHDB_PASSWORD"] = randomString.generate()
+  } else {
+    obj["COUCH_DB_USER"] = "admin"
+    obj["COUCH_DB_PASSWORD"] = randomString.generate()
+  }
   return obj
 }
 
@@ -35,7 +40,7 @@ function getSingleCompose(port) {
         restart: "unless-stopped",
         image: SINGLE_IMAGE,
         ports: [`${port}:80`],
-        environment: getSecrets(),
+        environment: getSecrets({ single: true }),
         volumes: [`${VOL_NAME}:/data`],
       },
     },
@@ -119,12 +124,12 @@ module.exports.getEnvProperty = property => {
 }
 
 module.exports.getComposeProperty = property => {
-  const appService = getAppService(COMPOSE_PATH)
-  if (property === "port" && Array.isArray(appService.ports)) {
-    const port = appService.ports[0]
+  const { service } = getAppService(COMPOSE_PATH)
+  if (property === "port" && Array.isArray(service.ports)) {
+    const port = service.ports[0]
     return port.split(":")[0]
-  } else if (appService.environment) {
-    return appService.environment[property]
+  } else if (service.environment) {
+    return service.environment[property]
   }
   return null
 }
