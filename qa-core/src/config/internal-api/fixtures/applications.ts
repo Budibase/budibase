@@ -1,12 +1,10 @@
 import generator from "../../generator"
 import {
   Application,
-  CreateApplicationParams,
 } from "@budibase/server/api/controllers/public/mapping/types"
 
-const generate = (
-  overrides: Partial<Application> = {}
-): CreateApplicationParams => ({
+
+const generate = (overrides: Partial<Application> = {}): Partial<Application> => ({
   name: generator.word(),
   url: `/${generator.word()}`,
   ...overrides,
