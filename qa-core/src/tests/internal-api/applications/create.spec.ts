@@ -33,10 +33,7 @@ describe("Internal API - /applications endpoints", () => {
   })
 
   it("POST - Create an application", async () => {
-    const [response, app] = await config.applications.create({
-      ...generateApp(),
-      useTemplate: false
-    })
+    const [response, app] = await config.applications.create(generateApp())
     expect(response).toHaveStatusCode(200)
     expect(app._id).toBeDefined()
   })
