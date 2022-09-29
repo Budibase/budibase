@@ -7,8 +7,8 @@
   import { createPaginationStore } from "helpers/pagination"
   import { onMount } from "svelte"
   import dayjs from "dayjs"
-  import { auth, admin } from "stores/portal"
-  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+  import { auth, licensing, admin } from "stores/portal"
+  import { Constants } from "@budibase/frontend-core"
 
   const ERROR = "error",
     SUCCESS = "success",
@@ -16,7 +16,6 @@
   export let app
 
   $: licensePlan = $auth.user?.license?.plan
-  $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
   let pageInfo = createPaginationStore()
   let runHistory = null
@@ -31,6 +30,8 @@
   $: fetchLogs(automationId, status, page, timeRange)
 
   const timeOptions = [
+    { value: "90-d", label: "Past 90 days" },
+    { value: "30-d", label: "Past 30 days" },
     { value: "1-w", label: "Past week" },
     { value: "1-d", label: "Past day" },
     { value: "1-h", label: "Past 1 hour" },
@@ -141,11 +142,12 @@
           bind:value={timeRange}
           options={timeOptions}
           isOptionEnabled={x => {
-            if (
-              isEnabled(TENANT_FEATURE_FLAGS.LICENSING) &&
-              licensePlan?.type === "free"
-            ) {
-              return "1-w" !== x.value
+            if (licensePlan?.type === Constants.PlanType.FREE) {
+              return ["1-w", "30-d", "90-d"].indexOf(x.value) < 0
+            } else if (licensePlan?.type === Constants.PlanType.TEAM) {
+              return ["90-d"].indexOf(x.value) < 0
+            } else if (licensePlan?.type === Constants.PlanType.PRO) {
+              return ["30-d", "90-d"].indexOf(x.value) < 0
             }
             return true
           }}
@@ -159,14 +161,10 @@
           options={statusOptions}
         />
       </div>
-      {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING) && licensePlan?.type === "free"}
+      {#if (licensePlan?.type !== Constants.PlanType.ENTERPRISE && $auth.user.accountPortalAccess) || !$admin.cloud}
         <div class="pro-upgrade">
-          <div class="pro-copy">Store up to 30 days of automations</div>
-          <Button
-            primary
-            newStyles
-            on:click={window.open(upgradeUrl, "_blank")}
-          >
+          <div class="pro-copy">Expand your automation log history</div>
+          <Button primary newStyles on:click={$licensing.goToUpgradePage()}>
             Upgrade
           </Button>
         </div>
