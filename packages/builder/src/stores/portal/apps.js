@@ -21,6 +21,8 @@ const getProdAppID = appId => {
   } else if (!appId.startsWith("app")) {
     rest = appId
     separator = "_"
+  } else {
+    return appId
   }
   return `app${separator}${rest}`
 }
