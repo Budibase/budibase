@@ -89,7 +89,7 @@ module.exports.QUICK_CONFIG = {
   port: 10000,
 }
 
-async function make(path, contentsFn, inputs = {}) {
+async function make(path, contentsFn, inputs = {}, silent) {
   const port =
     inputs.port ||
     (await number(
@@ -98,19 +98,21 @@ async function make(path, contentsFn, inputs = {}) {
     ))
   const fileContents = contentsFn(port)
   fs.writeFileSync(path, fileContents)
-  console.log(
-    success(
-      `Configuration has been written successfully - please check ${path} for more details.`
+  if (!silent) {
+    console.log(
+      success(
+        `Configuration has been written successfully - please check ${path} for more details.`
+      )
     )
-  )
+  }
 }
 
-module.exports.makeEnv = async (inputs = {}) => {
-  return make(ENV_PATH, getEnv, inputs)
+module.exports.makeEnv = async (inputs = {}, silent) => {
+  return make(ENV_PATH, getEnv, inputs, silent)
 }
 
-module.exports.makeSingleCompose = async (inputs = {}) => {
-  return make(COMPOSE_PATH, getSingleCompose, inputs)
+module.exports.makeSingleCompose = async (inputs = {}, silent) => {
+  return make(COMPOSE_PATH, getSingleCompose, inputs, silent)
 }
 
 module.exports.getEnvProperty = property => {
