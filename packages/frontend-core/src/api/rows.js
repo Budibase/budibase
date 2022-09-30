@@ -8,9 +8,10 @@ export const buildRowEndpoints = API => ({
     if (!tableId || !rowId) {
       return null
     }
-    return await API.get({
+    const row = await API.get({
       url: `/api/${tableId}/rows/${rowId}`,
     })
+    return (await API.enrichRows([row], tableId))[0]
   },
 
   /**
