@@ -18,28 +18,28 @@ describe("Internal API - /applications endpoints", () => {
     await config.auth.logout()
   })
 
-  it("POST - Can login", async () => {
+  xit("POST - Can login", async () => {
     const [response] = await config.auth.login()
     expect(response).toHaveStatusCode(200)
   })
 
-  it("GET - fetch applications", async () => {
+  xit("GET - fetch applications", async () => {
     await config.applications.create({
       ...generateApp(),
       useTemplate: false
     })
     const [response, apps] = await config.applications.fetch()
     expect(response).toHaveStatusCode(200)
-    expect(apps.length).toBeGreaterThan(1)
+    expect(apps.length).toBeGreaterThanOrEqual(1)
   })
 
-  it("POST - Create an application", async () => {
+  xit("POST - Create an application", async () => {
     const [response, app] = await config.applications.create(generateApp())
     expect(response).toHaveStatusCode(200)
     expect(app._id).toBeDefined()
   })
 
-  it("POST - Create an application from a template", async () => {
+  it("POST - Create an application from a template and check it renders", async () => {
     const appName = generator.word()
     const [response, app] = await config.applications.create({
       name: appName,
@@ -51,12 +51,13 @@ describe("Internal API - /applications endpoints", () => {
     })
     expect(response).toHaveStatusCode(200)
     expect(app.appId).toBeDefined()
-    const [_, appPackage] = await config.applications.getAppPackage(app.appId as string)
-    expect(appPackage.application.appId).toBe(app.appId)
-    expect(appPackage.application.name).toBe(appName)
+
+    config.applications.api.appId = app.appId
+    const [_, renderable] = await config.applications.canRender()
+    expect(renderable).toBe(true)
   })
 
-  it("POST - Publish app from template", async () => {
+  xit("POST - Publish app from template", async () => {
     const appUrl = `/${generator.word()}`
     const [response, app] = await config.applications.create({
       name: generator.word(),

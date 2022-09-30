@@ -4,6 +4,7 @@ import {
 import { App } from "@budibase/types"
 import { Response } from "node-fetch"
 import InternalAPIClient from "./InternalAPIClient"
+import FormData from "form-data"
 
 export default class AppApi {
   api: InternalAPIClient
@@ -18,10 +19,10 @@ export default class AppApi {
     return [response, json]
   }
 
-  async canRender(appId: string): Promise<[Response, string]> {
-    const response = await this.api.get(`/${appId}`, {})
-    const html = await response.text()
-    return [response, html]
+  async canRender(): Promise<[Response, boolean]> {
+    const response = await this.api.get("/routing/client")
+    const json = await response.json()
+    return [response, Object.keys(json.routes).length > 0]
   }
 
   async getAppPackage(appId: string): Promise<[Response, any]> {
@@ -30,7 +31,6 @@ export default class AppApi {
     return [response, json]
   }
 
-  // TODO: 500 Error: Missing/invalid DB name when called
   async publish(): Promise<[Response, string]> {
     const response = await this.api.post("/deploy")
     const json = await response.json()
@@ -40,7 +40,14 @@ export default class AppApi {
   async create(
     body: any
   ): Promise<[Response, Partial<App>]> {
-    const response = await this.api.post(`/applications`, { body })
+    const data = new FormData()
+    data.append("name", body.name)
+    data.append("url", body.url)
+    data.append("useTemplate", true)
+    data.append("templateName", body.templateName)
+    data.append("templateKey", body.templateKey)
+
+    const response = await this.api.post(`/applications`, { body: data })
     const json = await response.json()
     return [response, json]
   }

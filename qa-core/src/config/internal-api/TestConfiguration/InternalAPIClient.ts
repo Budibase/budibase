@@ -29,7 +29,7 @@ class InternalAPIClient {
     async (url = "", options: ApiOptions = {}) => {
       const requestOptions = {
         method,
-        body: JSON.stringify(options.body),
+        body: options.body,
         headers: {
           "x-budibase-app-id": this.appId,
           "Content-Type": "application/json",
