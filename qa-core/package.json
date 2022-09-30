@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@budibase/backend-core": "^2.0.5",
+    "form-data": "^4.0.0",
     "node-fetch": "2"
   }
 }
