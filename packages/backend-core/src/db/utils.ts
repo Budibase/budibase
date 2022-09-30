@@ -65,6 +65,28 @@ export function getQueryIndex(viewName: ViewName) {
 }
 
 /**
+ * Check if a given ID is that of a table.
+ * @returns {boolean}
+ */
+export const isTableId = (id: string) => {
+  // this includes datasource plus tables
+  return (
+    id &&
+    (id.startsWith(`${DocumentType.TABLE}${SEPARATOR}`) ||
+      id.startsWith(`${DocumentType.DATASOURCE_PLUS}${SEPARATOR}`))
+  )
+}
+
+/**
+ * Check if a given ID is that of a datasource or datasource plus.
+ * @returns {boolean}
+ */
+export const isDatasourceId = (id: string) => {
+  // this covers both datasources and datasource plus
+  return id && id.startsWith(`${DocumentType.DATASOURCE}${SEPARATOR}`)
+}
+
+/**
  * Generates a new workspace ID.
  * @returns {string} The new workspace ID which the workspace doc can be stored under.
  */
