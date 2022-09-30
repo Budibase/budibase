@@ -65,9 +65,9 @@ mkdir -p ${DATA_DIR}/couch/{dbs,views}
 mkdir -p ${DATA_DIR}/minio
 mkdir -p ${DATA_DIR}/search
 chown -R couchdb:couchdb ${DATA_DIR}/couch
-redis-server --requirepass $REDIS_PASSWORD &
-/opt/clouseau/bin/clouseau &
-/minio/minio server ${DATA_DIR}/minio &
+redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
+/opt/clouseau/bin/clouseau > /dev/stdout 2>&1 &
+/minio/minio server ${DATA_DIR}/minio > /dev/stdout 2>&1 &
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
@@ -80,10 +80,10 @@ fi
 
 /etc/init.d/nginx restart
 pushd app
-pm2 start --name app "yarn run:docker"
+pm2 start -o /dev/stdout -e /dev/stderr --name app "yarn run:docker" 
 popd
 pushd worker
-pm2 start --name worker "yarn run:docker"
+pm2 start -o /dev/stdout -e /dev/stderr --name worker "yarn run:docker"
 popd
 sleep 10
 curl -X PUT ${COUCH_DB_URL}/_users
