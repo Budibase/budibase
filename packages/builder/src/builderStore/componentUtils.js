@@ -143,10 +143,7 @@ export const getComponentSettings = componentType => {
   }
 
   // Ensure whole component name is used
-  if (
-    !componentType.startsWith("plugin/") &&
-    !componentType.startsWith("@budibase")
-  ) {
+  if (!componentType.startsWith("@budibase")) {
     componentType = `@budibase/standard-components/${componentType}`
   }
 
