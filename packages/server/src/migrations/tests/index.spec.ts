@@ -4,7 +4,6 @@ import {
   tenancy,
   DocumentType,
   context,
-  db,
 } from "@budibase/backend-core"
 import TestConfig from "../../tests/utilities/TestConfiguration"
 import structures from "../../tests/utilities/structures"

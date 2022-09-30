@@ -5,7 +5,6 @@ import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
 
 export const run = async () => {
   // get app count
-  // @ts-ignore
   const devApps = await getAllApps({ dev: true })
   const appCount = devApps ? devApps.length : 0
 
