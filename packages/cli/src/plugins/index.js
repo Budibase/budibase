@@ -10,6 +10,7 @@ const { join } = require("path")
 const { success, error, info, moveDirectory } = require("../utils")
 const { captureEvent } = require("../events")
 const fp = require("find-free-port")
+const { GENERATED_USER_EMAIL } = require("../constants")
 const { init: hostingInit } = require("../hosting/init")
 const { start: hostingStart } = require("../hosting/start")
 
@@ -147,14 +148,24 @@ async function watch() {
 async function dev() {
   const pluginDir = await questions.string("Directory to watch", "./")
   const [port] = await fp(10000)
+  const password = "admin"
   await hostingInit({
     init: InitTypes.QUICK,
     single: true,
     watchPluginDir: pluginDir,
-    genUser: true,
+    genUser: password,
     port,
+    silent: true,
   })
   await hostingStart()
+  console.log(success(`Configuration has been written to docker-compose.yaml`))
+  console.log(
+    success("Development environment started successfully - connect at: ") +
+      info(`http://localhost:${port}`)
+  )
+  console.log(success("Use the following credentials to login:"))
+  console.log(success("Email: ") + info(GENERATED_USER_EMAIL))
+  console.log(success("Password: ") + info(password))
 }
 
 const command = new Command(`${CommandWords.PLUGIN}`)

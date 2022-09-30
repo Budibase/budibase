@@ -33,7 +33,7 @@ async function getInitConfig(type, isQuick, port) {
 }
 
 exports.init = async opts => {
-  let type, isSingle, watchDir, genUser, port
+  let type, isSingle, watchDir, genUser, port, silent
   if (typeof opts === "string") {
     type = opts
   } else {
@@ -42,6 +42,7 @@ exports.init = async opts => {
     watchDir = opts["watchPluginDir"]
     genUser = opts["genUser"]
     port = opts["port"]
+    silent = opts["silent"]
   }
   const isQuick = type === InitTypes.QUICK || type === InitTypes.DIGITAL_OCEAN
   await checkDockerConfigured()
@@ -60,14 +61,15 @@ exports.init = async opts => {
   const config = await getInitConfig(type, isQuick, port)
   if (!isSingle) {
     await downloadFiles()
-    await makeFiles.makeEnv(config)
+    await makeFiles.makeEnv(config, silent)
   } else {
-    await makeFiles.makeSingleCompose(config)
+    await makeFiles.makeSingleCompose(config, silent)
   }
   if (watchDir) {
-    await watchPlugins(watchDir)
+    await watchPlugins(watchDir, silent)
   }
   if (genUser) {
-    await generateUser()
+    const inputPassword = typeof genUser === "string" ? genUser : null
+    await generateUser(inputPassword, silent)
   }
 }
