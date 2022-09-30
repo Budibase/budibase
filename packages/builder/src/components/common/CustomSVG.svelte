@@ -5,13 +5,13 @@
 
   function substituteSize(svg) {
     if (svg.includes("height=")) {
-      svg = svg.replace(/height="\d*"/, `height="${size}"`)
+      svg = svg.replace(/height="[^"]+"/, `height="${size}"`)
     }
     if (svg.includes("width=")) {
-      svg = svg.replace(/width="\d*"/, `width="${size}"`)
+      svg = svg.replace(/width="[^"]+"/, `width="${size}"`)
     }
     if (svg.includes("id=")) {
-      const matches = svg.match(/id="(.*)"/g)
+      const matches = svg.match(/id="([^"]+)"/g)
       for (let match of matches) {
         svg = svg.replace(new RegExp(match, "g"), Helpers.uuid())
       }
