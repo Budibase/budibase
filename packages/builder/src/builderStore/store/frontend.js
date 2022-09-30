@@ -428,7 +428,7 @@ export const getFrontendStore = () => {
           _id: Helpers.uuid(),
           _component: definition.component,
           _styles: { normal: {}, hover: {}, active: {} },
-          _instanceName: `New ${definition.name}`,
+          _instanceName: `New ${definition.friendlyName || definition.name}`,
           ...cloneDeep(props),
           ...extras,
         }
