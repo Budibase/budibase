@@ -1,4 +1,8 @@
-import { builderStore, environmentStore } from "./stores/index.js"
+import {
+  builderStore,
+  environmentStore,
+  notificationStore,
+} from "./stores/index.js"
 import { get } from "svelte/store"
 import { io } from "socket.io-client"
 
@@ -31,5 +35,6 @@ export const initWebsocket = () => {
   // Event handlers
   socket.on("plugin-update", data => {
     builderStore.actions.updateUsedPlugin(data.name, data.hash)
+    notificationStore.actions.info(`"${data.name}" plugin reloaded`)
   })
 }
