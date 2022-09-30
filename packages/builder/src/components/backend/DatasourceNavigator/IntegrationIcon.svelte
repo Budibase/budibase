@@ -15,19 +15,11 @@
     const url = `${pluginsUrl}/${info.url}`
     const resp = await fetch(url, {
       headers: {
-        pragma: "no-cache",
-        "cache-control": "no-cache",
+        ["pragma"]: "no-cache",
+        ["cache-control"]: "no-cache",
       },
     })
-    let text = await resp.text()
-    // explicitly only want to replace the first instance
-    if (text.includes("height=")) {
-      text = text.replace(/height="\d*"/, `height="${size}"`)
-    }
-    if (text.includes("width=")) {
-      text = text.replace(/width="\d*"/, `width="${size}"`)
-    }
-    return text
+    return resp.text()
   }
 </script>
 
