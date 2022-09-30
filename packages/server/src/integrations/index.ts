@@ -78,6 +78,9 @@ module.exports = {
           ...plugin.schema["schema"],
           custom: true,
         }
+        if (plugin.iconUrl) {
+          pluginSchemas[sourceId].iconUrl = plugin.iconUrl
+        }
       }
     }
     return {
