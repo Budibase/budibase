@@ -1113,6 +1113,11 @@ fill-range@^7.0.1:
   dependencies:
     to-regex-range "^5.0.1"
 
+find-free-port@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/find-free-port/-/find-free-port-2.0.0.tgz#4b22e5f6579eb1a38c41ac6bcb3efed1b6da9b1b"
+  integrity sha512-J1j8gfEVf5FN4PR5w5wrZZ7NYs2IvqsHcd03cAeQx3Ec/mo+lKceaVNhpsRKoZpZKbId88o8qh+dwUwzBV6WCg==
+
 find-replace@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/find-replace/-/find-replace-3.0.0.tgz#3e7e23d3b05167a76f770c9fbd5258b0def68c38"
@@ -3079,6 +3084,11 @@ yallist@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/yallist/-/yallist-4.0.0.tgz#9bb92790d9c0effec63be73519e11a35019a3a72"
   integrity sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==
+
+yaml@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/yaml/-/yaml-2.1.1.tgz#1e06fb4ca46e60d9da07e4f786ea370ed3c3cfec"
+  integrity sha512-o96x3OPo8GjWeSLF+wOAbrPfhFOGY0W00GNaxCDv+9hkcDJEnev1yh8S7pgHF0ik6zc8sQLuL8hjHjJULZp8bw==
 
 yargs-parser@^20.2.2:
   version "20.2.9"

@@ -1,5 +1,5 @@
 const Command = require("../structures/Command")
-const { CommandWords, AnalyticsEvents } = require("../constants")
+const { CommandWords, AnalyticsEvents, InitTypes } = require("../constants")
 const { getSkeleton, fleshOutSkeleton } = require("./skeleton")
 const questions = require("../questions")
 const fs = require("fs")
@@ -9,6 +9,9 @@ const { runPkgCommand } = require("../exec")
 const { join } = require("path")
 const { success, error, info, moveDirectory } = require("../utils")
 const { captureEvent } = require("../events")
+const fp = require("find-free-port")
+const { init: hostingInit } = require("../hosting/init")
+const { start: hostingStart } = require("../hosting/start")
 
 function checkInPlugin() {
   if (!fs.existsSync("package.json")) {
@@ -141,6 +144,19 @@ async function watch() {
   }
 }
 
+async function dev() {
+  const pluginDir = await questions.string("Directory to watch", "./")
+  const [port] = await fp(10000)
+  await hostingInit({
+    init: InitTypes.QUICK,
+    single: true,
+    watchPluginDir: pluginDir,
+    genUser: true,
+    port,
+  })
+  await hostingStart()
+}
+
 const command = new Command(`${CommandWords.PLUGIN}`)
   .addHelp(
     "Custom plugins for Budibase, init, build and verify your components and datasources with this tool."
@@ -159,6 +175,11 @@ const command = new Command(`${CommandWords.PLUGIN}`)
     "--watch",
     "Automatically build any changes to your plugin.",
     watch
+  )
+  .addSubOption(
+    "--dev",
+    "Run a development environment which automatically watches the current directory.",
+    dev
   )
 
 exports.command = command
