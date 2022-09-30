@@ -1,6 +1,6 @@
 {
   "name": "@budibase/cli",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "src/index.js",
   "bin": {
@@ -26,9 +26,9 @@
     "outputPath": "build"
   },
   "dependencies": {
-    "@budibase/backend-core": "^2.0.7",
-    "@budibase/string-templates": "^2.0.7",
-    "@budibase/types": "^2.0.7",
+    "@budibase/backend-core": "^2.0.8",
+    "@budibase/string-templates": "^2.0.8",
+    "@budibase/types": "^2.0.8",
     "axios": "0.21.2",
     "chalk": "4.1.0",
     "cli-progress": "3.11.2",
@@ -36,6 +36,7 @@
     "docker-compose": "0.23.6",
     "dotenv": "16.0.1",
     "download": "8.0.0",
+    "find-free-port": "^2.0.0",
     "inquirer": "8.0.0",
     "joi": "17.6.0",
     "lookpath": "1.1.0",
@@ -46,8 +47,7 @@
     "pouchdb-replication-stream": "1.2.9",
     "randomstring": "1.1.5",
     "tar": "6.1.11",
-    "yaml": "^2.1.1",
-    "find-free-port": "^2.0.0"
+    "yaml": "^2.1.1"
   },
   "devDependencies": {
     "copyfiles": "^2.4.1",
