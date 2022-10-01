@@ -21,6 +21,7 @@ export interface Plugin extends Document {
   name: string
   version: string
   jsUrl?: string
+  iconUrl?: string
   source: PluginSource
   package: { [key: string]: any }
   hash: string
