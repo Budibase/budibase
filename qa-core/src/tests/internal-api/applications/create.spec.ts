@@ -1,5 +1,6 @@
 import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
+import { db } from "@budibase/backend-core"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
 import generateApp from "../../../config/internal-api/fixtures/applications"
 import generator from "../../../config/generator"
@@ -10,20 +11,24 @@ describe("Internal API - /applications endpoints", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
-    await config.auth.login()
   })
 
   afterAll(async () => {
     await config.afterAll()
-    await config.auth.logout()
   })
 
-  xit("POST - Can login", async () => {
-    const [response] = await config.auth.login()
-    expect(response).toHaveStatusCode(200)
-  })
+  async function createAppFromTemplate() {
+    return config.applications.create({
+      name: generator.word(),
+      url: `/${generator.word()}`,
+      useTemplate: "true",
+      templateName: "Near Miss Register",
+      templateKey: "app/near-miss-register",
+      templateFile: undefined
+    })
+  }
 
-  xit("GET - fetch applications", async () => {
+  it("GET - fetch applications", async () => {
     await config.applications.create({
       ...generateApp(),
       useTemplate: false
@@ -33,51 +38,49 @@ describe("Internal API - /applications endpoints", () => {
     expect(apps.length).toBeGreaterThanOrEqual(1)
   })
 
-  xit("POST - Create an application", async () => {
+  it("POST - Create an application", async () => {
     const [response, app] = await config.applications.create(generateApp())
     expect(response).toHaveStatusCode(200)
     expect(app._id).toBeDefined()
   })
 
-  it("POST - Create an application from a template and check it renders", async () => {
-    const appName = generator.word()
-    const [response, app] = await config.applications.create({
-      name: appName,
-      url: `/${generator.word()}`,
-      useTemplate: true,
-      templateName: "Car Rental Admin Panel",
-      templateKey: "app/car-rental-admin-panel",
-      templateFile: undefined
-    })
+  it("POST - Publish application", async () => {
+    // create app
+    const [response, app] = await config.applications.create(generateApp())
     expect(response).toHaveStatusCode(200)
     expect(app.appId).toBeDefined()
 
+    // publish app
     config.applications.api.appId = app.appId
-    const [_, renderable] = await config.applications.canRender()
-    expect(renderable).toBe(true)
-  })
-
-  xit("POST - Publish app from template", async () => {
-    const appUrl = `/${generator.word()}`
-    const [response, app] = await config.applications.create({
-      name: generator.word(),
-      url: appUrl,
-      useTemplate: true,
-      templateName: "Car Rental Admin Panel",
-      templateKey: "app/car-rental-admin-panel",
-      templateFile: undefined
-    })
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
-
-    config.applications.api.appId = app.appId
-
-    const [publishResponse, json] = await config.applications.publish()
+    const [publishResponse, publish] = await config.applications.publish()
     expect(publishResponse).toHaveStatusCode(200)
-    expect(json).toEqual({
+    expect(publish).toEqual({
       _id: expect.any(String),
-      appUrl,
+      appUrl: app.url,
       status: "SUCCESS"
     })
   })
+
+  it("POST - Create an application from a template, publish and check it renders", async () => {
+    // create the app
+    const appName = generator.word()
+    const [response, app] = await createAppFromTemplate({ name: appName })
+    expect(response).toHaveStatusCode(200)
+    expect(app.appId).toBeDefined()
+    config.applications.api.appId = app.appId
+
+    // check preview renders
+    const [previewResponse, previewRenders] = await config.applications.canRender()
+    expect(previewResponse).toHaveStatusCode(200)
+    expect(previewRenders).toBe(true)
+
+    // publish app
+    await config.applications.publish()
+
+    // check published app renders
+    config.applications.api.appId = db.getProdAppID(app.appId)
+    const [publishedAppResponse, publishedAppRenders] = await config.applications.canRender()
+    expect(publishedAppRenders).toBe(true)
+  })
+
 })
