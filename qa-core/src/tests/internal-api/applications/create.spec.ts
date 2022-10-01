@@ -64,7 +64,7 @@ describe("Internal API - /applications endpoints", () => {
   it("POST - Create an application from a template, publish and check it renders", async () => {
     // create the app
     const appName = generator.word()
-    const [response, app] = await createAppFromTemplate({ name: appName })
+    const [response, app] = await createAppFromTemplate()
     expect(response).toHaveStatusCode(200)
     expect(app.appId).toBeDefined()
     config.applications.api.appId = app.appId
