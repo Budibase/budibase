@@ -57,7 +57,11 @@ const INTEGRATIONS: { [key: string]: any } = {
 }
 
 // optionally add oracle integration if the oracle binary can be installed
-if (process.arch && !process.arch.startsWith("arm")) {
+if (
+  process.arch &&
+  !process.arch.startsWith("arm") &&
+  oracle.integration.isInstalled()
+) {
   DEFINITIONS[SourceName.ORACLE] = oracle.schema
   INTEGRATIONS[SourceName.ORACLE] = oracle.integration
 }
@@ -77,6 +81,9 @@ module.exports = {
         pluginSchemas[sourceId] = {
           ...plugin.schema["schema"],
           custom: true,
+        }
+        if (plugin.iconUrl) {
+          pluginSchemas[sourceId].iconUrl = plugin.iconUrl
         }
       }
     }

@@ -98,6 +98,9 @@ const createBuilderStore = () => {
           return state
         })
       }
+
+      // Notify the builder so we can reload component definitions
+      dispatchEvent("reload-plugin")
     },
   }
   return {

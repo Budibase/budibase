@@ -3,7 +3,7 @@ const fs = require("fs")
 const { error, success } = require("../utils")
 const { updateDockerComposeService } = require("./utils")
 
-exports.watchPlugins = async pluginPath => {
+exports.watchPlugins = async (pluginPath, silent) => {
   const PLUGIN_PATH = "/plugins"
   // get absolute path
   pluginPath = resolve(pluginPath)
@@ -28,7 +28,9 @@ exports.watchPlugins = async pluginPath => {
     }
     service.volumes.push(`${pluginPath}:${PLUGIN_PATH}`)
   })
-  console.log(
-    success(`Docker compose configured to watch directory: ${pluginPath}`)
-  )
+  if (!silent) {
+    console.log(
+      success(`Docker compose configured to watch directory: ${pluginPath}`)
+    )
+  }
 }
