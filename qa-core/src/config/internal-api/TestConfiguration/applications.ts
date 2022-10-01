@@ -40,14 +40,7 @@ export default class AppApi {
   async create(
     body: any
   ): Promise<[Response, Partial<App>]> {
-    const data = new FormData()
-    data.append("name", body.name)
-    data.append("url", body.url)
-    data.append("useTemplate", true)
-    data.append("templateName", body.templateName)
-    data.append("templateKey", body.templateKey)
-
-    const response = await this.api.post(`/applications`, { body: data })
+    const response = await this.api.post(`/applications`, { body })
     const json = await response.json()
     return [response, json]
   }
