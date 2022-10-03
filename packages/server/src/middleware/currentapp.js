@@ -111,12 +111,14 @@ module.exports = async (ctx, next) => {
     ctx.appId = appId
     if (roleId) {
       ctx.roleId = roleId
+      const globalId = ctx.user ? ctx.user._id : undefined
       const userId = ctx.user ? generateUserMetadataID(ctx.user._id) : null
       ctx.user = {
         ...ctx.user,
         // override userID with metadata one
         _id: userId,
         userId,
+        globalId,
         roleId,
         role: await getRole(roleId),
       }

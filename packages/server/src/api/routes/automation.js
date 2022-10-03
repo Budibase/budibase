@@ -13,7 +13,7 @@ const {
 } = require("../../middleware/appInfo")
 const { automationValidator } = require("./utils/validators")
 
-const router = Router()
+const router = new Router()
 
 router
   .get(

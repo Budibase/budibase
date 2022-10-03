@@ -11,8 +11,6 @@
 <script>
   import { getContext, setContext, onMount, onDestroy } from "svelte"
   import { writable, get } from "svelte/store"
-  import * as AppComponents from "components/app"
-  import Router from "./Router.svelte"
   import {
     enrichProps,
     propsAreSame,
@@ -127,7 +125,9 @@
   // Empty components are those which accept children but do not have any.
   // Empty states can be shown for these components, but can be disabled
   // in the component manifest.
-  $: empty = interactive && !children.length && hasChildren
+  $: empty =
+    (interactive && !children.length && hasChildren) ||
+    hasMissingRequiredSettings
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
@@ -142,6 +142,10 @@
   // Determine and apply settings to the component
   $: applySettings(staticSettings, enrichedSettings, conditionalSettings)
 
+  // Determine custom css.
+  // Broken out as a separate variable to minimize reactivity updates.
+  $: customCSS = cachedSettings?._css
+
   // Scroll the selected element into view
   $: selected && scrollIntoView()
 
@@ -151,6 +155,7 @@
     children: children.length,
     styles: {
       ...instance._styles,
+      custom: customCSS,
       id,
       empty: emptyState,
       interactive,
@@ -165,14 +170,14 @@
     missingRequiredSettings,
   })
 
-  const initialise = instance => {
+  const initialise = (instance, force = false) => {
     if (instance == null) {
       return
     }
 
     // Ensure we're processing a new instance
     const instanceKey = Helpers.hashString(JSON.stringify(instance))
-    if (instanceKey === lastInstanceKey) {
+    if (instanceKey === lastInstanceKey && !force) {
       return
     } else {
       lastInstanceKey = instanceKey
@@ -180,7 +185,7 @@
 
     // Pull definition and constructor
     const component = instance._component
-    constructor = getComponentConstructor(component)
+    constructor = componentStore.actions.getComponentConstructor(component)
     definition = componentStore.actions.getComponentDefinition(component)
     if (!definition) {
       return
@@ -237,16 +242,6 @@
     })
   }
 
-  // Gets the component constructor for the specified component
-  const getComponentConstructor = component => {
-    const split = component?.split("/")
-    const name = split?.[split.length - 1]
-    if (name === "screenslot" && !insideScreenslot) {
-      return Router
-    }
-    return AppComponents[name]
-  }
-
   const getSettingsDefinitionMap = settingsDefinition => {
     let map = {}
     settingsDefinition?.forEach(setting => {
@@ -259,14 +254,18 @@
     // Get raw settings
     let settings = {}
     Object.entries(instance)
-      .filter(([name]) => name === "_conditions" || !name.startsWith("_"))
+      .filter(([name]) => !name.startsWith("_"))
       .forEach(([key, value]) => {
         settings[key] = value
       })
-
-    // Derive static, dynamic and nested settings if the instance changed
     let newStaticSettings = { ...settings }
     let newDynamicSettings = { ...settings }
+
+    // Attach some internal properties
+    newDynamicSettings["_conditions"] = instance._conditions
+    newDynamicSettings["_css"] = instance._styles?.custom
+
+    // Derive static, dynamic and nested settings if the instance changed
     settingsDefinition?.forEach(setting => {
       if (setting.nested) {
         delete newDynamicSettings[setting.key]
@@ -380,6 +379,11 @@
           // setting it on initialSettings directly, we avoid a double render.
           cachedSettings[key] = allSettings[key]
 
+          // Don't update components for internal properties
+          if (key.startsWith("_")) {
+            return
+          }
+
           if (ref?.$$set) {
             // Programmatically set the prop to avoid svelte reactive statements
             // firing inside components. This circumvents the problems caused by
@@ -419,9 +423,11 @@
       !componentStore.actions.isComponentRegistered(id)
     ) {
       componentStore.actions.registerInstance(id, {
+        component: instance._component,
         getSettings: () => cachedSettings,
         getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
         getDataContext: () => get(context),
+        reload: () => initialise(instance, true),
       })
     }
   })

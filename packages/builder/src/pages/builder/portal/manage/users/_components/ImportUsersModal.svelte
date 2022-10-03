@@ -6,7 +6,7 @@
     Multiselect,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth, admin } from "stores/portal"
+  import { groups, licensing, admin } from "stores/portal"
   import { emailValidator } from "helpers/validation"
   import { Constants } from "@budibase/frontend-core"
 
@@ -62,7 +62,7 @@
       csvString = e.target.result
       files = fileArray
 
-      userEmails = csvString.split("\n")
+      userEmails = csvString.split(/\r?\n/)
     })
     reader.readAsText(fileArray[0])
   }
@@ -72,7 +72,6 @@
   size="M"
   title="Import users"
   confirmText="Done"
-  showCancelButton={false}
   cancelText="Cancel"
   showCloseIcon={false}
   onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
@@ -92,7 +91,7 @@
     options={Constants.BuilderRoleDescriptions}
   />
 
-  {#if $auth.groupsEnabled}
+  {#if $licensing.groupsEnabled}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"

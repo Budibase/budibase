@@ -85,6 +85,8 @@
         ? [$store.componentToPaste?._id]
         : [],
     isBudibaseEvent: true,
+    usedPlugins: $store.usedPlugins,
+    location: window.location,
   }
 
   // Refresh the preview when required
@@ -183,7 +185,7 @@
           $goto("./navigation")
         }
       } else if (type === "request-add-component") {
-        $goto(`./components/${$selectedComponent?._id}/new`)
+        toggleAddComponent()
       } else if (type === "highlight-setting") {
         store.actions.settings.highlight(data.setting)
 
@@ -196,6 +198,8 @@
             block: "center",
           })
         }
+      } else if (type === "reload-plugin") {
+        await store.actions.components.refreshDefinitions()
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }
@@ -227,9 +231,8 @@
     if (isAddingComponent) {
       $goto(`../${$selectedScreen._id}/components/${$selectedComponent?._id}`)
     } else {
-      $goto(
-        `../${$selectedScreen._id}/components/${$selectedComponent?._id}/new`
-      )
+      const id = $selectedComponent?._id || $selectedScreen?.props?._id
+      $goto(`../${$selectedScreen._id}/components/${id}/new`)
     }
   }
 
@@ -291,7 +294,7 @@
   <iframe
     title="componentPreview"
     bind:this={iframe}
-    src="/preview"
+    src="/app/preview"
     class:hidden={loading || error}
     class:tablet={$store.previewDevice === "tablet"}
     class:mobile={$store.previewDevice === "mobile"}

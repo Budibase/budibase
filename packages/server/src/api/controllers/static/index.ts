@@ -18,7 +18,6 @@ const { DocumentType } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
-
 const fs = require("fs")
 const {
   downloadTarballDirect,
@@ -113,6 +112,7 @@ export const serveApp = async function (ctx: any) {
       production: env.isProd(),
       appId,
       clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+      usedPlugins: appInfo.usedPlugins,
     })
 
     const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)

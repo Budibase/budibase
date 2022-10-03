@@ -153,7 +153,10 @@ export async function preview(ctx: any) {
           auth: { ...authConfigCtx },
         },
       })
-    const { rows, keys, info, extra } = await quotas.addQuery(runFn)
+
+    const { rows, keys, info, extra } = await quotas.addQuery(runFn, {
+      datasourceId: datasource._id,
+    })
     const schemaFields: any = {}
     if (rows?.length > 0) {
       for (let key of [...new Set(keys)] as string[]) {
@@ -234,7 +237,9 @@ async function execute(
         },
       })
 
-    const { rows, pagination, extra } = await quotas.addQuery(runFn)
+    const { rows, pagination, extra } = await quotas.addQuery(runFn, {
+      datasourceId: datasource._id,
+    })
     if (opts && opts.rowsOnly) {
       ctx.body = rows
     } else {

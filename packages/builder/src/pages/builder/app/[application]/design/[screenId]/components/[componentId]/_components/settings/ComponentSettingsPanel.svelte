@@ -28,7 +28,7 @@
 
 {#if $selectedComponent}
   {#key $selectedComponent._id}
-    <Panel {title} icon={componentDefinition.icon} borderLeft>
+    <Panel {title} icon={componentDefinition?.icon} borderLeft>
       <ComponentSettingsSection
         {componentInstance}
         {componentDefinition}
