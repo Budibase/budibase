@@ -34,8 +34,6 @@ const DocumentType = {
   INSTANCE: "inst",
   LAYOUT: "layout",
   SCREEN: "screen",
-  DATASOURCE: "datasource",
-  DATASOURCE_PLUS: "datasource_plus",
   QUERY: "query",
   DEPLOYMENTS: "deployments",
   METADATA: "metadata",

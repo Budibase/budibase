@@ -20,6 +20,8 @@
   import { createEventDispatcher, onMount } from "svelte"
 
   const dispatch = createEventDispatcher()
+  const { OperatorOptions } = Constants
+  const { getValidOperatorsForType } = LuceneUtils
 
   export let schemaFields
   export let filters = []
@@ -45,7 +47,7 @@
       {
         id: generate(),
         field: null,
-        operator: Constants.OperatorOptions.Equals.value,
+        operator: OperatorOptions.Equals.value,
         value: null,
         valueType: "Value",
       },
@@ -66,49 +68,60 @@
     return schemaFields.find(field => field.name === filter.field)
   }
 
-  const onFieldChange = (expression, field) => {
-    // Update the field types
-    expression.type = enrichedSchemaFields.find(x => x.name === field)?.type
-    expression.externalType = getSchema(expression)?.externalType
+  const santizeTypes = filter => {
+    // Update type based on field
+    const fieldSchema = enrichedSchemaFields.find(x => x.name === filter.field)
+    filter.type = fieldSchema?.type
 
-    // Ensure a valid operator is set
-    const validOperators = LuceneUtils.getValidOperatorsForType(
-      expression.type
-    ).map(x => x.value)
-    if (!validOperators.includes(expression.operator)) {
-      expression.operator =
-        validOperators[0] ?? Constants.OperatorOptions.Equals.value
-      onOperatorChange(expression, expression.operator)
+    // Update external type based on field
+    filter.externalType = getSchema(filter)?.externalType
+  }
+
+  const santizeOperator = filter => {
+    // Ensure a valid operator is selected
+    const operators = getValidOperatorsForType(filter.type).map(x => x.value)
+    if (!operators.includes(filter.operator)) {
+      filter.operator = operators[0] ?? OperatorOptions.Equals.value
     }
 
-    // if changed to an array, change default value to empty array
-    const idx = filters.findIndex(x => x.id === expression.id)
-    if (expression.type === "array") {
-      filters[idx].value = []
-    } else {
-      filters[idx].value = null
+    // Update the noValue flag if the operator does not take a value
+    const noValueOptions = [
+      OperatorOptions.Empty.value,
+      OperatorOptions.NotEmpty.value,
+    ]
+    filter.noValue = noValueOptions.includes(filter.operator)
+  }
+
+  const santizeValue = filter => {
+    // Check if the operator allows a value at all
+    if (filter.noValue) {
+      filter.value = null
+      return
+    }
+
+    // Ensure array values are properly set and cleared
+    if (Array.isArray(filter.value)) {
+      if (filter.valueType !== "Value" || filter.type !== "array") {
+        filter.value = null
+      }
+    } else if (filter.type === "array" && filter.valueType === "Value") {
+      filter.value = []
     }
   }
 
-  const onOperatorChange = (expression, operator) => {
-    const noValueOptions = [
-      Constants.OperatorOptions.Empty.value,
-      Constants.OperatorOptions.NotEmpty.value,
-    ]
-    expression.noValue = noValueOptions.includes(operator)
-    if (expression.noValue) {
-      expression.value = null
-    }
-    if (
-      operator === Constants.OperatorOptions.In.value &&
-      !Array.isArray(expression.value)
-    ) {
-      if (expression.value) {
-        expression.value = [expression.value]
-      } else {
-        expression.value = []
-      }
-    }
+  const onFieldChange = filter => {
+    santizeTypes(filter)
+    santizeOperator(filter)
+    santizeValue(filter)
+  }
+
+  const onOperatorChange = filter => {
+    santizeOperator(filter)
+    santizeValue(filter)
+  }
+
+  const onValueTypeChange = filter => {
+    santizeValue(filter)
   }
 
   const getFieldOptions = field => {
@@ -153,23 +166,24 @@
               <Select
                 bind:value={filter.field}
                 options={fieldOptions}
-                on:change={e => onFieldChange(filter, e.detail)}
+                on:change={() => onFieldChange(filter)}
                 placeholder="Column"
               />
               <Select
                 disabled={!filter.field}
-                options={LuceneUtils.getValidOperatorsForType(filter.type)}
+                options={getValidOperatorsForType(filter.type)}
                 bind:value={filter.operator}
-                on:change={e => onOperatorChange(filter, e.detail)}
+                on:change={() => onOperatorChange(filter)}
                 placeholder={null}
               />
               <Select
                 disabled={filter.noValue || !filter.field}
                 options={valueTypeOptions}
                 bind:value={filter.valueType}
+                on:change={() => onValueTypeChange(filter)}
                 placeholder={null}
               />
-              {#if filter.valueType === "Binding"}
+              {#if filter.field && filter.valueType === "Binding"}
                 <DrawerBindableInput
                   disabled={filter.noValue}
                   title={`Value for "${filter.field}"`}
@@ -250,7 +264,7 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     align-items: center;
-    grid-template-columns: 1fr 120px 120px 1fr auto auto;
+    grid-template-columns: 1fr 150px 120px 1fr 16px 16px;
   }
 
   .filter-label {

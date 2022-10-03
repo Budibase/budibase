@@ -67,12 +67,8 @@ function validateDatasource(schema) {
       description: joi.string().required(),
       datasource: joi.object().pattern(joi.string(), fieldValidator).required(),
       query: joi
-        .object({
-          create: queryValidator,
-          read: queryValidator,
-          update: queryValidator,
-          delete: queryValidator,
-        })
+        .object()
+        .pattern(joi.string(), queryValidator)
         .unknown(true)
         .required(),
       extra: joi.object().pattern(

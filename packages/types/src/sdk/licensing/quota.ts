@@ -27,6 +27,7 @@ export enum ConstantQuotaName {
   AUTOMATION_LOG_RETENTION_DAYS = "automationLogRetentionDays",
 }
 
+export type MeteredQuotaName = StaticQuotaName | MonthlyQuotaName
 export type QuotaName = StaticQuotaName | MonthlyQuotaName | ConstantQuotaName
 
 export const isStaticQuota = (
