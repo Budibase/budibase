@@ -11,7 +11,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { admin, auth, licensing } from "../../../../stores/portal"
-  import { PlanType } from "../../../../constants"
+  import { Constants } from "@budibase/frontend-core"
   import { DashCard, Usage } from "../../../../components/usage"
 
   let staticUsage = []
@@ -125,7 +125,7 @@
   }
 
   const goToAccountPortal = () => {
-    if (license?.plan.type === PlanType.FREE) {
+    if (license?.plan.type === Constants.PlanType.FREE) {
       window.location.href = upgradeUrl
     } else {
       window.location.href = manageUrl
@@ -133,7 +133,7 @@
   }
 
   const setPrimaryActionText = () => {
-    if (license?.plan.type === PlanType.FREE) {
+    if (license?.plan.type === Constants.PlanType.FREE) {
       primaryActionText = "Upgrade"
       return
     }
