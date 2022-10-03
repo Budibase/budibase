@@ -56,6 +56,7 @@ jobs:
       - run: yarn bootstrap
       - run: yarn lint
       - run: yarn build
+      - run: yarn build:sdk
       - run: yarn test
 
       - name: Configure AWS Credentials

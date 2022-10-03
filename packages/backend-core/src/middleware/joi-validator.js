@@ -13,10 +13,13 @@ function validate(schema, property) {
       params = ctx.request[property]
     }
 
-    schema = schema.append({
-      createdAt: Joi.any().optional(),
-      updatedAt: Joi.any().optional(),
-    })
+    // not all schemas have the append property e.g. array schemas
+    if (schema.append) {
+      schema = schema.append({
+        createdAt: Joi.any().optional(),
+        updatedAt: Joi.any().optional(),
+      })
+    }
 
     const { error } = schema.validate(params)
     if (error) {

@@ -97,6 +97,7 @@ export interface Integration {
   description: string
   friendlyName: string
   type?: string
+  iconUrl?: string
   datasource: {}
   query: {
     [key: string]: QueryDefinition

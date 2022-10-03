@@ -148,7 +148,9 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
     finalData.push(row)
   }
 
-  await quotas.addRows(finalData.length, () => db.bulkDocs(finalData))
+  await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
+    tableId: table._id,
+  })
   await events.rows.imported(table, "csv", finalData.length)
   return table
 }

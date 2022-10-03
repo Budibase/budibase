@@ -34,8 +34,6 @@ const DocumentType = {
   INSTANCE: "inst",
   LAYOUT: "layout",
   SCREEN: "screen",
-  DATASOURCE: "datasource",
-  DATASOURCE_PLUS: "datasource_plus",
   QUERY: "query",
   DEPLOYMENTS: "deployments",
   METADATA: "metadata",
@@ -368,6 +366,10 @@ exports.generateMemoryViewID = viewName => {
 
 exports.getMemoryViewParams = (otherProps = {}) => {
   return getDocParams(DocumentType.MEM_VIEW, null, otherProps)
+}
+
+exports.generatePluginID = name => {
+  return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
 }
 
 /**

@@ -16,6 +16,7 @@
     themeStore,
     appStore,
     devToolsStore,
+    environmentStore,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -47,6 +48,8 @@
     !$builderStore.inBuilder &&
     $devToolsStore.enabled &&
     !$routeStore.queryParams?.peek
+  $: objectStoreUrl = $environmentStore.cloud ? "https://cdn.budi.live" : ""
+  $: pluginsUrl = `${objectStoreUrl}/plugins`
 
   // Handle no matching route
   $: {
@@ -88,6 +91,15 @@
     }
   })
 </script>
+
+<svelte:head>
+  {#if $builderStore.usedPlugins?.length}
+    {#each $builderStore.usedPlugins as plugin (plugin.hash)}
+      <script
+        src={`${pluginsUrl}/${plugin.jsUrl}?r=${plugin.hash || ""}`}></script>
+    {/each}
+  {/if}
+</svelte:head>
 
 {#if dataLoaded}
   <div

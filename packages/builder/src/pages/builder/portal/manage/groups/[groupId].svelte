@@ -5,13 +5,16 @@
     Button,
     Layout,
     Heading,
-    Body,
     Icon,
     Popover,
     notifications,
     List,
     ListItem,
     StatusLight,
+    Divider,
+    ActionMenu,
+    MenuItem,
+    Modal,
   } from "@budibase/bbui"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
@@ -19,91 +22,32 @@
   import { onMount } from "svelte"
   import { RoleUtils } from "@budibase/frontend-core"
   import { roles } from "stores/backend"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
+  import GroupIcon from "./_components/GroupIcon.svelte"
+  import AppAddModal from "./_components/AppAddModal.svelte"
 
   export let groupId
 
   let popoverAnchor
   let popover
   let searchTerm = ""
-  let selectedUsers = []
   let prevSearch = undefined
   let pageInfo = createPaginationStore()
   let loaded = false
+  let editModal, deleteModal, appAddModal
 
   $: page = $pageInfo.page
   $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
-
-  async function addAll() {
-    selectedUsers = [...selectedUsers, ...filtered.map(u => u._id)]
-
-    let reducedUserObjects = filtered.map(u => {
-      return {
-        _id: u._id,
-        email: u.email,
-      }
-    })
-    group.users = [...reducedUserObjects, ...group.users]
-
-    await groups.actions.save(group)
-
-    $users.data.forEach(async user => {
-      let userToEdit = await users.get(user._id)
-      let userGroups = userToEdit.userGroups || []
-      userGroups.push(groupId)
-      await users.save({
-        ...userToEdit,
-        userGroups,
-      })
-    })
-  }
-
-  async function selectUser(id) {
-    let selectedUser = selectedUsers.includes(id)
-    if (selectedUser) {
-      selectedUsers = selectedUsers.filter(id => id !== selectedUser)
-      let newUsers = group.users.filter(user => user._id !== id)
-      group.users = newUsers
-    } else {
-      let enrichedUser = $users.data
-        .filter(user => user._id === id)
-        .map(u => {
-          return {
-            _id: u._id,
-            email: u.email,
-          }
-        })[0]
-      selectedUsers = [...selectedUsers, id]
-      group.users.push(enrichedUser)
+  $: filtered = $users.data
+  $: groupApps = $apps.filter(app =>
+    groups.actions.getGroupAppIds(group).includes(apps.getProdAppID(app.devId))
+  )
+  $: {
+    if (loaded && !group?._id) {
+      $goto("./")
     }
-
-    await groups.actions.save(group)
-
-    let user = await users.get(id)
-
-    let userGroups = user.userGroups || []
-    userGroups.push(groupId)
-    await users.save({
-      ...user,
-      userGroups,
-    })
-  }
-  $: filtered =
-    $users.data?.filter(x => !group?.users.map(y => y._id).includes(x._id)) ||
-    []
-
-  $: groupApps = $apps.filter(x => group.apps.includes(x.appId))
-  async function removeUser(id) {
-    let newUsers = group.users.filter(user => user._id !== id)
-    group.users = newUsers
-    let user = await users.get(id)
-
-    await users.save({
-      ...user,
-      userGroups: [],
-    })
-
-    await groups.actions.save(group)
   }
 
   async function fetchUsers(page, search) {
@@ -126,9 +70,27 @@
   }
 
   const getRoleLabel = appId => {
-    const roleId = group?.roles?.[`app_${appId}`]
+    const roleId = group?.roles?.[apps.getProdAppID(appId)]
     const role = $roles.find(x => x._id === roleId)
     return role?.name || "Custom role"
+  }
+
+  async function deleteGroup() {
+    try {
+      await groups.actions.delete(group)
+      notifications.success("User group deleted successfully")
+      $goto("./")
+    } catch (error) {
+      notifications.error(`Failed to delete user group`)
+    }
+  }
+
+  async function saveGroup(group) {
+    try {
+      await groups.actions.save(group)
+    } catch (error) {
+      notifications.error(`Failed to save user group`)
+    }
   }
 
   onMount(async () => {
@@ -142,119 +104,161 @@
 </script>
 
 {#if loaded}
-  <Layout noPadding>
+  <Layout noPadding gap="XL">
     <div>
-      <ActionButton
-        on:click={() => $goto("../groups")}
-        size="S"
-        icon="ArrowLeft"
-      >
+      <ActionButton on:click={() => $goto("../groups")} icon="ArrowLeft">
         Back
       </ActionButton>
     </div>
-    <div class="header">
-      <div class="title">
-        <div style="background: {group?.color};" class="circle">
-          <div>
-            <Icon size="M" name={group?.icon} />
+
+    <Layout noPadding gap="M">
+      <div class="header">
+        <div class="title">
+          <GroupIcon {group} size="L" />
+          <div class="text-padding">
+            <Heading>{group?.name}</Heading>
           </div>
         </div>
-        <div class="text-padding">
-          <Heading>{group?.name}</Heading>
+        <div>
+          <ActionMenu align="right">
+            <span slot="control">
+              <Icon hoverable name="More" />
+            </span>
+            <MenuItem icon="Refresh" on:click={() => editModal.show()}>
+              Edit
+            </MenuItem>
+            <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
+              Delete
+            </MenuItem>
+          </ActionMenu>
         </div>
       </div>
-      <div bind:this={popoverAnchor}>
-        <Button on:click={popover.show()} icon="UserAdd" cta>Add user</Button>
-      </div>
-      <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-        <UserGroupPicker
-          key={"email"}
-          title={"User"}
-          bind:searchTerm
-          bind:selected={selectedUsers}
-          bind:filtered
-          {addAll}
-          select={selectUser}
-        />
-      </Popover>
-    </div>
 
-    <List>
-      {#if group?.users.length}
-        {#each group.users as user}
-          <ListItem title={user?.email} avatar
-            ><Icon
-              on:click={() => removeUser(user?._id)}
-              hoverable
-              size="L"
-              name="Close"
-            /></ListItem
-          >
-        {/each}
-      {:else}
-        <ListItem icon="UserGroup" title="You have no users in this team" />
-      {/if}
-    </List>
-    <div
-      style="flex-direction: column; margin-top: var(--spacing-m)"
-      class="title"
-    >
-      <Heading weight="light" size="XS">Apps</Heading>
-      <div style="margin-top: var(--spacing-xs)">
-        <Body size="S"
-          >Manage apps that this User group has been assigned to</Body
-        >
-      </div>
-    </div>
+      <Divider />
 
-    <List>
-      {#if groupApps.length}
-        {#each groupApps as app}
-          <ListItem
-            title={app.name}
-            icon={app?.icon?.name || "Apps"}
-            iconBackground={app?.icon?.color || ""}
-          >
-            <div class="title ">
-              <StatusLight
-                square
-                color={RoleUtils.getRoleColour(group.roles[`app_${app.appId}`])}
+      <Layout noPadding gap="S">
+        <div class="header">
+          <Heading size="S">Users</Heading>
+          <div bind:this={popoverAnchor}>
+            <Button on:click={popover.show()} icon="UserAdd" cta>
+              Add user
+            </Button>
+          </div>
+          <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+            <UserGroupPicker
+              bind:searchTerm
+              labelKey="email"
+              selected={group.users?.map(user => user._id)}
+              list={$users.data}
+              on:select={e => groups.actions.addUser(groupId, e.detail)}
+              on:deselect={e => groups.actions.removeUser(groupId, e.detail)}
+            />
+          </Popover>
+        </div>
+        <List>
+          {#if group?.users.length}
+            {#each group.users as user}
+              <ListItem
+                title={user.email}
+                on:click={() => $goto(`../users/${user._id}`)}
+                hoverable
               >
-                {getRoleLabel(app.appId)}
-              </StatusLight>
-            </div>
-          </ListItem>
-        {/each}
-      {:else}
-        <ListItem icon="UserGroup" title="No apps" />
-      {/if}
-    </List>
+                <Icon
+                  on:click={e => {
+                    groups.actions.removeUser(groupId, user._id)
+                    e.stopPropagation()
+                  }}
+                  hoverable
+                  size="S"
+                  name="Close"
+                />
+              </ListItem>
+            {/each}
+          {:else}
+            <ListItem icon="UserGroup" title="This user group has no users" />
+          {/if}
+        </List>
+      </Layout>
+    </Layout>
+
+    <Layout noPadding gap="S">
+      <div class="header">
+        <Heading size="S">Apps</Heading>
+        <div>
+          <Button on:click={appAddModal.show()} icon="ExperienceAdd" cta>
+            Add app
+          </Button>
+        </div>
+      </div>
+      <List>
+        {#if groupApps.length}
+          {#each groupApps as app}
+            <ListItem
+              title={app.name}
+              icon={app?.icon?.name || "Apps"}
+              iconColor={app?.icon?.color || ""}
+              on:click={() => $goto(`../../overview/${app.devId}`)}
+              hoverable
+            >
+              <div class="title ">
+                <StatusLight
+                  square
+                  color={RoleUtils.getRoleColour(
+                    group.roles[apps.getProdAppID(app.devId)]
+                  )}
+                >
+                  {getRoleLabel(app.devId)}
+                </StatusLight>
+              </div>
+              <Icon
+                on:click={e => {
+                  groups.actions.removeApp(
+                    groupId,
+                    apps.getProdAppID(app.devId)
+                  )
+                  e.stopPropagation()
+                }}
+                hoverable
+                size="S"
+                name="Close"
+              />
+            </ListItem>
+          {/each}
+        {:else}
+          <ListItem icon="Apps" title="This user group has access to no apps" />
+        {/if}
+      </List>
+    </Layout>
   </Layout>
 {/if}
 
-<style>
-  .text-padding {
-    margin-left: var(--spacing-l);
-  }
+<Modal bind:this={editModal}>
+  <CreateEditGroupModal {group} {saveGroup} />
+</Modal>
 
+<Modal bind:this={appAddModal}>
+  <AppAddModal {group} />
+</Modal>
+
+<ConfirmDialog
+  bind:this={deleteModal}
+  title="Delete user group"
+  okText="Delete user group"
+  onOk={deleteGroup}
+>
+  Are you sure you wish to delete <b>{group?.name}?</b>
+</ConfirmDialog>
+
+<style>
   .header {
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
   }
   .title {
     display: flex;
-  }
-  .circle {
-    border-radius: 50%;
-    height: 30px;
-    color: white;
-    font-weight: bold;
-    display: inline-block;
-    font-size: 1.2em;
-    width: 30px;
-  }
-
-  .circle > div {
-    padding: calc(1.5 * var(--spacing-xs)) var(--spacing-xs);
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

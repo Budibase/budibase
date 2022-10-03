@@ -19,7 +19,6 @@ import {
   makeComponentUnique,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
-import { DefaultAppTheme, LAYOUT_NAMES } from "../../constants"
 import { Utils } from "@budibase/frontend-core"
 
 const INITIAL_FRONTEND_STATE = {
@@ -89,19 +88,12 @@ export const getFrontendStore = () => {
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath } = pkg
 
-      // Fetch component definitions.
-      // Allow errors to propagate.
-      let components = await API.fetchComponentLibDefinitions(application.appId)
+      await store.actions.components.refreshDefinitions(application.appId)
 
       // Reset store state
       store.update(state => ({
         ...state,
         libraries: application.componentLibraries,
-        components,
-        clientFeatures: {
-          ...INITIAL_FRONTEND_STATE.clientFeatures,
-          ...components.features,
-        },
         name: application.name,
         description: application.description,
         appId: application.appId,
@@ -117,6 +109,7 @@ export const getFrontendStore = () => {
         version: application.version,
         revertableVersion: application.revertableVersion,
         navigation: application.navigation || {},
+        usedPlugins: application.usedPlugins || [],
       }))
 
       // Initialise backend stores
@@ -125,35 +118,6 @@ export const getFrontendStore = () => {
       await integrations.init()
       await queries.init()
       await tables.init()
-
-      // Add navigation settings to old apps
-      if (!application.navigation) {
-        const layout = layouts.find(x => x._id === LAYOUT_NAMES.MASTER.PRIVATE)
-        const customTheme = application.customTheme
-        let navigationSettings = {
-          navigation: "Top",
-          title: application.name,
-          navWidth: "Large",
-          navBackground:
-            customTheme?.navBackground || DefaultAppTheme.navBackground,
-          navTextColor:
-            customTheme?.navTextColor || DefaultAppTheme.navTextColor,
-        }
-        if (layout) {
-          navigationSettings.hideLogo = layout.props.hideLogo
-          navigationSettings.hideTitle = layout.props.hideTitle
-          navigationSettings.title = layout.props.title || application.name
-          navigationSettings.logoUrl = layout.props.logoUrl
-          navigationSettings.links = layout.props.links
-          navigationSettings.navigation = layout.props.navigation || "Top"
-          navigationSettings.sticky = layout.props.sticky
-          navigationSettings.navWidth = layout.props.width || "Large"
-          if (navigationSettings.navigation === "None") {
-            navigationSettings.navigation = "Top"
-          }
-        }
-        await store.actions.navigation.save(navigationSettings)
-      }
     },
     theme: {
       save: async theme => {
@@ -219,9 +183,18 @@ export const getFrontendStore = () => {
         })
       },
       save: async screen => {
+        const state = get(store)
         const creatingNewScreen = screen._id === undefined
         const savedScreen = await API.saveScreen(screen)
         const routesResponse = await API.fetchAppRoutes()
+        let usedPlugins = state.usedPlugins
+
+        // If plugins changed we need to fetch the latest app metadata
+        if (savedScreen.pluginAdded) {
+          const { application } = await API.fetchAppPackage(state.appId)
+          usedPlugins = application.usedPlugins || []
+        }
+
         store.update(state => {
           // Update screen object
           const idx = state.screens.findIndex(x => x._id === savedScreen._id)
@@ -239,6 +212,9 @@ export const getFrontendStore = () => {
 
           // Update routes
           state.routes = routesResponse.routes
+
+          // Update used plugins
+          state.usedPlugins = usedPlugins
 
           return state
         })
@@ -394,12 +370,32 @@ export const getFrontendStore = () => {
       },
     },
     components: {
+      refreshDefinitions: async appId => {
+        if (!appId) {
+          appId = get(store).appId
+        }
+
+        // Fetch definitions and filter out custom component definitions so we
+        // can flag them
+        const components = await API.fetchComponentLibDefinitions(appId)
+        const customComponents = Object.keys(components).filter(name =>
+          name.startsWith("plugin/")
+        )
+
+        // Update store
+        store.update(state => ({
+          ...state,
+          components,
+          customComponents,
+          clientFeatures: {
+            ...INITIAL_FRONTEND_STATE.clientFeatures,
+            ...components.features,
+          },
+        }))
+      },
       getDefinition: componentName => {
         if (!componentName) {
           return null
-        }
-        if (!componentName.startsWith("@budibase")) {
-          componentName = `@budibase/standard-components/${componentName}`
         }
         return get(store).components[componentName]
       },
@@ -440,7 +436,7 @@ export const getFrontendStore = () => {
           _id: Helpers.uuid(),
           _component: definition.component,
           _styles: { normal: {}, hover: {}, active: {} },
-          _instanceName: `New ${definition.name}`,
+          _instanceName: `New ${definition.friendlyName || definition.name}`,
           ...cloneDeep(props),
           ...extras,
         }

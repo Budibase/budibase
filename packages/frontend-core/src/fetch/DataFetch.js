@@ -136,14 +136,12 @@ export default class DataFetch {
     }
 
     // Determine what sort type to use
-    if (!this.options.sortType) {
-      let sortType = "string"
-      if (sortColumn) {
-        const type = schema?.[sortColumn]?.type
-        sortType = type === "number" ? "number" : "string"
-      }
-      this.options.sortType = sortType
+    let sortType = "string"
+    if (sortColumn) {
+      const type = schema?.[sortColumn]?.type
+      sortType = type === "number" ? "number" : "string"
     }
+    this.options.sortType = sortType
 
     // Build the lucene query
     let query = this.options.query
@@ -158,6 +156,8 @@ export default class DataFetch {
       schema,
       query,
       loading: true,
+      cursors: [],
+      cursor: null,
     }))
 
     // Actually fetch data

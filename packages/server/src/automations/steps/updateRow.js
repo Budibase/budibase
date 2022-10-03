@@ -66,9 +66,9 @@ exports.run = async function ({ inputs, appId, emitter }) {
   }
   const tableId = inputs.row.tableId
 
-  // clear any falsy properties so that they aren't updated
+  // clear any undefined, null or empty string properties so that they aren't updated
   for (let propKey of Object.keys(inputs.row)) {
-    if (!inputs.row[propKey] || inputs.row[propKey] === "") {
+    if (inputs.row[propKey] == null || inputs.row[propKey] === "") {
       delete inputs.row[propKey]
     }
   }

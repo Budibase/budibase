@@ -23,7 +23,6 @@ describe("/users", () => {
   })
 
   describe("fetch", () => {
-
     it("returns a list of users from an instance db", async () => {
       await config.createUser("uuidx")
       await config.createUser("uuidy")
@@ -37,7 +36,6 @@ describe("/users", () => {
       expect(res.body.find(u => u._id === `ro_ta_users_us_uuidx`)).toBeDefined()
       expect(res.body.find(u => u._id === `ro_ta_users_us_uuidy`)).toBeDefined()
     })
-
 
     it("should apply authorization to endpoint", async () => {
       await config.createUser()

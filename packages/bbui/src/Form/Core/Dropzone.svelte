@@ -65,6 +65,9 @@
     }
   }
 
+  $: showDropzone =
+    (!maximum || (maximum && value?.length < maximum)) && !disabled
+
   async function processFileList(fileList) {
     if (
       handleFileTooLarge &&
@@ -139,7 +142,13 @@
         <div class="title">
           <div class="filename">
             {#if selectedUrl}
-              <Link href={selectedUrl}>{selectedImage.name}</Link>
+              <Link
+                target="_blank"
+                download={selectedImage.name}
+                href={selectedUrl}
+              >
+                {selectedImage.name}
+              </Link>
             {:else}
               {selectedImage.name}
             {/if}
@@ -205,7 +214,7 @@
       {/each}
     {/if}
   {/if}
-  {#if !maximum || (maximum && value?.length < maximum)}
+  {#if showDropzone}
     <div
       class="spectrum-Dropzone"
       class:is-invalid={!!error}

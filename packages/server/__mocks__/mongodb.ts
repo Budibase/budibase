@@ -33,7 +33,7 @@ module MongoMock {
     })
   }
 
-  mongodb.ObjectId = require("mongodb").ObjectId
+  mongodb.ObjectID = jest.requireActual("mongodb").ObjectID
 
   module.exports = mongodb
 }

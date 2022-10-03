@@ -98,7 +98,7 @@
         </header>
         <Body size="M">{integration.description}</Body>
       </Layout>
-      <Divider size="S" />
+      <Divider />
       <div class="config-header">
         <Heading size="S">Configuration</Heading>
         <Button disabled={!changed} cta on:click={saveDatasource}>Save</Button>
@@ -111,7 +111,7 @@
       {#if datasource.plus}
         <PlusConfigForm bind:datasource save={saveDatasource} />
       {/if}
-      <Divider size="S" />
+      <Divider />
       <div class="query-header">
         <Heading size="S">Queries</Heading>
         <div class="query-buttons">

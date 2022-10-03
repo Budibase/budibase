@@ -371,7 +371,10 @@ module External {
         const toColumn = `${linkedTable.name}.${relationship.to}`
         // this is important when working with multiple relationships
         // between the same tables, don't want to overlap/multiply the relations
-        if (!relationship.through && row[fromColumn] !== row[toColumn]) {
+        if (
+          !relationship.through &&
+          row[fromColumn]?.toString() !== row[toColumn]?.toString()
+        ) {
           continue
         }
         let linked = basicProcessing(row, linkedTable)
@@ -534,7 +537,7 @@ module External {
         })
         // this is the response from knex if no rows found
         const rows = !response[0].read ? response : []
-        const storeTo = isMany ? field.throughFrom || linkPrimaryKey : manyKey
+        const storeTo = isMany ? field.throughFrom || linkPrimaryKey : fieldName
         related[storeTo] = { rows, isMany, tableId }
       }
       return related
