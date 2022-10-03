@@ -44,3 +44,10 @@ export interface InviteUsersResponse {
   successful: { email: string }[]
   unsuccessful: { email: string; reason: string }[]
 }
+
+export interface SearchUsersRequest {
+  page?: string
+  email?: string
+  appId?: string
+  userIds?: string[]
+}

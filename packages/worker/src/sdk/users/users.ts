@@ -27,6 +27,7 @@ import {
   MigrationType,
   PlatformUserByEmail,
   RowResponse,
+  SearchUsersRequest,
   User,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
@@ -56,7 +57,8 @@ export const paginatedUsers = async ({
   page,
   email,
   appId,
-}: { page?: string; email?: string; appId?: string } = {}) => {
+  userIds,
+}: SearchUsersRequest = {}) => {
   const db = tenancy.getGlobalDB()
   // get one extra document, to have the next page
   const opts: any = {
@@ -77,6 +79,9 @@ export const paginatedUsers = async ({
   } else if (email) {
     userList = await usersCore.searchGlobalUsersByEmail(email, opts)
     property = "email"
+  }
+  if (userIds) {
+    // TODO: search users by userIds
   } else {
     // no search, query allDocs
     const response = await db.allDocs(dbUtils.getGlobalUserParams(null, opts))
