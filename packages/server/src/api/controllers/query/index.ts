@@ -235,6 +235,10 @@ async function execute(
       })
 
     const { rows, pagination, extra } = await quotas.addQuery(runFn)
+    // remove the raw from execution incase transformer being used to hide data
+    if (extra?.raw) {
+      delete extra.raw
+    }
     if (opts && opts.rowsOnly) {
       ctx.body = rows
     } else {
