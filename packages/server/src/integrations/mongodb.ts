@@ -56,6 +56,9 @@ const SCHEMA: Integration = {
     delete: {
       type: QueryType.JSON,
     },
+    aggregate: {
+      type: QueryType.FLOW,
+    },
   },
   extra: {
     collection: {
@@ -327,7 +330,7 @@ class MongoIntegration implements IntegrationBase {
       await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(query.extra.collection)
-      let response = {}
+      let response = []
       for await (const doc of collection.aggregate(
         query.steps.map(({ key, value }) => {
           let temp: any = {}
@@ -335,7 +338,7 @@ class MongoIntegration implements IntegrationBase {
           return temp
         })
       )) {
-        response = doc
+        response.push(doc)
       }
       return response
     } catch (err) {
