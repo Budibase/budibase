@@ -36,6 +36,7 @@ exports.getDevelopmentAppID = appId => {
   const rest = split.join(APP_PREFIX)
   return `${APP_DEV_PREFIX}${rest}`
 }
+exports.getDevAppID = exports.getDevelopmentAppID
 
 /**
  * Convert a development app ID to a deployed app ID.
