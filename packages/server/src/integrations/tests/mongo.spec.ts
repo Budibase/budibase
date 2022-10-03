@@ -169,12 +169,12 @@ describe("MongoDB Integration", () => {
     const args = config.integration.client.updateOne.mock.calls[0]
     expect(args[0]).toEqual({
       _id: {
-        $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
+        $eq: mongo.ObjectId.createFromHexString("ACBD12345678ABCD12345678"),
       },
     })
     expect(args[1]).toEqual({
       $set: {
-        _id: mongo.ObjectID.createFromHexString("FFFF12345678ABCD12345678"),
+        _id: mongo.ObjectId.createFromHexString("FFFF12345678ABCD12345678"),
       },
     })
     expect(args[2]).toEqual({
@@ -208,7 +208,7 @@ describe("MongoDB Integration", () => {
     const args = config.integration.client.findOneAndUpdate.mock.calls[0]
     expect(args[0]).toEqual({
       _id: {
-        $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
+        $eq: mongo.ObjectId.createFromHexString("ACBD12345678ABCD12345678"),
       },
     })
     expect(args[1]).toEqual({
@@ -253,7 +253,7 @@ describe("MongoDB Integration", () => {
     const args = config.integration.client.updateOne.mock.calls[0]
     expect(args[0]).toEqual({
       _id: {
-        $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
+        $eq: mongo.ObjectId.createFromHexString("ACBD12345678ABCD12345678"),
       },
     })
     expect(args[1]).toEqual({
@@ -308,7 +308,7 @@ describe("MongoDB Integration", () => {
     const args = config.integration.client.updateOne.mock.calls[0]
     expect(args[0]).toEqual({
       _id: {
-        $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
+        $eq: mongo.ObjectId.createFromHexString("ACBD12345678ABCD12345678"),
       },
     })
     expect(args[1]).toEqual({
