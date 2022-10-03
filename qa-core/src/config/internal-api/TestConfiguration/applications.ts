@@ -1,8 +1,10 @@
 import {
   Application,
 } from "@budibase/server/api/controllers/public/mapping/types"
+import { App } from "@budibase/types"
 import { Response } from "node-fetch"
 import InternalAPIClient from "./InternalAPIClient"
+import FormData from "form-data"
 
 export default class AppApi {
   api: InternalAPIClient
@@ -17,9 +19,27 @@ export default class AppApi {
     return [response, json]
   }
 
+  async canRender(): Promise<[Response, boolean]> {
+    const response = await this.api.get("/routing/client")
+    const json = await response.json()
+    return [response, Object.keys(json.routes).length > 0]
+  }
+
+  async getAppPackage(appId: string): Promise<[Response, any]> {
+    const response = await this.api.get(`/applications/${appId}/appPackage`)
+    const json = await response.json()
+    return [response, json]
+  }
+
+  async publish(): Promise<[Response, string]> {
+    const response = await this.api.post("/deploy")
+    const json = await response.json()
+    return [response, json]
+  }
+
   async create(
     body: any
-  ): Promise<[Response, Application]> {
+  ): Promise<[Response, Partial<App>]> {
     const response = await this.api.post(`/applications`, { body })
     const json = await response.json()
     return [response, json]

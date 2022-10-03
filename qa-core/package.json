@@ -25,7 +25,8 @@
     "moduleNameMapper": {
       "@budibase/types": "<rootDir>/../packages/types/src",
       "@budibase/server": "<rootDir>/../packages/server/src",
-      "@budibase/backend-core": "<rootDir>/../packages/backend-core/src"
+      "@budibase/backend-core": "<rootDir>/../packages/backend-core/src",
+      "@budibase/backend-core/(.*)": "<rootDir>/../packages/backend-core/$1"
     },
     "setupFiles": [
       "./scripts/jestSetup.js"
@@ -51,6 +52,7 @@
   },
   "dependencies": {
     "@budibase/backend-core": "^2.0.5",
+    "form-data": "^4.0.0",
     "node-fetch": "2"
   }
 }
