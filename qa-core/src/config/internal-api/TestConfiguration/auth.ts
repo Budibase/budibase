@@ -9,11 +9,11 @@ export default class AuthApi {
   }
 
   async login(): Promise<[Response, any]> {
-    const response = await this.api.post(`/global/auth/default/login`, { 
+    const response = await this.api.post(`/global/auth/default/login`, {
       body: {
         username: process.env.BB_ADMIN_USER_EMAIL,
-        password: process.env.BB_ADMIN_USER_PASSWORD
-      }
+        password: process.env.BB_ADMIN_USER_PASSWORD,
+      },
     })
     const cookie = response.headers.get("set-cookie")
     this.api.cookie = cookie as any
