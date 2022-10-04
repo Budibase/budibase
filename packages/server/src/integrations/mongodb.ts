@@ -326,7 +326,11 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async aggregate(query: { json: object; steps: any[]; extra: { [key: string]: string } }) {
+  async aggregate(query: {
+    json: object
+    steps: any[]
+    extra: { [key: string]: string }
+  }) {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -344,9 +348,7 @@ class MongoIntegration implements IntegrationBase {
         }
       } else {
         const stages: Array<any> = query.json as Array<any>
-        for await (const doc of collection.aggregate(
-          stages ? stages : []
-        )) {
+        for await (const doc of collection.aggregate(stages ? stages : [])) {
           response.push(doc)
         }
       }
