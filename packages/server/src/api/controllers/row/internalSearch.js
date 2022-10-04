@@ -159,7 +159,7 @@ class QueryBuilder {
     }
 
     // Wrap in quotes
-    if (originalType === "string" && !isNaN(value)) {
+    if (originalType === "string" && !isNaN(value) && !escape) {
       value = `"${value}"`
     } else if (hasVersion && wrap) {
       value = originalType === "number" ? value : `"${value}"`
