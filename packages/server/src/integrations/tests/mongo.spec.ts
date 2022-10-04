@@ -34,7 +34,7 @@ describe("MongoDB Integration", () => {
     await config.integration.create({
       index: indexName,
       json: body,
-      extra: { collection: "testCollection", actionTypes: "insertOne" },
+      extra: { collection: "testCollection", actionType: "insertOne" },
     })
     expect(config.integration.client.insertOne).toHaveBeenCalledWith(body)
   })
@@ -44,7 +44,7 @@ describe("MongoDB Integration", () => {
       json: {
         address: "test",
       },
-      extra: { collection: "testCollection", actionTypes: "find" },
+      extra: { collection: "testCollection", actionType: "find" },
     }
     const response = await config.integration.read(query)
     expect(config.integration.client.find).toHaveBeenCalledWith(query.json)
@@ -61,7 +61,7 @@ describe("MongoDB Integration", () => {
           opt: "option",
         },
       },
-      extra: { collection: "testCollection", actionTypes: "deleteOne" },
+      extra: { collection: "testCollection", actionType: "deleteOne" },
     }
     await config.integration.delete(query)
     expect(config.integration.client.deleteOne).toHaveBeenCalledWith(
@@ -83,7 +83,7 @@ describe("MongoDB Integration", () => {
           upsert: false,
         },
       },
-      extra: { collection: "testCollection", actionTypes: "updateOne" },
+      extra: { collection: "testCollection", actionType: "updateOne" },
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalledWith(
@@ -97,7 +97,7 @@ describe("MongoDB Integration", () => {
     const restore = disableConsole()
 
     const query = {
-      extra: { collection: "testCollection", actionTypes: "deleteOne" },
+      extra: { collection: "testCollection", actionType: "deleteOne" },
     }
 
     let error = null
@@ -125,7 +125,7 @@ describe("MongoDB Integration", () => {
           upsert: false,
         },
       },
-      extra: { collection: "testCollection", actionTypes: "updateOne" },
+      extra: { collection: "testCollection", actionType: "updateOne" },
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalled()
@@ -161,7 +161,7 @@ describe("MongoDB Integration", () => {
           upsert: true,
         },
       },
-      extra: { collection: "testCollection", actionTypes: "updateOne" },
+      extra: { collection: "testCollection", actionType: "updateOne" },
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalled()
@@ -200,7 +200,7 @@ describe("MongoDB Integration", () => {
           upsert: false,
         },
       },
-      extra: { collection: "testCollection", actionTypes: "findOneAndUpdate" },
+      extra: { collection: "testCollection", actionType: "findOneAndUpdate" },
     }
     await config.integration.read(query)
     expect(config.integration.client.findOneAndUpdate).toHaveBeenCalled()
@@ -245,7 +245,7 @@ describe("MongoDB Integration", () => {
         {
           "upsert": true
         }`,
-      extra: { collection: "testCollection", actionTypes: "updateOne" },
+      extra: { collection: "testCollection", actionType: "updateOne" },
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalled()
@@ -300,7 +300,7 @@ describe("MongoDB Integration", () => {
           "upsert": true,
           "extra": "ad\\"{\\"d"
         }`,
-      extra: { collection: "testCollection", actionTypes: "updateOne" },
+      extra: { collection: "testCollection", actionType: "updateOne" },
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalled()
