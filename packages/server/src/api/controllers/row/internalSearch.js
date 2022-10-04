@@ -157,8 +157,11 @@ class QueryBuilder {
     if (escape && originalType === "string") {
       value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
     }
+
     // Wrap in quotes
-    if (hasVersion && wrap) {
+    if (originalType === "string" && !isNaN(value)) {
+      value = `"${value}"`
+    } else if (hasVersion && wrap) {
       value = originalType === "number" ? value : `"${value}"`
     }
     return value
