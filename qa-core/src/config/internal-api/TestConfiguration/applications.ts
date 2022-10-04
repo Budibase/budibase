@@ -50,4 +50,11 @@ export default class AppApi {
     const json = await response.json()
     return [response, json.data]
   }
+
+  async sync(appId: string): Promise<[Response, any]> {
+    const response = await this.api.post(`/applications/${appId}/sync`)
+    const json = await response.json()
+    return [response, json]
+  }
+
 }
