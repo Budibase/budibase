@@ -245,7 +245,7 @@ class TableSaveFunctions {
   // after saving
   async after(table: any) {
     table = await handleSearchIndexes(table)
-    await handleDataImport(this.user, table, this.dataImport)
+    table = await handleDataImport(this.user, table, this.dataImport)
     return table
   }
 
