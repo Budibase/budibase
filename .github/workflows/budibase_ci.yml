@@ -15,7 +15,7 @@ on:
  workflow_dispatch:
 
 env:
-  BRANCH: $GITHUB_REF_NAME
+  BRANCH: ${GITHUB_REF_NAME}
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
   PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
