@@ -1,4 +1,3 @@
-import { Plugin } from "@budibase/types"
 import { enrichPluginURLs } from "../../../utilities/plugins"
 
 require("svelte/register")
@@ -25,7 +24,6 @@ const fs = require("fs")
 const {
   downloadTarballDirect,
 } = require("../../../utilities/fileSystem/utilities")
-const { isMultiTenant } = require("@budibase/backend-core/tenancy")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   const response = await upload({
