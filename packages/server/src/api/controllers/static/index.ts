@@ -1,3 +1,6 @@
+import { Plugin } from "@budibase/types"
+import { enrichPluginURLs } from "../../../utilities/plugins"
+
 require("svelte/register")
 
 const send = require("koa-send")
@@ -22,6 +25,7 @@ const fs = require("fs")
 const {
   downloadTarballDirect,
 } = require("../../../utilities/fileSystem/utilities")
+const { isMultiTenant } = require("@budibase/backend-core/tenancy")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   const response = await upload({
@@ -107,12 +111,13 @@ export const serveApp = async function (ctx: any) {
 
   if (!env.isJest()) {
     const App = require("./templates/BudibaseApp.svelte").default
+    const plugins = enrichPluginURLs(appInfo.usedPlugins)
     const { head, html, css } = App.render({
       title: appInfo.name,
       production: env.isProd(),
       appId,
       clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
-      usedPlugins: appInfo.usedPlugins,
+      usedPlugins: plugins,
     })
 
     const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
