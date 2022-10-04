@@ -68,6 +68,7 @@ exports.buildSchemaFromDb = async function (ctx) {
     datasource.entities = tables
   }
 
+  setDefaultDisplayColumns(datasource)
   const dbResp = await db.put(datasource)
   datasource._rev = dbResp.rev
 
@@ -76,6 +77,24 @@ exports.buildSchemaFromDb = async function (ctx) {
     response.error = error
   }
   ctx.body = response
+}
+
+/**
+ * Make sure all datasource entities have a display name selected
+ */
+const setDefaultDisplayColumns = datasource => {
+  //
+  for (let entity of Object.values(datasource.entities)) {
+    if (entity.primaryDisplay) {
+      continue
+    }
+    const notAutoColumn = Object.values(entity.schema).find(
+      schema => !schema.autocolumn
+    )
+    if (notAutoColumn) {
+      entity.primaryDisplay = notAutoColumn.name
+    }
+  }
 }
 
 /**
@@ -155,6 +174,7 @@ exports.save = async function (ctx) {
     const { tables, error } = await buildSchemaHelper(datasource)
     schemaError = error
     datasource.entities = tables
+    setDefaultDisplayColumns(datasource)
   }
 
   const dbResp = await db.put(datasource)
@@ -237,19 +257,6 @@ const buildSchemaHelper = async datasource => {
   // Connect to the DB and build the schema
   const connector = new Connector(datasource.config)
   await connector.buildSchema(datasource._id, datasource.entities)
-
-  // make sure they all have a display name selected
-  for (let entity of Object.values(datasource.entities ?? {})) {
-    if (entity.primaryDisplay) {
-      continue
-    }
-    const notAutoColumn = Object.values(entity.schema).find(
-      schema => !schema.autocolumn
-    )
-    if (notAutoColumn) {
-      entity.primaryDisplay = notAutoColumn.name
-    }
-  }
 
   const errors = connector.schemaErrors
   let error = null
