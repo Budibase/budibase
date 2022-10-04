@@ -87,8 +87,6 @@
       builderStore.actions.analyticsPing({ source: "app" })
     }
   })
-
-  $: console.log($builderStore.usedPlugins)
 </script>
 
 <svelte:head>
