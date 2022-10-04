@@ -19,6 +19,7 @@ if [[ -d "budibase-pro" ]]; then
   cd budibase-pro
 
   if [[ -z "${BRANCH}" ]]; then
+    echo Using GITHUB_REF_NAME: $GITHUB_REF_NAME
     export BRANCH=$GITHUB_REF_NAME
   fi
 
