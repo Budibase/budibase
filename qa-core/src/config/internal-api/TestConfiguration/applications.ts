@@ -53,4 +53,29 @@ export default class AppApi {
     return [response, json]
   }
 
+  async update(appId: string, body: any): Promise<[Response, Application]> {
+    const response = await this.api.put(`/applications/${appId}/client/update`, { body })
+    const json = await response.json()
+    return [response, json]
+  }
+
+  async revert(appId: string): Promise<[Response, Application]> {
+    const response = await this.api.post(`/applications/${appId}/client/revert`)
+    const json = await response.json()
+    return [response, json]
+  }
+
+  async delete(appId: string): Promise<[Response, any]> {
+    const response = await this.api.del(`/applications/${appId}`)
+    const json = await response.json()
+    return [response, json]
+  }
+
+  async getAppDefinition(appId: string): Promise<[Response, any]> {
+    const response = await this.api.get(`/applications/${appId}/definition`)
+    const json = await response.json()
+    return [response, json]
+  }
+
+
 }
