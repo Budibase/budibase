@@ -41,6 +41,9 @@
       flowEditors[i].update(query.fields.steps[i + 1].value.value)
     }
   }
+
+  $: shouldDisplayJsonBox =
+    schema.type === QueryTypes.JSON && query.fields.extra?.actionType !== "flow"
 </script>
 
 {#if schema}
@@ -55,7 +58,7 @@
         value={query.fields.sql}
         parameters={query.parameters}
       />
-    {:else if schema.type === QueryTypes.JSON}
+    {:else if shouldDisplayJsonBox}
       <Editor
         editorHeight={height}
         label="Query"
@@ -73,7 +76,7 @@
           <Input thin outline disabled value={urlDisplay} />
         </div>
       {/if}
-    {:else if schema.type === QueryTypes.FLOW}
+    {:else if query.fields.extra?.actionType === "flow"}
       <br />
       {#if (query.fields.steps?.length ?? 0) === 0}
         <div class="controls">
