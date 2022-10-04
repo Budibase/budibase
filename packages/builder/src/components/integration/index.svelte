@@ -24,6 +24,8 @@
   export let editable = true
   export let height = 500
 
+  let flowEditors = []
+
   $: urlDisplay =
     schema.urlDisplay &&
     `${datasource.config.url}${
@@ -32,6 +34,12 @@
 
   function updateQuery({ detail }) {
     query.fields[schema.type] = detail.value
+  }
+
+  function updateEditors(deleteIndex) {
+    for (let i = deleteIndex; i < query.fields.steps?.length - 1; i++) {
+      flowEditors[i].update(query.fields.steps[i + 1].value.value)
+    }
   }
 </script>
 
@@ -93,8 +101,9 @@
                   Stage {index + 1}
                   <ActionButton
                     on:click={() => {
+                      updateEditors(index)
                       query.fields.steps.splice(index, 1)
-                      query.fields.steps = query.fields.steps
+                      query.fields.steps = [...query.fields.steps]
                     }}
                     icon="DeleteOutline"
                   />
@@ -108,18 +117,17 @@
                           query.fields.steps[index].key = detail
                         }}
                       />
-                      {#key query.fields.steps.length}
-                        <Editor
-                          editorHeight={height / 2}
-                          mode="json"
-                          value={typeof step.value === "string"
-                            ? step.value
-                            : step.value.value}
-                          on:change={({ detail }) => {
-                            query.fields.steps[index].value = detail
-                          }}
-                        />
-                      {/key}
+                      <Editor
+                        bind:this={flowEditors[index]}
+                        editorHeight={height / 2}
+                        mode="json"
+                        value={typeof step.value === "string"
+                          ? step.value
+                          : step.value.value}
+                        on:change={({ detail }) => {
+                          query.fields.steps[index].value = detail
+                        }}
+                      />
                     </div>
                   </div>
                 </Layout>
