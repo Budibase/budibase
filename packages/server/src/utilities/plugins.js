@@ -2,7 +2,7 @@ const env = require("../environment")
 const { plugins: ProPlugins } = require("@budibase/pro")
 const { objectStore } = require("@budibase/backend-core")
 
-export const enrichPluginURLs = plugins => {
+exports.enrichPluginURLs = plugins => {
   if (!plugins || !plugins.length) {
     return []
   }
