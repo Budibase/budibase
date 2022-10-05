@@ -1,5 +1,6 @@
-import env from "../environment"
-import { plugins as ProPlugins } from "@budibase/pro"
+const env = require("../environment")
+const { plugins: ProPlugins } = require("@budibase/pro")
+const { objectStore } = require("@budibase/backend-core")
 
 export const enrichPluginURLs = plugins => {
   if (!plugins || !plugins.length) {
@@ -7,14 +8,14 @@ export const enrichPluginURLs = plugins => {
   }
   return plugins.map(plugin => {
     const cloud = !env.SELF_HOSTED
-    // In self host we need to prefix the path, as "plugins" is not part of the
-    // bucket path. In cloud, "plugins" is already part of the bucket path.
-    let jsUrl = cloud ? "https://cdn.budi.live/" : "/plugins/"
+    const bucket = objectStore.ObjectStoreBuckets.PLUGINS
+    const jsFileName = "plugin.min.js"
+
+    // In self host we need to prefix the path, as the bucket name is not part
+    // of the bucket path. In cloud, it's already part of the bucket path.
+    let jsUrl = cloud ? "https://cdn.budi.live/" : `/${bucket}/`
     jsUrl += ProPlugins.getBucketPath(plugin.name)
-    jsUrl += "plugin.min.js"
-    return {
-      ...plugin,
-      jsUrl,
-    }
+    jsUrl += jsFileName
+    return { ...plugin, jsUrl }
   })
 }
