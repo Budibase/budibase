@@ -446,7 +446,7 @@ class Orchestrator {
         this._context.steps.splice(loopStepNumber + 1, 1)
         wasLoopStep = false
       }
-      console.log()
+
       if (loopSteps && loopSteps.length) {
         let tempOutput = {
           success: true,
