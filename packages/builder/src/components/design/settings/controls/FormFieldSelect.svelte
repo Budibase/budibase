@@ -26,7 +26,7 @@
     let entries = Object.entries(schema ?? {})
 
     let types = []
-    if (type === "field/options") {
+    if ((type === "field/options", type === "field/code")) {
       // allow options to be used on both options and string fields
       types = [type, "field/string"]
     } else {

@@ -8,6 +8,15 @@ export const FIELDS = {
       presence: false,
     },
   },
+  CODE: {
+    name: "Code",
+    type: "code",
+    constraints: {
+      type: "string",
+      length: {},
+      presence: false,
+    },
+  },
   LONGFORM: {
     name: "Long Form Text",
     type: "longform",
@@ -148,6 +157,7 @@ export const ALLOWABLE_STRING_OPTIONS = [
   FIELDS.STRING,
   FIELDS.OPTIONS,
   FIELDS.LONGFORM,
+  FIELDS.CODE,
 ]
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type

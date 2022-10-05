@@ -48,6 +48,11 @@ const TYPE_TRANSFORM_MAP = {
     [null]: "",
     [undefined]: undefined,
   },
+  [FieldTypes.CODE]: {
+    "": "",
+    [null]: "",
+    [undefined]: undefined,
+  },
   [FieldTypes.FORMULA]: {
     "": "",
     [null]: "",

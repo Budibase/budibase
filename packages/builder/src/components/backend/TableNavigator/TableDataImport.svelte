@@ -124,6 +124,10 @@
       label: "Multi-select",
       value: FIELDS.ARRAY.type,
     },
+    {
+      label: "Code",
+      value: FIELDS.CODE.type,
+    },
   ]
 </script>
 
