@@ -24,6 +24,7 @@ export enum QueryType {
 
 export enum DatasourceFieldType {
   STRING = "string",
+  CODE = "code",
   LONGFORM = "longForm",
   BOOLEAN = "boolean",
   NUMBER = "number",

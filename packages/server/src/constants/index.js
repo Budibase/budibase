@@ -31,6 +31,7 @@ exports.NoEmptyFilterStrings = [
 
 exports.FieldTypes = {
   STRING: "string",
+  CODE: "code",
   LONGFORM: "longform",
   OPTIONS: "options",
   NUMBER: "number",
@@ -51,6 +52,7 @@ exports.CanSwitchTypes = [
     exports.FieldTypes.STRING,
     exports.FieldTypes.OPTIONS,
     exports.FieldTypes.LONGFORM,
+    exports.FieldTypes.CODE,
   ],
   [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
 ]

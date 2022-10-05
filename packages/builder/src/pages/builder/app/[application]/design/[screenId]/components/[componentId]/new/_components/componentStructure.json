@@ -65,7 +65,8 @@
       "relationshipfield",
       "datetimefield",
       "multifieldselect",
-      "s3upload"
+      "s3upload",
+      "codescanner"
     ]
   },
   {

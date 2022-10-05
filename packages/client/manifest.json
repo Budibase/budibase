@@ -3157,6 +3157,42 @@
       }
     ]
   },
+  "codescanner": {
+    "name": "Code Scanner",
+    "icon": "Camera",
+    "styles": [
+      "size"
+    ],
+    "draggable": true,
+    "illegalChildren": [
+      "section"
+    ],
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label",
+        "defaultValue": true
+      },
+      {
+        "type": "field/code",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ]
+  },
   "embeddedmap": {
     "name": "Embedded Map",
     "icon": "Location",
