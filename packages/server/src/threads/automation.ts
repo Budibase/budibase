@@ -317,7 +317,7 @@ class Orchestrator {
           }
 
           // The "Loop" binding in the front end is "fake", so replace it here so the context can understand it
-          // Pretty hacky because we need to account for the row objec
+          // Pretty hacky because we need to account for the row object
           for (let [key, value] of Object.entries(originalStepInput)) {
             if (typeof value === "object") {
               for (let [innerKey, innerValue] of Object.entries(
@@ -461,8 +461,6 @@ class Orchestrator {
         })
         this._context.steps[loopStepNumber] = tempOutput
 
-        console.log(loopStepNumber)
-        console.log(this._context)
         loopSteps = undefined
         wasLoopStep = true
       }
