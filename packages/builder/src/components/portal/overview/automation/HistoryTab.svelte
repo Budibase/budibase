@@ -1,5 +1,5 @@
 <script>
-  import { Layout, Table, Select, Pagination } from "@budibase/bbui"
+  import { Layout, Table, Select, Pagination, Button } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./StatusRenderer.svelte"
   import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
@@ -7,11 +7,15 @@
   import { createPaginationStore } from "helpers/pagination"
   import { onMount } from "svelte"
   import dayjs from "dayjs"
+  import { auth, licensing, admin } from "stores/portal"
+  import { Constants } from "@budibase/frontend-core"
 
   const ERROR = "error",
     SUCCESS = "success",
     STOPPED = "stopped"
   export let app
+
+  $: licensePlan = $auth.user?.license?.plan
 
   let pageInfo = createPaginationStore()
   let runHistory = null
@@ -26,6 +30,8 @@
   $: fetchLogs(automationId, status, page, timeRange)
 
   const timeOptions = [
+    { value: "90-d", label: "Past 90 days" },
+    { value: "30-d", label: "Past 30 days" },
     { value: "1-w", label: "Past week" },
     { value: "1-d", label: "Past day" },
     { value: "1-h", label: "Past 1 hour" },
@@ -131,10 +137,20 @@
       </div>
       <div class="select">
         <Select
-          placeholder="Past 30 days"
+          placeholder="All"
           label="Date range"
           bind:value={timeRange}
           options={timeOptions}
+          isOptionEnabled={x => {
+            if (licensePlan?.type === Constants.PlanType.FREE) {
+              return ["1-w", "30-d", "90-d"].indexOf(x.value) < 0
+            } else if (licensePlan?.type === Constants.PlanType.TEAM) {
+              return ["90-d"].indexOf(x.value) < 0
+            } else if (licensePlan?.type === Constants.PlanType.PRO) {
+              return ["30-d", "90-d"].indexOf(x.value) < 0
+            }
+            return true
+          }}
         />
       </div>
       <div class="select">
@@ -145,6 +161,14 @@
           options={statusOptions}
         />
       </div>
+      {#if (licensePlan?.type !== Constants.PlanType.ENTERPRISE && $auth.user.accountPortalAccess) || !$admin.cloud}
+        <div class="pro-upgrade">
+          <div class="pro-copy">Expand your automation log history</div>
+          <Button primary newStyles on:click={$licensing.goToUpgradePage()}>
+            Upgrade
+          </Button>
+        </div>
+      {/if}
     </div>
     {#if runHistory}
       <div>
@@ -220,5 +244,16 @@
 
   .panelOpen {
     grid-template-columns: auto 420px;
+  }
+
+  .pro-upgrade {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+  }
+
+  .pro-copy {
+    margin-right: var(--spacing-l);
   }
 </style>
