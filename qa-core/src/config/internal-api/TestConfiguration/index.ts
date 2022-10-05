@@ -13,9 +13,12 @@ export default class TestConfiguration<T> {
     this.context = <T>{}
   }
 
-  async beforeAll() {}
+  async beforeAll() {
+    await this.auth.login()
+  }
 
   async afterAll() {
     this.context = <T>{}
+    await this.auth.logout()
   }
 }
