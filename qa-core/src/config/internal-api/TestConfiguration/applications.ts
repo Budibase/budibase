@@ -1,6 +1,4 @@
-import {
-  Application,
-} from "@budibase/server/api/controllers/public/mapping/types"
+import { Application } from "@budibase/server/api/controllers/public/mapping/types"
 import { App } from "@budibase/types"
 import { Response } from "node-fetch"
 import InternalAPIClient from "./InternalAPIClient"
@@ -37,9 +35,7 @@ export default class AppApi {
     return [response, json]
   }
 
-  async create(
-    body: any
-  ): Promise<[Response, Partial<App>]> {
+  async create(body: any): Promise<[Response, Partial<App>]> {
     const response = await this.api.post(`/applications`, { body })
     const json = await response.json()
     return [response, json]
