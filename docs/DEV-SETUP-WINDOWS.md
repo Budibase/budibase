@@ -25,6 +25,7 @@ You should follow the next steps from within the Ubuntu terminal.
 
 ### Install NVM & Node 16
 NVM documentation: https://github.com/nvm-sh/nvm#installing-and-updating
+
 Install NVM
 ```
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
