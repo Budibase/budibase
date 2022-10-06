@@ -4,7 +4,7 @@
 
   export let field
   export let label
-  export let type = "code"
+  export let type = "scannedcode"
   export let disabled = false
   export let validation
   export let defaultValue = ""

@@ -8,9 +8,9 @@ export const FIELDS = {
       presence: false,
     },
   },
-  CODE: {
-    name: "Code",
-    type: "code",
+  SCANNEDCODE: {
+    name: "Scanned Code",
+    type: "scannedcode",
     constraints: {
       type: "string",
       length: {},
@@ -157,7 +157,7 @@ export const ALLOWABLE_STRING_OPTIONS = [
   FIELDS.STRING,
   FIELDS.OPTIONS,
   FIELDS.LONGFORM,
-  FIELDS.CODE,
+  FIELDS.SCANNEDCODE,
 ]
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type

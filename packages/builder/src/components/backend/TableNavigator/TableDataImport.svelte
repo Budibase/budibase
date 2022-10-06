@@ -125,8 +125,8 @@
       value: FIELDS.ARRAY.type,
     },
     {
-      label: "Code",
-      value: FIELDS.CODE.type,
+      label: "Scanned Code",
+      value: FIELDS.SCANNEDCODE.type,
     },
   ]
 </script>

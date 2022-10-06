@@ -40,7 +40,7 @@ function generateSchema(
       case FieldTypes.STRING:
       case FieldTypes.OPTIONS:
       case FieldTypes.LONGFORM:
-      case FieldTypes.CODE:
+      case FieldTypes.SCANNEDCODE:
         schema.text(key)
         break
       case FieldTypes.NUMBER:

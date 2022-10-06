@@ -3169,7 +3169,7 @@
     ],
     "settings": [
       {
-        "type": "field/code",
+        "type": "field/scannedcode",
         "label": "Field",
         "key": "field",
         "required": true

@@ -261,7 +261,7 @@
     } else {
       return [
         FIELDS.STRING,
-        FIELDS.CODE,
+        FIELDS.SCANNEDCODE,
         FIELDS.LONGFORM,
         FIELDS.OPTIONS,
         FIELDS.DATETIME,

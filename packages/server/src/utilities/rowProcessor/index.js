@@ -48,7 +48,7 @@ const TYPE_TRANSFORM_MAP = {
     [null]: "",
     [undefined]: undefined,
   },
-  [FieldTypes.CODE]: {
+  [FieldTypes.SCANNEDCODE]: {
     "": "",
     [null]: "",
     [undefined]: undefined,
