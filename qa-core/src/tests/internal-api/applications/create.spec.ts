@@ -24,14 +24,14 @@ describe("Internal API - /applications endpoints", () => {
       useTemplate: "true",
       templateName: "Near Miss Register",
       templateKey: "app/near-miss-register",
-      templateFile: undefined
+      templateFile: undefined,
     })
   }
 
   it("GET - fetch applications", async () => {
     await config.applications.create({
       ...generateApp(),
-      useTemplate: false
+      useTemplate: false,
     })
     const [response, apps] = await config.applications.fetch()
     expect(response).toHaveStatusCode(200)
@@ -57,7 +57,7 @@ describe("Internal API - /applications endpoints", () => {
     expect(publish).toEqual({
       _id: expect.any(String),
       appUrl: app.url,
-      status: "SUCCESS"
+      status: "SUCCESS",
     })
   })
 
@@ -70,7 +70,8 @@ describe("Internal API - /applications endpoints", () => {
     config.applications.api.appId = app.appId
 
     // check preview renders
-    const [previewResponse, previewRenders] = await config.applications.canRender()
+    const [previewResponse, previewRenders] =
+      await config.applications.canRender()
     expect(previewResponse).toHaveStatusCode(200)
     expect(previewRenders).toBe(true)
 
@@ -79,8 +80,8 @@ describe("Internal API - /applications endpoints", () => {
 
     // check published app renders
     config.applications.api.appId = db.getProdAppID(app.appId)
-    const [publishedAppResponse, publishedAppRenders] = await config.applications.canRender()
+    const [publishedAppResponse, publishedAppRenders] =
+      await config.applications.canRender()
     expect(publishedAppRenders).toBe(true)
   })
-
 })
