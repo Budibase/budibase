@@ -23,16 +23,16 @@ https://docs.docker.com/desktop/install/windows-install/
 
 You should follow the next steps from within the Ubuntu terminal.
 
-### Install NVM & Node 16
+### Install NVM & Node 14
 NVM documentation: https://github.com/nvm-sh/nvm#installing-and-updating
 
 Install NVM
 ```
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 ```
-Install Node 16
+Install Node 14
 ```
-nvm install 16
+nvm install 14
 ```
 
 
@@ -53,7 +53,7 @@ This setup process was tested on Windows 11 with version numbers show below. You
 
 - Docker: 20.10.7
 - Docker-Compose: 2.10.2
-- Node: v16.17.1
+- Node: v14.20.1
 - Yarn: 1.22.19
 - Lerna: 5.5.4
 
