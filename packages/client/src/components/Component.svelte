@@ -96,6 +96,7 @@
   $: selected =
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
   $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
+  $: inDropPath = $componentStore.dropPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
 
   // Derive definition properties which can all be optional, so need to be
@@ -108,7 +109,7 @@
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
   $: builderInteractive =
-    $builderStore.inBuilder && insideScreenslot && !isBlock
+    $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
   $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
@@ -453,10 +454,11 @@
     class:interactive
     class:editing
     class:block={isBlock}
-    class:explode={children.length && !isLayout && $builderStore.isDragging}
+    class:explode={children.length && !isLayout && inDropPath && false}
     data-id={id}
     data-name={name}
     data-icon={icon}
+    data-placeholder={id === "placeholder"}
   >
     <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
       {#if hasMissingRequiredSettings}

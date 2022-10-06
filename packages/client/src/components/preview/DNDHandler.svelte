@@ -77,19 +77,16 @@
     builderStore.actions.setDragging(false)
   }
 
-  // Callback when on top of a component
-  const onDragOver = e => {
-    // Skip if we aren't validly dragging currently
-    if (!dragInfo || !dropInfo) {
-      return
+  const validateDrop = (dropInfo, e) => {
+    if (!dropInfo) {
+      return null
     }
 
-    e.preventDefault()
     const { droppableInside, bounds } = dropInfo
     const { top, left, height, width } = bounds
     const mouseY = e.clientY
     const mouseX = e.clientX
-    const snapFactor = droppableInside ? 0.33 : 0.5
+    const snapFactor = droppableInside ? 0.25 : 0.5
     const snapLimitV = Math.min(40, height * snapFactor)
     const snapLimitH = Math.min(40, width * snapFactor)
 
@@ -108,20 +105,32 @@
 
     // When no edges match, drop inside if possible
     if (!sides.length) {
-      dropInfo.mode = droppableInside ? "inside" : null
-      dropInfo.side = null
-      return
+      if (droppableInside) {
+        return {
+          ...dropInfo,
+          mode: "inside",
+          side: null,
+        }
+      } else {
+        return null
+      }
     }
 
     // When one edge matches, use that edge
     if (sides.length === 1) {
-      dropInfo.side = sides[0]
       if ([Sides.Top, Sides.Left].includes(sides[0])) {
-        dropInfo.mode = "above"
+        return {
+          ...dropInfo,
+          mode: "above",
+          side: sides[0],
+        }
       } else {
-        dropInfo.mode = "below"
+        return {
+          ...dropInfo,
+          mode: "below",
+          side: sides[0],
+        }
       }
-      return
     }
 
     // When 2 edges match, work out which is closer
@@ -134,9 +143,34 @@
     const edge = delta1 < delta2 ? sides[0] : sides[1]
     dropInfo.side = edge
     if ([Sides.Top, Sides.Left].includes(edge)) {
-      dropInfo.mode = "above"
+      return {
+        ...dropInfo,
+        mode: "above",
+        side: edge,
+      }
     } else {
-      dropInfo.mode = "below"
+      return {
+        ...dropInfo,
+        mode: "below",
+        side: edge,
+      }
+    }
+  }
+
+  // Callback when on top of a component
+  const onDragOver = e => {
+    // Skip if we aren't validly dragging currently
+    if (!dragInfo || !dropInfo) {
+      return
+    }
+
+    e.preventDefault()
+
+    const nextDropInfo = validateDrop(dropInfo, e)
+    if (nextDropInfo) {
+      console.log("set from over")
+      dropInfo = nextDropInfo
+      console.log(dropInfo.mode, dropInfo.target)
     }
   }
 
@@ -146,6 +180,16 @@
     if (!dragInfo || !e.target.closest) {
       return
     }
+
+    // Update drop target
+    const dropTarget = e.target.closest(".component")
+    builderStore.actions.setDropTarget(dropTarget?.dataset.id)
+
+    // // Do nothing if this is the placeholder
+    // if (element.dataset.id === "placeholder") {
+    //   console.log("placeholder")
+    //   return
+    // }
 
     const element = e.target.closest(".component:not(.block)")
     if (
@@ -172,15 +216,20 @@
       // dragOver
       const child = getDOMNodeForComponent(e.target)
       const bounds = child.getBoundingClientRect()
-      dropInfo = {
+      let nextDropInfo = {
         target,
         name: element.dataset.name,
         icon: element.dataset.icon,
         droppableInside: element.classList.contains("empty"),
         bounds,
       }
+      nextDropInfo = validateDrop(nextDropInfo, e)
+      if (nextDropInfo) {
+        console.log("set from enter")
+        dropInfo = nextDropInfo
+      }
     } else {
-      dropInfo = null
+      // dropInfo = null
     }
   }
 
@@ -199,6 +248,10 @@
       )
     }
   }
+
+  $: mode = dropInfo?.mode
+  $: target = dropInfo?.target
+  $: builderStore.actions.updateDNDPlaceholder(mode, target)
 
   onMount(() => {
     // Events fired on the draggable target

@@ -36,8 +36,13 @@ const createComponentStore = () => {
       const definition = getComponentDefinition(component?._component)
 
       // Derive the selected component path
-      const path =
+      const selectedPath =
         findComponentPathById(asset?.props, selectedComponentId) || []
+      let dropPath = []
+      if ($builderState.isDragging) {
+        dropPath =
+          findComponentPathById(asset?.props, $builderState.dropTarget) || []
+      }
 
       return {
         customComponentManifest: $store.customComponentManifest,
@@ -45,9 +50,10 @@ const createComponentStore = () => {
           $store.mountedComponents[selectedComponentId],
         selectedComponent: component,
         selectedComponentDefinition: definition,
-        selectedComponentPath: path?.map(component => component._id),
+        selectedComponentPath: selectedPath?.map(component => component._id),
         mountedComponentCount: Object.keys($store.mountedComponents).length,
         currentAsset: asset,
+        dropPath: dropPath?.map(component => component._id),
       }
     }
   )

@@ -3,6 +3,11 @@ import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
 import { RoleUtils } from "@budibase/frontend-core"
+import {
+  findComponentById,
+  findComponentPathById,
+} from "../utils/components.js"
+import { Helpers } from "@budibase/bbui"
 
 const createScreenStore = () => {
   const store = derived(
@@ -13,7 +18,7 @@ const createScreenStore = () => {
 
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
-        activeScreen = $builderStore.screen
+        activeScreen = Helpers.cloneDeep($builderStore.screen)
         screens = [activeScreen]
 
         // Legacy - allow the builder to specify a layout
@@ -24,8 +29,10 @@ const createScreenStore = () => {
         // Find the correct screen by matching the current route
         screens = $appStore.screens || []
         if ($routeStore.activeRoute) {
-          activeScreen = screens.find(
-            screen => screen._id === $routeStore.activeRoute.screenId
+          activeScreen = Helpers.cloneDeep(
+            screens.find(
+              screen => screen._id === $routeStore.activeRoute.screenId
+            )
           )
         }
 
@@ -36,6 +43,34 @@ const createScreenStore = () => {
           )
           if (screenLayout) {
             activeLayout = screenLayout
+          }
+        }
+      }
+
+      // Insert DND placeholder if required
+      const { dndTarget, dndMode, selectedComponentId } = $builderStore
+      const insert = false
+      if (insert && activeScreen && dndTarget && dndMode) {
+        let selectedComponent = findComponentById(
+          activeScreen.props,
+          selectedComponentId
+        )
+        const placeholder = {
+          ...selectedComponent,
+          _id: "placeholder",
+          static: true,
+        }
+        // delete selectedComponent._component
+        if (dndMode === "inside") {
+          const target = findComponentById(activeScreen.props, dndTarget)
+          target._children = [placeholder]
+        } else {
+          const path = findComponentPathById(activeScreen.props, dndTarget)
+          const parent = path?.[path.length - 2]
+          if (parent) {
+            const idx = parent._children.findIndex(x => x._id === dndTarget)
+            const delta = dndMode === "below" ? 1 : -1
+            parent._children.splice(idx + delta, 0, placeholder)
           }
         }
       }
