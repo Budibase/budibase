@@ -396,19 +396,17 @@ export const getUserBindings = () => {
 
   bindings = keys.reduce((acc, key) => {
     const fieldSchema = schema[key]
-    if (fieldSchema.type !== "link") {
-      acc.push({
-        type: "context",
-        runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
-        readableBinding: `Current User.${key}`,
-        // Field schema and provider are required to construct relationship
-        // datasource options, based on bindable properties
-        fieldSchema,
-        providerId: "user",
-        category: "Current User",
-        icon: "User",
-      })
-    }
+    acc.push({
+      type: "context",
+      runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
+      readableBinding: `Current User.${key}`,
+      // Field schema and provider are required to construct relationship
+      // datasource options, based on bindable properties
+      fieldSchema,
+      providerId: "user",
+      category: "Current User",
+      icon: "User",
+    })
     return acc
   }, [])
 
