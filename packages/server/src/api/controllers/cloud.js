@@ -1,14 +1,11 @@
 const env = require("../../environment")
 const { getAllApps, getGlobalDBName } = require("@budibase/backend-core/db")
-const {
-  exportDB,
-  sendTempFile,
-  readFileSync,
-} = require("../../utilities/fileSystem")
+const { sendTempFile, readFileSync } = require("../../utilities/fileSystem")
 const { stringToReadStream } = require("../../utilities")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const { create } = require("./application")
 const { getDocParams, DocumentType, isDevAppID } = require("../../db/utils")
+const sdk = require("../../sdk")
 
 async function createApp(appName, appImport) {
   const ctx = {
@@ -27,7 +24,7 @@ exports.exportApps = async ctx => {
     ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
   }
   const apps = await getAllApps({ all: true })
-  const globalDBString = await exportDB(getGlobalDBName(), {
+  const globalDBString = await sdk.apps.exports.exportDB(getGlobalDBName(), {
     filter: doc => !doc._id.startsWith(DocumentType.USER),
   })
   let allDBs = {
@@ -38,7 +35,7 @@ exports.exportApps = async ctx => {
     // only export the dev apps as they will be the latest, the user can republish the apps
     // in their self hosted environment
     if (isDevAppID(appId)) {
-      allDBs[app.name] = await exportDB(appId)
+      allDBs[app.name] = await sdk.apps.exports.exportDB(appId)
     }
   }
   const filename = `cloud-export-${new Date().getTime()}.txt`
