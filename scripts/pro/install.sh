@@ -18,6 +18,11 @@ git clone https://$PERSONAL_ACCESS_TOKEN@github.com/Budibase/budibase-pro.git
 if [[ -d "budibase-pro" ]]; then
   cd budibase-pro
 
+  if [[ -z "${BRANCH}" ]]; then
+    echo Using GITHUB_REF_NAME: $GITHUB_REF_NAME
+    export BRANCH=$GITHUB_REF_NAME
+  fi
+
   # Try to checkout the matching pro branch
   git checkout $BRANCH
 
