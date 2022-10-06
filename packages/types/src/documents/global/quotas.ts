@@ -24,7 +24,14 @@ export interface UsageBreakdown {
   }
 }
 
-export type MonthlyUsage = {
+export interface StaticUsage {
+  [StaticQuotaName.APPS]: number
+  [StaticQuotaName.PLUGINS]: number
+  [StaticQuotaName.USER_GROUPS]: number
+  [StaticQuotaName.ROWS]: number
+}
+
+export interface MonthlyUsage {
   [MonthlyQuotaName.QUERIES]: number
   [MonthlyQuotaName.AUTOMATIONS]: number
   [MonthlyQuotaName.DAY_PASSES]: number
@@ -34,9 +41,7 @@ export type MonthlyUsage = {
 }
 
 export interface BaseQuotaUsage {
-  usageQuota: {
-    [key in StaticQuotaName]: number
-  }
+  usageQuota: StaticUsage
   monthly: {
     [key: string]: MonthlyUsage
   }

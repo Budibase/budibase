@@ -1,5 +1,12 @@
-import { Feature, Hosting, PlanType, Quotas } from "../../sdk"
-import { QuotaUsage } from "../global"
+import {
+  Feature,
+  Hosting,
+  MonthlyQuotaName,
+  PlanType,
+  Quotas,
+  StaticQuotaName,
+} from "../../sdk"
+import { MonthlyUsage, QuotaUsage, StaticUsage } from "../global"
 
 export interface CreateAccount {
   email: string
@@ -43,7 +50,7 @@ export interface Account extends CreateAccount {
   licenseKey?: string
   licenseKeyActivatedAt?: number
   licenseOverrides?: LicenseOverrides
-  quotaUsage?: QuotaUsage
+  quotaUsage?: AccountQuotaUsage
 }
 
 export interface PasswordAccount extends Account {
@@ -85,4 +92,27 @@ export enum AuthType {
 export interface OAuthTokens {
   accessToken: string
   refreshToken: string
+}
+
+export type QuotaTriggers = {
+  [key: string]: string | null
+}
+
+export interface AccountStaticUsage extends StaticUsage {
+  triggers?: {
+    [key in StaticQuotaName]?: QuotaTriggers
+  }
+}
+
+export interface AccountMonthlyUsage extends MonthlyUsage {
+  triggers?: {
+    [key in MonthlyQuotaName]?: QuotaTriggers
+  }
+}
+
+export interface AccountQuotaUsage extends QuotaUsage {
+  usageQuota: AccountStaticUsage
+  monthly: {
+    [key: string]: AccountMonthlyUsage
+  }
 }
