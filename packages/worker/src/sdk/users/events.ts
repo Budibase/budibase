@@ -1,7 +1,6 @@
 import env from "../../environment"
 import { events, accounts, tenancy } from "@budibase/backend-core"
 import { User, UserRoles, CloudAccount } from "@budibase/types"
-import { users as pro } from "@budibase/pro"
 
 export const handleDeleteEvents = async (user: any) => {
   await events.user.deleted(user)
