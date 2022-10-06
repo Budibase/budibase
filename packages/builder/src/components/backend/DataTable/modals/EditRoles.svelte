@@ -37,7 +37,6 @@
     const id = event?.detail
     const role = $roles.find(role => role._id === id)
     if (role) {
-      console.log("INH ", role.inherits)
       selectedRole = {
         ...role,
         inherits: role.inherits ?? "",
@@ -125,7 +124,7 @@
     <Select
       label="Inherits Role"
       bind:value={selectedRole.inherits}
-      options={$roles}
+      options={selectedRole._id === "BASIC" ? $roles : otherRoles}
       getOptionValue={role => role._id}
       getOptionLabel={role => role.name}
       disabled={builtInRoles.includes(selectedRole.name)}
