@@ -1,15 +1,15 @@
-const { streamBackup } = require("../../utilities/fileSystem")
-const { events, context } = require("@budibase/backend-core")
-const { DocumentType } = require("../../db/utils")
-const { isQsTrue } = require("../../utilities")
+import sdk from "../../sdk"
+import { events, context } from "@budibase/backend-core"
+import { DocumentType } from "../../db/utils"
+import { isQsTrue } from "../../utilities"
 
-exports.exportAppDump = async function (ctx) {
+export async function exportAppDump(ctx: any) {
   let { appId, excludeRows } = ctx.query
   const appName = decodeURI(ctx.query.appname)
   excludeRows = isQsTrue(excludeRows)
   const backupIdentifier = `${appName}-export-${new Date().getTime()}.txt`
   ctx.attachment(backupIdentifier)
-  ctx.body = await streamBackup(appId, excludeRows)
+  ctx.body = await sdk.apps.exports.streamBackup(appId, excludeRows)
 
   await context.doInAppContext(appId, async () => {
     const appDb = context.getAppDB()
