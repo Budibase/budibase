@@ -19,8 +19,8 @@ ADD packages/worker .
 RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
 
 FROM couchdb:3.2.1
-# TARGETARCH can be amd64 or arm e.g. docker build --build-arg TARGETARCH=amd64
-ARG TARGETARCH=amd64
+ARG TARGETARCH
+ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
 # e.g. docker build --build-arg TARGETBUILD=aas ....
 ARG TARGETBUILD=single
