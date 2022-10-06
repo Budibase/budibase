@@ -3169,21 +3169,36 @@
     ],
     "settings": [
       {
-        "type": "text",
-        "label": "Label",
-        "key": "label",
-        "defaultValue": true
-      },
-      {
         "type": "field/code",
         "label": "Field",
         "key": "field",
         "required": true
       },
       {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Button",
+        "key": "scanButtonText"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Allow manual entry",
+        "key": "allowManualEntry",
         "defaultValue": false
       },
       {

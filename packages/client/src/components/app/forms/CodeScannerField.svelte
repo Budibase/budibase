@@ -9,34 +9,18 @@
   export let validation
   export let defaultValue = ""
   export let onChange
+  export let allowManualEntry
+  export let scanButtonText
 
   let fieldState
   let fieldApi
 
-  let scannedCode
-  let loaded = false
-
-  const handleInput = () => {
-    const changed = fieldApi.setValue(scannedCode)
+  const handleUpdate = e => {
+    const changed = fieldApi.setValue(e.detail)
     if (onChange && changed) {
-      onChange({ value: scannedCode })
+      onChange({ value: e.detail })
     }
   }
-
-  $: if (!loaded && !scannedCode && fieldState?.value) {
-    scannedCode = fieldState.value + ""
-    loaded = true
-  }
-
-  /*
-    QR    Nimiq has rollup issues?
-    QR    qrcodejs 12b bundle?
-            https://github.com/davidshimjs/qrcodejs
-    BOTH  html5-qrcode has a 330k bundle
-            https://github.com/mebjas/html5-qrcode
-    BOTH  zxing 360k bundle size
-            https://github.com/zxing-js/library
-  */
 </script>
 
 <Field
@@ -50,6 +34,12 @@
   bind:fieldApi
 >
   {#if fieldState}
-    <CodeScanner bind:code={scannedCode} on:input={handleInput} />
+    <CodeScanner
+      value={fieldState.value}
+      on:change={handleUpdate}
+      disabled={fieldState.disabled}
+      {allowManualEntry}
+      {scanButtonText}
+    />
   {/if}
 </Field>

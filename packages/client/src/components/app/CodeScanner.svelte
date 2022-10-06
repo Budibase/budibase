@@ -1,123 +1,189 @@
 <script>
-  import { ModalContent, Modal, Select } from "@budibase/bbui"
+  import { ModalContent, Modal, Icon, ActionButton } from "@budibase/bbui"
   import { Input, Button, StatusLight } from "@budibase/bbui"
   import { Html5Qrcode } from "html5-qrcode"
 
-  export let code = ""
+  export let value
+  export let disabled = false
+  export let allowManualEntry = false
+  export let scanButtonText = "Scan Code"
+
+  import { createEventDispatcher } from "svelte"
+  const dispatch = createEventDispatcher()
 
   let videoEle
   let camModal
   let manualMode = false
-  let enabled = false
-  let cameraInit = false
+  let cameraEnabled
+  let cameraStarted = false
   let html5QrCode
-  let cameraId
-  let cameraDevices = []
-  let selectedCam
+  let cameraSetting = { facingMode: "environment" }
+  let cameraConfig = {
+    fps: 25,
+    qrbox: { width: 250, height: 250 },
+  }
+  const onScanSuccess = decodedText => {
+    if (value != decodedText) {
+      dispatch("change", decodedText)
+    }
+  }
+
+  const initReader = async () => {
+    if (html5QrCode) {
+      html5QrCode.stop()
+    }
+    html5QrCode = new Html5Qrcode("reader")
+    return new Promise(resolve => {
+      html5QrCode
+        .start(cameraSetting, cameraConfig, onScanSuccess)
+        .then(() => {
+          resolve({ initialised: true })
+        })
+        .catch(err => {
+          console.log("There was a problem scanning the image", err)
+          resolve({ initialised: false })
+        })
+    })
+  }
 
   const checkCamera = async () => {
     return new Promise(resolve => {
       Html5Qrcode.getCameras()
         .then(devices => {
           if (devices && devices.length) {
-            cameraDevices = devices
-            cameraId = devices[0].id
             resolve({ enabled: true })
           }
         })
-        .catch(() => {
+        .catch(e => {
+          console.error(e)
           resolve({ enabled: false })
         })
     })
   }
 
-  $: if (enabled && videoEle && !cameraInit) {
-    html5QrCode = new Html5Qrcode("reader")
-    html5QrCode
-      .start(
-        cameraId,
-        {
-          fps: 25,
-          qrbox: { width: 250, height: 250 },
-        },
-        (decodedText, decodedResult) => {
-          code = decodedText
-          console.log(decodedText, decodedResult)
-        }
-      )
-      .catch(err => {
-        console.log("There was a problem scanning the image", err)
-      })
+  const start = async () => {
+    const status = await initReader()
+    cameraStarted = status.initialised
+  }
+
+  $: if (cameraEnabled && videoEle && !cameraStarted) {
+    start()
   }
 
   const showReaderModal = async () => {
     camModal.show()
     const camStatus = await checkCamera()
-    enabled = camStatus.enabled
+    cameraEnabled = camStatus.enabled
   }
 
   const hideReaderModal = async () => {
+    cameraEnabled = undefined
+    cameraStarted = false
+    if (html5QrCode) {
+      await html5QrCode.stop()
+      html5QrCode = undefined
+    }
     camModal.hide()
-    await html5QrCode.stop()
   }
 </script>
 
 <div class="scanner-video-wrapper">
-  {#if code}
-    <div class="scanner-value">
+  {#if value && !manualMode}
+    <div class="scanner-value field-display">
       <StatusLight positive />
-      {code}
+      {value}
     </div>
   {/if}
-  <Button primary icon="Camera" on:click={showReaderModal}>Scan Code</Button>
+
+  {#if allowManualEntry && manualMode}
+    <div class="manual-input">
+      <Input
+        bind:value
+        on:change={() => {
+          dispatch("change", value)
+        }}
+      />
+    </div>
+  {/if}
+
+  {#if value}
+    <ActionButton
+      on:click={() => {
+        dispatch("change", "")
+      }}
+      {disabled}
+    >
+      Clear
+    </ActionButton>
+  {:else}
+    <ActionButton
+      icon="Camera"
+      on:click={() => {
+        showReaderModal()
+      }}
+      {disabled}
+    >
+      {scanButtonText}
+    </ActionButton>
+  {/if}
 </div>
 
 <div class="modal-wrap">
-  <Select
-    on:change={e => console.log(e)}
-    value={selectedCam}
-    options={cameraDevices}
-    getOptionLabel={() => cameraDevices}
-  />
-
   <Modal bind:this={camModal} on:hide={hideReaderModal}>
     <ModalContent
-      title="Scan Code"
-      showCancelButton={false}
+      title={scanButtonText}
       showConfirmButton={false}
+      showCancelButton={false}
     >
-      <div id="reader" bind:this={videoEle} />
-      <div class="code-wrap">
-        {#if manualMode}
-          <Input label="Enter" bind:value={code} />
-        {/if}
-        {#if code}
-          <div class="scanner-value">
-            <StatusLight positive />
-            {code}
-          </div>
-        {/if}
-        {#if !code && enabled && videoEle && cameraInit}
-          <div class="scanner-value">
-            <StatusLight neutral />
-            Searching for code...
-          </div>
-        {/if}
+      <div id="reader" class="container" bind:this={videoEle}>
+        <div class="camera-placeholder">
+          <Icon size="XXL" name="Camera" />
+          {#if cameraEnabled === false}
+            <div>Your camera is disabled.</div>
+          {/if}
+        </div>
       </div>
+      {#if cameraEnabled === true}
+        <div class="code-wrap">
+          {#if value}
+            <div class="scanner-value">
+              <StatusLight positive />
+              {value}
+            </div>
+          {:else}
+            <div class="scanner-value">
+              <StatusLight neutral />
+              Searching for code...
+            </div>
+          {/if}
+        </div>
+      {/if}
+
       <div slot="footer">
         <div class="footer-buttons">
+          {#if allowManualEntry}
+            <Button
+              group
+              secondary
+              newStyles
+              on:click={() => {
+                manualMode = !manualMode
+                camModal.hide()
+              }}
+            >
+              Enter Manually
+            </Button>
+          {/if}
+
           <Button
             group
-            secondary
-            newStyles
+            cta
             on:click={() => {
-              manualMode = !manualMode
+              camModal.hide()
             }}
           >
-            Enter Manually
+            Confirm
           </Button>
-
-          <Button group cta disabled={!code}>Confirm</Button>
         </div>
       </div>
     </ModalContent>
@@ -125,17 +191,45 @@
 </div>
 
 <style>
+  #reader :global(video) {
+    border-radius: 4px;
+    border: var(--border-light-2);
+    overflow: hidden;
+  }
+  .field-display :global(.spectrum-Tags-item) {
+    margin: 0px;
+  }
   .footer-buttons {
     display: flex;
     grid-area: buttonGroup;
     gap: var(--spectrum-global-dimension-static-size-200);
   }
   .scanner-value {
+    display: flex;
+  }
+  .field-display {
     padding-top: var(
       --spectrum-fieldlabel-side-m-padding-top,
       var(--spectrum-global-dimension-size-100)
     );
-    display: flex;
     margin-bottom: var(--spacing-m);
+  }
+  .camera-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: var(--border-light-2);
+    background-color: var(--spectrum-global-color-gray-200);
+    flex-direction: column;
+    gap: var(--spectrum-global-dimension-static-size-200);
+  }
+  .container,
+  .camera-placeholder {
+    width: 100%;
+    min-height: 240px;
+  }
+  .manual-input {
+    padding-bottom: var(--spacing-m);
   }
 </style>
