@@ -50,6 +50,7 @@ import { errors, events, migrations } from "@budibase/backend-core"
 import { App, Layout, Screen, MigrationType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { groups } from "@budibase/pro"
+import { enrichPluginURLs } from "../../utilities/plugins"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -208,9 +209,12 @@ export const fetchAppDefinition = async (ctx: any) => {
 
 export const fetchAppPackage = async (ctx: any) => {
   const db = context.getAppDB()
-  const application = await db.get(DocumentType.APP_METADATA)
+  let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
+
+  // Enrich plugin URLs
+  application.usedPlugins = enrichPluginURLs(application.usedPlugins)
 
   // Only filter screens if the user is not a builder
   if (!(ctx.user.builder && ctx.user.builder.global)) {

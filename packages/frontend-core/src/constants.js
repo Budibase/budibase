@@ -98,6 +98,7 @@ export const BuilderRoleDescriptions = [
 export const PlanType = {
   FREE: "free",
   TEAM: "team",
+  PRO: "pro",
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
 }
