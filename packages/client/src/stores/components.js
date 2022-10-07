@@ -39,6 +39,8 @@ const createComponentStore = () => {
       // Derive the selected component path
       const selectedPath =
         findComponentPathById(asset?.props, selectedComponentId) || []
+      const dndPath =
+        findComponentPathById(asset?.props, $builderState.dndParent) || []
 
       return {
         customComponentManifest: $store.customComponentManifest,
@@ -49,6 +51,7 @@ const createComponentStore = () => {
         selectedComponentPath: selectedPath?.map(component => component._id),
         mountedComponentCount: Object.keys($store.mountedComponents).length,
         currentAsset: asset,
+        dndPath: dndPath?.map(component => component._id),
       }
     }
   )
