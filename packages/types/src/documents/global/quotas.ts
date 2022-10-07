@@ -24,17 +24,27 @@ export interface UsageBreakdown {
   }
 }
 
+export type QuotaTriggers = {
+  [key: string]: string | undefined
+}
+
 export interface StaticUsage {
   [StaticQuotaName.APPS]: number
   [StaticQuotaName.PLUGINS]: number
   [StaticQuotaName.USER_GROUPS]: number
   [StaticQuotaName.ROWS]: number
+  triggers: {
+    [key in StaticQuotaName]?: QuotaTriggers
+  }
 }
 
 export interface MonthlyUsage {
   [MonthlyQuotaName.QUERIES]: number
   [MonthlyQuotaName.AUTOMATIONS]: number
   [MonthlyQuotaName.DAY_PASSES]: number
+  triggers: {
+    [key in MonthlyQuotaName]?: QuotaTriggers
+  }
   breakdown?: {
     [key in BreakdownQuotaName]?: UsageBreakdown
   }
@@ -54,6 +64,13 @@ export interface QuotaUsage extends BaseQuotaUsage {
   apps?: {
     [key: string]: BaseQuotaUsage
   }
+}
+
+export type SetUsageValues = {
+  total: number
+  app?: number
+  breakdown?: number
+  triggers?: QuotaTriggers
 }
 
 export type UsageValues = {

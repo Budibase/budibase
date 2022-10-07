@@ -50,7 +50,7 @@ export interface Account extends CreateAccount {
   licenseKey?: string
   licenseKeyActivatedAt?: number
   licenseOverrides?: LicenseOverrides
-  quotaUsage?: AccountQuotaUsage
+  quotaUsage?: QuotaUsage
 }
 
 export interface PasswordAccount extends Account {
@@ -92,27 +92,4 @@ export enum AuthType {
 export interface OAuthTokens {
   accessToken: string
   refreshToken: string
-}
-
-export type QuotaTriggers = {
-  [key: string]: string | null
-}
-
-export interface AccountStaticUsage extends StaticUsage {
-  triggers?: {
-    [key in StaticQuotaName]?: QuotaTriggers
-  }
-}
-
-export interface AccountMonthlyUsage extends MonthlyUsage {
-  triggers?: {
-    [key in MonthlyQuotaName]?: QuotaTriggers
-  }
-}
-
-export interface AccountQuotaUsage extends QuotaUsage {
-  usageQuota: AccountStaticUsage
-  monthly: {
-    [key: string]: AccountMonthlyUsage
-  }
 }
