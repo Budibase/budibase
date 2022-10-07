@@ -4,6 +4,7 @@ import { db } from "@budibase/backend-core"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
 import generateApp from "../../../config/internal-api/fixtures/applications"
 import generator from "../../../config/generator"
+import generateScreen from "../../../config/internal-api/fixtures/screens"
 
 describe("Internal API - /applications endpoints", () => {
   const api = new InternalAPIClient()
@@ -118,29 +119,57 @@ describe("Internal API - /applications endpoints", () => {
     const [response, app] = await config.applications.create(generateApp())
     expect(response).toHaveStatusCode(200)
     expect(app.appId).toBeDefined()
-
-  })
-
-
-  it.skip("POST - Revert Changes", async () => {
-    const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
-
-    // publish app
-    await config.applications.publish()
+    config.applications.api.appId = app.appId
 
     const [updateResponse, updatedApp] = await config.applications.update(app.appId ? app.appId : "", {
       name: generator.word(),
     })
     expect(updateResponse).toHaveStatusCode(200)
     expect(updatedApp.name).not.toEqual(app.name)
+  })
+
+  // Skip this test because of the if line 44 in InternalAPIClient.ts
+  it.skip("POST - Revert Changes without changes", async () => {
+    const [response, app] = await config.applications.create(generateApp())
+    expect(response).toHaveStatusCode(200)
+    expect(app.appId).toBeDefined()
+    config.applications.api.appId = app.appId
+
+    const [revertResponse, revert] = await config.applications.revert(app.appId ? app.appId : "")
+    expect(revertResponse).toHaveStatusCode(400)
+    expect(revert).toEqual({
+      message: "There is no version to revert to",
+    })
+  })
+
+  it("POST - Revert Changes", async () => {
+    const [response, app] = await config.applications.create(generateApp())
+    expect(response).toHaveStatusCode(200)
+    expect(app.appId).toBeDefined()
+    config.applications.api.appId = app.appId
+
+    // publish app
+    const [publishResponse, publish] = await config.applications.publish()
+    expect(publishResponse).toHaveStatusCode(200)
+    expect(publish.status).toEqual("SUCCESS")
+
+    // Change/add component to the app
+    const [screenResponse, screen] = await config.applications.addScreentoApp(generateScreen())
+    expect(screenResponse).toHaveStatusCode(200)
+    expect(screen._id).toBeDefined()
+
 
     const [revertResponse, revert] = await config.applications.revert(app.appId ? app.appId : "")
     expect(revertResponse).toHaveStatusCode(200)
     expect(revert).toEqual({
       message: "App reverted successfully."
     })
+
+    // Check screen is removed
+    const [routesResponse, routes] = await config.applications.getRoutes()
+    expect(routesResponse).toHaveStatusCode(200)
+    expect(routes.routes["/test"]).toBeUndefined()
+
   })
 
   it("DELETE - Delete an application", async () => {
