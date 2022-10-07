@@ -14,8 +14,10 @@ import {
   fixAutoColumnSubType,
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import { Table } from "../../../definitions/common"
+import { Table } from "@budibase/types"
 import { quotas } from "@budibase/pro"
+import { isEqual } from "lodash"
+import { cloneDeep } from "lodash/fp"
 
 function checkAutoColumns(table: Table, oldTable: Table) {
   if (!table.schema) {
@@ -123,10 +125,16 @@ export async function save(ctx: any) {
   if (updatedRows && updatedRows.length !== 0) {
     await db.bulkDocs(updatedRows)
   }
-  const result = await db.put(tableToSave)
+  let result = await db.put(tableToSave)
   tableToSave._rev = result.rev
+  const savedTable = cloneDeep(tableToSave)
 
   tableToSave = await tableSaveFunctions.after(tableToSave)
+  // the table may be updated as part of the table save after functionality - need to write it
+  if (!isEqual(savedTable, tableToSave)) {
+    result = await db.put(tableToSave)
+    tableToSave._rev = result.rev
+  }
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(tableToSave, { oldTable, deletion: null })
   return tableToSave
