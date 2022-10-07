@@ -48,36 +48,7 @@
 
   // Fetches the form schema from this form's dataSource
   const fetchSchema = async dataSource => {
-    if (!dataSource) {
-      schema = {}
-    }
-
-    // If the datasource is a query, then we instead use a schema of the query
-    // parameters rather than the output schema
-    else if (
-      dataSource.type === "query" &&
-      dataSource._id &&
-      actionType === "Create"
-    ) {
-      try {
-        const query = await API.fetchQueryDefinition(dataSource._id)
-        let paramSchema = {}
-        const params = query.parameters || []
-        params.forEach(param => {
-          paramSchema[param.name] = { ...param, type: "string" }
-        })
-        schema = paramSchema
-      } catch (error) {
-        schema = {}
-      }
-    }
-
-    // For all other cases, just grab the normal schema
-    else {
-      const dataSourceSchema = await fetchDatasourceSchema(dataSource)
-      schema = dataSourceSchema || {}
-    }
-
+    schema = (await fetchDatasourceSchema(dataSource)) || {}
     if (!loaded) {
       loaded = true
     }
@@ -95,7 +66,7 @@
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
   $: resetKey = Helpers.hashString(
-    JSON.stringify(initialValues) + JSON.stringify(schema)
+    JSON.stringify(initialValues) + JSON.stringify(schema) + disabled
   )
 </script>
 

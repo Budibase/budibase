@@ -56,6 +56,16 @@
         return
       }
 
+      // If this is a custom event, try and handle it
+      if (parsed.runtimeEvent) {
+        const { name, payload } = parsed
+        if (window.handleBuilderRuntimeEvent) {
+          window.handleBuilderRuntimeEvent(name, payload)
+        }
+        return
+      }
+
+      // Otherwise this is a full reload message
       // Extract data from message
       const {
         selectedComponentId,

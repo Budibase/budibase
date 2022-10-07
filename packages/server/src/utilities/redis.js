@@ -34,12 +34,8 @@ exports.doesUserHaveLock = async (devAppId, user) => {
   return expected === userId
 }
 
-exports.getAllLocks = async () => {
-  const locks = await devAppClient.scan()
-  return locks.map(lock => ({
-    appId: lock.key,
-    user: lock.value,
-  }))
+exports.getLocksById = async appIds => {
+  return await devAppClient.bulkGet(appIds)
 }
 
 exports.updateLock = async (devAppId, user) => {

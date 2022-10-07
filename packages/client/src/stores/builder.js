@@ -85,6 +85,9 @@ const createBuilderStore = () => {
     highlightSetting: setting => {
       dispatchEvent("highlight-setting", { setting })
     },
+    ejectBlock: (id, definition) => {
+      dispatchEvent("eject-block", { id, definition })
+    },
     updateUsedPlugin: (name, hash) => {
       // Check if we used this plugin
       const used = get(store)?.usedPlugins?.find(x => x.name === name)
