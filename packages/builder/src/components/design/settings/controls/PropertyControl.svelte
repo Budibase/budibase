@@ -95,6 +95,7 @@
       bindings={allBindings}
       name={key}
       text={label}
+      {nested}
       {key}
       {type}
       {...props}

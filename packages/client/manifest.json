@@ -3845,7 +3845,7 @@
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns",
-        "info": "Only the first 3 search columns will be used"
+        "info": "Only the first 5 search columns will be used"
       },
       {
         "type": "filter",
@@ -4010,7 +4010,7 @@
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns",
-        "info": "Only the first 3 search columns will be used"
+        "info": "Only the first 5 search columns will be used"
       },
       {
         "type": "filter",
@@ -4393,6 +4393,146 @@
         "label": "Markdown",
         "key": "value",
         "required": true
+      }
+    ]
+  },
+  "formblock": {
+    "name": "Form Block",
+    "icon": "Form",
+    "styles": ["size"],
+    "block": true,
+    "info": "Form blocks are only compatible with internal or SQL tables",
+    "settings": [
+      {
+        "type": "select",
+        "label": "Type",
+        "key": "actionType",
+        "options": ["Create", "Update", "View"],
+        "defaultValue": "Create"
+      },
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "dataSource"
+      },
+      {
+        "type": "text",
+        "label": "Row ID",
+        "key": "rowId",
+        "nested": true,
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "Create",
+          "invert": true
+        }
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title",
+        "nested": true
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ],
+        "defaultValue": "spectrum--medium"
+      },
+      {
+        "section": true,
+        "name": "Fields",
+        "settings": [
+          {
+            "type": "multifield",
+            "label": "Fields",
+            "key": "fields"
+          },
+          {
+            "type": "select",
+            "label": "Field labels",
+            "key": "labelPosition",
+            "defaultValue": "left",
+            "options": [
+              {
+                "label": "Left",
+                "value": "left"
+              },
+              {
+                "label": "Above",
+                "value": "above"
+              }
+            ]
+          },
+          {
+            "type": "boolean",
+            "label": "Disabled",
+            "key": "disabled",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Buttons",
+        "settings": [
+          {
+            "type": "boolean",
+            "label": "Show save button",
+            "key": "showSaveButton",
+            "defaultValue": true,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
+          },
+          {
+            "type": "boolean",
+            "label": "Show delete button",
+            "key": "showDeleteButton",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "Update"
+            }
+          },
+          {
+            "type": "url",
+            "label": "Navigate after button press",
+            "key": "actionUrl",
+            "placeholder": "Choose a screen",
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
+          }
+        ]
+      }
+    ],
+    "context": [
+      {
+        "type": "form",
+        "suffix": "form"
+      },
+      {
+        "type": "schema",
+        "suffix": "repeater"
       }
     ]
   }
