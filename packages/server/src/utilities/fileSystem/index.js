@@ -49,7 +49,15 @@ const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 exports.init = () => {
   const tempDir = budibaseTempDir()
   if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir)
+    // some test cases fire this quickly enough that
+    // synchronous cases can end up here at the same time
+    try {
+      fs.mkdirSync(tempDir)
+    } catch (err) {
+      if (!err || err.code !== "EEXIST") {
+        throw err
+      }
+    }
   }
   const clientLibPath = join(budibaseTempDir(), "budibase-client.js")
   if (env.isTest() && !fs.existsSync(clientLibPath)) {
@@ -102,13 +110,6 @@ exports.getTemplateStream = async template => {
  */
 exports.loadHandlebarsFile = path => {
   return fs.readFileSync(path, "utf8")
-}
-
-/**
- * Same as above just with a different name.
- */
-exports.loadJSFile = (directory, name) => {
-  return fs.readFileSync(join(directory, name), "utf8")
 }
 
 /**
@@ -404,6 +405,7 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
       return require(filename)
     } else {
       console.log(`Updating plugin: ${name}`)
+      delete require.cache[require.resolve(filename)]
       fs.unlinkSync(filename)
     }
   }
@@ -415,7 +417,7 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
     const content = await response.text()
     fs.writeFileSync(filename, content)
     fs.writeFileSync(metadataName, hash)
-    require(filename)
+    return require(filename)
   } else {
     throw new Error(
       `Unable to retrieve plugin - reason: ${await response.text()}`

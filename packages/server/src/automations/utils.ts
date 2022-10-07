@@ -13,7 +13,7 @@ import {
   getAppId,
   getProdAppDB,
 } from "@budibase/backend-core/context"
-import { tenancy } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { Automation } from "@budibase/types"
 
@@ -28,12 +28,14 @@ const jobMessage = (job: any, message: string) => {
 
 export async function processEvent(job: any) {
   try {
+    const automationId = job.data.automation._id
     console.log(jobMessage(job, "running"))
     // need to actually await these so that an error can be captured properly
-    const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
-    return await tenancy.doInTenant(tenantId, async () => {
+    return await context.doInContext(job.data.event.appId, async () => {
       const runFn = () => Runner.run(job)
-      return quotas.addAutomation(runFn)
+      return quotas.addAutomation(runFn, {
+        automationId,
+      })
     })
   } catch (err) {
     const errJson = JSON.stringify(err)

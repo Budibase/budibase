@@ -1,2 +1,7 @@
-export * as users from "./users"
-export * as accounts from "./accounts"
+import * as users from "./users"
+import * as accounts from "./accounts"
+
+export default {
+  users,
+  accounts,
+}

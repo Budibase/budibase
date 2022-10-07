@@ -211,6 +211,8 @@
       } else if (type === "eject-block") {
         const { id, definition } = data
         await store.actions.components.handleEjectBlock(id, definition)
+      } else if (type === "reload-plugin") {
+        await store.actions.components.refreshDefinitions()
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }

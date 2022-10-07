@@ -1,7 +1,6 @@
 export * from "./account"
 export * from "./app"
 export * from "./global"
-export * from "./plugin"
 export * from "./platform"
 export * from "./document"
 export * from "./pouch"

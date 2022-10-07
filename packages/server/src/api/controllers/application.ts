@@ -47,14 +47,10 @@ import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
 import { errors, events, migrations } from "@budibase/backend-core"
-import {
-  App,
-  Layout,
-  Screen,
-  MigrationType,
-  AppNavigation,
-} from "@budibase/types"
+import { App, Layout, Screen, MigrationType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
+import { groups } from "@budibase/pro"
+import { enrichPluginURLs } from "../../utilities/plugins"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -213,9 +209,12 @@ export const fetchAppDefinition = async (ctx: any) => {
 
 export const fetchAppPackage = async (ctx: any) => {
   const db = context.getAppDB()
-  const application = await db.get(DocumentType.APP_METADATA)
+  let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
+
+  // Enrich plugin URLs
+  application.usedPlugins = enrichPluginURLs(application.usedPlugins)
 
   // Only filter screens if the user is not a builder
   if (!(ctx.user.builder && ctx.user.builder.global)) {
@@ -304,7 +303,7 @@ const performAppCreate = async (ctx: any) => {
     })
 
     // Migrate navigation settings and screens if required
-    if (existing && !existing.navigation) {
+    if (existing) {
       const navigation = await migrateAppNavigation()
       if (navigation) {
         newApplication.navigation = navigation
@@ -361,7 +360,7 @@ const appPostCreate = async (ctx: any, app: App) => {
   await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
-    const rows = await getUniqueRows([app.appId])
+    const { rows } = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
@@ -472,7 +471,6 @@ const destroyApp = async (ctx: any) => {
   const result = await db.destroy()
 
   if (isUnpublish) {
-    await quotas.removePublishedApp()
     await events.app.unpublished(app)
   } else {
     await quotas.removeApp()
@@ -496,12 +494,13 @@ const destroyApp = async (ctx: any) => {
 }
 
 const preDestroyApp = async (ctx: any) => {
-  const rows = await getUniqueRows([ctx.params.appId])
+  const { rows } = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }
 
 const postDestroyApp = async (ctx: any) => {
   const rowCount = ctx.rowCount
+  await groups.cleanupApp(ctx.params.appId)
   if (rowCount) {
     await quotas.removeRows(rowCount)
   }
@@ -602,7 +601,7 @@ const migrateAppNavigation = async () => {
   // Migrate all screens, removing custom layouts
   for (let screen of screens) {
     if (!screen.layoutId) {
-      return
+      continue
     }
     const layout = layouts.find(layout => layout._id === screen.layoutId)
     screen.layoutId = undefined
@@ -616,7 +615,7 @@ const migrateAppNavigation = async () => {
   const layout = layouts?.find(
     (layout: Layout) => layout._id === BASE_LAYOUT_PROP_IDS.PRIVATE
   )
-  if (layout) {
+  if (layout && !existing.navigation) {
     let navigationSettings: any = {
       navigation: "Top",
       title: name,

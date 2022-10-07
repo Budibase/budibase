@@ -5,6 +5,7 @@ import {
   devToolsStore,
   blockStore,
   componentStore,
+  environmentStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
@@ -21,7 +22,7 @@ loadSpectrumIcons()
 
 let app
 
-const loadBudibase = () => {
+const loadBudibase = async () => {
   // Update builder store with any builder flags
   builderStore.set({
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
@@ -41,6 +42,9 @@ const loadBudibase = () => {
   // Set app ID - this window flag is set by both the preview and the real
   // server rendered app HTML
   appStore.actions.setAppId(window["##BUDIBASE_APP_ID##"])
+
+  // Fetch environment info
+  await environmentStore.actions.fetchEnvironment()
 
   // Enable dev tools or not. We need to be using a dev app and not inside
   // the builder preview to enable them.
