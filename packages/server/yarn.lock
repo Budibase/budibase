@@ -1094,12 +1094,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.0.23":
-  version "2.0.23"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.0.23.tgz#915d4ea2e78547795894b2aebd81b8a8c9b568db"
-  integrity sha512-wovJF+kS/vVs+cR6lHieEEs99vmXsOt5qKjMAkkMUVXmWBWPYQaLppz+dxTV9xXd8Ht9yFhnkbOo7QJxFE8+fA==
+"@budibase/backend-core@2.0.24":
+  version "2.0.24"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.0.24.tgz#305be50481095441aeb663add4271c06b0d98435"
+  integrity sha512-yq/TwV1GWGeAZgn8FrSVAk0tNXFQLvduoKrwy4f2EsR26R5y6uxp2B0igP0sKMvUJPjTNPBONJM0MdYx9JBSmA==
   dependencies:
-    "@budibase/types" "^2.0.23"
+    "@budibase/types" "^2.0.24"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -1180,13 +1180,13 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@2.0.23":
-  version "2.0.23"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.0.23.tgz#215759f07470d37b6571f54ad80d7fb38a2f902e"
-  integrity sha512-RP7lS076VP3W+9AI9d/ylM6k1YBotGlqkBrshgzX/pl1e2O9eg0MmG2/dP6X+w4LzGv2ruC7lfwyf3MgWgYFyQ==
+"@budibase/pro@2.0.24":
+  version "2.0.24"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.0.24.tgz#d678753a28fc44f4f476120c8fb7b01365b5e18b"
+  integrity sha512-j/wsd1RCvTGodRAvD9GJZ9JDivGxMuFDAmrQlvcq5ffrqX2VDm0dSP/F+8YZFck4hdSmcL5VeqxZCPh2kx74vA==
   dependencies:
-    "@budibase/backend-core" "2.0.23"
-    "@budibase/types" "2.0.23"
+    "@budibase/backend-core" "2.0.24"
+    "@budibase/types" "2.0.24"
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
@@ -1209,10 +1209,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@2.0.23", "@budibase/types@^2.0.23":
-  version "2.0.23"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.0.23.tgz#2467342b9c48c965319182ef4cbb7166c8bf1e43"
-  integrity sha512-Oyq9tVwV+zl38III1or4Cr8VOKemMv3L/o95CBXdyZRDmmVfdzQgJ7AByUMOj9quEe6IjctdkOI4ssE8Fds9Dw==
+"@budibase/types@2.0.24", "@budibase/types@^2.0.24":
+  version "2.0.24"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.0.24.tgz#8ac0615b17d3f46809b10897b3217a86b6d2a62e"
+  integrity sha512-Lo1NGnu+4PH0OLjwxRU5dqEAADEBOCkikQtAjapVFIZWcBit0ZC/bXTs6meIaey6JqqEKOlDR5V+VwrzcmdUIA==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
