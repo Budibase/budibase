@@ -330,6 +330,16 @@ export const getFrontendStore = () => {
           return state
         })
       },
+      sendEvent: (name, payload) => {
+        const { previewEventHandler } = get(store)
+        previewEventHandler?.(name, payload)
+      },
+      registerEventHandler: handler => {
+        store.update(state => {
+          state.previewEventHandler = handler
+          return state
+        })
+      },
     },
     layouts: {
       select: layoutId => {
@@ -890,6 +900,50 @@ export const getFrontendStore = () => {
           }
           component[name] = value
         })
+      },
+      requestEjectBlock: componentId => {
+        store.actions.preview.sendEvent("eject-block", componentId)
+      },
+      handleEjectBlock: async (componentId, ejectedDefinition) => {
+        let nextSelectedComponentId
+
+        await store.actions.screens.patch(screen => {
+          const block = findComponent(screen.props, componentId)
+          const parent = findComponentParent(screen.props, componentId)
+
+          // Sanity check
+          if (!block || !parent?._children?.length) {
+            return false
+          }
+
+          // Attach block children back into ejected definition, using the
+          // _containsSlot flag to know where to insert them
+          const slotContainer = findAllMatchingComponents(
+            ejectedDefinition,
+            x => x._containsSlot
+          )[0]
+          if (slotContainer) {
+            delete slotContainer._containsSlot
+            slotContainer._children = [
+              ...(slotContainer._children || []),
+              ...(block._children || []),
+            ]
+          }
+
+          // Replace block with ejected definition
+          makeComponentUnique(ejectedDefinition)
+          const index = parent._children.findIndex(x => x._id === componentId)
+          parent._children[index] = ejectedDefinition
+          nextSelectedComponentId = ejectedDefinition._id
+        })
+
+        // Select new root component
+        if (nextSelectedComponentId) {
+          store.update(state => {
+            state.selectedComponentId = nextSelectedComponentId
+            return state
+          })
+        }
       },
     },
     links: {
