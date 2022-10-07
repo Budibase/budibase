@@ -214,6 +214,31 @@ export = class RedisWrapper {
     }
   }
 
+  async bulkGet(keys: string[]) {
+    const db = this._db
+    const prefixedKeys = keys.map(key => addDbPrefix(db, key))
+    let response = await this.getClient().mget(prefixedKeys)
+    if (Array.isArray(response)) {
+      let final: any = {}
+      let count = 0
+      for (let result of response) {
+        if (result) {
+          let parsed
+          try {
+            parsed = JSON.parse(result)
+          } catch (err) {
+            parsed = result
+          }
+          final[keys[count]] = parsed
+        }
+        count++
+      }
+      return final
+    } else {
+      throw new Error(`Invalid response: ${response}`)
+    }
+  }
+
   async store(key: string, value: any, expirySeconds: number | null = null) {
     const db = this._db
     if (typeof value === "object") {

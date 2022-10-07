@@ -4,6 +4,7 @@
 
   export let value
   export let bindings
+  export let placeholder
 
   $: urlOptions = $store.screens
     .map(screen => screen.routing?.route)
@@ -13,6 +14,7 @@
 <DrawerBindableCombobox
   {value}
   {bindings}
+  {placeholder}
   on:change
   options={urlOptions}
   appendBindingsAsOptions={false}
