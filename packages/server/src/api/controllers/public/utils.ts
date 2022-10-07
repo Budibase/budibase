@@ -22,7 +22,7 @@ export async function addRev(
 }
 
 /**
- * Performs a case insensitive search on the provided documents, using the
+ * Performs a case in-sensitive search on the provided documents, using the
  * provided key and value. This will be a string based search, using the
  * startsWith function.
  */
