@@ -53,7 +53,7 @@ export default class AppApi {
     return [response, json]
   }
 
-  async update(appId: string, body: any): Promise<[Response, Application]> {
+  async updateClient(appId: string, body: any): Promise<[Response, Application]> {
     const response = await this.api.put(`/applications/${appId}/client/update`, { body })
     const json = await response.json()
     return [response, json]
@@ -73,6 +73,12 @@ export default class AppApi {
 
   async getAppDefinition(appId: string): Promise<[Response, any]> {
     const response = await this.api.get(`/applications/${appId}/definition`)
+    const json = await response.json()
+    return [response, json]
+  }
+
+  async update(appId: string, body: any): Promise<[Response, Application]> {
+    const response = await this.api.put(`/applications/${appId}`, { body })
     const json = await response.json()
     return [response, json]
   }
