@@ -2,7 +2,6 @@
   import { Body, ModalContent, Table } from "@budibase/bbui"
   import { onMount } from "svelte"
 
-  export let userData
   export let deleteUsersResponse
 
   let successCount

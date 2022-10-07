@@ -23,7 +23,7 @@
   import AccessTab from "../_components/AccessTab.svelte"
   import { API } from "api"
   import { store } from "builderStore"
-  import { apps, auth } from "stores/portal"
+  import { apps, auth, groups } from "stores/portal"
   import analytics, { Events, EventSource } from "analytics"
   import { AppStatus } from "constants"
   import AppLockModal from "components/common/AppLockModal.svelte"
@@ -36,17 +36,21 @@
 
   export let application
 
-  let promise = getPackage()
   let loaded = false
   let deletionModal
   let unpublishModal
   let exportModal
   let appName = ""
+  let deployments = []
   let published
 
   // App
   $: filteredApps = $apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
+  $: loaded && !selectedApp && backToAppList()
+  $: isPublished =
+    selectedApp?.status === AppStatus.DEPLOYED && latestDeployments?.length > 0
+  $: appUrl = `${window.origin}/app${selectedApp?.url}`
 
   // Locking
   $: lockedBy = selectedApp?.lockedBy
@@ -58,18 +62,11 @@
   }`
 
   // App deployments
-  $: deployments = []
   $: latestDeployments = deployments
-    .filter(
-      deployment =>
-        deployment.status === "SUCCESS" && application === deployment.appId
-    )
+    .filter(x => x.status === "SUCCESS" && application === x.appId)
     .sort((a, b) => a.updatedAt > b.updatedAt)
 
-  $: isPublished =
-    selectedApp?.status === AppStatus.DEPLOYED && latestDeployments?.length > 0
-
-  $: appUrl = `${window.origin}/app${selectedApp?.url}`
+  // Tabs
   $: tabs = ["Overview", "Automation History", "Backups", "Settings", "Access"]
   $: selectedTab = "Overview"
 
@@ -84,17 +81,6 @@
       selectedTab = tabKey
     } else {
       notifications.error("Invalid tab key")
-    }
-  }
-
-  async function getPackage() {
-    try {
-      const pkg = await API.fetchAppPackage(application)
-      await store.actions.initialise(pkg)
-      loaded = true
-      return pkg
-    } catch (error) {
-      notifications.error(`Error initialising app: ${error?.message}`)
     }
   }
 
@@ -187,24 +173,37 @@
     appName = null
   }
 
-  onDestroy(() => {
-    store.actions.reset()
-  })
-
   onMount(async () => {
     const params = new URLSearchParams(window.location.search)
     if (params.get("tab")) {
       selectedTab = params.get("tab")
     }
+
+    // Check app exists
     try {
+      const pkg = await API.fetchAppPackage(application)
+      await store.actions.initialise(pkg)
+    } catch (error) {
+      // Swallow
+      backToAppList()
+    }
+
+    // Initialise application
+    try {
+      await API.syncApp(application)
+      deployments = await fetchDeployments()
+      await groups.actions.init()
       if (!apps.length) {
         await apps.load()
       }
-      await API.syncApp(application)
-      deployments = await fetchDeployments()
     } catch (error) {
       notifications.error("Error initialising app overview")
     }
+    loaded = true
+  })
+
+  onDestroy(() => {
+    store.actions.reset()
   })
 </script>
 
@@ -214,11 +213,11 @@
 
 <span class="overview-wrap">
   <Page wide noPadding>
-    {#await promise}
+    {#if !loaded || !selectedApp}
       <div class="loading">
         <ProgressCircle size="XL" />
       </div>
-    {:then _}
+    {:else}
       <Layout paddingX="XXL" paddingY="XL" gap="L">
         <span class="page-header" class:loaded>
           <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
@@ -360,9 +359,7 @@
       >
         Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
       </ConfirmDialog>
-    {:catch error}
-      <p>Something went wrong: {error.message}</p>
-    {/await}
+    {/if}
   </Page>
 </span>
 

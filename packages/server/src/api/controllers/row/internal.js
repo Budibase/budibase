@@ -333,7 +333,7 @@ exports.bulkDestroy = async ctx => {
 
 exports.search = async ctx => {
   // Fetch the whole table when running in cypress, as search doesn't work
-  if (env.isCypress()) {
+  if (!env.COUCH_DB_URL && env.isCypress()) {
     return { rows: await exports.fetch(ctx) }
   }
 
