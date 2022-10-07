@@ -121,7 +121,12 @@ export const buildLuceneQuery = filter => {
         query.allOr = true
         return
       }
-      if (type === "datetime" && !isHbs) {
+      if (
+        type === "datetime" &&
+        !isHbs &&
+        operator !== "empty" &&
+        operator !== "notEmpty"
+      ) {
         // Ensure date value is a valid date and parse into correct format
         if (!value) {
           return
