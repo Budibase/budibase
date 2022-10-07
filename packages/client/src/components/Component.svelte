@@ -27,6 +27,8 @@
   export let isLayout = false
   export let isScreen = false
   export let isBlock = false
+  export let parent = null
+  export let index = 0
 
   // Get parent contexts
   const context = getContext("context")
@@ -96,7 +98,7 @@
   $: selected =
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
   $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
-  $: inDropPath = $componentStore.dropPath?.includes(id)
+  $: isDndParent = $componentStore.dndParent === id
   $: inDragPath = inSelectedPath && $builderStore.editMode
 
   // Derive definition properties which can all be optional, so need to be
@@ -119,7 +121,7 @@
     !isLayout &&
     !isScreen &&
     definition?.draggable !== false
-  $: droppable = interactive && !isLayout && !isScreen
+  $: droppable = interactive
   $: builderHidden =
     $builderStore.inBuilder && $builderStore.hiddenComponentIds?.includes(id)
 
@@ -451,21 +453,24 @@
     class:draggable
     class:droppable
     class:empty
+    class:parent={hasChildren}
     class:interactive
     class:editing
     class:block={isBlock}
-    class:explode={children.length && !isLayout && inDropPath && false}
+    class:explode={interactive && hasChildren && $builderStore.isDragging}
+    class:placeholder={id === "placeholder"}
     data-id={id}
     data-name={name}
     data-icon={icon}
-    data-placeholder={id === "placeholder"}
+    data-parent={parent}
+    data-index={index}
   >
     <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
       {#if hasMissingRequiredSettings}
         <ComponentPlaceholder />
       {:else if children.length}
-        {#each children as child (child._id)}
-          <svelte:self instance={child} />
+        {#each children as child, idx (child._id)}
+          <svelte:self instance={child} parent={id} index={idx} />
         {/each}
       {:else if emptyState}
         {#if isScreen}
@@ -488,8 +493,9 @@
     transition: padding 250ms ease, border 250ms ease;
   }
   .component.explode :global(> *) {
-    padding: 12px 4px !important;
+    padding: 16px !important;
     border: 2px dashed var(--spectrum-global-color-gray-400) !important;
+    border-radius: 4px !important;
   }
   .interactive :global(*:hover) {
     cursor: pointer;

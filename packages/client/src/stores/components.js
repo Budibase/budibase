@@ -5,6 +5,7 @@ import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
 import Router from "../components/Router.svelte"
+import Placeholder from "../components/preview/Placeholder.svelte"
 import * as AppComponents from "../components/app/index.js"
 
 const budibasePrefix = "@budibase/standard-components/"
@@ -38,11 +39,6 @@ const createComponentStore = () => {
       // Derive the selected component path
       const selectedPath =
         findComponentPathById(asset?.props, selectedComponentId) || []
-      let dropPath = []
-      if ($builderState.isDragging) {
-        dropPath =
-          findComponentPathById(asset?.props, $builderState.dropTarget) || []
-      }
 
       return {
         customComponentManifest: $store.customComponentManifest,
@@ -53,7 +49,6 @@ const createComponentStore = () => {
         selectedComponentPath: selectedPath?.map(component => component._id),
         mountedComponentCount: Object.keys($store.mountedComponents).length,
         currentAsset: asset,
-        dropPath: dropPath?.map(component => component._id),
       }
     }
   )
@@ -113,6 +108,8 @@ const createComponentStore = () => {
     // Screenslot is an edge case
     if (type === "screenslot") {
       type = `${budibasePrefix}${type}`
+    } else if (type === "placeholder") {
+      return {}
     }
 
     // Handle built-in components
@@ -132,6 +129,8 @@ const createComponentStore = () => {
     }
     if (type === "screenslot") {
       return Router
+    } else if (type === "placeholder") {
+      return Placeholder
     }
 
     // Handle budibase components

@@ -21,9 +21,9 @@ const createBuilderStore = () => {
     navigation: null,
     hiddenComponentIds: [],
     usedPlugins: null,
-    dndMode: null,
-    dndTarget: null,
-    dropTarget: null,
+
+    dndParent: null,
+    dndIndex: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -106,17 +106,10 @@ const createBuilderStore = () => {
       // Notify the builder so we can reload component definitions
       dispatchEvent("reload-plugin")
     },
-    updateDNDPlaceholder: (mode, target) => {
-      console.log(mode, target)
+    updateDNDPlaceholder: (parent, index) => {
       store.update(state => {
-        state.dndMode = mode
-        state.dndTarget = target
-        return state
-      })
-    },
-    setDropTarget: target => {
-      store.update(state => {
-        state.dropTarget = target
+        state.dndParent = parent
+        state.dndIndex = index
         return state
       })
     },
