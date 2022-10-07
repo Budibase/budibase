@@ -17,6 +17,8 @@ const arg = process.argv.slice(2)[0]
  */
 updateDotEnv({
   ACCOUNT_PORTAL_URL:
-    arg === "enable" ? "http://local.com:10001" : "http://localhost:10001",
+    arg === "enable"
+      ? "http://account.local.com:10001"
+      : "http://localhost:10001",
   COOKIE_DOMAIN: arg === "enable" ? ".local.com" : "",
 }).then(() => console.log("Updated worker!"))

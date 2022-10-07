@@ -30,7 +30,11 @@ const fs = require("fs")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
-import { createAdminUser, getChecklist } from "./utilities/workerRequests"
+import {
+  createAdminUser,
+  generateApiKey,
+  getChecklist,
+} from "./utilities/workerRequests"
 import { watch } from "./watch"
 import { initialise as initialiseWebsockets } from "./websocket"
 
@@ -127,11 +131,16 @@ module.exports = server.listen(env.PORT || 0, async () => {
     if (!checklist?.adminUser?.checked) {
       try {
         const tenantId = tenancy.getTenantId()
-        await createAdminUser(
+        const user = await createAdminUser(
           env.BB_ADMIN_USER_EMAIL,
           env.BB_ADMIN_USER_PASSWORD,
           tenantId
         )
+        // Need to set up an API key for automated integration tests
+        if (env.isTest()) {
+          await generateApiKey(user._id)
+        }
+
         console.log(
           "Admin account automatically created for",
           env.BB_ADMIN_USER_EMAIL

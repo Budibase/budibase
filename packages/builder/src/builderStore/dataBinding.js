@@ -71,17 +71,19 @@ export const getAuthBindings = () => {
       runtime: `${safeUser}.${safeOAuth2}.${safeAccessToken}`,
       readable: `Current User.OAuthToken`,
       key: "accessToken",
+      display: { name: "OAuthToken" },
     },
   ]
 
-  bindings = Object.keys(authBindings).map(key => {
-    const fieldBinding = authBindings[key]
+  bindings = authBindings.map(fieldBinding => {
     return {
       type: "context",
       runtimeBinding: fieldBinding.runtime,
       readableBinding: fieldBinding.readable,
       fieldSchema: { type: "string", name: fieldBinding.key },
       providerId: "user",
+      category: "Current User",
+      display: fieldBinding.display,
     }
   })
   return bindings
@@ -93,7 +95,7 @@ export const getAuthBindings = () => {
  * @param {string} prefix A contextual string prefix/path for a user readable binding
  * @return {object[]} An array containing readable/runtime binding objects
  */
-export const toBindingsArray = (valueMap, prefix) => {
+export const toBindingsArray = (valueMap, prefix, category) => {
   if (!valueMap) {
     return []
   }
@@ -101,11 +103,20 @@ export const toBindingsArray = (valueMap, prefix) => {
     if (!binding || !valueMap[binding]) {
       return acc
     }
-    acc.push({
+
+    let config = {
       type: "context",
       runtimeBinding: binding,
       readableBinding: `${prefix}.${binding}`,
-    })
+      icon: "Brackets",
+    }
+
+    if (category) {
+      config.category = category
+    }
+
+    acc.push(config)
+
     return acc
   }, [])
 }
@@ -118,8 +129,7 @@ export const readableToRuntimeMap = (bindings, ctx) => {
     return {}
   }
   return Object.keys(ctx).reduce((acc, key) => {
-    let parsedQuery = readableToRuntimeBinding(bindings, ctx[key])
-    acc[key] = parsedQuery
+    acc[key] = readableToRuntimeBinding(bindings, ctx[key])
     return acc
   }, {})
 }
@@ -132,8 +142,7 @@ export const runtimeToReadableMap = (bindings, ctx) => {
     return {}
   }
   return Object.keys(ctx).reduce((acc, key) => {
-    let parsedQuery = runtimeToReadableBinding(bindings, ctx[key])
-    acc[key] = parsedQuery
+    acc[key] = runtimeToReadableBinding(bindings, ctx[key])
     return acc
   }, {})
 }
@@ -234,18 +243,18 @@ export const getDatasourceForProvider = (asset, component) => {
     return null
   }
 
-  // There are different types of setting which can be a datasource, for
-  // example an actual datasource object, or a table ID string.
-  // Convert the datasource setting into a proper datasource object so that
-  // we can use it properly
-  if (datasourceSetting.type === "table") {
+  // For legacy compatibility, we need to be able to handle datasources that are
+  // just strings. These are not generated any more, so could be removed in
+  // future.
+  // TODO: remove at some point
+  const datasource = component[datasourceSetting?.key]
+  if (typeof datasource === "string") {
     return {
-      tableId: component[datasourceSetting?.key],
+      tableId: datasource,
       type: "table",
     }
-  } else {
-    return component[datasourceSetting?.key]
   }
+  return datasource
 }
 
 /**
@@ -379,14 +388,15 @@ const getProviderContextBindings = (asset, dataProviders) => {
 /**
  * Gets all bindable properties from the logged in user.
  */
-const getUserBindings = () => {
+export const getUserBindings = () => {
   let bindings = []
   const { schema } = getSchemaForTable(TableNames.USERS)
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
-  keys.forEach(key => {
+
+  bindings = keys.reduce((acc, key) => {
     const fieldSchema = schema[key]
-    bindings.push({
+    acc.push({
       type: "context",
       runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
       readableBinding: `Current User.${key}`,
@@ -396,9 +406,10 @@ const getUserBindings = () => {
       providerId: "user",
       category: "Current User",
       icon: "User",
-      display: fieldSchema,
     })
-  })
+    return acc
+  }, [])
+
   return bindings
 }
 

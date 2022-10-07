@@ -1,6 +1,6 @@
 const Router = require("@koa/router")
 const migrationsController = require("../controllers/migrations")
-const router = Router()
+const router = new Router()
 const { internalApi } = require("@budibase/backend-core/auth")
 
 router

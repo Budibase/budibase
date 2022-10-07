@@ -78,6 +78,8 @@ spec:
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: PLUGIN_BUCKET_NAME
+          value: {{ .Values.services.objectStore.pluginBucketName | default "plugins" | quote }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
         {{ if .Values.services.worker.publicApiRateLimitPerSecond }}

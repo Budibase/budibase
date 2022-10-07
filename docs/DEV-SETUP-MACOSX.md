@@ -11,7 +11,7 @@ through brew.
 
 ### Install Node
 
-Budibase requires a recent version of node (14+):
+Budibase requires a recent version of node 14:
 ```
 brew install node npm
 node -v
@@ -38,7 +38,7 @@ This setup process was tested on Mac OSX 12 (Monterey) with version numbers show
 
 - Docker: 20.10.14
 - Docker-Compose: 2.6.0
-- Node: 18.3.0
+- Node: 14.20.1
 - Yarn: 1.22.19
 - Lerna: 5.1.4
 
@@ -60,3 +60,6 @@ http://127.0.0.1:10000/builder/admin
 
 | **NOTE**: If you are working on a M1 Apple Silicon, you will need to uncomment `# platform: linux/amd64` line in
 [hosting/docker-compose-dev.yaml](../hosting/docker-compose.dev.yaml)
+
+### Troubleshooting
+If there are errors with the `yarn setup` command, you can try installing nvm and node 14. This is the same as the instructions for Debian 11. 

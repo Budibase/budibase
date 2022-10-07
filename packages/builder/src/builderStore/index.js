@@ -1,5 +1,6 @@
 import { getFrontendStore } from "./store/frontend"
 import { getAutomationStore } from "./store/automation"
+import { getTemporalStore } from "./store/temporal"
 import { getThemeStore } from "./store/theme"
 import { derived } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
@@ -8,6 +9,7 @@ import { RoleUtils } from "@budibase/frontend-core"
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
+export const temporalStore = getTemporalStore()
 
 export const selectedScreen = derived(store, $store => {
   return $store.screens.find(screen => screen._id === $store.selectedScreenId)

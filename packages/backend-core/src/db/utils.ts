@@ -2,7 +2,8 @@ import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
 import { SEPARATOR, DocumentType, UNICODE_MAX, ViewName } from "./constants"
-import { getTenantId, getGlobalDBName, getGlobalDB } from "../tenancy"
+import { getTenantId, getGlobalDB } from "../context"
+import { getGlobalDBName } from "./tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
 import { getCouchInfo } from "./pouch"
@@ -15,6 +16,7 @@ import * as events from "../events"
 export * from "./constants"
 export * from "./conversions"
 export { default as Replication } from "./Replication"
+export * from "./tenancy"
 
 /**
  * Generates a new app ID.
@@ -60,6 +62,28 @@ export function getDocParams(
  */
 export function getQueryIndex(viewName: ViewName) {
   return `database/${viewName}`
+}
+
+/**
+ * Check if a given ID is that of a table.
+ * @returns {boolean}
+ */
+export const isTableId = (id: string) => {
+  // this includes datasource plus tables
+  return (
+    id &&
+    (id.startsWith(`${DocumentType.TABLE}${SEPARATOR}`) ||
+      id.startsWith(`${DocumentType.DATASOURCE_PLUS}${SEPARATOR}`))
+  )
+}
+
+/**
+ * Check if a given ID is that of a datasource or datasource plus.
+ * @returns {boolean}
+ */
+export const isDatasourceId = (id: string) => {
+  // this covers both datasources and datasource plus
+  return id && id.startsWith(`${DocumentType.DATASOURCE}${SEPARATOR}`)
 }
 
 /**
@@ -364,6 +388,21 @@ export const getConfigParams = (
  */
 export const generateDevInfoID = (userId: any) => {
   return `${DocumentType.DEV_INFO}${SEPARATOR}${userId}`
+}
+
+/**
+ * Generates a new plugin ID - to be used in the global DB.
+ * @returns {string} The new plugin ID which a plugin metadata document can be stored under.
+ */
+export const generatePluginID = (name: string) => {
+  return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
+}
+
+/**
+ * Gets parameters for retrieving automations, this is a utility function for the getDocParams function.
+ */
+export const getPluginParams = (pluginId?: string | null, otherProps = {}) => {
+  return getDocParams(DocumentType.PLUGIN, pluginId, otherProps)
 }
 
 /**

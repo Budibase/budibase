@@ -2,6 +2,7 @@ const { getAllRoles } = require("@budibase/backend-core/roles")
 const {
   getAllApps,
   getProdAppID,
+  getDevAppID,
   DocumentType,
 } = require("@budibase/backend-core/db")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
@@ -34,7 +35,7 @@ exports.fetch = async ctx => {
 
 exports.find = async ctx => {
   const appId = ctx.params.appId
-  await doInAppContext(appId, async () => {
+  await doInAppContext(getDevAppID(appId), async () => {
     const db = getAppDB()
     const app = await db.get(DocumentType.APP_METADATA)
     ctx.body = {

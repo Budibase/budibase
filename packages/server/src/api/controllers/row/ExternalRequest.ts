@@ -371,7 +371,10 @@ module External {
         const toColumn = `${linkedTable.name}.${relationship.to}`
         // this is important when working with multiple relationships
         // between the same tables, don't want to overlap/multiply the relations
-        if (!relationship.through && row[fromColumn] !== row[toColumn]) {
+        if (
+          !relationship.through &&
+          row[fromColumn]?.toString() !== row[toColumn]?.toString()
+        ) {
           continue
         }
         let linked = basicProcessing(row, linkedTable)

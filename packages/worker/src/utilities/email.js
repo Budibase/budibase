@@ -174,7 +174,7 @@ exports.isEmailConfigured = async (workspaceId = null) => {
 exports.sendEmail = async (
   email,
   purpose,
-  { workspaceId, user, from, contents, subject, info, automation } = {}
+  { workspaceId, user, from, contents, subject, info, cc, bcc, automation } = {}
 ) => {
   const db = getGlobalDB()
   let config = (await getSmtpConfiguration(db, workspaceId, automation)) || {}
@@ -197,6 +197,8 @@ exports.sendEmail = async (
   message = {
     ...message,
     to: email,
+    cc: cc,
+    bcc: bcc,
   }
 
   if (subject || config.subject) {
