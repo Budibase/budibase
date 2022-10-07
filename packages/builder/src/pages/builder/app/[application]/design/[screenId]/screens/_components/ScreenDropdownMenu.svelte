@@ -38,7 +38,7 @@
     let duplicateScreen = Helpers.cloneDeep(screen)
     delete duplicateScreen._id
     delete duplicateScreen._rev
-    makeComponentUnique(duplicateScreen.props)
+    duplicateScreen.props = makeComponentUnique(duplicateScreen.props)
 
     // Attach the new name and URL
     duplicateScreen.routing.route = sanitizeUrl(screenUrl)
