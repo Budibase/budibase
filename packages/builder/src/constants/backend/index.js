@@ -8,9 +8,9 @@ export const FIELDS = {
       presence: false,
     },
   },
-  SCANNEDCODE: {
-    name: "Scanned Code",
-    type: "scannedcode",
+  BARCODEQR: {
+    name: "Barcode/QR",
+    type: "barcodeqr",
     constraints: {
       type: "string",
       length: {},
@@ -157,7 +157,7 @@ export const ALLOWABLE_STRING_OPTIONS = [
   FIELDS.STRING,
   FIELDS.OPTIONS,
   FIELDS.LONGFORM,
-  FIELDS.SCANNEDCODE,
+  FIELDS.BARCODEQR,
 ]
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type

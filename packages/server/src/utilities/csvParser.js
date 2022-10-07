@@ -4,7 +4,7 @@ const { FieldTypes } = require("../constants")
 const VALIDATORS = {
   [FieldTypes.STRING]: () => true,
   [FieldTypes.OPTIONS]: () => true,
-  [FieldTypes.SCANNEDCODE]: () => true,
+  [FieldTypes.BARCODEQR]: () => true,
   [FieldTypes.NUMBER]: attribute => {
     // allow not to be present
     if (!attribute) {

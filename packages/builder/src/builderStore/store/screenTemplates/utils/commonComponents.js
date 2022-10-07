@@ -138,7 +138,7 @@ const fieldTypeToComponentMap = {
   attachment: "attachmentfield",
   link: "relationshipfield",
   json: "jsonfield",
-  scannedcode: "codescanner",
+  barcodeqr: "codescanner",
 }
 
 export function makeDatasourceFormComponents(datasource) {

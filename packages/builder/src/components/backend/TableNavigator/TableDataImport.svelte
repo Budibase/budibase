@@ -125,8 +125,12 @@
       value: FIELDS.ARRAY.type,
     },
     {
-      label: "Scanned Code",
-      value: FIELDS.SCANNEDCODE.type,
+      label: "Barcode/QR",
+      value: FIELDS.BARCODEQR.type,
+    },
+    {
+      label: "Long Form Text",
+      value: FIELDS.LONGFORM.type,
     },
   ]
 </script>
