@@ -98,8 +98,8 @@
   $: selected =
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
   $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
-  $: isDndParent = $componentStore.dndParent === id
   $: inDragPath = inSelectedPath && $builderStore.editMode
+  $: inDndPath = $componentStore.dndPath?.includes(id)
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
@@ -457,7 +457,7 @@
     class:interactive
     class:editing
     class:block={isBlock}
-    class:explode={interactive && hasChildren && $builderStore.isDragging}
+    class:explode={interactive && hasChildren && inDndPath}
     class:placeholder={id === "placeholder"}
     data-id={id}
     data-name={name}
