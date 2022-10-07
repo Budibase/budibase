@@ -29,7 +29,7 @@ export default class AppApi {
     return [response, json]
   }
 
-  async publish(): Promise<[Response, string]> {
+  async publish(): Promise<[Response, any]> {
     const response = await this.api.post("/deploy")
     const json = await response.json()
     return [response, json]
@@ -82,6 +82,17 @@ export default class AppApi {
     const json = await response.json()
     return [response, json]
   }
+  async addScreentoApp(body: any): Promise<[Response, Application]> {
 
+    const response = await this.api.post(`/screens`, { body })
+    const json = await response.json()
+    return [response, json]
+  }
+
+  async getRoutes(): Promise<[Response, any]> {
+    const response = await this.api.get(`/routing`)
+    const json = await response.json()
+    return [response, json]
+  }
 
 }
