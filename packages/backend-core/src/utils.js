@@ -42,6 +42,18 @@ async function resolveAppUrl(ctx) {
   return app && app.appId ? app.appId : undefined
 }
 
+exports.isServingApp = ctx => {
+  // dev app
+  if (ctx.path.startsWith(`/${APP_PREFIX}`)) {
+    return true
+  }
+  // prod app
+  if (ctx.path.startsWith(PROD_APP_PREFIX)) {
+    return true
+  }
+  return false
+}
+
 /**
  * Given a request tries to find the appId, which can be located in various places
  * @param {object} ctx The main request body to look through.

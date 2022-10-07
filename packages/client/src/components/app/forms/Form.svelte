@@ -41,7 +41,7 @@
     if (["user", "url"].includes(context.closestComponentId)) {
       return {}
     }
-    // Always inherit the closest data source
+    // Always inherit the closest datasource
     const closestContext = context[`${context.closestComponentId}`] || {}
     return closestContext || {}
   }

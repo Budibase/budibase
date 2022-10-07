@@ -2,6 +2,7 @@ const { getRowParams, USER_METDATA_PREFIX } = require("../../db/utils")
 const {
   isDevAppID,
   getDevelopmentAppID,
+  getProdAppID,
   doWithDB,
 } = require("@budibase/backend-core/db")
 
@@ -52,7 +53,8 @@ const getAppRows = async appId => {
  * Rows duplicates may exist across apps due to data import so they are not filtered out.
  */
 exports.getUniqueRows = async appIds => {
-  let uniqueRows = []
+  let uniqueRows = [],
+    rowsByApp = {}
   const pairs = getAppPairs(appIds)
 
   for (let pair of Object.values(pairs)) {
@@ -73,8 +75,10 @@ exports.getUniqueRows = async appIds => {
     // this can't be done on all rows because app import results in
     // duplicate row ids across apps
     // the array pre-concat is important to avoid stack overflow
-    uniqueRows = uniqueRows.concat([...new Set(appRows)])
+    const prodId = getProdAppID(pair.devId || pair.prodId)
+    rowsByApp[prodId] = [...new Set(appRows)]
+    uniqueRows = uniqueRows.concat(rowsByApp[prodId])
   }
 
-  return uniqueRows
+  return { rows: uniqueRows, appRows: rowsByApp }
 }

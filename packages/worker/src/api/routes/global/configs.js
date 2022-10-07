@@ -5,7 +5,7 @@ const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const { Configs } = require("../../../constants")
 
-const router = Router()
+const router = new Router()
 
 function smtpValidation() {
   // prettier-ignore

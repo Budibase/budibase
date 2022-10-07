@@ -1,10 +1,10 @@
 import { getTenantId } from "@budibase/backend-core/tenancy"
 import { getAllApps } from "@budibase/backend-core/db"
-import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
+import { quotas } from "@budibase/pro"
+import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
 
 export const run = async () => {
   // get app count
-  // @ts-ignore
   const devApps = await getAllApps({ dev: true })
   const appCount = devApps ? devApps.length : 0
 
