@@ -84,4 +84,71 @@ describe("Internal API - /applications endpoints", () => {
       await config.applications.canRender()
     expect(publishedAppRenders).toBe(true)
   })
+
+  it("POST - Sync application before deployment", async () => {
+    const [response, app] = await config.applications.create(generateApp())
+    expect(response).toHaveStatusCode(200)
+    expect(app.appId).toBeDefined()
+    config.applications.api.appId = app.appId
+
+    const [syncResponse, sync] = await config.applications.sync(app.appId ? app.appId : "")
+    expect(syncResponse).toHaveStatusCode(200)
+    expect(sync).toEqual({
+      message: "App sync not required, app not deployed."
+    })
+  })
+
+  it("POST - Sync application after deployment", async () => {
+    const [response, app] = await config.applications.create(generateApp())
+    expect(response).toHaveStatusCode(200)
+    expect(app.appId).toBeDefined()
+    config.applications.api.appId = app.appId
+
+    // publish app
+    await config.applications.publish()
+
+    const [syncResponse, sync] = await config.applications.sync(app.appId ? app.appId : "")
+    expect(syncResponse).toHaveStatusCode(200)
+    expect(sync).toEqual({
+      message: "App sync completed successfully."
+    })
+  })
+
+  it("PUT - Update an application", async () => {
+    const [response, app] = await config.applications.create(generateApp())
+    expect(response).toHaveStatusCode(200)
+    expect(app.appId).toBeDefined()
+
+  })
+
+
+  it.skip("POST - Revert Changes", async () => {
+    const [response, app] = await config.applications.create(generateApp())
+    expect(response).toHaveStatusCode(200)
+    expect(app.appId).toBeDefined()
+
+    // publish app
+    await config.applications.publish()
+
+    const [updateResponse, updatedApp] = await config.applications.update(app.appId ? app.appId : "", {
+      name: generator.word(),
+    })
+    expect(updateResponse).toHaveStatusCode(200)
+    expect(updatedApp.name).not.toEqual(app.name)
+
+    const [revertResponse, revert] = await config.applications.revert(app.appId ? app.appId : "")
+    expect(revertResponse).toHaveStatusCode(200)
+    expect(revert).toEqual({
+      message: "App reverted successfully."
+    })
+  })
+
+  it("DELETE - Delete an application", async () => {
+    const [response, app] = await config.applications.create(generateApp())
+    expect(response).toHaveStatusCode(200)
+    expect(app.appId).toBeDefined()
+
+    const [deleteResponse] = await config.applications.delete(app.appId ? app.appId : "")
+    expect(deleteResponse).toHaveStatusCode(200)
+  })
 })
