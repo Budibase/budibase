@@ -65,6 +65,9 @@ const createScreenStore = () => {
         if (!parent._children?.length) {
           parent._children = [placeholder]
         } else {
+          parent._children = parent._children.filter(
+            x => x._id !== selectedComponentId
+          )
           parent._children.splice(dndIndex, 0, placeholder)
         }
       }
