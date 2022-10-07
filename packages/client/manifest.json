@@ -3158,7 +3158,7 @@
     ]
   },
   "codescanner": {
-    "name": "Code Scanner",
+    "name": "Barcode/QR Scanner",
     "icon": "Camera",
     "styles": [
       "size"
@@ -3169,7 +3169,7 @@
     ],
     "settings": [
       {
-        "type": "field/scannedcode",
+        "type": "field/barcodeqr",
         "label": "Field",
         "key": "field",
         "required": true

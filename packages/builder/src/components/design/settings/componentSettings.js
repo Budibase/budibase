@@ -51,7 +51,7 @@ const componentMap = {
   "field/link": FormFieldSelect,
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,
-  "field/scannedcode": FormFieldSelect,
+  "field/barcodeqr": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,

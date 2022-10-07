@@ -48,7 +48,7 @@ const TYPE_TRANSFORM_MAP = {
     [null]: "",
     [undefined]: undefined,
   },
-  [FieldTypes.SCANNEDCODE]: {
+  [FieldTypes.BARCODEQR]: {
     "": "",
     [null]: "",
     [undefined]: undefined,
