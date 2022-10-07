@@ -117,19 +117,22 @@
     })
 
     // Calculate the variance between each set of positions on the children
-    const variances = Object.keys(childCoords[0]).map(key => {
-      const coords = childCoords.map(x => x[key])
-      return {
-        variance: variance(coords),
-        side: key,
-      }
-    })
+    const variances = Object.keys(childCoords[0])
+      .filter(x => x !== "placeholder")
+      .map(key => {
+        const coords = childCoords.map(x => x[key])
+        return {
+          variance: variance(coords),
+          side: key,
+        }
+      })
 
     // Sort by variance. The lowest variance position indicates whether we are
     // in a row or column layout
     variances.sort((a, b) => {
       return a.variance < b.variance ? -1 : 1
     })
+    console.log(variances[0].side)
     const column = ["centerX", "left", "right"].includes(variances[0].side)
     console.log(column ? "COL" : "ROW")
 
