@@ -1,7 +1,7 @@
 jest.mock("../../../utilities/redis", () => ({
   init: jest.fn(),
-  getAllLocks: () => {
-    return []
+  getLocksById: () => {
+    return {}
   },
   doesUserHaveLock: () => {
     return true
