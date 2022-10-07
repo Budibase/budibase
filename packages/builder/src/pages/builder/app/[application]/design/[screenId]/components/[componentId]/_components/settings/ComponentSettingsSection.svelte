@@ -4,6 +4,7 @@
   import { store } from "builderStore"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
+  import EjectBlockButton from "components/design/settings/controls/EjectBlockButton.svelte"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
 
   export let componentDefinition
@@ -21,7 +22,6 @@
     return [
       {
         name: "General",
-        info: componentDefinition?.info,
         settings: generalSettings,
       },
       ...(customSections || []),
@@ -103,6 +103,7 @@
           nested={setting.nested}
           onChange={val => updateSetting(setting.key, val)}
           highlighted={$store.highlightedSettingKey === setting.key}
+          info={setting.info}
           props={{
             // Generic settings
             placeholder: setting.placeholder || null,
@@ -124,17 +125,8 @@
     {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
       <ResetFieldsButton {componentInstance} />
     {/if}
-    {#if section?.info}
-      <div class="text">
-        {@html section.info}
-      </div>
+    {#if idx === 0 && componentDefinition?.block}
+      <EjectBlockButton />
     {/if}
   </DetailSummary>
 {/each}
-
-<style>
-  .text {
-    font-size: var(--spectrum-global-dimension-font-size-75);
-    color: var(--grey-6);
-  }
-</style>

@@ -1,9 +1,10 @@
 import ClientApp from "./components/ClientApp.svelte"
 import {
-  componentStore,
   builderStore,
   appStore,
   devToolsStore,
+  blockStore,
+  componentStore,
   environmentStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
@@ -49,6 +50,17 @@ const loadBudibase = async () => {
   // the builder preview to enable them.
   const enableDevTools = !get(builderStore).inBuilder && get(appStore).isDevApp
   devToolsStore.actions.setEnabled(enableDevTools)
+
+  // Register handler for runtime events from the builder
+  window.handleBuilderRuntimeEvent = (name, payload) => {
+    if (!window["##BUDIBASE_IN_BUILDER##"]) {
+      return
+    }
+    if (name === "eject-block") {
+      const block = blockStore.actions.getBlock(payload)
+      block?.eject()
+    }
+  }
 
   // Register any custom components
   if (window["##BUDIBASE_CUSTOM_COMPONENTS##"]) {
