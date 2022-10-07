@@ -407,6 +407,7 @@
   }
 
   const scrollIntoView = () => {
+    return
     const node = document.getElementsByClassName(id)?.[0]?.children[0]
     if (!node) {
       return
@@ -458,6 +459,9 @@
     class:block={isBlock}
     class:explode={interactive && hasChildren && inDndPath}
     class:placeholder={id === "placeholder"}
+    class:screen={isScreen}
+    class:dragging={$builderStore.selectedComponentId === id &&
+      $builderStore.isDragging}
     data-id={id}
     data-name={name}
     data-icon={icon}
@@ -503,5 +507,8 @@
   }
   .editing :global(*:hover) {
     cursor: auto;
+  }
+  .dragging {
+    pointer-events: none;
   }
 </style>

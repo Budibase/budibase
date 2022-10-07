@@ -1,12 +1,3 @@
-<script context="module">
-  export const Sides = {
-    Top: "Top",
-    Right: "Right",
-    Bottom: "Bottom",
-    Left: "Left",
-  }
-</script>
-
 <script>
   import { onMount, onDestroy } from "svelte"
   import IndicatorSet from "./IndicatorSet.svelte"
@@ -17,9 +8,44 @@
   let dropInfo
   let placeholderInfo
 
+  $: parent = placeholderInfo?.parent
+  $: index = placeholderInfo?.index
+  $: builderStore.actions.updateDNDPlaceholder(parent, index)
+
+  // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
     const component = document.getElementsByClassName(id)[0]
     return [...component.children][0]
+  }
+
+  // Util to calculate the variance of a set of data
+  const variance = arr => {
+    const mean = arr.reduce((a, b) => a + b, 0) / arr.length
+    let squareSum = 0
+    arr.forEach(value => {
+      const delta = value - mean
+      squareSum += delta * delta
+    })
+    return squareSum / arr.length
+  }
+
+  // Callback when drag stops (whether dropped or not)
+  const stopDragging = () => {
+    console.log("END")
+
+    // Reset state
+    dragInfo = null
+    dropInfo = null
+    placeholderInfo = null
+    builderStore.actions.setDragging(false)
+
+    // Reset listener
+    if (dragInfo?.target) {
+      const component = document.getElementsByClassName(dragInfo.target)[0]
+      if (component) {
+        component.removeEventListener("dragend", stopDragging)
+      }
+    }
   }
 
   // Callback when initially starting a drag on a draggable component
@@ -29,6 +55,12 @@
       return
     }
 
+    // Hide drag ghost image
+    e.dataTransfer.setDragImage(new Image(), 0, 0)
+
+    // Add event handler to clear all drag state when dragging ends
+    component.addEventListener("dragend", stopDragging)
+
     // Update state
     dragInfo = {
       target: component.dataset.id,
@@ -36,37 +68,11 @@
     builderStore.actions.selectComponent(dragInfo.target)
     builderStore.actions.setDragging(true)
 
-    // Highlight being dragged by setting opacity
-    const child = getDOMNode(component.dataset.id)
-    if (child) {
-      child.style.opacity = "0.5"
-    }
-  }
-
-  // Callback when drag stops (whether dropped or not)
-  const onDragEnd = () => {
-    // Reset opacity style
-    if (dragInfo) {
-      const child = getDOMNode(dragInfo.target)
-      if (child) {
-        child.style.opacity = ""
-      }
-    }
-
-    // Reset state and styles
-    dragInfo = null
-    dropInfo = null
-    builderStore.actions.setDragging(false)
-  }
-
-  const variance = arr => {
-    const mean = arr.reduce((a, b) => a + b, 0) / arr.length
-    let squareSum = 0
-    arr.forEach(value => {
-      const delta = value - mean
-      squareSum += delta * delta
-    })
-    return squareSum / arr.length
+    // Execute this asynchronously so we don't kill the drag event by hiding
+    // the component in the same handler as starting the drag event
+    setTimeout(() => {
+      onDragEnter(e)
+    }, 0)
   }
 
   const handleEvent = e => {
@@ -106,7 +112,7 @@
     const childCoords = [...(node.children || [])].map(node => {
       const bounds = node.children[0].getBoundingClientRect()
       return {
-        placeholder: node.classList.contains("placeholder"),
+        // placeholder: node.classList.contains("placeholder"),
         centerX: bounds.left + bounds.width / 2,
         centerY: bounds.top + bounds.height / 2,
         left: bounds.left,
@@ -117,35 +123,45 @@
     })
 
     // Calculate the variance between each set of positions on the children
-    const variances = Object.keys(childCoords[0])
-      .filter(x => x !== "placeholder")
-      .map(key => {
-        const coords = childCoords.map(x => x[key])
-        return {
-          variance: variance(coords),
-          side: key,
-        }
-      })
+    const variances = Object.keys(childCoords[0]).map(key => {
+      const coords = childCoords.map(x => x[key])
+      return {
+        variance: variance(coords),
+        side: key,
+      }
+    })
 
     // Sort by variance. The lowest variance position indicates whether we are
     // in a row or column layout
     variances.sort((a, b) => {
       return a.variance < b.variance ? -1 : 1
     })
-    console.log(variances[0].side)
     const column = ["centerX", "left", "right"].includes(variances[0].side)
     console.log(column ? "COL" : "ROW")
 
-    // Find the correct index to drop in based on the midpoints of each child
-    // in their primary axis.
-    // Here we filter out the placeholder component as we do not want it to
-    // affect the determination of the new index.
-    const childPositions = column
-      ? childCoords.filter(x => !x.placeholder).map(x => x.centerY)
-      : childCoords.filter(x => !x.placeholder).map(x => x.centerX)
+    // Calculate breakpoints between children
+    let midpoints = []
+    for (let i = 0; i < childCoords.length - 1; i++) {
+      const child1 = childCoords[i]
+      const child2 = childCoords[i + 1]
+      let midpoint
+      if (column) {
+        const top = Math.min(child1.top, child2.top)
+        const bottom = Math.max(child1.bottom, child2.bottom)
+        midpoint = (top + bottom) / 2
+      } else {
+        const left = Math.min(child1.left, child2.left)
+        const right = Math.max(child1.right, child2.right)
+        midpoint = (left + right) / 2
+      }
+      midpoints.push(midpoint)
+    }
+    // let midpoints = childCoords.map(x => (column ? x.centerY : x.centerX))
+
+    // Determine the index to drop the component in
     const mousePosition = column ? mouseY : mouseX
     let idx = 0
-    while (idx < childPositions.length && childPositions[idx] < mousePosition) {
+    while (idx < midpoints.length && midpoints[idx] < mousePosition) {
       idx++
     }
     placeholderInfo = {
@@ -171,11 +187,7 @@
     }
 
     const component = e.target.closest(".component:not(.block)")
-    if (
-      component &&
-      component.classList.contains("droppable") &&
-      component.dataset.id !== dragInfo.target
-    ) {
+    if (component && component.classList.contains("droppable")) {
       // Do nothing if this is the same target
       if (component.dataset.id === dropInfo?.target) {
         return
@@ -195,51 +207,33 @@
     }
   }
 
-  // Callback when leaving a potential drop target.
-  // Since we don't style our targets, we don't need to unset anything.
-  const onDragLeave = () => {}
-
   // Callback when dropping a drag on top of some component
-  const onDrop = e => {
-    e.preventDefault()
-    dropInfo = null
-    placeholderInfo = null
-    dragInfo = null
-    builderStore.actions.setDragging(false)
-    if (dropInfo?.mode) {
-      // builderStore.actions.moveComponent(
-      //   dragInfo.target,
-      //   dropInfo.target,
-      //   dropInfo.mode
-      // )
-    }
+  const onDrop = () => {
+    console.log("DROP")
+    // builderStore.actions.moveComponent(
+    //   dragInfo.target,
+    //   dropInfo.target,
+    //   dropInfo.mode
+    // )
   }
-
-  $: parent = placeholderInfo?.parent
-  $: index = placeholderInfo?.index
-  $: builderStore.actions.updateDNDPlaceholder(parent, index)
 
   onMount(() => {
     // Events fired on the draggable target
     document.addEventListener("dragstart", onDragStart, false)
-    document.addEventListener("dragend", onDragEnd, false)
 
     // Events fired on the drop targets
     document.addEventListener("dragover", onDragOver, false)
     document.addEventListener("dragenter", onDragEnter, false)
-    document.addEventListener("dragleave", onDragLeave, false)
     document.addEventListener("drop", onDrop, false)
   })
 
   onDestroy(() => {
     // Events fired on the draggable target
     document.removeEventListener("dragstart", onDragStart, false)
-    document.removeEventListener("dragend", onDragEnd, false)
 
     // Events fired on the drop targets
     document.removeEventListener("dragover", onDragOver, false)
     document.removeEventListener("dragenter", onDragEnter, false)
-    document.removeEventListener("dragleave", onDragLeave, false)
     document.removeEventListener("drop", onDrop, false)
   })
 </script>
