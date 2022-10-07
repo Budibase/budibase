@@ -28,7 +28,6 @@
   export let isScreen = false
   export let isBlock = false
   export let parent = null
-  export let index = 0
 
   // Get parent contexts
   const context = getContext("context")
@@ -463,14 +462,13 @@
     data-name={name}
     data-icon={icon}
     data-parent={parent}
-    data-index={index}
   >
     <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
       {#if hasMissingRequiredSettings}
         <ComponentPlaceholder />
       {:else if children.length}
-        {#each children as child, idx (child._id)}
-          <svelte:self instance={child} parent={id} index={idx} />
+        {#each children as child (child._id)}
+          <svelte:self instance={child} parent={id} />
         {/each}
       {:else if emptyState}
         {#if isScreen}
