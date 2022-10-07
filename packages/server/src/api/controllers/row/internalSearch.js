@@ -145,7 +145,7 @@ class QueryBuilder {
    * @param options The preprocess options
    * @returns {string|*}
    */
-  preprocess(value, { escape, lowercase, wrap } = {}) {
+  preprocess(value, { escape, lowercase, wrap, type } = {}) {
     const hasVersion = !!this.version
     // Determine if type needs wrapped
     const originalType = typeof value
@@ -157,8 +157,11 @@ class QueryBuilder {
     if (escape && originalType === "string") {
       value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
     }
+
     // Wrap in quotes
-    if (hasVersion && wrap) {
+    if (originalType === "string" && !isNaN(value) && !type) {
+      value = `"${value}"`
+    } else if (hasVersion && wrap) {
       value = originalType === "number" ? value : `"${value}"`
     }
     return value
@@ -253,6 +256,7 @@ class QueryBuilder {
         value = builder.preprocess(value, {
           escape: true,
           lowercase: true,
+          type: "string",
         })
         return `${key}:${value}*`
       })
@@ -281,6 +285,7 @@ class QueryBuilder {
         value = builder.preprocess(value, {
           escape: true,
           lowercase: true,
+          type: "fuzzy",
         })
         return `${key}:${value}~`
       })
