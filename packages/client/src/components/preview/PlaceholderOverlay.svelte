@@ -1,0 +1,43 @@
+<script>
+  import { onMount } from "svelte"
+
+  let left, top, height, width
+
+  onMount(() => {
+    const interval = setInterval(() => {
+      const node = document.getElementById("placeholder")
+      if (!node) {
+        height = 0
+        width = 0
+      } else {
+        const bounds = node.getBoundingClientRect()
+        left = bounds.left
+        top = bounds.top
+        height = bounds.height
+        width = bounds.width
+      }
+    }, 100)
+
+    return () => {
+      clearInterval(interval)
+    }
+  })
+</script>
+
+{#if left != null}
+  <div
+    class="overlay"
+    style="left: {left}px; top: {top}px; width: {width}px; height: {height}px;"
+  />
+{/if}
+
+<style>
+  .overlay {
+    position: fixed;
+    z-index: 800;
+    background: hsl(160, 64%, 90%);
+    border-radius: 4px;
+    transition: all 130ms ease-out;
+    border: 2px solid var(--spectrum-global-color-static-green-500);
+  }
+</style>

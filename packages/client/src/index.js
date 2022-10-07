@@ -24,6 +24,7 @@ let app
 const loadBudibase = async () => {
   // Update builder store with any builder flags
   builderStore.set({
+    ...get(builderStore),
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
     layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],

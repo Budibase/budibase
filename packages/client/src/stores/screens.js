@@ -48,30 +48,24 @@ const createScreenStore = () => {
       }
 
       // Insert DND placeholder if required
-      const { dndTarget, dndMode, selectedComponentId } = $builderStore
-      const insert = false
-      if (insert && activeScreen && dndTarget && dndMode) {
-        let selectedComponent = findComponentById(
-          activeScreen.props,
-          selectedComponentId
-        )
+      const { dndParent, dndIndex } = $builderStore
+      const insert = true
+      if (insert && activeScreen && dndParent && dndIndex != null) {
+        // let selectedComponent = findComponentById(
+        //   activeScreen.props,
+        //   selectedComponentId
+        // )
+        // delete selectedComponent._component
         const placeholder = {
-          ...selectedComponent,
+          _component: "placeholder",
           _id: "placeholder",
           static: true,
         }
-        // delete selectedComponent._component
-        if (dndMode === "inside") {
-          const target = findComponentById(activeScreen.props, dndTarget)
-          target._children = [placeholder]
+        let parent = findComponentById(activeScreen.props, dndParent)
+        if (!parent._children?.length) {
+          parent._children = [placeholder]
         } else {
-          const path = findComponentPathById(activeScreen.props, dndTarget)
-          const parent = path?.[path.length - 2]
-          if (parent) {
-            const idx = parent._children.findIndex(x => x._id === dndTarget)
-            const delta = dndMode === "below" ? 1 : -1
-            parent._children.splice(idx + delta, 0, placeholder)
-          }
+          parent._children.splice(dndIndex, 0, placeholder)
         }
       }
 
