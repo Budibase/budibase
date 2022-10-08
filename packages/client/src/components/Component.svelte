@@ -495,7 +495,8 @@
     transition: padding 250ms ease, border 250ms ease;
   }
   .component.explode :global(> *) {
-    padding: 16px !important;
+    padding: 32px !important;
+    gap: 16px !important;
     border: 2px dashed var(--spectrum-global-color-gray-400) !important;
     border-radius: 4px !important;
   }
