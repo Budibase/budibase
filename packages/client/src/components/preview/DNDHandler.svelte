@@ -76,34 +76,11 @@
     }, 0)
   }
 
-  let lastX
-  let lastY
-  let lastTime
-
   const processEvent = (mouseX, mouseY) => {
     if (!dropInfo) {
       return null
     }
-
     let { id, parent, node, acceptsChildren, empty } = dropInfo
-
-    // Debounce by 10px difference
-    // if (lastX != null && lastY != null) {
-    //   const delta = Math.abs(mouseY - lastY) + Math.abs(mouseX - lastX)
-    //   if (delta < 10) {
-    //     console.log("delta fail")
-    //     return
-    //   }
-    // }
-    // lastX = mouseX
-    // lastY = mouseY
-
-    // Debounce by time
-    // if (Date.now() - (lastTime || 0) < 100) {
-    //   console.log("time fail")
-    //   return
-    // }
-    // lastTime = Date.now()
 
     // If we're over something that does not accept children then we go up a
     // level and consider the mouse position relative to the parent
@@ -114,7 +91,7 @@
     }
 
     // We're now hovering over something which does accept children.
-    // If it is empty, just go inside it
+    // If it is empty, just go inside it.
     if (empty) {
       placeholderInfo = {
         parent: id,
@@ -143,13 +120,15 @@
     })
 
     // Calculate the variance between each set of positions on the children
-    const variances = Object.keys(childCoords[0]).map(key => {
-      const coords = childCoords.map(x => x[key])
-      return {
-        variance: variance(coords),
-        side: key,
-      }
-    })
+    const variances = Object.keys(childCoords[0])
+      .filter(x => x !== "placeholder")
+      .map(key => {
+        const coords = childCoords.map(x => x[key])
+        return {
+          variance: variance(coords),
+          side: key,
+        }
+      })
 
     // Sort by variance. The lowest variance position indicates whether we are
     // in a row or column layout
@@ -157,76 +136,29 @@
       return a.variance < b.variance ? -1 : 1
     })
     const column = ["centerX", "left", "right"].includes(variances[0].side)
-    console.log(column ? "COL" : "ROW")
 
-    /** SYMMETRICAL BREAKPOINTS **/
-    // let breakpoints = []
-    // for (let i = 0; i < childCoords.length - 1; i++) {
-    //   const child1 = childCoords[i]
-    //   const child2 = childCoords[i + 1]
-    //   let breakpoint
-    //   if (column) {
-    //     const top = Math.min(child1.top, child2.top)
-    //     const bottom = Math.max(child1.bottom, child2.bottom)
-    //     breakpoint = (top + bottom) / 2
-    //   } else {
-    //     const left = Math.min(child1.left, child2.left)
-    //     const right = Math.max(child1.right, child2.right)
-    //     breakpoint = (left + right) / 2
-    //   }
-    //   breakpoints.push(breakpoint)
-    // }
-
-    /** CENTER BREAKPOINTS **/
+    // Calculate breakpoints between child components so we can determine the
+    // index to drop the component in.
+    // We want to ignore the placeholder from this calculation as it should not
+    // be considered a real child of the parent.
     let breakpoints = childCoords
       .filter(x => !x.placeholder)
       .map(x => {
         return column ? x.centerY : x.centerX
       })
 
-    /** NEXT EDGE BREAKPOINTS **/
-    // let breakpoints = []
-    // for (let i = 0; i < childCoords.length; i++) {
-    //   let breakpoint
-    //   if (column) {
-    //     if (mouseY > childCoords[i].top && mouseY < childCoords[i].bottom) {
-    //       // Inside this container
-    //       if (childCoords[i + 1]) {
-    //         breakpoint = childCoords[i + 1].top
-    //       } else {
-    //         breakpoint = childCoords[i].top
-    //       }
-    //     } else {
-    //       breakpoint =
-    //         mouseY < childCoords[i].bottom
-    //           ? childCoords[i].top
-    //           : childCoords[i].bottom
-    //     }
-    //   } else {
-    //     breakpoint =
-    //       mouseX < childCoords[i].left
-    //         ? childCoords[i].left
-    //         : childCoords[i].right
-    //   }
-    //   breakpoints.push(breakpoint)
-    // }
-
     // Determine the index to drop the component in
     const mousePosition = column ? mouseY : mouseX
-
     let idx = 0
     while (idx < breakpoints.length && breakpoints[idx] < mousePosition) {
       idx++
     }
-
-    // console.log(mousePosition, breakpoints.map(Math.round), idx)
-
     placeholderInfo = {
       parent: id,
       index: idx,
     }
   }
-  const throttledProcessEvent = Utils.throttle(processEvent, 250)
+  const throttledProcessEvent = Utils.throttle(processEvent, 200)
 
   const handleEvent = e => {
     e.preventDefault()
@@ -235,7 +167,6 @@
 
   // Callback when on top of a component
   const onDragOver = e => {
-    // Skip if we aren't validly dragging currently
     if (!dragInfo || !dropInfo) {
       return
     }
@@ -244,20 +175,12 @@
 
   // Callback when entering a potential drop target
   const onDragEnter = e => {
-    // Skip if we aren't validly dragging currently
-    if (!dragInfo || !e.target.closest) {
+    if (!dragInfo) {
       return
     }
 
-    const component = e.target.closest(".component:not(.block)")
+    const component = e.target?.closest?.(".component:not(.block)")
     if (component && component.classList.contains("droppable")) {
-      // Do nothing if this is the same target
-      if (component.dataset.id === dropInfo?.target) {
-        return
-      }
-
-      // Precompute and store some info to avoid recalculating everything in
-      // dragOver
       dropInfo = {
         id: component.dataset.id,
         parent: component.dataset.parent,
@@ -265,7 +188,6 @@
         empty: component.classList.contains("empty"),
         acceptsChildren: component.classList.contains("parent"),
       }
-
       handleEvent(e)
     }
   }
