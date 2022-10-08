@@ -459,9 +459,6 @@
     class:block={isBlock}
     class:explode={interactive && hasChildren && inDndPath}
     class:placeholder={id === "placeholder"}
-    class:screen={isScreen}
-    class:dragging={$builderStore.selectedComponentId === id &&
-      $builderStore.isDragging}
     data-id={id}
     data-name={name}
     data-icon={icon}
@@ -495,7 +492,7 @@
     transition: padding 250ms ease, border 250ms ease;
   }
   .component.explode :global(> *) {
-    padding: 32px !important;
+    padding: 16px !important;
     gap: 16px !important;
     border: 2px dashed var(--spectrum-global-color-gray-400) !important;
     border-radius: 4px !important;
@@ -508,8 +505,5 @@
   }
   .editing :global(*:hover) {
     cursor: auto;
-  }
-  .dragging {
-    pointer-events: none;
   }
 </style>
