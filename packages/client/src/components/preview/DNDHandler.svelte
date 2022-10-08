@@ -5,12 +5,14 @@
   import PlaceholderOverlay from "./PlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
 
-  let dragInfo
+  let sourceId
+  let targetInfo
   let dropInfo
-  let placeholderInfo
 
-  $: parent = placeholderInfo?.parent
-  $: index = placeholderInfo?.index
+  // These reactive statements are just a trick to only update the store when
+  // the value of one of the properties actually changes
+  $: parent = dropInfo?.parent
+  $: index = dropInfo?.index
   $: builderStore.actions.updateDNDPlaceholder(parent, index)
 
   // Util to get the inner DOM node by a component ID
@@ -35,14 +37,14 @@
     console.log("END")
 
     // Reset state
-    dragInfo = null
+    sourceId = null
+    targetInfo = null
     dropInfo = null
-    placeholderInfo = null
     builderStore.actions.setDragging(false)
 
     // Reset listener
-    if (dragInfo?.target) {
-      const component = document.getElementsByClassName(dragInfo.target)[0]
+    if (sourceId) {
+      const component = document.getElementsByClassName(sourceId)[0]
       if (component) {
         component.removeEventListener("dragend", stopDragging)
       }
@@ -63,10 +65,8 @@
     component.addEventListener("dragend", stopDragging)
 
     // Update state
-    dragInfo = {
-      target: component.dataset.id,
-    }
-    builderStore.actions.selectComponent(dragInfo.target)
+    sourceId = component.dataset.id
+    builderStore.actions.selectComponent(sourceId)
     builderStore.actions.setDragging(true)
 
     // Execute this asynchronously so we don't kill the drag event by hiding
@@ -76,11 +76,13 @@
     }, 0)
   }
 
+  // Core logic for handling drop events and determining where to render the
+  // drop target placeholder
   const processEvent = (mouseX, mouseY) => {
-    if (!dropInfo) {
+    if (!targetInfo) {
       return null
     }
-    let { id, parent, node, acceptsChildren, empty } = dropInfo
+    let { id, parent, node, acceptsChildren, empty } = targetInfo
 
     // If we're over something that does not accept children then we go up a
     // level and consider the mouse position relative to the parent
@@ -93,7 +95,7 @@
     // We're now hovering over something which does accept children.
     // If it is empty, just go inside it.
     if (empty) {
-      placeholderInfo = {
+      dropInfo = {
         parent: id,
         index: 0,
       }
@@ -153,7 +155,7 @@
     while (idx < breakpoints.length && breakpoints[idx] < mousePosition) {
       idx++
     }
-    placeholderInfo = {
+    dropInfo = {
       parent: id,
       index: idx,
     }
@@ -167,7 +169,7 @@
 
   // Callback when on top of a component
   const onDragOver = e => {
-    if (!dragInfo || !dropInfo) {
+    if (!sourceId || !targetInfo) {
       return
     }
     handleEvent(e)
@@ -175,13 +177,15 @@
 
   // Callback when entering a potential drop target
   const onDragEnter = e => {
-    if (!dragInfo) {
+    if (!sourceId) {
       return
     }
 
+    // Find the next valid component to consider dropping over, ignoring nested
+    // block components
     const component = e.target?.closest?.(".component:not(.block)")
     if (component && component.classList.contains("droppable")) {
-      dropInfo = {
+      targetInfo = {
         id: component.dataset.id,
         parent: component.dataset.parent,
         node: getDOMNode(component.dataset.id),
