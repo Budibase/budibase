@@ -4,6 +4,8 @@
  * @param fn the async function to run
  * @return {Promise} a sequential version of the function
  */
+import { lastIndexOf } from "lodash/array"
+
 export const sequential = fn => {
   let queue = []
   return async (...params) => {
@@ -39,4 +41,38 @@ export const debounce = (callback, minDelay = 1000) => {
       }, minDelay)
     })
   }
+}
+
+/**
+ * Utility to throttle invocations of a synchronous function. This is better
+ * than a simple debounce invocation for a number of reasons. Features include:
+ * - First invocation is immediate (no initial delay)
+ * - Every invocation has the latest params (no stale params)
+ * - There will always be a final invocation with the last params (no missing
+ *   final update)
+ * @param callback
+ * @param minDelay
+ * @returns {Function} a throttled version function
+ */
+export const throttle = (callback, minDelay = 1000) => {
+  let lastParams
+  let stalled = false
+  let pending = false
+  const invoke = (...params) => {
+    lastParams = params
+    if (stalled) {
+      pending = true
+      return
+    }
+    callback(...lastParams)
+    stalled = true
+    setTimeout(() => {
+      stalled = false
+      if (pending) {
+        pending = false
+        invoke(...lastParams)
+      }
+    }, minDelay)
+  }
+  return invoke
 }
