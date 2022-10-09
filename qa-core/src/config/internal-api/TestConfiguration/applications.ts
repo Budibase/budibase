@@ -59,8 +59,8 @@ export default class AppApi {
     return [response, json]
   }
 
-  async revert(appId: string): Promise<[Response, Application]> {
-    const response = await this.api.post(`/applications/${appId}/client/revert`)
+  async revert(appId: string): Promise<[Response, { message: string }]> {
+    const response = await this.api.post(`/dev/${appId}/revert`)
     const json = await response.json()
     return [response, json]
   }
@@ -82,8 +82,8 @@ export default class AppApi {
     const json = await response.json()
     return [response, json]
   }
-  async addScreentoApp(body: any): Promise<[Response, Application]> {
 
+  async addScreentoApp(body: any): Promise<[Response, Application]> {
     const response = await this.api.post(`/screens`, { body })
     const json = await response.json()
     return [response, json]
