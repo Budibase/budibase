@@ -158,11 +158,11 @@ describe("Internal API - /applications endpoints", () => {
     expect(screenResponse).toHaveStatusCode(200)
     expect(screen._id).toBeDefined()
 
-
-    const [revertResponse, revert] = await config.applications.revert(app.appId ? app.appId : "")
+    // // Revert the app to published state
+    const [revertResponse, revert] = await config.applications.revert(app.appId as string)
     expect(revertResponse).toHaveStatusCode(200)
     expect(revert).toEqual({
-      message: "App reverted successfully."
+      message: "Reverted changes successfully."
     })
 
     // Check screen is removed
