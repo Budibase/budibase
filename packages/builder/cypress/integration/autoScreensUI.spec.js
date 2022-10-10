@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(['smoke', 'all'], () => {
-  context("Auto Screens UI", () => {
+  xcontext("Auto Screens UI", () => {
     before(() => {
       cy.login()
       cy.deleteAllApps()
