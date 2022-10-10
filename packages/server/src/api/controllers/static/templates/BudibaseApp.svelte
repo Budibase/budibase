@@ -88,9 +88,7 @@
   <!-- But before loadBudibase is called -->
   {#if usedPlugins?.length}
     {#each usedPlugins as plugin}
-      <script
-        type="application/javascript"
-        src={`/plugins/${plugin.jsUrl}`}></script>
+      <script type="application/javascript" src={plugin.jsUrl}></script>
     {/each}
   {/if}
   <script type="application/javascript">

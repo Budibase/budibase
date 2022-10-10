@@ -103,7 +103,7 @@ exports.revert = async ctx => {
     target: appId,
   })
   try {
-    if (!env.isTest()) {
+    if (!env.isCypress()) {
       // in-memory db stalls on rollback
       await replication.rollback()
     }
