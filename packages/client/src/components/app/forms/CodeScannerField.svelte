@@ -41,7 +41,7 @@
       on:change={handleUpdate}
       disabled={fieldState.disabled}
       {allowManualEntry}
-      {scanText}
+      scanButtonText={scanText}
     />
   {/if}
 </Field>

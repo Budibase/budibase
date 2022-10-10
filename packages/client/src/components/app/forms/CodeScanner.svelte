@@ -2,13 +2,12 @@
   import { ModalContent, Modal, Icon, ActionButton } from "@budibase/bbui"
   import { Input, Button, StatusLight } from "@budibase/bbui"
   import { Html5Qrcode } from "html5-qrcode"
+  import { createEventDispatcher } from "svelte"
 
   export let value
   export let disabled = false
   export let allowManualEntry = false
   export let scanButtonText = "Scan code"
-
-  import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
   let videoEle
