@@ -2,6 +2,9 @@ import { writable } from "svelte/store"
 import { AppStatus } from "../../constants"
 import { API } from "api"
 
+// properties that should always come from the dev app, not the deployed
+const DEV_PROPS = ["updatedBy", "updatedAt"]
+
 const extractAppId = id => {
   const split = id?.split("_") || []
   return split.length ? split[split.length - 1] : null
@@ -57,9 +60,19 @@ export function createAppStore() {
           return
         }
 
+        let devProps = {}
+        if (appMap[id]) {
+          const entries = Object.entries(appMap[id]).filter(
+            ([key]) => DEV_PROPS.indexOf(key) !== -1
+          )
+          entries.forEach(entry => {
+            devProps[entry[0]] = entry[1]
+          })
+        }
         appMap[id] = {
           ...appMap[id],
           ...app,
+          ...devProps,
           prodId: app.appId,
           prodRev: app._rev,
         }

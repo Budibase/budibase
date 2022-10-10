@@ -1,6 +1,6 @@
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { UserStatus } = require("@budibase/backend-core/constants")
-const { ObjectStoreBuckets } = require("@budibase/backend-core/objectStore")
+const { objectStore } = require("@budibase/backend-core")
 
 exports.JobQueues = {
   AUTOMATIONS: "automationQueue",
@@ -209,6 +209,8 @@ exports.AutomationErrors = {
 }
 
 // pass through the list from the auth/core lib
-exports.ObjectStoreBuckets = ObjectStoreBuckets
+exports.ObjectStoreBuckets = objectStore.ObjectStoreBuckets
+
+exports.ATTACHMENT_PATH = "attachments"
 
 exports.MAX_AUTOMATION_RECURRING_ERRORS = 5

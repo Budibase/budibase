@@ -18,6 +18,10 @@ const STATE = {
   bucketCreationPromises: {},
 }
 
+type ListParams = {
+  ContinuationToken?: string
+}
+
 const CONTENT_TYPE_MAP: any = {
   html: "text/html",
   css: "text/css",
@@ -93,7 +97,7 @@ export const ObjectStore = (bucket: any) => {
  * Given an object store and a bucket name this will make sure the bucket exists,
  * if it does not exist then it will create it.
  */
-export const makeSureBucketExists = async (client: any, bucketName: any) => {
+export const makeSureBucketExists = async (client: any, bucketName: string) => {
   bucketName = sanitizeBucket(bucketName)
   try {
     await client
@@ -168,8 +172,8 @@ export const upload = async ({
  * through to the object store.
  */
 export const streamUpload = async (
-  bucketName: any,
-  filename: any,
+  bucketName: string,
+  filename: string,
   stream: any,
   extra = {}
 ) => {
@@ -202,7 +206,7 @@ export const streamUpload = async (
  * retrieves the contents of a file from the object store, if it is a known content type it
  * will be converted, otherwise it will be returned as a buffer stream.
  */
-export const retrieve = async (bucketName: any, filepath: any) => {
+export const retrieve = async (bucketName: string, filepath: string) => {
   const objectStore = ObjectStore(bucketName)
   const params = {
     Bucket: sanitizeBucket(bucketName),
@@ -217,10 +221,38 @@ export const retrieve = async (bucketName: any, filepath: any) => {
   }
 }
 
+export const listAllObjects = async (bucketName: string, path: string) => {
+  const objectStore = ObjectStore(bucketName)
+  const list = (params: ListParams = {}) => {
+    return objectStore
+      .listObjectsV2({
+        ...params,
+        Bucket: sanitizeBucket(bucketName),
+        Prefix: sanitizeKey(path),
+      })
+      .promise()
+  }
+  let isTruncated = false,
+    token,
+    objects: AWS.S3.Types.Object[] = []
+  do {
+    let params: ListParams = {}
+    if (token) {
+      params.ContinuationToken = token
+    }
+    const response = await list(params)
+    if (response.Contents) {
+      objects = objects.concat(response.Contents)
+    }
+    isTruncated = !!response.IsTruncated
+  } while (isTruncated)
+  return objects
+}
+
 /**
  * Same as retrieval function but puts to a temporary file.
  */
-export const retrieveToTmp = async (bucketName: any, filepath: any) => {
+export const retrieveToTmp = async (bucketName: string, filepath: string) => {
   bucketName = sanitizeBucket(bucketName)
   filepath = sanitizeKey(filepath)
   const data = await retrieve(bucketName, filepath)
@@ -229,10 +261,30 @@ export const retrieveToTmp = async (bucketName: any, filepath: any) => {
   return outputPath
 }
 
+export const retrieveDirectory = async (bucketName: string, path: string) => {
+  let writePath = join(budibaseTempDir(), v4())
+  const objects = await listAllObjects(bucketName, path)
+  let fullObjects = await Promise.all(
+    objects.map(obj => retrieve(bucketName, obj.Key!))
+  )
+  let count = 0
+  for (let obj of objects) {
+    const filename = obj.Key!
+    const data = fullObjects[count++]
+    const possiblePath = filename.split("/")
+    if (possiblePath.length > 1) {
+      const dirs = possiblePath.slice(0, possiblePath.length - 1)
+      fs.mkdirSync(join(writePath, ...dirs), { recursive: true })
+    }
+    fs.writeFileSync(join(writePath, ...possiblePath), data)
+  }
+  return writePath
+}
+
 /**
  * Delete a single file.
  */
-export const deleteFile = async (bucketName: any, filepath: any) => {
+export const deleteFile = async (bucketName: string, filepath: string) => {
   const objectStore = ObjectStore(bucketName)
   await makeSureBucketExists(objectStore, bucketName)
   const params = {

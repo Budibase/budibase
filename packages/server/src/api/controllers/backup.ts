@@ -9,7 +9,7 @@ export async function exportAppDump(ctx: any) {
   excludeRows = isQsTrue(excludeRows)
   const backupIdentifier = `${appName}-export-${new Date().getTime()}.txt`
   ctx.attachment(backupIdentifier)
-  ctx.body = await sdk.apps.exports.streamBackup(appId, excludeRows)
+  ctx.body = await sdk.apps.exports.streamExportApp(appId, excludeRows)
 
   await context.doInAppContext(appId, async () => {
     const appDb = context.getAppDB()
