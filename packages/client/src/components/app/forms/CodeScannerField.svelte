@@ -1,6 +1,6 @@
 <script>
   import Field from "./Field.svelte"
-  import CodeScanner from "../CodeScanner.svelte"
+  import CodeScanner from "./CodeScanner.svelte"
 
   export let field
   export let label
@@ -14,6 +14,8 @@
 
   let fieldState
   let fieldApi
+
+  $: scanText = scanButtonText || "Scan code"
 
   const handleUpdate = e => {
     const changed = fieldApi.setValue(e.detail)
@@ -39,7 +41,7 @@
       on:change={handleUpdate}
       disabled={fieldState.disabled}
       {allowManualEntry}
-      {scanButtonText}
+      {scanText}
     />
   {/if}
 </Field>

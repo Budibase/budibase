@@ -3163,7 +3163,6 @@
     "styles": [
       "size"
     ],
-    "draggable": true,
     "illegalChildren": [
       "section"
     ],
@@ -3181,7 +3180,7 @@
       },
       {
         "type": "text",
-        "label": "Button",
+        "label": "Button text",
         "key": "scanButtonText"
       },
       {
@@ -4450,7 +4449,9 @@
   "formblock": {
     "name": "Form Block",
     "icon": "Form",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "block": true,
     "info": "Form blocks are only compatible with internal or SQL tables",
     "settings": [
@@ -4458,7 +4459,11 @@
         "type": "select",
         "label": "Type",
         "key": "actionType",
-        "options": ["Create", "Update", "View"],
+        "options": [
+          "Create",
+          "Update",
+          "View"
+        ],
         "defaultValue": "Create"
       },
       {
