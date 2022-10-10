@@ -3,10 +3,7 @@ import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
 import { RoleUtils } from "@budibase/frontend-core"
-import {
-  findComponentById,
-  findComponentPathById,
-} from "../utils/components.js"
+import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
 
 const createScreenStore = () => {
@@ -51,11 +48,16 @@ const createScreenStore = () => {
       const { dndParent, dndIndex, selectedComponentId } = $builderStore
       const insert = true
       if (insert && activeScreen && dndParent && dndIndex != null) {
-        let selectedComponent = findComponentById(
+        // Remove selected component from tree
+        let selectedParent = findComponentParent(
           activeScreen.props,
           selectedComponentId
         )
-        delete selectedComponent._component
+        selectedParent._children = selectedParent._children?.filter(
+          x => x._id !== selectedComponentId
+        )
+
+        // Insert placeholder
         const placeholder = {
           _component: "placeholder",
           _id: "placeholder",
