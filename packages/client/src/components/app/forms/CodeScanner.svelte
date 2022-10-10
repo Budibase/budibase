@@ -6,7 +6,7 @@
   export let value
   export let disabled = false
   export let allowManualEntry = false
-  export let scanButtonText = "Scan Code"
+  export let scanButtonText = "Scan code"
 
   import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
@@ -161,17 +161,17 @@
 
       <div slot="footer">
         <div class="footer-buttons">
-          {#if allowManualEntry}
+          {#if allowManualEntry && !manualMode}
             <Button
               group
               secondary
               newStyles
               on:click={() => {
-                manualMode = !manualMode
+                manualMode = true
                 camModal.hide()
               }}
             >
-              Enter Manually
+              Enter manually
             </Button>
           {/if}
 
@@ -193,7 +193,7 @@
 <style>
   #reader :global(video) {
     border-radius: 4px;
-    border: var(--border-light-2);
+    border: 2px solid var(--spectrum-global-color-gray-300);
     overflow: hidden;
   }
   .field-display :global(.spectrum-Tags-item) {
@@ -219,7 +219,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    border: var(--border-light-2);
+    border: 2px solid var(--spectrum-global-color-gray-300);
     background-color: var(--spectrum-global-color-gray-200);
     flex-direction: column;
     gap: var(--spectrum-global-dimension-static-size-200);
