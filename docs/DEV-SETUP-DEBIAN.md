@@ -1,12 +1,15 @@
 ## Dev Environment on Debian 11
 
-### Install Node
+### Install NVM & Node 14
+NVM documentation: https://github.com/nvm-sh/nvm#installing-and-updating
 
-Budibase requires a recent version of node (14+):
+Install NVM
 ```
-curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
-apt -y install nodejs
-node -v
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+```
+Install Node 14
+```
+nvm install 14
 ```
 
 ### Install npm requirements
@@ -31,7 +34,7 @@ This setup process was tested on Debian 11 (bullseye) with version numbers show 
 
 - Docker: 20.10.5
 - Docker-Compose: 1.29.2
-- Node: v16.15.1
+- Node: v14.20.1
 - Yarn: 1.22.19
 - Lerna: 5.1.4
 

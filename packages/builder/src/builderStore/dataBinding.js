@@ -169,7 +169,12 @@ export const getComponentBindableProperties = (asset, componentId) => {
 /**
  * Gets all data provider components above a component.
  */
-export const getContextProviderComponents = (asset, componentId, type) => {
+export const getContextProviderComponents = (
+  asset,
+  componentId,
+  type,
+  options = { includeSelf: false }
+) => {
   if (!asset || !componentId) {
     return []
   }
@@ -177,7 +182,9 @@ export const getContextProviderComponents = (asset, componentId, type) => {
   // Get the component tree leading up to this component, ignoring the component
   // itself
   const path = findComponentPath(asset.props, componentId)
-  path.pop()
+  if (!options?.includeSelf) {
+    path.pop()
+  }
 
   // Filter by only data provider components
   return path.filter(component => {
@@ -396,19 +403,17 @@ export const getUserBindings = () => {
 
   bindings = keys.reduce((acc, key) => {
     const fieldSchema = schema[key]
-    if (fieldSchema.type !== "link") {
-      acc.push({
-        type: "context",
-        runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
-        readableBinding: `Current User.${key}`,
-        // Field schema and provider are required to construct relationship
-        // datasource options, based on bindable properties
-        fieldSchema,
-        providerId: "user",
-        category: "Current User",
-        icon: "User",
-      })
-    }
+    acc.push({
+      type: "context",
+      runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
+      readableBinding: `Current User.${key}`,
+      // Field schema and provider are required to construct relationship
+      // datasource options, based on bindable properties
+      fieldSchema,
+      providerId: "user",
+      category: "Current User",
+      icon: "User",
+    })
     return acc
   }, [])
 
@@ -800,6 +805,17 @@ export const buildFormSchema = component => {
   if (!component) {
     return schema
   }
+
+  // If this is a form block, simply use the fields setting
+  if (component._component.endsWith("formblock")) {
+    let schema = {}
+    component.fields?.forEach(field => {
+      schema[field] = { type: "string" }
+    })
+    return schema
+  }
+
+  // Otherwise find all field component children
   const settings = getComponentSettings(component._component)
   const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")
