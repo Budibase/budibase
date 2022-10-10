@@ -46,4 +46,10 @@ export default class AppApi {
     const json = await response.json()
     return [response, json.data]
   }
+
+  async getRoutes(): Promise<[Response, any]> {
+    const response = await this.api.get(`/routing`)
+    const json = await response.json()
+    return [response, json]
+  }
 }
