@@ -160,7 +160,7 @@
       index: idx,
     }
   }
-  const throttledProcessEvent = Utils.throttle(processEvent, 200)
+  const throttledProcessEvent = Utils.throttle(processEvent, 130)
 
   const handleEvent = e => {
     e.preventDefault()
