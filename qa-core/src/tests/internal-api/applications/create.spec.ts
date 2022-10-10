@@ -128,7 +128,6 @@ describe("Internal API - /applications endpoints", () => {
     expect(updatedApp.name).not.toEqual(app.name)
   })
 
-  // Skip this test because of the if line 44 in InternalAPIClient.ts
   it("POST - Revert Changes without changes", async () => {
     const [response, app] = await config.applications.create(generateApp())
     expect(response).toHaveStatusCode(200)
