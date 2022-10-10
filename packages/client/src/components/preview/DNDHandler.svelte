@@ -1,9 +1,11 @@
 <script>
   import { onMount, onDestroy } from "svelte"
+  import { get } from "svelte/store"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import { builderStore } from "stores"
+  import { builderStore, componentStore } from "stores"
   import PlaceholderOverlay from "./PlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
+  import { findComponentById } from "utils/components.js"
 
   let sourceId
   let targetInfo
@@ -34,8 +36,6 @@
 
   // Callback when drag stops (whether dropped or not)
   const stopDragging = () => {
-    console.log("END")
-
     // Reset state
     sourceId = null
     targetInfo = null
@@ -198,12 +198,37 @@
 
   // Callback when dropping a drag on top of some component
   const onDrop = () => {
-    console.log("DROP")
-    // builderStore.actions.moveComponent(
-    //   dragInfo.target,
-    //   dropInfo.target,
-    //   dropInfo.mode
-    // )
+    let target, mode
+
+    // Convert parent + index into target + mode
+    if (sourceId && dropInfo?.parent && dropInfo.index != null) {
+      const parent = findComponentById(
+        get(componentStore).currentAsset?.props,
+        dropInfo.parent
+      )
+      if (!parent) {
+        return
+      }
+
+      // Filter out source component from consideration
+      const children = parent._children?.filter(x => x._id !== sourceId)
+
+      // Use inside if no existing children
+      if (!children?.length) {
+        target = parent._id
+        mode = "inside"
+      } else if (dropInfo.index === 0) {
+        target = children[0]?._id
+        mode = "above"
+      } else {
+        target = children[dropInfo.index - 1]?._id
+        mode = "below"
+      }
+    }
+
+    if (target && mode) {
+      builderStore.actions.moveComponent(sourceId, target, mode)
+    }
   }
 
   onMount(() => {
