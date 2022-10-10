@@ -252,7 +252,7 @@ class Orchestrator {
     let loopStepNumber: any = undefined
     let loopSteps: LoopStep[] | undefined = []
     let metadata
-
+    let wasLoopStep = false
     // check if this is a recurring automation,
     if (isProdAppID(this._appId) && isRecurring(automation)) {
       metadata = await this.getMetadata()
@@ -267,6 +267,7 @@ class Orchestrator {
       let input,
         iterations = 1,
         iterationCount = 0
+
       if (step.stepId === LOOP_STEP_ID) {
         loopStep = step
         loopStepNumber = stepCount
@@ -277,10 +278,8 @@ class Orchestrator {
         input = await processObject(loopStep.inputs, this._context)
         iterations = getLoopIterations(loopStep as LoopStep, input)
       }
-
       for (let index = 0; index < iterations; index++) {
         let originalStepInput = cloneDeep(step.inputs)
-
         // Handle if the user has set a max iteration count or if it reaches the max limit set by us
         if (loopStep && input.binding) {
           let newInput = await processObject(
@@ -313,7 +312,6 @@ class Orchestrator {
           } else {
             item = loopStep.inputs.binding
           }
-
           this._context.steps[loopStepNumber] = {
             currentItem: item[index],
           }
@@ -331,6 +329,16 @@ class Orchestrator {
                       innerValue,
                       `steps.${loopStepNumber}`
                     )
+                } else if (typeof value === "object") {
+                  for (let [innerObject, innerValue] of Object.entries(
+                    originalStepInput[key][innerKey]
+                  )) {
+                    originalStepInput[key][innerKey][innerObject] =
+                      automationUtils.substituteLoopStep(
+                        innerValue,
+                        `steps.${loopStepNumber}`
+                      )
+                  }
                 }
               }
             } else {
@@ -386,6 +394,7 @@ class Orchestrator {
         let stepFn = await this.getStepFunctionality(step.stepId)
         let inputs = await processObject(originalStepInput, this._context)
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
+
         try {
           // appId is always passed
           const outputs = await stepFn({
@@ -394,6 +403,7 @@ class Orchestrator {
             emitter: this._emitter,
             context: this._context,
           })
+
           this._context.steps[stepCount] = outputs
           // if filter causes us to stop execution don't break the loop, set a var
           // so that we can finish iterating through the steps and record that it stopped
@@ -419,6 +429,7 @@ class Orchestrator {
           console.error(`Automation error - ${step.stepId} - ${err}`)
           return err
         }
+
         if (loopStep) {
           iterationCount++
           if (index === iterations - 1) {
@@ -427,6 +438,13 @@ class Orchestrator {
             break
           }
         }
+      }
+
+      // Delete the step after the loop step as it's irrelevant, since information is included
+      // in the loop step
+      if (wasLoopStep) {
+        this._context.steps.splice(loopStepNumber + 1, 1)
+        wasLoopStep = false
       }
 
       if (loopSteps && loopSteps.length) {
@@ -441,9 +459,10 @@ class Orchestrator {
           outputs: tempOutput,
           inputs: step.inputs,
         })
+        this._context.steps[loopStepNumber] = tempOutput
 
-        this._context.steps.splice(loopStepNumber, 0, tempOutput)
         loopSteps = undefined
+        wasLoopStep = true
       }
     }
 
