@@ -2,7 +2,7 @@ import generator from "../../generator"
 
 const randomId = generator.guid()
 
-const generateScreen = (): any => ({
+const generateScreen = (roleId: string): any => ({
     showNavigation: true,
     width: "Large",
     name: randomId,
@@ -26,7 +26,7 @@ const generateScreen = (): any => ({
         gap: "M"
     }, routing: {
         route: "/test",
-        roleId: "BASIC",
+        roleId: roleId,
         homeScreen: false
     },
 })

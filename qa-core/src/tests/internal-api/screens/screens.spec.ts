@@ -19,17 +19,20 @@ describe("Internal API - /screens endpoints", () => {
     await config.afterAll()
   })
 
-  it("POST - Create a BASIC screen", async () => {
+  it("POST - Create a screen with each role type", async () => {
     // Create app
     const [appResponse, app] = await appConfig.applications.create(generateApp())
     expect(appResponse).toHaveStatusCode(200)
     expect(app._id).toBeDefined()
     
     // Create Screen
+    const roleArray = ["BASIC", "POWER", "ADMIN", "PUBLIC"]
     appConfig.applications.api.appId = app.appId
-    const [response, screen] = await config.screen.createScreen(generateScreen())
-    expect(response).toHaveStatusCode(200)
-    expect(screen.routing.roleId).toEqual("BASIC")
+    for (let i = 0; i < 4; i++) {
+      const [response, screen] = await config.screen.createScreen(generateScreen(roleArray[i]))
+      expect(response).toHaveStatusCode(200)
+      expect(screen.routing.roleId).toEqual(roleArray[i])
+    }
   })
 
   it("GET - Fetch screens", async () => {
@@ -40,7 +43,7 @@ describe("Internal API - /screens endpoints", () => {
     
     // Create Screen
     appConfig.applications.api.appId = app.appId
-    const [response, screen] = await config.screen.createScreen(generateScreen())
+    const [response, screen] = await config.screen.createScreen(generateScreen("BASIC"))
     expect(response).toHaveStatusCode(200)
 
     // Check screen exists
@@ -57,7 +60,7 @@ describe("Internal API - /screens endpoints", () => {
     
     // Create Screen
     appConfig.applications.api.appId = app.appId
-    const [screenResponse, screen] = await config.screen.createScreen(generateScreen())
+    const [screenResponse, screen] = await config.screen.createScreen(generateScreen("BASIC"))
     expect(screenResponse).toHaveStatusCode(200)
     expect(screen._id).toBeDefined()
 
