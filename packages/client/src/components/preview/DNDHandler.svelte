@@ -210,8 +210,10 @@
         return
       }
 
-      // Filter out source component from consideration
-      const children = parent._children?.filter(x => x._id !== sourceId)
+      // Filter out source component and placeholder from consideration
+      const children = parent._children?.filter(
+        x => x._id !== "placeholder" && x._id !== sourceId
+      )
 
       // Use inside if no existing children
       if (!children?.length) {
