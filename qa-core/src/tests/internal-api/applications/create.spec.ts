@@ -129,7 +129,7 @@ describe("Internal API - /applications endpoints", () => {
   })
 
   // Skip this test because of the if line 44 in InternalAPIClient.ts
-  it.skip("POST - Revert Changes without changes", async () => {
+  it("POST - Revert Changes without changes", async () => {
     const [response, app] = await config.applications.create(generateApp())
     expect(response).toHaveStatusCode(200)
     expect(app.appId).toBeDefined()
@@ -138,9 +138,11 @@ describe("Internal API - /applications endpoints", () => {
     const [revertResponse, revert] = await config.applications.revert(app.appId ? app.appId : "")
     expect(revertResponse).toHaveStatusCode(400)
     expect(revert).toEqual({
-      message: "There is no version to revert to",
+      message: "App has not yet been deployed",
+      status: 400
     })
   })
+
 
   it("POST - Revert Changes", async () => {
     const [response, app] = await config.applications.create(generateApp())
