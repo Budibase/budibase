@@ -1,37 +1,39 @@
 export class ApexOptionsBuilder {
-  formatters = {
-    ["Default"]: val => (isNaN(val) ? val : Math.round(val * 100) / 100),
-    ["Thousands"]: val => `${Math.round(val / 1000)}K`,
-    ["Millions"]: val => `${Math.round(val / 1000000)}M`,
-  }
-  options = {
-    series: [],
-    legend: {
-      show: false,
-      position: "top",
-      horizontalAlign: "right",
-      showForSingleSeries: true,
-      showForNullSeries: true,
-      showForZeroSeries: true,
-    },
-    chart: {
-      toolbar: {
+  constructor() {
+    this.formatters = {
+      ["Default"]: val => (isNaN(val) ? val : Math.round(val * 100) / 100),
+      ["Thousands"]: val => `${Math.round(val / 1000)}K`,
+      ["Millions"]: val => `${Math.round(val / 1000000)}M`,
+    }
+    this.options = {
+      series: [],
+      legend: {
         show: false,
+        position: "top",
+        horizontalAlign: "right",
+        showForSingleSeries: true,
+        showForNullSeries: true,
+        showForZeroSeries: true,
       },
-      zoom: {
-        enabled: false,
+      chart: {
+        toolbar: {
+          show: false,
+        },
+        zoom: {
+          enabled: false,
+        },
       },
-    },
-    xaxis: {
-      labels: {
-        formatter: this.formatters.Default,
+      xaxis: {
+        labels: {
+          formatter: this.formatters.Default,
+        },
       },
-    },
-    yaxis: {
-      labels: {
-        formatter: this.formatters.Default,
+      yaxis: {
+        labels: {
+          formatter: this.formatters.Default,
+        },
       },
-    },
+    }
   }
 
   setOption(path, value) {

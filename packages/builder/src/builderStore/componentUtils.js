@@ -185,43 +185,42 @@ export const makeComponentUnique = component => {
   // Replace component ID
   const oldId = component._id
   const newId = Helpers.uuid()
-  component._id = newId
+  let definition = JSON.stringify(component)
 
-  if (component._children?.length) {
-    let children = JSON.stringify(component._children)
+  // Replace all instances of this ID in HBS bindings
+  definition = definition.replace(new RegExp(oldId, "g"), newId)
 
-    // Replace all instances of this ID in child HBS bindings
-    children = children.replace(new RegExp(oldId, "g"), newId)
+  // Replace all instances of this ID in JS bindings
+  const bindings = findHBSBlocks(definition)
+  bindings.forEach(binding => {
+    // JSON.stringify will have escaped double quotes, so we need
+    // to account for that
+    let sanitizedBinding = binding.replace(/\\"/g, '"')
 
-    // Replace all instances of this ID in child JS bindings
-    const bindings = findHBSBlocks(children)
-    bindings.forEach(binding => {
-      // JSON.stringify will have escaped double quotes, so we need
-      // to account for that
-      let sanitizedBinding = binding.replace(/\\"/g, '"')
+    // Check if this is a valid JS binding
+    let js = decodeJSBinding(sanitizedBinding)
+    if (js != null) {
+      // Replace ID inside JS binding
+      js = js.replace(new RegExp(oldId, "g"), newId)
 
-      // Check if this is a valid JS binding
-      let js = decodeJSBinding(sanitizedBinding)
-      if (js != null) {
-        // Replace ID inside JS binding
-        js = js.replace(new RegExp(oldId, "g"), newId)
+      // Create new valid JS binding
+      let newBinding = encodeJSBinding(js)
 
-        // Create new valid JS binding
-        let newBinding = encodeJSBinding(js)
+      // Replace escaped double quotes
+      newBinding = newBinding.replace(/"/g, '\\"')
 
-        // Replace escaped double quotes
-        newBinding = newBinding.replace(/"/g, '\\"')
+      // Insert new JS back into binding.
+      // A single string replace here is better than a regex as
+      // the binding contains special characters, and we only need
+      // to replace a single instance.
+      definition = definition.replace(binding, newBinding)
+    }
+  })
 
-        // Insert new JS back into binding.
-        // A single string replace here is better than a regex as
-        // the binding contains special characters, and we only need
-        // to replace a single instance.
-        children = children.replace(binding, newBinding)
-      }
-    })
-
-    // Recurse on all children
-    component._children = JSON.parse(children)
-    component._children.forEach(makeComponentUnique)
+  // Recurse on all children
+  component = JSON.parse(definition)
+  return {
+    ...component,
+    _children: component._children?.map(makeComponentUnique),
   }
 }
