@@ -99,16 +99,7 @@ export const paginatedUsers = async ({
  */
 export const getUser = async (userId: string) => {
   const db = tenancy.getGlobalDB()
-  let user
-  try {
-    user = await db.get(userId)
-  } catch (err: any) {
-    // no user found, just return nothing
-    if (err.status === 404) {
-      return {}
-    }
-    throw err
-  }
+  let user = await db.get(userId)
   if (user) {
     delete user.password
   }

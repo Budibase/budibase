@@ -1,7 +1,10 @@
-import { closeDB, dangerousGetDB, doWithDB } from "@budibase/backend-core/db"
+import { db as dbCore } from "@budibase/backend-core"
 import { budibaseTempDir } from "../../utilities/budibaseDir"
-import { streamUpload } from "../../utilities/fileSystem/utilities"
-import { ObjectStoreBuckets } from "../../constants"
+import {
+  streamUpload,
+  retrieveDirectory,
+} from "../../utilities/fileSystem/utilities"
+import { ObjectStoreBuckets, ATTACHMENT_PATH } from "../../constants"
 import {
   LINK_USER_METADATA_PREFIX,
   TABLE_ROW_PREFIX,
@@ -25,16 +28,16 @@ export async function exportDB(
 ) {
   // streaming a DB dump is a bit more complicated, can't close DB
   if (opts?.stream) {
-    const db = dangerousGetDB(dbName)
+    const db = dbCore.dangerousGetDB(dbName)
     const memStream = new MemoryStream()
     memStream.on("end", async () => {
-      await closeDB(db)
+      await dbCore.closeDB(db)
     })
     db.dump(memStream, { filter: opts?.filter })
     return memStream
   }
 
-  return doWithDB(dbName, async (db: any) => {
+  return dbCore.doWithDB(dbName, async (db: any) => {
     // Write the dump to file if required
     if (opts?.exportName) {
       const path = join(budibaseTempDir(), opts?.exportName)
@@ -49,18 +52,17 @@ export async function exportDB(
           fs.createReadStream(path)
         )
       }
-
       return fs.createReadStream(path)
+    } else {
+      // Stringify the dump in memory if required
+      const memStream = new MemoryStream()
+      let appString = ""
+      memStream.on("data", (chunk: any) => {
+        appString += chunk.toString()
+      })
+      await db.dump(memStream, { filter: opts?.filter })
+      return appString
     }
-
-    // Stringify the dump in memory if required
-    const memStream = new MemoryStream()
-    let appString = ""
-    memStream.on("data", (chunk: any) => {
-      appString += chunk.toString()
-    })
-    await db.dump(memStream, { filter: opts?.filter })
-    return appString
   })
 }
 
@@ -81,12 +83,17 @@ function defineFilter(excludeRows?: boolean) {
  * @param {boolean} excludeRows Flag to state whether the export should include data.
  * @returns {*} either a string or a stream of the backup
  */
-async function backupAppData(
+export async function exportApp(
   appId: string,
-  config: any,
+  config?: any,
   excludeRows?: boolean
 ) {
-  return await exportDB(appId, {
+  const attachmentsPath = `${dbCore.getProdAppID(appId)}/${ATTACHMENT_PATH}`
+  const tmpPath = await retrieveDirectory(
+    ObjectStoreBuckets.APPS,
+    attachmentsPath
+  )
+  await exportDB(appId, {
     ...config,
     filter: defineFilter(excludeRows),
   })
@@ -98,16 +105,6 @@ async function backupAppData(
  * @param {boolean} excludeRows Flag to state whether the export should include data.
  * @returns {*} a readable stream of the backup which is written in real time
  */
-export async function streamBackup(appId: string, excludeRows: boolean) {
-  return await backupAppData(appId, { stream: true }, excludeRows)
-}
-
-/**
- * Takes a copy of the database state for an app to the object store.
- * @param {string} appId The ID of the app which is to be backed up.
- * @param {string} backupName The name of the backup located in the object store.
- * @return {*} a readable stream to the completed backup file
- */
-export async function performBackup(appId: string, backupName: string) {
-  return await backupAppData(appId, { exportName: backupName })
+export async function streamExportApp(appId: string, excludeRows: boolean) {
+  return await exportApp(appId, { stream: true }, excludeRows)
 }

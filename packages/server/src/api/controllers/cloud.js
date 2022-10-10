@@ -35,7 +35,7 @@ exports.exportApps = async ctx => {
     // only export the dev apps as they will be the latest, the user can republish the apps
     // in their self hosted environment
     if (isDevAppID(appId)) {
-      allDBs[app.name] = await sdk.apps.exports.exportDB(appId)
+      allDBs[app.name] = await sdk.apps.exports.exportApp(appId)
     }
   }
   const filename = `cloud-export-${new Date().getTime()}.txt`
