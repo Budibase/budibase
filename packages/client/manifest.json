@@ -3168,7 +3168,7 @@
     ],
     "settings": [
       {
-        "type": "field/barcodeqr",
+        "type": "field/barcode/qr",
         "label": "Field",
         "key": "field",
         "required": true
