@@ -183,7 +183,9 @@
 
     // Find the next valid component to consider dropping over, ignoring nested
     // block components
-    const component = e.target?.closest?.(".component:not(.block)")
+    const component = e.target?.closest?.(
+      `.component:not(.block):not(.${sourceId})`
+    )
     if (component && component.classList.contains("droppable")) {
       targetInfo = {
         id: component.dataset.id,

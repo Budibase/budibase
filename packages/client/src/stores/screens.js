@@ -46,8 +46,7 @@ const createScreenStore = () => {
 
       // Insert DND placeholder if required
       const { dndParent, dndIndex, selectedComponentId } = $builderStore
-      const insert = true
-      if (insert && activeScreen && dndParent && dndIndex != null) {
+      if (activeScreen && dndParent && dndIndex != null) {
         // Remove selected component from tree
         let selectedParent = findComponentParent(
           activeScreen.props,
