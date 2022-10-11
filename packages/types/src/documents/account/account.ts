@@ -42,6 +42,10 @@ export interface Account extends CreateAccount {
   licenseKey?: string
   licenseKeyActivatedAt?: number
   licenseOverrides?: LicenseOverrides
+  // trial
+  isTrialing?: boolean
+  trialStartAt?: number
+  trialEndAt?: number
 }
 
 export interface PasswordAccount extends Account {
