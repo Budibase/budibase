@@ -489,21 +489,15 @@
     display: contents;
   }
   .component :global(> *) {
-    transition: padding 250ms ease, border 250ms ease;
+    transition: padding 260ms ease, border 260ms ease;
   }
   .component.explode :global(> *) {
-    padding: 16px !important;
-    gap: 16px !important;
-    border: 2px dashed var(--spectrum-global-color-gray-400) !important;
+    padding: 12px !important;
+    gap: 12px !important;
+    border: 2px dotted var(--spectrum-global-color-gray-400) !important;
     border-radius: 4px !important;
   }
-  .interactive :global(*:hover) {
-    cursor: pointer;
-  }
-  .draggable :global(*:hover) {
-    cursor: grab;
-  }
-  .editing :global(*:hover) {
-    cursor: auto;
+  .interactive :global(*) {
+    cursor: default;
   }
 </style>

@@ -102,14 +102,21 @@
       return
     }
 
+    // Append an ephemeral div to allow us to determine layout if only one
+    // child exists
+    let ephemeralDiv
+    if (node.children.length === 1) {
+      ephemeralDiv = document.createElement("div")
+      ephemeralDiv.classList.add("placeholder")
+      node.appendChild(ephemeralDiv)
+    }
+
     // We're now hovering over something which accepts children and is not
     // empty, so we need to work out where to inside the placeholder
     // Calculate the coordinates of various locations on each child.
-    // We include the placeholder component in this as it guarantees we have
-    // at least 2 child components, and therefore guarantee there is no
-    // ambiguity in the layout.
     const childCoords = [...(node.children || [])].map(node => {
-      const bounds = node.children[0].getBoundingClientRect()
+      const child = node.children?.[0] || node
+      const bounds = child.getBoundingClientRect()
       return {
         placeholder: node.classList.contains("placeholder"),
         centerX: bounds.left + bounds.width / 2,
@@ -120,6 +127,12 @@
         bottom: bounds.bottom,
       }
     })
+
+    // Now that we've calculated the position of the children, we no longer need
+    // the ephemeral div
+    if (ephemeralDiv) {
+      node.removeChild(ephemeralDiv)
+    }
 
     // Calculate the variance between each set of positions on the children
     const variances = Object.keys(childCoords[0])
