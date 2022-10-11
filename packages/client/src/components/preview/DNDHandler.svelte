@@ -3,11 +3,11 @@
   import { get } from "svelte/store"
   import IndicatorSet from "./IndicatorSet.svelte"
   import { builderStore, componentStore } from "stores"
-  import PlaceholderOverlay from "./PlaceholderOverlay.svelte"
+  import DNDPlaceholderOverlay from "./DNDPlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "utils/components.js"
 
-  let sourceId
+  let sourceInfo
   let targetInfo
   let dropInfo
 
@@ -15,7 +15,8 @@
   // the value of one of the properties actually changes
   $: parent = dropInfo?.parent
   $: index = dropInfo?.index
-  $: builderStore.actions.updateDNDPlaceholder(parent, index)
+  $: bounds = sourceInfo?.bounds
+  $: builderStore.actions.updateDNDPlaceholder(parent, index, bounds)
 
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
@@ -37,14 +38,14 @@
   // Callback when drag stops (whether dropped or not)
   const stopDragging = () => {
     // Reset state
-    sourceId = null
+    sourceInfo = null
     targetInfo = null
     dropInfo = null
     builderStore.actions.setDragging(false)
 
     // Reset listener
-    if (sourceId) {
-      const component = document.getElementsByClassName(sourceId)[0]
+    if (sourceInfo) {
+      const component = document.getElementsByClassName(sourceInfo.id)[0]
       if (component) {
         component.removeEventListener("dragend", stopDragging)
       }
@@ -65,14 +66,33 @@
     component.addEventListener("dragend", stopDragging)
 
     // Update state
-    sourceId = component.dataset.id
-    builderStore.actions.selectComponent(sourceId)
+    const parentId = component.dataset.parent
+    const parent = findComponentById(
+      get(componentStore).currentAsset.props,
+      parentId
+    )
+    const index = parent._children.findIndex(
+      x => x._id === component.dataset.id
+    )
+    sourceInfo = {
+      id: component.dataset.id,
+      bounds: component.children[0].getBoundingClientRect(),
+      parent: parentId,
+      index,
+    }
+    builderStore.actions.selectComponent(sourceInfo.id)
     builderStore.actions.setDragging(true)
 
-    // Execute this asynchronously so we don't kill the drag event by hiding
-    // the component in the same handler as starting the drag event
+    // Set initial drop info to show placeholder exactly where the dragged
+    // component is.
+    // Execute this asynchronously to prevent bugs caused by updating state in
+    // the same handler as selecting a new component (which causes a client
+    // re-initialisation).
     setTimeout(() => {
-      onDragEnter(e)
+      dropInfo = {
+        parent: parentId,
+        index,
+      }
     }, 0)
   }
 
@@ -182,7 +202,7 @@
 
   // Callback when on top of a component
   const onDragOver = e => {
-    if (!sourceId || !targetInfo) {
+    if (!sourceInfo || !targetInfo) {
       return
     }
     handleEvent(e)
@@ -190,14 +210,14 @@
 
   // Callback when entering a potential drop target
   const onDragEnter = e => {
-    if (!sourceId) {
+    if (!sourceInfo) {
       return
     }
 
     // Find the next valid component to consider dropping over, ignoring nested
     // block components
     const component = e.target?.closest?.(
-      `.component:not(.block):not(.${sourceId})`
+      `.component:not(.block):not(.${sourceInfo.id})`
     )
     if (component && component.classList.contains("droppable")) {
       targetInfo = {
@@ -216,7 +236,7 @@
     let target, mode
 
     // Convert parent + index into target + mode
-    if (sourceId && dropInfo?.parent && dropInfo.index != null) {
+    if (sourceInfo && dropInfo?.parent && dropInfo.index != null) {
       const parent = findComponentById(
         get(componentStore).currentAsset?.props,
         dropInfo.parent
@@ -225,9 +245,17 @@
         return
       }
 
+      // Do nothing if we didn't change the location
+      if (
+        sourceInfo.parent === dropInfo.parent &&
+        sourceInfo.index === dropInfo.index
+      ) {
+        return
+      }
+
       // Filter out source component and placeholder from consideration
       const children = parent._children?.filter(
-        x => x._id !== "placeholder" && x._id !== sourceId
+        x => x._id !== "placeholder" && x._id !== sourceInfo.id
       )
 
       // Use inside if no existing children
@@ -244,7 +272,7 @@
     }
 
     if (target && mode) {
-      builderStore.actions.moveComponent(sourceId, target, mode)
+      builderStore.actions.moveComponent(sourceInfo.id, target, mode)
     }
   }
 
@@ -278,5 +306,5 @@
 />
 
 {#if $builderStore.isDragging}
-  <PlaceholderOverlay />
+  <DNDPlaceholderOverlay />
 {/if}

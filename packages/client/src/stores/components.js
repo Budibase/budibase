@@ -5,8 +5,9 @@ import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
 import Router from "../components/Router.svelte"
-import Placeholder from "../components/preview/Placeholder.svelte"
+import DNDPlaceholder from "../components/preview/DNDPlaceholder.svelte"
 import * as AppComponents from "../components/app/index.js"
+import { DNDPlaceholderType, ScreenslotType } from "../constants.js"
 
 const budibasePrefix = "@budibase/standard-components/"
 
@@ -109,9 +110,9 @@ const createComponentStore = () => {
     }
 
     // Screenslot is an edge case
-    if (type === "screenslot") {
+    if (type === ScreenslotType) {
       type = `${budibasePrefix}${type}`
-    } else if (type === "placeholder") {
+    } else if (type === DNDPlaceholderType) {
       return {}
     }
 
@@ -130,10 +131,10 @@ const createComponentStore = () => {
     if (!type) {
       return null
     }
-    if (type === "screenslot") {
+    if (type === ScreenslotType) {
       return Router
-    } else if (type === "placeholder") {
-      return Placeholder
+    } else if (type === DNDPlaceholderType) {
+      return DNDPlaceholder
     }
 
     // Handle budibase components

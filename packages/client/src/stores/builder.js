@@ -1,7 +1,6 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
 import { devToolsStore } from "./devTools.js"
-import { findComponentPathById } from "../utils/components.js"
 
 const dispatchEvent = (type, data = {}) => {
   window.parent.postMessage({ type, data })
@@ -21,9 +20,9 @@ const createBuilderStore = () => {
     navigation: null,
     hiddenComponentIds: [],
     usedPlugins: null,
-
     dndParent: null,
     dndIndex: null,
+    dndBounds: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -109,10 +108,11 @@ const createBuilderStore = () => {
       // Notify the builder so we can reload component definitions
       dispatchEvent("reload-plugin")
     },
-    updateDNDPlaceholder: (parent, index) => {
+    updateDNDPlaceholder: (parent, index, bounds) => {
       store.update(state => {
         state.dndParent = parent
         state.dndIndex = index
+        state.dndBounds = bounds
         return state
       })
     },

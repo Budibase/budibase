@@ -22,6 +22,7 @@
   import Placeholder from "components/app/Placeholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
   import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
+  import { DNDPlaceholderID } from "constants"
 
   export let instance = {}
   export let isLayout = false
@@ -458,7 +459,7 @@
     class:editing
     class:block={isBlock}
     class:explode={interactive && hasChildren && inDndPath}
-    class:placeholder={id === "placeholder"}
+    class:placeholder={id === DNDPlaceholderID}
     data-id={id}
     data-name={name}
     data-icon={icon}
