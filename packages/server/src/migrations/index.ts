@@ -4,10 +4,9 @@ import env from "../environment"
 
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
-import * as quota1 from "./functions/quotas1"
+import * as syncQuotas from "./functions/syncQuotas"
 import * as appUrls from "./functions/appUrls"
 import * as backfill from "./functions/backfill"
-
 /**
  * Populate the migration function and additional configuration from
  * the static migration definitions.
@@ -25,10 +24,10 @@ export const buildMigrations = () => {
         })
         break
       }
-      case MigrationName.QUOTAS_1: {
+      case MigrationName.SYNC_QUOTAS: {
         serverMigrations.push({
           ...definition,
-          fn: quota1.run,
+          fn: syncQuotas.run,
         })
         break
       }

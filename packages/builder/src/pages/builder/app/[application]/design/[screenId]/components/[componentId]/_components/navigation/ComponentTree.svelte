@@ -18,6 +18,8 @@
 
   let closedNodes = {}
 
+  $: currentScreen = get(selectedScreen)
+
   $: filteredComponents = components?.filter(component => {
     return (
       !$store.componentToPaste?.isCut ||
@@ -68,9 +70,27 @@
     closedNodes = closedNodes
   }
 
-  const onDrop = async e => {
+  const onDrop = async (e, component) => {
     e.stopPropagation()
     try {
+      const compDef = store.actions.components.getDefinition(
+        $dndStore.source?._component
+      )
+      const compTypeName = compDef.name.toLowerCase()
+      const path = findComponentPath(currentScreen.props, component._id)
+
+      for (let pathComp of path) {
+        const pathCompDef = store.actions.components.getDefinition(
+          pathComp?._component
+        )
+        if (pathCompDef?.illegalChildren?.indexOf(compTypeName) > -1) {
+          notifications.warning(
+            `${compDef.name} cannot be a child of ${pathCompDef.name} (${pathComp._instanceName})`
+          )
+          return
+        }
+      }
+
       await dndStore.actions.drop()
     } catch (error) {
       console.error(error)
@@ -114,7 +134,9 @@
         on:dragstart={() => dndStore.actions.dragstart(component)}
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
-        on:drop={onDrop}
+        on:drop={e => {
+          onDrop(e, component)
+        }}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
         withArrow={componentHasChildren(component)}

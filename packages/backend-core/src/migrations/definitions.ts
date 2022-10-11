@@ -11,7 +11,7 @@ export const DEFINITIONS: MigrationDefinition[] = [
   },
   {
     type: MigrationType.GLOBAL,
-    name: MigrationName.QUOTAS_1,
+    name: MigrationName.SYNC_QUOTAS,
   },
   {
     type: MigrationType.APP,

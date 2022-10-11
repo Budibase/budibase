@@ -17,6 +17,7 @@ import { getAction } from "utils/getAction"
 import Provider from "components/context/Provider.svelte"
 import { ActionTypes } from "./constants"
 import { fetchDatasourceSchema } from "./utils/schema.js"
+import { getAPIKey } from "./utils/api.js"
 
 export default {
   API,
@@ -36,4 +37,5 @@ export default {
   fetchDatasourceSchema,
   Provider,
   ActionTypes,
+  getAPIKey,
 }

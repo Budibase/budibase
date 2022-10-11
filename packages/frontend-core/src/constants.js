@@ -40,7 +40,7 @@ export const OperatorOptions = {
   },
   NotContains: {
     value: "notContains",
-    label: "Does Not Contain",
+    label: "Does not contain",
   },
   In: {
     value: "oneOf",
@@ -98,6 +98,7 @@ export const BuilderRoleDescriptions = [
 export const PlanType = {
   FREE: "free",
   TEAM: "team",
+  PRO: "pro",
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
 }

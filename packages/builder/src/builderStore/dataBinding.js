@@ -9,14 +9,14 @@ import {
 import { store } from "builderStore"
 import {
   queries as queriesStores,
-  roles as rolesStore,
   tables as tablesStore,
+  roles as rolesStore,
 } from "stores/backend"
 import {
+  makePropSafe,
+  isJSBinding,
   decodeJSBinding,
   encodeJSBinding,
-  isJSBinding,
-  makePropSafe,
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
@@ -71,17 +71,19 @@ export const getAuthBindings = () => {
       runtime: `${safeUser}.${safeOAuth2}.${safeAccessToken}`,
       readable: `Current User.OAuthToken`,
       key: "accessToken",
+      display: { name: "OAuthToken" },
     },
   ]
 
-  bindings = Object.keys(authBindings).map(key => {
-    const fieldBinding = authBindings[key]
+  bindings = authBindings.map(fieldBinding => {
     return {
       type: "context",
       runtimeBinding: fieldBinding.runtime,
       readableBinding: fieldBinding.readable,
       fieldSchema: { type: "string", name: fieldBinding.key },
       providerId: "user",
+      category: "Current User",
+      display: fieldBinding.display,
     }
   })
   return bindings
@@ -93,7 +95,7 @@ export const getAuthBindings = () => {
  * @param {string} prefix A contextual string prefix/path for a user readable binding
  * @return {object[]} An array containing readable/runtime binding objects
  */
-export const toBindingsArray = (valueMap, prefix) => {
+export const toBindingsArray = (valueMap, prefix, category) => {
   if (!valueMap) {
     return []
   }
@@ -101,11 +103,20 @@ export const toBindingsArray = (valueMap, prefix) => {
     if (!binding || !valueMap[binding]) {
       return acc
     }
-    acc.push({
+
+    let config = {
       type: "context",
       runtimeBinding: binding,
       readableBinding: `${prefix}.${binding}`,
-    })
+      icon: "Brackets",
+    }
+
+    if (category) {
+      config.category = category
+    }
+
+    acc.push(config)
+
     return acc
   }, [])
 }
@@ -158,7 +169,12 @@ export const getComponentBindableProperties = (asset, componentId) => {
 /**
  * Gets all data provider components above a component.
  */
-export const getContextProviderComponents = (asset, componentId, type) => {
+export const getContextProviderComponents = (
+  asset,
+  componentId,
+  type,
+  options = { includeSelf: false }
+) => {
   if (!asset || !componentId) {
     return []
   }
@@ -166,7 +182,9 @@ export const getContextProviderComponents = (asset, componentId, type) => {
   // Get the component tree leading up to this component, ignoring the component
   // itself
   const path = findComponentPath(asset.props, componentId)
-  path.pop()
+  if (!options?.includeSelf) {
+    path.pop()
+  }
 
   // Filter by only data provider components
   return path.filter(component => {
@@ -232,18 +250,18 @@ export const getDatasourceForProvider = (asset, component) => {
     return null
   }
 
-  // There are different types of setting which can be a datasource, for
-  // example an actual datasource object, or a table ID string.
-  // Convert the datasource setting into a proper datasource object so that
-  // we can use it properly
-  if (datasourceSetting.type === "table") {
+  // For legacy compatibility, we need to be able to handle datasources that are
+  // just strings. These are not generated any more, so could be removed in
+  // future.
+  // TODO: remove at some point
+  const datasource = component[datasourceSetting?.key]
+  if (typeof datasource === "string") {
     return {
-      tableId: component[datasourceSetting?.key],
+      tableId: datasource,
       type: "table",
     }
-  } else {
-    return component[datasourceSetting?.key]
   }
+  return datasource
 }
 
 /**
@@ -382,9 +400,10 @@ export const getUserBindings = () => {
   const { schema } = getSchemaForTable(TableNames.USERS)
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
-  keys.forEach(key => {
+
+  bindings = keys.reduce((acc, key) => {
     const fieldSchema = schema[key]
-    bindings.push({
+    acc.push({
       type: "context",
       runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
       readableBinding: `Current User.${key}`,
@@ -394,9 +413,10 @@ export const getUserBindings = () => {
       providerId: "user",
       category: "Current User",
       icon: "User",
-      display: fieldSchema,
     })
-  })
+    return acc
+  }, [])
+
   return bindings
 }
 
@@ -785,6 +805,17 @@ export const buildFormSchema = component => {
   if (!component) {
     return schema
   }
+
+  // If this is a form block, simply use the fields setting
+  if (component._component.endsWith("formblock")) {
+    let schema = {}
+    component.fields?.forEach(field => {
+      schema[field] = { type: "string" }
+    })
+    return schema
+  }
+
+  // Otherwise find all field component children
   const settings = getComponentSettings(component._component)
   const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")

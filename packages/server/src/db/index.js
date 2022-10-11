@@ -7,7 +7,7 @@ exports.init = () => {
     find: true,
   }
 
-  if (env.isTest()) {
+  if (env.isTest() && !env.COUCH_DB_URL) {
     dbConfig.inMemory = true
     dbConfig.allDbs = true
   }

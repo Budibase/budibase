@@ -11,7 +11,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { admin, auth, licensing } from "../../../../stores/portal"
-  import { PlanType } from "../../../../constants"
+  import { Constants } from "@budibase/frontend-core"
   import { DashCard, Usage } from "../../../../components/usage"
 
   let staticUsage = []
@@ -125,7 +125,7 @@
   }
 
   const goToAccountPortal = () => {
-    if (license?.plan.type === PlanType.FREE) {
+    if (license?.plan.type === Constants.PlanType.FREE) {
       window.location.href = upgradeUrl
     } else {
       window.location.href = manageUrl
@@ -133,7 +133,7 @@
   }
 
   const setPrimaryActionText = () => {
-    if (license?.plan.type === PlanType.FREE) {
+    if (license?.plan.type === Constants.PlanType.FREE) {
       primaryActionText = "Upgrade"
       return
     }
@@ -147,7 +147,8 @@
 
   const init = async () => {
     try {
-      await licensing.getQuotaUsage()
+      // always load latest
+      await licensing.init()
     } catch (e) {
       console.error(e)
       notifications.error(e)
@@ -175,18 +176,18 @@
 </script>
 
 {#if loaded}
-  <Layout>
-    <Layout noPadding gap="S">
+  <Layout noPadding>
+    <Layout noPadding gap="XS">
       <Heading>Usage</Heading>
-      <Body
-        >Get information about your current usage within Budibase.
+      <Body>
+        Get information about your current usage within Budibase.
         {#if accountPortalAccess}
           To upgrade your plan and usage limits visit your <Link
             on:click={goToAccountPortal}
             size="L">Account</Link
           >
         {:else}
-          To upgrade your plan and usage limits contact your account holder
+          To upgrade your plan and usage limits contact your account holder.
         {/if}
       </Body>
     </Layout>

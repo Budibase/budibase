@@ -8,7 +8,7 @@
   let accountDowngradeModal
 
   $: accountUrl = $admin.accountPortalUrl
-  $: upgradeUrl = `${accountUrl}/portal/upgrade`
+  $: billingUrl = `${accountUrl}/portal/billing`
 
   export function show() {
     accountDowngradeModal.show()
@@ -24,10 +24,10 @@
     title="Your account is now on the Free plan"
     size="M"
     showCancelButton={$auth.user.accountPortalAccess}
-    confirmText={$auth.user.accountPortalAccess ? "Upgrade" : "Confirm"}
+    confirmText={$auth.user.accountPortalAccess ? "Billing" : "Confirm"}
     onConfirm={$auth.user.accountPortalAccess
       ? () => {
-          window.location.href = upgradeUrl
+          window.location.href = billingUrl
         }
       : null}
   >
@@ -35,7 +35,9 @@
       The payment for your subscription has failed and we have downgraded your
       account to the <span class="free-plan">Free plan</span>.
     </Body>
-    <Body>Upgrade to restore full functionality.</Body>
+    <Body>
+      Please update your billing details to restore full functionality.
+    </Body>
     {#if !$auth.user.accountPortalAccess}
       <Body>Please contact the account holder to upgrade.</Body>
     {/if}
