@@ -2,20 +2,23 @@ import { db as dbCore } from "@budibase/backend-core"
 import { budibaseTempDir } from "../../utilities/budibaseDir"
 import { retrieveDirectory } from "../../utilities/fileSystem/utilities"
 import { streamFile } from "../../utilities/fileSystem"
-import { ObjectStoreBuckets, ATTACHMENT_PATH } from "../../constants"
+import { ObjectStoreBuckets } from "../../constants"
 import {
   LINK_USER_METADATA_PREFIX,
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
 } from "../../db/utils"
+import {
+  DB_EXPORT_FILE,
+  GLOBAL_DB_EXPORT_FILE,
+  ATTACHMENT_DIR,
+} from "./constants"
 import fs from "fs"
 import { join } from "path"
 const uuid = require("uuid/v4")
 const tar = require("tar")
 const MemoryStream = require("memorystream")
 
-const DB_EXPORT_FILE = "db.txt"
-const GLOBAL_DB_EXPORT_FILE = "global.txt"
 type ExportOpts = {
   filter?: any
   exportPath?: string
@@ -84,14 +87,14 @@ function defineFilter(excludeRows?: boolean) {
  */
 export async function exportApp(appId: string, config?: ExportOpts) {
   const prodAppId = dbCore.getProdAppID(appId)
-  const attachmentsPath = `${prodAppId}/${ATTACHMENT_PATH}`
+  const attachmentsPath = `${prodAppId}/${ATTACHMENT_DIR}`
   // export attachments to tmp
   const tmpPath = await retrieveDirectory(
     ObjectStoreBuckets.APPS,
     attachmentsPath
   )
   const downloadedPath = join(tmpPath, attachmentsPath),
-    tmpAttachmentPath = join(tmpPath, ATTACHMENT_PATH)
+    tmpAttachmentPath = join(tmpPath, ATTACHMENT_DIR)
   if (fs.existsSync(downloadedPath)) {
     // move out of app directory, simplify structure
     fs.renameSync(downloadedPath, tmpAttachmentPath)
@@ -110,7 +113,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   // if tar requested, return where the tarball is
   if (config?.tar) {
     // now the tmpPath contains both the DB export and attachments, tar this
-    const tarPath = tarFilesToTmp(tmpPath, [ATTACHMENT_PATH, DB_EXPORT_FILE])
+    const tarPath = tarFilesToTmp(tmpPath, [ATTACHMENT_DIR, DB_EXPORT_FILE])
     // cleanup the tmp export files as tarball returned
     fs.rmSync(tmpPath, { recursive: true, force: true })
     return tarPath

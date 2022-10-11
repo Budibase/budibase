@@ -75,21 +75,6 @@ exports.checkDevelopmentEnvironment = () => {
 }
 
 /**
- * This function manages temporary template files which are stored by Koa.
- * @param {Object} template The template object retrieved from the Koa context object.
- * @returns {Object} Returns an fs read stream which can be loaded into the database.
- */
-exports.getTemplateStream = async template => {
-  if (template.file) {
-    return fs.createReadStream(template.file.path)
-  } else {
-    const [type, name] = template.key.split("/")
-    const tmpPath = await exports.downloadTemplate(type, name)
-    return fs.createReadStream(join(tmpPath, name, "db", "dump.txt"))
-  }
-}
-
-/**
  * Used to retrieve a handlebars file from the system which will be used as a template.
  * This is allowable as the template handlebars files should be static and identical across
  * the cluster.
