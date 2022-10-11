@@ -36,16 +36,16 @@ const STRING_CONTENT_TYPES = [
 ]
 
 // does normal sanitization and then swaps dev apps to apps
-export function sanitizeKey(input: any) {
+export function sanitizeKey(input: string) {
   return sanitize(sanitizeBucket(input)).replace(/\\/g, "/")
 }
 
 // simply handles the dev app to app conversion
-export function sanitizeBucket(input: any) {
+export function sanitizeBucket(input: string) {
   return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
 }
 
-function publicPolicy(bucketName: any) {
+function publicPolicy(bucketName: string) {
   return {
     Version: "2012-10-17",
     Statement: [
@@ -73,7 +73,7 @@ const PUBLIC_BUCKETS = [
  * @return {Object} an S3 object store object, check S3 Nodejs SDK for usage.
  * @constructor
  */
-export const ObjectStore = (bucket: any) => {
+export const ObjectStore = (bucket: string) => {
   const config: any = {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
@@ -295,7 +295,7 @@ export const deleteFile = async (bucketName: string, filepath: string) => {
   return objectStore.deleteObject(params)
 }
 
-export const deleteFiles = async (bucketName: any, filepaths: any) => {
+export const deleteFiles = async (bucketName: string, filepaths: string[]) => {
   const objectStore = ObjectStore(bucketName)
   await makeSureBucketExists(objectStore, bucketName)
   const params = {
@@ -311,8 +311,8 @@ export const deleteFiles = async (bucketName: any, filepaths: any) => {
  * Delete a path, including everything within.
  */
 export const deleteFolder = async (
-  bucketName: any,
-  folder: any
+  bucketName: string,
+  folder: string
 ): Promise<any> => {
   bucketName = sanitizeBucket(bucketName)
   folder = sanitizeKey(folder)
@@ -345,9 +345,9 @@ export const deleteFolder = async (
 }
 
 export const uploadDirectory = async (
-  bucketName: any,
-  localPath: any,
-  bucketPath: any
+  bucketName: string,
+  localPath: string,
+  bucketPath: string
 ) => {
   bucketName = sanitizeBucket(bucketName)
   let uploads = []
@@ -379,7 +379,11 @@ exports.downloadTarballDirect = async (
   await streamPipeline(response.body, zlib.Unzip(), tar.extract(path))
 }
 
-export const downloadTarball = async (url: any, bucketName: any, path: any) => {
+export const downloadTarball = async (
+  url: string,
+  bucketName: string,
+  path: string
+) => {
   bucketName = sanitizeBucket(bucketName)
   path = sanitizeKey(path)
   const response = await fetch(url)
