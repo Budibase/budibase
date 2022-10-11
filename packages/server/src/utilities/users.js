@@ -7,14 +7,17 @@ const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 exports.getFullUser = async (ctx, userId) => {
   const global = await getGlobalUser(userId)
   let metadata = {}
+
+  // always prefer the user metadata _id and _rev
+  delete global._id
+  delete global._rev
+
   try {
     // this will throw an error if the db doesn't exist, or there is no appId
     const db = getAppDB()
     metadata = await db.get(userId)
   } catch (err) {
-    // it is fine if there is no user metadata, just remove global db info
-    delete global._id
-    delete global._rev
+    // it is fine if there is no user metadata yet
   }
   delete metadata.csrfToken
   return {
