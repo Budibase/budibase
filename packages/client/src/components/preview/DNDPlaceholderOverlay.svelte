@@ -1,11 +1,12 @@
 <script>
   import { onMount } from "svelte"
+  import { DNDPlaceholderID } from "constants"
 
   let left, top, height, width
 
   onMount(() => {
     const interval = setInterval(() => {
-      const node = document.getElementById("placeholder")
+      const node = document.getElementById(DNDPlaceholderID)
       if (!node) {
         height = 0
         width = 0

@@ -5,6 +5,7 @@ import { appStore } from "./app"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
+import { DNDPlaceholderID, DNDPlaceholderType } from "constants"
 
 const createScreenStore = () => {
   const store = derived(
@@ -58,8 +59,8 @@ const createScreenStore = () => {
 
         // Insert placeholder
         const placeholder = {
-          _component: "placeholder",
-          _id: "placeholder",
+          _component: DNDPlaceholderID,
+          _id: DNDPlaceholderType,
           static: true,
         }
         let parent = findComponentById(activeScreen.props, dndParent)
