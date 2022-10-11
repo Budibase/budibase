@@ -92,7 +92,7 @@ describe("Internal API - /applications endpoints", () => {
     expect(app.appId).toBeDefined()
     config.applications.api.appId = app.appId
 
-    const [syncResponse, sync] = await config.applications.sync(app.appId ? app.appId : "")
+    const [syncResponse, sync] = await config.applications.sync(<string>app.appId)
     expect(syncResponse).toHaveStatusCode(200)
     expect(sync).toEqual({
       message: "App sync not required, app not deployed."
@@ -108,7 +108,7 @@ describe("Internal API - /applications endpoints", () => {
     // publish app
     await config.applications.publish()
 
-    const [syncResponse, sync] = await config.applications.sync(app.appId ? app.appId : "")
+    const [syncResponse, sync] = await config.applications.sync(<string>app.appId)
     expect(syncResponse).toHaveStatusCode(200)
     expect(sync).toEqual({
       message: "App sync completed successfully."
@@ -121,7 +121,7 @@ describe("Internal API - /applications endpoints", () => {
     expect(app.appId).toBeDefined()
     config.applications.api.appId = app.appId
 
-    const [updateResponse, updatedApp] = await config.applications.update(app.appId ? app.appId : "", {
+    const [updateResponse, updatedApp] = await config.applications.update(<string>app.appId, {
       name: generator.word(),
     })
     expect(updateResponse).toHaveStatusCode(200)
@@ -134,7 +134,7 @@ describe("Internal API - /applications endpoints", () => {
     expect(app.appId).toBeDefined()
     config.applications.api.appId = app.appId
 
-    const [revertResponse, revert] = await config.applications.revert(app.appId ? app.appId : "")
+    const [revertResponse, revert] = await config.applications.revert(<string>app.appId)
     expect(revertResponse).toHaveStatusCode(400)
     expect(revert).toEqual({
       message: "App has not yet been deployed",
@@ -160,7 +160,7 @@ describe("Internal API - /applications endpoints", () => {
     expect(screen._id).toBeDefined()
 
     // // Revert the app to published state
-    const [revertResponse, revert] = await config.applications.revert(app.appId as string)
+    const [revertResponse, revert] = await config.applications.revert(<string>app.appId)
     expect(revertResponse).toHaveStatusCode(200)
     expect(revert).toEqual({
       message: "Reverted changes successfully."
@@ -178,26 +178,8 @@ describe("Internal API - /applications endpoints", () => {
     expect(response).toHaveStatusCode(200)
     expect(app.appId).toBeDefined()
 
-    const [deleteResponse] = await config.applications.delete(app.appId ? app.appId : "")
+    const [deleteResponse] = await config.applications.delete(<string>app.appId)
     expect(deleteResponse).toHaveStatusCode(200)
   })
 
-  it("GET - App Definition", async () => {
-    const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
-    config.applications.api.appId = app.appId
-
-    const [definitionResponse, definition] = await config.applications.getAppDefinition(app.appId ? app.appId : "")
-    expect(definitionResponse).toHaveStatusCode(200)
-    expect(definition).toEqual({
-      appId: app.appId,
-      appUrl: app.url,
-      name: app.name,
-      pages: [],
-      pagesById: {},
-      routes: {},
-      theme: {},
-    })
-  })
 })
