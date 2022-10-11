@@ -4,6 +4,8 @@ import { Response } from "node-fetch"
 import InternalAPIClient from "./InternalAPIClient"
 import FormData from "form-data"
 
+type messageResponse = { message: string }
+
 export default class AppApi {
   api: InternalAPIClient
 
@@ -47,7 +49,7 @@ export default class AppApi {
     return [response, json.data]
   }
 
-  async sync(appId: string): Promise<[Response, any]> {
+  async sync(appId: string): Promise<[Response, messageResponse]> {
     const response = await this.api.post(`/applications/${appId}/sync`)
     const json = await response.json()
     return [response, json]
@@ -59,7 +61,7 @@ export default class AppApi {
     return [response, json]
   }
 
-  async revert(appId: string): Promise<[Response, { message: string }]> {
+  async revert(appId: string): Promise<[Response, messageResponse]> {
     const response = await this.api.post(`/dev/${appId}/revert`)
     const json = await response.json()
     return [response, json]
