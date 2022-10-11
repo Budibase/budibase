@@ -112,6 +112,10 @@ exports.apiFileReturn = contents => {
   return fs.createReadStream(path)
 }
 
+exports.streamFile = path => {
+  return fs.createReadStream(path)
+}
+
 /**
  * Writes the provided contents to a temporary file, which can be used briefly.
  * @param {string} fileContents contents which will be written to a temp file.
