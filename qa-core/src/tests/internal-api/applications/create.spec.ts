@@ -181,4 +181,23 @@ describe("Internal API - /applications endpoints", () => {
     const [deleteResponse] = await config.applications.delete(app.appId ? app.appId : "")
     expect(deleteResponse).toHaveStatusCode(200)
   })
+
+  it("GET - App Definition", async () => {
+    const [response, app] = await config.applications.create(generateApp())
+    expect(response).toHaveStatusCode(200)
+    expect(app.appId).toBeDefined()
+    config.applications.api.appId = app.appId
+
+    const [definitionResponse, definition] = await config.applications.getAppDefinition(app.appId ? app.appId : "")
+    expect(definitionResponse).toHaveStatusCode(200)
+    expect(definition).toEqual({
+      appId: app.appId,
+      appUrl: app.url,
+      name: app.name,
+      pages: [],
+      pagesById: {},
+      routes: {},
+      theme: {},
+    })
+  })
 })
