@@ -3,6 +3,9 @@ import { App } from "@budibase/types"
 import { Response } from "node-fetch"
 import InternalAPIClient from "./InternalAPIClient"
 import FormData from "form-data"
+import { RouteConfig } from "../fixtures/types/routing"
+import { AppPackageResponse } from "../fixtures/types/appPackage"
+import { DeployConfig } from "../fixtures/types/deploy"
 
 type messageResponse = { message: string }
 
@@ -25,13 +28,13 @@ export default class AppApi {
     return [response, Object.keys(json.routes).length > 0]
   }
 
-  async getAppPackage(appId: string): Promise<[Response, any]> {
+  async getAppPackage(appId: string): Promise<[Response, AppPackageResponse]> {
     const response = await this.api.get(`/applications/${appId}/appPackage`)
     const json = await response.json()
     return [response, json]
   }
 
-  async publish(): Promise<[Response, any]> {
+  async publish(): Promise<[Response, DeployConfig]> {
     const response = await this.api.post("/deploy")
     const json = await response.json()
     return [response, json]
@@ -73,12 +76,6 @@ export default class AppApi {
     return [response, json]
   }
 
-  async getAppDefinition(appId: string): Promise<[Response, any]> {
-    const response = await this.api.get(`/applications/${appId}/definition`)
-    const json = await response.json()
-    return [response, json]
-  }
-
   async update(appId: string, body: any): Promise<[Response, Application]> {
     const response = await this.api.put(`/applications/${appId}`, { body })
     const json = await response.json()
@@ -91,7 +88,7 @@ export default class AppApi {
     return [response, json]
   }
 
-  async getRoutes(): Promise<[Response, any]> {
+  async getRoutes(): Promise<[Response, RouteConfig]> {
     const response = await this.api.get(`/routing`)
     const json = await response.json()
     return [response, json]
