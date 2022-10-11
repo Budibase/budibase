@@ -263,6 +263,7 @@ export const retrieveToTmp = async (bucketName: string, filepath: string) => {
 
 export const retrieveDirectory = async (bucketName: string, path: string) => {
   let writePath = join(budibaseTempDir(), v4())
+  fs.mkdirSync(writePath)
   const objects = await listAllObjects(bucketName, path)
   let fullObjects = await Promise.all(
     objects.map(obj => retrieve(bucketName, obj.Key!))

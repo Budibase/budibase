@@ -23,19 +23,19 @@ type ExportOpts = {
   excludeRows?: boolean
 }
 
-function tarFiles(cwd: string, files: string[], exportName?: string) {
-  exportName = exportName ? `${exportName}.tar.gz` : "export.tar.gz"
+function tarFilesToTmp(tmpDir: string, files: string[]) {
+  const exportFile = join(budibaseTempDir(), `${uuid()}.tar.gz`)
   tar.create(
     {
       sync: true,
       gzip: true,
-      file: exportName,
+      file: exportFile,
       recursive: true,
-      cwd,
+      cwd: tmpDir,
     },
     files
   )
-  return join(cwd, exportName)
+  return exportFile
 }
 
 /**
@@ -52,7 +52,7 @@ export async function exportDB(dbName: string, opts: ExportOpts = {}) {
       const path = opts?.exportPath
       const writeStream = fs.createWriteStream(path)
       await db.dump(writeStream, { filter: opts?.filter })
-      return fs.createReadStream(path)
+      return path
     } else {
       // Stringify the dump in memory if required
       const memStream = new MemoryStream()
@@ -90,10 +90,16 @@ export async function exportApp(appId: string, config?: ExportOpts) {
     ObjectStoreBuckets.APPS,
     attachmentsPath
   )
-  // move out of app directory, simplify structure
-  fs.renameSync(join(tmpPath, attachmentsPath), join(tmpPath, ATTACHMENT_PATH))
-  // remove the old app directory created by object export
-  fs.rmdirSync(join(tmpPath, prodAppId))
+  const downloadedPath = join(tmpPath, attachmentsPath),
+    tmpAttachmentPath = join(tmpPath, ATTACHMENT_PATH)
+  if (fs.existsSync(downloadedPath)) {
+    // move out of app directory, simplify structure
+    fs.renameSync(downloadedPath, tmpAttachmentPath)
+    // remove the old app directory created by object export
+    fs.rmdirSync(join(tmpPath, prodAppId))
+  } else {
+    fs.mkdirSync(tmpAttachmentPath)
+  }
   // enforce an export of app DB to the tmp path
   const dbPath = join(tmpPath, DB_EXPORT_FILE)
   await exportDB(appId, {
@@ -104,7 +110,10 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   // if tar requested, return where the tarball is
   if (config?.tar) {
     // now the tmpPath contains both the DB export and attachments, tar this
-    return tarFiles(tmpPath, [ATTACHMENT_PATH, DB_EXPORT_FILE])
+    const tarPath = tarFilesToTmp(tmpPath, [ATTACHMENT_PATH, DB_EXPORT_FILE])
+    // cleanup the tmp export files as tarball returned
+    fs.rmSync(tmpPath, { recursive: true, force: true })
+    return tarPath
   }
   // tar not requested, turn the directory where export is
   else {
@@ -112,6 +121,13 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   }
 }
 
+/**
+ * Export all apps + global DB (if supplied) to a single tarball, this includes
+ * the attachments for each app as well.
+ * @param {string[]} appIds The IDs of the apps to be exported.
+ * @param {string} globalDbContents The contents of the global DB to export as well.
+ * @return {string} The path to the tarball.
+ */
 export async function exportMultipleApps(
   appIds: string[],
   globalDbContents?: string
@@ -129,7 +145,10 @@ export async function exportMultipleApps(
   if (globalDbContents) {
     fs.writeFileSync(join(tmpPath, GLOBAL_DB_EXPORT_FILE), globalDbContents)
   }
-  return tarFiles(tmpPath, [...appIds, GLOBAL_DB_EXPORT_FILE])
+  const tarPath = tarFilesToTmp(tmpPath, [...appIds, GLOBAL_DB_EXPORT_FILE])
+  // clear up the tmp path now tarball generated
+  fs.rmSync(tmpPath, { recursive: true, force: true })
+  return tarPath
 }
 
 /**
