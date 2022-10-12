@@ -225,7 +225,7 @@ class RestIntegration implements IntegrationBase {
     }
 
     if (queryString) {
-        // make sure the query string is fully encoded
+      // make sure the query string is fully encoded
       queryString = "?" + qs.encode(qs.decode(queryString))
     }
     const main = `${path}${queryString}`

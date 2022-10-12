@@ -3,7 +3,7 @@ import { Layout } from "@budibase/types"
 import { Screen } from "@budibase/types"
 // Create type for getAppPackage response
 export interface AppPackageResponse {
-    application: Partial<Application>,
-    layout: Layout,
-    screens: Screen[]
+  application: Partial<Application>
+  layout: Layout
+  screens: Screen[]
 }

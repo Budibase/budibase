@@ -92,10 +92,12 @@ describe("Internal API - /applications endpoints", () => {
     expect(app.appId).toBeDefined()
     config.applications.api.appId = app.appId
 
-    const [syncResponse, sync] = await config.applications.sync(<string>app.appId)
+    const [syncResponse, sync] = await config.applications.sync(
+      <string>app.appId
+    )
     expect(syncResponse).toHaveStatusCode(200)
     expect(sync).toEqual({
-      message: "App sync not required, app not deployed."
+      message: "App sync not required, app not deployed.",
     })
   })
 
@@ -108,10 +110,12 @@ describe("Internal API - /applications endpoints", () => {
     // publish app
     await config.applications.publish()
 
-    const [syncResponse, sync] = await config.applications.sync(<string>app.appId)
+    const [syncResponse, sync] = await config.applications.sync(
+      <string>app.appId
+    )
     expect(syncResponse).toHaveStatusCode(200)
     expect(sync).toEqual({
-      message: "App sync completed successfully."
+      message: "App sync completed successfully.",
     })
   })
 
@@ -121,9 +125,12 @@ describe("Internal API - /applications endpoints", () => {
     expect(app.appId).toBeDefined()
     config.applications.api.appId = app.appId
 
-    const [updateResponse, updatedApp] = await config.applications.update(<string>app.appId, {
-      name: generator.word(),
-    })
+    const [updateResponse, updatedApp] = await config.applications.update(
+      <string>app.appId,
+      {
+        name: generator.word(),
+      }
+    )
     expect(updateResponse).toHaveStatusCode(200)
     expect(updatedApp.name).not.toEqual(app.name)
   })
@@ -134,14 +141,15 @@ describe("Internal API - /applications endpoints", () => {
     expect(app.appId).toBeDefined()
     config.applications.api.appId = app.appId
 
-    const [revertResponse, revert] = await config.applications.revert(<string>app.appId)
+    const [revertResponse, revert] = await config.applications.revert(
+      <string>app.appId
+    )
     expect(revertResponse).toHaveStatusCode(400)
     expect(revert).toEqual({
       message: "App has not yet been deployed",
-      status: 400
+      status: 400,
     })
   })
-
 
   it("POST - Revert Changes", async () => {
     const [response, app] = await config.applications.create(generateApp())
@@ -155,22 +163,25 @@ describe("Internal API - /applications endpoints", () => {
     expect(publish.status).toEqual("SUCCESS")
 
     // Change/add component to the app
-    const [screenResponse, screen] = await config.applications.addScreentoApp(generateScreen())
+    const [screenResponse, screen] = await config.applications.addScreentoApp(
+      generateScreen()
+    )
     expect(screenResponse).toHaveStatusCode(200)
     expect(screen._id).toBeDefined()
 
     // // Revert the app to published state
-    const [revertResponse, revert] = await config.applications.revert(<string>app.appId)
+    const [revertResponse, revert] = await config.applications.revert(
+      <string>app.appId
+    )
     expect(revertResponse).toHaveStatusCode(200)
     expect(revert).toEqual({
-      message: "Reverted changes successfully."
+      message: "Reverted changes successfully.",
     })
 
     // Check screen is removed
     const [routesResponse, routes] = await config.applications.getRoutes()
     expect(routesResponse).toHaveStatusCode(200)
     expect(routes.routes["/test"]).toBeUndefined()
-
   })
 
   it("DELETE - Delete an application", async () => {
@@ -181,5 +192,4 @@ describe("Internal API - /applications endpoints", () => {
     const [deleteResponse] = await config.applications.delete(<string>app.appId)
     expect(deleteResponse).toHaveStatusCode(200)
   })
-
 })
