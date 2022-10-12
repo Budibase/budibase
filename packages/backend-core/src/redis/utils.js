@@ -28,6 +28,7 @@ exports.Databases = {
   LICENSES: "license",
   GENERIC_CACHE: "data_cache",
   WRITE_THROUGH: "writeThrough",
+  LOCKS: "locks",
 }
 
 /**
