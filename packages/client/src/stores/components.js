@@ -141,7 +141,7 @@ const createComponentStore = () => {
   }
 
   const registerCustomComponent = ({ Component, schema, version }) => {
-    if (!Component || !schema?.schema?.name) {
+    if (!Component || !schema?.schema?.name || !version) {
       return
     }
     const component = `plugin/${schema.schema.name}`
@@ -149,7 +149,6 @@ const createComponentStore = () => {
       state.customComponentManifest[component] = {
         Component,
         schema,
-        version,
       }
       return state
     })

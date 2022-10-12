@@ -4,12 +4,9 @@ import env from "../environment"
 
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
-import * as quota1 from "./functions/quotas1"
+import * as syncQuotas from "./functions/syncQuotas"
 import * as appUrls from "./functions/appUrls"
-import * as developerQuota from "./functions/developerQuota"
-import * as publishedAppsQuota from "./functions/publishedAppsQuota"
 import * as backfill from "./functions/backfill"
-
 /**
  * Populate the migration function and additional configuration from
  * the static migration definitions.
@@ -27,10 +24,10 @@ export const buildMigrations = () => {
         })
         break
       }
-      case MigrationName.QUOTAS_1: {
+      case MigrationName.SYNC_QUOTAS: {
         serverMigrations.push({
           ...definition,
-          fn: quota1.run,
+          fn: syncQuotas.run,
         })
         break
       }
@@ -39,20 +36,6 @@ export const buildMigrations = () => {
           ...definition,
           appOpts: { all: true },
           fn: appUrls.run,
-        })
-        break
-      }
-      case MigrationName.DEVELOPER_QUOTA: {
-        serverMigrations.push({
-          ...definition,
-          fn: developerQuota.run,
-        })
-        break
-      }
-      case MigrationName.PUBLISHED_APP_QUOTA: {
-        serverMigrations.push({
-          ...definition,
-          fn: publishedAppsQuota.run,
         })
         break
       }

@@ -57,3 +57,10 @@ export const DefaultAppTheme = {
   navBackground: "var(--spectrum-global-color-gray-50)",
   navTextColor: "var(--spectrum-global-color-gray-800)",
 }
+
+export const PluginSource = {
+  URL: "URL",
+  NPM: "NPM",
+  GITHUB: "Github",
+  FILE: "File Upload",
+}

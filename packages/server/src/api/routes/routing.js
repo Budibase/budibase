@@ -3,7 +3,7 @@ const authorized = require("../../middleware/authorized")
 const { BUILDER } = require("@budibase/backend-core/permissions")
 const controller = require("../controllers/routing")
 
-const router = Router()
+const router = new Router()
 
 router
   // gets correct structure for user role

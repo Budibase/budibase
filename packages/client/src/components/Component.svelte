@@ -125,7 +125,9 @@
   // Empty components are those which accept children but do not have any.
   // Empty states can be shown for these components, but can be disabled
   // in the component manifest.
-  $: empty = interactive && !children.length && hasChildren
+  $: empty =
+    (interactive && !children.length && hasChildren) ||
+    hasMissingRequiredSettings
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
@@ -140,6 +142,10 @@
   // Determine and apply settings to the component
   $: applySettings(staticSettings, enrichedSettings, conditionalSettings)
 
+  // Determine custom css.
+  // Broken out as a separate variable to minimize reactivity updates.
+  $: customCSS = cachedSettings?._css
+
   // Scroll the selected element into view
   $: selected && scrollIntoView()
 
@@ -149,6 +155,7 @@
     children: children.length,
     styles: {
       ...instance._styles,
+      custom: customCSS,
       id,
       empty: emptyState,
       interactive,
@@ -247,14 +254,18 @@
     // Get raw settings
     let settings = {}
     Object.entries(instance)
-      .filter(([name]) => name === "_conditions" || !name.startsWith("_"))
+      .filter(([name]) => !name.startsWith("_"))
       .forEach(([key, value]) => {
         settings[key] = value
       })
-
-    // Derive static, dynamic and nested settings if the instance changed
     let newStaticSettings = { ...settings }
     let newDynamicSettings = { ...settings }
+
+    // Attach some internal properties
+    newDynamicSettings["_conditions"] = instance._conditions
+    newDynamicSettings["_css"] = instance._styles?.custom
+
+    // Derive static, dynamic and nested settings if the instance changed
     settingsDefinition?.forEach(setting => {
       if (setting.nested) {
         delete newDynamicSettings[setting.key]
@@ -367,6 +378,11 @@
           // initial props are up to date. By setting it this way rather than
           // setting it on initialSettings directly, we avoid a double render.
           cachedSettings[key] = allSettings[key]
+
+          // Don't update components for internal properties
+          if (key.startsWith("_")) {
+            return
+          }
 
           if (ref?.$$set) {
             // Programmatically set the prop to avoid svelte reactive statements

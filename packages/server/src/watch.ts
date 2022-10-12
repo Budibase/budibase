@@ -4,7 +4,7 @@ import chokidar from "chokidar"
 import fs from "fs"
 import { tenancy } from "@budibase/backend-core"
 import { DEFAULT_TENANT_ID } from "@budibase/backend-core/constants"
-import { processPlugin } from "./api/controllers/plugin"
+import { processUploadedPlugin } from "./api/controllers/plugin"
 
 export function watch() {
   const watchPath = path.join(env.PLUGINS_DIR, "./**/*.tar.gz")
@@ -28,7 +28,7 @@ export function watch() {
           const split = path.split("/")
           const name = split[split.length - 1]
           console.log("Importing plugin:", path)
-          await processPlugin({ name, path })
+          await processUploadedPlugin({ name, path })
         } catch (err: any) {
           const message = err?.message ? err?.message : err
           console.error("Failed to import plugin:", message)

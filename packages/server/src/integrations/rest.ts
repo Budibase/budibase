@@ -15,6 +15,7 @@ import {
 } from "../definitions/datasource"
 import { get } from "lodash"
 import * as https from "https"
+import qs from "querystring"
 const fetch = require("node-fetch")
 const { formatBytes } = require("../utilities")
 const { performance } = require("perf_hooks")
@@ -80,6 +81,12 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.BOOLEAN,
       default: true,
       required: false,
+    },
+    legacyHttpParser: {
+      display: "Legacy HTTP Support",
+      type: DatasourceFieldType.BOOLEAN,
+      required: false,
+      default: false,
     },
   },
   query: {
@@ -218,9 +225,11 @@ class RestIntegration implements IntegrationBase {
     }
 
     if (queryString) {
-      queryString = "?" + queryString
+        // make sure the query string is fully encoded
+      queryString = "?" + qs.encode(qs.decode(queryString))
     }
     const main = `${path}${queryString}`
+
     let complete = main
     if (this.config.url && !main.startsWith("http")) {
       complete = !this.config.url ? main : `${this.config.url}/${main}`
@@ -386,6 +395,11 @@ class RestIntegration implements IntegrationBase {
       input.agent = new https.Agent({
         rejectUnauthorized: false,
       })
+    }
+
+    if (this.config.legacyHttpParser) {
+      // https://github.com/nodejs/node/issues/43798
+      input.extraHttpOptions = { insecureHTTPParser: true }
     }
 
     this.startTimeMs = performance.now()

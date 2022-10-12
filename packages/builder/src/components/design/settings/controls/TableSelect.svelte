@@ -1,26 +1,28 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import { tables } from "stores/backend"
+  import { createEventDispatcher } from "svelte"
+  import { tables as tablesStore } from "stores/backend"
 
   export let value
+
+  const dispatch = createEventDispatcher()
+
+  $: tables = $tablesStore.list.map(m => ({
+    label: m.name,
+    tableId: m._id,
+    type: "table",
+  }))
+
+  const onChange = e => {
+    const dataSource = tables?.find(x => x.tableId === e.detail)
+    dispatch("change", dataSource)
+  }
 </script>
 
-<div>
-  <Select extraThin secondary wide on:change {value}>
-    <option value="">Choose a table</option>
-    {#each $tables.list as table}
-      <option value={table._id}>{table.name}</option>
-    {/each}
-  </Select>
-</div>
-
-<style>
-  div {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-  }
-  div :global(> *) {
-    flex: 1 1 auto;
-  }
-</style>
+<Select
+  on:change={onChange}
+  value={value?.tableId}
+  options={tables}
+  getOptionValue={x => x.tableId}
+  getOptionLabel={x => x.label}
+/>

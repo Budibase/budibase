@@ -43,7 +43,8 @@ const env = {
   PLATFORM_URL: process.env.PLATFORM_URL,
   APPS_URL: process.env.APPS_URL,
   // ports
-  PORT: process.env.PORT || process.env.WORKER_PORT,
+  // prefer worker port to generic port
+  PORT: process.env.WORKER_PORT || process.env.PORT,
   CLUSTER_PORT: process.env.CLUSTER_PORT,
   // flags
   NODE_ENV: process.env.NODE_ENV,
@@ -62,6 +63,7 @@ const env = {
   // other
   CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
+  ENCRYPTED_TEST_PUBLIC_API_KEY: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY,
   _set(key: any, value: any) {
     process.env[key] = value
     module.exports[key] = value
