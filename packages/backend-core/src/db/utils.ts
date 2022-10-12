@@ -4,7 +4,7 @@ import env from "../environment"
 import { SEPARATOR, DocumentType, UNICODE_MAX, ViewName } from "./constants"
 import { getTenantId, getGlobalDB } from "../context"
 import { getGlobalDBName } from "./tenancy"
-import { doWithDB, allDbs, directCouchQuery } from "./index"
+import { doWithDB, allDbs, directCouchQuery, directCouchAllDbs } from "./index"
 import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
@@ -188,9 +188,9 @@ export function getRoleParams(roleId = null, otherProps = {}) {
   return getDocParams(DocumentType.ROLE, roleId, otherProps)
 }
 
-export function getStartEndKeyURL(base: any, baseKey: any, tenantId = null) {
+export function getStartEndKeyURL(baseKey: any, tenantId = null) {
   const tenancy = tenantId ? `${SEPARATOR}${tenantId}` : ""
-  return `${base}?startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
+  return `startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
 }
 
 /**
@@ -206,11 +206,10 @@ export async function getAllDbs(opts = { efficient: false }) {
     return allDbs()
   }
   let dbs: any[] = []
-  async function addDbs(couchPath: string) {
-    const json = await directCouchQuery(couchPath)
+  async function addDbs(queryString?: string) {
+    const json = await directCouchAllDbs(queryString)
     dbs = dbs.concat(json)
   }
-  let couchPath = "/_all_dbs"
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY || (!efficient && tenantId === DEFAULT_TENANT_ID)) {
     // just get all DBs when:
@@ -218,12 +217,12 @@ export async function getAllDbs(opts = { efficient: false }) {
     // - default tenant
     //    - apps dbs don't contain tenant id
     //    - non-default tenant dbs are filtered out application side in getAllApps
-    await addDbs(couchPath)
+    await addDbs()
   } else {
     // get prod apps
-    await addDbs(getStartEndKeyURL(couchPath, DocumentType.APP, tenantId))
+    await addDbs(getStartEndKeyURL(DocumentType.APP, tenantId))
     // get dev apps
-    await addDbs(getStartEndKeyURL(couchPath, DocumentType.APP_DEV, tenantId))
+    await addDbs(getStartEndKeyURL(DocumentType.APP_DEV, tenantId))
     // add global db name
     dbs.push(getGlobalDBName(tenantId))
   }
