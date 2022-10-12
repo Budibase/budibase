@@ -1,10 +1,12 @@
 import { db as dbCore } from "@budibase/backend-core"
-import { budibaseTempDir } from "../../utilities/budibaseDir"
+import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, ATTACHMENT_DIR } from "./constants"
-import { uploadDirectory } from "../../utilities/fileSystem/utilities"
-import { ObjectStoreBuckets } from "../../constants"
+import { uploadDirectory } from "../../../utilities/fileSystem/utilities"
+import { ObjectStoreBuckets, FieldTypes } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
+import sdk from "../../"
+import { CouchFindOptions, Row } from "@budibase/types"
 const uuid = require("uuid/v4")
 const tar = require("tar")
 
@@ -64,8 +66,29 @@ export async function importApp(
   const { ok } = await db.load(dbStream)
   if (!ok) {
     throw "Error loading database dump from template."
-  } else {
-    // TODO: need to iterate over attachments and update their URLs
+  }
+  // iterate through attachment documents and update them
+  const tables = await sdk.tables.getAllInternalTables(db)
+  for (let table of tables) {
+    const attachmentCols: string[] = []
+    for (let [key, column] of Object.entries(table.schema)) {
+      if (column.type === FieldTypes.ATTACHMENT) {
+        attachmentCols.push(key)
+      }
+    }
+    // no attachment columns, nothing to do
+    if (attachmentCols.length === 0) {
+      continue
+    }
+    // use the CouchDB Mango query API to lookup rows that have attachments
+    const params: CouchFindOptions = { selector: {} }
+    attachmentCols.forEach(col => (params.selector[col] = { $exists: true }))
+    const { rows } = await dbCore.directCouchFind(db.name, params)
+    for (let row of rows) {
+      // TODO:
+    }
+    // write back the updated attachments
+    await db.bulkDocs(rows)
   }
   return ok
 }

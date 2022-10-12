@@ -49,4 +49,5 @@ export interface Table extends Document {
   sourceId?: string
   relatedFormula?: string[]
   constrained?: string[]
+  sql?: boolean
 }

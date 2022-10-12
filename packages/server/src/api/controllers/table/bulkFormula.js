@@ -1,10 +1,11 @@
 const { FieldTypes, FormulaTypes } = require("../../../constants")
-const { getAllInternalTables, clearColumns } = require("./utils")
+const { clearColumns } = require("./utils")
 const { doesContainStrings } = require("@budibase/string-templates")
 const { cloneDeep } = require("lodash/fp")
 const { isEqual, uniq } = require("lodash")
 const { updateAllFormulasInTable } = require("../row/staticFormula")
 const { getAppDB } = require("@budibase/backend-core/context")
+const sdk = require("../../../sdk")
 
 function isStaticFormula(column) {
   return (
@@ -39,7 +40,7 @@ function getFormulaThatUseColumn(table, columnNames) {
  */
 async function checkIfFormulaNeedsCleared(table, { oldTable, deletion }) {
   // start by retrieving all tables, remove the current table from the list
-  const tables = (await getAllInternalTables()).filter(
+  const tables = (await sdk.tables.getAllInternalTables()).filter(
     tbl => tbl._id !== table._id
   )
   const schemaToUse = oldTable ? oldTable.schema : table.schema
@@ -99,7 +100,7 @@ async function updateRelatedFormulaLinksOnTables(
 ) {
   const db = getAppDB()
   // start by retrieving all tables, remove the current table from the list
-  const tables = (await getAllInternalTables()).filter(
+  const tables = (await sdk.tables.getAllInternalTables()).filter(
     tbl => tbl._id !== table._id
   )
   // clone the tables, so we can compare at end

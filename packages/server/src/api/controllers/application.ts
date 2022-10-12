@@ -150,7 +150,7 @@ async function createInstance(template: any) {
       throw "Error loading database dump from memory."
     }
   } else if (template && template.useTemplate === "true") {
-    await sdk.apps.imports.importApp(appId, db, template)
+    await sdk.backups.importApp(appId, db, template)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)

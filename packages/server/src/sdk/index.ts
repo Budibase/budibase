@@ -1,5 +1,7 @@
-import * as apps from "./app"
+import { default as backups } from "./app/backups"
+import { default as tables } from "./app/tables"
 
 export default {
-  apps,
+  backups,
+  tables,
 }

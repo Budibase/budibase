@@ -9,7 +9,7 @@ exports.exportApps = async ctx => {
     ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
   }
   const apps = await getAllApps({ all: true })
-  const globalDBString = await sdk.apps.exports.exportDB(getGlobalDBName(), {
+  const globalDBString = await sdk.backups.exportDB(getGlobalDBName(), {
     filter: doc => !doc._id.startsWith(DocumentType.USER),
   })
   // only export the dev apps as they will be the latest, the user can republish the apps
@@ -17,10 +17,7 @@ exports.exportApps = async ctx => {
   let appIds = apps
     .map(app => app.appId || app._id)
     .filter(appId => isDevAppID(appId))
-  const tmpPath = await sdk.apps.exports.exportMultipleApps(
-    appIds,
-    globalDBString
-  )
+  const tmpPath = await sdk.backups.exportMultipleApps(appIds, globalDBString)
   const filename = `cloud-export-${new Date().getTime()}.tar.gz`
   ctx.attachment(filename)
   ctx.body = streamFile(tmpPath)
