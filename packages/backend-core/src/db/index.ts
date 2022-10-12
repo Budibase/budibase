@@ -40,7 +40,7 @@ export async function init(opts?: PouchOptions) {
 // NOTE: THIS IS A DANGEROUS FUNCTION - USE WITH CAUTION
 // this function is prone to leaks, should only be used
 // in situations that using the function doWithDB does not work
-export async function dangerousGetDB(dbName: string, opts?: any) {
+export function dangerousGetDB(dbName: string, opts?: any) {
   checkInitialised()
   if (env.isTest()) {
     dbList.add(dbName)
@@ -75,13 +75,13 @@ export async function closeDB(db: PouchDB.Database) {
 // the DB when we're done, without this manual requests would
 // need to close the database when done with it to avoid memory leaks
 export async function doWithDB(dbName: string, cb: any, opts = {}) {
-  const db = exports.dangerousGetDB(dbName, opts)
+  const db = dangerousGetDB(dbName, opts)
   // need this to be async so that we can correctly close DB after all
   // async operations have been completed
   try {
     return await cb(db)
   } finally {
-    await exports.closeDB(db)
+    await closeDB(db)
   }
 }
 
