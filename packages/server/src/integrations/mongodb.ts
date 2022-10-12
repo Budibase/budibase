@@ -58,6 +58,25 @@ const SCHEMA: Integration = {
     },
     aggregate: {
       type: QueryType.JSON,
+      steps: [
+        {
+          key: "$addFields",
+          template: "{\n\t\n}",
+        },
+        {
+          key: "$bucket",
+          template: `{
+  "groupBy": "",
+  "boundaries": [],
+  "default": "",
+  "output": {}
+}`,
+        },
+        {
+          key: "$match",
+          template: "{\n\t\n}",
+        },
+      ]
     },
   },
   extra: {

@@ -70,6 +70,11 @@ export enum FilterType {
   ONE_OF = "oneOf",
 }
 
+export interface StepDefinition {
+  key: string
+  template: string
+}
+
 export interface QueryDefinition {
   type: QueryType
   displayName?: string
@@ -77,6 +82,7 @@ export interface QueryDefinition {
   customisable?: boolean
   fields?: object
   urlDisplay?: boolean
+  steps?: Array<StepDefinition>
 }
 
 export interface ExtraQueryConfig {
