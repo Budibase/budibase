@@ -37,10 +37,15 @@
     query.fields[schema.type] = detail.value
   }
 
-  function updateEditors(deleteIndex) {
+  function updateEditorsOnDelete(deleteIndex) {
     for (let i = deleteIndex; i < query.fields.steps?.length - 1; i++) {
       flowEditors[i].update(query.fields.steps[i + 1].value.value)
     }
+  }
+  function updateEditorsOnSwap(actionIndex, targetIndex) {
+    const target = query.fields.steps[targetIndex].value.value
+    flowEditors[targetIndex].update(query.fields.steps[actionIndex].value.value)
+    flowEditors[actionIndex].update(target)
   }
 
   function setEditorTemplate(fromKey, toKey, index) {
@@ -119,14 +124,44 @@
               <div class="blockSection">
                 <div class="block-options">
                   Stage {index + 1}
-                  <ActionButton
-                    on:click={() => {
-                      updateEditors(index)
-                      query.fields.steps.splice(index, 1)
-                      query.fields.steps = [...query.fields.steps]
-                    }}
-                    icon="DeleteOutline"
-                  />
+                  <div class="block-actions">
+                    <div style="margin-right: 24px;">
+                      {#if index > 0}
+                        <ActionButton
+                          quiet
+                          on:click={() => {
+                            updateEditorsOnSwap(index, index - 1)
+                            const target = query.fields.steps[index - 1].key
+                            query.fields.steps[index - 1].key =
+                              query.fields.steps[index].key
+                            query.fields.steps[index].key = target
+                          }}
+                          icon="ChevronUp"
+                        />
+                      {/if}
+                      {#if index < query.fields.steps.length - 1}
+                        <ActionButton
+                          quiet
+                          on:click={() => {
+                            updateEditorsOnSwap(index, index + 1)
+                            const target = query.fields.steps[index + 1].key
+                            query.fields.steps[index + 1].key =
+                              query.fields.steps[index].key
+                            query.fields.steps[index].key = target
+                          }}
+                          icon="ChevronDown"
+                        />
+                      {/if}
+                    </div>
+                    <ActionButton
+                      on:click={() => {
+                        updateEditorsOnDelete(index)
+                        query.fields.steps.splice(index, 1)
+                        query.fields.steps = [...query.fields.steps]
+                      }}
+                      icon="DeleteOutline"
+                    />
+                  </div>
                 </div>
                 <Layout noPadding gap="S">
                   <div class="fields">
@@ -208,6 +243,11 @@
     display: flex;
     align-items: center;
     padding-bottom: 24px;
+  }
+  .block-actions {
+    justify-content: space-between;
+    display: flex;
+    align-items: right;
   }
 
   .fields {
