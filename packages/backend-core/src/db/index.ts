@@ -107,7 +107,8 @@ export async function directCouchQuery(
     },
   }
   if (body && method !== "GET") {
-    params.body = body
+    params.body = JSON.stringify(body)
+    params.headers["Content-Type"] = "application/json"
   }
   const response = await fetch(checkSlashesInUrl(encodeURI(couchUrl)), params)
   if (response.status < 300) {
@@ -115,6 +116,14 @@ export async function directCouchQuery(
   } else {
     throw "Cannot connect to CouchDB instance"
   }
+}
+
+export async function directCouchAllDbs(queryString?: string) {
+  let couchPath = "/_all_dbs"
+  if (queryString) {
+    couchPath += `?${queryString}`
+  }
+  return await directCouchQuery(couchPath)
 }
 
 export async function directCouchFind(dbName: string, opts: CouchFindOptions) {
