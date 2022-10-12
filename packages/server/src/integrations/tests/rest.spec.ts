@@ -256,7 +256,7 @@ describe("REST Integration", () => {
         authConfigId: "c59c14bd1898a43baa08da68959b24686",
       }
       await config.integration.read(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/`, {
         method: "GET",
         headers: {
           Authorization: "Basic dXNlcjpwYXNzd29yZA==",
@@ -269,7 +269,7 @@ describe("REST Integration", () => {
         authConfigId: "0d91d732f34e4befabeff50b392a8ff3",
       }
       await config.integration.read(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/`, {
         method: "GET",
         headers: {
           Authorization: "Bearer mytoken",
@@ -327,7 +327,7 @@ describe("REST Integration", () => {
         },
       }
       await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: JSON.stringify({
           [pageParam]: pageValue,
           [sizeParam]: sizeValue,
@@ -359,7 +359,7 @@ describe("REST Integration", () => {
         },
       }
       await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: expect.any(FormData),
         headers: {},
         method: "POST",
@@ -390,7 +390,7 @@ describe("REST Integration", () => {
         },
       }
       await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: expect.any(URLSearchParams),
         headers: {},
         method: "POST",
@@ -456,7 +456,7 @@ describe("REST Integration", () => {
         },
       }
       const res = await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: JSON.stringify({
           [pageParam]: pageValue,
           [sizeParam]: sizeValue,
@@ -490,7 +490,7 @@ describe("REST Integration", () => {
         },
       }
       const res = await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: expect.any(FormData),
         headers: {},
         method: "POST",
@@ -523,7 +523,7 @@ describe("REST Integration", () => {
         },
       }
       const res = await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: expect.any(URLSearchParams),
         headers: {},
         method: "POST",
@@ -563,7 +563,7 @@ describe("REST Integration", () => {
         legacyHttpParser: true,
       })
       await config.integration.read({})
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/`, {
         method: "GET",
         headers: {},
         extraHttpOptions: {
