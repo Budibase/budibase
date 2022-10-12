@@ -9,13 +9,13 @@ import InternalAPIClient from "./InternalAPIClient"
       this.api = apiClient
     }
   
-    async createScreen(body: any): Promise<[Response, Screen]> {
+    async create(body: any): Promise<[Response, Screen]> {
       const response = await this.api.post(`/screens`, { body })
       const json = await response.json()
       return [response, json]
     }
 
-    async deleteScreen(screenId: any, rev: any): Promise<[Response, Screen]> {
+    async delete(screenId: string, rev: string): Promise<[Response, Screen]> {
       const response = await this.api.del(`/screens/${screenId}/${rev}`)
       const json = await response.json()
       return [response, json]

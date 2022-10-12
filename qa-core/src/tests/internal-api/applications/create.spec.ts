@@ -164,7 +164,7 @@ describe("Internal API - /applications endpoints", () => {
 
     // Change/add component to the app
     const [screenResponse, screen] = await config.applications.addScreentoApp(
-      generateScreen()
+      generateScreen("BASIC")
     )
     expect(screenResponse).toHaveStatusCode(200)
     expect(screen._id).toBeDefined()
