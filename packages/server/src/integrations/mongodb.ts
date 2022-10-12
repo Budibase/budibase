@@ -564,14 +564,14 @@ class MongoIntegration implements IntegrationBase {
           query.steps.map(({ key, value }) => {
             let temp: any = {}
             temp[key] = JSON.parse(value.value)
-            return temp
+            return this.createObjectIds(temp)
           })
         )) {
           response.push(doc)
         }
       } else {
         const stages: Array<any> = query.json as Array<any>
-        for await (const doc of collection.aggregate(stages ? stages : [])) {
+        for await (const doc of collection.aggregate(stages ? this.createObjectIds(stages) : [])) {
           response.push(doc)
         }
       }
