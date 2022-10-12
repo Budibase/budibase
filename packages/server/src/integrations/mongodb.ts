@@ -571,7 +571,9 @@ class MongoIntegration implements IntegrationBase {
         }
       } else {
         const stages: Array<any> = query.json as Array<any>
-        for await (const doc of collection.aggregate(stages ? this.createObjectIds(stages) : [])) {
+        for await (const doc of collection.aggregate(
+          stages ? this.createObjectIds(stages) : []
+        )) {
           response.push(doc)
         }
       }
