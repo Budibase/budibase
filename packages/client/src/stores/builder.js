@@ -47,6 +47,9 @@ const createBuilderStore = () => {
     duplicateComponent: id => {
       dispatchEvent("duplicate-component", { id })
     },
+    deleteComponent: id => {
+      dispatchEvent("delete-component", { id })
+    },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
@@ -84,6 +87,9 @@ const createBuilderStore = () => {
     },
     highlightSetting: setting => {
       dispatchEvent("highlight-setting", { setting })
+    },
+    ejectBlock: (id, definition) => {
+      dispatchEvent("eject-block", { id, definition })
     },
     updateUsedPlugin: (name, hash) => {
       // Check if we used this plugin

@@ -12,6 +12,7 @@
   export let value = []
   export let name
   export let bindings
+  export let nested
 
   let drawer
   let tmpValue
@@ -90,6 +91,7 @@
     eventType={name}
     {bindings}
     {key}
+    {nested}
   />
 </Drawer>
 
