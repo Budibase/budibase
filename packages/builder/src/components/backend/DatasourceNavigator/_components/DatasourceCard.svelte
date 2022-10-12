@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { Heading, Detail } from "@budibase/bbui"
-  import { getIcon } from "../icons"
+  import IntegrationIcon from "../IntegrationIcon.svelte"
 
   export let integration
   export let integrationType
@@ -16,11 +16,7 @@
   class="item hoverable"
 >
   <div class="item-body" class:with-type={!!schema.type}>
-    <svelte:component
-      this={getIcon(integrationType, schema)}
-      height="20"
-      width="20"
-    />
+    <IntegrationIcon {integrationType} {schema} size="25" />
     <div class="text">
       <Heading size="XXS">{schema.friendlyName}</Heading>
       {#if schema.type}

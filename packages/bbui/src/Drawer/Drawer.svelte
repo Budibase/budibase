@@ -78,7 +78,7 @@
     bottom: 0;
     background: var(--background);
     border-top: var(--border-light);
-    z-index: 2;
+    z-index: 3;
   }
 
   .fillWidth {

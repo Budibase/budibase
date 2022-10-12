@@ -88,27 +88,12 @@ export const getFrontendStore = () => {
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath } = pkg
 
-      // Fetch component definitions.
-      // Allow errors to propagate.
-      const components = await API.fetchComponentLibDefinitions(
-        application.appId
-      )
-
-      // Filter out custom component keys so we can flag them
-      const customComponents = Object.keys(components).filter(name =>
-        name.startsWith("plugin/")
-      )
+      await store.actions.components.refreshDefinitions(application.appId)
 
       // Reset store state
       store.update(state => ({
         ...state,
         libraries: application.componentLibraries,
-        components,
-        customComponents,
-        clientFeatures: {
-          ...INITIAL_FRONTEND_STATE.clientFeatures,
-          ...components.features,
-        },
         name: application.name,
         description: application.description,
         appId: application.appId,
@@ -345,6 +330,16 @@ export const getFrontendStore = () => {
           return state
         })
       },
+      sendEvent: (name, payload) => {
+        const { previewEventHandler } = get(store)
+        previewEventHandler?.(name, payload)
+      },
+      registerEventHandler: handler => {
+        store.update(state => {
+          state.previewEventHandler = handler
+          return state
+        })
+      },
     },
     layouts: {
       select: layoutId => {
@@ -385,6 +380,29 @@ export const getFrontendStore = () => {
       },
     },
     components: {
+      refreshDefinitions: async appId => {
+        if (!appId) {
+          appId = get(store).appId
+        }
+
+        // Fetch definitions and filter out custom component definitions so we
+        // can flag them
+        const components = await API.fetchComponentLibDefinitions(appId)
+        const customComponents = Object.keys(components).filter(name =>
+          name.startsWith("plugin/")
+        )
+
+        // Update store
+        store.update(state => ({
+          ...state,
+          components,
+          customComponents,
+          clientFeatures: {
+            ...INITIAL_FRONTEND_STATE.clientFeatures,
+            ...components.features,
+          },
+        }))
+      },
       getDefinition: componentName => {
         if (!componentName) {
           return null
@@ -428,7 +446,7 @@ export const getFrontendStore = () => {
           _id: Helpers.uuid(),
           _component: definition.component,
           _styles: { normal: {}, hover: {}, active: {} },
-          _instanceName: `New ${definition.name}`,
+          _instanceName: `New ${definition.friendlyName || definition.name}`,
           ...cloneDeep(props),
           ...extras,
         }
@@ -603,7 +621,7 @@ export const getFrontendStore = () => {
 
           // Make new component unique if copying
           if (!cut) {
-            makeComponentUnique(componentToPaste)
+            componentToPaste = makeComponentUnique(componentToPaste)
           }
           newComponentId = componentToPaste._id
 
@@ -882,6 +900,50 @@ export const getFrontendStore = () => {
           }
           component[name] = value
         })
+      },
+      requestEjectBlock: componentId => {
+        store.actions.preview.sendEvent("eject-block", componentId)
+      },
+      handleEjectBlock: async (componentId, ejectedDefinition) => {
+        let nextSelectedComponentId
+
+        await store.actions.screens.patch(screen => {
+          const block = findComponent(screen.props, componentId)
+          const parent = findComponentParent(screen.props, componentId)
+
+          // Sanity check
+          if (!block || !parent?._children?.length) {
+            return false
+          }
+
+          // Attach block children back into ejected definition, using the
+          // _containsSlot flag to know where to insert them
+          const slotContainer = findAllMatchingComponents(
+            ejectedDefinition,
+            x => x._containsSlot
+          )[0]
+          if (slotContainer) {
+            delete slotContainer._containsSlot
+            slotContainer._children = [
+              ...(slotContainer._children || []),
+              ...(block._children || []),
+            ]
+          }
+
+          // Replace block with ejected definition
+          ejectedDefinition = makeComponentUnique(ejectedDefinition)
+          const index = parent._children.findIndex(x => x._id === componentId)
+          parent._children[index] = ejectedDefinition
+          nextSelectedComponentId = ejectedDefinition._id
+        })
+
+        // Select new root component
+        if (nextSelectedComponentId) {
+          store.update(state => {
+            state.selectedComponentId = nextSelectedComponentId
+            return state
+          })
+        }
       },
     },
     links: {

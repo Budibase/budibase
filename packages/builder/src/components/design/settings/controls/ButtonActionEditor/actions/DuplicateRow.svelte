@@ -73,13 +73,13 @@
 
 <div class="root">
   <Body size="S">
-    Choose the data source that provides the row you would like to duplicate.
+    Choose the datasource that provides the row you would like to duplicate.
     <br />
     You can always add or override fields manually.
   </Body>
 
   <div class="params">
-    <Label small>Data Source</Label>
+    <Label small>Datasource</Label>
     <Select
       bind:value={parameters.providerId}
       options={providerOptions}

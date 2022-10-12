@@ -1,41 +1,37 @@
 import env from "../../environment"
-import { quotas } from "@budibase/pro"
 import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
 import {
-  tenancy,
-  utils,
-  db as dbUtils,
-  constants,
-  cache,
-  users as usersCore,
-  deprovisioning,
-  sessions,
-  HTTPError,
   accounts,
-  migrations,
-  StaticDatabases,
-  ViewName,
+  cache,
+  constants,
+  db as dbUtils,
+  deprovisioning,
   events,
+  HTTPError,
+  migrations,
+  sessions,
+  tenancy,
+  users as usersCore,
+  utils,
+  ViewName,
 } from "@budibase/backend-core"
 import {
-  MigrationType,
-  PlatformUserByEmail,
-  User,
-  BulkCreateUsersResponse,
-  CreateUserResponse,
-  BulkDeleteUsersResponse,
-  CloudAccount,
-  AllDocsResponse,
-  RowResponse,
-  BulkDocsResponse,
   AccountMetadata,
+  AllDocsResponse,
+  BulkUserResponse,
+  CloudAccount,
+  CreateUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
+  MigrationType,
+  PlatformUserByEmail,
+  RowResponse,
+  User,
 } from "@budibase/types"
-import { groups as groupUtils } from "@budibase/pro"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
+import { groups as groupsSdk } from "@budibase/pro"
 
 const PAGE_LIMIT = 8
 
@@ -120,7 +116,7 @@ interface SaveUserOpts {
 }
 
 const buildUser = async (
-  user: any,
+  user: User,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
@@ -230,16 +226,7 @@ export const save = async (
 
   try {
     // save the user to db
-    let response
-    const putUserFn = () => {
-      return db.put(builtUser)
-    }
-
-    if (eventHelpers.isAddingBuilder(builtUser, dbUser)) {
-      response = await quotas.addDeveloper(putUserFn)
-    } else {
-      response = await putUserFn()
-    }
+    let response = await db.put(builtUser)
     builtUser._rev = response.rev
 
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
@@ -278,39 +265,61 @@ export const addTenant = async (
 }
 
 const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
-  return dbUtils.queryGlobalView(ViewName.USER_BY_EMAIL, {
-    keys: emails,
+  const lcEmails = emails.map(email => email.toLowerCase())
+  const params = {
+    keys: lcEmails,
     include_docs: true,
+  }
+
+  const opts = {
     arrayResponse: true,
-  })
+  }
+
+  return dbUtils.queryGlobalView(
+    ViewName.USER_BY_EMAIL,
+    params,
+    undefined,
+    opts
+  ) as Promise<User[]>
 }
 
 const getExistingPlatformUsers = async (
   emails: string[]
 ): Promise<PlatformUserByEmail[]> => {
-  return dbUtils.doWithDB(
-    StaticDatabases.PLATFORM_INFO.name,
-    async (infoDb: any) => {
-      const response: AllDocsResponse<PlatformUserByEmail> =
-        await infoDb.allDocs({
-          keys: emails,
-          include_docs: true,
-        })
-      return response.rows
-        .filter(row => row.doc && (row.error !== "not_found") !== null)
-        .map((row: any) => row.doc)
-    }
-  )
+  const lcEmails = emails.map(email => email.toLowerCase())
+  const params = {
+    keys: lcEmails,
+    include_docs: true,
+  }
+
+  const opts = {
+    arrayResponse: true,
+  }
+  return dbUtils.queryPlatformView(
+    ViewName.PLATFORM_USERS_LOWERCASE,
+    params,
+    opts
+  ) as Promise<PlatformUserByEmail[]>
 }
 
 const getExistingAccounts = async (
   emails: string[]
 ): Promise<AccountMetadata[]> => {
-  return dbUtils.queryPlatformView(ViewName.ACCOUNT_BY_EMAIL, {
-    keys: emails,
+  const lcEmails = emails.map(email => email.toLowerCase())
+  const params = {
+    keys: lcEmails,
     include_docs: true,
+  }
+
+  const opts = {
     arrayResponse: true,
-  })
+  }
+
+  return dbUtils.queryPlatformView(
+    ViewName.ACCOUNT_BY_EMAIL,
+    params,
+    opts
+  ) as Promise<AccountMetadata[]>
 }
 
 /**
@@ -332,14 +341,13 @@ const searchExistingEmails = async (emails: string[]) => {
   const existingAccounts = await getExistingAccounts(emails)
   matchedEmails.push(...existingAccounts.map(account => account.email))
 
-  return [...new Set(matchedEmails)]
+  return [...new Set(matchedEmails.map(email => email.toLowerCase()))]
 }
 
 export const bulkCreate = async (
   newUsersRequested: User[],
   groups: string[]
-): Promise<BulkCreateUsersResponse> => {
-  const db = tenancy.getGlobalDB()
+): Promise<BulkUserResponse["created"]> => {
   const tenantId = tenancy.getTenantId()
 
   let usersToSave: any[] = []
@@ -351,8 +359,10 @@ export const bulkCreate = async (
 
   for (const newUser of newUsersRequested) {
     if (
-      newUsers.find((x: any) => x.email === newUser.email) ||
-      existingEmails.includes(newUser.email)
+      newUsers.find(
+        (x: User) => x.email.toLowerCase() === newUser.email.toLowerCase()
+      ) ||
+      existingEmails.includes(newUser.email.toLowerCase())
     ) {
       unsuccessful.push({
         email: newUser.email,
@@ -364,13 +374,8 @@ export const bulkCreate = async (
     newUsers.push(newUser)
   }
 
-  // Figure out how many builders we are adding and create the promises
-  // array that will be called by bulkDocs
-  let builderCount = 0
+  // create the promises array that will be called by bulkDocs
   newUsers.forEach((user: any) => {
-    if (eventHelpers.isAddingBuilder(user, null)) {
-      builderCount++
-    }
     usersToSave.push(
       buildUser(
         user,
@@ -384,14 +389,14 @@ export const bulkCreate = async (
   })
 
   const usersToBulkSave = await Promise.all(usersToSave)
-  await quotas.addDevelopers(() => db.bulkDocs(usersToBulkSave), builderCount)
+  await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
 
-  // Post processing of bulk added users, i.e events and cache operations
+  // Post-processing of bulk added users, e.g. events and cache operations
   for (const user of usersToBulkSave) {
     // TODO: Refactor to bulk insert users into the info db
     // instead of relying on looping tenant creation
     await addTenant(tenantId, user._id, user.email)
-    await eventHelpers.handleSaveEvents(user, null)
+    await eventHelpers.handleSaveEvents(user, undefined)
     await apps.syncUserInApps(user._id)
   }
 
@@ -401,6 +406,16 @@ export const bulkCreate = async (
       email: user.email,
     }
   })
+
+  // now update the groups
+  if (Array.isArray(saved) && groups) {
+    const groupPromises = []
+    const createdUserIds = saved.map(user => user._id)
+    for (let groupId of groups) {
+      groupPromises.push(groupsSdk.addUsers(groupId, createdUserIds))
+    }
+    await Promise.all(groupPromises)
+  }
 
   return {
     successful: saved,
@@ -430,10 +445,10 @@ const getAccountHolderFromUserIds = async (
 
 export const bulkDelete = async (
   userIds: string[]
-): Promise<BulkDeleteUsersResponse> => {
+): Promise<BulkUserResponse["deleted"]> => {
   const db = tenancy.getGlobalDB()
 
-  const response: BulkDeleteUsersResponse = {
+  const response: BulkUserResponse["deleted"] = {
     successful: [],
     unsuccessful: [],
   }
@@ -450,9 +465,6 @@ export const bulkDelete = async (
     })
   }
 
-  let groupsToModify: any = {}
-  let builderCount = 0
-
   // Get users and delete
   const allDocsResponse: AllDocsResponse<User> = await db.allDocs({
     include_docs: true,
@@ -460,42 +472,19 @@ export const bulkDelete = async (
   })
   const usersToDelete: User[] = allDocsResponse.rows.map(
     (user: RowResponse<User>) => {
-      // if we find a user that has an associated group, add it to
-      // an array so we can easily use allDocs on them later.
-      // This prevents us having to re-loop over all the users
-      if (user.doc.userGroups) {
-        for (let groupId of user.doc.userGroups) {
-          if (!Object.keys(groupsToModify).includes(groupId)) {
-            groupsToModify[groupId] = [user.id]
-          } else {
-            groupsToModify[groupId] = [...groupsToModify[groupId], user.id]
-          }
-        }
-      }
-
-      // Also figure out how many builders are being deleted
-      if (eventHelpers.isAddingBuilder(user.doc, null)) {
-        builderCount++
-      }
-
       return user.doc
     }
   )
 
   // Delete from DB
-  const dbResponse: BulkDocsResponse = await db.bulkDocs(
-    usersToDelete.map(user => ({
-      ...user,
-      _deleted: true,
-    }))
-  )
-
-  // Deletion post processing
-  await groupUtils.bulkDeleteGroupUsers(groupsToModify)
+  const toDelete = usersToDelete.map(user => ({
+    ...user,
+    _deleted: true,
+  }))
+  const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
   for (let user of usersToDelete) {
     await bulkDeleteProcessing(user)
   }
-  await quotas.removeDevelopers(builderCount)
 
   // Build Response
   // index users by id
@@ -526,7 +515,6 @@ export const destroy = async (id: string, currentUser: any) => {
   const db = tenancy.getGlobalDB()
   const dbUser = await db.get(id)
   const userId = dbUser._id as string
-  let groups = dbUser.userGroups
 
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     // root account holder can't be deleted from inside budibase
@@ -545,12 +533,7 @@ export const destroy = async (id: string, currentUser: any) => {
 
   await db.remove(userId, dbUser._rev)
 
-  if (groups) {
-    await groupUtils.deleteGroupUsers(groups, dbUser)
-  }
-
   await eventHelpers.handleDeleteEvents(dbUser)
-  await quotas.removeUser(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "deletion" })
   // let server know to sync user

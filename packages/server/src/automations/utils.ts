@@ -13,10 +13,11 @@ import {
   getAppId,
   getProdAppDB,
 } from "@budibase/backend-core/context"
-import { tenancy } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { Automation } from "@budibase/types"
 
+const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
 const Runner = new Thread(ThreadType.AUTOMATION)
@@ -27,12 +28,14 @@ const jobMessage = (job: any, message: string) => {
 
 export async function processEvent(job: any) {
   try {
+    const automationId = job.data.automation._id
     console.log(jobMessage(job, "running"))
     // need to actually await these so that an error can be captured properly
-    const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
-    return await tenancy.doInTenant(tenantId, async () => {
+    return await context.doInContext(job.data.event.appId, async () => {
       const runFn = () => Runner.run(job)
-      return quotas.addAutomation(runFn)
+      return quotas.addAutomation(runFn, {
+        automationId,
+      })
     })
   } catch (err) {
     const errJson = JSON.stringify(err)
@@ -109,22 +112,33 @@ export async function clearMetadata() {
   await db.bulkDocs(automationMetadata)
 }
 
+export function isCronTrigger(auto: Automation) {
+  return (
+    auto &&
+    auto.definition.trigger &&
+    auto.definition.trigger.stepId === CRON_STEP_ID
+  )
+}
+
+export function isRebootTrigger(auto: Automation) {
+  const trigger = auto ? auto.definition.trigger : null
+  return isCronTrigger(auto) && trigger?.inputs.cron === REBOOT_CRON
+}
+
 /**
  * This function handles checking of any cron jobs that need to be enabled/updated.
  * @param {string} appId The ID of the app in which we are checking for webhooks
  * @param {object|undefined} automation The automation object to be updated.
  */
-export async function enableCronTrigger(appId: any, automation: any) {
+export async function enableCronTrigger(appId: any, automation: Automation) {
   const trigger = automation ? automation.definition.trigger : null
-  function isCronTrigger(auto: any) {
-    return (
-      auto &&
-      auto.definition.trigger &&
-      auto.definition.trigger.stepId === CRON_STEP_ID
-    )
-  }
+
   // need to create cron job
-  if (isCronTrigger(automation) && trigger?.inputs.cron) {
+  if (
+    isCronTrigger(automation) &&
+    !isRebootTrigger(automation) &&
+    trigger?.inputs.cron
+  ) {
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${newid()}`
     const job: any = await queue.add(
