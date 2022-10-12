@@ -18,6 +18,7 @@ import { Table } from "@budibase/types"
 import { quotas } from "@budibase/pro"
 import { isEqual } from "lodash"
 import { cloneDeep } from "lodash/fp"
+import env from "../../../environment"
 
 function checkAutoColumns(table: Table, oldTable: Table) {
   if (!table.schema) {
@@ -167,7 +168,7 @@ export async function destroy(ctx: any) {
   await db.remove(tableToDelete)
 
   // remove table search index
-  if (!isTest()) {
+  if (!isTest() || env.COUCH_DB_URL) {
     const currentIndexes = await db.getIndexes()
     const existingIndex = currentIndexes.indexes.find(
       (existing: any) => existing.name === `search:${ctx.params.tableId}`
