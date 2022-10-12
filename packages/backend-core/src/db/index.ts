@@ -32,7 +32,7 @@ const checkInitialised = () => {
   }
 }
 
-export async function init(opts: PouchOptions) {
+export async function init(opts?: PouchOptions) {
   PouchDB = pouch.getPouch(opts)
   initialised = true
 }
@@ -40,7 +40,7 @@ export async function init(opts: PouchOptions) {
 // NOTE: THIS IS A DANGEROUS FUNCTION - USE WITH CAUTION
 // this function is prone to leaks, should only be used
 // in situations that using the function doWithDB does not work
-export async function dangerousGetDB(dbName: string, opts: any) {
+export async function dangerousGetDB(dbName: string, opts?: any) {
   checkInitialised()
   if (env.isTest()) {
     dbList.add(dbName)

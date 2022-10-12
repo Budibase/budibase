@@ -1,4 +1,5 @@
 import { db as dbCore } from "@budibase/backend-core"
+import { TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, ATTACHMENT_DIR } from "./constants"
 import { uploadDirectory } from "../../../utilities/fileSystem/utilities"
@@ -6,7 +7,7 @@ import { ObjectStoreBuckets, FieldTypes } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
-import { CouchFindOptions, Row } from "@budibase/types"
+import { CouchFindOptions, RowAttachment } from "@budibase/types"
 const uuid = require("uuid/v4")
 const tar = require("tar")
 
@@ -16,6 +17,63 @@ type TemplateType = {
     path: string
   }
   key?: string
+}
+
+async function updateAttachmentColumns(
+  prodAppId: string,
+  db: PouchDB.Database
+) {
+  // iterate through attachment documents and update them
+  const tables = await sdk.tables.getAllInternalTables(db)
+  for (let table of tables) {
+    const attachmentCols: string[] = []
+    for (let [key, column] of Object.entries(table.schema)) {
+      if (column.type === FieldTypes.ATTACHMENT) {
+        attachmentCols.push(key)
+      }
+    }
+    // no attachment columns, nothing to do
+    if (attachmentCols.length === 0) {
+      continue
+    }
+    // use the CouchDB Mango query API to lookup rows that have attachments
+    const params: CouchFindOptions = {
+      selector: {
+        _id: {
+          $regex: `^${TABLE_ROW_PREFIX}`,
+        },
+      },
+    }
+    attachmentCols.forEach(col => (params.selector[col] = { $exists: true }))
+    const { rows } = await dbCore.directCouchFind(db.name, params)
+    for (let row of rows) {
+      for (let column of attachmentCols) {
+        if (!Array.isArray(row[column])) {
+          continue
+        }
+        row[column] = row[column].map((attachment: RowAttachment) => {
+          // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
+          const urlParts = attachment.url.split("/")
+          // drop the first empty element
+          urlParts.shift()
+          // get the prefix
+          const prefix = urlParts.shift()
+          // remove the app ID
+          urlParts.shift()
+          // add new app ID
+          urlParts.unshift(prodAppId)
+          const key = urlParts.join("/")
+          return {
+            ...attachment,
+            key,
+            url: `/${prefix}/${key}`,
+          }
+        })
+      }
+    }
+    // write back the updated attachments
+    await db.bulkDocs(rows)
+  }
 }
 
 /**
@@ -67,28 +125,6 @@ export async function importApp(
   if (!ok) {
     throw "Error loading database dump from template."
   }
-  // iterate through attachment documents and update them
-  const tables = await sdk.tables.getAllInternalTables(db)
-  for (let table of tables) {
-    const attachmentCols: string[] = []
-    for (let [key, column] of Object.entries(table.schema)) {
-      if (column.type === FieldTypes.ATTACHMENT) {
-        attachmentCols.push(key)
-      }
-    }
-    // no attachment columns, nothing to do
-    if (attachmentCols.length === 0) {
-      continue
-    }
-    // use the CouchDB Mango query API to lookup rows that have attachments
-    const params: CouchFindOptions = { selector: {} }
-    attachmentCols.forEach(col => (params.selector[col] = { $exists: true }))
-    const { rows } = await dbCore.directCouchFind(db.name, params)
-    for (let row of rows) {
-      // TODO:
-    }
-    // write back the updated attachments
-    await db.bulkDocs(rows)
-  }
+  await updateAttachmentColumns(prodAppId, db)
   return ok
 }
