@@ -73,10 +73,209 @@ const SCHEMA: Integration = {
 }`,
         },
         {
+          key: "$bucketAuto",
+          template: `{
+  "groupBy": "",
+  "buckets": 1,
+  "output": {},
+  "granularity": "R5"
+}`,
+        },
+        {
+          key: "$changeStream",
+          template: `{
+  "allChangesForCluster": true,
+  "fullDocument": "",
+  "fullDocumentBeforeChange": "",
+  "resumeAfter": 1,
+  "showExpandedEvents": true,
+  "startAfter": {},
+  "startAtOperationTime": ""
+}`,
+        },
+        {
+          key: "$collStats",
+          template: `{
+  "latencyStats": { "histograms": true } },
+  "storageStats": { "scale": 1 } },
+  "count": {},
+  "queryExecStats": {}
+}`,
+        },
+        {
+          key: "$count",
+          template: ``,
+        },
+        {
+          key: "$densify",
+          template: `{
+  "field": "",
+  "partitionByFields": [],
+  "range": {
+    "step": 1,
+    "unit": 1,
+    "bounds": "full"
+  }
+}`,
+        },
+        {
+          key: "$documents",
+          template: `[]`,
+        },
+        {
+          key: "$facet",
+          template: `{\n\t\n}`,
+        },
+        {
+          key: "$fill",
+          template: `{
+  "partitionBy": "",
+  "partitionByFields": [],
+  "sortBy": {},
+  "output": {}
+}`,
+        },
+        {
+          key: "$geoNear",
+          template: `{
+  "near": { "type": "Point", "coordinates": [ -73.98142 , 40.71782 ] },
+  "key": "location",
+  "distanceField": "dist.calculated",
+  "query": { "category": "Parks" }
+}`
+        },
+        {
+          key: "$graphLookup",
+          template: `{
+  "from": "",
+  "startWith": "",
+  "connectFromField": "",
+  "connectToField": "",
+  "as": "",
+  "maxDepth": 1,
+  "depthField": "",
+  "restrictSearchWithMatch": {}
+}`
+        },
+        {
+          key: "$group",
+          template: `{
+  "_id": ""
+}`,
+        },
+        {
+          key: "$indexStats",
+          template: "{\n\t\n}",
+        },
+        {
+          key: "$limit",
+          template: `1`,
+        },
+        {
+          key: "$listLocalSessions",
+          template: `{\n\t\n}`,
+        },
+        {
+          key: "$listSessions",
+          template: `{\n\t\n}`,
+        },
+        {
+          key: "$lookup",
+          template: `{
+  "from": "",
+  "localField": "",
+  "foreignField": "",
+  "as": ""
+}`
+        },
+        {
           key: "$match",
           template: "{\n\t\n}",
         },
-      ]
+        {
+          key: "$merge",
+          template: `{
+  "into": {},
+  "on": "_id",
+  "whenMatched": "replace",
+  "whenNotMatched": "insert"
+}`
+        },
+        {
+          key: "$out",
+          template: `{
+  "db": "",
+  "coll": ""
+}`
+        },
+        {
+          key: "$planCacheStats",
+          template: "{\n\t\n}",
+        },
+        {
+          key: "$project",
+          template: "{\n\t\n}",
+        },
+        {
+          key: "$redact",
+          template: "",
+        },
+        {
+          key: "$replaceRoot",
+          template: `{ "newRoot": "" }`,
+        },
+        {
+          key: "$replaceWith",
+          template: ``,
+        },
+        {
+          key: "$sample",
+          template: `{ "size": 3 }`,
+        },
+        {
+          key: "$set",
+          template: "{\n\t\n}",
+        },
+        {
+          key: "$setWindowFields",
+          template: `{
+  "partitionBy": "",
+  "sortBy": {},
+  "output": {}
+}`,
+        },
+        {
+          key: "$skip",
+          template: `1`,
+        },
+        {
+          key: "$sort",
+          template: "{\n\t\n}",
+        },
+        {
+          key: "$sortByCount",
+          template: "",
+        },
+        {
+          key: "$unionWith",
+          template: `{
+  "coll": "",
+  "pipeline": []
+}`
+        },
+        {
+          key: "$unset",
+          template: "",
+        },
+        {
+          key: "$unwind",
+          template: `{
+  "path": "",
+  "includeArrayIndex": "",
+  "preserveNullAndEmptyArrays": true
+}`
+        },
+      ],
     },
   },
   extra: {
