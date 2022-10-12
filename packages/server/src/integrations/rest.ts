@@ -78,15 +78,10 @@ const SCHEMA: Integration = {
       default: {},
     },
     rejectUnauthorized: {
+      display: "Reject Unauthorized",
       type: DatasourceFieldType.BOOLEAN,
       default: true,
       required: false,
-    },
-    legacyHttpParser: {
-      display: "Legacy HTTP Support",
-      type: DatasourceFieldType.BOOLEAN,
-      required: false,
-      default: false,
     },
   },
   query: {
@@ -397,6 +392,7 @@ class RestIntegration implements IntegrationBase {
       })
     }
 
+    // Deprecated by rejectUnauthorized
     if (this.config.legacyHttpParser) {
       // https://github.com/nodejs/node/issues/43798
       input.extraHttpOptions = { insecureHTTPParser: true }
