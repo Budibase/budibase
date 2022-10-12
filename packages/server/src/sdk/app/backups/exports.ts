@@ -1,13 +1,13 @@
 import { db as dbCore } from "@budibase/backend-core"
-import { budibaseTempDir } from "../../utilities/budibaseDir"
-import { retrieveDirectory } from "../../utilities/fileSystem/utilities"
-import { streamFile } from "../../utilities/fileSystem"
-import { ObjectStoreBuckets } from "../../constants"
+import { budibaseTempDir } from "../../../utilities/budibaseDir"
+import { retrieveDirectory } from "../../../utilities/fileSystem/utilities"
+import { streamFile } from "../../../utilities/fileSystem"
+import { ObjectStoreBuckets } from "../../../constants"
 import {
   LINK_USER_METADATA_PREFIX,
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
-} from "../../db/utils"
+} from "../../../db/utils"
 import {
   DB_EXPORT_FILE,
   GLOBAL_DB_EXPORT_FILE,

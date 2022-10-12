@@ -1,8 +1,11 @@
-const pouch = require("./pouch")
-const env = require("../environment")
+import pouch from "./pouch"
+import env from "../environment"
+import { checkSlashesInUrl } from "../helpers"
+import fetch from "node-fetch"
+import { PouchOptions, CouchFindOptions } from "@budibase/types"
 
-const openDbs = []
-let PouchDB
+const openDbs: string[] = []
+let PouchDB: any
 let initialised = false
 const dbList = new Set()
 
@@ -14,8 +17,8 @@ if (env.MEMORY_LEAK_CHECK) {
 }
 
 const put =
-  dbPut =>
-  async (doc, options = {}) => {
+  (dbPut: any) =>
+  async (doc: any, options = {}) => {
     if (!doc.createdAt) {
       doc.createdAt = new Date().toISOString()
     }
@@ -29,7 +32,7 @@ const checkInitialised = () => {
   }
 }
 
-exports.init = opts => {
+export async function init(opts: PouchOptions) {
   PouchDB = pouch.getPouch(opts)
   initialised = true
 }
@@ -37,7 +40,7 @@ exports.init = opts => {
 // NOTE: THIS IS A DANGEROUS FUNCTION - USE WITH CAUTION
 // this function is prone to leaks, should only be used
 // in situations that using the function doWithDB does not work
-exports.dangerousGetDB = (dbName, opts) => {
+export async function dangerousGetDB(dbName: string, opts: any) {
   checkInitialised()
   if (env.isTest()) {
     dbList.add(dbName)
@@ -53,7 +56,7 @@ exports.dangerousGetDB = (dbName, opts) => {
 
 // use this function if you have called dangerousGetDB - close
 // the databases you've opened once finished
-exports.closeDB = async db => {
+export async function closeDB(db: PouchDB.Database) {
   if (!db || env.isTest()) {
     return
   }
@@ -71,7 +74,7 @@ exports.closeDB = async db => {
 // we have to use a callback for this so that we can close
 // the DB when we're done, without this manual requests would
 // need to close the database when done with it to avoid memory leaks
-exports.doWithDB = async (dbName, cb, opts = {}) => {
+export async function doWithDB(dbName: string, cb: any, opts = {}) {
   const db = exports.dangerousGetDB(dbName, opts)
   // need this to be async so that we can correctly close DB after all
   // async operations have been completed
@@ -82,10 +85,39 @@ exports.doWithDB = async (dbName, cb, opts = {}) => {
   }
 }
 
-exports.allDbs = () => {
+export function allDbs() {
   if (!env.isTest()) {
     throw new Error("Cannot be used outside test environment.")
   }
   checkInitialised()
   return [...dbList]
+}
+
+export async function directCouchQuery(
+  path: string,
+  method: string = "GET",
+  body?: any
+) {
+  let { url, cookie } = pouch.getCouchInfo()
+  const couchUrl = `${url}/${path}`
+  const params: any = {
+    method: method,
+    headers: {
+      Authorization: cookie,
+    },
+  }
+  if (body && method !== "GET") {
+    params.body = body
+  }
+  const response = await fetch(checkSlashesInUrl(encodeURI(couchUrl)), params)
+  if (response.status < 300) {
+    return await response.json()
+  } else {
+    throw "Cannot connect to CouchDB instance"
+  }
+}
+
+export async function directCouchFind(dbName: string, opts: CouchFindOptions) {
+  const json = await directCouchQuery(`${dbName}/_find`, "POST", opts)
+  return { rows: json.docs, bookmark: json.bookmark }
 }

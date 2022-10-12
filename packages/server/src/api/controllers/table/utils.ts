@@ -256,46 +256,6 @@ class TableSaveFunctions {
   }
 }
 
-export async function getAllInternalTables() {
-  const db = getAppDB()
-  const internalTables = await db.allDocs(
-    getTableParams(null, {
-      include_docs: true,
-    })
-  )
-  return internalTables.rows.map((tableDoc: any) => ({
-    ...tableDoc.doc,
-    type: "internal",
-    sourceId: BudibaseInternalDB._id,
-  }))
-}
-
-export async function getAllExternalTables(datasourceId: any) {
-  const db = getAppDB()
-  const datasource = await db.get(datasourceId)
-  if (!datasource || !datasource.entities) {
-    throw "Datasource is not configured fully."
-  }
-  return datasource.entities
-}
-
-export async function getExternalTable(datasourceId: any, tableName: any) {
-  const entities = await getAllExternalTables(datasourceId)
-  return entities[tableName]
-}
-
-export async function getTable(tableId: any) {
-  const db = getAppDB()
-  if (isExternalTable(tableId)) {
-    let { datasourceId, tableName } = breakExternalTableId(tableId)
-    const datasource = await db.get(datasourceId)
-    const table = await getExternalTable(datasourceId, tableName)
-    return { ...table, sql: isSQL(datasource) }
-  } else {
-    return db.get(tableId)
-  }
-}
-
 export async function checkForViewUpdates(
   table: any,
   rename: any,
