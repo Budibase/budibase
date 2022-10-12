@@ -127,28 +127,33 @@ export async function exportApp(appId: string, config?: ExportOpts) {
 /**
  * Export all apps + global DB (if supplied) to a single tarball, this includes
  * the attachments for each app as well.
- * @param {string[]} appIds The IDs of the apps to be exported.
+ * @param {object[]} appMetadata The IDs and names of apps to export.
  * @param {string} globalDbContents The contents of the global DB to export as well.
  * @return {string} The path to the tarball.
  */
 export async function exportMultipleApps(
-  appIds: string[],
+  appMetadata: { appId: string; name: string }[],
   globalDbContents?: string
 ) {
   const tmpPath = join(budibaseTempDir(), uuid())
+  fs.mkdirSync(tmpPath)
   let exportPromises: Promise<void>[] = []
-  const exportAndMove = async (appId: string) => {
+  // export each app to a directory, then move it into the complete export
+  const exportAndMove = async (appId: string, appName: string) => {
     const path = await exportApp(appId)
     await fs.promises.rename(path, join(tmpPath, appId))
   }
-  for (let appId of appIds) {
-    exportPromises.push(exportAndMove(appId))
+  for (let metadata of appMetadata) {
+    exportPromises.push(exportAndMove(metadata.appId, metadata.name))
   }
+  // wait for all exports to finish
   await Promise.all(exportPromises)
+  // add the global DB contents
   if (globalDbContents) {
     fs.writeFileSync(join(tmpPath, GLOBAL_DB_EXPORT_FILE), globalDbContents)
   }
-  const tarPath = tarFilesToTmp(tmpPath, [...appIds, GLOBAL_DB_EXPORT_FILE])
+  const appNames = appMetadata.map(metadata => metadata.name)
+  const tarPath = tarFilesToTmp(tmpPath, [...appNames, GLOBAL_DB_EXPORT_FILE])
   // clear up the tmp path now tarball generated
   fs.rmSync(tmpPath, { recursive: true, force: true })
   return tarPath

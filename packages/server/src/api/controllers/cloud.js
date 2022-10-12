@@ -1,8 +1,44 @@
 const env = require("../../environment")
 const { getAllApps, getGlobalDBName } = require("@budibase/backend-core/db")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const { streamFile } = require("../../utilities/fileSystem")
-const { DocumentType, isDevAppID } = require("../../db/utils")
+const { stringToReadStream } = require("../../utilities")
+const {
+  getDocParams,
+  DocumentType,
+  isDevAppID,
+  APP_PREFIX,
+} = require("../../db/utils")
+const { create } = require("./application")
+const { join } = require("path")
+const fs = require("fs")
 const sdk = require("../../sdk")
+
+async function createApp(appName, appDirectory) {
+  const ctx = {
+    request: {
+      body: {
+        useTemplate: true,
+        name: appName,
+      },
+      files: {
+        templateFile: {
+          path: appDirectory,
+        },
+      },
+    },
+  }
+  return create(ctx)
+}
+
+async function getAllDocType(db, docType) {
+  const response = await db.allDocs(
+    getDocParams(docType, null, {
+      include_docs: true,
+    })
+  )
+  return response.rows.map(row => row.doc)
+}
 
 exports.exportApps = async ctx => {
   if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
@@ -14,10 +50,13 @@ exports.exportApps = async ctx => {
   })
   // only export the dev apps as they will be the latest, the user can republish the apps
   // in their self-hosted environment
-  let appIds = apps
-    .map(app => app.appId || app._id)
-    .filter(appId => isDevAppID(appId))
-  const tmpPath = await sdk.backups.exportMultipleApps(appIds, globalDBString)
+  let appMetadata = apps
+    .filter(app => isDevAppID(app.appId || app._id))
+    .map(app => ({ appId: app.appId || app._id, name: app.name }))
+  const tmpPath = await sdk.backups.exportMultipleApps(
+    appMetadata,
+    globalDBString
+  )
   const filename = `cloud-export-${new Date().getTime()}.tar.gz`
   ctx.attachment(filename)
   ctx.body = streamFile(tmpPath)
@@ -48,51 +87,37 @@ exports.importApps = async ctx => {
       "Import file is required and environment must be fresh to import apps."
     )
   }
+  if (ctx.request.files.importFile.type !== "application/gzip") {
+    ctx.throw(400, "Import file must be a gzipped tarball.")
+  }
 
-  // TODO: IMPLEMENT TARBALL EXTRACTION, APP IMPORT, ATTACHMENT IMPORT AND GLOBAL DB IMPORT
-  // async function getAllDocType(db, docType) {
-  //   const response = await db.allDocs(
-  //     getDocParams(docType, null, {
-  //       include_docs: true,
-  //     })
-  //   )
-  //   return response.rows.map(row => row.doc)
-  // }
-  // async function createApp(appName, appImport) {
-  //   const ctx = {
-  //     request: {
-  //       body: {
-  //         templateString: appImport,
-  //         name: appName,
-  //       },
-  //     },
-  //   }
-  //   return create(ctx)
-  // }
-  // const importFile = ctx.request.files.importFile
-  // const importString = readFileSync(importFile.path)
-  // const dbs = JSON.parse(importString)
-  // const globalDbImport = dbs.global
-  // // remove from the list of apps
-  // delete dbs.global
-  // const globalDb = getGlobalDB()
-  // // load the global db first
-  // await globalDb.load(stringToReadStream(globalDbImport))
-  // for (let [appName, appImport] of Object.entries(dbs)) {
-  //   await createApp(appName, appImport)
-  // }
-  //
-  // // if there are any users make sure to remove them
-  // let users = await getAllDocType(globalDb, DocumentType.USER)
-  // let userDeletionPromises = []
-  // for (let user of users) {
-  //   userDeletionPromises.push(globalDb.remove(user._id, user._rev))
-  // }
-  // if (userDeletionPromises.length > 0) {
-  //   await Promise.all(userDeletionPromises)
-  // }
-  //
-  // await globalDb.bulkDocs(users)
+  // initially get all the app databases out of the tarball
+  const tmpPath = sdk.backups.untarFile(ctx.request.file.importFile)
+  const globalDbImport = sdk.backups.getGlobalDBFile(tmpPath)
+  const appNames = fs
+    .readdirSync(tmpPath)
+    .filter(dir => dir.startsWith(APP_PREFIX))
+
+  const globalDb = getGlobalDB()
+  // load the global db first
+  await globalDb.load(stringToReadStream(globalDbImport))
+  const appCreationPromises = []
+  for (let appName of appNames) {
+    appCreationPromises.push(createApp(appName, join(tmpPath, appName)))
+  }
+  await Promise.all(appCreationPromises)
+
+  // if there are any users make sure to remove them
+  let users = await getAllDocType(globalDb, DocumentType.USER)
+  let userDeletionPromises = []
+  for (let user of users) {
+    userDeletionPromises.push(globalDb.remove(user._id, user._rev))
+  }
+  if (userDeletionPromises.length > 0) {
+    await Promise.all(userDeletionPromises)
+  }
+
+  await globalDb.bulkDocs(users)
   ctx.body = {
     message: "Apps successfully imported.",
   }

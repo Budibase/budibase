@@ -1,7 +1,11 @@
 import { db as dbCore } from "@budibase/backend-core"
 import { TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import { DB_EXPORT_FILE, ATTACHMENT_DIR } from "./constants"
+import {
+  DB_EXPORT_FILE,
+  ATTACHMENT_DIR,
+  GLOBAL_DB_EXPORT_FILE,
+} from "./constants"
 import { uploadDirectory } from "../../../utilities/fileSystem/utilities"
 import { ObjectStoreBuckets, FieldTypes } from "../../../constants"
 import { join } from "path"
@@ -91,6 +95,22 @@ async function getTemplateStream(template: TemplateType) {
   }
 }
 
+export function untarFile(file: { path: string }) {
+  const tmpPath = join(budibaseTempDir(), uuid())
+  fs.mkdirSync(tmpPath)
+  // extract the tarball
+  tar.extract({
+    sync: true,
+    cwd: tmpPath,
+    file: file.path,
+  })
+  return tmpPath
+}
+
+export function getGlobalDBFile(tmpPath: string) {
+  return fs.readFileSync(join(tmpPath, GLOBAL_DB_EXPORT_FILE), "utf8")
+}
+
 export async function importApp(
   appId: string,
   db: PouchDB.Database,
@@ -98,15 +118,11 @@ export async function importApp(
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
-  if (template.file && template.file.type === "application/gzip") {
-    const tmpPath = join(budibaseTempDir(), uuid())
-    fs.mkdirSync(tmpPath)
-    // extract the tarball
-    tar.extract({
-      sync: true,
-      cwd: tmpPath,
-      file: template.file.path,
-    })
+  const isTar = template.file && template.file.type === "application/gzip"
+  const isDirectory =
+    template.file && fs.lstatSync(template.file.path).isDirectory()
+  if (template.file && (isTar || isDirectory)) {
+    const tmpPath = isTar ? untarFile(template.file) : template.file.path
     const attachmentPath = join(tmpPath, ATTACHMENT_DIR)
     // have to handle object import
     if (fs.existsSync(attachmentPath)) {
