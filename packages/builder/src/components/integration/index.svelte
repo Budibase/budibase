@@ -4,6 +4,7 @@
   import {
     Label,
     Input,
+    Select,
     Divider,
     Layout,
     Icon,
@@ -40,6 +41,19 @@
     for (let i = deleteIndex; i < query.fields.steps?.length - 1; i++) {
       flowEditors[i].update(query.fields.steps[i + 1].value.value)
     }
+  }
+
+  function setEditorTemplate(fromKey, toKey, index) {
+    if (
+      schema.steps.filter(step => step.key === fromKey)[0]?.template ===
+      query.fields.steps[index].value.value
+    ) {
+      query.fields.steps[index].value.value = schema.steps.filter(
+        step => step.key === toKey
+      )[0]?.template
+      flowEditors[index].update(query.fields.steps[index].value.value)
+    }
+    query.fields.steps[index].key = toKey
   }
 
   $: shouldDisplayJsonBox =
@@ -114,10 +128,11 @@
                 <Layout noPadding gap="S">
                   <div class="fields">
                     <div class="block-field">
-                      <Input
+                      <Select
                         value={step.key}
+                        options={schema.steps.map(s => s.key)}
                         on:change={({ detail }) => {
-                          query.fields.steps[index].key = detail
+                          setEditorTemplate(step.key, detail, index)
                         }}
                       />
                       <Editor
