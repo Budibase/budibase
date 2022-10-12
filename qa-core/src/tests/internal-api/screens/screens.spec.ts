@@ -22,29 +22,24 @@ describe("Internal API - /screens endpoints", () => {
   it("POST - Create a screen with each role type", async () => {
     // Create app
     const [appResponse, app] = await appConfig.applications.create(generateApp())
-    expect(appResponse).toHaveStatusCode(200)
-    expect(app._id).toBeDefined()
     
     // Create Screen
     const roleArray = ["BASIC", "POWER", "ADMIN", "PUBLIC"]
     appConfig.applications.api.appId = app.appId
-    for (let i = 0; i < 4; i++) {
-      const [response, screen] = await config.screen.createScreen(generateScreen(roleArray[i]))
+    for (let role in roleArray) {
+      const [response, screen] = await config.screen.create(generateScreen(roleArray[role]))
       expect(response).toHaveStatusCode(200)
-      expect(screen.routing.roleId).toEqual(roleArray[i])
+      expect(screen.routing.roleId).toEqual(roleArray[role])
     }
   })
 
   it("GET - Fetch screens", async () => {
     // Create app
     const [appResponse, app] = await appConfig.applications.create(generateApp())
-    expect(appResponse).toHaveStatusCode(200)
-    expect(app._id).toBeDefined()
     
     // Create Screen
     appConfig.applications.api.appId = app.appId
-    const [response, screen] = await config.screen.createScreen(generateScreen("BASIC"))
-    expect(response).toHaveStatusCode(200)
+    const [response, screen] = await config.screen.create(generateScreen("BASIC"))
 
     // Check screen exists
     const [routesResponse, routes] = await appConfig.applications.getRoutes()
@@ -55,17 +50,13 @@ describe("Internal API - /screens endpoints", () => {
   it("DELETE - Delete a screen", async () => {
     // Create app
     const [appResponse, app] = await appConfig.applications.create(generateApp())
-    expect(appResponse).toHaveStatusCode(200)
-    expect(app._id).toBeDefined()
     
     // Create Screen
     appConfig.applications.api.appId = app.appId
-    const [screenResponse, screen] = await config.screen.createScreen(generateScreen("BASIC"))
-    expect(screenResponse).toHaveStatusCode(200)
-    expect(screen._id).toBeDefined()
+    const [screenResponse, screen] = await config.screen.create(generateScreen("BASIC"))
 
     // Delete Screen
-    const [response] = await config.screen.deleteScreen(screen._id, screen._rev)
+    const [response] = await config.screen.delete(screen._id!, screen._rev!)
     expect(response).toHaveStatusCode(200)
   })
 })
