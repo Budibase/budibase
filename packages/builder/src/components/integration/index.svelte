@@ -44,9 +44,12 @@
   }
 
   function setEditorTemplate(fromKey, toKey, index) {
+    const currentValue = query.fields.steps[index].value.value
     if (
+      !currentValue ||
+      currentValue.toString().replace("\\s", "").length < 3 ||
       schema.steps.filter(step => step.key === fromKey)[0]?.template ===
-      query.fields.steps[index].value.value
+        currentValue
     ) {
       query.fields.steps[index].value.value = schema.steps.filter(
         step => step.key === toKey

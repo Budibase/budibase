@@ -138,11 +138,16 @@ const SCHEMA: Integration = {
         {
           key: "$geoNear",
           template: `{
-  "near": { "type": "Point", "coordinates": [ -73.98142 , 40.71782 ] },
+  "near": { 
+    "type": "Point", 
+    "coordinates": [ 
+      -73.98142, 40.71782
+    ] 
+  },
   "key": "location",
   "distanceField": "dist.calculated",
   "query": { "category": "Parks" }
-}`
+}`,
         },
         {
           key: "$graphLookup",
@@ -155,7 +160,7 @@ const SCHEMA: Integration = {
   "maxDepth": 1,
   "depthField": "",
   "restrictSearchWithMatch": {}
-}`
+}`,
         },
         {
           key: "$group",
@@ -186,7 +191,7 @@ const SCHEMA: Integration = {
   "localField": "",
   "foreignField": "",
   "as": ""
-}`
+}`,
         },
         {
           key: "$match",
@@ -199,14 +204,14 @@ const SCHEMA: Integration = {
   "on": "_id",
   "whenMatched": "replace",
   "whenNotMatched": "insert"
-}`
+}`,
         },
         {
           key: "$out",
           template: `{
   "db": "",
   "coll": ""
-}`
+}`,
         },
         {
           key: "$planCacheStats",
@@ -261,7 +266,7 @@ const SCHEMA: Integration = {
           template: `{
   "coll": "",
   "pipeline": []
-}`
+}`,
         },
         {
           key: "$unset",
@@ -273,7 +278,7 @@ const SCHEMA: Integration = {
   "path": "",
   "includeArrayIndex": "",
   "preserveNullAndEmptyArrays": true
-}`
+}`,
         },
       ],
     },
