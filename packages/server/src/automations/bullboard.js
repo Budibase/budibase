@@ -2,10 +2,12 @@ const { createBullBoard } = require("@bull-board/api")
 const { BullAdapter } = require("@bull-board/api/bullAdapter")
 const { KoaAdapter } = require("@bull-board/koa")
 const { queue } = require("@budibase/backend-core")
-const listeners = require("./listeners")
+const automation = require("../threads/automation")
 
-let automationQueue = queue.createQueue(queue.JobQueue.AUTOMATIONS)
-listeners.addListeners(automationQueue)
+let automationQueue = queue.createQueue(
+  queue.JobQueue.AUTOMATIONS,
+  automation.removeStalled
+)
 
 const PATH_PREFIX = "/bulladmin"
 
