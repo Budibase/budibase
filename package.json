@@ -3,7 +3,6 @@
   "private": true,
   "devDependencies": {
     "@rollup/plugin-json": "^4.0.2",
-    "@types/mongodb": "3.6.3",
     "@typescript-eslint/parser": "4.28.0",
     "babel-eslint": "^10.0.3",
     "eslint": "^7.28.0",
