@@ -8,6 +8,15 @@ export const FIELDS = {
       presence: false,
     },
   },
+  BARCODEQR: {
+    name: "Barcode/QR",
+    type: "barcodeqr",
+    constraints: {
+      type: "string",
+      length: {},
+      presence: false,
+    },
+  },
   LONGFORM: {
     name: "Long Form Text",
     type: "longform",
@@ -148,6 +157,7 @@ export const ALLOWABLE_STRING_OPTIONS = [
   FIELDS.STRING,
   FIELDS.OPTIONS,
   FIELDS.LONGFORM,
+  FIELDS.BARCODEQR,
 ]
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type

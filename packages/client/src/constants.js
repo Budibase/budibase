@@ -1,5 +1,6 @@
 export const FieldTypes = {
   STRING: "string",
+  BARCODEQR: "barcodeqr",
   LONGFORM: "longform",
   OPTIONS: "options",
   NUMBER: "number",
