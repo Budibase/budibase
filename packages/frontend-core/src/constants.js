@@ -103,6 +103,11 @@ export const PlanType = {
   ENTERPRISE: "enterprise",
 }
 
+export const HostingTypes = {
+  Cloud: "cloud",
+  Self: "self",
+}
+
 /**
  * API version header attached to all requests.
  * Version changelog:

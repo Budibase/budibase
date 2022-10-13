@@ -13,6 +13,7 @@
   import { admin, auth, licensing } from "../../../../stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import { DashCard, Usage } from "../../../../components/usage"
+  import * as helpers from "../../../../helpers"
 
   let staticUsage = []
   let monthlyUsage = []
@@ -32,6 +33,9 @@
   $: license = $auth.user?.license
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: quotaReset = quotaUsage?.quotaReset
+  $: planType = $auth.user?.license.plan.type
+  $: isTrialing = license?.plan.isTrialing
+  $: trialEndAt = license?.plan.trialEndAt
 
   const setMonthlyUsage = () => {
     monthlyUsage = []
@@ -72,17 +76,17 @@
   }
 
   const setCancelAt = () => {
-    cancelAt = license?.billing?.subscription?.cancelAt
-  }
-
-  const capitalise = string => {
-    if (string) {
-      return string.charAt(0).toUpperCase() + string.slice(1)
+    if (!isTrialing) {
+      cancelAt = license?.billing?.subscription?.cancelAt
     }
   }
 
   const planTitle = () => {
-    return capitalise(license?.plan.type)
+    if (isTrialing) {
+      return `${helpers.capitalise(planType)} Trial`
+    } else {
+      return helpers.capitalise(planType)
+    }
   }
 
   const getDaysRemaining = timestamp => {
@@ -105,6 +109,18 @@
   const setTextRows = () => {
     textRows = []
 
+    if (isTrialing) {
+      textRows.push({
+        message: `${getDaysRemaining(trialEndAt)} days remaining`,
+        tooltip: new Date(trialEndAt),
+      })
+      return
+    }
+
+    if (planType === Constants.PlanType.FREE) {
+      return
+    }
+
     if (cancelAt) {
       textRows.push({ message: "Subscription has been cancelled" })
       textRows.push({
@@ -125,7 +141,7 @@
   }
 
   const goToAccountPortal = () => {
-    if (license?.plan.type === Constants.PlanType.FREE) {
+    if (planType === Constants.PlanType.FREE || isTrialing) {
       window.location.href = upgradeUrl
     } else {
       window.location.href = manageUrl
@@ -133,16 +149,22 @@
   }
 
   const setPrimaryActionText = () => {
-    if (license?.plan.type === Constants.PlanType.FREE) {
+    if (planType === Constants.PlanType.FREE) {
       primaryActionText = "Upgrade"
+      return
+    }
+
+    if (isTrialing) {
+      primaryActionText = "Upgrade now"
       return
     }
 
     if (cancelAt) {
       primaryActionText = "Renew"
-    } else {
-      primaryActionText = "Manage"
+      return
     }
+
+    primaryActionText = "Manage"
   }
 
   const init = async () => {
