@@ -4,7 +4,7 @@ const { KoaAdapter } = require("@bull-board/koa")
 const { queue } = require("@budibase/backend-core")
 const listeners = require("./listeners")
 
-let automationQueue = queue.createQueue(queue.JobQueues.AUTOMATIONS)
+let automationQueue = queue.createQueue(queue.JobQueue.AUTOMATIONS)
 listeners.addListeners(automationQueue)
 
 const PATH_PREFIX = "/bulladmin"
@@ -29,4 +29,4 @@ exports.shutdown = async () => {
   await queue.shutdown()
 }
 
-exports.queue = automationQueue
+exports.automationQueue = automationQueue

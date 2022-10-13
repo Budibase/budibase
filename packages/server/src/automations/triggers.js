@@ -4,7 +4,7 @@ const { coerce } = require("../utilities/rowProcessor")
 const { definitions } = require("./triggerInfo")
 const { isDevAppID } = require("../db/utils")
 // need this to call directly, so we can get a response
-const { queue } = require("./bullboard")
+const { automationQueue } = require("./bullboard")
 const { checkTestFlag } = require("../utilities/redis")
 const utils = require("./utils")
 const env = require("../environment")
@@ -56,7 +56,7 @@ async function queueRelevantRowAutomations(event, eventType) {
         automationTrigger.inputs &&
         automationTrigger.inputs.tableId === event.row.tableId
       ) {
-        await queue.add({ automation, event }, JOB_OPTS)
+        await automationQueue.add({ automation, event }, JOB_OPTS)
       }
     }
   })
@@ -110,7 +110,7 @@ exports.externalTrigger = async function (
   if (getResponses) {
     return utils.processEvent({ data })
   } else {
-    return queue.add(data, JOB_OPTS)
+    return automationQueue.add(data, JOB_OPTS)
   }
 }
 
@@ -136,7 +136,7 @@ exports.rebootTrigger = async () => {
               timestamp: Date.now(),
             },
           }
-          rebootEvents.push(queue.add(job, JOB_OPTS))
+          rebootEvents.push(automationQueue.add(job, JOB_OPTS))
         }
       }
       await Promise.all(rebootEvents)
