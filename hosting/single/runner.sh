@@ -18,6 +18,14 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 [[ -z "${WORKER_URL}" ]] && export WORKER_URL=http://localhost:4002
 [[ -z "${APPS_URL}" ]] && export APPS_URL=http://localhost:4001
 #  export CUSTOM_DOMAIN=budi001.custom.com
+
+# Mount NFS or GCP Filestore if env vars exist for it
+if [[ -z ${FILESHARE_IP} && -z ${FILESHARE_NAME} ]]; then
+    echo "Mount file share ${FILESHARE_IP}:/${FILESHARE_NAME} to ${DATA_DIR}"
+    mount -o nolock ${FILESHARE_IP}:/${FILESHARE_NAME} ${DATA_DIR}
+    echo "Mounting completed."
+fi
+
 # Azure App Service customisations
 if [[ "${TARGETBUILD}" = "aas" ]]; then
     DATA_DIR=/home
