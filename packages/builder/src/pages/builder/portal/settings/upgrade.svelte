@@ -91,7 +91,6 @@
   })
 </script>
 
-{"is adming" + $auth.isAdmin}
 {#if $auth.isAdmin}
   <DeleteLicenseKeyModal
     bind:this={deleteLicenseKeyModal}

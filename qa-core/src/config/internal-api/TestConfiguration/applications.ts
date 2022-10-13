@@ -58,8 +58,14 @@ export default class AppApi {
     return [response, json]
   }
 
-  async updateClient(appId: string, body: any): Promise<[Response, Application]> {
-    const response = await this.api.put(`/applications/${appId}/client/update`, { body })
+  async updateClient(
+    appId: string,
+    body: any
+  ): Promise<[Response, Application]> {
+    const response = await this.api.put(
+      `/applications/${appId}/client/update`,
+      { body }
+    )
     const json = await response.json()
     return [response, json]
   }
@@ -93,5 +99,4 @@ export default class AppApi {
     const json = await response.json()
     return [response, json]
   }
-
 }
