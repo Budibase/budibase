@@ -290,7 +290,7 @@ const SCHEMA: Integration = {
       required: true,
     },
     actionType: {
-      displayName: "Action Type",
+      displayName: "Query Type",
       type: DatasourceFieldType.LIST,
       required: true,
       data: {
@@ -298,7 +298,7 @@ const SCHEMA: Integration = {
         create: ["insertOne", "insertMany"],
         update: ["updateOne", "updateMany"],
         delete: ["deleteOne", "deleteMany"],
-        aggregate: ["json", "flow"],
+        aggregate: ["json", "pipeline"],
       },
     },
   },
@@ -559,7 +559,7 @@ class MongoIntegration implements IntegrationBase {
       const db = this.client.db(this.config.db)
       const collection = db.collection(query.extra.collection)
       let response = []
-      if (query.extra?.actionType === "flow") {
+      if (query.extra?.actionType === "pipeline") {
         for await (const doc of collection.aggregate(
           query.steps.map(({ key, value }) => {
             let temp: any = {}

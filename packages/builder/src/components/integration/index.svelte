@@ -16,7 +16,6 @@
     SQL: "sql",
     JSON: "json",
     FIELDS: "fields",
-    FLOW: "flow",
   }
 
   export let query
@@ -65,7 +64,8 @@
   }
 
   $: shouldDisplayJsonBox =
-    schema.type === QueryTypes.JSON && query.fields.extra?.actionType !== "flow"
+    schema.type === QueryTypes.JSON &&
+    query.fields.extra?.actionType !== "pipeline"
 </script>
 
 {#if schema}
@@ -98,7 +98,7 @@
           <Input thin outline disabled value={urlDisplay} />
         </div>
       {/if}
-    {:else if query.fields.extra?.actionType === "flow"}
+    {:else if query.fields.extra?.actionType === "pipeline"}
       <br />
       {#if (query.fields.steps?.length ?? 0) === 0}
         <div class="controls">
