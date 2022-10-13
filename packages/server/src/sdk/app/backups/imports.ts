@@ -1,5 +1,5 @@
 import { db as dbCore } from "@budibase/backend-core"
-import { TABLE_ROW_PREFIX } from "../../../db/utils"
+import { APP_PREFIX, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import {
   DB_EXPORT_FILE,
@@ -109,6 +109,10 @@ export function untarFile(file: { path: string }) {
 
 export function getGlobalDBFile(tmpPath: string) {
   return fs.readFileSync(join(tmpPath, GLOBAL_DB_EXPORT_FILE), "utf8")
+}
+
+export function getListOfAppsInMulti(tmpPath: string) {
+  return fs.readdirSync(tmpPath).filter(dir => dir !== GLOBAL_DB_EXPORT_FILE)
 }
 
 export async function importApp(

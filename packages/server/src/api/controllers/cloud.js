@@ -3,15 +3,9 @@ const { getAllApps, getGlobalDBName } = require("@budibase/backend-core/db")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const { streamFile } = require("../../utilities/fileSystem")
 const { stringToReadStream } = require("../../utilities")
-const {
-  getDocParams,
-  DocumentType,
-  isDevAppID,
-  APP_PREFIX,
-} = require("../../db/utils")
+const { getDocParams, DocumentType, isDevAppID } = require("../../db/utils")
 const { create } = require("./application")
 const { join } = require("path")
-const fs = require("fs")
 const sdk = require("../../sdk")
 
 async function createApp(appName, appDirectory) {
@@ -41,9 +35,9 @@ async function getAllDocType(db, docType) {
 }
 
 exports.exportApps = async ctx => {
-  if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
-    ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
-  }
+  // if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
+  //   ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
+  // }
   const apps = await getAllApps({ all: true })
   const globalDBString = await sdk.backups.exportDB(getGlobalDBName(), {
     filter: doc => !doc._id.startsWith(DocumentType.USER),
@@ -92,20 +86,16 @@ exports.importApps = async ctx => {
   }
 
   // initially get all the app databases out of the tarball
-  const tmpPath = sdk.backups.untarFile(ctx.request.file.importFile)
+  const tmpPath = sdk.backups.untarFile(ctx.request.files.importFile)
   const globalDbImport = sdk.backups.getGlobalDBFile(tmpPath)
-  const appNames = fs
-    .readdirSync(tmpPath)
-    .filter(dir => dir.startsWith(APP_PREFIX))
+  const appNames = sdk.backups.getListOfAppsInMulti(tmpPath)
 
   const globalDb = getGlobalDB()
   // load the global db first
   await globalDb.load(stringToReadStream(globalDbImport))
-  const appCreationPromises = []
   for (let appName of appNames) {
-    appCreationPromises.push(createApp(appName, join(tmpPath, appName)))
+    await createApp(appName, join(tmpPath, appName))
   }
-  await Promise.all(appCreationPromises)
 
   // if there are any users make sure to remove them
   let users = await getAllDocType(globalDb, DocumentType.USER)
