@@ -1,27 +1,23 @@
 const Client = require("./index")
 const utils = require("./utils")
-const { getRedlock } = require("./redlock")
 
-let userClient, sessionClient, appClient, cacheClient, writethroughClient
-let migrationsRedlock
-
-// turn retry off so that only one instance can ever hold the lock
-const migrationsRedlockConfig = { retryCount: 0 }
+let userClient,
+  sessionClient,
+  appClient,
+  cacheClient,
+  writethroughClient,
+  lockClient
 
 async function init() {
   userClient = await new Client(utils.Databases.USER_CACHE).init()
   sessionClient = await new Client(utils.Databases.SESSIONS).init()
   appClient = await new Client(utils.Databases.APP_METADATA).init()
   cacheClient = await new Client(utils.Databases.GENERIC_CACHE).init()
+  lockClient = await new Client(utils.Databases.LOCKS).init()
   writethroughClient = await new Client(
     utils.Databases.WRITE_THROUGH,
     utils.SelectableDatabases.WRITE_THROUGH
   ).init()
-  // pass the underlying ioredis client to redlock
-  migrationsRedlock = getRedlock(
-    cacheClient.getClient(),
-    migrationsRedlockConfig
-  )
 }
 
 process.on("exit", async () => {
@@ -30,6 +26,7 @@ process.on("exit", async () => {
   if (appClient) await appClient.finish()
   if (cacheClient) await cacheClient.finish()
   if (writethroughClient) await writethroughClient.finish()
+  if (lockClient) await lockClient.finish()
 })
 
 module.exports = {
@@ -63,10 +60,10 @@ module.exports = {
     }
     return writethroughClient
   },
-  getMigrationsRedlock: async () => {
-    if (!migrationsRedlock) {
+  getLockClient: async () => {
+    if (!lockClient) {
       await init()
     }
-    return migrationsRedlock
+    return lockClient
   },
 }
