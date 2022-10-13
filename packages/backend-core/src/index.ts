@@ -19,6 +19,7 @@ import pino from "./pino"
 import * as middleware from "./middleware"
 import plugins from "./plugin"
 import encryption from "./security/encryption"
+import * as queue from "./queue"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"
@@ -63,6 +64,7 @@ const core = {
   ...errorClasses,
   middleware,
   encryption,
+  queue,
 }
 
 export = core
