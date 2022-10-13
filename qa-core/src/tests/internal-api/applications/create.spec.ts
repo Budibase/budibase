@@ -45,7 +45,7 @@ describe("Internal API - /applications endpoints", () => {
 
   it("POST - Publish application", async () => {
     // create app
-    const [response, app] = await config.applications.create(generateApp())
+    const app = await config.applications.create(generateApp())
 
     // publish app
     config.applications.api.appId = app.appId
@@ -61,9 +61,7 @@ describe("Internal API - /applications endpoints", () => {
   it("POST - Create an application from a template, publish and check it renders", async () => {
     // create the app
     const appName = generator.word()
-    const [response, app] = await createAppFromTemplate()
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
+    const app = await createAppFromTemplate()
     config.applications.api.appId = app.appId
 
     // check preview renders
