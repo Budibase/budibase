@@ -4,6 +4,7 @@ import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "components/portal/licensing/constants"
 import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+import * as helpers from "../../helpers"
 
 export const createLicensingStore = () => {
   const DEFAULT = {
@@ -12,6 +13,9 @@ export const createLicensingStore = () => {
     // the top level license
     license: undefined,
     isFreePlan: true,
+    isTrialing: false,
+    trialDaysRemaining: undefined,
+    planName: undefined,
     // features
     groupsEnabled: false,
     // the currently used quotas from the db
@@ -31,6 +35,14 @@ export const createLicensingStore = () => {
 
   const store = writable(DEFAULT)
 
+  const getDaysBetween = (dateStart, dateEnd) => {
+    return dateEnd > dateStart
+      ? Math.round(
+          (dateEnd.getTime() - dateStart.getTime()) / oneDayInMilliseconds
+        )
+      : 0
+  }
+
   const actions = {
     init: async () => {
       actions.setNavigation()
@@ -40,8 +52,13 @@ export const createLicensingStore = () => {
     },
     setNavigation: () => {
       const upgradeUrl = `${get(admin).accountPortalUrl}/portal/upgrade`
+      const pricingUrl = `https://budibase.com/pricing/`
       const goToUpgradePage = () => {
-        window.location.href = upgradeUrl
+        if (get(auth).user?.accountPortalAccess) {
+          window.location.href = upgradeUrl
+        } else {
+          window.open(pricingUrl, "_blank")
+        }
       }
       store.update(state => {
         return {
@@ -53,14 +70,30 @@ export const createLicensingStore = () => {
     setLicense: () => {
       const license = get(auth).user.license
       const isFreePlan = license?.plan.type === Constants.PlanType.FREE
+      const planName = license?.plan.type
+        ? helpers.capitalise(license.plan.type)
+        : ""
       const groupsEnabled = license.features.includes(
         Constants.Features.USER_GROUPS
       )
+      // trial
+      const isTrialing = license?.plan.isTrialing
+      let trialDaysRemaining
+      if (isTrialing) {
+        const now = new Date()
+        trialDaysRemaining = getDaysBetween(
+          now,
+          new Date(license.plan.trialEndAt)
+        )
+      }
       store.update(state => {
         return {
           ...state,
           license,
           isFreePlan,
+          isTrialing,
+          trialDaysRemaining,
+          planName,
           groupsEnabled,
         }
       })
@@ -101,14 +134,6 @@ export const createLicensingStore = () => {
           license.quotas.usage.static,
           quota.usageQuota
         )
-
-        const getDaysBetween = (dateStart, dateEnd) => {
-          return dateEnd > dateStart
-            ? Math.round(
-                (dateEnd.getTime() - dateStart.getTime()) / oneDayInMilliseconds
-              )
-            : 0
-        }
 
         const quotaResetDate = new Date(quota.quotaReset)
         const quotaResetDaysRemaining = getDaysBetween(now, quotaResetDate)

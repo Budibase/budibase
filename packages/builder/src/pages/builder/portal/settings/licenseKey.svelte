@@ -91,7 +91,6 @@
   })
 </script>
 
-{"is adming" + $auth.isAdmin}
 {#if $auth.isAdmin}
   <DeleteLicenseKeyModal
     bind:this={deleteLicenseKeyModal}
@@ -99,15 +98,16 @@
   />
   <Layout noPadding>
     <Layout gap="XS" noPadding>
-      <Heading size="M">Upgrade</Heading>
+      <Heading size="M">License Key</Heading>
       <Body size="M">
         {#if license.plan.type === "free"}
-          Upgrade your Budibase installation to unlock additional features. To
-          subscribe to a plan visit your
-          <Link size="L" href={upgradeUrl}>Account</Link>.
+          Upgrade your budibase self-host <Link size="L" href={upgradeUrl}
+            >account</Link
+          > to create a license key
         {:else}
-          To manage your plan visit your
-          <Link size="L" href={upgradeUrl}>Account</Link>.
+          To manage your plan visit your <Link size="L" href={upgradeUrl}
+            >account</Link
+          >
         {/if}
       </Body>
     </Layout>

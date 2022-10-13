@@ -18,6 +18,7 @@
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
+  import UpgradePanel from "components/portal/licensing/UpgradePanel.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
@@ -48,7 +49,6 @@
           ? {
               title: "User Groups",
               href: "/builder/portal/manage/groups",
-              badge: "New",
             }
           : undefined,
         { title: "Auth", href: "/builder/portal/manage/auth" },
@@ -56,7 +56,6 @@
         {
           title: "Plugins",
           href: "/builder/portal/manage/plugins",
-          badge: "New",
         },
 
         {
@@ -113,20 +112,10 @@
         },
       ])
 
-      // show the relevant hosting upgrade page
-      if ($adminStore.cloud && $auth?.user?.accountPortalAccess) {
-        menu = menu.concat([
-          {
-            title: "Upgrade",
-            href: $adminStore.accountPortalUrl + "/portal/upgrade",
-            badge: "New",
-          },
-        ])
-      } else if (!$adminStore.cloud && admin) {
+      if (!$adminStore.cloud && admin) {
         menu = menu.concat({
-          title: "Upgrade",
-          href: "/builder/portal/settings/upgrade",
-          badge: "New",
+          title: "License Key",
+          href: "/builder/portal/settings/licenseKey",
         })
       }
 
@@ -207,6 +196,7 @@
           </Navigation>
         </div>
       </Layout>
+      <UpgradePanel />
     </div>
     <div class="main">
       <div class="toolbar">
@@ -286,6 +276,9 @@
     overflow: auto;
     flex: 0 0 auto;
     width: 250px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
   }
   .main {
     flex: 1 1 auto;
