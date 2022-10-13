@@ -1,9 +1,9 @@
 import env from "../environment"
 import { getRedisOptions } from "../redis/utils"
 import { JobQueue } from "./constants"
-import inMemoryQueue from "./inMemoryQueue"
-import BullQueue from "bull"
 import InMemoryQueue from "./inMemoryQueue"
+import BullQueue from "bull"
+import { addListeners, StalledFn } from "./listeners"
 const { opts, redisProtocolUrl } = getRedisOptions()
 
 const CLEANUP_PERIOD_MS = 60 * 1000
@@ -16,14 +16,18 @@ async function cleanup() {
   }
 }
 
-export function createQueue(jobQueue: JobQueue) {
+export function createQueue(
+  jobQueue: JobQueue,
+  removeStalled: StalledFn
+): BullQueue.Queue {
   const queueConfig: any = redisProtocolUrl || { redis: opts }
   let queue: any
   if (env.isTest()) {
     queue = new BullQueue(jobQueue, queueConfig)
   } else {
-    queue = new inMemoryQueue(jobQueue, queueConfig)
+    queue = new InMemoryQueue(jobQueue, queueConfig)
   }
+  addListeners(queue, jobQueue, removeStalled)
   QUEUES.push(queue)
   if (!cleanupInterval) {
     cleanupInterval = setInterval(cleanup, CLEANUP_PERIOD_MS)
