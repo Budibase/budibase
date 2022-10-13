@@ -100,7 +100,7 @@
       {/if}
     {:else if query.fields.extra?.actionType === "pipeline"}
       <br />
-      {#if (query.fields.steps?.length ?? 0) === 0}
+      {#if query.fields.steps?.length === 0}
         <div class="controls">
           <Button
             secondary
