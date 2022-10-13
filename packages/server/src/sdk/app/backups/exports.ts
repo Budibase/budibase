@@ -141,7 +141,7 @@ export async function exportMultipleApps(
   // export each app to a directory, then move it into the complete export
   const exportAndMove = async (appId: string, appName: string) => {
     const path = await exportApp(appId)
-    await fs.promises.rename(path, join(tmpPath, appId))
+    await fs.promises.rename(path, join(tmpPath, appName))
   }
   for (let metadata of appMetadata) {
     exportPromises.push(exportAndMove(metadata.appId, metadata.name))
