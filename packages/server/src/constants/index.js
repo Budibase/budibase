@@ -2,10 +2,6 @@ const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { UserStatus } = require("@budibase/backend-core/constants")
 const { objectStore } = require("@budibase/backend-core")
 
-exports.JobQueues = {
-  AUTOMATIONS: "automationQueue",
-}
-
 const FilterTypes = {
   STRING: "string",
   FUZZY: "fuzzy",
