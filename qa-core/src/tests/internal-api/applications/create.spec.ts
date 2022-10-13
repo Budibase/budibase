@@ -40,16 +40,12 @@ describe("Internal API - /applications endpoints", () => {
   })
 
   it("POST - Create an application", async () => {
-    const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app._id).toBeDefined()
+    config.applications.create(generateApp())
   })
 
   it("POST - Publish application", async () => {
     // create app
     const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
 
     // publish app
     config.applications.api.appId = app.appId
@@ -87,9 +83,7 @@ describe("Internal API - /applications endpoints", () => {
   })
 
   it("POST - Sync application before deployment", async () => {
-    const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
+    const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
     const [syncResponse, sync] = await config.applications.sync(
@@ -102,9 +96,7 @@ describe("Internal API - /applications endpoints", () => {
   })
 
   it("POST - Sync application after deployment", async () => {
-    const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
+    const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
     // publish app
@@ -120,9 +112,8 @@ describe("Internal API - /applications endpoints", () => {
   })
 
   it("PUT - Update an application", async () => {
-    const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
+    const app = await config.applications.create(generateApp())
+
     config.applications.api.appId = app.appId
 
     const [updateResponse, updatedApp] = await config.applications.update(
@@ -136,9 +127,7 @@ describe("Internal API - /applications endpoints", () => {
   })
 
   it("POST - Revert Changes without changes", async () => {
-    const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
+    const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
     const [revertResponse, revert] = await config.applications.revert(
@@ -152,9 +141,7 @@ describe("Internal API - /applications endpoints", () => {
   })
 
   it("POST - Revert Changes", async () => {
-    const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
+    const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
     // publish app
@@ -185,9 +172,7 @@ describe("Internal API - /applications endpoints", () => {
   })
 
   it("DELETE - Delete an application", async () => {
-    const [response, app] = await config.applications.create(generateApp())
-    expect(response).toHaveStatusCode(200)
-    expect(app.appId).toBeDefined()
+    const app = await config.applications.create(generateApp())
 
     const [deleteResponse] = await config.applications.delete(<string>app.appId)
     expect(deleteResponse).toHaveStatusCode(200)
