@@ -24,7 +24,7 @@
   export let editable = true
   export let height = 500
 
-  let flowEditors = []
+  let stepEditors = []
 
   $: urlDisplay =
     schema.urlDisplay &&
@@ -38,13 +38,13 @@
 
   function updateEditorsOnDelete(deleteIndex) {
     for (let i = deleteIndex; i < query.fields.steps?.length - 1; i++) {
-      flowEditors[i].update(query.fields.steps[i + 1].value.value)
+      stepEditors[i].update(query.fields.steps[i + 1].value.value)
     }
   }
   function updateEditorsOnSwap(actionIndex, targetIndex) {
     const target = query.fields.steps[targetIndex].value.value
-    flowEditors[targetIndex].update(query.fields.steps[actionIndex].value.value)
-    flowEditors[actionIndex].update(target)
+    stepEditors[targetIndex].update(query.fields.steps[actionIndex].value.value)
+    stepEditors[actionIndex].update(target)
   }
 
   function setEditorTemplate(fromKey, toKey, index) {
@@ -58,7 +58,7 @@
       query.fields.steps[index].value.value = schema.steps.filter(
         step => step.key === toKey
       )[0]?.template
-      flowEditors[index].update(query.fields.steps[index].value.value)
+      stepEditors[index].update(query.fields.steps[index].value.value)
     }
     query.fields.steps[index].key = toKey
   }
@@ -174,7 +174,7 @@
                         }}
                       />
                       <Editor
-                        bind:this={flowEditors[index]}
+                        bind:this={stepEditors[index]}
                         editorHeight={height / 2}
                         mode="json"
                         value={typeof step.value === "string"
