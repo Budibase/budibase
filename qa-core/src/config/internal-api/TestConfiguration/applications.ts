@@ -40,10 +40,12 @@ export default class AppApi {
     return [response, json]
   }
 
-  async create(body: any): Promise<[Response, Partial<App>]> {
+  async create(body: any): Promise<Partial<App>> {
     const response = await this.api.post(`/applications`, { body })
     const json = await response.json()
-    return [response, json]
+    expect(response).toHaveStatusCode(200)
+    expect(json._id).toBeDefined()
+    return json
   }
 
   async read(id: string): Promise<[Response, Application]> {
