@@ -124,6 +124,14 @@
       label: "Multi-select",
       value: FIELDS.ARRAY.type,
     },
+    {
+      label: "Barcode/QR",
+      value: FIELDS.BARCODEQR.type,
+    },
+    {
+      label: "Long Form Text",
+      value: FIELDS.LONGFORM.type,
+    },
   ]
 </script>
 
