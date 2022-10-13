@@ -29,7 +29,7 @@
         ...get(context),
         url: params,
       })
-      if (actions !== null) {
+      if (actions != null) {
         actions()
       }
     }
