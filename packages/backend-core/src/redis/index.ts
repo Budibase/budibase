@@ -216,6 +216,9 @@ export = class RedisWrapper {
 
   async bulkGet(keys: string[]) {
     const db = this._db
+    if (keys.length === 0) {
+      return {}
+    }
     const prefixedKeys = keys.map(key => addDbPrefix(db, key))
     let response = await this.getClient().mget(prefixedKeys)
     if (Array.isArray(response)) {

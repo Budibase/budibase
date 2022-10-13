@@ -17,7 +17,6 @@ import {
   getProdAppDB,
   getDevAppDB,
 } from "@budibase/backend-core/context"
-import { quotas } from "@budibase/pro"
 import { events } from "@budibase/backend-core"
 
 // the max time we can wait for an invalidation to complete before considering it failed
