@@ -1,17 +1,16 @@
-jest.mock("node-fetch", () =>
-  jest.fn(() => ({
-    headers: {
-      raw: () => {
-        return { "content-type": ["application/json"] }
-      },
-      get: () => ["application/json"],
+const mockFetch = jest.fn(() => ({
+  headers: {
+    raw: () => {
+      return { "content-type": ["application/json"] }
     },
-    json: jest.fn(() => ({
-      my_next_cursor: 123,
-    })),
-    text: jest.fn(),
-  }))
-)
+    get: () => ["application/json"],
+  },
+  json: jest.fn(() => ({
+    my_next_cursor: 123,
+  })),
+  text: jest.fn(),
+}))
+jest.mock("node-fetch", () => mockFetch)
 import fetch from "node-fetch"
 import { default as RestIntegration } from "../rest"
 const FormData = require("form-data")
@@ -571,5 +570,22 @@ describe("REST Integration", () => {
         },
       })
     })
+  })
+
+  it("Attaches custom agent when Reject Unauthorized option is false", async () => {
+    config = new TestConfiguration({
+      url: BASE_URL,
+      rejectUnauthorized: false,
+    })
+    await config.integration.read({})
+
+    const calls: any = mockFetch.mock.calls[0]
+    const url = calls[0]
+    expect(url).toBe(`${BASE_URL}/`)
+
+    const calledConfig = calls[1]
+    expect(calledConfig.method).toBe("GET")
+    expect(calledConfig.headers).toEqual({})
+    expect(calledConfig.agent.options.rejectUnauthorized).toBe(false)
   })
 })
