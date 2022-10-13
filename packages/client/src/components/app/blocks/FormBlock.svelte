@@ -29,7 +29,7 @@
     attachment: "attachmentfield",
     link: "relationshipfield",
     json: "jsonfield",
-    //barcodeqr: "codescanner",
+    barcodeqr: "codescanner",
   }
 
   let schema
