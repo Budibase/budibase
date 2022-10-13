@@ -33,6 +33,7 @@ const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.ARANGODB]: arangodb.schema,
   [SourceName.REST]: rest.schema,
   [SourceName.FIRESTORE]: firebase.schema,
+  [SourceName.GOOGLE_SHEETS]: googlesheets.schema,
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
 }
@@ -64,10 +65,6 @@ if (
 ) {
   DEFINITIONS[SourceName.ORACLE] = oracle.schema
   INTEGRATIONS[SourceName.ORACLE] = oracle.integration
-}
-
-if (environment.SELF_HOSTED) {
-  DEFINITIONS[SourceName.GOOGLE_SHEETS] = googlesheets.schema
 }
 
 module.exports = {
