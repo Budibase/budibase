@@ -38,17 +38,19 @@
 
   function updateEditorsOnDelete(deleteIndex) {
     for (let i = deleteIndex; i < query.fields.steps?.length - 1; i++) {
-      stepEditors[i].update(query.fields.steps[i + 1].value.value)
+      stepEditors[i].update(query.fields.steps[i + 1].value?.value)
     }
   }
   function updateEditorsOnSwap(actionIndex, targetIndex) {
-    const target = query.fields.steps[targetIndex].value.value
-    stepEditors[targetIndex].update(query.fields.steps[actionIndex].value.value)
+    const target = query.fields.steps[targetIndex].value?.value
+    stepEditors[targetIndex].update(
+      query.fields.steps[actionIndex].value?.value
+    )
     stepEditors[actionIndex].update(target)
   }
 
   function setEditorTemplate(fromKey, toKey, index) {
-    const currentValue = query.fields.steps[index].value.value
+    const currentValue = query.fields.steps[index].value?.value
     if (
       !currentValue ||
       currentValue.toString().replace("\\s", "").length < 3 ||
