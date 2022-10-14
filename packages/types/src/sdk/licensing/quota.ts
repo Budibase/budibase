@@ -61,26 +61,40 @@ export type PlanQuotas = {
   [PlanType.ENTERPRISE]: Quotas
 }
 
+export type MonthlyQuotas = {
+  [MonthlyQuotaName.QUERIES]: Quota
+  [MonthlyQuotaName.AUTOMATIONS]: Quota
+  [MonthlyQuotaName.DAY_PASSES]: Quota
+}
+
+export type StaticQuotas = {
+  [StaticQuotaName.ROWS]: Quota
+  [StaticQuotaName.APPS]: Quota
+  [StaticQuotaName.USER_GROUPS]: Quota
+  [StaticQuotaName.PLUGINS]: Quota
+}
+
+export type ConstantQuotas = {
+  [ConstantQuotaName.AUTOMATION_LOG_RETENTION_DAYS]: Quota
+}
+
 export type Quotas = {
   [QuotaType.USAGE]: {
-    [QuotaUsageType.MONTHLY]: {
-      [MonthlyQuotaName.QUERIES]: Quota
-      [MonthlyQuotaName.AUTOMATIONS]: Quota
-      [MonthlyQuotaName.DAY_PASSES]: Quota
-    }
-    [QuotaUsageType.STATIC]: {
-      [StaticQuotaName.ROWS]: Quota
-      [StaticQuotaName.APPS]: Quota
-      [StaticQuotaName.USER_GROUPS]: Quota
-      [StaticQuotaName.PLUGINS]: Quota
-    }
+    [QuotaUsageType.MONTHLY]: MonthlyQuotas
+    [QuotaUsageType.STATIC]: StaticQuotas
   }
-  [QuotaType.CONSTANT]: {
-    [ConstantQuotaName.AUTOMATION_LOG_RETENTION_DAYS]: Quota
-  }
+  [QuotaType.CONSTANT]: ConstantQuotas
 }
 
 export interface Quota {
   name: string
   value: number
+  /**
+   * Array of whole numbers (1-100) that dictate the percentage that this quota should trigger
+   * at in relation to the corresponding usage inside budibase.
+   *
+   * Triggering results in a budibase installation sending a request to account-portal,
+   * which can have subsequent effects such as sending emails to users.
+   */
+  triggers: number[]
 }

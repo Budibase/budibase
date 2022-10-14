@@ -37,6 +37,7 @@ const core = {
   db,
   ...dbConstants,
   redis,
+  locks: redis.redlock,
   objectStore,
   utils,
   users,
