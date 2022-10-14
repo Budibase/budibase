@@ -156,8 +156,8 @@
               page={$usersFetch.pageNumber + 1}
               hasPrevPage={$usersFetch.hasPrevPage}
               hasNextPage={$usersFetch.hasNextPage}
-              goToPrevPage={$usersFetch.loading ? null : fetch.prevPage}
-              goToNextPage={$usersFetch.loading ? null : fetch.nextPage}
+              goToPrevPage={$usersFetch.loading ? null : usersFetch.prevPage}
+              goToNextPage={$usersFetch.loading ? null : usersFetch.nextPage}
             />
           </div>
         </div>

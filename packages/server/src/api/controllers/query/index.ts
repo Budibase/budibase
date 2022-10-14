@@ -56,6 +56,7 @@ const _import = async (ctx: any) => {
       config: {
         url: info.url,
         defaultHeaders: [],
+        rejectUnauthorized: true,
       },
       name: info.name,
     }

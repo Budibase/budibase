@@ -50,6 +50,9 @@ const createBuilderStore = () => {
     duplicateComponent: id => {
       dispatchEvent("duplicate-component", { id })
     },
+    deleteComponent: id => {
+      dispatchEvent("delete-component", { id })
+    },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
