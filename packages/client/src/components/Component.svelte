@@ -135,8 +135,9 @@
   // Empty states can be shown for these components, but can be disabled
   // in the component manifest.
   $: empty =
-    (interactive && !children.length && hasChildren) ||
-    hasMissingRequiredSettings
+    !isBlock &&
+    ((interactive && !children.length && hasChildren) ||
+      hasMissingRequiredSettings)
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
