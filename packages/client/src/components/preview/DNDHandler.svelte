@@ -123,6 +123,14 @@
       return
     }
 
+    // As the first DOM node in a component may not necessarily contain the
+    // child components, we can find to try the parent of the first child
+    // component and use that as the real parent DOM node
+    const childNode = node.getElementsByClassName("component")[0]
+    if (childNode?.parentNode) {
+      node = childNode.parentNode
+    }
+
     // Append an ephemeral div to allow us to determine layout if only one
     // child exists
     let ephemeralDiv
