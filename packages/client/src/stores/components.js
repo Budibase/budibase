@@ -4,6 +4,7 @@ import { findComponentById, findComponentPathById } from "../utils/components"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
+import { dndParent } from "./dnd.js"
 import Router from "../components/Router.svelte"
 import DNDPlaceholder from "../components/preview/DNDPlaceholder.svelte"
 import * as AppComponents from "../components/app/index.js"
@@ -19,8 +20,8 @@ const createComponentStore = () => {
   })
 
   const derivedStore = derived(
-    [store, builderStore, devToolsStore, screenStore],
-    ([$store, $builderState, $devToolsState, $screenState]) => {
+    [store, builderStore, devToolsStore, screenStore, dndParent],
+    ([$store, $builderState, $devToolsState, $screenState, $dndParent]) => {
       // Avoid any of this logic if we aren't in the builder preview
       if (!$builderState.inBuilder && !$devToolsState.visible) {
         return {}
@@ -40,8 +41,7 @@ const createComponentStore = () => {
       // Derive the selected component path
       const selectedPath =
         findComponentPathById(asset?.props, selectedComponentId) || []
-      const dndPath =
-        findComponentPathById(asset?.props, $builderState.dndParent) || []
+      const dndPath = findComponentPathById(asset?.props, $dndParent) || []
 
       return {
         customComponentManifest: $store.customComponentManifest,

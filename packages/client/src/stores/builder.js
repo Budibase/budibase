@@ -16,13 +16,10 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
-    isDragging: false,
+    draggingNewComponent: false,
     navigation: null,
     hiddenComponentIds: [],
     usedPlugins: null,
-    dndParent: null,
-    dndIndex: null,
-    dndBounds: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -70,11 +67,19 @@ const createBuilderStore = () => {
         mode,
       })
     },
-    setDragging: dragging => {
-      if (dragging === get(store).isDragging) {
+    dropNewComponent: (component, parent, index) => {
+      console.log("dispatch", component, parent, index)
+      dispatchEvent("drop-new-component", {
+        component,
+        parent,
+        index,
+      })
+    },
+    setDraggingNewComponent: draggingNewComponent => {
+      if (draggingNewComponent === get(store).draggingNewComponent) {
         return
       }
-      store.update(state => ({ ...state, isDragging: dragging }))
+      store.update(state => ({ ...state, draggingNewComponent }))
     },
     setEditMode: enabled => {
       if (enabled === get(store).editMode) {
@@ -110,14 +115,6 @@ const createBuilderStore = () => {
 
       // Notify the builder so we can reload component definitions
       dispatchEvent("reload-plugin")
-    },
-    updateDNDPlaceholder: (parent, index, bounds) => {
-      store.update(state => {
-        state.dndParent = parent
-        state.dndIndex = index
-        state.dndBounds = bounds
-        return state
-      })
     },
   }
   return {

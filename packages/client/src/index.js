@@ -6,6 +6,7 @@ import {
   blockStore,
   componentStore,
   environmentStore,
+  dndStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
@@ -60,6 +61,24 @@ const loadBudibase = async () => {
     if (name === "eject-block") {
       const block = blockStore.actions.getBlock(payload)
       block?.eject()
+    } else if (name === "dragging-new-component") {
+      const { dragging, component } = payload
+      if (dragging) {
+        dndStore.actions.startDragging({
+          id: null,
+          parent: null,
+          bounds: {
+            height: 64,
+            width: 64,
+          },
+          index: null,
+          newComponentType: component,
+        })
+        builderStore.actions.setDraggingNewComponent(true)
+      } else {
+        dndStore.actions.reset()
+        builderStore.actions.setDraggingNewComponent(false)
+      }
     }
   }
 

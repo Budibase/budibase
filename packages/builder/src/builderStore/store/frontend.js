@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { selectedScreen, selectedComponent } from "builderStore"
+import { selectedScreen, selectedComponent, store } from "builderStore"
 import {
   datasources,
   integrations,
@@ -451,7 +451,7 @@ export const getFrontendStore = () => {
           ...extras,
         }
       },
-      create: async (componentName, presetProps) => {
+      create: async (componentName, presetProps, parent, index) => {
         const state = get(store)
         const componentInstance = store.actions.components.createInstance(
           componentName,
@@ -461,48 +461,62 @@ export const getFrontendStore = () => {
           return
         }
 
-        // Patch selected screen
-        await store.actions.screens.patch(screen => {
-          // Find the selected component
-          const currentComponent = findComponent(
-            screen.props,
-            state.selectedComponentId
-          )
-          if (!currentComponent) {
-            return false
-          }
-
-          // Find parent node to attach this component to
-          let parentComponent
-          if (currentComponent) {
-            // Use selected component as parent if one is selected
-            const definition = store.actions.components.getDefinition(
-              currentComponent._component
-            )
-            if (definition?.hasChildren) {
-              // Use selected component if it allows children
-              parentComponent = currentComponent
+        // Insert in position if specified
+        if (parent && index != null) {
+          await store.actions.screens.patch(screen => {
+            let parentComponent = findComponent(screen.props, parent)
+            if (!parentComponent._children?.length) {
+              parentComponent._children = [componentInstance]
             } else {
-              // Otherwise we need to use the parent of this component
-              parentComponent = findComponentParent(
-                screen.props,
-                currentComponent._id
-              )
+              parentComponent._children.splice(index, 0, componentInstance)
             }
-          } else {
-            // Use screen or layout if no component is selected
-            parentComponent = screen.props
-          }
+          })
+        }
 
-          // Attach new component
-          if (!parentComponent) {
-            return false
-          }
-          if (!parentComponent._children) {
-            parentComponent._children = []
-          }
-          parentComponent._children.push(componentInstance)
-        })
+        // Otherwise we work out where this component should be inserted
+        else {
+          await store.actions.screens.patch(screen => {
+            // Find the selected component
+            const currentComponent = findComponent(
+              screen.props,
+              state.selectedComponentId
+            )
+            if (!currentComponent) {
+              return false
+            }
+
+            // Find parent node to attach this component to
+            let parentComponent
+            if (currentComponent) {
+              // Use selected component as parent if one is selected
+              const definition = store.actions.components.getDefinition(
+                currentComponent._component
+              )
+              if (definition?.hasChildren) {
+                // Use selected component if it allows children
+                parentComponent = currentComponent
+              } else {
+                // Otherwise we need to use the parent of this component
+                parentComponent = findComponentParent(
+                  screen.props,
+                  currentComponent._id
+                )
+              }
+            } else {
+              // Use screen or layout if no component is selected
+              parentComponent = screen.props
+            }
+
+            // Attach new component
+            if (!parentComponent) {
+              return false
+            }
+            if (!parentComponent._children) {
+              parentComponent._children = []
+            }
+            parentComponent._children.push(componentInstance)
+          })
+        }
 
         // Select new component
         store.update(state => {
@@ -988,6 +1002,19 @@ export const getFrontendStore = () => {
           ...state,
           highlightedSettingKey: key,
         }))
+      },
+    },
+    dnd: {
+      start: component => {
+        store.actions.preview.sendEvent("dragging-new-component", {
+          dragging: true,
+          component,
+        })
+      },
+      stop: () => {
+        store.actions.preview.sendEvent("dragging-new-component", {
+          dragging: false,
+        })
       },
     },
   }

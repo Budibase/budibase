@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import { builderStore } from "stores"
+  import { builderStore, isDragging } from "stores"
 
   let componentId
   $: zIndex = componentId === $builderStore.selectedComponentId ? 900 : 920
@@ -30,7 +30,7 @@
 </script>
 
 <IndicatorSet
-  componentId={$builderStore.isDragging ? null : componentId}
+  componentId={$isDragging ? null : componentId}
   color="var(--spectrum-global-color-static-blue-200)"
   transition
   {zIndex}
