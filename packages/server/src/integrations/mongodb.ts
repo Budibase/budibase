@@ -41,7 +41,7 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.STRING,
       required: true,
       default: "mongodb://localhost:27017",
-      display: "Connection string"
+      display: "Connection string",
     },
     db: {
       type: DatasourceFieldType.STRING,
@@ -51,17 +51,17 @@ const SCHEMA: Integration = {
     tlsCertificateFile: {
       type: DatasourceFieldType.STRING,
       required: false,
-      display: "Certificate file path"
+      display: "Certificate file path",
     },
     tlsCertificateKeyFile: {
       type: DatasourceFieldType.STRING,
       required: false,
-      display: "Certificate Key file path"
+      display: "Certificate Key file path",
     },
     tlsCAFile: {
       type: DatasourceFieldType.STRING,
       required: false,
-      display: "CA file path"
+      display: "CA file path",
     },
   },
   query: {
@@ -334,7 +334,7 @@ class MongoIntegration implements IntegrationBase {
     const options: MongoClientOptions = {
       tlsCertificateFile: config.tlsCertificateFile || undefined,
       tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
-      tlsCAFile: config.tlsCAFile || undefined
+      tlsCAFile: config.tlsCAFile || undefined,
     }
     this.client = new MongoClient(config.connectionString, options)
   }
