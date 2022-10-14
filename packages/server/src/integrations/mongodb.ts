@@ -14,6 +14,7 @@ import {
   OperationOptions,
   MongoClientOptions,
 } from "mongodb"
+import environment from "../environment"
 
 interface MongoDBConfig {
   connectionString: string
@@ -29,14 +30,13 @@ interface MongoDBQuery {
     [key: string]: string
   }
 }
-
 const SCHEMA: Integration = {
   docs: "https://github.com/mongodb/node-mongodb-native",
   friendlyName: "MongoDB",
   type: "Non-relational",
   description:
     "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
-  datasource: {
+  datasource: environment.SELF_HOSTED ? {
     connectionString: {
       type: DatasourceFieldType.STRING,
       required: true,
@@ -62,6 +62,18 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.STRING,
       required: false,
       display: "CA file path",
+    },
+  } : {
+    connectionString: {
+      type: DatasourceFieldType.STRING,
+      required: true,
+      default: "mongodb://localhost:27017",
+      display: "Connection string",
+    },
+    db: {
+      type: DatasourceFieldType.STRING,
+      required: true,
+      display: "DB",
     },
   },
   query: {
