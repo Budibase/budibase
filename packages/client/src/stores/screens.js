@@ -2,6 +2,7 @@ import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
+import { dndIndex, dndParent } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
@@ -9,8 +10,8 @@ import { DNDPlaceholderID, DNDPlaceholderType } from "constants"
 
 const createScreenStore = () => {
   const store = derived(
-    [appStore, routeStore, builderStore],
-    ([$appStore, $routeStore, $builderStore]) => {
+    [appStore, routeStore, builderStore, dndParent, dndIndex],
+    ([$appStore, $routeStore, $builderStore, $dndParent, $dndIndex]) => {
       let activeLayout, activeScreen
       let screens
 
@@ -46,31 +47,33 @@ const createScreenStore = () => {
       }
 
       // Insert DND placeholder if required
-      const { dndParent, dndIndex, selectedComponentId } = $builderStore
-      if (activeScreen && dndParent && dndIndex != null) {
-        // Remove selected component from tree
-        let selectedParent = findComponentParent(
-          activeScreen.props,
-          selectedComponentId
-        )
-        selectedParent._children = selectedParent._children?.filter(
-          x => x._id !== selectedComponentId
-        )
+      if (activeScreen && $dndParent && $dndIndex != null) {
+        // Remove selected component from tree if we are moving an existing
+        // component
+        const { selectedComponentId, draggingNewComponent } = $builderStore
+        if (!draggingNewComponent) {
+          let selectedParent = findComponentParent(
+            activeScreen.props,
+            selectedComponentId
+          )
+          if (selectedParent) {
+            selectedParent._children = selectedParent._children?.filter(
+              x => x._id !== selectedComponentId
+            )
+          }
+        }
 
-        // Insert placeholder
+        // Insert placeholder component
         const placeholder = {
           _component: DNDPlaceholderID,
           _id: DNDPlaceholderType,
           static: true,
         }
-        let parent = findComponentById(activeScreen.props, dndParent)
+        let parent = findComponentById(activeScreen.props, $dndParent)
         if (!parent._children?.length) {
           parent._children = [placeholder]
         } else {
-          parent._children = parent._children.filter(
-            x => x._id !== selectedComponentId
-          )
-          parent._children.splice(dndIndex, 0, placeholder)
+          parent._children.splice($dndIndex, 0, placeholder)
         }
       }
 

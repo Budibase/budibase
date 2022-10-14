@@ -1,8 +1,8 @@
 <script>
-  import { builderStore } from "stores"
+  import { dndBounds } from "stores"
   import { DNDPlaceholderID } from "constants"
 
-  $: style = getStyle($builderStore.dndBounds)
+  $: style = getStyle($dndBounds)
 
   const getStyle = bounds => {
     if (!bounds) {

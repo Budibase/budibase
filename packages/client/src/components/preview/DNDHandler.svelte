@@ -2,21 +2,22 @@
   import { onMount, onDestroy } from "svelte"
   import { get } from "svelte/store"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import { builderStore, componentStore } from "stores"
+  import {
+    builderStore,
+    componentStore,
+    dndStore,
+    dndParent,
+    isDragging,
+  } from "stores"
   import DNDPlaceholderOverlay from "./DNDPlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "utils/components.js"
 
-  let sourceInfo
-  let targetInfo
-  let dropInfo
-
-  // These reactive statements are just a trick to only update the store when
-  // the value of one of the properties actually changes
-  $: parent = dropInfo?.parent
-  $: index = dropInfo?.index
-  $: bounds = sourceInfo?.bounds
-  $: builderStore.actions.updateDNDPlaceholder(parent, index, bounds)
+  // Cache some dnd store state as local variables as it massively helps
+  // performance. It lets us avoid calling svelte getters on every DOM action.
+  $: source = $dndStore.source
+  $: target = $dndStore.target
+  $: drop = $dndStore.drop
 
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
@@ -37,19 +38,16 @@
 
   // Callback when drag stops (whether dropped or not)
   const stopDragging = () => {
-    // Reset state
-    sourceInfo = null
-    targetInfo = null
-    dropInfo = null
-    builderStore.actions.setDragging(false)
-
     // Reset listener
-    if (sourceInfo) {
-      const component = document.getElementsByClassName(sourceInfo.id)[0]
+    if (source?.id) {
+      const component = document.getElementsByClassName(source?.id)[0]
       if (component) {
         component.removeEventListener("dragend", stopDragging)
       }
     }
+
+    // Reset state
+    dndStore.actions.reset()
   }
 
   // Callback when initially starting a drag on a draggable component
@@ -66,6 +64,7 @@
     component.addEventListener("dragend", stopDragging)
 
     // Update state
+    const id = component.dataset.id
     const parentId = component.dataset.parent
     const parent = findComponentById(
       get(componentStore).currentAsset.props,
@@ -74,14 +73,13 @@
     const index = parent._children.findIndex(
       x => x._id === component.dataset.id
     )
-    sourceInfo = {
-      id: component.dataset.id,
+    dndStore.actions.startDragging({
+      id,
       bounds: component.children[0].getBoundingClientRect(),
       parent: parentId,
       index,
-    }
-    builderStore.actions.selectComponent(sourceInfo.id)
-    builderStore.actions.setDragging(true)
+    })
+    builderStore.actions.selectComponent(id)
 
     // Set initial drop info to show placeholder exactly where the dragged
     // component is.
@@ -89,20 +87,20 @@
     // the same handler as selecting a new component (which causes a client
     // re-initialisation).
     setTimeout(() => {
-      dropInfo = {
+      dndStore.actions.updateDrop({
         parent: parentId,
         index,
-      }
+      })
     }, 0)
   }
 
   // Core logic for handling drop events and determining where to render the
   // drop target placeholder
   const processEvent = (mouseX, mouseY) => {
-    if (!targetInfo) {
+    if (!target) {
       return null
     }
-    let { id, parent, node, acceptsChildren, empty } = targetInfo
+    let { id, parent, node, acceptsChildren, empty } = target
 
     // If we're over something that does not accept children then we go up a
     // level and consider the mouse position relative to the parent
@@ -115,10 +113,10 @@
     // We're now hovering over something which does accept children.
     // If it is empty, just go inside it.
     if (empty) {
-      dropInfo = {
+      dndStore.actions.updateDrop({
         parent: id,
         index: 0,
-      }
+      })
       return
     }
 
@@ -188,10 +186,10 @@
     while (idx < breakpoints.length && breakpoints[idx] < mousePosition) {
       idx++
     }
-    dropInfo = {
+    dndStore.actions.updateDrop({
       parent: id,
       index: idx,
-    }
+    })
   }
   const throttledProcessEvent = Utils.throttle(processEvent, 130)
 
@@ -202,7 +200,7 @@
 
   // Callback when on top of a component
   const onDragOver = e => {
-    if (!sourceInfo || !targetInfo) {
+    if (!source || !target) {
       return
     }
     handleEvent(e)
@@ -210,69 +208,80 @@
 
   // Callback when entering a potential drop target
   const onDragEnter = e => {
-    if (!sourceInfo) {
+    if (!source) {
       return
     }
 
     // Find the next valid component to consider dropping over, ignoring nested
     // block components
     const component = e.target?.closest?.(
-      `.component:not(.block):not(.${sourceInfo.id})`
+      `.component:not(.block):not(.${source.id})`
     )
     if (component && component.classList.contains("droppable")) {
-      targetInfo = {
+      dndStore.actions.updateTarget({
         id: component.dataset.id,
         parent: component.dataset.parent,
         node: getDOMNode(component.dataset.id),
         empty: component.classList.contains("empty"),
         acceptsChildren: component.classList.contains("parent"),
-      }
+      })
       handleEvent(e)
     }
   }
 
   // Callback when dropping a drag on top of some component
   const onDrop = () => {
-    let target, mode
-
-    // Convert parent + index into target + mode
-    if (sourceInfo && dropInfo?.parent && dropInfo.index != null) {
-      const parent = findComponentById(
-        get(componentStore).currentAsset?.props,
-        dropInfo.parent
-      )
-      if (!parent) {
-        return
-      }
-
-      // Do nothing if we didn't change the location
-      if (
-        sourceInfo.parent === dropInfo.parent &&
-        sourceInfo.index === dropInfo.index
-      ) {
-        return
-      }
-
-      // Filter out source component and placeholder from consideration
-      const children = parent._children?.filter(
-        x => x._id !== "placeholder" && x._id !== sourceInfo.id
-      )
-
-      // Use inside if no existing children
-      if (!children?.length) {
-        target = parent._id
-        mode = "inside"
-      } else if (dropInfo.index === 0) {
-        target = children[0]?._id
-        mode = "above"
-      } else {
-        target = children[dropInfo.index - 1]?._id
-        mode = "below"
-      }
+    if (!source || !drop?.parent || drop?.index == null) {
+      return
     }
 
-    if (target && mode) {
-      builderStore.actions.moveComponent(sourceInfo.id, target, mode)
+    // Check if we're adding a new component rather than moving one
+    if (source.newComponentType) {
+      builderStore.actions.dropNewComponent(
+        source.newComponentType,
+        drop.parent,
+        drop.index
+      )
+    }
+
+    // Convert parent + index into target + mode
+    let legacyDropTarget, legacyDropMode
+    const parent = findComponentById(
+      get(componentStore).currentAsset?.props,
+      drop.parent
+    )
+    if (!parent) {
+      return
+    }
+
+    // Do nothing if we didn't change the location
+    if (source.parent === drop.parent && source.index === drop.index) {
+      return
+    }
+
+    // Filter out source component and placeholder from consideration
+    const children = parent._children?.filter(
+      x => x._id !== "placeholder" && x._id !== source.id
+    )
+
+    // Use inside if no existing children
+    if (!children?.length) {
+      legacyDropTarget = parent._id
+      legacyDropMode = "inside"
+    } else if (drop.index === 0) {
+      legacyDropTarget = children[0]?._id
+      legacyDropMode = "above"
+    } else {
+      legacyDropTarget = children[drop.index - 1]?._id
+      legacyDropMode = "below"
+    }
+
+    if (legacyDropTarget && legacyDropMode) {
+      builderStore.actions.moveComponent(
+        source.id,
+        legacyDropTarget,
+        legacyDropMode
+      )
     }
   }
 
@@ -298,13 +307,13 @@
 </script>
 
 <IndicatorSet
-  componentId={$builderStore.dndParent}
+  componentId={$dndParent}
   color="var(--spectrum-global-color-static-green-500)"
   zIndex="930"
   transition
   prefix="Inside"
 />
 
-{#if $builderStore.isDragging}
+{#if $isDragging}
   <DNDPlaceholderOverlay />
 {/if}
