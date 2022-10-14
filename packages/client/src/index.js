@@ -69,7 +69,7 @@ const loadBudibase = async () => {
           parent: null,
           bounds: {
             height: 64,
-            width: 64,
+            width: 128,
           },
           index: null,
           newComponentType: component,
