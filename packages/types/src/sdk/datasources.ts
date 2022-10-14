@@ -95,6 +95,16 @@ export interface ExtraQueryConfig {
   }
 }
 
+export interface DatasourceConfig {
+  [key: string]: {
+    type: string
+    display?: string
+    required?: boolean
+    default?: any
+    deprecated?: boolean
+  }
+}
+
 export interface Integration {
   docs: string
   plus?: boolean
@@ -104,7 +114,7 @@ export interface Integration {
   friendlyName: string
   type?: string
   iconUrl?: string
-  datasource: {}
+  datasource: DatasourceConfig
   query: {
     [key: string]: QueryDefinition
   }

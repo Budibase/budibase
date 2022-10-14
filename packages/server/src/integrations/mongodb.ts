@@ -12,11 +12,15 @@ import {
   FindOneAndUpdateOptions,
   UpdateOptions,
   OperationOptions,
+  MongoClientOptions,
 } from "mongodb"
 
 interface MongoDBConfig {
   connectionString: string
   db: string
+  tlsCertificateFile: string
+  tlsCertificateKeyFile: string
+  tlsCAFile: string
 }
 
 interface MongoDBQuery {
@@ -37,10 +41,27 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.STRING,
       required: true,
       default: "mongodb://localhost:27017",
+      display: "Connection string"
     },
     db: {
       type: DatasourceFieldType.STRING,
       required: true,
+      display: "DB",
+    },
+    tlsCertificateFile: {
+      type: DatasourceFieldType.STRING,
+      required: false,
+      display: "Certificate file path"
+    },
+    tlsCertificateKeyFile: {
+      type: DatasourceFieldType.STRING,
+      required: false,
+      display: "Certificate Key file path"
+    },
+    tlsCAFile: {
+      type: DatasourceFieldType.STRING,
+      required: false,
+      display: "CA file path"
     },
   },
   query: {
@@ -310,7 +331,12 @@ class MongoIntegration implements IntegrationBase {
 
   constructor(config: MongoDBConfig) {
     this.config = config
-    this.client = new MongoClient(config.connectionString)
+    const options: MongoClientOptions = {
+      tlsCertificateFile: config.tlsCertificateFile || undefined,
+      tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
+      tlsCAFile: config.tlsCAFile || undefined
+    }
+    this.client = new MongoClient(config.connectionString, options)
   }
 
   async connect() {
