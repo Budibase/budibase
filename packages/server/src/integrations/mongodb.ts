@@ -36,46 +36,48 @@ const SCHEMA: Integration = {
   type: "Non-relational",
   description:
     "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
-  datasource: environment.SELF_HOSTED ? {
-    connectionString: {
-      type: DatasourceFieldType.STRING,
-      required: true,
-      default: "mongodb://localhost:27017",
-      display: "Connection string",
-    },
-    db: {
-      type: DatasourceFieldType.STRING,
-      required: true,
-      display: "DB",
-    },
-    tlsCertificateFile: {
-      type: DatasourceFieldType.STRING,
-      required: false,
-      display: "Certificate file path",
-    },
-    tlsCertificateKeyFile: {
-      type: DatasourceFieldType.STRING,
-      required: false,
-      display: "Certificate Key file path",
-    },
-    tlsCAFile: {
-      type: DatasourceFieldType.STRING,
-      required: false,
-      display: "CA file path",
-    },
-  } : {
-    connectionString: {
-      type: DatasourceFieldType.STRING,
-      required: true,
-      default: "mongodb://localhost:27017",
-      display: "Connection string",
-    },
-    db: {
-      type: DatasourceFieldType.STRING,
-      required: true,
-      display: "DB",
-    },
-  },
+  datasource: environment.SELF_HOSTED
+    ? {
+        connectionString: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          default: "mongodb://localhost:27017",
+          display: "Connection string",
+        },
+        db: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          display: "DB",
+        },
+        tlsCertificateFile: {
+          type: DatasourceFieldType.STRING,
+          required: false,
+          display: "Certificate file path",
+        },
+        tlsCertificateKeyFile: {
+          type: DatasourceFieldType.STRING,
+          required: false,
+          display: "Certificate Key file path",
+        },
+        tlsCAFile: {
+          type: DatasourceFieldType.STRING,
+          required: false,
+          display: "CA file path",
+        },
+      }
+    : {
+        connectionString: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          default: "mongodb://localhost:27017",
+          display: "Connection string",
+        },
+        db: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          display: "DB",
+        },
+      },
   query: {
     create: {
       type: QueryType.JSON,
