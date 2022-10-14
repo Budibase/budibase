@@ -13,6 +13,8 @@
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "utils/components.js"
 
+  const ThrottleRate = 130
+
   // Cache some dnd store state as local variables as it massively helps
   // performance. It lets us avoid calling svelte getters on every DOM action.
   $: source = $dndStore.source
@@ -191,7 +193,7 @@
       index: idx,
     })
   }
-  const throttledProcessEvent = Utils.throttle(processEvent, 130)
+  const throttledProcessEvent = Utils.throttle(processEvent, ThrottleRate)
 
   const handleEvent = e => {
     e.preventDefault()

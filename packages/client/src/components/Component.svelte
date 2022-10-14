@@ -16,7 +16,13 @@
     propsAreSame,
     getSettingsDefinition,
   } from "utils/componentProps"
-  import { builderStore, devToolsStore, componentStore, appStore } from "stores"
+  import {
+    builderStore,
+    devToolsStore,
+    componentStore,
+    appStore,
+    isDragging,
+  } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
@@ -151,6 +157,12 @@
 
   // Scroll the selected element into view
   $: selected && scrollIntoView()
+
+  // When dragging and dropping, pad components to allow dropping between
+  // nested layers. Only reset this when dragging stops.
+  let pad = false
+  $: pad = pad || (interactive && hasChildren && inDndPath)
+  $: $isDragging, (pad = false)
 
   // Update component context
   $: store.set({
@@ -454,11 +466,11 @@
     class:draggable
     class:droppable
     class:empty
-    class:parent={hasChildren}
     class:interactive
     class:editing
+    class:pad
+    class:parent={hasChildren}
     class:block={isBlock}
-    class:explode={interactive && hasChildren && inDndPath}
     class:placeholder={id === DNDPlaceholderID}
     data-id={id}
     data-name={name}
@@ -490,9 +502,9 @@
     display: contents;
   }
   .component :global(> *) {
-    transition: padding 260ms ease, border 260ms ease;
+    transition: padding 260ms ease-in, border 260ms ease-in;
   }
-  .component.explode :global(> *) {
+  .component.pad :global(> *) {
     padding: 12px !important;
     gap: 12px !important;
     border: 2px dotted var(--spectrum-global-color-gray-400) !important;

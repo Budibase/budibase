@@ -53,6 +53,7 @@ const createComponentStore = () => {
         mountedComponentCount: Object.keys($store.mountedComponents).length,
         currentAsset: asset,
         dndPath: dndPath?.map(component => component._id),
+        dndDepth: dndPath?.length || 0,
       }
     }
   )
