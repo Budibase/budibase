@@ -2,6 +2,10 @@ import { writable, derived } from "svelte/store"
 
 const createDndStore = () => {
   const initialState = {
+    // Flags for whether we are inserting a new component or not
+    isNewComponent: false,
+    newComponentType: null,
+
     // Info about the dragged component
     source: null,
 
@@ -13,12 +17,32 @@ const createDndStore = () => {
   }
   const store = writable(initialState)
 
-  // newComponentType is an optional field to signify we are creating a new
-  // component rather than moving an existing one
-  const startDragging = ({ id, parent, bounds, index, newComponentType }) => {
+  const startDraggingExistingComponent = ({ id, parent, bounds, index }) => {
     store.set({
       ...initialState,
-      source: { id, parent, bounds, index, newComponentType },
+      source: { id, parent, bounds, index },
+    })
+  }
+
+  const startDraggingNewComponent = ({ type, definition }) => {
+    if (!type || !definition) {
+      return
+    }
+
+    // Get size of new component so we can show a properly sized placeholder
+    const width = definition.size?.width || 128
+    const height = definition.size?.height || 64
+
+    store.set({
+      ...initialState,
+      isNewComponent: true,
+      newComponentType: type,
+      source: {
+        id: null,
+        parent: null,
+        bounds: { height, width },
+        index: null,
+      },
     })
   }
 
@@ -43,7 +67,8 @@ const createDndStore = () => {
   return {
     subscribe: store.subscribe,
     actions: {
-      startDragging,
+      startDraggingExistingComponent,
+      startDraggingNewComponent,
       updateTarget,
       updateDrop,
       reset,
@@ -52,9 +77,19 @@ const createDndStore = () => {
 }
 
 export const dndStore = createDndStore()
+
+// The DND store is updated extremely frequently, so we can greatly improve
+// performance by deriving any state that needs to be externally observed.
+// By doing this and using primitives, we can avoid invalidating other stores
+// or components which depend on DND state unless values actually change.
+export const dndIsDragging = derived(dndStore, $dndStore => !!$dndStore.source)
 export const dndParent = derived(dndStore, $dndStore => $dndStore.drop?.parent)
 export const dndIndex = derived(dndStore, $dndStore => $dndStore.drop?.index)
 export const dndBounds = derived(
   dndStore,
   $dndStore => $dndStore.source?.bounds
+)
+export const dndIsNewComponent = derived(
+  dndStore,
+  $dndStore => $dndStore.isNewComponent
 )

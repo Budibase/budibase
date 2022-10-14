@@ -16,7 +16,6 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
-    draggingNewComponent: false,
     navigation: null,
     hiddenComponentIds: [],
     usedPlugins: null,
@@ -68,18 +67,11 @@ const createBuilderStore = () => {
       })
     },
     dropNewComponent: (component, parent, index) => {
-      console.log("dispatch", component, parent, index)
       dispatchEvent("drop-new-component", {
         component,
         parent,
         index,
       })
-    },
-    setDraggingNewComponent: draggingNewComponent => {
-      if (draggingNewComponent === get(store).draggingNewComponent) {
-        return
-      }
-      store.update(state => ({ ...state, draggingNewComponent }))
     },
     setEditMode: enabled => {
       if (enabled === get(store).editMode) {

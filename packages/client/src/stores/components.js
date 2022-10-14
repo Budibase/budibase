@@ -4,7 +4,6 @@ import { findComponentById, findComponentPathById } from "../utils/components"
 import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
-import { dndParent } from "./dnd.js"
 import Router from "../components/Router.svelte"
 import DNDPlaceholder from "../components/preview/DNDPlaceholder.svelte"
 import * as AppComponents from "../components/app/index.js"
@@ -20,28 +19,22 @@ const createComponentStore = () => {
   })
 
   const derivedStore = derived(
-    [store, builderStore, devToolsStore, screenStore, dndParent],
-    ([$store, $builderState, $devToolsState, $screenState, $dndParent]) => {
+    [store, builderStore, devToolsStore, screenStore],
+    ([$store, $builderStore, $devToolsStore, $screenStore]) => {
+      const { inBuilder, selectedComponentId } = $builderStore
+
       // Avoid any of this logic if we aren't in the builder preview
-      if (!$builderState.inBuilder && !$devToolsState.visible) {
+      if (!inBuilder && !$devToolsStore.visible) {
         return {}
       }
 
-      // Derive the selected component instance and definition
-      let asset
-      const { screen, selectedComponentId } = $builderState
-      if ($builderState.inBuilder) {
-        asset = screen
-      } else {
-        asset = $screenState.activeScreen
-      }
-      const component = findComponentById(asset?.props, selectedComponentId)
+      const root = $screenStore.activeScreen?.props
+      const component = findComponentById(root, selectedComponentId)
       const definition = getComponentDefinition(component?._component)
 
       // Derive the selected component path
       const selectedPath =
-        findComponentPathById(asset?.props, selectedComponentId) || []
-      const dndPath = findComponentPathById(asset?.props, $dndParent) || []
+        findComponentPathById(root, selectedComponentId) || []
 
       return {
         customComponentManifest: $store.customComponentManifest,
@@ -51,9 +44,6 @@ const createComponentStore = () => {
         selectedComponentDefinition: definition,
         selectedComponentPath: selectedPath?.map(component => component._id),
         mountedComponentCount: Object.keys($store.mountedComponents).length,
-        currentAsset: asset,
-        dndPath: dndPath?.map(component => component._id),
-        dndDepth: dndPath?.length || 0,
       }
     }
   )
@@ -101,8 +91,8 @@ const createComponentStore = () => {
   }
 
   const getComponentById = id => {
-    const asset = get(derivedStore).currentAsset
-    return findComponentById(asset?.props, id)
+    const root = get(screenStore).activeScreen?.props
+    return findComponentById(root, id)
   }
 
   const getComponentDefinition = type => {

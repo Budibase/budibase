@@ -64,20 +64,11 @@ const loadBudibase = async () => {
     } else if (name === "dragging-new-component") {
       const { dragging, component } = payload
       if (dragging) {
-        dndStore.actions.startDragging({
-          id: null,
-          parent: null,
-          bounds: {
-            height: 64,
-            width: 128,
-          },
-          index: null,
-          newComponentType: component,
-        })
-        builderStore.actions.setDraggingNewComponent(true)
+        const definition =
+          componentStore.actions.getComponentDefinition(component)
+        dndStore.actions.startDraggingNewComponent({ component, definition })
       } else {
         dndStore.actions.reset()
-        builderStore.actions.setDraggingNewComponent(false)
       }
     }
   }

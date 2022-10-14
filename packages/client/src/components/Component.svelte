@@ -21,14 +21,14 @@
     devToolsStore,
     componentStore,
     appStore,
-    isDragging,
+    dndIsDragging,
+    dndComponentPath,
   } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
   import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
-  import { DNDPlaceholderID } from "constants"
 
   export let instance = {}
   export let isLayout = false
@@ -105,7 +105,7 @@
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
   $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
-  $: inDndPath = $componentStore.dndPath?.includes(id)
+  $: inDndPath = $dndComponentPath?.includes(id)
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
@@ -162,7 +162,7 @@
   // nested layers. Only reset this when dragging stops.
   let pad = false
   $: pad = pad || (interactive && hasChildren && inDndPath)
-  $: $isDragging, (pad = false)
+  $: $dndIsDragging, (pad = false)
 
   // Update component context
   $: store.set({
@@ -471,7 +471,6 @@
     class:pad
     class:parent={hasChildren}
     class:block={isBlock}
-    class:placeholder={id === DNDPlaceholderID}
     data-id={id}
     data-name={name}
     data-icon={icon}
@@ -502,7 +501,7 @@
     display: contents;
   }
   .component :global(> *) {
-    transition: padding 260ms ease-in, border 260ms ease-in;
+    transition: padding 260ms ease-out, border 260ms ease-out;
   }
   .component.pad :global(> *) {
     padding: 12px !important;
