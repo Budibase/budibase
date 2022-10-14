@@ -18,7 +18,7 @@ async function cleanup() {
 
 export function createQueue(
   jobQueue: JobQueue,
-  removeStalled: StalledFn
+  removeStalled?: StalledFn
 ): BullQueue.Queue {
   const queueConfig: any = redisProtocolUrl || { redis: opts }
   let queue: any
