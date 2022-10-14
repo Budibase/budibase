@@ -16,10 +16,10 @@ async function cleanup() {
   }
 }
 
-export function createQueue(
+export function createQueue<T>(
   jobQueue: JobQueue,
   removeStalled?: StalledFn
-): BullQueue.Queue {
+): BullQueue.Queue<T> {
   const queueConfig: any = redisProtocolUrl || { redis: opts }
   let queue: any
   if (env.isTest()) {

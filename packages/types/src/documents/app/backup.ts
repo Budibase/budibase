@@ -6,16 +6,35 @@ export enum AppBackupTrigger {
   SCHEDULED = "scheduled",
 }
 
-export interface AppBackupContents {
-  datasources: string[]
-  screens: string[]
-  automations: string[]
-}
-
 export interface AppBackup extends Document {
   trigger: AppBackupTrigger
   name: string
-  date: string
-  userId: string
-  contents: AppBackupContents
+  createdAt: string
+  filename: string
+  appId: string
+  userId?: string
+  contents?: {
+    datasources: string[]
+    screens: string[]
+    automations: string[]
+  }
+}
+
+export type AppBackupFetchOpts = {
+  trigger?: AppBackupTrigger
+  limit?: number
+  page?: string
+  paginate?: boolean
+  startDate?: string
+  endDate?: string
+}
+
+export interface AppBackupQueueData {
+  trigger: AppBackupTrigger
+  name?: string
+  appId: string
+}
+
+export interface AppBackupMetadata extends AppBackupQueueData {
+  createdAt: string
 }

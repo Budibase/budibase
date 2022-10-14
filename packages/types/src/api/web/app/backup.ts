@@ -4,6 +4,7 @@ export interface SearchAppBackupsRequest {
   trigger: AppBackupTrigger
   startDate: string
   endDate: string
+  page?: string
 }
 
 export interface CreateAppBackupRequest {

@@ -27,6 +27,7 @@ const CONTENT_TYPE_MAP: any = {
   css: "text/css",
   js: "application/javascript",
   json: "application/json",
+  gz: "application/gzip",
 }
 const STRING_CONTENT_TYPES = [
   CONTENT_TYPE_MAP.html,
@@ -149,7 +150,7 @@ export const upload = async ({
   type,
   metadata,
 }: any) => {
-  const extension = [...filename.split(".")].pop()
+  const extension = filename.split(".").pop()
   const fileBytes = fs.readFileSync(path)
 
   const objectStore = ObjectStore(bucketName)

@@ -5,7 +5,7 @@ const { queue } = require("@budibase/backend-core")
 const automation = require("../threads/automation")
 
 let automationQueue = queue.createQueue(
-  queue.JobQueue.AUTOMATIONS,
+  queue.JobQueue.AUTOMATION,
   automation.removeStalled
 )
 
