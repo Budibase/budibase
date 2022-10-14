@@ -34,10 +34,10 @@ function handleStalled(queue: Queue, removeStalled?: StalledFn) {
 function logging(queue: Queue, jobQueue: JobQueue) {
   let eventType: string
   switch (jobQueue) {
-    case JobQueue.AUTOMATIONS:
+    case JobQueue.AUTOMATION:
       eventType = "automation-event"
       break
-    case JobQueue.APP_BACKUPS:
+    case JobQueue.APP_BACKUP:
       eventType = "app-backup-event"
       break
   }

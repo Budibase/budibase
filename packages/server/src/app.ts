@@ -37,6 +37,7 @@ import {
 } from "./utilities/workerRequests"
 import { watch } from "./watch"
 import { initialise as initialiseWebsockets } from "./websocket"
+import sdk from "./sdk"
 
 const app = new Koa()
 
@@ -108,6 +109,7 @@ module.exports = server.listen(env.PORT || 0, async () => {
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await redis.init()
+  await sdk.backups.init()
 
   // run migrations on startup if not done via http
   // not recommended in a clustered environment

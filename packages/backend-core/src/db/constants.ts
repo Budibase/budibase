@@ -21,6 +21,7 @@ export enum ViewName {
   ACCOUNT_BY_EMAIL = "account_by_email",
   PLATFORM_USERS_LOWERCASE = "platform_users_lowercase",
   USER_BY_GROUP = "by_group_user",
+  APP_BACKUP_BY_TRIGGER = "by_trigger",
 }
 
 export const DeprecatedViews = {
@@ -49,6 +50,7 @@ export enum DocumentType {
   TABLE = "ta",
   DATASOURCE = "datasource",
   DATASOURCE_PLUS = "datasource_plus",
+  APP_BACKUP = "backup",
 }
 
 export const StaticDatabases = {

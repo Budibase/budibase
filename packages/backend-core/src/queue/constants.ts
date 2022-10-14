@@ -1,4 +1,4 @@
 export enum JobQueue {
-  AUTOMATIONS = "automationQueue",
-  APP_BACKUPS = "appBackupQueue",
+  AUTOMATION = "automationQueue",
+  APP_BACKUP = "appBackupQueue",
 }
