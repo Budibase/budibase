@@ -21,13 +21,13 @@ const createDndStore = () => {
   }
 
   const startDraggingNewComponent = ({ component, definition }) => {
-    if (!component || !definition) {
+    if (!component) {
       return
     }
 
     // Get size of new component so we can show a properly sized placeholder
-    const width = definition.size?.width || 128
-    const height = definition.size?.height || 64
+    const width = definition?.size?.width || 128
+    const height = definition?.size?.height || 64
 
     store.set({
       ...initialState,
