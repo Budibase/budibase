@@ -25,7 +25,7 @@
   })
 </script>
 
-{#if left != null}
+{#if left != null && top != null && width && height}
   <div
     class="overlay"
     style="left: {left}px; top: {top}px; width: {width}px; height: {height}px;"
