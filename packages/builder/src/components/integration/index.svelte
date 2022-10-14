@@ -102,7 +102,7 @@
       {/if}
     {:else if query.fields.extra?.actionType === "pipeline"}
       <br />
-      {#if query.fields.steps?.length === 0}
+      {#if !query.fields.steps?.length}
         <div class="controls">
           <Button
             secondary
@@ -119,7 +119,7 @@
         </div>
         <br />
       {:else}
-        {#each query.fields.steps as step, index}
+        {#each query.fields.steps ?? [] as step, index}
           <div class="block">
             <div class="subblock">
               <Divider noMargin />
