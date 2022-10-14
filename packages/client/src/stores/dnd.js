@@ -2,10 +2,6 @@ import { writable, derived } from "svelte/store"
 
 const createDndStore = () => {
   const initialState = {
-    // Flags for whether we are inserting a new component or not
-    isNewComponent: false,
-    newComponentType: null,
-
     // Info about the dragged component
     source: null,
 
@@ -24,8 +20,8 @@ const createDndStore = () => {
     })
   }
 
-  const startDraggingNewComponent = ({ type, definition }) => {
-    if (!type || !definition) {
+  const startDraggingNewComponent = ({ component, definition }) => {
+    if (!component || !definition) {
       return
     }
 
@@ -35,13 +31,12 @@ const createDndStore = () => {
 
     store.set({
       ...initialState,
-      isNewComponent: true,
-      newComponentType: type,
       source: {
         id: null,
         parent: null,
         bounds: { height, width },
         index: null,
+        newComponentType: component,
       },
     })
   }
@@ -91,5 +86,5 @@ export const dndBounds = derived(
 )
 export const dndIsNewComponent = derived(
   dndStore,
-  $dndStore => $dndStore.isNewComponent
+  $dndStore => $dndStore.source?.newComponentType != null
 )

@@ -245,6 +245,7 @@
         drop.parent,
         drop.index
       )
+      return
     }
 
     // Convert parent + index into target + mode
