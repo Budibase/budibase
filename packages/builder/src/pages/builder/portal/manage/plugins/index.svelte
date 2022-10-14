@@ -55,7 +55,7 @@
           Add plugin
         </Button>
       </div>
-      {#if filteredPlugins?.length}
+      {#if $plugins?.length}
         <div class="filters">
           <div class="select">
             <Select
