@@ -4,8 +4,6 @@
  * @param fn the async function to run
  * @return {Promise} a sequential version of the function
  */
-import { lastIndexOf } from "lodash/array"
-
 export const sequential = fn => {
   let queue = []
   return async (...params) => {

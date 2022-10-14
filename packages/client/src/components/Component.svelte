@@ -421,7 +421,11 @@
   }
 
   const scrollIntoView = () => {
-    return
+    // Don't scroll into view if we selected this component because we were
+    // starting dragging on it
+    if (get(dndIsDragging)) {
+      return
+    }
     const node = document.getElementsByClassName(id)?.[0]?.children[0]
     if (!node) {
       return
