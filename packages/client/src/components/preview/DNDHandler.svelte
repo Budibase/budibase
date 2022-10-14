@@ -4,14 +4,15 @@
   import IndicatorSet from "./IndicatorSet.svelte"
   import {
     builderStore,
-    componentStore,
+    screenStore,
     dndStore,
     dndParent,
-    isDragging,
+    dndIsDragging,
   } from "stores"
   import DNDPlaceholderOverlay from "./DNDPlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "utils/components.js"
+  import { DNDPlaceholderID } from "constants"
 
   const ThrottleRate = 130
 
@@ -69,13 +70,13 @@
     const id = component.dataset.id
     const parentId = component.dataset.parent
     const parent = findComponentById(
-      get(componentStore).currentAsset.props,
+      get(screenStore).activeScreen?.props,
       parentId
     )
     const index = parent._children.findIndex(
       x => x._id === component.dataset.id
     )
-    dndStore.actions.startDragging({
+    dndStore.actions.startDraggingExistingComponent({
       id,
       bounds: component.children[0].getBoundingClientRect(),
       parent: parentId,
@@ -127,7 +128,7 @@
     let ephemeralDiv
     if (node.children.length === 1) {
       ephemeralDiv = document.createElement("div")
-      ephemeralDiv.classList.add("placeholder")
+      ephemeralDiv.dataset.id = DNDPlaceholderID
       node.appendChild(ephemeralDiv)
     }
 
@@ -138,7 +139,7 @@
       const child = node.children?.[0] || node
       const bounds = child.getBoundingClientRect()
       return {
-        placeholder: node.classList.contains("placeholder"),
+        placeholder: node.dataset.id === DNDPlaceholderID,
         centerX: bounds.left + bounds.width / 2,
         centerY: bounds.top + bounds.height / 2,
         left: bounds.left,
@@ -249,7 +250,7 @@
     // Convert parent + index into target + mode
     let legacyDropTarget, legacyDropMode
     const parent = findComponentById(
-      get(componentStore).currentAsset?.props,
+      get(screenStore).activeScreen?.props,
       drop.parent
     )
     if (!parent) {
@@ -263,7 +264,7 @@
 
     // Filter out source component and placeholder from consideration
     const children = parent._children?.filter(
-      x => x._id !== "placeholder" && x._id !== source.id
+      x => x._id !== DNDPlaceholderID && x._id !== source.id
     )
 
     // Use inside if no existing children
@@ -316,6 +317,6 @@
   prefix="Inside"
 />
 
-{#if $isDragging}
+{#if $dndIsDragging}
   <DNDPlaceholderOverlay />
 {/if}

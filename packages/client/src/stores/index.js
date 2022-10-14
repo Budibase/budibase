@@ -15,7 +15,14 @@ export { uploadStore } from "./uploads.js"
 export { rowSelectionStore } from "./rowSelection.js"
 export { blockStore } from "./blocks.js"
 export { environmentStore } from "./environment"
-export { dndStore, dndIndex, dndParent, dndBounds } from "./dnd"
+export {
+  dndStore,
+  dndIndex,
+  dndParent,
+  dndBounds,
+  dndIsNewComponent,
+  dndIsDragging,
+} from "./dnd"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"

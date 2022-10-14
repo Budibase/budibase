@@ -2,7 +2,7 @@ import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
-import { dndIndex, dndParent } from "./dnd.js"
+import { dndIndex, dndParent, dndIsNewComponent } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
@@ -10,8 +10,22 @@ import { DNDPlaceholderID, DNDPlaceholderType } from "constants"
 
 const createScreenStore = () => {
   const store = derived(
-    [appStore, routeStore, builderStore, dndParent, dndIndex],
-    ([$appStore, $routeStore, $builderStore, $dndParent, $dndIndex]) => {
+    [
+      appStore,
+      routeStore,
+      builderStore,
+      dndParent,
+      dndIndex,
+      dndIsNewComponent,
+    ],
+    ([
+      $appStore,
+      $routeStore,
+      $builderStore,
+      $dndParent,
+      $dndIndex,
+      $dndIsNewComponent,
+    ]) => {
       let activeLayout, activeScreen
       let screens
 
@@ -50,8 +64,8 @@ const createScreenStore = () => {
       if (activeScreen && $dndParent && $dndIndex != null) {
         // Remove selected component from tree if we are moving an existing
         // component
-        const { selectedComponentId, draggingNewComponent } = $builderStore
-        if (!draggingNewComponent) {
+        const { selectedComponentId } = $builderStore
+        if (!$dndIsNewComponent) {
           let selectedParent = findComponentParent(
             activeScreen.props,
             selectedComponentId

@@ -85,6 +85,10 @@
     "icon": "Selection",
     "hasChildren": true,
     "showSettingsBar": true,
+    "size": {
+      "width": 400,
+      "height": 200
+    },
     "styles": [
       "padding",
       "size",
