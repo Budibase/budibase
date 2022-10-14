@@ -91,9 +91,13 @@ export async function disableAllCrons(appId: any) {
   return Promise.all(promises)
 }
 
-export async function disableCron(jobId: string, jobKey: string) {
-  await automationQueue.removeRepeatableByKey(jobKey)
-  await automationQueue.removeJobs(jobId)
+export async function disableCronById(jobId: number | string) {
+  const repeatJobs = await automationQueue.getRepeatableJobs()
+  for (let repeatJob of repeatJobs) {
+    if (repeatJob.id === jobId) {
+      await automationQueue.removeRepeatableByKey(repeatJob.key)
+    }
+  }
   console.log(`jobId=${jobId} disabled`)
 }
 

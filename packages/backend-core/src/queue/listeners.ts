@@ -3,24 +3,35 @@ import { JobQueue } from "./constants"
 
 export type StalledFn = (job: Job) => Promise<void>
 
-export const addListeners = (
+export function addListeners(
   queue: Queue,
   jobQueue: JobQueue,
   removeStalled?: StalledFn
-) => {
+) {
   logging(queue, jobQueue)
   if (removeStalled) {
     handleStalled(queue, removeStalled)
   }
 }
 
-const handleStalled = (queue: Queue, removeStalled: StalledFn) => {
+function handleStalled(queue: Queue, removeStalled?: StalledFn) {
   queue.on("stalled", async (job: Job) => {
-    await removeStalled(job)
+    if (removeStalled) {
+      await removeStalled(job)
+    } else if (job.opts.repeat) {
+      const jobId = job.id
+      const repeatJobs = await queue.getRepeatableJobs()
+      for (let repeatJob of repeatJobs) {
+        if (repeatJob.id === jobId) {
+          await queue.removeRepeatableByKey(repeatJob.key)
+        }
+      }
+      console.log(`jobId=${jobId} disabled`)
+    }
   })
 }
 
-const logging = (queue: Queue, jobQueue: JobQueue) => {
+function logging(queue: Queue, jobQueue: JobQueue) {
   let eventType: string
   switch (jobQueue) {
     case JobQueue.AUTOMATIONS:
