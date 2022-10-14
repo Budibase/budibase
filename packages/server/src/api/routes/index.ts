@@ -34,6 +34,8 @@ export { default as publicRoutes } from "./public"
 const appBackupRoutes = api.appBackups
 const scheduleRoutes = api.schedules
 export const mainRoutes: Router[] = [
+  appBackupRoutes,
+  backupRoutes,
   authRoutes,
   deployRoutes,
   layoutRoutes,
@@ -53,16 +55,14 @@ export const mainRoutes: Router[] = [
   permissionRoutes,
   datasourceRoutes,
   queryRoutes,
-  backupRoutes,
   metadataRoutes,
   devRoutes,
   cloudRoutes,
-  // these need to be handled last as they still use /api/:tableId
-  // this could be breaking as koa may recognise other routes as this
-  tableRoutes,
   rowRoutes,
   migrationRoutes,
   pluginRoutes,
-  appBackupRoutes,
   scheduleRoutes,
+  // these need to be handled last as they still use /api/:tableId
+  // this could be breaking as koa may recognise other routes as this
+  tableRoutes,
 ]

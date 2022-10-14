@@ -7,7 +7,12 @@ export interface ContextUser extends User {
   license: License
 }
 
-export interface BBContext extends Context {
+export interface BBContext {
   user?: ContextUser
-  body: any
+  request: {
+    body: any
+  }
+  params: any
+  body?: any
+  redirect?: any
 }
