@@ -481,6 +481,7 @@ const getSelectedRowsBindings = asset => {
           block._id + "-table"
         )}.${makePropSafe("selectedRows")}`,
         readableBinding: `${block._instanceName}.Selected rows`,
+        category: "Selected rows",
       }))
     )
   }
