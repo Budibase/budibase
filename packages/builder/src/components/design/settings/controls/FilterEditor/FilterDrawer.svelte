@@ -38,8 +38,8 @@
 
   let behaviourValue
   const behaviourOptions = [
-    { value: "and", label: "Match all of the following filters" },
-    { value: "or", label: "Match any of the following filters" },
+    { value: "and", label: "Match all filters" },
+    { value: "or", label: "Match any filter" },
   ]
   const addFilter = () => {
     filters = [
@@ -137,14 +137,9 @@
 <DrawerContent>
   <div class="container">
     <Layout noPadding>
-      <Body size="S">
-        {#if !filters?.length}
-          Add your first filter expression.
-        {:else}
-          Results are filtered to only those which match all of the following
-          constraints.
-        {/if}
-      </Body>
+      {#if !filters?.length}
+        <Body size="S">Add your first filter expression.</Body>
+      {/if}
       {#if filters?.length}
         <div class="fields">
           <Select
@@ -264,7 +259,7 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     align-items: center;
-    grid-template-columns: 1fr 150px 120px 1fr 16px 16px;
+    grid-template-columns: minmax(150px, 1fr) 120px 120px minmax(150px, 1fr) 16px 16px;
   }
 
   .filter-label {
