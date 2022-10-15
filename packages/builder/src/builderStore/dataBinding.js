@@ -1004,7 +1004,10 @@ const bindingReplacement = (
  * {{ literal [componentId] }}
  */
 const extractLiteralHandlebarsID = value => {
-  return value?.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
+  if (!value || typeof value !== "string") {
+    return null
+  }
+  return value.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
 }
 
 /**
