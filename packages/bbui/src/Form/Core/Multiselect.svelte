@@ -15,12 +15,28 @@
   export let sort = false
   export let autoWidth = false
 
+  $: streamed = Array.isArray(value)
+    ? value.reduce((acc, ele) => {
+        if (typeof ele === "string") {
+          let temp = ele.trim()
+          if (!temp) {
+            return acc
+          }
+        }
+        let processedOpt = ele.toString()
+        if (options.indexOf(processedOpt) > -1) {
+          acc.push(ele.toString())
+        }
+        return acc
+      }, [])
+    : []
+
   const dispatch = createEventDispatcher()
-  $: selectedLookupMap = getSelectedLookupMap(value)
+  $: selectedLookupMap = getSelectedLookupMap(streamed)
   $: optionLookupMap = getOptionLookupMap(options)
-  $: fieldText = getFieldText(value, optionLookupMap, placeholder)
+  $: fieldText = getFieldText(streamed, optionLookupMap, placeholder)
   $: isOptionSelected = optionValue => selectedLookupMap[optionValue] === true
-  $: toggleOption = makeToggleOption(selectedLookupMap, value)
+  $: toggleOption = makeToggleOption(selectedLookupMap, streamed)
 
   const getFieldText = (value, map, placeholder) => {
     if (Array.isArray(value) && value.length > 0) {
