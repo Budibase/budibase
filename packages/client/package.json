@@ -1,6 +1,6 @@
 {
   "name": "@budibase/client",
-  "version": "2.0.31",
+  "version": "2.0.32",
   "license": "MPL-2.0",
   "module": "dist/budibase-client.js",
   "main": "dist/budibase-client.js",
@@ -19,9 +19,9 @@
     "dev:builder": "rollup -cw"
   },
   "dependencies": {
-    "@budibase/bbui": "^2.0.31",
-    "@budibase/frontend-core": "^2.0.31",
-    "@budibase/string-templates": "^2.0.31",
+    "@budibase/bbui": "^2.0.32",
+    "@budibase/frontend-core": "^2.0.32",
+    "@budibase/string-templates": "^2.0.32",
     "@spectrum-css/button": "^3.0.3",
     "@spectrum-css/card": "^3.0.3",
     "@spectrum-css/divider": "^1.0.3",
