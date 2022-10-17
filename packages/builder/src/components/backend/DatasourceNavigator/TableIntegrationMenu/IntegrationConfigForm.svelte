@@ -109,10 +109,7 @@
         </div>
       {:else if schema[configKey].type === "fieldGroup"}
         <div class="spectrum-Accordion" role={configKey}>
-          <div
-            class="spectrum-Accordion-item {openAccordionItems[configKey]}"
-            role="presentation"
-          >
+          <div class="spectrum-Accordion-item {openAccordionItems[configKey]}">
             <h3 class="spectrum-Accordion-itemHeading">
               <button
                 class="spectrum-Accordion-itemHeader"
@@ -171,7 +168,13 @@
     border: none;
   }
   .spectrum-Accordion-itemContent {
-    width: 99%;
+    width: 97%;
+    padding-left: 30px;
+  }
+  .spectrum-Accordion-itemHeader {
+    text-transform: none;
+    font-weight: bold;
+    font-size: 0.875rem;
   }
   .form-row {
     display: grid;
