@@ -10,6 +10,7 @@ export interface AppBackup extends Document {
   trigger: AppBackupTrigger
   name: string
   createdAt: string
+  createdBy?: string
   filename: string
   appId: string
   userId?: string
@@ -31,6 +32,7 @@ export type AppBackupFetchOpts = {
 
 export interface AppBackupQueueData {
   trigger: AppBackupTrigger
+  createdBy?: string
   name?: string
   appId: string
 }

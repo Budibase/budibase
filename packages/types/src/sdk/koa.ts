@@ -15,4 +15,5 @@ export interface BBContext {
   params: any
   body?: any
   redirect?: any
+  attachment: any
 }
