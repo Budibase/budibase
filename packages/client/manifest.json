@@ -3157,6 +3157,56 @@
       }
     ]
   },
+  "codescanner": {
+    "name": "Barcode/QR Scanner",
+    "icon": "Camera",
+    "styles": [
+      "size"
+    ],
+    "illegalChildren": [
+      "section"
+    ],
+    "settings": [
+      {
+        "type": "field/barcode/qr",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Button text",
+        "key": "scanButtonText"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Allow manual entry",
+        "key": "allowManualEntry",
+        "defaultValue": false
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ]
+  },
   "embeddedmap": {
     "name": "Embedded Map",
     "icon": "Location",
@@ -4399,7 +4449,9 @@
   "formblock": {
     "name": "Form Block",
     "icon": "Form",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "block": true,
     "info": "Form blocks are only compatible with internal or SQL tables",
     "settings": [
@@ -4407,7 +4459,11 @@
         "type": "select",
         "label": "Type",
         "key": "actionType",
-        "options": ["Create", "Update", "View"],
+        "options": [
+          "Create",
+          "Update",
+          "View"
+        ],
         "defaultValue": "Create"
       },
       {

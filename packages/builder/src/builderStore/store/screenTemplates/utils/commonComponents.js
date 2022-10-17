@@ -65,6 +65,11 @@ export function makeBreadcrumbContainer(tableName, text) {
       vAlign: "middle",
       size: "shrink",
     })
+    .normalStyle({
+      width: "600px",
+      "margin-right": "auto",
+      "margin-left": "auto",
+    })
     .instanceName("Breadcrumbs")
     .addChild(link)
     .addChild(arrowText)
@@ -138,6 +143,7 @@ const fieldTypeToComponentMap = {
   attachment: "attachmentfield",
   link: "relationshipfield",
   json: "jsonfield",
+  barcodeqr: "codescanner",
 }
 
 export function makeDatasourceFormComponents(datasource) {
