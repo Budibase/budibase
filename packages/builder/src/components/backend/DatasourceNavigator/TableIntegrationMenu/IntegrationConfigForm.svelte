@@ -10,6 +10,7 @@
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
   import { IntegrationTypes } from "constants/backend"
+  import "@spectrum-css/accordion"
 
   export let datasource
   export let schema
@@ -32,6 +33,7 @@
     .map(([key]) => key)
 
   let addButton
+  let openAccordionItems = initialOpenAccordionItems()
 
   function getDisplayName(key) {
     let name
@@ -41,6 +43,26 @@
       name = key
     }
     return capitalise(name)
+  }
+  function getFieldGroupKeys(fieldGroup) {
+    return Object.entries(schema[fieldGroup].fields || {})
+      .filter(el => filter(el))
+      .map(([key]) => key)
+  }
+  function initialOpenAccordionItems() {
+    let openAccordionItems = {}
+    for (const configKey in schema) {
+      if (schema[configKey].type === "fieldGroup") {
+        if (
+          Object.keys(schema[configKey].fields)?.some(
+            field => !!datasource?.config[field]
+          )
+        ) {
+          openAccordionItems[configKey] = "is-open"
+        }
+      }
+    }
+    return openAccordionItems
   }
 </script>
 
@@ -81,6 +103,51 @@
             bind:value={config[configKey]}
           />
         </div>
+      {:else if schema[configKey].type === "fieldGroup"}
+        <div class="spectrum-Accordion" role={configKey}>
+          <div
+            class="spectrum-Accordion-item {openAccordionItems[configKey]}"
+            role="presentation"
+          >
+            <h3 class="spectrum-Accordion-itemHeading">
+              <button
+                class="spectrum-Accordion-itemHeader"
+                type="button"
+                on:click={() =>
+                  (openAccordionItems[configKey] =
+                    openAccordionItems[configKey] !== "is-open"
+                      ? "is-open"
+                      : "")}
+              >
+                {getDisplayName(configKey)}
+              </button>
+              <svg
+                class="spectrum-Icon spectrum-UIIcon-ChevronRight100 spectrum-Accordion-itemIndicator"
+                focusable="false"
+                aria-hidden="true"
+              >
+                <use xlink:href="#spectrum-css-icon-Chevron100" />
+              </svg>
+            </h3>
+            <div class="spectrum-Accordion-itemContent" role={configKey}>
+              <Layout gap="S">
+                {#each getFieldGroupKeys(configKey) as fieldGroupKey}
+                  <div class="form-row">
+                    <Label
+                      >{schema[configKey]["fields"][fieldGroupKey]
+                        ?.display}</Label
+                    >
+                    <Input
+                      type={schema[configKey]["fields"][fieldGroupKey]?.type}
+                      on:change
+                      bind:value={config[fieldGroupKey]}
+                    />
+                  </div>
+                {/each}
+              </Layout>
+            </div>
+          </div>
+        </div>
       {:else}
         <div class="form-row">
           <Label>{getDisplayName(configKey)}</Label>
@@ -96,6 +163,15 @@
 </form>
 
 <style>
+  .spectrum-Accordion {
+    margin-left: -20px;
+  }
+  .spectrum-Accordion-item {
+    border: none;
+  }
+  .spectrum-Accordion-itemContent {
+    width: 99%;
+  }
   .form-row {
     display: grid;
     grid-template-columns: 20% 1fr;

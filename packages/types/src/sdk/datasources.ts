@@ -33,6 +33,7 @@ export enum DatasourceFieldType {
   OBJECT = "object",
   JSON = "json",
   FILE = "file",
+  FIELD_GROUP = "fieldGroup"
 }
 
 export enum SourceName {

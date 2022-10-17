@@ -315,21 +315,27 @@ const getSchema = () => {
     schema.datasource = {
       ...schema.datasource,
       //@ts-ignore
-      tlsCertificateFile: {
-        type: DatasourceFieldType.STRING,
-        required: false,
-        display: "Certificate file path",
-      },
-      tlsCertificateKeyFile: {
-        type: DatasourceFieldType.STRING,
-        required: false,
-        display: "Certificate Key file path",
-      },
-      tlsCAFile: {
-        type: DatasourceFieldType.STRING,
-        required: false,
-        display: "CA file path",
-      },
+      tls: {
+        type: DatasourceFieldType.FIELD_GROUP,
+        display: "TLS",
+        fields: {
+          tlsCertificateFile: {
+            type: DatasourceFieldType.STRING,
+            required: false,
+            display: "Certificate file path",
+          },
+          tlsCertificateKeyFile: {
+            type: DatasourceFieldType.STRING,
+            required: false,
+            display: "Certificate Key file path",
+          },
+          tlsCAFile: {
+            type: DatasourceFieldType.STRING,
+            required: false,
+            display: "CA file path",
+          },
+        }
+      }
     }
   }
   return schema

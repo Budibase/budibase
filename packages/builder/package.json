@@ -78,6 +78,7 @@
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
+    "@spectrum-css/accordion": "^3.0.24",
     "codemirror": "^5.59.0",
     "dayjs": "^1.11.2",
     "downloadjs": "1.4.7",
