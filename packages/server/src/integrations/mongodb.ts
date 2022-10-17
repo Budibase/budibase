@@ -334,8 +334,8 @@ const getSchema = () => {
             required: false,
             display: "CA file path",
           },
-        }
-      }
+        },
+      },
     }
   }
   return schema
