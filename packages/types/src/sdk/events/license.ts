@@ -35,3 +35,13 @@ export interface LicensePaymentFailedEvent {
 export interface LicensePaymentRecoveredEvent {
   accountId: string
 }
+
+export interface LicenseTrialStartedEvent {
+  accountId: string
+  plan: PlanType
+}
+
+export interface LicenseTrialEndedEvent {
+  accountId: string
+  plan: PlanType
+}

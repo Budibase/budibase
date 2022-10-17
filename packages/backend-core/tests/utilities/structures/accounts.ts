@@ -1,6 +1,47 @@
 import { generator, uuid } from "."
-import { AuthType, CloudAccount, Hosting } from "@budibase/types"
+import {
+  Account,
+  AuthType,
+  CloudAccount,
+  Hosting,
+  PlanType,
+} from "@budibase/types"
 import * as db from "../../../src/db/utils"
+
+export const paidAccount = (
+  opts: { account?: Account; planType?: PlanType; dayPasses?: number } = {}
+) => {
+  if (!opts.account) {
+    opts.account = cloudAccount()
+  }
+  if (!opts.planType) {
+    opts.planType = PlanType.PRO
+  }
+  if (!opts.dayPasses) {
+    opts.dayPasses = 50
+  }
+
+  const account = opts.account
+  account.planType = opts.planType
+  account.planTier = opts.dayPasses
+  return opts.account
+}
+
+export const trialAccount = (
+  opts: { account?: Account; planType?: PlanType } = {}
+) => {
+  const account = paidAccount(opts)
+
+  account.isTrialing = true
+
+  const now = new Date()
+  const trialEnd = new Date(now)
+  trialEnd.setDate(now.getDate() + 30)
+  account.trialStartAt = now.getTime()
+  account.trialStartAt = trialEnd.getTime()
+
+  return account
+}
 
 export const cloudAccount = (): CloudAccount => {
   return {

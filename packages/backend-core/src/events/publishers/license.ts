@@ -11,6 +11,8 @@ import {
   LicenseCheckoutOpenedEvent,
   LicensePaymentFailedEvent,
   LicensePaymentRecoveredEvent,
+  LicenseTrialStartedEvent,
+  LicenseTrialEndedEvent,
 } from "@budibase/types"
 
 export async function tierChanged(account: Account, from: number, to: number) {
@@ -75,4 +77,20 @@ export async function paymentRecovered(account: Account) {
     accountId: account.accountId,
   }
   await publishEvent(Event.LICENSE_PAYMENT_RECOVERED, properties)
+}
+
+export async function trialStarted(account: Account, plan: PlanType) {
+  const properties: LicenseTrialStartedEvent = {
+    accountId: account.accountId,
+    plan,
+  }
+  await publishEvent(Event.LICENSE_TRIAL_STARTED, properties)
+}
+
+export async function trialEnded(account: Account, plan: PlanType) {
+  const properties: LicenseTrialEndedEvent = {
+    accountId: account.accountId,
+    plan,
+  }
+  await publishEvent(Event.LICENSE_TRIAL_ENDED, properties)
 }

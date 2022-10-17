@@ -8,11 +8,11 @@ const newPlan = (type: PlanType = PlanType.FREE): AccountPlan => {
 
 export const newLicense = (opts: {
   quotas: Quotas
-  planType?: PlanType
+  plan?: AccountPlan
 }): License => {
   return {
     features: [],
     quotas: opts.quotas,
-    plan: newPlan(opts.planType),
+    plan: opts.plan ? opts.plan : newPlan(),
   }
 }

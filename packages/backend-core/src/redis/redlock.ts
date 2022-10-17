@@ -13,6 +13,18 @@ const getClient = async (type: LockType): Promise<Redlock> => {
       }
       return noRetryRedlock
     }
+    case LockType.DEFAULT: {
+      if (!noRetryRedlock) {
+        noRetryRedlock = await newRedlock(OPTIONS.DEFAULT)
+      }
+      return noRetryRedlock
+    }
+    case LockType.DELAY_500: {
+      if (!noRetryRedlock) {
+        noRetryRedlock = await newRedlock(OPTIONS.DELAY_500)
+      }
+      return noRetryRedlock
+    }
     default: {
       throw new Error(`Could not get redlock client: ${type}`)
     }
@@ -41,6 +53,9 @@ export const OPTIONS = {
     // see https://www.awsarchitectureblog.com/2015/03/backoff.html
     retryJitter: 100, // time in ms
   },
+  DELAY_500: {
+    retryDelay: 500,
+  },
 }
 
 export const newRedlock = async (opts: Options = {}) => {
@@ -55,7 +70,7 @@ export const doWithLock = async (opts: LockOptions, task: any) => {
   let lock
   try {
     // aquire lock
-    let name: string = `${tenancy.getTenantId()}_${opts.name}`
+    let name: string = `lock:${tenancy.getTenantId()}_${opts.name}`
     if (opts.nameSuffix) {
       name = name + `_${opts.nameSuffix}`
     }

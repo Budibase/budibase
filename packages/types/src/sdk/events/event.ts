@@ -141,6 +141,8 @@ export enum Event {
   LICENSE_CHECKOUT_OPENED = "license:checkout:opened",
   LICENSE_CHECKOUT_SUCCESS = "license:checkout:success",
   LICENSE_PORTAL_OPENED = "license:portal:opened",
+  LICENSE_TRIAL_STARTED = "license:trial:started",
+  LICENSE_TRIAL_ENDED = "license:trial:ended",
 
   // ACCOUNT
   ACCOUNT_CREATED = "account:created",
