@@ -240,8 +240,11 @@
         <Layout noPadding gap="XS">
           {#each blocks as block}
             <div
+              draggable="true"
               class="component"
               on:click={() => addComponent(block.component)}
+              on:dragstart={() => onDragStart(block.component)}
+              on:dragend={onDragEnd}
             >
               <Icon name={block.icon} />
               <Body size="XS">{block.name}</Body>
