@@ -79,6 +79,10 @@ spec:
           value: {{ .Values.services.objectStore.url }}
         - name: PLUGIN_BUCKET_NAME
           value: {{ .Values.services.objectStore.pluginBucketName | default "plugins" | quote }}
+        - name: APPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.appsBucketName | default "apps" | quote }}
+        - name: GLOBAL_CLOUD_BUCKET_NAME
+          value: {{ .Values.services.objectStore.globalBucketName | default "global" | quote }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
