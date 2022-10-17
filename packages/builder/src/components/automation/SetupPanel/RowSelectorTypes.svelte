@@ -58,17 +58,19 @@
 {:else if schema.type === "longform"}
   <TextArea label={field} bind:value={value[field]} />
 {:else if schema.type === "json"}
-  <Label>{field}</Label>
-  <Editor
-    editorHeight="150"
-    mode="json"
-    on:change={e => {
-      if (e.detail?.value !== value[field]) {
-        onChange(e, field, schema.type)
-      }
-    }}
-    value={value[field]}
-  />
+  <span>
+    <Label>{field}</Label>
+    <Editor
+      editorHeight="150"
+      mode="json"
+      on:change={e => {
+        if (e.detail?.value !== value[field]) {
+          onChange(e, field, schema.type)
+        }
+      }}
+      value={value[field]}
+    />
+  </span>
 {:else if schema.type === "link"}
   <LinkedRowSelector bind:linkedRows={value[field]} {schema} />
 {:else if schema.type === "string" || schema.type === "number"}
