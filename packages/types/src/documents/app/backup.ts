@@ -6,6 +6,11 @@ export enum AppBackupTrigger {
   SCHEDULED = "scheduled",
 }
 
+export enum AppBackupEventType {
+  EXPORT = "export",
+  IMPORT = "import",
+}
+
 export interface AppBackup extends Document {
   trigger: AppBackupTrigger
   name: string
@@ -31,12 +36,22 @@ export type AppBackupFetchOpts = {
 }
 
 export interface AppBackupQueueData {
-  trigger: AppBackupTrigger
-  createdBy?: string
-  name?: string
+  eventType: AppBackupEventType
   appId: string
+  export?: {
+    trigger: AppBackupTrigger
+    name?: string
+    createdBy?: string
+  }
+  import?: {
+    backupId: string
+  }
 }
 
-export interface AppBackupMetadata extends AppBackupQueueData {
+export interface AppBackupMetadata {
+  appId: string
+  trigger: AppBackupTrigger
+  name?: string
+  createdBy?: string
   createdAt: string
 }

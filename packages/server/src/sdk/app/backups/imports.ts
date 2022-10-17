@@ -1,5 +1,5 @@
 import { db as dbCore } from "@budibase/backend-core"
-import { APP_PREFIX, TABLE_ROW_PREFIX } from "../../../db/utils"
+import { TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import {
   DB_EXPORT_FILE,
