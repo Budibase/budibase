@@ -17,7 +17,7 @@
   export let rowId
   export let actionUrl
 
-  const { fetchDatasourceSchema, builderStore } = getContext("sdk")
+  const { fetchDatasourceSchema } = getContext("sdk")
   const FieldTypeToComponentMap = {
     string: "stringfield",
     number: "numberfield",
@@ -29,6 +29,7 @@
     attachment: "attachmentfield",
     link: "relationshipfield",
     json: "jsonfield",
+    barcodeqr: "codescanner",
   }
 
   let schema
@@ -80,7 +81,7 @@
       field: "_id",
       operator: "equal",
       type: "string",
-      value: rowId,
+      value: !rowId ? `{{ ${safe("url")}.${safe("id")} }}` : rowId,
       valueType: "Binding",
     },
   ]
@@ -118,7 +119,7 @@
       props={{
         dataSource,
         filter,
-        limit: rowId ? 1 : $builderStore.inBuilder ? 1 : 0,
+        limit: 1,
         paginate: false,
       }}
     >
@@ -129,6 +130,8 @@
         props={{
           dataProvider,
           noRowsMessage: "We couldn't find a row to display",
+          direction: "column",
+          hAlign: "center",
         }}
       >
         <BlockComponent
@@ -138,6 +141,11 @@
             dataSource,
             size,
             disabled: disabled || actionType === "View",
+          }}
+          styles={{
+            normal: {
+              width: "600px",
+            },
           }}
           context="form"
           bind:id={formId}
