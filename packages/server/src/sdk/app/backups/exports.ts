@@ -1,6 +1,9 @@
 import { db as dbCore } from "@budibase/backend-core"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import { retrieveDirectory } from "../../../utilities/fileSystem/utilities"
+import {
+  retrieveDirectory,
+  retrieve,
+} from "../../../utilities/fileSystem/utilities"
 import { streamFile } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
 import {
@@ -8,11 +11,7 @@ import {
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
 } from "../../../db/utils"
-import {
-  DB_EXPORT_FILE,
-  GLOBAL_DB_EXPORT_FILE,
-  ATTACHMENT_DIR,
-} from "./constants"
+import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import fs from "fs"
 import { join } from "path"
 const uuid = require("uuid/v4")
@@ -87,21 +86,19 @@ function defineFilter(excludeRows?: boolean) {
  */
 export async function exportApp(appId: string, config?: ExportOpts) {
   const prodAppId = dbCore.getProdAppID(appId)
-  const attachmentsPath = `${prodAppId}/${ATTACHMENT_DIR}`
-  // export attachments to tmp
-  const tmpPath = await retrieveDirectory(
-    ObjectStoreBuckets.APPS,
-    attachmentsPath
-  )
-  const downloadedPath = join(tmpPath, attachmentsPath),
-    tmpAttachmentPath = join(tmpPath, ATTACHMENT_DIR)
+  const appPath = `${prodAppId}/`
+  // export bucket contents
+  const tmpPath = await retrieveDirectory(ObjectStoreBuckets.APPS, appPath)
+  const downloadedPath = join(tmpPath, appPath)
   if (fs.existsSync(downloadedPath)) {
-    // move out of app directory, simplify structure
-    fs.renameSync(downloadedPath, tmpAttachmentPath)
+    const allFiles = fs.readdirSync(downloadedPath)
+    for (let file of allFiles) {
+      const path = join(downloadedPath, file)
+      // move out of app directory, simplify structure
+      fs.renameSync(path, join(downloadedPath, "..", file))
+    }
     // remove the old app directory created by object export
-    fs.rmdirSync(join(tmpPath, prodAppId))
-  } else {
-    fs.mkdirSync(tmpAttachmentPath)
+    fs.rmdirSync(downloadedPath)
   }
   // enforce an export of app DB to the tmp path
   const dbPath = join(tmpPath, DB_EXPORT_FILE)
@@ -113,7 +110,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   // if tar requested, return where the tarball is
   if (config?.tar) {
     // now the tmpPath contains both the DB export and attachments, tar this
-    const tarPath = tarFilesToTmp(tmpPath, [ATTACHMENT_DIR, DB_EXPORT_FILE])
+    const tarPath = tarFilesToTmp(tmpPath, fs.readdirSync(tmpPath))
     // cleanup the tmp export files as tarball returned
     fs.rmSync(tmpPath, { recursive: true, force: true })
     return tarPath

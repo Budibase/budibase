@@ -1,16 +1,23 @@
 import { backups } from "@budibase/pro"
 import { objectStore, tenancy } from "@budibase/backend-core"
+import { AppBackupQueueData } from "@budibase/types"
 import { exportApp } from "./exports"
 import { Job } from "bull"
 import fs from "fs"
 import env from "../../../environment"
 
-async function importProcessor(job: Job) {}
+async function importProcessor(job: Job) {
+  const data: AppBackupQueueData = job.data
+  const appId = data.appId,
+    backupId = data.import!.backupId
+  const { path, metadata } = await backups.downloadAppBackup(backupId)
+}
 
 async function exportProcessor(job: Job) {
-  const appId = job.data.appId,
-    trigger = job.data.trigger,
-    name = job.data.name
+  const data: AppBackupQueueData = job.data
+  const appId = data.appId,
+    trigger = data.export!.trigger,
+    name = data.export!.name
   const tenantId = tenancy.getTenantIDFromAppID(appId)
   await tenancy.doInTenant(tenantId, async () => {
     const createdAt = new Date().toISOString()
