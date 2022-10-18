@@ -23,7 +23,10 @@
   $: drop = $dndStore.drop
 
   const insideGrid = e => {
-    return e.target?.closest?.(".grid") != null
+    return e.target
+      ?.closest?.(".component")
+      ?.parentNode?.closest?.(".component")
+      ?.childNodes[0]?.classList.contains("grid")
   }
 
   // Util to get the inner DOM node by a component ID
@@ -218,7 +221,7 @@
 
   // Callback when on top of a component.
   const onDragOver = e => {
-    if (!source || !target || insideGrid(e)) {
+    if (!source || !target) {
       return
     }
     handleEvent(e)
@@ -226,7 +229,7 @@
 
   // Callback when entering a potential drop target
   const onDragEnter = e => {
-    if (!source || insideGrid(e)) {
+    if (!source) {
       return
     }
 
@@ -249,7 +252,7 @@
 
   // Callback when dropping a drag on top of some component
   const onDrop = e => {
-    if (!source || !drop?.parent || drop?.index == null || insideGrid(e)) {
+    if (!source || !drop?.parent || drop?.index == null) {
       return
     }
 

@@ -4573,7 +4573,9 @@
     "hasChildren": true,
     "styles": [
       "size"
-    ]
+    ],
+    "illegalChildren": ["grid", "section"],
+    "allowedDirectChildren": [""]
   },
   "formblock": {
     "name": "Form Block",
