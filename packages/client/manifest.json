@@ -85,6 +85,10 @@
     "icon": "Selection",
     "hasChildren": true,
     "showSettingsBar": true,
+    "size": {
+      "width": 400,
+      "height": 100
+    },
     "styles": [
       "padding",
       "size",
@@ -255,6 +259,10 @@
       "section"
     ],
     "showEmptyState": false,
+    "size": {
+      "width": 400,
+      "height": 100
+    },
     "settings": [
       {
         "type": "section",
@@ -276,6 +284,10 @@
     "icon": "Button",
     "editable": true,
     "showSettingsBar": true,
+    "size": {
+      "width": 105,
+      "height": 35
+    },
     "settings": [
       {
         "type": "text",
@@ -368,6 +380,10 @@
     "illegalChildren": [
       "section"
     ],
+    "size": {
+      "width": 400,
+      "height": 10
+    },
     "settings": [
       {
         "type": "select",
@@ -405,6 +421,10 @@
     ],
     "hasChildren": true,
     "showSettingsBar": true,
+    "size": {
+      "width": 400,
+      "height": 100
+    },
     "settings": [
       {
         "type": "dataProvider",
@@ -584,6 +604,7 @@
     ]
   },
   "card": {
+    "deprecated": true,
     "name": "Vertical Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewColumn",
@@ -664,6 +685,10 @@
     ],
     "showSettingsBar": true,
     "editable": true,
+    "size": {
+      "width": 400,
+      "height": 30
+    },
     "settings": [
       {
         "type": "text",
@@ -786,6 +811,10 @@
     ],
     "showSettingsBar": true,
     "editable": true,
+    "size": {
+      "width": 400,
+      "height": 40
+    },
     "settings": [
       {
         "type": "text",
@@ -903,6 +932,10 @@
     "name": "Tag",
     "icon": "Label",
     "showSettingsBar": true,
+    "size": {
+      "width": 100,
+      "height": 25
+    },
     "settings": [
       {
         "type": "text",
@@ -954,12 +987,13 @@
     "name": "Image",
     "description": "A basic component for displaying images",
     "icon": "Image",
-    "illegalChildren": [
-      "section"
-    ],
     "styles": [
       "size"
     ],
+    "size": {
+      "width": 400,
+      "height": 300
+    },
     "settings": [
       {
         "type": "text",
@@ -976,9 +1010,10 @@
     "styles": [
       "size"
     ],
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 300
+    },
     "settings": [
       {
         "type": "text",
@@ -1036,9 +1071,10 @@
     "name": "Icon",
     "description": "A basic component for displaying icons",
     "icon": "Shapes",
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 25,
+      "height": 25
+    },
     "settings": [
       {
         "type": "icon",
@@ -1155,9 +1191,10 @@
     "icon": "Link",
     "showSettingsBar": true,
     "editable": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 200,
+      "height": 30
+    },
     "settings": [
       {
         "type": "text",
@@ -1267,12 +1304,10 @@
     ]
   },
   "cardhorizontal": {
+    "deprecated": true,
     "name": "Horizontal Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewRow",
-    "illegalChildren": [
-      "section"
-    ],
     "settings": [
       {
         "type": "text",
@@ -1363,27 +1398,31 @@
     "name": "Stat Card",
     "description": "A card component for displaying numbers.",
     "icon": "Card",
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 260,
+      "height": 143
+    },
     "settings": [
       {
         "type": "text",
         "label": "Title",
         "key": "title",
-        "placeholder": "Total Revenue"
+        "placeholder": "Total Revenue",
+        "defaultValue": "Title"
       },
       {
         "type": "text",
         "label": "Value",
         "key": "value",
-        "placeholder": "$1,981,983"
+        "placeholder": "$1,981,983",
+        "defaultValue": "Value"
       },
       {
         "type": "text",
         "label": "Label",
         "key": "label",
-        "placeholder": "Stripe"
+        "placeholder": "Stripe",
+        "defaultValue": "Label"
       }
     ]
   },
@@ -1391,12 +1430,13 @@
     "name": "Embed",
     "icon": "Code",
     "description": "Embed content from 3rd party sources",
-    "illegalChildren": [
-      "section"
-    ],
     "styles": [
       "size"
     ],
+    "size": {
+      "width": 400,
+      "height": 100
+    },
     "settings": [
       {
         "type": "text",
@@ -1410,9 +1450,10 @@
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
     "settings": [
       {
         "type": "text",
@@ -1571,9 +1612,10 @@
     "name": "Line Chart",
     "description": "Line chart",
     "icon": "GraphTrend",
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
     "settings": [
       {
         "type": "text",
@@ -1731,9 +1773,10 @@
     "name": "Area Chart",
     "description": "Line chart",
     "icon": "GraphAreaStacked",
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
     "settings": [
       {
         "type": "text",
@@ -1903,9 +1946,10 @@
     "name": "Pie Chart",
     "description": "Pie chart",
     "icon": "GraphPie",
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
     "settings": [
       {
         "type": "text",
@@ -2031,9 +2075,10 @@
     "name": "Donut Chart",
     "description": "Donut chart",
     "icon": "GraphDonut",
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
     "settings": [
       {
         "type": "text",
@@ -2159,9 +2204,10 @@
     "name": "Candlestick Chart",
     "description": "Candlestick chart",
     "icon": "GraphBarVerticalStacked",
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
     "settings": [
       {
         "type": "text",
@@ -2266,6 +2312,10 @@
     "styles": [
       "size"
     ],
+    "size": {
+      "width": 400,
+      "height": 400
+    },
     "settings": [
       {
         "type": "select",
@@ -2352,6 +2402,10 @@
     "styles": [
       "size"
     ],
+    "size": {
+      "width": 400,
+      "height": 400
+    },
     "settings": [
       {
         "type": "number",
@@ -2372,6 +2426,10 @@
       "size"
     ],
     "hasChildren": true,
+    "size": {
+      "width": 400,
+      "height": 400
+    },
     "settings": [
       {
         "type": "select",
@@ -2398,13 +2456,14 @@
   "stringfield": {
     "name": "Text Field",
     "icon": "Text",
-    "illegalChildren": [
-      "section"
-    ],
     "styles": [
       "size"
     ],
     "editable": true,
+    "size": {
+      "width": 400,
+      "height": 50
+    },
     "settings": [
       {
         "type": "field/string",
@@ -2492,9 +2551,10 @@
       "size"
     ],
     "editable": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
     "settings": [
       {
         "type": "field/number",
@@ -2548,9 +2608,10 @@
       "size"
     ],
     "editable": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
     "settings": [
       {
         "type": "field/string",
@@ -2604,9 +2665,10 @@
       "size"
     ],
     "editable": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
     "settings": [
       {
         "type": "field/options",
@@ -2771,9 +2833,10 @@
       "size"
     ],
     "editable": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
     "settings": [
       {
         "type": "field/array",
@@ -2929,9 +2992,10 @@
     "name": "Checkbox",
     "icon": "SelectBox",
     "editable": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
     "settings": [
       {
         "type": "field/boolean",
@@ -3009,6 +3073,10 @@
       "size"
     ],
     "editable": true,
+    "size": {
+      "width": 400,
+      "height": 150
+    },
     "settings": [
       {
         "type": "field/longform",
@@ -3084,9 +3152,10 @@
       "size"
     ],
     "editable": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
     "settings": [
       {
         "type": "field/datetime",
@@ -3163,9 +3232,10 @@
     "styles": [
       "size"
     ],
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
     "settings": [
       {
         "type": "field/barcode/qr",
@@ -3214,29 +3284,27 @@
       "size"
     ],
     "draggable": false,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 320
+    },
     "settings": [
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider",
-        "required": true
+        "key": "dataProvider"
       },
       {
         "type": "field",
         "label": "Latitude Key",
         "key": "latitudeKey",
-        "dependsOn": "dataProvider",
-        "required": true
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
         "label": "Longitude Key",
         "key": "longitudeKey",
-        "dependsOn": "dataProvider",
-        "required": true
+        "dependsOn": "dataProvider"
       },
       {
         "type": "field",
@@ -3330,9 +3398,10 @@
       "size"
     ],
     "editable": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 200
+    },
     "settings": [
       {
         "type": "field/attachment",
@@ -3387,9 +3456,10 @@
       "size"
     ],
     "editable": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
     "settings": [
       {
         "type": "field/link",
@@ -3449,6 +3519,10 @@
       "size"
     ],
     "editable": true,
+    "size": {
+      "width": 400,
+      "height": 100
+    },
     "settings": [
       {
         "type": "field/json",
@@ -3497,6 +3571,10 @@
       "size"
     ],
     "editable": true,
+    "size": {
+      "width": 400,
+      "height": 200
+    },
     "settings": [
       {
         "type": "field/attachment",
@@ -3559,6 +3637,10 @@
     "actions": [
       "RefreshDatasource"
     ],
+    "size": {
+      "width": 400,
+      "height": 100
+    },
     "settings": [
       {
         "type": "dataSource",
@@ -3639,6 +3721,10 @@
     ],
     "hasChildren": true,
     "showEmptyState": false,
+    "size": {
+      "width": 600,
+      "height": 400
+    },
     "settings": [
       {
         "type": "dataProvider",
@@ -3737,6 +3823,10 @@
       "size"
     ],
     "hasChildren": false,
+    "size": {
+      "width": 200,
+      "height": 50
+    },
     "settings": [
       {
         "type": "dataProvider",
@@ -3773,21 +3863,28 @@
     "styles": [
       "size"
     ],
+    "size": {
+      "width": 300,
+      "height": 120
+    },
     "settings": [
       {
         "type": "text",
         "key": "title",
-        "label": "Title"
+        "label": "Title",
+        "defaultValue": "Title"
       },
       {
         "type": "text",
         "key": "subtitle",
-        "label": "Subtitle"
+        "label": "Subtitle",
+        "defaultValue": "Subtitle"
       },
       {
         "type": "text",
         "key": "description",
-        "label": "Description"
+        "label": "Description",
+        "defaultValue": "Description"
       },
       {
         "type": "text",
@@ -3831,6 +3928,10 @@
     "name": "Dynamic Filter",
     "icon": "Filter",
     "showSettingsBar": true,
+    "size": {
+      "width": 100,
+      "height": 35
+    },
     "settings": [
       {
         "type": "dataProvider",
@@ -3878,6 +3979,10 @@
     "styles": [
       "size"
     ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
     "settings": [
       {
         "type": "text",
@@ -4043,6 +4148,10 @@
     "styles": [
       "size"
     ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
     "settings": [
       {
         "type": "text",
@@ -4101,19 +4210,22 @@
             "type": "text",
             "key": "cardTitle",
             "label": "Title",
-            "nested": true
+            "nested": true,
+            "defaultValue": "Title"
           },
           {
             "type": "text",
             "key": "cardSubtitle",
             "label": "Subtitle",
-            "nested": true
+            "nested": true,
+            "defaultValue": "Subtitle"
           },
           {
             "type": "text",
             "key": "cardDescription",
             "label": "Description",
-            "nested": true
+            "nested": true,
+            "defaultValue": "Description"
           },
           {
             "type": "text",
@@ -4215,6 +4327,10 @@
     ],
     "hasChildren": true,
     "showSettingsBar": true,
+    "size": {
+      "width": 400,
+      "height": 100
+    },
     "settings": [
       {
         "type": "dataSource",
@@ -4437,6 +4553,10 @@
     "styles": [
       "size"
     ],
+    "size": {
+      "width": 400,
+      "height": 100
+    },
     "settings": [
       {
         "type": "text",
@@ -4454,6 +4574,10 @@
     ],
     "block": true,
     "info": "Form blocks are only compatible with internal or SQL tables",
+    "size": {
+      "width": 400,
+      "height": 400
+    },
     "settings": [
       {
         "type": "select",

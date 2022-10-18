@@ -76,6 +76,9 @@
       const compDef = store.actions.components.getDefinition(
         $dndStore.source?._component
       )
+      if (!compDef) {
+        return
+      }
       const compTypeName = compDef.name.toLowerCase()
       const path = findComponentPath(currentScreen.props, component._id)
 
