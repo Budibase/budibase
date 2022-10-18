@@ -30,3 +30,7 @@ export const ActionTypes = {
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
 }
+
+export const DNDPlaceholderID = "dnd-placeholder"
+export const DNDPlaceholderType = "dnd-placeholder"
+export const ScreenslotType = "screenslot"

@@ -67,6 +67,9 @@
     // any depth
     id: $component.id,
 
+    // Name can be used down the tree in placeholders
+    name: $component.name,
+
     // We register block components with their raw props so that we can eject
     // blocks later on
     registerComponent: registerBlockComponent,
