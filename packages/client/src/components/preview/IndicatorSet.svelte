@@ -9,11 +9,13 @@
   export let transition
   export let zIndex
   export let prefix = null
+  export let allowResizeAnchors = false
 
   let indicators = []
   let interval
   let text
   let icon
+  let insideGrid = false
 
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
@@ -22,6 +24,19 @@
   let observers = []
   let callbackCount = 0
   let nextIndicators = []
+
+  const checkInsideGrid = id => {
+    const component = document.getElementsByClassName(id)[0]
+    const domNode = component?.children[0]
+
+    // Ignore grid itself
+    if (domNode?.classList.contains("grid")) {
+      return false
+    }
+
+    // Check if we're a descendent of a grid
+    return domNode?.closest(".grid") != null
+  }
 
   const createIntersectionCallback = idx => entries => {
     if (callbackCount >= observers.length) {
@@ -51,6 +66,11 @@
     observers.forEach(o => o.disconnect())
     observers = []
     nextIndicators = []
+
+    // Check if we're inside a grid
+    if (allowResizeAnchors) {
+      insideGrid = checkInsideGrid(componentId)
+    }
 
     // Determine next set of indicators
     const parents = document.getElementsByClassName(componentId)
@@ -127,6 +147,7 @@
       height={indicator.height}
       text={idx === 0 ? text : null}
       icon={idx === 0 ? icon : null}
+      showResizeAnchors={allowResizeAnchors && insideGrid}
       {componentId}
       {transition}
       {zIndex}

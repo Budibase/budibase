@@ -19,6 +19,7 @@ const createBuilderStore = () => {
     navigation: null,
     hiddenComponentIds: [],
     usedPlugins: null,
+    dragging: false,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -110,6 +111,12 @@ const createBuilderStore = () => {
 
       // Notify the builder so we can reload component definitions
       dispatchEvent("reload-plugin")
+    },
+    setDragging: dragging => {
+      store.update(state => {
+        state.dragging = dragging
+        return state
+      })
     },
   }
   return {

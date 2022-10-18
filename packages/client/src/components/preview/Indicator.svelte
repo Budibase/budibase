@@ -10,10 +10,22 @@
   export let icon
   export let color
   export let zIndex
+  export let componentId
   export let transition = false
   export let line = false
   export let alignRight = false
-  export let componentId
+  export let showResizeAnchors = false
+
+  const AnchorSides = [
+    "right",
+    "left",
+    "top",
+    "bottom",
+    "bottom-right",
+    "bottom-left",
+    "top-right",
+    "top-left",
+  ]
 
   $: flipped = top < 24
 </script>
@@ -41,54 +53,16 @@
       {/if}
     </div>
   {/if}
-  <div
-    draggable={true}
-    class="anchor right"
-    data-side="right"
-    data-id={componentId}
-  />
-  <div
-    draggable={true}
-    class="anchor top"
-    data-side="top"
-    data-id={componentId}
-  />
-  <div
-    draggable={true}
-    class="anchor left"
-    data-side="left"
-    data-id={componentId}
-  />
-  <div
-    draggable={true}
-    class="anchor bottom"
-    data-side="bottom"
-    data-id={componentId}
-  />
-  <div
-    draggable={true}
-    class="anchor bottom-right"
-    data-side="bottom-right"
-    data-id={componentId}
-  />
-  <div
-    draggable={true}
-    class="anchor bottom-left"
-    data-side="bottom-left"
-    data-id={componentId}
-  />
-  <div
-    draggable={true}
-    class="anchor top-right"
-    data-side="top-right"
-    data-id={componentId}
-  />
-  <div
-    draggable={true}
-    class="anchor top-left"
-    data-side="top-left"
-    data-id={componentId}
-  />
+  {#if showResizeAnchors}
+    {#each AnchorSides as side}
+      <div
+        draggable="true"
+        class="anchor {side}"
+        data-side={side}
+        data-id={componentId}
+      />
+    {/each}
+  {/if}
 </div>
 
 <style>

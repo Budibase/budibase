@@ -10,9 +10,6 @@ const createDndStore = () => {
 
     // Info about where the component would be dropped
     drop: null,
-
-    // Grid info
-    gridStyles: null,
   }
   const store = writable(initialState)
 
@@ -62,13 +59,6 @@ const createDndStore = () => {
     store.set(initialState)
   }
 
-  const setGridStyles = styles => {
-    store.update(state => {
-      state.gridStyles = styles
-      return state
-    })
-  }
-
   return {
     subscribe: store.subscribe,
     actions: {
@@ -77,7 +67,6 @@ const createDndStore = () => {
       updateTarget,
       updateDrop,
       reset,
-      setGridStyles,
     },
   }
 }
@@ -88,7 +77,6 @@ export const dndStore = createDndStore()
 // performance by deriving any state that needs to be externally observed.
 // By doing this and using primitives, we can avoid invalidating other stores
 // or components which depend on DND state unless values actually change.
-export const dndIsDragging = derived(dndStore, $dndStore => !!$dndStore.source)
 export const dndParent = derived(dndStore, $dndStore => $dndStore.drop?.parent)
 export const dndIndex = derived(dndStore, $dndStore => $dndStore.drop?.index)
 export const dndBounds = derived(

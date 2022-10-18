@@ -3,7 +3,7 @@
   import SettingsButton from "./SettingsButton.svelte"
   import SettingsColorPicker from "./SettingsColorPicker.svelte"
   import SettingsPicker from "./SettingsPicker.svelte"
-  import { builderStore, componentStore, dndIsDragging } from "stores"
+  import { builderStore, componentStore } from "stores"
   import { domDebounce } from "utils/domDebounce"
 
   const verticalOffset = 36
@@ -16,7 +16,7 @@
   let measured = false
 
   $: definition = $componentStore.selectedComponentDefinition
-  $: showBar = definition?.showSettingsBar && !$dndIsDragging
+  $: showBar = definition?.showSettingsBar && !$builderStore.dragging
   $: settings = getBarSettings(definition)
 
   const getBarSettings = definition => {
