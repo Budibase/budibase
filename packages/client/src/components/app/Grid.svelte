@@ -1,11 +1,14 @@
 <script>
   import { getContext } from "svelte"
-  import { fade } from "svelte/transition"
+  import GridDNDHandler from "../preview/GridDNDHandler.svelte"
 
   const component = getContext("component")
   const { styleable, builderStore } = getContext("sdk")
 
-  $: coords = generateCoords(12)
+  const cols = 12
+
+  let node
+  $: coords = generateCoords(cols)
 
   const generateCoords = num => {
     let grid = []
@@ -18,29 +21,23 @@
   }
 </script>
 
-<div class="grid" use:styleable={$component.styles}>
+<div
+  bind:this={node}
+  class="grid"
+  use:styleable={$component.styles}
+  data-cols={cols}
+>
   <div class="underlay">
     {#each coords as coord}
       <div class="placeholder" />
     {/each}
   </div>
   <slot />
-  {#if $builderStore.isDragging}
-    <div
-      class="overlay"
-      in:fade={{ duration: 130 }}
-      out:fade|self={{ duration: 130 }}
-    >
-      {#each coords as coord}
-        <div
-          class="placeholder grid-coord"
-          data-row={coord.row}
-          data-col={coord.col}
-        />
-      {/each}
-    </div>
-  {/if}
 </div>
+
+{#if $builderStore.inBuilder && node}
+  <GridDNDHandler {node} />
+{/if}
 
 <style>
   .grid {
@@ -48,14 +45,12 @@
     min-height: 400px;
   }
   .grid,
-  .underlay,
-  .overlay {
+  .underlay {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     grid-template-rows: repeat(12, 1fr);
   }
-  .underlay,
-  .overlay {
+  .underlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -67,12 +62,6 @@
   }
   .underlay {
     z-index: -1;
-  }
-  .overlay {
-    z-index: 999;
-    background-color: var(--spectrum-global-color-gray-500);
-    border-color: var(--spectrum-global-color-gray-500);
-    opacity: 0.3;
   }
 
   .placeholder {

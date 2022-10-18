@@ -21,7 +21,6 @@
     devToolsStore,
     componentStore,
     appStore,
-    dndIsDragging,
     dndComponentPath,
   } from "stores"
   import { Helpers } from "@budibase/bbui"
@@ -163,7 +162,7 @@
   // nested layers. Only reset this when dragging stops.
   let pad = false
   $: pad = pad || (interactive && hasChildren && inDndPath)
-  $: $dndIsDragging, (pad = false)
+  $: $builderStore.dragging, (pad = false)
 
   // Update component context
   $: store.set({
@@ -427,7 +426,7 @@
   const scrollIntoView = () => {
     // Don't scroll into view if we selected this component because we were
     // starting dragging on it
-    if (get(dndIsDragging)) {
+    if (get(builderStore).dragging) {
       return
     }
     const node = document.getElementsByClassName(id)?.[0]?.children[0]

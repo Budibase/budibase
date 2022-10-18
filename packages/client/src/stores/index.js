@@ -21,7 +21,6 @@ export {
   dndParent,
   dndBounds,
   dndIsNewComponent,
-  dndIsDragging,
 } from "./dnd"
 
 // Context stores are layered and duplicated, so it is not a singleton

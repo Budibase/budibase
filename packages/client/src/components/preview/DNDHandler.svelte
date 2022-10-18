@@ -2,13 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import { get } from "svelte/store"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import {
-    builderStore,
-    screenStore,
-    dndStore,
-    dndParent,
-    dndIsDragging,
-  } from "stores"
+  import { builderStore, screenStore, dndStore, dndParent } from "stores"
   import DNDPlaceholderOverlay from "./DNDPlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "utils/components.js"
@@ -21,6 +15,10 @@
   $: source = $dndStore.source
   $: target = $dndStore.target
   $: drop = $dndStore.drop
+
+  const insideGrid = e => {
+    return e.target?.closest?.(".grid") != null
+  }
 
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
@@ -51,10 +49,14 @@
 
     // Reset state
     dndStore.actions.reset()
+    builderStore.actions.setDragging(false)
   }
 
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
+    if (insideGrid(e)) {
+      return
+    }
     const component = e.target.closest(".component")
     if (!component?.classList.contains("draggable")) {
       return
@@ -83,6 +85,7 @@
       index,
     })
     builderStore.actions.selectComponent(id)
+    builderStore.actions.setDragging(true)
 
     // Set initial drop info to show placeholder exactly where the dragged
     // component is.
@@ -99,9 +102,9 @@
 
   // Core logic for handling drop events and determining where to render the
   // drop target placeholder
-  const processEvent = (mouseX, mouseY) => {
+  const processEvent = Utils.throttle((mouseX, mouseY) => {
     if (!target) {
-      return null
+      return
     }
     let { id, parent, node, acceptsChildren, empty } = target
 
@@ -201,17 +204,17 @@
       parent: id,
       index: idx,
     })
-  }
-  const throttledProcessEvent = Utils.throttle(processEvent, ThrottleRate)
+  }, ThrottleRate)
 
   const handleEvent = e => {
     e.preventDefault()
-    throttledProcessEvent(e.clientX, e.clientY)
+    e.stopPropagation()
+    processEvent(e.clientX, e.clientY)
   }
 
-  // Callback when on top of a component
+  // Callback when on top of a component.
   const onDragOver = e => {
-    if (!source || !target) {
+    if (!source || !target || insideGrid(e)) {
       return
     }
     handleEvent(e)
@@ -219,7 +222,7 @@
 
   // Callback when entering a potential drop target
   const onDragEnter = e => {
-    if (!source) {
+    if (!source || insideGrid(e)) {
       return
     }
 
@@ -241,8 +244,8 @@
   }
 
   // Callback when dropping a drag on top of some component
-  const onDrop = () => {
-    if (!source || !drop?.parent || drop?.index == null) {
+  const onDrop = e => {
+    if (!source || !drop?.parent || drop?.index == null || insideGrid(e)) {
       return
     }
 
@@ -326,6 +329,6 @@
   prefix="Inside"
 />
 
-{#if $dndIsDragging}
+{#if $builderStore.dragging}
   <DNDPlaceholderOverlay />
 {/if}

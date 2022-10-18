@@ -41,8 +41,6 @@ const loadBudibase = async () => {
     previewDevice: window["##BUDIBASE_PREVIEW_DEVICE##"],
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
     hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
-    gridStyles: get(builderStore).gridStyles,
-    isDragging: get(builderStore).isDragging,
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
     location: window["##BUDIBASE_LOCATION##"],
   })

@@ -1,27 +1,17 @@
 <script>
   import { onMount, onDestroy } from "svelte"
-  import { get } from "svelte/store"
-  import IndicatorSet from "./IndicatorSet.svelte"
-  import {
-    builderStore,
-    screenStore,
-    dndStore,
-    dndParent,
-    dndIsDragging,
-  } from "stores"
-  import DNDPlaceholderOverlay from "./DNDPlaceholderOverlay.svelte"
+  import { builderStore, componentStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
-  import { findComponentById } from "utils/components.js"
-  import { DNDPlaceholderID } from "constants"
-  import { DNDModes } from "stores/dnd.js"
 
-  const ThrottleRate = 130
+  let dragInfo
+  let gridStyles
 
-  // Cache some dnd store state as local variables as it massively helps
-  // performance. It lets us avoid calling svelte getters on every DOM action.
-  $: source = $dndStore.source
-  $: target = $dndStore.target
-  $: drop = $dndStore.drop
+  $: dragNode = getDOMNode(dragInfo?.id)
+  $: applyStyles(dragNode, gridStyles)
+
+  const insideGrid = e => {
+    return e.target?.closest?.(".grid") || e.target.classList.contains("anchor")
+  }
 
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
@@ -29,535 +19,195 @@
     return [...component.children][0]
   }
 
-  // Util to calculate the variance of a set of data
-  const variance = arr => {
-    const mean = arr.reduce((a, b) => a + b, 0) / arr.length
-    let squareSum = 0
-    arr.forEach(value => {
-      const delta = value - mean
-      squareSum += delta * delta
+  const applyStyles = (dragNode, gridStyles) => {
+    if (!dragNode || !gridStyles) {
+      return
+    }
+    Object.entries(gridStyles).forEach(([style, value]) => {
+      dragNode.style[style] = value
     })
-    return squareSum / arr.length
   }
 
   // Callback when drag stops (whether dropped or not)
   const stopDragging = () => {
+    // Save changes
+    if (gridStyles) {
+      builderStore.actions.updateStyles(gridStyles)
+    }
+
     // Reset listener
-    if (source?.id) {
-      const component = document.getElementsByClassName(source?.id)[0]
-      if (component) {
-        component.removeEventListener("dragend", stopDragging)
-      }
+    if (dragInfo?.domTarget) {
+      dragInfo.domTarget.removeEventListener("dragend", stopDragging)
     }
 
     // Reset state
-    dndStore.actions.reset()
-  }
-
-  const calculatePointDelta = (point1, point2) => {
-    const deltaX = Math.abs(point1[0] - point2[0])
-    const deltaY = Math.abs(point1[1] - point2[1])
-    return Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+    dragInfo = null
+    gridStyles = null
+    builderStore.actions.setDragging(false)
   }
 
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
-    // New stuff
-    // var img = new Image()
-    // img.src =
-    //   "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs="
-    // e.dataTransfer.setDragImage(img, 0, 0)
-    //
-    // // Resize component
-    // if (e.target.classList.contains("anchor")) {
-    //   dragInfo = {
-    //     target: e.target.dataset.id,
-    //     side: e.target.dataset.side,
-    //     mode: "resize",
-    //   }
-    // } else {
-    //   // Drag component
-    //   const parent = e.target.closest(".component")
-    //   if (!parent?.classList.contains("draggable")) {
-    //     return
-    //   }
-    //   dragInfo = {
-    //     target: parent.dataset.id,
-    //     parent: parent.dataset.parent,
-    //     mode: "move",
-    //   }
-    // }
-    // if (!dragInfo) {
-    //   return
-    // }
-    //
-    // builderStore.actions.selectComponent(dragInfo.target)
-    // builderStore.actions.setDragging(true)
-
-    // Current stuff
-    const component = e.target.closest(".component")
-    if (!component?.classList.contains("draggable")) {
+    if (!insideGrid(e)) {
       return
     }
 
     // Hide drag ghost image
     e.dataTransfer.setDragImage(new Image(), 0, 0)
 
-    // Add event handler to clear all drag state when dragging ends
-    component.addEventListener("dragend", stopDragging)
-
-    //
-
-    // Update state
-    const id = component.dataset.id
-    const parentId = component.dataset.parent
-    const parent = findComponentById(
-      get(screenStore).activeScreen?.props,
-      parentId
-    )
-    const index = parent._children.findIndex(
-      x => x._id === component.dataset.id
-    )
-    dndStore.actions.startDraggingExistingComponent({
-      id,
-      bounds: component.children[0].getBoundingClientRect(),
-      parent: parentId,
-      index,
-    })
-    builderStore.actions.selectComponent(id)
-
-    // Set initial drop info to show placeholder exactly where the dragged
-    // component is.
-    // Execute this asynchronously to prevent bugs caused by updating state in
-    // the same handler as selecting a new component (which causes a client
-    // re-initialisation).
-    setTimeout(() => {
-      dndStore.actions.updateDrop({
-        parent: parentId,
-        index,
-      })
-    }, 0)
-  }
-
-  // Core logic for handling drop events and determining where to render the
-  // drop target placeholder
-  const processEvent = (mouseX, mouseY) => {
-    if (!target) {
-      return null
-    }
-    let { id, parent, node, acceptsChildren, empty } = target
-
-    // If we're over something that does not accept children then we go up a
-    // level and consider the mouse position relative to the parent
-    if (!acceptsChildren) {
-      id = parent
-      empty = false
-      node = getDOMNode(parent)
+    // Extract state
+    let mode, id, side
+    if (e.target.classList.contains("anchor")) {
+      // Handle resize
+      mode = "resize"
+      id = e.target.dataset.id
+      side = e.target.dataset.side
+    } else {
+      // Handle move
+      mode = "move"
+      const component = e.target.closest(".component")
+      id = component.dataset.id
     }
 
-    // We're now hovering over something which does accept children.
-    // If it is empty, just go inside it.
-    if (empty) {
-      dndStore.actions.updateDrop({
-        parent: id,
-        index: 0,
-      })
+    // Find grid parent
+    const domComponent = getDOMNode(id)
+    const gridId = domComponent?.closest(".grid")?.parentNode.dataset.id
+    if (!gridId) {
       return
     }
 
-    // As the first DOM node in a component may not necessarily contain the
-    // child components, we can find to try the parent of the first child
-    // component and use that as the real parent DOM node
-    const childNode = node.getElementsByClassName("component")[0]
-    if (childNode?.parentNode) {
-      node = childNode.parentNode
+    // Update state
+    dragInfo = {
+      domTarget: e.target,
+      id,
+      gridId,
+      mode,
+      side,
     }
+    // builderStore.actions.selectComponent(dragInfo.id)
+    // builderStore.actions.setDragging(true)
 
-    // Append an ephemeral div to allow us to determine layout if only one
-    // child exists
-    let ephemeralDiv
-    if (node.children.length === 1) {
-      ephemeralDiv = document.createElement("div")
-      ephemeralDiv.dataset.id = DNDPlaceholderID
-      node.appendChild(ephemeralDiv)
-    }
-
-    // We're now hovering over something which accepts children and is not
-    // empty, so we need to work out where to inside the placeholder
-    // Calculate the coordinates of various locations on each child.
-    const childCoords = [...(node.children || [])].map(node => {
-      const child = node.children?.[0] || node
-      const bounds = child.getBoundingClientRect()
-      return {
-        placeholder: node.dataset.id === DNDPlaceholderID,
-        centerX: bounds.left + bounds.width / 2,
-        centerY: bounds.top + bounds.height / 2,
-        left: bounds.left,
-        right: bounds.right,
-        top: bounds.top,
-        bottom: bounds.bottom,
-      }
-    })
-
-    // Now that we've calculated the position of the children, we no longer need
-    // the ephemeral div
-    if (ephemeralDiv) {
-      node.removeChild(ephemeralDiv)
-    }
-
-    // Calculate the variance between each set of positions on the children
-    const variances = Object.keys(childCoords[0])
-      .filter(x => x !== "placeholder")
-      .map(key => {
-        const coords = childCoords.map(x => x[key])
-        return {
-          variance: variance(coords),
-          side: key,
-        }
-      })
-
-    // Sort by variance. The lowest variance position indicates whether we are
-    // in a row or column layout
-    variances.sort((a, b) => {
-      return a.variance < b.variance ? -1 : 1
-    })
-    const column = ["centerX", "left", "right"].includes(variances[0].side)
-
-    // Calculate breakpoints between child components so we can determine the
-    // index to drop the component in.
-    // We want to ignore the placeholder from this calculation as it should not
-    // be considered a real child of the parent.
-    let breakpoints = childCoords
-      .filter(x => !x.placeholder)
-      .map(x => {
-        return column ? x.centerY : x.centerX
-      })
-
-    // Determine the index to drop the component in
-    const mousePosition = column ? mouseY : mouseX
-    let idx = 0
-    while (idx < breakpoints.length && breakpoints[idx] < mousePosition) {
-      idx++
-    }
-    dndStore.actions.updateDrop({
-      parent: id,
-      index: idx,
-    })
+    // Add event handler to clear all drag state when dragging ends
+    dragInfo.domTarget.addEventListener("dragend", stopDragging)
   }
-  const throttledProcessEvent = Utils.throttle(processEvent, ThrottleRate)
+
+  // Callback when entering a potential drop target
+  const onDragEnter = e => {
+    // Skip if we aren't validly dragging currently
+    if (!dragInfo || dragInfo.grid || !insideGrid(e)) {
+      return
+    }
+
+    const compDef = $componentStore.selectedComponent
+    const domGrid = getDOMNode(dragInfo.gridId)
+    if (domGrid) {
+      const getStyle = x => parseInt(compDef._styles.normal?.[x] || "0")
+      dragInfo.grid = {
+        startX: e.clientX,
+        startY: e.clientY,
+        rowStart: getStyle("grid-row-start"),
+        rowEnd: getStyle("grid-row-end"),
+        colStart: getStyle("grid-column-start"),
+        colEnd: getStyle("grid-column-end"),
+        rowDeltaMin: 1 - getStyle("grid-row-start"),
+        rowDeltaMax:
+          parseInt(domGrid.dataset.cols) + 1 - getStyle("grid-row-end"),
+        colDeltaMin: 1 - getStyle("grid-column-start"),
+        colDeltaMax:
+          parseInt(domGrid.dataset.cols) + 1 - getStyle("grid-column-end"),
+      }
+      handleEvent(e)
+    }
+  }
+
+  const processEvent = Utils.throttle((mouseX, mouseY) => {
+    if (!dragInfo?.grid) {
+      return
+    }
+
+    const { mode, side, gridId, grid } = dragInfo
+    const {
+      startX,
+      startY,
+      rowStart,
+      rowEnd,
+      colStart,
+      colEnd,
+      rowDeltaMin,
+      rowDeltaMax,
+      colDeltaMin,
+      colDeltaMax,
+    } = grid
+
+    const domGrid = getDOMNode(gridId)
+    const cols = parseInt(domGrid.dataset.cols)
+    const { width, height } = domGrid.getBoundingClientRect()
+
+    const colWidth = width / cols
+    const diffX = mouseX - startX
+    let deltaX = Math.round(diffX / colWidth)
+    const rowHeight = height / cols
+    const diffY = mouseY - startY
+    let deltaY = Math.round(diffY / rowHeight)
+
+    if (mode === "move") {
+      deltaY = Math.min(Math.max(deltaY, rowDeltaMin), rowDeltaMax)
+      deltaX = Math.min(Math.max(deltaX, colDeltaMin), colDeltaMax)
+      gridStyles = {
+        "grid-row-start": rowStart + deltaY,
+        "grid-row-end": rowEnd + deltaY,
+        "grid-column-start": colStart + deltaX,
+        "grid-column-end": colEnd + deltaX,
+      }
+    } else if (mode === "resize") {
+      let newStyles = {}
+      if (side === "right") {
+        newStyles["grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
+      } else if (side === "left") {
+        newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
+      } else if (side === "top") {
+        newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
+      } else if (side === "bottom") {
+        newStyles["grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
+      } else if (side === "bottom-right") {
+        newStyles["grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles["grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
+      } else if (side === "bottom-left") {
+        newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
+        newStyles["grid-row-end"] = Math.max(rowEnd + deltaY, rowStart + 1)
+      } else if (side === "top-right") {
+        newStyles["grid-column-end"] = Math.max(colEnd + deltaX, colStart + 1)
+        newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
+      } else if (side === "top-left") {
+        newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
+        newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
+      }
+      gridStyles = newStyles
+    }
+  }, 100)
 
   const handleEvent = e => {
     e.preventDefault()
-    throttledProcessEvent(e.clientX, e.clientY)
+    e.stopPropagation()
+    processEvent(e.clientX, e.clientY)
   }
 
-  // Callback when on top of a component
   const onDragOver = e => {
-    // New stuff
-    // // Skip if we aren't validly dragging currently
-    // if (!dragInfo) {
-    //   return
-    // }
-    //
-    // e.preventDefault()
-    //
-    // // Set drag info for grids if not set
-    // if (!dragInfo.grid) {
-    //   const coord = e.target.closest(".grid-coord")
-    //   if (coord) {
-    //     const row = parseInt(coord.dataset.row)
-    //     const col = parseInt(coord.dataset.col)
-    //     const component = $componentStore.selectedComponent
-    //     const getStyle = x => parseInt(component._styles.normal?.[x] || "0")
-    //     dragInfo.grid = {
-    //       startRow: row,
-    //       startCol: col,
-    //       rowDeltaMin: 1 - getStyle("grid-row-start"),
-    //       rowDeltaMax: 13 - getStyle("grid-row-end"),
-    //       colDeltaMin: 1 - getStyle("grid-column-start"),
-    //       colDeltaMax: 13 - getStyle("grid-column-end"),
-    //     }
-    //   }
-    // }
-    //
-    // if (!dropInfo) {
-    //   return
-    // }
-    //
-    // const { droppableInside, bounds } = dropInfo
-    // const { top, left, height, width } = bounds
-    // const mouseY = e.clientY
-    // const mouseX = e.clientX
-    // const snapFactor = droppableInside ? 0.33 : 0.5
-    // const snapLimitV = Math.min(40, height * snapFactor)
-    // const snapLimitH = Math.min(40, width * snapFactor)
-    //
-    // // Determine all sies we are within snap range of
-    // let sides = []
-    // if (mouseY <= top + snapLimitV) {
-    //   sides.push(Sides.Top)
-    // } else if (mouseY >= top + height - snapLimitV) {
-    //   sides.push(Sides.Bottom)
-    // }
-    // if (mouseX < left + snapLimitH) {
-    //   sides.push(Sides.Left)
-    // } else if (mouseX > left + width - snapLimitH) {
-    //   sides.push(Sides.Right)
-    // }
-    //
-    // // When no edges match, drop inside if possible
-    // if (!sides.length) {
-    //   dropInfo.mode = droppableInside ? "inside" : null
-    //   dropInfo.side = null
-    //   return
-    // }
-    //
-    // // When one edge matches, use that edge
-    // if (sides.length === 1) {
-    //   dropInfo.side = sides[0]
-    //   if ([Sides.Top, Sides.Left].includes(sides[0])) {
-    //     dropInfo.mode = "above"
-    //   } else {
-    //     dropInfo.mode = "below"
-    //   }
-    //   return
-    // }
-    //
-    // // When 2 edges match, work out which is closer
-    // const mousePoint = [mouseX, mouseY]
-    // const edges = getEdges(bounds, mousePoint)
-    // const edge1 = edges[sides[0]]
-    // const delta1 = calculatePointDelta(mousePoint, edge1)
-    // const edge2 = edges[sides[1]]
-    // const delta2 = calculatePointDelta(mousePoint, edge2)
-    // const edge = delta1 < delta2 ? sides[0] : sides[1]
-    // dropInfo.side = edge
-    // if ([Sides.Top, Sides.Left].includes(edge)) {
-    //   dropInfo.mode = "above"
-    // } else {
-    //   dropInfo.mode = "below"
-    // }
-
-    // Current stuff
-    if (!source || !target) {
+    if (!dragInfo?.grid || !insideGrid(e)) {
       return
     }
     handleEvent(e)
   }
 
-  // Callback when entering a potential drop target
-  const onDragEnter = e => {
-    // // New stuff
-    // const coord = e.target.closest(".grid-coord")
-    // if (coord && dragInfo.grid) {
-    //   const row = parseInt(coord.dataset.row)
-    //   const col = parseInt(coord.dataset.col)
-    //   const { mode, side, grid } = dragInfo
-    //   const {
-    //     startRow,
-    //     startCol,
-    //     rowDeltaMin,
-    //     rowDeltaMax,
-    //     colDeltaMin,
-    //     colDeltaMax,
-    //   } = grid
-    //
-    //   const component = $componentStore.selectedComponent
-    //   const rowStart = parseInt(
-    //     component._styles.normal?.["grid-row-start"] || 0
-    //   )
-    //   const rowEnd = parseInt(component._styles.normal?.["grid-row-end"] || 0)
-    //   const colStart = parseInt(
-    //     component._styles.normal?.["grid-column-start"] || 0
-    //   )
-    //   const colEnd = parseInt(
-    //     component._styles.normal?.["grid-column-end"] || 0
-    //   )
-    //
-    //   let rowDelta = row - startRow
-    //   let colDelta = col - startCol
-    //
-    //   if (mode === "move") {
-    //     rowDelta = Math.min(Math.max(rowDelta, rowDeltaMin), rowDeltaMax)
-    //     colDelta = Math.min(Math.max(colDelta, colDeltaMin), colDeltaMax)
-    //     builderStore.actions.setGridStyles({
-    //       "grid-row-start": rowStart + rowDelta,
-    //       "grid-row-end": rowEnd + rowDelta,
-    //       "grid-column-start": colStart + colDelta,
-    //       "grid-column-end": colEnd + colDelta,
-    //     })
-    //   } else if (mode === "resize") {
-    //     let newStyles = {}
-    //     if (side === "right") {
-    //       newStyles["grid-column-end"] = colEnd + colDelta
-    //     } else if (side === "left") {
-    //       newStyles["grid-column-start"] = colStart + colDelta
-    //     } else if (side === "top") {
-    //       newStyles["grid-row-start"] = rowStart + rowDelta
-    //     } else if (side === "bottom") {
-    //       newStyles["grid-row-end"] = rowEnd + rowDelta
-    //     } else if (side === "bottom-right") {
-    //       newStyles["grid-column-end"] = colEnd + colDelta
-    //       newStyles["grid-row-end"] = rowEnd + rowDelta
-    //     } else if (side === "bottom-left") {
-    //       newStyles["grid-column-start"] = colStart + colDelta
-    //       newStyles["grid-row-end"] = rowEnd + rowDelta
-    //     } else if (side === "top-right") {
-    //       newStyles["grid-column-end"] = colEnd + colDelta
-    //       newStyles["grid-row-start"] = rowStart + rowDelta
-    //     } else if (side === "top-left") {
-    //       newStyles["grid-column-start"] = colStart + colDelta
-    //       newStyles["grid-row-start"] = rowStart + rowDelta
-    //     }
-    //     builderStore.actions.setGridStyles(newStyles)
-    //   }
-    // }
-    // return
-    //
-    // const element = e.target.closest(".component:not(.block)")
-    // if (
-    //   element &&
-    //   element.classList.contains("droppable") &&
-    //   element.dataset.id !== dragInfo.target
-    // ) {
-    //   // Do nothing if this is the same target
-    //   if (element.dataset.id === dropInfo?.target) {
-    //     return
-    //   }
-    //
-    //   // Ensure the dragging flag is always set.
-    //   // There's a bit of a race condition between the app reinitialisation
-    //   // after selecting the DND component and setting this the first time
-    //   if (!get(builderStore).isDragging) {
-    //     builderStore.actions.setDragging(true)
-    //   }
-    //
-    //   // Store target ID
-    //   const target = element.dataset.id
-    //
-    //   // Precompute and store some info to avoid recalculating everything in
-    //   // dragOver
-    //   const child = getDOMNodeForComponent(e.target)
-    //   const bounds = child.getBoundingClientRect()
-    //   dropInfo = {
-    //     target,
-    //     name: element.dataset.name,
-    //     icon: element.dataset.icon,
-    //     droppableInside: element.classList.contains("empty"),
-    //     bounds,
-    //   }
-    // } else {
-    //   dropInfo = null
-    // }
-
-    // Current stuff
-    if (!source) {
-      return
-    }
-
-    // Find the next valid component to consider dropping over, ignoring nested
-    // block components
-    const component = e.target?.closest?.(
-      `.component:not(.block):not(.${source.id})`
-    )
-    if (component && component.classList.contains("droppable")) {
-      dndStore.actions.updateTarget({
-        id: component.dataset.id,
-        parent: component.dataset.parent,
-        node: getDOMNode(component.dataset.id),
-        empty: component.classList.contains("empty"),
-        acceptsChildren: component.classList.contains("parent"),
-      })
-      handleEvent(e)
-    }
-  }
-
-  // Callback when dropping a drag on top of some component
-  const onDrop = () => {
-    if (!source || !drop?.parent || drop?.index == null) {
-      return
-    }
-
-    // Check if we're adding a new component rather than moving one
-    if (source.newComponentType) {
-      builderStore.actions.dropNewComponent(
-        source.newComponentType,
-        drop.parent,
-        drop.index
-      )
-      return
-    }
-
-    // Convert parent + index into target + mode
-    let legacyDropTarget, legacyDropMode
-    const parent = findComponentById(
-      get(screenStore).activeScreen?.props,
-      drop.parent
-    )
-    if (!parent) {
-      return
-    }
-
-    // Do nothing if we didn't change the location
-    if (source.parent === drop.parent && source.index === drop.index) {
-      return
-    }
-
-    // Filter out source component and placeholder from consideration
-    const children = parent._children?.filter(
-      x => x._id !== DNDPlaceholderID && x._id !== source.id
-    )
-
-    // Use inside if no existing children
-    if (!children?.length) {
-      legacyDropTarget = parent._id
-      legacyDropMode = "inside"
-    } else if (drop.index === 0) {
-      legacyDropTarget = children[0]?._id
-      legacyDropMode = "above"
-    } else {
-      legacyDropTarget = children[drop.index - 1]?._id
-      legacyDropMode = "below"
-    }
-
-    if (legacyDropTarget && legacyDropMode) {
-      builderStore.actions.moveComponent(
-        source.id,
-        legacyDropTarget,
-        legacyDropMode
-      )
-    }
-  }
-
   onMount(() => {
-    // Events fired on the draggable target
     document.addEventListener("dragstart", onDragStart, false)
-
-    // Events fired on the drop targets
-    document.addEventListener("dragover", onDragOver, false)
     document.addEventListener("dragenter", onDragEnter, false)
-    document.addEventListener("drop", onDrop, false)
+    document.addEventListener("dragover", onDragOver, false)
   })
 
   onDestroy(() => {
-    // Events fired on the draggable target
     document.removeEventListener("dragstart", onDragStart, false)
-
-    // Events fired on the drop targets
-    document.removeEventListener("dragover", onDragOver, false)
     document.removeEventListener("dragenter", onDragEnter, false)
-    document.removeEventListener("drop", onDrop, false)
+    document.removeEventListener("dragover", onDragOver, false)
   })
 </script>
-
-<IndicatorSet
-  componentId={$dndParent}
-  color="var(--spectrum-global-color-static-green-500)"
-  zIndex="930"
-  transition
-  prefix="Inside"
-/>
-
-{#if $dndIsDragging}
-  <DNDPlaceholderOverlay />
-{/if}
