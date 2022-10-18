@@ -11,7 +11,13 @@
   $: applyStyles(dragNode, gridStyles)
 
   const insideGrid = e => {
-    return e.target?.closest?.(".grid") || e.target.classList.contains("anchor")
+    return (
+      e.target
+        ?.closest?.(".component")
+        ?.parentNode?.closest?.(".component")
+        ?.childNodes[0]?.classList.contains("grid") ||
+      e.target.classList.contains("anchor")
+    )
   }
 
   // Util to get the inner DOM node by a component ID

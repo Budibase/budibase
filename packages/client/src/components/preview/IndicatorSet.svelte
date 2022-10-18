@@ -34,8 +34,9 @@
       return false
     }
 
-    // Check if we're a descendent of a grid
-    return domNode?.closest(".grid") != null
+    return component?.parentNode
+      ?.closest?.(".component")
+      ?.childNodes[0]?.classList.contains("grid")
   }
 
   const createIntersectionCallback = idx => entries => {
