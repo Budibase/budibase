@@ -1,7 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte"
-  import { builderStore, componentStore } from "stores"
+  import { builderStore, screenStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
+  import { findComponentById } from "utils/components.js"
 
   let dragInfo
   let gridStyles
@@ -32,7 +33,7 @@
   const stopDragging = () => {
     // Save changes
     if (gridStyles) {
-      builderStore.actions.updateStyles(gridStyles)
+      builderStore.actions.updateStyles(gridStyles, dragInfo.id)
     }
 
     // Reset listener
@@ -43,7 +44,6 @@
     // Reset state
     dragInfo = null
     gridStyles = null
-    builderStore.actions.setDragging(false)
   }
 
   // Callback when initially starting a drag on a draggable component
@@ -84,8 +84,6 @@
       mode,
       side,
     }
-    // builderStore.actions.selectComponent(dragInfo.id)
-    // builderStore.actions.setDragging(true)
 
     // Add event handler to clear all drag state when dragging ends
     dragInfo.domTarget.addEventListener("dragend", stopDragging)
@@ -98,7 +96,13 @@
       return
     }
 
-    const compDef = $componentStore.selectedComponent
+    const compDef = findComponentById(
+      $screenStore.activeScreen.props,
+      dragInfo.id
+    )
+    if (!compDef) {
+      return
+    }
     const domGrid = getDOMNode(dragInfo.gridId)
     if (domGrid) {
       const getStyle = x => parseInt(compDef._styles.normal?.[x] || "0")

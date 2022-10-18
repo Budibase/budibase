@@ -19,7 +19,6 @@ const createBuilderStore = () => {
     navigation: null,
     hiddenComponentIds: [],
     usedPlugins: null,
-    dragging: false,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -41,8 +40,8 @@ const createBuilderStore = () => {
     updateProp: (prop, value) => {
       dispatchEvent("update-prop", { prop, value })
     },
-    updateStyles: styles => {
-      dispatchEvent("update-styles", { styles })
+    updateStyles: (styles, id) => {
+      dispatchEvent("update-styles", { styles, id })
     },
     keyDown: (key, ctrlKey) => {
       dispatchEvent("key-down", { key, ctrlKey })
@@ -111,12 +110,6 @@ const createBuilderStore = () => {
 
       // Notify the builder so we can reload component definitions
       dispatchEvent("reload-plugin")
-    },
-    setDragging: dragging => {
-      store.update(state => {
-        state.dragging = dragging
-        return state
-      })
     },
   }
   return {

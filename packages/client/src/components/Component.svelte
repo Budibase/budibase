@@ -22,6 +22,7 @@
     componentStore,
     appStore,
     dndComponentPath,
+    dndIsDragging,
   } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
@@ -162,7 +163,7 @@
   // nested layers. Only reset this when dragging stops.
   let pad = false
   $: pad = pad || (interactive && hasChildren && inDndPath)
-  $: $builderStore.dragging, (pad = false)
+  $: $dndIsDragging, (pad = false)
 
   // Update component context
   $: store.set({
