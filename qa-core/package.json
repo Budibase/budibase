@@ -9,8 +9,8 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "test": "jest --runInBand",
-    "test:watch": "jest --watch",
+    "test": "env-cmd jest --runInBand",
+    "test:watch": "env-cmd jest --watch",
     "test:debug": "DEBUG=1 jest",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
@@ -24,7 +24,9 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "@budibase/types": "<rootDir>/../packages/types/src",
-      "@budibase/server": "<rootDir>/../packages/server/src"
+      "@budibase/server": "<rootDir>/../packages/server/src",
+      "@budibase/backend-core": "<rootDir>/../packages/backend-core/src",
+      "@budibase/backend-core/(.*)": "<rootDir>/../packages/backend-core/$1"
     },
     "setupFiles": [
       "./scripts/jestSetup.js"
@@ -49,6 +51,8 @@
     "typescript": "4.7.3"
   },
   "dependencies": {
+    "@budibase/backend-core": "^2.0.5",
+    "form-data": "^4.0.0",
     "node-fetch": "2"
   }
 }

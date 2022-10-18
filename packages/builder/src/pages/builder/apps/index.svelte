@@ -133,7 +133,7 @@
             </Body>
           </Layout>
           <Divider />
-          {#if $licensing.usageMetrics.dayPasses >= 100}
+          {#if $licensing.usageMetrics?.dayPasses >= 100}
             <div>
               <Layout gap="S" justifyItems="center">
                 <img class="spaceman" alt="spaceman" src={Spaceman} />

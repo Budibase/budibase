@@ -34,18 +34,13 @@ describe("/rows", () => {
       .expect(status)
 
   const getRowUsage = async () => {
-    return config.doInContext(null, () =>
-      quotas.getCurrentUsageValue(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
-    )
+    const { total } = await config.doInContext(null, () => quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS))
+    return total
   }
 
   const getQueryUsage = async () => {
-    return config.doInContext(null, () =>
-      quotas.getCurrentUsageValue(
-        QuotaUsageType.MONTHLY,
-        MonthlyQuotaName.QUERIES
-      )
-    )
+    const { total } = await config.doInContext(null, () => quotas.getCurrentUsageValues(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
+    return total
   }
 
   const assertRowUsage = async expected => {
@@ -60,26 +55,26 @@ describe("/rows", () => {
 
   describe("save, load, update", () => {
     it("returns a success message when the row is created", async () => {
-      // const rowUsage = await getRowUsage()
-      // const queryUsage = await getQueryUsage()
-      //
-      // const res = await request
-      //   .post(`/api/${row.tableId}/rows`)
-      //   .send(row)
-      //   .set(config.defaultHeaders())
-      //   .expect('Content-Type', /json/)
-      //   .expect(200)
-      // expect(res.res.statusMessage).toEqual(`${table.name} saved successfully`)
-      // expect(res.body.name).toEqual("Test Contact")
-      // expect(res.body._rev).toBeDefined()
-      // await assertRowUsage(rowUsage + 1)
-      // await assertQueryUsage(queryUsage + 1)
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const res = await request
+        .post(`/api/${row.tableId}/rows`)
+        .send(row)
+        .set(config.defaultHeaders())
+        .expect('Content-Type', /json/)
+        .expect(200)
+      expect(res.res.statusMessage).toEqual(`${table.name} saved successfully`)
+      expect(res.body.name).toEqual("Test Contact")
+      expect(res.body._rev).toBeDefined()
+      await assertRowUsage(rowUsage + 1)
+      await assertQueryUsage(queryUsage + 1)
     })
 
     it("updates a row successfully", async () => {
       const existing = await config.createRow()
-      // const rowUsage = await getRowUsage()
-      // const queryUsage = await getQueryUsage()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
 
       const res = await request
         .post(`/api/${table._id}/rows`)
@@ -97,8 +92,8 @@ describe("/rows", () => {
         `${table.name} updated successfully.`
       )
       expect(res.body.name).toEqual("Updated Name")
-      // await assertRowUsage(rowUsage)
-      // await assertQueryUsage(queryUsage + 1)
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage + 1)
     })
 
     it("should load a row", async () => {

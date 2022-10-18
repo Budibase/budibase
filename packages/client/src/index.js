@@ -1,5 +1,13 @@
 import ClientApp from "./components/ClientApp.svelte"
-import { componentStore, builderStore, appStore, devToolsStore } from "./stores"
+import {
+  builderStore,
+  appStore,
+  devToolsStore,
+  blockStore,
+  componentStore,
+  environmentStore,
+  dndStore,
+} from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
 import { initWebsocket } from "./websocket.js"
@@ -15,13 +23,14 @@ loadSpectrumIcons()
 
 let app
 
-const loadBudibase = () => {
+const loadBudibase = async () => {
   if (get(builderStore).clearGridNextLoad) {
     builderStore.actions.setDragging(false)
   }
 
   // Update builder store with any builder flags
   builderStore.set({
+    ...get(builderStore),
     inBuilder: !!window["##BUDIBASE_IN_BUILDER##"],
     layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
@@ -42,10 +51,33 @@ const loadBudibase = () => {
   // server rendered app HTML
   appStore.actions.setAppId(window["##BUDIBASE_APP_ID##"])
 
+  // Fetch environment info
+  await environmentStore.actions.fetchEnvironment()
+
   // Enable dev tools or not. We need to be using a dev app and not inside
   // the builder preview to enable them.
   const enableDevTools = !get(builderStore).inBuilder && get(appStore).isDevApp
   devToolsStore.actions.setEnabled(enableDevTools)
+
+  // Register handler for runtime events from the builder
+  window.handleBuilderRuntimeEvent = (name, payload) => {
+    if (!window["##BUDIBASE_IN_BUILDER##"]) {
+      return
+    }
+    if (name === "eject-block") {
+      const block = blockStore.actions.getBlock(payload)
+      block?.eject()
+    } else if (name === "dragging-new-component") {
+      const { dragging, component } = payload
+      if (dragging) {
+        const definition =
+          componentStore.actions.getComponentDefinition(component)
+        dndStore.actions.startDraggingNewComponent({ component, definition })
+      } else {
+        dndStore.actions.reset()
+      }
+    }
+  }
 
   // Register any custom components
   if (window["##BUDIBASE_CUSTOM_COMPONENTS##"]) {

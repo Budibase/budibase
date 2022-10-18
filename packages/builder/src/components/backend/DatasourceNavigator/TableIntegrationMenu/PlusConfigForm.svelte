@@ -209,27 +209,29 @@
 {:else}
   <Body size="S"><i>No tables found.</i></Body>
 {/if}
-<Divider />
-<div class="query-header">
-  <Heading size="S">Relationships</Heading>
-  <Button primary on:click={() => openRelationshipModal()}>
-    Define relationship
-  </Button>
-</div>
-<Body>
-  Tell budibase how your tables are related to get even more smart features.
-</Body>
-{#if relationshipInfo && relationshipInfo.length > 0}
-  <Table
-    on:click={({ detail }) => openRelationshipModal(detail.from, detail.to)}
-    schema={relationshipSchema}
-    data={relationshipInfo}
-    allowEditColumns={false}
-    allowEditRows={false}
-    allowSelectRows={false}
-  />
-{:else}
-  <Body size="S"><i>No relationships configured.</i></Body>
+{#if integration.relationships !== false}
+  <Divider />
+  <div class="query-header">
+    <Heading size="S">Relationships</Heading>
+    <Button primary on:click={() => openRelationshipModal()}>
+      Define relationship
+    </Button>
+  </div>
+  <Body>
+    Tell budibase how your tables are related to get even more smart features.
+  </Body>
+  {#if relationshipInfo && relationshipInfo.length > 0}
+    <Table
+      on:click={({ detail }) => openRelationshipModal(detail.from, detail.to)}
+      schema={relationshipSchema}
+      data={relationshipInfo}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+    />
+  {:else}
+    <Body size="S"><i>No relationships configured.</i></Body>
+  {/if}
 {/if}
 
 <style>

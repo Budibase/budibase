@@ -15,3 +15,5 @@ tk.freeze(MOCK_DATE)
 if (!process.env.DEBUG) {
   global.console.log = jest.fn() // console.log are ignored in tests
 }
+
+jest.setTimeout(10000)
