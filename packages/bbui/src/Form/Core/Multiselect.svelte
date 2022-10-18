@@ -16,16 +16,13 @@
   export let autoWidth = false
 
   $: streamed = Array.isArray(value)
-    ? value.reduce((acc, ele) => {
-        if (typeof ele === "string") {
-          let temp = ele.trim()
-          if (!temp) {
-            return acc
-          }
+    ? value.reduce((acc, entry) => {
+        if (typeof ele === "string" && entry.trim() === "") {
+          return acc
         }
-        let processedOpt = ele.toString()
-        if (options.indexOf(processedOpt) > -1) {
-          acc.push(ele.toString())
+        let processedOption = String(entry)
+        if (options.indexOf(processedOption) > -1) {
+          acc.push(processedOption)
         }
         return acc
       }, [])

@@ -27,11 +27,19 @@
   $: formField = formApi?.registerField(
     field,
     type,
-    defaultValue,
+    parseDefaultValue(defaultValue),
     disabled,
     validation,
     formStep
   )
+
+  const parseDefaultValue = defaultValue => {
+    if (Array.isArray(defaultValue) && type === "array") {
+      return defaultValue.map(val => String(val))
+    }
+    return defaultValue
+  }
+
   $: schemaType = fieldSchema?.type !== "formula" ? fieldSchema?.type : "string"
 
   // Focus label when editing
