@@ -1,17 +1,13 @@
 import { db as dbCore } from "@budibase/backend-core"
 import { TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import {
-  DB_EXPORT_FILE,
-  ATTACHMENT_DIR,
-  GLOBAL_DB_EXPORT_FILE,
-} from "./constants"
+import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import {
   uploadDirectory,
   upload,
 } from "../../../utilities/fileSystem/utilities"
 import { ObjectStoreBuckets, FieldTypes } from "../../../constants"
-import { join, basename } from "path"
+import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
 import { CouchFindOptions, RowAttachment } from "@budibase/types"

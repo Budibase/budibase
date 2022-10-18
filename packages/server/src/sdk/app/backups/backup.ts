@@ -11,6 +11,7 @@ async function importProcessor(job: Job) {
   const appId = data.appId,
     backupId = data.import!.backupId
   const { path, metadata } = await backups.downloadAppBackup(backupId)
+  // start by removing app database and contents of bucket - which will be updated
 }
 
 async function exportProcessor(job: Job) {
