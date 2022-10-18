@@ -3523,7 +3523,7 @@
         "key": "filter"
       },
       {
-        "type": "field",
+        "type": "field/sortable",
         "label": "Sort Column",
         "key": "sortColumn"
       },
@@ -3853,7 +3853,7 @@
         "key": "filter"
       },
       {
-        "type": "field",
+        "type": "field/sortable",
         "label": "Sort Column",
         "key": "sortColumn"
       },
@@ -4018,7 +4018,7 @@
         "key": "filter"
       },
       {
-        "type": "field",
+        "type": "field/sortable",
         "label": "Sort Column",
         "key": "sortColumn"
       },
@@ -4177,7 +4177,7 @@
         "key": "filter"
       },
       {
-        "type": "field",
+        "type": "field/sortable",
         "label": "Sort Column",
         "key": "sortColumn"
       },

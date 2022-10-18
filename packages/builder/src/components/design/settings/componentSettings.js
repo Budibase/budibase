@@ -7,6 +7,7 @@ import TableSelect from "./controls/TableSelect.svelte"
 import ColorPicker from "./controls/ColorPicker.svelte"
 import { IconSelect } from "./controls/IconSelect"
 import FieldSelect from "./controls/FieldSelect.svelte"
+import SortableFieldSelect from "./controls/SortableFieldSelect.svelte"
 import MultiFieldSelect from "./controls/MultiFieldSelect.svelte"
 import SearchFieldSelect from "./controls/SearchFieldSelect.svelte"
 import SchemaSelect from "./controls/SchemaSelect.svelte"
@@ -41,6 +42,7 @@ const componentMap = {
   filter: FilterEditor,
   url: URLSelect,
   columns: ColumnEditor,
+  "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
   "field/options": FormFieldSelect,
