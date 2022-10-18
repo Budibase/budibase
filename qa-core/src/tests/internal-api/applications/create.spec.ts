@@ -5,6 +5,7 @@ import InternalAPIClient from "../../../config/internal-api/TestConfiguration/In
 import generateApp from "../../../config/internal-api/fixtures/applications"
 import generator from "../../../config/generator"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
+import { generateTable, generateNewColumnForTable, generateNewRowForTable } from "../../../config/internal-api/fixtures/table"
 
 describe("Internal API - /applications endpoints", () => {
   const api = new InternalAPIClient()
@@ -174,5 +175,68 @@ describe("Internal API - /applications endpoints", () => {
 
     const [deleteResponse] = await config.applications.delete(<string>app.appId)
     expect(deleteResponse).toHaveStatusCode(200)
+  })
+
+  it("Operations on Tables", async () => {
+    // create the app
+    const appName = generator.word()
+    const app = await createAppFromTemplate()
+    config.applications.api.appId = app.appId
+
+    // Get current tables: expect 2 in this template
+    await config.tables.getTables(2)
+
+    // Add new table
+    const [createdTableResponse, createdTableData] = await config.tables.create(generateTable())
+    expect(createdTableResponse).toHaveStatusCode(200)
+    expect(createdTableData._id).toBeDefined()
+    expect(createdTableData._rev).toBeDefined()
+
+    //Table was added
+    await config.tables.getTables(3)
+
+    //Get information about the table
+    const [tableInfoResponse, tableInfo] = await config.tables.getTableById(<string>createdTableData._id)
+    expect(tableInfoResponse).toHaveStatusCode(200)
+    expect(tableInfo._id).toEqual(createdTableData._id)
+
+    //Add Column to table
+    const newColumn = generateNewColumnForTable(createdTableData)
+    const [addColumnResponse, addColumnData] = await config.tables.create(newColumn)
+    expect(addColumnResponse).toHaveStatusCode(200)
+    expect(addColumnData._id).toEqual(createdTableData._id)
+    expect(addColumnData.schema.TestColumn).toBeDefined()
+
+    //Add Row to table
+    const newRow = generateNewRowForTable(<string>addColumnData._id)
+    const [addRowResponse, addRowData] = await config.tables.addRow(<string>addColumnData._id, newRow)
+    console.log(addRowData)
+    expect(addRowResponse).toHaveStatusCode(200)
+    expect(addRowData._id).toBeDefined()
+    expect(addRowData._rev).toBeDefined()
+    expect(addRowData.tableId).toEqual(addColumnData._id)
+
+    //Get Row from table
+    const [getRowResponse, getRowData] = await config.tables.getRows(<string>addColumnData._id)
+    expect(getRowResponse).toHaveStatusCode(200)
+    expect(getRowData.length).toEqual(1)
+
+    //Delete Row from table
+    const rowToDelete = {
+      rows: [
+        getRowData[0]
+      ]
+    }
+    const [deleteRowResponse, deleteRowData] = await config.tables.deleteRow(<string>addColumnData._id, rowToDelete)
+    expect(deleteRowResponse).toHaveStatusCode(200)
+    expect(deleteRowData[0]._id).toEqual(getRowData[0]._id)
+
+    //Delete the table
+    const [deleteTableResponse, deleteTable] = await config.tables.deleteTable(<string>addColumnData._id, <string>addColumnData._rev)
+    expect(deleteTableResponse).toHaveStatusCode(200)
+    expect(deleteTable.message).toEqual(`Table ${createdTableData._id} deleted.`)
+
+    //Table was deleted
+    await config.tables.getTables(2)
   })
 })
