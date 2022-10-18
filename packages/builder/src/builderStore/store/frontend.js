@@ -542,12 +542,11 @@ export const getFrontendStore = () => {
       },
       patch: async (patchFn, componentId, screenId) => {
         // Use selected component by default
-        if (!componentId && !screenId) {
+        if (!componentId || !screenId) {
           const state = get(store)
-          componentId = state.selectedComponentId
-          screenId = state.selectedScreenId
+          componentId = componentId || state.selectedComponentId
+          screenId = screenId || state.selectedScreenId
         }
-        // Invalid if only a screen or component ID provided
         if (!componentId || !screenId || !patchFn) {
           return
         }
@@ -902,13 +901,14 @@ export const getFrontendStore = () => {
           }
         })
       },
-      updateStyles: async styles => {
-        await store.actions.components.patch(component => {
+      updateStyles: async (styles, id) => {
+        const patchFn = component => {
           component._styles.normal = {
             ...component._styles.normal,
             ...styles,
           }
-        })
+        }
+        await store.actions.components.patch(patchFn, id)
       },
       updateCustomStyle: async style => {
         await store.actions.components.patch(component => {

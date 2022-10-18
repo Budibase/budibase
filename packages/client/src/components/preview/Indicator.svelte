@@ -60,7 +60,9 @@
         class="anchor {side}"
         data-side={side}
         data-id={componentId}
-      />
+      >
+        <div class="anchor-inner" />
+      </div>
     {/each}
   {/if}
 </div>
@@ -131,52 +133,61 @@
 
   /* Anchor */
   .anchor {
+    --size: 24px;
     position: absolute;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: var(--color);
+    width: var(--size);
+    height: var(--size);
     pointer-events: all;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+  }
+  .anchor-inner {
+    width: 12px;
+    height: 12px;
+    background: white;
+    border: 2px solid var(--color);
+    pointer-events: none;
   }
   .anchor.right {
-    right: -6px;
-    top: calc(50% - 5px);
+    right: calc(var(--size) / -2 - 1px);
+    top: calc(50% - var(--size) / 2);
     cursor: e-resize;
   }
   .anchor.left {
-    left: -6px;
-    top: calc(50% - 5px);
+    left: calc(var(--size) / -2 - 1px);
+    top: calc(50% - var(--size) / 2);
     cursor: w-resize;
   }
   .anchor.bottom {
-    left: calc(50% - 5px);
-    bottom: -6px;
+    left: calc(50% - var(--size) / 2 + 1px);
+    bottom: calc(var(--size) / -2 - 1px);
     cursor: s-resize;
   }
   .anchor.top {
-    left: calc(50% - 5px);
-    top: -6px;
+    left: calc(50% - var(--size) / 2 + 1px);
+    top: calc(var(--size) / -2 - 1px);
     cursor: n-resize;
   }
 
   .anchor.bottom-right {
-    right: -6px;
-    bottom: -6px;
+    right: calc(var(--size) / -2 - 1px);
+    bottom: calc(var(--size) / -2 - 1px);
     cursor: se-resize;
   }
   .anchor.bottom-left {
-    left: -6px;
-    bottom: -6px;
+    left: calc(var(--size) / -2 - 1px);
+    bottom: calc(var(--size) / -2 - 1px);
     cursor: sw-resize;
   }
   .anchor.top-right {
-    right: -6px;
-    top: -6px;
+    right: calc(var(--size) / -2 - 1px);
+    top: calc(var(--size) / -2 - 1px);
     cursor: ne-resize;
   }
   .anchor.top-left {
-    left: -6px;
-    top: -6px;
+    left: calc(var(--size) / -2 - 1px);
+    top: calc(var(--size) / -2 - 1px);
     cursor: nw-resize;
   }
 </style>

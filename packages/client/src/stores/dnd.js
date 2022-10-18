@@ -87,3 +87,4 @@ export const dndIsNewComponent = derived(
   dndStore,
   $dndStore => $dndStore.source?.newComponentType != null
 )
+export const dndIsDragging = derived(dndStore, $dndStore => !!$dndStore.source)

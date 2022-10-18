@@ -2,7 +2,13 @@
   import { onMount, onDestroy } from "svelte"
   import { get } from "svelte/store"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import { builderStore, screenStore, dndStore, dndParent } from "stores"
+  import {
+    builderStore,
+    screenStore,
+    dndStore,
+    dndParent,
+    dndIsDragging,
+  } from "stores"
   import DNDPlaceholderOverlay from "./DNDPlaceholderOverlay.svelte"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "utils/components.js"
@@ -49,7 +55,6 @@
 
     // Reset state
     dndStore.actions.reset()
-    builderStore.actions.setDragging(false)
   }
 
   // Callback when initially starting a drag on a draggable component
@@ -85,7 +90,6 @@
       index,
     })
     builderStore.actions.selectComponent(id)
-    builderStore.actions.setDragging(true)
 
     // Set initial drop info to show placeholder exactly where the dragged
     // component is.
@@ -329,6 +333,6 @@
   prefix="Inside"
 />
 
-{#if $builderStore.dragging}
+{#if $dndIsDragging}
   <DNDPlaceholderOverlay />
 {/if}
