@@ -16,11 +16,8 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
-    isDragging: false,
     navigation: null,
     hiddenComponentIds: [],
-    gridStyles: null,
-    clearGridNextLoad: false,
     usedPlugins: null,
 
     // Legacy - allow the builder to specify a layout
@@ -52,6 +49,9 @@ const createBuilderStore = () => {
     duplicateComponent: id => {
       dispatchEvent("duplicate-component", { id })
     },
+    deleteComponent: id => {
+      dispatchEvent("delete-component", { id })
+    },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
@@ -69,16 +69,12 @@ const createBuilderStore = () => {
         mode,
       })
     },
-    setDragging: dragging => {
-      if (dragging === get(store).isDragging) {
-        return
-      }
-      store.update(state => ({
-        ...state,
-        isDragging: dragging,
-        gridStyles: null,
-        clearGridNextLoad: false,
-      }))
+    dropNewComponent: (component, parent, index) => {
+      dispatchEvent("drop-new-component", {
+        component,
+        parent,
+        index,
+      })
     },
     setEditMode: enabled => {
       if (enabled === get(store).editMode) {
@@ -95,17 +91,8 @@ const createBuilderStore = () => {
     highlightSetting: setting => {
       dispatchEvent("highlight-setting", { setting })
     },
-    setGridStyles: styles => {
-      store.update(state => {
-        state.gridStyles = styles
-        return state
-      })
-    },
-    clearGridNextLoad: () => {
-      store.update(state => {
-        state.clearGridNextLoad = true
-        return state
-      })
+    ejectBlock: (id, definition) => {
+      dispatchEvent("eject-block", { id, definition })
     },
     updateUsedPlugin: (name, hash) => {
       // Check if we used this plugin
@@ -120,6 +107,9 @@ const createBuilderStore = () => {
           return state
         })
       }
+
+      // Notify the builder so we can reload component definitions
+      dispatchEvent("reload-plugin")
     },
   }
   return {

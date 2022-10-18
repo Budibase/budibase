@@ -65,7 +65,16 @@ export const getTenantIDFromAppID = (appId: string) => {
   }
 }
 
-// used for automations, API endpoints should always be in context already
+export const doInContext = async (appId: string, task: any) => {
+  // gets the tenant ID from the app ID
+  const tenantId = getTenantIDFromAppID(appId)
+  return doInTenant(tenantId, async () => {
+    return doInAppContext(appId, async () => {
+      return task()
+    })
+  })
+}
+
 export const doInTenant = (tenantId: string | null, task: any) => {
   // make sure default always selected in single tenancy
   if (!env.MULTI_TENANCY) {

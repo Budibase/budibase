@@ -14,52 +14,52 @@ import { convertJSONSchemaToTableSchema } from "../utils/json"
  * For other types of datasource, this class is overridden and extended.
  */
 export default class DataFetch {
-  // API client
-  API = null
-
-  // Feature flags
-  featureStore = writable({
-    supportsSearch: false,
-    supportsSort: false,
-    supportsPagination: false,
-  })
-
-  // Config
-  options = {
-    datasource: null,
-    limit: 10,
-
-    // Search config
-    filter: null,
-    query: null,
-
-    // Sorting config
-    sortColumn: null,
-    sortOrder: "ascending",
-    sortType: null,
-
-    // Pagination config
-    paginate: true,
-  }
-
-  // State of the fetch
-  store = writable({
-    rows: [],
-    info: null,
-    schema: null,
-    loading: false,
-    loaded: false,
-    query: null,
-    pageNumber: 0,
-    cursor: null,
-    cursors: [],
-  })
-
   /**
    * Constructs a new DataFetch instance.
    * @param opts the fetch options
    */
   constructor(opts) {
+    // API client
+    this.API = null
+
+    // Feature flags
+    this.featureStore = writable({
+      supportsSearch: false,
+      supportsSort: false,
+      supportsPagination: false,
+    })
+
+    // Config
+    this.options = {
+      datasource: null,
+      limit: 10,
+
+      // Search config
+      filter: null,
+      query: null,
+
+      // Sorting config
+      sortColumn: null,
+      sortOrder: "ascending",
+      sortType: null,
+
+      // Pagination config
+      paginate: true,
+    }
+
+    // State of the fetch
+    this.store = writable({
+      rows: [],
+      info: null,
+      schema: null,
+      loading: false,
+      loaded: false,
+      query: null,
+      pageNumber: 0,
+      cursor: null,
+      cursors: [],
+    })
+
     // Merge options with their default values
     this.API = opts?.API
     this.options = {

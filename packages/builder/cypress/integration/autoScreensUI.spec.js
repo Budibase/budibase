@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(['smoke', 'all'], () => {
-  context("Auto Screens UI", () => {
+  xcontext("Auto Screens UI", () => {
     before(() => {
       cy.login()
       cy.deleteAllApps()
@@ -54,6 +54,7 @@ filterTests(['smoke', 'all'], () => {
       cy.createDatasourceScreen([initialTable, secondTable])
       // Confirm screens have been auto generated
       // Previously generated tables are suffixed with numbers - as expected
+      cy.wait(1000)
       cy.get(interact.BODY).should('contain', 'cypress-tests-2')
         .and('contain', 'cypress-tests-2/:id')
         .and('contain', 'cypress-tests-2/new/row')

@@ -32,7 +32,7 @@ const {
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { clientLibraryPath, stringToReadStream } from "../../utilities"
-import { getAllLocks } from "../../utilities/redis"
+import { getLocksById } from "../../utilities/redis"
 import {
   updateClientLibrary,
   backupClientLibrary,
@@ -45,11 +45,11 @@ import { cleanupAutomations } from "../../automations/utils"
 import { context } from "@budibase/backend-core"
 import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
-import { quotas } from "@budibase/pro"
+import { quotas, groups } from "@budibase/pro"
 import { errors, events, migrations } from "@budibase/backend-core"
 import { App, Layout, Screen, MigrationType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import { groups } from "@budibase/pro"
+import { enrichPluginURLs } from "../../utilities/plugins"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -171,16 +171,16 @@ export const fetch = async (ctx: any) => {
   const all = ctx.query && ctx.query.status === AppStatus.ALL
   const apps = await getAllApps({ dev, all })
 
+  const appIds = apps
+    .filter((app: any) => app.status === "development")
+    .map((app: any) => app.appId)
   // get the locks for all the dev apps
   if (dev || all) {
-    const locks = await getAllLocks()
+    const locks = await getLocksById(appIds)
     for (let app of apps) {
-      if (app.status !== "development") {
-        continue
-      }
-      const lock = locks.find((lock: any) => lock.appId === app.appId)
+      const lock = locks[app.appId]
       if (lock) {
-        app.lockedBy = lock.user
+        app.lockedBy = lock
       } else {
         // make sure its definitely not present
         delete app.lockedBy
@@ -208,9 +208,12 @@ export const fetchAppDefinition = async (ctx: any) => {
 
 export const fetchAppPackage = async (ctx: any) => {
   const db = context.getAppDB()
-  const application = await db.get(DocumentType.APP_METADATA)
+  let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
+
+  // Enrich plugin URLs
+  application.usedPlugins = enrichPluginURLs(application.usedPlugins)
 
   // Only filter screens if the user is not a builder
   if (!(ctx.user.builder && ctx.user.builder.global)) {
@@ -356,7 +359,7 @@ const appPostCreate = async (ctx: any, app: App) => {
   await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
-    const rows = await getUniqueRows([app.appId])
+    const { rows } = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
@@ -490,7 +493,7 @@ const destroyApp = async (ctx: any) => {
 }
 
 const preDestroyApp = async (ctx: any) => {
-  const rows = await getUniqueRows([ctx.params.appId])
+  const { rows } = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }
 

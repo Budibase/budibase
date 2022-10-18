@@ -13,7 +13,7 @@
     customQueryIconColor,
     customQueryText,
   } from "helpers/data/utils"
-  import { getIcon } from "./icons"
+  import IntegrationIcon from "./IntegrationIcon.svelte"
   import { notifications } from "@budibase/bbui"
 
   let openDataSources = []
@@ -123,10 +123,10 @@
         on:iconClick={() => toggleNode(datasource)}
       >
         <div class="datasource-icon" slot="icon">
-          <svelte:component
-            this={getIcon(datasource.source, datasource.schema)}
-            height="18"
-            width="18"
+          <IntegrationIcon
+            integrationType={datasource.source}
+            schema={datasource.schema}
+            size="18"
           />
         </div>
         {#if datasource._id !== BUDIBASE_INTERNAL_DB}

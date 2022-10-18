@@ -261,6 +261,7 @@
     } else {
       return [
         FIELDS.STRING,
+        FIELDS.BARCODEQR,
         FIELDS.LONGFORM,
         FIELDS.OPTIONS,
         FIELDS.DATETIME,
@@ -314,7 +315,7 @@
       const relatedTable = $tables.list.find(
         tbl => tbl._id === fieldInfo.tableId
       )
-      if (inUse(relatedTable, fieldInfo.fieldName)) {
+      if (inUse(relatedTable, fieldInfo.fieldName) && !originalName) {
         newError.relatedName = `Column name already in use in table ${relatedTable.name}`
       }
     }

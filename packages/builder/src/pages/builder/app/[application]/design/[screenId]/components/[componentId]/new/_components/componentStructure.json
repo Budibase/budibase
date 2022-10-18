@@ -5,7 +5,8 @@
     "children": [
       "tableblock",
       "cardsblock",
-      "repeaterblock"
+      "repeaterblock",
+      "formblock"
     ]
   },
   {
@@ -66,7 +67,8 @@
       "relationshipfield",
       "datetimefield",
       "multifieldselect",
-      "s3upload"
+      "s3upload",
+      "codescanner"
     ]
   },
   {

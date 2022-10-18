@@ -13,6 +13,7 @@ import googlesheets from "./googlesheets"
 import firebase from "./firebase"
 import redis from "./redis"
 import snowflake from "./snowflake"
+import oracle from "./oracle"
 import { getPlugins } from "../api/controllers/plugin"
 import { SourceName, Integration, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
@@ -32,6 +33,7 @@ const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.ARANGODB]: arangodb.schema,
   [SourceName.REST]: rest.schema,
   [SourceName.FIRESTORE]: firebase.schema,
+  [SourceName.GOOGLE_SHEETS]: googlesheets.schema,
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
 }
@@ -56,14 +58,13 @@ const INTEGRATIONS: { [key: string]: any } = {
 }
 
 // optionally add oracle integration if the oracle binary can be installed
-if (process.arch && !process.arch.startsWith("arm")) {
-  const oracle = require("./oracle")
+if (
+  process.arch &&
+  !process.arch.startsWith("arm") &&
+  oracle.integration.isInstalled()
+) {
   DEFINITIONS[SourceName.ORACLE] = oracle.schema
   INTEGRATIONS[SourceName.ORACLE] = oracle.integration
-}
-
-if (environment.SELF_HOSTED) {
-  DEFINITIONS[SourceName.GOOGLE_SHEETS] = googlesheets.schema
 }
 
 module.exports = {
@@ -77,6 +78,9 @@ module.exports = {
         pluginSchemas[sourceId] = {
           ...plugin.schema["schema"],
           custom: true,
+        }
+        if (plugin.iconUrl) {
+          pluginSchemas[sourceId].iconUrl = plugin.iconUrl
         }
       }
     }

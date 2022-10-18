@@ -16,7 +16,14 @@
     propsAreSame,
     getSettingsDefinition,
   } from "utils/componentProps"
-  import { builderStore, devToolsStore, componentStore, appStore } from "stores"
+  import {
+    builderStore,
+    devToolsStore,
+    componentStore,
+    appStore,
+    dndIsDragging,
+    dndComponentPath,
+  } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
@@ -27,6 +34,7 @@
   export let isLayout = false
   export let isScreen = false
   export let isBlock = false
+  export let parent = null
 
   // Get parent contexts
   const context = getContext("context")
@@ -97,6 +105,7 @@
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
   $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
+  $: inDndPath = $dndComponentPath?.includes(id)
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
@@ -108,7 +117,7 @@
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
   $: builderInteractive =
-    $builderStore.inBuilder && insideScreenslot && !isBlock
+    $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
   $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
@@ -118,7 +127,7 @@
     !isLayout &&
     !isScreen &&
     definition?.draggable !== false
-  $: droppable = interactive && !isLayout && !isScreen
+  $: droppable = interactive
   $: builderHidden =
     $builderStore.inBuilder && $builderStore.hiddenComponentIds?.includes(id)
 
@@ -126,8 +135,9 @@
   // Empty states can be shown for these components, but can be disabled
   // in the component manifest.
   $: empty =
-    (interactive && !children.length && hasChildren) ||
-    hasMissingRequiredSettings
+    !isBlock &&
+    ((interactive && !children.length && hasChildren) ||
+      hasMissingRequiredSettings)
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
@@ -148,6 +158,12 @@
 
   // Scroll the selected element into view
   $: selected && scrollIntoView()
+
+  // When dragging and dropping, pad components to allow dropping between
+  // nested layers. Only reset this when dragging stops.
+  let pad = false
+  $: pad = pad || (interactive && hasChildren && inDndPath)
+  $: $dndIsDragging, (pad = false)
 
   // Update component context
   $: store.set({
@@ -409,6 +425,11 @@
   }
 
   const scrollIntoView = () => {
+    // Don't scroll into view if we selected this component because we were
+    // starting dragging on it
+    if (get(dndIsDragging)) {
+      return
+    }
     const node = document.getElementsByClassName(id)?.[0]?.children[0]
     if (!node) {
       return
@@ -456,17 +477,20 @@
     class:empty
     class:interactive
     class:editing
+    class:pad
+    class:parent={hasChildren}
     class:block={isBlock}
     data-id={id}
     data-name={name}
     data-icon={icon}
+    data-parent={parent}
   >
     <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
       {#if hasMissingRequiredSettings}
         <ComponentPlaceholder />
       {:else if children.length}
         {#each children as child (child._id)}
-          <svelte:self instance={child} />
+          <svelte:self instance={child} parent={id} />
         {/each}
       {:else if emptyState}
         {#if isScreen}
@@ -485,16 +509,14 @@
   .component {
     display: contents;
   }
-
-  .interactive :global(*:hover) {
-    cursor: pointer;
+  .component.pad :global(> *) {
+    padding: var(--spacing-l) !important;
+    gap: var(--spacing-l) !important;
+    border: 2px dashed var(--spectrum-global-color-gray-400) !important;
+    border-radius: 4px !important;
+    transition: padding 260ms ease-out, border 260ms ease-out;
   }
-
-  .draggable :global(*:hover) {
-    cursor: grab;
-  }
-
-  .editing :global(*:hover) {
-    cursor: auto;
+  .interactive :global(*) {
+    cursor: default;
   }
 </style>
