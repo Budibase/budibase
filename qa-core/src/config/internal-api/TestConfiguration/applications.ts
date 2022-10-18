@@ -6,8 +6,9 @@ import FormData from "form-data"
 import { RouteConfig } from "../fixtures/types/routing"
 import { AppPackageResponse } from "../fixtures/types/appPackage"
 import { DeployConfig } from "../fixtures/types/deploy"
+import { responseMessage } from "../fixtures/types/responseMessage"
 
-type messageResponse = { message: string }
+
 
 export default class AppApi {
   api: InternalAPIClient
@@ -54,7 +55,7 @@ export default class AppApi {
     return [response, json.data]
   }
 
-  async sync(appId: string): Promise<[Response, messageResponse]> {
+  async sync(appId: string): Promise<[Response, responseMessage]> {
     const response = await this.api.post(`/applications/${appId}/sync`)
     const json = await response.json()
     return [response, json]
@@ -72,7 +73,7 @@ export default class AppApi {
     return [response, json]
   }
 
-  async revert(appId: string): Promise<[Response, messageResponse]> {
+  async revert(appId: string): Promise<[Response, responseMessage]> {
     const response = await this.api.post(`/dev/${appId}/revert`)
     const json = await response.json()
     return [response, json]
