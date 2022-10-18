@@ -2,18 +2,36 @@ import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
+import { dndIndex, dndParent, dndIsNewComponent } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
+import { findComponentById, findComponentParent } from "../utils/components.js"
+import { Helpers } from "@budibase/bbui"
+import { DNDPlaceholderID, DNDPlaceholderType } from "constants"
 
 const createScreenStore = () => {
   const store = derived(
-    [appStore, routeStore, builderStore],
-    ([$appStore, $routeStore, $builderStore]) => {
+    [
+      appStore,
+      routeStore,
+      builderStore,
+      dndParent,
+      dndIndex,
+      dndIsNewComponent,
+    ],
+    ([
+      $appStore,
+      $routeStore,
+      $builderStore,
+      $dndParent,
+      $dndIndex,
+      $dndIsNewComponent,
+    ]) => {
       let activeLayout, activeScreen
       let screens
 
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
-        activeScreen = $builderStore.screen
+        activeScreen = Helpers.cloneDeep($builderStore.screen)
         screens = [activeScreen]
 
         // Legacy - allow the builder to specify a layout
@@ -24,8 +42,10 @@ const createScreenStore = () => {
         // Find the correct screen by matching the current route
         screens = $appStore.screens || []
         if ($routeStore.activeRoute) {
-          activeScreen = screens.find(
-            screen => screen._id === $routeStore.activeRoute.screenId
+          activeScreen = Helpers.cloneDeep(
+            screens.find(
+              screen => screen._id === $routeStore.activeRoute.screenId
+            )
           )
         }
 
@@ -37,6 +57,37 @@ const createScreenStore = () => {
           if (screenLayout) {
             activeLayout = screenLayout
           }
+        }
+      }
+
+      // Insert DND placeholder if required
+      if (activeScreen && $dndParent && $dndIndex != null) {
+        // Remove selected component from tree if we are moving an existing
+        // component
+        const { selectedComponentId } = $builderStore
+        if (!$dndIsNewComponent) {
+          let selectedParent = findComponentParent(
+            activeScreen.props,
+            selectedComponentId
+          )
+          if (selectedParent) {
+            selectedParent._children = selectedParent._children?.filter(
+              x => x._id !== selectedComponentId
+            )
+          }
+        }
+
+        // Insert placeholder component
+        const placeholder = {
+          _component: DNDPlaceholderID,
+          _id: DNDPlaceholderType,
+          static: true,
+        }
+        let parent = findComponentById(activeScreen.props, $dndParent)
+        if (!parent._children?.length) {
+          parent._children = [placeholder]
+        } else {
+          parent._children.splice($dndIndex, 0, placeholder)
         }
       }
 
