@@ -53,9 +53,8 @@ export const generateNewColumnForTable = (tableData: any): Table => {
 }
 
 export const generateNewRowForTable = (tableId: string): Row => {
-    const newRow = {
+    return {
         TestColumn: "TestRow",
         tableId: tableId
     }
-    return newRow
 }
