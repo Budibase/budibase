@@ -487,7 +487,7 @@
         ]}
         getOptionLabel={option => option.label}
         getOptionValue={option => option.value}
-        tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered,
+        tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
          while static formula are calculated when the row is saved."
       />
     {/if}
