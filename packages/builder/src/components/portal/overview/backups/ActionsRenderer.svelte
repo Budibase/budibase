@@ -21,5 +21,6 @@
     flex-direction: row;
     gap: var(--spacing-m);
     align-items: center;
+    margin-left: auto;
   }
 </style>

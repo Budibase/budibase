@@ -2,18 +2,20 @@
   import { Icon } from "@budibase/bbui"
 
   export let value
+
+  let trigger = value.charAt(0).toUpperCase() + value.slice(1)
 </script>
 
 <div class="cell">
-  {#if value === "PUBLISH"}
+  {#if value === "publish"}
     <Icon name="GlobeCheck" />
-    <div>{value}</div>
-  {:else if value === "MANUAL"}
-    <Icon name="Floppy" />
-    <div>{value}</div>
-  {:else if value === "SCHEDULED"}
+    <div>{trigger}</div>
+  {:else if value === "manual"}
+    <Icon name="SaveFloppy" />
+    <div>{trigger}</div>
+  {:else if value === "scheduled"}
     <Icon name="Clock" />
-    <div>{value}</div>
+    <div>{trigger}</div>
   {/if}
 </div>
 

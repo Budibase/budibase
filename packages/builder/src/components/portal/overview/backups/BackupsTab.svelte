@@ -3,6 +3,7 @@
     ActionButton,
     DatePicker,
     Layout,
+    notifications,
     Pagination,
     Select,
     Table,
@@ -10,16 +11,26 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { backups } from "stores/portal"
+  import { createPaginationStore } from "helpers/pagination"
   import DatasourceRenderer from "./DatasourceRenderer.svelte"
   import ScreensRenderer from "./ScreensRenderer.svelte"
   import AutomationsRenderer from "./AutomationsRenderer.svelte"
   import CreateBackupModal from "./CreateBackupModal.svelte"
   import TriggerRenderer from "./TriggerRenderer.svelte"
   import ActionsRenderer from "./ActionsRenderer.svelte"
+  import DateRenderer from "./DateRenderer.svelte"
+  import DaysRenderer from "./DaysRenderer.svelte"
 
   export let app
+
   let backupData = null
   let modal
+  let trigger = null
+  let pageInfo = createPaginationStore()
+  $: page = $pageInfo.page
+  $: console.log(page)
+
+  $: fetchBackups(app.instance._id, trigger, page)
 
   const triggers = {
     PUBLISH: "Publish",
@@ -31,10 +42,14 @@
     trigger: {
       displayName: "Trigger",
     },
+    days: {
+      displayName: null,
+    },
+
     name: {
       displayName: "Name",
     },
-    date: {
+    createdAt: {
       displayName: "Date",
     },
     datasources: {
@@ -60,33 +75,52 @@
     { column: "automations", component: AutomationsRenderer },
     { column: "trigger", component: TriggerRenderer },
     { column: "actions", component: ActionsRenderer },
+    { column: "createdAt", component: DateRenderer },
+    { column: "days", component: DaysRenderer },
   ]
 
-  async function fetchBackups() {
-    backups.load()
-    backupData = enrichBackupData($backups)
-  }
-
-  function enrichBackupData(backups) {
-    let enrichedBackups = backups.map(backup => {
+  function flattenBackups(backups) {
+    let flattened = backups.map(backup => {
       return {
         ...backup,
-        ...Object.assign(...backup.contents),
+        days: getDaysBetween(backup.createdAt),
+        //...Object.assign(...backup?.contents),
       }
     })
 
-    return enrichedBackups
+    return flattened
   }
 
-  function createManualBackup(name) {
-    backups.createManualBackup({ appId: app.appId, name })
+  function getDaysBetween(date) {
+    const now = new Date()
+    const backupDate = new Date(date)
+    backupDate.setDate(backupDate.getDate() - 1)
+    console.log(backupDate)
+    const oneDay = 24 * 60 * 60 * 1000
+    return now > backupDate
+      ? Math.round(Math.abs((now - backupDate) / oneDay))
+      : 0
   }
 
-  onMount(async () => {
-    console.log(await backups.searchBackups(app.appId))
+  async function fetchBackups(appId, trigger, page) {
+    const response = await backups.searchBackups(appId, trigger, page)
+    pageInfo.fetched(response.hasNextPage, response.nextPage)
 
-    await fetchBackups()
-  })
+    // flatten so we have an easier structure to use for the table schema
+    backupData = flattenBackups(response.data)
+  }
+
+  async function createManualBackup(name) {
+    try {
+      let response = await backups.createManualBackup({
+        appId: app.instance._id,
+        name,
+      })
+      notifications.success(response.message)
+    } catch {
+      notifications.error("Unable to create backup")
+    }
+  }
 </script>
 
 <div class="root">
@@ -122,7 +156,13 @@
           border={false}
         />
         <div class="pagination">
-          <Pagination page={1} />
+          <Pagination
+            page={$pageInfo.pageNumber}
+            hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+            hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+            goToPrevPage={pageInfo.prevPage}
+            goToNextPage={pageInfo.nextPage}
+          />
         </div>
       </div>
     {/if}
