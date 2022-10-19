@@ -9,7 +9,6 @@
     Table,
     Modal,
   } from "@budibase/bbui"
-  import { onMount } from "svelte"
   import { backups } from "stores/portal"
   import { createPaginationStore } from "helpers/pagination"
   import DatasourceRenderer from "./DatasourceRenderer.svelte"
