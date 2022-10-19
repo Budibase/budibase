@@ -1,6 +1,7 @@
 <script>
   import {
     ActionButton,
+    DatePicker,
     Layout,
     Pagination,
     Select,
@@ -98,6 +99,10 @@
           options={Object.values(triggers)}
         />
       </div>
+      <div>
+        <DatePicker range label="Filter range" />
+      </div>
+
       <div class="split-buttons">
         <ActionButton on:click={modal.show} icon="SaveAsFloppy"
           >Create new backup</ActionButton

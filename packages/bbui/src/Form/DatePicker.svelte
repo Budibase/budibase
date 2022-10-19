@@ -14,7 +14,7 @@
   export let placeholder = null
   export let appendTo = undefined
   export let ignoreTimezones = false
-
+  export let range = false
   const dispatch = createEventDispatcher()
 
   const onChange = e => {
@@ -34,6 +34,7 @@
     {time24hr}
     {appendTo}
     {ignoreTimezones}
+    {range}
     on:change={onChange}
   />
 </Field>

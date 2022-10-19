@@ -17,7 +17,7 @@
   export let timeOnly = false
   export let ignoreTimezones = false
   export let time24hr = false
-
+  export let range = false
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
   let open = false
@@ -41,6 +41,7 @@
     time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
+    mode: "range" || null,
     appendTo,
     disableMobile: "true",
     onReady: () => {
