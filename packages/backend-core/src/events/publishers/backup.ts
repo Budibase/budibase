@@ -4,8 +4,8 @@ import { publishEvent } from "../events"
 export async function appBackupRestored(backup: AppBackup) {
   const properties: AppBackupRevertEvent = {
     appId: backup.appId,
-    backupName: backup.name,
-    backupCreatedAt: backup.createdAt,
+    backupName: backup.name!,
+    backupCreatedAt: backup.timestamp,
   }
 
   await publishEvent(Event.APP_BACKUP_RESTORED, properties)
