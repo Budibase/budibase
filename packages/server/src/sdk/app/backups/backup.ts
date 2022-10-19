@@ -49,7 +49,7 @@ async function exportProcessor(job: Job) {
   const data: AppBackupQueueData = job.data
   const appId = data.appId,
     trigger = data.export!.trigger,
-    name = data.export!.name
+    name = data.export!.name || `${trigger} - backup`
   const tenantId = tenancy.getTenantIDFromAppID(appId)
   await tenancy.doInTenant(tenantId, async () => {
     const createdAt = new Date().toISOString()
