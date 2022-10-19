@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte"
-  import { builderStore, screenStore } from "stores"
+  import { builderStore, componentStore, screenStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
   import { findComponentById } from "utils/components.js"
 
@@ -157,16 +157,14 @@
       return
     }
 
-    const compDef = findComponentById(
-      $screenStore.activeScreen.props,
-      dragInfo.id
-    )
-    if (!compDef) {
+    const instance = componentStore.actions.getComponentInstance(dragInfo.id)
+    if (!instance) {
       return
     }
+    const styles = instance.getStyles()
     const domGrid = getDOMNode(dragInfo.gridId)
     if (domGrid) {
-      const getStyle = x => parseInt(compDef._styles.normal?.[x] || "0")
+      const getStyle = x => parseInt(styles?.normal?.[x] || "0")
       dragInfo.grid = {
         startX: e.clientX,
         startY: e.clientY,

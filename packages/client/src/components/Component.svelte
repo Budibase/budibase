@@ -35,6 +35,7 @@
   export let isScreen = false
   export let isBlock = false
   export let parent = null
+  export let parentType = null
 
   // Get parent contexts
   const context = getContext("context")
@@ -165,23 +166,35 @@
   $: pad = pad || (interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
 
+  // We can apply additional styles automatically if required.
+  // One use case for this is ensuring grid children have proper styles to
+  // display properly inside a grid.
+  $: additionalStyles = getAdditionalStyles(
+    instance._styles?.normal || {},
+    parentType,
+    definition
+  )
+
+  // Compute overall styles
+  $: styles = {
+    ...instance._styles,
+    normal: {
+      ...instance._styles?.normal,
+      ...additionalStyles,
+    },
+    custom: customCSS,
+    id,
+    empty: emptyState,
+    interactive,
+    draggable,
+    editable,
+  }
+
   // Update component context
   $: store.set({
     id,
     children: children.length,
-    styles: {
-      ...instance._styles,
-      normal: {
-        ...instance._styles?.normal,
-        ...(selected ? $builderStore.gridStyles : null),
-      },
-      custom: customCSS,
-      id,
-      empty: emptyState,
-      interactive,
-      draggable,
-      editable,
-    },
+    styles,
     empty: emptyState,
     selected,
     name,
@@ -442,6 +455,54 @@
     })
   }
 
+  const getAdditionalStyles = (styles, parentType, definition) => {
+    let newStyles = {}
+
+    // Ensure grid styles are set
+    if (parentType?.endsWith("/grid")) {
+      newStyles = {
+        ...newStyles,
+        overflow: "hidden",
+        width: "auto",
+        height: "auto",
+      }
+
+      // Guess rough grid size from definition size
+      let columns = 6
+      let rows = 4
+      if (definition.size?.width) {
+        columns = Math.round(definition.size.width / 100)
+      }
+      if (definition.size?.height) {
+        rows = Math.round(definition.size.height / 100)
+      }
+
+      // Ensure grid position styles are set
+      if (!styles["grid-column-start"]) {
+        newStyles["grid-column-start"] = 1
+      }
+      if (!styles["grid-column-end"]) {
+        newStyles["grid-column-end"] = columns + 1
+      }
+      if (!styles["grid-row-start"]) {
+        newStyles["grid-row-start"] = 1
+      }
+      if (!styles["grid-row-end"]) {
+        newStyles["grid-row-end"] = rows + 1
+      }
+
+      // Ensure grid end styles aren't before grid start styles
+      if (newStyles["grid-column-end"] <= newStyles["grid-column-start"]) {
+        newStyles["grid-column-end"] = newStyles["grid-column-start"] + 1
+      }
+      if (newStyles["grid-row-end"] <= newStyles["grid-row-start"]) {
+        newStyles["grid-row-end"] = newStyles["grid-row-start"] + 1
+      }
+    }
+
+    return newStyles
+  }
+
   onMount(() => {
     if (
       $appStore.isDevApp &&
@@ -450,6 +511,7 @@
       componentStore.actions.registerInstance(id, {
         component: instance._component,
         getSettings: () => cachedSettings,
+        getStyles: () => styles,
         getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
         getDataContext: () => get(context),
         reload: () => initialise(instance, true),
@@ -490,7 +552,11 @@
         <ComponentPlaceholder />
       {:else if children.length}
         {#each children as child (child._id)}
-          <svelte:self instance={child} parent={id} />
+          <svelte:self
+            instance={child}
+            parent={id}
+            parentType={instance._component}
+          />
         {/each}
       {:else if emptyState}
         {#if isScreen}

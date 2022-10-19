@@ -5,9 +5,8 @@ import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
 import Router from "../components/Router.svelte"
-import DNDPlaceholder from "../components/preview/DNDPlaceholder.svelte"
 import * as AppComponents from "../components/app/index.js"
-import { DNDPlaceholderType, ScreenslotType } from "../constants.js"
+import { ScreenslotType } from "../constants.js"
 
 const budibasePrefix = "@budibase/standard-components/"
 
@@ -103,8 +102,6 @@ const createComponentStore = () => {
     // Screenslot is an edge case
     if (type === ScreenslotType) {
       type = `${budibasePrefix}${type}`
-    } else if (type === DNDPlaceholderType) {
-      return {}
     }
 
     // Handle built-in components
@@ -124,8 +121,6 @@ const createComponentStore = () => {
     }
     if (type === ScreenslotType) {
       return Router
-    } else if (type === DNDPlaceholderType) {
-      return DNDPlaceholder
     }
 
     // Handle budibase components
@@ -138,6 +133,10 @@ const createComponentStore = () => {
     // Handle custom components
     const { customComponentManifest } = get(store)
     return customComponentManifest?.[type]?.Component
+  }
+
+  const getComponentInstance = id => {
+    return get(store).mountedComponents[id]
   }
 
   const registerCustomComponent = ({ Component, schema, version }) => {
@@ -171,6 +170,7 @@ const createComponentStore = () => {
       getComponentById,
       getComponentDefinition,
       getComponentConstructor,
+      getComponentInstance,
       registerCustomComponent,
     },
   }

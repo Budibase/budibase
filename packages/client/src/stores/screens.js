@@ -2,11 +2,11 @@ import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
-import { dndIndex, dndParent, dndIsNewComponent } from "./dnd.js"
+import { dndIndex, dndParent, dndIsNewComponent, dndBounds } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
-import { DNDPlaceholderID, DNDPlaceholderType } from "constants"
+import { DNDPlaceholderID } from "constants"
 
 const createScreenStore = () => {
   const store = derived(
@@ -17,6 +17,7 @@ const createScreenStore = () => {
       dndParent,
       dndIndex,
       dndIsNewComponent,
+      dndBounds,
     ],
     ([
       $appStore,
@@ -25,6 +26,7 @@ const createScreenStore = () => {
       $dndParent,
       $dndIndex,
       $dndIsNewComponent,
+      $dndBounds,
     ]) => {
       let activeLayout, activeScreen
       let screens
@@ -79,8 +81,15 @@ const createScreenStore = () => {
 
         // Insert placeholder component
         const placeholder = {
-          _component: DNDPlaceholderID,
-          _id: DNDPlaceholderType,
+          _component: "@budibase/standard-components/container",
+          _id: DNDPlaceholderID,
+          _styles: {
+            normal: {
+              width: `${$dndBounds?.width || 666}px`,
+              height: `${$dndBounds?.height || 666}px`,
+              opacity: 0,
+            },
+          },
           static: true,
         }
         let parent = findComponentById(activeScreen.props, $dndParent)

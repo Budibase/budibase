@@ -87,10 +87,9 @@
     "showSettingsBar": true,
     "size": {
       "width": 400,
-      "height": 100
+      "height": 200
     },
     "styles": [
-      "grid",
       "padding",
       "size",
       "background",
