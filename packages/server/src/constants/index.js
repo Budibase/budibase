@@ -209,6 +209,4 @@ exports.AutomationErrors = {
 // pass through the list from the auth/core lib
 exports.ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 
-exports.ATTACHMENT_DIR = "attachments"
-
 exports.MAX_AUTOMATION_RECURRING_ERRORS = 5
