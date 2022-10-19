@@ -1,12 +1,10 @@
 <script>
-  import { Icon } from "@budibase/bbui"
-
+  import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   export let value
 </script>
 
 <div class="cell">
-  <Icon name="Data" />
-  <div>{value?.length}</div>
+  <DateTimeRenderer {value} />
 </div>
 
 <style>

@@ -1,12 +1,11 @@
 <script>
-  import { Icon } from "@budibase/bbui"
-
   export let value
+  $: console.log(value)
 </script>
 
 <div class="cell">
-  <Icon name="Data" />
-  <div>{value?.length}</div>
+  {value}
+  {`day${value == 1 ? "" : "s"} ago`}
 </div>
 
 <style>

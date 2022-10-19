@@ -20,8 +20,8 @@ export function createBackupsStore() {
     ])
   }
 
-  async function searchBackups(appId) {
-    return API.searchBackups(appId)
+  async function searchBackups(appId, trigger, page) {
+    return API.searchBackups({appId, trigger, page})
   }
 
   async function createManualBackup(appId, name) {

@@ -2,12 +2,11 @@
   import { Icon } from "@budibase/bbui"
 
   export let value
-  $: console.log(value)
 </script>
 
 <div class="cell">
   <Icon name="JourneyVoyager" />
-  <div>{value.length}</div>
+  <div>{value?.length}</div>
 </div>
 
 <style>
