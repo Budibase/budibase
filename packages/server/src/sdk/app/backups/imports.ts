@@ -1,12 +1,11 @@
 import { db as dbCore } from "@budibase/backend-core"
 import { TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
+import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import {
-  DB_EXPORT_FILE,
-  ATTACHMENT_DIR,
-  GLOBAL_DB_EXPORT_FILE,
-} from "./constants"
-import { uploadDirectory } from "../../../utilities/fileSystem/utilities"
+  uploadDirectory,
+  upload,
+} from "../../../utilities/fileSystem/utilities"
 import { ObjectStoreBuckets, FieldTypes } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
@@ -127,14 +126,32 @@ export async function importApp(
     template.file && fs.lstatSync(template.file.path).isDirectory()
   if (template.file && (isTar || isDirectory)) {
     const tmpPath = isTar ? untarFile(template.file) : template.file.path
-    const attachmentPath = join(tmpPath, ATTACHMENT_DIR)
+    const contents = fs.readdirSync(tmpPath)
     // have to handle object import
-    if (fs.existsSync(attachmentPath)) {
-      await uploadDirectory(
-        ObjectStoreBuckets.APPS,
-        attachmentPath,
-        join(prodAppId, ATTACHMENT_DIR)
-      )
+    if (contents.length) {
+      let promises = []
+      let excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
+      for (let filename of contents) {
+        const path = join(tmpPath, filename)
+        if (excludedFiles.includes(filename)) {
+          continue
+        }
+        filename = join(prodAppId, filename)
+        if (fs.lstatSync(path).isDirectory()) {
+          promises.push(
+            uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
+          )
+        } else {
+          promises.push(
+            upload({
+              bucket: ObjectStoreBuckets.APPS,
+              path,
+              filename,
+            })
+          )
+        }
+      }
+      await Promise.all(promises)
     }
     dbStream = fs.createReadStream(join(tmpPath, DB_EXPORT_FILE))
   } else {
