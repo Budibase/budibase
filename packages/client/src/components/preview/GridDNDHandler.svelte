@@ -10,12 +10,12 @@
   $: dragNode = getDOMNode(dragInfo?.id)
   $: applyStyles(dragNode, gridStyles)
 
-  const insideGrid = e => {
+  const isChildOfGrid = e => {
     return (
       e.target
-        ?.closest?.(".component")
-        ?.parentNode?.closest?.(".component")
-        ?.childNodes[0]?.classList.contains("grid") ||
+        .closest?.(".component")
+        ?.parentNode.closest(".component")
+        ?.childNodes[0].classList.contains("grid") ||
       e.target.classList.contains("anchor")
     )
   }
@@ -33,101 +33,6 @@
     Object.entries(gridStyles).forEach(([style, value]) => {
       dragNode.style[style] = value
     })
-  }
-
-  // Callback when drag stops (whether dropped or not)
-  const stopDragging = () => {
-    // Save changes
-    if (gridStyles) {
-      builderStore.actions.updateStyles(gridStyles, dragInfo.id)
-    }
-
-    // Reset listener
-    if (dragInfo?.domTarget) {
-      dragInfo.domTarget.removeEventListener("dragend", stopDragging)
-    }
-
-    // Reset state
-    dragInfo = null
-    gridStyles = null
-  }
-
-  // Callback when initially starting a drag on a draggable component
-  const onDragStart = e => {
-    if (!insideGrid(e)) {
-      return
-    }
-
-    // Hide drag ghost image
-    e.dataTransfer.setDragImage(new Image(), 0, 0)
-
-    // Extract state
-    let mode, id, side
-    if (e.target.classList.contains("anchor")) {
-      // Handle resize
-      mode = "resize"
-      id = e.target.dataset.id
-      side = e.target.dataset.side
-    } else {
-      // Handle move
-      mode = "move"
-      const component = e.target.closest(".component")
-      id = component.dataset.id
-    }
-
-    // Find grid parent
-    const domComponent = getDOMNode(id)
-    const gridId = domComponent?.closest(".grid")?.parentNode.dataset.id
-    if (!gridId) {
-      return
-    }
-
-    // Update state
-    dragInfo = {
-      domTarget: e.target,
-      id,
-      gridId,
-      mode,
-      side,
-    }
-
-    // Add event handler to clear all drag state when dragging ends
-    dragInfo.domTarget.addEventListener("dragend", stopDragging)
-  }
-
-  // Callback when entering a potential drop target
-  const onDragEnter = e => {
-    // Skip if we aren't validly dragging currently
-    if (!dragInfo || dragInfo.grid || !insideGrid(e)) {
-      return
-    }
-
-    const compDef = findComponentById(
-      $screenStore.activeScreen.props,
-      dragInfo.id
-    )
-    if (!compDef) {
-      return
-    }
-    const domGrid = getDOMNode(dragInfo.gridId)
-    if (domGrid) {
-      const getStyle = x => parseInt(compDef._styles.normal?.[x] || "0")
-      dragInfo.grid = {
-        startX: e.clientX,
-        startY: e.clientY,
-        rowStart: getStyle("grid-row-start"),
-        rowEnd: getStyle("grid-row-end"),
-        colStart: getStyle("grid-column-start"),
-        colEnd: getStyle("grid-column-end"),
-        rowDeltaMin: 1 - getStyle("grid-row-start"),
-        rowDeltaMax:
-          parseInt(domGrid.dataset.cols) + 1 - getStyle("grid-row-end"),
-        colDeltaMin: 1 - getStyle("grid-column-start"),
-        colDeltaMax:
-          parseInt(domGrid.dataset.cols) + 1 - getStyle("grid-column-end"),
-      }
-      handleEvent(e)
-    }
   }
 
   const processEvent = Utils.throttle((mouseX, mouseY) => {
@@ -202,11 +107,106 @@
     processEvent(e.clientX, e.clientY)
   }
 
+  // Callback when initially starting a drag on a draggable component
+  const onDragStart = e => {
+    if (!isChildOfGrid(e)) {
+      return
+    }
+
+    // Hide drag ghost image
+    e.dataTransfer.setDragImage(new Image(), 0, 0)
+
+    // Extract state
+    let mode, id, side
+    if (e.target.classList.contains("anchor")) {
+      // Handle resize
+      mode = "resize"
+      id = e.target.dataset.id
+      side = e.target.dataset.side
+    } else {
+      // Handle move
+      mode = "move"
+      const component = e.target.closest(".component")
+      id = component.dataset.id
+    }
+
+    // Find grid parent
+    const domComponent = getDOMNode(id)
+    const gridId = domComponent?.closest(".grid")?.parentNode.dataset.id
+    if (!gridId) {
+      return
+    }
+
+    // Update state
+    dragInfo = {
+      domTarget: e.target,
+      id,
+      gridId,
+      mode,
+      side,
+    }
+
+    // Add event handler to clear all drag state when dragging ends
+    dragInfo.domTarget.addEventListener("dragend", stopDragging)
+  }
+
+  // Callback when entering a potential drop target
+  const onDragEnter = e => {
+    // Skip if we aren't validly dragging currently
+    if (!dragInfo || dragInfo.grid) {
+      return
+    }
+
+    const compDef = findComponentById(
+      $screenStore.activeScreen.props,
+      dragInfo.id
+    )
+    if (!compDef) {
+      return
+    }
+    const domGrid = getDOMNode(dragInfo.gridId)
+    if (domGrid) {
+      const getStyle = x => parseInt(compDef._styles.normal?.[x] || "0")
+      dragInfo.grid = {
+        startX: e.clientX,
+        startY: e.clientY,
+        rowStart: getStyle("grid-row-start"),
+        rowEnd: getStyle("grid-row-end"),
+        colStart: getStyle("grid-column-start"),
+        colEnd: getStyle("grid-column-end"),
+        rowDeltaMin: 1 - getStyle("grid-row-start"),
+        rowDeltaMax:
+          parseInt(domGrid.dataset.cols) + 1 - getStyle("grid-row-end"),
+        colDeltaMin: 1 - getStyle("grid-column-start"),
+        colDeltaMax:
+          parseInt(domGrid.dataset.cols) + 1 - getStyle("grid-column-end"),
+      }
+      handleEvent(e)
+    }
+  }
+
   const onDragOver = e => {
-    if (!dragInfo?.grid || !insideGrid(e)) {
+    if (!dragInfo?.grid) {
       return
     }
     handleEvent(e)
+  }
+
+  // Callback when drag stops (whether dropped or not)
+  const stopDragging = () => {
+    // Save changes
+    if (gridStyles) {
+      builderStore.actions.updateStyles(gridStyles, dragInfo.id)
+    }
+
+    // Reset listener
+    if (dragInfo?.domTarget) {
+      dragInfo.domTarget.removeEventListener("dragend", stopDragging)
+    }
+
+    // Reset state
+    dragInfo = null
+    gridStyles = null
   }
 
   onMount(() => {
