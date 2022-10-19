@@ -1,9 +1,6 @@
 import { db as dbCore } from "@budibase/backend-core"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import {
-  retrieveDirectory,
-  retrieve,
-} from "../../../utilities/fileSystem/utilities"
+import { retrieveDirectory } from "../../../utilities/fileSystem/utilities"
 import { streamFile } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
 import {
