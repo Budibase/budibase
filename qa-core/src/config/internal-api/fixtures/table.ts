@@ -1,23 +1,4 @@
-import { Row } from "@budibase/types"
-
-type Table = {
-    type?: string
-    views?: { [key: string]: any }
-    name: string
-    primary?: string[]
-    schema: { [key: string]: any }
-    primaryDisplay?: string
-    sourceId?: string
-    relatedFormula?: string[]
-    constrained?: string[]
-    _id?: string
-    _rev?: string
-    createdAt?: string
-    updatedAt?: string
-    indexes?: { [key: string]: any }
-    dataImport?: { [key: string]: any }
-
-}
+import { Table } from "@budibase/types"
 
 export const generateTable = (): Table => {
     return {
@@ -52,9 +33,3 @@ export const generateNewColumnForTable = (tableData: any): Table => {
     return newColumn
 }
 
-export const generateNewRowForTable = (tableId: string): Row => {
-    return {
-        TestColumn: "TestRow",
-        tableId: tableId
-    }
-}

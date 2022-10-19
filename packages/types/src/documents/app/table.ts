@@ -49,4 +49,10 @@ export interface Table extends Document {
   sourceId?: string
   relatedFormula?: string[]
   constrained?: string[]
+  _id?: string
+  _rev?: string
+  createdAt?: string
+  updatedAt?: string
+  indexes?: { [key: string]: any }
+  dataImport?: { [key: string]: any }
 }
