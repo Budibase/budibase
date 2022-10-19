@@ -446,12 +446,7 @@ export const getFrontendStore = () => {
           _id: Helpers.uuid(),
           _component: definition.component,
           _styles: {
-            normal: {
-              "grid-column-start": 1,
-              "grid-column-end": 2,
-              "grid-row-start": 1,
-              "grid-row-end": 2,
-            },
+            normal: {},
             hover: {},
             active: {},
           },
