@@ -11,19 +11,21 @@ export enum AppBackupEventType {
   IMPORT = "import",
 }
 
-export interface AppBackup extends Document {
-  trigger: AppBackupTrigger
-  name: string
-  createdAt: string
-  createdBy?: string
-  filename: string
+export interface AppBackupMetadata {
   appId: string
-  userId?: string
-  contents?: {
+  trigger: AppBackupTrigger
+  name?: string
+  createdBy?: string
+  timestamp: string
+  contents: {
     datasources: string[]
     screens: string[]
     automations: string[]
   }
+}
+
+export interface AppBackup extends Document, AppBackupMetadata {
+  filename: string
 }
 
 export type AppBackupFetchOpts = {
@@ -46,12 +48,4 @@ export interface AppBackupQueueData {
   import?: {
     backupId: string
   }
-}
-
-export interface AppBackupMetadata {
-  appId: string
-  trigger: AppBackupTrigger
-  name?: string
-  createdBy?: string
-  createdAt: string
 }
