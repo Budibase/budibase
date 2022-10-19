@@ -32,4 +32,3 @@ export const generateNewColumnForTable = (tableData: any): Table => {
     newColumn.updatedAt = new Date().toISOString()
     return newColumn
 }
-
