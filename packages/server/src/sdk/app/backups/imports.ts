@@ -6,6 +6,7 @@ import {
   uploadDirectory,
   upload,
 } from "../../../utilities/fileSystem/utilities"
+import { downloadTemplate } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets, FieldTypes } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
@@ -89,7 +90,7 @@ async function getTemplateStream(template: TemplateType) {
     return fs.createReadStream(template.file.path)
   } else if (template.key) {
     const [type, name] = template.key.split("/")
-    const tmpPath = await exports.downloadTemplate(type, name)
+    const tmpPath = await downloadTemplate(type, name)
     return fs.createReadStream(join(tmpPath, name, "db", "dump.txt"))
   }
 }
