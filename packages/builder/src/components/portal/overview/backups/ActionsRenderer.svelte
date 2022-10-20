@@ -1,5 +1,12 @@
 <script>
-  import { ActionButton, ActionMenu, MenuItem, Icon } from "@budibase/bbui"
+  import {
+    ActionButton,
+    ActionMenu,
+    MenuItem,
+    Icon,
+    Heading,
+    Body,
+  } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { createEventDispatcher } from "svelte"
 
@@ -7,13 +14,16 @@
 
   let deleteDialog
   let restoreDialog
-  let editDialog
+
+  let restoreBackupName
+
   const dispatch = createEventDispatcher()
 
   const onClickRestore = () => {
     dispatch("buttonclick", {
       type: "backupRestore",
       backupId: row._id,
+      restoreBackupName,
     })
   }
 
@@ -33,7 +43,8 @@
     </div>
 
     <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
-    <MenuItem on:click={editDialog.show} icon="Edit">Edit</MenuItem>
+    <MenuItem icon="Edit">Edit</MenuItem>
+    <MenuItem icon="Edit">Download</MenuItem>
   </ActionMenu>
 </div>
 
@@ -55,8 +66,8 @@
   title="Confirm Restore"
   warning={false}
 >
-  Are you sure you wish to restore this backup
-  <i>{row.name}</i>. This action cannot be undone.
+  <Heading size="S">{row.name}</Heading>
+  <Body size="S">{new Date(row.timestamp).toLocaleString()}</Body>
 </ConfirmDialog>
 
 <style>
