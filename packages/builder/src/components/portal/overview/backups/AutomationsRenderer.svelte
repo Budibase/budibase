@@ -6,7 +6,7 @@
 
 <div class="cell">
   <Icon name="JourneyVoyager" />
-  <div>{value?.length}</div>
+  <div>{value || 0}</div>
 </div>
 
 <style>
