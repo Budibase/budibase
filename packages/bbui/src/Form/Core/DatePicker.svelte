@@ -62,11 +62,9 @@
     const [dates] = event.detail
     const noTimezone = enableTime && !timeOnly && ignoreTimezones
     let newValue = dates[0]
-
     if (newValue) {
       newValue = newValue.toISOString()
     }
-
     // If time only set date component to 2000-01-01
     else if (timeOnly) {
       // Classic flackpickr causing issues.
@@ -95,10 +93,13 @@
       newValue = new Date(dates[0].getTime() - offset)
         .toISOString()
         .slice(0, -1)
-    } else if (range) {
-      console.log("hello")
     }
-    dispatch("change", newValue)
+
+    if (range) {
+      dispatch("change", event.detail)
+    } else {
+      dispatch("change", newValue)
+    }
   }
 
   const clearDateOnBackspace = event => {
@@ -163,7 +164,7 @@
 {#key redrawOptions}
   <Flatpickr
     bind:flatpickr
-    value={parseDate(value)}
+    value={range ? value : parseDate(value)}
     on:open={onOpen}
     on:close={onClose}
     options={flatpickrOptions}

@@ -2,7 +2,7 @@
   import { Icon } from "@budibase/bbui"
 
   export let value
-  $: console.log(value)
+
   let trigger = value?.charAt(0).toUpperCase() + value?.slice(1)
 </script>
 
