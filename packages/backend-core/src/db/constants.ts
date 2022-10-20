@@ -31,6 +31,10 @@ export const DeprecatedViews = {
   ],
 }
 
+export enum InternalTable {
+  USER_METADATA = "ta_users",
+}
+
 export enum DocumentType {
   USER = "us",
   GROUP = "gr",
@@ -47,10 +51,23 @@ export enum DocumentType {
   AUTOMATION_LOG = "log_au",
   ACCOUNT_METADATA = "acc_metadata",
   PLUGIN = "plg",
-  TABLE = "ta",
   DATASOURCE = "datasource",
   DATASOURCE_PLUS = "datasource_plus",
   APP_BACKUP = "backup",
+  TABLE = "ta",
+  ROW = "ro",
+  AUTOMATION = "au",
+  LINK = "li",
+  WEBHOOK = "wh",
+  INSTANCE = "inst",
+  LAYOUT = "layout",
+  SCREEN = "screen",
+  QUERY = "query",
+  DEPLOYMENTS = "deployments",
+  METADATA = "metadata",
+  MEM_VIEW = "view",
+  USER_FLAG = "flag",
+  AUTOMATION_METADATA = "meta_au",
 }
 
 export const StaticDatabases = {

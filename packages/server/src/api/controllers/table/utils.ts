@@ -1,11 +1,5 @@
 import { transform } from "../../../utilities/csvParser"
-import {
-  getRowParams,
-  generateRowID,
-  InternalTables,
-  getTableParams,
-  BudibaseInternalDB,
-} from "../../../db/utils"
+import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
 import { isEqual } from "lodash"
 import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
 import {
@@ -17,11 +11,6 @@ import {
   SwitchableTypes,
   CanSwitchTypes,
 } from "../../../constants"
-import {
-  isExternalTable,
-  breakExternalTableId,
-  isSQL,
-} from "../../../integrations/utils"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 const { getAppDB } = require("@budibase/backend-core/context")
