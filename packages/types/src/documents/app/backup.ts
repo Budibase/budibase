@@ -59,6 +59,7 @@ export interface AppBackupQueueData {
   }
   import?: {
     backupId: string
+    nameForBackup: string
     createdBy?: string
   }
 }

@@ -40,9 +40,10 @@ export const buildBackupsEndpoints = API => ({
     })
   },
 
-  restoreBackup: async ({ appId, backupId }) => {
+  restoreBackup: async ({ appId, backupId, name }) => {
     return await API.post({
       url: `/api/apps/${appId}/backups/${backupId}/import`,
+      body: { name },
     })
   },
 
