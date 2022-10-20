@@ -1,6 +1,6 @@
 import { backups } from "@budibase/pro"
-import { objectStore, tenancy, db as dbCore } from "@budibase/backend-core"
-import { AppBackupQueueData } from "@budibase/types"
+import { db as dbCore, objectStore, tenancy } from "@budibase/backend-core"
+import { AppBackupQueueData, AppBackupStatus } from "@budibase/types"
 import { exportApp } from "./exports"
 import { importApp } from "./imports"
 import { calculateBackupStats } from "../statistics"
@@ -42,6 +42,11 @@ async function importProcessor(job: Job) {
       await removeExistingApp(devAppId)
       await performImport(backupTarPath)
     }
+    await backups.updateRestoreStatus(
+      data.docId,
+      data.docRev,
+      AppBackupStatus.COMPLETE
+    )
     fs.rmSync(backupTarPath)
   })
 }
@@ -64,13 +69,6 @@ async function exportProcessor(job: Job) {
       filename = `${tenantId}/${filename}`
     }
     const bucket = objectStore.ObjectStoreBuckets.BACKUPS
-    const metadata = {
-      appId: prodAppId,
-      timestamp,
-      trigger,
-      name,
-      contents,
-    }
     await objectStore.upload({
       path: tarPath,
       type: "application/gzip",
@@ -83,7 +81,13 @@ async function exportProcessor(job: Job) {
         appId: prodAppId,
       },
     })
-    await backups.storeAppBackupMetadata(filename, metadata)
+    await backups.updateBackupStatus(
+      data.docId,
+      data.docRev,
+      AppBackupStatus.COMPLETE,
+      contents,
+      filename
+    )
     // clear up the tarball after uploading it
     fs.rmSync(tarPath)
   })
