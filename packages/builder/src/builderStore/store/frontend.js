@@ -236,12 +236,12 @@ export const getFrontendStore = () => {
           }
         }
 
-        // Validate the entire tree and throw and error if an illegal child is
+        // Validate the entire tree and throw an error if an illegal child is
         // found anywhere
         const illegalChild = findIllegalChild(screen.props)
         if (illegalChild) {
           const def = store.actions.components.getDefinition(illegalChild)
-          throw `A ${def.name} can't be inserted here`
+          throw `You can't place a ${def.name} here`
         }
       },
       save: async screen => {
