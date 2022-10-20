@@ -3,10 +3,12 @@ import AuthApi from "./auth"
 import InternalAPIClient from "./InternalAPIClient"
 import TablesApi from "./tables"
 import RowApi from "./rows"
+import ScreenApi from "./screens"
 
 export default class TestConfiguration<T> {
   applications: ApplicationApi
   auth: AuthApi
+  screen: ScreenApi
   context: T
   tables: TablesApi
   rows: RowApi
@@ -16,6 +18,7 @@ export default class TestConfiguration<T> {
     this.tables = new TablesApi(apiClient)
     this.rows = new RowApi(apiClient)
     this.auth = new AuthApi(apiClient)
+    this.screen = new ScreenApi(apiClient)
     this.context = <T>{}
   }
 
