@@ -41,7 +41,7 @@
     time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
-    mode: "range" || null,
+    mode: range ? "range" : null,
     appendTo,
     disableMobile: "true",
     onReady: () => {
@@ -62,12 +62,13 @@
     const [dates] = event.detail
     const noTimezone = enableTime && !timeOnly && ignoreTimezones
     let newValue = dates[0]
+
     if (newValue) {
       newValue = newValue.toISOString()
     }
 
     // If time only set date component to 2000-01-01
-    if (timeOnly) {
+    else if (timeOnly) {
       // Classic flackpickr causing issues.
       // When selecting a value for the first time for a "time only" field,
       // the time is always offset by 1 hour for some reason (regardless of time
@@ -94,8 +95,9 @@
       newValue = new Date(dates[0].getTime() - offset)
         .toISOString()
         .slice(0, -1)
+    } else if (range) {
+      console.log("hello")
     }
-
     dispatch("change", newValue)
   }
 

@@ -122,19 +122,25 @@
     }
   }
 
-  async function deleteBackup(backupId) {
-    await backups.deleteBackup({ appId: app.instance._id, backupId })
-    await fetchBackups(app.instance._id, trigger, page)
-  }
-  async function restoreBackup(backupId) {
-    backups.restoreBackup({ appId: app.instance._id, backupId })
-  }
-
-  function handleButtonClick({ detail }) {
+  async function handleButtonClick({ detail }) {
     if (detail.type === "backupDelete") {
-      deleteBackup(detail.backupId)
+      await backups.deleteBackup({
+        appId: app.instance._id,
+        backupId: detail.backupId,
+      })
+      await fetchBackups(app.instance._id, trigger, page)
     } else if (detail.type === "backupRestore") {
-      restoreBackup(detail.backupId)
+      await backups.restoreBackup({
+        appId: app.instance._id,
+        backupId: detail.backupId,
+      })
+    } else if (detail.type === "backupUpdate") {
+      await backups.updateBackup({
+        appId: app.instance._id,
+        backupId: detail.backupId,
+        name: detail.name,
+      })
+      await fetchBackups(app.instance._id, trigger, page)
     }
   }
 </script>
@@ -151,7 +157,11 @@
         />
       </div>
       <div>
-        <DatePicker range label="Filter range" />
+        <DatePicker
+          range
+          label={"Filter Range"}
+          on:change={e => console.log(e)}
+        />
       </div>
 
       <div class="split-buttons">

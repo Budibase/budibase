@@ -2,7 +2,7 @@ export const buildBackupsEndpoints = API => ({
   /**
    * Gets a list of users in the current tenant.
    */
-  searchBackups: async ({ appId, trigger, page }) => {
+  searchBackups: async ({ appId, trigger, page, startDate, endDate }) => {
     const opts = {}
     if (page) {
       opts.page = page
@@ -10,6 +10,12 @@ export const buildBackupsEndpoints = API => ({
     if (trigger) {
       opts.trigger = trigger.toLowerCase()
     }
+
+    if (startDate) {
+      opts.startDate = startDate
+      opts.endDate = endDate
+    }
+    console.log(opts)
     return await API.post({
       url: `/api/apps/${appId}/backups/search`,
       body: opts,
@@ -29,15 +35,22 @@ export const buildBackupsEndpoints = API => ({
     })
   },
 
-  updateBackup: async ({ appId, backupId }) => {
+  updateBackup: async ({ appId, backupId, name }) => {
     return await API.patch({
       url: `/api/apps/${appId}/backups/${backupId}`,
+      body: { name },
     })
   },
 
   restoreBackup: async ({ appId, backupId }) => {
     return await API.post({
       url: `/api/apps/${appId}/backups/${backupId}/import`,
+    })
+  },
+
+  downloadBackup: async ({ appId, backupId }) => {
+    return await API.get({
+      url: `/api/apps/${appId}/backups/${backupId}/file`,
     })
   },
 })

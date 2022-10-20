@@ -4,17 +4,21 @@
     ActionMenu,
     MenuItem,
     Icon,
+    Input,
     Heading,
     Body,
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { createEventDispatcher } from "svelte"
+  import download from "downloadjs"
+  import { backups } from "stores/portal"
 
   export let row
 
   let deleteDialog
   let restoreDialog
-
+  let updateDialog
+  let name
   let restoreBackupName
 
   const dispatch = createEventDispatcher()
@@ -33,6 +37,21 @@
       backupId: row._id,
     })
   }
+
+  const onClickUpdate = () => {
+    dispatch("buttonclick", {
+      type: "backupUpdate",
+      backupId: row._id,
+      name,
+    })
+  }
+  async function downloadExport() {
+    let resp = await backups.downloadBackup({
+      backupId: row._id,
+      appId: row.appId,
+    })
+    download(resp, row.filename)
+  }
 </script>
 
 <div class="cell">
@@ -43,8 +62,8 @@
     </div>
 
     <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
-    <MenuItem icon="Edit">Edit</MenuItem>
-    <MenuItem icon="Edit">Download</MenuItem>
+    <MenuItem on:click={updateDialog.show} icon="Edit">Update</MenuItem>
+    <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
   </ActionMenu>
 </div>
 
@@ -68,6 +87,18 @@
 >
   <Heading size="S">{row.name}</Heading>
   <Body size="S">{new Date(row.timestamp).toLocaleString()}</Body>
+</ConfirmDialog>
+
+<ConfirmDialog
+  bind:this={updateDialog}
+  disabled={!name}
+  okText="Confirm"
+  onOk={onClickUpdate}
+  title="Update Backup"
+  warning={false}
+>
+  <Input onlabel="Backup name" placeholder={row.name} bind:value={name} />
+  <ConfirmDialog />
 </ConfirmDialog>
 
 <style>

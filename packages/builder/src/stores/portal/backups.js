@@ -27,12 +27,22 @@ export function createBackupsStore() {
     return API.createManualBackup(appId, name)
   }
 
+  async function downloadBackup({ appId, backupId }) {
+    return API.downloadBackup({ appId, backupId })
+  }
+
+  async function updateBackup({ appId, backupId, name }) {
+    return API.updateBackup({ appId, backupId, name })
+  }
+
   return {
     createManualBackup,
     searchBackups,
     selectBackup,
     deleteBackup,
     restoreBackup,
+    downloadBackup,
+    updateBackup,
     subscribe: store.subscribe,
   }
 }
