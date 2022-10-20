@@ -16,6 +16,7 @@ export enum AppBackupTrigger {
   PUBLISH = "publish",
   MANUAL = "manual",
   SCHEDULED = "scheduled",
+  RESTORING = "restoring",
 }
 
 export interface AppBackupContents {
@@ -59,6 +60,7 @@ export interface AppBackupQueueData {
   }
   import?: {
     backupId: string
+    nameForBackup: string
     createdBy?: string
   }
 }
