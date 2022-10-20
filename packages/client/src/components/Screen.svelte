@@ -10,9 +10,6 @@
 
   const context = getContext("context")
 
-  // Keep route params up to date
-  $: routeStore.actions.setRouteParams(params || {})
-
   // Get the screen definition for the current route
   $: screenDefinition = $screenStore.activeScreen?.props
 
