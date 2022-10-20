@@ -5,8 +5,10 @@
 </script>
 
 <div class="cell">
-  <Icon name="Data" />
-  <div>{value || 0}</div>
+  {#if value != null}
+    <Icon name="Data" />
+    <div>{value || 0}</div>
+  {/if}
 </div>
 
 <style>

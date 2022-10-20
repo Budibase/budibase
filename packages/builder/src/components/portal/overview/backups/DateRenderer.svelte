@@ -1,10 +1,15 @@
 <script>
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
+  import dayjs from "dayjs"
+  import relativeTime from "dayjs/plugin/relativeTime"
+  dayjs.extend(relativeTime)
+
   export let value
+  $: timeSince = dayjs(value).fromNow()
 </script>
 
 <div class="cell">
-  <DateTimeRenderer {value} />
+  {timeSince} - <DateTimeRenderer {value} />
 </div>
 
 <style>

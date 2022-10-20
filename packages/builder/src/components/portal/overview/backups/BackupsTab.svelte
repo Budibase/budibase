@@ -12,14 +12,13 @@
   import { backups } from "stores/portal"
   import { createPaginationStore } from "helpers/pagination"
 
-  import DatasourceRenderer from "./DatasourceRenderer.svelte"
-  import ScreensRenderer from "./ScreensRenderer.svelte"
-  import AutomationsRenderer from "./AutomationsRenderer.svelte"
+  import AppSizeRenderer from "./AppSizeRenderer.svelte"
   import CreateBackupModal from "./CreateBackupModal.svelte"
-  import TriggerRenderer from "./TriggerRenderer.svelte"
   import ActionsRenderer from "./ActionsRenderer.svelte"
   import DateRenderer from "./DateRenderer.svelte"
-  import DaysRenderer from "./DaysRenderer.svelte"
+  import UserRenderer from "./UserRenderer.svelte"
+  import StatusRenderer from "./StatusRenderer.svelte"
+  import TypeRenderer from "./TypeRenderer.svelte"
 
   export let app
 
@@ -38,30 +37,23 @@
   }
 
   const schema = {
-    trigger: {
-      displayName: "Trigger",
-    },
-    days: {
-      displayName: null,
-    },
-
-    name: {
-      displayName: "Name",
+    type: {
+      displayName: "Type",
     },
     createdAt: {
       displayName: "Date",
     },
-    datasources: {
-      displayName: "Data",
+    name: {
+      displayName: "Name",
     },
-    screens: {
-      displayName: "Screens",
+    appSize: {
+      displayName: "App size",
     },
-    automations: {
-      displayName: "Automations",
-    },
-    userId: {
+    createdBy: {
       displayName: "User",
+    },
+    status: {
+      displayName: "Status",
     },
     actions: {
       displayName: null,
@@ -69,33 +61,21 @@
   }
 
   const customRenderers = [
-    { column: "datasources", component: DatasourceRenderer },
-    { column: "screens", component: ScreensRenderer },
-    { column: "automations", component: AutomationsRenderer },
-    { column: "trigger", component: TriggerRenderer },
+    { column: "appSize", component: AppSizeRenderer },
     { column: "actions", component: ActionsRenderer },
     { column: "createdAt", component: DateRenderer },
-    { column: "days", component: DaysRenderer },
+    { column: "createdBy", component: UserRenderer },
+    { column: "status", component: StatusRenderer },
+    { column: "type", component: TypeRenderer },
   ]
 
   function flattenBackups(backups) {
     return backups.map(backup => {
       return {
         ...backup,
-        days: getDaysBetween(backup.timestamp),
         ...backup?.contents,
       }
     })
-  }
-
-  function getDaysBetween(date) {
-    const now = new Date()
-    const backupDate = new Date(date)
-    backupDate.setDate(backupDate.getDate() - 1)
-    const oneDay = 24 * 60 * 60 * 1000
-    return now > backupDate
-      ? Math.round(Math.abs((now - backupDate) / oneDay))
-      : 0
   }
 
   async function fetchBackups(trigger, page) {
@@ -123,6 +103,7 @@
   }
 
   async function handleButtonClick({ detail }) {
+    console.log(detail.type)
     if (detail.type === "backupDelete") {
       await backups.deleteBackup({
         appId: app.instance._id,

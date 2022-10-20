@@ -1,12 +1,14 @@
 <script>
-  import { Icon } from "@budibase/bbui"
-
   export let value
+  $: username = value?.firstName
+    ? `${value?.firstName} ${value?.lastName}`
+    : value?.email
 </script>
 
 <div class="cell">
-  <Icon name="JourneyVoyager" />
-  <div>{value || 0}</div>
+  {#if value != null}
+    <div>{username}</div>
+  {/if}
 </div>
 
 <style>

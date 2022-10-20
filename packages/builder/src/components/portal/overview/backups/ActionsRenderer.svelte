@@ -1,6 +1,5 @@
 <script>
   import {
-    ActionButton,
     ActionMenu,
     MenuItem,
     Icon,
@@ -55,15 +54,17 @@
 </script>
 
 <div class="cell">
-  <ActionButton on:click={restoreDialog.show}>Restore</ActionButton>
-  <ActionMenu>
+  <ActionMenu align="right">
     <div slot="control">
       <Icon size="M" hoverable name="MoreSmallList" />
     </div>
 
-    <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
+    {#if row.type !== "restore"}
+      <MenuItem on:click={restoreDialog.show} icon="Revert">Restore</MenuItem>
+      <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
+      <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
+    {/if}
     <MenuItem on:click={updateDialog.show} icon="Edit">Update</MenuItem>
-    <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
   </ActionMenu>
 </div>
 
