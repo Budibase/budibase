@@ -222,8 +222,7 @@
         console.warn(`Client sent unknown event type: ${type}`)
       }
     } catch (error) {
-      console.warn(error)
-      notifications.error("Error handling event from app preview")
+      notifications.error(error || "Error handling event from app preview")
     }
   }
 

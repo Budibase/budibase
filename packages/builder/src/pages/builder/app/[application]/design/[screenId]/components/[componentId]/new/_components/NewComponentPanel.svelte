@@ -138,7 +138,7 @@
       await store.actions.components.create(component)
       $goto("../")
     } catch (error) {
-      notifications.error("Error creating component")
+      notifications.error(error || "Error creating component")
     }
   }
 

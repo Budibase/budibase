@@ -477,10 +477,10 @@
       let columns = 6
       let rows = 4
       if (definition.size?.width) {
-        columns = Math.round(definition.size.width / 100)
+        columns = Math.min(12, Math.round(definition.size.width / 100))
       }
       if (definition.size?.height) {
-        rows = Math.round(definition.size.height / 100)
+        rows = Math.min(12, Math.round(definition.size.height / 50))
       }
 
       // Ensure grid position styles are set
