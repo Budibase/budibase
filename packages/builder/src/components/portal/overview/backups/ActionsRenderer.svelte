@@ -6,8 +6,10 @@
     Input,
     Heading,
     Body,
+    Modal,
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import CreateRestoreModal from "./CreateRestoreModal.svelte"
   import { createEventDispatcher } from "svelte"
   import download from "downloadjs"
   import { backups } from "stores/portal"
@@ -19,12 +21,14 @@
   let updateDialog
   let name
   let restoreBackupName
+  let restoreBackupModal
 
   const dispatch = createEventDispatcher()
 
-  const onClickRestore = () => {
+  const onClickRestore = name => {
     dispatch("buttonclick", {
       type: "backupRestore",
+      name,
       backupId: row._id,
       restoreBackupName,
     })
@@ -68,6 +72,10 @@
   </ActionMenu>
 </div>
 
+<Modal bind:this={restoreBackupModal}>
+  <CreateRestoreModal confirm={name => onClickRestore(name)} />
+</Modal>
+
 <ConfirmDialog
   bind:this={deleteDialog}
   okText="Delete Backup"
@@ -81,8 +89,8 @@
 
 <ConfirmDialog
   bind:this={restoreDialog}
-  okText="Restore Backup"
-  onOk={onClickRestore}
+  okText="Continue"
+  onOk={restoreBackupModal?.show}
   title="Confirm Restore"
   warning={false}
 >
