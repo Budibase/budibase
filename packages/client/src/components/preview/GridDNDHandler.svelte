@@ -1,14 +1,18 @@
 <script>
   import { onMount, onDestroy } from "svelte"
-  import { builderStore, componentStore, screenStore } from "stores"
+  import { builderStore, componentStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
-  import { findComponentById } from "utils/components.js"
 
   let dragInfo
   let gridStyles
 
-  $: dragNode = getDOMNode(dragInfo?.id)
-  $: applyStyles(dragNode, gridStyles)
+  $: jsonStyles = JSON.stringify(gridStyles)
+  $: id = dragInfo?.id
+  $: instance = componentStore.actions.getComponentInstance(id)
+
+  // We don't clear grid styles because that causes flashing, as the component
+  // will revert to its original position until the save completes.
+  $: gridStyles && instance?.setEphemeralStyles(gridStyles)
 
   const isChildOfGrid = e => {
     return (
@@ -24,15 +28,6 @@
   const getDOMNode = id => {
     const component = document.getElementsByClassName(id)[0]
     return [...component.children][0]
-  }
-
-  const applyStyles = (dragNode, gridStyles) => {
-    if (!dragNode || !gridStyles) {
-      return
-    }
-    Object.entries(gridStyles).forEach(([style, value]) => {
-      dragNode.style[style] = value
-    })
   }
 
   const processEvent = Utils.throttle((mouseX, mouseY) => {
@@ -68,11 +63,14 @@
     if (mode === "move") {
       deltaY = Math.min(Math.max(deltaY, rowDeltaMin), rowDeltaMax)
       deltaX = Math.min(Math.max(deltaX, colDeltaMin), colDeltaMax)
-      gridStyles = {
+      const newStyles = {
         "grid-row-start": rowStart + deltaY,
         "grid-row-end": rowEnd + deltaY,
         "grid-column-start": colStart + deltaX,
         "grid-column-end": colEnd + deltaX,
+      }
+      if (JSON.stringify(newStyles) !== jsonStyles) {
+        gridStyles = newStyles
       }
     } else if (mode === "resize") {
       let newStyles = {}
@@ -97,7 +95,9 @@
         newStyles["grid-column-start"] = Math.min(colStart + deltaX, colEnd - 1)
         newStyles["grid-row-start"] = Math.min(rowStart + deltaY, rowEnd - 1)
       }
-      gridStyles = newStyles
+      if (JSON.stringify(newStyles) !== jsonStyles) {
+        gridStyles = newStyles
+      }
     }
   }, 100)
 

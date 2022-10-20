@@ -91,6 +91,10 @@
   let settingsDefinitionMap
   let missingRequiredSettings = false
 
+  // Temporary styles which can be added in the app preview for things like DND.
+  // We clear these whenever a new instance is received.
+  let ephemeralStyles
+
   // Set up initial state for each new component instance
   $: initialise(instance)
 
@@ -181,6 +185,7 @@
     normal: {
       ...instance._styles?.normal,
       ...additionalStyles,
+      ...ephemeralStyles,
     },
     custom: customCSS,
     id,
@@ -214,6 +219,7 @@
       return
     } else {
       lastInstanceKey = instanceKey
+      ephemeralStyles = null
     }
 
     // Pull definition and constructor
@@ -515,6 +521,7 @@
         getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
         getDataContext: () => get(context),
         reload: () => initialise(instance, true),
+        setEphemeralStyles: styles => (ephemeralStyles = styles),
       })
     }
   })
