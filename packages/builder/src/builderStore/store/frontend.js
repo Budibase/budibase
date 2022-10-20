@@ -182,7 +182,70 @@ export const getFrontendStore = () => {
           return state
         })
       },
+      validate: screen => {
+        // Recursive function to find any illegal children in component trees
+        const findIllegalChild = (
+          component,
+          illegalChildren = [],
+          legalDirectChildren = []
+        ) => {
+          const type = component._component
+          if (illegalChildren.includes(type)) {
+            return type
+          }
+          if (
+            legalDirectChildren.length &&
+            !legalDirectChildren.includes(type)
+          ) {
+            return type
+          }
+          if (!component?._children?.length) {
+            return
+          }
+
+          const definition = store.actions.components.getDefinition(
+            component._component
+          )
+
+          // Reset whitelist for direct children
+          legalDirectChildren = []
+          if (definition?.legalDirectChildren?.length) {
+            legalDirectChildren = definition.legalDirectChildren.map(x => {
+              return `@budibase/standard-components/${x}`
+            })
+          }
+
+          // Append blacklisted components and remove duplicates
+          if (definition?.illegalChildren?.length) {
+            const blacklist = definition.illegalChildren.map(x => {
+              return `@budibase/standard-components/${x}`
+            })
+            illegalChildren = [...new Set([...illegalChildren, ...blacklist])]
+          }
+
+          // Recurse on all children
+          for (let child of component._children) {
+            const illegalChild = findIllegalChild(
+              child,
+              illegalChildren,
+              legalDirectChildren
+            )
+            if (illegalChild) {
+              return illegalChild
+            }
+          }
+        }
+
+        // Validate the entire tree and throw and error if an illegal child is
+        // found anywhere
+        const illegalChild = findIllegalChild(screen.props)
+        if (illegalChild) {
+          const def = store.actions.components.getDefinition(illegalChild)
+          throw `A ${def.name} can't be inserted here`
+        }
+      },
       save: async screen => {
+        store.actions.screens.validate(screen)
         const state = get(store)
         const creatingNewScreen = screen._id === undefined
         const savedScreen = await API.saveScreen(screen)
@@ -624,16 +687,24 @@ export const getFrontendStore = () => {
         }
         let newComponentId
 
+        // Remove copied component if cutting, regardless if pasting works
+        let componentToPaste = cloneDeep(state.componentToPaste)
+        if (componentToPaste.isCut) {
+          store.update(state => {
+            delete state.componentToPaste
+            return state
+          })
+        }
+
         // Patch screen
         const patch = screen => {
           // Get up to date ref to target
           targetComponent = findComponent(screen.props, targetComponent._id)
           if (!targetComponent) {
-            return
+            return false
           }
-          const cut = state.componentToPaste.isCut
-          const originalId = state.componentToPaste._id
-          let componentToPaste = cloneDeep(state.componentToPaste)
+          const cut = componentToPaste.isCut
+          const originalId = componentToPaste._id
           delete componentToPaste.isCut
 
           // Make new component unique if copying
@@ -688,11 +759,8 @@ export const getFrontendStore = () => {
         const targetScreenId = targetScreen?._id || state.selectedScreenId
         await store.actions.screens.patch(patch, targetScreenId)
 
+        // Select the new component
         store.update(state => {
-          // Remove copied component if cutting
-          if (state.componentToPaste.isCut) {
-            delete state.componentToPaste
-          }
           state.selectedScreenId = targetScreenId
           state.selectedComponentId = newComponentId
           return state

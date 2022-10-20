@@ -4573,8 +4573,14 @@
     "styles": [
       "size"
     ],
-    "illegalChildren": ["grid", "section"],
-    "allowedDirectChildren": [""],
+    "illegalChildren": ["section", "grid"],
+    "legalDirectChildren": [
+      "container",
+      "tableblock",
+      "cardsblock",
+      "repeaterblock",
+      "formblock"
+    ],
     "size": {
       "width": 800,
       "height": 400

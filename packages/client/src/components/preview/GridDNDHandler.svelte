@@ -12,7 +12,8 @@
 
   // We don't clear grid styles because that causes flashing, as the component
   // will revert to its original position until the save completes.
-  $: gridStyles && instance?.setEphemeralStyles(gridStyles)
+  $: gridStyles &&
+    instance?.setEphemeralStyles({ ...gridStyles, "z-index": 999 })
 
   const isChildOfGrid = e => {
     return (
