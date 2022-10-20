@@ -1,10 +1,16 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentType, UNICODE_MAX, ViewName } from "./constants"
+import {
+  SEPARATOR,
+  DocumentType,
+  UNICODE_MAX,
+  ViewName,
+  InternalTable,
+} from "./constants"
 import { getTenantId, getGlobalDB } from "../context"
 import { getGlobalDBName } from "./tenancy"
-import { doWithDB, allDbs, directCouchQuery, directCouchAllDbs } from "./index"
+import { doWithDB, allDbs, directCouchAllDbs } from "./index"
 import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
@@ -40,8 +46,8 @@ export const generateAppID = (tenantId = null) => {
  * @returns {object} Parameters which can then be used with an allDocs request.
  */
 export function getDocParams(
-  docType: any,
-  docId: any = null,
+  docType: string,
+  docId?: string | null,
   otherProps: any = {}
 ) {
   if (docId == null) {
@@ -55,10 +61,43 @@ export function getDocParams(
 }
 
 /**
+ * Gets the DB allDocs/query params for retrieving a row.
+ * @param {string|null} tableId The table in which the rows have been stored.
+ * @param {string|null} rowId The ID of the row which is being specifically queried for. This can be
+ * left null to get all the rows in the table.
+ * @param {object} otherProps Any other properties to add to the request.
+ * @returns {object} Parameters which can then be used with an allDocs request.
+ */
+export function getRowParams(
+  tableId?: string | null,
+  rowId?: string | null,
+  otherProps = {}
+) {
+  if (tableId == null) {
+    return getDocParams(DocumentType.ROW, null, otherProps)
+  }
+
+  const endOfKey = rowId == null ? `${tableId}${SEPARATOR}` : rowId
+
+  return getDocParams(DocumentType.ROW, endOfKey, otherProps)
+}
+
+/**
  * Retrieve the correct index for a view based on default design DB.
  */
 export function getQueryIndex(viewName: ViewName) {
   return `database/${viewName}`
+}
+
+/**
+ * Gets a new row ID for the specified table.
+ * @param {string} tableId The table which the row is being created for.
+ * @param {string|null} id If an ID is to be used then the UUID can be substituted for this.
+ * @returns {string} The new ID which a row doc can be stored under.
+ */
+export function generateRowID(tableId: string, id?: string) {
+  id = id || newid()
+  return `${DocumentType.ROW}${SEPARATOR}${tableId}${SEPARATOR}${id}`
 }
 
 /**
@@ -126,6 +165,33 @@ export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
       : `${DocumentType.USER}${SEPARATOR}${globalId}`,
     endkey: `${DocumentType.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
   }
+}
+
+/**
+ * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
+ */
+export function getUserMetadataParams(userId?: string, otherProps = {}) {
+  return getRowParams(InternalTable.USER_METADATA, userId, otherProps)
+}
+
+/**
+ * Generates a new user ID based on the passed in global ID.
+ * @param {string} globalId The ID of the global user.
+ * @returns {string} The new user ID which the user doc can be stored under.
+ */
+export function generateUserMetadataID(globalId: string) {
+  return generateRowID(InternalTable.USER_METADATA, globalId)
+}
+
+/**
+ * Breaks up the ID to get the global ID.
+ */
+export function getGlobalIDFromUserMetadataID(id: string) {
+  const prefix = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
+  if (!id || !id.includes(prefix)) {
+    return id
+  }
+  return id.split(prefix)[1]
 }
 
 export function getUsersByAppParams(appId: any, otherProps: any = {}) {
