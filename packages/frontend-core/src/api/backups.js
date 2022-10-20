@@ -10,7 +10,7 @@ export const buildBackupsEndpoints = API => ({
     if (trigger) {
       opts.trigger = trigger.toLowerCase()
     }
-    if (startDate) {
+    if (startDate && endDate) {
       opts.startDate = startDate
       opts.endDate = endDate
     }

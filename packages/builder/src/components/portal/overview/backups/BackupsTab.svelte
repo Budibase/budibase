@@ -26,9 +26,11 @@
   let modal
   let trigger = null
   let pageInfo = createPaginationStore()
-  $: page = $pageInfo.page
+  let startDate
+  let endDate
 
-  $: fetchBackups(trigger, page)
+  $: page = $pageInfo.page
+  $: fetchBackups(trigger, page, startDate, endDate)
 
   const triggers = {
     PUBLISH: "publish",
@@ -78,11 +80,13 @@
     })
   }
 
-  async function fetchBackups(trigger, page) {
+  async function fetchBackups(trigger, page, startDate, endDate) {
     const response = await backups.searchBackups({
       appId: app.instance._id,
       trigger,
       page,
+      startDate,
+      endDate,
     })
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
@@ -139,9 +143,14 @@
       </div>
       <div>
         <DatePicker
-          range
+          range={true}
           label={"Filter Range"}
-          on:change={e => console.log(e)}
+          on:change={e => {
+            if (e.detail[0].length > 1) {
+              startDate = e.detail[0][0].toISOString()
+              endDate = e.detail[0][1].toISOString()
+            }
+          }}
         />
       </div>
 
