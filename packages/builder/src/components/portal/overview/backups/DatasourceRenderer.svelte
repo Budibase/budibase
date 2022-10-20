@@ -6,7 +6,7 @@
 
 <div class="cell">
   <Icon name="Data" />
-  <div>{value}</div>
+  <div>{value || 0}</div>
 </div>
 
 <style>

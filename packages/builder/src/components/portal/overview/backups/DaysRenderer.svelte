@@ -1,6 +1,5 @@
 <script>
   export let value
-  $: console.log(value)
 </script>
 
 <div class="cell">
