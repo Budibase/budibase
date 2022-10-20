@@ -80,9 +80,21 @@
 
   function flattenBackups(backups) {
     let flattened = backups.map(backup => {
+      if (!backup.name) {
+        if (backup.trigger === "publish") {
+          backup.name = "Published Backup"
+        } else if (backup.trigger === "scheduled") {
+          backup.name = "Scheduled Backup"
+        }
+      }
+
+      if (backup.type === "restore") {
+        backup.trigger = "restore"
+        backup.name = "Restored"
+      }
       return {
         ...backup,
-        days: getDaysBetween(backup.createdAt),
+        days: getDaysBetween(backup.timestamp),
         ...backup?.contents,
       }
     })
@@ -123,19 +135,15 @@
     }
   }
 
-  function selectBackup({ detail }) {
-    console.log(detail)
-  }
   async function deleteBackup(backupId) {
     await backups.deleteBackup({ appId: app.instance._id, backupId })
     await fetchBackups(app.instance._id, trigger, page)
   }
   async function restoreBackup(backupId) {
-    console.log(backupId)
-    //backups.restoreBackup(app.instance._id, backupId)
+    backups.restoreBackup({ appId: app.instance._id, backupId })
   }
 
-  async function handleButtonClick({ detail }) {
+  function handleButtonClick({ detail }) {
     if (detail.type === "backupDelete") {
       deleteBackup(detail.backupId)
     } else if (detail.type === "backupRestore") {
@@ -152,6 +160,7 @@
           placeholder="All"
           label="Trigger"
           options={Object.values(triggers)}
+          bind:value={trigger}
         />
       </div>
       <div>
@@ -167,7 +176,6 @@
     {#if backupData}
       <div>
         <Table
-          on:click={selectBackup}
           {schema}
           allowSelectRows={false}
           allowEditColumns={false}

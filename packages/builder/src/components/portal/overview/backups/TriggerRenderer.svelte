@@ -2,8 +2,8 @@
   import { Icon } from "@budibase/bbui"
 
   export let value
-
-  let trigger = value.charAt(0).toUpperCase() + value.slice(1)
+  $: console.log(value)
+  let trigger = value?.charAt(0).toUpperCase() + value?.slice(1)
 </script>
 
 <div class="cell">
@@ -15,6 +15,9 @@
     <div>{trigger}</div>
   {:else if value === "scheduled"}
     <Icon name="Clock" />
+    <div>{trigger}</div>
+  {:else if value === "restore"}
+    <Icon name="Refresh" />
     <div>{trigger}</div>
   {/if}
 </div>

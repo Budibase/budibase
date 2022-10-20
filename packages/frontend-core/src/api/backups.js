@@ -2,12 +2,17 @@ export const buildBackupsEndpoints = API => ({
   /**
    * Gets a list of users in the current tenant.
    */
-  searchBackups: async ({ appId, page }) => {
+  searchBackups: async ({ appId, trigger, page }) => {
+    const opts = {}
+    if (page) {
+      opts.page = page
+    }
+    if (trigger) {
+      opts.trigger = trigger.toLowerCase()
+    }
     return await API.post({
       url: `/api/apps/${appId}/backups/search`,
-      body: {
-        page,
-      },
+      body: opts,
     })
   },
 
@@ -26,7 +31,13 @@ export const buildBackupsEndpoints = API => ({
 
   updateBackup: async ({ appId, backupId }) => {
     return await API.patch({
-      url: `/api/apps/${appId}/backups/${backupId}}`,
+      url: `/api/apps/${appId}/backups/${backupId}`,
+    })
+  },
+
+  restoreBackup: async ({ appId, backupId }) => {
+    return await API.post({
+      url: `/api/apps/${appId}/backups/${backupId}/import`,
     })
   },
 })
