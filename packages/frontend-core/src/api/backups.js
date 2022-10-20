@@ -10,12 +10,10 @@ export const buildBackupsEndpoints = API => ({
     if (trigger) {
       opts.trigger = trigger.toLowerCase()
     }
-
     if (startDate) {
       opts.startDate = startDate
       opts.endDate = endDate
     }
-    console.log(opts)
     return await API.post({
       url: `/api/apps/${appId}/backups/search`,
       body: opts,

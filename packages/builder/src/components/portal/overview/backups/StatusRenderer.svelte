@@ -1,0 +1,10 @@
+<script>
+  import { Badge } from "@budibase/bbui"
+
+  export let value = "started"
+  $: status = value.charAt(0).toUpperCase() + value.slice(1)
+</script>
+
+<Badge green={value === "complete"} red={value === "failed"} size="S">
+  {status}
+</Badge>
