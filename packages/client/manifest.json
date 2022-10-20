@@ -4574,7 +4574,12 @@
       "size"
     ],
     "illegalChildren": ["grid", "section"],
-    "allowedDirectChildren": [""]
+    "allowedDirectChildren": [""],
+    "size": {
+      "width": 800,
+      "height": 400
+    },
+    "showEmptyState": false
   },
   "formblock": {
     "name": "Form Block",

@@ -48,6 +48,9 @@ const createComponentStore = () => {
   )
 
   const registerInstance = (id, instance) => {
+    if (!id) {
+      return
+    }
     store.update(state => {
       // If this is a custom component, flag it so we can reload this component
       // later if required
@@ -67,6 +70,9 @@ const createComponentStore = () => {
   }
 
   const unregisterInstance = id => {
+    if (!id) {
+      return
+    }
     store.update(state => {
       // Remove from custom component map if required
       const component = state.mountedComponents[id]?.instance?.component
@@ -136,6 +142,9 @@ const createComponentStore = () => {
   }
 
   const getComponentInstance = id => {
+    if (!id) {
+      return null
+    }
     return get(store).mountedComponents[id]
   }
 
