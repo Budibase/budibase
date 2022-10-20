@@ -42,7 +42,7 @@
 <style>
   .grid {
     position: relative;
-    min-height: 400px;
+    height: 400px;
   }
   .grid,
   .underlay {
