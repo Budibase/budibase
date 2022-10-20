@@ -32,9 +32,9 @@
   $: fetchBackups(trigger, page)
 
   const triggers = {
-    PUBLISH: "Publish",
-    SCHEDULED: "Scheduled",
-    MANUAL: "Manual",
+    PUBLISH: "publish",
+    SCHEDULED: "scheduled",
+    MANUAL: "manual",
   }
 
   const schema = {
@@ -79,26 +79,13 @@
   ]
 
   function flattenBackups(backups) {
-    let flattened = backups.map(backup => {
-      if (!backup.name) {
-        if (backup.trigger === "publish") {
-          backup.name = "Published Backup"
-        } else if (backup.trigger === "scheduled") {
-          backup.name = "Scheduled Backup"
-        }
-      }
-
-      if (backup.type === "restore") {
-        backup.trigger = "restore"
-        backup.name = "Restored"
-      }
+    return backups.map(backup => {
       return {
         ...backup,
         days: getDaysBetween(backup.timestamp),
         ...backup?.contents,
       }
     })
-    return flattened
   }
 
   function getDaysBetween(date) {
