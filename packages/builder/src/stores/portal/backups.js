@@ -2,38 +2,38 @@ import { writable } from "svelte/store"
 import { API } from "api"
 
 export function createBackupsStore() {
-  const { subscribe, set } = writable([])
+  const store = writable({})
 
-  async function load() {
-    set([
-      {
-        trigger: "PUBLISH",
-        name: "A Backup",
-        date: "1665407451",
-        userId: "Peter Clement",
-        contents: [
-          { datasources: ["datasource1", "datasource2"] },
-          { screens: ["screen1", "screen2"] },
-          { automations: ["automation1", "automation2"] },
-        ],
-      },
-    ])
+  function selectBackup(backupId) {
+    store.update(state => {
+      state.selectedBackup = backupId
+      return state
+    })
   }
 
-  async function searchBackups(appId, trigger, page) {
+  async function searchBackups({ appId, trigger, page } = {}) {
     return API.searchBackups({ appId, trigger, page })
   }
 
+  async function restoreBackup({ appId, backupId }) {
+    return API.restoreBackup({ appId, backupId })
+  }
+
+  async function deleteBackup({ appId, backupId }) {
+    return API.deleteBackup({ appId, backupId })
+  }
+
   async function createManualBackup(appId, name) {
-    let resp = API.createManualBackup(appId, name)
-    return resp
+    return API.createManualBackup(appId, name)
   }
 
   return {
-    subscribe,
-    load,
     createManualBackup,
     searchBackups,
+    selectBackup,
+    deleteBackup,
+    restoreBackup,
+    subscribe: store.subscribe,
   }
 }
 
