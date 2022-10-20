@@ -11,6 +11,7 @@
   } from "@budibase/bbui"
   import { backups } from "stores/portal"
   import { createPaginationStore } from "helpers/pagination"
+
   import DatasourceRenderer from "./DatasourceRenderer.svelte"
   import ScreensRenderer from "./ScreensRenderer.svelte"
   import AutomationsRenderer from "./AutomationsRenderer.svelte"
@@ -27,9 +28,8 @@
   let trigger = null
   let pageInfo = createPaginationStore()
   $: page = $pageInfo.page
-  $: console.log(page)
 
-  $: fetchBackups(app.instance._id, trigger, page)
+  $: fetchBackups(trigger, page)
 
   const triggers = {
     PUBLISH: "publish",
@@ -83,7 +83,7 @@
       return {
         ...backup,
         days: getDaysBetween(backup.createdAt),
-        //...Object.assign(...backup?.contents),
+        ...backup?.contents,
       }
     })
   }
@@ -92,15 +92,18 @@
     const now = new Date()
     const backupDate = new Date(date)
     backupDate.setDate(backupDate.getDate() - 1)
-    console.log(backupDate)
     const oneDay = 24 * 60 * 60 * 1000
     return now > backupDate
       ? Math.round(Math.abs((now - backupDate) / oneDay))
       : 0
   }
 
-  async function fetchBackups(appId, trigger, page) {
-    const response = await backups.searchBackups(appId, trigger, page)
+  async function fetchBackups(trigger, page) {
+    const response = await backups.searchBackups({
+      appId: app.instance._id,
+      trigger,
+      page,
+    })
     pageInfo.fetched(response.hasNextPage, response.nextPage)
 
     // flatten so we have an easier structure to use for the table schema
@@ -116,6 +119,26 @@
       notifications.success(response.message)
     } catch {
       notifications.error("Unable to create backup")
+    }
+  }
+
+  function selectBackup({ detail }) {
+    console.log(detail)
+  }
+  async function deleteBackup(backupId) {
+    await backups.deleteBackup({ appId: app.instance._id, backupId })
+    await fetchBackups(app.instance._id, trigger, page)
+  }
+  async function restoreBackup(backupId) {
+    console.log(backupId)
+    //backups.restoreBackup(app.instance._id, backupId)
+  }
+
+  async function handleButtonClick({ detail }) {
+    if (detail.type === "backupDelete") {
+      deleteBackup(detail.backupId)
+    } else if (detail.type === "backupRestore") {
+      restoreBackup(detail.backupId)
     }
   }
 </script>
@@ -143,6 +166,7 @@
     {#if backupData}
       <div>
         <Table
+          on:click={selectBackup}
           {schema}
           allowSelectRows={false}
           allowEditColumns={false}
@@ -151,6 +175,7 @@
           {customRenderers}
           placeholderText="No backups found"
           border={false}
+          on:buttonclick={handleButtonClick}
         />
         <div class="pagination">
           <Pagination

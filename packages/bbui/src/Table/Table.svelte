@@ -387,6 +387,7 @@
                   schema={schema[field]}
                   value={deepGet(row, field)}
                   on:clickrelationship
+                  on:buttonclick
                 >
                   <slot />
                 </CellRenderer>
