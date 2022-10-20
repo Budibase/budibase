@@ -119,7 +119,7 @@ describe("Internal API - /applications endpoints", () => {
     const [updateResponse, updatedApp] = await config.applications.update(
       <string>app.appId,
       {
-        name: generator.word(),
+        name: generator.word()
       }
     )
     expect(updateResponse).toHaveStatusCode(200)
