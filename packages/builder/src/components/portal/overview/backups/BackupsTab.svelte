@@ -3,11 +3,11 @@
     ActionButton,
     DatePicker,
     Layout,
+    Modal,
     notifications,
     Pagination,
     Select,
     Table,
-    Modal,
   } from "@budibase/bbui"
   import { backups } from "stores/portal"
   import { createPaginationStore } from "helpers/pagination"
@@ -32,9 +32,9 @@
   $: fetchBackups(app.instance._id, trigger, page)
 
   const triggers = {
-    PUBLISH: "Publish",
-    SCHEDULED: "Scheduled",
-    MANUAL: "Manual",
+    PUBLISH: "publish",
+    SCHEDULED: "scheduled",
+    MANUAL: "manual",
   }
 
   const schema = {
@@ -79,15 +79,13 @@
   ]
 
   function flattenBackups(backups) {
-    let flattened = backups.map(backup => {
+    return backups.map(backup => {
       return {
         ...backup,
         days: getDaysBetween(backup.createdAt),
         //...Object.assign(...backup?.contents),
       }
     })
-
-    return flattened
   }
 
   function getDaysBetween(date) {
