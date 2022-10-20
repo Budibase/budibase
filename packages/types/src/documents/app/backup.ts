@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { User } from "../../"
 
 export enum AppBackupType {
   BACKUP = "backup",
@@ -29,7 +30,7 @@ export interface AppBackupMetadata {
   type: AppBackupType
   status: AppBackupStatus
   name?: string
-  createdBy?: string
+  createdBy?: string | User
   timestamp: string
   contents?: AppBackupContents
 }
