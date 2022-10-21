@@ -1,4 +1,4 @@
-import { writable, derived } from "svelte/store"
+import { writable } from "svelte/store"
 import { computed } from "../utils/computed.js"
 
 const createDndStore = () => {
