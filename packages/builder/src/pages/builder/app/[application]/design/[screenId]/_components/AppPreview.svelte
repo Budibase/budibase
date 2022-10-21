@@ -86,7 +86,11 @@
         : [],
     isBudibaseEvent: true,
     usedPlugins: $store.usedPlugins,
-    location: window.location,
+    location: {
+      protocol: window.location.protocol,
+      hostname: window.location.hostname,
+      port: window.location.port,
+    },
   }
 
   // Refresh the preview when required
@@ -189,7 +193,7 @@
 
         // Cut and paste the component to the new destination
         if (source && destination) {
-          store.actions.components.copy(source, true)
+          store.actions.components.copy(source, true, false)
           await store.actions.components.paste(destination, data.mode)
         }
       } else if (type === "click-nav") {
