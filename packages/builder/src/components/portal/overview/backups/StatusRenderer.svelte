@@ -6,7 +6,7 @@
 </script>
 
 <Badge
-  grey={value === "started"}
+  grey={value === "started" || value === "pending"}
   green={value === "complete"}
   red={value === "failed"}
   size="S"
