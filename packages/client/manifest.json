@@ -3972,6 +3972,477 @@
       }
     ]
   },
+  "chartblock": {
+    "block": true,
+    "name": "Chart block",
+    "icon": "GraphPie",
+    "hasChildren": false,
+    "settings": [
+      {
+        "type": "select",
+        "label": "Chart Type",
+        "key": "chartType",
+        "required": true,
+        "options": [
+          {
+            "label": "Pie",
+            "value": "pie"
+          },
+          {
+            "label": "Bar",
+            "value": "bar"
+          },
+          {
+            "label": "Line",
+            "value": "line"
+          },
+          {
+            "label": "Donut",
+            "value": "donut"
+          },
+          {
+            "label": "Candlestick",
+            "value": "candlestick"
+          },
+          {
+            "label": "Area",
+            "value": "area"
+          }
+        ]
+      },
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "chartTitle"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
+        "defaultValue": "Ascending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 50
+      },
+      {
+        "type": "text",
+        "label": "Width",
+        "key": "width"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "400"
+      },
+      {
+        "type": "select",
+        "label": "Colors",
+        "key": "palette",
+        "defaultValue": "Palette 1",
+        "options": [
+          "Custom",
+          "Palette 1",
+          "Palette 2",
+          "Palette 3",
+          "Palette 4",
+          "Palette 5",
+          "Palette 6",
+          "Palette 7",
+          "Palette 8",
+          "Palette 9",
+          "Palette 10"
+        ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Data Labels",
+        "key": "dataLabels",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Legend",
+        "key": "legend",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Animate",
+        "key": "animate",
+        "defaultValue": false
+      },
+      {
+        "section": true,
+        "name": "Pie Chart",
+        "icon": "GraphPie",
+        "dependsOn": {
+          "setting": "chartType",
+          "value": "pie"
+        },
+        "settings": [
+          {
+            "type": "field",
+            "label": "Label Col.",
+            "key": "labelColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "field",
+            "label": "Data Col.",
+            "key": "valueColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Donut Chart",
+        "icon": "GraphDonut",
+        "dependsOn": {
+          "setting": "chartType",
+          "value": "donut"
+        },
+        "settings": [
+          {
+            "type": "field",
+            "label": "Label Col.",
+            "key": "labelColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "field",
+            "label": "Data Col.",
+            "key": "valueColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Bar Chart",
+        "icon": "GraphBarVertical",
+        "dependsOn": {
+          "setting": "chartType",
+          "value": "bar"
+        },
+        "settings": [
+          {
+            "type": "field",
+            "label": "Label Col.",
+            "key": "labelColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "multifield",
+            "label": "Data Cols.",
+            "key": "valueColumns",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "select",
+            "label": "Format",
+            "key": "yAxisUnits",
+            "options": [
+              "Default",
+              "Thousands",
+              "Millions"
+            ],
+            "defaultValue": "Default"
+          },
+          {
+            "type": "text",
+            "label": "Y Axis Label",
+            "key": "yAxisLabel"
+          },
+          {
+            "type": "text",
+            "label": "X Axis Label",
+            "key": "xAxisLabel"
+          },
+          {
+            "type": "boolean",
+            "label": "Stacked",
+            "key": "stacked",
+            "defaultValue": false
+          },
+          {
+            "type": "boolean",
+            "label": "Horizontal",
+            "key": "horizontal",
+            "defaultValue": false
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Line Chart",
+        "icon": "GraphTrend",
+        "dependsOn": {
+          "setting": "chartType",
+          "value": "line"
+        },
+        "settings": [
+          {
+            "type": "field",
+            "label": "Label Col.",
+            "key": "labelColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "multifield",
+            "label": "Data Cols.",
+            "key": "valueColumns",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "select",
+            "label": "Format",
+            "key": "yAxisUnits",
+            "options": [
+              "Default",
+              "Thousands",
+              "Millions"
+            ],
+            "defaultValue": "Default"
+          },
+          {
+            "type": "text",
+            "label": "Y Axis Label",
+            "key": "yAxisLabel"
+          },
+          {
+            "type": "text",
+            "label": "X Axis Label",
+            "key": "xAxisLabel"
+          },
+          {
+            "type": "select",
+            "label": "Curve",
+            "key": "curve",
+            "options": [
+              "Smooth",
+              "Straight",
+              "Stepline"
+            ],
+            "defaultValue": "Smooth"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Area Chart",
+        "icon": "GraphAreaStacked",
+        "dependsOn": {
+          "setting": "chartType",
+          "value": "area"
+        },
+        "settings": [
+          {
+            "type": "field",
+            "label": "Label Col.",
+            "key": "labelColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "multifield",
+            "label": "Data Cols.",
+            "key": "valueColumns",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "select",
+            "label": "Format",
+            "key": "yAxisUnits",
+            "options": [
+              "Default",
+              "Thousands",
+              "Millions"
+            ],
+            "defaultValue": "Default"
+          },
+          {
+            "type": "text",
+            "label": "Y Axis Label",
+            "key": "yAxisLabel"
+          },
+          {
+            "type": "text",
+            "label": "X Axis Label",
+            "key": "xAxisLabel"
+          },
+          {
+            "type": "select",
+            "label": "Curve",
+            "key": "curve",
+            "options": [
+              "Smooth",
+              "Straight",
+              "Stepline"
+            ],
+            "defaultValue": "Smooth"
+          },
+          {
+            "type": "boolean",
+            "label": "Stacked",
+            "key": "stacked",
+            "defaultValue": true
+          },
+          {
+            "type": "boolean",
+            "label": "Gradient",
+            "key": "gradient",
+            "defaultValue": false
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Candlestick Chart",
+        "icon": "GraphBarVerticalStacked",
+        "dependsOn": {
+          "setting": "chartType",
+          "value": "candlestick"
+        },
+        "settings": [
+          {
+            "type": "field",
+            "label": "Date Col.",
+            "key": "dateColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "field",
+            "label": "Open Col.",
+            "key": "openColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "field",
+            "label": "Close Col.",
+            "key": "closeColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "field",
+            "label": "High Col.",
+            "key": "highColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "field",
+            "label": "Low Col.",
+            "key": "lowColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "select",
+            "label": "Format",
+            "key": "yAxisUnits",
+            "options": [
+              "Default",
+              "Thousands",
+              "Millions"
+            ],
+            "defaultValue": "Default"
+          },
+          {
+            "type": "text",
+            "label": "Y Axis Label",
+            "key": "yAxisLabel"
+          },
+          {
+            "type": "text",
+            "label": "X Axis Label",
+            "key": "xAxisLabel"
+          }
+        ]
+      }
+    ]
+  },
   "tableblock": {
     "block": true,
     "name": "Table block",

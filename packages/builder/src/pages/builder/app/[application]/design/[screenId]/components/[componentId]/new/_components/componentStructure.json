@@ -6,7 +6,8 @@
       "tableblock",
       "cardsblock",
       "repeaterblock",
-      "formblock"
+      "formblock",
+      "chartblock"
     ]
   },
   {
