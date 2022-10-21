@@ -9,6 +9,7 @@ export interface ContextUser extends User {
 
 export interface BBContext {
   user?: ContextUser
+  status?: number
   request: {
     body: any
   }
