@@ -24,18 +24,31 @@
 
   let backupData = null
   let modal
-  let trigger = null
   let pageInfo = createPaginationStore()
-  let startDate
-  let endDate
+  let filterOpt = null
+  let startDate = null
+  let endDate = null
+  let filters = getFilters()
 
   $: page = $pageInfo.page
-  $: fetchBackups(trigger, page, startDate, endDate)
+  $: fetchBackups(filterOpt, page, startDate, endDate)
 
-  const triggers = {
-    PUBLISH: "publish",
-    SCHEDULED: "scheduled",
-    MANUAL: "manual",
+  function getFilters() {
+    const options = []
+    let types = ["backup"]
+    let triggers = ["manual", "publish", "scheduled", "restoring"]
+    for (let type of types) {
+      for (let trigger of triggers) {
+        let label = `${trigger} ${type}`
+        label = label.charAt(0).toUpperCase() + label?.slice(1)
+        options.push({ label, value: { type, trigger } })
+      }
+    }
+    options.push({
+      label: `Manual restore`,
+      value: { type: "restore", trigger: "manual" },
+    })
+    return options
   }
 
   const schema = {
@@ -80,10 +93,10 @@
     })
   }
 
-  async function fetchBackups(trigger, page, startDate, endDate) {
+  async function fetchBackups(filters, page, startDate, endDate) {
     const response = await backups.searchBackups({
       appId: app.instance._id,
-      trigger,
+      ...filters,
       page,
       startDate,
       endDate,
@@ -100,7 +113,7 @@
         appId: app.instance._id,
         name,
       })
-      await fetchBackups(trigger, page)
+      await fetchBackups(filterOpt, page)
       notifications.success(response.message)
     } catch {
       notifications.error("Unable to create backup")
@@ -113,21 +126,21 @@
         appId: app.instance._id,
         backupId: detail.backupId,
       })
-      await fetchBackups(trigger, page)
+      await fetchBackups(filterOpt, page)
     } else if (detail.type === "backupRestore") {
       await backups.restoreBackup({
         appId: app.instance._id,
         backupId: detail.backupId,
         name: detail.restoreBackupName,
       })
-      await fetchBackups(trigger, page)
+      await fetchBackups(filterOpt, page)
     } else if (detail.type === "backupUpdate") {
       await backups.updateBackup({
         appId: app.instance._id,
         backupId: detail.backupId,
         name: detail.name,
       })
-      await fetchBackups(trigger, page)
+      await fetchBackups(filterOpt, page)
     }
   }
 </script>
@@ -138,11 +151,11 @@
       <div class="select">
         <Select
           placeholder="All"
-          label="Trigger"
-          options={Object.values(triggers)}
-          getOptionLabel={trigger =>
-            trigger.charAt(0).toUpperCase() + trigger.slice(1)}
-          bind:value={trigger}
+          label="Type"
+          options={filters}
+          getOptionValue={filter => filter.value}
+          getOptionLabel={filter => filter.label}
+          bind:value={filterOpt}
         />
       </div>
       <div>
