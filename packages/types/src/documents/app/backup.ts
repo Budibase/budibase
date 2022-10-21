@@ -42,6 +42,7 @@ export interface AppBackup extends Document, AppBackupMetadata {
 
 export type AppBackupFetchOpts = {
   trigger?: AppBackupTrigger
+  type?: AppBackupType
   limit?: number
   page?: string
   paginate?: boolean
