@@ -5,6 +5,11 @@
   $: status = value?.charAt(0).toUpperCase() + value?.slice(1)
 </script>
 
-<Badge green={value === "complete"} red={value === "failed"} size="S">
+<Badge
+  grey={value === "started"}
+  green={value === "complete"}
+  red={value === "failed"}
+  size="S"
+>
   {status}
 </Badge>
