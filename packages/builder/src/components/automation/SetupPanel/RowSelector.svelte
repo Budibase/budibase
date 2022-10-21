@@ -15,8 +15,9 @@
   export let isTestModal
 
   $: parsedBindings = bindings.map(binding => {
-    binding.icon = "ShareAndroid"
-    return binding
+    let clone = Object.assign({}, binding)
+    clone.icon = "ShareAndroid"
+    return clone
   })
 
   let table
