@@ -22,7 +22,7 @@ export function createQueue<T>(
 ): BullQueue.Queue<T> {
   const queueConfig: any = redisProtocolUrl || { redis: opts }
   let queue: any
-  if (env.isTest()) {
+  if (!env.isTest()) {
     queue = new BullQueue(jobQueue, queueConfig)
   } else {
     queue = new InMemoryQueue(jobQueue, queueConfig)

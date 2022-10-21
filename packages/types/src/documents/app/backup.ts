@@ -16,6 +16,7 @@ export enum AppBackupTrigger {
   PUBLISH = "publish",
   MANUAL = "manual",
   SCHEDULED = "scheduled",
+  RESTORING = "restoring",
 }
 
 export interface AppBackupContents {
