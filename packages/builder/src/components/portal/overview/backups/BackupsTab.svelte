@@ -100,6 +100,7 @@
         appId: app.instance._id,
         name,
       })
+      await fetchBackups(trigger, page)
       notifications.success(response.message)
     } catch {
       notifications.error("Unable to create backup")
@@ -112,20 +113,21 @@
         appId: app.instance._id,
         backupId: detail.backupId,
       })
-      await fetchBackups(app.instance._id, trigger, page)
+      await fetchBackups(trigger, page)
     } else if (detail.type === "backupRestore") {
       await backups.restoreBackup({
         appId: app.instance._id,
         backupId: detail.backupId,
         name: detail.restoreBackupName,
       })
+      await fetchBackups(trigger, page)
     } else if (detail.type === "backupUpdate") {
       await backups.updateBackup({
         appId: app.instance._id,
         backupId: detail.backupId,
         name: detail.name,
       })
-      await fetchBackups(app.instance._id, trigger, page)
+      await fetchBackups(trigger, page)
     }
   }
 </script>
@@ -138,6 +140,8 @@
           placeholder="All"
           label="Trigger"
           options={Object.values(triggers)}
+          getOptionLabel={trigger =>
+            trigger.charAt(0).toUpperCase() + trigger.slice(1)}
           bind:value={trigger}
         />
       </div>
