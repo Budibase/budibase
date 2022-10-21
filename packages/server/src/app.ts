@@ -49,6 +49,9 @@ app.use(
     textLimit: "10mb",
     enableTypes: ["json", "form", "text"],
     parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
+    formidable: {
+      maxFileSize: "1000mb"
+    }
   })
 )
 
