@@ -24,10 +24,6 @@ loadSpectrumIcons()
 let app
 
 const loadBudibase = async () => {
-  if (get(builderStore).clearGridNextLoad) {
-    builderStore.actions.setDragging(false)
-  }
-
   // Update builder store with any builder flags
   builderStore.set({
     ...get(builderStore),
@@ -44,6 +40,11 @@ const loadBudibase = async () => {
     usedPlugins: window["##BUDIBASE_USED_PLUGINS##"],
     location: window["##BUDIBASE_LOCATION##"],
   })
+
+  // Reset DND state if we completed a successful drop
+  if (get(dndStore).dropped) {
+    dndStore.actions.reset()
+  }
 
   // Set app ID - this window flag is set by both the preview and the real
   // server rendered app HTML

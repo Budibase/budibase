@@ -57,7 +57,9 @@
     }
 
     // Reset state
-    dndStore.actions.reset()
+    if (!$dndStore.dropped) {
+      dndStore.actions.reset()
+    }
   }
 
   // Callback when initially starting a drag on a draggable component
@@ -251,7 +253,7 @@
   }
 
   // Callback when dropping a drag on top of some component
-  const onDrop = e => {
+  const onDrop = () => {
     if (!source || !drop?.parent || drop?.index == null) {
       return
     }
@@ -299,6 +301,7 @@
     }
 
     if (legacyDropTarget && legacyDropMode) {
+      dndStore.actions.markDropped()
       builderStore.actions.moveComponent(
         source.id,
         legacyDropTarget,
