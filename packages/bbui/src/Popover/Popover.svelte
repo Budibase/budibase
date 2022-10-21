@@ -33,6 +33,13 @@
     open = false
   }
 
+  const handleOutsideClick = e => {
+    if (open) {
+      e.stopPropagation()
+      hide()
+    }
+  }
+
   let open = null
 
   function handleEscape(e) {
@@ -47,7 +54,7 @@
     <div
       tabindex="0"
       use:positionDropdown={{ anchor, align, maxWidth }}
-      use:clickOutside={hide}
+      use:clickOutside={handleOutsideClick}
       on:keydown={handleEscape}
       class={"spectrum-Popover is-open " + (tooltipClasses || "")}
       role="presentation"
