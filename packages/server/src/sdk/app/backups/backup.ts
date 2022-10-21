@@ -89,6 +89,11 @@ async function importProcessor(job: Job) {
   const tenantId = tenancy.getTenantIDFromAppID(appId) as string
   tenancy.doInTenant(tenantId, async () => {
     const devAppId = dbCore.getDevAppID(appId)
+    const { rev } = await backups.updateRestoreStatus(
+      data.docId,
+      data.docRev,
+      AppBackupStatus.PENDING
+    )
     // initially export the current state to disk - incase something goes wrong
     await runBackup(
       nameForBackup,
@@ -113,7 +118,7 @@ async function importProcessor(job: Job) {
     } catch (err) {
       status = AppBackupStatus.FAILED
     }
-    await backups.updateRestoreStatus(data.docId, data.docRev, status)
+    await backups.updateRestoreStatus(data.docId, rev, status)
   })
 }
 
@@ -124,8 +129,13 @@ async function exportProcessor(job: Job) {
     name = data.export!.name || `${trigger} - backup`
   const tenantId = tenancy.getTenantIDFromAppID(appId) as string
   await tenancy.doInTenant(tenantId, async () => {
+    const { rev } = await backups.updateBackupStatus(
+      data.docId,
+      data.docRev,
+      AppBackupStatus.PENDING
+    )
     return runBackup(name, trigger, tenantId, appId, {
-      doc: { id: data.docId, rev: data.docRev },
+      doc: { id: data.docId, rev },
     })
   })
 }

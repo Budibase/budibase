@@ -8,6 +8,7 @@ export enum AppBackupType {
 
 export enum AppBackupStatus {
   STARTED = "started",
+  PENDING = "pending",
   COMPLETE = "complete",
   FAILED = "failed",
 }
