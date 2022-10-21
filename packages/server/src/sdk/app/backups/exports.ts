@@ -1,7 +1,7 @@
 import { db as dbCore } from "@budibase/backend-core"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { retrieveDirectory } from "../../../utilities/fileSystem/utilities"
-import { streamFile } from "../../../utilities/fileSystem"
+import { streamFile, createTempFolder } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
 import {
   LINK_USER_METADATA_PREFIX,
@@ -11,6 +11,7 @@ import {
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import fs from "fs"
 import { join } from "path"
+import env from "../../../environment"
 const uuid = require("uuid/v4")
 const tar = require("tar")
 const MemoryStream = require("memorystream")
@@ -85,7 +86,12 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   const prodAppId = dbCore.getProdAppID(appId)
   const appPath = `${prodAppId}/`
   // export bucket contents
-  const tmpPath = await retrieveDirectory(ObjectStoreBuckets.APPS, appPath)
+  let tmpPath
+  if (!env.isTest()) {
+    tmpPath = await retrieveDirectory(ObjectStoreBuckets.APPS, appPath)
+  } else {
+    tmpPath = createTempFolder(uuid())
+  }
   const downloadedPath = join(tmpPath, appPath)
   if (fs.existsSync(downloadedPath)) {
     const allFiles = fs.readdirSync(downloadedPath)
