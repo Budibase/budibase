@@ -17,6 +17,11 @@
 
   $: definition = $componentStore.selectedComponentDefinition
   $: showBar = definition?.showSettingsBar && !$dndIsDragging
+  $: {
+    if (!showBar) {
+      measured = false
+    }
+  }
   $: settings = getBarSettings(definition)
 
   const getBarSettings = definition => {
