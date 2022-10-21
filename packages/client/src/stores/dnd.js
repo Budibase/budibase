@@ -1,4 +1,5 @@
 import { writable, derived } from "svelte/store"
+import { computed } from "../utils/computed.js"
 
 const createDndStore = () => {
   const initialState = {
@@ -10,6 +11,9 @@ const createDndStore = () => {
 
     // Info about where the component would be dropped
     drop: null,
+
+    // Whether the current drop has been completed successfully
+    dropped: false,
   }
   const store = writable(initialState)
 
@@ -59,6 +63,13 @@ const createDndStore = () => {
     store.set(initialState)
   }
 
+  const markDropped = () => {
+    store.update(state => {
+      state.dropped = true
+      return state
+    })
+  }
+
   return {
     subscribe: store.subscribe,
     actions: {
@@ -67,6 +78,7 @@ const createDndStore = () => {
       updateTarget,
       updateDrop,
       reset,
+      markDropped,
     },
   }
 }
@@ -77,14 +89,12 @@ export const dndStore = createDndStore()
 // performance by deriving any state that needs to be externally observed.
 // By doing this and using primitives, we can avoid invalidating other stores
 // or components which depend on DND state unless values actually change.
-export const dndParent = derived(dndStore, $dndStore => $dndStore.drop?.parent)
-export const dndIndex = derived(dndStore, $dndStore => $dndStore.drop?.index)
-export const dndBounds = derived(
+export const dndParent = computed(dndStore, x => x.drop?.parent)
+export const dndIndex = computed(dndStore, x => x.drop?.index)
+export const dndDropped = computed(dndStore, x => x.dropped)
+export const dndBounds = computed(dndStore, x => x.source?.bounds)
+export const dndIsDragging = computed(dndStore, x => !!x.source)
+export const dndIsNewComponent = computed(
   dndStore,
-  $dndStore => $dndStore.source?.bounds
+  x => x.source?.newComponentType != null
 )
-export const dndIsNewComponent = derived(
-  dndStore,
-  $dndStore => $dndStore.source?.newComponentType != null
-)
-export const dndIsDragging = derived(dndStore, $dndStore => !!$dndStore.source)
