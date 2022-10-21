@@ -27,7 +27,7 @@ export const styleable = (node, styles = {}) => {
   const setupStyles = (newStyles = {}) => {
     let baseStyles = {}
     if (newStyles.empty) {
-      baseStyles.border = "2px dashed var(--spectrum-global-color-gray-600)"
+      baseStyles.border = "2px dashed var(--spectrum-global-color-gray-400)"
       baseStyles.padding = "var(--spacing-l)"
       baseStyles.overflow = "hidden"
     }
