@@ -11,8 +11,6 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
   import { createEventDispatcher } from "svelte"
-  import download from "downloadjs"
-  import { backups } from "stores/portal"
 
   export let row
 
@@ -20,7 +18,6 @@
   let restoreDialog
   let updateDialog
   let name
-  let restoreBackupName
   let restoreBackupModal
 
   const dispatch = createEventDispatcher()
@@ -30,7 +27,7 @@
       type: "backupRestore",
       name,
       backupId: row._id,
-      restoreBackupName,
+      restoreBackupName: name,
     })
   }
 
@@ -48,12 +45,9 @@
       name,
     })
   }
+
   async function downloadExport() {
-    let resp = await backups.downloadBackup({
-      backupId: row._id,
-      appId: row.appId,
-    })
-    download(resp, row.filename)
+    window.location = `/api/apps/${row.appId}/backups/${row._id}/file`
   }
 </script>
 
