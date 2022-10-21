@@ -11,8 +11,15 @@ export function createBackupsStore() {
     })
   }
 
-  async function searchBackups({ appId, trigger, page, startDate, endDate }) {
-    return API.searchBackups({ appId, trigger, page, startDate, endDate })
+  async function searchBackups({
+    appId,
+    trigger,
+    type,
+    page,
+    startDate,
+    endDate,
+  }) {
+    return API.searchBackups({ appId, trigger, type, page, startDate, endDate })
   }
 
   async function restoreBackup({ appId, backupId, name }) {
