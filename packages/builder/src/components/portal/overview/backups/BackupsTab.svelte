@@ -107,7 +107,6 @@
   }
 
   async function handleButtonClick({ detail }) {
-    console.log(detail.type)
     if (detail.type === "backupDelete") {
       await backups.deleteBackup({
         appId: app.instance._id,
@@ -118,6 +117,7 @@
       await backups.restoreBackup({
         appId: app.instance._id,
         backupId: detail.backupId,
+        name: detail.restoreBackupName,
       })
     } else if (detail.type === "backupUpdate") {
       await backups.updateBackup({
