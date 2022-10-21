@@ -667,16 +667,14 @@ export const getFrontendStore = () => {
         })
 
         // Select the parent if cutting
-        if (cut) {
+        if (cut && selectParent) {
           const screen = get(selectedScreen)
           const parent = findComponentParent(screen?.props, component._id)
           if (parent) {
-            if (selectParent) {
-              store.update(state => {
-                state.selectedComponentId = parent._id
-                return state
-              })
-            }
+            store.update(state => {
+              state.selectedComponentId = parent._id
+              return state
+            })
           }
         }
       },
