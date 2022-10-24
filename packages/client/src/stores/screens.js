@@ -2,13 +2,7 @@ import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
-import {
-  dndIndex,
-  dndParent,
-  dndIsNewComponent,
-  dndBounds,
-  dndDropped,
-} from "./dnd.js"
+import { dndIndex, dndParent, dndIsNewComponent, dndBounds } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
 import { Helpers } from "@budibase/bbui"
@@ -24,7 +18,6 @@ const createScreenStore = () => {
       dndIndex,
       dndIsNewComponent,
       dndBounds,
-      dndDropped,
     ],
     ([
       $appStore,
@@ -34,7 +27,6 @@ const createScreenStore = () => {
       $dndIndex,
       $dndIsNewComponent,
       $dndBounds,
-      $dndDropped,
     ]) => {
       let activeLayout, activeScreen
       let screens
@@ -80,9 +72,6 @@ const createScreenStore = () => {
           activeScreen.props,
           selectedComponentId
         )
-        const selectedComponent = selectedParent?._children?.find(
-          x => x._id === selectedComponentId
-        )
 
         // Remove selected component from tree if we are moving an existing
         // component
@@ -92,33 +81,25 @@ const createScreenStore = () => {
           )
         }
 
-        // Insert placeholder component if dragging, or artificially insert
-        // the dropped component in the new location if the drop completed
-        let componentToInsert
-        if ($dndDropped && !$dndIsNewComponent) {
-          componentToInsert = selectedComponent
-        } else {
-          componentToInsert = {
-            _component: "@budibase/standard-components/container",
-            _id: DNDPlaceholderID,
-            _styles: {
-              normal: {
-                width: `${$dndBounds?.width || 400}px`,
-                height: `${$dndBounds?.height || 200}px`,
-                opacity: 0,
-              },
+        // Insert placeholder component
+        const componentToInsert = {
+          _component: "@budibase/standard-components/container",
+          _id: DNDPlaceholderID,
+          _styles: {
+            normal: {
+              width: `${$dndBounds?.width || 400}px`,
+              height: `${$dndBounds?.height || 200}px`,
+              opacity: 0,
             },
-            static: true,
-          }
+          },
+          static: true,
         }
-        if (componentToInsert) {
-          let parent = findComponentById(activeScreen.props, $dndParent)
-          if (parent) {
-            if (!parent._children?.length) {
-              parent._children = [componentToInsert]
-            } else {
-              parent._children.splice($dndIndex, 0, componentToInsert)
-            }
+        let parent = findComponentById(activeScreen.props, $dndParent)
+        if (parent) {
+          if (!parent._children?.length) {
+            parent._children = [componentToInsert]
+          } else {
+            parent._children.splice($dndIndex, 0, componentToInsert)
           }
         }
       }

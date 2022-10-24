@@ -22,6 +22,9 @@
   $: target = $dndStore.target
   $: drop = $dndStore.drop
 
+  // Local flag for whether we are awaiting an async drop event
+  let dropping = false
+
   const insideGrid = e => {
     return e.target
       ?.closest?.(".component")
@@ -48,6 +51,10 @@
 
   // Callback when drag stops (whether dropped or not)
   const stopDragging = () => {
+    if (dropping) {
+      return
+    }
+
     // Reset listener
     if (source?.id) {
       const component = document.getElementsByClassName(source?.id)[0]
@@ -57,9 +64,7 @@
     }
 
     // Reset state
-    if (!$dndStore.dropped) {
-      dndStore.actions.reset()
-    }
+    dndStore.actions.reset()
   }
 
   // Callback when initially starting a drag on a draggable component
@@ -253,18 +258,21 @@
   }
 
   // Callback when dropping a drag on top of some component
-  const onDrop = () => {
+  const onDrop = async () => {
     if (!source || !drop?.parent || drop?.index == null) {
       return
     }
 
     // Check if we're adding a new component rather than moving one
     if (source.newComponentType) {
-      builderStore.actions.dropNewComponent(
+      dropping = true
+      await builderStore.actions.dropNewComponent(
         source.newComponentType,
         drop.parent,
         drop.index
       )
+      dropping = false
+      stopDragging()
       return
     }
 
@@ -301,12 +309,14 @@
     }
 
     if (legacyDropTarget && legacyDropMode) {
-      dndStore.actions.markDropped()
-      builderStore.actions.moveComponent(
+      dropping = true
+      await builderStore.actions.moveComponent(
         source.id,
         legacyDropTarget,
         legacyDropMode
       )
+      dropping = false
+      stopDragging()
     }
   }
 

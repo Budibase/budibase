@@ -7,6 +7,7 @@ import {
   componentStore,
   environmentStore,
   dndStore,
+  eventStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
@@ -42,9 +43,9 @@ const loadBudibase = async () => {
   })
 
   // Reset DND state if we completed a successful drop
-  if (get(dndStore).dropped) {
-    dndStore.actions.reset()
-  }
+  // if (get(dndStore).dropped) {
+  //   dndStore.actions.reset()
+  // }
 
   // Set app ID - this window flag is set by both the preview and the real
   // server rendered app HTML
@@ -59,15 +60,17 @@ const loadBudibase = async () => {
   devToolsStore.actions.setEnabled(enableDevTools)
 
   // Register handler for runtime events from the builder
-  window.handleBuilderRuntimeEvent = (name, payload) => {
+  window.handleBuilderRuntimeEvent = (type, data) => {
     if (!window["##BUDIBASE_IN_BUILDER##"]) {
       return
     }
-    if (name === "eject-block") {
-      const block = blockStore.actions.getBlock(payload)
+    if (type === "event-completed") {
+      eventStore.actions.resolveEvent(data)
+    } else if (type === "eject-block") {
+      const block = blockStore.actions.getBlock(data)
       block?.eject()
-    } else if (name === "dragging-new-component") {
-      const { dragging, component } = payload
+    } else if (type === "dragging-new-component") {
+      const { dragging, component } = data
       if (dragging) {
         const definition =
           componentStore.actions.getComponentDefinition(component)
