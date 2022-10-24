@@ -42,17 +42,14 @@ const loadBudibase = async () => {
     location: window["##BUDIBASE_LOCATION##"],
   })
 
-  // Reset DND state if we completed a successful drop
-  // if (get(dndStore).dropped) {
-  //   dndStore.actions.reset()
-  // }
-
   // Set app ID - this window flag is set by both the preview and the real
   // server rendered app HTML
   appStore.actions.setAppId(window["##BUDIBASE_APP_ID##"])
 
   // Fetch environment info
-  await environmentStore.actions.fetchEnvironment()
+  if (!get(environmentStore)) {
+    await environmentStore.actions.fetchEnvironment()
+  }
 
   // Enable dev tools or not. We need to be using a dev app and not inside
   // the builder preview to enable them.
