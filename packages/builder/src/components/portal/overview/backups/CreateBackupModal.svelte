@@ -1,9 +1,13 @@
 <script>
   import { ModalContent, Input } from "@budibase/bbui"
+  import { auth } from "stores/portal"
 
   export let createManualBackup
 
-  let name
+  let templateName = $auth.user.firstName
+    ? `${$auth.user.firstName}'s Backup`
+    : "New Backup"
+  let name = templateName
 </script>
 
 <ModalContent
