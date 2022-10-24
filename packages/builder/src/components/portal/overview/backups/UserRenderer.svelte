@@ -1,8 +1,11 @@
 <script>
   export let value
-  $: username = value?.firstName
-    ? `${value?.firstName} ${value?.lastName}`
-    : value?.email
+
+  let firstName = value?.firstName
+  let lastName = value?.lastName || ""
+
+  $: username =
+    firstName && lastName ? `${firstName} ${lastName}` : value?.email
 </script>
 
 <div class="cell">
