@@ -4585,7 +4585,23 @@
       "width": 800,
       "height": 400
     },
-    "showEmptyState": false
+    "showEmptyState": false,
+    "settings": [
+      {
+        "type": "number",
+        "label": "Rows",
+        "key": "rows",
+        "defaultValue": 12,
+        "min": 1
+      },
+      {
+        "type": "number",
+        "label": "Columns",
+        "key": "cols",
+        "defaultValue": 12,
+        "min": 1
+      }
+    ]
   },
   "formblock": {
     "name": "Form Block",
