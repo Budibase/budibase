@@ -50,4 +50,6 @@ export interface Table extends Document {
   relatedFormula?: string[]
   constrained?: string[]
   sql?: boolean
+  indexes?: { [key: string]: any }
+  dataImport?: { [key: string]: any }
 }
