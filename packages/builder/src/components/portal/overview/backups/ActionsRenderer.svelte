@@ -47,7 +47,7 @@
   }
 
   async function downloadExport() {
-    window.location = `/api/apps/${row.appId}/backups/${row._id}/file`
+    window.open(`/api/apps/${row.appId}/backups/${row._id}/file`, "_blank")
   }
 </script>
 
@@ -88,7 +88,7 @@
   title="Confirm restore"
   warning={false}
 >
-  <Heading size="S">{row.name}</Heading>
+  <Heading size="S">{row.name || "Backup"}</Heading>
   <Body size="S">{new Date(row.timestamp).toLocaleString()}</Body>
 </ConfirmDialog>
 

@@ -1,7 +1,7 @@
 <script>
   import { ModalContent, Input, Body } from "@budibase/bbui"
   import { auth } from "stores/portal"
-  $: console.log($auth.user)
+
   export let confirm
 
   let templateName = $auth.user.firstName

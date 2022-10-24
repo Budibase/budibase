@@ -26,6 +26,8 @@
   import StatusRenderer from "./StatusRenderer.svelte"
   import TypeRenderer from "./TypeRenderer.svelte"
   import BackupsDefault from "assets/backups-default.png"
+  import { onMount } from "svelte"
+
   export let app
 
   let backupData = null
@@ -149,6 +151,10 @@
       await fetchBackups(filterOpt, page)
     }
   }
+
+  onMount(() => {
+    fetchBackups(filterOpt, page, startDate, endDate)
+  })
 </script>
 
 <div class="root">
@@ -171,14 +177,16 @@
         </div>
         <Divider />
         <div class="pro-buttons">
-          <Button
-            newStyles
-            primary
-            disabled={!$auth.accountPortalAccess && $admin.cloud}
-            on:click={$licensing.goToUpgradePage()}
-          >
-            Upgrade
-          </Button>
+          {#if $auth.accountPortalAccess}
+            <Button
+              newStyles
+              primary
+              disabled={!$auth.accountPortalAccess && $admin.cloud}
+              on:click={$licensing.goToUpgradePage()}
+            >
+              Upgrade
+            </Button>
+          {/if}
           <!--Show the view plans button-->
           <Button
             newStyles
@@ -252,7 +260,7 @@
       <div class="align">
         <img
           width="200px"
-          height="100px"
+          height="120px"
           src={BackupsDefault}
           alt="BackupsDefault"
         />
