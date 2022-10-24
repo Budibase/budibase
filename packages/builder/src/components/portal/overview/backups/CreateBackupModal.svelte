@@ -10,11 +10,7 @@
   onConfirm={() => createManualBackup(name)}
   title="Create new backup"
   confirmText="Create"
-  ><Input
-    label="Backup name"
-    bind:value={name}
-    placeholder={"test"}
-  /></ModalContent
+  ><Input label="Backup name" bind:value={name} /></ModalContent
 >
 
 <style>

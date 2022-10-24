@@ -85,7 +85,7 @@
   bind:this={restoreDialog}
   okText="Continue"
   onOk={restoreBackupModal?.show}
-  title="Confirm Restore"
+  title="Confirm restore"
   warning={false}
 >
   <Heading size="S">{row.name}</Heading>
