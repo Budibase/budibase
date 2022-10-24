@@ -36,6 +36,6 @@
     align-items: stretch;
     position: relative;
     border-right: var(--border-light);
-    margin-bottom: -60px;
+    padding-bottom: 60px;
   }
 </style>
