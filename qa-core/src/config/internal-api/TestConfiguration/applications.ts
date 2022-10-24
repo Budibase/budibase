@@ -6,8 +6,9 @@ import FormData from "form-data"
 import { RouteConfig } from "../fixtures/types/routing"
 import { AppPackageResponse } from "../fixtures/types/appPackage"
 import { DeployConfig } from "../fixtures/types/deploy"
+import { responseMessage } from "../fixtures/types/responseMessage"
 
-type messageResponse = { message: string }
+
 
 export default class AppApi {
   api: InternalAPIClient
@@ -40,10 +41,12 @@ export default class AppApi {
     return [response, json]
   }
 
-  async create(body: any): Promise<[Response, Partial<App>]> {
+  async create(body: any): Promise<Partial<App>> {
     const response = await this.api.post(`/applications`, { body })
     const json = await response.json()
-    return [response, json]
+    expect(response).toHaveStatusCode(200)
+    expect(json._id).toBeDefined()
+    return json
   }
 
   async read(id: string): Promise<[Response, Application]> {
@@ -52,7 +55,7 @@ export default class AppApi {
     return [response, json.data]
   }
 
-  async sync(appId: string): Promise<[Response, messageResponse]> {
+  async sync(appId: string): Promise<[Response, responseMessage]> {
     const response = await this.api.post(`/applications/${appId}/sync`)
     const json = await response.json()
     return [response, json]
@@ -70,7 +73,7 @@ export default class AppApi {
     return [response, json]
   }
 
-  async revert(appId: string): Promise<[Response, messageResponse]> {
+  async revert(appId: string): Promise<[Response, responseMessage]> {
     const response = await this.api.post(`/dev/${appId}/revert`)
     const json = await response.json()
     return [response, json]
