@@ -64,34 +64,36 @@
       limit,
     }}
   >
-    <BlockComponent
-      type={chartType}
-      props={{
-        dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
-        height,
-        width,
-        title: chartTitle,
-        labelColumn,
-        valueColumn,
-        valueColumns,
-        palette,
-        dataLabels,
-        legend,
-        animate,
-        ...colors,
-        yAxisUnits,
-        yAxisLabel,
-        xAxisLabel,
-        stacked,
-        horizontal,
-        curve,
-        gradient, //issue?
-        closeColumn,
-        openColumn,
-        highColumn,
-        lowColumn,
-        dateColumn,
-      }}
-    />
+    {#if dataProviderId && chartType}
+      <BlockComponent
+        type={chartType}
+        props={{
+          dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+          height,
+          width,
+          title: chartTitle,
+          labelColumn,
+          valueColumn,
+          valueColumns,
+          palette,
+          dataLabels,
+          legend,
+          animate,
+          ...colors,
+          yAxisUnits,
+          yAxisLabel,
+          xAxisLabel,
+          stacked,
+          horizontal,
+          curve,
+          gradient, //issue?
+          closeColumn,
+          openColumn,
+          highColumn,
+          lowColumn,
+          dateColumn,
+        }}
+      />
+    {/if}
   </BlockComponent>
 </Block>
