@@ -25,7 +25,9 @@
   // Local flag for whether we are awaiting an async drop event
   let dropping = false
 
-  const insideGrid = e => {
+  // Util to check if a DND event originates from a grid (or inside a grid).
+  // This is important as we do not handle grid DND in this handler.
+  const isGridEvent = e => {
     return e.target
       ?.closest?.(".component")
       ?.parentNode?.closest?.(".component")
@@ -69,7 +71,7 @@
 
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
-    if (insideGrid(e)) {
+    if (isGridEvent(e)) {
       return
     }
     const component = e.target.closest(".component")
