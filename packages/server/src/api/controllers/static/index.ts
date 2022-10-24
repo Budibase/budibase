@@ -1,11 +1,9 @@
-import { enrichPluginURLs } from "../../../utilities/plugins"
-
 require("svelte/register")
 
 const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
 const uuid = require("uuid")
-const { ObjectStoreBuckets } = require("../../../constants")
+import { ObjectStoreBuckets } from "../../../constants"
 const { processString } = require("@budibase/string-templates")
 const {
   loadHandlebarsFile,
@@ -13,20 +11,17 @@ const {
   TOP_LEVEL_PATH,
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
-const { clientLibraryPath } = require("../../../utilities")
-const { upload, deleteFiles } = require("../../../utilities/fileSystem")
-const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentType } = require("../../../db/utils")
-const { getAppDB, getAppId } = require("@budibase/backend-core/context")
+import { context } from "@budibase/backend-core"
 const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
 const fs = require("fs")
-const {
-  downloadTarballDirect,
-} = require("../../../utilities/fileSystem/utilities")
+import { objectStore } from "@budibase/backend-core"
+import { UserCtx } from "@budibase/types"
+import { sdk as pro } from "@budibase/pro"
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
-  const response = await upload({
+  const response = await objectStore.upload({
     bucket,
     metadata,
     filename: s3Key,
@@ -34,11 +29,9 @@ async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
     type: file.type,
   })
 
-  // don't store a URL, work this out on the way out as the URL could change
   return {
     size: file.size,
     name: file.name,
-    url: attachmentsRelativeURL(response.Key),
     extension: [...file.name.split(".")].pop(),
     key: response.Key,
   }
@@ -61,7 +54,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
   if (!fs.existsSync(builderPath)) {
     fs.mkdirSync(builderPath)
   }
-  await downloadTarballDirect(
+  await objectStore.downloadTarballDirect(
     "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
     builderPath
   )
@@ -75,6 +68,12 @@ export const toggleBetaUiFeature = async function (ctx: any) {
 export const serveBuilder = async function (ctx: any) {
   const builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
+}
+
+export const getAttachment = async function (ctx: UserCtx) {
+  const attachmentId = ctx.params.attachmentId
+  const filePath = `attachments/${attachmentId}`
+  await objectStore.serveAppFile(ctx, filePath)
 }
 
 export const uploadFile = async function (ctx: any) {
@@ -99,22 +98,25 @@ export const uploadFile = async function (ctx: any) {
 }
 
 export const deleteObjects = async function (ctx: any) {
-  ctx.body = await deleteFiles(ObjectStoreBuckets.APPS, ctx.request.body.keys)
+  ctx.body = await objectStore.deleteFiles(
+    ObjectStoreBuckets.APPS,
+    ctx.request.body.keys
+  )
 }
 
 export const serveApp = async function (ctx: any) {
-  const db = getAppDB({ skip_setup: true })
+  const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
-  let appId = getAppId()
+  let appId = context.getAppId()
 
   if (!env.isJest()) {
     const App = require("./templates/BudibaseApp.svelte").default
-    const plugins = enrichPluginURLs(appInfo.usedPlugins)
+    const plugins = pro.plugins.enrichPluginURLs(appInfo.usedPlugins)
     const { head, html, css } = App.render({
       title: appInfo.name,
       production: env.isProd(),
       appId,
-      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+      clientLibPath: objectStore.clientLibraryUrl(appId, appInfo.version),
       usedPlugins: plugins,
     })
 
@@ -132,14 +134,14 @@ export const serveApp = async function (ctx: any) {
 }
 
 export const serveBuilderPreview = async function (ctx: any) {
-  const db = getAppDB({ skip_setup: true })
+  const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
-    let appId = getAppId()
+    let appId = context.getAppId()
     const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
     ctx.body = await processString(previewHbs, {
-      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+      clientLibPath: objectStore.clientLibraryUrl(appId, appInfo.version),
     })
   } else {
     // just return the app info for jest to assert on
@@ -154,7 +156,7 @@ export const serveClientLibrary = async function (ctx: any) {
 }
 
 export const getSignedUploadURL = async function (ctx: any) {
-  const database = getAppDB()
+  const database = context.getAppDB()
 
   // Ensure datasource is valid
   let datasource

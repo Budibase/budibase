@@ -1,17 +1,24 @@
 import { newid } from "../hashing"
-import { DEFAULT_TENANT_ID, Configs } from "../constants"
+import { Configs, DEFAULT_TENANT_ID } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentType, UNICODE_MAX, ViewName } from "./constants"
-import { getTenantId, getGlobalDB } from "../context"
+import {
+  APP_PREFIX,
+  DocumentType,
+  SEPARATOR,
+  UNICODE_MAX,
+  ViewName,
+} from "./constants"
+import { getGlobalDB, getTenantId } from "../context"
 import { getGlobalDBName } from "./tenancy"
 import fetch from "node-fetch"
-import { doWithDB, allDbs } from "./index"
+import { allDbs, doWithDB } from "./index"
 import { getCouchInfo } from "./pouch"
 import { getAppMetadata } from "../cache/appMetadata"
 import { checkSlashesInUrl } from "../helpers"
-import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
-import { APP_PREFIX } from "./constants"
+import { getProdAppID, isDevApp, isDevAppID } from "./conversions"
 import * as events from "../events"
+import { Config, ConfigType, isSettingsConfig } from "@budibase/types"
+import * as objectStore from "../objectStore"
 
 export * from "./constants"
 export * from "./conversions"
@@ -444,29 +451,39 @@ export const getScopedFullConfig = async function (
   }
 
   // Find the config with the most granular scope based on context
-  let scopedConfig = response.rows.sort(
+  let scopedConfig: { doc: Config } = response.rows.sort(
     (a: any, b: any) => determineScore(a) - determineScore(b)
   )[0]
 
   // custom logic for settings doc
-  if (type === Configs.SETTINGS) {
-    if (scopedConfig && scopedConfig.doc) {
-      // overrides affected by environment variables
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
-        tenantAware: true,
-      })
-      scopedConfig.doc.config.analyticsEnabled =
-        await events.analytics.enabled()
-    } else {
+  if (type === ConfigType.SETTINGS) {
+    if (!scopedConfig || !scopedConfig.doc) {
       // defaults
       scopedConfig = {
         doc: {
           _id: generateConfigID({ type, user, workspace }),
+          type: ConfigType.SETTINGS,
           config: {
             platformUrl: await getPlatformUrl({ tenantAware: true }),
             analyticsEnabled: await events.analytics.enabled(),
           },
         },
+      }
+    }
+
+    // will always be true - use assertion function to get type access
+    if (isSettingsConfig(scopedConfig.doc)) {
+      // overrides affected by environment
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
+        tenantAware: true,
+      })
+      scopedConfig.doc.config.analyticsEnabled =
+        await events.analytics.enabled()
+
+      // empty url means deleted for logo
+      if (scopedConfig.doc.config.logoUrl !== "") {
+        scopedConfig.doc.config.logoUrl =
+          objectStore.getGlobalFileUrl("settings/logoUrl")
       }
     }
   }

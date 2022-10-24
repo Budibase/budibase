@@ -25,13 +25,8 @@ import {
 } from "../../../constants"
 import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
-// @ts-ignore
 import { cloneDeep } from "lodash/fp"
-import {
-  processFormulas,
-  processDates,
-} from "../../../utilities/rowProcessor/utils"
-// @ts-ignore
+import { processFormulas, processDates } from "../../../utilities/rowProcessor"
 import { getAppDB } from "@budibase/backend-core/context"
 
 interface ManyRelationship {
@@ -442,7 +437,7 @@ module External {
       // Process some additional data types
       let finalRowArray = Object.values(finalRows)
       finalRowArray = processDates(table, finalRowArray)
-      finalRowArray = processFormulas(table, finalRowArray)
+      finalRowArray = processFormulas(table, finalRowArray) as Row[]
 
       return finalRowArray.map((row: Row) =>
         this.squashRelationshipColumns(table, row, relationships)

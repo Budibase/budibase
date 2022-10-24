@@ -6,10 +6,6 @@ const {
 } = require("@budibase/backend-core/db")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
-const {
-  upload,
-  ObjectStoreBuckets,
-} = require("@budibase/backend-core/objectStore")
 const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 const { googleCallbackUrl, oidcCallbackUrl } = require("./auth")
@@ -19,14 +15,22 @@ const {
   bustCache,
   cache,
 } = require("@budibase/backend-core/cache")
-const { events } = require("@budibase/backend-core")
 const { checkAnyUserExists } = require("../../../utilities/users")
+import {
+  Config,
+  ConfigType,
+  isGoogleConfig,
+  isOIDCConfig,
+  isSettingsConfig,
+  isSMTPConfig,
+  OIDCConfig,
+  Ctx,
+  UserCtx,
+} from "@budibase/types"
+import { events, objectStore, env as coreEnv } from "@budibase/backend-core"
 
-const BB_TENANT_CDN = "https://tenants.cdn.budi.live"
-
-const getEventFns = async (db, config) => {
+const getEventFns = async (db: any, config: Config) => {
   const fns = []
-  const type = config.type
 
   let existing
   if (config._id) {
@@ -34,107 +38,89 @@ const getEventFns = async (db, config) => {
   }
 
   if (!existing) {
-    switch (config.type) {
-      case Configs.SMTP: {
-        fns.push(events.email.SMTPCreated)
-        break
+    if (isSMTPConfig(config)) {
+      fns.push(events.email.SMTPCreated)
+    } else if (isGoogleConfig(config)) {
+      fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
+      if (config.config.activated) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.GOOGLE))
       }
-      case Configs.GOOGLE: {
-        fns.push(() => events.auth.SSOCreated(type))
-        if (config.config.activated) {
-          fns.push(() => events.auth.SSOActivated(type))
-        }
-        break
+    } else if (isOIDCConfig(config)) {
+      fns.push(() => events.auth.SSOCreated(ConfigType.OIDC))
+      if (config.config.configs[0].activated) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.OIDC))
       }
-      case Configs.OIDC: {
-        fns.push(() => events.auth.SSOCreated(type))
-        if (config.config.configs[0].activated) {
-          fns.push(() => events.auth.SSOActivated(type))
-        }
-        break
+    } else if (isSettingsConfig(config)) {
+      // company
+      const company = config.config.company
+      if (company && company !== "Budibase") {
+        fns.push(events.org.nameUpdated)
       }
-      case Configs.SETTINGS: {
-        // company
-        const company = config.config.company
-        if (company && company !== "Budibase") {
-          fns.push(events.org.nameUpdated)
-        }
 
-        // logo
-        const logoUrl = config.config.logoUrl
-        if (logoUrl) {
-          fns.push(events.org.logoUpdated)
-        }
+      // logo
+      const logoUrl = config.config.logoUrl
+      if (logoUrl) {
+        fns.push(events.org.logoUpdated)
+      }
 
-        // platform url
-        const platformUrl = config.config.platformUrl
-        if (
-          platformUrl &&
-          platformUrl !== "http://localhost:10000" &&
-          env.SELF_HOSTED
-        ) {
-          fns.push(events.org.platformURLUpdated)
-        }
-        break
+      // platform url
+      const platformUrl = config.config.platformUrl
+      if (
+        platformUrl &&
+        platformUrl !== "http://localhost:10000" &&
+        env.SELF_HOSTED
+      ) {
+        fns.push(events.org.platformURLUpdated)
       }
     }
   } else {
-    switch (config.type) {
-      case Configs.SMTP: {
-        fns.push(events.email.SMTPUpdated)
-        break
+    if (isSMTPConfig(config)) {
+      fns.push(events.email.SMTPUpdated)
+    } else if (isGoogleConfig(config)) {
+      fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
+      if (!existing.config.activated && config.config.activated) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.GOOGLE))
+      } else if (existing.config.activated && !config.config.activated) {
+        fns.push(() => events.auth.SSODeactivated(ConfigType.GOOGLE))
       }
-      case Configs.GOOGLE: {
-        fns.push(() => events.auth.SSOUpdated(type))
-        if (!existing.config.activated && config.config.activated) {
-          fns.push(() => events.auth.SSOActivated(type))
-        } else if (existing.config.activated && !config.config.activated) {
-          fns.push(() => events.auth.SSODeactivated(type))
-        }
-        break
+    } else if (isOIDCConfig(config)) {
+      fns.push(() => events.auth.SSOUpdated(ConfigType.OIDC))
+      if (
+        !existing.config.configs[0].activated &&
+        config.config.configs[0].activated
+      ) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.OIDC))
+      } else if (
+        existing.config.configs[0].activated &&
+        !config.config.configs[0].activated
+      ) {
+        fns.push(() => events.auth.SSODeactivated(ConfigType.OIDC))
       }
-      case Configs.OIDC: {
-        fns.push(() => events.auth.SSOUpdated(type))
-        if (
-          !existing.config.configs[0].activated &&
-          config.config.configs[0].activated
-        ) {
-          fns.push(() => events.auth.SSOActivated(type))
-        } else if (
-          existing.config.configs[0].activated &&
-          !config.config.configs[0].activated
-        ) {
-          fns.push(() => events.auth.SSODeactivated(type))
-        }
-        break
+    } else if (isSettingsConfig(config)) {
+      // company
+      const existingCompany = existing.config.company
+      const company = config.config.company
+      if (company && company !== "Budibase" && existingCompany !== company) {
+        fns.push(events.org.nameUpdated)
       }
-      case Configs.SETTINGS: {
-        // company
-        const existingCompany = existing.config.company
-        const company = config.config.company
-        if (company && company !== "Budibase" && existingCompany !== company) {
-          fns.push(events.org.nameUpdated)
-        }
 
-        // logo
-        const existingLogoUrl = existing.config.logoUrl
-        const logoUrl = config.config.logoUrl
-        if (logoUrl && existingLogoUrl !== logoUrl) {
-          fns.push(events.org.logoUpdated)
-        }
+      // logo
+      const existingLogoUrl = existing.config.logoUrl
+      const logoUrl = config.config.logoUrl
+      if (logoUrl && existingLogoUrl !== logoUrl) {
+        fns.push(events.org.logoUpdated)
+      }
 
-        // platform url
-        const existingPlatformUrl = existing.config.platformUrl
-        const platformUrl = config.config.platformUrl
-        if (
-          platformUrl &&
-          platformUrl !== "http://localhost:10000" &&
-          existingPlatformUrl !== platformUrl &&
-          env.SELF_HOSTED
-        ) {
-          fns.push(events.org.platformURLUpdated)
-        }
-        break
+      // platform url
+      const existingPlatformUrl = existing.config.platformUrl
+      const platformUrl = config.config.platformUrl
+      if (
+        platformUrl &&
+        platformUrl !== "http://localhost:10000" &&
+        existingPlatformUrl !== platformUrl &&
+        env.SELF_HOSTED
+      ) {
+        fns.push(events.org.platformURLUpdated)
       }
     }
   }
@@ -142,7 +128,7 @@ const getEventFns = async (db, config) => {
   return fns
 }
 
-exports.save = async function (ctx) {
+export const save = async function (ctx: UserCtx) {
   const db = getGlobalDB()
   const { type, workspace, user, config } = ctx.request.body
   let eventFns = await getEventFns(db, ctx.request.body)
@@ -161,7 +147,7 @@ exports.save = async function (ctx) {
         await email.verifyConfig(config)
         break
     }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 
@@ -179,12 +165,12 @@ exports.save = async function (ctx) {
       _id: response.id,
       _rev: response.rev,
     }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
 
-exports.fetch = async function (ctx) {
+export const fetch = async function (ctx: UserCtx) {
   const db = getGlobalDB()
   const response = await db.allDocs(
     getConfigParams(
@@ -194,23 +180,23 @@ exports.fetch = async function (ctx) {
       }
     )
   )
-  ctx.body = response.rows.map(row => row.doc)
+  ctx.body = response.rows.map((row: any) => row.doc)
 }
 
 /**
  * Gets the most granular config for a particular configuration type.
  * The hierarchy is type -> workspace -> user.
  */
-exports.find = async function (ctx) {
+export const find = async function (ctx: UserCtx) {
   const db = getGlobalDB()
 
   const { userId, workspaceId } = ctx.query
   if (workspaceId && userId) {
     const workspace = await db.get(workspaceId)
     const userInWorkspace = workspace.users.some(
-      workspaceUser => workspaceUser === userId
+      (workspaceUser: any) => workspaceUser === userId
     )
-    if (!ctx.user.admin && !userInWorkspace) {
+    if (!ctx.user!.admin && !userInWorkspace) {
       ctx.throw(400, `User is not in specified workspace: ${workspace}.`)
     }
   }
@@ -229,16 +215,16 @@ exports.find = async function (ctx) {
       // don't throw an error, there simply is nothing to return
       ctx.body = {}
     }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-exports.publicOidc = async function (ctx) {
+export const publicOidc = async function (ctx: Ctx) {
   const db = getGlobalDB()
   try {
     // Find the config with the most granular scope based on context
-    const oidcConfig = await getScopedFullConfig(db, {
+    const oidcConfig: OIDCConfig = await getScopedFullConfig(db, {
       type: Configs.OIDC,
     })
 
@@ -251,12 +237,12 @@ exports.publicOidc = async function (ctx) {
         uuid: config.uuid,
       }))
     }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-exports.publicSettings = async function (ctx) {
+export const publicSettings = async function (ctx: Ctx) {
   const db = getGlobalDB()
 
   try {
@@ -303,33 +289,29 @@ exports.publicSettings = async function (ctx) {
     }
 
     ctx.body = config
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-exports.upload = async function (ctx) {
-  if (ctx.request.files == null || ctx.request.files.file.length > 1) {
+export const upload = async function (ctx: UserCtx) {
+  if (ctx.request.files == null || Array.isArray(ctx.request.files.file)) {
     ctx.throw(400, "One file must be uploaded.")
   }
   const file = ctx.request.files.file
   const { type, name } = ctx.params
 
-  let bucket
-  if (env.SELF_HOSTED) {
-    bucket = ObjectStoreBuckets.GLOBAL
-  } else {
-    bucket = ObjectStoreBuckets.GLOBAL_CLOUD
-  }
+  let bucket = coreEnv.GLOBAL_BUCKET_NAME
 
+  let baseKey = `${type}/${name}`
   let key
   if (env.MULTI_TENANCY) {
-    key = `${getTenantId()}/${type}/${name}`
+    key = `${getTenantId()}/${baseKey}`
   } else {
-    key = `${type}/${name}`
+    key = baseKey
   }
 
-  await upload({
+  await objectStore.upload({
     bucket,
     filename: key,
     path: file.path,
@@ -346,13 +328,8 @@ exports.upload = async function (ctx) {
       config: {},
     }
   }
-  let url
-  if (env.SELF_HOSTED) {
-    url = `/${bucket}/${key}`
-  } else {
-    url = `${BB_TENANT_CDN}/${key}`
-  }
 
+  const url = objectStore.getGlobalFileUrl(baseKey)
   cfgStructure.config[`${name}`] = url
   // write back to db with url updated
   await db.put(cfgStructure)
@@ -363,19 +340,19 @@ exports.upload = async function (ctx) {
   }
 }
 
-exports.destroy = async function (ctx) {
+export const destroy = async function (ctx: UserCtx) {
   const db = getGlobalDB()
   const { id, rev } = ctx.params
   try {
     await db.remove(id, rev)
     await cache.delete(CacheKeys.CHECKLIST)
     ctx.body = { message: "Config deleted successfully" }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-exports.configChecklist = async function (ctx) {
+export const configChecklist = async function (ctx: Ctx) {
   const db = getGlobalDB()
   const tenantId = getTenantId()
 
@@ -431,7 +408,7 @@ exports.configChecklist = async function (ctx) {
         }
       }
     )
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }

@@ -1,12 +1,14 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
-const { UserStatus } = require("@budibase/backend-core/constants")
-const { ObjectStoreBuckets } = require("@budibase/backend-core/objectStore")
+import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/roles"
+import { UserStatus } from "@budibase/backend-core/constants"
+import { objectStore } from "@budibase/backend-core"
 
-exports.JobQueues = {
+export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
+
+export const JobQueues = {
   AUTOMATIONS: "automationQueue",
 }
 
-const FilterTypes = {
+export const FilterTypes = {
   STRING: "string",
   FUZZY: "fuzzy",
   RANGE: "range",
@@ -19,8 +21,7 @@ const FilterTypes = {
   ONE_OF: "oneOf",
 }
 
-exports.FilterTypes = FilterTypes
-exports.NoEmptyFilterStrings = [
+export const NoEmptyFilterStrings = [
   FilterTypes.STRING,
   FilterTypes.FUZZY,
   FilterTypes.EQUAL,
@@ -29,7 +30,7 @@ exports.NoEmptyFilterStrings = [
   FilterTypes.NOT_CONTAINS,
 ]
 
-exports.FieldTypes = {
+export const FieldTypes = {
   STRING: "string",
   BARCODEQR: "barcodeqr",
   LONGFORM: "longform",
@@ -46,39 +47,39 @@ exports.FieldTypes = {
   INTERNAL: "internal",
 }
 
-exports.CanSwitchTypes = [
-  [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
+export const CanSwitchTypes = [
+  [FieldTypes.JSON, FieldTypes.ARRAY],
   [
-    exports.FieldTypes.STRING,
-    exports.FieldTypes.OPTIONS,
-    exports.FieldTypes.LONGFORM,
-    exports.FieldTypes.BARCODEQR,
+    FieldTypes.STRING,
+    FieldTypes.OPTIONS,
+    FieldTypes.LONGFORM,
+    FieldTypes.BARCODEQR,
   ],
-  [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
+  [FieldTypes.BOOLEAN, FieldTypes.NUMBER],
 ]
 
-exports.SwitchableTypes = exports.CanSwitchTypes.reduce((prev, current) =>
+export const SwitchableTypes = CanSwitchTypes.reduce((prev, current) =>
   prev ? prev.concat(current) : current
 )
 
-exports.RelationshipTypes = {
+export const RelationshipTypes = {
   ONE_TO_MANY: "one-to-many",
   MANY_TO_ONE: "many-to-one",
   MANY_TO_MANY: "many-to-many",
 }
 
-exports.FormulaTypes = {
+export const FormulaTypes = {
   STATIC: "static",
   DYNAMIC: "dynamic",
 }
 
-exports.AuthTypes = {
+export const AuthTypes = {
   APP: "app",
   BUILDER: "builder",
   EXTERNAL: "external",
 }
 
-exports.DataSourceOperation = {
+export const DataSourceOperation = {
   CREATE: "CREATE",
   READ: "READ",
   UPDATE: "UPDATE",
@@ -89,16 +90,16 @@ exports.DataSourceOperation = {
   DELETE_TABLE: "DELETE_TABLE",
 }
 
-exports.DatasourceAuthTypes = {
+export const DatasourceAuthTypes = {
   GOOGLE: "google",
 }
 
-exports.SortDirection = {
+export const SortDirection = {
   ASCENDING: "ASCENDING",
   DESCENDING: "DESCENDING",
 }
 
-exports.USERS_TABLE_SCHEMA = {
+export const USERS_TABLE_SCHEMA = {
   _id: "ta_users",
   type: "table",
   views: {},
@@ -106,9 +107,9 @@ exports.USERS_TABLE_SCHEMA = {
   // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out
   schema: {
     email: {
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         email: true,
         length: {
           maximum: "",
@@ -121,27 +122,27 @@ exports.USERS_TABLE_SCHEMA = {
     firstName: {
       name: "firstName",
       fieldName: "firstName",
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
       },
     },
     lastName: {
       name: "lastName",
       fieldName: "lastName",
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
       },
     },
     roleId: {
       fieldName: "roleId",
       name: "roleId",
-      type: exports.FieldTypes.OPTIONS,
+      type: FieldTypes.OPTIONS,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
         inclusion: Object.values(BUILTIN_ROLE_IDS),
       },
@@ -149,9 +150,9 @@ exports.USERS_TABLE_SCHEMA = {
     status: {
       fieldName: "status",
       name: "status",
-      type: exports.FieldTypes.OPTIONS,
+      type: FieldTypes.OPTIONS,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
         inclusion: Object.values(UserStatus),
       },
@@ -160,7 +161,7 @@ exports.USERS_TABLE_SCHEMA = {
   primaryDisplay: "email",
 }
 
-exports.AutoFieldSubTypes = {
+export const AutoFieldSubTypes = {
   CREATED_BY: "createdBy",
   CREATED_AT: "createdAt",
   UPDATED_BY: "updatedBy",
@@ -168,7 +169,7 @@ exports.AutoFieldSubTypes = {
   AUTO_ID: "autoID",
 }
 
-exports.AutoFieldDefaultNames = {
+export const AutoFieldDefaultNames = {
   CREATED_BY: "Created By",
   CREATED_AT: "Created At",
   UPDATED_BY: "Updated By",
@@ -176,41 +177,37 @@ exports.AutoFieldDefaultNames = {
   AUTO_ID: "Auto ID",
 }
 
-exports.OBJ_STORE_DIRECTORY = "/prod-budi-app-assets"
-exports.BaseQueryVerbs = {
+export const BaseQueryVerbs = {
   CREATE: "create",
   READ: "read",
   UPDATE: "update",
   DELETE: "delete",
 }
 
-exports.MetadataTypes = {
+export const MetadataTypes = {
   AUTOMATION_TEST_INPUT: "automationTestInput",
   AUTOMATION_TEST_HISTORY: "automationTestHistory",
 }
 
-exports.InvalidColumns = {
+export const InvalidColumns = {
   ID: "_id",
   REV: "_rev",
   TABLE_ID: "tableId",
 }
 
-exports.BuildSchemaErrors = {
+export const BuildSchemaErrors = {
   NO_KEY: "no_key",
   INVALID_COLUMN: "invalid_column",
 }
 
-exports.WebhookType = {
+export const WebhookType = {
   AUTOMATION: "automation",
 }
 
-exports.AutomationErrors = {
+export const AutomationErrors = {
   INCORRECT_TYPE: "INCORRECT_TYPE",
   MAX_ITERATIONS: "MAX_ITERATIONS_REACHED",
   FAILURE_CONDITION: "FAILURE_CONDITION_MET",
 }
 
-// pass through the list from the auth/core lib
-exports.ObjectStoreBuckets = ObjectStoreBuckets
-
-exports.MAX_AUTOMATION_RECURRING_ERRORS = 5
+export const MAX_AUTOMATION_RECURRING_ERRORS = 5

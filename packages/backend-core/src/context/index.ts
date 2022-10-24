@@ -14,6 +14,7 @@ import {
   closeAppDBs,
   getContextDB,
 } from "./utils"
+import * as conversions from "../db/conversions"
 
 export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 
@@ -233,6 +234,11 @@ export const getAppId = () => {
   } else {
     return foundId
   }
+}
+
+export const getProdAppId = () => {
+  const appId = getAppId()
+  return conversions.getProdAppID(appId)
 }
 
 export const isTenancyEnabled = () => {

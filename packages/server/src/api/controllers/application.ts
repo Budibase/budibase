@@ -31,7 +31,7 @@ const {
 } = require("@budibase/backend-core/db")
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { clientLibraryPath, stringToReadStream } from "../../utilities"
+import { stringToReadStream } from "../../utilities"
 import { getLocksById } from "../../utilities/redis"
 import {
   updateClientLibrary,
@@ -46,10 +46,10 @@ import { context } from "@budibase/backend-core"
 import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas, groups } from "@budibase/pro"
-import { errors, events, migrations } from "@budibase/backend-core"
+import { errors, events, migrations, objectStore } from "@budibase/backend-core"
 import { App, Layout, Screen, MigrationType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import { enrichPluginURLs } from "../../utilities/plugins"
+import { sdk as pro } from "@budibase/pro"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -213,7 +213,9 @@ export const fetchAppPackage = async (ctx: any) => {
   let screens = await getScreens()
 
   // Enrich plugin URLs
-  application.usedPlugins = enrichPluginURLs(application.usedPlugins)
+  application.usedPlugins = pro.plugins.enrichPluginURLs(
+    application.usedPlugins
+  )
 
   // Only filter screens if the user is not a builder
   if (!(ctx.user.builder && ctx.user.builder.global)) {
@@ -226,7 +228,10 @@ export const fetchAppPackage = async (ctx: any) => {
     application,
     screens,
     layouts,
-    clientLibPath: clientLibraryPath(ctx.params.appId, application.version),
+    clientLibPath: objectStore.clientLibraryUrl(
+      ctx.params.appId,
+      application.version
+    ),
   }
 }
 

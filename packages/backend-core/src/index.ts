@@ -19,10 +19,10 @@ import pino from "./pino"
 import * as middleware from "./middleware"
 import plugins from "./plugin"
 import encryption from "./security/encryption"
+import * as objectStore from "./objectStore"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"
-import * as objectStore from "./pkg/objectStore"
 import * as utils from "./pkg/utils"
 import redis from "./pkg/redis"
 import cache from "./pkg/cache"

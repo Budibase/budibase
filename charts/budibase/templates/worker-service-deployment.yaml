@@ -78,7 +78,9 @@ spec:
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
         - name: PLUGIN_BUCKET_NAME
-          value: {{ .Values.services.objectStore.pluginBucketName | default "plugins" | quote }}
+          value: {{ .Values.services.objectStore.pluginBucketName | quote }}
+        - name: GLOBAL_BUCKET_NAME
+          value: {{ .Values.services.objectStore.globalBucketName | quote }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY

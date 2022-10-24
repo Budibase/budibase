@@ -10,7 +10,7 @@ import {
 import * as env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
 
-const router = new Router()
+const router: Router = new Router()
 
 /* istanbul ignore next */
 router.param("file", async (file: any, ctx: any, next: any) => {
@@ -49,6 +49,12 @@ router
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     controller.uploadFile
+  )
+  .get(
+    "/api/tables/:tableId/rows/:rowId/attachments/:attachmentId",
+    paramResource("tableId"),
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    controller.getAttachment
   )
   .post(
     "/api/attachments/:tableId/delete",

@@ -1026,13 +1026,6 @@
   dependencies:
     "@types/koa" "*"
 
-"@types/koa-router@7.4.4":
-  version "7.4.4"
-  resolved "https://registry.yarnpkg.com/@types/koa-router/-/koa-router-7.4.4.tgz#db72bde3616365d74f00178d5f243c4fce7da572"
-  integrity sha512-3dHlZ6CkhgcWeF6wafEUvyyqjWYfKmev3vy1PtOmr0mBc3wpXPU5E8fBBd4YQo5bRpHPfmwC5yDaX7s4jhIN6A==
-  dependencies:
-    "@types/koa" "*"
-
 "@types/koa@*", "@types/koa@2.13.4":
   version "2.13.4"
   resolved "https://registry.yarnpkg.com/@types/koa/-/koa-2.13.4.tgz#10620b3f24a8027ef5cbae88b393d1b31205726b"
@@ -1047,10 +1040,10 @@
     "@types/koa-compose" "*"
     "@types/node" "*"
 
-"@types/koa__router@8.0.11":
-  version "8.0.11"
-  resolved "https://registry.yarnpkg.com/@types/koa__router/-/koa__router-8.0.11.tgz#d7b37e6db934fc072ea1baa2ab92bc8ac4564f3e"
-  integrity sha512-WXgKWpBsbS14kzmzD9LeFapOIa678h7zvUHxDwXwSx4ETKXhXLVUAToX6jZ/U7EihM7qwyD9W/BZvB0MRu7MTQ==
+"@types/koa__router@8.0.8":
+  version "8.0.8"
+  resolved "https://registry.yarnpkg.com/@types/koa__router/-/koa__router-8.0.8.tgz#b1e0e9a512498777d3366bbdf0e853df27ec831c"
+  integrity sha512-9pGCaDtzCsj4HJ8HmGuqzk8+s57sPj4njWd08GG5o92n5Xp9io2snc40CPpXFhoKcZ8OKhuu6ht4gNou9e1C2w==
   dependencies:
     "@types/koa" "*"
 

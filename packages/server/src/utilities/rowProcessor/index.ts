@@ -1,9 +1,7 @@
 const linkRows = require("../../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
-const { FieldTypes, AutoFieldSubTypes } = require("../../constants")
-const { attachmentsRelativeURL } = require("../index")
-const { processFormulas, fixAutoColumnSubType } = require("./utils")
-const { deleteFiles } = require("../../utilities/fileSystem/utilities")
+import { FieldTypes, AutoFieldSubTypes } from "../../constants"
+import { processFormulas, fixAutoColumnSubType } from "./utils"
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   isProdAppID,
@@ -12,6 +10,10 @@ const {
 } = require("@budibase/backend-core/db")
 const { getAppId } = require("@budibase/backend-core/context")
 const { InternalTables } = require("../../db/utils")
+import { objectStore } from "@budibase/backend-core"
+import { Row, Table } from "@budibase/types"
+
+export * from "./utils"
 
 const BASE_AUTO_ID = 1
 
@@ -21,9 +23,11 @@ const BASE_AUTO_ID = 1
 const TYPE_TRANSFORM_MAP = {
   [FieldTypes.LINK]: {
     "": [],
+    // @ts-ignore
     [null]: [],
+    // @ts-ignore
     [undefined]: undefined,
-    parse: link => {
+    parse: (link: any) => {
       if (Array.isArray(link) && typeof link[0] === "object") {
         return link.map(el => (el && el._id ? el._id : el))
       }
@@ -35,45 +39,61 @@ const TYPE_TRANSFORM_MAP = {
   },
   [FieldTypes.OPTIONS]: {
     "": null,
+    // @ts-ignore
     [null]: null,
+    // @ts-ignore
     [undefined]: undefined,
   },
   [FieldTypes.ARRAY]: {
     "": [],
+    // @ts-ignore
     [null]: [],
+    // @ts-ignore
     [undefined]: undefined,
   },
   [FieldTypes.STRING]: {
     "": "",
+    // @ts-ignore
     [null]: "",
+    // @ts-ignore
     [undefined]: undefined,
   },
   [FieldTypes.BARCODEQR]: {
     "": "",
+    // @ts-ignore
     [null]: "",
+    // @ts-ignore
     [undefined]: undefined,
   },
   [FieldTypes.FORMULA]: {
     "": "",
+    // @ts-ignore
     [null]: "",
+    // @ts-ignore
     [undefined]: undefined,
   },
   [FieldTypes.LONGFORM]: {
     "": "",
+    // @ts-ignore
     [null]: "",
+    // @ts-ignore
     [undefined]: undefined,
   },
   [FieldTypes.NUMBER]: {
     "": null,
+    // @ts-ignore
     [null]: null,
+    // @ts-ignore
     [undefined]: undefined,
-    parse: n => parseFloat(n),
+    parse: (n: any) => parseFloat(n),
   },
   [FieldTypes.DATETIME]: {
     "": null,
+    // @ts-ignore
     [undefined]: undefined,
+    // @ts-ignore
     [null]: null,
-    parse: date => {
+    parse: (date: string | Date) => {
       if (date instanceof Date) {
         return date.toISOString()
       }
@@ -82,12 +102,16 @@ const TYPE_TRANSFORM_MAP = {
   },
   [FieldTypes.ATTACHMENT]: {
     "": [],
+    // @ts-ignore
     [null]: [],
+    // @ts-ignore
     [undefined]: undefined,
   },
   [FieldTypes.BOOLEAN]: {
     "": null,
+    // @ts-ignore
     [null]: null,
+    // @ts-ignore
     [undefined]: undefined,
     true: true,
     false: false,
@@ -96,7 +120,7 @@ const TYPE_TRANSFORM_MAP = {
     parse: () => undefined,
   },
   [FieldTypes.JSON]: {
-    parse: input => {
+    parse: (input: any) => {
       try {
         if (input === "") {
           return undefined
@@ -113,17 +137,21 @@ const TYPE_TRANSFORM_MAP = {
  * Given the old state of the row and the new one after an update, this will
  * find the keys that have been removed in the updated row.
  */
-function getRemovedAttachmentKeys(oldRow, row, attachmentKey) {
+function getRemovedAttachmentKeys(
+  oldRow: Row,
+  row: Row,
+  attachmentKey: string
+) {
   if (!oldRow[attachmentKey]) {
     return []
   }
-  const oldKeys = oldRow[attachmentKey].map(attachment => attachment.key)
+  const oldKeys = oldRow[attachmentKey].map((attachment: any) => attachment.key)
   // no attachments in new row, all removed
   if (!row[attachmentKey]) {
     return oldKeys
   }
-  const newKeys = row[attachmentKey].map(attachment => attachment.key)
-  return oldKeys.filter(key => newKeys.indexOf(key) === -1)
+  const newKeys = row[attachmentKey].map((attachment: any) => attachment.key)
+  return oldKeys.filter((key: string) => newKeys.indexOf(key) === -1)
 }
 
 /**
@@ -136,12 +164,15 @@ function getRemovedAttachmentKeys(oldRow, row, attachmentKey) {
  * @returns {{row: Object, table: Object}} The updated row and table, the table may need to be updated
  * for automatic ID purposes.
  */
-function processAutoColumn(
-  user,
-  table,
-  row,
-  opts = { reprocessing: false, noAutoRelationships: false }
-) {
+export const processAutoColumn = (
+  user: any,
+  table: Table,
+  row: Row,
+  opts: { reprocessing?: boolean; noAutoRelationships?: boolean } = {
+    reprocessing: false,
+    noAutoRelationships: false,
+  }
+) => {
   let noUser = !user || !user.userId
   let isUserTable = table._id === InternalTables.USER_METADATA
   let now = new Date().toISOString()
@@ -150,7 +181,8 @@ function processAutoColumn(
   // check its not user table, or whether any of the processing options have been disabled
   const shouldUpdateUserFields =
     !isUserTable && !opts.reprocessing && !opts.noAutoRelationships && !noUser
-  for (let [key, schema] of Object.entries(table.schema)) {
+  for (let [key, s] of Object.entries(table.schema)) {
+    let schema = s as any
     if (!schema.autocolumn) {
       continue
     }
@@ -186,9 +218,6 @@ function processAutoColumn(
   }
   return { table, row }
 }
-exports.processAutoColumn = processAutoColumn
-exports.fixAutoColumnSubType = fixAutoColumnSubType
-exports.processFormulas = processFormulas
 
 /**
  * This will coerce a value to the correct types based on the type transform map
@@ -196,15 +225,17 @@ exports.processFormulas = processFormulas
  * @param {object} type The type fo coerce to
  * @returns {object} The coerced value
  */
-exports.coerce = (row, type) => {
+export const coerce = (row: any, type: string) => {
   // no coercion specified for type, skip it
   if (!TYPE_TRANSFORM_MAP[type]) {
     return row
   }
   // eslint-disable-next-line no-prototype-builtins
   if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(row)) {
+    // @ts-ignore
     return TYPE_TRANSFORM_MAP[type][row]
   } else if (TYPE_TRANSFORM_MAP[type].parse) {
+    // @ts-ignore
     return TYPE_TRANSFORM_MAP[type].parse(row)
   }
 
@@ -220,10 +251,10 @@ exports.coerce = (row, type) => {
  * @param {object} opts some input processing options (like disabling auto-column relationships).
  * @returns {object} the row which has been prepared to be written to the DB.
  */
-exports.inputProcessing = (
+export const inputProcessing = (
   user = {},
-  table,
-  row,
+  table: Table,
+  row: Row,
   opts = { noAutoRelationships: false }
 ) => {
   let clonedRow = cloneDeep(row)
@@ -245,7 +276,7 @@ exports.inputProcessing = (
     }
     // otherwise coerce what is there to correct types
     else {
-      clonedRow[key] = exports.coerce(value, field.type)
+      clonedRow[key] = coerce(value, field.type)
     }
   }
 
@@ -267,7 +298,11 @@ exports.inputProcessing = (
  * @param {object} opts used to set some options for the output, such as disabling relationship squashing.
  * @returns {object[]|object} the enriched rows will be returned.
  */
-exports.outputProcessing = async (table, rows, opts = { squash: true }) => {
+export const outputProcessing = async (
+  table: Table,
+  rows: Row[],
+  opts = { squash: true }
+) => {
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
@@ -286,8 +321,14 @@ exports.outputProcessing = async (table, rows, opts = { squash: true }) => {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue
         }
-        row[property].forEach(attachment => {
-          attachment.url = attachmentsRelativeURL(attachment.key)
+        row[property].forEach((attachment: any) => {
+          const keyParts = attachment.key.split("/")
+          attachment.id = keyParts[2]
+          attachment.url = objectStore.getAttachmentUrl(row, attachment.id)
+          attachment.permaUrl = objectStore.getPermaAttachmentUrl(
+            row,
+            attachment.id
+          )
         })
       }
     }
@@ -308,7 +349,15 @@ exports.outputProcessing = async (table, rows, opts = { squash: true }) => {
  * deleted attachment columns.
  * @return {Promise<void>} When all attachments have been removed this will return.
  */
-exports.cleanupAttachments = async (table, { row, rows, oldRow, oldTable }) => {
+export const cleanupAttachments = async (
+  table: Table,
+  opts: { row?: Row; rows?: Row[]; oldRow?: Row; oldTable?: Table }
+) => {
+  const row = opts.row
+  const rows = opts.rows
+  const oldRow = opts.oldRow
+  const oldTable = opts.oldTable
+
   const appId = getAppId()
   if (!isProdAppID(appId)) {
     const prodAppId = getProdAppID(appId)
@@ -318,10 +367,10 @@ exports.cleanupAttachments = async (table, { row, rows, oldRow, oldTable }) => {
       return
     }
   }
-  let files = []
-  function addFiles(row, key) {
+  let files: string[] = []
+  function addFiles(row: Row, key: string) {
     if (row[key]) {
-      files = files.concat(row[key].map(attachment => attachment.key))
+      files = files.concat(row[key].map((attachment: any) => attachment.key))
     }
   }
   const schemaToUse = oldTable ? oldTable.schema : table.schema
@@ -331,7 +380,7 @@ exports.cleanupAttachments = async (table, { row, rows, oldRow, oldTable }) => {
     }
     // old table had this column, new table doesn't - delete it
     if (oldTable && !table.schema[key]) {
-      rows.forEach(row => addFiles(row, key))
+      rows?.forEach(row => addFiles(row, key))
     } else if (oldRow && row) {
       // if updating, need to manage the differences
       files = files.concat(getRemovedAttachmentKeys(oldRow, row, key))
@@ -342,6 +391,6 @@ exports.cleanupAttachments = async (table, { row, rows, oldRow, oldTable }) => {
     }
   }
   if (files.length > 0) {
-    return deleteFiles(ObjectStoreBuckets.APPS, files)
+    await objectStore.deleteFiles(ObjectStoreBuckets.APPS, files)
   }
 }

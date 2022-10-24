@@ -5,7 +5,7 @@ import { auth as authCore } from "@budibase/backend-core"
 import Joi from "joi"
 const { adminOnly, joiValidator } = authCore
 
-const router = new Router()
+const router: Router = new Router()
 
 function buildTemplateSaveValidation() {
   // prettier-ignore

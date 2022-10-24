@@ -1,19 +1,16 @@
 const env = require("../environment")
-const { OBJ_STORE_DIRECTORY } = require("../constants")
-const { sanitizeKey } = require("@budibase/backend-core/objectStore")
 const { generateMetadataID } = require("../db/utils")
 const Readable = require("stream").Readable
 const { getAppDB } = require("@budibase/backend-core/context")
 
-const BB_CDN = "https://cdn.budi.live"
+export const wait = (ms: number) =>
+  new Promise(resolve => setTimeout(resolve, ms))
 
-exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+export const isDev = env.isDev
 
-exports.isDev = env.isDev
+export const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
 
-exports.NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
-
-exports.removeFromArray = (array, element) => {
+export const removeFromArray = (array: any[], element: number) => {
   const index = array.indexOf(element)
   if (index !== -1) {
     array.splice(index, 1)
@@ -27,61 +24,20 @@ exports.removeFromArray = (array, element) => {
  * @param {string} url The URL to test and remove any extra double slashes.
  * @return {string} The updated url.
  */
-exports.checkSlashesInUrl = url => {
+export const checkSlashesInUrl = (url: string) => {
   return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
 }
 
-/**
- * Gets the address of the object store, depending on whether self hosted or in cloud.
- * @return {string} The base URL of the object store (MinIO or S3).
- */
-exports.objectStoreUrl = () => {
-  if (env.SELF_HOSTED || env.MINIO_URL) {
-    // can use a relative url for this as all goes through the proxy (this is hosted in minio)
-    return OBJ_STORE_DIRECTORY
-  } else {
-    return BB_CDN
-  }
-}
-
-/**
- * In production the client library is stored in the object store, however in development
- * we use the symlinked version produced by lerna, located in node modules. We link to this
- * via a specific endpoint (under /api/assets/client).
- * @param {string} appId In production we need the appId to look up the correct bucket, as the
- * version of the client lib may differ between apps.
- * @param {string} version The version to retrieve.
- * @return {string} The URL to be inserted into appPackage response or server rendered
- * app index file.
- */
-exports.clientLibraryPath = (appId, version) => {
-  if (env.isProd()) {
-    let url = `${exports.objectStoreUrl()}/${sanitizeKey(
-      appId
-    )}/budibase-client.js`
-
-    // append app version to bust the cache
-    if (version) {
-      url += `?v=${version}`
-    }
-    return url
-  } else {
-    return `/api/assets/client`
-  }
-}
-
-exports.attachmentsRelativeURL = attachmentKey => {
-  return exports.checkSlashesInUrl(
-    `${exports.objectStoreUrl()}/${attachmentKey}`
-  )
-}
-
-exports.updateEntityMetadata = async (type, entityId, updateFn) => {
+export const updateEntityMetadata = async (
+  type: string,
+  entityId: string,
+  updateFn: any
+) => {
   const db = getAppDB()
   const id = generateMetadataID(type, entityId)
   // read it to see if it exists, we'll overwrite it no matter what
   let rev,
-    metadata = {}
+    metadata: any = {}
   try {
     const oldMetadata = await db.get(id)
     rev = oldMetadata._rev
@@ -102,13 +58,17 @@ exports.updateEntityMetadata = async (type, entityId, updateFn) => {
   }
 }
 
-exports.saveEntityMetadata = async (type, entityId, metadata) => {
-  return exports.updateEntityMetadata(type, entityId, () => {
+export const saveEntityMetadata = async (
+  type: string,
+  entityId: string,
+  metadata: any
+) => {
+  return updateEntityMetadata(type, entityId, () => {
     return metadata
   })
 }
 
-exports.deleteEntityMetadata = async (type, entityId) => {
+export const deleteEntityMetadata = async (type: string, entityId: string) => {
   const db = getAppDB()
   const id = generateMetadataID(type, entityId)
   let rev
@@ -125,7 +85,7 @@ exports.deleteEntityMetadata = async (type, entityId) => {
   }
 }
 
-exports.escapeDangerousCharacters = string => {
+export const escapeDangerousCharacters = (string: string) => {
   return string
     .replace(/[\\]/g, "\\\\")
     .replace(/[\b]/g, "\\b")
@@ -135,7 +95,7 @@ exports.escapeDangerousCharacters = string => {
     .replace(/[\t]/g, "\\t")
 }
 
-exports.stringToReadStream = string => {
+export const stringToReadStream = (string: string) => {
   return new Readable({
     read() {
       this.push(string)
@@ -144,7 +104,7 @@ exports.stringToReadStream = string => {
   })
 }
 
-exports.formatBytes = bytes => {
+export const formatBytes = (bytes: string) => {
   const units = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
   const byteIncrements = 1024
   let unit = 0
@@ -155,7 +115,7 @@ exports.formatBytes = bytes => {
   return `${size.toFixed(size < 10 && unit > 0 ? 1 : 0)}${units[unit]}`
 }
 
-exports.convertBookmark = bookmark => {
+export const convertBookmark = (bookmark: any) => {
   const IS_NUMBER = /^\d+\.?\d*$/
   if (typeof bookmark === "string" && bookmark.match(IS_NUMBER)) {
     return parseFloat(bookmark)
@@ -163,7 +123,7 @@ exports.convertBookmark = bookmark => {
   return bookmark
 }
 
-exports.isQsTrue = param => {
+export const isQsTrue = (param: any) => {
   if (typeof param === "string") {
     return param.toLowerCase() === "true"
   } else {

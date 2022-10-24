@@ -1,7 +1,8 @@
 import { BaseEvent } from "./event"
+import { ConfigType } from "../../documents"
 
 export type LoginSource = "local" | "google" | "oidc" | "google-internal"
-export type SSOType = "oidc" | "google"
+export type SSOType = ConfigType.OIDC | ConfigType.GOOGLE
 
 export interface LoginEvent extends BaseEvent {
   userId: string

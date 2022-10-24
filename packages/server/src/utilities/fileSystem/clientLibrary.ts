@@ -1,10 +1,10 @@
 const { join } = require("path")
 const { ObjectStoreBuckets } = require("../../constants")
 const fs = require("fs")
-const { upload, retrieveToTmp, streamUpload } = require("./utilities")
 const { resolve } = require("../centralPath")
 const env = require("../../environment")
-const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
+import { objectStore } from "@budibase/backend-core"
+import { TOP_LEVEL_PATH } from "./filesystem"
 
 /**
  * Client library paths in the object store:
@@ -33,18 +33,18 @@ const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
  * @param appId The app ID to backup
  * @returns {Promise<void>}
  */
-exports.backupClientLibrary = async appId => {
+export const backupClientLibrary = async (appId: string) => {
   // Copy existing manifest to tmp
   let tmpManifestPath
   try {
     // Try to load the manifest from the new file location
-    tmpManifestPath = await retrieveToTmp(
+    tmpManifestPath = await objectStore.retrieveToTmp(
       ObjectStoreBuckets.APPS,
       join(appId, "manifest.json")
     )
   } catch (error) {
     // Fallback to loading it from the old location for old apps
-    tmpManifestPath = await retrieveToTmp(
+    tmpManifestPath = await objectStore.retrieveToTmp(
       ObjectStoreBuckets.APPS,
       join(
         appId,
@@ -58,19 +58,19 @@ exports.backupClientLibrary = async appId => {
   }
 
   // Copy existing client lib to tmp
-  const tmpClientPath = await retrieveToTmp(
+  const tmpClientPath = await objectStore.retrieveToTmp(
     ObjectStoreBuckets.APPS,
     join(appId, "budibase-client.js")
   )
 
   // Upload manifest and client library as backups
-  const manifestUpload = upload({
+  const manifestUpload = objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "manifest.json.bak"),
     path: tmpManifestPath,
     type: "application/json",
   })
-  const clientUpload = upload({
+  const clientUpload = objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "budibase-client.js.bak"),
     path: tmpClientPath,
@@ -85,7 +85,7 @@ exports.backupClientLibrary = async appId => {
  * @param appId The app ID to update
  * @returns {Promise<void>}
  */
-exports.updateClientLibrary = async appId => {
+export const updateClientLibrary = async (appId: string) => {
   let manifest, client
 
   if (env.isDev()) {
@@ -99,7 +99,7 @@ exports.updateClientLibrary = async appId => {
   }
 
   // Upload latest manifest and client library
-  const manifestUpload = streamUpload(
+  const manifestUpload = objectStore.streamUpload(
     ObjectStoreBuckets.APPS,
     join(appId, "manifest.json"),
     fs.createReadStream(manifest),
@@ -107,7 +107,7 @@ exports.updateClientLibrary = async appId => {
       ContentType: "application/json",
     }
   )
-  const clientUpload = streamUpload(
+  const clientUpload = objectStore.streamUpload(
     ObjectStoreBuckets.APPS,
     join(appId, "budibase-client.js"),
     fs.createReadStream(client),
@@ -124,27 +124,27 @@ exports.updateClientLibrary = async appId => {
  * @param appId The app ID to revert
  * @returns {Promise<void>}
  */
-exports.revertClientLibrary = async appId => {
+export const revertClientLibrary = async (appId: string) => {
   // Copy backups manifest to tmp directory
-  const tmpManifestPath = await retrieveToTmp(
+  const tmpManifestPath = await objectStore.retrieveToTmp(
     ObjectStoreBuckets.APPS,
     join(appId, "manifest.json.bak")
   )
 
   // Copy backup client lib to tmp
-  const tmpClientPath = await retrieveToTmp(
+  const tmpClientPath = await objectStore.retrieveToTmp(
     ObjectStoreBuckets.APPS,
     join(appId, "budibase-client.js.bak")
   )
 
   // Upload backups as new versions
-  const manifestUpload = upload({
+  const manifestUpload = objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "manifest.json"),
     path: tmpManifestPath,
     type: "application/json",
   })
-  const clientUpload = upload({
+  const clientUpload = objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "budibase-client.js"),
     path: tmpClientPath,

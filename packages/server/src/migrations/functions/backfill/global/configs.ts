@@ -5,6 +5,7 @@ import {
   isGoogleConfig,
   isOIDCConfig,
   isSettingsConfig,
+  ConfigType,
 } from "@budibase/types"
 import env from "./../../../../environment"
 
@@ -31,15 +32,15 @@ export const backfill = async (
       await events.email.SMTPCreated(timestamp)
     }
     if (isGoogleConfig(config)) {
-      await events.auth.SSOCreated("google", timestamp)
+      await events.auth.SSOCreated(ConfigType.GOOGLE, timestamp)
       if (config.config.activated) {
-        await events.auth.SSOActivated("google", timestamp)
+        await events.auth.SSOActivated(ConfigType.GOOGLE, timestamp)
       }
     }
     if (isOIDCConfig(config)) {
-      await events.auth.SSOCreated("oidc", timestamp)
+      await events.auth.SSOCreated(ConfigType.OIDC, timestamp)
       if (config.config.configs[0].activated) {
-        await events.auth.SSOActivated("oidc", timestamp)
+        await events.auth.SSOActivated(ConfigType.OIDC, timestamp)
       }
     }
     if (isSettingsConfig(config)) {

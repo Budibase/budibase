@@ -1,3 +1,4 @@
+import { Row, Table } from "@budibase/types"
 const {
   FieldTypes,
   FormulaTypes,
@@ -10,7 +11,7 @@ const { processStringSync } = require("@budibase/string-templates")
  * If the subtype has been lost for any reason this works out what
  * subtype the auto column should be.
  */
-exports.fixAutoColumnSubType = column => {
+export const fixAutoColumnSubType = (column: any) => {
   if (!column.autocolumn || !column.name || column.subtype) {
     return column
   }
@@ -32,16 +33,24 @@ exports.fixAutoColumnSubType = column => {
 /**
  * Looks through the rows provided and finds formulas - which it then processes.
  */
-exports.processFormulas = (
-  table,
-  rows,
-  { dynamic, contextRows } = { dynamic: true }
+export const processFormulas = (
+  table: Table,
+  data: Row[] | Row,
+  opts: { dynamic?: boolean; contextRows?: any } = { dynamic: true }
 ) => {
-  const single = !Array.isArray(rows)
+  let contextRows = opts.contextRows
+  const dynamic = opts.dynamic
+
+  // handle singular row data
+  let rows: Row[]
+  const single = !Array.isArray(data)
   if (single) {
-    rows = [rows]
+    rows = [data]
     contextRows = contextRows ? [contextRows] : contextRows
+  } else {
+    rows = data
   }
+
   for (let [column, schema] of Object.entries(table.schema)) {
     const isStatic = schema.formulaType === FormulaTypes.STATIC
     if (
@@ -70,7 +79,7 @@ exports.processFormulas = (
  * Processes any date columns and ensures that those without the ignoreTimezones
  * flag set are parsed as UTC rather than local time.
  */
-exports.processDates = (table, rows) => {
+export const processDates = (table: Table, rows: Row[]) => {
   let datesWithTZ = []
   for (let [column, schema] of Object.entries(table.schema)) {
     if (schema.type !== FieldTypes.DATETIME) {
