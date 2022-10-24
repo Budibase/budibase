@@ -17,7 +17,9 @@
     ...(gridStyles ? { "z-index": 999 } : null),
   })
 
-  const isChildOfGrid = e => {
+  // Util to check if a DND event originates from a grid (or inside a grid).
+  // This is important as we do not handle grid DND in this handler.
+  const isGridEvent = e => {
     return (
       e.target
         .closest?.(".component")
@@ -113,7 +115,7 @@
 
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
-    if (!isChildOfGrid(e)) {
+    if (!isGridEvent(e)) {
       return
     }
 
