@@ -54,12 +54,13 @@
 
     const domGrid = getDOMNode(gridId)
     const cols = parseInt(domGrid.dataset.cols)
+    const rows = parseInt(domGrid.dataset.rows)
     const { width, height } = domGrid.getBoundingClientRect()
 
     const colWidth = width / cols
     const diffX = mouseX - startX
     let deltaX = Math.round(diffX / colWidth)
-    const rowHeight = height / cols
+    const rowHeight = height / rows
     const diffY = mouseY - startY
     let deltaY = Math.round(diffY / rowHeight)
 
@@ -160,27 +161,27 @@
       return
     }
 
-    const instance = componentStore.actions.getComponentInstance(dragInfo.id)
-    if (!instance) {
-      return
-    }
-    const styles = instance.getStyles()
     const domGrid = getDOMNode(dragInfo.gridId)
+    const gridCols = parseInt(domGrid.dataset.cols)
+    const gridRows = parseInt(domGrid.dataset.rows)
+    const domNode = getDOMNode(dragInfo.id)
+    const styles = window.getComputedStyle(domNode)
     if (domGrid) {
-      const getStyle = x => parseInt(styles?.normal?.[x] || "0")
+      const minMax = (value, min, max) => Math.min(max, Math.max(min, value))
+      const getStyle = x => parseInt(styles?.[x] || "0")
+      const getColStyle = x => minMax(getStyle(x), 1, gridCols + 1)
+      const getRowStyle = x => minMax(getStyle(x), 1, gridRows + 1)
       dragInfo.grid = {
         startX: e.clientX,
         startY: e.clientY,
-        rowStart: getStyle("grid-row-start"),
-        rowEnd: getStyle("grid-row-end"),
-        colStart: getStyle("grid-column-start"),
-        colEnd: getStyle("grid-column-end"),
-        rowDeltaMin: 1 - getStyle("grid-row-start"),
-        rowDeltaMax:
-          parseInt(domGrid.dataset.cols) + 1 - getStyle("grid-row-end"),
-        colDeltaMin: 1 - getStyle("grid-column-start"),
-        colDeltaMax:
-          parseInt(domGrid.dataset.cols) + 1 - getStyle("grid-column-end"),
+        rowStart: getRowStyle("grid-row-start"),
+        rowEnd: getRowStyle("grid-row-end"),
+        colStart: getColStyle("grid-column-start"),
+        colEnd: getColStyle("grid-column-end"),
+        rowDeltaMin: 1 - getRowStyle("grid-row-start"),
+        rowDeltaMax: gridRows + 1 - getRowStyle("grid-row-end"),
+        colDeltaMin: 1 - getColStyle("grid-column-start"),
+        colDeltaMax: gridCols + 1 - getColStyle("grid-column-end"),
       }
       handleEvent(e)
     }

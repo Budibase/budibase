@@ -170,21 +170,11 @@
   $: pad = pad || (interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
 
-  // We can apply additional styles automatically if required.
-  // One use case for this is ensuring grid children have proper styles to
-  // display properly inside a grid.
-  $: additionalStyles = getAdditionalStyles(
-    instance._styles?.normal || {},
-    parentType,
-    definition
-  )
-
   // Compute overall styles
   $: styles = {
     ...instance._styles,
     normal: {
       ...instance._styles?.normal,
-      ...additionalStyles,
       ...ephemeralStyles,
     },
     custom: customCSS,
@@ -458,54 +448,6 @@
       block: "start",
       inline: "start",
     })
-  }
-
-  const getAdditionalStyles = (styles, parentType, definition) => {
-    let newStyles = {}
-
-    // Ensure grid styles are set
-    if (parentType?.endsWith("/grid")) {
-      newStyles = {
-        ...newStyles,
-        overflow: "hidden",
-        width: "auto",
-        height: "auto",
-      }
-
-      // Guess rough grid size from definition size
-      let columns = 6
-      let rows = 4
-      if (definition.size?.width) {
-        columns = Math.min(12, Math.round(definition.size.width / 100))
-      }
-      if (definition.size?.height) {
-        rows = Math.min(12, Math.round(definition.size.height / 50))
-      }
-
-      // Ensure grid position styles are set
-      if (!styles["grid-column-start"]) {
-        newStyles["grid-column-start"] = 1
-      }
-      if (!styles["grid-column-end"]) {
-        newStyles["grid-column-end"] = columns + 1
-      }
-      if (!styles["grid-row-start"]) {
-        newStyles["grid-row-start"] = 1
-      }
-      if (!styles["grid-row-end"]) {
-        newStyles["grid-row-end"] = rows + 1
-      }
-
-      // Ensure grid end styles aren't before grid start styles
-      if (newStyles["grid-column-end"] <= newStyles["grid-column-start"]) {
-        newStyles["grid-column-end"] = newStyles["grid-column-start"] + 1
-      }
-      if (newStyles["grid-row-end"] <= newStyles["grid-row-start"]) {
-        newStyles["grid-row-end"] = newStyles["grid-row-start"] + 1
-      }
-    }
-
-    return newStyles
   }
 
   onMount(() => {
