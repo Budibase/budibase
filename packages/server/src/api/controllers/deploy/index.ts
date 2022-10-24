@@ -110,14 +110,17 @@ async function deployApp(deployment: any, userId: string) {
 
     // can't do this in test
     if (!env.isTest()) {
-      // trigger backup initially
-      await backups.triggerAppBackup(
-        productionAppId,
-        AppBackupTrigger.PUBLISH,
-        {
-          createdBy: userId,
-        }
-      )
+      // don't try this if feature isn't allowed, will error
+      if (!(await backups.isEnabled())) {
+        // trigger backup initially
+        await backups.triggerAppBackup(
+          productionAppId,
+          AppBackupTrigger.PUBLISH,
+          {
+            createdBy: userId,
+          }
+        )
+      }
     }
 
     const config: any = {
