@@ -94,9 +94,7 @@
             type={schema[configKey].type}
             on:change
             bind:value={config[configKey]}
-            on:blur={($validation.touched[configKey] = true)}
-            error={$validation.touched[configKey] &&
-              $validation.errors[configKey]}
+            error={$validation.errors[configKey]}
           />
         </div>
       {:else}
@@ -106,9 +104,7 @@
             type={schema[configKey].type}
             on:change
             bind:value={config[configKey]}
-            on:blur={($validation.touched[configKey] = true)}
-            error={$validation.touched[configKey] &&
-              $validation.errors[configKey]}
+            error={$validation.errors[configKey]}
           />
         </div>
       {/if}
