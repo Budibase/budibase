@@ -36,7 +36,6 @@
   let endDate = null
   let filters = getFilters()
 
-  $: console.log(backupData)
   $: page = $pageInfo.page
   $: fetchBackups(filterOpt, page, startDate, endDate)
 
@@ -193,7 +192,7 @@
         </div>
       </Layout>
     </Page>
-  {:else if backupData}
+  {:else if backupData?.length > 0}
     <Layout noPadding gap="M" alignContent="start">
       <div class="search">
         <div class="select">
@@ -248,7 +247,7 @@
         </div>
       </div>
     </Layout>
-  {:else if !backupData}
+  {:else if backupData?.length === 0}
     <Page wide={false}>
       <div class="align">
         <img
@@ -263,7 +262,7 @@
             <Body size="S">You can manually backup your app any time</Body>
           </div>
           <div class="padding">
-            <Button cta>Create Backup</Button>
+            <Button on:click={modal.show} cta>Create Backup</Button>
           </div>
         </Layout>
       </div>
