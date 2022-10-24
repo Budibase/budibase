@@ -35,7 +35,6 @@
   export let isScreen = false
   export let isBlock = false
   export let parent = null
-  export let parentType = null
 
   // Get parent contexts
   const context = getContext("context")
@@ -496,11 +495,7 @@
         <ComponentPlaceholder />
       {:else if children.length}
         {#each children as child (child._id)}
-          <svelte:self
-            instance={child}
-            parent={id}
-            parentType={instance._component}
-          />
+          <svelte:self instance={child} parent={id} />
         {/each}
       {:else if emptyState}
         {#if isScreen}
