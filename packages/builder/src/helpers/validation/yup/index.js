@@ -28,7 +28,9 @@ export const createValidationStore = () => {
     let propertyValidator
     switch (type) {
       case "number":
-        propertyValidator = number()
+        propertyValidator = number().transform(value =>
+          isNaN(value) ? undefined : value
+        )
         break
       case "email":
         propertyValidator = string().email()
