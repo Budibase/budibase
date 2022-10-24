@@ -11,9 +11,6 @@ const createDndStore = () => {
 
     // Info about where the component would be dropped
     drop: null,
-
-    // Whether the current drop has been completed successfully
-    dropped: false,
   }
   const store = writable(initialState)
 
@@ -63,13 +60,6 @@ const createDndStore = () => {
     store.set(initialState)
   }
 
-  const markDropped = () => {
-    store.update(state => {
-      state.dropped = true
-      return state
-    })
-  }
-
   return {
     subscribe: store.subscribe,
     actions: {
@@ -78,7 +68,6 @@ const createDndStore = () => {
       updateTarget,
       updateDrop,
       reset,
-      markDropped,
     },
   }
 }
@@ -91,7 +80,6 @@ export const dndStore = createDndStore()
 // or components which depend on DND state unless values actually change.
 export const dndParent = computed(dndStore, x => x.drop?.parent)
 export const dndIndex = computed(dndStore, x => x.drop?.index)
-export const dndDropped = computed(dndStore, x => x.dropped)
 export const dndBounds = computed(dndStore, x => x.source?.bounds)
 export const dndIsDragging = computed(dndStore, x => !!x.source)
 export const dndIsNewComponent = computed(
