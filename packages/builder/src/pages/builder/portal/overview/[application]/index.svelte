@@ -33,6 +33,7 @@
   import ExportAppModal from "components/start/ExportAppModal.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
+  import BackupsTab from "components/portal/overview/backups/BackupsTab.svelte"
 
   export let application
 
@@ -318,16 +319,12 @@
           <Tab title="Access">
             <AccessTab app={selectedApp} />
           </Tab>
-          {#if isPublished}
-            <Tab title="Automation History">
-              <HistoryTab app={selectedApp} />
-            </Tab>
-          {/if}
-          {#if false}
-            <Tab title="Backups">
-              <div class="container">Backups contents</div>
-            </Tab>
-          {/if}
+          <Tab title="Automation History">
+            <HistoryTab app={selectedApp} />
+          </Tab>
+          <Tab title="Backups">
+            <BackupsTab app={selectedApp} />
+          </Tab>
           <Tab title="Settings">
             <SettingsTab app={selectedApp} />
           </Tab>
