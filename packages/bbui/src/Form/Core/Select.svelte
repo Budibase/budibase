@@ -36,7 +36,7 @@
 
   const getFieldText = (value, options, placeholder) => {
     // Always use placeholder if no value
-    if (value == null || value === "" || value.length == 0) {
+    if (value == null || value === "") {
       return placeholder || "Choose an option"
     }
 
