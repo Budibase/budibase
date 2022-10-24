@@ -26,6 +26,8 @@
   }
   div :global(.apexcharts-text.apexcharts-xaxis-title-text),
   div :global(.apexcharts-text.apexcharts-yaxis-title-text),
+  div :global(.apexcharts-text.apexcharts-xaxis-label),
+  div :global(.apexcharts-text.apexcharts-yaxis-label),
   div :global(.apexcharts-title-text) {
     fill: var(--spectrum-global-color-gray-600);
   }
