@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
 
   const component = getContext("component")
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
 
   export let cols = 12
   export let rows = 12
@@ -11,6 +11,7 @@
 
   // Deliberately non-reactive as we want this fixed whenever the grid renders
   const defaultColSpan = Math.ceil((cols + 1) / 2)
+  console.log(defaultColSpan)
   const defaultRowSpan = Math.ceil((rows + 1) / 2)
 
   $: coords = generateCoords(rows, cols)
@@ -37,16 +38,20 @@
       "--rows": rows,
       "--default-col-span": defaultColSpan,
       "--default-row-span": defaultRowSpan,
+      padding: "0 !important",
+      gap: "0 !important",
     },
   }}
   data-rows={rows}
   data-cols={cols}
 >
-  <div class="underlay">
-    {#each coords as coord}
-      <div class="placeholder" />
-    {/each}
-  </div>
+  {#if $builderStore.inBuilder}
+    <div class="underlay">
+      {#each coords as coord}
+        <div class="placeholder" />
+      {/each}
+    </div>
+  {/if}
   <slot />
 </div>
 
@@ -69,6 +74,8 @@
     grid-column-end: var(--default-col-span);
     grid-row-start: 1;
     grid-row-end: var(--default-row-span);
+    max-height: 100%;
+    max-width: 100%;
   }
 
   .grid {
@@ -94,7 +101,6 @@
   .underlay {
     z-index: -1;
   }
-
   .placeholder {
     background-color: var(--spectrum-global-color-gray-100);
   }
