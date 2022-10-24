@@ -168,6 +168,9 @@ export enum Event {
   PLUGIN_INIT = "plugin:init",
   PLUGIN_IMPORTED = "plugin:imported",
   PLUGIN_DELETED = "plugin:deleted",
+
+  // BACKUP
+  APP_BACKUP_RESTORED = "app:backup:restored",
 }
 
 // properties added at the final stage of the event pipeline

@@ -1,10 +1,10 @@
-const { getTable } = require("../api/controllers/table/utils")
 const {
   findHBSBlocks,
   decodeJSBinding,
   isJSBinding,
   encodeJSBinding,
 } = require("@budibase/string-templates")
+const sdk = require("../sdk")
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -64,7 +64,7 @@ exports.cleanInputValues = (inputs, schema) => {
  * @returns {Promise<Object>} The cleaned up rows object, will should now have all the required primitive types.
  */
 exports.cleanUpRow = async (tableId, row) => {
-  let table = await getTable(tableId)
+  let table = await sdk.tables.getTable(tableId)
   return exports.cleanInputValues(row, { properties: table.schema })
 }
 

@@ -4,8 +4,8 @@ const csvParser = require("../../../utilities/csvParser")
 const { isExternalTable, isSQL } = require("../../../integrations/utils")
 const { getDatasourceParams } = require("../../../db/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
-const { getTable, getAllInternalTables } = require("./utils")
 const { events } = require("@budibase/backend-core")
+const sdk = require("../../../sdk")
 
 function pickApi({ tableId, table }) {
   if (table && !tableId) {
@@ -23,7 +23,7 @@ function pickApi({ tableId, table }) {
 exports.fetch = async function (ctx) {
   const db = getAppDB()
 
-  const internal = await getAllInternalTables()
+  const internal = await sdk.tables.getAllInternalTables()
 
   const externalTables = await db.allDocs(
     getDatasourceParams("plus", {
@@ -50,7 +50,7 @@ exports.fetch = async function (ctx) {
 
 exports.find = async function (ctx) {
   const tableId = ctx.params.tableId
-  ctx.body = await getTable(tableId)
+  ctx.body = await sdk.tables.getTable(tableId)
 }
 
 exports.save = async function (ctx) {
@@ -101,7 +101,7 @@ exports.validateCSVSchema = async function (ctx) {
   const { csvString, schema = {}, tableId } = ctx.request.body
   let existingTable
   if (tableId) {
-    existingTable = await getTable(tableId)
+    existingTable = await sdk.tables.getTable(tableId)
   }
   let result = await csvParser.parse(csvString, schema)
   if (existingTable) {
