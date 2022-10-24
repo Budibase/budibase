@@ -10,6 +10,7 @@ export const syncURLToState = options => {
     fallbackUrl,
     store,
     routify,
+    beforeNavigate,
   } = options || {}
   if (
     !urlParam ||
@@ -41,6 +42,15 @@ export const syncURLToState = options => {
 
   // Navigate to a certain URL
   const gotoUrl = (url, params) => {
+    if (beforeNavigate) {
+      const res = beforeNavigate(url, params)
+      if (res?.url) {
+        url = res.url
+      }
+      if (res?.params) {
+        params = res.params
+      }
+    }
     log("Navigating to", url, "with params", params)
     cachedGoto(url, params)
   }
