@@ -783,6 +783,7 @@
                       "type": "string",
                       "enum": [
                         "string",
+                        "barcodeqr",
                         "longform",
                         "options",
                         "number",
@@ -986,6 +987,7 @@
                           "type": "string",
                           "enum": [
                             "string",
+                            "barcodeqr",
                             "longform",
                             "options",
                             "number",
@@ -1200,6 +1202,7 @@
                             "type": "string",
                             "enum": [
                               "string",
+                              "barcodeqr",
                               "longform",
                               "options",
                               "number",
