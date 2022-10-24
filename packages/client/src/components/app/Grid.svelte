@@ -11,7 +11,6 @@
 
   // Deliberately non-reactive as we want this fixed whenever the grid renders
   const defaultColSpan = Math.ceil((cols + 1) / 2)
-  console.log(defaultColSpan)
   const defaultRowSpan = Math.ceil((rows + 1) / 2)
 
   $: coords = generateCoords(rows, cols)

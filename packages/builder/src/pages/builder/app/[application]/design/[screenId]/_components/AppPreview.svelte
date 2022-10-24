@@ -124,7 +124,6 @@
     if (!message?.data?.type) {
       return
     }
-    console.debug(`CLIENT: [${message.data.type}]`)
 
     // Await the event handler
     try {
