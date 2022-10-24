@@ -5,7 +5,8 @@
     "children": [
       "tableblock",
       "cardsblock",
-      "repeaterblock"
+      "repeaterblock",
+      "formblock"
     ]
   },
   {
@@ -23,7 +24,8 @@
       "dataprovider",
       "repeater",
       "table",
-      "dynamicfilter"
+      "dynamicfilter",
+      "daterangepicker"
     ]
   },
   {
@@ -60,12 +62,12 @@
       "booleanfield",
       "longformfield",
       "attachmentfield",
-      "daterangepicker",
       "jsonfield",
       "relationshipfield",
       "datetimefield",
       "multifieldselect",
-      "s3upload"
+      "s3upload",
+      "codescanner"
     ]
   },
   {
@@ -81,4 +83,3 @@
     ]
   }
 ]
-

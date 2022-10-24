@@ -5,9 +5,19 @@ export const buildPluginEndpoints = API => ({
    */
   uploadPlugin: async data => {
     return await API.post({
-      url: "/api/plugin/upload",
+      url: `/api/plugin/upload`,
       body: data,
       json: false,
+    })
+  },
+
+  /**
+   * Creates a plugin from URL, Github or NPM
+   */
+  createPlugin: async data => {
+    return await API.post({
+      url: `/api/plugin`,
+      body: data,
     })
   },
 
@@ -17,6 +27,18 @@ export const buildPluginEndpoints = API => ({
   getPlugins: async () => {
     return await API.get({
       url: "/api/plugin",
+    })
+  },
+
+  /**
+   * Deletes a plugin.
+   * @param pluginId the ID of the plugin to delete
+   *
+   * * @param pluginId the revision of the plugin to delete
+   */
+  deletePlugin: async pluginId => {
+    return await API.delete({
+      url: `/api/plugin/${pluginId}`,
     })
   },
 })

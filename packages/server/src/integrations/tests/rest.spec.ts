@@ -1,17 +1,16 @@
-jest.mock("node-fetch", () =>
-  jest.fn(() => ({
-    headers: {
-      raw: () => {
-        return { "content-type": ["application/json"] }
-      },
-      get: () => ["application/json"],
+const mockFetch = jest.fn(() => ({
+  headers: {
+    raw: () => {
+      return { "content-type": ["application/json"] }
     },
-    json: jest.fn(() => ({
-      my_next_cursor: 123,
-    })),
-    text: jest.fn(),
-  }))
-)
+    get: () => ["application/json"],
+  },
+  json: jest.fn(() => ({
+    my_next_cursor: 123,
+  })),
+  text: jest.fn(),
+}))
+jest.mock("node-fetch", () => mockFetch)
 import fetch from "node-fetch"
 import { default as RestIntegration } from "../rest"
 const FormData = require("form-data")
@@ -51,7 +50,7 @@ describe("REST Integration", () => {
         name: "test",
       }),
     }
-    const response = await config.integration.create(query)
+    await config.integration.create(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "POST",
       body: '{"name":"test"}',
@@ -256,7 +255,7 @@ describe("REST Integration", () => {
         authConfigId: "c59c14bd1898a43baa08da68959b24686",
       }
       await config.integration.read(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/`, {
         method: "GET",
         headers: {
           Authorization: "Basic dXNlcjpwYXNzd29yZA==",
@@ -269,7 +268,7 @@ describe("REST Integration", () => {
         authConfigId: "0d91d732f34e4befabeff50b392a8ff3",
       }
       await config.integration.read(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/`, {
         method: "GET",
         headers: {
           Authorization: "Bearer mytoken",
@@ -299,7 +298,7 @@ describe("REST Integration", () => {
       }
       await config.integration.read(query)
       expect(fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}&`,
+        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}`,
         {
           headers: {},
           method: "GET",
@@ -327,7 +326,7 @@ describe("REST Integration", () => {
         },
       }
       await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: JSON.stringify({
           [pageParam]: pageValue,
           [sizeParam]: sizeValue,
@@ -359,7 +358,7 @@ describe("REST Integration", () => {
         },
       }
       await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: expect.any(FormData),
         headers: {},
         method: "POST",
@@ -390,7 +389,7 @@ describe("REST Integration", () => {
         },
       }
       await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: expect.any(URLSearchParams),
         headers: {},
         method: "POST",
@@ -426,7 +425,7 @@ describe("REST Integration", () => {
       }
       const res = await config.integration.read(query)
       expect(fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}&`,
+        `${BASE_URL}/api?${pageParam}=${pageValue}&${sizeParam}=${sizeValue}`,
         {
           headers: {},
           method: "GET",
@@ -456,7 +455,7 @@ describe("REST Integration", () => {
         },
       }
       const res = await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: JSON.stringify({
           [pageParam]: pageValue,
           [sizeParam]: sizeValue,
@@ -490,7 +489,7 @@ describe("REST Integration", () => {
         },
       }
       const res = await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: expect.any(FormData),
         headers: {},
         method: "POST",
@@ -523,7 +522,7 @@ describe("REST Integration", () => {
         },
       }
       const res = await config.integration.create(query)
-      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?`, {
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api`, {
         body: expect.any(URLSearchParams),
         headers: {},
         method: "POST",
@@ -536,5 +535,57 @@ describe("REST Integration", () => {
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
       expect(res.pagination.cursor).toEqual(123)
     })
+
+    it("should encode query string correctly", async () => {
+      const query = {
+        path: "api",
+        queryString: "test=1 2",
+        headers: HEADERS,
+        bodyType: "json",
+        requestBody: JSON.stringify({
+          name: "test",
+        }),
+      }
+      await config.integration.create(query)
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1%202`, {
+        method: "POST",
+        body: '{"name":"test"}',
+        headers: HEADERS,
+      })
+    })
+  })
+
+  describe("Configuration options", () => {
+    it("Attaches insecureHttpParams when legacy HTTP Parser option is set", async () => {
+      config = new TestConfiguration({
+        url: BASE_URL,
+        legacyHttpParser: true,
+      })
+      await config.integration.read({})
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/`, {
+        method: "GET",
+        headers: {},
+        extraHttpOptions: {
+          insecureHTTPParser: true,
+        },
+      })
+    })
+  })
+
+  it("Attaches custom agent when Reject Unauthorized option is false", async () => {
+    config = new TestConfiguration({
+      url: BASE_URL,
+      rejectUnauthorized: false,
+    })
+    await config.integration.read({})
+
+    const calls: any = mockFetch.mock.calls[0]
+    const url = calls[0]
+    expect(url).toBe(`${BASE_URL}/`)
+
+    const calledConfig = calls[1]
+    expect(calledConfig.method).toBe("GET")
+    expect(calledConfig.headers).toEqual({})
+    expect(calledConfig.agent.options.rejectUnauthorized).toBe(false)
   })
 })

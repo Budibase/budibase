@@ -15,17 +15,22 @@ import {
   getSqlQuery,
   SqlClient,
 } from "./utils"
-import oracledb, {
+import Sql from "./base/sql"
+import { FieldTypes } from "../constants"
+import {
   BindParameters,
   Connection,
   ConnectionAttributes,
   ExecuteOptions,
   Result,
 } from "oracledb"
-import Sql from "./base/sql"
-import { FieldTypes } from "../constants"
-
-oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT
+let oracledb: any
+try {
+  oracledb = require("oracledb")
+  oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT
+} catch (err) {
+  console.log("ORACLEDB is not installed")
+}
 
 interface OracleConfig {
   host: string
@@ -181,6 +186,10 @@ class OracleIntegration extends Sql implements DatasourcePlus {
 
   getStringConcat(parts: string[]): string {
     return parts.join(" || ")
+  }
+
+  static isInstalled() {
+    return oracledb != null
   }
 
   /**

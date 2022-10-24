@@ -15,12 +15,12 @@
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-  import ExportAppModal from "components/start/ExportAppModal.svelte"
+  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, templates } from "stores/portal"
+  import { apps, auth, admin, templates, licensing } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
@@ -33,7 +33,7 @@
   let selectedApp
   let creationModal
   let updatingModal
-  let exportModal
+  let appLimitModal
   let creatingApp = false
   let loaded = $apps?.length || $templates?.length
   let searchTerm = ""
@@ -126,8 +126,10 @@
     return `${app.name} - Automation error (${errorCount(errors)})`
   }
 
-  const initiateAppCreation = () => {
-    if ($apps?.length) {
+  const initiateAppCreation = async () => {
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+    } else if ($apps?.length) {
       $goto("/builder/portal/apps/create")
     } else {
       template = null
@@ -227,6 +229,9 @@
     try {
       await apps.load()
       await templates.load()
+      // always load latest
+      await licensing.init()
+
       if ($templates?.length === 0) {
         notifications.error(
           "There was a problem loading quick start templates."
@@ -355,7 +360,7 @@
                   </Button>
                 {/if}
                 <div class="filter">
-                  {#if $auth.groupsEnabled}
+                  {#if $licensing.groupsEnabled}
                     <AccessFilter on:change={accessFilterAction} />
                   {/if}
                   <Select
@@ -407,9 +412,7 @@
   <UpdateAppModal app={selectedApp} />
 </Modal>
 
-<Modal bind:this={exportModal} padding={false} width="600px">
-  <ExportAppModal app={selectedApp} />
-</Modal>
+<AppLimitModal bind:this={appLimitModal} />
 
 <style>
   .appTable {
@@ -474,9 +477,10 @@
   .appTable :global(> div) {
     border-bottom: var(--border-light);
   }
+
   @media (max-width: 640px) {
     .appTable {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto !important;
     }
   }
   .empty-wrapper {

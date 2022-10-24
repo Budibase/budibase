@@ -20,7 +20,9 @@ filterTests(["smoke", "all"], () => {
       cy.get(".spectrum-Form-itemField").eq(3).should('contain', 'App User')
 
       // User should not have app access
-      cy.get(interact.LIST_ITEMS, { timeout: 500 }).should("contain", "No apps")
+      cy.get(".spectrum-Heading").contains("Apps").parent().within(() => {
+        cy.get(interact.LIST_ITEMS, { timeout: 500 }).should("contain", "This user has access to no apps")
+      })
     })
 
     if (Cypress.env("TEST_ENV")) {

@@ -88,27 +88,12 @@ export const getFrontendStore = () => {
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath } = pkg
 
-      // Fetch component definitions.
-      // Allow errors to propagate.
-      const components = await API.fetchComponentLibDefinitions(
-        application.appId
-      )
-
-      // Filter out custom component keys so we can flag them
-      const customComponents = Object.keys(components).filter(name =>
-        name.startsWith("plugin/")
-      )
+      await store.actions.components.refreshDefinitions(application.appId)
 
       // Reset store state
       store.update(state => ({
         ...state,
         libraries: application.componentLibraries,
-        components,
-        customComponents,
-        clientFeatures: {
-          ...INITIAL_FRONTEND_STATE.clientFeatures,
-          ...components.features,
-        },
         name: application.name,
         description: application.description,
         appId: application.appId,
@@ -345,6 +330,16 @@ export const getFrontendStore = () => {
           return state
         })
       },
+      sendEvent: (name, payload) => {
+        const { previewEventHandler } = get(store)
+        previewEventHandler?.(name, payload)
+      },
+      registerEventHandler: handler => {
+        store.update(state => {
+          state.previewEventHandler = handler
+          return state
+        })
+      },
     },
     layouts: {
       select: layoutId => {
@@ -385,6 +380,29 @@ export const getFrontendStore = () => {
       },
     },
     components: {
+      refreshDefinitions: async appId => {
+        if (!appId) {
+          appId = get(store).appId
+        }
+
+        // Fetch definitions and filter out custom component definitions so we
+        // can flag them
+        const components = await API.fetchComponentLibDefinitions(appId)
+        const customComponents = Object.keys(components).filter(name =>
+          name.startsWith("plugin/")
+        )
+
+        // Update store
+        store.update(state => ({
+          ...state,
+          components,
+          customComponents,
+          clientFeatures: {
+            ...INITIAL_FRONTEND_STATE.clientFeatures,
+            ...components.features,
+          },
+        }))
+      },
       getDefinition: componentName => {
         if (!componentName) {
           return null
@@ -428,12 +446,12 @@ export const getFrontendStore = () => {
           _id: Helpers.uuid(),
           _component: definition.component,
           _styles: { normal: {}, hover: {}, active: {} },
-          _instanceName: `New ${definition.name}`,
+          _instanceName: `New ${definition.friendlyName || definition.name}`,
           ...cloneDeep(props),
           ...extras,
         }
       },
-      create: async (componentName, presetProps) => {
+      create: async (componentName, presetProps, parent, index) => {
         const state = get(store)
         const componentInstance = store.actions.components.createInstance(
           componentName,
@@ -443,48 +461,62 @@ export const getFrontendStore = () => {
           return
         }
 
-        // Patch selected screen
-        await store.actions.screens.patch(screen => {
-          // Find the selected component
-          const currentComponent = findComponent(
-            screen.props,
-            state.selectedComponentId
-          )
-          if (!currentComponent) {
-            return false
-          }
-
-          // Find parent node to attach this component to
-          let parentComponent
-          if (currentComponent) {
-            // Use selected component as parent if one is selected
-            const definition = store.actions.components.getDefinition(
-              currentComponent._component
-            )
-            if (definition?.hasChildren) {
-              // Use selected component if it allows children
-              parentComponent = currentComponent
+        // Insert in position if specified
+        if (parent && index != null) {
+          await store.actions.screens.patch(screen => {
+            let parentComponent = findComponent(screen.props, parent)
+            if (!parentComponent._children?.length) {
+              parentComponent._children = [componentInstance]
             } else {
-              // Otherwise we need to use the parent of this component
-              parentComponent = findComponentParent(
-                screen.props,
-                currentComponent._id
-              )
+              parentComponent._children.splice(index, 0, componentInstance)
             }
-          } else {
-            // Use screen or layout if no component is selected
-            parentComponent = screen.props
-          }
+          })
+        }
 
-          // Attach new component
-          if (!parentComponent) {
-            return false
-          }
-          if (!parentComponent._children) {
-            parentComponent._children = []
-          }
-          parentComponent._children.push(componentInstance)
-        })
+        // Otherwise we work out where this component should be inserted
+        else {
+          await store.actions.screens.patch(screen => {
+            // Find the selected component
+            const currentComponent = findComponent(
+              screen.props,
+              state.selectedComponentId
+            )
+            if (!currentComponent) {
+              return false
+            }
+
+            // Find parent node to attach this component to
+            let parentComponent
+            if (currentComponent) {
+              // Use selected component as parent if one is selected
+              const definition = store.actions.components.getDefinition(
+                currentComponent._component
+              )
+              if (definition?.hasChildren) {
+                // Use selected component if it allows children
+                parentComponent = currentComponent
+              } else {
+                // Otherwise we need to use the parent of this component
+                parentComponent = findComponentParent(
+                  screen.props,
+                  currentComponent._id
+                )
+              }
+            } else {
+              // Use screen or layout if no component is selected
+              parentComponent = screen.props
+            }
+
+            // Attach new component
+            if (!parentComponent) {
+              return false
+            }
+            if (!parentComponent._children) {
+              parentComponent._children = []
+            }
+            parentComponent._children.push(componentInstance)
+          })
+        }
 
         // Select new component
         store.update(state => {
@@ -603,7 +635,7 @@ export const getFrontendStore = () => {
 
           // Make new component unique if copying
           if (!cut) {
-            makeComponentUnique(componentToPaste)
+            componentToPaste = makeComponentUnique(componentToPaste)
           }
           newComponentId = componentToPaste._id
 
@@ -883,6 +915,50 @@ export const getFrontendStore = () => {
           component[name] = value
         })
       },
+      requestEjectBlock: componentId => {
+        store.actions.preview.sendEvent("eject-block", componentId)
+      },
+      handleEjectBlock: async (componentId, ejectedDefinition) => {
+        let nextSelectedComponentId
+
+        await store.actions.screens.patch(screen => {
+          const block = findComponent(screen.props, componentId)
+          const parent = findComponentParent(screen.props, componentId)
+
+          // Sanity check
+          if (!block || !parent?._children?.length) {
+            return false
+          }
+
+          // Attach block children back into ejected definition, using the
+          // _containsSlot flag to know where to insert them
+          const slotContainer = findAllMatchingComponents(
+            ejectedDefinition,
+            x => x._containsSlot
+          )[0]
+          if (slotContainer) {
+            delete slotContainer._containsSlot
+            slotContainer._children = [
+              ...(slotContainer._children || []),
+              ...(block._children || []),
+            ]
+          }
+
+          // Replace block with ejected definition
+          ejectedDefinition = makeComponentUnique(ejectedDefinition)
+          const index = parent._children.findIndex(x => x._id === componentId)
+          parent._children[index] = ejectedDefinition
+          nextSelectedComponentId = ejectedDefinition._id
+        })
+
+        // Select new root component
+        if (nextSelectedComponentId) {
+          store.update(state => {
+            state.selectedComponentId = nextSelectedComponentId
+            return state
+          })
+        }
+      },
     },
     links: {
       save: async (url, title) => {
@@ -926,6 +1002,19 @@ export const getFrontendStore = () => {
           ...state,
           highlightedSettingKey: key,
         }))
+      },
+    },
+    dnd: {
+      start: component => {
+        store.actions.preview.sendEvent("dragging-new-component", {
+          dragging: true,
+          component,
+        })
+      },
+      stop: () => {
+        store.actions.preview.sendEvent("dragging-new-component", {
+          dragging: false,
+        })
       },
     },
   }

@@ -1,15 +1,18 @@
-import { migrations, redis } from "@budibase/backend-core"
-import { Migration, MigrationOptions, MigrationName } from "@budibase/types"
+import { locks, migrations } from "@budibase/backend-core"
+import {
+  Migration,
+  MigrationOptions,
+  MigrationName,
+  LockType,
+  LockName,
+} from "@budibase/types"
 import env from "../environment"
 
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
-import * as quota1 from "./functions/quotas1"
+import * as syncQuotas from "./functions/syncQuotas"
 import * as appUrls from "./functions/appUrls"
-import * as developerQuota from "./functions/developerQuota"
-import * as publishedAppsQuota from "./functions/publishedAppsQuota"
 import * as backfill from "./functions/backfill"
-
 /**
  * Populate the migration function and additional configuration from
  * the static migration definitions.
@@ -27,10 +30,10 @@ export const buildMigrations = () => {
         })
         break
       }
-      case MigrationName.QUOTAS_1: {
+      case MigrationName.SYNC_QUOTAS: {
         serverMigrations.push({
           ...definition,
-          fn: quota1.run,
+          fn: syncQuotas.run,
         })
         break
       }
@@ -39,20 +42,6 @@ export const buildMigrations = () => {
           ...definition,
           appOpts: { all: true },
           fn: appUrls.run,
-        })
-        break
-      }
-      case MigrationName.DEVELOPER_QUOTA: {
-        serverMigrations.push({
-          ...definition,
-          fn: developerQuota.run,
-        })
-        break
-      }
-      case MigrationName.PUBLISHED_APP_QUOTA: {
-        serverMigrations.push({
-          ...definition,
-          fn: publishedAppsQuota.run,
         })
         break
       }
@@ -103,33 +92,14 @@ export const migrate = async (options?: MigrationOptions) => {
 }
 
 const migrateWithLock = async (options?: MigrationOptions) => {
-  // get a new lock client
-  const redlock = await redis.clients.getMigrationsRedlock()
-  // lock for 15 minutes
-  const ttl = 1000 * 60 * 15
-
-  let migrationLock
-
-  // acquire lock
-  try {
-    migrationLock = await redlock.lock("migrations", ttl)
-  } catch (e: any) {
-    if (e.name === "LockError") {
-      return
-    } else {
-      throw e
+  await locks.doWithLock(
+    {
+      type: LockType.TRY_ONCE,
+      name: LockName.MIGRATIONS,
+      ttl: 1000 * 60 * 15, // auto expire the migration lock after 15 minutes
+    },
+    async () => {
+      await migrations.runMigrations(MIGRATIONS, options)
     }
-  }
-
-  // run migrations
-  try {
-    await migrations.runMigrations(MIGRATIONS, options)
-  } finally {
-    // release lock
-    try {
-      await migrationLock.unlock()
-    } catch (e) {
-      console.error("unable to release migration lock")
-    }
-  }
+  )
 }

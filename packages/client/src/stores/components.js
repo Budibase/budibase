@@ -5,7 +5,9 @@ import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
 import Router from "../components/Router.svelte"
+import DNDPlaceholder from "../components/preview/DNDPlaceholder.svelte"
 import * as AppComponents from "../components/app/index.js"
+import { DNDPlaceholderType, ScreenslotType } from "../constants.js"
 
 const budibasePrefix = "@budibase/standard-components/"
 
@@ -18,26 +20,21 @@ const createComponentStore = () => {
 
   const derivedStore = derived(
     [store, builderStore, devToolsStore, screenStore],
-    ([$store, $builderState, $devToolsState, $screenState]) => {
+    ([$store, $builderStore, $devToolsStore, $screenStore]) => {
+      const { inBuilder, selectedComponentId } = $builderStore
+
       // Avoid any of this logic if we aren't in the builder preview
-      if (!$builderState.inBuilder && !$devToolsState.visible) {
+      if (!inBuilder && !$devToolsStore.visible) {
         return {}
       }
 
-      // Derive the selected component instance and definition
-      let asset
-      const { screen, selectedComponentId } = $builderState
-      if ($builderState.inBuilder) {
-        asset = screen
-      } else {
-        asset = $screenState.activeScreen
-      }
-      const component = findComponentById(asset?.props, selectedComponentId)
+      const root = $screenStore.activeScreen?.props
+      const component = findComponentById(root, selectedComponentId)
       const definition = getComponentDefinition(component?._component)
 
       // Derive the selected component path
-      const path =
-        findComponentPathById(asset?.props, selectedComponentId) || []
+      const selectedPath =
+        findComponentPathById(root, selectedComponentId) || []
 
       return {
         customComponentManifest: $store.customComponentManifest,
@@ -45,9 +42,8 @@ const createComponentStore = () => {
           $store.mountedComponents[selectedComponentId],
         selectedComponent: component,
         selectedComponentDefinition: definition,
-        selectedComponentPath: path?.map(component => component._id),
+        selectedComponentPath: selectedPath?.map(component => component._id),
         mountedComponentCount: Object.keys($store.mountedComponents).length,
-        currentAsset: asset,
       }
     }
   )
@@ -95,8 +91,8 @@ const createComponentStore = () => {
   }
 
   const getComponentById = id => {
-    const asset = get(derivedStore).currentAsset
-    return findComponentById(asset?.props, id)
+    const root = get(screenStore).activeScreen?.props
+    return findComponentById(root, id)
   }
 
   const getComponentDefinition = type => {
@@ -105,8 +101,10 @@ const createComponentStore = () => {
     }
 
     // Screenslot is an edge case
-    if (type === "screenslot") {
+    if (type === ScreenslotType) {
       type = `${budibasePrefix}${type}`
+    } else if (type === DNDPlaceholderType) {
+      return {}
     }
 
     // Handle built-in components
@@ -124,8 +122,10 @@ const createComponentStore = () => {
     if (!type) {
       return null
     }
-    if (type === "screenslot") {
+    if (type === ScreenslotType) {
       return Router
+    } else if (type === DNDPlaceholderType) {
+      return DNDPlaceholder
     }
 
     // Handle budibase components
@@ -141,7 +141,7 @@ const createComponentStore = () => {
   }
 
   const registerCustomComponent = ({ Component, schema, version }) => {
-    if (!Component || !schema?.schema?.name) {
+    if (!Component || !schema?.schema?.name || !version) {
       return
     }
     const component = `plugin/${schema.schema.name}`
@@ -149,7 +149,6 @@ const createComponentStore = () => {
       state.customComponentManifest[component] = {
         Component,
         schema,
-        version,
       }
       return state
     })

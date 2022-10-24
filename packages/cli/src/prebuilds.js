@@ -27,7 +27,10 @@ function checkForBinaries() {
 }
 
 function cleanup(evt) {
-  if (evt && evt.errno) {
+  if (!isNaN(evt)) {
+    return
+  }
+  if (evt) {
     console.error(
       error(
         "Failed to run CLI command - please report with the following message:"
