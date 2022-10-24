@@ -132,7 +132,7 @@
   {#if open}
     <div
       use:clickOutside={() => (open = false)}
-      transition:fly={{ y: -20, duration: 200 }}
+      transition:fly|local={{ y: -20, duration: 200 }}
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
       class:spectrum-Popover--align-right={alignRight}
     >
