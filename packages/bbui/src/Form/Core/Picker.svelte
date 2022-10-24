@@ -85,7 +85,7 @@
     class:is-invalid={!!error}
     class:is-open={open}
     aria-haspopup="listbox"
-    on:mousedown={onClick}
+    on:click={onClick}
   >
     {#if fieldIcon}
       <span class="option-extra">
