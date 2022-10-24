@@ -35,9 +35,9 @@ async function getAllDocType(db, docType) {
 }
 
 exports.exportApps = async ctx => {
-  // if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
-  //   ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
-  // }
+  if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
+    ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
+  }
   const apps = await getAllApps({ all: true })
   const globalDBString = await sdk.backups.exportDB(getGlobalDBName(), {
     filter: doc => !doc._id.startsWith(DocumentType.USER),

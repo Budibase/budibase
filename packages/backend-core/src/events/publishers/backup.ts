@@ -1,8 +1,8 @@
-import { AppBackup, AppBackupRevertEvent, Event } from "@budibase/types"
+import { AppBackup, AppBackupRestoreEvent, Event } from "@budibase/types"
 import { publishEvent } from "../events"
 
 export async function appBackupRestored(backup: AppBackup) {
-  const properties: AppBackupRevertEvent = {
+  const properties: AppBackupRestoreEvent = {
     appId: backup.appId,
     backupName: backup.name!,
     backupCreatedAt: backup.timestamp,
