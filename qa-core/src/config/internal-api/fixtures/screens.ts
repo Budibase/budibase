@@ -2,9 +2,11 @@ import generator from "../../generator"
 
 const randomId = generator.guid()
 
-const generateScreen = (): any => ({
+const generateScreen = (roleId: string): any => ({
   showNavigation: true,
   width: "Large",
+  name: randomId,
+  template: "createFromScratch",
   props: {
     _id: randomId,
     _component: "@budibase/standard-components/container",
@@ -24,11 +26,9 @@ const generateScreen = (): any => ({
   },
   routing: {
     route: "/test",
-    roleId: "BASIC",
+    roleId: roleId,
     homeScreen: false,
   },
-  name: randomId,
-  template: "createFromScratch",
 })
 
 export default generateScreen

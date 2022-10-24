@@ -4,7 +4,7 @@ import { JobQueue } from "./constants"
 import InMemoryQueue from "./inMemoryQueue"
 import BullQueue from "bull"
 import { addListeners, StalledFn } from "./listeners"
-const { opts, redisProtocolUrl } = getRedisOptions()
+const { opts: redisOpts, redisProtocolUrl } = getRedisOptions()
 
 const CLEANUP_PERIOD_MS = 60 * 1000
 let QUEUES: BullQueue.Queue[] | InMemoryQueue[] = []
@@ -18,16 +18,16 @@ async function cleanup() {
 
 export function createQueue<T>(
   jobQueue: JobQueue,
-  removeStalled?: StalledFn
+  opts: { removeStalledCb?: StalledFn } = {}
 ): BullQueue.Queue<T> {
-  const queueConfig: any = redisProtocolUrl || { redis: opts }
+  const queueConfig: any = redisProtocolUrl || { redis: redisOpts }
   let queue: any
   if (!env.isTest()) {
     queue = new BullQueue(jobQueue, queueConfig)
   } else {
     queue = new InMemoryQueue(jobQueue, queueConfig)
   }
-  addListeners(queue, jobQueue, removeStalled)
+  addListeners(queue, jobQueue, opts?.removeStalledCb)
   QUEUES.push(queue)
   if (!cleanupInterval) {
     cleanupInterval = setInterval(cleanup, CLEANUP_PERIOD_MS)

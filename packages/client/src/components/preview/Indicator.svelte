@@ -19,8 +19,8 @@
 
 <div
   in:fade={{
-    delay: transition ? 130 : 0,
-    duration: transition ? 130 : 0,
+    delay: transition ? 100 : 0,
+    duration: transition ? 100 : 0,
   }}
   class="indicator"
   class:flipped
