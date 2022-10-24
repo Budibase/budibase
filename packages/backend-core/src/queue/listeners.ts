@@ -6,18 +6,18 @@ export type StalledFn = (job: Job) => Promise<void>
 export function addListeners(
   queue: Queue,
   jobQueue: JobQueue,
-  removeStalled?: StalledFn
+  removeStalledCb?: StalledFn
 ) {
   logging(queue, jobQueue)
-  if (removeStalled) {
-    handleStalled(queue, removeStalled)
+  if (removeStalledCb) {
+    handleStalled(queue, removeStalledCb)
   }
 }
 
-function handleStalled(queue: Queue, removeStalled?: StalledFn) {
+function handleStalled(queue: Queue, removeStalledCb?: StalledFn) {
   queue.on("stalled", async (job: Job) => {
-    if (removeStalled) {
-      await removeStalled(job)
+    if (removeStalledCb) {
+      await removeStalledCb(job)
     } else if (job.opts.repeat) {
       const jobId = job.id
       const repeatJobs = await queue.getRepeatableJobs()

@@ -213,6 +213,9 @@
         await store.actions.components.handleEjectBlock(id, definition)
       } else if (type === "reload-plugin") {
         await store.actions.components.refreshDefinitions()
+      } else if (type === "drop-new-component") {
+        const { component, parent, index } = data
+        await store.actions.components.create(component, null, parent, index)
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }
