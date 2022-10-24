@@ -27,18 +27,6 @@ export interface TriggerOutput {
   timestamp?: number
 }
 
-export interface AutomationEvent {
-  data: {
-    automation: Automation
-    event: any
-  }
-  opts?: {
-    repeat?: {
-      jobId: string
-    }
-  }
-}
-
 export interface AutomationContext extends AutomationResults {
   steps: any[]
   trigger: any

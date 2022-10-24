@@ -1,7 +1,7 @@
 import { Thread, ThreadType } from "../threads"
 import { definitions } from "./triggerInfo"
 import * as webhooks from "../api/controllers/webhook"
-import { queue } from "./bullboard"
+import { automationQueue } from "./bullboard"
 import newid from "../db/newid"
 import { updateEntityMetadata } from "../utilities"
 import { MetadataTypes, WebhookType } from "../constants"
@@ -79,21 +79,25 @@ export function removeDeprecated(definitions: any) {
 // end the repetition and the job itself
 export async function disableAllCrons(appId: any) {
   const promises = []
-  const jobs = await queue.getRepeatableJobs()
+  const jobs = await automationQueue.getRepeatableJobs()
   for (let job of jobs) {
     if (job.key.includes(`${appId}_cron`)) {
-      promises.push(queue.removeRepeatableByKey(job.key))
+      promises.push(automationQueue.removeRepeatableByKey(job.key))
       if (job.id) {
-        promises.push(queue.removeJobs(job.id))
+        promises.push(automationQueue.removeJobs(job.id))
       }
     }
   }
   return Promise.all(promises)
 }
 
-export async function disableCron(jobId: string, jobKey: string) {
-  await queue.removeRepeatableByKey(jobKey)
-  await queue.removeJobs(jobId)
+export async function disableCronById(jobId: number | string) {
+  const repeatJobs = await automationQueue.getRepeatableJobs()
+  for (let repeatJob of repeatJobs) {
+    if (repeatJob.id === jobId) {
+      await automationQueue.removeRepeatableByKey(repeatJob.key)
+    }
+  }
   console.log(`jobId=${jobId} disabled`)
 }
 
@@ -141,7 +145,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
   ) {
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${newid()}`
-    const job: any = await queue.add(
+    const job: any = await automationQueue.add(
       {
         automation,
         event: { appId, timestamp: Date.now() },
