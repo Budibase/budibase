@@ -170,26 +170,23 @@
   $: pad = pad || (interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
 
-  // Compute overall styles
-  $: styles = {
-    ...instance._styles,
-    normal: {
-      ...instance._styles?.normal,
-      ...ephemeralStyles,
-    },
-    custom: customCSS,
-    id,
-    empty: emptyState,
-    interactive,
-    draggable,
-    editable,
-  }
-
   // Update component context
   $: store.set({
     id,
     children: children.length,
-    styles,
+    styles: {
+      ...instance._styles,
+      normal: {
+        ...instance._styles?.normal,
+        ...ephemeralStyles,
+      },
+      custom: customCSS,
+      id,
+      empty: emptyState,
+      interactive,
+      draggable,
+      editable,
+    },
     empty: emptyState,
     selected,
     name,
@@ -458,7 +455,6 @@
       componentStore.actions.registerInstance(id, {
         component: instance._component,
         getSettings: () => cachedSettings,
-        getStyles: () => styles,
         getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
         getDataContext: () => get(context),
         reload: () => initialise(instance, true),
