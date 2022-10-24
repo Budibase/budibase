@@ -6,11 +6,6 @@
   let componentId
 
   $: zIndex = componentId === $builderStore.selectedComponentId ? 900 : 920
-  $: {
-    if ($dndIsDragging) {
-      componentId = null
-    }
-  }
 
   const onMouseOver = e => {
     // Ignore if dragging
@@ -49,7 +44,7 @@
 </script>
 
 <IndicatorSet
-  {componentId}
+  componentId={$dndIsDragging ? null : componentId}
   color="var(--spectrum-global-color-static-blue-200)"
   transition
   {zIndex}
