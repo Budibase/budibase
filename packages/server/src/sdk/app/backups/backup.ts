@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 import { exportApp } from "./exports"
 import { importApp } from "./imports"
-import { calculateBackupStats } from "../statistics"
+import { calculateBackupStats } from "./statistics"
 import { Job } from "bull"
 import fs from "fs"
 import env from "../../../environment"
