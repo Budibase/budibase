@@ -7,10 +7,12 @@
   let gridStyles
   let id
 
+  // Some memoisation of primitive types for performance
   $: jsonStyles = JSON.stringify(gridStyles)
   $: id = dragInfo?.id || id
-  $: instance = componentStore.actions.getComponentInstance(id)
-  $: instance?.setEphemeralStyles({
+
+  // Set ephemeral grid styles on the dragged component
+  $: componentStore.actions.getComponentInstance(id)?.setEphemeralStyles({
     ...gridStyles,
     ...(gridStyles ? { "z-index": 999 } : null),
   })
@@ -193,7 +195,6 @@
 
   // Callback when drag stops (whether dropped or not)
   const stopDragging = async () => {
-    console.log("STOP")
     // Save changes
     if (gridStyles) {
       await builderStore.actions.updateStyles(gridStyles, dragInfo.id)
