@@ -5,15 +5,15 @@
 
   let dragInfo
   let gridStyles
+  let id
 
   $: jsonStyles = JSON.stringify(gridStyles)
-  $: id = dragInfo?.id
+  $: id = dragInfo?.id || id
   $: instance = componentStore.actions.getComponentInstance(id)
-
-  // We don't clear grid styles because that causes flashing, as the component
-  // will revert to its original position until the save completes.
-  $: gridStyles &&
-    instance?.setEphemeralStyles({ ...gridStyles, "z-index": 999 })
+  $: instance?.setEphemeralStyles({
+    ...gridStyles,
+    ...(gridStyles ? { "z-index": 999 } : null),
+  })
 
   const isChildOfGrid = e => {
     return (
@@ -192,10 +192,11 @@
   }
 
   // Callback when drag stops (whether dropped or not)
-  const stopDragging = () => {
+  const stopDragging = async () => {
+    console.log("STOP")
     // Save changes
     if (gridStyles) {
-      builderStore.actions.updateStyles(gridStyles, dragInfo.id)
+      await builderStore.actions.updateStyles(gridStyles, dragInfo.id)
     }
 
     // Reset listener

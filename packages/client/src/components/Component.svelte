@@ -219,7 +219,6 @@
       return
     } else {
       lastInstanceKey = instanceKey
-      ephemeralStyles = null
     }
 
     // Pull definition and constructor
