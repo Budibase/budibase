@@ -1,8 +1,6 @@
 <script>
-  import { getContext } from "svelte"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
-  import Placeholder from "components/app/Placeholder.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
 
   // Datasource
@@ -48,8 +46,6 @@
   export let lowColumn
   export let dateColumn
 
-  const component = getContext("component")
-
   let dataProviderId
 
   $: colors = c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null
@@ -67,41 +63,35 @@
       sortOrder,
       limit,
     }}
-    order={0}
   >
-    {#if $component.empty}
-      <Placeholder />
-    {:else}
-      <BlockComponent
-        type={chartType}
-        props={{
-          dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
-          height,
-          width,
-          title: chartTitle,
-          labelColumn,
-          valueColumn,
-          valueColumns,
-          palette,
-          dataLabels,
-          legend,
-          animate,
-          ...colors,
-          yAxisUnits,
-          yAxisLabel,
-          xAxisLabel,
-          stacked,
-          horizontal,
-          curve,
-          gradient, //issue?
-          closeColumn,
-          openColumn,
-          highColumn,
-          lowColumn,
-          dateColumn,
-        }}
-        order={1}
-      />
-    {/if}
+    <BlockComponent
+      type={chartType}
+      props={{
+        dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+        height,
+        width,
+        title: chartTitle,
+        labelColumn,
+        valueColumn,
+        valueColumns,
+        palette,
+        dataLabels,
+        legend,
+        animate,
+        ...colors,
+        yAxisUnits,
+        yAxisLabel,
+        xAxisLabel,
+        stacked,
+        horizontal,
+        curve,
+        gradient, //issue?
+        closeColumn,
+        openColumn,
+        highColumn,
+        lowColumn,
+        dateColumn,
+      }}
+    />
   </BlockComponent>
 </Block>
