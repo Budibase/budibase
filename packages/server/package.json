@@ -163,7 +163,7 @@
     "@types/google-spreadsheet": "3.1.5",
     "@types/ioredis": "4.28.10",
     "@types/jest": "27.5.1",
-    "@types/koa": "2.13.5",
+    "@types/koa": "2.13.4",
     "@types/koa__router": "8.0.11",
     "@types/lodash": "4.14.180",
     "@types/node": "14.18.20",
