@@ -20,9 +20,7 @@ describe("Internal API - /screens endpoints", () => {
 
   it("POST - Create a screen with each role type", async () => {
     // Create app
-    const [appResponse, app] = await appConfig.applications.create(
-      generateApp()
-    )
+    const app = await appConfig.applications.create(generateApp())
 
     // Create Screen
     const roleArray = ["BASIC", "POWER", "ADMIN", "PUBLIC"]
@@ -38,9 +36,7 @@ describe("Internal API - /screens endpoints", () => {
 
   it("GET - Fetch screens", async () => {
     // Create app
-    const [appResponse, app] = await appConfig.applications.create(
-      generateApp()
-    )
+    const app = await appConfig.applications.create(generateApp())
 
     // Create Screen
     appConfig.applications.api.appId = app.appId
@@ -56,9 +52,7 @@ describe("Internal API - /screens endpoints", () => {
 
   it("DELETE - Delete a screen", async () => {
     // Create app
-    const [appResponse, app] = await appConfig.applications.create(
-      generateApp()
-    )
+    const app = await appConfig.applications.create(generateApp())
 
     // Create Screen
     appConfig.applications.api.appId = app.appId
