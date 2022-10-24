@@ -1,6 +1,11 @@
 import { default as threadUtils } from "./utils"
+import { Job } from "bull"
 threadUtils.threadSetup()
-import { isRecurring, disableCron, isErrorInOutput } from "../automations/utils"
+import {
+  isRecurring,
+  disableCronById,
+  isErrorInOutput,
+} from "../automations/utils"
 import { default as actions } from "../automations/actions"
 import { default as automationUtils } from "../automations/automationUtils"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
@@ -13,7 +18,6 @@ import {
   LoopStep,
   LoopStepType,
   LoopInput,
-  AutomationEvent,
   TriggerOutput,
   AutomationContext,
   AutomationMetadata,
@@ -73,19 +77,16 @@ class Orchestrator {
   _automation: Automation
   _emitter: any
   _context: AutomationContext
-  _repeat?: { jobId: string; jobKey: string }
+  _job: Job
   executionOutput: AutomationContext
 
-  constructor(automation: Automation, triggerOutput: TriggerOutput, opts: any) {
+  constructor(job: Job) {
+    let automation = job.data.automation,
+      triggerOutput = job.data.event
     const metadata = triggerOutput.metadata
     this._chainCount = metadata ? metadata.automationChainCount : 0
     this._appId = triggerOutput.appId as string
-    if (opts?.repeat) {
-      this._repeat = {
-        jobId: opts.repeat.jobId,
-        jobKey: opts.repeat.key,
-      }
-    }
+    this._job = job
     const triggerStepId = automation.definition.trigger.stepId
     triggerOutput = this.cleanupTriggerOutputs(triggerStepId, triggerOutput)
     // remove from context
@@ -134,7 +135,7 @@ class Orchestrator {
   }
 
   async stopCron(reason: string) {
-    if (!this._repeat) {
+    if (!this._job.opts.repeat) {
       return
     }
     logWarn(
@@ -142,7 +143,7 @@ class Orchestrator {
     )
     const automation = this._automation
     const trigger = automation.definition.trigger
-    await disableCron(this._repeat?.jobId, this._repeat?.jobKey)
+    await disableCronById(this._job.id)
     this.updateExecutionOutput(
       trigger.id,
       trigger.stepId,
@@ -156,7 +157,7 @@ class Orchestrator {
   }
 
   async checkIfShouldStop(metadata: AutomationMetadata): Promise<boolean> {
-    if (!metadata.errorCount || !this._repeat) {
+    if (!metadata.errorCount || !this._job.opts.repeat) {
       return false
     }
     if (metadata.errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
@@ -475,17 +476,13 @@ class Orchestrator {
   }
 }
 
-export function execute(input: AutomationEvent, callback: WorkerCallback) {
-  const appId = input.data.event.appId
+export function execute(job: Job, callback: WorkerCallback) {
+  const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
   doInAppContext(appId, async () => {
-    const automationOrchestrator = new Orchestrator(
-      input.data.automation,
-      input.data.event,
-      input.opts
-    )
+    const automationOrchestrator = new Orchestrator(job)
     try {
       const response = await automationOrchestrator.execute()
       callback(null, response)
@@ -495,17 +492,13 @@ export function execute(input: AutomationEvent, callback: WorkerCallback) {
   })
 }
 
-export const removeStalled = async (input: AutomationEvent) => {
-  const appId = input.data.event.appId
+export const removeStalled = async (job: Job) => {
+  const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
   await doInAppContext(appId, async () => {
-    const automationOrchestrator = new Orchestrator(
-      input.data.automation,
-      input.data.event,
-      input.opts
-    )
+    const automationOrchestrator = new Orchestrator(job)
     await automationOrchestrator.stopCron("stalled")
   })
 }

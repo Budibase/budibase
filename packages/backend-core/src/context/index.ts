@@ -53,6 +53,9 @@ export const getTenantIDFromAppID = (appId: string) => {
   if (!appId) {
     return null
   }
+  if (!isMultiTenant()) {
+    return DEFAULT_TENANT_ID
+  }
   const split = appId.split(SEPARATOR)
   const hasDev = split[1] === DocumentType.DEV
   if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {

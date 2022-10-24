@@ -1,12 +1,7 @@
 import { updateLinks, EventType } from "../../../db/linkedRows"
 import { getRowParams, generateTableID } from "../../../db/utils"
 import { FieldTypes } from "../../../constants"
-import {
-  TableSaveFunctions,
-  hasTypeChanged,
-  getTable,
-  handleDataImport,
-} from "./utils"
+import { TableSaveFunctions, hasTypeChanged, handleDataImport } from "./utils"
 const { getAppDB } = require("@budibase/backend-core/context")
 import { isTest } from "../../../environment"
 import {
@@ -19,6 +14,7 @@ import { quotas } from "@budibase/pro"
 import { isEqual } from "lodash"
 import { cloneDeep } from "lodash/fp"
 import env from "../../../environment"
+import sdk from "../../../sdk"
 
 function checkAutoColumns(table: Table, oldTable: Table) {
   if (!table.schema) {
@@ -188,7 +184,7 @@ export async function destroy(ctx: any) {
 }
 
 export async function bulkImport(ctx: any) {
-  const table = await getTable(ctx.params.tableId)
+  const table = await sdk.tables.getTable(ctx.params.tableId)
   const { dataImport } = ctx.request.body
   await handleDataImport(ctx.user, table, dataImport)
   return table
