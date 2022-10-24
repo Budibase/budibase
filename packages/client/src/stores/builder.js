@@ -38,8 +38,8 @@ const createBuilderStore = () => {
     updateProp: (prop, value) => {
       eventStore.actions.dispatchEvent("update-prop", { prop, value })
     },
-    updateStyles: (styles, id) => {
-      eventStore.actions.dispatchEvent("update-styles", { styles, id })
+    updateStyles: async (styles, id) => {
+      await eventStore.actions.dispatchEvent("update-styles", { styles, id })
     },
     keyDown: (key, ctrlKey) => {
       eventStore.actions.dispatchEvent("key-down", { key, ctrlKey })

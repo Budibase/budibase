@@ -1,9 +1,8 @@
 <script>
   import { getContext } from "svelte"
-  import GridDNDHandler from "../preview/GridDNDHandler.svelte"
 
   const component = getContext("component")
-  const { styleable, builderStore } = getContext("sdk")
+  const { styleable } = getContext("sdk")
 
   const cols = 12
 
@@ -34,10 +33,6 @@
   </div>
   <slot />
 </div>
-
-{#if $builderStore.inBuilder && node}
-  <GridDNDHandler {node} />
-{/if}
 
 <style>
   .grid {
