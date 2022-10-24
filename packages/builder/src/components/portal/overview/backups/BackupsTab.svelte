@@ -1,17 +1,23 @@
 <script>
   import {
     ActionButton,
+    Button,
     DatePicker,
+    Divider,
     Layout,
     Modal,
     notifications,
     Pagination,
     Select,
+    Heading,
+    Body,
+    Tags,
+    Tag,
     Table,
+    Page,
   } from "@budibase/bbui"
-  import { backups } from "stores/portal"
+  import { backups, licensing, auth, admin } from "stores/portal"
   import { createPaginationStore } from "helpers/pagination"
-
   import AppSizeRenderer from "./AppSizeRenderer.svelte"
   import CreateBackupModal from "./CreateBackupModal.svelte"
   import ActionsRenderer from "./ActionsRenderer.svelte"
@@ -19,7 +25,7 @@
   import UserRenderer from "./UserRenderer.svelte"
   import StatusRenderer from "./StatusRenderer.svelte"
   import TypeRenderer from "./TypeRenderer.svelte"
-
+  import BackupsDefault from "assets/backups-default.png"
   export let app
 
   let backupData = null
@@ -30,6 +36,7 @@
   let endDate = null
   let filters = getFilters()
 
+  $: console.log(backupData)
   $: page = $pageInfo.page
   $: fetchBackups(filterOpt, page, startDate, endDate)
 
@@ -146,38 +153,78 @@
 </script>
 
 <div class="root">
-  <Layout noPadding gap="M" alignContent="start">
-    <div class="search">
-      <div class="select">
-        <Select
-          placeholder="All"
-          label="Type"
-          options={filters}
-          getOptionValue={filter => filter.value}
-          getOptionLabel={filter => filter.label}
-          bind:value={filterOpt}
-        />
-      </div>
-      <div>
-        <DatePicker
-          range={true}
-          label={"Filter Range"}
-          on:change={e => {
-            if (e.detail[0].length > 1) {
-              startDate = e.detail[0][0].toISOString()
-              endDate = e.detail[0][1].toISOString()
-            }
-          }}
-        />
-      </div>
+  {#if !$licensing.backupsEnabled}
+    <Page wide={false}>
+      <Layout gap="XS" noPadding>
+        <div class="title">
+          <Heading size="M">Backups</Heading>
+          <Tags>
+            <Tag icon="LockClosed">Pro plan</Tag>
+          </Tags>
+        </div>
+        <div>
+          <Body>
+            Backup your apps and restore them to their previous state.
+            {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
+              Contact your account holder to upgrade your plan.
+            {/if}
+          </Body>
+        </div>
+        <Divider />
+        <div class="pro-buttons">
+          <Button
+            newStyles
+            primary
+            disabled={!$auth.accountPortalAccess && $admin.cloud}
+            on:click={$licensing.goToUpgradePage()}
+          >
+            Upgrade
+          </Button>
+          <!--Show the view plans button-->
+          <Button
+            newStyles
+            secondary
+            on:click={() => {
+              window.open("https://budibase.com/pricing/", "_blank")
+            }}
+          >
+            View Plans
+          </Button>
+        </div>
+      </Layout>
+    </Page>
+  {:else if backupData}
+    <Layout noPadding gap="M" alignContent="start">
+      <div class="search">
+        <div class="select">
+          <Select
+            placeholder="All"
+            label="Type"
+            options={filters}
+            getOptionValue={filter => filter.value}
+            getOptionLabel={filter => filter.label}
+            bind:value={filterOpt}
+          />
+        </div>
+        <div>
+          <DatePicker
+            range={true}
+            label={"Filter Range"}
+            on:change={e => {
+              if (e.detail[0].length > 1) {
+                startDate = e.detail[0][0].toISOString()
+                endDate = e.detail[0][1].toISOString()
+              }
+            }}
+          />
+        </div>
 
-      <div class="split-buttons">
-        <ActionButton on:click={modal.show} icon="SaveAsFloppy"
-          >Create new backup</ActionButton
-        >
+        <div class="split-buttons">
+          <ActionButton on:click={modal.show} icon="SaveAsFloppy"
+            >Create new backup</ActionButton
+          >
+        </div>
       </div>
-    </div>
-    {#if backupData}
       <div>
         <Table
           {schema}
@@ -200,8 +247,28 @@
           />
         </div>
       </div>
-    {/if}
-  </Layout>
+    </Layout>
+  {:else if !backupData}
+    <Page wide={false}>
+      <div class="align">
+        <img
+          width="200px"
+          height="100px"
+          src={BackupsDefault}
+          alt="BackupsDefault"
+        />
+        <Layout gap="S">
+          <Heading>You have no backups yet</Heading>
+          <div class="opacity">
+            <Body size="S">You can manually backup your app any time</Body>
+          </div>
+          <div class="padding">
+            <Button cta>Create Backup</Button>
+          </div>
+        </Layout>
+      </div>
+    </Page>
+  {/if}
 </div>
 
 <Modal bind:this={modal}>
@@ -241,5 +308,22 @@
     justify-content: flex-end;
     flex: 1;
     gap: var(--spacing-xl);
+  }
+
+  .title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  .align {
+    margin-top: 5%;
+    text-align: center;
+  }
+
+  .pro-buttons {
+    display: flex;
+    gap: var(--spacing-m);
   }
 </style>
