@@ -7,8 +7,6 @@
   export let cols = 12
   export let rows = 12
 
-  let node
-
   // Deliberately non-reactive as we want this fixed whenever the grid renders
   const defaultColSpan = Math.ceil((cols + 1) / 2)
   const defaultRowSpan = Math.ceil((rows + 1) / 2)
@@ -27,7 +25,6 @@
 </script>
 
 <div
-  bind:this={node}
   class="grid"
   use:styleable={{
     ...$component.styles,
@@ -37,7 +34,6 @@
       "--rows": rows,
       "--default-col-span": defaultColSpan,
       "--default-row-span": defaultRowSpan,
-      padding: "0 !important",
       gap: "0 !important",
     },
   }}
