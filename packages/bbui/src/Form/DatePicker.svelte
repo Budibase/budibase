@@ -21,7 +21,7 @@
     if (range) {
       // Flatpickr cant take two dates and work out what to display, needs to be provided a string.
       // Like - "Date1 to Date2". Hence passing in that specifically from the array
-      value = e.detail[1]
+      value = e?.detail[1]
     } else {
       value = e.detail
     }

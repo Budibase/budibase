@@ -101,7 +101,6 @@
   warning={false}
 >
   <Input onlabel="Backup name" placeholder={row.name} bind:value={name} />
-  <ConfirmDialog />
 </ConfirmDialog>
 
 <style>

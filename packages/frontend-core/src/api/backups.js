@@ -47,10 +47,4 @@ export const buildBackupsEndpoints = API => ({
       body: { name },
     })
   },
-
-  downloadBackup: async ({ appId, backupId }) => {
-    return await API.get({
-      url: `/api/apps/${appId}/backups/${backupId}/file`,
-    })
-  },
 })

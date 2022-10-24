@@ -2,7 +2,7 @@
   import { Badge } from "@budibase/bbui"
 
   export let value = "started"
-  $: status = value?.charAt(0).toUpperCase() + value?.slice(1)
+  $: status = value[0].toUpperCase() + value?.slice(1)
 </script>
 
 <Badge
