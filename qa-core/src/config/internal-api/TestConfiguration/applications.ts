@@ -8,8 +8,6 @@ import { AppPackageResponse } from "../fixtures/types/appPackage"
 import { DeployConfig } from "../fixtures/types/deploy"
 import { responseMessage } from "../fixtures/types/responseMessage"
 
-
-
 export default class AppApi {
   api: InternalAPIClient
 

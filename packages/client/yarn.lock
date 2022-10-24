@@ -670,6 +670,11 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
+html5-qrcode@^2.2.1:
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/html5-qrcode/-/html5-qrcode-2.2.4.tgz#99e4b36fbd8fbc4956036cf3f21ea3e98c3463d1"
+  integrity sha512-X8wVVsHpNb35tl7KcoCGAboc6Nep2VyT3CIMjFvrfWrHbHTC0yYTjE+DhO/VcswY2MfHy1uB7b1G9+L13gM6dQ==
+
 htmlparser2@^6.0.0:
   version "6.1.0"
   resolved "https://registry.yarnpkg.com/htmlparser2/-/htmlparser2-6.1.0.tgz#c4d762b6c3371a05dbe65e94ae43a9f845fb8fb7"
