@@ -47,7 +47,7 @@ const loadBudibase = async () => {
   appStore.actions.setAppId(window["##BUDIBASE_APP_ID##"])
 
   // Fetch environment info
-  if (!get(environmentStore)) {
+  if (!get(environmentStore)?.loaded) {
     await environmentStore.actions.fetchEnvironment()
   }
 

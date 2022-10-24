@@ -2,6 +2,7 @@ import { API } from "api"
 import { writable } from "svelte/store"
 
 const initialState = {
+  loaded: false,
   cloud: false,
 }
 
@@ -15,6 +16,7 @@ const createEnvironmentStore = () => {
         store.set({
           ...initialState,
           ...environment,
+          loaded: true,
         })
       } catch (error) {
         store.set(initialState)
