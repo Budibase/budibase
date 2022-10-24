@@ -5,7 +5,6 @@ import generateApp from "../../../config/internal-api/fixtures/applications"
 import { Screen } from "@budibase/types"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
 
-
 describe("Internal API - /screens endpoints", () => {
   const api = new InternalAPIClient()
   const config = new TestConfiguration<Screen>(api)
@@ -27,7 +26,9 @@ describe("Internal API - /screens endpoints", () => {
     const roleArray = ["BASIC", "POWER", "ADMIN", "PUBLIC"]
     appConfig.applications.api.appId = app.appId
     for (let role in roleArray) {
-      const [response, screen] = await config.screen.create(generateScreen(roleArray[role]))
+      const [response, screen] = await config.screen.create(
+        generateScreen(roleArray[role])
+      )
       expect(response).toHaveStatusCode(200)
       expect(screen.routing.roleId).toEqual(roleArray[role])
     }
@@ -39,7 +40,9 @@ describe("Internal API - /screens endpoints", () => {
 
     // Create Screen
     appConfig.applications.api.appId = app.appId
-    const [response, screen] = await config.screen.create(generateScreen("BASIC"))
+    const [response, screen] = await config.screen.create(
+      generateScreen("BASIC")
+    )
 
     // Check screen exists
     const [routesResponse, routes] = await appConfig.applications.getRoutes()
@@ -53,7 +56,9 @@ describe("Internal API - /screens endpoints", () => {
 
     // Create Screen
     appConfig.applications.api.appId = app.appId
-    const [screenResponse, screen] = await config.screen.create(generateScreen("BASIC"))
+    const [screenResponse, screen] = await config.screen.create(
+      generateScreen("BASIC")
+    )
 
     // Delete Screen
     const [response] = await config.screen.delete(screen._id!, screen._rev!)
