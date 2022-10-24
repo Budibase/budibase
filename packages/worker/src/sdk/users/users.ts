@@ -79,9 +79,6 @@ export const paginatedUsers = async ({
   } else if (email) {
     userList = await usersCore.searchGlobalUsersByEmail(email, opts)
     property = "email"
-  }
-  if (userIds) {
-    // TODO: search users by userIds
   } else {
     // no search, query allDocs
     const response = await db.allDocs(dbUtils.getGlobalUserParams(null, opts))

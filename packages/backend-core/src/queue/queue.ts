@@ -18,7 +18,7 @@ async function cleanup() {
 
 export function createQueue<T>(
   jobQueue: JobQueue,
-  removeStalled?: StalledFn
+  opts: { removeStalledCb?: StalledFn }
 ): BullQueue.Queue<T> {
   const queueConfig: any = redisProtocolUrl || { redis: opts }
   let queue: any
@@ -27,7 +27,7 @@ export function createQueue<T>(
   } else {
     queue = new InMemoryQueue(jobQueue, queueConfig)
   }
-  addListeners(queue, jobQueue, removeStalled)
+  addListeners(queue, jobQueue, opts?.removeStalledCb)
   QUEUES.push(queue)
   if (!cleanupInterval) {
     cleanupInterval = setInterval(cleanup, CLEANUP_PERIOD_MS)
