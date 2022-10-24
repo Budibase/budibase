@@ -20,7 +20,6 @@ import {
 import { events } from "@budibase/backend-core"
 import { backups } from "@budibase/pro"
 import { AppBackupTrigger } from "@budibase/types"
-import env from "../../../environment"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -108,21 +107,17 @@ async function deployApp(deployment: any, userId: string) {
     const devAppId = getDevelopmentAppID(appId)
     const productionAppId = getProdAppID(appId)
 
-    // can't do this in test
-    if (!env.isTest()) {
-      // don't try this if feature isn't allowed, will error
-      if (!(await backups.isEnabled())) {
-        // trigger backup initially
-        await backups.triggerAppBackup(
-          productionAppId,
-          AppBackupTrigger.PUBLISH,
-          {
-            createdBy: userId,
-          }
-        )
-      }
+    // don't try this if feature isn't allowed, will error
+    if (!(await backups.isEnabled())) {
+      // trigger backup initially
+      await backups.triggerAppBackup(
+        productionAppId,
+        AppBackupTrigger.PUBLISH,
+        {
+          createdBy: userId,
+        }
+      )
     }
-
     const config: any = {
       source: devAppId,
       target: productionAppId,
