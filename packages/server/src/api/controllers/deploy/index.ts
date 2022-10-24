@@ -108,7 +108,7 @@ async function deployApp(deployment: any, userId: string) {
     const productionAppId = getProdAppID(appId)
 
     // don't try this if feature isn't allowed, will error
-    if (!(await backups.isEnabled())) {
+    if (await backups.isEnabled()) {
       // trigger backup initially
       await backups.triggerAppBackup(
         productionAppId,
