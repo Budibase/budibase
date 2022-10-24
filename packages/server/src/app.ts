@@ -38,6 +38,7 @@ import {
 import { watch } from "./watch"
 import { initialise as initialiseWebsockets } from "./websocket"
 import sdk from "./sdk"
+import * as pro from "@budibase/pro"
 
 const app = new Koa()
 
@@ -103,13 +104,25 @@ server.on("close", async () => {
   }
 })
 
+const initPro = async () => {
+  await pro.init({
+    backups: {
+      processing: {
+        exportAppFn: sdk.backups.exportApp,
+        importAppFn: sdk.backups.importApp,
+        statsFn: sdk.backups.calculateBackupStats,
+      },
+    },
+  })
+}
+
 module.exports = server.listen(env.PORT || 0, async () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
   env._set("PORT", server.address().port)
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await redis.init()
-  await sdk.backups.init()
+  await initPro()
 
   // run migrations on startup if not done via http
   // not recommended in a clustered environment
