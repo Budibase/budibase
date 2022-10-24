@@ -124,6 +124,7 @@
     if (!message?.data?.type) {
       return
     }
+    console.debug(`CLIENT: [${message.data.type}]`)
 
     // Await the event handler
     try {
@@ -139,20 +140,11 @@
   }
 
   const handleBudibaseEvent = async event => {
-    const { type, data } = event.data || event.detail
-    if (!type) {
-      return
-    }
+    const { type, data } = event.data
     if (type === MessageTypes.READY) {
       // Initialise the app when mounted
-      if ($store.clientFeatures.messagePassing) {
-        if (!loading) return
-      }
-
-      // Display preview immediately if the intelligent loading feature
-      // is not supported
-      if (!$store.clientFeatures.intelligentLoading) {
-        loading = false
+      if (!loading) {
+        return
       }
       refreshContent(json)
     } else if (type === MessageTypes.ERROR) {
