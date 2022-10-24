@@ -169,6 +169,14 @@
       window.removeEventListener("keydown", handleKeyDown)
     }
   })
+
+  const onDragStart = component => {
+    store.actions.dnd.start(component)
+  }
+
+  const onDragEnd = () => {
+    store.actions.dnd.stop()
+  }
 </script>
 
 <div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
@@ -206,6 +214,9 @@
               <div class="category-label">{category.name}</div>
               {#each category.children as component}
                 <div
+                  draggable="true"
+                  on:dragstart={() => onDragStart(component.component)}
+                  on:dragend={onDragEnd}
                   data-cy={`component-${component.name}`}
                   class="component"
                   class:selected={selectedIndex ===
@@ -229,8 +240,11 @@
         <Layout noPadding gap="XS">
           {#each blocks as block}
             <div
+              draggable="true"
               class="component"
               on:click={() => addComponent(block.component)}
+              on:dragstart={() => onDragStart(block.component)}
+              on:dragend={onDragEnd}
             >
               <Icon name={block.icon} />
               <Body size="XS">{block.name}</Body>

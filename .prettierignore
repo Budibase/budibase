@@ -9,3 +9,4 @@ packages/server/src/definitions/openapi.ts
 packages/builder/.routify
 packages/builder/cypress/support/queryLevelTransformerFunction.js
 packages/builder/cypress/support/queryLevelTransformerFunctionWithData.js
+packages/sdk/sdk

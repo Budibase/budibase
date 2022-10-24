@@ -37,8 +37,8 @@ function parseIntSafe(number) {
 let inThread = false
 
 module.exports = {
-  // important
-  PORT: process.env.PORT || process.env.APP_PORT,
+  // important - prefer app port to generic port
+  PORT: process.env.APP_PORT || process.env.PORT,
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,

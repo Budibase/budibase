@@ -2,6 +2,11 @@ const { join } = require("path")
 const { tmpdir } = require("os")
 const env = require("../environment")
 
+/****************************************************
+ *      NOTE: When adding a new bucket - name       *
+ *     sure that S3 usages (like budibase-infra)    *
+ *  have been updated to have a unique bucket name. *
+ ****************************************************/
 exports.ObjectStoreBuckets = {
   BACKUPS: env.BACKUPS_BUCKET_NAME,
   APPS: env.APPS_BUCKET_NAME,

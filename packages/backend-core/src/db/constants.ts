@@ -19,6 +19,8 @@ export enum ViewName {
   ROUTING = "screen_routes",
   AUTOMATION_LOGS = "automation_logs",
   ACCOUNT_BY_EMAIL = "account_by_email",
+  PLATFORM_USERS_LOWERCASE = "platform_users_lowercase",
+  USER_BY_GROUP = "by_group_user",
 }
 
 export const DeprecatedViews = {
@@ -43,6 +45,10 @@ export enum DocumentType {
   DEV_INFO = "devinfo",
   AUTOMATION_LOG = "log_au",
   ACCOUNT_METADATA = "acc_metadata",
+  PLUGIN = "plg",
+  TABLE = "ta",
+  DATASOURCE = "datasource",
+  DATASOURCE_PLUS = "datasource_plus",
 }
 
 export const StaticDatabases = {

@@ -34,15 +34,12 @@ const DocumentType = {
   INSTANCE: "inst",
   LAYOUT: "layout",
   SCREEN: "screen",
-  DATASOURCE: "datasource",
-  DATASOURCE_PLUS: "datasource_plus",
   QUERY: "query",
   DEPLOYMENTS: "deployments",
   METADATA: "metadata",
   MEM_VIEW: "view",
   USER_FLAG: "flag",
   AUTOMATION_METADATA: "meta_au",
-  PLUGIN: "plg",
 }
 
 const InternalTables = {
@@ -383,11 +380,4 @@ exports.getMultiIDParams = ids => {
     keys: ids,
     include_docs: true,
   }
-}
-
-/**
- * Gets parameters for retrieving automations, this is a utility function for the getDocParams function.
- */
-exports.getPluginParams = (pluginId = null, otherProps = {}) => {
-  return getDocParams(DocumentType.PLUGIN, pluginId, otherProps)
 }

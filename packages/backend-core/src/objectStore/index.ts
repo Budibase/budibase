@@ -182,6 +182,11 @@ export const streamUpload = async (
       ...extra,
       ContentType: "application/javascript",
     }
+  } else if (filename?.endsWith(".svg")) {
+    extra = {
+      ...extra,
+      ContentType: "image",
+    }
   }
 
   const params = {
@@ -307,9 +312,13 @@ export const uploadDirectory = async (
   return files
 }
 
-exports.downloadTarballDirect = async (url: string, path: string) => {
+exports.downloadTarballDirect = async (
+  url: string,
+  path: string,
+  headers = {}
+) => {
   path = sanitizeKey(path)
-  const response = await fetch(url)
+  const response = await fetch(url, { headers })
   if (!response.ok) {
     throw new Error(`unexpected response ${response.statusText}`)
   }

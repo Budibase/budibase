@@ -51,7 +51,10 @@ const handleAppRoleEvents = async (user: any, existingUser: any) => {
   await unassignAppRoleEvents(user, roles, existingRoles)
 }
 
-export const handleSaveEvents = async (user: any, existingUser: any) => {
+export const handleSaveEvents = async (
+  user: User,
+  existingUser: User | undefined
+) => {
   const tenantId = tenancy.getTenantId()
   let tenantAccount: CloudAccount | undefined
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {

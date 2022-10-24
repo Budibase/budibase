@@ -19,17 +19,17 @@
     Modal,
     notifications,
     Divider,
+    Banner,
     StatusLight,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { fetchData } from "helpers"
-  import { users, auth, groups, apps } from "stores/portal"
+  import { users, auth, groups, apps, licensing } from "stores/portal"
   import { roles } from "stores/backend"
-  import { Constants } from "@budibase/frontend-core"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
-  import { RoleUtils } from "@budibase/frontend-core"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"
+  import GroupIcon from "../groups/_components/GroupIcon.svelte"
+  import { Constants, RoleUtils } from "@budibase/frontend-core"
 
   export let userId
 
@@ -38,59 +38,57 @@
   let popoverAnchor
   let searchTerm = ""
   let popover
-  let selectedGroups = []
-  let allAppList = []
   let user
   let loaded = false
 
-  $: fetchUser(userId)
-  $: fullName = $userFetch?.data?.firstName
-    ? $userFetch?.data?.firstName + " " + $userFetch?.data?.lastName
-    : ""
-  $: nameLabel = getNameLabel($userFetch)
+  $: fullName = user?.firstName ? user?.firstName + " " + user?.lastName : ""
+  $: privileged = user?.admin?.global || user?.builder?.global
+  $: nameLabel = getNameLabel(user)
   $: initials = getInitials(nameLabel)
-  $: allAppList = $apps
-    .filter(x => {
-      if ($userFetch.data?.roles) {
-        return Object.keys($userFetch.data.roles).find(y => {
-          return x.appId === apps.extractAppId(y)
-        })
-      }
-    })
-    .map(app => {
-      let roles = Object.fromEntries(
-        Object.entries($userFetch.data.roles).filter(([key]) => {
-          return apps.extractAppId(key) === app.appId
-        })
-      )
-      return {
-        name: app.name,
-        devId: app.devId,
-        icon: app.icon,
-        roles,
-      }
-    })
-  // Used for searching through groups in the add group popover
-  $: filteredGroups = $groups.filter(
-    group =>
-      selectedGroups &&
-      group?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  $: filteredGroups = getFilteredGroups($groups, searchTerm)
+  $: availableApps = getAvailableApps($apps, privileged, user?.roles)
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
       return y._id === userId
     })
   })
-  $: globalRole = $userFetch?.data?.admin?.global
+  $: globalRole = user?.admin?.global
     ? "admin"
-    : $userFetch?.data?.builder?.global
+    : user?.builder?.global
     ? "developer"
     : "appUser"
 
-  const userFetch = fetchData(`/api/global/users/${userId}`)
+  const getAvailableApps = (appList, privileged, roles) => {
+    let availableApps = appList.slice()
+    if (!privileged) {
+      availableApps = availableApps.filter(x => {
+        return Object.keys(roles || {}).find(y => {
+          return x.appId === apps.extractAppId(y)
+        })
+      })
+    }
+    return availableApps.map(app => {
+      const prodAppId = apps.getProdAppID(app.appId)
+      console.log(prodAppId)
+      return {
+        name: app.name,
+        devId: app.devId,
+        icon: app.icon,
+        role: privileged ? Constants.Roles.ADMIN : roles[prodAppId],
+      }
+    })
+  }
 
-  const getNameLabel = userFetch => {
-    const { firstName, lastName, email } = userFetch?.data || {}
+  const getFilteredGroups = (groups, search) => {
+    if (!search) {
+      return groups
+    }
+    search = search.toLowerCase()
+    return groups.filter(group => group.name?.toLowerCase().includes(search))
+  }
+
+  const getNameLabel = user => {
+    const { firstName, lastName, email } = user || {}
     if (!firstName && !lastName) {
       return email || ""
     }
@@ -122,38 +120,19 @@
     return role?.name || "Custom role"
   }
 
-  function getHighestRole(roles) {
-    let highestRole
-    let highestRoleNumber = 0
-    Object.keys(roles).forEach(role => {
-      let roleNumber = RoleUtils.getRolePriority(roles[role])
-      if (roleNumber > highestRoleNumber) {
-        highestRoleNumber = roleNumber
-        highestRole = roles[role]
-      }
-    })
-    return highestRole
-  }
   async function updateUserFirstName(evt) {
     try {
-      await users.save({ ...$userFetch?.data, firstName: evt.target.value })
-      await userFetch.refresh()
+      await users.save({ ...user, firstName: evt.target.value })
+      await fetchUser()
     } catch (error) {
       notifications.error("Error updating user")
     }
   }
 
-  async function removeGroup(id) {
-    let updatedGroup = $groups.find(x => x._id === id)
-    let newUsers = updatedGroup.users.filter(user => user._id !== userId)
-    updatedGroup.users = newUsers
-    groups.actions.save(updatedGroup)
-  }
-
   async function updateUserLastName(evt) {
     try {
-      await users.save({ ...$userFetch?.data, lastName: evt.target.value })
-      await userFetch.refresh()
+      await users.save({ ...user, lastName: evt.target.value })
+      await fetchUser()
     } catch (error) {
       notifications.error("Error updating user")
     }
@@ -169,40 +148,40 @@
     }
   }
 
-  async function addGroup(groupId) {
-    let selectedGroup = selectedGroups.includes(groupId)
-    let group = $groups.find(group => group._id === groupId)
-
-    if (selectedGroup) {
-      selectedGroups = selectedGroups.filter(id => id === selectedGroup)
-      let newUsers = group.users.filter(groupUser => user._id !== groupUser._id)
-      group.users = newUsers
-    } else {
-      selectedGroups = [...selectedGroups, groupId]
-      group.users.push(user)
+  async function fetchUser() {
+    user = await users.get(userId)
+    if (!user?._id) {
+      $goto("./")
     }
-
-    await groups.actions.save(group)
-  }
-
-  async function fetchUser(userId) {
-    let userPromise = users.get(userId)
-    user = await userPromise
   }
 
   async function toggleFlags(detail) {
     try {
-      await users.save({ ...$userFetch?.data, ...detail })
-      await userFetch.refresh()
+      await users.save({ ...user, ...detail })
+      await fetchUser()
     } catch (error) {
       notifications.error("Error updating user")
     }
   }
 
-  function addAll() {}
+  const addGroup = async groupId => {
+    await groups.actions.addUser(groupId, userId)
+    await fetchUser()
+  }
+
+  const removeGroup = async groupId => {
+    await groups.actions.removeUser(groupId, userId)
+    await fetchUser()
+  }
+
   onMount(async () => {
     try {
-      await Promise.all([groups.actions.init(), apps.load(), roles.fetch()])
+      await Promise.all([
+        fetchUser(),
+        groups.actions.init(),
+        apps.load(),
+        roles.fetch(),
+      ])
       loaded = true
     } catch (error) {
       notifications.error("Error getting user groups")
@@ -225,13 +204,13 @@
             <Avatar size="XXL" {initials} />
             <div class="subtitle">
               <Heading size="S">{nameLabel}</Heading>
-              {#if nameLabel !== $userFetch?.data?.email}
-                <Body size="S">{$userFetch?.data?.email}</Body>
+              {#if nameLabel !== user?.email}
+                <Body size="S">{user?.email}</Body>
               {/if}
             </div>
           </div>
         </div>
-        {#if userId !== $auth.user._id}
+        {#if userId !== $auth.user?._id}
           <div>
             <ActionMenu align="right">
               <span slot="control">
@@ -247,27 +226,21 @@
           </div>
         {/if}
       </div>
-      <Divider size="S" />
+      <Divider />
       <Layout noPadding gap="S">
         <Heading size="S">Details</Heading>
         <div class="fields">
           <div class="field">
             <Label size="L">Email</Label>
-            <Input disabled value={$userFetch?.data?.email} />
+            <Input disabled value={user?.email} />
           </div>
           <div class="field">
             <Label size="L">First name</Label>
-            <Input
-              value={$userFetch?.data?.firstName}
-              on:blur={updateUserFirstName}
-            />
+            <Input value={user?.firstName} on:blur={updateUserFirstName} />
           </div>
           <div class="field">
             <Label size="L">Last name</Label>
-            <Input
-              value={$userFetch?.data?.lastName}
-              on:blur={updateUserLastName}
-            />
+            <Input value={user?.lastName} on:blur={updateUserLastName} />
           </div>
           <!-- don't let a user remove the privileges that let them be here -->
           {#if userId !== $auth.user._id}
@@ -284,7 +257,7 @@
       </Layout>
     </Layout>
 
-    {#if $auth.groupsEnabled}
+    {#if $licensing.groupsEnabled}
       <!-- User groups -->
       <Layout gap="S" noPadding>
         <div class="tableTitle">
@@ -301,13 +274,14 @@
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
             <UserGroupPicker
-              key={"name"}
-              title={"User group"}
+              labelKey="name"
               bind:searchTerm
-              bind:selected={selectedGroups}
-              bind:filtered={filteredGroups}
-              {addAll}
-              select={addGroup}
+              list={filteredGroups}
+              selected={user.userGroups}
+              on:select={e => addGroup(e.detail)}
+              on:deselect={e => removeGroup(e.detail)}
+              iconComponent={GroupIcon}
+              extractIconProps={item => ({ group: item, size: "S" })}
             />
           </Popover>
         </div>
@@ -322,7 +296,10 @@
                 on:click={() => $goto(`../groups/${group._id}`)}
               >
                 <Icon
-                  on:click={removeGroup(group._id)}
+                  on:click={e => {
+                    removeGroup(group._id)
+                    e.stopPropagation()
+                  }}
                   hoverable
                   size="S"
                   name="Close"
@@ -330,7 +307,7 @@
               </ListItem>
             {/each}
           {:else}
-            <ListItem icon="UserGroup" title="No groups" />
+            <ListItem icon="UserGroup" title="This user is in no user groups" />
           {/if}
         </List>
       </Layout>
@@ -339,27 +316,28 @@
     <Layout gap="S" noPadding>
       <Heading size="S">Apps</Heading>
       <List>
-        {#if allAppList.length}
-          {#each allAppList as app}
+        {#if privileged}
+          <Banner showCloseButton={false}>
+            This user's role grants admin access to all apps
+          </Banner>
+        {:else if availableApps.length}
+          {#each availableApps as app}
             <ListItem
               title={app.name}
-              iconBackground={app?.icon?.color || ""}
+              iconColor={app?.icon?.color}
               icon={app?.icon?.name || "Apps"}
               hoverable
               on:click={() => $goto(`../../overview/${app.devId}`)}
             >
               <div class="title ">
-                <StatusLight
-                  square
-                  color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
-                >
-                  {getRoleLabel(getHighestRole(app.roles))}
+                <StatusLight square color={RoleUtils.getRoleColour(app.role)}>
+                  {getRoleLabel(app.role)}
                 </StatusLight>
               </div>
             </ListItem>
           {/each}
         {:else}
-          <ListItem icon="Apps" title="No apps" />
+          <ListItem icon="Apps" title="This user has access to no apps" />
         {/if}
       </List>
     </Layout>
@@ -367,13 +345,10 @@
 {/if}
 
 <Modal bind:this={deleteModal}>
-  <DeleteUserModal user={$userFetch.data} />
+  <DeleteUserModal {user} />
 </Modal>
 <Modal bind:this={resetPasswordModal}>
-  <ForceResetPasswordModal
-    user={$userFetch.data}
-    on:update={userFetch.refresh}
-  />
+  <ForceResetPasswordModal {user} on:update={fetchUser} />
 </Modal>
 
 <style>

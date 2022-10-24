@@ -16,9 +16,9 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
-    isDragging: false,
     navigation: null,
     hiddenComponentIds: [],
+    usedPlugins: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -46,6 +46,9 @@ const createBuilderStore = () => {
     duplicateComponent: id => {
       dispatchEvent("duplicate-component", { id })
     },
+    deleteComponent: id => {
+      dispatchEvent("delete-component", { id })
+    },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
@@ -63,11 +66,12 @@ const createBuilderStore = () => {
         mode,
       })
     },
-    setDragging: dragging => {
-      if (dragging === get(store).isDragging) {
-        return
-      }
-      store.update(state => ({ ...state, isDragging: dragging }))
+    dropNewComponent: (component, parent, index) => {
+      dispatchEvent("drop-new-component", {
+        component,
+        parent,
+        index,
+      })
     },
     setEditMode: enabled => {
       if (enabled === get(store).editMode) {
@@ -83,6 +87,26 @@ const createBuilderStore = () => {
     },
     highlightSetting: setting => {
       dispatchEvent("highlight-setting", { setting })
+    },
+    ejectBlock: (id, definition) => {
+      dispatchEvent("eject-block", { id, definition })
+    },
+    updateUsedPlugin: (name, hash) => {
+      // Check if we used this plugin
+      const used = get(store)?.usedPlugins?.find(x => x.name === name)
+      if (used) {
+        store.update(state => {
+          state.usedPlugins = state.usedPlugins.filter(x => x.name !== name)
+          state.usedPlugins.push({
+            ...used,
+            hash,
+          })
+          return state
+        })
+      }
+
+      // Notify the builder so we can reload component definitions
+      dispatchEvent("reload-plugin")
     },
   }
   return {
