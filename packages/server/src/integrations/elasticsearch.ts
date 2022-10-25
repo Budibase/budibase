@@ -9,6 +9,9 @@ const { Client } = require("@elastic/elasticsearch")
 
 interface ElasticsearchConfig {
   url: string
+  ssl?: boolean
+  ca?: string
+  rejectUnauthorized?: boolean
 }
 
 const SCHEMA: Integration = {
@@ -22,6 +25,21 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.STRING,
       required: true,
       default: "http://localhost:9200",
+    },
+    ssl: {
+      type: DatasourceFieldType.BOOLEAN,
+      default: false,
+      required: false,
+    },
+    rejectUnauthorized: {
+      type: DatasourceFieldType.BOOLEAN,
+      default: true,
+      required: false,
+    },
+    ca: {
+      type: DatasourceFieldType.LONGFORM,
+      default: false,
+      required: false,
     },
   },
   query: {
@@ -81,7 +99,25 @@ class ElasticSearchIntegration implements IntegrationBase {
 
   constructor(config: ElasticsearchConfig) {
     this.config = config
-    this.client = new Client({ node: config.url })
+
+    let newConfig = { 
+      node: this.config.url,
+      ssl: this.config.ssl 
+        ? {
+          rejectUnauthorized: this.config.rejectUnauthorized,
+          ca: this.config.ca ? this.config.ca : undefined
+        }
+        : undefined,
+    }
+
+    if (newConfig.ssl && !newConfig.ssl.ca)
+    {
+      delete newConfig.ssl.ca
+    } else if(!newConfig.ssl)
+    {
+      delete newConfig.ssl
+    }
+    this.client = new Client(newConfig)
   }
 
   async create(query: { index: string; json: object }) {
