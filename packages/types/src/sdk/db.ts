@@ -1,3 +1,5 @@
+import PouchDB from "pouchdb"
+
 export type PouchOptions = {
   inMemory: boolean
   replication: boolean

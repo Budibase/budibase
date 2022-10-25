@@ -11,10 +11,14 @@
   import { capitalise } from "helpers"
   import { IntegrationTypes } from "constants/backend"
   import "@spectrum-css/accordion"
+  import { createValidationStore } from "helpers/validation/yup"
+  import { createEventDispatcher } from "svelte"
 
   export let datasource
   export let schema
   export let creating
+  const validation = createValidationStore()
+  const dispatch = createEventDispatcher()
 
   function filter([key, value]) {
     if (!value) {
@@ -31,6 +35,17 @@
   $: configKeys = Object.entries(schema || {})
     .filter(el => filter(el))
     .map(([key]) => key)
+
+  // setup the validation for each required field
+  $: configKeys.forEach(key => {
+    if (schema[key].required) {
+      validation.addValidatorType(key, schema[key].type, schema[key].required)
+    }
+  })
+  // run the validation whenever the config changes
+  $: validation.check(config)
+  // dispatch the validation result
+  $: dispatch("valid", $validation.valid)
 
   let addButton
   let openAccordionItems = initialOpenAccordionItems()
@@ -105,6 +120,7 @@
             type={schema[configKey].type}
             on:change
             bind:value={config[configKey]}
+            error={$validation.errors[configKey]}
           />
         </div>
       {:else if schema[configKey].type === "fieldGroup"}
@@ -153,6 +169,7 @@
             type={schema[configKey].type}
             on:change
             bind:value={config[configKey]}
+            error={$validation.errors[configKey]}
           />
         </div>
       {/if}

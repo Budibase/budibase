@@ -6,6 +6,7 @@ import {
   isSQL,
 } from "../../../integrations/utils"
 import { Table } from "@budibase/types"
+import PouchDB from "pouchdb"
 
 async function getAllInternalTables(db?: PouchDB.Database): Promise<Table[]> {
   if (!db) {

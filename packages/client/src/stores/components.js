@@ -5,9 +5,8 @@ import { devToolsStore } from "./devTools"
 import { screenStore } from "./screens"
 import { builderStore } from "./builder"
 import Router from "../components/Router.svelte"
-import DNDPlaceholder from "../components/preview/DNDPlaceholder.svelte"
 import * as AppComponents from "../components/app/index.js"
-import { DNDPlaceholderType, ScreenslotType } from "../constants.js"
+import { ScreenslotType } from "../constants.js"
 
 const budibasePrefix = "@budibase/standard-components/"
 
@@ -49,6 +48,9 @@ const createComponentStore = () => {
   )
 
   const registerInstance = (id, instance) => {
+    if (!id) {
+      return
+    }
     store.update(state => {
       // If this is a custom component, flag it so we can reload this component
       // later if required
@@ -68,6 +70,9 @@ const createComponentStore = () => {
   }
 
   const unregisterInstance = id => {
+    if (!id) {
+      return
+    }
     store.update(state => {
       // Remove from custom component map if required
       const component = state.mountedComponents[id]?.instance?.component
@@ -103,8 +108,6 @@ const createComponentStore = () => {
     // Screenslot is an edge case
     if (type === ScreenslotType) {
       type = `${budibasePrefix}${type}`
-    } else if (type === DNDPlaceholderType) {
-      return {}
     }
 
     // Handle built-in components
@@ -124,8 +127,6 @@ const createComponentStore = () => {
     }
     if (type === ScreenslotType) {
       return Router
-    } else if (type === DNDPlaceholderType) {
-      return DNDPlaceholder
     }
 
     // Handle budibase components
@@ -138,6 +139,13 @@ const createComponentStore = () => {
     // Handle custom components
     const { customComponentManifest } = get(store)
     return customComponentManifest?.[type]?.Component
+  }
+
+  const getComponentInstance = id => {
+    if (!id) {
+      return null
+    }
+    return get(store).mountedComponents[id]
   }
 
   const registerCustomComponent = ({ Component, schema, version }) => {
@@ -171,6 +179,7 @@ const createComponentStore = () => {
       getComponentById,
       getComponentDefinition,
       getComponentConstructor,
+      getComponentInstance,
       registerCustomComponent,
     },
   }

@@ -22,6 +22,18 @@
   $: target = $dndStore.target
   $: drop = $dndStore.drop
 
+  // Local flag for whether we are awaiting an async drop event
+  let dropping = false
+
+  // Util to check if a DND event originates from a grid (or inside a grid).
+  // This is important as we do not handle grid DND in this handler.
+  const isGridEvent = e => {
+    return e.target
+      ?.closest?.(".component")
+      ?.parentNode?.closest?.(".component")
+      ?.childNodes[0]?.classList.contains("grid")
+  }
+
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
     const component = document.getElementsByClassName(id)[0]
@@ -41,6 +53,10 @@
 
   // Callback when drag stops (whether dropped or not)
   const stopDragging = () => {
+    if (dropping) {
+      return
+    }
+
     // Reset listener
     if (source?.id) {
       const component = document.getElementsByClassName(source?.id)[0]
@@ -55,6 +71,9 @@
 
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
+    if (isGridEvent(e)) {
+      return
+    }
     const component = e.target.closest(".component")
     if (!component?.classList.contains("draggable")) {
       return
@@ -99,9 +118,9 @@
 
   // Core logic for handling drop events and determining where to render the
   // drop target placeholder
-  const processEvent = (mouseX, mouseY) => {
+  const processEvent = Utils.throttle((mouseX, mouseY) => {
     if (!target) {
-      return null
+      return
     }
     let { id, parent, node, acceptsChildren, empty } = target
 
@@ -201,15 +220,15 @@
       parent: id,
       index: idx,
     })
-  }
-  const throttledProcessEvent = Utils.throttle(processEvent, ThrottleRate)
+  }, ThrottleRate)
 
   const handleEvent = e => {
     e.preventDefault()
-    throttledProcessEvent(e.clientX, e.clientY)
+    e.stopPropagation()
+    processEvent(e.clientX, e.clientY)
   }
 
-  // Callback when on top of a component
+  // Callback when on top of a component.
   const onDragOver = e => {
     if (!source || !target) {
       return
@@ -241,18 +260,21 @@
   }
 
   // Callback when dropping a drag on top of some component
-  const onDrop = () => {
+  const onDrop = async () => {
     if (!source || !drop?.parent || drop?.index == null) {
       return
     }
 
     // Check if we're adding a new component rather than moving one
     if (source.newComponentType) {
-      builderStore.actions.dropNewComponent(
+      dropping = true
+      await builderStore.actions.dropNewComponent(
         source.newComponentType,
         drop.parent,
         drop.index
       )
+      dropping = false
+      stopDragging()
       return
     }
 
@@ -289,11 +311,14 @@
     }
 
     if (legacyDropTarget && legacyDropMode) {
-      builderStore.actions.moveComponent(
+      dropping = true
+      await builderStore.actions.moveComponent(
         source.id,
         legacyDropTarget,
         legacyDropMode
       )
+      dropping = false
+      stopDragging()
     }
   }
 

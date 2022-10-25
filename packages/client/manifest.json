@@ -87,7 +87,7 @@
     "showSettingsBar": true,
     "size": {
       "width": 400,
-      "height": 100
+      "height": 200
     },
     "styles": [
       "padding",
@@ -5034,6 +5034,45 @@
         "label": "Markdown",
         "key": "value",
         "required": true
+      }
+    ]
+  },
+  "grid": {
+    "name": "Grid (Beta)",
+    "icon": "ViewGrid",
+    "hasChildren": true,
+    "styles": [
+      "size"
+    ],
+    "illegalChildren": ["section", "grid"],
+    "legalDirectChildren": [
+      "container",
+      "tableblock",
+      "cardsblock",
+      "repeaterblock",
+      "formblock"
+    ],
+    "size": {
+      "width": 800,
+      "height": 400
+    },
+    "showEmptyState": false,
+    "settings": [
+      {
+        "type": "number",
+        "label": "Rows",
+        "key": "rows",
+        "defaultValue": 12,
+        "min": 1,
+        "max": 32
+      },
+      {
+        "type": "number",
+        "label": "Columns",
+        "key": "cols",
+        "defaultValue": 12,
+        "min": 1,
+        "max": 32
       }
     ]
   },
