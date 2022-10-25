@@ -211,8 +211,8 @@
     <Page wide={false}>
       <div class="align">
         <img
-          width="200px"
-          height="120px"
+          width="220px"
+          height="130px"
           src={BackupsDefault}
           alt="BackupsDefault"
         />
