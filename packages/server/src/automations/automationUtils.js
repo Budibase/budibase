@@ -1,6 +1,5 @@
 const { getTable } = require("../api/controllers/table/utils")
 const {
-  findHBSBlocks,
   decodeJSBinding,
   isJSBinding,
   encodeJSBinding,
