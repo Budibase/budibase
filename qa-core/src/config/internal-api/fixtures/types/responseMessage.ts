@@ -1,1 +1,3 @@
-export interface responseMessage { message: string }
+export interface responseMessage {
+  message: string
+}

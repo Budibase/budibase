@@ -5,6 +5,7 @@ import {
   getAutomationParams,
   getScreenParams,
 } from "../../../db/utils"
+import PouchDB from "pouchdb"
 
 async function runInContext(appId: string, cb: any, db?: PouchDB.Database) {
   if (db) {

@@ -1,11 +1,12 @@
-import pouch from "./pouch"
+import * as pouch from "./pouch"
 import env from "../environment"
 import { checkSlashesInUrl } from "../helpers"
 import fetch from "node-fetch"
 import { PouchOptions, CouchFindOptions } from "@budibase/types"
+import PouchDB from "pouchdb"
 
 const openDbs: string[] = []
-let PouchDB: any
+let Pouch: any
 let initialised = false
 const dbList = new Set()
 
@@ -33,19 +34,19 @@ const checkInitialised = () => {
 }
 
 export async function init(opts?: PouchOptions) {
-  PouchDB = pouch.getPouch(opts)
+  Pouch = pouch.getPouch(opts)
   initialised = true
 }
 
 // NOTE: THIS IS A DANGEROUS FUNCTION - USE WITH CAUTION
 // this function is prone to leaks, should only be used
 // in situations that using the function doWithDB does not work
-export function dangerousGetDB(dbName: string, opts?: any) {
+export function dangerousGetDB(dbName: string, opts?: any): PouchDB.Database {
   checkInitialised()
   if (env.isTest()) {
     dbList.add(dbName)
   }
-  const db = new PouchDB(dbName, opts)
+  const db = new Pouch(dbName, opts)
   if (env.MEMORY_LEAK_CHECK) {
     openDbs.push(db.name)
   }

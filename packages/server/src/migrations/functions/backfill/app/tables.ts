@@ -1,5 +1,6 @@
 import { events } from "@budibase/backend-core"
 import sdk from "../../../../sdk"
+import PouchDB from "pouchdb"
 
 export const backfill = async (
   appDb: PouchDB.Database,
