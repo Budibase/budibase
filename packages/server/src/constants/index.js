@@ -196,10 +196,6 @@ exports.BuildSchemaErrors = {
   INVALID_COLUMN: "invalid_column",
 }
 
-exports.WebhookType = {
-  AUTOMATION: "automation",
-}
-
 exports.AutomationErrors = {
   INCORRECT_TYPE: "INCORRECT_TYPE",
   MAX_ITERATIONS: "MAX_ITERATIONS_REACHED",

@@ -1,20 +1,25 @@
 import { db as dbCore } from "@budibase/backend-core"
-import { TABLE_ROW_PREFIX } from "../../../db/utils"
+import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import {
-  uploadDirectory,
   upload,
+  uploadDirectory,
 } from "../../../utilities/fileSystem/utilities"
 import { downloadTemplate } from "../../../utilities/fileSystem"
-import { ObjectStoreBuckets, FieldTypes } from "../../../constants"
+import { FieldTypes, ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
-import { CouchFindOptions, RowAttachment } from "@budibase/types"
+import {
+  Automation,
+  AutomationTriggerStepId,
+  CouchFindOptions,
+  RowAttachment,
+} from "@budibase/types"
+import PouchDB from "pouchdb"
 const uuid = require("uuid/v4")
 const tar = require("tar")
-import PouchDB from "pouchdb"
 
 type TemplateType = {
   file?: {
@@ -79,6 +84,34 @@ async function updateAttachmentColumns(
     // write back the updated attachments
     await db.bulkDocs(rows)
   }
+}
+
+async function updateAutomations(prodAppId: string, db: PouchDB.Database) {
+  const automations = (
+    await db.allDocs(
+      getAutomationParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc) as Automation[]
+  const devAppId = dbCore.getDevAppID(prodAppId)
+  let toSave: Automation[] = []
+  for (let automation of automations) {
+    const oldDevAppId = automation.appId,
+      oldProdAppId = dbCore.getProdAppID(automation.appId)
+    if (
+      automation.definition.trigger.stepId === AutomationTriggerStepId.WEBHOOK
+    ) {
+      const old = automation.definition.trigger.inputs
+      automation.definition.trigger.inputs = {
+        schemaUrl: old.schemaUrl.replace(oldDevAppId, devAppId),
+        triggerUrl: old.triggerUrl.replace(oldProdAppId, prodAppId),
+      }
+    }
+    automation.appId = devAppId
+    toSave.push(automation)
+  }
+  await db.bulkDocs(toSave)
 }
 
 /**
@@ -165,5 +198,6 @@ export async function importApp(
     throw "Error loading database dump from template."
   }
   await updateAttachmentColumns(prodAppId, db)
+  await updateAutomations(prodAppId, db)
   return ok
 }
