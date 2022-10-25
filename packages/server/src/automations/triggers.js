@@ -116,8 +116,8 @@ exports.externalTrigger = async function (
 
 exports.rebootTrigger = async () => {
   // reboot cron option is only available on the main thread at
-  // startup and only usable in self host
-  if (env.isInThread() || !env.SELF_HOSTED) {
+  // startup and only usable in self host and single tenant environments
+  if (env.isInThread() || !env.SELF_HOSTED || env.MULTI_TENANCY) {
     return
   }
   // iterate through all production apps, find the reboot crons
