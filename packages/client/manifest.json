@@ -4567,7 +4567,7 @@
     ]
   },
   "grid": {
-    "name": "Grid",
+    "name": "Grid (Beta)",
     "icon": "ViewGrid",
     "hasChildren": true,
     "styles": [
