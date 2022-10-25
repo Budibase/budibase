@@ -317,7 +317,7 @@ const getSchema = () => {
       //@ts-ignore
       tls: {
         type: DatasourceFieldType.FIELD_GROUP,
-        display: "Configure TLS",
+        display: "Configure SSL",
         fields: {
           tlsCertificateFile: {
             type: DatasourceFieldType.STRING,
