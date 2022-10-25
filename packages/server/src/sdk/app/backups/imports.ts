@@ -14,6 +14,7 @@ import sdk from "../../"
 import { CouchFindOptions, RowAttachment } from "@budibase/types"
 const uuid = require("uuid/v4")
 const tar = require("tar")
+import PouchDB from "pouchdb"
 
 type TemplateType = {
   file?: {
