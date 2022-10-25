@@ -11,9 +11,10 @@
     notifications,
   } from "@budibase/bbui"
   import structure from "./componentStructure.json"
-  import { store, selectedComponent } from "builderStore"
+  import { store, selectedComponent, selectedScreen } from "builderStore"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
+  import { findComponentPath } from "builderStore/componentUtils"
 
   let section = "components"
   let searchString
@@ -21,8 +22,10 @@
   let selectedIndex
   let componentList = []
 
-  $: currentDefinition = store.actions.components.getDefinition(
-    $selectedComponent?._component
+  $: allowedComponents = getAllowedComponents(
+    $store.components,
+    $selectedScreen,
+    $selectedComponent
   )
   $: enrichedStructure = enrichStructure(
     structure,
@@ -31,12 +34,49 @@
   )
   $: filteredStructure = filterStructure(
     enrichedStructure,
-    section,
-    currentDefinition,
+    allowedComponents,
     searchString
   )
   $: blocks = enrichedStructure.find(x => x.name === "Blocks").children
   $: orderMap = createComponentOrderMap(componentList)
+
+  const getAllowedComponents = (allComponents, screen, component) => {
+    const path = findComponentPath(screen?.props, component?._id)
+    if (!path?.length) {
+      return []
+    }
+
+    // Get initial set of allowed components
+    let allowedComponents = []
+    const definition = store.actions.components.getDefinition(
+      component?._component
+    )
+    if (definition.legalDirectChildren?.length) {
+      allowedComponents = definition.legalDirectChildren.map(x => {
+        return `@budibase/standard-components/${x}`
+      })
+    } else {
+      allowedComponents = Object.keys(allComponents)
+    }
+
+    // Build up list of illegal children from ancestors
+    let illegalChildren = definition.illegalChildren || []
+    path.forEach(ancestor => {
+      const def = store.actions.components.getDefinition(ancestor._component)
+      const blacklist = def?.illegalChildren?.map(x => {
+        return `@budibase/standard-components/${x}`
+      })
+      illegalChildren = [...illegalChildren, ...(blacklist || [])]
+    })
+    illegalChildren = [...new Set(illegalChildren)]
+
+    // Filter out illegal children from allowed components
+    allowedComponents = allowedComponents.filter(x => {
+      return !illegalChildren.includes(x)
+    })
+
+    return allowedComponents
+  }
 
   // Creates a simple lookup map from an array, so we can find the selected
   // component much faster
@@ -90,7 +130,7 @@
     return enrichedStructure
   }
 
-  const filterStructure = (structure, section, currentDefinition, search) => {
+  const filterStructure = (structure, allowedComponents, search) => {
     selectedIndex = search ? 0 : null
     componentList = []
     if (!structure?.length) {
@@ -114,7 +154,7 @@
         }
 
         // Check if the component is allowed as a child
-        return !currentDefinition?.illegalChildren?.includes(name)
+        return allowedComponents.includes(child.component)
       })
       if (matchedChildren.length) {
         filteredStructure.push({
@@ -138,7 +178,7 @@
       await store.actions.components.create(component)
       $goto("../")
     } catch (error) {
-      notifications.error("Error creating component")
+      notifications.error(error || "Error creating component")
     }
   }
 
