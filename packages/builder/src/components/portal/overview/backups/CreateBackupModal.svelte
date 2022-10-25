@@ -13,6 +13,7 @@
 <ModalContent
   onConfirm={() => createManualBackup(name)}
   title="Create new backup"
+  diabled={!name}
   confirmText="Create"
   ><Input label="Backup name" bind:value={name} /></ModalContent
 >

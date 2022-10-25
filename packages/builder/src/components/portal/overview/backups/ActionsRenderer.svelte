@@ -77,7 +77,7 @@
   title="Confirm Deletion"
 >
   Are you sure you wish to delete the backup
-  <i>{row.name}</i>
+  <i>{row.name}?&nbsp;</i>
   This action cannot be undone.
 </ConfirmDialog>
 
