@@ -122,7 +122,6 @@ module.exports = server.listen(env.PORT || 0, async () => {
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await redis.init()
-  await initPro()
 
   // run migrations on startup if not done via http
   // not recommended in a clustered environment
@@ -180,8 +179,11 @@ module.exports = server.listen(env.PORT || 0, async () => {
   // check for version updates
   await installation.checkInstallVersion()
 
-  // done last - this will never complete
-  await automations.init()
+  // done last - these will never complete
+  let promises = []
+  promises.push(automations.init())
+  promises.push(initPro())
+  await Promise.all(promises)
 })
 
 const shutdown = () => {
