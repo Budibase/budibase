@@ -7,6 +7,7 @@ import {
   componentStore,
   environmentStore,
   dndStore,
+  eventStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
@@ -46,7 +47,9 @@ const loadBudibase = async () => {
   appStore.actions.setAppId(window["##BUDIBASE_APP_ID##"])
 
   // Fetch environment info
-  await environmentStore.actions.fetchEnvironment()
+  if (!get(environmentStore)?.loaded) {
+    await environmentStore.actions.fetchEnvironment()
+  }
 
   // Enable dev tools or not. We need to be using a dev app and not inside
   // the builder preview to enable them.
@@ -54,15 +57,17 @@ const loadBudibase = async () => {
   devToolsStore.actions.setEnabled(enableDevTools)
 
   // Register handler for runtime events from the builder
-  window.handleBuilderRuntimeEvent = (name, payload) => {
+  window.handleBuilderRuntimeEvent = (type, data) => {
     if (!window["##BUDIBASE_IN_BUILDER##"]) {
       return
     }
-    if (name === "eject-block") {
-      const block = blockStore.actions.getBlock(payload)
+    if (type === "event-completed") {
+      eventStore.actions.resolveEvent(data)
+    } else if (type === "eject-block") {
+      const block = blockStore.actions.getBlock(data)
       block?.eject()
-    } else if (name === "dragging-new-component") {
-      const { dragging, component } = payload
+    } else if (type === "dragging-new-component") {
+      const { dragging, component } = data
       if (dragging) {
         const definition =
           componentStore.actions.getComponentDefinition(component)

@@ -32,5 +32,4 @@ export const ActionTypes = {
 }
 
 export const DNDPlaceholderID = "dnd-placeholder"
-export const DNDPlaceholderType = "dnd-placeholder"
 export const ScreenslotType = "screenslot"

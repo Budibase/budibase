@@ -15,6 +15,7 @@ export { uploadStore } from "./uploads.js"
 export { rowSelectionStore } from "./rowSelection.js"
 export { blockStore } from "./blocks.js"
 export { environmentStore } from "./environment"
+export { eventStore } from "./events.js"
 export {
   dndStore,
   dndIndex,
