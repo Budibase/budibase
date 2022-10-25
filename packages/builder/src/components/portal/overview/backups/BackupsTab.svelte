@@ -37,7 +37,7 @@
   let startDate = null
   let endDate = null
   let filters = getFilters()
-
+  let loaded = false
   $: page = $pageInfo.page
   $: fetchBackups(filterOpt, page, startDate, endDate)
 
@@ -161,7 +161,10 @@
 
   onMount(() => {
     fetchBackups(filterOpt, page, startDate, endDate)
+    loaded = true
   })
+  $: console.log(loaded)
+  $: console.log(backups.length)
 </script>
 
 <div class="root">
@@ -207,7 +210,7 @@
         </div>
       </Layout>
     </Page>
-  {:else if backupData?.length === 0 && !filterOpt && !startDate}
+  {:else if backupData?.length === 0 && !loaded && !filterOpt && !startDate}
     <Page wide={false}>
       <div class="align">
         <img
@@ -227,7 +230,7 @@
         </Layout>
       </div>
     </Page>
-  {:else}
+  {:else if loaded}
     <Layout noPadding gap="M" alignContent="start">
       <div class="search">
         <div class="select">
