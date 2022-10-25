@@ -55,7 +55,12 @@ export const doWithLock = async (opts: LockOptions, task: any) => {
   let lock
   try {
     // aquire lock
-    let name: string = `${tenancy.getTenantId()}_${opts.name}`
+    let name: string
+    if (opts.systemLock) {
+      name = opts.name
+    } else {
+      name = `${tenancy.getTenantId()}_${opts.name}`
+    }
     if (opts.nameSuffix) {
       name = name + `_${opts.nameSuffix}`
     }
