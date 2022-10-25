@@ -62,24 +62,31 @@
   const schema = {
     type: {
       displayName: "Type",
+      width: "auto",
     },
     createdAt: {
       displayName: "Date",
+      width: "auto",
     },
     name: {
       displayName: "Name",
+      width: "auto",
     },
     appSize: {
       displayName: "App size",
+      width: "auto",
     },
     createdBy: {
       displayName: "User",
+      width: "auto",
     },
     status: {
       displayName: "Status",
+      width: "auto",
     },
     actions: {
       displayName: null,
+      width: "5%",
     },
   }
 
@@ -169,7 +176,7 @@
         </div>
         <div>
           <Body>
-            Backup your apps and restore them to their previous state.
+            Back up your apps and restore them to their previous state.
             {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
               Contact your account holder to upgrade your plan.
             {/if}
@@ -195,12 +202,32 @@
               window.open("https://budibase.com/pricing/", "_blank")
             }}
           >
-            View Plans
+            View plans
           </Button>
         </div>
       </Layout>
     </Page>
-  {:else if backupData?.length > 0}
+  {:else if backupData?.length === 0 && !filterOpt && !startDate}
+    <Page wide={false}>
+      <div class="align">
+        <img
+          width="200px"
+          height="120px"
+          src={BackupsDefault}
+          alt="BackupsDefault"
+        />
+        <Layout gap="S">
+          <Heading>You have no backups yet</Heading>
+          <div class="opacity">
+            <Body size="S">You can manually backup your app any time</Body>
+          </div>
+          <div class="padding">
+            <Button on:click={modal.show} cta>Create Backup</Button>
+          </div>
+        </Layout>
+      </div>
+    </Page>
+  {:else}
     <Layout noPadding gap="M" alignContent="start">
       <div class="search">
         <div class="select">
@@ -235,6 +262,7 @@
       <div>
         <Table
           {schema}
+          disableSorting
           allowSelectRows={false}
           allowEditColumns={false}
           allowEditRows={false}
@@ -255,26 +283,6 @@
         </div>
       </div>
     </Layout>
-  {:else if backupData?.length === 0}
-    <Page wide={false}>
-      <div class="align">
-        <img
-          width="200px"
-          height="120px"
-          src={BackupsDefault}
-          alt="BackupsDefault"
-        />
-        <Layout gap="S">
-          <Heading>You have no backups yet</Heading>
-          <div class="opacity">
-            <Body size="S">You can manually backup your app any time</Body>
-          </div>
-          <div class="padding">
-            <Button on:click={modal.show} cta>Create Backup</Button>
-          </div>
-        </Layout>
-      </div>
-    </Page>
   {/if}
 </div>
 
