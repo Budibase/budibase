@@ -28,4 +28,8 @@ export interface LockOptions {
    * The suffix to add to the lock name for additional uniqueness
    */
   nameSuffix?: string
+  /**
+   * This is a system-wide lock - don't use tenancy in lock key
+   */
+  systemLock?: boolean
 }
