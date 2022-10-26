@@ -163,8 +163,6 @@
     fetchBackups(filterOpt, page, startDate, endDate)
     loaded = true
   })
-  $: console.log(loaded)
-  $: console.log(backups.length)
 </script>
 
 <div class="root">
