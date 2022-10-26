@@ -120,7 +120,7 @@
         allSteps[idx]?.stepId === ActionStepID.LOOP &&
         allSteps.find(x => x.blockToLoop === block.id)
 
-      // If the previous block was a loop block, decerement the index so the following
+      // If the previous block was a loop block, decrement the index so the following
       // steps are in the correct order
       if (wasLoopBlock) {
         loopBlockCount++
