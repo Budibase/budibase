@@ -1,12 +1,95 @@
 <script>
-  import { getContext, setContext } from "svelte"
+  import { getContext, onDestroy, onMount, setContext } from "svelte"
+  import { builderStore } from "stores/builder.js"
+  import { blockStore } from "stores/blocks.js"
 
   const component = getContext("component")
+  const { styleable } = getContext("sdk")
 
-  // We need to set a block context to know we're inside a block, but also
-  // to be able to reference the actual component ID of the block from
-  // any depth
-  setContext("block", { id: $component.id })
+  let structureLookupMap = {}
+
+  const registerBlockComponent = (id, order, parentId, instance) => {
+    // Ensure child array exists
+    if (!structureLookupMap[parentId]) {
+      structureLookupMap[parentId] = {}
+    }
+    // Add this instance in this order, overwriting any existing instance in
+    // this order in case of repeaters
+    structureLookupMap[parentId][order] = instance
+  }
+
+  const eject = () => {
+    // Start the new structure with the root component
+    let definition = structureLookupMap[$component.id][0]
+
+    // Copy styles from block to root component
+    definition._styles = {
+      ...definition._styles,
+      normal: {
+        ...definition._styles?.normal,
+        ...$component.styles?.normal,
+      },
+      custom:
+        definition._styles?.custom || "" + $component.styles?.custom || "",
+    }
+
+    // Create component tree
+    attachChildren(definition, structureLookupMap)
+    builderStore.actions.ejectBlock($component.id, definition)
+  }
+
+  const attachChildren = (rootComponent, map) => {
+    // Transform map into children array
+    let id = rootComponent._id
+    const children = Object.entries(map[id] || {}).map(([order, instance]) => ({
+      order,
+      instance,
+    }))
+    if (!children.length) {
+      return
+    }
+
+    // Sort children by order
+    children.sort((a, b) => (a.order < b.order ? -1 : 1))
+
+    // Attach all children of this component
+    rootComponent._children = children.map(x => x.instance)
+
+    // Recurse for each child
+    rootComponent._children.forEach(child => {
+      attachChildren(child, map)
+    })
+  }
+
+  setContext("block", {
+    // We need to set a block context to know we're inside a block, but also
+    // to be able to reference the actual component ID of the block from
+    // any depth
+    id: $component.id,
+
+    // Name can be used down the tree in placeholders
+    name: $component.name,
+
+    // We register block components with their raw props so that we can eject
+    // blocks later on
+    registerComponent: registerBlockComponent,
+  })
+
+  onMount(() => {
+    // We register and unregister blocks to the block store when inside the
+    // builder preview to allow for block ejection
+    if ($builderStore.inBuilder) {
+      blockStore.actions.registerBlock($component.id, { eject })
+    }
+  })
+
+  onDestroy(() => {
+    if ($builderStore.inBuilder) {
+      blockStore.actions.unregisterBlock($component.id)
+    }
+  })
 </script>
 
-<slot />
+<div use:styleable={$component.styles}>
+  <slot />
+</div>

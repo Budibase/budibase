@@ -261,6 +261,7 @@
     } else {
       return [
         FIELDS.STRING,
+        FIELDS.BARCODEQR,
         FIELDS.LONGFORM,
         FIELDS.OPTIONS,
         FIELDS.DATETIME,
@@ -314,7 +315,7 @@
       const relatedTable = $tables.list.find(
         tbl => tbl._id === fieldInfo.tableId
       )
-      if (inUse(relatedTable, fieldInfo.fieldName)) {
+      if (inUse(relatedTable, fieldInfo.fieldName) && !originalName) {
         newError.relatedName = `Column name already in use in table ${relatedTable.name}`
       }
     }
@@ -467,6 +468,7 @@
         options={relationshipOptions}
         getOptionLabel={option => option.name}
         getOptionValue={option => option.value}
+        getOptionTitle={option => option.alt}
       />
     {/if}
     <Input
@@ -486,7 +488,7 @@
         ]}
         getOptionLabel={option => option.label}
         getOptionValue={option => option.value}
-        tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered,
+        tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
          while static formula are calculated when the row is saved."
       />
     {/if}

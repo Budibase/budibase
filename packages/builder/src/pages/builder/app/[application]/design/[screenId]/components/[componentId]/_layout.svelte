@@ -7,6 +7,18 @@
   import ComponentListPanel from "./_components/navigation/ComponentListPanel.svelte"
   import ComponentSettingsPanel from "./_components/settings/ComponentSettingsPanel.svelte"
 
+  const cleanUrl = url => {
+    // Strip trailing slashes
+    if (url?.endsWith("/index")) {
+      url = url.replace("/index", "")
+    }
+    // Hide new component panel whenever component ID changes
+    if (url?.endsWith("/new")) {
+      url = url.replace("/new", "")
+    }
+    return { url }
+  }
+
   // Keep URL and state in sync for selected component ID
   const stopSyncing = syncURLToState({
     urlParam: "componentId",
@@ -15,6 +27,7 @@
     fallbackUrl: "../",
     store,
     routify,
+    beforeNavigate: cleanUrl,
   })
 
   onDestroy(stopSyncing)

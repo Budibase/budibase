@@ -55,6 +55,7 @@ exports.init = async () => {
 exports.shutdown = async () => {
   if (pwResetClient) await pwResetClient.finish()
   if (invitationClient) await invitationClient.finish()
+  console.log("Redis shutdown")
 }
 
 /**

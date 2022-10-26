@@ -2,22 +2,28 @@ const { InternalTables } = require("../db/utils")
 const { getGlobalUser } = require("../utilities/global")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { getProdAppID } = require("@budibase/backend-core/db")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 
 exports.getFullUser = async (ctx, userId) => {
   const global = await getGlobalUser(userId)
-  let metadata
+  let metadata = {}
+
+  // always prefer the user metadata _id and _rev
+  delete global._id
+  delete global._rev
+
   try {
     // this will throw an error if the db doesn't exist, or there is no appId
     const db = getAppDB()
     metadata = await db.get(userId)
   } catch (err) {
-    // it is fine if there is no user metadata, just remove global db info
-    delete global._id
-    delete global._rev
+    // it is fine if there is no user metadata yet
   }
+  delete metadata.csrfToken
   return {
-    ...global,
     ...metadata,
+    ...global,
+    roleId: global.roleId || BUILTIN_ROLE_IDS.PUBLIC,
     tableId: InternalTables.USER_METADATA,
     // make sure the ID is always a local ID, not a global one
     _id: userId,

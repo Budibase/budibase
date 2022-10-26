@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "1.2.44-alpha.10",
+  "version": "2.0.34-alpha.4",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -20,10 +20,13 @@
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
-    "@budibase/types": "1.2.44-alpha.10",
+    "@budibase/types": "2.0.34-alpha.4",
+    "@shopify/jest-koa-mocks": "5.0.1",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.0.1",
+    "bcryptjs": "2.4.3",
+    "bull": "4.10.1",
     "dotenv": "16.0.1",
     "emitter-listener": "1.1.2",
     "ioredis": "4.28.0",
@@ -60,7 +63,8 @@
     ]
   },
   "devDependencies": {
-    "@shopify/jest-koa-mocks": "3.1.5",
+    "@types/chance": "1.1.3",
+    "@types/ioredis": "4.28.0",
     "@types/jest": "27.5.1",
     "@types/koa": "2.0.52",
     "@types/lodash": "4.14.180",
@@ -71,6 +75,7 @@
     "@types/semver": "7.3.7",
     "@types/tar-fs": "2.0.1",
     "@types/uuid": "8.3.4",
+    "chance": "1.1.3",
     "ioredis-mock": "5.8.0",
     "jest": "27.5.1",
     "koa": "2.7.0",

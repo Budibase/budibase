@@ -1,5 +1,6 @@
 export const FieldTypes = {
   STRING: "string",
+  BARCODEQR: "barcodeqr",
   LONGFORM: "longform",
   OPTIONS: "options",
   NUMBER: "number",
@@ -29,3 +30,6 @@ export const ActionTypes = {
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
 }
+
+export const DNDPlaceholderID = "dnd-placeholder"
+export const ScreenslotType = "screenslot"

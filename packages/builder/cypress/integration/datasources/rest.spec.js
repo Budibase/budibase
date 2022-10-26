@@ -10,11 +10,11 @@ filterTests(["smoke", "all"], () => {
     const datasource = "REST"
     const restUrl = "https://api.openbrewerydb.org/breweries"
 
-    it("Should add REST data source with incorrect API", () => {
-      // Select REST data source
+    it("Should add REST datasource with incorrect API", () => {
+      // Select REST datasource
       cy.selectExternalDatasource(datasource)
       // Enter incorrect api & attempt to send query
-      cy.get(".spectrum-Button", { timeout: 500 }).contains("Add query").click({ force: true })
+      cy.get(".query-buttons", { timeout: 1000 }).contains("Add query").click({ force: true })
       cy.intercept("**/preview").as("queryError")
       cy.get("input").clear().type("random text")
       cy.get(".spectrum-Button").contains("Send").click({ force: true })
@@ -22,7 +22,7 @@ filterTests(["smoke", "all"], () => {
       cy.wait("@queryError")
       cy.get("@queryError")
         .its("response.body")
-        .should("have.property", "message", "Invalid URL: http://random text?")
+        .should("have.property", "message", "Invalid URL: http://random text")
       cy.get("@queryError")
         .its("response.body")
         .should("have.property", "status", 400)

@@ -103,11 +103,9 @@ class Table {
 
 exports.init = endpoint => {
   let AWS = require("aws-sdk")
-  AWS.config.update({
-    region: AWS_REGION,
-  })
   let docClientParams = {
     correctClockSkew: true,
+    region: AWS_REGION,
   }
   if (endpoint) {
     docClientParams.endpoint = endpoint

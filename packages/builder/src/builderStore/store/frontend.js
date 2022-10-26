@@ -19,7 +19,6 @@ import {
   makeComponentUnique,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
-import { DefaultAppTheme, LAYOUT_NAMES } from "../../constants"
 import { Utils } from "@budibase/frontend-core"
 
 const INITIAL_FRONTEND_STATE = {
@@ -89,19 +88,12 @@ export const getFrontendStore = () => {
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath } = pkg
 
-      // Fetch component definitions.
-      // Allow errors to propagate.
-      let components = await API.fetchComponentLibDefinitions(application.appId)
+      await store.actions.components.refreshDefinitions(application.appId)
 
       // Reset store state
       store.update(state => ({
         ...state,
         libraries: application.componentLibraries,
-        components,
-        clientFeatures: {
-          ...INITIAL_FRONTEND_STATE.clientFeatures,
-          ...components.features,
-        },
         name: application.name,
         description: application.description,
         appId: application.appId,
@@ -117,6 +109,7 @@ export const getFrontendStore = () => {
         version: application.version,
         revertableVersion: application.revertableVersion,
         navigation: application.navigation || {},
+        usedPlugins: application.usedPlugins || [],
       }))
 
       // Initialise backend stores
@@ -125,35 +118,6 @@ export const getFrontendStore = () => {
       await integrations.init()
       await queries.init()
       await tables.init()
-
-      // Add navigation settings to old apps
-      if (!application.navigation) {
-        const layout = layouts.find(x => x._id === LAYOUT_NAMES.MASTER.PRIVATE)
-        const customTheme = application.customTheme
-        let navigationSettings = {
-          navigation: "Top",
-          title: application.name,
-          navWidth: "Large",
-          navBackground:
-            customTheme?.navBackground || DefaultAppTheme.navBackground,
-          navTextColor:
-            customTheme?.navTextColor || DefaultAppTheme.navTextColor,
-        }
-        if (layout) {
-          navigationSettings.hideLogo = layout.props.hideLogo
-          navigationSettings.hideTitle = layout.props.hideTitle
-          navigationSettings.title = layout.props.title || application.name
-          navigationSettings.logoUrl = layout.props.logoUrl
-          navigationSettings.links = layout.props.links
-          navigationSettings.navigation = layout.props.navigation || "Top"
-          navigationSettings.sticky = layout.props.sticky
-          navigationSettings.navWidth = layout.props.width || "Large"
-          if (navigationSettings.navigation === "None") {
-            navigationSettings.navigation = "Top"
-          }
-        }
-        await store.actions.navigation.save(navigationSettings)
-      }
     },
     theme: {
       save: async theme => {
@@ -218,10 +182,82 @@ export const getFrontendStore = () => {
           return state
         })
       },
+      validate: screen => {
+        // Recursive function to find any illegal children in component trees
+        const findIllegalChild = (
+          component,
+          illegalChildren = [],
+          legalDirectChildren = []
+        ) => {
+          const type = component._component
+          if (illegalChildren.includes(type)) {
+            return type
+          }
+          if (
+            legalDirectChildren.length &&
+            !legalDirectChildren.includes(type)
+          ) {
+            return type
+          }
+          if (!component?._children?.length) {
+            return
+          }
+
+          const definition = store.actions.components.getDefinition(
+            component._component
+          )
+
+          // Reset whitelist for direct children
+          legalDirectChildren = []
+          if (definition?.legalDirectChildren?.length) {
+            legalDirectChildren = definition.legalDirectChildren.map(x => {
+              return `@budibase/standard-components/${x}`
+            })
+          }
+
+          // Append blacklisted components and remove duplicates
+          if (definition?.illegalChildren?.length) {
+            const blacklist = definition.illegalChildren.map(x => {
+              return `@budibase/standard-components/${x}`
+            })
+            illegalChildren = [...new Set([...illegalChildren, ...blacklist])]
+          }
+
+          // Recurse on all children
+          for (let child of component._children) {
+            const illegalChild = findIllegalChild(
+              child,
+              illegalChildren,
+              legalDirectChildren
+            )
+            if (illegalChild) {
+              return illegalChild
+            }
+          }
+        }
+
+        // Validate the entire tree and throw an error if an illegal child is
+        // found anywhere
+        const illegalChild = findIllegalChild(screen.props)
+        if (illegalChild) {
+          const def = store.actions.components.getDefinition(illegalChild)
+          throw `You can't place a ${def.name} here`
+        }
+      },
       save: async screen => {
+        store.actions.screens.validate(screen)
+        const state = get(store)
         const creatingNewScreen = screen._id === undefined
         const savedScreen = await API.saveScreen(screen)
         const routesResponse = await API.fetchAppRoutes()
+        let usedPlugins = state.usedPlugins
+
+        // If plugins changed we need to fetch the latest app metadata
+        if (savedScreen.pluginAdded) {
+          const { application } = await API.fetchAppPackage(state.appId)
+          usedPlugins = application.usedPlugins || []
+        }
+
         store.update(state => {
           // Update screen object
           const idx = state.screens.findIndex(x => x._id === savedScreen._id)
@@ -239,6 +275,9 @@ export const getFrontendStore = () => {
 
           // Update routes
           state.routes = routesResponse.routes
+
+          // Update used plugins
+          state.usedPlugins = usedPlugins
 
           return state
         })
@@ -354,6 +393,16 @@ export const getFrontendStore = () => {
           return state
         })
       },
+      sendEvent: (name, payload) => {
+        const { previewEventHandler } = get(store)
+        previewEventHandler?.(name, payload)
+      },
+      registerEventHandler: handler => {
+        store.update(state => {
+          state.previewEventHandler = handler
+          return state
+        })
+      },
     },
     layouts: {
       select: layoutId => {
@@ -394,12 +443,32 @@ export const getFrontendStore = () => {
       },
     },
     components: {
+      refreshDefinitions: async appId => {
+        if (!appId) {
+          appId = get(store).appId
+        }
+
+        // Fetch definitions and filter out custom component definitions so we
+        // can flag them
+        const components = await API.fetchComponentLibDefinitions(appId)
+        const customComponents = Object.keys(components).filter(name =>
+          name.startsWith("plugin/")
+        )
+
+        // Update store
+        store.update(state => ({
+          ...state,
+          components,
+          customComponents,
+          clientFeatures: {
+            ...INITIAL_FRONTEND_STATE.clientFeatures,
+            ...components.features,
+          },
+        }))
+      },
       getDefinition: componentName => {
         if (!componentName) {
           return null
-        }
-        if (!componentName.startsWith("@budibase")) {
-          componentName = `@budibase/standard-components/${componentName}`
         }
         return get(store).components[componentName]
       },
@@ -439,13 +508,17 @@ export const getFrontendStore = () => {
         return {
           _id: Helpers.uuid(),
           _component: definition.component,
-          _styles: { normal: {}, hover: {}, active: {} },
-          _instanceName: `New ${definition.name}`,
+          _styles: {
+            normal: {},
+            hover: {},
+            active: {},
+          },
+          _instanceName: `New ${definition.friendlyName || definition.name}`,
           ...cloneDeep(props),
           ...extras,
         }
       },
-      create: async (componentName, presetProps) => {
+      create: async (componentName, presetProps, parent, index) => {
         const state = get(store)
         const componentInstance = store.actions.components.createInstance(
           componentName,
@@ -455,48 +528,62 @@ export const getFrontendStore = () => {
           return
         }
 
-        // Patch selected screen
-        await store.actions.screens.patch(screen => {
-          // Find the selected component
-          const currentComponent = findComponent(
-            screen.props,
-            state.selectedComponentId
-          )
-          if (!currentComponent) {
-            return false
-          }
-
-          // Find parent node to attach this component to
-          let parentComponent
-          if (currentComponent) {
-            // Use selected component as parent if one is selected
-            const definition = store.actions.components.getDefinition(
-              currentComponent._component
-            )
-            if (definition?.hasChildren) {
-              // Use selected component if it allows children
-              parentComponent = currentComponent
+        // Insert in position if specified
+        if (parent && index != null) {
+          await store.actions.screens.patch(screen => {
+            let parentComponent = findComponent(screen.props, parent)
+            if (!parentComponent._children?.length) {
+              parentComponent._children = [componentInstance]
             } else {
-              // Otherwise we need to use the parent of this component
-              parentComponent = findComponentParent(
-                screen.props,
-                currentComponent._id
-              )
+              parentComponent._children.splice(index, 0, componentInstance)
             }
-          } else {
-            // Use screen or layout if no component is selected
-            parentComponent = screen.props
-          }
+          })
+        }
 
-          // Attach new component
-          if (!parentComponent) {
-            return false
-          }
-          if (!parentComponent._children) {
-            parentComponent._children = []
-          }
-          parentComponent._children.push(componentInstance)
-        })
+        // Otherwise we work out where this component should be inserted
+        else {
+          await store.actions.screens.patch(screen => {
+            // Find the selected component
+            const currentComponent = findComponent(
+              screen.props,
+              state.selectedComponentId
+            )
+            if (!currentComponent) {
+              return false
+            }
+
+            // Find parent node to attach this component to
+            let parentComponent
+            if (currentComponent) {
+              // Use selected component as parent if one is selected
+              const definition = store.actions.components.getDefinition(
+                currentComponent._component
+              )
+              if (definition?.hasChildren) {
+                // Use selected component if it allows children
+                parentComponent = currentComponent
+              } else {
+                // Otherwise we need to use the parent of this component
+                parentComponent = findComponentParent(
+                  screen.props,
+                  currentComponent._id
+                )
+              }
+            } else {
+              // Use screen or layout if no component is selected
+              parentComponent = screen.props
+            }
+
+            // Attach new component
+            if (!parentComponent) {
+              return false
+            }
+            if (!parentComponent._children) {
+              parentComponent._children = []
+            }
+            parentComponent._children.push(componentInstance)
+          })
+        }
 
         // Select new component
         store.update(state => {
@@ -513,12 +600,11 @@ export const getFrontendStore = () => {
       },
       patch: async (patchFn, componentId, screenId) => {
         // Use selected component by default
-        if (!componentId && !screenId) {
+        if (!componentId || !screenId) {
           const state = get(store)
-          componentId = state.selectedComponentId
-          screenId = state.selectedScreenId
+          componentId = componentId || state.selectedComponentId
+          screenId = screenId || state.selectedScreenId
         }
-        // Invalid if only a screen or component ID provided
         if (!componentId || !screenId || !patchFn) {
           return
         }
@@ -581,16 +667,14 @@ export const getFrontendStore = () => {
         })
 
         // Select the parent if cutting
-        if (cut) {
+        if (cut && selectParent) {
           const screen = get(selectedScreen)
           const parent = findComponentParent(screen?.props, component._id)
           if (parent) {
-            if (selectParent) {
-              store.update(state => {
-                state.selectedComponentId = parent._id
-                return state
-              })
-            }
+            store.update(state => {
+              state.selectedComponentId = parent._id
+              return state
+            })
           }
         }
       },
@@ -601,21 +685,29 @@ export const getFrontendStore = () => {
         }
         let newComponentId
 
+        // Remove copied component if cutting, regardless if pasting works
+        let componentToPaste = cloneDeep(state.componentToPaste)
+        if (componentToPaste.isCut) {
+          store.update(state => {
+            delete state.componentToPaste
+            return state
+          })
+        }
+
         // Patch screen
         const patch = screen => {
           // Get up to date ref to target
           targetComponent = findComponent(screen.props, targetComponent._id)
           if (!targetComponent) {
-            return
+            return false
           }
-          const cut = state.componentToPaste.isCut
-          const originalId = state.componentToPaste._id
-          let componentToPaste = cloneDeep(state.componentToPaste)
+          const cut = componentToPaste.isCut
+          const originalId = componentToPaste._id
           delete componentToPaste.isCut
 
           // Make new component unique if copying
           if (!cut) {
-            makeComponentUnique(componentToPaste)
+            componentToPaste = makeComponentUnique(componentToPaste)
           }
           newComponentId = componentToPaste._id
 
@@ -665,11 +757,8 @@ export const getFrontendStore = () => {
         const targetScreenId = targetScreen?._id || state.selectedScreenId
         await store.actions.screens.patch(patch, targetScreenId)
 
+        // Select the new component
         store.update(state => {
-          // Remove copied component if cutting
-          if (state.componentToPaste.isCut) {
-            delete state.componentToPaste
-          }
           state.selectedScreenId = targetScreenId
           state.selectedComponentId = newComponentId
           return state
@@ -873,6 +962,15 @@ export const getFrontendStore = () => {
           }
         })
       },
+      updateStyles: async (styles, id) => {
+        const patchFn = component => {
+          component._styles.normal = {
+            ...component._styles.normal,
+            ...styles,
+          }
+        }
+        await store.actions.components.patch(patchFn, id)
+      },
       updateCustomStyle: async style => {
         await store.actions.components.patch(component => {
           component._styles.custom = style
@@ -894,6 +992,50 @@ export const getFrontendStore = () => {
           }
           component[name] = value
         })
+      },
+      requestEjectBlock: componentId => {
+        store.actions.preview.sendEvent("eject-block", componentId)
+      },
+      handleEjectBlock: async (componentId, ejectedDefinition) => {
+        let nextSelectedComponentId
+
+        await store.actions.screens.patch(screen => {
+          const block = findComponent(screen.props, componentId)
+          const parent = findComponentParent(screen.props, componentId)
+
+          // Sanity check
+          if (!block || !parent?._children?.length) {
+            return false
+          }
+
+          // Attach block children back into ejected definition, using the
+          // _containsSlot flag to know where to insert them
+          const slotContainer = findAllMatchingComponents(
+            ejectedDefinition,
+            x => x._containsSlot
+          )[0]
+          if (slotContainer) {
+            delete slotContainer._containsSlot
+            slotContainer._children = [
+              ...(slotContainer._children || []),
+              ...(block._children || []),
+            ]
+          }
+
+          // Replace block with ejected definition
+          ejectedDefinition = makeComponentUnique(ejectedDefinition)
+          const index = parent._children.findIndex(x => x._id === componentId)
+          parent._children[index] = ejectedDefinition
+          nextSelectedComponentId = ejectedDefinition._id
+        })
+
+        // Select new root component
+        if (nextSelectedComponentId) {
+          store.update(state => {
+            state.selectedComponentId = nextSelectedComponentId
+            return state
+          })
+        }
       },
     },
     links: {
@@ -938,6 +1080,19 @@ export const getFrontendStore = () => {
           ...state,
           highlightedSettingKey: key,
         }))
+      },
+    },
+    dnd: {
+      start: component => {
+        store.actions.preview.sendEvent("dragging-new-component", {
+          dragging: true,
+          component,
+        })
+      },
+      stop: () => {
+        store.actions.preview.sendEvent("dragging-new-component", {
+          dragging: false,
+        })
       },
     },
   }

@@ -18,6 +18,8 @@
 
   let closedNodes = {}
 
+  $: currentScreen = get(selectedScreen)
+
   $: filteredComponents = components?.filter(component => {
     return (
       !$store.componentToPaste?.isCut ||
@@ -68,12 +70,12 @@
     closedNodes = closedNodes
   }
 
-  const onDrop = async () => {
+  const onDrop = async e => {
+    e.stopPropagation()
     try {
       await dndStore.actions.drop()
     } catch (error) {
-      console.error(error)
-      notifications.error("Error saving component")
+      notifications.error(error || "Error saving component")
     }
   }
 

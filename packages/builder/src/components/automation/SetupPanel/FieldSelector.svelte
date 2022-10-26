@@ -14,7 +14,7 @@
   $: {
     let fields = {}
 
-    for (const [key, type] of Object.entries(block?.inputs?.fields)) {
+    for (const [key, type] of Object.entries(block?.inputs?.fields ?? {})) {
       fields = {
         ...fields,
         [key]: {

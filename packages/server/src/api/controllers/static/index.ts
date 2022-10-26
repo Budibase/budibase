@@ -1,9 +1,11 @@
+import { enrichPluginURLs } from "../../../utilities/plugins"
+
 require("svelte/register")
 
 const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
 const uuid = require("uuid")
-const { ObjectStoreBuckets } = require("../../../constants")
+const { ObjectStoreBuckets, ATTACHMENT_DIR } = require("../../../constants")
 const { processString } = require("@budibase/string-templates")
 const {
   loadHandlebarsFile,
@@ -18,7 +20,6 @@ const { DocumentType } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
-
 const fs = require("fs")
 const {
   downloadTarballDirect,
@@ -89,7 +90,7 @@ export const uploadFile = async function (ctx: any) {
 
     return prepareUpload({
       file,
-      s3Key: `${ctx.appId}/attachments/${processedFileName}`,
+      s3Key: `${ctx.appId}/${ATTACHMENT_DIR}/${processedFileName}`,
       bucket: ObjectStoreBuckets.APPS,
     })
   })
@@ -108,11 +109,13 @@ export const serveApp = async function (ctx: any) {
 
   if (!env.isJest()) {
     const App = require("./templates/BudibaseApp.svelte").default
+    const plugins = enrichPluginURLs(appInfo.usedPlugins)
     const { head, html, css } = App.render({
       title: appInfo.name,
       production: env.isProd(),
       appId,
       clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+      usedPlugins: plugins,
     })
 
     const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)

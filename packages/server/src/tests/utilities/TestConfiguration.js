@@ -25,7 +25,7 @@ const newid = require("../../db/newid")
 const context = require("@budibase/backend-core/context")
 const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
 const { encrypt } = require("@budibase/backend-core/encryption")
-const { DocumentType } = require("../../db/utils")
+const { DocumentType, generateUserMetadataID } = require("../../db/utils")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -95,7 +95,10 @@ class TestConfiguration {
 
   // use a new id as the name to avoid name collisions
   async init(appName = newid()) {
-    await this.globalUser()
+    this.user = await this.globalUser()
+    this.globalUserId = this.user._id
+    this.userMetadataId = generateUserMetadataID(this.globalUserId)
+
     return this.createApp(appName)
   }
 
@@ -560,7 +563,7 @@ class TestConfiguration {
 
   async createQuery(config = null) {
     if (!this.datasource && !config) {
-      throw "No data source created for query."
+      throw "No datasource created for query."
     }
     config = config || basicQuery(this.datasource._id)
     return this._req(config, null, controllers.query.save)

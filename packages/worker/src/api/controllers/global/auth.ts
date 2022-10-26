@@ -8,7 +8,7 @@ const { checkResetPasswordCode } = require("../../../utilities/redis")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 import { events, users as usersCore, context } from "@budibase/backend-core"
-import { users } from "../../../sdk"
+import sdk from "../../../sdk"
 import { User } from "@budibase/types"
 
 export const googleCallbackUrl = async (config: any) => {
@@ -167,7 +167,11 @@ export const googlePreAuth = async (ctx: any, next: any) => {
     workspace: ctx.query.workspace,
   })
   let callbackUrl = await exports.googleCallbackUrl(config)
-  const strategy = await google.strategyFactory(config, callbackUrl, users.save)
+  const strategy = await google.strategyFactory(
+    config,
+    callbackUrl,
+    sdk.users.save
+  )
 
   return passport.authenticate(strategy, {
     scope: ["profile", "email"],
@@ -184,7 +188,11 @@ export const googleAuth = async (ctx: any, next: any) => {
     workspace: ctx.query.workspace,
   })
   const callbackUrl = await exports.googleCallbackUrl(config)
-  const strategy = await google.strategyFactory(config, callbackUrl, users.save)
+  const strategy = await google.strategyFactory(
+    config,
+    callbackUrl,
+    sdk.users.save
+  )
 
   return passport.authenticate(
     strategy,
@@ -214,7 +222,7 @@ export const oidcStrategyFactory = async (ctx: any, configId: any) => {
     chosenConfig,
     callbackUrl
   )
-  return oidc.strategyFactory(enrichedConfig, users.save)
+  return oidc.strategyFactory(enrichedConfig, sdk.users.save)
 }
 
 /**

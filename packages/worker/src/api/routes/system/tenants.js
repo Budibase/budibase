@@ -2,7 +2,7 @@ const Router = require("@koa/router")
 const controller = require("../../controllers/system/tenants")
 const { adminOnly } = require("@budibase/backend-core/auth")
 
-const router = Router()
+const router = new Router()
 
 router
   .get("/api/system/tenants/:tenantId/exists", controller.exists)
