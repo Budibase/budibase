@@ -54,19 +54,6 @@ app.use(
   })
 )
 
-app.use(pino(pinoSettings()))
-
-if (!env.isTest()) {
-  const plugin = bullboard.init()
-  app.use(plugin)
-}
-
-app.context.eventEmitter = eventEmitter
-app.context.auth = {}
-
-// api routes
-app.use(api.router.routes())
-
 if (env.isProd()) {
   env._set("NODE_ENV", "production")
   Sentry.init()
@@ -104,7 +91,22 @@ server.on("close", async () => {
   }
 })
 
-const initPro = async () => {
+async function initRoutes() {
+  app.use(pino(pinoSettings()))
+
+  if (!env.isTest()) {
+    const plugin = await bullboard.init()
+    app.use(plugin)
+  }
+
+  app.context.eventEmitter = eventEmitter
+  app.context.auth = {}
+
+  // api routes
+  app.use(api.router.routes())
+}
+
+async function initPro() {
   await pro.init({
     backups: {
       processing: {
@@ -179,11 +181,13 @@ module.exports = server.listen(env.PORT || 0, async () => {
   // check for version updates
   await installation.checkInstallVersion()
 
-  // done last - these will never complete
-  let promises = []
-  promises.push(automations.init())
-  promises.push(initPro())
-  await Promise.all(promises)
+  // get the references to the queue promises, don't await as
+  // they will never end, unless the processing stops
+  let queuePromises = []
+  queuePromises.push(automations.init())
+  queuePromises.push(initPro())
+  // bring routes online as final step once everything ready
+  await initRoutes()
 })
 
 const shutdown = () => {
