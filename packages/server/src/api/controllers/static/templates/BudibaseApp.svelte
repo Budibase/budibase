@@ -20,7 +20,7 @@
   <meta name="twitter:image" content={metaImage} />
   <meta name="twitter:title" content="{title} - built with Budibase" />
   <meta property="og:site_name" content="Budibase" />
-  <meta property="og:title" content="{title} - build with Budibase" />
+  <meta property="og:title" content="{title} - built with Budibase" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content={metaImage} />
 
