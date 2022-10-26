@@ -68,7 +68,12 @@
     // Initialise default chart
     let builder = new ApexOptionsBuilder()
       .type("candlestick")
-      .title(title)
+      .title({
+        text: title,
+        style: {
+          color: "var(--spectrum-glo" + "bal-color-gray-800)",
+        },
+      })
       .width(width)
       .height(height)
       .xLabel(xAxisLabel)

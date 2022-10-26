@@ -81,7 +81,12 @@
     // Initialise default chart
     let builder = new ApexOptionsBuilder()
       .type("bar")
-      .title(title)
+      .title({
+        text: title,
+        style: {
+          color: "var(--spectrum-glo" + "bal-color-gray-800)",
+        },
+      })
       .width(width)
       .height(height)
       .xLabel(xAxisLabel)

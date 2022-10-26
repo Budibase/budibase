@@ -61,7 +61,7 @@ export class ApexOptionsBuilder {
   }
 
   title(title) {
-    return this.setOption(["title", "text"], title)
+    return this.setOption(["title"], title)
   }
 
   colors(colors) {

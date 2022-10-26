@@ -89,7 +89,12 @@
 
     // Initialise default chart
     let builder = new ApexOptionsBuilder()
-      .title(title)
+      .title({
+        text: title,
+        style: {
+          color: "var(--spectrum-glo" + "bal-color-gray-800)",
+        },
+      })
       .type(area ? "area" : "line")
       .width(width)
       .height(height)
