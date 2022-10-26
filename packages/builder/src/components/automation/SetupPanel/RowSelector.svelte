@@ -14,6 +14,12 @@
   export let block
   export let isTestModal
 
+  $: parsedBindings = bindings.map(binding => {
+    let clone = Object.assign({}, binding)
+    clone.icon = "ShareAndroid"
+    return clone
+  })
+
   let table
   let schemaFields
 
@@ -79,6 +85,10 @@
       return [value]
     }
 
+    if (type === "json") {
+      return value.value
+    }
+
     return value
   }
 
@@ -109,7 +119,7 @@
               {isTestModal}
               {field}
               {schema}
-              {bindings}
+              bindings={parsedBindings}
               {value}
               {onChange}
             />
@@ -124,7 +134,7 @@
               on:change={e => onChange(e, field, schema.type)}
               label={field}
               type="string"
-              {bindings}
+              bindings={parsedBindings}
               fillWidth={true}
               allowJS={true}
               updateOnChange={false}

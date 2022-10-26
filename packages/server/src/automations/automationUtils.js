@@ -1,6 +1,5 @@
 const { getTable } = require("../api/controllers/table/utils")
 const {
-  findHBSBlocks,
   decodeJSBinding,
   isJSBinding,
   encodeJSBinding,
@@ -82,24 +81,34 @@ exports.getError = err => {
 }
 
 exports.substituteLoopStep = (hbsString, substitute) => {
-  let blocks = []
   let checkForJS = isJSBinding(hbsString)
+  let substitutedHbsString = ""
+  let open = checkForJS ? `$("` : "{{"
+  let closed = checkForJS ? `")` : "}}"
   if (checkForJS) {
     hbsString = decodeJSBinding(hbsString)
-    blocks.push(hbsString)
-  } else {
-    blocks = findHBSBlocks(hbsString)
   }
-  for (let block of blocks) {
-    block = block.replace(/loop/, substitute)
-    if (checkForJS) {
-      hbsString = encodeJSBinding(block)
-    } else {
-      hbsString = block
+  let pointer = 0,
+    openPointer = 0,
+    closedPointer = 0
+  while (pointer < hbsString.length) {
+    openPointer = hbsString.indexOf(open, pointer)
+    closedPointer = hbsString.indexOf(closed, pointer) + 2
+    if (openPointer < 0 || closedPointer < 0) {
+      substitutedHbsString += hbsString.substring(pointer)
+      break
     }
+    let before = hbsString.substring(pointer, openPointer)
+    let block = hbsString
+      .substring(openPointer, closedPointer)
+      .replace(/loop/, substitute)
+    substitutedHbsString += before + block
+    pointer = closedPointer
   }
-
-  return hbsString
+  if (checkForJS) {
+    substitutedHbsString = encodeJSBinding(substitutedHbsString)
+  }
+  return substitutedHbsString
 }
 
 exports.stringSplit = value => {
