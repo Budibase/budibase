@@ -2,17 +2,11 @@ const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
 const uuid = require("uuid/v4")
-const {
-  doWithDB,
-  dangerousGetDB,
-  closeDB,
-} = require("@budibase/backend-core/db")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   upload,
   retrieve,
   retrieveToTmp,
-  streamUpload,
   deleteFolder,
   downloadTarball,
   downloadTarballDirect,
@@ -21,12 +15,6 @@ const {
 const { updateClientLibrary } = require("./clientLibrary")
 const { checkSlashesInUrl } = require("../")
 const env = require("../../environment")
-const {
-  USER_METDATA_PREFIX,
-  LINK_USER_METADATA_PREFIX,
-  TABLE_ROW_PREFIX,
-} = require("../../db/utils")
-const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
 const tar = require("tar")
 const fetch = require("node-fetch")
@@ -87,21 +75,6 @@ exports.checkDevelopmentEnvironment = () => {
 }
 
 /**
- * This function manages temporary template files which are stored by Koa.
- * @param {Object} template The template object retrieved from the Koa context object.
- * @returns {Object} Returns an fs read stream which can be loaded into the database.
- */
-exports.getTemplateStream = async template => {
-  if (template.file) {
-    return fs.createReadStream(template.file.path)
-  } else {
-    const [type, name] = template.key.split("/")
-    const tmpPath = await exports.downloadTemplate(type, name)
-    return fs.createReadStream(join(tmpPath, name, "db", "dump.txt"))
-  }
-}
-
-/**
  * Used to retrieve a handlebars file from the system which will be used as a template.
  * This is allowable as the template handlebars files should be static and identical across
  * the cluster.
@@ -124,98 +97,8 @@ exports.apiFileReturn = contents => {
   return fs.createReadStream(path)
 }
 
-exports.defineFilter = excludeRows => {
-  const ids = [USER_METDATA_PREFIX, LINK_USER_METADATA_PREFIX]
-  if (excludeRows) {
-    ids.push(TABLE_ROW_PREFIX)
-  }
-  return doc =>
-    !ids.map(key => doc._id.includes(key)).reduce((prev, curr) => prev || curr)
-}
-
-/**
- * Local utility to back up the database state for an app, excluding global user
- * data or user relationships.
- * @param {string} appId The app to backup
- * @param {object} config Config to send to export DB
- * @param {boolean} excludeRows Flag to state whether the export should include data.
- * @returns {*} either a string or a stream of the backup
- */
-const backupAppData = async (appId, config, excludeRows) => {
-  return await exports.exportDB(appId, {
-    ...config,
-    filter: exports.defineFilter(excludeRows),
-  })
-}
-
-/**
- * Takes a copy of the database state for an app to the object store.
- * @param {string} appId The ID of the app which is to be backed up.
- * @param {string} backupName The name of the backup located in the object store.
- * @return {*} a readable stream to the completed backup file
- */
-exports.performBackup = async (appId, backupName) => {
-  return await backupAppData(appId, { exportName: backupName })
-}
-
-/**
- * Streams a backup of the database state for an app
- * @param {string} appId The ID of the app which is to be backed up.
- * @param {boolean} excludeRows Flag to state whether the export should include data.
- * @returns {*} a readable stream of the backup which is written in real time
- */
-exports.streamBackup = async (appId, excludeRows) => {
-  return await backupAppData(appId, { stream: true }, excludeRows)
-}
-
-/**
- * Exports a DB to either file or a variable (memory).
- * @param {string} dbName the DB which is to be exported.
- * @param {string} exportName optional - provide a filename to write the backup to a file
- * @param {boolean} stream optional - whether to perform a full backup
- * @param {function} filter optional - a filter function to clear out any un-wanted docs.
- * @return {*} either a readable stream or a string
- */
-exports.exportDB = async (dbName, { stream, filter, exportName } = {}) => {
-  // streaming a DB dump is a bit more complicated, can't close DB
-  if (stream) {
-    const db = dangerousGetDB(dbName)
-    const memStream = new MemoryStream()
-    memStream.on("end", async () => {
-      await closeDB(db)
-    })
-    db.dump(memStream, { filter })
-    return memStream
-  }
-
-  return doWithDB(dbName, async db => {
-    // Write the dump to file if required
-    if (exportName) {
-      const path = join(budibaseTempDir(), exportName)
-      const writeStream = fs.createWriteStream(path)
-      await db.dump(writeStream, { filter })
-
-      // Upload the dump to the object store if self hosted
-      if (env.SELF_HOSTED) {
-        await streamUpload(
-          ObjectStoreBuckets.BACKUPS,
-          join(dbName, exportName),
-          fs.createReadStream(path)
-        )
-      }
-
-      return fs.createReadStream(path)
-    }
-
-    // Stringify the dump in memory if required
-    const memStream = new MemoryStream()
-    let appString = ""
-    memStream.on("data", chunk => {
-      appString += chunk.toString()
-    })
-    await db.dump(memStream, { filter })
-    return appString
-  })
+exports.streamFile = path => {
+  return fs.createReadStream(path)
 }
 
 /**

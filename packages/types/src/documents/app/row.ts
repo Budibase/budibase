@@ -16,6 +16,14 @@ export enum FieldType {
   INTERNAL = "internal",
 }
 
+export interface RowAttachment {
+  size: number
+  name: string
+  url: string
+  extension: string
+  key: string
+}
+
 export interface Row extends Document {
   type?: string
   tableId?: string

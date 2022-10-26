@@ -3,12 +3,12 @@ const { apiFileReturn } = require("../../../utilities/fileSystem")
 const exporters = require("./exporters")
 const { saveView, getView, getViews, deleteView } = require("./utils")
 const { fetchView } = require("../row")
-const { getTable } = require("../table/utils")
 const { FieldTypes } = require("../../../constants")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
 const { DocumentType } = require("../../../db/utils")
 const { cloneDeep, isEqual } = require("lodash")
+const sdk = require("../../../sdk")
 
 exports.fetch = async ctx => {
   ctx.body = await getViews()
@@ -144,7 +144,7 @@ exports.exportView = async ctx => {
 
   let schema = view && view.meta && view.meta.schema
   const tableId = ctx.params.tableId || view.meta.tableId
-  const table = await getTable(tableId)
+  const table = await sdk.tables.getTable(tableId)
   if (!schema) {
     schema = table.schema
   }

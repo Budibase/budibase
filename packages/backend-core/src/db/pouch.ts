@@ -1,7 +1,7 @@
-const PouchDB = require("pouchdb")
-const env = require("../environment")
+import PouchDB from "pouchdb"
+import env from "../environment"
 
-exports.getUrlInfo = (url = env.COUCH_DB_URL) => {
+export const getUrlInfo = (url = env.COUCH_DB_URL) => {
   let cleanUrl, username, password, host
   if (url) {
     // Ensure the URL starts with a protocol
@@ -44,8 +44,8 @@ exports.getUrlInfo = (url = env.COUCH_DB_URL) => {
   }
 }
 
-exports.getCouchInfo = () => {
-  const urlInfo = exports.getUrlInfo()
+export const getCouchInfo = () => {
+  const urlInfo = getUrlInfo()
   let username
   let password
   if (env.COUCH_DB_USERNAME) {
@@ -82,11 +82,11 @@ exports.getCouchInfo = () => {
  * This should be rarely used outside of the main application config.
  * Exposed for exceptional cases such as in-memory views.
  */
-exports.getPouch = (opts = {}) => {
-  let { url, cookie } = exports.getCouchInfo()
+export const getPouch = (opts: any = {}) => {
+  let { url, cookie } = getCouchInfo()
   let POUCH_DB_DEFAULTS = {
     prefix: url,
-    fetch: (url, opts) => {
+    fetch: (url: string, opts: any) => {
       // use a specific authorization cookie - be very explicit about how we authenticate
       opts.headers.set("Authorization", cookie)
       return PouchDB.fetch(url, opts)
@@ -98,6 +98,7 @@ exports.getPouch = (opts = {}) => {
     PouchDB.plugin(inMemory)
     POUCH_DB_DEFAULTS = {
       prefix: undefined,
+      // @ts-ignore
       adapter: "memory",
     }
   }
@@ -105,6 +106,7 @@ exports.getPouch = (opts = {}) => {
   if (opts.onDisk) {
     POUCH_DB_DEFAULTS = {
       prefix: undefined,
+      // @ts-ignore
       adapter: "leveldb",
     }
   }
@@ -112,6 +114,7 @@ exports.getPouch = (opts = {}) => {
   if (opts.replication) {
     const replicationStream = require("pouchdb-replication-stream")
     PouchDB.plugin(replicationStream.plugin)
+    // @ts-ignore
     PouchDB.adapter("writableStream", replicationStream.adapters.writableStream)
   }
 

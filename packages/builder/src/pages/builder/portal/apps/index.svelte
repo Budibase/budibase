@@ -21,7 +21,6 @@
   import { API } from "api"
   import { onMount } from "svelte"
   import { apps, auth, admin, templates, licensing } from "stores/portal"
-  import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
@@ -140,7 +139,7 @@
 
   const initiateAppsExport = () => {
     try {
-      download(`/api/cloud/export`)
+      window.location = `/api/cloud/export`
       notifications.success("Apps exported successfully")
     } catch (err) {
       notifications.error(`Error exporting apps: ${err}`)

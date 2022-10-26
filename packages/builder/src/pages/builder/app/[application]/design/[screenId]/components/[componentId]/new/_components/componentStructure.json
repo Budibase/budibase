@@ -6,7 +6,8 @@
       "tableblock",
       "cardsblock",
       "repeaterblock",
-      "formblock"
+      "formblock",
+      "chartblock"
     ]
   },
   {
@@ -14,7 +15,8 @@
     "icon": "ClassicGridView",
     "children": [
       "container",
-      "section"
+      "section",
+      "grid"
     ]
   },
   {
