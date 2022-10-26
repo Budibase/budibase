@@ -128,23 +128,6 @@
     return fields.find(field => get(field).name === name)
   }
 
-  const getDefault = (defaultValue, schema, type) => {
-    // Remove any values not present in the field schema
-    // Convert any values supplied to string
-    if (Array.isArray(defaultValue) && type == "array") {
-      return defaultValue.reduce((acc, entry) => {
-        let processedOption = String(entry)
-        let schemaOptions = schema.constraints.inclusion
-        if (schemaOptions.indexOf(processedOption) > -1) {
-          acc.push(processedOption)
-        }
-        return acc
-      }, [])
-    } else {
-      return defaultValue
-    }
-  }
-
   const formApi = {
     registerField: (
       field,
@@ -170,10 +153,8 @@
             table
           )
 
-      const parsedDefault = getDefault(defaultValue, schema?.[field], type)
-
       // If we've already registered this field then keep some existing state
-      let initialValue = Helpers.deepGet(initialValues, field) ?? parsedDefault
+      let initialValue = Helpers.deepGet(initialValues, field) ?? defaultValue
       let initialError = null
       let fieldId = `id-${Helpers.uuid()}`
       const existingField = getField(field)
@@ -206,11 +187,11 @@
           error: initialError,
           disabled:
             disabled || fieldDisabled || (isAutoColumn && !editAutoColumns),
-          defaultValue: parsedDefault,
+          defaultValue,
           validator,
           lastUpdate: Date.now(),
         },
-        fieldApi: makeFieldApi(field, parsedDefault),
+        fieldApi: makeFieldApi(field, defaultValue),
         fieldSchema: schema?.[field] ?? {},
       })
 
