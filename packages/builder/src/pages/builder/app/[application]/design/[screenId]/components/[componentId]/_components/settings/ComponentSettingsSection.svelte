@@ -4,6 +4,7 @@
   import { store } from "builderStore"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
+  import EjectBlockButton from "components/design/settings/controls/EjectBlockButton.svelte"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
 
   export let componentDefinition
@@ -12,20 +13,33 @@
   export let componentBindings
   export let isScreen = false
 
-  $: sections = getSections(componentDefinition)
+  $: sections = getSections(componentInstance, componentDefinition, isScreen)
 
-  const getSections = definition => {
+  const getSections = (instance, definition, isScreen) => {
     const settings = definition?.settings ?? []
     const generalSettings = settings.filter(setting => !setting.section)
     const customSections = settings.filter(setting => setting.section)
-    return [
+    let sections = [
       {
         name: "General",
-        info: componentDefinition?.info,
         settings: generalSettings,
       },
       ...(customSections || []),
     ]
+
+    // Filter out settings which shouldn't be rendered
+    sections.forEach(section => {
+      section.visible = shouldDisplay(instance, section)
+      if (!section.visible) {
+        return
+      }
+      section.settings.forEach(setting => {
+        setting.visible = canRenderControl(instance, setting, isScreen)
+      })
+      section.visible = section.settings.some(setting => setting.visible)
+    })
+
+    return sections
   }
 
   const updateSetting = async (key, value) => {
@@ -36,21 +50,12 @@
     }
   }
 
-  const canRenderControl = (setting, isScreen) => {
-    // Prevent rendering on click setting for screens
-    if (setting?.type === "event" && isScreen) {
-      return false
-    }
-
-    const control = getComponentForSetting(setting)
-    if (!control) {
-      return false
-    }
-
+  const shouldDisplay = (instance, setting) => {
     // Parse dependant settings
     if (setting.dependsOn) {
       let dependantSetting = setting.dependsOn
       let dependantValue = null
+      let invert = !!setting.dependsOn.invert
       if (typeof setting.dependsOn === "object") {
         dependantSetting = setting.dependsOn.setting
         dependantValue = setting.dependsOn.value
@@ -62,7 +67,7 @@
       // If no specific value is depended upon, check if a value exists at all
       // for the dependent setting
       if (dependantValue == null) {
-        const currentValue = componentInstance[dependantSetting]
+        const currentValue = instance[dependantSetting]
         if (currentValue === false) {
           return false
         }
@@ -73,68 +78,79 @@
       }
 
       // Otherwise check the value matches
-      return componentInstance[dependantSetting] === dependantValue
+      if (invert) {
+        return instance[dependantSetting] !== dependantValue
+      } else {
+        return instance[dependantSetting] === dependantValue
+      }
     }
 
     return true
   }
+
+  const canRenderControl = (instance, setting, isScreen) => {
+    // Prevent rendering on click setting for screens
+    if (setting?.type === "event" && isScreen) {
+      return false
+    }
+    const control = getComponentForSetting(setting)
+    if (!control) {
+      return false
+    }
+
+    return shouldDisplay(instance, setting)
+  }
 </script>
 
 {#each sections as section, idx (section.name)}
-  <DetailSummary name={section.name} collapsible={false}>
-    {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen}
-      <PropertyControl
-        control={Input}
-        label="Name"
-        key="_instanceName"
-        value={componentInstance._instanceName}
-        onChange={val => updateSetting("_instanceName", val)}
-      />
-    {/if}
-    {#each section.settings as setting (setting.key)}
-      {#if canRenderControl(setting, isScreen)}
+  {#if section.visible}
+    <DetailSummary name={section.name} collapsible={false}>
+      {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen}
         <PropertyControl
-          type={setting.type}
-          control={getComponentForSetting(setting)}
-          label={setting.label}
-          key={setting.key}
-          value={componentInstance[setting.key]}
-          defaultValue={setting.defaultValue}
-          nested={setting.nested}
-          onChange={val => updateSetting(setting.key, val)}
-          highlighted={$store.highlightedSettingKey === setting.key}
-          props={{
-            // Generic settings
-            placeholder: setting.placeholder || null,
-
-            // Select settings
-            options: setting.options || [],
-
-            // Number fields
-            min: setting.min || null,
-            max: setting.max || null,
-          }}
-          {bindings}
-          {componentBindings}
-          {componentInstance}
-          {componentDefinition}
+          control={Input}
+          label="Name"
+          key="_instanceName"
+          value={componentInstance._instanceName}
+          onChange={val => updateSetting("_instanceName", val)}
         />
       {/if}
-    {/each}
-    {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
-      <ResetFieldsButton {componentInstance} />
-    {/if}
-    {#if section?.info}
-      <div class="text">
-        {@html section.info}
-      </div>
-    {/if}
-  </DetailSummary>
-{/each}
+      {#each section.settings as setting (setting.key)}
+        {#if setting.visible}
+          <PropertyControl
+            type={setting.type}
+            control={getComponentForSetting(setting)}
+            label={setting.label}
+            key={setting.key}
+            value={componentInstance[setting.key]}
+            defaultValue={setting.defaultValue}
+            nested={setting.nested}
+            onChange={val => updateSetting(setting.key, val)}
+            highlighted={$store.highlightedSettingKey === setting.key}
+            info={setting.info}
+            props={{
+              // Generic settings
+              placeholder: setting.placeholder || null,
 
-<style>
-  .text {
-    font-size: var(--spectrum-global-dimension-font-size-75);
-    color: var(--grey-6);
-  }
-</style>
+              // Select settings
+              options: setting.options || [],
+
+              // Number fields
+              min: setting.min || null,
+              max: setting.max || null,
+            }}
+            {bindings}
+            {componentBindings}
+            {componentInstance}
+            {componentDefinition}
+          />
+        {/if}
+      {/each}
+      {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
+        <ResetFieldsButton {componentInstance} />
+      {/if}
+      {#if idx === 0 && componentDefinition?.block}
+        <EjectBlockButton />
+      {/if}
+    </DetailSummary>
+  {/if}
+{/each}

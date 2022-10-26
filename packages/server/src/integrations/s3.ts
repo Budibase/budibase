@@ -9,13 +9,13 @@ module S3Module {
   const AWS = require("aws-sdk")
   const csv = require("csvtojson")
 
-  interface S3Config {
-    region: string
-    accessKeyId: string
-    secretAccessKey: string
-    s3ForcePathStyle: boolean
-    endpoint?: string
-  }
+interface S3Config {
+  region: string
+  accessKeyId: string
+  secretAccessKey: string
+  s3ForcePathStyle: boolean
+  endpoint?: string
+}
 
   const SCHEMA: Integration = {
     docs: "https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html",
@@ -150,20 +150,20 @@ module S3Module {
     },
   }
 
-  class S3Integration implements IntegrationBase {
-    private readonly config: S3Config
-    private client: any
+class S3Integration implements IntegrationBase {
+  private readonly config: S3Config
+  private client: any
 
-    constructor(config: S3Config) {
-      this.config = config
-      if (this.config.endpoint) {
-        this.config.s3ForcePathStyle = true
-      } else {
-        delete this.config.endpoint
-      }
-
-      this.client = new AWS.S3(this.config)
+  constructor(config: S3Config) {
+    this.config = config
+    if (this.config.endpoint) {
+      this.config.s3ForcePathStyle = true
+    } else {
+      delete this.config.endpoint
     }
+
+    this.client = new AWS.S3(this.config)
+  }
 
     async create(query: {
       bucket: string
@@ -254,8 +254,7 @@ module S3Module {
     }
   }
 
-  module.exports = {
-    schema: SCHEMA,
-    integration: S3Integration,
-  }
+export default {
+  schema: SCHEMA,
+  integration: S3Integration,
 }

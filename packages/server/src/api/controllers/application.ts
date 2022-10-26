@@ -5,11 +5,7 @@ import {
   createRoutingView,
   createAllSearchIndex,
 } from "../../db/views/staticViews"
-import {
-  getTemplateStream,
-  createApp,
-  deleteApp,
-} from "../../utilities/fileSystem"
+import { createApp, deleteApp } from "../../utilities/fileSystem"
 import {
   generateAppID,
   getLayoutParams,
@@ -32,7 +28,7 @@ const {
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { clientLibraryPath, stringToReadStream } from "../../utilities"
-import { getAllLocks } from "../../utilities/redis"
+import { getLocksById } from "../../utilities/redis"
 import {
   updateClientLibrary,
   backupClientLibrary,
@@ -45,9 +41,12 @@ import { cleanupAutomations } from "../../automations/utils"
 import { context } from "@budibase/backend-core"
 import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
-import { quotas } from "@budibase/pro"
+import { quotas, groups } from "@budibase/pro"
 import { errors, events, migrations } from "@budibase/backend-core"
-import { App, MigrationType } from "@budibase/types"
+import { App, Layout, Screen, MigrationType } from "@budibase/types"
+import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
+import { enrichPluginURLs } from "../../utilities/plugins"
+import sdk from "../../sdk"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -151,11 +150,7 @@ async function createInstance(template: any) {
       throw "Error loading database dump from memory."
     }
   } else if (template && template.useTemplate === "true") {
-    /* istanbul ignore next */
-    const { ok } = await db.load(await getTemplateStream(template))
-    if (!ok) {
-      throw "Error loading database dump from template."
-    }
+    await sdk.backups.importApp(appId, db, template)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
@@ -169,16 +164,16 @@ export const fetch = async (ctx: any) => {
   const all = ctx.query && ctx.query.status === AppStatus.ALL
   const apps = await getAllApps({ dev, all })
 
+  const appIds = apps
+    .filter((app: any) => app.status === "development")
+    .map((app: any) => app.appId)
   // get the locks for all the dev apps
   if (dev || all) {
-    const locks = await getAllLocks()
+    const locks = await getLocksById(appIds)
     for (let app of apps) {
-      if (app.status !== "development") {
-        continue
-      }
-      const lock = locks.find((lock: any) => lock.appId === app.appId)
+      const lock = locks[app.appId]
       if (lock) {
-        app.lockedBy = lock.user
+        app.lockedBy = lock
       } else {
         // make sure its definitely not present
         delete app.lockedBy
@@ -206,9 +201,12 @@ export const fetchAppDefinition = async (ctx: any) => {
 
 export const fetchAppPackage = async (ctx: any) => {
   const db = context.getAppDB()
-  const application = await db.get(DocumentType.APP_METADATA)
+  let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
+
+  // Enrich plugin URLs
+  application.usedPlugins = enrichPluginURLs(application.usedPlugins)
 
   // Only filter screens if the user is not a builder
   if (!(ctx.user.builder && ctx.user.builder.global)) {
@@ -243,27 +241,19 @@ const performAppCreate = async (ctx: any) => {
   }
   const instance = await createInstance(instanceConfig)
   const appId = instance._id
-
   const db = context.getAppDB()
-  let _rev
-  try {
-    // if template there will be an existing doc
-    const existing = await db.get(DocumentType.APP_METADATA)
-    _rev = existing._rev
-  } catch (err) {
-    // nothing to do
-  }
-  const newApplication: App = {
+
+  let newApplication: App = {
     _id: DocumentType.APP_METADATA,
-    _rev,
-    appId: instance._id,
+    _rev: undefined,
+    appId,
     type: "app",
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
     name: name,
     url: url,
-    template: ctx.request.body.template,
-    instance: instance,
+    template: templateKey,
+    instance,
     tenantId: getTenantId(),
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
@@ -285,6 +275,36 @@ const performAppCreate = async (ctx: any) => {
       buttonBorderRadius: "16px",
     },
   }
+
+  // If we used a template or imported an app there will be an existing doc.
+  // Fetch and migrate some metadata from the existing app.
+  try {
+    const existing: App = await db.get(DocumentType.APP_METADATA)
+    const keys: (keyof App)[] = [
+      "_rev",
+      "navigation",
+      "theme",
+      "customTheme",
+      "icon",
+    ]
+    keys.forEach(key => {
+      if (existing[key]) {
+        // @ts-ignore
+        newApplication[key] = existing[key]
+      }
+    })
+
+    // Migrate navigation settings and screens if required
+    if (existing) {
+      const navigation = await migrateAppNavigation()
+      if (navigation) {
+        newApplication.navigation = navigation
+      }
+    }
+  } catch (err) {
+    // Nothing to do
+  }
+
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
 
@@ -332,7 +352,7 @@ const appPostCreate = async (ctx: any, app: App) => {
   await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
-    const rows = await getUniqueRows([app.appId])
+    const { rows } = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
@@ -443,7 +463,6 @@ const destroyApp = async (ctx: any) => {
   const result = await db.destroy()
 
   if (isUnpublish) {
-    await quotas.removePublishedApp()
     await events.app.unpublished(app)
   } else {
     await quotas.removeApp()
@@ -467,12 +486,13 @@ const destroyApp = async (ctx: any) => {
 }
 
 const preDestroyApp = async (ctx: any) => {
-  const rows = await getUniqueRows([ctx.params.appId])
+  const { rows } = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }
 
 const postDestroyApp = async (ctx: any) => {
   const rowCount = ctx.rowCount
+  await groups.cleanupApp(ctx.params.appId)
   if (rowCount) {
     await quotas.removeRows(rowCount)
   }
@@ -524,11 +544,7 @@ export const sync = async (ctx: any, next: any) => {
   })
   let error
   try {
-    await replication.replicate({
-      filter: function (doc: any) {
-        return doc._id !== DocumentType.APP_METADATA
-      },
-    })
+    await replication.replicate(replication.appReplicateOpts())
   } catch (err) {
     error = err
   } finally {
@@ -547,7 +563,7 @@ export const sync = async (ctx: any, next: any) => {
   }
 }
 
-const updateAppPackage = async (appPackage: any, appId: any) => {
+export const updateAppPackage = async (appPackage: any, appId: any) => {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await db.get(DocumentType.APP_METADATA)
@@ -566,4 +582,56 @@ const updateAppPackage = async (appPackage: any, appId: any) => {
     await appCache.invalidateAppMetadata(appId)
     return newAppPackage
   })
+}
+
+const migrateAppNavigation = async () => {
+  const db = context.getAppDB()
+  const existing: App = await db.get(DocumentType.APP_METADATA)
+  const layouts: Layout[] = await getLayouts()
+  const screens: Screen[] = await getScreens()
+
+  // Migrate all screens, removing custom layouts
+  for (let screen of screens) {
+    if (!screen.layoutId) {
+      continue
+    }
+    const layout = layouts.find(layout => layout._id === screen.layoutId)
+    screen.layoutId = undefined
+    screen.showNavigation = layout?.props.navigation !== "None"
+    screen.width = layout?.props.width || "Large"
+    await db.put(screen)
+  }
+
+  // Migrate layout navigation settings
+  const { name, customTheme } = existing
+  const layout = layouts?.find(
+    (layout: Layout) => layout._id === BASE_LAYOUT_PROP_IDS.PRIVATE
+  )
+  if (layout && !existing.navigation) {
+    let navigationSettings: any = {
+      navigation: "Top",
+      title: name,
+      navWidth: "Large",
+      navBackground:
+        customTheme?.navBackground || "var(--spectrum-global-color-gray-50)",
+      navTextColor:
+        customTheme?.navTextColor || "var(--spectrum-global-color-gray-800)",
+    }
+    if (layout) {
+      navigationSettings.hideLogo = layout.props.hideLogo
+      navigationSettings.hideTitle = layout.props.hideTitle
+      navigationSettings.title = layout.props.title || name
+      navigationSettings.logoUrl = layout.props.logoUrl
+      navigationSettings.links = layout.props.links
+      navigationSettings.navigation = layout.props.navigation || "Top"
+      navigationSettings.sticky = layout.props.sticky
+      navigationSettings.navWidth = layout.props.width || "Large"
+      if (navigationSettings.navigation === "None") {
+        navigationSettings.navigation = "Top"
+      }
+    }
+    return navigationSettings
+  } else {
+    return null
+  }
 }

@@ -37,8 +37,8 @@
 
   const handleChange = e => {
     const value = parseValue(e.detail)
-    fieldApi.setValue(value)
-    if (onChange) {
+    const changed = fieldApi.setValue(value)
+    if (onChange && changed) {
       onChange({ value })
     }
   }

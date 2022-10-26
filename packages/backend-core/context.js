@@ -6,6 +6,7 @@ const {
   updateAppId,
   doInAppContext,
   doInTenant,
+  doInContext,
 } = require("./src/context")
 
 const identity = require("./src/context/identity")
@@ -19,4 +20,5 @@ module.exports = {
   doInAppContext,
   doInTenant,
   identity,
+  doInContext,
 }

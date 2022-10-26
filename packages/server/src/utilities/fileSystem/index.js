@@ -2,33 +2,26 @@ const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
 const uuid = require("uuid/v4")
-const {
-  doWithDB,
-  dangerousGetDB,
-  closeDB,
-} = require("@budibase/backend-core/db")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   upload,
   retrieve,
   retrieveToTmp,
-  streamUpload,
   deleteFolder,
   downloadTarball,
+  downloadTarballDirect,
   deleteFiles,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
+const { checkSlashesInUrl } = require("../")
 const env = require("../../environment")
-const {
-  USER_METDATA_PREFIX,
-  LINK_USER_METADATA_PREFIX,
-  TABLE_ROW_PREFIX,
-} = require("../../db/utils")
-const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
+const tar = require("tar")
+const fetch = require("node-fetch")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
+const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 
 /**
  * The single stack system (Cloud and Builder) should not make use of the file system where possible,
@@ -44,7 +37,15 @@ const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 exports.init = () => {
   const tempDir = budibaseTempDir()
   if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir)
+    // some test cases fire this quickly enough that
+    // synchronous cases can end up here at the same time
+    try {
+      fs.mkdirSync(tempDir)
+    } catch (err) {
+      if (!err || err.code !== "EEXIST") {
+        throw err
+      }
+    }
   }
   const clientLibPath = join(budibaseTempDir(), "budibase-client.js")
   if (env.isTest() && !fs.existsSync(clientLibPath)) {
@@ -74,21 +75,6 @@ exports.checkDevelopmentEnvironment = () => {
 }
 
 /**
- * This function manages temporary template files which are stored by Koa.
- * @param {Object} template The template object retrieved from the Koa context object.
- * @returns {Object} Returns an fs read stream which can be loaded into the database.
- */
-exports.getTemplateStream = async template => {
-  if (template.file) {
-    return fs.createReadStream(template.file.path)
-  } else {
-    const [type, name] = template.key.split("/")
-    const tmpPath = await exports.downloadTemplate(type, name)
-    return fs.createReadStream(join(tmpPath, name, "db", "dump.txt"))
-  }
-}
-
-/**
  * Used to retrieve a handlebars file from the system which will be used as a template.
  * This is allowable as the template handlebars files should be static and identical across
  * the cluster.
@@ -111,98 +97,8 @@ exports.apiFileReturn = contents => {
   return fs.createReadStream(path)
 }
 
-exports.defineFilter = excludeRows => {
-  const ids = [USER_METDATA_PREFIX, LINK_USER_METADATA_PREFIX]
-  if (excludeRows) {
-    ids.push(TABLE_ROW_PREFIX)
-  }
-  return doc =>
-    !ids.map(key => doc._id.includes(key)).reduce((prev, curr) => prev || curr)
-}
-
-/**
- * Local utility to back up the database state for an app, excluding global user
- * data or user relationships.
- * @param {string} appId The app to backup
- * @param {object} config Config to send to export DB
- * @param {boolean} includeRows Flag to state whether the export should include data.
- * @returns {*} either a string or a stream of the backup
- */
-const backupAppData = async (appId, config, includeRows) => {
-  return await exports.exportDB(appId, {
-    ...config,
-    filter: exports.defineFilter(includeRows),
-  })
-}
-
-/**
- * Takes a copy of the database state for an app to the object store.
- * @param {string} appId The ID of the app which is to be backed up.
- * @param {string} backupName The name of the backup located in the object store.
- * @return {*} a readable stream to the completed backup file
- */
-exports.performBackup = async (appId, backupName) => {
-  return await backupAppData(appId, { exportName: backupName })
-}
-
-/**
- * Streams a backup of the database state for an app
- * @param {string} appId The ID of the app which is to be backed up.
- * @param {boolean} includeRows Flag to state whether the export should include data.
- * @returns {*} a readable stream of the backup which is written in real time
- */
-exports.streamBackup = async (appId, includeRows) => {
-  return await backupAppData(appId, { stream: true }, includeRows)
-}
-
-/**
- * Exports a DB to either file or a variable (memory).
- * @param {string} dbName the DB which is to be exported.
- * @param {string} exportName optional - provide a filename to write the backup to a file
- * @param {boolean} stream optional - whether to perform a full backup
- * @param {function} filter optional - a filter function to clear out any un-wanted docs.
- * @return {*} either a readable stream or a string
- */
-exports.exportDB = async (dbName, { stream, filter, exportName } = {}) => {
-  // streaming a DB dump is a bit more complicated, can't close DB
-  if (stream) {
-    const db = dangerousGetDB(dbName)
-    const memStream = new MemoryStream()
-    memStream.on("end", async () => {
-      await closeDB(db)
-    })
-    db.dump(memStream, { filter })
-    return memStream
-  }
-
-  return doWithDB(dbName, async db => {
-    // Write the dump to file if required
-    if (exportName) {
-      const path = join(budibaseTempDir(), exportName)
-      const writeStream = fs.createWriteStream(path)
-      await db.dump(writeStream, { filter })
-
-      // Upload the dump to the object store if self hosted
-      if (env.SELF_HOSTED) {
-        await streamUpload(
-          ObjectStoreBuckets.BACKUPS,
-          join(dbName, exportName),
-          fs.createReadStream(path)
-        )
-      }
-
-      return fs.createReadStream(path)
-    }
-
-    // Stringify the dump in memory if required
-    const memStream = new MemoryStream()
-    let appString = ""
-    memStream.on("data", chunk => {
-      appString += chunk.toString()
-    })
-    await db.dump(memStream, { filter })
-    return appString
-  })
+exports.streamFile = path => {
+  return fs.createReadStream(path)
 }
 
 /**
@@ -287,13 +183,18 @@ exports.getComponentLibraryManifest = async library => {
   }
 
   let resp
+  let path
   try {
     // Try to load the manifest from the new file location
-    const path = join(appId, filename)
+    path = join(appId, filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
   } catch (error) {
+    console.error(
+      `component-manifest-objectstore=failed appId=${appId} path=${path}`,
+      error
+    )
     // Fallback to loading it from the old location for old apps
-    const path = join(appId, "node_modules", library, "package", filename)
+    path = join(appId, "node_modules", library, "package", filename)
     resp = await retrieve(ObjectStoreBuckets.APPS, path)
   }
   if (typeof resp !== "string") {
@@ -322,6 +223,123 @@ exports.cleanup = appIds => {
   }
 }
 
+const createTempFolder = item => {
+  const path = join(budibaseTempDir(), item)
+  try {
+    // remove old tmp directories automatically - don't combine
+    if (fs.existsSync(path)) {
+      fs.rmSync(path, { recursive: true, force: true })
+    }
+    fs.mkdirSync(path)
+  } catch (err) {
+    throw new Error(`Path cannot be created: ${err.message}`)
+  }
+
+  return path
+}
+exports.createTempFolder = createTempFolder
+
+const extractTarball = async (fromFilePath, toPath) => {
+  await tar.extract({
+    file: fromFilePath,
+    C: toPath,
+  })
+}
+exports.extractTarball = extractTarball
+
+const getPluginMetadata = async path => {
+  let metadata = {}
+  try {
+    const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
+    const schema = fs.readFileSync(join(path, "schema.json"), "utf8")
+
+    metadata.schema = JSON.parse(schema)
+    metadata.package = JSON.parse(pkg)
+
+    if (
+      !metadata.package.name ||
+      !metadata.package.version ||
+      !metadata.package.description
+    ) {
+      throw new Error(
+        "package.json is missing one of 'name', 'version' or 'description'."
+      )
+    }
+  } catch (err) {
+    throw new Error(
+      `Unable to process schema.json/package.json in plugin. ${err.message}`
+    )
+  }
+
+  return { metadata, directory: path }
+}
+exports.getPluginMetadata = getPluginMetadata
+
+exports.getDatasourcePlugin = async (name, url, hash) => {
+  if (!fs.existsSync(DATASOURCE_PATH)) {
+    fs.mkdirSync(DATASOURCE_PATH)
+  }
+  const filename = join(DATASOURCE_PATH, name)
+  const metadataName = `${filename}.bbmetadata`
+  if (fs.existsSync(filename)) {
+    const currentHash = fs.readFileSync(metadataName, "utf8")
+    // if hash is the same return the file, otherwise remove it and re-download
+    if (currentHash === hash) {
+      return require(filename)
+    } else {
+      console.log(`Updating plugin: ${name}`)
+      delete require.cache[require.resolve(filename)]
+      fs.unlinkSync(filename)
+    }
+  }
+  const fullUrl = checkSlashesInUrl(
+    `${env.MINIO_URL}/${ObjectStoreBuckets.PLUGINS}/${url}`
+  )
+  const response = await fetch(fullUrl)
+  if (response.status === 200) {
+    const content = await response.text()
+    fs.writeFileSync(filename, content)
+    fs.writeFileSync(metadataName, hash)
+    return require(filename)
+  } else {
+    throw new Error(
+      `Unable to retrieve plugin - reason: ${await response.text()}`
+    )
+  }
+}
+
+/**
+ * Find for a file recursively from start path applying filter, return first match
+ */
+exports.findFileRec = (startPath, filter) => {
+  if (!fs.existsSync(startPath)) {
+    return
+  }
+
+  const files = fs.readdirSync(startPath)
+  for (let i = 0, len = files.length; i < len; i++) {
+    const filename = join(startPath, files[i])
+    const stat = fs.lstatSync(filename)
+
+    if (stat.isDirectory()) {
+      return exports.findFileRec(filename, filter)
+    } else if (filename.endsWith(filter)) {
+      return filename
+    }
+  }
+}
+
+/**
+ * Remove a folder which is not empty from the file system
+ */
+exports.deleteFolderFileSystem = path => {
+  if (!fs.existsSync(path)) {
+    return
+  }
+
+  fs.rmSync(path, { recursive: true, force: true })
+}
+
 /**
  * Full function definition for below can be found in the utilities.
  */
@@ -329,5 +347,6 @@ exports.upload = upload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
 exports.deleteFiles = deleteFiles
+exports.downloadTarballDirect = downloadTarballDirect
 exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
 exports.NODE_MODULES_PATH = NODE_MODULES_PATH

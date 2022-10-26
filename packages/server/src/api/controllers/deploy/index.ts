@@ -1,23 +1,25 @@
 import Deployment from "./Deployment"
 import {
-  Replication,
-  getProdAppID,
   getDevelopmentAppID,
+  getProdAppID,
+  Replication,
 } from "@budibase/backend-core/db"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import {
+  clearMetadata,
   disableAllCrons,
   enableCronTrigger,
-  clearMetadata,
 } from "../../../automations/utils"
 import { app as appCache } from "@budibase/backend-core/cache"
 import {
-  getAppId,
   getAppDB,
+  getAppId,
+  getDevAppDB,
   getProdAppDB,
 } from "@budibase/backend-core/context"
-import { quotas } from "@budibase/pro"
 import { events } from "@budibase/backend-core"
+import { backups } from "@budibase/pro"
+import { AppBackupTrigger } from "@budibase/types"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -98,29 +100,52 @@ async function initDeployedApp(prodAppId: any) {
   console.log("Enabled cron triggers for deployed app..")
 }
 
-async function deployApp(deployment: any) {
+async function deployApp(deployment: any, userId: string) {
   let replication
   try {
     const appId = getAppId()
     const devAppId = getDevelopmentAppID(appId)
     const productionAppId = getProdAppID(appId)
 
+    // don't try this if feature isn't allowed, will error
+    if (await backups.isEnabled()) {
+      // trigger backup initially
+      await backups.triggerAppBackup(
+        productionAppId,
+        AppBackupTrigger.PUBLISH,
+        {
+          createdBy: userId,
+        }
+      )
+    }
     const config: any = {
       source: devAppId,
       target: productionAppId,
     }
     replication = new Replication(config)
-
+    const devDb = getDevAppDB()
+    console.log("Compacting development DB")
+    await devDb.compact()
     console.log("Replication object created")
-    await replication.replicate()
+    await replication.replicate(replication.appReplicateOpts())
     console.log("replication complete.. replacing app meta doc")
+    // app metadata is excluded as it is likely to be in conflict
+    // replicate the app metadata document manually
     const db = getProdAppDB()
-    const appDoc = await db.get(DocumentType.APP_METADATA)
+    const appDoc = await devDb.get(DocumentType.APP_METADATA)
+    try {
+      const prodAppDoc = await db.get(DocumentType.APP_METADATA)
+      appDoc._rev = prodAppDoc._rev
+    } catch (err) {
+      delete appDoc._rev
+    }
 
+    // switch to production app ID
     deployment.appUrl = appDoc.url
-
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
+    // remove automation errors if they exist
+    delete appDoc.automationErrors
     await db.put(appDoc)
     await appCache.invalidateAppMetadata(productionAppId)
     console.log("New app doc written successfully.")
@@ -193,12 +218,7 @@ const _deployApp = async function (ctx: any) {
 
   console.log("Deploying app...")
 
-  let app
-  if (await isFirstDeploy()) {
-    app = await quotas.addPublishedApp(() => deployApp(deployment))
-  } else {
-    app = await deployApp(deployment)
-  }
+  let app = await deployApp(deployment, ctx.user._id)
 
   await events.app.published(app)
   ctx.body = deployment

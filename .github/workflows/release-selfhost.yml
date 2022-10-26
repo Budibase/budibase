@@ -3,10 +3,6 @@ name: Budibase Release Selfhost
 on:
  workflow_dispatch:
 
-env:
-  BRANCH: ${{ github.event.pull_request.head.ref }}
-  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -53,9 +49,6 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           SELFHOST_TAG: latest
-
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
 
       - name: Bootstrap and build (CLI)
         run: |

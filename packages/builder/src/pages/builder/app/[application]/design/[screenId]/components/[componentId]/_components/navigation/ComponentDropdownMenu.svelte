@@ -4,17 +4,20 @@
 
   export let component
 
+  $: definition = store.actions.components.getDefinition(component?._component)
   $: noPaste = !$store.componentToPaste
+  $: isBlock = definition?.block === true
 
   const keyboardEvent = (key, ctrlKey = false) => {
-    // Ensure this component is selected first
-    if (component._id !== $store.selectedComponentId) {
-      store.update(state => {
-        state.selectedComponentId = component._id
-        return state
+    document.dispatchEvent(
+      new CustomEvent("component-menu", {
+        detail: {
+          key,
+          ctrlKey,
+          id: component?._id,
+        },
       })
-    }
-    document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
+    )
   }
 </script>
 
@@ -29,6 +32,15 @@
   >
     Delete
   </MenuItem>
+  {#if isBlock}
+    <MenuItem
+      icon="Export"
+      keyBind="Ctrl+E"
+      on:click={() => keyboardEvent("e", true)}
+    >
+      Eject block
+    </MenuItem>
+  {/if}
   <MenuItem
     icon="ChevronUp"
     keyBind="Ctrl+!ArrowUp"

@@ -7,7 +7,7 @@ const {
   getTableParams,
 } = require("../../db/utils")
 const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
-const { integrations } = require("../../integrations")
+const { getIntegration } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
 const { invalidateDynamicVariables } = require("../../threads/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
@@ -50,10 +50,25 @@ exports.fetch = async function (ctx) {
 exports.buildSchemaFromDb = async function (ctx) {
   const db = getAppDB()
   const datasource = await db.get(ctx.params.datasourceId)
+  const tablesFilter = ctx.request.body.tablesFilter
 
-  const { tables, error } = await buildSchemaHelper(datasource)
-  datasource.entities = tables
+  let { tables, error } = await buildSchemaHelper(datasource)
+  if (tablesFilter) {
+    if (!datasource.entities) {
+      datasource.entities = {}
+    }
+    for (let key in tables) {
+      if (
+        tablesFilter.some(filter => filter.toLowerCase() === key.toLowerCase())
+      ) {
+        datasource.entities[key] = tables[key]
+      }
+    }
+  } else {
+    datasource.entities = tables
+  }
 
+  setDefaultDisplayColumns(datasource)
   const dbResp = await db.put(datasource)
   datasource._rev = dbResp.rev
 
@@ -62,6 +77,24 @@ exports.buildSchemaFromDb = async function (ctx) {
     response.error = error
   }
   ctx.body = response
+}
+
+/**
+ * Make sure all datasource entities have a display name selected
+ */
+const setDefaultDisplayColumns = datasource => {
+  //
+  for (let entity of Object.values(datasource.entities)) {
+    if (entity.primaryDisplay) {
+      continue
+    }
+    const notAutoColumn = Object.values(entity.schema).find(
+      schema => !schema.autocolumn
+    )
+    if (notAutoColumn) {
+      entity.primaryDisplay = notAutoColumn.name
+    }
+  }
 }
 
 /**
@@ -114,7 +147,7 @@ exports.update = async function (ctx) {
 
   // Drain connection pools when configuration is changed
   if (datasource.source) {
-    const source = integrations[datasource.source]
+    const source = await getIntegration(datasource.source)
     if (source && source.pool) {
       await source.pool.end()
     }
@@ -141,6 +174,7 @@ exports.save = async function (ctx) {
     const { tables, error } = await buildSchemaHelper(datasource)
     schemaError = error
     datasource.entities = tables
+    setDefaultDisplayColumns(datasource)
   }
 
   const dbResp = await db.put(datasource)
@@ -149,7 +183,7 @@ exports.save = async function (ctx) {
 
   // Drain connection pools when configuration is changed
   if (datasource.source) {
-    const source = integrations[datasource.source]
+    const source = await getIntegration(datasource.source)
     if (source && source.pool) {
       await source.pool.end()
     }
@@ -218,25 +252,11 @@ function updateError(error, newError, tables) {
 }
 
 const buildSchemaHelper = async datasource => {
-  const Connector = integrations[datasource.source]
+  const Connector = await getIntegration(datasource.source)
 
   // Connect to the DB and build the schema
   const connector = new Connector(datasource.config)
   await connector.buildSchema(datasource._id, datasource.entities)
-  datasource.entities = connector.tables
-
-  // make sure they all have a display name selected
-  for (let entity of Object.values(datasource.entities)) {
-    if (entity.primaryDisplay) {
-      continue
-    }
-    const notAutoColumn = Object.values(entity.schema).find(
-      schema => !schema.autocolumn
-    )
-    if (notAutoColumn) {
-      entity.primaryDisplay = notAutoColumn.name
-    }
-  }
 
   const errors = connector.schemaErrors
   let error = null

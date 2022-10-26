@@ -2,7 +2,7 @@ import env from "../environment"
 import { SEPARATOR, DocumentType } from "../db/constants"
 import cls from "./FunctionContext"
 import { dangerousGetDB, closeDB } from "../db"
-import { baseGlobalDBName } from "../tenancy/utils"
+import { baseGlobalDBName } from "../db/tenancy"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
 import { ContextKey } from "./constants"
@@ -53,6 +53,9 @@ export const getTenantIDFromAppID = (appId: string) => {
   if (!appId) {
     return null
   }
+  if (!isMultiTenant()) {
+    return DEFAULT_TENANT_ID
+  }
   const split = appId.split(SEPARATOR)
   const hasDev = split[1] === DocumentType.DEV
   if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
@@ -65,7 +68,16 @@ export const getTenantIDFromAppID = (appId: string) => {
   }
 }
 
-// used for automations, API endpoints should always be in context already
+export const doInContext = async (appId: string, task: any) => {
+  // gets the tenant ID from the app ID
+  const tenantId = getTenantIDFromAppID(appId)
+  return doInTenant(tenantId, async () => {
+    return doInAppContext(appId, async () => {
+      return task()
+    })
+  })
+}
+
 export const doInTenant = (tenantId: string | null, task: any) => {
   // make sure default always selected in single tenancy
   if (!env.MULTI_TENANCY) {
@@ -224,6 +236,10 @@ export const getAppId = () => {
   } else {
     return foundId
   }
+}
+
+export const isTenancyEnabled = () => {
+  return env.MULTI_TENANCY
 }
 
 /**

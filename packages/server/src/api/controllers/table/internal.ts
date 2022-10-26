@@ -1,12 +1,7 @@
 import { updateLinks, EventType } from "../../../db/linkedRows"
 import { getRowParams, generateTableID } from "../../../db/utils"
 import { FieldTypes } from "../../../constants"
-import {
-  TableSaveFunctions,
-  hasTypeChanged,
-  getTable,
-  handleDataImport,
-} from "./utils"
+import { TableSaveFunctions, hasTypeChanged, handleDataImport } from "./utils"
 const { getAppDB } = require("@budibase/backend-core/context")
 import { isTest } from "../../../environment"
 import {
@@ -14,8 +9,12 @@ import {
   fixAutoColumnSubType,
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import { Table } from "../../../definitions/common"
+import { Table } from "@budibase/types"
 import { quotas } from "@budibase/pro"
+import { isEqual } from "lodash"
+import { cloneDeep } from "lodash/fp"
+import env from "../../../environment"
+import sdk from "../../../sdk"
 
 function checkAutoColumns(table: Table, oldTable: Table) {
   if (!table.schema) {
@@ -123,10 +122,16 @@ export async function save(ctx: any) {
   if (updatedRows && updatedRows.length !== 0) {
     await db.bulkDocs(updatedRows)
   }
-  const result = await db.put(tableToSave)
+  let result = await db.put(tableToSave)
   tableToSave._rev = result.rev
+  const savedTable = cloneDeep(tableToSave)
 
   tableToSave = await tableSaveFunctions.after(tableToSave)
+  // the table may be updated as part of the table save after functionality - need to write it
+  if (!isEqual(savedTable, tableToSave)) {
+    result = await db.put(tableToSave)
+    tableToSave._rev = result.rev
+  }
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(tableToSave, { oldTable, deletion: null })
   return tableToSave
@@ -145,7 +150,9 @@ export async function destroy(ctx: any) {
   await db.bulkDocs(
     rows.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
   )
-  await quotas.removeRows(rows.rows.length)
+  await quotas.removeRows(rows.rows.length, {
+    tableId: ctx.params.tableId,
+  })
 
   // update linked rows
   await updateLinks({
@@ -157,7 +164,7 @@ export async function destroy(ctx: any) {
   await db.remove(tableToDelete)
 
   // remove table search index
-  if (!isTest()) {
+  if (!isTest() || env.COUCH_DB_URL) {
     const currentIndexes = await db.getIndexes()
     const existingIndex = currentIndexes.indexes.find(
       (existing: any) => existing.name === `search:${ctx.params.tableId}`
@@ -177,7 +184,7 @@ export async function destroy(ctx: any) {
 }
 
 export async function bulkImport(ctx: any) {
-  const table = await getTable(ctx.params.tableId)
+  const table = await sdk.tables.getTable(ctx.params.tableId)
   const { dataImport } = ctx.request.body
   await handleDataImport(ctx.user, table, dataImport)
   return table

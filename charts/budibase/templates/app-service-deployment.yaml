@@ -78,6 +78,12 @@ spec:
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: PLUGIN_BUCKET_NAME
+          value: {{ .Values.services.objectStore.pluginBucketName | quote }}
+        - name: APPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.appsBucketName | quote }}
+        - name: GLOBAL_CLOUD_BUCKET_NAME
+          value: {{ .Values.services.objectStore.globalBucketName | quote }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
         {{ if .Values.services.worker.publicApiRateLimitPerSecond }}
@@ -124,11 +130,31 @@ spec:
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         {{ if .Values.globals.bbAdminUserEmail }}
         - name: BB_ADMIN_USER_EMAIL
-          value: { { .Values.globals.bbAdminUserEmail | quote } }
+          value: {{ .Values.globals.bbAdminUserEmail | quote }}
         {{ end }}
         {{ if .Values.globals.bbAdminUserPassword }}
         - name: BB_ADMIN_USER_PASSWORD
-          value: { { .Values.globals.bbAdminUserPassword | quote } }
+          value: {{ .Values.globals.bbAdminUserPassword | quote }}
+        {{ end }}
+        {{ if .Values.globals.pluginsDir }}
+        - name: PLUGINS_DIR
+          value: {{ .Values.globals.pluginsDir | quote }}
+        {{ end }}
+        {{ if .Values.services.apps.nodeDebug }}
+        - name: NODE_DEBUG
+          value: {{ .Values.services.apps.nodeDebug | quote }}
+        {{ end }}
+        {{ if .Values.globals.elasticApmEnabled }}
+        - name: ELASTIC_APM_ENABLED
+          value: {{ .Values.globals.elasticApmEnabled | quote }}
+        {{ end }}
+        {{ if .Values.globals.elasticApmSecretToken }}
+        - name: ELASTIC_APM_SECRET_TOKEN
+          value: {{ .Values.globals.elasticApmSecretToken | quote }}
+        {{ end }}
+        {{ if .Values.globals.elasticApmServerUrl }}
+        - name: ELASTIC_APM_SERVER_URL
+          value: {{ .Values.globals.elasticApmServerUrl | quote }}
         {{ end }}
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
@@ -142,7 +168,10 @@ spec:
         name: bbapps
         ports:
         - containerPort: {{ .Values.services.apps.port }}
-        resources: {}
+        {{ with .Values.services.apps.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

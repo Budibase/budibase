@@ -1,26 +1,29 @@
 const { processEvent } = require("./utils")
-const { queue, shutdown } = require("./bullboard")
-const { TRIGGER_DEFINITIONS } = require("./triggers")
+const { automationQueue, shutdown } = require("./bullboard")
+const { TRIGGER_DEFINITIONS, rebootTrigger } = require("./triggers")
 const { ACTION_DEFINITIONS } = require("./actions")
 
 /**
  * This module is built purely to kick off the worker farm and manage the inputs/outputs
  */
-exports.init = function () {
+exports.init = async function () {
   // this promise will not complete
-  return queue.process(async job => {
+  const promise = automationQueue.process(async job => {
     await processEvent(job)
   })
+  // on init we need to trigger any reboot automations
+  await rebootTrigger()
+  return promise
 }
 
 exports.getQueues = () => {
-  return [queue]
+  return [automationQueue]
 }
 
 exports.shutdown = () => {
   return shutdown()
 }
 
-exports.queue = queue
+exports.automationQueue = automationQueue
 exports.TRIGGER_DEFINITIONS = TRIGGER_DEFINITIONS
 exports.ACTION_DEFINITIONS = ACTION_DEFINITIONS

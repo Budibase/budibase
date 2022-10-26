@@ -1,24 +1,32 @@
 export const email = "test@test.com"
+import { AdminUser, BuilderUser, User } from "@budibase/types"
+import { v4 as uuid } from "uuid"
 
-export const user = (userProps: any) => {
+export const newEmail = () => {
+  return `${uuid()}@test.com`
+}
+export const user = (userProps?: any): User => {
   return {
-    email: "test@test.com",
+    email: newEmail(),
     password: "test",
     roles: {},
     ...userProps,
   }
 }
 
-export const adminUser = (userProps: any) => {
+export const adminUser = (userProps?: any): AdminUser => {
   return {
     ...user(userProps),
     admin: {
       global: true,
     },
+    builder: {
+      global: true,
+    },
   }
 }
 
-export const builderUser = (userProps: any) => {
+export const builderUser = (userProps?: any): BuilderUser => {
   return {
     ...user(userProps),
     builder: {
