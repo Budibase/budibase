@@ -12,7 +12,7 @@
 
 <ModalContent
   onConfirm={() => confirm(name)}
-  title="Backup your current version"
+  title="Back up your current version"
   confirmText="Confirm Restore"
   disabled={!name}
 >

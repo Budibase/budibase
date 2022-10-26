@@ -515,8 +515,8 @@
     display: contents;
   }
   .component.pad :global(> *) {
-    padding: var(--spacing-l) !important;
-    gap: var(--spacing-l) !important;
+    padding: var(--spacing-m) !important;
+    gap: var(--spacing-m) !important;
     border: 2px dashed var(--spectrum-global-color-gray-400) !important;
     border-radius: 4px !important;
     transition: padding 260ms ease-out, border 260ms ease-out;
