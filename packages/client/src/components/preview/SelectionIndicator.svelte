@@ -1,5 +1,5 @@
 <script>
-  import { builderStore, dndIsDragging } from "stores"
+  import { builderStore } from "stores"
   import IndicatorSet from "./IndicatorSet.svelte"
 
   $: color = $builderStore.editMode
@@ -8,8 +8,9 @@
 </script>
 
 <IndicatorSet
-  componentId={$dndIsDragging ? null : $builderStore.selectedComponentId}
+  componentId={$builderStore.selectedComponentId}
   {color}
   zIndex="910"
   transition
+  allowResizeAnchors
 />

@@ -37,6 +37,8 @@ import {
 } from "./utilities/workerRequests"
 import { watch } from "./watch"
 import { initialise as initialiseWebsockets } from "./websocket"
+import sdk from "./sdk"
+import * as pro from "@budibase/pro"
 
 const app = new Koa()
 
@@ -102,6 +104,18 @@ server.on("close", async () => {
   }
 })
 
+const initPro = async () => {
+  await pro.init({
+    backups: {
+      processing: {
+        exportAppFn: sdk.backups.exportApp,
+        importAppFn: sdk.backups.importApp,
+        statsFn: sdk.backups.calculateBackupStats,
+      },
+    },
+  })
+}
+
 module.exports = server.listen(env.PORT || 0, async () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
   env._set("PORT", server.address().port)
@@ -165,8 +179,11 @@ module.exports = server.listen(env.PORT || 0, async () => {
   // check for version updates
   await installation.checkInstallVersion()
 
-  // done last - this will never complete
-  await automations.init()
+  // done last - these will never complete
+  let promises = []
+  promises.push(automations.init())
+  promises.push(initPro())
+  await Promise.all(promises)
 })
 
 const shutdown = () => {

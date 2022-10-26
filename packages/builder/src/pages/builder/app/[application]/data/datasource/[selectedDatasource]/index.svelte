@@ -23,7 +23,8 @@
 
   let importQueriesModal
 
-  let changed
+  let changed,
+    isValid = true
   let integration, baseDatasource, datasource
   let queryList
   const querySchema = {
@@ -101,12 +102,15 @@
       <Divider />
       <div class="config-header">
         <Heading size="S">Configuration</Heading>
-        <Button disabled={!changed} cta on:click={saveDatasource}>Save</Button>
+        <Button disabled={!changed || !isValid} cta on:click={saveDatasource}
+          >Save</Button
+        >
       </div>
       <IntegrationConfigForm
         on:change={hasChanged}
         schema={integration.datasource}
         bind:datasource
+        on:valid={e => (isValid = e.detail)}
       />
       {#if datasource.plus}
         <PlusConfigForm bind:datasource save={saveDatasource} />

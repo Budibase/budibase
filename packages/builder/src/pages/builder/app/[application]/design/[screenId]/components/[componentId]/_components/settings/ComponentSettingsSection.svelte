@@ -29,6 +29,10 @@
 
     // Filter out settings which shouldn't be rendered
     sections.forEach(section => {
+      section.visible = shouldDisplay(instance, section)
+      if (!section.visible) {
+        return
+      }
       section.settings.forEach(setting => {
         setting.visible = canRenderControl(instance, setting, isScreen)
       })
@@ -46,17 +50,7 @@
     }
   }
 
-  const canRenderControl = (instance, setting, isScreen) => {
-    // Prevent rendering on click setting for screens
-    if (setting?.type === "event" && isScreen) {
-      return false
-    }
-
-    const control = getComponentForSetting(setting)
-    if (!control) {
-      return false
-    }
-
+  const shouldDisplay = (instance, setting) => {
     // Parse dependant settings
     if (setting.dependsOn) {
       let dependantSetting = setting.dependsOn
@@ -92,6 +86,19 @@
     }
 
     return true
+  }
+
+  const canRenderControl = (instance, setting, isScreen) => {
+    // Prevent rendering on click setting for screens
+    if (setting?.type === "event" && isScreen) {
+      return false
+    }
+    const control = getComponentForSetting(setting)
+    if (!control) {
+      return false
+    }
+
+    return shouldDisplay(instance, setting)
   }
 </script>
 

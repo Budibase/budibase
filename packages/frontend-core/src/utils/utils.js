@@ -6,17 +6,29 @@
  */
 export const sequential = fn => {
   let queue = []
-  return async (...params) => {
-    queue.push(async () => {
-      await fn(...params)
-      queue.shift()
-      if (queue.length) {
-        await queue[0]()
+  return (...params) => {
+    return new Promise((resolve, reject) => {
+      queue.push(async () => {
+        let data, error
+        try {
+          data = await fn(...params)
+        } catch (err) {
+          error = err
+        }
+        queue.shift()
+        if (queue.length) {
+          queue[0]()
+        }
+        if (error) {
+          reject(error)
+        } else {
+          resolve(data)
+        }
+      })
+      if (queue.length === 1) {
+        queue[0]()
       }
     })
-    if (queue.length === 1) {
-      await queue[0]()
-    }
   }
 }
 

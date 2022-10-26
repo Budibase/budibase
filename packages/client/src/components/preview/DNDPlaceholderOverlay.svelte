@@ -6,7 +6,8 @@
   let left, top, height, width
 
   const updatePosition = () => {
-    const node = document.getElementById(DNDPlaceholderID)
+    const node =
+      document.getElementsByClassName(DNDPlaceholderID)[0]?.childNodes[0]
     if (!node) {
       height = 0
       width = 0

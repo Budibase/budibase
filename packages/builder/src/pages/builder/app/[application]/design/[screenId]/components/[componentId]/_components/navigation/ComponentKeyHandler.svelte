@@ -80,10 +80,9 @@
         event.preventDefault()
         event.stopPropagation()
       }
-      return handler(component)
+      return await handler(component)
     } catch (error) {
-      console.error(error)
-      notifications.error("Error handling key press")
+      notifications.error(error || "Error handling key press")
     }
   }
 
