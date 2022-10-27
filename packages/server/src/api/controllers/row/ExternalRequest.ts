@@ -283,7 +283,7 @@ module External {
         // one to many
         if (isOneSide(field)) {
           let id = row[key][0]
-          if (isNaN(id)) {
+          if (typeof row[key] === "string") {
             id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
           }
           newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
