@@ -37,6 +37,9 @@ export async function patch(ctx: any): Promise<any> {
         datasourceId: tableId,
       }
     )
+    if (!row) {
+      ctx.throw(404, "Row not found!")
+    }
     ctx.status = 200
     ctx.eventEmitter &&
       ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
