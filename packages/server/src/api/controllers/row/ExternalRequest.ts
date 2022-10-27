@@ -286,9 +286,7 @@ module External {
           if (isNaN(id)) {
             id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
           }
-          newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(
-            id
-          )[0]
+          newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
         }
         // many to many
         else if (field.through) {
