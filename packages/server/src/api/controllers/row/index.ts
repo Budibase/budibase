@@ -37,8 +37,7 @@ export async function patch(ctx: any): Promise<any> {
     }
   )
   ctx.status = 200
-  ctx.eventEmitter &&
-    ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
+  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
   ctx.message = `${table.name} updated successfully.`
   ctx.body = row
 }
