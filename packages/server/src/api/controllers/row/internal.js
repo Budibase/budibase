@@ -118,7 +118,7 @@ exports.patch = async ctx => {
   })
 
   if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
+    ctx.throw(400, { validation: validateResult.errors })
   }
 
   // returned row is cleaned and prepared for writing to DB
