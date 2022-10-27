@@ -1,6 +1,6 @@
 <script>
   export let wide = false
-  export let maxWidth = "80ch"
+  export let maxWidth = "1080px"
   export let noPadding = false
 </script>
 
@@ -16,8 +16,8 @@
     align-items: stretch;
     max-width: var(--max-width);
     margin: 0 auto;
-    padding: calc(var(--spacing-xl) * 2);
-    min-height: calc(100% - var(--spacing-xl) * 4);
+    flex: 1 1 auto;
+    padding-bottom: 50px;
   }
 
   .wide {

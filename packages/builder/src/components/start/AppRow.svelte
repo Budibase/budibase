@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Button, Icon } from "@budibase/bbui"
+  import { Heading, Body, Button, Icon } from "@budibase/bbui"
   import AppLockModal from "../common/AppLockModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
 
@@ -8,78 +8,106 @@
   export let appOverview
 </script>
 
-<div class="title" data-cy={`${app.devId}`}>
-  <div>
-    <div class="app-icon" style="color: {app.icon?.color || ''}">
-      <Icon size="XL" name={app.icon?.name || "Apps"} />
+<div class="app-row">
+  <div class="header">
+    <div class="title" data-cy={`${app.devId}`}>
+      <div class="app-icon" style="color: {app.icon?.color || ''}">
+        <Icon size="L" name={app.icon?.name || "Apps"} />
+      </div>
+      <div class="name" data-cy="app-name-link" on:click={() => editApp(app)}>
+        <Heading size="S">
+          {app.name}
+        </Heading>
+      </div>
     </div>
-    <div class="name" data-cy="app-name-link" on:click={() => editApp(app)}>
-      <Heading size="XS">
-        {app.name}
-      </Heading>
+
+    <div class="updated">
+      {#if app.updatedAt}
+        {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+          time: new Date().getTime() - new Date(app.updatedAt).getTime(),
+        })}
+      {:else}
+        Never updated
+      {/if}
     </div>
   </div>
-</div>
-<div class="desktop">
-  {#if app.updatedAt}
-    {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
-      time: new Date().getTime() - new Date(app.updatedAt).getTime(),
-    })}
-  {:else}
-    Never updated
-  {/if}
-</div>
-<div class="desktop">
-  <span><AppLockModal {app} buttonSize="M" /></span>
-</div>
-<div class="desktop">
-  <div class="app-status">
-    {#if app.deployed}
-      <Icon name="Globe" disabled={false} />
-      Published
-    {:else}
-      <Icon name="GlobeStrike" disabled={true} />
-      <span class="disabled"> Unpublished </span>
-    {/if}
+
+  <div class="title app-status" class:deployed={app.deployed}>
+    <Icon size="L" name={app.deployed ? "GlobeCheck" : "GlobeStrike"} />
+    <Body size="S">{`${window.origin}/app${app.url}`}</Body>
   </div>
-</div>
-<div data-cy={`row_actions_${app.appId}`}>
-  <div class="app-row-actions">
-    <Button size="S" secondary newStyles on:click={() => appOverview(app)}>
-      Manage
-    </Button>
-    <Button
-      size="S"
-      primary
-      newStyles
-      disabled={app.lockedOther}
-      on:click={() => editApp(app)}
-    >
-      Edit
-    </Button>
+
+  <div data-cy={`row_actions_${app.appId}`}>
+    <div class="app-row-actions">
+      <Button
+        size="S"
+        primary
+        newStyles
+        disabled={app.lockedOther}
+        on:click={() => editApp(app)}
+      >
+        Edit
+      </Button>
+      <Button size="S" secondary newStyles on:click={() => appOverview(app)}>
+        Manage
+      </Button>
+      <AppLockModal {app} buttonSize="M" />
+    </div>
   </div>
 </div>
 
 <style>
-  div.title,
-  div.title > div {
+  .app-row {
+    background: var(--background);
+    padding: 24px 32px;
+    border-radius: 8px;
     display: flex;
-    max-width: 100%;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-m);
   }
-  .app-row-actions {
-    grid-gap: var(--spacing-s);
+
+  .header {
     display: flex;
     flex-direction: row;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
   }
+
+  .updated {
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .title,
   .app-status {
-    display: grid;
-    grid-gap: var(--spacing-s);
-    grid-template-columns: 24px 100px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
   }
-  .app-status span.disabled {
-    opacity: 0.3;
+
+  .title :global(.spectrum-Heading),
+  .title :global(.spectrum-Icon),
+  .title :global(.spectrum-Body) {
+    color: var(--spectrum-global-color-gray-900);
   }
+
+  .app-status:not(.deployed) :global(.spectrum-Icon),
+  .app-status:not(.deployed) :global(.spectrum-Body) {
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .app-row-actions {
+    gap: var(--spacing-m);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: var(--spacing-m);
+  }
+
   .name {
     text-decoration: none;
     overflow: hidden;
@@ -88,7 +116,6 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    margin-left: calc(1.5 * var(--spacing-xl));
   }
   .title :global(h1:hover) {
     color: var(--spectrum-global-color-blue-600);

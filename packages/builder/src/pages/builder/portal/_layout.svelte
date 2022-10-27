@@ -246,9 +246,7 @@
       </div>
     </div>
     <div class="main">
-      <div class="content">
-        <slot />
-      </div>
+      <slot />
     </div>
   </div>
   <Modal bind:this={userInfoModal}>
@@ -333,10 +331,7 @@
     justify-content: center;
     align-items: stretch;
     overflow: auto;
-    padding: 50px;
-  }
-  .content {
-    max-width: 1080px;
+    padding: 50px 50px 0 50px;
   }
 
   @media (max-width: 640px) {
