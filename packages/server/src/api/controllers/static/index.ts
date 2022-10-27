@@ -111,7 +111,7 @@ export const serveApp = async function (ctx: any) {
 
   if (!env.isJest()) {
     const App = require("./templates/BudibaseApp.svelte").default
-    const plugins = pro.plugins.enrichPluginURLs(appInfo.usedPlugins)
+    const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
     const { head, html, css } = App.render({
       title: appInfo.name,
       production: env.isProd(),

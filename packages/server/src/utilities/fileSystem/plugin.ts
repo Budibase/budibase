@@ -1,10 +1,9 @@
+import { Plugin } from "@budibase/types"
+
 const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
-import { ObjectStoreBuckets } from "../../constants"
-const { checkSlashesInUrl } = require("../")
-const env = require("../../environment")
-const fetch = require("node-fetch")
+import { objectStore } from "@budibase/backend-core"
 
 const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 
@@ -35,15 +34,12 @@ export const getPluginMetadata = async (path: string) => {
   return { metadata, directory: path }
 }
 
-export const getDatasourcePlugin = async (
-  name: string,
-  url: string,
-  hash: string
-) => {
+export const getDatasourcePlugin = async (plugin: Plugin) => {
+  const hash = plugin.schema?.hash
   if (!fs.existsSync(DATASOURCE_PATH)) {
     fs.mkdirSync(DATASOURCE_PATH)
   }
-  const filename = join(DATASOURCE_PATH, name)
+  const filename = join(DATASOURCE_PATH, plugin.name)
   const metadataName = `${filename}.bbmetadata`
   if (fs.existsSync(filename)) {
     const currentHash = fs.readFileSync(metadataName, "utf8")
@@ -51,23 +47,19 @@ export const getDatasourcePlugin = async (
     if (currentHash === hash) {
       return require(filename)
     } else {
-      console.log(`Updating plugin: ${name}`)
+      console.log(`Updating plugin: ${plugin.name}`)
       delete require.cache[require.resolve(filename)]
       fs.unlinkSync(filename)
     }
   }
-  const fullUrl = checkSlashesInUrl(
-    `${env.MINIO_URL}/${ObjectStoreBuckets.PLUGINS}/${url}`
+  const pluginPath = objectStore.getPluginJSPath(plugin)
+  const pluginJs = await objectStore.retrieve(
+    objectStore.ObjectStoreBuckets.PLUGINS,
+    pluginPath
   )
-  const response = await fetch(fullUrl)
-  if (response.status === 200) {
-    const content = await response.text()
-    fs.writeFileSync(filename, content)
-    fs.writeFileSync(metadataName, hash)
-    return require(filename)
-  } else {
-    throw new Error(
-      `Unable to retrieve plugin - reason: ${await response.text()}`
-    )
-  }
+
+  fs.writeFileSync(filename, pluginJs)
+  fs.writeFileSync(metadataName, hash)
+
+  return require(filename)
 }

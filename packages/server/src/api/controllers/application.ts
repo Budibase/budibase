@@ -213,7 +213,7 @@ export const fetchAppPackage = async (ctx: any) => {
   let screens = await getScreens()
 
   // Enrich plugin URLs
-  application.usedPlugins = pro.plugins.enrichPluginURLs(
+  application.usedPlugins = objectStore.enrichPluginURLs(
     application.usedPlugins
   )
 
