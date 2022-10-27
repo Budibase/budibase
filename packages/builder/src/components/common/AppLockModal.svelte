@@ -8,6 +8,7 @@
     ProgressCircle,
     Layout,
     Body,
+    Icon,
   } from "@budibase/bbui"
   import { auth, apps } from "stores/portal"
   import { processStringSync } from "@budibase/string-templates"
@@ -58,19 +59,14 @@
 
 <div class="lock-status">
   {#if lockedBy}
-    <Button
-      quiet
-      secondary
-      icon="LockClosed"
+    <Icon
+      name="LockClosed"
+      hoverable
       size={buttonSize}
       on:click={() => {
         appLockModal.show()
       }}
-    >
-      <span class="lock-status-text">
-        {lockedByHeading}
-      </span>
-    </Button>
+    />
   {/if}
 </div>
 
