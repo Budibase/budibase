@@ -282,8 +282,12 @@ module External {
         const linkTablePrimary = linkTable.primary[0]
         // one to many
         if (isOneSide(field)) {
+          let id = row[key][0]
+          if (isNaN(id)) {
+            id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+          }
           newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(
-            row[key][0]
+            id
           )[0]
         }
         // many to many
