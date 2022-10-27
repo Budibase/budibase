@@ -16,7 +16,8 @@
     "children": [
       "container",
       "section",
-      "grid"
+      "grid",
+      "sidepanel"
     ]
   },
   {

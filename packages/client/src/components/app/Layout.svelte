@@ -16,6 +16,7 @@
     builderStore,
     currentRole,
     environmentStore,
+    sidePanelStore,
   } = sdk
   const component = getContext("component")
   const context = getContext("context")
@@ -150,113 +151,130 @@
   class:desktop={!mobile}
   class:mobile={!!mobile}
 >
-  {#if typeClass !== "none"}
-    <div
-      class="interactive component navigation"
-      data-id="navigation"
-      data-name="Navigation"
-      data-icon="Link"
-    >
+  <div class="layout-body">
+    {#if typeClass !== "none"}
       <div
-        class="nav-wrapper"
-        class:sticky
-        class:hidden={$routeStore.queryParams?.peek}
-        class:clickable={$builderStore.inBuilder}
-        on:click={$builderStore.inBuilder
-          ? builderStore.actions.clickNav
-          : null}
-        style={navStyle}
+        class="interactive component navigation"
+        data-id="navigation"
+        data-name="Navigation"
+        data-icon="Link"
       >
-        <div class="nav nav--{typeClass} size--{navWidthClass}">
-          <div class="nav-header">
+        <div
+          class="nav-wrapper"
+          class:sticky
+          class:hidden={$routeStore.queryParams?.peek}
+          class:clickable={$builderStore.inBuilder}
+          on:click={$builderStore.inBuilder
+            ? builderStore.actions.clickNav
+            : null}
+          style={navStyle}
+        >
+          <div class="nav nav--{typeClass} size--{navWidthClass}">
+            <div class="nav-header">
+              {#if validLinks?.length}
+                <div class="burger">
+                  <Icon
+                    hoverable
+                    name="ShowMenu"
+                    on:click={() => (mobileOpen = !mobileOpen)}
+                  />
+                </div>
+              {/if}
+              <div class="logo">
+                {#if !hideLogo}
+                  <img
+                    src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
+                    alt={title}
+                  />
+                {/if}
+                {#if !hideTitle && title}
+                  <Heading size="S">{title}</Heading>
+                {/if}
+              </div>
+              <div class="portal">
+                <Icon hoverable name="Apps" on:click={navigateToPortal} />
+              </div>
+            </div>
+            <div
+              class="mobile-click-handler"
+              class:visible={mobileOpen}
+              on:click={() => (mobileOpen = false)}
+            />
             {#if validLinks?.length}
-              <div class="burger">
-                <Icon
-                  hoverable
-                  name="ShowMenu"
-                  on:click={() => (mobileOpen = !mobileOpen)}
-                />
+              <div class="links" class:visible={mobileOpen}>
+                {#each validLinks as { text, url }}
+                  {#if isInternal(url)}
+                    <a
+                      class={FieldTypes.LINK}
+                      href={url}
+                      use:linkable
+                      on:click={close}
+                      use:active={url}
+                    >
+                      {text}
+                    </a>
+                  {:else}
+                    <a
+                      class={FieldTypes.LINK}
+                      href={ensureExternal(url)}
+                      on:click={close}
+                    >
+                      {text}
+                    </a>
+                  {/if}
+                {/each}
+                <div class="close">
+                  <Icon
+                    hoverable
+                    name="Close"
+                    on:click={() => (mobileOpen = false)}
+                  />
+                </div>
               </div>
             {/if}
-            <div class="logo">
-              {#if !hideLogo}
-                <img
-                  src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
-                  alt={title}
-                />
-              {/if}
-              {#if !hideTitle && title}
-                <Heading size="S">{title}</Heading>
-              {/if}
-            </div>
-            <div class="portal">
-              <Icon hoverable name="Apps" on:click={navigateToPortal} />
-            </div>
           </div>
-          <div
-            class="mobile-click-handler"
-            class:visible={mobileOpen}
-            on:click={() => (mobileOpen = false)}
-          />
-          {#if validLinks?.length}
-            <div class="links" class:visible={mobileOpen}>
-              {#each validLinks as { text, url }}
-                {#if isInternal(url)}
-                  <a
-                    class={FieldTypes.LINK}
-                    href={url}
-                    use:linkable
-                    on:click={close}
-                    use:active={url}
-                  >
-                    {text}
-                  </a>
-                {:else}
-                  <a
-                    class={FieldTypes.LINK}
-                    href={ensureExternal(url)}
-                    on:click={close}
-                  >
-                    {text}
-                  </a>
-                {/if}
-              {/each}
-              <div class="close">
-                <Icon
-                  hoverable
-                  name="Close"
-                  on:click={() => (mobileOpen = false)}
-                />
-              </div>
-            </div>
-          {/if}
         </div>
       </div>
+    {/if}
+
+    {#if !$builderStore.inBuilder && licensing.logoEnabled() && $environmentStore.cloud}
+      <FreeLogo />
+    {/if}
+
+    <div class="main-wrapper">
+      <div class="main size--{pageWidthClass}">
+        <slot />
+      </div>
     </div>
-  {/if}
-
-  {#if !$builderStore.inBuilder && licensing.logoEnabled() && $environmentStore.cloud}
-    <FreeLogo />
-  {/if}
-
-  <div class="main-wrapper">
-    <div class="main size--{pageWidthClass}">
-      <slot />
+  </div>
+  <div id="side-panel-container" class:open={$sidePanelStore.open}>
+    <div class="side-panel-header">
+      <Icon name="Close" hoverable on:click={sidePanelStore.actions.close} />
     </div>
   </div>
 </div>
 
 <style>
   /*  Main components */
+  .layout {
+    height: 100%;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    z-index: 1;
+    border-top: 1px solid var(--spectrum-global-color-gray-300);
+    overflow: hidden;
+  }
   .component {
     display: contents;
   }
-  .layout {
+  .layout-body {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    height: 100%;
     flex: 1 1 auto;
     overflow: auto;
     overflow-x: hidden;
@@ -316,6 +334,28 @@
     align-items: center;
     gap: var(--spacing-xl);
   }
+
+  #side-panel-container {
+    flex: 0 0 360px;
+    background: var(--background);
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    transition: margin-right 130ms ease-out;
+    z-index: 3;
+    padding: var(--spacing-xl);
+    margin-right: -370px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+  #side-panel-container.open {
+    margin-right: 0;
+  }
+  .side-panel-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
   .main-wrapper {
     display: flex;
     flex-direction: row;

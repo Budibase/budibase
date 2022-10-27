@@ -35,10 +35,10 @@ export { default as tag } from "./Tag.svelte"
 export { default as markdownviewer } from "./MarkdownViewer.svelte"
 export { default as embeddedmap } from "./embedded-map/EmbeddedMap.svelte"
 export { default as grid } from "./Grid.svelte"
+export { default as sidepanel } from "./SidePanel.svelte"
 export * from "./charts"
 export * from "./forms"
 export * from "./table"
-
 export * from "./blocks"
 export * from "./dynamic-filter"
 
