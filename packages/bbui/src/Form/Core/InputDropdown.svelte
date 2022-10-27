@@ -102,6 +102,13 @@
     }
     return value
   }
+
+  const handleOutsideClick = event => {
+    if (open) {
+      event.stopPropagation()
+      open = false
+    }
+  }
 </script>
 
 <div
@@ -151,7 +158,7 @@
       {disabled}
       class:is-open={open}
       aria-haspopup="listbox"
-      on:mousedown={onClick}
+      on:click={onClick}
     >
       <span class="spectrum-Picker-label">
         <div>
@@ -168,7 +175,7 @@
     </button>
     {#if open}
       <div
-        use:clickOutside={() => (open = false)}
+        use:clickOutside={handleOutsideClick}
         transition:fly|local={{ y: -20, duration: 200 }}
         class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
       >
