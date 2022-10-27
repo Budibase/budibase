@@ -3,16 +3,14 @@
   import {
     Icon,
     Avatar,
-    Layout,
-    SideNavigation as Navigation,
-    SideNavigationItem as Item,
     ActionMenu,
     MenuItem,
     Modal,
-    clickOutside,
     notifications,
+    Tabs,
+    Tab,
+    Button,
   } from "@budibase/bbui"
-  import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   import { organisation, auth, admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
@@ -26,6 +24,7 @@
   let changePasswordModal
   let apiKeyModal
   let mobileMenuVisible = false
+  let activeTab = "Apps"
 
   $: menu = buildMenu($auth.isAdmin)
 
@@ -122,12 +121,6 @@
             badge: "New",
           },
         ])
-      } else if (!$adminStore.cloud && admin) {
-        menu = menu.concat({
-          title: "Upgrade",
-          href: "/builder/portal/settings/upgrade",
-          badge: "New",
-        })
       }
 
       // show the billing page to licensed account holders in cloud
@@ -173,42 +166,28 @@
         loaded = true
       }
     }
+
+    // Find selected tab
+    for (let entry of menu) {
+      if ($isActive(entry.href)) {
+        activeTab = entry.title
+        break
+      }
+    }
   })
 </script>
 
 {#if $auth.user && loaded}
   <div class="container">
-    <div
-      class="nav"
-      class:visible={mobileMenuVisible}
-      use:clickOutside={hideMobileMenu}
-    >
-      <Layout paddingX="L" paddingY="L">
-        <div class="branding">
-          <div class="name" on:click={() => $goto("./apps")}>
-            <img src={$organisation?.logoUrl || Logo} alt="Logotype" />
-            <span>{$organisation?.company || "Budibase"}</span>
-          </div>
-          <div class="onboarding">
-            <ConfigChecklist />
-          </div>
-        </div>
-        <div class="menu">
-          <Navigation>
-            {#each menu as { title, href, heading, badge }}
-              <Item
-                on:click={hideMobileMenu}
-                selected={$isActive(href)}
-                {href}
-                {badge}
-                {heading}>{title}</Item
-              >
-            {/each}
-          </Navigation>
-        </div>
-      </Layout>
-    </div>
-    <div class="main">
+    <div class="nav">
+      <div class="branding" on:click={() => $goto("./apps")}>
+        <img src={Logo} alt="Logotype" />
+      </div>
+      <Tabs selected={activeTab}>
+        {#each menu as { title, href }}
+          <Tab {title} on:click={() => $goto(href)} />
+        {/each}
+      </Tabs>
       <div class="toolbar">
         <div class="mobile-toggle">
           <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
@@ -219,11 +198,20 @@
             alt={$organisation?.company || "Budibase"}
           />
         </div>
+        {#if !$adminStore.cloud && $auth.isAdmin}
+          <Button
+            size="S"
+            cta
+            on:click={() => $goto("/builder/portal/settings/upgrade")}
+          >
+            Upgrade
+          </Button>
+        {/if}
         <div class="user-dropdown">
           <ActionMenu align="right" dataCy="user-menu">
             <div slot="control" class="avatar">
               <Avatar
-                size="M"
+                size="L"
                 initials={$auth.initials}
                 url={$auth.user.pictureUrl}
               />
@@ -256,6 +244,8 @@
           </ActionMenu>
         </div>
       </div>
+    </div>
+    <div class="main">
       <div class="content">
         <slot />
       </div>
@@ -276,79 +266,77 @@
   .container {
     height: 100%;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
   }
   .nav {
     background: var(--background);
-    border-right: var(--border-light);
-    overflow: auto;
-    flex: 0 0 auto;
-    width: 250px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    border-bottom: var(--border-light);
+    padding: 0 20px;
+    gap: 24px;
   }
-  .main {
-    flex: 1 1 auto;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    overflow: hidden;
+  .nav :global(.spectrum-Tabs) {
+    margin-bottom: -2px;
+    padding: 7px 0;
+  }
+  .nav :global(.spectrum-Tabs-itemLabel) {
+    color: #d0d0d0;
+  }
+  .nav :global(.spectrum-Tabs-item.is-selected .spectrum-Tabs-itemLabel) {
+    color: #ffffff;
   }
   .branding {
     display: grid;
-    grid-gap: var(--spacing-s);
-    grid-template-columns: auto auto;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .name {
-    display: grid;
-    grid-template-columns: auto auto;
-    grid-gap: var(--spacing-m);
-    align-items: center;
-  }
-  .name:hover {
-    cursor: pointer;
+    place-items: center;
   }
   .avatar {
     display: grid;
     grid-template-columns: auto auto;
     place-items: center;
-    grid-gap: var(--spacing-xs);
+    grid-gap: var(--spacing-s);
   }
   .avatar:hover {
     cursor: pointer;
     filter: brightness(110%);
   }
   .toolbar {
-    background: var(--background);
-    border-bottom: var(--border-light);
+    flex: 1 1 auto;
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
+    gap: 24px;
   }
   .mobile-toggle,
   .mobile-logo {
     display: none;
   }
   .user-dropdown {
-    flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
   }
   img {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
   }
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 600;
+
+  .main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    overflow: auto;
+    padding: 50px;
   }
   .content {
-    overflow: auto;
+    max-width: 1080px;
   }
 
   @media (max-width: 640px) {
