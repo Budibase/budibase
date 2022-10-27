@@ -30,21 +30,17 @@ export async function patch(ctx: any): Promise<any> {
   if (body && !body._id) {
     return save(ctx)
   }
-  try {
-    const { row, table } = await quotas.addQuery(
-      () => pickApi(tableId).patch(ctx),
-      {
-        datasourceId: tableId,
-      }
-    )
-    ctx.status = 200
-    ctx.eventEmitter &&
-      ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
-    ctx.message = `${table.name} updated successfully.`
-    ctx.body = row
-  } catch (err) {
-    ctx.throw(400, err)
-  }
+  const { row, table } = await quotas.addQuery(
+    () => pickApi(tableId).patch(ctx),
+    {
+      datasourceId: tableId,
+    }
+  )
+  ctx.status = 200
+  ctx.eventEmitter &&
+    ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
+  ctx.message = `${table.name} updated successfully.`
+  ctx.body = row
 }
 
 export const save = async (ctx: any) => {
@@ -55,52 +51,35 @@ export const save = async (ctx: any) => {
   if (body && body._id) {
     return patch(ctx)
   }
-  try {
-    const { row, table } = await quotas.addRow(() =>
-      quotas.addQuery(() => pickApi(tableId).save(ctx), {
-        datasourceId: tableId,
-      })
-    )
-    ctx.status = 200
-    ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
-    ctx.message = `${table.name} saved successfully`
-    ctx.body = row
-  } catch (err) {
-    ctx.throw(400, err)
-  }
-}
-
-export async function fetchView(ctx: any) {
-  const tableId = getTableId(ctx)
-  try {
-    ctx.body = await quotas.addQuery(() => pickApi(tableId).fetchView(ctx), {
+  const { row, table } = await quotas.addRow(() =>
+    quotas.addQuery(() => pickApi(tableId).save(ctx), {
       datasourceId: tableId,
     })
-  } catch (err) {
-    ctx.throw(400, err)
-  }
+  )
+  ctx.status = 200
+  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
+  ctx.message = `${table.name} saved successfully`
+  ctx.body = row
+}
+export async function fetchView(ctx: any) {
+  const tableId = getTableId(ctx)
+  ctx.body = await quotas.addQuery(() => pickApi(tableId).fetchView(ctx), {
+    datasourceId: tableId,
+  })
 }
 
 export async function fetch(ctx: any) {
   const tableId = getTableId(ctx)
-  try {
-    ctx.body = await quotas.addQuery(() => pickApi(tableId).fetch(ctx), {
-      datasourceId: tableId,
-    })
-  } catch (err) {
-    ctx.throw(400, err)
-  }
+  ctx.body = await quotas.addQuery(() => pickApi(tableId).fetch(ctx), {
+    datasourceId: tableId,
+  })
 }
 
 export async function find(ctx: any) {
   const tableId = getTableId(ctx)
-  try {
-    ctx.body = await quotas.addQuery(() => pickApi(tableId).find(ctx), {
-      datasourceId: tableId,
-    })
-  } catch (err) {
-    ctx.throw(400, err)
-  }
+  ctx.body = await quotas.addQuery(() => pickApi(tableId).find(ctx), {
+    datasourceId: tableId,
+  })
 }
 
 export async function destroy(ctx: any) {
@@ -137,46 +116,30 @@ export async function destroy(ctx: any) {
 
 export async function search(ctx: any) {
   const tableId = getTableId(ctx)
-  try {
-    ctx.status = 200
-    ctx.body = await quotas.addQuery(() => pickApi(tableId).search(ctx), {
-      datasourceId: tableId,
-    })
-  } catch (err) {
-    ctx.throw(400, err)
-  }
+  ctx.status = 200
+  ctx.body = await quotas.addQuery(() => pickApi(tableId).search(ctx), {
+    datasourceId: tableId,
+  })
 }
 
 export async function validate(ctx: any) {
   const tableId = getTableId(ctx)
-  try {
-    ctx.body = await pickApi(tableId).validate(ctx)
-  } catch (err) {
-    ctx.throw(400, err)
-  }
+  ctx.body = await pickApi(tableId).validate(ctx)
 }
 
 export async function fetchEnrichedRow(ctx: any) {
   const tableId = getTableId(ctx)
-  try {
-    ctx.body = await quotas.addQuery(
-      () => pickApi(tableId).fetchEnrichedRow(ctx),
-      {
-        datasourceId: tableId,
-      }
-    )
-  } catch (err) {
-    ctx.throw(400, err)
-  }
+  ctx.body = await quotas.addQuery(
+    () => pickApi(tableId).fetchEnrichedRow(ctx),
+    {
+      datasourceId: tableId,
+    }
+  )
 }
 
 export const exportRows = async (ctx: any) => {
   const tableId = getTableId(ctx)
-  try {
-    ctx.body = await quotas.addQuery(() => pickApi(tableId).exportRows(ctx), {
-      datasourceId: tableId,
-    })
-  } catch (err) {
-    ctx.throw(400, err)
-  }
+  ctx.body = await quotas.addQuery(() => pickApi(tableId).exportRows(ctx), {
+    datasourceId: tableId,
+  })
 }
