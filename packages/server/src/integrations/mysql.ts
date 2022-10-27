@@ -64,7 +64,6 @@ const SCHEMA: Integration = {
     database: {
       type: DatasourceFieldType.STRING,
       required: true,
-      default: "db",
     },
     ssl: {
       type: DatasourceFieldType.OBJECT,
