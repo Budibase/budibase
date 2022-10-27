@@ -105,16 +105,14 @@ class ElasticSearchIntegration implements IntegrationBase {
       ssl: this.config.ssl 
         ? {
           rejectUnauthorized: this.config.rejectUnauthorized,
-          ca: this.config.ca ? this.config.ca : undefined
+          ca: this.config.ca || undefined,
         }
         : undefined,
     }
 
-    if (newConfig.ssl && !newConfig.ssl.ca)
-    {
+    if (newConfig.ssl && !newConfig.ssl.ca) {
       delete newConfig.ssl.ca
-    } else if(!newConfig.ssl)
-    {
+    } else if(!newConfig.ssl) {
       delete newConfig.ssl
     }
     this.client = new Client(newConfig)
