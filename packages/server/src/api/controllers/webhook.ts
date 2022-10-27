@@ -1,66 +1,51 @@
-const { generateWebhookID, getWebhookParams } = require("../../db/utils")
+import { getWebhookParams } from "../../db/utils"
+import triggers from "../../automations/triggers"
+import { db as dbCore, context } from "@budibase/backend-core"
+import {
+  Webhook,
+  WebhookActionType,
+  BBContext,
+  Automation,
+} from "@budibase/types"
+import sdk from "../../sdk"
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
-const { WebhookType } = require("../../constants")
-const triggers = require("../../automations/triggers")
-const { getProdAppID } = require("@budibase/backend-core/db")
-const { getAppDB, updateAppId } = require("@budibase/backend-core/context")
 
 const AUTOMATION_DESCRIPTION = "Generated from Webhook Schema"
 
-function Webhook(name, type, target) {
-  this.live = true
-  this.name = name
-  this.action = {
-    type,
-    target,
-  }
-}
-
-exports.Webhook = Webhook
-
-exports.fetch = async ctx => {
-  const db = getAppDB()
+export async function fetch(ctx: BBContext) {
+  const db = context.getAppDB()
   const response = await db.allDocs(
     getWebhookParams(null, {
       include_docs: true,
     })
   )
-  ctx.body = response.rows.map(row => row.doc)
+  ctx.body = response.rows.map((row: any) => row.doc)
 }
 
-exports.save = async ctx => {
-  const db = getAppDB()
-  const webhook = ctx.request.body
-  webhook.appId = ctx.appId
-
-  // check that the webhook exists
-  if (webhook._id) {
-    await db.get(webhook._id)
-  } else {
-    webhook._id = generateWebhookID()
-  }
-  const response = await db.put(webhook)
-  webhook._rev = response.rev
+export async function save(ctx: BBContext) {
+  const webhook = await sdk.automations.webhook.save(ctx.request.body)
   ctx.body = {
     message: "Webhook created successfully",
     webhook,
   }
 }
 
-exports.destroy = async ctx => {
-  const db = getAppDB()
-  ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
+export async function destroy(ctx: BBContext) {
+  ctx.body = await sdk.automations.webhook.destroy(
+    ctx.params.id,
+    ctx.params.rev
+  )
 }
 
-exports.buildSchema = async ctx => {
-  await updateAppId(ctx.params.instance)
-  const db = getAppDB()
-  const webhook = await db.get(ctx.params.id)
+export async function buildSchema(ctx: BBContext) {
+  await context.updateAppId(ctx.params.instance)
+  const db = context.getAppDB()
+  const webhook = (await db.get(ctx.params.id)) as Webhook
   webhook.bodySchema = toJsonSchema(ctx.request.body)
   // update the automation outputs
-  if (webhook.action.type === WebhookType.AUTOMATION) {
-    let automation = await db.get(webhook.action.target)
+  if (webhook.action.type === WebhookActionType.AUTOMATION) {
+    let automation = (await db.get(webhook.action.target)) as Automation
     const autoOutputs = automation.definition.trigger.schema.outputs
     let properties = webhook.bodySchema.properties
     // reset webhook outputs
@@ -78,18 +63,18 @@ exports.buildSchema = async ctx => {
   ctx.body = await db.put(webhook)
 }
 
-exports.trigger = async ctx => {
-  const prodAppId = getProdAppID(ctx.params.instance)
-  await updateAppId(prodAppId)
+export async function trigger(ctx: BBContext) {
+  const prodAppId = dbCore.getProdAppID(ctx.params.instance)
+  await context.updateAppId(prodAppId)
   try {
-    const db = getAppDB()
-    const webhook = await db.get(ctx.params.id)
+    const db = context.getAppDB()
+    const webhook = (await db.get(ctx.params.id)) as Webhook
     // validate against the schema
     if (webhook.bodySchema) {
       validate(ctx.request.body, webhook.bodySchema)
     }
     const target = await db.get(webhook.action.target)
-    if (webhook.action.type === WebhookType.AUTOMATION) {
+    if (webhook.action.type === WebhookActionType.AUTOMATION) {
       // trigger with both the pure request and then expand it
       // incase the user has produced a schema to bind to
       await triggers.externalTrigger(target, {
@@ -102,7 +87,7 @@ exports.trigger = async ctx => {
     ctx.body = {
       message: "Webhook trigger fired successfully",
     }
-  } catch (err) {
+  } catch (err: any) {
     if (err.status === 404) {
       ctx.status = 200
       ctx.body = {

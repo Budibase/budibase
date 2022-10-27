@@ -1,10 +1,10 @@
 const { joiValidator } = require("@budibase/backend-core/auth")
 const { DataSourceOperation } = require("../../../constants")
-const { WebhookType } = require("../../../constants")
 const {
   BUILTIN_PERMISSION_IDS,
   PermissionLevels,
 } = require("@budibase/backend-core/permissions")
+const { WebhookActionType } = require("@budibase/types")
 const Joi = require("joi")
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
@@ -126,7 +126,7 @@ exports.webhookValidator = () => {
     name: Joi.string().required(),
     bodySchema: Joi.object().optional(),
     action: Joi.object({
-      type: Joi.string().required().valid(WebhookType.AUTOMATION),
+      type: Joi.string().required().valid(WebhookActionType.AUTOMATION),
       target: Joi.string().required(),
     }).required(),
   }).unknown(true))
