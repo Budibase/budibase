@@ -10,6 +10,7 @@ import {
   componentStore,
   currentRole,
   environmentStore,
+  sidePanelStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -30,6 +31,7 @@ export default {
   uploadStore,
   componentStore,
   environmentStore,
+  sidePanelStore,
   currentRole,
   styleable,
   linkable,

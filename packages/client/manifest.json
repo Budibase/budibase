@@ -5225,5 +5225,13 @@
         "suffix": "repeater"
       }
     ]
+  },
+  "sidepanel": {
+    "name": "Side Panel",
+    "icon": "AdDisplay",
+    "hasChildren": true,
+    "illegalChildren": ["section"],
+    "showEmptyState": false,
+    "static": true
   }
 }
