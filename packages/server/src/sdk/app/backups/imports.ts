@@ -1,20 +1,25 @@
 import { db as dbCore } from "@budibase/backend-core"
-import { TABLE_ROW_PREFIX } from "../../../db/utils"
+import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import {
-  uploadDirectory,
   upload,
+  uploadDirectory,
 } from "../../../utilities/fileSystem/utilities"
 import { downloadTemplate } from "../../../utilities/fileSystem"
-import { ObjectStoreBuckets, FieldTypes } from "../../../constants"
+import { FieldTypes, ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
-import { CouchFindOptions, RowAttachment } from "@budibase/types"
+import {
+  Automation,
+  AutomationTriggerStepId,
+  CouchFindOptions,
+  RowAttachment,
+} from "@budibase/types"
+import PouchDB from "pouchdb"
 const uuid = require("uuid/v4")
 const tar = require("tar")
-import PouchDB from "pouchdb"
 
 type TemplateType = {
   file?: {
@@ -81,12 +86,43 @@ async function updateAttachmentColumns(
   }
 }
 
+async function updateAutomations(prodAppId: string, db: PouchDB.Database) {
+  const automations = (
+    await db.allDocs(
+      getAutomationParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc) as Automation[]
+  const devAppId = dbCore.getDevAppID(prodAppId)
+  let toSave: Automation[] = []
+  for (let automation of automations) {
+    const oldDevAppId = automation.appId,
+      oldProdAppId = dbCore.getProdAppID(automation.appId)
+    if (
+      automation.definition.trigger.stepId === AutomationTriggerStepId.WEBHOOK
+    ) {
+      const old = automation.definition.trigger.inputs
+      automation.definition.trigger.inputs = {
+        schemaUrl: old.schemaUrl.replace(oldDevAppId, devAppId),
+        triggerUrl: old.triggerUrl.replace(oldProdAppId, prodAppId),
+      }
+    }
+    automation.appId = devAppId
+    toSave.push(automation)
+  }
+  await db.bulkDocs(toSave)
+}
+
 /**
  * This function manages temporary template files which are stored by Koa.
  * @param {Object} template The template object retrieved from the Koa context object.
  * @returns {Object} Returns a fs read stream which can be loaded into the database.
  */
 async function getTemplateStream(template: TemplateType) {
+  if (template.file && template.file.type !== "text/plain") {
+    throw new Error("Cannot import a non-text based file.")
+  }
   if (template.file) {
     return fs.createReadStream(template.file.path)
   } else if (template.key) {
@@ -123,7 +159,7 @@ export async function importApp(
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
-  const isTar = template.file && template.file.type === "application/gzip"
+  const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
     template.file && fs.lstatSync(template.file.path).isDirectory()
   if (template.file && (isTar || isDirectory)) {
@@ -165,5 +201,6 @@ export async function importApp(
     throw "Error loading database dump from template."
   }
   await updateAttachmentColumns(prodAppId, db)
+  await updateAutomations(prodAppId, db)
   return ok
 }

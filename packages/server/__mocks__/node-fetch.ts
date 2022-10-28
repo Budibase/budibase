@@ -30,11 +30,21 @@ module FetchMock {
     }
 
     if (url.includes("/api/global")) {
-      return json({
+      const user = {
         email: "test@test.com",
         _id: "us_test@test.com",
         status: "active",
-      })
+        roles: {},
+        builder: {
+          global: false,
+        },
+        admin: {
+          global: false,
+        },
+      }
+      return url.endsWith("/users") && opts.method === "GET"
+        ? json([user])
+        : json(user)
     }
     // mocked data based on url
     else if (url.includes("api/apps")) {

@@ -26,6 +26,7 @@ const context = require("@budibase/backend-core/context")
 const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
 const { encrypt } = require("@budibase/backend-core/encryption")
 const { DocumentType, generateUserMetadataID } = require("../../db/utils")
+const { startup } = require("../../startup")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -41,6 +42,9 @@ class TestConfiguration {
       this.server = require("../../app")
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
+      this.started = true
+    } else {
+      this.started = false
     }
     this.appId = null
     this.allApps = []
@@ -95,6 +99,9 @@ class TestConfiguration {
 
   // use a new id as the name to avoid name collisions
   async init(appName = newid()) {
+    if (!this.started) {
+      await startup()
+    }
     this.user = await this.globalUser()
     this.globalUserId = this.user._id
     this.userMetadataId = generateUserMetadataID(this.globalUserId)

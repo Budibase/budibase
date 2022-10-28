@@ -23,6 +23,14 @@ exports.downloadFile = async (url, filePath) => {
   })
 }
 
+exports.httpCall = async (url, method) => {
+  const response = await axios({
+    url,
+    method,
+  })
+  return response.data
+}
+
 exports.getHelpDescription = string => {
   return chalk.cyan(string)
 }
