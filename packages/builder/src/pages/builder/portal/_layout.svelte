@@ -40,16 +40,8 @@
       menu = menu.concat([
         {
           title: "Users",
-          href: "/builder/portal/manage/users",
-          heading: "Manage",
+          href: "/builder/portal/users/users",
         },
-        isEnabled(TENANT_FEATURE_FLAGS.USER_GROUPS)
-          ? {
-              title: "User Groups",
-              href: "/builder/portal/manage/groups",
-              badge: "New",
-            }
-          : undefined,
         { title: "Auth", href: "/builder/portal/manage/auth" },
         { title: "Email", href: "/builder/portal/manage/email" },
         {

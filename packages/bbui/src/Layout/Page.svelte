@@ -1,10 +1,10 @@
 <script>
   export let wide = false
-  export let maxWidth = "1080px"
+  export let narrow = false
   export let noPadding = false
 </script>
 
-<div style="--max-width: {maxWidth}" class:wide class:noPadding>
+<div class:wide class:noPadding class:narrow>
   <slot />
 </div>
 
@@ -14,7 +14,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    max-width: var(--max-width);
+    max-width: 1080px;
     margin: 0 auto;
     flex: 1 1 auto;
     padding-bottom: 50px;
@@ -22,11 +22,10 @@
 
   .wide {
     max-width: none;
-    margin: 0;
   }
 
-  .noPadding {
-    padding: 0px;
-    margin: 0px;
+  .narrow {
+    max-width: 800px;
+    margin: 0;
   }
 </style>

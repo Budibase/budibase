@@ -40,7 +40,7 @@
   ]
 
   $: schema = {
-    name: {},
+    name: { displayName: "Group" },
     users: { sortable: false },
     roles: { sortable: false, displayName: "Apps" },
   }
@@ -91,7 +91,7 @@
 <Layout noPadding gap="M">
   <Layout gap="XS" noPadding>
     <div class="title">
-      <Heading size="M">User groups</Heading>
+      <Heading size="M">Groups</Heading>
       {#if !$licensing.groupsEnabled}
         <Tags>
           <Tag icon="LockClosed">Pro plan</Tag>
@@ -99,7 +99,7 @@
       {/if}
     </div>
     <Body>
-      Easily assign and manage your users' access with user groups.
+      Easily assign and manage your users' access with groups.
       {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
         Contact your account holder to upgrade your plan.
       {/if}
@@ -110,14 +110,7 @@
     <ButtonGroup>
       {#if $licensing.groupsEnabled}
         <!--Show the group create button-->
-        <Button
-          newStyles
-          icon={"UserGroup"}
-          cta
-          on:click={showCreateGroupModal}
-        >
-          Create user group
-        </Button>
+        <Button newStyles cta on:click={showCreateGroupModal}>Add group</Button>
       {:else}
         <Button
           newStyles
