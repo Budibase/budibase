@@ -218,20 +218,11 @@
     <Divider />
     <div class="controls">
       <ButtonGroup>
-        <Button
-          dataCy="add-user"
-          on:click={createUserModal.show}
-          icon="UserAdd"
-          cta
-          >Add users
+        <Button dataCy="add-user" on:click={createUserModal.show} cta>
+          Add users
         </Button>
-        <Button
-          on:click={importUsersModal.show}
-          icon="Import"
-          secondary
-          newStyles
-        >
-          Import users
+        <Button on:click={importUsersModal.show} secondary newStyles>
+          Import
         </Button>
       </ButtonGroup>
       <div class="controls-right">

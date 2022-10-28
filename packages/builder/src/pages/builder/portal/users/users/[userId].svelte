@@ -1,7 +1,6 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto, url } from "@roxi/routify"
   import {
-    ActionButton,
     ActionMenu,
     Avatar,
     Button,
@@ -18,7 +17,6 @@
     Select,
     Modal,
     notifications,
-    Divider,
     Banner,
     StatusLight,
   } from "@budibase/bbui"
@@ -30,6 +28,7 @@
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"
   import GroupIcon from "../groups/_components/GroupIcon.svelte"
   import { Constants, RoleUtils } from "@budibase/frontend-core"
+  import { Breadcrumbs, Breadcrumb } from "components/portal/page"
 
   export let userId
 
@@ -191,85 +190,76 @@
 
 {#if loaded}
   <Layout gap="XL" noPadding>
-    <div>
-      <ActionButton on:click={() => $goto("./")} icon="ArrowLeft">
-        Back
-      </ActionButton>
-    </div>
+    <Breadcrumbs>
+      <Breadcrumb url={$url("./")} text="Users" />
+      <Breadcrumb text={user?.email} />
+    </Breadcrumbs>
 
-    <Layout noPadding gap="M">
-      <div class="title">
-        <div>
-          <div style="display: flex;">
-            <Avatar size="XXL" {initials} />
-            <div class="subtitle">
-              <Heading size="S">{nameLabel}</Heading>
-              {#if nameLabel !== user?.email}
-                <Body size="S">{user?.email}</Body>
-              {/if}
-            </div>
+    <div class="title">
+      <div>
+        <div style="display: flex;">
+          <Avatar size="XXL" {initials} />
+          <div class="subtitle">
+            <Heading size="M">{nameLabel}</Heading>
+            {#if nameLabel !== user?.email}
+              <Body size="S">{user?.email}</Body>
+            {/if}
           </div>
         </div>
-        {#if userId !== $auth.user?._id}
-          <div>
-            <ActionMenu align="right">
-              <span slot="control">
-                <Icon hoverable name="More" />
-              </span>
-              <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
-                Force password reset
-              </MenuItem>
-              <MenuItem on:click={deleteModal.show} icon="Delete">
-                Delete
-              </MenuItem>
-            </ActionMenu>
+      </div>
+      {#if userId !== $auth.user?._id}
+        <div>
+          <ActionMenu align="right">
+            <span slot="control">
+              <Icon hoverable name="More" />
+            </span>
+            <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
+              Force password reset
+            </MenuItem>
+            <MenuItem on:click={deleteModal.show} icon="Delete">
+              Delete
+            </MenuItem>
+          </ActionMenu>
+        </div>
+      {/if}
+    </div>
+    <Layout noPadding gap="S">
+      <Heading size="S">Details</Heading>
+      <div class="fields">
+        <div class="field">
+          <Label size="L">Email</Label>
+          <Input disabled value={user?.email} />
+        </div>
+        <div class="field">
+          <Label size="L">First name</Label>
+          <Input value={user?.firstName} on:blur={updateUserFirstName} />
+        </div>
+        <div class="field">
+          <Label size="L">Last name</Label>
+          <Input value={user?.lastName} on:blur={updateUserLastName} />
+        </div>
+        <!-- don't let a user remove the privileges that let them be here -->
+        {#if userId !== $auth.user._id}
+          <div class="field">
+            <Label size="L">Role</Label>
+            <Select
+              value={globalRole}
+              options={Constants.BudibaseRoleOptions}
+              on:change={updateUserRole}
+            />
           </div>
         {/if}
       </div>
-      <Divider />
-      <Layout noPadding gap="S">
-        <Heading size="S">Details</Heading>
-        <div class="fields">
-          <div class="field">
-            <Label size="L">Email</Label>
-            <Input disabled value={user?.email} />
-          </div>
-          <div class="field">
-            <Label size="L">First name</Label>
-            <Input value={user?.firstName} on:blur={updateUserFirstName} />
-          </div>
-          <div class="field">
-            <Label size="L">Last name</Label>
-            <Input value={user?.lastName} on:blur={updateUserLastName} />
-          </div>
-          <!-- don't let a user remove the privileges that let them be here -->
-          {#if userId !== $auth.user._id}
-            <div class="field">
-              <Label size="L">Role</Label>
-              <Select
-                value={globalRole}
-                options={Constants.BudibaseRoleOptions}
-                on:change={updateUserRole}
-              />
-            </div>
-          {/if}
-        </div>
-      </Layout>
     </Layout>
 
     {#if $licensing.groupsEnabled}
       <!-- User groups -->
       <Layout gap="S" noPadding>
         <div class="tableTitle">
-          <Heading size="S">User groups</Heading>
+          <Heading size="S">Groups</Heading>
           <div bind:this={popoverAnchor}>
-            <Button
-              on:click={popover.show()}
-              icon="UserGroup"
-              secondary
-              newStyles
-            >
-              Add to user group
+            <Button on:click={popover.show()} secondary newStyles>
+              Add to group
             </Button>
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>

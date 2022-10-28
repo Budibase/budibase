@@ -4,7 +4,7 @@
   export let active = false
 </script>
 
-<a on:click {url} class:active>
+<a on:click href={url} class:active>
   {text}
 </a>
 

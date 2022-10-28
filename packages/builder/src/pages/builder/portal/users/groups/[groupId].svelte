@@ -1,7 +1,6 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { url, goto } from "@roxi/routify"
   import {
-    ActionButton,
     Button,
     Layout,
     Heading,
@@ -26,6 +25,7 @@
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import AppAddModal from "./_components/AppAddModal.svelte"
+  import { Breadcrumbs, Breadcrumb } from "components/portal/page"
 
   export let groupId
 
@@ -105,87 +105,80 @@
 
 {#if loaded}
   <Layout noPadding gap="XL">
-    <div>
-      <ActionButton on:click={() => $goto("../groups")} icon="ArrowLeft">
-        Back
-      </ActionButton>
-    </div>
+    <Breadcrumbs>
+      <Breadcrumb url={$url("./")} text="Groups" />
+      <Breadcrumb text={group?.name} />
+    </Breadcrumbs>
 
-    <Layout noPadding gap="M">
-      <div class="header">
-        <div class="title">
-          <GroupIcon {group} size="L" />
-          <div class="text-padding">
-            <Heading>{group?.name}</Heading>
-          </div>
-        </div>
-        <div>
-          <ActionMenu align="right">
-            <span slot="control">
-              <Icon hoverable name="More" />
-            </span>
-            <MenuItem icon="Refresh" on:click={() => editModal.show()}>
-              Edit
-            </MenuItem>
-            <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
-              Delete
-            </MenuItem>
-          </ActionMenu>
+    <div class="header">
+      <div class="title">
+        <GroupIcon {group} size="L" />
+        <div class="text-padding">
+          <Heading>{group?.name}</Heading>
         </div>
       </div>
+      <div>
+        <ActionMenu align="right">
+          <span slot="control">
+            <Icon hoverable name="More" />
+          </span>
+          <MenuItem icon="Refresh" on:click={() => editModal.show()}>
+            Edit
+          </MenuItem>
+          <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
+            Delete
+          </MenuItem>
+        </ActionMenu>
+      </div>
+    </div>
 
-      <Divider />
-
-      <Layout noPadding gap="S">
-        <div class="header">
-          <Heading size="S">Users</Heading>
-          <div bind:this={popoverAnchor}>
-            <Button on:click={popover.show()} icon="UserAdd" cta>
-              Add user
-            </Button>
-          </div>
-          <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-            <UserGroupPicker
-              bind:searchTerm
-              labelKey="email"
-              selected={group.users?.map(user => user._id)}
-              list={$users.data}
-              on:select={e => groups.actions.addUser(groupId, e.detail)}
-              on:deselect={e => groups.actions.removeUser(groupId, e.detail)}
-            />
-          </Popover>
+    <Layout noPadding gap="S">
+      <div class="header">
+        <Heading size="S">Users</Heading>
+        <div bind:this={popoverAnchor}>
+          <Button on:click={popover.show()} cta>Add user</Button>
         </div>
-        <List>
-          {#if group?.users.length}
-            {#each group.users as user}
-              <ListItem
-                title={user.email}
-                on:click={() => $goto(`../users/${user._id}`)}
+        <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+          <UserGroupPicker
+            bind:searchTerm
+            labelKey="email"
+            selected={group.users?.map(user => user._id)}
+            list={$users.data}
+            on:select={e => groups.actions.addUser(groupId, e.detail)}
+            on:deselect={e => groups.actions.removeUser(groupId, e.detail)}
+          />
+        </Popover>
+      </div>
+      <List>
+        {#if group?.users.length}
+          {#each group.users as user}
+            <ListItem
+              title={user.email}
+              on:click={() => $goto(`../users/${user._id}`)}
+              hoverable
+            >
+              <Icon
+                on:click={e => {
+                  groups.actions.removeUser(groupId, user._id)
+                  e.stopPropagation()
+                }}
                 hoverable
-              >
-                <Icon
-                  on:click={e => {
-                    groups.actions.removeUser(groupId, user._id)
-                    e.stopPropagation()
-                  }}
-                  hoverable
-                  size="S"
-                  name="Close"
-                />
-              </ListItem>
-            {/each}
-          {:else}
-            <ListItem icon="UserGroup" title="This user group has no users" />
-          {/if}
-        </List>
-      </Layout>
+                size="S"
+                name="Close"
+              />
+            </ListItem>
+          {/each}
+        {:else}
+          <ListItem icon="UserGroup" title="This user group has no users" />
+        {/if}
+      </List>
     </Layout>
 
     <Layout noPadding gap="S">
       <div class="header">
         <Heading size="S">Apps</Heading>
         <div>
-          <Button on:click={appAddModal.show()} icon="ExperienceAdd" cta>
+          <Button on:click={appAddModal.show()} newStyles secondary>
             Add app
           </Button>
         </div>

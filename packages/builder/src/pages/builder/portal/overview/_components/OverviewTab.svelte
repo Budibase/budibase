@@ -9,7 +9,7 @@
   import { createEventDispatcher } from "svelte"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
-  import GroupIcon from "../../manage/groups/_components/GroupIcon.svelte"
+  import GroupIcon from "../../users/groups/_components/GroupIcon.svelte"
 
   export let app
   export let deployments
