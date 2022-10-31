@@ -1,6 +1,6 @@
 <script>
   import Picker from "./Picker.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
   export let value = []
   export let id = null
@@ -16,8 +16,33 @@
   export let autoWidth = false
 
   const dispatch = createEventDispatcher()
+  const parseValues = value => {
+    return Array.isArray(value)
+      ? value.reduce((acc, entry) => {
+          if (typeof ele === "string" && entry.trim() === "") {
+            return acc
+          }
+          let processedOption = String(entry)
+          if (options.indexOf(processedOption) > -1) {
+            acc.push(processedOption)
+          }
+          return acc
+        }, [])
+      : []
+  }
+  let loaded = false
+
+  $: combinedValues = value ? [...value].concat(options) : []
+  $: superSet = new Set(combinedValues)
+
+  $: if (loaded && options.length != superSet.size) {
+    // ensure that the values being pushed in are valid.
+    dispatch("change", parseValues(value))
+  }
+
   $: selectedLookupMap = getSelectedLookupMap(value)
   $: optionLookupMap = getOptionLookupMap(options)
+
   $: fieldText = getFieldText(value, optionLookupMap, placeholder)
   $: isOptionSelected = optionValue => selectedLookupMap[optionValue] === true
   $: toggleOption = makeToggleOption(selectedLookupMap, value)
@@ -70,6 +95,10 @@
       }
     }
   }
+
+  onMount(() => {
+    loaded = true
+  })
 </script>
 
 <Picker
