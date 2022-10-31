@@ -15,6 +15,7 @@
 
   $: rows = dataProvider?.rows ?? []
   $: loaded = dataProvider?.loaded ?? true
+  $: schema = dataProvider?.schema ?? null
 </script>
 
 <Container {direction} {hAlign} {vAlign} {gap} wrap>
@@ -22,7 +23,7 @@
     <Placeholder />
   {:else if rows.length > 0}
     {#each rows as row, index}
-      <Provider data={{ ...row, index }}>
+      <Provider data={{ ...row, index, schema }}>
         <slot />
       </Provider>
     {/each}

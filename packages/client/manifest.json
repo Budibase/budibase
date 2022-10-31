@@ -3972,6 +3972,47 @@
       }
     ]
   },
+  "rowdetails": {
+    "name": "Row Details",
+    "description": "Displays every field of a given row.",
+    "icon": "JourneyData",
+    "hasChildren": false,
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "repeater",
+        "label": "Repater",
+        "key": "repeater",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Empty Text",
+        "key": "noDataMessage",
+        "defaultValue": "No data"
+      },
+      {
+        "type": "text",
+        "label": "Heading",
+        "key": "heading"
+      }
+    ],
+    "context": [
+      {
+        "type": "schema"
+      },
+      {
+        "type": "static",
+        "values": [
+          {
+            "label": "Row Index",
+            "key": "index",
+            "type": "number"
+          }
+        ]
+      }
+    ]
+  },
   "chartblock": {
     "block": true,
     "name": "Chart block",
@@ -5186,5 +5227,65 @@
         "suffix": "repeater"
       }
     ]
+  },
+  "rowexplorer": {
+    "block": true,
+    "name": "Row explorer block",
+    "icon": "PersonalizationField",
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Details heading",
+        "key": "detailsHeading",
+        "nested": true
+      },
+      {
+        "section": true,
+        "name": "Cards",
+        "settings": [
+          {
+            "type": "text",
+            "key": "cardTitle",
+            "label": "Title",
+            "nested": true,
+            "defaultValue": "Title"
+          },
+          {
+            "type": "text",
+            "key": "cardSubtitle",
+            "label": "Subtitle",
+            "nested": true,
+            "defaultValue": "Subtitle"
+          },
+          {
+            "type": "text",
+            "key": "cardDescription",
+            "label": "Description",
+            "nested": true,
+            "defaultValue": "Description"
+          },
+          {
+            "type": "text",
+            "key": "cardImageURL",
+            "label": "Image URL",
+            "nested": true
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "schema",
+      "suffix": "repeater"
+    }
   }
 }
