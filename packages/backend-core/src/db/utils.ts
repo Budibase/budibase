@@ -18,7 +18,6 @@ import { checkSlashesInUrl } from "../helpers"
 import { getProdAppID, isDevApp, isDevAppID } from "./conversions"
 import * as events from "../events"
 import { Config, ConfigType, isSettingsConfig } from "@budibase/types"
-import * as objectStore from "../objectStore"
 
 export * from "./constants"
 export * from "./conversions"
@@ -479,12 +478,6 @@ export const getScopedFullConfig = async function (
       })
       scopedConfig.doc.config.analyticsEnabled =
         await events.analytics.enabled()
-
-      // empty url means deleted for logo
-      if (scopedConfig.doc.config.logoUrl !== "") {
-        scopedConfig.doc.config.logoUrl =
-          objectStore.getGlobalFileUrl("settings/logoUrl")
-      }
     }
   }
 

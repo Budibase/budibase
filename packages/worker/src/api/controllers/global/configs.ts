@@ -268,6 +268,17 @@ export const publicSettings = async function (ctx: Ctx) {
       config = publicConfig
     }
 
+    // enrich the logo url
+    // empty url means deleted
+    if (config.config.logoUrl !== "") {
+      const suffix = config.config.logoUrlEtag
+        ? `?etag=${config.config.logoUrlEtag}`
+        : ""
+      config.config.logoUrl = objectStore.getGlobalFileUrl(
+        `settings/logoUrl${suffix}`
+      )
+    }
+
     // google button flag
     if (googleConfig && googleConfig.config) {
       // activated by default for configs pre-activated flag
@@ -311,7 +322,7 @@ export const upload = async function (ctx: UserCtx) {
     key = baseKey
   }
 
-  await objectStore.upload({
+  const result = await objectStore.upload({
     bucket,
     filename: key,
     path: file.path,
@@ -331,6 +342,9 @@ export const upload = async function (ctx: UserCtx) {
 
   const url = objectStore.getGlobalFileUrl(baseKey)
   cfgStructure.config[`${name}`] = url
+  if (result.ETag) {
+    cfgStructure.config[`${name}Etag`] = result.ETag.replace(/"/g, "")
+  }
   // write back to db with url updated
   await db.put(cfgStructure)
 
@@ -382,7 +396,7 @@ export const configChecklist = async function (ctx: Ctx) {
           type: Configs.OIDC,
         })
 
-        // They have set up an global user
+        // They have set up a global user
         const userExists = await checkAnyUserExists()
         return {
           apps: {

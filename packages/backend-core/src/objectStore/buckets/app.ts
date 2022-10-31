@@ -1,7 +1,7 @@
 import env from "../../environment"
 import * as objectStore from "../objectStore"
 import * as cloudfront from "../cloudfront"
-import { context } from "../../index"
+import * as context from "../../context"
 import { Ctx, Row } from "@budibase/types"
 
 /**
@@ -44,7 +44,7 @@ export const getAppFileUrl = (file: string) => {
   }
 }
 
-export const getAttachmentUrl = (row: Row, attachmentId: string) => {
+export const getAttachmentUrl = (attachmentId: string) => {
   return getAppFileUrl(`attachments/${attachmentId}`)
 }
 

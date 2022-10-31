@@ -324,7 +324,7 @@ export const outputProcessing = async (
         row[property].forEach((attachment: any) => {
           const keyParts = attachment.key.split("/")
           attachment.id = keyParts[2]
-          attachment.url = objectStore.getAttachmentUrl(row, attachment.id)
+          attachment.url = objectStore.getAttachmentUrl(attachment.id)
           attachment.permaUrl = objectStore.getPermaAttachmentUrl(
             row,
             attachment.id

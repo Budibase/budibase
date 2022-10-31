@@ -18,9 +18,14 @@ const AWS = require("aws-sdk")
 const fs = require("fs")
 import { objectStore } from "@budibase/backend-core"
 import { UserCtx } from "@budibase/types"
-import { sdk as pro } from "@budibase/pro"
 
-async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
+async function prepareUpload({
+  s3Key,
+  bucket,
+  metadata,
+  file,
+  processedFileName,
+}: any) {
   const response = await objectStore.upload({
     bucket,
     metadata,
@@ -32,6 +37,7 @@ async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   return {
     size: file.size,
     name: file.name,
+    url: objectStore.getAttachmentUrl(processedFileName),
     extension: [...file.name.split(".")].pop(),
     key: response.Key,
   }
@@ -89,6 +95,7 @@ export const uploadFile = async function (ctx: any) {
 
     return prepareUpload({
       file,
+      processedFileName,
       s3Key: `${ctx.appId}/attachments/${processedFileName}`,
       bucket: ObjectStoreBuckets.APPS,
     })

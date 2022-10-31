@@ -1,5 +1,5 @@
 import env from "../../environment"
-import { tenancy } from "../../index"
+import tenancy from "../../tenancy"
 import * as objectStore from "../objectStore"
 import * as cloudfront from "../cloudfront"
 

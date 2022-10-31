@@ -1,6 +1,6 @@
 import env from "../../environment"
 import * as objectStore from "../objectStore"
-import { tenancy } from "../../index"
+import tenancy from "../../tenancy"
 import * as cloudfront from "../cloudfront"
 import { Plugin } from "@budibase/types"
 
