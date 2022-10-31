@@ -7,7 +7,7 @@
   export let webhookModal
 </script>
 
-<div class="title">
+<div class="nav">
   <Tabs selected="Automations">
     <Tab title="Automations">
       <AutomationList />
@@ -27,12 +27,15 @@
     top: var(--spacing-l);
     right: var(--spacing-xl);
   }
-
-  .title {
+  .nav {
+    overflow-y: auto;
+    background: var(--background);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     position: relative;
+    border-right: var(--border-light);
+    padding-bottom: 60px;
   }
 </style>
