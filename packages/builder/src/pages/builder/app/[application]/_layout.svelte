@@ -1,7 +1,16 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { Icon, Tabs, Tab, Heading, notifications } from "@budibase/bbui"
+  import { apps } from "stores/portal"
+  import {
+    ActionMenu,
+    MenuItem,
+    Icon,
+    Tabs,
+    Tab,
+    Heading,
+    notifications,
+  } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import DeployNavigation from "components/deploy/DeployNavigation.svelte"
@@ -54,6 +63,9 @@
     })
   }
 
+  $: isPublished =
+    $apps.find(app => app.devId === application)?.status === "published"
+
   onMount(async () => {
     if (!hasSynced && application) {
       try {
@@ -83,12 +95,48 @@
   <div class="root">
     <div class="top-nav">
       <div class="topleftnav">
-        <Icon
-          size="M"
-          name="ArrowLeft"
-          hoverable
-          on:click={() => $goto("../../portal/apps")}
-        />
+        <ActionMenu>
+          <div slot="control">
+            <Icon size="M" hoverable name="ShowMenu" />
+          </div>
+          <MenuItem on:click={() => $goto("../../portal/apps")}>
+            Exit to portal
+          </MenuItem>
+          <MenuItem
+            on:click={() => $goto(`../../portal/overview/${application}`)}
+          >
+            Overview
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}?tab=Access`)}
+          >
+            Access
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(
+                `../../portal/overview/${application}?tab=${encodeURIComponent(
+                  "Automation History"
+                )}`
+              )}
+          >
+            Automation history
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}?tab=Backups`)}
+          >
+            Backups
+          </MenuItem>
+
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}?tab=Settings`)}
+          >
+            Settings
+          </MenuItem>
+        </ActionMenu>
         <Heading size="XS">{$store.name || "App"}</Heading>
       </div>
       <div class="topcenternav">

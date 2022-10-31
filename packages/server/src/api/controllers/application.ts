@@ -5,11 +5,7 @@ import {
   createRoutingView,
   createAllSearchIndex,
 } from "../../db/views/staticViews"
-import {
-  getTemplateStream,
-  createApp,
-  deleteApp,
-} from "../../utilities/fileSystem"
+import { createApp, deleteApp } from "../../utilities/fileSystem"
 import {
   generateAppID,
   getLayoutParams,
@@ -50,6 +46,7 @@ import { errors, events, migrations } from "@budibase/backend-core"
 import { App, Layout, Screen, MigrationType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { enrichPluginURLs } from "../../utilities/plugins"
+import sdk from "../../sdk"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -153,11 +150,7 @@ async function createInstance(template: any) {
       throw "Error loading database dump from memory."
     }
   } else if (template && template.useTemplate === "true") {
-    /* istanbul ignore next */
-    const { ok } = await db.load(await getTemplateStream(template))
-    if (!ok) {
-      throw "Error loading database dump from template."
-    }
+    await sdk.backups.importApp(appId, db, template)
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
@@ -359,7 +352,7 @@ const appPostCreate = async (ctx: any, app: App) => {
   await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
-    const rows = await getUniqueRows([app.appId])
+    const { rows } = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
@@ -493,7 +486,7 @@ const destroyApp = async (ctx: any) => {
 }
 
 const preDestroyApp = async (ctx: any) => {
-  const rows = await getUniqueRows([ctx.params.appId])
+  const { rows } = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }
 

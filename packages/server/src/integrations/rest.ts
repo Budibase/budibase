@@ -14,6 +14,7 @@ import {
   BearerAuthConfig,
 } from "../definitions/datasource"
 import { get } from "lodash"
+import * as https from "https"
 import qs from "querystring"
 const fetch = require("node-fetch")
 const { formatBytes } = require("../utilities")
@@ -76,11 +77,11 @@ const SCHEMA: Integration = {
       required: false,
       default: {},
     },
-    legacyHttpParser: {
-      display: "Legacy HTTP Support",
+    rejectUnauthorized: {
+      display: "Reject Unauthorized",
       type: DatasourceFieldType.BOOLEAN,
+      default: true,
       required: false,
-      default: false,
     },
   },
   query: {
@@ -218,8 +219,12 @@ class RestIntegration implements IntegrationBase {
       }
     }
 
-    // make sure the query string is fully encoded
-    const main = `${path}?${qs.encode(qs.decode(queryString))}`
+    if (queryString) {
+      // make sure the query string is fully encoded
+      queryString = "?" + qs.encode(qs.decode(queryString))
+    }
+    const main = `${path}${queryString}`
+
     let complete = main
     if (this.config.url && !main.startsWith("http")) {
       complete = !this.config.url ? main : `${this.config.url}/${main}`
@@ -381,6 +386,13 @@ class RestIntegration implements IntegrationBase {
       paginationValues
     )
 
+    if (this.config.rejectUnauthorized == false) {
+      input.agent = new https.Agent({
+        rejectUnauthorized: false,
+      })
+    }
+
+    // Deprecated by rejectUnauthorized
     if (this.config.legacyHttpParser) {
       // https://github.com/nodejs/node/issues/43798
       input.extraHttpOptions = { insecureHTTPParser: true }

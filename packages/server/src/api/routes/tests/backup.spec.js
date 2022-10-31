@@ -21,7 +21,7 @@ describe("/backups", () => {
         .set(config.defaultHeaders())
         .expect(200)
       expect(res.text).toBeDefined()
-      expect(res.text.includes(`"db_name":"${config.getAppId()}"`)).toEqual(true)
+      expect(res.headers["content-type"]).toEqual("application/gzip")
       expect(events.app.exported.mock.calls.length).toBe(1)
     })
 

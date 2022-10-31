@@ -1,14 +1,17 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentType, UNICODE_MAX, ViewName } from "./constants"
+import {
+  SEPARATOR,
+  DocumentType,
+  UNICODE_MAX,
+  ViewName,
+  InternalTable,
+} from "./constants"
 import { getTenantId, getGlobalDB } from "../context"
 import { getGlobalDBName } from "./tenancy"
-import fetch from "node-fetch"
-import { doWithDB, allDbs } from "./index"
-import { getCouchInfo } from "./pouch"
+import { doWithDB, allDbs, directCouchAllDbs } from "./index"
 import { getAppMetadata } from "../cache/appMetadata"
-import { checkSlashesInUrl } from "../helpers"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
@@ -43,8 +46,8 @@ export const generateAppID = (tenantId = null) => {
  * @returns {object} Parameters which can then be used with an allDocs request.
  */
 export function getDocParams(
-  docType: any,
-  docId: any = null,
+  docType: string,
+  docId?: string | null,
   otherProps: any = {}
 ) {
   if (docId == null) {
@@ -58,10 +61,65 @@ export function getDocParams(
 }
 
 /**
+ * Gets the DB allDocs/query params for retrieving a row.
+ * @param {string|null} tableId The table in which the rows have been stored.
+ * @param {string|null} rowId The ID of the row which is being specifically queried for. This can be
+ * left null to get all the rows in the table.
+ * @param {object} otherProps Any other properties to add to the request.
+ * @returns {object} Parameters which can then be used with an allDocs request.
+ */
+export function getRowParams(
+  tableId?: string | null,
+  rowId?: string | null,
+  otherProps = {}
+) {
+  if (tableId == null) {
+    return getDocParams(DocumentType.ROW, null, otherProps)
+  }
+
+  const endOfKey = rowId == null ? `${tableId}${SEPARATOR}` : rowId
+
+  return getDocParams(DocumentType.ROW, endOfKey, otherProps)
+}
+
+/**
  * Retrieve the correct index for a view based on default design DB.
  */
 export function getQueryIndex(viewName: ViewName) {
   return `database/${viewName}`
+}
+
+/**
+ * Gets a new row ID for the specified table.
+ * @param {string} tableId The table which the row is being created for.
+ * @param {string|null} id If an ID is to be used then the UUID can be substituted for this.
+ * @returns {string} The new ID which a row doc can be stored under.
+ */
+export function generateRowID(tableId: string, id?: string) {
+  id = id || newid()
+  return `${DocumentType.ROW}${SEPARATOR}${tableId}${SEPARATOR}${id}`
+}
+
+/**
+ * Check if a given ID is that of a table.
+ * @returns {boolean}
+ */
+export const isTableId = (id: string) => {
+  // this includes datasource plus tables
+  return (
+    id &&
+    (id.startsWith(`${DocumentType.TABLE}${SEPARATOR}`) ||
+      id.startsWith(`${DocumentType.DATASOURCE_PLUS}${SEPARATOR}`))
+  )
+}
+
+/**
+ * Check if a given ID is that of a datasource or datasource plus.
+ * @returns {boolean}
+ */
+export const isDatasourceId = (id: string) => {
+  // this covers both datasources and datasource plus
+  return id && id.startsWith(`${DocumentType.DATASOURCE}${SEPARATOR}`)
 }
 
 /**
@@ -107,6 +165,33 @@ export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
       : `${DocumentType.USER}${SEPARATOR}${globalId}`,
     endkey: `${DocumentType.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
   }
+}
+
+/**
+ * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
+ */
+export function getUserMetadataParams(userId?: string, otherProps = {}) {
+  return getRowParams(InternalTable.USER_METADATA, userId, otherProps)
+}
+
+/**
+ * Generates a new user ID based on the passed in global ID.
+ * @param {string} globalId The ID of the global user.
+ * @returns {string} The new user ID which the user doc can be stored under.
+ */
+export function generateUserMetadataID(globalId: string) {
+  return generateRowID(InternalTable.USER_METADATA, globalId)
+}
+
+/**
+ * Breaks up the ID to get the global ID.
+ */
+export function getGlobalIDFromUserMetadataID(id: string) {
+  const prefix = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
+  if (!id || !id.includes(prefix)) {
+    return id
+  }
+  return id.split(prefix)[1]
 }
 
 export function getUsersByAppParams(appId: any, otherProps: any = {}) {
@@ -169,9 +254,9 @@ export function getRoleParams(roleId = null, otherProps = {}) {
   return getDocParams(DocumentType.ROLE, roleId, otherProps)
 }
 
-export function getStartEndKeyURL(base: any, baseKey: any, tenantId = null) {
+export function getStartEndKeyURL(baseKey: any, tenantId = null) {
   const tenancy = tenantId ? `${SEPARATOR}${tenantId}` : ""
-  return `${base}?startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
+  return `startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
 }
 
 /**
@@ -187,22 +272,10 @@ export async function getAllDbs(opts = { efficient: false }) {
     return allDbs()
   }
   let dbs: any[] = []
-  let { url, cookie } = getCouchInfo()
-  async function addDbs(couchUrl: string) {
-    const response = await fetch(checkSlashesInUrl(encodeURI(couchUrl)), {
-      method: "GET",
-      headers: {
-        Authorization: cookie,
-      },
-    })
-    if (response.status === 200) {
-      let json = await response.json()
-      dbs = dbs.concat(json)
-    } else {
-      throw "Cannot connect to CouchDB instance"
-    }
+  async function addDbs(queryString?: string) {
+    const json = await directCouchAllDbs(queryString)
+    dbs = dbs.concat(json)
   }
-  let couchUrl = `${url}/_all_dbs`
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY || (!efficient && tenantId === DEFAULT_TENANT_ID)) {
     // just get all DBs when:
@@ -210,12 +283,12 @@ export async function getAllDbs(opts = { efficient: false }) {
     // - default tenant
     //    - apps dbs don't contain tenant id
     //    - non-default tenant dbs are filtered out application side in getAllApps
-    await addDbs(couchUrl)
+    await addDbs()
   } else {
     // get prod apps
-    await addDbs(getStartEndKeyURL(couchUrl, DocumentType.APP, tenantId))
+    await addDbs(getStartEndKeyURL(DocumentType.APP, tenantId))
     // get dev apps
-    await addDbs(getStartEndKeyURL(couchUrl, DocumentType.APP_DEV, tenantId))
+    await addDbs(getStartEndKeyURL(DocumentType.APP_DEV, tenantId))
     // add global db name
     dbs.push(getGlobalDBName(tenantId))
   }

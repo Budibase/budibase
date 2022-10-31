@@ -986,13 +986,6 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
-"@types/bson@*":
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/@types/bson/-/bson-4.2.0.tgz#a2f71e933ff54b2c3bf267b67fa221e295a33337"
-  integrity sha512-ELCPqAdroMdcuxqwMgUpifQyRoTpyYCNr1V9xKyF40VsBobsj+BbWNRvwGchMgBPGqkw655ypkjj2MEF5ywVwg==
-  dependencies:
-    bson "*"
-
 "@types/estree@0.0.39":
   version "0.0.39"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.39.tgz#e177e699ee1b8c22d23174caaa7422644389509f"
@@ -1007,19 +1000,6 @@
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/@types/minimist/-/minimist-1.2.2.tgz#ee771e2ba4b3dc5b372935d549fd9617bf345b8c"
   integrity sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==
-
-"@types/mongodb@3.6.3":
-  version "3.6.3"
-  resolved "https://registry.yarnpkg.com/@types/mongodb/-/mongodb-3.6.3.tgz#5655af409d9e32d5d5ae9a653abf3e5f9c83eb7a"
-  integrity sha512-6YNqGP1hk5bjUFaim+QoFFuI61WjHiHE1BNeB41TA00Xd2K7zG4lcWyLLq/XtIp36uMavvS5hoAUJ+1u/GcX2Q==
-  dependencies:
-    "@types/bson" "*"
-    "@types/node" "*"
-
-"@types/node@*":
-  version "17.0.33"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.33.tgz#3c1879b276dc63e73030bb91165e62a4509cd506"
-  integrity sha512-miWq2m2FiQZmaHfdZNcbpp9PuXg34W5JZ5CrJ/BaS70VuhoJENBEQybeiYSaPBRNq6KQGnjfEnc/F3PN++D+XQ==
 
 "@types/node@>= 8":
   version "18.0.0"
@@ -1466,13 +1446,6 @@ braces@^3.0.2:
   dependencies:
     fill-range "^7.0.1"
 
-bson@*:
-  version "4.6.3"
-  resolved "https://registry.yarnpkg.com/bson/-/bson-4.6.3.tgz#d1a9a0b84b9e84b62390811fc5580f6a8b1d858c"
-  integrity sha512-rAqP5hcUVJhXP2MCSNVsf0oM2OGU1So6A9pVRDYayvJ5+hygXHQApf87wd5NlhPM1J9RJnbqxIG/f8QTzRoQ4A==
-  dependencies:
-    buffer "^5.6.0"
-
 btoa-lite@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/btoa-lite/-/btoa-lite-1.0.0.tgz#337766da15801210fdd956c22e9c6891ab9d0337"
@@ -1483,7 +1456,7 @@ buffer-from@^1.0.0:
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.2.tgz#2b146a6fd72e80b4f55d255f35ed59a3a9a41bd5"
   integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
 
-buffer@^5.5.0, buffer@^5.6.0:
+buffer@^5.5.0:
   version "5.7.1"
   resolved "https://registry.yarnpkg.com/buffer/-/buffer-5.7.1.tgz#ba62e7c13133053582197160851a8f648e99eed0"
   integrity sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==

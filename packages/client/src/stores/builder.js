@@ -1,10 +1,7 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
 import { devToolsStore } from "./devTools.js"
-
-const dispatchEvent = (type, data = {}) => {
-  window.parent.postMessage({ type, data })
-}
+import { eventStore } from "./events.js"
 
 const createBuilderStore = () => {
   const initialState = {
@@ -16,10 +13,10 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
-    isDragging: false,
     navigation: null,
     hiddenComponentIds: [],
     usedPlugins: null,
+    eventResolvers: {},
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -36,22 +33,25 @@ const createBuilderStore = () => {
         selectedComponentId: id,
       }))
       devToolsStore.actions.setAllowSelection(false)
-      dispatchEvent("select-component", { id })
+      eventStore.actions.dispatchEvent("select-component", { id })
     },
     updateProp: (prop, value) => {
-      dispatchEvent("update-prop", { prop, value })
+      eventStore.actions.dispatchEvent("update-prop", { prop, value })
+    },
+    updateStyles: async (styles, id) => {
+      await eventStore.actions.dispatchEvent("update-styles", { styles, id })
     },
     keyDown: (key, ctrlKey) => {
-      dispatchEvent("key-down", { key, ctrlKey })
+      eventStore.actions.dispatchEvent("key-down", { key, ctrlKey })
     },
     duplicateComponent: id => {
-      dispatchEvent("duplicate-component", { id })
+      eventStore.actions.dispatchEvent("duplicate-component", { id })
     },
     deleteComponent: id => {
-      dispatchEvent("delete-component", { id })
+      eventStore.actions.dispatchEvent("delete-component", { id })
     },
     notifyLoaded: () => {
-      dispatchEvent("preview-loaded")
+      eventStore.actions.dispatchEvent("preview-loaded")
     },
     analyticsPing: async () => {
       try {
@@ -60,18 +60,19 @@ const createBuilderStore = () => {
         // Do nothing
       }
     },
-    moveComponent: (componentId, destinationComponentId, mode) => {
-      dispatchEvent("move-component", {
+    moveComponent: async (componentId, destinationComponentId, mode) => {
+      await eventStore.actions.dispatchEvent("move-component", {
         componentId,
         destinationComponentId,
         mode,
       })
     },
-    setDragging: dragging => {
-      if (dragging === get(store).isDragging) {
-        return
-      }
-      store.update(state => ({ ...state, isDragging: dragging }))
+    dropNewComponent: (component, parent, index) => {
+      eventStore.actions.dispatchEvent("drop-new-component", {
+        component,
+        parent,
+        index,
+      })
     },
     setEditMode: enabled => {
       if (enabled === get(store).editMode) {
@@ -80,13 +81,16 @@ const createBuilderStore = () => {
       store.update(state => ({ ...state, editMode: enabled }))
     },
     clickNav: () => {
-      dispatchEvent("click-nav")
+      eventStore.actions.dispatchEvent("click-nav")
     },
     requestAddComponent: () => {
-      dispatchEvent("request-add-component")
+      eventStore.actions.dispatchEvent("request-add-component")
     },
     highlightSetting: setting => {
-      dispatchEvent("highlight-setting", { setting })
+      eventStore.actions.dispatchEvent("highlight-setting", { setting })
+    },
+    ejectBlock: (id, definition) => {
+      eventStore.actions.dispatchEvent("eject-block", { id, definition })
     },
     updateUsedPlugin: (name, hash) => {
       // Check if we used this plugin
@@ -103,7 +107,7 @@ const createBuilderStore = () => {
       }
 
       // Notify the builder so we can reload component definitions
-      dispatchEvent("reload-plugin")
+      eventStore.actions.dispatchEvent("reload-plugin")
     },
   }
   return {

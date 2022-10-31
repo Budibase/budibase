@@ -1,24 +1,25 @@
 import Deployment from "./Deployment"
 import {
-  Replication,
-  getProdAppID,
   getDevelopmentAppID,
+  getProdAppID,
+  Replication,
 } from "@budibase/backend-core/db"
 import { DocumentType, getAutomationParams } from "../../../db/utils"
 import {
+  clearMetadata,
   disableAllCrons,
   enableCronTrigger,
-  clearMetadata,
 } from "../../../automations/utils"
 import { app as appCache } from "@budibase/backend-core/cache"
 import {
-  getAppId,
   getAppDB,
-  getProdAppDB,
+  getAppId,
   getDevAppDB,
+  getProdAppDB,
 } from "@budibase/backend-core/context"
-import { quotas } from "@budibase/pro"
 import { events } from "@budibase/backend-core"
+import { backups } from "@budibase/pro"
+import { AppBackupTrigger } from "@budibase/types"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -99,13 +100,24 @@ async function initDeployedApp(prodAppId: any) {
   console.log("Enabled cron triggers for deployed app..")
 }
 
-async function deployApp(deployment: any) {
+async function deployApp(deployment: any, userId: string) {
   let replication
   try {
     const appId = getAppId()
     const devAppId = getDevelopmentAppID(appId)
     const productionAppId = getProdAppID(appId)
 
+    // don't try this if feature isn't allowed, will error
+    if (await backups.isEnabled()) {
+      // trigger backup initially
+      await backups.triggerAppBackup(
+        productionAppId,
+        AppBackupTrigger.PUBLISH,
+        {
+          createdBy: userId,
+        }
+      )
+    }
     const config: any = {
       source: devAppId,
       target: productionAppId,
@@ -206,7 +218,7 @@ const _deployApp = async function (ctx: any) {
 
   console.log("Deploying app...")
 
-  let app = await deployApp(deployment)
+  let app = await deployApp(deployment, ctx.user._id)
 
   await events.app.published(app)
   ctx.body = deployment

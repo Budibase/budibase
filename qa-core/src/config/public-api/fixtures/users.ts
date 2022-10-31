@@ -2,7 +2,7 @@ import {
   CreateUserParams,
   User,
 } from "@budibase/server/api/controllers/public/mapping/types"
-import generator from "../TestConfiguration/generator"
+import generator from "../../generator"
 
 const generate = (overrides: Partial<User> = {}): CreateUserParams => ({
   email: generator.email(),
