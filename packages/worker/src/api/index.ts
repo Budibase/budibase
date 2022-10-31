@@ -55,6 +55,10 @@ const PUBLIC_ENDPOINTS = [
     route: "/api/global/users/tenant/:id",
     method: "GET",
   },
+  {
+    route: "/api/system/restored",
+    method: "POST",
+  },
 ]
 
 const NO_TENANCY_ENDPOINTS = [

@@ -1,4 +1,12 @@
-import { Feature, Hosting, PlanType, Quotas } from "../../sdk"
+import {
+  Feature,
+  Hosting,
+  MonthlyQuotaName,
+  PlanType,
+  Quotas,
+  StaticQuotaName,
+} from "../../sdk"
+import { MonthlyUsage, QuotaUsage, StaticUsage } from "../global"
 
 export interface CreateAccount {
   email: string
@@ -42,6 +50,7 @@ export interface Account extends CreateAccount {
   licenseKey?: string
   licenseKeyActivatedAt?: number
   licenseOverrides?: LicenseOverrides
+  quotaUsage?: QuotaUsage
 }
 
 export interface PasswordAccount extends Account {

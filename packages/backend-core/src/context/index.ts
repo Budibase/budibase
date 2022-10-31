@@ -6,6 +6,7 @@ import { baseGlobalDBName } from "../db/tenancy"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
 import { ContextKey } from "./constants"
+import PouchDB from "pouchdb"
 import {
   updateUsing,
   closeWithUsing,
@@ -22,16 +23,15 @@ export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 let TEST_APP_ID: string | null = null
 
 export const closeTenancy = async () => {
-  let db
   try {
     if (env.USE_COUCH) {
-      db = getGlobalDB()
+      const db = getGlobalDB()
+      await closeDB(db)
     }
   } catch (err) {
     // no DB found - skip closing
     return
   }
-  await closeDB(db)
   // clear from context now that database is closed/task is finished
   cls.setOnContext(ContextKey.TENANT_ID, null)
   cls.setOnContext(ContextKey.GLOBAL_DB, null)
@@ -53,6 +53,9 @@ export const getTenantIDFromAppID = (appId: string) => {
   if (!appId) {
     return null
   }
+  if (!isMultiTenant()) {
+    return DEFAULT_TENANT_ID
+  }
   const split = appId.split(SEPARATOR)
   const hasDev = split[1] === DocumentType.DEV
   if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
@@ -65,7 +68,16 @@ export const getTenantIDFromAppID = (appId: string) => {
   }
 }
 
-// used for automations, API endpoints should always be in context already
+export const doInContext = async (appId: string, task: any) => {
+  // gets the tenant ID from the app ID
+  const tenantId = getTenantIDFromAppID(appId)
+  return doInTenant(tenantId, async () => {
+    return doInAppContext(appId, async () => {
+      return task()
+    })
+  })
+}
+
 export const doInTenant = (tenantId: string | null, task: any) => {
   // make sure default always selected in single tenancy
   if (!env.MULTI_TENANCY) {

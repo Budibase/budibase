@@ -1,5 +1,6 @@
 <script>
   import { screenStore, routeStore, builderStore } from "stores"
+  import { get } from "svelte/store"
   import Component from "./Component.svelte"
   import Provider from "./context/Provider.svelte"
   import { onMount, getContext } from "svelte"
@@ -9,29 +10,32 @@
 
   const context = getContext("context")
 
-  // Keep route params up to date
-  $: routeStore.actions.setRouteParams(params || {})
-
   // Get the screen definition for the current route
   $: screenDefinition = $screenStore.activeScreen?.props
 
-  onMount(() => {
-    // Mark the router as loaded whenever the screen mounts
-    if (!$routeStore.routerLoaded) {
-      routeStore.actions.setRouterLoaded()
-    }
+  $: runOnLoadActions(params)
 
-    // Enrich and execute and on load actions.
-    // We manually construct the full context here as this component is the
-    // one that provides the url context, so it is not available in $context yet
-    if ($screenStore.activeScreen?.onLoad && !$builderStore.inBuilder) {
-      const actions = enrichButtonActions($screenStore.activeScreen.onLoad, {
-        ...$context,
+  // Enrich and execute any on load actions.
+  // We manually construct the full context here as this component is the
+  // one that provides the url context, so it is not available in $context yet
+  const runOnLoadActions = params => {
+    const screenState = get(screenStore)
+
+    if (screenState.activeScreen?.onLoad && !get(builderStore).inBuilder) {
+      const actions = enrichButtonActions(screenState.activeScreen.onLoad, {
+        ...get(context),
         url: params,
       })
       if (actions != null) {
         actions()
       }
+    }
+  }
+
+  onMount(() => {
+    // Mark the router as loaded whenever the screen mounts
+    if (!$routeStore.routerLoaded) {
+      routeStore.actions.setRouterLoaded()
     }
   })
 </script>
