@@ -7,6 +7,7 @@ import { RouteConfig } from "../fixtures/types/routing"
 import { AppPackageResponse } from "../fixtures/types/appPackage"
 import { DeployConfig } from "../fixtures/types/deploy"
 import { responseMessage } from "../fixtures/types/responseMessage"
+import { UnpublishAppResponse } from "../fixtures/types/unpublishAppResponse"
 
 export default class AppApi {
   api: InternalAPIClient
@@ -98,6 +99,16 @@ export default class AppApi {
   async getRoutes(): Promise<[Response, RouteConfig]> {
     const response = await this.api.get(`/routing`)
     const json = await response.json()
+    return [response, json]
+  }
+
+  async unpublish(appId: string): Promise<[Response, UnpublishAppResponse]> {
+    const response = await this.api.del(`/applications/${appId}?unpublish=1`)
+    expect(response).toHaveStatusCode(200)
+    const json = await response.json()
+    expect(json.data.ok).toBe(true)
+    expect(json.ok).toBe(true)
+    expect(json.status).toBe(200)
     return [response, json]
   }
 }
