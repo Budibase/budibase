@@ -111,6 +111,8 @@ export const serveApp = async function (ctx: any) {
     const App = require("./templates/BudibaseApp.svelte").default
     const plugins = enrichPluginURLs(appInfo.usedPlugins)
     const { head, html, css } = App.render({
+      metaImage:
+        "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
       title: appInfo.name,
       production: env.isProd(),
       appId,
