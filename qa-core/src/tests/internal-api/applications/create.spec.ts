@@ -86,7 +86,6 @@ describe("Internal API - /applications endpoints", () => {
 
     // unpublish app
     await config.applications.unpublish(<string>app.appId)
-
   })
 
   it("POST - Sync application before deployment", async () => {
