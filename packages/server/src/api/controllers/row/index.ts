@@ -38,7 +38,7 @@ export async function patch(ctx: any): Promise<any> {
       }
     )
     if (!row) {
-      ctx.throw(404, "Row not found!")
+      ctx.throw(404, "Row not found")
     }
     ctx.status = 200
     ctx.eventEmitter &&
