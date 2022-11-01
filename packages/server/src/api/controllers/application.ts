@@ -224,14 +224,16 @@ export const fetchAppPackage = async (ctx: any) => {
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
+  const clientLibPath = objectStore.clientLibraryUrl(
+    ctx.params.appId,
+    application.version
+  )
+
   ctx.body = {
     application,
     screens,
     layouts,
-    clientLibPath: objectStore.clientLibraryUrl(
-      ctx.params.appId,
-      application.version
-    ),
+    clientLibPath,
   }
 }
 

@@ -15,22 +15,22 @@ import { Ctx, Row } from "@budibase/types"
  * app index file.
  */
 export const clientLibraryUrl = (appId: string, version: string) => {
-  // if (env.isProd()) {
-  let file = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
-  // append app version to bust the cache
-  if (version) {
-    file += `?v=${version}`
-  }
-  if (env.CLOUDFRONT_CDN) {
-    file = `${file}`
-    // don't need to use presigned for client
-    return cloudfront.getUrl(file)
+  if (env.isProd()) {
+    let file = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
+    // append app version to bust the cache
+    if (version) {
+      file += `?v=${version}`
+    }
+    if (env.CLOUDFRONT_CDN) {
+      file = `${file}`
+      // don't need to use presigned for client
+      return cloudfront.getUrl(file)
+    } else {
+      return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
+    }
   } else {
-    return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
+    return `/api/assets/client`
   }
-  // } else {
-  //   return `/api/assets/client`
-  // }
 }
 
 export const getAppFileUrl = (file: string) => {

@@ -25,6 +25,7 @@ import {
   InviteUsersRequest,
   InviteUsersResponse,
   MigrationType,
+  PlatformUser,
   PlatformUserByEmail,
   RowResponse,
   User,
@@ -157,10 +158,26 @@ const buildUser = async (
   return user
 }
 
+// lookup, could be email or userId, either will return a doc
+export const getPlatformUser = async (
+  identifier: string
+): Promise<PlatformUser | null> => {
+  // use the view here and allow to find anyone regardless of casing
+  // Use lowercase to ensure email login is case insensitive
+  const response = dbUtils.queryPlatformView(
+    ViewName.PLATFORM_USERS_LOWERCASE,
+    {
+      keys: [identifier.toLowerCase()],
+      include_docs: true,
+    }
+  ) as Promise<PlatformUser>
+  return response
+}
+
 const validateUniqueUser = async (email: string, tenantId: string) => {
   // check budibase users in other tenants
   if (env.MULTI_TENANCY) {
-    const tenantUser = await tenancy.getTenantUser(email)
+    const tenantUser = await getPlatformUser(email)
     if (tenantUser != null && tenantUser.tenantId !== tenantId) {
       throw `Unavailable`
     }

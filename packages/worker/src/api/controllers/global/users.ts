@@ -173,7 +173,7 @@ export const find = async (ctx: any) => {
 
 export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
-  const user = await tenancy.getTenantUser(id)
+  const user = await sdk.users.getPlatformUser(id)
   if (user) {
     ctx.body = user
   } else {
