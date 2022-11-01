@@ -120,6 +120,9 @@ async function updateAutomations(prodAppId: string, db: PouchDB.Database) {
  * @returns {Object} Returns a fs read stream which can be loaded into the database.
  */
 async function getTemplateStream(template: TemplateType) {
+  if (template.file && template.file.type !== "text/plain") {
+    throw new Error("Cannot import a non-text based file.")
+  }
   if (template.file) {
     return fs.createReadStream(template.file.path)
   } else if (template.key) {
@@ -156,7 +159,7 @@ export async function importApp(
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
-  const isTar = template.file && template.file.type === "application/gzip"
+  const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
     template.file && fs.lstatSync(template.file.path).isDirectory()
   if (template.file && (isTar || isDirectory)) {
