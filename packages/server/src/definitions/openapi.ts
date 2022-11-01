@@ -221,6 +221,7 @@ export interface components {
                */
               type?:
                 | "string"
+                | "barcodeqr"
                 | "longform"
                 | "options"
                 | "number"
@@ -326,6 +327,7 @@ export interface components {
                  */
                 type?:
                   | "string"
+                  | "barcodeqr"
                   | "longform"
                   | "options"
                   | "number"
@@ -433,6 +435,7 @@ export interface components {
                  */
                 type?:
                   | "string"
+                  | "barcodeqr"
                   | "longform"
                   | "options"
                   | "number"
