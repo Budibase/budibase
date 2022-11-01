@@ -305,6 +305,9 @@
                       getOptionLabel={x => x}
                       getOptionValue={x => x}
                       value={rule.value}
+                      on:change={e => {
+                        rule.value = e.detail
+                      }}
                     />
                   {:else if rule.type === "boolean"}
                     <Select
