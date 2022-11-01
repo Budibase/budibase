@@ -5,7 +5,7 @@ import {
   IntegrationBase,
 } from "@budibase/types"
 
-const { Client } = require("@elastic/elasticsearch")
+import { Client, ClientOptions } from "@elastic/elasticsearch"
 
 interface ElasticsearchConfig {
   url: string
@@ -100,22 +100,18 @@ class ElasticSearchIntegration implements IntegrationBase {
   constructor(config: ElasticsearchConfig) {
     this.config = config
 
-    let newConfig = {
+    const clientConfig: ClientOptions = {
       node: this.config.url,
-      ssl: this.config.ssl
-        ? {
-            rejectUnauthorized: this.config.rejectUnauthorized,
-            ca: this.config.ca || undefined,
-          }
-        : undefined,
     }
 
-    if (newConfig.ssl && !newConfig.ssl.ca) {
-      delete newConfig.ssl.ca
-    } else if (!newConfig.ssl) {
-      delete newConfig.ssl
+    if (this.config.ssl) {
+      clientConfig.ssl = {
+        rejectUnauthorized: this.config.rejectUnauthorized,
+        ca: this.config.ca || undefined,
+      }
     }
-    this.client = new Client(newConfig)
+
+    this.client = new Client(clientConfig)
   }
 
   async create(query: { index: string; json: object }) {
