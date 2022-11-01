@@ -1,5 +1,6 @@
 const { join } = require("path")
 const { tmpdir } = require("os")
+const fs = require("fs")
 import env from "../environment"
 
 /****************************************************
@@ -15,6 +16,11 @@ export const ObjectStoreBuckets = {
   PLUGINS: env.PLUGIN_BUCKET_NAME,
 }
 
+const bbTmp = join(tmpdir(), ".budibase")
+if (!fs.existsSync(bbTmp)) {
+  fs.mkdirSync(bbTmp)
+}
+
 export const budibaseTempDir = function () {
-  return join(tmpdir(), ".budibase")
+  return bbTmp
 }

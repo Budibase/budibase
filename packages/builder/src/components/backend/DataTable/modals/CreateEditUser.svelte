@@ -70,7 +70,11 @@
               .map(([key, error]) => ({ dataPath: key, message: error }))
               .flat()
           }
-        } else if (error.status === 400) {
+        } else if (error.status === 400 && response?.validationErrors) {
+          errors = Object.keys(response.validationErrors).map(field => ({
+            message: `${field} ${response.validationErrors[field][0]}`,
+          }))
+        } else {
           errors = [{ message: response?.message || "Unknown error" }]
         }
       } else {

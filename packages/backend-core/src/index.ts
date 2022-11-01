@@ -4,6 +4,7 @@ import * as events from "./events"
 import * as migrations from "./migrations"
 import * as users from "./users"
 import * as roles from "./security/roles"
+import * as permissions from "./security/permissions"
 import * as accounts from "./cloud/accounts"
 import * as installation from "./installation"
 import env from "./environment"
@@ -20,6 +21,7 @@ import * as middleware from "./middleware"
 import plugins from "./plugin"
 import encryption from "./security/encryption"
 import * as objectStore from "./objectStore"
+import * as queue from "./queue"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"
@@ -63,6 +65,8 @@ const core = {
   ...errorClasses,
   middleware,
   encryption,
+  queue,
+  permissions,
 }
 
 export = core

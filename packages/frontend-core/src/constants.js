@@ -113,6 +113,7 @@ export const ApiVersion = "1"
 
 export const Features = {
   USER_GROUPS: "userGroups",
+  BACKUPS: "appBackups",
 }
 
 // Role IDs

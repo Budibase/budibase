@@ -79,6 +79,8 @@ spec:
           value: {{ .Values.services.objectStore.url }}
         - name: PLUGIN_BUCKET_NAME
           value: {{ .Values.services.objectStore.pluginBucketName | quote }}
+        - name: APPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.appsBucketName | quote }}
         - name: GLOBAL_BUCKET_NAME
           value: {{ .Values.services.objectStore.globalBucketName | quote }}
         - name: PORT

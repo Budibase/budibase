@@ -8,7 +8,7 @@ const {
 } = require("@budibase/backend-core/permissions")
 const { internalSearchValidator } = require("./utils/validators")
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   /**

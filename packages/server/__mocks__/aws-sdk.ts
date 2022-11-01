@@ -37,6 +37,25 @@ module AwsMock {
         Contents: {},
       })
     )
+
+    // @ts-ignore
+    this.createBucket = jest.fn(
+      response({
+        Contents: {},
+      })
+    )
+
+    // @ts-ignore
+    this.deleteObjects = jest.fn(
+      response({
+        Contents: {},
+      })
+    )
+
+    // @ts-ignore
+    this.getSignedUrl = (operation, params) => {
+      return `/${params.Bucket}/${params.Key}`
+    }
   }
 
   aws.DynamoDB = { DocumentClient }

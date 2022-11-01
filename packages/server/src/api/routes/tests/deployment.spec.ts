@@ -1,5 +1,5 @@
-const setup = require("./utilities")
-const { events } = require("@budibase/backend-core")
+import setup from "./utilities"
+import { events } from "@budibase/backend-core"
 
 describe("/deployments", () => {
   let request = setup.getRequest()
@@ -19,7 +19,7 @@ describe("/deployments", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(events.app.published.mock.calls.length).toBe(1)
+      expect((events.app.published as jest.Mock).mock.calls.length).toBe(1)
     })
   })
 })

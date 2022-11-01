@@ -1,18 +1,12 @@
 import { events } from "@budibase/backend-core"
-import { getTableParams } from "../../../../db/utils"
-import { Table } from "@budibase/types"
+import sdk from "../../../../sdk"
+import PouchDB from "pouchdb"
 
-const getTables = async (appDb: any): Promise<Table[]> => {
-  const response = await appDb.allDocs(
-    getTableParams(null, {
-      include_docs: true,
-    })
-  )
-  return response.rows.map((row: any) => row.doc)
-}
-
-export const backfill = async (appDb: any, timestamp: string | number) => {
-  const tables = await getTables(appDb)
+export const backfill = async (
+  appDb: PouchDB.Database,
+  timestamp: string | number
+) => {
+  const tables = await sdk.tables.getAllInternalTables(appDb)
 
   for (const table of tables) {
     await events.table.created(table, timestamp)

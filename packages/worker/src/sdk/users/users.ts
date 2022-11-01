@@ -28,6 +28,7 @@ import {
   PlatformUser,
   PlatformUserByEmail,
   RowResponse,
+  SearchUsersRequest,
   User,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
@@ -57,7 +58,8 @@ export const paginatedUsers = async ({
   page,
   email,
   appId,
-}: { page?: string; email?: string; appId?: string } = {}) => {
+  userIds,
+}: SearchUsersRequest = {}) => {
   const db = tenancy.getGlobalDB()
   // get one extra document, to have the next page
   const opts: any = {
@@ -95,16 +97,7 @@ export const paginatedUsers = async ({
  */
 export const getUser = async (userId: string) => {
   const db = tenancy.getGlobalDB()
-  let user
-  try {
-    user = await db.get(userId)
-  } catch (err: any) {
-    // no user found, just return nothing
-    if (err.status === 404) {
-      return {}
-    }
-    throw err
-  }
+  let user = await db.get(userId)
   if (user) {
     delete user.password
   }

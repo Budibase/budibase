@@ -7,6 +7,7 @@ import {
   CloudAccount,
   InviteUserRequest,
   InviteUsersRequest,
+  SearchUsersRequest,
   User,
 } from "@budibase/types"
 import {
@@ -144,7 +145,8 @@ export const destroy = async (ctx: any) => {
 }
 
 export const search = async (ctx: any) => {
-  const paginated = await sdk.users.paginatedUsers(ctx.request.body)
+  const body = ctx.request.body as SearchUsersRequest
+  const paginated = await sdk.users.paginatedUsers(body)
   // user hashed password shouldn't ever be returned
   for (let user of paginated.data) {
     if (user) {

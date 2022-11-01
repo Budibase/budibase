@@ -23,13 +23,19 @@ const CONTENT_TYPE_MAP: any = {
   css: "text/css",
   js: "application/javascript",
   json: "application/json",
+  gz: "application/gzip",
 }
+
 const STRING_CONTENT_TYPES = [
   CONTENT_TYPE_MAP.html,
   CONTENT_TYPE_MAP.css,
   CONTENT_TYPE_MAP.js,
   CONTENT_TYPE_MAP.json,
 ]
+
+type ListParams = {
+  ContinuationToken?: string
+}
 
 // does normal sanitization and then swaps dev apps to apps
 export function sanitizeKey(input: any) {
@@ -242,6 +248,55 @@ export const retrieveStream = async (bucketName: string, filepath: string) => {
     Key: sanitizeKey(filepath),
   }
   return objectStore.getObject(params).createReadStream()
+}
+
+export const retrieveDirectory = async (bucketName: string, path: string) => {
+  let writePath = join(budibaseTempDir(), v4())
+  fs.mkdirSync(writePath)
+  const objects = await listAllObjects(bucketName, path)
+  let fullObjects = await Promise.all(
+    objects.map(obj => retrieve(bucketName, obj.Key!))
+  )
+  let count = 0
+  for (let obj of objects) {
+    const filename = obj.Key!
+    const data = fullObjects[count++]
+    const possiblePath = filename.split("/")
+    if (possiblePath.length > 1) {
+      const dirs = possiblePath.slice(0, possiblePath.length - 1)
+      fs.mkdirSync(join(writePath, ...dirs), { recursive: true })
+    }
+    fs.writeFileSync(join(writePath, ...possiblePath), data)
+  }
+  return writePath
+}
+
+export const listAllObjects = async (bucketName: string, path: string) => {
+  const objectStore = ObjectStore(bucketName)
+  const list = (params: ListParams = {}) => {
+    return objectStore
+      .listObjectsV2({
+        ...params,
+        Bucket: sanitizeBucket(bucketName),
+        Prefix: sanitizeKey(path),
+      })
+      .promise()
+  }
+  let isTruncated = false,
+    token,
+    objects: AWS.S3.Types.Object[] = []
+  do {
+    let params: ListParams = {}
+    if (token) {
+      params.ContinuationToken = token
+    }
+    const response = await list(params)
+    if (response.Contents) {
+      objects = objects.concat(response.Contents)
+    }
+    isTruncated = !!response.IsTruncated
+  } while (isTruncated)
+  return objects
 }
 
 /**

@@ -74,6 +74,10 @@ export const apiFileReturn = (contents: any) => {
   return fs.createReadStream(path)
 }
 
+export const streamFile = (path: string) => {
+  return fs.createReadStream(path)
+}
+
 /**
  * Writes the provided contents to a temporary file, which can be used briefly.
  * @param {string} fileContents contents which will be written to a temp file.

@@ -113,18 +113,23 @@
           >
             Access
           </MenuItem>
-          {#if isPublished}
-            <MenuItem
-              on:click={() =>
-                $goto(
-                  `../../portal/overview/${application}?tab=${encodeURIComponent(
-                    "Automation History"
-                  )}`
-                )}
-            >
-              Automation history
-            </MenuItem>
-          {/if}
+          <MenuItem
+            on:click={() =>
+              $goto(
+                `../../portal/overview/${application}?tab=${encodeURIComponent(
+                  "Automation History"
+                )}`
+              )}
+          >
+            Automation history
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}?tab=Backups`)}
+          >
+            Backups
+          </MenuItem>
+
           <MenuItem
             on:click={() =>
               $goto(`../../portal/overview/${application}?tab=Settings`)}
