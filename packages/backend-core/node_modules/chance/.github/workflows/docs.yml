@@ -1,0 +1,34 @@
+name: Documentation
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'docs/**/*'
+  push:
+    branches:
+      - master
+    paths:
+      - 'docs/**/*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: build and deploy
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == 'true'
+        run: |
+          yarn
+          yarn docs
+          yarn docs:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: chancejs/chancejs
+          GIT_NAME: Travis CI
+          GIT_EMAIL: mail@victorquinn.ocm
+          GIT_SOURCE: _docpress

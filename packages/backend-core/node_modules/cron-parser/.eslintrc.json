@@ -1,0 +1,15 @@
+{
+    "rules": {
+        "eol-last": ["error", "always"],
+        "quotes": ["error", "single"],
+        "semi": ["error", "always"]
+    },
+    "overrides": [
+        {
+            "files": ["test/**.js"],
+            "parserOptions": {
+                "ecmaVersion": 6
+            }
+        }
+    ]
+}

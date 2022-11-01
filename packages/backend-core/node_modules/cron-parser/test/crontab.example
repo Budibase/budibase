@@ -1,0 +1,7 @@
+# Comment line (ignore)
+ENV1="test1"
+ENV2="test2"
+
+*/10 * * * * /path/to/exe
+*/10 * * * * /path/to/exe
+0 09-18 * * 1-5 /path/to/exe
