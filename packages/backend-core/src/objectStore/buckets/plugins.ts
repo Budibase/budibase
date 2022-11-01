@@ -3,6 +3,7 @@ import * as objectStore from "../objectStore"
 import tenancy from "../../tenancy"
 import * as cloudfront from "../cloudfront"
 import { Plugin } from "@budibase/types"
+import { v4 as uuid } from "uuid"
 
 export const enrichPluginURLs = (plugins: Plugin[]) => {
   if (!plugins || !plugins.length) {
@@ -16,7 +17,11 @@ export const enrichPluginURLs = (plugins: Plugin[]) => {
 }
 
 const getPluginJSUrl = (plugin: Plugin) => {
-  const file = getPluginJSPath(plugin)
+  let file = getPluginJSPath(plugin)
+  // use a random uuid to ensure browser doesn't cache plugins
+  // TODO: Enrich apps with correct hash so that proper
+  // browser and cloudfront caching can be used
+  file = `${file}?r=${uuid()}`
   if (env.CLOUDFRONT_CDN) {
     return cloudfront.getPresignedUrl(file)
   } else {
