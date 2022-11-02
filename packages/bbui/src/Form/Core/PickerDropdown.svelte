@@ -61,6 +61,7 @@
   const onPickPrimary = newValue => {
     dispatch("pickprimary", newValue)
     primaryOpen = false
+    dispatch("closed")
   }
 
   const onClearPrimary = () => {
@@ -92,6 +93,7 @@
     if (primaryOpen) {
       event.stopPropagation()
       primaryOpen = false
+      dispatch("closed")
     }
   }
 
