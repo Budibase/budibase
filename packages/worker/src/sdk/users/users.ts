@@ -184,7 +184,9 @@ export const save = async (
 ): Promise<CreateUserResponse> => {
   const tenantId = tenancy.getTenantId()
   const db = tenancy.getGlobalDB()
-  let { email, _id } = user
+
+  let { email, _id, userGroups = [] } = user
+
   if (!email && !_id) {
     throw new Error("_id or email is required")
   }
@@ -220,8 +222,16 @@ export const save = async (
   let builtUser = await buildUser(user, opts, tenantId, dbUser)
 
   // make sure we set the _id field for a new user
+  // Also if this is a new user, associate groups with them
+  let groupPromises = []
   if (!_id) {
     _id = builtUser._id!
+
+    if (userGroups.length > 0) {
+      for (let groupId of userGroups) {
+        groupPromises.push(groupsSdk.addUsers(groupId, [_id]))
+      }
+    }
   }
 
   try {
@@ -234,6 +244,8 @@ export const save = async (
     await cache.user.invalidateUser(response.id)
     // let server know to sync user
     await apps.syncUserInApps(_id)
+
+    await Promise.all(groupPromises)
 
     return {
       _id: response.id,
@@ -557,12 +569,13 @@ export const invite = async (
     successful: [],
     unsuccessful: [],
   }
-
+  console.log(users)
   const matchedEmails = await searchExistingEmails(users.map(u => u.email))
   const newUsers = []
 
   // separate duplicates from new users
   for (let user of users) {
+    console.log(user)
     if (matchedEmails.includes(user.email)) {
       response.unsuccessful.push({ email: user.email, reason: "Unavailable" })
     } else {
