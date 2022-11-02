@@ -1,4 +1,5 @@
 import events from "events"
+import { timeout } from "../../utils"
 
 /**
  * Bull works with a Job wrapper around all messages that contains a lot more information about
@@ -27,6 +28,7 @@ class InMemoryQueue {
   _opts?: any
   _messages: any[]
   _emitter: EventEmitter
+  _runCount: number
   /**
    * The constructor the queue, exactly the same as that of Bulls.
    * @param {string} name The name of the queue which is being configured.
@@ -38,6 +40,7 @@ class InMemoryQueue {
     this._opts = opts
     this._messages = []
     this._emitter = new events.EventEmitter()
+    this._runCount = 0
   }
 
   /**
@@ -59,6 +62,7 @@ class InMemoryQueue {
       if (resp.then != null) {
         await resp
       }
+      this._runCount++
     })
   }
 
@@ -121,6 +125,15 @@ class InMemoryQueue {
 
   on() {
     // do nothing
+  }
+
+  async waitForCompletion() {
+    const currentCount = this._runCount
+    let increased = false
+    do {
+      await timeout(50)
+      increased = this._runCount > currentCount
+    } while (!increased)
   }
 }
 
