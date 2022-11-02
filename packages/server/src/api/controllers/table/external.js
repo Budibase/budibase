@@ -3,7 +3,6 @@ const {
   breakExternalTableId,
 } = require("../../../integrations/utils")
 const {
-  getTable,
   generateForeignKey,
   generateJunctionTableName,
   foreignKeyStructure,
@@ -20,6 +19,7 @@ const csvParser = require("../../../utilities/csvParser")
 const { handleRequest } = require("../row/external")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
+const sdk = require("../../../sdk")
 
 async function makeTableRequest(
   datasource,
@@ -181,7 +181,7 @@ exports.save = async function (ctx) {
 
   let oldTable
   if (ctx.request.body && ctx.request.body._id) {
-    oldTable = await getTable(ctx.request.body._id)
+    oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
 
   if (hasTypeChanged(tableToSave, oldTable)) {
@@ -281,7 +281,7 @@ exports.save = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const tableToDelete = await getTable(ctx.params.tableId)
+  const tableToDelete = await sdk.tables.getTable(ctx.params.tableId)
   if (!tableToDelete || !tableToDelete.created) {
     ctx.throw(400, "Cannot delete tables which weren't created in Budibase.")
   }
@@ -303,7 +303,7 @@ exports.destroy = async function (ctx) {
 }
 
 exports.bulkImport = async function (ctx) {
-  const table = await getTable(ctx.params.tableId)
+  const table = await sdk.tables.getTable(ctx.params.tableId)
   const { dataImport } = ctx.request.body
   if (!dataImport || !dataImport.schema || !dataImport.csvString) {
     ctx.throw(400, "Provided data import information is invalid.")

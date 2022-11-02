@@ -1,6 +1,7 @@
 const newid = require("./newid")
 const {
-  DocumentType: CoreDocTypes,
+  DocumentType: CoreDocType,
+  InternalTable,
   getRoleParams,
   generateRoleID,
   APP_DEV_PREFIX,
@@ -13,6 +14,12 @@ const {
   generateAppID,
   getQueryIndex,
   ViewName,
+  getDocParams,
+  getRowParams,
+  generateRowID,
+  getUserMetadataParams,
+  generateUserMetadataID,
+  getGlobalIDFromUserMetadataID,
 } = require("@budibase/backend-core/db")
 
 const UNICODE_MAX = "\ufff0"
@@ -23,30 +30,7 @@ const AppStatus = {
   DEPLOYED: "published",
 }
 
-const DocumentType = {
-  ...CoreDocTypes,
-  TABLE: "ta",
-  ROW: "ro",
-  USER: "us",
-  AUTOMATION: "au",
-  LINK: "li",
-  WEBHOOK: "wh",
-  INSTANCE: "inst",
-  LAYOUT: "layout",
-  SCREEN: "screen",
-  DATASOURCE: "datasource",
-  DATASOURCE_PLUS: "datasource_plus",
-  QUERY: "query",
-  DEPLOYMENTS: "deployments",
-  METADATA: "metadata",
-  MEM_VIEW: "view",
-  USER_FLAG: "flag",
-  AUTOMATION_METADATA: "meta_au",
-}
-
-const InternalTables = {
-  USER_METADATA: "ta_users",
-}
+const DocumentType = CoreDocType
 
 const SearchIndexes = {
   ROWS: "rows",
@@ -66,11 +50,11 @@ exports.APP_PREFIX = APP_PREFIX
 exports.APP_DEV_PREFIX = APP_DEV_PREFIX
 exports.isDevAppID = isDevAppID
 exports.isProdAppID = isProdAppID
-exports.USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
-exports.LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+exports.USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
+exports.LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
 exports.TABLE_ROW_PREFIX = `${DocumentType.ROW}${SEPARATOR}${DocumentType.TABLE}`
 exports.ViewName = ViewName
-exports.InternalTables = InternalTables
+exports.InternalTables = InternalTable
 exports.DocumentType = DocumentType
 exports.SEPARATOR = SEPARATOR
 exports.UNICODE_MAX = UNICODE_MAX
@@ -79,36 +63,15 @@ exports.AppStatus = AppStatus
 exports.BudibaseInternalDB = BudibaseInternalDB
 exports.generateAppID = generateAppID
 exports.generateDevAppID = getDevelopmentAppID
-
 exports.generateRoleID = generateRoleID
 exports.getRoleParams = getRoleParams
-
 exports.getQueryIndex = getQueryIndex
-
-/**
- * If creating DB allDocs/query params with only a single top level ID this can be used, this
- * is usually the case as most of our docs are top level e.g. tables, automations, users and so on.
- * More complex cases such as link docs and rows which have multiple levels of IDs that their
- * ID consists of need their own functions to build the allDocs parameters.
- * @param {string} docType The type of document which input params are being built for, e.g. user,
- * link, app, table and so on.
- * @param {string|null} docId The ID of the document minus its type - this is only needed if looking
- * for a singular document.
- * @param {object} otherProps Add any other properties onto the request, e.g. include_docs.
- * @returns {object} Parameters which can then be used with an allDocs request.
- */
-function getDocParams(docType, docId = null, otherProps = {}) {
-  if (docId == null) {
-    docId = ""
-  }
-  return {
-    ...otherProps,
-    startkey: `${docType}${SEPARATOR}${docId}`,
-    endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
-  }
-}
-
 exports.getDocParams = getDocParams
+exports.getRowParams = getRowParams
+exports.generateRowID = generateRowID
+exports.getUserMetadataParams = getUserMetadataParams
+exports.generateUserMetadataID = generateUserMetadataID
+exports.getGlobalIDFromUserMetadataID = getGlobalIDFromUserMetadataID
 
 /**
  * Gets parameters for retrieving tables, this is a utility function for the getDocParams function.
@@ -126,24 +89,6 @@ exports.generateTableID = () => {
 }
 
 /**
- * Gets the DB allDocs/query params for retrieving a row.
- * @param {string|null} tableId The table in which the rows have been stored.
- * @param {string|null} rowId The ID of the row which is being specifically queried for. This can be
- * left null to get all the rows in the table.
- * @param {object} otherProps Any other properties to add to the request.
- * @returns {object} Parameters which can then be used with an allDocs request.
- */
-exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
-  if (tableId == null) {
-    return getDocParams(DocumentType.ROW, null, otherProps)
-  }
-
-  const endOfKey = rowId == null ? `${tableId}${SEPARATOR}` : rowId
-
-  return getDocParams(DocumentType.ROW, endOfKey, otherProps)
-}
-
-/**
  * Given a row ID this will find the table ID within it (only works for internal tables).
  * @param {string} rowId The ID of the row.
  * @returns {string} The table ID.
@@ -153,44 +98,6 @@ exports.getTableIDFromRowID = rowId => {
     .split(DocumentType.TABLE + SEPARATOR)[1]
     .split(SEPARATOR)
   return `${DocumentType.TABLE}${SEPARATOR}${components[0]}`
-}
-
-/**
- * Gets a new row ID for the specified table.
- * @param {string} tableId The table which the row is being created for.
- * @param {string|null} id If an ID is to be used then the UUID can be substituted for this.
- * @returns {string} The new ID which a row doc can be stored under.
- */
-exports.generateRowID = (tableId, id = null) => {
-  id = id || newid()
-  return `${DocumentType.ROW}${SEPARATOR}${tableId}${SEPARATOR}${id}`
-}
-
-/**
- * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
- */
-exports.getUserMetadataParams = (userId = null, otherProps = {}) => {
-  return exports.getRowParams(InternalTables.USER_METADATA, userId, otherProps)
-}
-
-/**
- * Generates a new user ID based on the passed in global ID.
- * @param {string} globalId The ID of the global user.
- * @returns {string} The new user ID which the user doc can be stored under.
- */
-exports.generateUserMetadataID = globalId => {
-  return exports.generateRowID(InternalTables.USER_METADATA, globalId)
-}
-
-/**
- * Breaks up the ID to get the global ID.
- */
-exports.getGlobalIDFromUserMetadataID = id => {
-  const prefix = `${DocumentType.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
-  if (!id || !id.includes(prefix)) {
-    return id
-  }
-  return id.split(prefix)[1]
 }
 
 /**

@@ -1,4 +1,4 @@
-import { Context } from "koa"
+import { Context, Request } from "koa"
 import { User } from "../documents"
 import { License } from "../sdk"
 
@@ -7,7 +7,11 @@ export interface ContextUser extends User {
   license: License
 }
 
-export interface BBContext extends Context {
-  user?: ContextUser
+export interface BBRequest extends Request {
   body: any
+}
+
+export interface BBContext extends Context {
+  request: BBRequest
+  user?: ContextUser
 }

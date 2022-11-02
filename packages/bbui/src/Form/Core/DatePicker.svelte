@@ -17,7 +17,7 @@
   export let timeOnly = false
   export let ignoreTimezones = false
   export let time24hr = false
-
+  export let range = false
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
   let open = false
@@ -41,6 +41,7 @@
     time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
+    mode: range ? "range" : null,
     appendTo,
     disableMobile: "true",
     onReady: () => {
@@ -64,7 +65,6 @@
     if (newValue) {
       newValue = newValue.toISOString()
     }
-
     // If time only set date component to 2000-01-01
     if (timeOnly) {
       // Classic flackpickr causing issues.
@@ -95,7 +95,11 @@
         .slice(0, -1)
     }
 
-    dispatch("change", newValue)
+    if (range) {
+      dispatch("change", event.detail)
+    } else {
+      dispatch("change", newValue)
+    }
   }
 
   const clearDateOnBackspace = event => {
@@ -160,7 +164,7 @@
 {#key redrawOptions}
   <Flatpickr
     bind:flatpickr
-    value={parseDate(value)}
+    value={range ? value : parseDate(value)}
     on:open={onOpen}
     on:close={onClose}
     options={flatpickrOptions}

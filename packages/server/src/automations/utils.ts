@@ -1,10 +1,9 @@
 import { Thread, ThreadType } from "../threads"
 import { definitions } from "./triggerInfo"
-import * as webhooks from "../api/controllers/webhook"
-import { queue } from "./bullboard"
+import { automationQueue } from "./bullboard"
 import newid from "../db/newid"
 import { updateEntityMetadata } from "../utilities"
-import { MetadataTypes, WebhookType } from "../constants"
+import { MetadataTypes } from "../constants"
 import { getProdAppID, doWithDB } from "@budibase/backend-core/db"
 import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
@@ -13,9 +12,10 @@ import {
   getAppId,
   getProdAppDB,
 } from "@budibase/backend-core/context"
-import { tenancy } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
-import { Automation } from "@budibase/types"
+import { Automation, WebhookActionType } from "@budibase/types"
+import sdk from "../sdk"
 
 const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
@@ -28,12 +28,14 @@ const jobMessage = (job: any, message: string) => {
 
 export async function processEvent(job: any) {
   try {
+    const automationId = job.data.automation._id
     console.log(jobMessage(job, "running"))
     // need to actually await these so that an error can be captured properly
-    const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
-    return await tenancy.doInTenant(tenantId, async () => {
+    return await context.doInContext(job.data.event.appId, async () => {
       const runFn = () => Runner.run(job)
-      return quotas.addAutomation(runFn)
+      return quotas.addAutomation(runFn, {
+        automationId,
+      })
     })
   } catch (err) {
     const errJson = JSON.stringify(err)
@@ -77,21 +79,25 @@ export function removeDeprecated(definitions: any) {
 // end the repetition and the job itself
 export async function disableAllCrons(appId: any) {
   const promises = []
-  const jobs = await queue.getRepeatableJobs()
+  const jobs = await automationQueue.getRepeatableJobs()
   for (let job of jobs) {
     if (job.key.includes(`${appId}_cron`)) {
-      promises.push(queue.removeRepeatableByKey(job.key))
+      promises.push(automationQueue.removeRepeatableByKey(job.key))
       if (job.id) {
-        promises.push(queue.removeJobs(job.id))
+        promises.push(automationQueue.removeJobs(job.id))
       }
     }
   }
   return Promise.all(promises)
 }
 
-export async function disableCron(jobId: string, jobKey: string) {
-  await queue.removeRepeatableByKey(jobKey)
-  await queue.removeJobs(jobId)
+export async function disableCronById(jobId: number | string) {
+  const repeatJobs = await automationQueue.getRepeatableJobs()
+  for (let repeatJob of repeatJobs) {
+    if (repeatJob.id === jobId) {
+      await automationQueue.removeRepeatableByKey(repeatJob.key)
+    }
+  }
   console.log(`jobId=${jobId} disabled`)
 }
 
@@ -139,7 +145,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
   ) {
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${newid()}`
-    const job: any = await queue.add(
+    const job: any = await automationQueue.add(
       {
         automation,
         event: { appId, timestamp: Date.now() },
@@ -191,16 +197,12 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
       let db = getAppDB()
       // need to get the webhook to get the rev
       const webhook = await db.get(oldTrigger.webhookId)
-      const ctx = {
-        appId,
-        params: { id: webhook._id, rev: webhook._rev },
-      }
       // might be updating - reset the inputs to remove the URLs
       if (newTrigger) {
         delete newTrigger.webhookId
         newTrigger.inputs = {}
       }
-      await webhooks.destroy(ctx)
+      await sdk.automations.webhook.destroy(webhook._id, webhook._rev)
     } catch (err) {
       // don't worry about not being able to delete, if it doesn't exist all good
     }
@@ -210,18 +212,14 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
     (!isWebhookTrigger(oldAuto) || triggerChanged) &&
     isWebhookTrigger(newAuto)
   ) {
-    const ctx: any = {
-      appId,
-      request: {
-        body: new webhooks.Webhook(
-          "Automation webhook",
-          WebhookType.AUTOMATION,
-          newAuto._id
-        ),
-      },
-    }
-    await webhooks.save(ctx)
-    const id = ctx.body.webhook._id
+    const webhook = await sdk.automations.webhook.save(
+      sdk.automations.webhook.newDoc(
+        "Automation webhook",
+        WebhookActionType.AUTOMATION,
+        newAuto._id
+      )
+    )
+    const id = webhook._id
     newTrigger.webhookId = id
     // the app ID has to be development for this endpoint
     // it can only be used when building the app

@@ -22,6 +22,7 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 # Azure App Service customisations
 if [[ "${TARGETBUILD}" = "aas" ]]; then
     DATA_DIR=/home
+    WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
     /etc/init.d/ssh start
 else
     DATA_DIR=${DATA_DIR:-/data}

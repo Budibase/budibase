@@ -6,6 +6,7 @@ const {
   streamUpload,
   retrieve,
   retrieveToTmp,
+  retrieveDirectory,
   deleteFolder,
   uploadDirectory,
   downloadTarball,
@@ -27,6 +28,7 @@ exports.upload = upload
 exports.streamUpload = streamUpload
 exports.retrieve = retrieve
 exports.retrieveToTmp = retrieveToTmp
+exports.retrieveDirectory = retrieveDirectory
 exports.deleteFolder = deleteFolder
 exports.uploadDirectory = uploadDirectory
 exports.downloadTarball = downloadTarball

@@ -119,6 +119,13 @@
 
     return "var(--spectrum-global-color-static-gray-900)"
   }
+
+  const handleOutsideClick = event => {
+    if (open) {
+      event.stopPropagation()
+      open = false
+    }
+  }
 </script>
 
 <div class="container">
@@ -131,7 +138,7 @@
   </div>
   {#if open}
     <div
-      use:clickOutside={() => (open = false)}
+      use:clickOutside={handleOutsideClick}
       transition:fly|local={{ y: -20, duration: 200 }}
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
       class:spectrum-Popover--align-right={alignRight}

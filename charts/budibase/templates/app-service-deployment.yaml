@@ -79,11 +79,13 @@ spec:
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
         - name: PLUGIN_BUCKET_NAME
-          value: {{ .Values.services.objectStore.pluginBucketName | default "plugins" | quote }}
+          value: {{ .Values.services.objectStore.pluginBucketName | quote }}
         - name: APPS_BUCKET_NAME
-          value: {{ .Values.services.objectStore.appsBucketName | default "apps" | quote }}
+          value: {{ .Values.services.objectStore.appsBucketName | quote }}
         - name: GLOBAL_CLOUD_BUCKET_NAME
-          value: {{ .Values.services.objectStore.globalBucketName | default "global" | quote }}
+          value: {{ .Values.services.objectStore.globalBucketName | quote }}
+        - name: BACKUPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.backupsBucketName | quote }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
         {{ if .Values.services.worker.publicApiRateLimitPerSecond }}

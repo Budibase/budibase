@@ -8,6 +8,7 @@ import {
   updateAppId,
   doInAppContext,
   doInTenant,
+  doInContext,
 } from "../context"
 
 import * as identity from "../context/identity"
@@ -20,5 +21,6 @@ export = {
   updateAppId,
   doInAppContext,
   doInTenant,
+  doInContext,
   identity,
 }

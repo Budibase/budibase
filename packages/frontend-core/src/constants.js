@@ -98,6 +98,7 @@ export const BuilderRoleDescriptions = [
 export const PlanType = {
   FREE: "free",
   TEAM: "team",
+  PRO: "pro",
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
 }
@@ -112,6 +113,7 @@ export const ApiVersion = "1"
 
 export const Features = {
   USER_GROUPS: "userGroups",
+  BACKUPS: "appBackups",
 }
 
 // Role IDs

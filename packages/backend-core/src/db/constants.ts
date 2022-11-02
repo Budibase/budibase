@@ -21,6 +21,7 @@ export enum ViewName {
   ACCOUNT_BY_EMAIL = "account_by_email",
   PLATFORM_USERS_LOWERCASE = "platform_users_lowercase",
   USER_BY_GROUP = "by_group_user",
+  APP_BACKUP_BY_TRIGGER = "by_trigger",
 }
 
 export const DeprecatedViews = {
@@ -28,6 +29,10 @@ export const DeprecatedViews = {
     // removed due to inaccuracy in view doc filter logic
     "by_email",
   ],
+}
+
+export enum InternalTable {
+  USER_METADATA = "ta_users",
 }
 
 export enum DocumentType {
@@ -46,6 +51,23 @@ export enum DocumentType {
   AUTOMATION_LOG = "log_au",
   ACCOUNT_METADATA = "acc_metadata",
   PLUGIN = "plg",
+  DATASOURCE = "datasource",
+  DATASOURCE_PLUS = "datasource_plus",
+  APP_BACKUP = "backup",
+  TABLE = "ta",
+  ROW = "ro",
+  AUTOMATION = "au",
+  LINK = "li",
+  WEBHOOK = "wh",
+  INSTANCE = "inst",
+  LAYOUT = "layout",
+  SCREEN = "screen",
+  QUERY = "query",
+  DEPLOYMENTS = "deployments",
+  METADATA = "metadata",
+  MEM_VIEW = "view",
+  USER_FLAG = "flag",
+  AUTOMATION_METADATA = "meta_au",
 }
 
 export const StaticDatabases = {

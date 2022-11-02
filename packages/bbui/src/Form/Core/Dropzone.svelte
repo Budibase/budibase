@@ -43,6 +43,7 @@
   let selectedImageIdx = 0
   let fileDragged = false
   let selectedUrl
+  let fileInput
   $: selectedImage = value?.[selectedImageIdx] ?? null
   $: fileCount = value?.length ?? 0
   $: isImage =
@@ -102,6 +103,7 @@
       await deleteAttachments(
         value.filter((x, idx) => idx === selectedImageIdx).map(item => item.key)
       )
+      fileInput.value = ""
     }
     selectedImageIdx = 0
   }
@@ -234,6 +236,7 @@
           type="file"
           multiple
           accept={extensions}
+          bind:this={fileInput}
           on:change={handleFile}
         />
         <svg
