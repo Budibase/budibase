@@ -5,7 +5,7 @@ require("svelte/register")
 const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
 const uuid = require("uuid")
-const { ObjectStoreBuckets, ATTACHMENT_DIR } = require("../../../constants")
+const { ObjectStoreBuckets } = require("../../../constants")
 const { processString } = require("@budibase/string-templates")
 const {
   loadHandlebarsFile,
@@ -90,7 +90,7 @@ export const uploadFile = async function (ctx: any) {
 
     return prepareUpload({
       file,
-      s3Key: `${ctx.appId}/${ATTACHMENT_DIR}/${processedFileName}`,
+      s3Key: `${ctx.appId}/attachments/${processedFileName}`,
       bucket: ObjectStoreBuckets.APPS,
     })
   })
