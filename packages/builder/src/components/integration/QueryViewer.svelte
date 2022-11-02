@@ -137,7 +137,12 @@
           queryBindings={query.parameters}
           bindable={false}
           on:change={e => {
-            query.parameters = e.detail
+            query.parameters = e.detail.map(binding => {
+              return {
+                name: binding.name,
+                default: binding.value,
+              }
+            })
           }}
         />
       {/key}

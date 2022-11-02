@@ -2,7 +2,6 @@
   import { Body, Button, Heading, Layout } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { getUserBindings } from "builderStore/dataBinding"
-  import { createEventDispatcher } from "svelte"
   export let bindable = true
   export let queryBindings = []
 
@@ -12,7 +11,6 @@
     acc[binding.name] = binding.default
     return acc
   }, {})
-  let dispatch = createEventDispatcher()
 
   function newQueryBinding() {
     queryBindings = [...queryBindings, {}]
@@ -46,17 +44,7 @@
       valuePlaceholder="Default"
       bindings={[...userBindings]}
       bindingDrawerLeft="260px"
-      on:change={e => {
-        dispatch(
-          "change",
-          e.detail.map(binding => {
-            return {
-              name: binding.name,
-              default: binding.value,
-            }
-          })
-        )
-      }}
+      on:change
     />
   </div>
 </Layout>
