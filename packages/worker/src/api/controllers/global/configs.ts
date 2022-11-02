@@ -271,11 +271,10 @@ export const publicSettings = async function (ctx: Ctx) {
     // enrich the logo url
     // empty url means deleted
     if (config.config.logoUrl !== "") {
-      const suffix = config.config.logoUrlEtag
-        ? `?etag=${config.config.logoUrlEtag}`
-        : ""
       config.config.logoUrl = objectStore.getGlobalFileUrl(
-        `settings/logoUrl${suffix}`
+        "settings",
+        "logoUrl",
+        config.config.logoUrlEtag
       )
     }
 
@@ -340,7 +339,7 @@ export const upload = async function (ctx: UserCtx) {
     }
   }
 
-  const url = objectStore.getGlobalFileUrl(baseKey)
+  const url = objectStore.getGlobalFilePath(type, name)
   cfgStructure.config[`${name}`] = url
   if (result.ETag) {
     cfgStructure.config[`${name}Etag`] = result.ETag.replace(/"/g, "")
