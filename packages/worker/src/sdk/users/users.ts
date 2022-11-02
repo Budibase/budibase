@@ -569,13 +569,12 @@ export const invite = async (
     successful: [],
     unsuccessful: [],
   }
-  console.log(users)
+
   const matchedEmails = await searchExistingEmails(users.map(u => u.email))
   const newUsers = []
 
   // separate duplicates from new users
   for (let user of users) {
-    console.log(user)
     if (matchedEmails.includes(user.email)) {
       response.unsuccessful.push({ email: user.email, reason: "Unavailable" })
     } else {
