@@ -82,10 +82,20 @@ exports.validate = async ({ tableId, row, table }) => {
         // non required MultiSelect creates an empty array, which should not throw errors
         errors[fieldName] = [`${fieldName} is required`]
       }
-    } else if (type === FieldTypes.JSON && typeof row[fieldName] === "string") {
+    } else if (
+      (type === FieldTypes.ATTACHMENT || type === FieldTypes.JSON) &&
+      typeof row[fieldName] === "string"
+    ) {
       // this should only happen if there is an error
       try {
-        JSON.parse(row[fieldName])
+        const json = JSON.parse(row[fieldName])
+        if (type === FieldTypes.ATTACHMENT) {
+          if (Array.isArray(json)) {
+            row[fieldName] = json
+          } else {
+            errors[fieldName] = [`Must be an array`]
+          }
+        }
       } catch (err) {
         errors[fieldName] = [`Contains invalid JSON`]
       }
