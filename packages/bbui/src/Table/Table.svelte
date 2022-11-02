@@ -76,7 +76,7 @@
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
   $: showEditColumn = allowEditRows || allowSelectRows
-  $: cellStyles = computeCellStyles(schema)
+  //$: cellStyles = computeCellStyles(schema)
 
   // Deselect the "select all" checkbox when the user navigates to a new page
   $: {
@@ -249,15 +249,21 @@
     }
   }
 
-  const computeCellStyles = schema => {
+  const computeCellStyles = (field, row) => {
     let styles = {}
     Object.keys(schema || {}).forEach(field => {
       styles[field] = ""
       if (schema[field].color) {
-        styles[field] += `color: ${schema[field].color};`
+        //TODO - use conditions utils to do this check
+        if (schema[field].conditions.color.referenceValue === row[field]) {
+          styles[field] += `color: ${schema[field].color};`
+        }
       }
       if (schema[field].background) {
-        styles[field] += `background-color: ${schema[field].background};`
+        //TODO - use conditions utils to do this check
+        if (schema[field].conditions.background.referenceValue === row[field]) {
+          styles[field] += `background-color: ${schema[field].background};`
+        }
       }
       if (schema[field].align === "Center") {
         styles[field] += "justify-content: center; text-align: center;"
@@ -266,7 +272,7 @@
         styles[field] += "justify-content: flex-end; text-align: right;"
       }
     })
-    return styles
+    return styles[field]
   }
 </script>
 
@@ -373,7 +379,7 @@
               <div
                 class="spectrum-Table-cell"
                 class:spectrum-Table-cell--divider={!!schema[field].divider}
-                style={cellStyles[field]}
+                style={computeCellStyles(field, row)}
                 on:click={() => {
                   if (!schema[field]?.preventSelectRow) {
                     dispatch("click", row)

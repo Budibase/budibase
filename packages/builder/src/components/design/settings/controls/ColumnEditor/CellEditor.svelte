@@ -11,6 +11,12 @@
 
   const updateBoundValue = value => {
     boundValue = { ...value }
+    if (!column.conditions) {
+      column.conditions = {
+        background: {},
+        color: {},
+      }
+    }
   }
 
   const open = () => {
