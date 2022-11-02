@@ -87,6 +87,20 @@
       updateValue(event.target.value)
     }
   }
+
+  const handlePrimaryOutsideClick = event => {
+    if (primaryOpen) {
+      event.stopPropagation()
+      primaryOpen = false
+    }
+  }
+
+  const handleSecondaryOutsideClick = event => {
+    if (secondaryOpen) {
+      event.stopPropagation()
+      secondaryOpen = false
+    }
+  }
 </script>
 
 <div
@@ -148,7 +162,7 @@
   </div>
   {#if primaryOpen}
     <div
-      use:clickOutside={() => (primaryOpen = false)}
+      use:clickOutside={handlePrimaryOutsideClick}
       transition:fly|local={{ y: -20, duration: 200 }}
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
       class:auto-width={autoWidth}
@@ -256,7 +270,7 @@
         {disabled}
         class:is-open={secondaryOpen}
         aria-haspopup="listbox"
-        on:mousedown={onClickSecondary}
+        on:click={onClickSecondary}
       >
         {#if secondaryFieldIcon}
           <span class="option-left">
@@ -281,7 +295,7 @@
       </button>
       {#if secondaryOpen}
         <div
-          use:clickOutside={() => (secondaryOpen = false)}
+          use:clickOutside={handleSecondaryOutsideClick}
           transition:fly|local={{ y: -20, duration: 200 }}
           class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
           style="width: 30%"

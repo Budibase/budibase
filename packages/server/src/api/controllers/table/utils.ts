@@ -1,11 +1,5 @@
 import { transform } from "../../../utilities/csvParser"
-import {
-  getRowParams,
-  generateRowID,
-  InternalTables,
-  getTableParams,
-  BudibaseInternalDB,
-} from "../../../db/utils"
+import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
 import { isEqual } from "lodash"
 import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
 import {
@@ -17,11 +11,6 @@ import {
   SwitchableTypes,
   CanSwitchTypes,
 } from "../../../constants"
-import {
-  isExternalTable,
-  breakExternalTableId,
-  isSQL,
-} from "../../../integrations/utils"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 const { getAppDB } = require("@budibase/backend-core/context")
@@ -148,7 +137,9 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
     finalData.push(row)
   }
 
-  await quotas.addRows(finalData.length, () => db.bulkDocs(finalData))
+  await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
+    tableId: table._id,
+  })
   await events.rows.imported(table, "csv", finalData.length)
   return table
 }
@@ -251,46 +242,6 @@ class TableSaveFunctions {
 
   getUpdatedRows() {
     return this.rows
-  }
-}
-
-export async function getAllInternalTables() {
-  const db = getAppDB()
-  const internalTables = await db.allDocs(
-    getTableParams(null, {
-      include_docs: true,
-    })
-  )
-  return internalTables.rows.map((tableDoc: any) => ({
-    ...tableDoc.doc,
-    type: "internal",
-    sourceId: BudibaseInternalDB._id,
-  }))
-}
-
-export async function getAllExternalTables(datasourceId: any) {
-  const db = getAppDB()
-  const datasource = await db.get(datasourceId)
-  if (!datasource || !datasource.entities) {
-    throw "Datasource is not configured fully."
-  }
-  return datasource.entities
-}
-
-export async function getExternalTable(datasourceId: any, tableName: any) {
-  const entities = await getAllExternalTables(datasourceId)
-  return entities[tableName]
-}
-
-export async function getTable(tableId: any) {
-  const db = getAppDB()
-  if (isExternalTable(tableId)) {
-    let { datasourceId, tableName } = breakExternalTableId(tableId)
-    const datasource = await db.get(datasourceId)
-    const table = await getExternalTable(datasourceId, tableName)
-    return { ...table, sql: isSQL(datasource) }
-  } else {
-    return db.get(tableId)
   }
 }
 

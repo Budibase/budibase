@@ -1,5 +1,5 @@
 const { processEvent } = require("./utils")
-const { queue, shutdown } = require("./bullboard")
+const { automationQueue, shutdown } = require("./bullboard")
 const { TRIGGER_DEFINITIONS, rebootTrigger } = require("./triggers")
 const { ACTION_DEFINITIONS } = require("./actions")
 
@@ -8,7 +8,7 @@ const { ACTION_DEFINITIONS } = require("./actions")
  */
 exports.init = async function () {
   // this promise will not complete
-  const promise = queue.process(async job => {
+  const promise = automationQueue.process(async job => {
     await processEvent(job)
   })
   // on init we need to trigger any reboot automations
@@ -17,13 +17,13 @@ exports.init = async function () {
 }
 
 exports.getQueues = () => {
-  return [queue]
+  return [automationQueue]
 }
 
 exports.shutdown = () => {
   return shutdown()
 }
 
-exports.queue = queue
+exports.automationQueue = automationQueue
 exports.TRIGGER_DEFINITIONS = TRIGGER_DEFINITIONS
 exports.ACTION_DEFINITIONS = ACTION_DEFINITIONS

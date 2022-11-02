@@ -43,6 +43,7 @@
   }
 
   const onRouteLoading = ({ detail }) => {
+    routeStore.actions.setRouteParams(detail.params || {})
     routeStore.actions.setActiveRoute(detail.route)
   }
 

@@ -1,10 +1,6 @@
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { UserStatus } = require("@budibase/backend-core/constants")
-const { ObjectStoreBuckets } = require("@budibase/backend-core/objectStore")
-
-exports.JobQueues = {
-  AUTOMATIONS: "automationQueue",
-}
+const { objectStore } = require("@budibase/backend-core")
 
 const FilterTypes = {
   STRING: "string",
@@ -31,6 +27,7 @@ exports.NoEmptyFilterStrings = [
 
 exports.FieldTypes = {
   STRING: "string",
+  BARCODEQR: "barcodeqr",
   LONGFORM: "longform",
   OPTIONS: "options",
   NUMBER: "number",
@@ -51,6 +48,7 @@ exports.CanSwitchTypes = [
     exports.FieldTypes.STRING,
     exports.FieldTypes.OPTIONS,
     exports.FieldTypes.LONGFORM,
+    exports.FieldTypes.BARCODEQR,
   ],
   [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
 ]
@@ -198,10 +196,6 @@ exports.BuildSchemaErrors = {
   INVALID_COLUMN: "invalid_column",
 }
 
-exports.WebhookType = {
-  AUTOMATION: "automation",
-}
-
 exports.AutomationErrors = {
   INCORRECT_TYPE: "INCORRECT_TYPE",
   MAX_ITERATIONS: "MAX_ITERATIONS_REACHED",
@@ -209,6 +203,6 @@ exports.AutomationErrors = {
 }
 
 // pass through the list from the auth/core lib
-exports.ObjectStoreBuckets = ObjectStoreBuckets
+exports.ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 
 exports.MAX_AUTOMATION_RECURRING_ERRORS = 5

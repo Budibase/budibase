@@ -14,6 +14,7 @@ export const createLicensingStore = () => {
     isFreePlan: true,
     // features
     groupsEnabled: false,
+    backupsEnabled: false,
     // the currently used quotas from the db
     quotaUsage: undefined,
     // derived quota metrics for percentages used
@@ -56,12 +57,17 @@ export const createLicensingStore = () => {
       const groupsEnabled = license.features.includes(
         Constants.Features.USER_GROUPS
       )
+      const backupsEnabled = license.features.includes(
+        Constants.Features.BACKUPS
+      )
+
       store.update(state => {
         return {
           ...state,
           license,
           isFreePlan,
           groupsEnabled,
+          backupsEnabled,
         }
       })
     },
