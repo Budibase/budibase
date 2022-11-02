@@ -132,7 +132,15 @@
           config={integrationInfo.extra}
         />
       {/if}
-      <BindingBuilder bind:queryBindings={query.parameters} bindable={false} />
+      {#key query.parameters}
+        <BindingBuilder
+          queryBindings={query.parameters}
+          bindable={false}
+          on:change={e => {
+            query.parameters = e.detail
+          }}
+        />
+      {/key}
     {/if}
   </div>
   {#if shouldShowQueryConfig}
