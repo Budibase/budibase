@@ -44,7 +44,7 @@
   // run the validation whenever the config changes
   $: validation.check(config)
   // dispatch the validation result
-  $: dispatch("valid", $validation.valid)
+  $: dispatch("valid", Object.keys($validation.errors).length === 0)
 
   let addButton
 
