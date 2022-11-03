@@ -158,7 +158,7 @@ export const buildUserEndpoints = API => ({
         userInfo: {
           admin: user.admin ? { global: true } : undefined,
           builder: user.admin || user.builder ? { global: true } : undefined,
-          groups: user.groups,
+          userGroups: user.groups,
         },
       })),
     })
