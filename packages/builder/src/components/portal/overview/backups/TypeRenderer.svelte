@@ -1,13 +1,29 @@
 <script>
+  import { BackupTrigger } from "constants/backend/backups"
   export let row
 
-  $: baseTrig = row?.trigger || "manual"
+  $: trigger = row?.trigger || "manual"
   $: type = row?.type || "backup"
-  $: trigger = baseTrig.charAt(0).toUpperCase() + baseTrig.slice(1)
+
+  function printTrigger(trig) {
+    let final = "undefined"
+    switch (trig) {
+      case BackupTrigger.PUBLISH:
+        final = "published"
+        break
+      case BackupTrigger.RESTORING:
+        final = "pre-restore"
+        break
+      default:
+        final = trig
+        break
+    }
+    return final.charAt(0).toUpperCase() + final.slice(1)
+  }
 </script>
 
 <div class="cell">
-  {trigger}
+  {printTrigger(trigger)}
   {type}
 </div>
 

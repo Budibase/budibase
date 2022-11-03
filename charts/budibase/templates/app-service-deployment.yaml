@@ -84,6 +84,8 @@ spec:
           value: {{ .Values.services.objectStore.appsBucketName | quote }}
         - name: GLOBAL_CLOUD_BUCKET_NAME
           value: {{ .Values.services.objectStore.globalBucketName | quote }}
+        - name: BACKUPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.backupsBucketName | quote }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
         {{ if .Values.services.worker.publicApiRateLimitPerSecond }}

@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
   export let row
 
@@ -49,6 +49,10 @@
   async function downloadExport() {
     window.open(`/api/apps/${row.appId}/backups/${row._id}/file`, "_blank")
   }
+
+  onMount(() => {
+    name = row.name
+  })
 </script>
 
 <div class="cell">
@@ -62,7 +66,7 @@
       <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
       <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
     {/if}
-    <MenuItem on:click={updateDialog.show} icon="Edit">Update</MenuItem>
+    <MenuItem on:click={updateDialog.show} icon="Edit">Rename</MenuItem>
   </ActionMenu>
 </div>
 
@@ -100,7 +104,7 @@
   title="Update Backup"
   warning={false}
 >
-  <Input onlabel="Backup name" placeholder={row.name} bind:value={name} />
+  <Input onlabel="Backup name" bind:value={name} />
 </ConfirmDialog>
 
 <style>
