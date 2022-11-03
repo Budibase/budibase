@@ -11,6 +11,7 @@ import env from "../environment"
 import { budibaseTempDir, ObjectStoreBuckets } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db/constants"
+import localStorage from "../localStorage"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -99,7 +100,8 @@ export const ObjectStore = (
       // when generating a presigned url it's important
       // that the endpoint of the client matches the hostname
       // where the file will be accessed
-      config.endpoint = env.PLATFORM_URL
+      const referer = localStorage.getReferrer()
+      config.endpoint = referer.origin
     } else {
       config.endpoint = env.MINIO_URL
     }

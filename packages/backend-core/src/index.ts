@@ -22,6 +22,7 @@ import plugins from "./plugin"
 import encryption from "./security/encryption"
 import * as objectStore from "./objectStore"
 import * as queue from "./queue"
+import localStorage from "./localStorage"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"
@@ -67,6 +68,7 @@ const core = {
   encryption,
   queue,
   permissions,
+  localStorage,
 }
 
 export = core

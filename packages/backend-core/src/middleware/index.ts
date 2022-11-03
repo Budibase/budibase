@@ -13,6 +13,7 @@ const adminOnly = require("./adminOnly")
 const builderOrAdmin = require("./builderOrAdmin")
 const builderOnly = require("./builderOnly")
 const joiValidator = require("./joi-validator")
+import localStorage from "./localStorage"
 
 const pkg = {
   google,
@@ -33,6 +34,7 @@ const pkg = {
   builderOnly,
   builderOrAdmin,
   joiValidator,
+  localStorage,
 }
 
 export = pkg

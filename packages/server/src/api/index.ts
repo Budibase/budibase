@@ -1,4 +1,4 @@
-const Router = require("@koa/router")
+import Router from "@koa/router"
 const {
   buildAuthMiddleware,
   auditLog,
@@ -12,14 +12,17 @@ const { mainRoutes, staticRoutes, publicRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
 const { middleware: pro } = require("@budibase/pro")
-const { shutdown } = require("./routes/public")
+import { middleware } from "@budibase/backend-core"
 
-const router = new Router()
+export { shutdown } from "./routes/public"
+
+export const router: Router = new Router()
 
 router.get("/health", ctx => (ctx.status = 200))
 router.get("/version", ctx => (ctx.body = pkg.version))
 
 router
+  .use(middleware.localStorage)
   .use(
     compress({
       threshold: 2048,
@@ -62,7 +65,7 @@ router
 router.use(async (ctx, next) => {
   try {
     await next()
-  } catch (err) {
+  } catch (err: any) {
     ctx.status = err.status || err.statusCode || 500
     const error = errors.getPublicError(err)
     ctx.body = {
@@ -91,6 +94,3 @@ router.use(publicRoutes.allowedMethods())
 // WARNING - static routes will catch everything else after them this must be last
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
-
-module.exports.router = router
-module.exports.shutdown = shutdown

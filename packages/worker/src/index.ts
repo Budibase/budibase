@@ -23,7 +23,7 @@ const { passport } = require("@budibase/backend-core/auth")
 const { logAlert } = require("@budibase/backend-core/logging")
 const logger = require("koa-pino-logger")
 const http = require("http")
-const api = require("./api")
+import * as api from "./api"
 const redis = require("./utilities/redis")
 const Sentry = require("@sentry/node")
 import { events, pinoSettings } from "@budibase/backend-core"
@@ -45,7 +45,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 // api routes
-app.use(api.routes())
+app.use(api.router.routes())
 
 // sentry
 if (env.isProd()) {

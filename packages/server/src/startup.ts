@@ -19,7 +19,7 @@ import eventEmitter from "./events"
 import * as migrations from "./migrations"
 import bullboard from "./automations/bullboard"
 import * as pro from "@budibase/pro"
-import api from "./api"
+import * as api from "./api"
 import sdk from "./sdk"
 const pino = require("koa-pino-logger")
 
