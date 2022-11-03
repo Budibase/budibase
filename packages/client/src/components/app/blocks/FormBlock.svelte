@@ -48,6 +48,9 @@
     },
     {
       "##eventHandlerType": "Close Screen Modal",
+      parameters: {
+        url: actionUrl,
+      },
     },
     {
       "##eventHandlerType": "Navigate To",
@@ -68,6 +71,9 @@
     },
     {
       "##eventHandlerType": "Close Screen Modal",
+      parameters: {
+        url: actionUrl,
+      },
     },
     {
       "##eventHandlerType": "Navigate To",
