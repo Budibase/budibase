@@ -102,7 +102,7 @@
       }
 
       //Add cell conditions
-      newSchema[columnName].conditions = cellConditions.filter(
+      newSchema[columnName].conditions = cellConditions?.filter(
         condition => condition.column === columnName
       )
 

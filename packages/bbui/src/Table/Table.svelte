@@ -6,6 +6,7 @@
   import { cloneDeep, deepGet } from "../helpers"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
   import Checkbox from "../Form/Checkbox.svelte"
+  import { getConditionalCellSettingValues } from "../../../client/src/utils/conditions"
 
   /**
    * The expected schema is our normal couch schemas for our tables.
@@ -254,23 +255,26 @@
       styles[field] = ""
 
       ///----
-      const backgroundCondition = schema[field].conditions?.filter(
+      const conditionalCellValues = getConditionalCellSettingValues(
+        row,
+        field,
+        schema[field].conditions
+      )
+      const conditionalBackground = conditionalCellValues?.filter(
         condition => condition.setting === "background"
       )[0]
-      const colorCondition = schema[field].conditions?.filter(
+      const conditionalColor = conditionalCellValues?.filter(
         condition => condition.setting === "color"
       )[0]
-      //TODO - use conditions utils to do this check
-      if (colorCondition?.referenceValue === row[field]) {
-        styles[field] += `color: ${colorCondition?.settingValue};`
+      if (conditionalColor) {
+        styles[field] += `color: ${conditionalColor?.settingValue};`
       } else if (schema[field].color) {
         styles[field] += `color: ${schema[field].color};`
       }
-      //TODO - use conditions utils to do this check
-      if (backgroundCondition?.referenceValue === row[field]) {
+      if (conditionalBackground) {
         styles[
           field
-        ] += `background-color: ${backgroundCondition?.settingValue};`
+        ] += `background-color: ${conditionalBackground?.settingValue};`
       } else if (schema[field].background) {
         styles[field] += `background-color: ${schema[field].background};`
       }
