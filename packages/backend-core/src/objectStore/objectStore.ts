@@ -73,6 +73,7 @@ const PUBLIC_BUCKETS = [
 /**
  * Gets a connection to the object store using the S3 SDK.
  * @param {string} bucket the name of the bucket which blobs will be uploaded/retrieved from.
+ * @param {object} opts configuration for the object store.
  * @return {Object} an S3 object store object, check S3 Nodejs SDK for usage.
  * @constructor
  */
@@ -94,14 +95,14 @@ export const ObjectStore = (
     }
   }
 
-  // custom S3 is in use
+  // custom S3 is in use i.e. minio
   if (env.MINIO_URL) {
     if (opts.presigning) {
-      // when generating a presigned url it's important
-      // that the endpoint of the client matches the hostname
-      // where the file will be accessed
-      const referer = localStorage.getReferrer()
-      config.endpoint = referer.origin
+      // IMPORTANT: Signed urls will inspect the host header of the request.
+      // Normally a signed url will need to be generated with a specified host in mind.
+      // To support dynamic hosts, e.g. some unknown self-hosted installation url,
+      // use a predefined host. The host 'minio-service' is also forwarded to minio requests via nginx
+      config.endpoint = "minio-service"
     } else {
       config.endpoint = env.MINIO_URL
     }
@@ -328,7 +329,9 @@ export const getPresignedUrl = (
     Key: sanitizeKey(filepath),
     Expires: durationSeconds,
   }
-  return objectStore.getSignedUrl("getObject", params)
+  const url = objectStore.getSignedUrl("getObject", params)
+  const signedUrl = new URL(url)
+  return `${signedUrl.pathname}${signedUrl.search}`
 }
 
 /**

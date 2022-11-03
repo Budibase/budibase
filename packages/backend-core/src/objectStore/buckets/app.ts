@@ -15,13 +15,13 @@ import * as cloudfront from "../cloudfront"
 export const clientLibraryUrl = (appId: string, version: string) => {
   if (env.isProd()) {
     let file = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
-    // append app version to bust the cache
-    if (version) {
-      file += `?v=${version}`
-    }
     if (env.CLOUDFRONT_CDN) {
-      file = `${file}`
-      // don't need to use presigned for client
+      // append app version to bust the cache
+      if (version) {
+        file += `?v=${version}`
+      }
+      // don't need to use presigned for client with cloudfront
+      // file is public
       return cloudfront.getUrl(file)
     } else {
       return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
