@@ -7,6 +7,7 @@
     Layout,
     Select,
     DatePicker,
+    Checkbox,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
@@ -188,6 +189,7 @@
                   bind:value={condition.referenceValue}
                 />
               {/if}
+              <Checkbox text="Row" bind:value={condition.applyToRow} />
               <Icon
                 name="Duplicate"
                 hoverable

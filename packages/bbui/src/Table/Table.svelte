@@ -249,16 +249,58 @@
     }
   }
 
-  const computeCellStyles = (field, row) => {
-    let styles = {}
-    Object.keys(schema || {}).forEach(field => {
-      styles[field] = ""
+  const computeCellStyle = (field, row) => {
+    let styles = ""
+    const conditionalCellValues = getConditionalCellSettingValues(
+      row,
+      field,
+      schema[field].conditions
+    )
+    let conditionalBackground = conditionalCellValues?.filter(
+      condition => condition.setting === "background"
+    )[0]
+    let conditionalColor = conditionalCellValues?.filter(
+      condition => condition.setting === "color"
+    )[0]
 
-      ///----
+    //Compute styles if 'applyToRow' is checked
+    const rowStyles = computeRowStyles(row)
+    if (rowStyles.length > 0) return rowStyles
+
+    if (conditionalColor) {
+      styles += `color: ${conditionalColor?.settingValue};`
+    } else if (schema[field].color) {
+      styles += `color: ${schema[field].color};`
+    }
+    if (conditionalBackground) {
+      styles += `background-color: ${conditionalBackground?.settingValue};`
+    } else if (schema[field].background) {
+      styles += `background-color: ${schema[field].background};`
+    }
+
+    if (schema[field].align === "Center") {
+      styles += "justify-content: center; text-align: center;"
+    }
+    if (schema[field].align === "Right") {
+      styles += "justify-content: flex-end; text-align: right;"
+    }
+
+    return styles
+  }
+
+  const computeRowStyles = row => {
+    const rowConditions = fields
+      .flatMap(field => schema[field].conditions)
+      .filter(condition => condition.applyToRow)
+    const fieldNames = new Set(rowConditions.map(condition => condition.column))
+    let styles = ""
+    let colorSet = false
+    let backgroundSet = false
+    fieldNames?.forEach(field => {
       const conditionalCellValues = getConditionalCellSettingValues(
         row,
         field,
-        schema[field].conditions
+        rowConditions
       )
       const conditionalBackground = conditionalCellValues?.filter(
         condition => condition.setting === "background"
@@ -266,28 +308,18 @@
       const conditionalColor = conditionalCellValues?.filter(
         condition => condition.setting === "color"
       )[0]
-      if (conditionalColor) {
-        styles[field] += `color: ${conditionalColor?.settingValue};`
-      } else if (schema[field].color) {
-        styles[field] += `color: ${schema[field].color};`
-      }
-      if (conditionalBackground) {
-        styles[
-          field
-        ] += `background-color: ${conditionalBackground?.settingValue};`
-      } else if (schema[field].background) {
-        styles[field] += `background-color: ${schema[field].background};`
-      }
-      ///----
 
-      if (schema[field].align === "Center") {
-        styles[field] += "justify-content: center; text-align: center;"
+      if (conditionalColor && !colorSet) {
+        styles += `color: ${conditionalColor?.settingValue};`
+        colorSet = true
       }
-      if (schema[field].align === "Right") {
-        styles[field] += "justify-content: flex-end; text-align: right;"
+      if (conditionalBackground && !backgroundSet) {
+        styles += `background-color: ${conditionalBackground?.settingValue};`
+        backgroundSet = true
       }
+      if (colorSet && backgroundSet) return
     })
-    return styles[field]
+    return styles
   }
 </script>
 
@@ -394,7 +426,7 @@
               <div
                 class="spectrum-Table-cell"
                 class:spectrum-Table-cell--divider={!!schema[field].divider}
-                style={computeCellStyles(field, row)}
+                style={computeCellStyle(field, row)}
                 on:click={() => {
                   if (!schema[field]?.preventSelectRow) {
                     dispatch("click", row)
