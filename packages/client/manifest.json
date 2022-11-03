@@ -3746,6 +3746,13 @@
         "nested": true
       },
       {
+        "type": "cellConditions",
+        "label": "Cell conditions",
+        "key": "cellConditions",
+        "dependsOn": "dataProvider",
+        "nested": true
+      },
+      {
         "type": "select",
         "label": "Size",
         "key": "size",

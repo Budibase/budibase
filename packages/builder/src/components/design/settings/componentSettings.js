@@ -20,6 +20,7 @@ import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelt
 import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
+import CellConditionsEditor from "./controls/ColumnEditor/CellConditionsEditor.svelte"
 
 const componentMap = {
   text: DrawerBindableCombobox,
@@ -42,6 +43,7 @@ const componentMap = {
   filter: FilterEditor,
   url: URLSelect,
   columns: ColumnEditor,
+  cellConditions: CellConditionsEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,

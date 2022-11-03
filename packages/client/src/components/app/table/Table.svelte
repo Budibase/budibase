@@ -7,6 +7,7 @@
 
   export let dataProvider
   export let columns
+  export let cellConditions
   export let showAutoColumns
   export let rowCount
   export let quiet
@@ -34,7 +35,7 @@
   $: data = dataProvider?.rows || []
   $: fullSchema = dataProvider?.schema ?? {}
   $: fields = getFields(fullSchema, columns, showAutoColumns)
-  $: schema = getFilteredSchema(fullSchema, fields, hasChildren)
+  $: schema = getFilteredSchema(fullSchema, fields, cellConditions, hasChildren)
   $: setSorting = getAction(
     dataProvider?.id,
     ActionTypes.SetDataProviderSorting
@@ -77,7 +78,7 @@
     return columns.concat(autoColumns)
   }
 
-  const getFilteredSchema = (schema, fields, hasChildren) => {
+  const getFilteredSchema = (schema, fields, cellConditions, hasChildren) => {
     let newSchema = {}
     if (hasChildren) {
       newSchema[customColumnKey] = {
@@ -99,6 +100,11 @@
       if (UnsortableTypes.includes(schema[columnName].type)) {
         newSchema[columnName].sortable = false
       }
+
+      //Add cell conditions
+      newSchema[columnName].conditions = cellConditions.filter(
+        condition => condition.column === columnName
+      )
 
       // Add additional settings like width etc
       if (typeof field === "object") {

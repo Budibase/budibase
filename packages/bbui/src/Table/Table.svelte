@@ -253,18 +253,26 @@
     let styles = {}
     Object.keys(schema || {}).forEach(field => {
       styles[field] = ""
-      if (schema[field].color) {
-        //TODO - use conditions utils to do this check
-        if (schema[field].conditions.color.referenceValue === row[field]) {
-          styles[field] += `color: ${schema[field].color};`
-        }
+
+      ///----
+      const backgroundCondition = schema[field].conditions?.filter(
+        condition => condition.setting === "background"
+      )[0]
+      const colorCondition = schema[field].conditions?.filter(
+        condition => condition.setting === "color"
+      )[0]
+      //TODO - use conditions utils to do this check
+      if (colorCondition?.referenceValue === row[field]) {
+        styles[field] += `color: ${colorCondition?.settingValue};`
       }
-      if (schema[field].background) {
-        //TODO - use conditions utils to do this check
-        if (schema[field].conditions.background.referenceValue === row[field]) {
-          styles[field] += `background-color: ${schema[field].background};`
-        }
+      //TODO - use conditions utils to do this check
+      if (backgroundCondition?.referenceValue === row[field]) {
+        styles[
+          field
+        ] += `background-color: ${backgroundCondition?.settingValue};`
       }
+      ///----
+
       if (schema[field].align === "Center") {
         styles[field] += "justify-content: center; text-align: center;"
       }
