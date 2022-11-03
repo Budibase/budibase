@@ -5,6 +5,9 @@ Addresses:
 - `<Enter the Link to the issue(s) this PR addresses>`
 - ...more if required
 
+## App Export
+- If possible, attach an app export file along with your request template to make QA testing easier, with minimal setup.
+
 ## Screenshots
 _If a UI facing feature, a short video of the happy path, and some screenshots of the new functionality._
 
