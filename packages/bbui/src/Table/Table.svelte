@@ -76,7 +76,6 @@
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
   $: showEditColumn = allowEditRows || allowSelectRows
-  //$: cellStyles = computeCellStyles(schema)
 
   // Deselect the "select all" checkbox when the user navigates to a new page
   $: {
@@ -264,12 +263,16 @@
       //TODO - use conditions utils to do this check
       if (colorCondition?.referenceValue === row[field]) {
         styles[field] += `color: ${colorCondition?.settingValue};`
+      } else if (schema[field].color) {
+        styles[field] += `color: ${schema[field].color};`
       }
       //TODO - use conditions utils to do this check
       if (backgroundCondition?.referenceValue === row[field]) {
         styles[
           field
         ] += `background-color: ${backgroundCondition?.settingValue};`
+      } else if (schema[field].background) {
+        styles[field] += `background-color: ${schema[field].background};`
       }
       ///----
 
