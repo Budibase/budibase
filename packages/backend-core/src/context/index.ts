@@ -6,7 +6,6 @@ import { baseGlobalDBName } from "../db/tenancy"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
 import { ContextKey } from "./constants"
-import PouchDB from "pouchdb"
 import {
   updateUsing,
   closeWithUsing,

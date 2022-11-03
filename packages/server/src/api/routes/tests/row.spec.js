@@ -514,9 +514,6 @@ describe("/rows", () => {
           expect(enriched[0].attachment[0].url).toBe(
             `/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
           )
-          expect(enriched[0].attachment[0].permaUrl).toBe(
-            `/api/tables/${table._id}/rows/${row._id}/attachments/${attachmentId}`
-          )
         })
       })
     })

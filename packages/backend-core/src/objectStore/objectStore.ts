@@ -75,7 +75,10 @@ const PUBLIC_BUCKETS = [
  * @return {Object} an S3 object store object, check S3 Nodejs SDK for usage.
  * @constructor
  */
-export const ObjectStore = (bucket: any) => {
+export const ObjectStore = (
+  bucket: any,
+  opts: { presigning: boolean } = { presigning: false }
+) => {
   const config: any = {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
@@ -89,9 +92,19 @@ export const ObjectStore = (bucket: any) => {
       Bucket: sanitizeBucket(bucket),
     }
   }
+
+  // custom S3 is in use
   if (env.MINIO_URL) {
-    config.endpoint = env.MINIO_URL
+    if (opts.presigning) {
+      // when generating a presigned url it's important
+      // that the endpoint of the client matches the hostname
+      // where the file will be accessed
+      config.endpoint = env.PLATFORM_URL
+    } else {
+      config.endpoint = env.MINIO_URL
+    }
   }
+
   return new AWS.S3(config)
 }
 
@@ -307,7 +320,7 @@ export const getPresignedUrl = (
   filepath: string,
   durationSeconds: number = 3600
 ) => {
-  const objectStore = ObjectStore(bucketName)
+  const objectStore = ObjectStore(bucketName, { presigning: true })
   const params = {
     Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(filepath),

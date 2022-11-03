@@ -5,6 +5,8 @@ import { Files } from "formidable"
 
 export interface ContextUser extends User {
   globalId?: string
+  userId?: string
+  csrfToken?: string
   license: License
 }
 

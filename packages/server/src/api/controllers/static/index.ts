@@ -17,15 +17,8 @@ const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
 const fs = require("fs")
 import { objectStore } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
 
-async function prepareUpload({
-  s3Key,
-  bucket,
-  metadata,
-  file,
-  processedFileName,
-}: any) {
+async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   const response = await objectStore.upload({
     bucket,
     metadata,
@@ -37,7 +30,7 @@ async function prepareUpload({
   return {
     size: file.size,
     name: file.name,
-    url: objectStore.getAttachmentUrl(processedFileName),
+    url: objectStore.getAppFileUrl(s3Key),
     extension: [...file.name.split(".")].pop(),
     key: response.Key,
   }
@@ -76,12 +69,6 @@ export const serveBuilder = async function (ctx: any) {
   await send(ctx, ctx.file, { root: builderPath })
 }
 
-export const getAttachment = async function (ctx: UserCtx) {
-  const attachmentId = ctx.params.attachmentId
-  const filePath = `attachments/${attachmentId}`
-  await objectStore.serveAppFile(ctx, filePath)
-}
-
 export const uploadFile = async function (ctx: any) {
   let files =
     ctx.request.files.file.length > 1
@@ -95,7 +82,6 @@ export const uploadFile = async function (ctx: any) {
 
     return prepareUpload({
       file,
-      processedFileName,
       s3Key: `${ctx.appId}/attachments/${processedFileName}`,
       bucket: ObjectStoreBuckets.APPS,
     })

@@ -50,12 +50,6 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     controller.uploadFile
   )
-  .get(
-    "/api/tables/:tableId/rows/:rowId/attachments/:attachmentId",
-    paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
-    controller.getAttachment
-  )
   .post(
     "/api/attachments/:tableId/delete",
     paramResource("tableId"),

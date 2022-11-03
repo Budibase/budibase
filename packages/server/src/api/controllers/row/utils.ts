@@ -1,3 +1,5 @@
+import { Ctx } from "@budibase/types"
+
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
 const { InternalTables } = require("../../../db/utils")
@@ -5,28 +7,27 @@ const userController = require("../user")
 const { FieldTypes } = require("../../../constants")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { makeExternalQuery } = require("../../../integrations/base/query")
-const { removeKeyNumbering } = require("../../../integrations/base/utils")
+
+export { removeKeyNumbering } from "../../../integrations/base/utils"
 
 validateJs.extend(validateJs.validators.datetime, {
-  parse: function (value) {
+  parse: function (value: any) {
     return new Date(value).getTime()
   },
   // Input is a unix timestamp
-  format: function (value) {
+  format: function (value: any) {
     return new Date(value).toISOString()
   },
 })
 
-exports.removeKeyNumbering = removeKeyNumbering
-
-exports.getDatasourceAndQuery = async json => {
+export const getDatasourceAndQuery = async (json: any) => {
   const datasourceId = json.endpoint.datasourceId
   const db = getAppDB()
   const datasource = await db.get(datasourceId)
   return makeExternalQuery(datasource, json)
 }
 
-exports.findRow = async (ctx, tableId, rowId) => {
+export const findRow = async (ctx: Ctx, tableId: string, rowId: string) => {
   const db = getAppDB()
   let row
   // TODO remove special user case in future
@@ -45,12 +46,23 @@ exports.findRow = async (ctx, tableId, rowId) => {
   return row
 }
 
-exports.validate = async ({ tableId, row, table }) => {
+export const validate = async ({
+  tableId,
+  row,
+  table,
+}: {
+  tableId?: string
+  row: any
+  table?: any
+}) => {
   if (!table) {
+    if (!tableId) {
+      throw new Error("table or tableId must be specified")
+    }
     const db = getAppDB()
     table = await db.get(tableId)
   }
-  const errors = {}
+  const errors: any = {}
   for (let fieldName of Object.keys(table.schema)) {
     const constraints = cloneDeep(table.schema[fieldName].constraints)
     const type = table.schema[fieldName].type
@@ -70,7 +82,7 @@ exports.validate = async ({ tableId, row, table }) => {
         if (!Array.isArray(row[fieldName])) {
           row[fieldName] = row[fieldName].split(",")
         }
-        row[fieldName].map(val => {
+        row[fieldName].map((val: any) => {
           if (
             !constraints.inclusion.includes(val) &&
             constraints.inclusion.length !== 0

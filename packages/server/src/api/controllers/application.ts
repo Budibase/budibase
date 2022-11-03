@@ -43,7 +43,7 @@ import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas, groups } from "@budibase/pro"
 import { errors, events, migrations, objectStore } from "@budibase/backend-core"
-import { App, Layout, Screen, MigrationType } from "@budibase/types"
+import { App, Layout, Screen, MigrationType, Ctx } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 
@@ -198,7 +198,7 @@ export const fetchAppDefinition = async (ctx: any) => {
   }
 }
 
-export const fetchAppPackage = async (ctx: any) => {
+export const fetchAppPackage = async (ctx: Ctx) => {
   const db = context.getAppDB()
   let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
