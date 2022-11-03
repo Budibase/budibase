@@ -291,7 +291,7 @@
   const computeRowStyles = row => {
     const rowConditions = fields
       .flatMap(field => schema[field].conditions)
-      .filter(condition => condition.applyToRow)
+      .filter(condition => condition?.applyToRow)
     const fieldNames = new Set(rowConditions.map(condition => condition.column))
     let styles = ""
     let colorSet = false
