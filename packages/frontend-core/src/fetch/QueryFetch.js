@@ -1,5 +1,5 @@
 import DataFetch from "./DataFetch.js"
-import { Helpers } from "@budibase/bbui"
+import { cloneDeep } from "../utils/helpers"
 import { get } from "svelte/store"
 
 export default class QueryFetch extends DataFetch {
@@ -36,7 +36,7 @@ export default class QueryFetch extends DataFetch {
     const type = definition?.fields?.pagination?.type
 
     // Set the default query params
-    let parameters = Helpers.cloneDeep(datasource?.queryParams || {})
+    let parameters = cloneDeep(datasource?.queryParams || {})
     for (let param of datasource?.parameters || {}) {
       if (!parameters[param.name]) {
         parameters[param.name] = param.default

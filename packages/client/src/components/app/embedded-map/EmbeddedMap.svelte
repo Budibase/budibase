@@ -2,7 +2,8 @@
   import L from "leaflet"
   import sanitizeHtml from "sanitize-html"
   import "leaflet/dist/leaflet.css"
-  import { Helpers, Button } from "@budibase/bbui"
+  import { Button } from "@budibase/bbui"
+  import { Helpers } from "@budibase/frontend-core"
   import { onMount, getContext } from "svelte"
   import {
     FullScreenControl,

@@ -5,7 +5,7 @@
   import "@spectrum-css/textfield/dist/index-vars.css"
   import "@spectrum-css/picker/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { uuid } from "../../helpers"
+  import { Helpers } from "@budibase/frontend-core"
 
   export let id = null
   export let disabled = false
@@ -19,7 +19,7 @@
   export let time24hr = false
   export let range = false
   const dispatch = createEventDispatcher()
-  const flatpickrId = `${uuid()}-wrapper`
+  const flatpickrId = `${Helpers.uuid()}-wrapper`
   let open = false
   let flatpickr, flatpickrOptions
 

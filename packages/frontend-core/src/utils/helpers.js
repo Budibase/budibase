@@ -1,4 +1,4 @@
-import { LuceneUtils } from "@budibase/frontend-core"
+import { buildLuceneQuery, runLuceneQuery } from "./lucene"
 
 /**
  * Generates a DOM safe UUID.
@@ -168,7 +168,7 @@ export const getConditionalCellSettingValues = (row, field, conditions) => {
       field,
       value: condition.referenceValue,
     }
-    const query = LuceneUtils.buildLuceneQuery([luceneCondition])
-    return LuceneUtils.runLuceneQuery([row], query).length > 0
+    const query = buildLuceneQuery([luceneCondition])
+    return runLuceneQuery([row], query).length > 0
   })
 }

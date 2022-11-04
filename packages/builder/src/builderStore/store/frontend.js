@@ -18,8 +18,7 @@ import {
   getComponentSettings,
   makeComponentUnique,
 } from "../componentUtils"
-import { Helpers } from "@budibase/bbui"
-import { Utils } from "@budibase/frontend-core"
+import { Utils, Helpers } from "@budibase/frontend-core"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],

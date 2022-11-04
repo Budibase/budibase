@@ -5,7 +5,7 @@
   import { fly } from "svelte/transition"
   import Icon from "../Icon/Icon.svelte"
   import Input from "../Form/Input.svelte"
-  import { capitalise } from "../helpers"
+  import { Helpers } from "@budibase/frontend-core"
 
   export let value
   export let size = "M"
@@ -101,7 +101,7 @@
   }
 
   const prettyPrint = color => {
-    return capitalise(color.split("-").join(" "))
+    return Helpers.capitalise(color.split("-").join(" "))
   }
 
   const getCheckColor = value => {

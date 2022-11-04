@@ -9,7 +9,7 @@
     Body,
   } from "@budibase/bbui"
   import { tables } from "stores/backend"
-  import { Helpers } from "@budibase/bbui"
+  import { Helpers } from "@budibase/frontend-core"
   import { writable } from "svelte/store"
 
   export let save

@@ -1,4 +1,4 @@
-import { Helpers } from "@budibase/bbui"
+import { deepGet } from "./helpers"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "../constants"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
@@ -212,7 +212,7 @@ export const runLuceneQuery = (docs, query) => {
     const filters = Object.entries(query[type] || {})
     for (let i = 0; i < filters.length; i++) {
       const [key, testValue] = filters[i]
-      const docValue = Helpers.deepGet(doc, removeKeyNumbering(key))
+      const docValue = deepGet(doc, removeKeyNumbering(key))
       if (failFn(docValue, testValue)) {
         return false
       }

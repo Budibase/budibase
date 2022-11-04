@@ -3,11 +3,7 @@
   import "@spectrum-css/table/dist/index-vars.css"
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
-  import {
-    cloneDeep,
-    deepGet,
-    getConditionalCellSettingValues,
-  } from "../helpers"
+  import { Helpers } from "@budibase/frontend-core"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
   import Checkbox from "../Form/Checkbox.svelte"
 
@@ -219,7 +215,7 @@
 
   const editRow = (e, row) => {
     e.stopPropagation()
-    dispatch("editrow", cloneDeep(row))
+    dispatch("editrow", Helpers.cloneDeep(row))
   }
 
   const toggleSelectRow = row => {
@@ -254,7 +250,7 @@
 
   const computeCellStyle = (field, row) => {
     let styles = ""
-    const conditionalCellValues = getConditionalCellSettingValues(
+    const conditionalCellValues = Helpers.getConditionalCellSettingValues(
       row,
       field,
       schema[field].conditions
@@ -300,7 +296,7 @@
     let colorSet = false
     let backgroundSet = false
     fieldNames?.forEach(field => {
-      const conditionalCellValues = getConditionalCellSettingValues(
+      const conditionalCellValues = Helpers.getConditionalCellSettingValues(
         row,
         field,
         rowConditions
@@ -441,7 +437,7 @@
                   {customRenderers}
                   {row}
                   schema={schema[field]}
-                  value={deepGet(row, field)}
+                  value={Helpers.deepGet(row, field)}
                   on:clickrelationship
                   on:buttonclick
                 >

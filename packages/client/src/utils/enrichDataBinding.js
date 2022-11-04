@@ -1,4 +1,4 @@
-import { Helpers } from "@budibase/bbui"
+import { Helpers } from "@budibase/frontend-core"
 import { processString, processObjectSync } from "@budibase/string-templates"
 
 // Regex to test inputs with to see if they are likely candidates for template strings

@@ -1,7 +1,7 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import { get } from "svelte/store"
-  import { Helpers } from "@budibase/bbui"
+  import { Helpers } from "@budibase/frontend-core"
   import {
     Input,
     Layout,

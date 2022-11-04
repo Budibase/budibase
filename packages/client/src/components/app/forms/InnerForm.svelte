@@ -2,7 +2,7 @@
   import { setContext, getContext } from "svelte"
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
-  import { Helpers } from "@budibase/bbui"
+  import { Helpers } from "@budibase/frontend-core"
 
   export let dataSource
   export let disabled = false

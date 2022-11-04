@@ -3,7 +3,7 @@
   import "@spectrum-css/typography/dist/index-vars.css"
   import "@spectrum-css/illustratedmessage/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { uuid } from "../../helpers"
+  import { Helpers } from "@budibase/frontend-core"
   import Icon from "../../Icon/Icon.svelte"
   import Link from "../../Link/Link.svelte"
   import Tag from "../../Tags/Tag.svelte"
@@ -39,7 +39,7 @@
     "jfif",
   ]
 
-  const fieldId = id || uuid()
+  const fieldId = id || Helpers.uuid()
   let selectedImageIdx = 0
   let fileDragged = false
   let selectedUrl

@@ -24,7 +24,7 @@
     dndComponentPath,
     dndIsDragging,
   } from "stores"
-  import { Helpers } from "@budibase/bbui"
+  import { Helpers } from "@budibase/frontend-core"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"

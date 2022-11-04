@@ -5,7 +5,7 @@ import { appStore } from "./app"
 import { dndIndex, dndParent, dndIsNewComponent, dndBounds } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
-import { Helpers } from "@budibase/bbui"
+import { Helpers } from "@budibase/frontend-core"
 import { DNDPlaceholderID } from "constants"
 
 const createScreenStore = () => {

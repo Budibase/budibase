@@ -15,9 +15,9 @@
     ActionMenu,
     MenuItem,
     Icon,
-    Helpers,
     Modal,
   } from "@budibase/bbui"
+  import { Helpers } from "@budibase/frontend-core"
   import OverviewTab from "../_components/OverviewTab.svelte"
   import SettingsTab from "../_components/SettingsTab.svelte"
   import AccessTab from "../_components/AccessTab.svelte"

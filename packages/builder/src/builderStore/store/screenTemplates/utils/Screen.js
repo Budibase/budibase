@@ -1,5 +1,5 @@
 import { BaseStructure } from "./BaseStructure"
-import { Helpers } from "@budibase/bbui"
+import { Helpers } from "@budibase/frontend-core"
 
 export class Screen extends BaseStructure {
   constructor() {

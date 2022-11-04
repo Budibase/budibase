@@ -14,7 +14,7 @@ import {
 import { API } from "api"
 import { ActionTypes } from "constants"
 import { enrichDataBindings } from "./enrichDataBinding"
-import { Helpers } from "@budibase/bbui"
+import { Helpers } from "@budibase/frontend-core"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters

@@ -1,5 +1,5 @@
 import { writable, derived } from "svelte/store"
-import { Helpers } from "@budibase/bbui"
+import { Helpers } from "@budibase/frontend-core"
 
 export const createContextStore = oldContext => {
   const newContext = writable({})

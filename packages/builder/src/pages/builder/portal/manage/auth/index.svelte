@@ -24,7 +24,7 @@
   import { onMount } from "svelte"
   import { API } from "api"
   import { organisation, admin } from "stores/portal"
-  import { Helpers } from "@budibase/bbui"
+  import { Helpers } from "@budibase/frontend-core"
 
   const ConfigTypes = {
     Google: "google",

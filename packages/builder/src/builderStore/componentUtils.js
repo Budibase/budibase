@@ -1,5 +1,5 @@
 import { store } from "./index"
-import { Helpers } from "@budibase/bbui"
+import { Helpers } from "@budibase/frontend-core"
 import {
   decodeJSBinding,
   encodeJSBinding,
