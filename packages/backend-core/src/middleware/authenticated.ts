@@ -152,6 +152,7 @@ export = (
         return next()
       }
     } catch (err: any) {
+      console.error("Auth Error", err?.message || err)
       // invalid token, clear the cookie
       if (err && err.name === "JsonWebTokenError") {
         clearCookie(ctx, Cookies.Auth)
