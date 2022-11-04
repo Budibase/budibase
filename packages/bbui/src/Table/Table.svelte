@@ -3,10 +3,13 @@
   import "@spectrum-css/table/dist/index-vars.css"
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
-  import { cloneDeep, deepGet } from "../helpers"
+  import {
+    cloneDeep,
+    deepGet,
+    getConditionalCellSettingValues,
+  } from "../helpers"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
   import Checkbox from "../Form/Checkbox.svelte"
-  import { getConditionalCellSettingValues } from "../../../client/src/utils/conditions"
 
   /**
    * The expected schema is our normal couch schemas for our tables.
