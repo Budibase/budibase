@@ -84,7 +84,7 @@
       out:fly|local={{ x: 500, duration: 500 }}
     >
       {#if block.stepId !== ActionStepID.LOOP}
-        <FlowItem {testDataModal} {block} />
+        <FlowItem {testDataModal} {block} {idx} />
       {/if}
     </div>
   {/each}

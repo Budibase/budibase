@@ -9,6 +9,7 @@
   export let showParameters = {}
   export let testResult
   export let isTrigger
+  export let idx
 
   $: {
     if (!testResult) {
@@ -71,12 +72,16 @@
         </svg>
       {/if}
       <div class="iconAlign">
+        {#if idx === 0}
+          <Body size="XS"><b>Trigger</b></Body>
+        {:else}
+          <Body size="XS"><b>Step {idx}</b></Body>
+        {/if}
         {#if isTrigger}
           <Body size="XS">When this happens:</Body>
         {:else}
           <Body size="XS">Do this:</Body>
         {/if}
-
         <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
       </div>
     </div>

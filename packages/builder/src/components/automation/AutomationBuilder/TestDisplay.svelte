@@ -52,6 +52,7 @@
           bind:showParameters
           {block}
           isTrigger={idx === 0}
+          {idx}
           testResult={filteredResults?.[idx]}
         />
         {#if showParameters && showParameters[block.id]}
