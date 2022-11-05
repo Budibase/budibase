@@ -167,7 +167,7 @@
   const autoCreateApp = async () => {
     try {
       // Auto name app if has same name
-      let appName = template.key
+      let appName = template.key.replace("app/", "")
       const appsWithSameName = $apps.filter(app =>
         app.name?.startsWith(appName)
       )
