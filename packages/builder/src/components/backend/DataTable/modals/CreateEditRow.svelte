@@ -32,9 +32,6 @@
         const response = error.json
         if (response?.errors) {
           errors = response.errors
-          // errors = Object.entries(response.errors)
-          //   .map(([key, error]) => ({ dataPath: key, message: error }))
-          //   .flat()
         } else if (response?.validationErrors) {
           const mappedErrors = {}
           for (let field in response.validationErrors) {

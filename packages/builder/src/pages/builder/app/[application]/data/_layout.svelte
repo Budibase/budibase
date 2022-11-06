@@ -24,7 +24,9 @@
     <Tabs {selected} on:select={selectFirstDatasource}>
       <Tab title="Sources">
         <Layout paddingX="L" paddingY="L" gap="S">
-          <Button cta wide on:click={modal.show}>Add source</Button>
+          <Button dataCy={`new-datasource`} cta wide on:click={modal.show}
+            >Add source</Button
+          >
         </Layout>
         <CreateDatasourceModal bind:modal />
         <DatasourceNavigator />
