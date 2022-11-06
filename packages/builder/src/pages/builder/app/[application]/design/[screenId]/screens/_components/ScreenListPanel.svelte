@@ -30,7 +30,7 @@
 </script>
 
 <Panel title="Screens" borderRight>
-  <Layout paddingX="L" paddingY="L" gap="S">
+  <Layout paddingX="L" paddingY="XL" gap="S">
     <Button on:click={showNewScreenModal} cta>Add screen</Button>
     <Search
       placeholder="Search"
