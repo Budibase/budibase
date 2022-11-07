@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(['all'], () => {
-    context("Add Radio Buttons", () => {
+    xcontext("Add Radio Buttons", () => {
         before(() => {
         cy.login()
         cy.createTestApp()
