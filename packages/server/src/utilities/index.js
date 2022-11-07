@@ -5,8 +5,6 @@ const { generateMetadataID } = require("../db/utils")
 const Readable = require("stream").Readable
 const { getAppDB } = require("@budibase/backend-core/context")
 
-const BB_CDN = "https://cdn.budi.live"
-
 exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 exports.isDev = env.isDev
@@ -40,7 +38,7 @@ exports.objectStoreUrl = () => {
     // can use a relative url for this as all goes through the proxy (this is hosted in minio)
     return OBJ_STORE_DIRECTORY
   } else {
-    return BB_CDN
+    return env.CDN_URL
   }
 }
 
