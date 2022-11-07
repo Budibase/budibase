@@ -6,7 +6,6 @@ import { screenStore } from "./screens"
 import { builderStore } from "./builder"
 import Router from "../components/Router.svelte"
 import * as AppComponents from "../components/app/index.js"
-import { ScreenslotType } from "../constants.js"
 
 const budibasePrefix = "@budibase/standard-components/"
 
@@ -19,21 +18,26 @@ const createComponentStore = () => {
 
   const derivedStore = derived(
     [store, builderStore, devToolsStore, screenStore],
-    ([$store, $builderStore, $devToolsStore, $screenStore]) => {
-      const { inBuilder, selectedComponentId } = $builderStore
-
+    ([$store, $builderState, $devToolsState, $screenState]) => {
       // Avoid any of this logic if we aren't in the builder preview
-      if (!inBuilder && !$devToolsStore.visible) {
+      if (!$builderState.inBuilder && !$devToolsState.visible) {
         return {}
       }
 
-      const root = $screenStore.activeScreen?.props
-      const component = findComponentById(root, selectedComponentId)
+      // Derive the selected component instance and definition
+      let asset
+      const { layout, screen, previewType, selectedComponentId } = $builderState
+      if ($builderState.inBuilder) {
+        asset = previewType === "layout" ? layout : screen
+      } else {
+        asset = $screenState.activeScreen
+      }
+      const component = findComponentById(asset?.props, selectedComponentId)
       const definition = getComponentDefinition(component?._component)
 
       // Derive the selected component path
-      const selectedPath =
-        findComponentPathById(root, selectedComponentId) || []
+      const path =
+        findComponentPathById(asset?.props, selectedComponentId) || []
 
       return {
         customComponentManifest: $store.customComponentManifest,
@@ -41,16 +45,14 @@ const createComponentStore = () => {
           $store.mountedComponents[selectedComponentId],
         selectedComponent: component,
         selectedComponentDefinition: definition,
-        selectedComponentPath: selectedPath?.map(component => component._id),
+        selectedComponentPath: path?.map(component => component._id),
         mountedComponentCount: Object.keys($store.mountedComponents).length,
+        currentAsset: asset,
       }
     }
   )
 
   const registerInstance = (id, instance) => {
-    if (!id) {
-      return
-    }
     store.update(state => {
       // If this is a custom component, flag it so we can reload this component
       // later if required
@@ -70,9 +72,6 @@ const createComponentStore = () => {
   }
 
   const unregisterInstance = id => {
-    if (!id) {
-      return
-    }
     store.update(state => {
       // Remove from custom component map if required
       const component = state.mountedComponents[id]?.instance?.component
@@ -96,8 +95,8 @@ const createComponentStore = () => {
   }
 
   const getComponentById = id => {
-    const root = get(screenStore).activeScreen?.props
-    return findComponentById(root, id)
+    const asset = get(derivedStore).currentAsset
+    return findComponentById(asset?.props, id)
   }
 
   const getComponentDefinition = type => {
@@ -106,7 +105,7 @@ const createComponentStore = () => {
     }
 
     // Screenslot is an edge case
-    if (type === ScreenslotType) {
+    if (type === "screenslot") {
       type = `${budibasePrefix}${type}`
     }
 
@@ -125,7 +124,7 @@ const createComponentStore = () => {
     if (!type) {
       return null
     }
-    if (type === ScreenslotType) {
+    if (type === "screenslot") {
       return Router
     }
 

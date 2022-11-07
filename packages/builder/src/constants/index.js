@@ -2,6 +2,13 @@ export const TableNames = {
   USERS: "ta_users",
 }
 
+export const FrontendTypes = {
+  PAGE: "page",
+  SCREEN: "screen",
+  LAYOUT: "layout",
+  NONE: "none",
+}
+
 export const AppStatus = {
   ALL: "all",
   DEV: "development",
@@ -56,6 +63,13 @@ export const DefaultAppTheme = {
   buttonBorderRadius: "16px",
   navBackground: "var(--spectrum-global-color-gray-50)",
   navTextColor: "var(--spectrum-global-color-gray-800)",
+}
+
+export const PlanType = {
+  FREE: "free",
+  PRO: "pro",
+  BUSINESS: "business",
+  ENTERPRISE: "enterprise",
 }
 
 export const PluginSource = {

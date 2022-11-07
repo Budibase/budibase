@@ -12,5 +12,4 @@
   {color}
   zIndex="910"
   transition
-  allowResizeAnchors
 />

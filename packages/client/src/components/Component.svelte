@@ -16,14 +16,7 @@
     propsAreSame,
     getSettingsDefinition,
   } from "utils/componentProps"
-  import {
-    builderStore,
-    devToolsStore,
-    componentStore,
-    appStore,
-    dndComponentPath,
-    dndIsDragging,
-  } from "stores"
+  import { builderStore, devToolsStore, componentStore, appStore } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
@@ -34,7 +27,6 @@
   export let isLayout = false
   export let isScreen = false
   export let isBlock = false
-  export let parent = null
 
   // Get parent contexts
   const context = getContext("context")
@@ -90,10 +82,6 @@
   let settingsDefinitionMap
   let missingRequiredSettings = false
 
-  // Temporary styles which can be added in the app preview for things like DND.
-  // We clear these whenever a new instance is received.
-  let ephemeralStyles
-
   // Set up initial state for each new component instance
   $: initialise(instance)
 
@@ -109,7 +97,6 @@
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
   $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
-  $: inDndPath = $dndComponentPath?.includes(id)
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
@@ -121,7 +108,9 @@
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
   $: builderInteractive =
-    $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
+    $builderStore.inBuilder &&
+    ($builderStore.previewType === "layout" || insideScreenslot) &&
+    !isBlock
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
   $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
@@ -131,7 +120,7 @@
     !isLayout &&
     !isScreen &&
     definition?.draggable !== false
-  $: droppable = interactive
+  $: droppable = interactive && !isLayout && !isScreen
   $: builderHidden =
     $builderStore.inBuilder && $builderStore.hiddenComponentIds?.includes(id)
 
@@ -139,9 +128,8 @@
   // Empty states can be shown for these components, but can be disabled
   // in the component manifest.
   $: empty =
-    !isBlock &&
-    ((interactive && !children.length && hasChildren) ||
-      hasMissingRequiredSettings)
+    (interactive && !children.length && hasChildren) ||
+    hasMissingRequiredSettings
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
@@ -163,22 +151,12 @@
   // Scroll the selected element into view
   $: selected && scrollIntoView()
 
-  // When dragging and dropping, pad components to allow dropping between
-  // nested layers. Only reset this when dragging stops.
-  let pad = false
-  $: pad = pad || (interactive && hasChildren && inDndPath)
-  $: $dndIsDragging, (pad = false)
-
   // Update component context
   $: store.set({
     id,
     children: children.length,
     styles: {
       ...instance._styles,
-      normal: {
-        ...instance._styles?.normal,
-        ...ephemeralStyles,
-      },
       custom: customCSS,
       id,
       empty: emptyState,
@@ -240,6 +218,7 @@
     dynamicSettings = instanceSettings.dynamicSettings
 
     // Check if we have any missing required settings
+    /*
     missingRequiredSettings = settingsDefinition.filter(setting => {
       let empty = instance[setting.key] == null || instance[setting.key] === ""
       let missing = setting.required && empty
@@ -259,6 +238,7 @@
 
       return missing
     })
+    */
 
     // Force an initial enrichment of the new settings
     enrichComponentSettings(get(context), settingsDefinitionMap, {
@@ -429,11 +409,6 @@
   }
 
   const scrollIntoView = () => {
-    // Don't scroll into view if we selected this component because we were
-    // starting dragging on it
-    if (get(dndIsDragging)) {
-      return
-    }
     const node = document.getElementsByClassName(id)?.[0]?.children[0]
     if (!node) {
       return
@@ -457,7 +432,6 @@
         getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
         getDataContext: () => get(context),
         reload: () => initialise(instance, true),
-        setEphemeralStyles: styles => (ephemeralStyles = styles),
       })
     }
   })
@@ -482,27 +456,18 @@
     class:empty
     class:interactive
     class:editing
-    class:pad
-    class:parent={hasChildren}
     class:block={isBlock}
     data-id={id}
     data-name={name}
     data-icon={icon}
-    data-parent={parent}
   >
     <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
-      {#if hasMissingRequiredSettings}
-        <ComponentPlaceholder />
-      {:else if children.length}
+      {#if children.length}
         {#each children as child (child._id)}
-          <svelte:self instance={child} parent={id} />
+          <svelte:self instance={child} />
         {/each}
       {:else if emptyState}
-        {#if isScreen}
-          <ScreenPlaceholder />
-        {:else}
-          <Placeholder />
-        {/if}
+        <Placeholder />
       {:else if isBlock}
         <slot />
       {/if}
@@ -514,14 +479,16 @@
   .component {
     display: contents;
   }
-  .component.pad :global(> *) {
-    padding: var(--spacing-m) !important;
-    gap: var(--spacing-m) !important;
-    border: 2px dashed var(--spectrum-global-color-gray-400) !important;
-    border-radius: 4px !important;
-    transition: padding 260ms ease-out, border 260ms ease-out;
+
+  .interactive :global(*:hover) {
+    cursor: pointer;
   }
-  .interactive :global(*) {
-    cursor: default;
+
+  .draggable :global(*:hover) {
+    cursor: grab;
+  }
+
+  .editing :global(*:hover) {
+    cursor: auto;
   }
 </style>

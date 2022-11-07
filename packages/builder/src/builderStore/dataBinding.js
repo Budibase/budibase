@@ -20,7 +20,8 @@ import {
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
-import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
+//import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
+import ActionDefinitions from "components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/manifest.json"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -549,6 +550,64 @@ const getRoleBindings = () => {
       display: { type: "string", name: role.name },
     }
   })
+}
+
+/**
+ * Gets all bindable properties exposed in a button actions flow up until
+ * the specified action ID, as well as context provided for the action
+ * setting as a whole by the component.
+ */
+ export const getButtonContextBindings = (
+  asset,
+  componentId,
+  settingKey,
+  actions,
+  actionId
+) => {
+  let bindings = []
+
+  // Check if any context bindings are provided by the component for this
+  // setting
+  const component = findComponent(asset.props, componentId)
+  const settings = getComponentSettings(component?._component)
+  const eventSetting = settings.find(setting => setting.key === settingKey)
+  if (!eventSetting) {
+    return bindings
+  }
+  if (eventSetting.context?.length) {
+    eventSetting.context.forEach(contextEntry => {
+      bindings.push({
+        readableBinding: contextEntry.label,
+        runtimeBinding: `${makePropSafe("eventContext")}.${makePropSafe(
+          contextEntry.key
+        )}`,
+      })
+    })
+  }
+
+  // Get the steps leading up to this value
+  const index = actions?.findIndex(action => action.id === actionId)
+  if (index == null || index === -1) {
+    return bindings
+  }
+  const prevActions = actions.slice(0, index)
+
+  // Generate bindings for any steps which provide context
+  prevActions.forEach((action, idx) => {
+    const def = ActionDefinitions.actions.find(
+      x => x.name === action["##eventHandlerType"]
+    )
+    if (def.context) {
+      def.context.forEach(contextValue => {
+        bindings.push({
+          readableBinding: `Action ${idx + 1}.${contextValue.label}`,
+          runtimeBinding: `actions.${idx}.${contextValue.value}`,
+        })
+      })
+    }
+  })
+
+  return bindings
 }
 
 /**

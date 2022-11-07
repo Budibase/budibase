@@ -1,53 +1,39 @@
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
-import { dndIndex, dndParent, dndIsNewComponent, dndBounds } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
-import { findComponentById, findComponentParent } from "../utils/components.js"
-import { Helpers } from "@budibase/bbui"
-import { DNDPlaceholderID } from "constants"
+import {
+  findComponentPathById,
+  findChildrenByType,
+  findComponentById,
+} from "../utils/components"
 
 const createScreenStore = () => {
   const store = derived(
-    [
-      appStore,
-      routeStore,
-      builderStore,
-      dndParent,
-      dndIndex,
-      dndIsNewComponent,
-      dndBounds,
-    ],
-    ([
-      $appStore,
-      $routeStore,
-      $builderStore,
-      $dndParent,
-      $dndIndex,
-      $dndIsNewComponent,
-      $dndBounds,
-    ]) => {
+    [appStore, routeStore, builderStore],
+    ([$appStore, $routeStore, $builderStore]) => {
       let activeLayout, activeScreen
-      let screens
+      let layouts, screens
 
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
-        activeScreen = Helpers.cloneDeep($builderStore.screen)
+        activeLayout = $builderStore.layout
+        activeScreen = $builderStore.screen
+        layouts = [activeLayout]
         screens = [activeScreen]
 
         // Legacy - allow the builder to specify a layout
-        if ($builderStore.layout) {
+        /*if ($builderStore.layout) {
           activeLayout = $builderStore.layout
-        }
+        }*/
       } else {
         // Find the correct screen by matching the current route
         screens = $appStore.screens || []
+        layouts = $appStore.layouts || []
         if ($routeStore.activeRoute) {
-          activeScreen = Helpers.cloneDeep(
-            screens.find(
-              screen => screen._id === $routeStore.activeRoute.screenId
-            )
+          activeScreen = screens.find(
+            screen => screen._id === $routeStore.activeRoute.screenId
           )
         }
 
@@ -58,48 +44,6 @@ const createScreenStore = () => {
           )
           if (screenLayout) {
             activeLayout = screenLayout
-          }
-        }
-      }
-
-      // Insert DND placeholder if required
-      if (activeScreen && $dndParent && $dndIndex != null) {
-        const { selectedComponentId } = $builderStore
-
-        // Extract and save the selected component as we need a reference to it
-        // later, and we may be removing it
-        let selectedParent = findComponentParent(
-          activeScreen.props,
-          selectedComponentId
-        )
-
-        // Remove selected component from tree if we are moving an existing
-        // component
-        if (!$dndIsNewComponent && selectedParent) {
-          selectedParent._children = selectedParent._children?.filter(
-            x => x._id !== selectedComponentId
-          )
-        }
-
-        // Insert placeholder component
-        const componentToInsert = {
-          _component: "@budibase/standard-components/container",
-          _id: DNDPlaceholderID,
-          _styles: {
-            normal: {
-              width: `${$dndBounds?.width || 400}px`,
-              height: `${$dndBounds?.height || 200}px`,
-              opacity: 0,
-            },
-          },
-          static: true,
-        }
-        let parent = findComponentById(activeScreen.props, $dndParent)
-        if (parent) {
-          if (!parent._children?.length) {
-            parent._children = [componentToInsert]
-          } else {
-            parent._children.splice($dndIndex, 0, componentToInsert)
           }
         }
       }
@@ -123,6 +67,24 @@ const createScreenStore = () => {
         // Then sort alphabetically
         return a.routing.route < b.routing.route ? -1 : 1
       })
+
+      //build structure of active custom layout to match with new client screen (after BB v1.0.219)
+      if (activeLayout) {
+        /* activeLayout.props._children.forEach(child => {
+          if (child._id == "7fcf11e4-6f5b-4085-8e0d-9f3d44c98967") { //catch screen slot component
+            child._id = "screenslot"
+            child._component = "screenslot"
+          }
+        }) */
+        if (activeLayout.props._children?.length) {
+          let serialized_children = JSON.stringify(activeLayout.props._children)
+          // Replace all instances of ID 7fcf11e4-6f5b-4085-8e0d-9f3d44c98967 in child to screenslot
+          serialized_children = serialized_children.replace(new RegExp("7fcf11e4-6f5b-4085-8e0d-9f3d44c98967", "g"), "screenslot")
+          serialized_children = serialized_children.replace(new RegExp("@budibase/standard-components/screenslot", "g"), "screenslot")
+          // Recurse on all children
+          activeLayout.props._children = JSON.parse(serialized_children)
+        }
+      }
 
       // If we don't have a legacy custom layout, build a layout structure
       // from the screen navigation settings
@@ -171,12 +133,42 @@ const createScreenStore = () => {
         }
       }
 
-      return { screens, activeLayout, activeScreen }
+      return { layouts, screens, activeLayout, activeScreen }
     }
   )
 
+  // Utils to parse component definitions
+  const actions = {
+    findComponentById: componentId => {
+      const { activeScreen, activeLayout } = get(store)
+      let result = findComponentById(activeScreen?.props, componentId)
+      if (result) {
+        return result
+      }
+      return findComponentById(activeLayout?.props)
+    },
+    findComponentPathById: componentId => {
+      const { activeScreen, activeLayout } = get(store)
+      let result = findComponentPathById(activeScreen?.props, componentId)
+      if (result) {
+        return result
+      }
+      return findComponentPathById(activeLayout?.props)
+    },
+    findChildrenByType: (componentId, type) => {
+      const component = actions.findComponentById(componentId)
+      if (!component || !component._children) {
+        return null
+      }
+      let children = []
+      findChildrenByType(component, type, children)
+      return children
+    },
+  }
+
   return {
     subscribe: store.subscribe,
+    actions,
   }
 }
 

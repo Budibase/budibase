@@ -50,7 +50,7 @@
   class:withActions
   class:scrollable
   class:highlighted
-  style={`padding-left: calc(${indentLevel * 14}px)`}
+  style={`padding-left: calc(${indentLevel * 20}px)`}
   {draggable}
   on:dragend
   on:dragstart
