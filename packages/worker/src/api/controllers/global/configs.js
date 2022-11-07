@@ -22,8 +22,6 @@ const {
 const { events } = require("@budibase/backend-core")
 const { checkAnyUserExists } = require("../../../utilities/users")
 
-const BB_TENANT_CDN = "https://tenants.cdn.budi.live"
-
 const getEventFns = async (db, config) => {
   const fns = []
   const type = config.type
@@ -350,7 +348,7 @@ exports.upload = async function (ctx) {
   if (env.SELF_HOSTED) {
     url = `/${bucket}/${key}`
   } else {
-    url = `${BB_TENANT_CDN}/${key}`
+    url = `${env.CDN_URL}/${key}`
   }
 
   cfgStructure.config[`${name}`] = url
