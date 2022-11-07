@@ -1,9 +1,9 @@
 import * as pouch from "./pouch"
 import env from "../environment"
-import { checkSlashesInUrl } from "../helpers"
-import fetch from "node-fetch"
 import { PouchOptions, CouchFindOptions } from "@budibase/types"
 import PouchDB from "pouchdb"
+import { directCouchQuery } from "../couch"
+export { directCouchQuery } from "../couch"
 
 const openDbs: string[] = []
 let Pouch: any
@@ -92,31 +92,6 @@ export function allDbs() {
   }
   checkInitialised()
   return [...dbList]
-}
-
-export async function directCouchQuery(
-  path: string,
-  method: string = "GET",
-  body?: any
-) {
-  let { url, cookie } = pouch.getCouchInfo()
-  const couchUrl = `${url}/${path}`
-  const params: any = {
-    method: method,
-    headers: {
-      Authorization: cookie,
-    },
-  }
-  if (body && method !== "GET") {
-    params.body = JSON.stringify(body)
-    params.headers["Content-Type"] = "application/json"
-  }
-  const response = await fetch(checkSlashesInUrl(encodeURI(couchUrl)), params)
-  if (response.status < 300) {
-    return await response.json()
-  } else {
-    throw "Cannot connect to CouchDB instance"
-  }
 }
 
 export async function directCouchAllDbs(queryString?: string) {
