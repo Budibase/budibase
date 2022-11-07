@@ -42,6 +42,7 @@ const env = {
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
   PLATFORM_URL: process.env.PLATFORM_URL,
   APPS_URL: process.env.APPS_URL,
+  CDN_URL: process.env.CDN_URL || "https://tenants.cdn.budi.live",
   // ports
   // prefer worker port to generic port
   PORT: process.env.WORKER_PORT || process.env.PORT,
