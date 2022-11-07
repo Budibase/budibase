@@ -11,32 +11,50 @@ import { UnpublishAppResponse } from "../fixtures/types/unpublishAppResponse"
 
 export default class AppApi {
   api: InternalAPIClient
-
+  appCreated: boolean
   constructor(apiClient: InternalAPIClient) {
     this.api = apiClient
+    this.appCreated = false
   }
 
   async fetch(): Promise<[Response, Application[]]> {
     const response = await this.api.get(`/applications?status=all`)
     const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    if (this.appCreated) {
+      expect(json.length).toBeGreaterThanOrEqual(1)
+    } else {
+      expect(json.length).toEqual(0)
+    }
     return [response, json]
   }
 
   async canRender(): Promise<[Response, boolean]> {
     const response = await this.api.get("/routing/client")
     const json = await response.json()
-    return [response, Object.keys(json.routes).length > 0]
+    const publishedAppRenders = Object.keys(json.routes).length > 0
+    expect(response).toHaveStatusCode(200)
+    expect(publishedAppRenders).toBe(true)
+    return [response, publishedAppRenders]
   }
 
   async getAppPackage(appId: string): Promise<[Response, AppPackageResponse]> {
     const response = await this.api.get(`/applications/${appId}/appPackage`)
     const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json.application.apppId).toBe(appId)
     return [response, json]
   }
 
-  async publish(): Promise<[Response, DeployConfig]> {
+  async publish(appUrl: string): Promise<[Response, DeployConfig]> {
     const response = await this.api.post("/deploy")
     const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json).toEqual({
+      _id: expect.any(String),
+      appUrl: appUrl,
+      status: "SUCCESS",
+    })
     return [response, json]
   }
 
@@ -45,6 +63,7 @@ export default class AppApi {
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
     expect(json._id).toBeDefined()
+    this.appCreated = true
     return json
   }
 
@@ -57,6 +76,7 @@ export default class AppApi {
   async sync(appId: string): Promise<[Response, responseMessage]> {
     const response = await this.api.post(`/applications/${appId}/sync`)
     const json = await response.json()
+    expect(response).toHaveStatusCode(200)
     return [response, json]
   }
 
@@ -72,21 +92,36 @@ export default class AppApi {
     return [response, json]
   }
 
-  async revert(appId: string): Promise<[Response, responseMessage]> {
+  async revert(appId: string, negativeTest?: boolean): Promise<[Response, responseMessage]> {
     const response = await this.api.post(`/dev/${appId}/revert`)
     const json = await response.json()
+    if (negativeTest) {
+      expect(response).toHaveStatusCode(400)
+      expect(json).toEqual({
+        message: "App has not yet been deployed",
+        status: 400,
+      })
+    } else {
+      expect(response).toHaveStatusCode(200)
+      expect(json).toEqual({
+        message: "Reverted changes successfully.",
+      })
+    }
     return [response, json]
   }
 
   async delete(appId: string): Promise<[Response, any]> {
     const response = await this.api.del(`/applications/${appId}`)
     const json = await response.json()
+    expect(response).toHaveStatusCode(200)
     return [response, json]
   }
 
-  async update(appId: string, body: any): Promise<[Response, Application]> {
+  async update(appId: string, oldName: string, body: any): Promise<[Response, Application]> {
     const response = await this.api.put(`/applications/${appId}`, { body })
     const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json.name).not.toEqual(oldName)
     return [response, json]
   }
 
@@ -96,9 +131,17 @@ export default class AppApi {
     return [response, json]
   }
 
-  async getRoutes(): Promise<[Response, RouteConfig]> {
+  async getRoutes(screenExists?: boolean): Promise<[Response, RouteConfig]> {
     const response = await this.api.get(`/routing`)
     const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    if (screenExists) {
+
+      expect(json.routes["/test"]).toBeTruthy()
+    } else {
+      expect(json.routes["/test"]).toBeUndefined()
+    }
+
     return [response, json]
   }
 
