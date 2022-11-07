@@ -3972,47 +3972,6 @@
       }
     ]
   },
-  "rowdetails": {
-    "name": "Row Details",
-    "description": "Displays every field of a given row.",
-    "icon": "JourneyData",
-    "hasChildren": false,
-    "showSettingsBar": true,
-    "settings": [
-      {
-        "type": "repeater",
-        "label": "Repater",
-        "key": "repeater",
-        "required": true
-      },
-      {
-        "type": "text",
-        "label": "Empty Text",
-        "key": "noDataMessage",
-        "defaultValue": "No data"
-      },
-      {
-        "type": "text",
-        "label": "Heading",
-        "key": "heading"
-      }
-    ],
-    "context": [
-      {
-        "type": "schema"
-      },
-      {
-        "type": "static",
-        "values": [
-          {
-            "label": "Row Index",
-            "key": "index",
-            "type": "number"
-          }
-        ]
-      }
-    ]
-  },
   "chartblock": {
     "block": true,
     "name": "Chart block",
@@ -5233,8 +5192,8 @@
     "name": "Row explorer block",
     "icon": "PersonalizationField",
     "size": {
-      "width": 600,
-      "height": 400
+      "width": 100,
+      "height": 100
     },
     "settings": [
       {
@@ -5245,14 +5204,19 @@
       },
       {
         "type": "text",
-        "label": "Details heading",
-        "key": "detailsHeading",
-        "nested": true
+        "label": "Height",
+        "key": "height"
       },
       {
         "section": true,
         "name": "Cards",
         "settings": [
+          {
+            "type": "field",
+            "label": "Search Field",
+            "key": "cardSearchField",
+            "nested": true
+          },
           {
             "type": "text",
             "key": "cardTitle",
@@ -5278,6 +5242,24 @@
             "type": "text",
             "key": "cardImageURL",
             "label": "Image URL",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Details",
+        "settings": [
+          {
+            "type": "text",
+            "key": "detailTitle",
+            "label": "Title",
+            "nested": true
+          },
+          {
+            "type": "multifield",
+            "label": "Fields",
+            "key": "detailFields",
             "nested": true
           }
         ]

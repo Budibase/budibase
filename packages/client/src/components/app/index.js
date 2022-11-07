@@ -13,7 +13,6 @@ import "@spectrum-css/page/dist/index-vars.css"
 export { default as Placeholder } from "./Placeholder.svelte"
 
 // User facing components
-export { default as rowdetails } from "./RowDetails.svelte"
 export { default as container } from "./Container.svelte"
 export { default as section } from "./Section.svelte"
 export { default as dataprovider } from "./DataProvider.svelte"

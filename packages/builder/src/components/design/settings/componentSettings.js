@@ -2,7 +2,6 @@ import { Checkbox, Select, Stepper } from "@budibase/bbui"
 import DataSourceSelect from "./controls/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
-import RepeaterSelect from "./controls/RepeaterSelect.svelte"
 import ButtonActionEditor from "./controls/ButtonActionEditor/ButtonActionEditor.svelte"
 import TableSelect from "./controls/TableSelect.svelte"
 import ColorPicker from "./controls/ColorPicker.svelte"
@@ -28,7 +27,6 @@ const componentMap = {
   dataSource: DataSourceSelect,
   "dataSource/s3": S3DataSourceSelect,
   dataProvider: DataProviderSelect,
-  repeater: RepeaterSelect,
   boolean: Checkbox,
   number: Stepper,
   event: ButtonActionEditor,
