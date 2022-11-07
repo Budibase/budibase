@@ -11,7 +11,7 @@ import {
 } from "../../../config/internal-api/fixtures/table"
 import { generateNewRowForTable } from "../../../config/internal-api/fixtures/rows"
 
-describe("Internal API - /applications endpoints", () => {
+describe("Internal API - Application creation, update, publish and delete", () => {
   const api = new InternalAPIClient()
   const config = new TestConfiguration<Application>(api)
 
@@ -34,55 +34,33 @@ describe("Internal API - /applications endpoints", () => {
     })
   }
 
-  it("GET - fetch applications", async () => {
+  it("Get all Applications", async () => {
+    await config.applications.fetch()
+
     await config.applications.create({
       ...generateApp(),
       useTemplate: false,
     })
-    const [response, apps] = await config.applications.fetch()
-    expect(response).toHaveStatusCode(200)
-    expect(apps.length).toBeGreaterThanOrEqual(1)
+
+    await config.applications.fetch()
   })
 
-  it("POST - Create an application", async () => {
-    config.applications.create(generateApp())
-  })
-
-  it("POST - Publish application", async () => {
-    // create app
-    const app = await config.applications.create(generateApp())
-
-    // publish app
-    config.applications.api.appId = app.appId
-    const [publishResponse, publish] = await config.applications.publish()
-    expect(publishResponse).toHaveStatusCode(200)
-    expect(publish).toEqual({
-      _id: expect.any(String),
-      appUrl: app.url,
-      status: "SUCCESS",
-    })
-  })
-
-  it("Publish app flow", async () => {
+  it("Publish app", async () => {
     // create the app
     const appName = generator.word()
     const app = await createAppFromTemplate()
     config.applications.api.appId = app.appId
 
     // check preview renders
-    const [previewResponse, previewRenders] =
-      await config.applications.canRender()
-    expect(previewResponse).toHaveStatusCode(200)
-    expect(previewRenders).toBe(true)
+    await config.applications.canRender()
 
     // publish app
-    await config.applications.publish()
+    await config.applications.publish(<string>app.url)
 
     // check published app renders
     config.applications.api.appId = db.getProdAppID(app.appId)
-    const [publishedAppResponse, publishedAppRenders] =
-      await config.applications.canRender()
-    expect(publishedAppRenders).toBe(true)
+    await config.applications.canRender()
+
 
     // unpublish app
     await config.applications.unpublish(<string>app.appId)
@@ -95,7 +73,6 @@ describe("Internal API - /applications endpoints", () => {
     const [syncResponse, sync] = await config.applications.sync(
       <string>app.appId
     )
-    expect(syncResponse).toHaveStatusCode(200)
     expect(sync).toEqual({
       message: "App sync not required, app not deployed.",
     })
@@ -106,12 +83,11 @@ describe("Internal API - /applications endpoints", () => {
     config.applications.api.appId = app.appId
 
     // publish app
-    await config.applications.publish()
+    await config.applications.publish(<string>app.url)
 
     const [syncResponse, sync] = await config.applications.sync(
       <string>app.appId
     )
-    expect(syncResponse).toHaveStatusCode(200)
     expect(sync).toEqual({
       message: "App sync completed successfully.",
     })
@@ -122,28 +98,23 @@ describe("Internal API - /applications endpoints", () => {
 
     config.applications.api.appId = app.appId
 
-    const [updateResponse, updatedApp] = await config.applications.update(
+    await config.applications.update(
       <string>app.appId,
+      <string>app.name,
       {
         name: generator.word(),
       }
     )
-    expect(updateResponse).toHaveStatusCode(200)
-    expect(updatedApp.name).not.toEqual(app.name)
   })
 
   it("POST - Revert Changes without changes", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
-    const [revertResponse, revert] = await config.applications.revert(
-      <string>app.appId
+    await config.applications.revert(
+      <string>app.appId,
+      true
     )
-    expect(revertResponse).toHaveStatusCode(400)
-    expect(revert).toEqual({
-      message: "App has not yet been deployed",
-      status: 400,
-    })
   })
 
   it("POST - Revert Changes", async () => {
@@ -151,116 +122,28 @@ describe("Internal API - /applications endpoints", () => {
     config.applications.api.appId = app.appId
 
     // publish app
-    const [publishResponse, publish] = await config.applications.publish()
-    expect(publishResponse).toHaveStatusCode(200)
-    expect(publish.status).toEqual("SUCCESS")
+    await config.applications.publish(<string>app.url)
+
 
     // Change/add component to the app
-    const [screenResponse, screen] = await config.applications.addScreentoApp(
+    await config.screen.create(
       generateScreen("BASIC")
     )
-    expect(screenResponse).toHaveStatusCode(200)
-    expect(screen._id).toBeDefined()
 
     // // Revert the app to published state
-    const [revertResponse, revert] = await config.applications.revert(
+    await config.applications.revert(
       <string>app.appId
     )
-    expect(revertResponse).toHaveStatusCode(200)
-    expect(revert).toEqual({
-      message: "Reverted changes successfully.",
-    })
 
     // Check screen is removed
-    const [routesResponse, routes] = await config.applications.getRoutes()
-    expect(routesResponse).toHaveStatusCode(200)
-    expect(routes.routes["/test"]).toBeUndefined()
+    await config.applications.getRoutes()
+
   })
 
   it("DELETE - Delete an application", async () => {
     const app = await config.applications.create(generateApp())
 
-    const [deleteResponse] = await config.applications.delete(<string>app.appId)
-    expect(deleteResponse).toHaveStatusCode(200)
+    await config.applications.delete(<string>app.appId)
   })
 
-  it("Operations on Tables", async () => {
-    // create the app
-    const appName = generator.word()
-    const app = await createAppFromTemplate()
-    config.applications.api.appId = app.appId
-
-    // Get current tables: expect 2 in this template
-    await config.tables.getAll(2)
-
-    // Add new table
-    const [createdTableResponse, createdTableData] = await config.tables.save(
-      generateTable()
-    )
-    expect(createdTableResponse).toHaveStatusCode(200)
-    expect(createdTableData._id).toBeDefined()
-    expect(createdTableData._rev).toBeDefined()
-
-    //Table was added
-    await config.tables.getAll(3)
-
-    //Get information about the table
-    const [tableInfoResponse, tableInfo] = await config.tables.getTableById(
-      <string>createdTableData._id
-    )
-    expect(tableInfoResponse).toHaveStatusCode(200)
-    expect(tableInfo._id).toEqual(createdTableData._id)
-
-    //Add Column to table
-    const newColumn = generateNewColumnForTable(createdTableData)
-    const [addColumnResponse, addColumnData] = await config.tables.save(
-      newColumn
-    )
-    expect(addColumnResponse).toHaveStatusCode(200)
-    expect(addColumnData._id).toEqual(createdTableData._id)
-    expect(addColumnData.schema.TestColumn).toBeDefined()
-
-    //Add Row to table
-    const newRow = generateNewRowForTable(<string>addColumnData._id)
-    const [addRowResponse, addRowData] = await config.rows.add(
-      <string>addColumnData._id,
-      newRow
-    )
-    console.log(addRowData)
-    expect(addRowResponse).toHaveStatusCode(200)
-    expect(addRowData._id).toBeDefined()
-    expect(addRowData._rev).toBeDefined()
-    expect(addRowData.tableId).toEqual(addColumnData._id)
-
-    //Get Row from table
-    const [getRowResponse, getRowData] = await config.rows.getAll(
-      <string>addColumnData._id
-    )
-    expect(getRowResponse).toHaveStatusCode(200)
-    expect(getRowData.length).toEqual(1)
-
-    //Delete Row from table
-    const rowToDelete = {
-      rows: [getRowData[0]],
-    }
-    const [deleteRowResponse, deleteRowData] = await config.rows.delete(
-      <string>addColumnData._id,
-      rowToDelete
-    )
-    expect(deleteRowResponse).toHaveStatusCode(200)
-    expect(deleteRowData[0]._id).toEqual(getRowData[0]._id)
-
-    //Delete the table
-    const [deleteTableResponse, deleteTable] = await config.tables.delete(
-      <string>addColumnData._id,
-      <string>addColumnData._rev
-    )
-    expect(deleteTableResponse).toHaveStatusCode(200)
-    expect(deleteTable.message).toEqual(
-      `Table ${createdTableData._id} deleted.`
-    )
-
-    //Table was deleted
-    await config.tables.getAll(2)
-  })
 })
