@@ -163,6 +163,12 @@ export const upload = async ({
     ContentType: type || CONTENT_TYPE_MAP[extension.toLowerCase()],
   }
   if (metadata) {
+    // remove any nullish keys from the metadata object, as these may be considered invalid
+    for (let key of Object.keys(metadata)) {
+      if (!metadata[key] || typeof metadata[key] !== "string") {
+        delete metadata[key]
+      }
+    }
     config.Metadata = metadata
   }
   return objectStore.upload(config).promise()
