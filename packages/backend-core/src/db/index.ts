@@ -2,6 +2,7 @@ import * as pouch from "./pouch"
 import env from "../environment"
 import { PouchOptions, CouchFindOptions } from "@budibase/types"
 import PouchDB from "pouchdb"
+import { PouchLike } from "../couch"
 import { directCouchQuery } from "../couch"
 export { directCouchQuery } from "../couch"
 
@@ -38,10 +39,7 @@ export async function init(opts?: PouchOptions) {
   initialised = true
 }
 
-// NOTE: THIS IS A DANGEROUS FUNCTION - USE WITH CAUTION
-// this function is prone to leaks, should only be used
-// in situations that using the function doWithDB does not work
-export function dangerousGetDB(dbName: string, opts?: any): PouchDB.Database {
+export function getPouchDB(dbName: string, opts?: any): PouchDB.Database {
   checkInitialised()
   if (env.isTest()) {
     dbList.add(dbName)
@@ -53,6 +51,13 @@ export function dangerousGetDB(dbName: string, opts?: any): PouchDB.Database {
   const dbPut = db.put
   db.put = put(dbPut)
   return db
+}
+
+// NOTE: THIS IS A DANGEROUS FUNCTION - USE WITH CAUTION
+// this function is prone to leaks, should only be used
+// in situations that using the function doWithDB does not work
+export function dangerousGetDB(dbName: string, opts?: any): PouchLike {
+  return new PouchLike(dbName, opts)
 }
 
 // use this function if you have called dangerousGetDB - close
@@ -79,11 +84,7 @@ export async function doWithDB(dbName: string, cb: any, opts = {}) {
   const db = dangerousGetDB(dbName, opts)
   // need this to be async so that we can correctly close DB after all
   // async operations have been completed
-  try {
-    return await cb(db)
-  } finally {
-    await closeDB(db)
-  }
+  return await cb(db)
 }
 
 export function allDbs() {
