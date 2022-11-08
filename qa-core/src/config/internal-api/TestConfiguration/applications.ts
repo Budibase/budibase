@@ -2,7 +2,6 @@ import { Application } from "@budibase/server/api/controllers/public/mapping/typ
 import { App } from "@budibase/types"
 import { Response } from "node-fetch"
 import InternalAPIClient from "./InternalAPIClient"
-import FormData from "form-data"
 import { RouteConfig } from "../fixtures/types/routing"
 import { AppPackageResponse } from "../fixtures/types/appPackage"
 import { DeployConfig } from "../fixtures/types/deploy"
