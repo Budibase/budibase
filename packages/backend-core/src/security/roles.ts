@@ -391,4 +391,9 @@ export function getExternalRoleID(roleId?: string) {
   return roleId
 }
 
-export const BUILTIN_ROLE_IDS = BUILTIN_IDS
+export const BUILTIN_ROLE_IDS = [
+  BUILTIN_IDS.ADMIN,
+  BUILTIN_IDS.POWER,
+  BUILTIN_IDS.BASIC,
+  BUILTIN_IDS.PUBLIC,
+]
