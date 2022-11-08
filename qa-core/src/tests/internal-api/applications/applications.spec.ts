@@ -5,11 +5,6 @@ import InternalAPIClient from "../../../config/internal-api/TestConfiguration/In
 import generateApp from "../../../config/internal-api/fixtures/applications"
 import generator from "../../../config/generator"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
-import {
-  generateTable,
-  generateNewColumnForTable,
-} from "../../../config/internal-api/fixtures/table"
-import { generateNewRowForTable } from "../../../config/internal-api/fixtures/rows"
 
 describe("Internal API - Application creation, update, publish and delete", () => {
   const api = new InternalAPIClient()
@@ -33,10 +28,11 @@ describe("Internal API - Application creation, update, publish and delete", () =
       templateFile: undefined,
     })
   }
-
-  it("Get all Applications", async () => {
+  it("Get applications without applications", async () => {
     await config.applications.fetch()
+  })
 
+  it("Get all Applications after creating an application", async () => {
     await config.applications.create({
       ...generateApp(),
       useTemplate: false,

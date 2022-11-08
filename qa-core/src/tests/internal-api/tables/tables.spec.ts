@@ -1,10 +1,7 @@
 import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
-import { db } from "@budibase/backend-core"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
-import generateApp from "../../../config/internal-api/fixtures/applications"
 import generator from "../../../config/generator"
-import generateScreen from "../../../config/internal-api/fixtures/screens"
 import {
     generateTable,
     generateNewColumnForTable,
