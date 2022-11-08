@@ -41,7 +41,7 @@
   $: integrationInfo = datasourceType ? $integrations[datasourceType] : null
   $: queryConfig = integrationInfo?.query
   $: shouldShowQueryConfig = queryConfig && query.queryVerb
-  $: readQuery = query.queryVerb === "read" || query.readable
+  $: readQuery = query.queryVerb === "" || query.readable
   $: queryInvalid = !query.name || (readQuery && data.length === 0)
 
   //Cast field in query preview response to number if specified by schema
