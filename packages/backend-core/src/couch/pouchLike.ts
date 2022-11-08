@@ -2,8 +2,7 @@ import Nano from "nano"
 import { AnyDocument } from "@budibase/types"
 import { getCouchInfo } from "./couch"
 import { directCouchCall } from "./utils"
-import { ReadStream, WriteStream } from "fs"
-import { dangerousGetDB } from "../db"
+import { getPouchDB } from "../db"
 
 export type PouchLikeOpts = {
   skip_setup?: boolean
@@ -20,10 +19,6 @@ export type QueryOpts = {
   keys?: string[]
 }
 
-export type DumpOpts = {
-  filter?: (doc: AnyDocument) => boolean
-}
-
 export class PouchLike {
   public readonly name: string
   private static nano: Nano.ServerScope
@@ -32,13 +27,21 @@ export class PouchLike {
   constructor(dbName: string, opts?: PouchLikeOpts) {
     this.name = dbName
     this.pouchOpts = opts || {}
+    if (!PouchLike.nano) {
+      PouchLike.init()
+    }
   }
 
   static init() {
     const couchInfo = getCouchInfo()
-    this.nano = Nano({
+    PouchLike.nano = Nano({
       url: couchInfo.url,
-      cookie: couchInfo.cookie,
+      requestDefaults: {
+        headers: {
+          Authorization: couchInfo.cookie,
+        },
+      },
+      parseUrl: false,
     })
   }
 
@@ -56,16 +59,30 @@ export class PouchLike {
     return PouchLike.nano.db.use(this.name)
   }
 
-  async info() {}
+  private async updateOutput(fnc: any) {
+    try {
+      return await fnc()
+    } catch (err: any) {
+      if (err.statusCode) {
+        err.status = err.statusCode
+      }
+      throw err
+    }
+  }
+
+  async info() {
+    const db = PouchLike.nano.db.use(this.name)
+    return db.info()
+  }
 
   async get(id: string) {
     const db = await this.checkSetup()
-    return await db.get(id)
+    return this.updateOutput(() => db.get(id))
   }
 
   async remove(id: string, rev: string) {
     const db = await this.checkSetup()
-    return await db.destroy(id, rev)
+    return this.updateOutput(() => db.destroy(id, rev))
   }
 
   async put(document: AnyDocument) {
@@ -73,23 +90,23 @@ export class PouchLike {
       throw new Error("Cannot store document without _id field.")
     }
     const db = await this.checkSetup()
-    return await db.insert(document)
+    return this.updateOutput(() => db.insert(document))
   }
 
   async bulkDocs(documents: AnyDocument[]) {
     const db = await this.checkSetup()
-    return await db.bulk({ docs: documents })
+    return this.updateOutput(() => db.bulk({ docs: documents }))
   }
 
   async allDocs(params: QueryOpts) {
     const db = await this.checkSetup()
-    return await db.fetch({ keys: [] }, params)
+    return this.updateOutput(() => db.list(params))
   }
 
   async query(viewName: string, params: QueryOpts) {
     const db = await this.checkSetup()
     const [database, view] = viewName.split("/")
-    return await db.view(database, view, params)
+    return this.updateOutput(() => db.view(database, view, params))
   }
 
   async destroy() {
@@ -97,37 +114,47 @@ export class PouchLike {
       await PouchLike.nano.db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
-      if (err.status === 404) {
+      if (err.statusCode === 404) {
         return
       } else {
-        throw err
+        throw { ...err, status: err.statusCode }
       }
     }
   }
 
   async compact() {
     const db = await this.checkSetup()
-    return await db.compact()
+    return this.updateOutput(() => db.compact())
   }
 
-  // utilise PouchDB for this
-  async dump(stream: WriteStream, params: DumpOpts) {
-    const pouch = dangerousGetDB(this.name)
-    // @ts-ignore
-    return pouch.dump(stream, params)
+  private doWithPouchDB(func: string) {
+    const dbName = this.name
+    return async (args: any[]) => {
+      const pouch = getPouchDB(dbName)
+      // @ts-ignore
+      return pouch[func](...args)
+    }
   }
 
-  // utilise PouchDB for this
-  async load(stream: ReadStream) {
-    const pouch = dangerousGetDB(this.name)
-    // @ts-ignore
-    return pouch.load(stream)
+  // All below functions are in-frequently called, just utilise PouchDB
+  // for them as it implements them better than we can
+  async dump(...args: any[]) {
+    return this.doWithPouchDB("dump")(args)
   }
 
-  // pouch specific functions - indexes come from the pouchdb-find library
-  async createIndex() {}
+  async load(...args: any[]) {
+    return this.doWithPouchDB("load")(args)
+  }
 
-  async deleteIndex() {}
+  async createIndex(...args: any[]) {
+    return this.doWithPouchDB("createIndex")(args)
+  }
 
-  async getIndexes() {}
+  async deleteIndex(...args: any[]) {
+    return this.doWithPouchDB("createIndex")(args)
+  }
+
+  async getIndexes(...args: any[]) {
+    return this.doWithPouchDB("createIndex")(args)
+  }
 }

@@ -66,7 +66,6 @@ export const getPouch = (opts: any = {}) => {
     const inMemory = require("pouchdb-adapter-memory")
     PouchDB.plugin(inMemory)
     POUCH_DB_DEFAULTS = {
-      prefix: undefined,
       // @ts-ignore
       adapter: "memory",
     }
@@ -74,7 +73,6 @@ export const getPouch = (opts: any = {}) => {
 
   if (opts.onDisk) {
     POUCH_DB_DEFAULTS = {
-      prefix: undefined,
       // @ts-ignore
       adapter: "leveldb",
     }
