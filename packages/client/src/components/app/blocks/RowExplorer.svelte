@@ -235,6 +235,7 @@
         type="formblock"
         order={1}
         props={{
+          showSaveButton: true,
           dataSource,
           actionType: "Update",
           rowId: `{{ [state].[${stateKey}] }}`,
