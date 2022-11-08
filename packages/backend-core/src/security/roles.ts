@@ -373,7 +373,7 @@ export class AccessController {
 /**
  * Adds the "role_" for builtin role IDs which are to be written to the DB (for permissions).
  */
-function getDBRoleID(roleId?: string) {
+export function getDBRoleID(roleId?: string) {
   if (roleId?.startsWith(DocumentType.ROLE)) {
     return roleId
   }
@@ -383,7 +383,7 @@ function getDBRoleID(roleId?: string) {
 /**
  * Remove the "role_" from builtin role IDs that have been written to the DB (for permissions).
  */
-function getExternalRoleID(roleId?: string) {
+export function getExternalRoleID(roleId?: string) {
   // for built-in roles we want to remove the DB role ID element (role_)
   if (roleId?.startsWith(DocumentType.ROLE) && isBuiltin(roleId)) {
     return roleId.split(`${DocumentType.ROLE}${SEPARATOR}`)[1]
