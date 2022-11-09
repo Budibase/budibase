@@ -32,6 +32,7 @@
     validation,
     formStep
   )
+
   $: schemaType = fieldSchema?.type !== "formula" ? fieldSchema?.type : "string"
 
   // Focus label when editing

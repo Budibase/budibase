@@ -84,6 +84,8 @@ spec:
           value: {{ .Values.services.objectStore.appsBucketName | quote }}
         - name: GLOBAL_CLOUD_BUCKET_NAME
           value: {{ .Values.services.objectStore.globalBucketName | quote }}
+        - name: BACKUPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.backupsBucketName | quote }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
         {{ if .Values.services.worker.publicApiRateLimitPerSecond }}
@@ -156,6 +158,8 @@ spec:
         - name: ELASTIC_APM_SERVER_URL
           value: {{ .Values.globals.elasticApmServerUrl | quote }}
         {{ end }}
+        - name: CDN_URL
+          value: {{ .Values.globals.cdnUrl }}
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always

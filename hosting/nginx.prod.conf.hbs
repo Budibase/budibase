@@ -51,11 +51,11 @@ http {
     proxy_buffering off;
 
     set $csp_default "default-src 'self'";
-    set $csp_script "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io";
+    set $csp_script "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.budibase.net https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io";
     set $csp_style "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://rsms.me https://maxcdn.bootstrapcdn.com";
     set $csp_object "object-src 'none'";
     set $csp_base_uri "base-uri 'self'";
-    set $csp_connect "connect-src 'self' https://api-iam.intercom.io https://api-iam.intercom.io  https://api-ping.intercom.io https://app.posthog.com wss://nexus-websocket-a.intercom.io  wss://nexus-websocket-b.intercom.io https://nexus-websocket-a.intercom.io https://nexus-websocket-b.intercom.io  https://uploads.intercomcdn.com  https://uploads.intercomusercontent.com https://*.s3.amazonaws.com https://*.s3.us-east-2.amazonaws.com https://*.s3.us-east-1.amazonaws.com https://*.s3.us-west-1.amazonaws.com https://*.s3.us-west-2.amazonaws.com https://*.s3.af-south-1.amazonaws.com https://*.s3.ap-east-1.amazonaws.com https://*.s3.ap-southeast-3.amazonaws.com https://*.s3.ap-south-1.amazonaws.com https://*.s3.ap-northeast-3.amazonaws.com https://*.s3.ap-northeast-2.amazonaws.com https://*.s3.ap-southeast-1.amazonaws.com https://*.s3.ap-southeast-2.amazonaws.com https://*.s3.ap-northeast-1.amazonaws.com https://*.s3.ca-central-1.amazonaws.com https://*.s3.cn-north-1.amazonaws.com https://*.s3.cn-northwest-1.amazonaws.com https://*.s3.eu-central-1.amazonaws.com https://*.s3.eu-west-1.amazonaws.com https://*.s3.eu-west-2.amazonaws.com https://*.s3.eu-south-1.amazonaws.com https://*.s3.eu-west-3.amazonaws.com https://*.s3.eu-north-1.amazonaws.com https://*.s3.sa-east-1.amazonaws.com https://*.s3.me-south-1.amazonaws.com https://*.s3.us-gov-east-1.amazonaws.com https://*.s3.us-gov-west-1.amazonaws.com";
+    set $csp_connect "connect-src 'self' https://*.budibase.net https://api-iam.intercom.io https://api-iam.intercom.io  https://api-ping.intercom.io https://app.posthog.com wss://nexus-websocket-a.intercom.io  wss://nexus-websocket-b.intercom.io https://nexus-websocket-a.intercom.io https://nexus-websocket-b.intercom.io  https://uploads.intercomcdn.com  https://uploads.intercomusercontent.com https://*.s3.amazonaws.com https://*.s3.us-east-2.amazonaws.com https://*.s3.us-east-1.amazonaws.com https://*.s3.us-west-1.amazonaws.com https://*.s3.us-west-2.amazonaws.com https://*.s3.af-south-1.amazonaws.com https://*.s3.ap-east-1.amazonaws.com https://*.s3.ap-southeast-3.amazonaws.com https://*.s3.ap-south-1.amazonaws.com https://*.s3.ap-northeast-3.amazonaws.com https://*.s3.ap-northeast-2.amazonaws.com https://*.s3.ap-southeast-1.amazonaws.com https://*.s3.ap-southeast-2.amazonaws.com https://*.s3.ap-northeast-1.amazonaws.com https://*.s3.ca-central-1.amazonaws.com https://*.s3.cn-north-1.amazonaws.com https://*.s3.cn-northwest-1.amazonaws.com https://*.s3.eu-central-1.amazonaws.com https://*.s3.eu-west-1.amazonaws.com https://*.s3.eu-west-2.amazonaws.com https://*.s3.eu-south-1.amazonaws.com https://*.s3.eu-west-3.amazonaws.com https://*.s3.eu-north-1.amazonaws.com https://*.s3.sa-east-1.amazonaws.com https://*.s3.me-south-1.amazonaws.com https://*.s3.us-gov-east-1.amazonaws.com https://*.s3.us-gov-west-1.amazonaws.com";
     set $csp_font "font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://rsms.me https://maxcdn.bootstrapcdn.com  https://js.intercomcdn.com  https://fonts.intercomcdn.com";
     set $csp_frame "frame-src 'self' https:";
     set $csp_img "img-src http: https: data: blob:";
@@ -116,6 +116,15 @@ http {
       rewrite ^/worker/(.*)$ /$1 break;
     }
 
+    location /api/backups/ {
+      proxy_read_timeout 1800s;
+      proxy_connect_timeout 1800s;
+      proxy_send_timeout 1800s;
+      proxy_pass      http://app-service;
+      proxy_http_version 1.1;
+      proxy_set_header Connection "";
+    }
+
     location /api/ {
       # calls to the API are rate limited with bursting
       limit_req zone=ratelimit burst=20 nodelay;
@@ -171,11 +180,13 @@ http {
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Host $http_host;
 
       proxy_connect_timeout 300;
       proxy_http_version 1.1;
       proxy_set_header Connection "";
       chunked_transfer_encoding off;
+
       proxy_pass      http://$minio:9000;
     }
 

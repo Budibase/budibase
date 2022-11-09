@@ -41,7 +41,7 @@
     time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
-    mode: range ? "range" : null,
+    mode: range ? "range" : "single",
     appendTo,
     disableMobile: "true",
     onReady: () => {
@@ -66,7 +66,7 @@
       newValue = newValue.toISOString()
     }
     // If time only set date component to 2000-01-01
-    else if (timeOnly) {
+    if (timeOnly) {
       // Classic flackpickr causing issues.
       // When selecting a value for the first time for a "time only" field,
       // the time is always offset by 1 hour for some reason (regardless of time

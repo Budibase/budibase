@@ -6,6 +6,7 @@ import { baseGlobalDBName } from "../db/tenancy"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
 import { ContextKey } from "./constants"
+import PouchDB from "pouchdb"
 import {
   updateUsing,
   closeWithUsing,
@@ -22,16 +23,15 @@ export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 let TEST_APP_ID: string | null = null
 
 export const closeTenancy = async () => {
-  let db
   try {
     if (env.USE_COUCH) {
-      db = getGlobalDB()
+      const db = getGlobalDB()
+      await closeDB(db)
     }
   } catch (err) {
     // no DB found - skip closing
     return
   }
-  await closeDB(db)
   // clear from context now that database is closed/task is finished
   cls.setOnContext(ContextKey.TENANT_ID, null)
   cls.setOnContext(ContextKey.GLOBAL_DB, null)

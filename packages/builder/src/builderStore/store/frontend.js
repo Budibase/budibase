@@ -245,7 +245,10 @@ export const getFrontendStore = () => {
         }
       },
       save: async screen => {
-        store.actions.screens.validate(screen)
+        /* 
+          Temporarily disabled to accomodate migration issues.
+          store.actions.screens.validate(screen)
+        */
         const state = get(store)
         const creatingNewScreen = screen._id === undefined
         const savedScreen = await API.saveScreen(screen)

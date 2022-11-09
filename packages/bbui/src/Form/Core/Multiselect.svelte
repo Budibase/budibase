@@ -16,8 +16,10 @@
   export let autoWidth = false
 
   const dispatch = createEventDispatcher()
+
   $: selectedLookupMap = getSelectedLookupMap(value)
   $: optionLookupMap = getOptionLookupMap(options)
+
   $: fieldText = getFieldText(value, optionLookupMap, placeholder)
   $: isOptionSelected = optionValue => selectedLookupMap[optionValue] === true
   $: toggleOption = makeToggleOption(selectedLookupMap, value)

@@ -21,13 +21,14 @@
   import AppSizeRenderer from "./AppSizeRenderer.svelte"
   import CreateBackupModal from "./CreateBackupModal.svelte"
   import ActionsRenderer from "./ActionsRenderer.svelte"
-  import DateRenderer from "./DateRenderer.svelte"
+  import DateRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import UserRenderer from "./UserRenderer.svelte"
   import StatusRenderer from "./StatusRenderer.svelte"
   import TypeRenderer from "./TypeRenderer.svelte"
+  import NameRenderer from "./NameRenderer.svelte"
   import BackupsDefault from "assets/backups-default.png"
+  import { BackupTrigger, BackupType } from "constants/backend/backups"
   import { onMount } from "svelte"
-
   export let app
 
   let backupData = null
@@ -36,50 +37,61 @@
   let filterOpt = null
   let startDate = null
   let endDate = null
-  let filters = getFilters()
+  let loaded = false
+  let filters = [
+    {
+      label: "Manual backup",
+      value: { type: BackupType.BACKUP, trigger: BackupTrigger.MANUAL },
+    },
+    {
+      label: "Published backup",
+      value: { type: BackupType.BACKUP, trigger: BackupTrigger.PUBLISH },
+    },
+    {
+      label: "Scheduled backup",
+      value: { type: BackupType.BACKUP, trigger: BackupTrigger.SCHEDULED },
+    },
+    {
+      label: "Pre-restore backup",
+      value: { type: BackupType.BACKUP, trigger: BackupTrigger.RESTORING },
+    },
+    {
+      label: "Manual restore",
+      value: { type: BackupType.RESTORE, trigger: BackupTrigger.MANUAL },
+    },
+  ]
 
   $: page = $pageInfo.page
   $: fetchBackups(filterOpt, page, startDate, endDate)
 
-  function getFilters() {
-    const options = []
-    let types = ["backup"]
-    let triggers = ["manual", "publish", "scheduled", "restoring"]
-    for (let type of types) {
-      for (let trigger of triggers) {
-        let label = `${trigger} ${type}`
-        label = label.charAt(0).toUpperCase() + label?.slice(1)
-        options.push({ label, value: { type, trigger } })
-      }
-    }
-    options.push({
-      label: `Manual restore`,
-      value: { type: "restore", trigger: "manual" },
-    })
-    return options
-  }
-
-  const schema = {
+  let schema = {
     type: {
       displayName: "Type",
+      width: "auto",
     },
     createdAt: {
       displayName: "Date",
+      width: "auto",
     },
     name: {
       displayName: "Name",
+      width: "auto",
     },
     appSize: {
       displayName: "App size",
+      width: "auto",
     },
     createdBy: {
       displayName: "User",
+      width: "auto",
     },
     status: {
       displayName: "Status",
+      width: "auto",
     },
     actions: {
       displayName: null,
+      width: "5%",
     },
   }
 
@@ -90,6 +102,7 @@
     { column: "createdBy", component: UserRenderer },
     { column: "status", component: StatusRenderer },
     { column: "type", component: TypeRenderer },
+    { column: "name", component: NameRenderer },
   ]
 
   function flattenBackups(backups) {
@@ -154,6 +167,7 @@
 
   onMount(() => {
     fetchBackups(filterOpt, page, startDate, endDate)
+    loaded = true
   })
 </script>
 
@@ -169,7 +183,7 @@
         </div>
         <div>
           <Body>
-            Backup your apps and restore them to their previous state.
+            Back up your apps and restore them to their previous state.
             {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
               Contact your account holder to upgrade your plan.
             {/if}
@@ -195,12 +209,32 @@
               window.open("https://budibase.com/pricing/", "_blank")
             }}
           >
-            View Plans
+            View plans
           </Button>
         </div>
       </Layout>
     </Page>
-  {:else if backupData?.length > 0}
+  {:else if backupData?.length === 0 && !loaded && !filterOpt && !startDate}
+    <Page wide={false}>
+      <div class="align">
+        <img
+          width="220px"
+          height="130px"
+          src={BackupsDefault}
+          alt="BackupsDefault"
+        />
+        <Layout gap="S">
+          <Heading>You have no backups yet</Heading>
+          <div class="opacity">
+            <Body size="S">You can manually backup your app any time</Body>
+          </div>
+          <div class="padding">
+            <Button on:click={modal.show} cta>Create Backup</Button>
+          </div>
+        </Layout>
+      </div>
+    </Page>
+  {:else if loaded}
     <Layout noPadding gap="M" alignContent="start">
       <div class="search">
         <div class="select">
@@ -232,9 +266,10 @@
           >
         </div>
       </div>
-      <div>
+      <div class="table">
         <Table
           {schema}
+          disableSorting
           allowSelectRows={false}
           allowEditColumns={false}
           allowEditRows={false}
@@ -255,26 +290,6 @@
         </div>
       </div>
     </Layout>
-  {:else if backupData?.length === 0}
-    <Page wide={false}>
-      <div class="align">
-        <img
-          width="200px"
-          height="120px"
-          src={BackupsDefault}
-          alt="BackupsDefault"
-        />
-        <Layout gap="S">
-          <Heading>You have no backups yet</Heading>
-          <div class="opacity">
-            <Body size="S">You can manually backup your app any time</Body>
-          </div>
-          <div class="padding">
-            <Button on:click={modal.show} cta>Create Backup</Button>
-          </div>
-        </Layout>
-      </div>
-    </Page>
   {/if}
 </div>
 
@@ -299,7 +314,7 @@
   }
 
   .select {
-    flex-basis: 150px;
+    flex-basis: 100px;
   }
 
   .pagination {
@@ -332,5 +347,9 @@
   .pro-buttons {
     display: flex;
     gap: var(--spacing-m);
+  }
+
+  .table {
+    overflow-x: scroll;
   }
 </style>
