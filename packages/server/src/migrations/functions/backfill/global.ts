@@ -149,7 +149,7 @@ export const run = async (db: any) => {
     }
 
     try {
-      const allApps: App[] = await dbUtils.getAllApps({ dev: true })
+      const allApps = (await dbUtils.getAllApps({ dev: true })) as App[]
       totals.apps = allApps.length
 
       totals.usage = await quotas.backfill(allApps)

@@ -12,6 +12,7 @@ import {
   MigrationOptions,
   MigrationType,
   MigrationNoOpOptions,
+  App,
 } from "@budibase/types"
 
 export const getMigrationsDoc = async (db: any) => {
@@ -55,14 +56,17 @@ export const runMigration = async (
   }
 
   // get the db to store the migration in
-  let dbNames
+  let dbNames: string[]
   if (migrationType === MigrationType.GLOBAL) {
     dbNames = [getGlobalDBName()]
   } else if (migrationType === MigrationType.APP) {
     if (options.noOp) {
+      if (!options.noOp.appId) {
+        throw new Error("appId is required for noOp app migration")
+      }
       dbNames = [options.noOp.appId]
     } else {
-      const apps = await getAllApps(migration.appOpts)
+      const apps = (await getAllApps(migration.appOpts)) as App[]
       dbNames = apps.map(app => app.appId)
     }
   } else if (migrationType === MigrationType.INSTALLATION) {
