@@ -15,7 +15,6 @@
 
   export let detailFields
   export let detailTitle
-  export let detailsHeading
 
   const stateKey = generate()
 
@@ -147,8 +146,8 @@
       styles={{
         custom: `
           padding: 20px;
-          background-color: white;
-          border: 1px solid rgb(225, 225, 225);
+          background-color: var(--spectrum-global-color-gray-50));
+          border: 1px solid var(--spectrum-global-color-gray-300);
           border-radius: 4px;
           flex: 4;
           {{#if (or [state].[${stateKey}] [device].[mobile]) }}
@@ -191,8 +190,8 @@
       }}
       styles={{
         custom: `
-          background-color: white;
-          border: 1px solid rgb(225, 225, 225);
+          background-color: var(--spectrum-global-color-gray-50));
+          border: 1px solid var(--spectrum-global-color-gray-300);
           border-radius: 4px;
           padding: 20px;
           overflow-y: scroll;
