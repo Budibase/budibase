@@ -59,5 +59,8 @@
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-visualizer": "^5.5.4"
   },
+  "resolutions": {
+    "loader-utils": "1.4.1"
+  },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }
