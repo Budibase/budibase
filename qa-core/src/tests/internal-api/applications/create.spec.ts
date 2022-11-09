@@ -63,7 +63,7 @@ describe("Internal API - /applications endpoints", () => {
     })
   })
 
-  it("POST - Create an application from a template, publish and check it renders", async () => {
+  it("Publish app flow", async () => {
     // create the app
     const appName = generator.word()
     const app = await createAppFromTemplate()
@@ -83,6 +83,9 @@ describe("Internal API - /applications endpoints", () => {
     const [publishedAppResponse, publishedAppRenders] =
       await config.applications.canRender()
     expect(publishedAppRenders).toBe(true)
+
+    // unpublish app
+    await config.applications.unpublish(<string>app.appId)
   })
 
   it("POST - Sync application before deployment", async () => {

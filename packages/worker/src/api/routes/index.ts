@@ -13,6 +13,7 @@ import selfRoutes from "./global/self"
 import licenseRoutes from "./global/license"
 import migrationRoutes from "./system/migrations"
 import accountRoutes from "./system/accounts"
+import restoreRoutes from "./system/restore"
 
 let userGroupRoutes = api.groups
 export const routes = [
@@ -31,4 +32,5 @@ export const routes = [
   userGroupRoutes,
   migrationRoutes,
   accountRoutes,
+  restoreRoutes,
 ]

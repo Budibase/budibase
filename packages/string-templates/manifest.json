@@ -625,7 +625,7 @@
         "length"
       ],
       "numArgs": 2,
-      "example": "{{ellipsis 'foo bar baz', 7}} -> foo bar…",
+      "example": "{{ellipsis 'foo bar baz' 7}} -> foo bar…",
       "description": "<p>Truncates a string to the specified <code>length</code>, and appends it with an elipsis, <code>…</code>.</p>\n"
     },
     "hyphenate": {

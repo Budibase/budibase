@@ -20,7 +20,14 @@
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, templates, licensing } from "stores/portal"
+  import {
+    apps,
+    auth,
+    admin,
+    templates,
+    licensing,
+    groups,
+  } from "stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
@@ -59,10 +66,15 @@
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(
     app =>
-      app?.name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (accessFilterList !== null ? accessFilterList.includes(app?.appId) : true)
+      (searchTerm
+        ? app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        : true) &&
+      (accessFilterList !== null
+        ? accessFilterList?.includes(
+            `${app?.type}_${app?.tenantId}_${app?.appId}`
+          )
+        : true)
   )
-
   $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
   $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
@@ -155,11 +167,13 @@
   const autoCreateApp = async () => {
     try {
       // Auto name app if has same name
-      let appName = template.key
+      const templateKey = template.key.split("/")[1]
+
+      let appName = templateKey.replace(/-/g, " ")
       const appsWithSameName = $apps.filter(app =>
         app.name?.startsWith(appName)
       )
-      appName = `${appName}-${appsWithSameName.length + 1}`
+      appName = `${appName} ${appsWithSameName.length + 1}`
 
       // Create form data to create app
       let data = new FormData()
@@ -230,6 +244,10 @@
       await templates.load()
       // always load latest
       await licensing.init()
+
+      if ($licensing.groupsEnabled) {
+        await groups.actions.init()
+      }
 
       if ($templates?.length === 0) {
         notifications.error(
