@@ -131,16 +131,16 @@ export const queryView = async <T>(
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   try {
-    let response = await db.query(`database/${viewName}`, params)
+    let response = await db.query<T>(`database/${viewName}`, params)
     const rows = response.rows
     const docs = rows.map(row => (params.include_docs ? row.doc : row.value))
 
     // if arrayResponse has been requested, always return array regardless of length
     if (opts?.arrayResponse) {
-      return docs
+      return docs as T[]
     } else {
       // return the single document if there is only one
-      return docs.length <= 1 ? docs[0] : docs
+      return docs.length <= 1 ? (docs[0] as T) : (docs as T[])
     }
   } catch (err: any) {
     if (err != null && err.name === "not_found") {
