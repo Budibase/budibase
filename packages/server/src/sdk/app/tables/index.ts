@@ -1,4 +1,4 @@
-import { getAppDB } from "@budibase/backend-core/context"
+import { context, PouchLike } from "@budibase/backend-core"
 import { BudibaseInternalDB, getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
@@ -6,11 +6,10 @@ import {
   isSQL,
 } from "../../../integrations/utils"
 import { Table } from "@budibase/types"
-import PouchDB from "pouchdb"
 
-async function getAllInternalTables(db?: PouchDB.Database): Promise<Table[]> {
+async function getAllInternalTables(db?: PouchLike): Promise<Table[]> {
   if (!db) {
-    db = getAppDB() as PouchDB.Database
+    db = context.getAppDB()
   }
   const internalTables = await db.allDocs(
     getTableParams(null, {
@@ -25,7 +24,7 @@ async function getAllInternalTables(db?: PouchDB.Database): Promise<Table[]> {
 }
 
 async function getAllExternalTables(datasourceId: any): Promise<Table[]> {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     throw "Datasource is not configured fully."
@@ -42,7 +41,7 @@ async function getExternalTable(
 }
 
 async function getTable(tableId: any): Promise<Table> {
-  const db = getAppDB()
+  const db = context.getAppDB()
   if (isExternalTable(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
     const datasource = await db.get(datasourceId)

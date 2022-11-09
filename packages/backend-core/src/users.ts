@@ -8,10 +8,9 @@ import { queryGlobalView } from "./db/views"
 import { UNICODE_MAX } from "./db/constants"
 import { BulkDocsResponse, User } from "@budibase/types"
 import { getGlobalDB } from "./context"
-import PouchDB from "pouchdb"
 
 export const bulkGetGlobalUsersById = async (userIds: string[]) => {
-  const db = getGlobalDB() as PouchDB.Database
+  const db = getGlobalDB()
   return (
     await db.allDocs({
       keys: userIds,
@@ -21,7 +20,7 @@ export const bulkGetGlobalUsersById = async (userIds: string[]) => {
 }
 
 export const bulkUpdateGlobalUsers = async (users: User[]) => {
-  const db = getGlobalDB() as PouchDB.Database
+  const db = getGlobalDB()
   return (await db.bulkDocs(users)) as BulkDocsResponse
 }
 

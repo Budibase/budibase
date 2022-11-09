@@ -5,8 +5,8 @@ import env from "../../environment"
 
 // must use require to spy index file exports due to known issue in jest
 const dbUtils = require("../../db")
-jest.spyOn(dbUtils, "closeDB")
-jest.spyOn(dbUtils, "dangerousGetDB")
+jest.spyOn(dbUtils, "closePouchDB")
+jest.spyOn(dbUtils, "getDB")
 
 describe("context", () => {
   beforeEach(() => {
@@ -25,8 +25,8 @@ describe("context", () => {
           const db = context.getGlobalDB()
           expect(db.name).toBe("global-db")
         })
-        expect(dbUtils.dangerousGetDB).toHaveBeenCalledTimes(1)
-        expect(dbUtils.closeDB).toHaveBeenCalledTimes(1)
+        expect(dbUtils.getDB).toHaveBeenCalledTimes(1)
+        expect(dbUtils.closePouchDB).toHaveBeenCalledTimes(1)
       })
     })
 
@@ -85,8 +85,8 @@ describe("context", () => {
           const db = context.getGlobalDB()
           expect(db.name).toBe("test_global-db")
         })
-        expect(dbUtils.dangerousGetDB).toHaveBeenCalledTimes(1)
-        expect(dbUtils.closeDB).toHaveBeenCalledTimes(1)
+        expect(dbUtils.getDB).toHaveBeenCalledTimes(1)
+        expect(dbUtils.closePouchDB).toHaveBeenCalledTimes(1)
       })
 
       it("sets the tenant id when nested with same tenant id", async () => {
@@ -123,8 +123,8 @@ describe("context", () => {
         })
 
         // only 1 db is opened and closed
-        expect(dbUtils.dangerousGetDB).toHaveBeenCalledTimes(1)
-        expect(dbUtils.closeDB).toHaveBeenCalledTimes(1)
+        expect(dbUtils.getDB).toHaveBeenCalledTimes(1)
+        expect(dbUtils.closePouchDB).toHaveBeenCalledTimes(1)
       })
 
       it("sets different tenant id inside another context", () => {
