@@ -22,7 +22,19 @@ type ListParams = {
   ContinuationToken?: string
 }
 
+type UploadParams = {
+  bucket: string
+  filename: string
+  path: string
+  type?: string
+  // can be undefined, we will remove it
+  metadata?: {
+    [key: string]: string | undefined
+  }
+}
+
 const CONTENT_TYPE_MAP: any = {
+  txt: "text/plain",
   html: "text/html",
   css: "text/css",
   js: "application/javascript",
@@ -149,20 +161,32 @@ export const upload = async ({
   path,
   type,
   metadata,
-}: any) => {
+}: UploadParams) => {
   const extension = filename.split(".").pop()
   const fileBytes = fs.readFileSync(path)
 
   const objectStore = ObjectStore(bucketName)
   await makeSureBucketExists(objectStore, bucketName)
 
+  let contentType = type
+  if (!contentType) {
+    contentType = extension
+      ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+      : CONTENT_TYPE_MAP.txt
+  }
   const config: any = {
     // windows file paths need to be converted to forward slashes for s3
     Key: sanitizeKey(filename),
     Body: fileBytes,
-    ContentType: type || CONTENT_TYPE_MAP[extension.toLowerCase()],
+    ContentType: contentType,
   }
-  if (metadata) {
+  if (metadata && typeof metadata === "object") {
+    // remove any nullish keys from the metadata object, as these may be considered invalid
+    for (let key of Object.keys(metadata)) {
+      if (!metadata[key] || typeof metadata[key] !== "string") {
+        delete metadata[key]
+      }
+    }
     config.Metadata = metadata
   }
   return objectStore.upload(config).promise()
