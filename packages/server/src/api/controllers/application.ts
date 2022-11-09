@@ -524,12 +524,10 @@ export const sync = async (ctx: any, next: any) => {
   // replicate prod to dev
   const prodAppId = getProdAppID(appId)
 
-  try {
-    // specific case, want to make sure setup is skipped
-    const prodDb = context.getProdAppDB({ skip_setup: true })
-    const info = await prodDb.info()
-    if (info.error) throw info.error
-  } catch (err) {
+  // specific case, want to make sure setup is skipped
+  const prodDb = context.getProdAppDB({ skip_setup: true })
+  const exists = await prodDb.exists()
+  if (!exists) {
     // the database doesn't exist. Don't replicate
     ctx.status = 200
     ctx.body = {

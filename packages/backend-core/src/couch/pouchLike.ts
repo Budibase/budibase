@@ -2,10 +2,14 @@ import Nano from "nano"
 import { AnyDocument } from "@budibase/types"
 import { getCouchInfo } from "./couch"
 import { directCouchCall } from "./utils"
-import { getPouchDB } from "../db"
+import { getPouchDB } from "./pouchDB"
 
 export type PouchLikeOpts = {
   skip_setup?: boolean
+}
+
+export type PutOpts = {
+  force?: boolean
 }
 
 export type QueryOpts = {
@@ -18,6 +22,10 @@ export type QueryOpts = {
   key?: string
   keys?: string[]
 }
+
+type QueryResp<T> = Promise<{
+  rows: { doc?: T | any; value?: any }[]
+}>
 
 export class PouchLike {
   public readonly name: string
@@ -45,11 +53,15 @@ export class PouchLike {
     })
   }
 
+  async exists() {
+    let response = await directCouchCall(`/${this.name}`, "HEAD")
+    return response.status === 200
+  }
+
   async checkSetup() {
     let shouldCreate = !this.pouchOpts?.skip_setup
     // check exists in a lightweight fashion
-    let response = await directCouchCall(`/${this.name}`, "HEAD")
-    let exists = response.status === 200
+    let exists = await this.exists()
     if (!shouldCreate && !exists) {
       throw new Error("DB does not exist")
     }
@@ -70,26 +82,43 @@ export class PouchLike {
     }
   }
 
-  async info() {
-    const db = PouchLike.nano.db.use(this.name)
-    return db.info()
-  }
-
-  async get(id: string) {
+  async get<T>(id?: string): Promise<T | any> {
     const db = await this.checkSetup()
+    if (!id) {
+      throw new Error("Unable to get doc without a valid _id.")
+    }
     return this.updateOutput(() => db.get(id))
   }
 
-  async remove(id: string, rev: string) {
+  async remove(id?: string, rev?: string) {
     const db = await this.checkSetup()
+    if (!id || !rev) {
+      throw new Error("Unable to remove doc without a valid _id and _rev.")
+    }
     return this.updateOutput(() => db.destroy(id, rev))
   }
 
-  async put(document: AnyDocument) {
+  async put(document: AnyDocument, opts?: PutOpts) {
     if (!document._id) {
       throw new Error("Cannot store document without _id field.")
     }
     const db = await this.checkSetup()
+    if (!document.createdAt) {
+      document.createdAt = new Date().toISOString()
+    }
+    document.updatedAt = new Date().toISOString()
+    if (opts?.force && document._id) {
+      try {
+        const existing = await this.get(document._id)
+        if (existing) {
+          document._rev = existing._rev
+        }
+      } catch (err: any) {
+        if (err.status !== 404) {
+          throw err
+        }
+      }
+    }
     return this.updateOutput(() => db.insert(document))
   }
 
@@ -98,12 +127,12 @@ export class PouchLike {
     return this.updateOutput(() => db.bulk({ docs: documents }))
   }
 
-  async allDocs(params: QueryOpts) {
+  async allDocs<T>(params: QueryOpts): QueryResp<T> {
     const db = await this.checkSetup()
     return this.updateOutput(() => db.list(params))
   }
 
-  async query(viewName: string, params: QueryOpts) {
+  async query<T>(viewName: string, params: QueryOpts): QueryResp<T> {
     const db = await this.checkSetup()
     const [database, view] = viewName.split("/")
     return this.updateOutput(() => db.view(database, view, params))

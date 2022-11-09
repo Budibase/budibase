@@ -1,9 +1,8 @@
-import { events } from "@budibase/backend-core"
+import { events, PouchLike } from "@budibase/backend-core"
 import sdk from "../../../../sdk"
-import PouchDB from "pouchdb"
 
 export const backfill = async (
-  appDb: PouchDB.Database,
+  appDb: PouchLike,
   timestamp: string | number
 ) => {
   const tables = await sdk.tables.getAllInternalTables(appDb)

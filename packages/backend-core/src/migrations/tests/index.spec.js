@@ -1,6 +1,6 @@
 require("../../../tests/utilities/TestConfiguration")
 const { runMigrations, getMigrationsDoc } = require("../index")
-const { dangerousGetDB } = require("../../db")
+const { getDB } = require("../../db")
 const {
   StaticDatabases,
 } = require("../../db/utils")
@@ -18,7 +18,7 @@ describe("migrations", () => {
   }]
 
   beforeEach(() => {
-    db = dangerousGetDB(StaticDatabases.GLOBAL.name)
+    db = getDB(StaticDatabases.GLOBAL.name)
   })
 
   afterEach(async () => {

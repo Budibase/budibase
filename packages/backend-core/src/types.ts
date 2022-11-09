@@ -1,0 +1,1 @@
+export { PouchLike } from "./couch"
