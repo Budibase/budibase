@@ -89,7 +89,7 @@
 
 {#if $auth.user && loaded}
   <div class="container">
-    <Page>
+    <Page narrow>
       <div class="content">
         <Layout noPadding>
           <div class="header">
@@ -196,6 +196,11 @@
   .container {
     height: 100%;
     overflow: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 80px;
   }
   .content {
     width: 100%;

@@ -6,13 +6,13 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading size="M">Theming</Heading>
+    <Heading size="M">Theme</Heading>
     <Body>Customize how Budibase looks and feels.</Body>
   </Layout>
   <Divider />
   <div class="fields">
     <div class="field">
-      <Label size="L">Builder theme</Label>
+      <Label size="L">Theme</Label>
       <Select
         options={Constants.Themes}
         bind:value={$themeStore.theme}

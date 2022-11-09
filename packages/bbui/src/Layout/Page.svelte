@@ -25,7 +25,7 @@
   }
 
   .narrow {
-    max-width: 800px;
+    max-width: 840px;
     margin: 0;
   }
 </style>

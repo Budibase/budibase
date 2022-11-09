@@ -12,7 +12,7 @@
     dummy.select()
     document.execCommand("copy")
     document.body.removeChild(dummy)
-    notifications.success(`URL copied to clipboard`)
+    notifications.success(`Copied to clipboard`)
   }
 </script>
 
