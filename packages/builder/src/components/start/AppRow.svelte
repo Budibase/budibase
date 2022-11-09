@@ -11,8 +11,12 @@
 <div class="app-row">
   <div class="header">
     <div class="title" data-cy={`${app.devId}`}>
-      <div class="app-icon" style="color: {app.icon?.color || ''}">
-        <Icon size="L" name={app.icon?.name || "Apps"} />
+      <div class="app-icon">
+        <Icon
+          size="L"
+          name={app.icon?.name || "Apps"}
+          color={app.icon?.color}
+        />
       </div>
       <div class="name" data-cy="app-name-link" on:click={() => editApp(app)}>
         <Heading size="S">
@@ -96,7 +100,7 @@
 
   .app-status:not(.deployed) :global(.spectrum-Icon),
   .app-status:not(.deployed) :global(.spectrum-Body) {
-    color: var(--spectrum-global-color-gray-700);
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .app-row-actions {

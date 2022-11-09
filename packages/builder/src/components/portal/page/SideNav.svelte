@@ -15,6 +15,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    gap: 4px;
   }
   .title {
     margin-left: var(--spacing-m);

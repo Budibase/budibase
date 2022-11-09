@@ -8,6 +8,7 @@
     Detail,
     Link,
     TooltipWrapper,
+    Page,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { admin, auth, licensing } from "../../../../stores/portal"
@@ -176,32 +177,32 @@
 </script>
 
 {#if loaded}
-  <Layout noPadding>
-    <Layout noPadding gap="XS">
-      <Heading>Usage</Heading>
-      <Body>
-        Get information about your current usage within Budibase.
-        {#if accountPortalAccess}
-          To upgrade your plan and usage limits visit your <Link
-            on:click={goToAccountPortal}
-            size="L">Account</Link
-          >
-        {:else}
-          To upgrade your plan and usage limits contact your account holder.
-        {/if}
-      </Body>
-    </Layout>
-    <Divider />
-    <DashCard
-      description="YOUR CURRENT PLAN"
-      title={planTitle()}
-      {primaryActionText}
-      primaryAction={accountPortalAccess ? goToAccountPortal : undefined}
-      {textRows}
-    >
-      <Layout gap="S" noPadding>
-        <Layout gap="S">
-          <div class="usages">
+  <Page narrow>
+    <Layout noPadding>
+      <Layout noPadding gap="XS">
+        <Heading>Usage</Heading>
+        <Body>
+          <div>Get information about your current usage within Budibase.</div>
+          {#if accountPortalAccess}
+            <div>
+              To upgrade your plan and usage limits visit your <Link
+                on:click={goToAccountPortal}
+                size="L">Account</Link
+              >
+            </div>
+          {/if}
+        </Body>
+      </Layout>
+      <Divider />
+      <DashCard
+        description="YOUR CURRENT PLAN"
+        title={planTitle()}
+        {primaryActionText}
+        primaryAction={accountPortalAccess ? goToAccountPortal : undefined}
+        {textRows}
+      >
+        <div class="content">
+          <div class="column">
             <Layout noPadding>
               {#each staticUsage as usage}
                 <div class="usage">
@@ -213,44 +214,51 @@
               {/each}
             </Layout>
           </div>
-        </Layout>
-        {#if monthlyUsage.length}
-          <div class="monthly-container">
-            <Layout gap="S">
-              <Heading size="S" weight="light">Monthly</Heading>
-              <div class="detail">
-                <TooltipWrapper tooltip={new Date(quotaReset)}>
-                  <Detail size="M">Resets in {daysRemainingInMonth} days</Detail
-                  >
-                </TooltipWrapper>
-              </div>
-              <div class="usages">
-                <Layout noPadding>
+
+          {#if monthlyUsage.length}
+            <div class="column">
+              <Layout noPadding gap="M">
+                <Layout gap="XS" noPadding>
+                  <Heading size="S">Monthly limits</Heading>
+                  <div class="detail">
+                    <TooltipWrapper tooltip={new Date(quotaReset)}>
+                      <Detail size="M">
+                        Resets in {daysRemainingInMonth} days
+                      </Detail>
+                    </TooltipWrapper>
+                  </div>
+                </Layout>
+                <Layout noPadding gap="M">
                   {#each monthlyUsage as usage}
-                    <div class="usage">
-                      <Usage
-                        {usage}
-                        warnWhenFull={WARN_USAGE.includes(usage.name)}
-                      />
-                    </div>
+                    <Usage
+                      {usage}
+                      warnWhenFull={WARN_USAGE.includes(usage.name)}
+                    />
                   {/each}
                 </Layout>
-              </div>
-            </Layout>
-          </div>
-        {/if}
-      </Layout>
-    </DashCard>
-  </Layout>
+              </Layout>
+            </div>
+          {/if}
+        </div>
+      </DashCard>
+    </Layout>
+  </Page>
 {/if}
 
 <style>
-  .usages {
+  .content {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 40px;
+  }
+  .column {
+    flex: 1 1 0;
   }
   .detail :global(.spectrum-Detail) {
     color: var(--spectrum-global-color-gray-700);
+    margin-bottom: 5px;
   }
   .detail :global(.icon) {
     margin-bottom: 0;

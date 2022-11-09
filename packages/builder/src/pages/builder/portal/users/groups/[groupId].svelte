@@ -104,7 +104,7 @@
 </script>
 
 {#if loaded}
-  <Layout noPadding gap="XL">
+  <Layout noPadding gap="L">
     <Breadcrumbs>
       <Breadcrumb url={$url("./")} text="Groups" />
       <Breadcrumb text={group?.name} />

@@ -189,7 +189,7 @@
 </script>
 
 {#if loaded}
-  <Layout gap="XL" noPadding>
+  <Layout gap="L" noPadding>
     <Breadcrumbs>
       <Breadcrumb url={$url("./")} text="Users" />
       <Breadcrumb text={user?.email} />

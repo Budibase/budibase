@@ -15,14 +15,12 @@
   import { onMount } from "svelte"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
-  import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   let loaded = false
   let userInfoModal
   let changePasswordModal
-  let apiKeyModal
   let mobileMenuVisible = false
   let activeTab = "Apps"
 
@@ -42,92 +40,79 @@
           title: "Users",
           href: "/builder/portal/users/users",
         },
-        { title: "Auth", href: "/builder/portal/manage/auth" },
-        { title: "Email", href: "/builder/portal/manage/email" },
         {
           title: "Plugins",
-          href: "/builder/portal/manage/plugins",
+          href: "/builder/portal/plugins",
           badge: "New",
         },
-
         {
-          title: "Organisation",
-          href: "/builder/portal/settings/organisation",
-          heading: "Settings",
+          title: "Usage",
+          href: "/builder/portal/usage",
         },
         {
-          title: "Theming",
-          href: "/builder/portal/settings/theming",
+          title: "Settings",
+          href: "/builder/portal/settings",
         },
       ])
-
-      if (!$adminStore.cloud) {
-        menu = menu.concat([
-          {
-            title: "Update",
-            href: "/builder/portal/settings/update",
-          },
-        ])
-      }
-    } else {
-      menu = menu.concat([
-        {
-          title: "Theming",
-          href: "/builder/portal/settings/theming",
-          heading: "Settings",
-        },
-      ])
+      // if (!$adminStore.cloud) {
+      //   menu = menu.concat([
+      //     {
+      //       title: "Update",
+      //       href: "/builder/portal/settings/update",
+      //     },
+      //   ])
+      // }
     }
 
     // add link to account portal if the user has access
     let accountSectionAdded = false
 
     // link out to account-portal if account holder in cloud or always in self-host
-    if ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin)) {
-      accountSectionAdded = true
-      menu = menu.concat([
-        {
-          title: "Account",
-          href: $adminStore.accountPortalUrl,
-          heading: "Account",
-        },
-      ])
-    }
-
-    if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
-      // always show usage in self-host or cloud if licensing enabled
-      menu = menu.concat([
-        {
-          title: "Usage",
-          href: "/builder/portal/settings/usage",
-          heading: accountSectionAdded ? "" : "Account",
-        },
-      ])
-
-      // show the relevant hosting upgrade page
-      if ($adminStore.cloud && $auth?.user?.accountPortalAccess) {
-        menu = menu.concat([
-          {
-            title: "Upgrade",
-            href: $adminStore.accountPortalUrl + "/portal/upgrade",
-            badge: "New",
-          },
-        ])
-      }
-
-      // show the billing page to licensed account holders in cloud
-      if (
-        $auth?.user?.accountPortalAccess &&
-        $auth.user.account.stripeCustomerId
-      ) {
-        menu = menu.concat([
-          {
-            title: "Billing",
-            href: $adminStore.accountPortalUrl + "/portal/billing",
-          },
-        ])
-      }
-    }
+    // if ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin)) {
+    //   accountSectionAdded = true
+    //   menu = menu.concat([
+    //     {
+    //       title: "Account",
+    //       href: $adminStore.accountPortalUrl,
+    //       heading: "Account",
+    //     },
+    //   ])
+    // }
+    //
+    // if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
+    //   // always show usage in self-host or cloud if licensing enabled
+    //   menu = menu.concat([
+    //     {
+    //       title: "Usage",
+    //       href: "/builder/portal/settings/usage",
+    //       heading: accountSectionAdded ? "" : "Account",
+    //     },
+    //   ])
+    //
+    //   // show the relevant hosting upgrade page
+    //   if ($adminStore.cloud && $auth?.user?.accountPortalAccess) {
+    //     menu = menu.concat([
+    //       {
+    //         title: "Upgrade",
+    //         href: $adminStore.accountPortalUrl + "/portal/upgrade",
+    //         badge: "New",
+    //       },
+    //     ])
+    //   }
+    //
+    //   // show the billing page to licensed account holders in cloud
+    //   if (
+    //     $auth?.user?.accountPortalAccess &&
+    //     $auth.user.account.stripeCustomerId
+    //   ) {
+    //     menu = menu.concat([
+    //       {
+    //         title: "Billing",
+    //         href: $adminStore.accountPortalUrl + "/portal/billing",
+    //       },
+    //     ])
+    //   }
+    // }
 
     menu = menu.filter(item => !!item)
     return menu
@@ -216,11 +201,6 @@
             >
               Update user information
             </MenuItem>
-            {#if $auth.isBuilder}
-              <MenuItem icon="Key" on:click={() => apiKeyModal.show()}>
-                View API key
-              </MenuItem>
-            {/if}
             <MenuItem
               icon="LockClosed"
               on:click={() => changePasswordModal.show()}
@@ -246,9 +226,6 @@
   </Modal>
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal />
-  </Modal>
-  <Modal bind:this={apiKeyModal}>
-    <UpdateAPIKeyModal />
   </Modal>
 {/if}
 

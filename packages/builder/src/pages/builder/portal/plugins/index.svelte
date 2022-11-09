@@ -8,6 +8,7 @@
     Divider,
     Modal,
     Search,
+    Page,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { plugins, admin } from "stores/portal"
@@ -42,43 +43,42 @@
   })
 </script>
 
-<Layout noPadding>
-  <Layout gap="XS" noPadding>
-    <Heading size="M">Plugins</Heading>
-    <Body>Add your own custom datasources and components.</Body>
-  </Layout>
-  <Divider size="S" />
+<Page narrow>
   <Layout noPadding>
-    <div class="controls">
-      <div>
-        <Button on:click={modal.show} newStyles cta icon={"Add"}>
-          Add plugin
-        </Button>
-      </div>
-      {#if $plugins?.length}
-        <div class="filters">
-          <div class="select">
-            <Select
-              bind:value={filter}
-              placeholder={null}
-              options={filterOptions}
-              autoWidth
-              quiet
-            />
-          </div>
-          <Search bind:value={searchTerm} placeholder="Search plugins" />
+    <Layout gap="XS" noPadding>
+      <Heading size="M">Plugins</Heading>
+      <Body>Add your own custom datasources and components.</Body>
+    </Layout>
+    <Divider />
+    <Layout noPadding>
+      <div class="controls">
+        <div>
+          <Button on:click={modal.show} newStyles cta>Add plugin</Button>
         </div>
+        {#if $plugins?.length}
+          <div class="filters">
+            <div class="select">
+              <Select
+                bind:value={filter}
+                placeholder={null}
+                options={filterOptions}
+                autoWidth
+              />
+            </div>
+            <Search bind:value={searchTerm} placeholder="Search plugins" />
+          </div>
+        {/if}
+      </div>
+      {#if filteredPlugins?.length}
+        <Layout noPadding gap="S">
+          {#each filteredPlugins as plugin (plugin._id)}
+            <PluginRow {plugin} />
+          {/each}
+        </Layout>
       {/if}
-    </div>
-    {#if filteredPlugins?.length}
-      <Layout noPadding gap="S">
-        {#each filteredPlugins as plugin (plugin._id)}
-          <PluginRow {plugin} />
-        {/each}
-      </Layout>
-    {/if}
+    </Layout>
   </Layout>
-</Layout>
+</Page>
 
 <Modal bind:this={modal}>
   <AddPluginModal />

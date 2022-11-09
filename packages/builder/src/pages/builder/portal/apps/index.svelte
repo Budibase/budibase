@@ -39,7 +39,7 @@
   let automationErrors
   let accessFilterList = null
 
-  $: welcomeHeader = `Welcome ${auth?.user?.firstName || "back"}`
+  $: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(
     app =>
