@@ -41,7 +41,7 @@ export default class AppApi {
     const response = await this.api.get(`/applications/${appId}/appPackage`)
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    expect(json.application.apppId).toBe(appId)
+    expect(json.application.appId).toEqual(appId)
     return [response, json]
   }
 

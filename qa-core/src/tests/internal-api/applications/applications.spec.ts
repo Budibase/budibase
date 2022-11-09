@@ -41,6 +41,21 @@ describe("Internal API - Application creation, update, publish and delete", () =
     await config.applications.fetch()
   })
 
+  it("Get application details", async () => {
+    const app = await config.applications.create({
+      ...generateApp(),
+      useTemplate: false,
+    })
+    config.applications.api.appId = app.appId
+
+    const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+    expect(appPackageJson.application.name).toEqual(app.name)
+    expect(appPackageJson.application.version).toEqual(app.version)
+    expect(appPackageJson.application.url).toEqual(app.url)
+    expect(appPackageJson.application.tenantId).toEqual(app.tenantId)
+    expect(appPackageJson.application.status).toEqual(app.status)
+  })
+
   it("Publish app", async () => {
     // create the app
     const appName = generator.word()
