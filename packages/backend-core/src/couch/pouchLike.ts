@@ -1,5 +1,5 @@
 import Nano from "nano"
-import { AnyDocument } from "@budibase/types"
+import { AllDocsResponse, AnyDocument } from "@budibase/types"
 import { getCouchInfo } from "./couch"
 import { directCouchCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
@@ -22,10 +22,6 @@ export type QueryOpts = {
   key?: string
   keys?: string[]
 }
-
-type QueryResp<T> = Promise<{
-  rows: { doc?: T | any; value?: any }[]
-}>
 
 export class PouchLike {
   public readonly name: string
@@ -127,12 +123,15 @@ export class PouchLike {
     return this.updateOutput(() => db.bulk({ docs: documents }))
   }
 
-  async allDocs<T>(params: QueryOpts): QueryResp<T> {
+  async allDocs<T>(params: QueryOpts): Promise<AllDocsResponse<T>> {
     const db = await this.checkSetup()
     return this.updateOutput(() => db.list(params))
   }
 
-  async query<T>(viewName: string, params: QueryOpts): QueryResp<T> {
+  async query<T>(
+    viewName: string,
+    params: QueryOpts
+  ): Promise<AllDocsResponse<T>> {
     const db = await this.checkSetup()
     const [database, view] = viewName.split("/")
     return this.updateOutput(() => db.view(database, view, params))
