@@ -51,6 +51,7 @@ function validateDatasource(schema) {
   const queryValidator = joi
     .object({
       type: joi.string().allow(...Object.values(QueryType)),
+      readable: joi.boolean(),
       fields: joi.object().pattern(joi.string(), fieldValidator),
     })
     .required()
