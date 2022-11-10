@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "2.1.22",
+  "version": "2.1.23",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -71,10 +71,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^2.1.22",
-    "@budibase/client": "^2.1.22",
-    "@budibase/frontend-core": "^2.1.22",
-    "@budibase/string-templates": "^2.1.22",
+    "@budibase/bbui": "^2.1.23",
+    "@budibase/client": "^2.1.23",
+    "@budibase/frontend-core": "^2.1.23",
+    "@budibase/string-templates": "^2.1.23",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
