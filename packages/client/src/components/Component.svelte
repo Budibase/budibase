@@ -188,6 +188,7 @@
     },
     empty: emptyState,
     selected,
+    inSelectedPath,
     name,
     editing,
     type: instance._component,
