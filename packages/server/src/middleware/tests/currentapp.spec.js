@@ -7,7 +7,7 @@ jest.mock("@budibase/backend-core/db", () => {
   coreDb.init()
   return {
     ...coreDb,
-    dbExists: () => true,
+    dbExists: async () => true,
   }
 })
 
