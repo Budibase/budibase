@@ -1,29 +1,26 @@
-const {
-  getAppIdFromCtx,
-  setCookie,
-  getCookie,
-  clearCookie,
-} = require("@budibase/backend-core/utils")
-const { Cookies, Headers } = require("@budibase/backend-core/constants")
-const { getRole } = require("@budibase/backend-core/roles")
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
-const { generateUserMetadataID, isDevAppID } = require("../db/utils")
-const { dbExists } = require("@budibase/backend-core/db")
-const { isUserInAppTenant } = require("@budibase/backend-core/tenancy")
-const { getCachedSelf } = require("../utilities/global")
-const env = require("../environment")
-const { isWebhookEndpoint } = require("./utils")
-const { doInAppContext } = require("@budibase/backend-core/context")
+import {
+  utils,
+  constants,
+  roles,
+  db as dbCore,
+  tenancy,
+  context,
+} from "@budibase/backend-core"
+import { generateUserMetadataID, isDevAppID } from "../db/utils"
+import { getCachedSelf } from "../utilities/global"
+import env from "../environment"
+import { isWebhookEndpoint } from "./utils"
+import { BBContext } from "@budibase/types"
 
-module.exports = async (ctx, next) => {
+export = async (ctx: BBContext, next: any) => {
   // try to get the appID from the request
-  let requestAppId = await getAppIdFromCtx(ctx)
+  let requestAppId = await utils.getAppIdFromCtx(ctx)
   // get app cookie if it exists
-  let appCookie = null
+  let appCookie: { appId?: string } | undefined
   try {
-    appCookie = getCookie(ctx, Cookies.CurrentApp)
+    appCookie = utils.getCookie(ctx, constants.Cookies.CurrentApp)
   } catch (err) {
-    clearCookie(ctx, Cookies.CurrentApp)
+    utils.clearCookie(ctx, constants.Cookies.CurrentApp)
   }
   if (!appCookie && !requestAppId) {
     return next()
@@ -31,9 +28,9 @@ module.exports = async (ctx, next) => {
   // check the app exists referenced in cookie
   if (appCookie) {
     const appId = appCookie.appId
-    const exists = await dbExists(appId)
+    const exists = await dbCore.dbExists(appId)
     if (!exists) {
-      clearCookie(ctx, Cookies.CurrentApp)
+      utils.clearCookie(ctx, constants.Cookies.CurrentApp)
       return next()
     }
     // if the request app ID wasn't set, update it with the cookie
@@ -47,13 +44,13 @@ module.exports = async (ctx, next) => {
       !isWebhookEndpoint(ctx) &&
       (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
     ) {
-      clearCookie(ctx, Cookies.CurrentApp)
+      utils.clearCookie(ctx, constants.Cookies.CurrentApp)
       return ctx.redirect("/")
     }
   }
 
-  let appId,
-    roleId = BUILTIN_ROLE_IDS.PUBLIC
+  let appId: string | undefined,
+    roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   if (!ctx.user) {
     // not logged in, try to set a cookie for public apps
     appId = requestAppId
@@ -68,16 +65,20 @@ module.exports = async (ctx, next) => {
     const isBuilder =
       globalUser && globalUser.builder && globalUser.builder.global
     const isDevApp = appId && isDevAppID(appId)
-    const roleHeader = ctx.request && ctx.request.headers[Headers.PREVIEW_ROLE]
+    const roleHeader =
+      ctx.request &&
+      (ctx.request.headers[constants.Headers.PREVIEW_ROLE] as string)
     if (isBuilder && isDevApp && roleHeader) {
       // Ensure the role is valid by ensuring a definition exists
       try {
-        await getRole(roleHeader)
-        roleId = roleHeader
+        if (roleHeader) {
+          await roles.getRole(roleHeader)
+          roleId = roleHeader
 
-        // Delete admin and builder flags so that the specified role is honoured
-        delete ctx.user.builder
-        delete ctx.user.admin
+          // Delete admin and builder flags so that the specified role is honoured
+          delete ctx.user.builder
+          delete ctx.user.admin
+        }
       } catch (error) {
         // Swallow error and do nothing
       }
@@ -89,21 +90,22 @@ module.exports = async (ctx, next) => {
     return next()
   }
 
-  return doInAppContext(appId, async () => {
+  return context.doInAppContext(appId, async () => {
     let skipCookie = false
     // if the user not in the right tenant then make sure they have no permissions
     // need to judge this only based on the request app ID,
     if (
       env.MULTI_TENANCY &&
-      ctx.user & requestAppId &&
-      !isUserInAppTenant(requestAppId, ctx.user)
+      ctx.user &&
+      requestAppId &&
+      !tenancy.isUserInAppTenant(requestAppId, ctx.user)
     ) {
       // don't error, simply remove the users rights (they are a public user)
       delete ctx.user.builder
       delete ctx.user.admin
       delete ctx.user.roles
       ctx.isAuthenticated = false
-      roleId = BUILTIN_ROLE_IDS.PUBLIC
+      roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
       skipCookie = true
     }
 
@@ -111,15 +113,17 @@ module.exports = async (ctx, next) => {
     if (roleId) {
       ctx.roleId = roleId
       const globalId = ctx.user ? ctx.user._id : undefined
-      const userId = ctx.user ? generateUserMetadataID(ctx.user._id) : null
+      const userId = ctx.user
+        ? generateUserMetadataID(ctx.user._id!)
+        : undefined
       ctx.user = {
-        ...ctx.user,
+        ...ctx.user!,
         // override userID with metadata one
         _id: userId,
         userId,
         globalId,
         roleId,
-        role: await getRole(roleId),
+        role: await roles.getRole(roleId),
       }
     }
     if (
@@ -128,7 +132,7 @@ module.exports = async (ctx, next) => {
         appCookie.appId !== requestAppId) &&
       !skipCookie
     ) {
-      setCookie(ctx, { appId }, Cookies.CurrentApp)
+      utils.setCookie(ctx, { appId }, constants.Cookies.CurrentApp)
     }
 
     return next()

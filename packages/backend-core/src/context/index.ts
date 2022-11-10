@@ -4,11 +4,9 @@ import cls from "./FunctionContext"
 import { baseGlobalDBName } from "../db/tenancy"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
-import { ContextElement, ContextKey } from "./constants"
+import { ContextMap, ContextKey } from "./constants"
 import { PouchLike } from "../couch"
 import { getDevelopmentAppID, getProdAppID } from "../db/conversions"
-
-type ContextMap = { [key in ContextElement]?: any }
 
 export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 
@@ -22,7 +20,7 @@ export function isMultiTenant() {
 
 export function isTenantIdSet() {
   const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
-  return !!context?.[ContextElement.TENANT_ID]
+  return !!context?.tenantId
 }
 
 export function isTenancyEnabled() {
@@ -35,7 +33,7 @@ export function isTenancyEnabled() {
  */
 export function getTenantIDFromAppID(appId: string) {
   if (!appId) {
-    return null
+    return undefined
   }
   if (!isMultiTenant()) {
     return DEFAULT_TENANT_ID
@@ -43,7 +41,7 @@ export function getTenantIDFromAppID(appId: string) {
   const split = appId.split(SEPARATOR)
   const hasDev = split[1] === DocumentType.DEV
   if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
-    return null
+    return undefined
   }
   if (hasDev) {
     return split[2]
@@ -80,8 +78,8 @@ export async function doInContext(appId: string, task: any): Promise<any> {
   const tenantId = getTenantIDFromAppID(appId)
   return newContext(
     {
-      [ContextElement.TENANT_ID]: tenantId,
-      [ContextElement.APP_ID]: appId,
+      tenantId,
+      appId,
     },
     task
   )
@@ -96,12 +94,8 @@ export async function doInTenant(
     tenantId = tenantId || DEFAULT_TENANT_ID
   }
 
-  return newContext(
-    {
-      [ContextElement.TENANT_ID]: tenantId,
-    },
-    task
-  )
+  const updates = tenantId ? { tenantId } : {}
+  return newContext(updates, task)
 }
 
 export async function doInAppContext(appId: string, task: any): Promise<any> {
@@ -112,8 +106,8 @@ export async function doInAppContext(appId: string, task: any): Promise<any> {
   const tenantId = getTenantIDFromAppID(appId)
   return newContext(
     {
-      [ContextElement.TENANT_ID]: tenantId,
-      [ContextElement.APP_ID]: appId,
+      tenantId,
+      appId,
     },
     task
   )
@@ -128,10 +122,10 @@ export async function doInIdentityContext(
   }
 
   const context: ContextMap = {
-    [ContextElement.IDENTITY]: identity,
+    identity,
   }
   if (identity.tenantId) {
-    context[ContextElement.TENANT_ID] = identity.tenantId
+    context.tenantId = identity.tenantId
   }
   return newContext(context, task)
 }
@@ -139,7 +133,7 @@ export async function doInIdentityContext(
 export function getIdentity(): IdentityContext | undefined {
   try {
     const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
-    return context?.[ContextElement.IDENTITY]
+    return context?.identity
   } catch (e) {
     // do nothing - identity is not in context
   }
@@ -150,7 +144,7 @@ export function getTenantId(): string {
     return DEFAULT_TENANT_ID
   }
   const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
-  const tenantId = context?.[ContextElement.TENANT_ID]
+  const tenantId = context?.tenantId
   if (!tenantId) {
     throw new Error("Tenant id not found")
   }
@@ -159,7 +153,7 @@ export function getTenantId(): string {
 
 export function getAppId(): string | undefined {
   const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
-  const foundId = context?.[ContextElement.APP_ID]
+  const foundId = context?.appId
   if (!foundId && env.isTest() && TEST_APP_ID) {
     return TEST_APP_ID
   } else {
@@ -167,16 +161,16 @@ export function getAppId(): string | undefined {
   }
 }
 
-export function updateTenantId(tenantId: string | null) {
+export function updateTenantId(tenantId?: string) {
   let context: ContextMap = updateContext({
-    [ContextElement.TENANT_ID]: tenantId,
+    tenantId,
   })
   cls.setOnContext(ContextKey.MAIN, context)
 }
 
 export function updateAppId(appId: string) {
   let context: ContextMap = updateContext({
-    [ContextElement.APP_ID]: appId,
+    appId,
   })
   try {
     cls.setOnContext(ContextKey.MAIN, context)
@@ -191,7 +185,7 @@ export function updateAppId(appId: string) {
 
 export function getGlobalDB(): PouchLike {
   const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
-  return new PouchLike(baseGlobalDBName(context?.[ContextElement.TENANT_ID]))
+  return new PouchLike(baseGlobalDBName(context?.tenantId))
 }
 
 /**

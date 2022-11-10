@@ -147,9 +147,9 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string) {
  * @param {string|null} roleId The level ID to lookup.
  * @returns {Promise<Role|object|null>} The role object, which may contain an "inherits" property.
  */
-export async function getRole(roleId?: string) {
+export async function getRole(roleId?: string): Promise<RoleDoc | undefined> {
   if (!roleId) {
-    return null
+    return undefined
   }
   let role: any = {}
   // built in roles mostly come from the in-code implementation,
@@ -193,7 +193,9 @@ async function getAllUserRoles(userRoleId?: string): Promise<RoleDoc[]> {
   ) {
     roleIds.push(currentRole.inherits)
     currentRole = await getRole(currentRole.inherits)
-    roles.push(currentRole)
+    if (currentRole) {
+      roles.push(currentRole)
+    }
   }
   return roles
 }

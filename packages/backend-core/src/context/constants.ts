@@ -1,9 +1,11 @@
+import { IdentityContext } from "@budibase/types"
+
 export enum ContextKey {
   MAIN = "main",
 }
 
-export enum ContextElement {
-  TENANT_ID = "tenantId",
-  APP_ID = "appId",
-  IDENTITY = "identity",
+export type ContextMap = {
+  tenantId?: string
+  appId?: string
+  identity?: IdentityContext
 }
