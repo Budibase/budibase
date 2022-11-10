@@ -2,9 +2,11 @@
   import { getContext } from "svelte"
 
   const component = getContext("component")
-  const { styleable, sidePanelStore } = getContext("sdk")
+  const { styleable, sidePanelStore, builderStore } = getContext("sdk")
 
-  $: open = $sidePanelStore.contentId === $component.id
+  $: appOpen = $sidePanelStore.contentId === $component.id
+  $: builderOpen = $component.inSelectedPath
+  $: open = $builderStore.inBuilder ? builderOpen : appOpen
 
   const showInSidePanel = (el, visible) => {
     const target = document.getElementById("side-panel-container")
@@ -13,9 +15,11 @@
     }
     const update = visible => {
       if (visible) {
+        sidePanelStore.actions.open($component.id)
         target.appendChild(el)
         el.hidden = false
       } else {
+        sidePanelStore.actions.close()
         destroy()
         el.hidden = true
       }
@@ -40,9 +44,9 @@
   <slot />
 </div>
 <div>
-  <button on:click={() => sidePanelStore.actions.open($component.id)}
-    >open</button
-  >
+  <button on:click={() => sidePanelStore.actions.open($component.id)}>
+    open
+  </button>
   <button on:click={sidePanelStore.actions.close}>close</button>
 </div>
 

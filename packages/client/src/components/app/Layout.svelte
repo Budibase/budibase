@@ -336,16 +336,18 @@
   }
 
   #side-panel-container {
-    flex: 0 0 360px;
-    background: var(--background);
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    flex: 0 0 400px;
+    max-width: calc(100vw - 40px);
+    background: var(--spectrum-global-color-gray-50);
     transition: margin-right 130ms ease-out;
     z-index: 3;
     padding: var(--spacing-xl);
-    margin-right: -370px;
+    margin-right: -410px;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
+    overflow-y: auto;
+    border-left: 1px solid var(--spectrum-global-color-gray-300);
   }
   #side-panel-container.open {
     margin-right: 0;
