@@ -41,7 +41,7 @@ export const runMigration = async (
   options: MigrationOptions = {}
 ) => {
   const migrationType = migration.type
-  let tenantId: string
+  let tenantId: string | undefined
   if (migrationType !== MigrationType.INSTALLATION) {
     tenantId = getTenantId()
   }
