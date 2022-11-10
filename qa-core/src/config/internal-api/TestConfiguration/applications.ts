@@ -10,21 +10,23 @@ import { UnpublishAppResponse } from "../fixtures/types/unpublishAppResponse"
 
 export default class AppApi {
   api: InternalAPIClient
-  appCreated: boolean
   constructor(apiClient: InternalAPIClient) {
     this.api = apiClient
-    this.appCreated = false
   }
 
-  async fetch(): Promise<[Response, Application[]]> {
+  async fetchEmptyAppList(): Promise<[Response, Application[]]> {
     const response = await this.api.get(`/applications?status=all`)
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    if (this.appCreated) {
-      expect(json.length).toBeGreaterThanOrEqual(1)
-    } else {
-      expect(json.length).toEqual(0)
-    }
+    expect(json.length).toEqual(0)
+    return [response, json]
+  }
+
+  async fetchAllApplications(): Promise<[Response, Application[]]> {
+    const response = await this.api.get(`/applications?status=all`)
+    const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json.length).toBeGreaterThanOrEqual(1)
     return [response, json]
   }
 
@@ -62,7 +64,6 @@ export default class AppApi {
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
     expect(json._id).toBeDefined()
-    this.appCreated = true
     return json
   }
 
@@ -79,6 +80,7 @@ export default class AppApi {
     return [response, json]
   }
 
+  // TODO
   async updateClient(
     appId: string,
     body: any
@@ -91,23 +93,28 @@ export default class AppApi {
     return [response, json]
   }
 
-  async revert(appId: string, negativeTest?: boolean): Promise<[Response, responseMessage]> {
+  async revertPublished(appId: string): Promise<[Response, responseMessage]> {
     const response = await this.api.post(`/dev/${appId}/revert`)
     const json = await response.json()
-    if (negativeTest) {
-      expect(response).toHaveStatusCode(400)
-      expect(json).toEqual({
-        message: "App has not yet been deployed",
-        status: 400,
-      })
-    } else {
-      expect(response).toHaveStatusCode(200)
-      expect(json).toEqual({
-        message: "Reverted changes successfully.",
-      })
-    }
+    expect(response).toHaveStatusCode(200)
+    expect(json).toEqual({
+      message: "Reverted changes successfully.",
+    })
     return [response, json]
   }
+
+  async revertUnpublished(appId: string): Promise<[Response, responseMessage]> {
+    const response = await this.api.post(`/dev/${appId}/revert`)
+    const json = await response.json()
+    expect(response).toHaveStatusCode(400)
+    expect(json).toEqual({
+      message: "App has not yet been deployed",
+      status: 400,
+    })
+    return [response, json]
+  }
+
+
 
   async delete(appId: string): Promise<[Response, any]> {
     const response = await this.api.del(`/applications/${appId}`)

@@ -29,7 +29,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     })
   }
   it("Get applications without applications", async () => {
-    await config.applications.fetch()
+    await config.applications.fetchEmptyAppList()
   })
 
   it("Get all Applications after creating an application", async () => {
@@ -38,7 +38,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
       useTemplate: false,
     })
 
-    await config.applications.fetch()
+    await config.applications.fetchAllApplications()
   })
 
   it("Get application details", async () => {
@@ -122,9 +122,8 @@ describe("Internal API - Application creation, update, publish and delete", () =
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
-    await config.applications.revert(
-      <string>app.appId,
-      true
+    await config.applications.revertUnpublished(
+      <string>app.appId
     )
   })
 
@@ -142,7 +141,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     )
 
     // // Revert the app to published state
-    await config.applications.revert(
+    await config.applications.revertPublished(
       <string>app.appId
     )
 
