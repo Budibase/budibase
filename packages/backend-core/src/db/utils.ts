@@ -15,6 +15,7 @@ import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
+import { PouchLike } from "../couch"
 
 export * from "./constants"
 export * from "./conversions"
@@ -254,7 +255,7 @@ export function getRoleParams(roleId = null, otherProps = {}) {
   return getDocParams(DocumentType.ROLE, roleId, otherProps)
 }
 
-export function getStartEndKeyURL(baseKey: any, tenantId = null) {
+export function getStartEndKeyURL(baseKey: any, tenantId?: string) {
   const tenancy = tenantId ? `${SEPARATOR}${tenantId}` : ""
   return `startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
 }
@@ -388,20 +389,10 @@ export async function getDevAppIDs() {
 }
 
 export async function dbExists(dbName: any) {
-  let exists = false
   return doWithDB(
     dbName,
-    async (db: any) => {
-      try {
-        // check if database exists
-        const info = await db.info()
-        if (info && !info.error) {
-          exists = true
-        }
-      } catch (err) {
-        exists = false
-      }
-      return exists
+    async (db: PouchLike) => {
+      return await db.exists()
     },
     { skip_setup: true }
   )

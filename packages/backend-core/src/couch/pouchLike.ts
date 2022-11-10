@@ -28,7 +28,10 @@ export class PouchLike {
   private static nano: Nano.ServerScope
   private readonly pouchOpts: PouchLikeOpts
 
-  constructor(dbName: string, opts?: PouchLikeOpts) {
+  constructor(dbName?: string, opts?: PouchLikeOpts) {
+    if (dbName == null) {
+      throw new Error("Database name cannot be undefined.")
+    }
     this.name = dbName
     this.pouchOpts = opts || {}
     if (!PouchLike.nano) {

@@ -95,8 +95,7 @@ module.exports = async (ctx, next) => {
     // need to judge this only based on the request app ID,
     if (
       env.MULTI_TENANCY &&
-      ctx.user &&
-      requestAppId &&
+      ctx.user & requestAppId &&
       !isUserInAppTenant(requestAppId, ctx.user)
     ) {
       // don't error, simply remove the users rights (they are a public user)

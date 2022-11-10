@@ -4,9 +4,11 @@ import cls from "./FunctionContext"
 import { baseGlobalDBName } from "../db/tenancy"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
-import { ContextKey } from "./constants"
+import { ContextElement, ContextKey } from "./constants"
 import { PouchLike } from "../couch"
 import { getDevelopmentAppID, getProdAppID } from "../db/conversions"
+
+type ContextMap = { [key in ContextElement]?: any }
 
 export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 
@@ -14,24 +16,24 @@ export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 // store an app ID to pretend there is a context
 let TEST_APP_ID: string | null = null
 
-export const isMultiTenant = () => {
+export function isMultiTenant() {
   return env.MULTI_TENANCY
 }
 
-const setAppTenantId = (appId: string) => {
-  const appTenantId = getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
-  updateTenantId(appTenantId)
+export function isTenantIdSet() {
+  const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+  return !!context?.[ContextElement.TENANT_ID]
 }
 
-const setIdentity = (identity: IdentityContext | null) => {
-  cls.setOnContext(ContextKey.IDENTITY, identity)
+export function isTenancyEnabled() {
+  return env.MULTI_TENANCY
 }
 
 /**
  * Given an app ID this will attempt to retrieve the tenant ID from it.
  * @return {null|string} The tenant ID found within the app ID.
  */
-export const getTenantIDFromAppID = (appId: string) => {
+export function getTenantIDFromAppID(appId: string) {
   if (!appId) {
     return null
   }
@@ -50,84 +52,134 @@ export const getTenantIDFromAppID = (appId: string) => {
   }
 }
 
-export const doInContext = async (appId: string, task: any) => {
-  // gets the tenant ID from the app ID
-  const tenantId = getTenantIDFromAppID(appId)
-  return doInTenant(tenantId, async () => {
-    return doInAppContext(appId, async () => {
-      return task()
-    })
+function updateContext(updates: ContextMap) {
+  let context: ContextMap
+  try {
+    context = cls.getFromContext(ContextKey.MAIN)
+  } catch (err) {
+    // no context, start empty
+    context = {}
+  }
+  context = {
+    ...context,
+    ...updates,
+  }
+  return context
+}
+
+async function newContext(updates: ContextMap, task: any) {
+  // see if there already is a context setup
+  let context: ContextMap = updateContext(updates)
+  return cls.run(async () => {
+    cls.setOnContext(ContextKey.MAIN, context)
+    return await task()
   })
 }
 
-export const doInTenant = (tenantId: string | null, task: any): any => {
+export async function doInContext(appId: string, task: any): Promise<any> {
+  const tenantId = getTenantIDFromAppID(appId)
+  return newContext(
+    {
+      [ContextElement.TENANT_ID]: tenantId,
+      [ContextElement.APP_ID]: appId,
+    },
+    task
+  )
+}
+
+export async function doInTenant(
+  tenantId: string | null,
+  task: any
+): Promise<any> {
   // make sure default always selected in single tenancy
   if (!env.MULTI_TENANCY) {
     tenantId = tenantId || DEFAULT_TENANT_ID
   }
 
-  return cls.run(async () => {
-    updateTenantId(tenantId)
-    return await task()
-  })
+  return newContext(
+    {
+      [ContextElement.TENANT_ID]: tenantId,
+    },
+    task
+  )
 }
 
-export const doInAppContext = (appId: string, task: any): any => {
+export async function doInAppContext(appId: string, task: any): Promise<any> {
   if (!appId) {
     throw new Error("appId is required")
   }
 
-  const identity = getIdentity()
-
-  return cls.run(async () => {
-    // set the app tenant id
-    setAppTenantId(appId)
-    // set the app ID
-    cls.setOnContext(ContextKey.APP_ID, appId)
-
-    // preserve the identity
-    if (identity) {
-      setIdentity(identity)
-    }
-    // invoke the task
-    return await task()
-  })
+  const tenantId = getTenantIDFromAppID(appId)
+  return newContext(
+    {
+      [ContextElement.TENANT_ID]: tenantId,
+      [ContextElement.APP_ID]: appId,
+    },
+    task
+  )
 }
 
-export const doInIdentityContext = (
+export async function doInIdentityContext(
   identity: IdentityContext,
   task: any
-): any => {
+): Promise<any> {
   if (!identity) {
     throw new Error("identity is required")
   }
 
-  return cls.run(async () => {
-    cls.setOnContext(ContextKey.IDENTITY, identity)
-    // set the tenant so that doInTenant will preserve identity
-    if (identity.tenantId) {
-      updateTenantId(identity.tenantId)
-    }
-    // invoke the task
-    return await task()
-  })
+  const context: ContextMap = {
+    [ContextElement.IDENTITY]: identity,
+  }
+  if (identity.tenantId) {
+    context[ContextElement.TENANT_ID] = identity.tenantId
+  }
+  return newContext(context, task)
 }
 
-export const getIdentity = (): IdentityContext | undefined => {
+export function getIdentity(): IdentityContext | undefined {
   try {
-    return cls.getFromContext(ContextKey.IDENTITY)
+    const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+    return context?.[ContextElement.IDENTITY]
   } catch (e) {
     // do nothing - identity is not in context
   }
 }
 
-export const updateTenantId = (tenantId: string | null) => {
-  cls.setOnContext(ContextKey.TENANT_ID, tenantId)
+export function getTenantId(): string {
+  if (!isMultiTenant()) {
+    return DEFAULT_TENANT_ID
+  }
+  const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+  const tenantId = context?.[ContextElement.TENANT_ID]
+  if (!tenantId) {
+    throw new Error("Tenant id not found")
+  }
+  return tenantId
 }
 
-export const updateAppId = async (appId: string) => {
+export function getAppId(): string | undefined {
+  const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+  const foundId = context?.[ContextElement.APP_ID]
+  if (!foundId && env.isTest() && TEST_APP_ID) {
+    return TEST_APP_ID
+  } else {
+    return foundId
+  }
+}
+
+export function updateTenantId(tenantId: string | null) {
+  let context: ContextMap = updateContext({
+    [ContextElement.TENANT_ID]: tenantId,
+  })
+  cls.setOnContext(ContextKey.MAIN, context)
+}
+
+export function updateAppId(appId: string) {
+  let context: ContextMap = updateContext({
+    [ContextElement.APP_ID]: appId,
+  })
   try {
-    cls.setOnContext(ContextKey.APP_ID, appId)
+    cls.setOnContext(ContextKey.MAIN, context)
   } catch (err) {
     if (env.isTest()) {
       TEST_APP_ID = appId
@@ -137,63 +189,34 @@ export const updateAppId = async (appId: string) => {
   }
 }
 
-export const getGlobalDB = (): PouchLike => {
-  const tenantId = cls.getFromContext(ContextKey.TENANT_ID)
-  return new PouchLike(baseGlobalDBName(tenantId))
-}
-
-export const isTenantIdSet = () => {
-  const tenantId = cls.getFromContext(ContextKey.TENANT_ID)
-  return !!tenantId
-}
-
-export const getTenantId = () => {
-  if (!isMultiTenant()) {
-    return DEFAULT_TENANT_ID
-  }
-  const tenantId = cls.getFromContext(ContextKey.TENANT_ID)
-  if (!tenantId) {
-    throw new Error("Tenant id not found")
-  }
-  return tenantId
-}
-
-export const getAppId = () => {
-  const foundId = cls.getFromContext(ContextKey.APP_ID)
-  if (!foundId && env.isTest() && TEST_APP_ID) {
-    return TEST_APP_ID
-  } else {
-    return foundId
-  }
-}
-
-export const isTenancyEnabled = () => {
-  return env.MULTI_TENANCY
+export function getGlobalDB(): PouchLike {
+  const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+  return new PouchLike(baseGlobalDBName(context?.[ContextElement.TENANT_ID]))
 }
 
 /**
- * Opens the app database based on whatever the request
+ * Gets the app database based on whatever the request
  * contained, dev or prod.
  */
-export const getAppDB = (opts?: any): PouchLike => {
+export function getAppDB(opts?: any): PouchLike {
   const appId = getAppId()
   return new PouchLike(appId, opts)
 }
 
 /**
  * This specifically gets the prod app ID, if the request
- * contained a development app ID, this will open the prod one.
+ * contained a development app ID, this will get the prod one.
  */
-export const getProdAppDB = (opts?: any): PouchLike => {
+export function getProdAppDB(opts?: any): PouchLike {
   const appId = getAppId()
   return new PouchLike(getProdAppID(appId), opts)
 }
 
 /**
  * This specifically gets the dev app ID, if the request
- * contained a prod app ID, this will open the dev one.
+ * contained a prod app ID, this will get the dev one.
  */
-export const getDevAppDB = (opts?: any): PouchLike => {
+export function getDevAppDB(opts?: any): PouchLike {
   const appId = getAppId()
   return new PouchLike(getDevelopmentAppID(appId), opts)
 }
