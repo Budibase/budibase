@@ -1,8 +1,9 @@
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
+
+// TODO
 
 describe("/api/global/license", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -16,7 +17,9 @@ describe("/api/global/license", () => {
     jest.clearAllMocks()
   })
 
-  describe("POST /api/global/license/activate", () => {})
+  describe("POST /api/global/license/activate", () => {
+    it("activates license", () => {})
+  })
 
   describe("POST /api/global/license/refresh", () => {})
 

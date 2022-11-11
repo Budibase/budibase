@@ -1,8 +1,9 @@
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
+
+// TODO
 
 describe("/api/global/workspaces", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -16,7 +17,9 @@ describe("/api/global/workspaces", () => {
     jest.clearAllMocks()
   })
 
-  describe("GET /api/global/workspaces", () => {})
+  describe("GET /api/global/workspaces", () => {
+    it("retrieves workspaces", () => {})
+  })
 
   describe("DELETE /api/global/workspaces/:id", () => {})
 

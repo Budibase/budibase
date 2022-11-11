@@ -1,8 +1,9 @@
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
+
+// TODO
 
 describe("/api/global/roles", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -16,7 +17,9 @@ describe("/api/global/roles", () => {
     jest.clearAllMocks()
   })
 
-  describe("GET /api/global/roles", () => {})
+  describe("GET /api/global/roles", () => {
+    it("retrieves roles", () => {})
+  })
 
   describe("GET /api/global/roles/:appId", () => {})
 

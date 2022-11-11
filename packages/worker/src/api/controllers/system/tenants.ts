@@ -11,8 +11,8 @@ const _delete = async (ctx: BBContext) => {
   }
 
   try {
-    await deprovisioning.deleteTenant(tenantId)
     await quotas.bustCache()
+    await deprovisioning.deleteTenant(tenantId)
     ctx.status = 204
   } catch (err) {
     ctx.log.error(err)

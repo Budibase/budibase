@@ -225,6 +225,7 @@ export const getTenantIDFromCtx = (
     }
   }
 
+  // path
   if (isAllowed(TenantResolutionStrategy.PATH)) {
     // params - have to parse manually due to koa-router not run yet
     const match = ctx.matched.find(

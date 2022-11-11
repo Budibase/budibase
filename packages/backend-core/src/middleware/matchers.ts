@@ -21,7 +21,6 @@ export const buildMatcherRegex = (
         const suffix = match.endsWith("/") ? "/" : ""
         const pattern = "/.*" + suffix
         route = route.replace(match, pattern)
-        console.log(route)
       }
     }
 

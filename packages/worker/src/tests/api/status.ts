@@ -1,12 +1,9 @@
 import TestConfiguration from "../TestConfiguration"
+import { TestAPI } from "./base"
 
-export class StatusAPI {
-  config: TestConfiguration
-  request: any
-
+export class StatusAPI extends TestAPI {
   constructor(config: TestConfiguration) {
-    this.config = config
-    this.request = config.request
+    super(config)
   }
 
   getStatus = () => {

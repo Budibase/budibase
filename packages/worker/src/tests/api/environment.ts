@@ -1,12 +1,9 @@
 import TestConfiguration from "../TestConfiguration"
+import { TestAPI } from "./base"
 
-export class EnvironmentAPI {
-  config: TestConfiguration
-  request: any
-
+export class EnvironmentAPI extends TestAPI {
   constructor(config: TestConfiguration) {
-    this.config = config
-    this.request = config.request
+    super(config)
   }
 
   getEnvironment = () => {

@@ -1,10 +1,9 @@
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
 import { accounts } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 
 describe("/api/system/status", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -21,7 +20,7 @@ describe("/api/system/status", () => {
   describe("GET /api/system/status", () => {
     it("returns status in self host", async () => {
       config.modeSelf()
-      const res = await api.status.getStatus()
+      const res = await config.api.status.getStatus()
       expect(res.body).toEqual({
         health: {
           passing: true,
@@ -40,7 +39,7 @@ describe("/api/system/status", () => {
 
       mocks.accounts.getStatus.mockReturnValueOnce(value)
 
-      const res = await api.status.getStatus()
+      const res = await config.api.status.getStatus()
 
       expect(accounts.getStatus).toBeCalledTimes(1)
       expect(res.body).toEqual(value)

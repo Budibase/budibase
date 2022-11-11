@@ -1,9 +1,8 @@
-import { TestConfiguration, API, structures } from "../../tests"
+import { TestConfiguration, structures } from "../../tests"
 import { constants } from "@budibase/backend-core"
 
 describe("tenancy middleware", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -20,7 +19,7 @@ describe("tenancy middleware", () => {
   it("should get tenant id from user", async () => {
     const user = await config.createTenant()
     await config.createSession(user)
-    const res = await api.self.getSelf(user)
+    const res = await config.api.self.getSelf(user)
     expect(res.headers[constants.Headers.TENANT_ID]).toBe(user.tenantId)
   })
 

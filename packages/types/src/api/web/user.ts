@@ -51,3 +51,9 @@ export interface SearchUsersRequest {
   appId?: string
   userIds?: string[]
 }
+
+export interface CreateAdminUserRequest {
+  email: string
+  password: string
+  tenantId: string
+}

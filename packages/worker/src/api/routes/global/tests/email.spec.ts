@@ -1,11 +1,10 @@
 jest.mock("nodemailer")
-import { TestConfiguration, mocks, API } from "../../../../tests"
+import { TestConfiguration, mocks } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
 import { EmailTemplatePurpose } from "../../../../constants"
 
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -20,7 +19,9 @@ describe("/api/global/email", () => {
     await config.saveSmtpConfig()
     await config.saveSettingsConfig()
 
-    const res = await api.emails.sendEmail(EmailTemplatePurpose.INVITATION)
+    const res = await config.api.emails.sendEmail(
+      EmailTemplatePurpose.INVITATION
+    )
 
     expect(res.body.message).toBeDefined()
     expect(sendMailMock).toHaveBeenCalled()

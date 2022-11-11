@@ -1,8 +1,7 @@
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
 
 describe("/api/system/restore", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -18,7 +17,7 @@ describe("/api/system/restore", () => {
 
   describe("POST /api/global/restore", () => {
     it("doesn't allow restore in cloud", async () => {
-      const res = await api.restore.restored({ status: 405 })
+      const res = await config.api.restore.restored({ status: 405 })
       expect(res.body).toEqual({
         message: "This operation is not allowed in cloud.",
         status: 405,
@@ -27,7 +26,7 @@ describe("/api/system/restore", () => {
 
     it("restores in self host", async () => {
       config.modeSelf()
-      const res = await api.restore.restored()
+      const res = await config.api.restore.restored()
       expect(res.body).toEqual({
         message: "System prepared after restore.",
       })
