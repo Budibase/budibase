@@ -115,6 +115,7 @@ async function deployApp(deployment: any, userId: string) {
         AppBackupTrigger.PUBLISH,
         {
           createdBy: userId,
+          name: 'Backup before publish',
         }
       )
     }
