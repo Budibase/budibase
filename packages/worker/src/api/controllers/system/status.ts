@@ -1,7 +1,8 @@
-const accounts = require("@budibase/backend-core/accounts")
-const env = require("../../../environment")
+import { accounts } from "@budibase/backend-core"
+import env from "../../../environment"
+import { BBContext } from "@budibase/types"
 
-exports.fetch = async ctx => {
+export const fetch = async (ctx: BBContext) => {
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const status = await accounts.getStatus()
     ctx.body = status

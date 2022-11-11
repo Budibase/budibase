@@ -18,4 +18,12 @@ export class SelfAPI {
       .expect("Content-Type", /json/)
       .expect(200)
   }
+
+  getSelf = (user: User) => {
+    return this.request
+      .get(`/api/global/self`)
+      .set(this.config.authHeaders(user))
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
 }
