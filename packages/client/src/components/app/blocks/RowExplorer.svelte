@@ -27,6 +27,7 @@
     type="container"
     props={{
       direction: "row",
+      gap: "M",
     }}
     styles={{
       custom: `
@@ -44,11 +45,11 @@
         limit: 10,
         filter: [
           {
-            id: generate(),
+            id: 0,
             field: cardSearchField,
             operator: "fuzzy",
             type: "string",
-            value: `{{ [state].[${stateKey}-search] }}`,
+            value: `{{ ${safe("state")}.${safe(stateKey + "-search")} }}`,
             valueType: "Binding",
             noValue: false,
           },
@@ -58,7 +59,9 @@
         custom: `
           flex: 3;
           overflow: scroll;
-          {{#if (and [state].[${stateKey}] [device].[mobile]) }}
+          {{#if (and ${safe("state")}.${safe(stateKey)} ${safe(
+          "device"
+        )}.${safe("mobile")}) }}
             display: none;
           {{/if}}
         `,
@@ -84,10 +87,10 @@
                   key: `${stateKey}-search`,
                   type: "set",
                   persist: null,
-                  value: "{{ [eventContext].[value] }}",
+                  value: `{{ ${safe("eventContext")}.${safe("value")} }}`,
                 },
                 "##eventHandlerType": "Update State",
-                id: generate(),
+                id: 0,
               },
             ],
           }}
@@ -119,10 +122,10 @@
                   key: stateKey,
                   type: "set",
                   persist: null,
-                  value: `{{ [${listRepeaterId}].[_id] }}`,
+                  value: `{{ ${safe(listRepeaterId)}.${safe("_id")} }}`,
                 },
                 "##eventHandlerType": "Update State",
-                id: generate(),
+                id: 0,
               },
             ],
           }}
@@ -150,7 +153,9 @@
           border: 1px solid var(--spectrum-global-color-gray-300);
           border-radius: 4px;
           flex: 4;
-          {{#if (or [state].[${stateKey}] [device].[mobile]) }}
+          {{#if (or ${safe("state")}.${safe(stateKey)} ${safe("device")}.${safe(
+          "mobile"
+        )}) }}
             display: none;
           {{/if}}
           `,
@@ -196,7 +201,7 @@
           padding: 20px;
           overflow-y: scroll;
           flex: 4;
-          {{#if (isFalsey [state].[${stateKey}]) }}
+          {{#if (isFalsey ${safe("state")}.${safe(stateKey)}) }}
             display: none;
           {{/if}}
           `,
@@ -216,15 +221,15 @@
                 value: "",
               },
               "##eventHandlerType": "Update State",
-              id: generate(),
+              id: 0,
             },
           ],
         }}
         styles={{
           custom: `
             align-self: flex-end;
-            margin-bottom: 5px;
-            {{#if (not [device].[mobile]) }}
+            margin-bottom: 16px;
+            {{#if (not ${safe("device")}.${safe("mobile")}) }}
               display: none;
             {{/if}}
             `,
@@ -237,7 +242,7 @@
           showSaveButton: true,
           dataSource,
           actionType: "Update",
-          rowId: `{{ [state].[${stateKey}] }}`,
+          rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
           fields: detailFields,
           title: detailTitle,
         }}

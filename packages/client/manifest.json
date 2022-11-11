@@ -5189,23 +5189,24 @@
   },
   "rowexplorer": {
     "block": true,
-    "name": "Row explorer block",
+    "name": "Row Explorer block",
     "icon": "PersonalizationField",
     "size": {
-      "width": 100,
-      "height": 100
+      "width": 600,
+      "height": 400
     },
     "settings": [
       {
-        "type": "dataSource",
-        "label": "Data",
+        "type": "table",
+        "label": "Table",
         "key": "dataSource",
         "required": true
       },
       {
         "type": "text",
         "label": "Height",
-        "key": "height"
+        "key": "height",
+        "defaultValue": "426px"
       },
       {
         "section": true,
@@ -5253,8 +5254,7 @@
           {
             "type": "text",
             "key": "detailTitle",
-            "label": "Title",
-            "nested": true
+            "label": "Title"
           },
           {
             "type": "multifield",
