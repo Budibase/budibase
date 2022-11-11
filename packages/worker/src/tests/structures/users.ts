@@ -5,6 +5,7 @@ import { v4 as uuid } from "uuid"
 export const newEmail = () => {
   return `${uuid()}@test.com`
 }
+
 export const user = (userProps?: any): User => {
   return {
     email: newEmail(),

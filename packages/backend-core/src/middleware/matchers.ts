@@ -1,27 +1,35 @@
+import { BBContext, EndpointMatcher, RegexMatcher } from "@budibase/types"
+
 const PARAM_REGEX = /\/:(.*?)(\/.*)?$/g
 
-exports.buildMatcherRegex = patterns => {
+export const buildMatcherRegex = (
+  patterns: EndpointMatcher[]
+): RegexMatcher[] => {
   if (!patterns) {
     return []
   }
   return patterns.map(pattern => {
-    const isObj = typeof pattern === "object" && pattern.route
-    const method = isObj ? pattern.method : "GET"
+    let route = pattern.route
+    const method = pattern.method
     const strict = pattern.strict ? pattern.strict : false
-    let route = isObj ? pattern.route : pattern
 
+    // if there is a param in the route
+    // use a wildcard pattern
     const matches = route.match(PARAM_REGEX)
     if (matches) {
       for (let match of matches) {
-        const pattern = "/.*" + (match.endsWith("/") ? "/" : "")
+        const suffix = match.endsWith("/") ? "/" : ""
+        const pattern = "/.*" + suffix
         route = route.replace(match, pattern)
+        console.log(route)
       }
     }
+
     return { regex: new RegExp(route), method, strict, route }
   })
 }
 
-exports.matches = (ctx, options) => {
+export const matches = (ctx: BBContext, options: RegexMatcher[]) => {
   return options.find(({ regex, method, strict, route }) => {
     let urlMatch
     if (strict) {

@@ -214,12 +214,31 @@ export const getTenantIDFromCtx = (
     // e.g. tenant.budibase.app or tenant.local.com
     const requestHost = ctx.host
     // parse the tenant id from the difference
-    const tenantId = requestHost.substring(
-      0,
-      requestHost.indexOf(`.${platformHost}`)
+    if (requestHost.includes(platformHost)) {
+      const tenantId = requestHost.substring(
+        0,
+        requestHost.indexOf(`.${platformHost}`)
+      )
+      if (tenantId) {
+        return tenantId
+      }
+    }
+  }
+
+  if (isAllowed(TenantResolutionStrategy.PATH)) {
+    // params - have to parse manually due to koa-router not run yet
+    const match = ctx.matched.find(
+      (m: any) => !!m.paramNames.find((p: any) => p.name === "tenantId")
     )
-    if (tenantId) {
-      return tenantId
+    if (match) {
+      const params = match.params(
+        ctx.originalUrl,
+        match.captures(ctx.originalUrl),
+        {}
+      )
+      if (params.tenantId) {
+        return params.tenantId
+      }
     }
   }
 

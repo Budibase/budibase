@@ -235,7 +235,7 @@ describe("configs", () => {
           expect(events.org.nameUpdated).toBeCalledTimes(1)
           expect(events.org.logoUpdated).toBeCalledTimes(1)
           expect(events.org.platformURLUpdated).toBeCalledTimes(1)
-          config.modeAccount()
+          config.modeCloud()
         })
       })
 
@@ -257,7 +257,7 @@ describe("configs", () => {
           expect(events.org.nameUpdated).toBeCalledTimes(1)
           expect(events.org.logoUpdated).toBeCalledTimes(1)
           expect(events.org.platformURLUpdated).toBeCalledTimes(1)
-          config.modeAccount()
+          config.modeCloud()
         })
       })
     })

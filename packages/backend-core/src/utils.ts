@@ -8,7 +8,12 @@ import userCache from "./cache/user"
 import { getSessionsForUser, invalidateSessions } from "./security/sessions"
 import * as events from "./events"
 import tenancy from "./tenancy"
-import { App, BBContext, TenantResolutionStrategy } from "@budibase/types"
+import {
+  App,
+  BBContext,
+  PlatformLogoutOpts,
+  TenantResolutionStrategy,
+} from "@budibase/types"
 import { SetOption } from "cookies"
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
@@ -187,12 +192,6 @@ const getBuilders = async () => {
 export const getBuildersCount = async () => {
   const builders = await getBuilders()
   return builders.length
-}
-
-interface PlatformLogoutOpts {
-  ctx: BBContext
-  userId: string
-  keepActiveSession: boolean
 }
 
 /**

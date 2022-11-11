@@ -9,4 +9,5 @@ export enum TenantResolutionStrategy {
   HEADER = "header",
   QUERY = "query",
   SUBDOMAIN = "subdomain",
+  PATH = "path",
 }

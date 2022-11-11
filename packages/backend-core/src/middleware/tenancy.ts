@@ -1,5 +1,6 @@
 import { doInTenant, getTenantIDFromCtx } from "../tenancy"
 import { buildMatcherRegex, matches } from "./matchers"
+import { Headers } from "../constants"
 import {
   BBContext,
   EndpointMatcher,
@@ -9,7 +10,7 @@ import {
 
 const tenancy = (
   allowQueryStringPatterns: EndpointMatcher[],
-  noTenancyPatterns: EndpointMatcher,
+  noTenancyPatterns: EndpointMatcher[],
   opts = { noTenancyRequired: false }
 ) => {
   const allowQsOptions = buildMatcherRegex(allowQueryStringPatterns)
@@ -28,6 +29,7 @@ const tenancy = (
     }
 
     const tenantId = getTenantIDFromCtx(ctx, tenantOpts)
+    ctx.set(Headers.TENANT_ID, tenantId as string)
     return doInTenant(tenantId, next)
   }
 }

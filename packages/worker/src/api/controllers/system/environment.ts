@@ -1,6 +1,7 @@
-const env = require("../../../environment")
+import { BBContext } from "@budibase/types"
+import env from "../../../environment"
 
-exports.fetch = async ctx => {
+export const fetch = async (ctx: BBContext) => {
   ctx.body = {
     multiTenancy: !!env.MULTI_TENANCY,
     cloud: !env.SELF_HOSTED,

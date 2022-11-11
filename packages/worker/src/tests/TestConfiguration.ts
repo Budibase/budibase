@@ -2,6 +2,7 @@ import "./mocks"
 import dbConfig from "../db"
 dbConfig.init()
 import env from "../environment"
+import { env as coreEnv } from "@budibase/backend-core"
 import controllers from "./controllers"
 const supertest = require("supertest")
 import { Configs } from "../constants"
@@ -12,13 +13,13 @@ import {
   Headers,
   sessions,
   auth,
+  constants,
 } from "@budibase/backend-core"
-import { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
-import structures from "./structures"
+import structures, { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
 import { CreateUserResponse, User, AuthToken } from "@budibase/types"
 
 enum Mode {
-  ACCOUNT = "account",
+  CLOUD = "cloud",
   SELF = "self",
 }
 
@@ -31,11 +32,11 @@ class TestConfiguration {
   constructor(
     opts: { openServer: boolean; mode: Mode } = {
       openServer: true,
-      mode: Mode.ACCOUNT,
+      mode: Mode.CLOUD,
     }
   ) {
-    if (opts.mode === Mode.ACCOUNT) {
-      this.modeAccount()
+    if (opts.mode === Mode.CLOUD) {
+      this.modeCloud()
     } else if (opts.mode === Mode.SELF) {
       this.modeSelf()
     }
@@ -54,20 +55,24 @@ class TestConfiguration {
 
   // MODES
 
-  modeAccount = () => {
-    env.SELF_HOSTED = false
-    // @ts-ignore
-    env.MULTI_TENANCY = true
-    // @ts-ignore
-    env.DISABLE_ACCOUNT_PORTAL = false
+  setMultiTenancy = (value: boolean) => {
+    env._set("MULTI_TENANCY", value)
+    coreEnv._set("MULTI_TENANCY", value)
+  }
+
+  setSelfHosted = (value: boolean) => {
+    env._set("SELF_HOSTED", value)
+    coreEnv._set("SELF_HOSTED", value)
+  }
+
+  modeCloud = () => {
+    this.setSelfHosted(false)
+    this.setMultiTenancy(true)
   }
 
   modeSelf = () => {
-    env.SELF_HOSTED = true
-    // @ts-ignore
-    env.MULTI_TENANCY = false
-    // @ts-ignore
-    env.DISABLE_ACCOUNT_PORTAL = true
+    this.setSelfHosted(true)
+    this.setMultiTenancy(false)
   }
 
   // UTILS
@@ -113,6 +118,16 @@ class TestConfiguration {
   }
 
   // TENANCY
+
+  createTenant = async (tenantId?: string): Promise<User> => {
+    // create user / new tenant
+    if (!tenantId) {
+      tenantId = structures.uuid()
+    }
+    return tenancy.doInTenant(tenantId, async () => {
+      return this.createUser()
+    })
+  }
 
   getTenantId() {
     try {
@@ -177,6 +192,10 @@ class TestConfiguration {
     } else {
       throw new Error("could not determine auth headers to use")
     }
+  }
+
+  internalAPIHeaders() {
+    return { [constants.Headers.API_KEY]: env.INTERNAL_API_KEY }
   }
 
   async getUser(email: string): Promise<User> {
