@@ -1,16 +1,20 @@
-const { getGlobalUserParams, getAllApps } = require("../db/utils")
-const { doWithDB } = require("../db")
-const { doWithGlobalDB } = require("../tenancy")
-const { StaticDatabases } = require("../db/constants")
+import { getGlobalUserParams, getAllApps } from "../db/utils"
+import { doWithDB } from "../db"
+import { doWithGlobalDB } from "../tenancy"
+import { StaticDatabases } from "../db/constants"
+import { PouchLike } from "../couch"
+import { User } from "@budibase/types"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
-const removeTenantFromInfoDB = async tenantId => {
+async function removeTenantFromInfoDB(tenantId: string) {
   try {
-    await doWithDB(PLATFORM_INFO_DB, async infoDb => {
+    await doWithDB(PLATFORM_INFO_DB, async (infoDb: PouchLike) => {
       let tenants = await infoDb.get(TENANT_DOC)
-      tenants.tenantIds = tenants.tenantIds.filter(id => id !== tenantId)
+      tenants.tenantIds = tenants.tenantIds.filter(
+        (id: string) => id !== tenantId
+      )
 
       await infoDb.put(tenants)
     })
@@ -20,32 +24,15 @@ const removeTenantFromInfoDB = async tenantId => {
   }
 }
 
-exports.removeUserFromInfoDB = async dbUser => {
-  await doWithDB(PLATFORM_INFO_DB, async infoDb => {
-    const keys = [dbUser._id, dbUser.email]
-    const userDocs = await infoDb.allDocs({
-      keys,
-      include_docs: true,
-    })
-    const toDelete = userDocs.rows.map(row => {
-      return {
-        ...row.doc,
-        _deleted: true,
-      }
-    })
-    await infoDb.bulkDocs(toDelete)
-  })
-}
-
-const removeUsersFromInfoDB = async tenantId => {
-  return doWithGlobalDB(tenantId, async db => {
+async function removeUsersFromInfoDB(tenantId: string) {
+  return doWithGlobalDB(tenantId, async (db: PouchLike) => {
     try {
       const allUsers = await db.allDocs(
         getGlobalUserParams(null, {
           include_docs: true,
         })
       )
-      await doWithDB(PLATFORM_INFO_DB, async infoDb => {
+      await doWithDB(PLATFORM_INFO_DB, async (infoDb: PouchLike) => {
         const allEmails = allUsers.rows.map(row => row.doc.email)
         // get the id docs
         let keys = allUsers.rows.map(row => row.id)
@@ -71,8 +58,8 @@ const removeUsersFromInfoDB = async tenantId => {
   })
 }
 
-const removeGlobalDB = async tenantId => {
-  return doWithGlobalDB(tenantId, async db => {
+async function removeGlobalDB(tenantId: string) {
+  return doWithGlobalDB(tenantId, async (db: PouchLike) => {
     try {
       await db.destroy()
     } catch (err) {
@@ -82,11 +69,11 @@ const removeGlobalDB = async tenantId => {
   })
 }
 
-const removeTenantApps = async tenantId => {
+async function removeTenantApps(tenantId: string) {
   try {
     const apps = await getAllApps({ all: true })
     const destroyPromises = apps.map(app =>
-      doWithDB(app.appId, db => db.destroy())
+      doWithDB(app.appId, (db: PouchLike) => db.destroy())
     )
     await Promise.allSettled(destroyPromises)
   } catch (err) {
@@ -95,8 +82,25 @@ const removeTenantApps = async tenantId => {
   }
 }
 
+export async function removeUserFromInfoDB(dbUser: User) {
+  await doWithDB(PLATFORM_INFO_DB, async (infoDb: PouchLike) => {
+    const keys = [dbUser._id!, dbUser.email]
+    const userDocs = await infoDb.allDocs({
+      keys,
+      include_docs: true,
+    })
+    const toDelete = userDocs.rows.map(row => {
+      return {
+        ...row.doc,
+        _deleted: true,
+      }
+    })
+    await infoDb.bulkDocs(toDelete)
+  })
+}
+
 // can't live in tenancy package due to circular dependency on db/utils
-exports.deleteTenant = async tenantId => {
+export async function deleteTenant(tenantId: string) {
   await removeTenantFromInfoDB(tenantId)
   await removeUsersFromInfoDB(tenantId)
   await removeGlobalDB(tenantId)

@@ -1,32 +1,33 @@
+import { APP_DEV_PREFIX, APP_PREFIX } from "./constants"
+import { App } from "@budibase/types"
 const NO_APP_ERROR = "No app provided"
-const { APP_DEV_PREFIX, APP_PREFIX } = require("./constants")
 
-exports.isDevAppID = appId => {
+export function isDevAppID(appId?: string) {
   if (!appId) {
     throw NO_APP_ERROR
   }
   return appId.startsWith(APP_DEV_PREFIX)
 }
 
-exports.isProdAppID = appId => {
+export function isProdAppID(appId?: string) {
   if (!appId) {
     throw NO_APP_ERROR
   }
-  return appId.startsWith(APP_PREFIX) && !exports.isDevAppID(appId)
+  return appId.startsWith(APP_PREFIX) && !isDevAppID(appId)
 }
 
-exports.isDevApp = app => {
+export function isDevApp(app: App) {
   if (!app) {
     throw NO_APP_ERROR
   }
-  return exports.isDevAppID(app.appId)
+  return isDevAppID(app.appId)
 }
 
 /**
  * Generates a development app ID from a real app ID.
  * @returns {string} the dev app ID which can be used for dev database.
  */
-exports.getDevelopmentAppID = appId => {
+export function getDevelopmentAppID(appId: string) {
   if (!appId || appId.startsWith(APP_DEV_PREFIX)) {
     return appId
   }
@@ -36,12 +37,12 @@ exports.getDevelopmentAppID = appId => {
   const rest = split.join(APP_PREFIX)
   return `${APP_DEV_PREFIX}${rest}`
 }
-exports.getDevAppID = exports.getDevelopmentAppID
+export const getDevAppID = getDevelopmentAppID
 
 /**
  * Convert a development app ID to a deployed app ID.
  */
-exports.getProdAppID = appId => {
+export function getProdAppID(appId: string) {
   if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
     return appId
   }
@@ -52,7 +53,7 @@ exports.getProdAppID = appId => {
   return `${APP_PREFIX}${rest}`
 }
 
-exports.extractAppUUID = id => {
+export function extractAppUUID(id: string) {
   const split = id?.split("_") || []
   return split.length ? split[split.length - 1] : null
 }

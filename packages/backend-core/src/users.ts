@@ -68,7 +68,7 @@ export const getGlobalUserByAppPage = (appId: string, user: User) => {
   if (!user) {
     return
   }
-  return generateAppUserID(getProdAppID(appId), user._id!)
+  return generateAppUserID(getProdAppID(appId)!, user._id!)
 }
 
 /**

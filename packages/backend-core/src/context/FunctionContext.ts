@@ -1,10 +1,10 @@
-const cls = require("../clshooked")
-const { newid } = require("../hashing")
+import cls from "../clshooked"
+import { newid } from "../hashing"
 
 const REQUEST_ID_KEY = "requestId"
 const MAIN_CTX = cls.createNamespace("main")
 
-function getContextStorage(namespace) {
+function getContextStorage(namespace: any) {
   if (namespace && namespace.active) {
     let contextData = namespace.active
     delete contextData.id
@@ -15,7 +15,7 @@ function getContextStorage(namespace) {
 }
 
 class FunctionContext {
-  static run(callback) {
+  static run(callback: any) {
     return MAIN_CTX.runAndReturn(async () => {
       const namespaceId = newid()
       MAIN_CTX.set(REQUEST_ID_KEY, namespaceId)
@@ -26,13 +26,13 @@ class FunctionContext {
     })
   }
 
-  static setOnContext(key, value) {
+  static setOnContext(key: string, value: any) {
     const namespaceId = MAIN_CTX.get(REQUEST_ID_KEY)
     const namespace = cls.getNamespace(namespaceId)
     namespace.set(key, value)
   }
 
-  static getFromContext(key) {
+  static getFromContext(key: string) {
     const namespaceId = MAIN_CTX.get(REQUEST_ID_KEY)
     const namespace = cls.getNamespace(namespaceId)
     const context = getContextStorage(namespace)
@@ -44,4 +44,4 @@ class FunctionContext {
   }
 }
 
-module.exports = FunctionContext
+export = FunctionContext
