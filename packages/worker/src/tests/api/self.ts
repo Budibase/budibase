@@ -1,13 +1,10 @@
 import TestConfiguration from "../TestConfiguration"
 import { User } from "@budibase/types"
+import { TestAPI } from "./base"
 
-export class SelfAPI {
-  config: TestConfiguration
-  request: any
-
+export class SelfAPI extends TestAPI {
   constructor(config: TestConfiguration) {
-    this.config = config
-    this.request = config.request
+    super(config)
   }
 
   updateSelf = (user: User) => {

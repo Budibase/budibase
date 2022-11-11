@@ -1,6 +1,6 @@
 const migrateFn = jest.fn()
 
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
 
 jest.mock("../../../../migrations", () => {
   return {
@@ -11,7 +11,6 @@ jest.mock("../../../../migrations", () => {
 
 describe("/api/system/migrations", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -27,7 +26,7 @@ describe("/api/system/migrations", () => {
 
   describe("POST /api/system/migrations/run", () => {
     it("fails with no internal api key", async () => {
-      const res = await api.migrations.runMigrations({
+      const res = await config.api.migrations.runMigrations({
         headers: {},
         status: 403,
       })
@@ -36,7 +35,7 @@ describe("/api/system/migrations", () => {
     })
 
     it("runs migrations", async () => {
-      const res = await api.migrations.runMigrations()
+      const res = await config.api.migrations.runMigrations()
       expect(res.text).toBe("OK")
       expect(migrateFn).toBeCalledTimes(1)
     })
@@ -44,7 +43,7 @@ describe("/api/system/migrations", () => {
 
   describe("DELETE /api/system/migrations/definitions", () => {
     it("fails with no internal api key", async () => {
-      const res = await api.migrations.getMigrationDefinitions({
+      const res = await config.api.migrations.getMigrationDefinitions({
         headers: {},
         status: 403,
       })
@@ -52,7 +51,7 @@ describe("/api/system/migrations", () => {
     })
 
     it("returns definitions", async () => {
-      const res = await api.migrations.getMigrationDefinitions()
+      const res = await config.api.migrations.getMigrationDefinitions()
       expect(res.body).toEqual([
         {
           name: "global_info_sync_users",

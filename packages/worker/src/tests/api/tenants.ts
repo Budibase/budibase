@@ -10,6 +10,6 @@ export class TenantAPI extends TestAPI {
     return this.request
       .delete(`/api/system/tenants/${tenantId}`)
       .set(opts?.headers)
-      .expect(opts?.status ? opts.status : 200)
+      .expect(opts?.status ? opts.status : 204)
   }
 }

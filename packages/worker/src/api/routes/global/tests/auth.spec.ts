@@ -1,11 +1,10 @@
 jest.mock("nodemailer")
-import { TestConfiguration, mocks, API } from "../../../../tests"
+import { TestConfiguration, mocks } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
 import { events } from "@budibase/backend-core"
 
 describe("/api/global/auth", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -20,12 +19,14 @@ describe("/api/global/auth", () => {
   })
 
   it("should logout", async () => {
-    await api.auth.logout()
+    await config.api.auth.logout()
     expect(events.auth.logout).toBeCalledTimes(1)
   })
 
   it("should be able to generate password reset email", async () => {
-    const { res, code } = await api.auth.requestPasswordReset(sendMailMock)
+    const { res, code } = await config.api.auth.requestPasswordReset(
+      sendMailMock
+    )
     const user = await config.getUser("test@test.com")
 
     expect(res.body).toEqual({
@@ -39,11 +40,11 @@ describe("/api/global/auth", () => {
   })
 
   it("should allow resetting user password with code", async () => {
-    const { code } = await api.auth.requestPasswordReset(sendMailMock)
+    const { code } = await config.api.auth.requestPasswordReset(sendMailMock)
     const user = await config.getUser("test@test.com")
     delete user.password
 
-    const res = await api.auth.updatePassword(code)
+    const res = await config.api.auth.updatePassword(code)
 
     expect(res.body).toEqual({ message: "password reset successfully." })
     expect(events.user.passwordReset).toBeCalledTimes(1)
@@ -80,7 +81,7 @@ describe("/api/global/auth", () => {
 
     describe("oidc configs", () => {
       it("should load strategy and delegate to passport", async () => {
-        await api.configs.getOIDCConfig(configId)
+        await config.api.configs.getOIDCConfig(configId)
 
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
           scope: ["profile", "email", "offline_access"],
@@ -91,7 +92,7 @@ describe("/api/global/auth", () => {
 
     describe("oidc callback", () => {
       it("should load strategy and delegate to passport", async () => {
-        await api.configs.OIDCCallback(configId)
+        await config.api.configs.OIDCCallback(configId)
 
         expect(passportSpy).toBeCalledWith(
           mockStrategyReturn,

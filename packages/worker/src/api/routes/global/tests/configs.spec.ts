@@ -1,12 +1,11 @@
 // mock the email system
 jest.mock("nodemailer")
-import { TestConfiguration, structures, mocks, API } from "../../../../tests"
+import { TestConfiguration, structures, mocks } from "../../../../tests"
 mocks.email.mock()
 import { Configs, events } from "@budibase/backend-core"
 
 describe("configs", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -28,7 +27,7 @@ describe("configs", () => {
         _rev,
       }
 
-      const res = await api.configs.saveConfig(data)
+      const res = await config.api.configs.saveConfig(data)
 
       return {
         ...data,
@@ -266,7 +265,7 @@ describe("configs", () => {
   it("should return the correct checklist status based on the state of the budibase installation", async () => {
     await config.saveSmtpConfig()
 
-    const res = await api.configs.getConfigChecklist()
+    const res = await config.api.configs.getConfigChecklist()
     const checklist = res.body
 
     expect(checklist.apps.checked).toBeFalsy()

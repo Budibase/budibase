@@ -2,7 +2,6 @@ import "./mocks"
 import dbConfig from "../db"
 dbConfig.init()
 import env from "../environment"
-import { env as coreEnv } from "@budibase/backend-core"
 import controllers from "./controllers"
 const supertest = require("supertest")
 import { Configs } from "../constants"
@@ -14,9 +13,11 @@ import {
   sessions,
   auth,
   constants,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import structures, { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
 import { CreateUserResponse, User, AuthToken } from "@budibase/types"
+import API from "./api"
 
 enum Mode {
   CLOUD = "cloud",
@@ -26,6 +27,7 @@ enum Mode {
 class TestConfiguration {
   server: any
   request: any
+  api: API
   defaultUser?: User
   tenant1User?: User
 
@@ -47,6 +49,8 @@ class TestConfiguration {
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
     }
+
+    this.api = new API(this)
   }
 
   getRequest() {
@@ -119,14 +123,23 @@ class TestConfiguration {
 
   // TENANCY
 
-  createTenant = async (tenantId?: string): Promise<User> => {
+  createTenant = async (): Promise<User> => {
     // create user / new tenant
-    if (!tenantId) {
-      tenantId = structures.uuid()
-    }
-    return tenancy.doInTenant(tenantId, async () => {
-      return this.createUser()
+    const res = await this.api.users.createAdminUser()
+
+    // return the created user
+    const userRes = await this.api.users.getUser(res.userId, {
+      headers: {
+        ...this.internalAPIHeaders(),
+        [constants.Headers.TENANT_ID]: res.tenantId,
+      },
     })
+
+    // create a session for the new user
+    const user = userRes.body
+    await this.createSession(user)
+
+    return user
   }
 
   getTenantId() {
@@ -137,30 +150,24 @@ class TestConfiguration {
     }
   }
 
-  // USER / AUTH
+  // AUTH
 
-  async createDefaultUser() {
-    const user = structures.users.adminUser({
-      email: "test@test.com",
-      password: "test",
+  async _createSession({
+    userId,
+    tenantId,
+  }: {
+    userId: string
+    tenantId: string
+  }) {
+    await sessions.createASession(userId!, {
+      sessionId: "sessionid",
+      tenantId: tenantId,
+      csrfToken: CSRF_TOKEN,
     })
-    this.defaultUser = await this.createUser(user)
-  }
-
-  async createTenant1User() {
-    const user = structures.users.adminUser({
-      email: "tenant1@test.com",
-      password: "test",
-    })
-    this.tenant1User = await this.createUser(user)
   }
 
   async createSession(user: User) {
-    await sessions.createASession(user._id!, {
-      sessionId: "sessionid",
-      tenantId: user.tenantId,
-      csrfToken: CSRF_TOKEN,
-    })
+    return this._createSession({ userId: user._id!, tenantId: user.tenantId })
   }
 
   cookieHeader(cookies: any) {
@@ -196,6 +203,28 @@ class TestConfiguration {
 
   internalAPIHeaders() {
     return { [constants.Headers.API_KEY]: env.INTERNAL_API_KEY }
+  }
+
+  adminOnlyResponse = () => {
+    return { message: "Admin user only endpoint.", status: 403 }
+  }
+
+  // USERS
+
+  async createDefaultUser() {
+    const user = structures.users.adminUser({
+      email: "test@test.com",
+      password: "test",
+    })
+    this.defaultUser = await this.createUser(user)
+  }
+
+  async createTenant1User() {
+    const user = structures.users.adminUser({
+      email: "tenant1@test.com",
+      password: "test",
+    })
+    this.tenant1User = await this.createUser(user)
   }
 
   async getUser(email: string): Promise<User> {

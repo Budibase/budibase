@@ -1,8 +1,7 @@
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
 
 describe("/api/system/environment", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -18,7 +17,7 @@ describe("/api/system/environment", () => {
 
   describe("GET /api/system/environment", () => {
     it("returns the expected environment", async () => {
-      const env = await api.environment.getEnvironment()
+      const env = await config.api.environment.getEnvironment()
       expect(env.body).toEqual({
         cloud: true,
         disableAccountPortal: false,

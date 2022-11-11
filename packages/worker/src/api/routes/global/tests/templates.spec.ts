@@ -1,8 +1,9 @@
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
+
+// TODO
 
 describe("/api/global/template", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -16,7 +17,9 @@ describe("/api/global/template", () => {
     jest.clearAllMocks()
   })
 
-  describe("GET /api/global/template/definitions", () => {})
+  describe("GET /api/global/template/definitions", () => {
+    it("retrieves definitions", () => {})
+  })
 
   describe("POST /api/global/template", () => {})
 
