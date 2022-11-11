@@ -203,6 +203,9 @@ export function getAppDB(opts?: any): PouchLike {
  */
 export function getProdAppDB(opts?: any): PouchLike {
   const appId = getAppId()
+  if (!appId) {
+    throw new Error("Unable to retrieve prod DB - no app ID.")
+  }
   return new PouchLike(getProdAppID(appId), opts)
 }
 
@@ -212,5 +215,8 @@ export function getProdAppDB(opts?: any): PouchLike {
  */
 export function getDevAppDB(opts?: any): PouchLike {
   const appId = getAppId()
+  if (!appId) {
+    throw new Error("Unable to retrieve dev DB - no app ID.")
+  }
   return new PouchLike(getDevelopmentAppID(appId), opts)
 }
