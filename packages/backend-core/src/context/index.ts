@@ -5,7 +5,7 @@ import { baseGlobalDBName } from "../db/tenancy"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
 import { ContextMap, ContextKey } from "./constants"
-import { PouchLike } from "../couch"
+import { PouchLike } from "../db"
 import { getDevelopmentAppID, getProdAppID } from "../db/conversions"
 
 export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID

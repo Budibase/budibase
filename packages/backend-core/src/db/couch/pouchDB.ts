@@ -1,50 +1,10 @@
 import PouchDB from "pouchdb"
-import env from "../environment"
-import { getCouchInfo } from "../couch"
-export { getCouchInfo } from "../couch"
+import env from "../../environment"
+import { PouchOptions } from "@budibase/types"
+import { getCouchInfo } from "./connections"
 
-export const getUrlInfo = (url = env.COUCH_DB_URL) => {
-  let cleanUrl, username, password, host
-  if (url) {
-    // Ensure the URL starts with a protocol
-    const protoRegex = /^https?:\/\//i
-    if (!protoRegex.test(url)) {
-      url = `http://${url}`
-    }
-
-    // Split into protocol and remainder
-    const split = url.split("://")
-    const protocol = split[0]
-    const rest = split.slice(1).join("://")
-
-    // Extract auth if specified
-    if (url.includes("@")) {
-      // Split into host and remainder
-      let parts = rest.split("@")
-      host = parts[parts.length - 1]
-      let auth = parts.slice(0, -1).join("@")
-
-      // Split auth into username and password
-      if (auth.includes(":")) {
-        const authParts = auth.split(":")
-        username = authParts[0]
-        password = authParts.slice(1).join(":")
-      } else {
-        username = auth
-      }
-    } else {
-      host = rest
-    }
-    cleanUrl = `${protocol}://${host}`
-  }
-  return {
-    url: cleanUrl,
-    auth: {
-      username,
-      password,
-    },
-  }
-}
+let Pouch: any
+let initialised = false
 
 /**
  * Return a constructor for PouchDB.
@@ -91,4 +51,34 @@ export const getPouch = (opts: any = {}) => {
   }
 
   return PouchDB.defaults(POUCH_DB_DEFAULTS)
+}
+
+export async function init(opts?: PouchOptions) {
+  Pouch = getPouch(opts)
+  initialised = true
+}
+
+const checkInitialised = () => {
+  if (!initialised) {
+    throw new Error("init has not been called")
+  }
+}
+
+export function getPouchDB(dbName: string, opts?: any): PouchDB.Database {
+  checkInitialised()
+  return new Pouch(dbName, opts)
+}
+
+// use this function if you have called getPouchDB - close
+// the databases you've opened once finished
+export async function closePouchDB(db: PouchDB.Database) {
+  if (!db || env.isTest()) {
+    return
+  }
+  try {
+    // specifically await so that if there is an error, it can be ignored
+    return await db.close()
+  } catch (err) {
+    // ignore error, already closed
+  }
 }

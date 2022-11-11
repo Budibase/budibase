@@ -57,7 +57,8 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "@budibase/types": "<rootDir>/../types/src"
+      "@budibase/types": "<rootDir>/../types/src",
+      "axios": "axios/dist/node/axios.cjs"
     },
     "setupFiles": [
       "./scripts/jestSetup.ts"
