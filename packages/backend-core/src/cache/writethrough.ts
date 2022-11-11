@@ -1,7 +1,7 @@
 import BaseCache from "./base"
 import { getWritethroughClient } from "../redis/init"
 import { logWarn } from "../logging"
-import { PouchLike } from "../couch"
+import { PouchLike } from "../db"
 
 const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null

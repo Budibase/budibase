@@ -1,1 +1,1 @@
-export { PouchLike } from "./couch"
+export { PouchLike } from "./db"

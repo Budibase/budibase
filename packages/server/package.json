@@ -42,7 +42,8 @@
     "moduleNameMapper": {
       "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
       "@budibase/backend-core": "<rootDir>/../backend-core/src",
-      "@budibase/types": "<rootDir>/../types/src"
+      "@budibase/types": "<rootDir>/../types/src",
+      "axios": "axios/dist/node/axios.cjs"
     },
     "setupFiles": [
       "./scripts/jestSetup.js"

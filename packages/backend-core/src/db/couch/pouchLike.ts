@@ -1,6 +1,6 @@
 import Nano from "nano"
 import { AllDocsResponse, AnyDocument } from "@budibase/types"
-import { getCouchInfo } from "./couch"
+import { getCouchInfo } from "./connections"
 import { directCouchCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 

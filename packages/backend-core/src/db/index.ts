@@ -1,8 +1,7 @@
 import env from "../environment"
 import { CouchFindOptions } from "@budibase/types"
-import { PouchLike } from "../couch"
-import { directCouchQuery } from "../couch"
-export { init, PouchLike } from "../couch"
+import { directCouchQuery, PouchLike } from "./couch"
+export { init, PouchLike, getPouch, getPouchDB } from "./couch"
 
 let initialised = false
 const dbList = new Set()

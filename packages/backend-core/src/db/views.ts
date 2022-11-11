@@ -1,6 +1,6 @@
 import { DocumentType, ViewName, DeprecatedViews, SEPARATOR } from "./utils"
 import { getGlobalDB } from "../context"
-import { PouchLike, QueryOpts } from "../couch"
+import { PouchLike, QueryOpts } from "./couch"
 import { StaticDatabases } from "./constants"
 import { doWithDB } from "./"
 
@@ -133,7 +133,9 @@ export const queryView = async <T>(
   try {
     let response = await db.query<T>(`database/${viewName}`, params)
     const rows = response.rows
-    const docs = rows.map(row => (params.include_docs ? row.doc : row.value))
+    const docs = rows.map((row: any) =>
+      params.include_docs ? row.doc : row.value
+    )
 
     // if arrayResponse has been requested, always return array regardless of length
     if (opts?.arrayResponse) {
@@ -186,5 +188,5 @@ export const queryGlobalView = async <T>(
     db = getGlobalDB()
   }
   const createFn = CreateFuncByName[viewName]
-  return queryView(viewName, params, db, createFn, opts)
+  return queryView(viewName, params, db!, createFn, opts)
 }

@@ -1,4 +1,4 @@
-import { getPouchDB, closePouchDB } from "../couch/pouchDB"
+import { getPouchDB, closePouchDB } from "./couch/pouchDB"
 import { DocumentType } from "./constants"
 
 class Replication {

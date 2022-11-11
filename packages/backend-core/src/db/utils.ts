@@ -15,7 +15,7 @@ import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-import { PouchLike } from "../couch"
+import { PouchLike } from "./couch"
 
 export * from "./constants"
 export * from "./conversions"

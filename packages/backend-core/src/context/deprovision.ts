@@ -1,8 +1,7 @@
 import { getGlobalUserParams, getAllApps } from "../db/utils"
-import { doWithDB } from "../db"
+import { doWithDB, PouchLike } from "../db"
 import { doWithGlobalDB } from "../tenancy"
 import { StaticDatabases } from "../db/constants"
-import { PouchLike } from "../couch"
 import { User } from "@budibase/types"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
