@@ -116,6 +116,11 @@
       "type": "application",
       "component": "ShowNotification",
       "dependsOnFeature": "showNotificationAction"
+    },
+    {
+      "name": "Question",
+      "type": "application",
+      "component": "QuestionPrompt"
     }
   ]
 }

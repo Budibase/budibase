@@ -312,6 +312,10 @@ const showNotificationHandler = action => {
   notificationStore.actions[type]?.(message, autoDismiss)
 }
 
+const questionHandler = action => {
+  return
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
@@ -331,6 +335,7 @@ const handlerMap = {
   ["Export Data"]: exportDataHandler,
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
+  ["Question"]: questionHandler,
 }
 
 const confirmTextMap = {
@@ -338,6 +343,7 @@ const confirmTextMap = {
   ["Save Row"]: "Are you sure you want to save this row?",
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
+  ["Question"]: "Are you sure you want to contiune?",
 }
 
 /**
@@ -401,12 +407,14 @@ export const enrichButtonActions = (actions, context) => {
                   buttonContext.push(result)
                   const newContext = { ...context, actions: buttonContext }
 
-                  // Enrich and call the next button action
-                  const next = enrichButtonActions(
-                    actions.slice(i + 1),
-                    newContext
-                  )
-                  resolve(await next())
+                  // Enrich and call the next button action if there is more than one action remaining
+                  if (actions.length > 1) {
+                    const next = enrichButtonActions(
+                      actions.slice(i + 1),
+                      newContext
+                    )
+                    resolve(await next())
+                  }
                 } else {
                   resolve(false)
                 }
