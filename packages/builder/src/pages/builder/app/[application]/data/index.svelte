@@ -7,8 +7,8 @@
 
   let modal
   $: setupComplete =
-    $datasources.list.find(x => (x._id = "bb_internal"))?.entities.length > 1 ||
-    $datasources.list.length > 1
+    $datasources.list.find(x => (x._id = "bb_internal"))?.entities?.length >
+      1 || $datasources.list.length > 1
 
   onMount(() => {
     if (!setupComplete && !$admin.isDev) {
