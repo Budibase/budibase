@@ -3,9 +3,9 @@ const {
   AutoFieldSubTypes,
   RelationshipTypes,
 } = require("../../constants/index")
-const { importToRows } = require("src/api/controllers/table/utils")
+const { importToRows } = require("../../api/controllers/table/utils")
 const { cloneDeep } = require("lodash/fp")
-const LinkDocument = require("src/db/linkedRows/LinkDocument")
+const LinkDocument = require("../linkedRows/LinkDocument")
 const { inventoryImport } = require("./inventoryImport")
 const { employeeImport } = require("./employeeImport")
 const { jobsImport } = require("./jobsImport")
