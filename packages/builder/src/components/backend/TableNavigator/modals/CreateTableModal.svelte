@@ -10,10 +10,12 @@
     Divider,
     Layout,
   } from "@budibase/bbui"
+  import { datasources } from "stores/backend"
   import TableDataImport from "../TableDataImport.svelte"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
 
   $: tableNames = $tables.list.map(table => table.name)
+  $: targetDatasourceId = $datasources.selected
 
   export let name
   let dataImport
@@ -45,7 +47,7 @@
       schema: addAutoColumns(name, dataImport.schema || {}),
       dataImport,
       type: "internal",
-      sourceId: "bb_internal",
+      sourceId: targetDatasourceId,
     }
 
     // Only set primary display if defined

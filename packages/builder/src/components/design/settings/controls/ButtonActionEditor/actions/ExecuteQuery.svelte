@@ -14,7 +14,7 @@
   )
   // Executequery must exclude budibase datasource
   $: executeQueryDatasources = $datasources.list.filter(
-    x => x._id !== BUDIBASE_DATASOURCE_ID
+    x => x._id !== BUDIBASE_DATASOURCE_ID && x.type !== "budibase"
   )
 
   function fetchQueryDefinition(query) {

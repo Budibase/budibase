@@ -20,7 +20,7 @@ async function getAllInternalTables(db?: PouchDB.Database): Promise<Table[]> {
   return internalTables.rows.map((tableDoc: any) => ({
     ...tableDoc.doc,
     type: "internal",
-    sourceId: BudibaseInternalDB._id,
+    sourceId: tableDoc.doc.sourceId || BudibaseInternalDB._id,
   }))
 }
 

@@ -95,18 +95,7 @@ export function makeSureTableUpToDate(table: any, tableToSave: any) {
   return tableToSave
 }
 
-export async function handleDataImport(user: any, table: any, dataImport: any) {
-  if (!dataImport || !dataImport.csvString) {
-    return table
-  }
-
-  const db = getAppDB()
-  // Populate the table with rows imported from CSV in a bulk update
-  const data = await transform({
-    ...dataImport,
-    existingTable: table,
-  })
-
+export function importToRows(data: any, table: any, user: any = {}) {
   let finalData: any = []
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
@@ -136,6 +125,22 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
 
     finalData.push(row)
   }
+  return finalData
+}
+
+export async function handleDataImport(user: any, table: any, dataImport: any) {
+  if (!dataImport || !dataImport.csvString) {
+    return table
+  }
+
+  const db = getAppDB()
+  // Populate the table with rows imported from CSV in a bulk update
+  const data = await transform({
+    ...dataImport,
+    existingTable: table,
+  })
+
+  let finalData: any = importToRows(data, table, user)
 
   await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
     tableId: table._id,
