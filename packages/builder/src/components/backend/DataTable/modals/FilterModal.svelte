@@ -97,7 +97,7 @@
   }
 
   function fieldOptions(field) {
-    return schema[field]?.type === "options"
+    return schema[field]?.type === "options" || schema[field]?.type === "array"
       ? schema[field]?.constraints.inclusion
       : [true, false]
   }
