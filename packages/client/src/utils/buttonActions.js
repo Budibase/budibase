@@ -17,7 +17,7 @@ import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
 
 const saveRowHandler = async (action, context) => {
-  const { fields, providerId, tableId } = action.parameters
+  const { fields, providerId, tableId, notificationOverride } = action.parameters
   let payload
   if (providerId) {
     payload = { ...context[providerId] }
@@ -34,7 +34,10 @@ const saveRowHandler = async (action, context) => {
   }
   try {
     const row = await API.saveRow(payload)
-    notificationStore.actions.success("Row saved")
+    
+    if (!notificationOverride){
+      notificationStore.actions.success("Row saved")
+    }
 
     // Refresh related datasources
     await dataSourceStore.actions.invalidateDataSource(row.tableId, {
@@ -49,7 +52,7 @@ const saveRowHandler = async (action, context) => {
 }
 
 const duplicateRowHandler = async (action, context) => {
-  const { fields, providerId, tableId } = action.parameters
+  const { fields, providerId, tableId, notificationOverride } = action.parameters
   if (providerId) {
     let payload = { ...context[providerId] }
     if (fields) {
@@ -64,7 +67,9 @@ const duplicateRowHandler = async (action, context) => {
     delete payload._rev
     try {
       const row = await API.saveRow(payload)
-      notificationStore.actions.success("Row saved")
+      if (!notificationOverride){
+        notificationStore.actions.success("Row saved")
+      }
 
       // Refresh related datasources
       await dataSourceStore.actions.invalidateDataSource(row.tableId, {
@@ -80,11 +85,13 @@ const duplicateRowHandler = async (action, context) => {
 }
 
 const deleteRowHandler = async action => {
-  const { tableId, revId, rowId } = action.parameters
+  const { tableId, revId, rowId, notificationOverride } = action.parameters
   if (tableId && rowId) {
     try {
       await API.deleteRow({ tableId, rowId, revId })
-      notificationStore.actions.success("Row deleted")
+      if (!notificationOverride){
+        notificationStore.actions.success("Row deleted")
+      }
 
       // Refresh related datasources
       await dataSourceStore.actions.invalidateDataSource(tableId, {
@@ -98,14 +105,16 @@ const deleteRowHandler = async action => {
 }
 
 const triggerAutomationHandler = async action => {
-  const { fields } = action.parameters
+  const { fields, notificationOverride } = action.parameters
   if (fields) {
     try {
       await API.triggerAutomation({
         automationId: action.parameters.automationId,
         fields,
       })
-      notificationStore.actions.success("Automation triggered")
+      if (!notificationOverride){
+        notificationStore.actions.success("Automation triggered")
+      }
     } catch (error) {
       // Abort next actions
       return false
@@ -119,7 +128,7 @@ const navigationHandler = action => {
 }
 
 const queryExecutionHandler = async action => {
-  const { datasourceId, queryId, queryParams } = action.parameters
+  const { datasourceId, queryId, queryParams, notificationOverride } = action.parameters
   try {
     const query = await API.fetchQueryDefinition(queryId)
     if (query?.datasourceId == null) {
@@ -135,7 +144,9 @@ const queryExecutionHandler = async action => {
     // Trigger a notification and invalidate the datasource as long as this
     // was not a readable query
     if (!query.readable) {
-      notificationStore.actions.success("Query executed successfully")
+      if (!notificationOverride){
+        notificationStore.actions.success("Query executed successfully")
+      }
       await dataSourceStore.actions.invalidateDataSource(query.datasourceId)
     }
 
