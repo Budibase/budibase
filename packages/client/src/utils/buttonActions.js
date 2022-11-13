@@ -313,6 +313,7 @@ const showNotificationHandler = action => {
 }
 
 const questionHandler = action => {
+  action.parameters
   return
 }
 
