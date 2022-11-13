@@ -44,8 +44,11 @@
       getOptionLabel={query => query.name}
       getOptionValue={query => query._id}
     />
-    <Checkbox text="Do not display default notification" bind:value={parameters.notificationOverride} />
-    <br>
+    <Checkbox
+      text="Do not display default notification"
+      bind:value={parameters.notificationOverride}
+    />
+    <br />
     {#if parameters.queryId}
       <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
