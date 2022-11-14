@@ -142,15 +142,15 @@ export async function destroy(ctx: any) {
   const tableToDelete = await db.get(ctx.params.tableId)
 
   // Delete all rows for that table
-  const rows = await db.allDocs(
+  const rowsData = await db.allDocs(
     getRowParams(ctx.params.tableId, null, {
       include_docs: true,
     })
   )
   await db.bulkDocs(
-    rows.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
+    rowsData.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
   )
-  await quotas.removeRows(rows.rows.length, {
+  await quotas.removeRows(rowsData.rows.length, {
     tableId: ctx.params.tableId,
   })
 
@@ -179,7 +179,9 @@ export async function destroy(ctx: any) {
     oldTable: null,
     deletion: true,
   })
-  await cleanupAttachments(tableToDelete, { rows })
+  await cleanupAttachments(tableToDelete, {
+    rows: rowsData.rows.map((row: any) => row.doc),
+  })
   return tableToDelete
 }
 
