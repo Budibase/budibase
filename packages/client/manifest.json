@@ -5189,7 +5189,7 @@
   },
   "rowexplorer": {
     "block": true,
-    "name": "Row Explorer block",
+    "name": "Row Explorer Block",
     "icon": "PersonalizationField",
     "size": {
       "width": 600,
