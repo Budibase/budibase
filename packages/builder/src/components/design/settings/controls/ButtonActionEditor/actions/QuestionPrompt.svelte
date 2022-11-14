@@ -14,8 +14,6 @@
 <div class="root">
   <Body size="S">Enter the message you wish to display to the user.</Body>
   <div class="params">
-    <Label small>Title</Label>
-    <Input placeholder="User Prompt" bind:value={parameters.titleText} />
     <Label small>Message</Label>
     <Input
       placeholder="Are you sure you want to continue?"
