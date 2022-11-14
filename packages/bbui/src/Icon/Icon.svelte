@@ -64,7 +64,7 @@
     transition: color var(--spectrum-global-animation-duration-100, 130ms);
   }
   svg.hoverable:hover {
-    color: var(--spectrum-alias-icon-color-selected-hover);
+    color: var(--spectrum-alias-icon-color-selected-hover) !important;
     cursor: pointer;
   }
 

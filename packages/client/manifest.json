@@ -3786,29 +3786,13 @@
         "info": "Row selection is only compatible with internal or SQL tables"
       },
       {
-        "type": "boolean",
-        "label": "Link table rows",
-        "key": "linkRows"
-      },
-      {
-        "type": "boolean",
-        "label": "Open link screens in modal",
-        "key": "linkPeek"
-      },
-      {
-        "type": "url",
-        "label": "Link screen",
-        "key": "linkURL"
-      },
-      {
-        "section": true,
-        "name": "Advanced",
-        "settings": [
+        "type": "event",
+        "label": "On row click",
+        "key": "onClick",
+        "context": [
           {
-            "type": "field",
-            "label": "ID column for linking (appended to URL)",
-            "key": "linkColumn",
-            "placeholder": "Default"
+            "label": "Clicked row",
+            "key": "row"
           }
         ]
       }

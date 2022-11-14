@@ -11,12 +11,15 @@
   export let rowCount
   export let quiet
   export let size
+  export let allowSelectRows
+  export let compact
+  export let onClick
+
+  // Legacy settings, still supported for old apps
   export let linkRows
   export let linkURL
   export let linkColumn
   export let linkPeek
-  export let allowSelectRows
-  export let compact
 
   const component = getContext("component")
   const { styleable, getAction, ActionTypes, routeStore, rowSelectionStore } =
@@ -28,7 +31,9 @@
       component: SlotRenderer,
     },
   ]
+
   let selectedRows = []
+
   $: hasChildren = $component.children
   $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
@@ -40,7 +45,6 @@
     ActionTypes.SetDataProviderSorting
   )
   $: table = dataProvider?.datasource?.type === "table"
-
   $: {
     rowSelectionStore.actions.updateSelection(
       $component.id,
@@ -118,17 +122,21 @@
     })
   }
 
-  const onClick = e => {
-    if (!linkRows || !linkURL) {
-      return
+  const handleClick = e => {
+    if (onClick) {
+      onClick({ row: e.detail })
     }
-    const col = linkColumn || "_id"
-    const id = e.detail?.[col]
-    if (!id) {
-      return
+
+    // Handle legacy settings
+    else if (linkRows && linkURL) {
+      const col = linkColumn || "_id"
+      const id = e.detail?.[col]
+      if (!id) {
+        return
+      }
+      const split = linkURL.split("/:")
+      routeStore.actions.navigate(`${split[0]}/${id}`, linkPeek)
     }
-    const split = linkURL.split("/:")
-    routeStore.actions.navigate(`${split[0]}/${id}`, linkPeek)
   }
 
   onDestroy(() => {
@@ -153,7 +161,7 @@
     disableSorting
     autoSortColumns={!columns?.length}
     on:sort={onSort}
-    on:click={onClick}
+    on:click={handleClick}
   >
     <slot />
   </Table>

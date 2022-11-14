@@ -249,7 +249,12 @@
   </div>
   <div id="side-panel-container" class:open={$sidePanelStore.open}>
     <div class="side-panel-header">
-      <Icon name="Close" hoverable on:click={sidePanelStore.actions.close} />
+      <Icon
+        color="var(--spectrum-global-color-gray-600)"
+        name="RailRightClose"
+        hoverable
+        on:click={sidePanelStore.actions.close}
+      />
     </div>
   </div>
 </div>
@@ -345,7 +350,7 @@
     margin-right: -410px;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
+    gap: 30px;
     overflow-y: auto;
     border-left: 1px solid var(--spectrum-global-color-gray-300);
   }
