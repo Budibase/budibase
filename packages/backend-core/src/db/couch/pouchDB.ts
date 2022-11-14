@@ -66,7 +66,20 @@ const checkInitialised = () => {
 
 export function getPouchDB(dbName: string, opts?: any): PouchDB.Database {
   checkInitialised()
-  return new Pouch(dbName, opts)
+  const db = new Pouch(dbName, opts)
+  const dbPut = db.put
+  db.put = async (doc: any, options = {}) => {
+    if (!doc.createdAt) {
+      doc.createdAt = new Date().toISOString()
+    }
+    doc.updatedAt = new Date().toISOString()
+    return dbPut(doc, options)
+  }
+  db.exists = async () => {
+    const info = await db.info()
+    return !info.error
+  }
+  return db
 }
 
 // use this function if you have called getPouchDB - close

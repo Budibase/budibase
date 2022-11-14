@@ -1,4 +1,4 @@
-require("../../../tests/utilities/TestConfiguration");
+require("../../../tests/utilities/TestConfiguration")
 const {
   generateAppID,
   getDevelopmentAppID,
@@ -8,8 +8,8 @@ const {
   getPlatformUrl,
   getScopedConfig
 } = require("../utils")
-const tenancy = require("../../tenancy");
-const { Configs, DEFAULT_TENANT_ID } = require("../../constants");
+const tenancy = require("../../tenancy")
+const { Configs, DEFAULT_TENANT_ID } = require("../../constants")
 const env = require("../../environment")
 
 describe("utils", () => {

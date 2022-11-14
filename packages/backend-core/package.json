@@ -58,7 +58,7 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "@budibase/types": "<rootDir>/../types/src",
-      "axios": "axios/dist/node/axios.cjs"
+      "^axios.*$": "<rootDir>/node_modules/axios/lib/axios.js"
     },
     "setupFiles": [
       "./scripts/jestSetup.ts"

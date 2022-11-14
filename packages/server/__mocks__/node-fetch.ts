@@ -2,7 +2,7 @@ module FetchMock {
   const fetch = jest.requireActual("node-fetch")
   let failCount = 0
 
-  module.exports = async (url: any, opts: any) => {
+  const func = async (url: any, opts: any) => {
     function json(body: any, status = 200) {
       return {
         status,
@@ -106,4 +106,8 @@ module FetchMock {
     }
     return fetch(url, opts)
   }
+
+  func.Headers = fetch.Headers
+
+  module.exports = func
 }
