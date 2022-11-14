@@ -27,12 +27,14 @@ if [[ "${TARGETBUILD}" = "aas" ]]; then
 else
     DATA_DIR=${DATA_DIR:-/data}
 fi
-
+mkdir -p ${DATA_DIR}
 # Mount NFS or GCP Filestore if env vars exist for it
-if [[ -z ${FILESHARE_IP} && -z ${FILESHARE_NAME} ]]; then
+if [[ ! -z ${FILESHARE_IP} && ! -z ${FILESHARE_NAME} ]]; then
+    echo "Mounting NFS share"
+    apt update && apt install -y nfs-common nfs-kernel-server
     echo "Mount file share ${FILESHARE_IP}:/${FILESHARE_NAME} to ${DATA_DIR}"
     mount -o nolock ${FILESHARE_IP}:/${FILESHARE_NAME} ${DATA_DIR}
-    echo "Mounting completed."
+    echo "Mounting result: $?"
 fi
 
 if [ -f "${DATA_DIR}/.env" ]; then
@@ -74,9 +76,9 @@ mkdir -p ${DATA_DIR}/couch/{dbs,views}
 mkdir -p ${DATA_DIR}/minio
 mkdir -p ${DATA_DIR}/search
 chown -R couchdb:couchdb ${DATA_DIR}/couch
-redis-server --requirepass $REDIS_PASSWORD &
-/opt/clouseau/bin/clouseau &
-/minio/minio server ${DATA_DIR}/minio &
+redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
+/opt/clouseau/bin/clouseau > /dev/stdout 2>&1 &
+/minio/minio server ${DATA_DIR}/minio > /dev/stdout 2>&1 &
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
@@ -85,16 +87,18 @@ if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
     chmod +x /etc/cron.d/certificate-renew
     # Request the certbot certificate
     /app/letsencrypt/certificate-request.sh ${CUSTOM_DOMAIN}
+    /etc/init.d/nginx restart
 fi
 
-/etc/init.d/nginx restart
 pushd app
-pm2 start --name app "yarn run:docker"
+pm2 start -l /dev/stdout --name app "yarn run:docker"
 popd
 pushd worker
-pm2 start --name worker "yarn run:docker"
+pm2 start -l /dev/stdout --name worker "yarn run:docker"
 popd
 sleep 10
+echo "curl to couchdb endpoints"
 curl -X PUT ${COUCH_DB_URL}/_users
 curl -X PUT ${COUCH_DB_URL}/_replicator
+echo "end of runner.sh, sleeping ..."
 sleep infinity
