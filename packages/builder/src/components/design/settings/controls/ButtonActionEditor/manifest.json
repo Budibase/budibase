@@ -118,9 +118,9 @@
       "dependsOnFeature": "showNotificationAction"
     },
     {
-      "name": "Question",
+      "name": "User Prompt",
       "type": "application",
-      "component": "QuestionPrompt"
+      "component": "UserPrompt"
     }
   ]
 }
