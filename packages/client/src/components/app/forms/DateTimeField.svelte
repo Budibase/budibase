@@ -6,7 +6,7 @@
   export let label
   export let placeholder
   export let disabled = false
-  export let enableTime = false
+  export let enableTime = true
   export let timeOnly = false
   export let time24hr = false
   export let ignoreTimezones = false
