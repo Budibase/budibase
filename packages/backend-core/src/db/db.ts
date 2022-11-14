@@ -1,19 +1,15 @@
 import env from "../environment"
-import { directCouchQuery, PouchLike } from "./couch"
+import { directCouchQuery, PouchLike, getPouchDB } from "./couch"
 import { CouchFindOptions } from "@budibase/types"
 
-let initialised = false
 const dbList = new Set()
 
-const checkInitialised = () => {
-  if (!initialised) {
-    throw new Error("init has not been called")
-  }
-}
-
 export function getDB(dbName?: string, opts?: any): PouchLike {
+  // TODO: once using the test image, need to remove this
   if (env.isTest()) {
     dbList.add(dbName)
+    // @ts-ignore
+    return getPouchDB(dbName, opts)
   }
   return new PouchLike(dbName, opts)
 }
@@ -32,7 +28,6 @@ export function allDbs() {
   if (!env.isTest()) {
     throw new Error("Cannot be used outside test environment.")
   }
-  checkInitialised()
   return [...dbList]
 }
 

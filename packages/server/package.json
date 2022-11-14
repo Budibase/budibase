@@ -43,7 +43,7 @@
       "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
       "@budibase/backend-core": "<rootDir>/../backend-core/src",
       "@budibase/types": "<rootDir>/../types/src",
-      "axios": "axios/dist/node/axios.cjs"
+      "^axios.*$": "<rootDir>/node_modules/axios/lib/axios.js"
     },
     "setupFiles": [
       "./scripts/jestSetup.js"
