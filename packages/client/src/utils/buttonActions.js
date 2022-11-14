@@ -312,7 +312,8 @@ const showNotificationHandler = action => {
   notificationStore.actions[type]?.(message, autoDismiss)
 }
 
-const questionHandler = action => {
+const promptUserHandler = action => {
+  action.parameters
   return
 }
 
@@ -335,7 +336,7 @@ const handlerMap = {
   ["Export Data"]: exportDataHandler,
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
-  ["Question"]: questionHandler,
+  ["Prompt User"]: promptUserHandler,
 }
 
 const confirmTextMap = {
@@ -343,7 +344,7 @@ const confirmTextMap = {
   ["Save Row"]: "Are you sure you want to save this row?",
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
-  ["Question"]: "Are you sure you want to contiune?",
+  ["Prompt User"]: "Are you sure you want to contiune?",
 }
 
 /**
@@ -395,8 +396,12 @@ export const enrichButtonActions = (actions, context) => {
           return new Promise(resolve => {
             const defaultText = confirmTextMap[action["##eventHandlerType"]]
             const confirmText = action.parameters?.confirmText || defaultText
+
+            const defaultTitleText = action["##eventHandlerType"]
+            const customTitleText =
+              action.parameters?.customTitleText || defaultTitleText
             confirmationStore.actions.showConfirmation(
-              action["##eventHandlerType"],
+              customTitleText,
               confirmText,
               async () => {
                 // When confirmed, execute this action immediately,
