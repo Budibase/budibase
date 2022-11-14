@@ -1,7 +1,7 @@
-#!/bin/bash 
+#!/bin/bash
 
 if [[ -z "${CI}" ]]; then
-  echo 'Cannot run insall.sh unless in CI'
+  echo 'Cannot run install.sh unless in CI'
   exit 0
 fi
 

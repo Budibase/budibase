@@ -10,3 +10,11 @@ env._set("SELF_HOSTED", "1")
 env._set("NODE_ENV", "jest")
 env._set("JWT_SECRET", "test-jwtsecret")
 env._set("LOG_LEVEL", "silent")
+
+global.console.log = jest.fn() // console.log are ignored in tests
+
+if (!process.env.CI) {
+  // set a longer timeout in dev for debugging
+  // 100 seconds
+  jest.setTimeout(100000)
+}

@@ -36,40 +36,6 @@
     "env:account:enable": "node scripts/account.js enable",
     "env:account:disable": "node scripts/account.js disable"
   },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
-      "@budibase/backend-core": "<rootDir>/../backend-core/src",
-      "@budibase/types": "<rootDir>/../types/src"
-    },
-    "setupFiles": [
-      "./scripts/jestSetup.js"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.js",
-      "!**/node_modules/**",
-      "!src/db/views/*.js",
-      "!src/api/controllers/deploy/**/*.js",
-      "!src/*.js",
-      "!src/api/controllers/static/**/*",
-      "!src/db/dynamoClient.js",
-      "!src/utilities/usageQuota.js",
-      "!src/api/routes/tests/**/*",
-      "!src/db/tests/**/*",
-      "!src/tests/**/*",
-      "!src/automations/tests/**/*",
-      "!src/utilities/fileProcessor.js",
-      "!src/utilities/fileSystem/**/*",
-      "!src/utilities/redis.js"
-    ],
-    "coverageReporters": [
-      "lcov",
-      "json",
-      "clover"
-    ]
-  },
   "keywords": [
     "budibase"
   ],
@@ -191,9 +157,9 @@
     "swagger-jsdoc": "6.1.0",
     "timekeeper": "2.2.0",
     "ts-jest": "27.1.3",
-    "ts-node": "10.5.0",
+    "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
-    "typescript": "4.6.2",
+    "typescript": "4.7.3",
     "update-dotenv": "1.1.1"
   },
   "optionalDependencies": {
