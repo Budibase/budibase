@@ -12,12 +12,16 @@ export default class ScreenApi {
   async create(body: any): Promise<[Response, Screen]> {
     const response = await this.api.post(`/screens`, { body })
     const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json._id).toBeDefined()
+    expect(json.routing.roleId).toBe(body.routing.roleId)
     return [response, json]
   }
 
   async delete(screenId: string, rev: string): Promise<[Response, Screen]> {
     const response = await this.api.del(`/screens/${screenId}/${rev}`)
     const json = await response.json()
+    expect(response).toHaveStatusCode(200)
     return [response, json]
   }
 }
