@@ -11,7 +11,7 @@ const checkInitialised = () => {
   }
 }
 
-export function getDB(dbName: string, opts?: any): PouchLike {
+export function getDB(dbName?: string, opts?: any): PouchLike {
   if (env.isTest()) {
     dbList.add(dbName)
   }
