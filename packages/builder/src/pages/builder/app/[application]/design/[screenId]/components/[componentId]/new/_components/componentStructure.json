@@ -7,7 +7,8 @@
       "cardsblock",
       "repeaterblock",
       "formblock",
-      "chartblock"
+      "chartblock",
+      "rowexplorer"
     ]
   },
   {
