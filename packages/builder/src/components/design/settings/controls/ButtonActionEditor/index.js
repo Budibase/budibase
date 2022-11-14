@@ -1,6 +1,7 @@
 import * as ActionComponents from "./actions"
 import { get } from "svelte/store"
 import { store } from "builderStore"
+// @ts-ignore
 import ActionDefinitions from "./manifest.json"
 
 // Defines which actions are available to configure in the front end.

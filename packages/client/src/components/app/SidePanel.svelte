@@ -43,12 +43,6 @@
 >
   <slot />
 </div>
-<div>
-  <button on:click={() => sidePanelStore.actions.open($component.id)}>
-    open
-  </button>
-  <button on:click={sidePanelStore.actions.close}>close</button>
-</div>
 
 <style>
   .side-panel {

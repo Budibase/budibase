@@ -116,6 +116,12 @@
       "type": "application",
       "component": "ShowNotification",
       "dependsOnFeature": "showNotificationAction"
+    },
+    {
+      "name": "Update Side Panel",
+      "type": "application",
+      "component": "UpdateSidePanel",
+      "dependsOnFeature": "sidePanel"
     }
   ]
 }
