@@ -1,13 +1,16 @@
 import env from "../environment"
-import { SEPARATOR, DocumentType } from "../db/constants"
-import cls from "./FunctionContext"
-import { baseGlobalDBName } from "../db/tenancy"
+import {
+  SEPARATOR,
+  DocumentType,
+  getDevelopmentAppID,
+  getProdAppID,
+  baseGlobalDBName,
+  PouchLike,
+} from "../db"
+import { Context } from "./localStorage"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
-import { ContextMap, ContextKey } from "./constants"
-import { PouchLike } from "../db"
-import { getDevelopmentAppID, getProdAppID } from "../db/conversions"
-
+import { ContextMap } from "./constants"
 export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 
 // some test cases call functions directly, need to
@@ -19,7 +22,7 @@ export function isMultiTenant() {
 }
 
 export function isTenantIdSet() {
-  const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+  const context = Context.get()
   return !!context?.tenantId
 }
 
@@ -53,7 +56,7 @@ export function getTenantIDFromAppID(appId: string) {
 function updateContext(updates: ContextMap) {
   let context: ContextMap
   try {
-    context = cls.getFromContext(ContextKey.MAIN)
+    context = Context.get()
   } catch (err) {
     // no context, start empty
     context = {}
@@ -68,10 +71,7 @@ function updateContext(updates: ContextMap) {
 async function newContext(updates: ContextMap, task: any) {
   // see if there already is a context setup
   let context: ContextMap = updateContext(updates)
-  return cls.run(async () => {
-    cls.setOnContext(ContextKey.MAIN, context)
-    return await task()
-  })
+  return Context.run(context, task)
 }
 
 export async function doInContext(appId: string, task: any): Promise<any> {
@@ -132,7 +132,7 @@ export async function doInIdentityContext(
 
 export function getIdentity(): IdentityContext | undefined {
   try {
-    const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+    const context = Context.get()
     return context?.identity
   } catch (e) {
     // do nothing - identity is not in context
@@ -143,7 +143,7 @@ export function getTenantId(): string {
   if (!isMultiTenant()) {
     return DEFAULT_TENANT_ID
   }
-  const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+  const context = Context.get()
   const tenantId = context?.tenantId
   if (!tenantId) {
     throw new Error("Tenant id not found")
@@ -152,7 +152,7 @@ export function getTenantId(): string {
 }
 
 export function getAppId(): string | undefined {
-  const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+  const context = Context.get()
   const foundId = context?.appId
   if (!foundId && env.isTest() && TEST_APP_ID) {
     return TEST_APP_ID
@@ -165,7 +165,7 @@ export function updateTenantId(tenantId?: string) {
   let context: ContextMap = updateContext({
     tenantId,
   })
-  cls.setOnContext(ContextKey.MAIN, context)
+  Context.set(context)
 }
 
 export function updateAppId(appId: string) {
@@ -173,7 +173,7 @@ export function updateAppId(appId: string) {
     appId,
   })
   try {
-    cls.setOnContext(ContextKey.MAIN, context)
+    Context.set(context)
   } catch (err) {
     if (env.isTest()) {
       TEST_APP_ID = appId
@@ -184,7 +184,7 @@ export function updateAppId(appId: string) {
 }
 
 export function getGlobalDB(): PouchLike {
-  const context = cls.getFromContext(ContextKey.MAIN) as ContextMap
+  const context = Context.get()
   return new PouchLike(baseGlobalDBName(context?.tenantId))
 }
 

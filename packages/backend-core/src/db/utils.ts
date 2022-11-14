@@ -10,7 +10,7 @@ import {
 } from "./constants"
 import { getTenantId, getGlobalDB } from "../context"
 import { getGlobalDBName } from "./tenancy"
-import { doWithDB, allDbs, directCouchAllDbs } from "./index"
+import { doWithDB, allDbs, directCouchAllDbs } from "./db"
 import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
