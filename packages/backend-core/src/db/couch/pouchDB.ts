@@ -53,7 +53,7 @@ export const getPouch = (opts: any = {}) => {
   return PouchDB.defaults(POUCH_DB_DEFAULTS)
 }
 
-export async function init(opts?: PouchOptions) {
+export function init(opts?: PouchOptions) {
   Pouch = getPouch(opts)
   initialised = true
 }
