@@ -9,7 +9,8 @@
     "messagePassing": true,
     "rowSelection": true,
     "continueIfAction": true,
-    "showNotificationAction": true
+    "showNotificationAction": true,
+    "sidePanel": true
   },
   "layout": {
     "name": "Layout",
