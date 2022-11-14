@@ -1,6 +1,5 @@
 <script>
   import { Body, Label, Input } from "@budibase/bbui"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { onMount } from "svelte"
 
   export let parameters
@@ -15,6 +14,8 @@
 <div class="root">
   <Body size="S">Enter the message you wish to display to the user.</Body>
   <div class="params">
+    <Label small>Title</Label>
+    <Input placeholder="Prompt User" bind:value={parameters.customTitleText} />
     <Label small>Message</Label>
     <Input
       placeholder="Are you sure you want to continue?"
