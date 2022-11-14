@@ -97,6 +97,8 @@
     styles={{
       normal: {
         width: "600px",
+        "margin-left": "auto",
+        "margin-right": "auto",
       },
     }}
     context="form"

@@ -65,7 +65,7 @@
       type="container"
       props={{
         direction: "column",
-        hAlign: "center",
+        hAlign: "left",
         vAlign: "stretch",
       }}
     >
