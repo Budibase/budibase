@@ -5,6 +5,7 @@ import {
   getDevelopmentAppID,
   getProdAppID,
   baseGlobalDBName,
+  getDB,
   PouchLike,
 } from "../db"
 import { Context } from "./localStorage"
@@ -185,7 +186,10 @@ export function updateAppId(appId: string) {
 
 export function getGlobalDB(): PouchLike {
   const context = Context.get()
-  return new PouchLike(baseGlobalDBName(context?.tenantId))
+  if (!context || (env.MULTI_TENANCY && !context.tenantId)) {
+    throw new Error("Global DB not found")
+  }
+  return getDB(baseGlobalDBName(context?.tenantId))
 }
 
 /**
@@ -194,7 +198,7 @@ export function getGlobalDB(): PouchLike {
  */
 export function getAppDB(opts?: any): PouchLike {
   const appId = getAppId()
-  return new PouchLike(appId, opts)
+  return getDB(appId, opts)
 }
 
 /**
@@ -206,7 +210,7 @@ export function getProdAppDB(opts?: any): PouchLike {
   if (!appId) {
     throw new Error("Unable to retrieve prod DB - no app ID.")
   }
-  return new PouchLike(getProdAppID(appId), opts)
+  return getDB(getProdAppID(appId), opts)
 }
 
 /**
@@ -218,5 +222,5 @@ export function getDevAppDB(opts?: any): PouchLike {
   if (!appId) {
     throw new Error("Unable to retrieve dev DB - no app ID.")
   }
-  return new PouchLike(getDevelopmentAppID(appId), opts)
+  return getDB(getDevelopmentAppID(appId), opts)
 }
