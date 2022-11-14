@@ -76,7 +76,7 @@
   </Body>
   <Input
     bind:value={name}
-    on:change={() => (nameTouched = true)}
+    on:input={() => (nameTouched = true)}
     bind:error={nameError}
     label="Name"
   />
@@ -124,10 +124,13 @@
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
-    border: solid var(--spectrum-alias-border-color);
     border-radius: 5px;
     box-sizing: border-box;
     border-width: 2px;
+  }
+
+  .item:hover {
+    background: var(--spectrum-alias-background-color-tertiary);
   }
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
