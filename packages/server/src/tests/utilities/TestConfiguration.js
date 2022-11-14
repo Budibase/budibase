@@ -116,7 +116,9 @@ class TestConfiguration {
     if (this.server) {
       this.server.close()
     }
-    cleanup(this.allApps.map(app => app.appId))
+    if (this.allApps) {
+      cleanup(this.allApps.map(app => app.appId))
+    }
   }
 
   // UTILS

@@ -33,7 +33,7 @@ const checkInitialised = () => {
   }
 }
 
-export async function init(opts?: PouchOptions) {
+export function init(opts?: PouchOptions) {
   Pouch = pouch.getPouch(opts)
   initialised = true
 }

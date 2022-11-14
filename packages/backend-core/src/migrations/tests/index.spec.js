@@ -1,4 +1,4 @@
-require("../../../tests/utilities/TestConfiguration")
+require("../../../tests")
 const { runMigrations, getMigrationsDoc } = require("../index")
 const { dangerousGetDB } = require("../../db")
 const {

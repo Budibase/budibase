@@ -1,5 +1,5 @@
 import "./mocks"
-import dbConfig from "../db"
+import * as dbConfig from "../db"
 dbConfig.init()
 import env from "../environment"
 import controllers from "./controllers"

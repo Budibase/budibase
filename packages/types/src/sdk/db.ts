@@ -1,10 +1,10 @@
 import PouchDB from "pouchdb"
 
 export type PouchOptions = {
-  inMemory: boolean
-  replication: boolean
-  onDisk: boolean
-  find: boolean
+  inMemory?: boolean
+  replication?: boolean
+  onDisk?: boolean
+  find?: boolean
 }
 
 export enum SortOption {

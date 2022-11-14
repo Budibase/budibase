@@ -1,5 +1,4 @@
-require("../../tests/utilities/TestConfiguration")
-const { structures } = require("../../tests/utilities")
+const { structures } = require("../../tests")
 const utils = require("../utils")
 const events = require("../events")
 const { doInTenant, DEFAULT_TENANT_ID }= require("../context")

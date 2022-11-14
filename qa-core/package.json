@@ -41,7 +41,7 @@
     "@types/node-fetch": "2.6.2",
     "chance": "1.1.8",
     "env-cmd": "^10.1.0",
-    "jest": "28.0.2",
+    "jest": "28.1.1",
     "prettier": "2.7.1",
     "start-server-and-test": "1.14.0",
     "timekeeper": "2.2.0",
