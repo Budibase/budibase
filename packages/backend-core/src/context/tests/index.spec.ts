@@ -1,4 +1,4 @@
-import "../../../tests/utilities/TestConfiguration"
+import "../../../tests"
 import * as context from ".."
 import { DEFAULT_TENANT_ID } from "../../constants"
 import env from "../../environment"
