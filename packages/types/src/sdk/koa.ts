@@ -9,6 +9,7 @@ export interface ContextUser extends Omit<User, "roles"> {
   roleId?: string | null
   role?: Role
   roles?: UserRoles
+  csrfToken?: string
 }
 
 export interface BBRequest extends Request {
