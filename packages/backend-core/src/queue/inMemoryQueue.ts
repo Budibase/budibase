@@ -29,6 +29,7 @@ class InMemoryQueue {
   _messages: any[]
   _emitter: EventEmitter
   _runCount: number
+  _addCount: number
   /**
    * The constructor the queue, exactly the same as that of Bulls.
    * @param {string} name The name of the queue which is being configured.
@@ -41,6 +42,7 @@ class InMemoryQueue {
     this._messages = []
     this._emitter = new events.EventEmitter()
     this._runCount = 0
+    this._addCount = 0
   }
 
   /**
@@ -81,6 +83,7 @@ class InMemoryQueue {
       throw "Queue only supports carrying JSON."
     }
     this._messages.push(newJob(this._name, msg))
+    this._addCount++
     this._emitter.emit("message")
   }
 
@@ -128,12 +131,9 @@ class InMemoryQueue {
   }
 
   async waitForCompletion() {
-    const currentCount = this._runCount
-    let increased = false
     do {
       await timeout(50)
-      increased = this._runCount > currentCount
-    } while (!increased)
+    } while (this._addCount < this._runCount)
   }
 }
 
