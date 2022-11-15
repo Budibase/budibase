@@ -44,7 +44,7 @@ function mockAuthWithNoCookie() {
       },
       cache: {
         user: {
-          getUser: () => {
+          getUser: async id => {
             return {
               _id: "us_uuid1",
             }
@@ -77,6 +77,15 @@ function mockAuthWithCookie() {
         setCookie: jest.fn(),
         clearCookie: jest.fn(),
         getCookie: () => ({ appId: "app_different", roleId: "PUBLIC" }),
+      },
+      cache: {
+        user: {
+          getUser: async id => {
+            return {
+              _id: "us_uuid1",
+            }
+          },
+        },
       },
     }
   })
@@ -183,6 +192,15 @@ describe("Current app middleware", () => {
             setCookie: jest.fn(),
             getCookie: jest.fn(),
           },
+          cache: {
+            user: {
+              getUser: async id => {
+                return {
+                  _id: "us_uuid1",
+                }
+              },
+            },
+          },
         }
       })
       await checkExpected(true)
@@ -203,6 +221,15 @@ describe("Current app middleware", () => {
             },
             setCookie: jest.fn(),
             getCookie: () => ({ appId: "app_test", roleId: "PUBLIC" }),
+          },
+          cache: {
+            user: {
+              getUser: async id => {
+                return {
+                  _id: "us_uuid1",
+                }
+              },
+            },
           },
         }
       })
