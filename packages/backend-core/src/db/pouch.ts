@@ -1,5 +1,6 @@
 import PouchDB from "pouchdb"
 import env from "../environment"
+import { PouchOptions } from "@budibase/types"
 
 export const getUrlInfo = (url = env.COUCH_DB_URL) => {
   let cleanUrl, username, password, host
@@ -82,7 +83,7 @@ export const getCouchInfo = () => {
  * This should be rarely used outside of the main application config.
  * Exposed for exceptional cases such as in-memory views.
  */
-export const getPouch = (opts: any = {}) => {
+export const getPouch = (opts: PouchOptions = {}) => {
   let { url, cookie } = getCouchInfo()
   let POUCH_DB_DEFAULTS = {
     prefix: url,

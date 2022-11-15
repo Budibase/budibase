@@ -12,7 +12,7 @@ filterTests(['smoke', 'all'], () => {
       cy.createTestTableWithData()
       cy.wait(2000)
       cy.contains("Automate").click()
-      cy.get(interact.ADD_BUTTON_SPECTRUM).click()
+      cy.get(interact.SPECTRUM_BUTTON_TEMPLATE).contains("Add automation").click({ force: true })
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.get("input").type("Add Row")
         cy.contains("Row Created").click({ force: true })
