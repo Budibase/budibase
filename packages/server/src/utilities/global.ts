@@ -94,7 +94,9 @@ export async function getGlobalUsers(users?: ContextUser[]) {
   const db = tenancy.getGlobalDB()
   let globalUsers
   if (users) {
-    const globalIds = users.map(user => getGlobalIDFromUserMetadataID(user._id))
+    const globalIds = users.map(user =>
+      getGlobalIDFromUserMetadataID(user._id!)
+    )
     globalUsers = (await db.allDocs(getMultiIDParams(globalIds))).rows.map(
       row => row.doc
     )
