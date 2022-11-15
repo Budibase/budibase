@@ -15,7 +15,14 @@
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
 
   $: tableNames = $tables.list.map(table => table.name)
-  $: targetDatasourceId = $datasources.selected
+  $: selectedSource = $datasources.list.find(
+    source => source._id === $datasources.selected
+  )
+
+  $: isSelectedInternal = selectedSource?.type === "budibase"
+  $: targetDatasourceId = isSelectedInternal
+    ? selectedSource._id
+    : "bb_internal"
 
   export let name
   let dataImport
