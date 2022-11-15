@@ -23,14 +23,18 @@
   export let bindings = []
   export let nested
 
-  $: showAvailableActions = !actions?.length
-
   let actionQuery
-  $: parsedQuery =
-    typeof actionQuery === "string" ? actionQuery.toLowerCase().trim() : ""
-
   let selectedAction = actions?.length ? actions[0] : null
 
+  $: {
+    // Ensure parameters object is never null
+    if (selectedAction && !selectedAction.parameters) {
+      selectedAction.parameters = {}
+    }
+  }
+  $: parsedQuery =
+    typeof actionQuery === "string" ? actionQuery.toLowerCase().trim() : ""
+  $: showAvailableActions = !actions?.length
   $: mappedActionTypes = actionTypes.reduce((acc, action) => {
     let parsedName = action.name.toLowerCase().trim()
     if (parsedQuery.length && parsedName.indexOf(parsedQuery) < 0) {
@@ -40,7 +44,6 @@
     acc[action.type].push(action)
     return acc
   }, {})
-
   // These are ephemeral bindings which only exist while executing actions
   $: eventContexBindings = getEventContextBindings(
     $currentAsset,
@@ -50,9 +53,8 @@
     selectedAction?.id
   )
   $: allBindings = eventContexBindings.concat(bindings)
-
-  // Assign a unique ID to each action
   $: {
+    // Ensure each action has a unique ID
     if (actions) {
       actions.forEach(action => {
         if (!action.id) {
@@ -61,13 +63,11 @@
       })
     }
   }
-
   $: selectedActionComponent =
     selectedAction &&
     actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY])?.component
-
-  // Select the first action if we delete an action
   $: {
+    // Select the first action if we delete an action
     if (selectedAction && !actions?.includes(selectedAction)) {
       selectedAction = actions?.[0]
     }
