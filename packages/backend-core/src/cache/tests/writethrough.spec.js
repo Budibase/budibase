@@ -1,4 +1,4 @@
-require("../../../tests/utilities/TestConfiguration")
+require("../../../tests")
 const { Writethrough } = require("../writethrough")
 const { dangerousGetDB } = require("../../db")
 const tk = require("timekeeper")
