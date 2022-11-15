@@ -9,13 +9,21 @@
   let structureLookupMap = {}
 
   const registerBlockComponent = (id, order, parentId, instance) => {
-    // Ensure child array exists
+    // Ensure child map exists
     if (!structureLookupMap[parentId]) {
       structureLookupMap[parentId] = {}
     }
     // Add this instance in this order, overwriting any existing instance in
     // this order in case of repeaters
     structureLookupMap[parentId][order] = instance
+  }
+
+  const unregisterBlockComponent = (order, parentId) => {
+    // Ensure child map exists
+    if (!structureLookupMap[parentId]) {
+      return
+    }
+    delete structureLookupMap[parentId][order]
   }
 
   const eject = () => {
@@ -73,6 +81,7 @@
     // We register block components with their raw props so that we can eject
     // blocks later on
     registerComponent: registerBlockComponent,
+    unregisterComponent: unregisterBlockComponent,
   })
 
   onMount(() => {

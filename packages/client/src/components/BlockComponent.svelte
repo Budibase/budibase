@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onDestroy } from "svelte"
   import { generate } from "shortid"
   import { builderStore } from "../stores/builder.js"
   import Component from "components/Component.svelte"
@@ -41,6 +41,12 @@
       block.registerComponent(id, order ?? 0, $component?.id, instance)
     }
   }
+
+  onDestroy(() => {
+    if ($builderStore.inBuilder) {
+      block.unregisterComponent(order ?? 0, $component?.id)
+    }
+  })
 </script>
 
 <Component {instance} isBlock>
