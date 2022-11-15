@@ -1,6 +1,6 @@
+import mocks from "./mocks"
 import TestConfiguration from "./TestConfiguration"
 import structures from "./structures"
-import mocks from "./mocks"
 import API from "./api"
 
 const pkg = {
