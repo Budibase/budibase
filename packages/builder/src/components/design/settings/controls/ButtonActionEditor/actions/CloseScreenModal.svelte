@@ -1,5 +1,5 @@
 <script>
-  import { Label, Body } from "@budibase/bbui"
+  import { Label } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
