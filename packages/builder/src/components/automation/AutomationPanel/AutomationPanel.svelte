@@ -1,7 +1,7 @@
 <script>
   import AutomationList from "./AutomationList.svelte"
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
-  import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
+  import { Modal, Tabs, Tab, Button, Layout } from "@budibase/bbui"
 
   export let modal
   export let webhookModal
@@ -10,23 +10,18 @@
 <div class="nav">
   <Tabs selected="Automations">
     <Tab title="Automations">
+      <Layout paddingX="L" paddingY="L" gap="S">
+        <Button cta wide on:click={modal.show}>Add automation</Button>
+      </Layout>
       <AutomationList />
       <Modal bind:this={modal}>
         <CreateAutomationModal {webhookModal} />
       </Modal>
     </Tab>
   </Tabs>
-  <div class="add-button">
-    <Icon hoverable name="AddCircle" on:click={modal.show} />
-  </div>
 </div>
 
 <style>
-  .add-button {
-    position: absolute;
-    top: var(--spacing-l);
-    right: var(--spacing-xl);
-  }
   .nav {
     overflow-y: auto;
     background: var(--background);
