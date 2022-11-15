@@ -1,5 +1,8 @@
 #!/bin/bash 
 
+# Fail when any command fails
+set -e
+
 if [[ -z "${CI}" ]]; then
   echo 'Cannot run release.sh unless in CI'
   exit 0
@@ -58,22 +61,6 @@ git push
 #############################################
 
 lerna publish $VERSION --yes --force-publish --dist-tag $TAG
-
-#############################################
-#             POST-PUBLISH - PRO            #
-#############################################
-
-# Revert build changes on packages/pro/package.json
-cd packages/pro
-jq '.main = "src/index.ts" | .types = "src/index.ts"' package.json > package.json.tmp && mv package.json.tmp package.json
-
-# Go back to pro repo root
-cd -
-
-# Commit and push changes
-git add packages/pro/package.json
-git commit -m "Prep next development iteration"
-git push 
 
 #############################################
 #            POST-PUBLISH - BUDIBASE        #

@@ -1,7 +1,7 @@
+import mocks from "./mocks"
 import { generator } from "@budibase/backend-core/tests"
 import TestConfiguration from "./TestConfiguration"
 import structures from "./structures"
-import mocks from "./mocks"
 import API from "./api"
 import { v4 as uuid } from "uuid"
 

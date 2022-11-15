@@ -201,7 +201,6 @@
       var(--spectrum-alias-item-padding-m);
     background: var(--spectrum-alias-background-color-secondary);
     transition: background 0.13s ease-out;
-    border: solid var(--spectrum-alias-border-color);
     border-radius: 5px;
     box-sizing: border-box;
     border-width: 2px;

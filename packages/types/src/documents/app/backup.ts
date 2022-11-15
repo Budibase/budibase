@@ -40,6 +40,7 @@ export interface AppBackupMetadata {
 }
 
 export interface AppBackup extends Document, AppBackupMetadata {
+  _id: string
   filename?: string
 }
 
