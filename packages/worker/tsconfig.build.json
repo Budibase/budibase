@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
     "target": "es6",
+    "skipLibCheck": true,
     "module": "commonjs",
     "lib": ["es2020"],
     "allowJs": true,
+    "outDir": "dist",
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "incremental": true,
-    "types": [ "node", "jest" ],
-    "outDir": "dist",
-    "skipLibCheck": true
+    "types": [ "node", "jest"],
   },
   "include": [
     "src/**/*"
@@ -20,7 +20,7 @@
     "node_modules",
     "dist",
     "src/tests",
-    "**/*.spec.ts",
-    "**/*.spec.js"
+    "**/*.spec.js",
+    "**/*.spec.ts"
   ]
 }

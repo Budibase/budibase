@@ -1,4 +1,4 @@
-import "../../../../../tests/utilities/TestConfiguration"
+import "../../../../../tests"
 import PosthogProcessor from "../PosthogProcessor"
 import { Event, IdentityType, Hosting } from "@budibase/types"
 const tk = require("timekeeper")

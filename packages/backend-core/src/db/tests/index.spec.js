@@ -1,4 +1,4 @@
-require("../../../tests/utilities/TestConfiguration")
+require("../../../tests")
 const { getDB } = require("../")
 
 describe("db", () => { 

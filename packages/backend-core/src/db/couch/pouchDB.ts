@@ -11,7 +11,7 @@ let initialised = false
  * This should be rarely used outside of the main application config.
  * Exposed for exceptional cases such as in-memory views.
  */
-export const getPouch = (opts: any = {}) => {
+export const getPouch = (opts: PouchOptions = {}) => {
   let { url, cookie } = getCouchInfo()
   let POUCH_DB_DEFAULTS = {
     prefix: url,
