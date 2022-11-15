@@ -8,6 +8,9 @@ env._set("CLIENT_ID", "test-client-id")
 env._set("BUDIBASE_DIR", tmpdir("budibase-unittests"))
 env._set("LOG_LEVEL", "silent")
 env._set("PORT", 0)
+env._set("MINIO_URL", "http://localhost")
+env._set("MINIO_ACCESS_KEY", "test")
+env._set("MINIO_SECRET_KEY", "test")
 
 import { mocks } from "@budibase/backend-core/tests"
 
