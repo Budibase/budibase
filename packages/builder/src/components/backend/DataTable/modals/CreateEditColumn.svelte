@@ -304,7 +304,7 @@
     const newError = {}
     if (!external && fieldInfo.name?.startsWith("_")) {
       newError.name = `Column name cannot start with an underscore.`
-    } else if (fieldInfo.name && !fieldInfo.name.match(/^[a-zA-Z0-9\s]*$/g)) {
+    } else if (fieldInfo.name && !fieldInfo.name.match(/^[_a-zA-Z0-9\s]*$/g)) {
       newError.name = `Illegal character; must be alpha-numeric.`
     } else if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
       newError.name = `${PROHIBITED_COLUMN_NAMES.join(
