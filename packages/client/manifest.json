@@ -4540,19 +4540,13 @@
             "info": "Row selection is only compatible with internal or SQL tables"
           },
           {
-            "type": "boolean",
-            "label": "Link table rows",
-            "key": "linkRows"
-          },
-          {
-            "type": "boolean",
-            "label": "Open link in modal",
-            "key": "linkPeek"
-          },
-          {
-            "type": "url",
-            "label": "Link screen",
-            "key": "linkURL"
+            "type": "event",
+            "label": "On row click",
+            "key": "onClick",
+            "context": [{
+              "label": "Clicked row",
+              "key": "row"
+            }]
           }
         ]
       },
@@ -4580,18 +4574,6 @@
             "type": "url",
             "label": "Button link",
             "key": "titleButtonURL"
-          }
-        ]
-      },
-      {
-        "section": true,
-        "name": "Advanced",
-        "settings": [
-          {
-            "type": "field",
-            "label": "ID column for linking (appended to URL)",
-            "key": "linkColumn",
-            "placeholder": "Default"
           }
         ]
       }
