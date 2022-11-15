@@ -5,6 +5,9 @@ env._set("NODE_ENV", "jest")
 env._set("JWT_SECRET", "test-jwtsecret")
 env._set("LOG_LEVEL", "silent")
 env._set("MULTI_TENANCY", true)
+env._set("MINIO_URL", "http://localhost")
+env._set("MINIO_ACCESS_KEY", "test")
+env._set("MINIO_SECRET_KEY", "test")
 
 import { mocks } from "@budibase/backend-core/tests"
 
