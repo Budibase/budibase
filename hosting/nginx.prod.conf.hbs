@@ -117,12 +117,21 @@ http {
     }
 
     location /api/backups/ {
+      # calls to export apps are limited
+      limit_req zone=ratelimit burst=20 nodelay;
+
+      # 1800s timeout for app export requests
       proxy_read_timeout 1800s;
       proxy_connect_timeout 1800s;
       proxy_send_timeout 1800s;
-      proxy_pass      http://app-service;
+
       proxy_http_version 1.1;
-      proxy_set_header Connection "";
+      proxy_set_header    Connection          $connection_upgrade;
+      proxy_set_header    Upgrade             $http_upgrade;
+      proxy_set_header    X-Real-IP           $remote_addr;
+      proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+
+      proxy_pass      http://$apps:4002;
     }
 
     location /api/ {
