@@ -5186,5 +5186,88 @@
         "suffix": "repeater"
       }
     ]
+  },
+  "rowexplorer": {
+    "block": true,
+    "name": "Row Explorer Block",
+    "icon": "PersonalizationField",
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "settings": [
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "dataSource",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "426px"
+      },
+      {
+        "section": true,
+        "name": "Cards",
+        "settings": [
+          {
+            "type": "field",
+            "label": "Search Field",
+            "key": "cardSearchField",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "key": "cardTitle",
+            "label": "Title",
+            "nested": true,
+            "defaultValue": "Title"
+          },
+          {
+            "type": "text",
+            "key": "cardSubtitle",
+            "label": "Subtitle",
+            "nested": true,
+            "defaultValue": "Subtitle"
+          },
+          {
+            "type": "text",
+            "key": "cardDescription",
+            "label": "Description",
+            "nested": true,
+            "defaultValue": "Description"
+          },
+          {
+            "type": "text",
+            "key": "cardImageURL",
+            "label": "Image URL",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Details",
+        "settings": [
+          {
+            "type": "text",
+            "key": "detailTitle",
+            "label": "Title"
+          },
+          {
+            "type": "multifield",
+            "label": "Fields",
+            "key": "detailFields",
+            "nested": true
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "schema",
+      "suffix": "repeater"
+    }
   }
 }
