@@ -50,6 +50,9 @@
       "##eventHandlerType": "Close Screen Modal",
     },
     {
+      "##eventHandlerType": "Close Side Panel",
+    },
+    {
       "##eventHandlerType": "Navigate To",
       parameters: {
         url: actionUrl,
@@ -68,6 +71,9 @@
     },
     {
       "##eventHandlerType": "Close Screen Modal",
+    },
+    {
+      "##eventHandlerType": "Close Side Panel",
     },
     {
       "##eventHandlerType": "Navigate To",
