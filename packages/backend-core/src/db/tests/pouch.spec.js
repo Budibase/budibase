@@ -1,4 +1,4 @@
-require("../../../tests/utilities/TestConfiguration")
+require("../../../tests")
 const getUrlInfo = require("../pouch").getUrlInfo
 
 describe("pouch", () => {
