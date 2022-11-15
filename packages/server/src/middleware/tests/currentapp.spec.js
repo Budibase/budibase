@@ -40,6 +40,7 @@ function mockAuthWithNoCookie() {
     return {
       ...core,
       db: {
+        ...core.db,
         dbExists: () => true,
       },
       cache: {
@@ -68,6 +69,7 @@ function mockAuthWithCookie() {
     return {
       ...core,
       db: {
+        ...core.db,
         dbExists: () => true,
       },
       utils: {
@@ -183,6 +185,7 @@ describe("Current app middleware", () => {
         return {
           ...core,
           db: {
+            ...core.db,
             dbExists: () => true,
           },
           utils: {
@@ -213,6 +216,7 @@ describe("Current app middleware", () => {
         return {
           ...core,
           db: {
+            ...core.db,
             dbExists: () => true,
           },
           utils: {

@@ -1,6 +1,5 @@
 const TestConfig = require("../../../tests/utilities/TestConfiguration")
-const { TENANT_ID } = require("../../../tests/utilities/structures")
-const { doInTenant } = require("@budibase/backend-core/tenancy")
+const { context } = require("@budibase/backend-core")
 const actions = require("../../actions")
 const emitter = require("../../../events/index")
 const env = require("../../../environment")
@@ -33,7 +32,7 @@ exports.runInProd = async fn => {
 }
 
 exports.runStep = async function runStep(stepId, inputs) {
-  return doInTenant(TENANT_ID, async () => {
+  async function run() {
     let step = await actions.getAction(stepId)
     expect(step).toBeDefined()
     return step({
@@ -43,7 +42,14 @@ exports.runStep = async function runStep(stepId, inputs) {
       apiKey: exports.apiKey,
       emitter,
     })
-  })
+  }
+  if (config?.appId) {
+    return context.doInContext(config?.appId, async () => {
+      return run()
+    })
+  } else {
+    return run()
+  }
 }
 
 exports.apiKey = "test"
