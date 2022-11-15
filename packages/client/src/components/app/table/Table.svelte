@@ -15,14 +15,8 @@
   export let compact
   export let onClick
 
-  // Legacy settings, still supported for old apps
-  export let linkRows
-  export let linkURL
-  export let linkColumn
-  export let linkPeek
-
   const component = getContext("component")
-  const { styleable, getAction, ActionTypes, routeStore, rowSelectionStore } =
+  const { styleable, getAction, ActionTypes, rowSelectionStore } =
     getContext("sdk")
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
@@ -125,17 +119,6 @@
   const handleClick = e => {
     if (onClick) {
       onClick({ row: e.detail })
-    }
-
-    // Handle legacy settings
-    else if (linkRows && linkURL) {
-      const col = linkColumn || "_id"
-      const id = e.detail?.[col]
-      if (!id) {
-        return
-      }
-      const split = linkURL.split("/:")
-      routeStore.actions.navigate(`${split[0]}/${id}`, linkPeek)
     }
   }
 

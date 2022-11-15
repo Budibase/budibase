@@ -19,10 +19,7 @@
   export let compact
   export let size
   export let allowSelectRows
-  export let linkRows
-  export let linkURL
-  export let linkColumn
-  export let linkPeek
+  export let onClick
   export let showTitleButton
   export let titleButtonText
   export let titleButtonURL
@@ -164,10 +161,7 @@
             compact,
             allowSelectRows,
             size,
-            linkRows,
-            linkURL,
-            linkColumn,
-            linkPeek,
+            onClick,
           }}
         />
       </BlockComponent>
