@@ -175,17 +175,6 @@ const addDefaultTables = async (db: any) => {
 
   // add in the default db data docs - tables, datasource, rows and links
   await db.bulkDocs([...defaultDbDocs])
-
-  // Sync Quotas with the imported row count.
-  const metrics = defaultDbDocs.reduce((acc, doc) => {
-    acc[doc.type] = acc[doc.type] ? acc[doc.type] + 1 : 1
-    return acc
-  }, {})
-
-  // Record the row quotas
-  if (metrics.row) {
-    await quotas.addRows(metrics.row)
-  }
 }
 
 export const fetch = async (ctx: any) => {

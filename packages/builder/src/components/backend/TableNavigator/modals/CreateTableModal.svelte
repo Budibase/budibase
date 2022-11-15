@@ -12,6 +12,10 @@
   } from "@budibase/bbui"
   import { datasources } from "stores/backend"
   import TableDataImport from "../TableDataImport.svelte"
+  import {
+    BUDIBASE_INTERNAL_DB_ID,
+    BUDIBASE_DATASOURCE_TYPE,
+  } from "constants/backend"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
 
   $: tableNames = $tables.list.map(table => table.name)
@@ -19,10 +23,10 @@
     source => source._id === $datasources.selected
   )
 
-  $: isSelectedInternal = selectedSource?.type === "budibase"
+  $: isSelectedInternal = selectedSource?.type === BUDIBASE_DATASOURCE_TYPE
   $: targetDatasourceId = isSelectedInternal
     ? selectedSource._id
-    : "bb_internal"
+    : BUDIBASE_INTERNAL_DB_ID
 
   export let name
   let dataImport

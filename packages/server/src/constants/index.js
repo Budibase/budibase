@@ -89,6 +89,8 @@ exports.DatasourceAuthTypes = {
   GOOGLE: "google",
 }
 
+exports.BUDIBASE_DATASOURCE_TYPE = "budibase"
+
 exports.SortDirection = {
   ASCENDING: "ASCENDING",
   DESCENDING: "DESCENDING",

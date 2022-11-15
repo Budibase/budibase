@@ -22,6 +22,8 @@ const {
   getGlobalIDFromUserMetadataID,
 } = require("@budibase/backend-core/db")
 
+const { BUDIBASE_DATASOURCE_TYPE } = require("../constants")
+
 const UNICODE_MAX = "\ufff0"
 
 const AppStatus = {
@@ -40,7 +42,7 @@ exports.StaticDatabases = StaticDatabases
 
 const BudibaseInternalDB = {
   _id: "bb_internal",
-  type: "budibase",
+  type: BUDIBASE_DATASOURCE_TYPE,
   name: "Budibase DB",
   source: "BUDIBASE",
   config: {},
