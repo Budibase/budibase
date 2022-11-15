@@ -1,21 +1,9 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { onMount } from "svelte"
   import { selectedScreen } from "builderStore"
   import { findAllMatchingComponents } from "builderStore/componentUtils"
 
   export let parameters
-
-  const typeOptions = [
-    {
-      label: "Show side panel",
-      value: "show",
-    },
-    {
-      label: "Hide side panel",
-      value: "hide",
-    },
-  ]
 
   $: sidePanelOptions = getSidePanelOptions($selectedScreen)
 
@@ -29,25 +17,11 @@
       value: sidePanel._id,
     }))
   }
-
-  onMount(() => {
-    if (!parameters.type) {
-      parameters.type = "show"
-    }
-  })
 </script>
 
 <div class="root">
-  <Label small>Type</Label>
-  <Select
-    placeholder={null}
-    bind:value={parameters.type}
-    options={typeOptions}
-  />
-  {#if parameters.type === "show"}
-    <Label small>Side Panel</Label>
-    <Select bind:value={parameters.id} options={sidePanelOptions} />
-  {/if}
+  <Label small>Side Panel</Label>
+  <Select bind:value={parameters.id} options={sidePanelOptions} />
 </div>
 
 <style>

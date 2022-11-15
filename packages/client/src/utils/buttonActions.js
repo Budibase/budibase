@@ -313,13 +313,15 @@ const showNotificationHandler = action => {
   notificationStore.actions[type]?.(message, autoDismiss)
 }
 
-const UpdateSidePanelHandler = action => {
-  const { type, id } = action.parameters
-  if (type === "hide") {
-    sidePanelStore.actions.close()
-  } else if (id) {
+const OpenSidePanelHandler = action => {
+  const { id } = action.parameters
+  if (id) {
     sidePanelStore.actions.open(id)
   }
+}
+
+const CloseSidePanelHandler = () => {
+  sidePanelStore.actions.close()
 }
 
 const handlerMap = {
@@ -341,7 +343,8 @@ const handlerMap = {
   ["Export Data"]: exportDataHandler,
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
-  ["Update Side Panel"]: UpdateSidePanelHandler,
+  ["Open Side Panel"]: OpenSidePanelHandler,
+  ["Close Side Panel"]: CloseSidePanelHandler,
 }
 
 const confirmTextMap = {

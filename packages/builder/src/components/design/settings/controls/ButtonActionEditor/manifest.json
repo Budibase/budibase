@@ -118,9 +118,15 @@
       "dependsOnFeature": "showNotificationAction"
     },
     {
-      "name": "Update Side Panel",
+      "name": "Open Side Panel",
       "type": "application",
-      "component": "UpdateSidePanel",
+      "component": "OpenSidePanel",
+      "dependsOnFeature": "sidePanel"
+    },
+    {
+      "name": "Close Side Panel",
+      "type": "application",
+      "component": "CloseSidePanel",
       "dependsOnFeature": "sidePanel"
     }
   ]
