@@ -481,6 +481,40 @@ export const getFrontendStore = () => {
           return null
         }
 
+        const dataSourceField = definition.settings.find(
+          setting => setting.type == "dataSource"
+        )
+
+        let defaultDatasource
+        if (dataSourceField) {
+          const _tables = get(tables)
+          const filteredTables = _tables.list.filter(
+            table => table._id != "ta_users"
+          )
+
+          const internalTable = filteredTables.find(
+            table =>
+              table.sourceId === "bb_internal" && table.type == "internal"
+          )
+
+          const defaultSourceTable = filteredTables.find(
+            table =>
+              table.sourceId !== "bb_internal" && table.type == "internal"
+          )
+
+          const defaultExternalTable = filteredTables.find(
+            table => table.type == "external"
+          )
+
+          if (defaultSourceTable) {
+            defaultDatasource = defaultSourceTable
+          } else if (internalTable) {
+            defaultDatasource = internalTable
+          } else if (defaultExternalTable) {
+            defaultDatasource = defaultExternalTable
+          }
+        }
+
         // Generate default props
         const settings = getComponentSettings(componentName)
         let props = { ...presetProps }
@@ -489,6 +523,15 @@ export const getFrontendStore = () => {
             props[setting.key] = setting.defaultValue
           }
         })
+
+        // Set a default datasource
+        if (dataSourceField && defaultDatasource) {
+          props["dataSource"] = {
+            label: defaultDatasource.name,
+            tableId: defaultDatasource._id,
+            type: "table",
+          }
+        }
 
         // Add any extra properties the component needs
         let extras = {}
