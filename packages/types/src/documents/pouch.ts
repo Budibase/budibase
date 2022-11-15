@@ -24,3 +24,9 @@ interface BulkDocResponse {
   id: string
   rev: string
 }
+
+export interface PutResponse {
+  ok: boolean
+  id: string
+  rev: string
+}
