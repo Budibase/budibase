@@ -6,7 +6,7 @@ export interface ContextUser extends Omit<User, "roles"> {
   globalId?: string
   license: License
   userId?: string
-  roleId?: string
+  roleId?: string | null
   role?: Role
   roles?: UserRoles
 }
