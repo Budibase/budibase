@@ -10,6 +10,7 @@ const { inventoryImport } = require("./inventoryImport")
 const { employeeImport } = require("./employeeImport")
 const { jobsImport } = require("./jobsImport")
 const { expensesImport } = require("./expensesImport")
+const { BUDIBASE_DATASOURCE_TYPE } = require("../../constants")
 
 exports.DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
 exports.DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
@@ -18,8 +19,8 @@ exports.DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
 exports.DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
 exports.DEFAULT_BB_DATASOURCE = {
   _id: this.DEFAULT_BB_DATASOURCE_ID,
-  type: "budibase",
-  name: "BB Default",
+  type: BUDIBASE_DATASOURCE_TYPE,
+  name: "Test DB",
   source: "BUDIBASE",
   config: {},
 }
@@ -290,14 +291,6 @@ exports.DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
       name: "Badge Photo",
       sortable: false,
     },
-    // Jobs: {
-    //   name: "Jobs",
-    //   type: FieldTypes.LINK,
-    //   tableId: this.DEFAULT_EMPLOYEE_TABLE_ID,
-    //   fieldName: "Assigned",
-    //   relationshipType: RelationshipTypes.MANY_TO_MANY,
-    //   sortable: false,
-    // },
     Jobs: {
       type: FieldTypes.LINK,
       constraints: {

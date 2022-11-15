@@ -1,7 +1,7 @@
 <script>
   import { redirect, params } from "@roxi/routify"
   import { Icon, Tabs, Tab } from "@budibase/bbui"
-  import { BUDIBASE_INTERNAL_DB } from "constants"
+  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
 
@@ -11,7 +11,7 @@
 
   $: isExternal =
     $params.selectedDatasource &&
-    $params.selectedDatasource !== BUDIBASE_INTERNAL_DB
+    $params.selectedDatasource !== BUDIBASE_INTERNAL_DB_ID
 
   function selectFirstDatasource() {
     $redirect("./table")

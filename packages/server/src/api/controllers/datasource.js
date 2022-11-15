@@ -7,7 +7,11 @@ const {
   getTableParams,
 } = require("../../db/utils")
 const { destroy: tableDestroy } = require("./table/internal")
-const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
+const {
+  BuildSchemaErrors,
+  InvalidColumns,
+  BUDIBASE_DATASOURCE_TYPE,
+} = require("../../constants")
 const { getIntegration } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
 const { invalidateDynamicVariables } = require("../../threads/utils")
@@ -51,7 +55,7 @@ exports.fetch = async function (ctx) {
       delete datasource.config.auth
     }
 
-    if (datasource.type === "budibase") {
+    if (datasource.type === BUDIBASE_DATASOURCE_TYPE) {
       datasource.entities = internal[datasource._id]
     }
   }
@@ -243,7 +247,7 @@ exports.destroy = async function (ctx) {
   const datasource = await db.get(datasourceId)
   // Delete all queries for the datasource
 
-  if (datasource.type === "budibase") {
+  if (datasource.type === BUDIBASE_DATASOURCE_TYPE) {
     await destroyInternalTablesBySourceId(datasourceId)
   } else {
     const queries = await db.allDocs(getQueryParams(datasourceId, null))
