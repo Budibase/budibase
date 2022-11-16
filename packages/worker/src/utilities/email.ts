@@ -1,15 +1,33 @@
+import env from "../environment"
+import { EmailTemplatePurpose, TemplateType, Config } from "../constants"
+import { getTemplateByPurpose } from "../constants/templates"
+import { getSettingsTemplateContext } from "./templates"
+import { processString } from "@budibase/string-templates"
+import { getResetPasswordCode, getInviteCode } from "./redis"
+import { User } from "@budibase/types"
+import { tenancy, db as dbCore, PouchLike } from "@budibase/backend-core"
 const nodemailer = require("nodemailer")
-const env = require("../environment")
-const { getScopedConfig } = require("@budibase/backend-core/db")
-const { EmailTemplatePurpose, TemplateTypes, Config } = require("../constants")
-const { getTemplateByPurpose } = require("../constants/templates")
-const { getSettingsTemplateContext } = require("./templates")
-const { processString } = require("@budibase/string-templates")
-const { getResetPasswordCode, getInviteCode } = require("../utilities/redis")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+
+type SendEmailOpts = {
+  // workspaceId If finer grain controls being used then this will lookup config for workspace.
+  workspaceId?: string
+  // user If sending to an existing user the object can be provided, this is used in the context.
+  user: User
+  // from If sending from an address that is not what is configured in the SMTP config.
+  from?: string
+  // contents If sending a custom email then can supply contents which will be added to it.
+  contents?: string
+  // subject A custom subject can be specified if the config one is not desired.
+  subject?: string
+  // info Pass in a structure of information to be stored alongside the invitation.
+  info?: any
+  cc?: boolean
+  bcc?: boolean
+  automation?: boolean
+}
 
 const TEST_MODE = false
-const TYPE = TemplateTypes.EMAIL
+const TYPE = TemplateType.EMAIL
 
 const FULL_EMAIL_PURPOSES = [
   EmailTemplatePurpose.INVITATION,
@@ -18,8 +36,8 @@ const FULL_EMAIL_PURPOSES = [
   EmailTemplatePurpose.CUSTOM,
 ]
 
-function createSMTPTransport(config) {
-  let options
+function createSMTPTransport(config: any) {
+  let options: any
   let secure = config.secure
   // default it if not specified
   if (secure == null) {
@@ -52,10 +70,15 @@ function createSMTPTransport(config) {
   return nodemailer.createTransport(options)
 }
 
-async function getLinkCode(purpose, email, user, info = null) {
+async function getLinkCode(
+  purpose: EmailTemplatePurpose,
+  email: string,
+  user: User,
+  info: any = null
+) {
   switch (purpose) {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
-      return getResetPasswordCode(user._id, info)
+      return getResetPasswordCode(user._id!, info)
     case EmailTemplatePurpose.INVITATION:
       return getInviteCode(email, info)
     default:
@@ -72,7 +95,12 @@ async function getLinkCode(purpose, email, user, info = null) {
  * @param {string|null} contents if using a custom template can supply contents for context.
  * @return {Promise<string>} returns the built email HTML if all provided parameters were valid.
  */
-async function buildEmail(purpose, email, context, { user, contents } = {}) {
+async function buildEmail(
+  purpose: EmailTemplatePurpose,
+  email: string,
+  context: any,
+  { user, contents }: any = {}
+) {
   // this isn't a full email
   if (FULL_EMAIL_PURPOSES.indexOf(purpose) === -1) {
     throw `Unable to build an email of type ${purpose}`
@@ -113,15 +141,19 @@ async function buildEmail(purpose, email, context, { user, contents } = {}) {
  * @param {boolean|null} automation Whether or not the configuration is being fetched for an email automation.
  * @return {Promise<object|null>} returns the SMTP configuration if it exists
  */
-async function getSmtpConfiguration(db, workspaceId = null, automation) {
-  const params = {
+async function getSmtpConfiguration(
+  db: PouchLike,
+  workspaceId?: string,
+  automation?: boolean
+) {
+  const params: any = {
     type: Config.SMTP,
   }
   if (workspaceId) {
     params.workspace = workspaceId
   }
 
-  const customConfig = await getScopedConfig(db, params)
+  const customConfig = await dbCore.getScopedConfig(db, params)
 
   if (customConfig) {
     return customConfig
@@ -146,12 +178,12 @@ async function getSmtpConfiguration(db, workspaceId = null, automation) {
  * Checks if a SMTP config exists based on passed in parameters.
  * @return {Promise<boolean>} returns true if there is a configuration that can be used.
  */
-exports.isEmailConfigured = async (workspaceId = null) => {
+export async function isEmailConfigured(workspaceId?: string) {
   // when "testing" or smtp fallback is enabled simply return true
   if (TEST_MODE || env.SMTP_FALLBACK_ENABLED) {
     return true
   }
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
   const config = await getSmtpConfiguration(db, workspaceId)
   return config != null
 }
@@ -161,48 +193,49 @@ exports.isEmailConfigured = async (workspaceId = null) => {
  * send an email using it.
  * @param {string} email The email address to send to.
  * @param {string} purpose The purpose of the email being sent (e.g. reset password).
- * @param {string|undefined} workspaceId If finer grain controls being used then this will lookup config for workspace.
- * @param {object|undefined} user If sending to an existing user the object can be provided, this is used in the context.
- * @param {string|undefined} from If sending from an address that is not what is configured in the SMTP config.
- * @param {string|undefined} contents If sending a custom email then can supply contents which will be added to it.
- * @param {string|undefined} subject A custom subject can be specified if the config one is not desired.
- * @param {object|undefined} info Pass in a structure of information to be stored alongside the invitation.
- * @param {boolean|undefined} disableFallback Prevent email being sent from SMTP fallback to avoid spam.
+ * @param {object} opts The options for sending the email.
  * @return {Promise<object>} returns details about the attempt to send email, e.g. if it is successful; based on
  * nodemailer response.
  */
-exports.sendEmail = async (
-  email,
-  purpose,
-  { workspaceId, user, from, contents, subject, info, cc, bcc, automation } = {}
-) => {
-  const db = getGlobalDB()
-  let config = (await getSmtpConfiguration(db, workspaceId, automation)) || {}
+export async function sendEmail(
+  email: string,
+  purpose: EmailTemplatePurpose,
+  opts: SendEmailOpts
+) {
+  const db = tenancy.getGlobalDB()
+  let config =
+    (await getSmtpConfiguration(db, opts?.workspaceId, opts?.automation)) || {}
   if (Object.keys(config).length === 0 && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
   }
   const transport = createSMTPTransport(config)
   // if there is a link code needed this will retrieve it
-  const code = await getLinkCode(purpose, email, user, info)
-  const context = await getSettingsTemplateContext(purpose, code)
+  const code = await getLinkCode(purpose, email, opts.user, opts?.info)
+  let context
+  if (code) {
+    context = await getSettingsTemplateContext(purpose, code)
+  }
 
-  let message = {
-    from: from || config.from,
+  let message: any = {
+    from: opts?.from || config.from,
     html: await buildEmail(purpose, email, context, {
-      user,
-      contents,
+      user: opts?.user,
+      contents: opts?.contents,
     }),
   }
 
   message = {
     ...message,
     to: email,
-    cc: cc,
-    bcc: bcc,
+    cc: opts?.cc,
+    bcc: opts?.bcc,
   }
 
-  if (subject || config.subject) {
-    message.subject = await processString(subject || config.subject, context)
+  if (opts?.subject || config.subject) {
+    message.subject = await processString(
+      opts?.subject || config.subject,
+      context
+    )
   }
   const response = await transport.sendMail(message)
   if (TEST_MODE) {
@@ -216,7 +249,7 @@ exports.sendEmail = async (
  * @param {object} config an SMTP configuration - this is based on the nodemailer API.
  * @return {Promise<boolean>} returns true if the configuration is valid.
  */
-exports.verifyConfig = async config => {
+export async function verifyConfig(config: any) {
   const transport = createSMTPTransport(config)
   await transport.verify()
 }
