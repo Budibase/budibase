@@ -16,7 +16,7 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
-const { Cookies, Headers } = require("@budibase/backend-core/constants")
+const { Cookie, Headers } = require("@budibase/backend-core/constants")
 const { jwt } = require("@budibase/backend-core/auth")
 const { doInTenant, doWithGlobalDB } = require("@budibase/backend-core/tenancy")
 const { createASession } = require("@budibase/backend-core/sessions")
@@ -256,10 +256,10 @@ class TestConfiguration {
       return {
         Accept: "application/json",
         Cookie: [
-          `${Cookies.Auth}=${authToken}`,
-          `${Cookies.CurrentApp}=${appToken}`,
+          `${Cookie.Auth}=${authToken}`,
+          `${Cookie.CurrentApp}=${appToken}`,
         ],
-        [Headers.APP_ID]: appId,
+        [Header.APP_ID]: appId,
       }
     })
   }
@@ -279,14 +279,14 @@ class TestConfiguration {
     const headers = {
       Accept: "application/json",
       Cookie: [
-        `${Cookies.Auth}=${authToken}`,
-        `${Cookies.CurrentApp}=${appToken}`,
+        `${Cookie.Auth}=${authToken}`,
+        `${Cookie.CurrentApp}=${appToken}`,
       ],
-      [Headers.CSRF_TOKEN]: CSRF_TOKEN,
+      [Header.CSRF_TOKEN]: CSRF_TOKEN,
       ...extras,
     }
     if (this.appId) {
-      headers[Headers.APP_ID] = this.appId
+      headers[Header.APP_ID] = this.appId
     }
     return headers
   }
@@ -298,7 +298,7 @@ class TestConfiguration {
       Accept: "application/json",
     }
     if (appId) {
-      headers[Headers.APP_ID] = appId
+      headers[Header.APP_ID] = appId
     }
     return headers
   }

@@ -1,11 +1,9 @@
-import { Cookies, Headers } from "../constants"
+import { Cookie, Header } from "../constants"
 import { getCookie, clearCookie, openJwt } from "../utils"
 import { getUser } from "../cache/user"
 import { getSession, updateSessionTTL } from "../security/sessions"
 import { buildMatcherRegex, matches } from "./matchers"
-import { SEPARATOR } from "../db/constants"
-import { ViewName } from "../db/utils"
-import { queryGlobalView } from "../db/views"
+import { SEPARATOR, queryGlobalView, ViewName } from "../db"
 import { getGlobalDB, doInTenant } from "../tenancy"
 import { decrypt } from "../security/encryption"
 const identity = require("../context/identity")
@@ -74,7 +72,7 @@ export = (
   const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
   return async (ctx: any, next: any) => {
     let publicEndpoint = false
-    const version = ctx.request.headers[Headers.API_VER]
+    const version = ctx.request.headers[Header.API_VER]
     // the path is not authenticated
     const found = matches(ctx, noAuthOptions)
     if (found) {
@@ -82,10 +80,10 @@ export = (
     }
     try {
       // check the actual user is authenticated first, try header or cookie
-      const headerToken = ctx.request.headers[Headers.TOKEN]
-      const authCookie = getCookie(ctx, Cookies.Auth) || openJwt(headerToken)
-      const apiKey = ctx.request.headers[Headers.API_KEY]
-      const tenantId = ctx.request.headers[Headers.TENANT_ID]
+      const headerToken = ctx.request.headers[Header.TOKEN]
+      const authCookie = getCookie(ctx, Cookie.Auth) || openJwt(headerToken)
+      const apiKey = ctx.request.headers[Header.API_KEY]
+      const tenantId = ctx.request.headers[Header.TENANT_ID]
       let authenticated = false,
         user = null,
         internal = false
@@ -116,7 +114,7 @@ export = (
           authenticated = false
           console.error("Auth Error", err?.message || err)
           // remove the cookie as the user does not exist anymore
-          clearCookie(ctx, Cookies.Auth)
+          clearCookie(ctx, Cookie.Auth)
         }
       }
       // this is an internal request, no user made it
@@ -140,7 +138,7 @@ export = (
         delete user.password
       }
       // be explicit
-      if (authenticated !== true) {
+      if (!authenticated) {
         authenticated = false
       }
       // isAuthenticated is a function, so use a variable to be able to check authed state
@@ -155,7 +153,7 @@ export = (
       console.error("Auth Error", err?.message || err)
       // invalid token, clear the cookie
       if (err && err.name === "JsonWebTokenError") {
-        clearCookie(ctx, Cookies.Auth)
+        clearCookie(ctx, Cookie.Auth)
       }
       // allow configuring for public access
       if ((opts && opts.publicAllowed) || publicEndpoint) {

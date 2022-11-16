@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer")
 const env = require("../environment")
 const { getScopedConfig } = require("@budibase/backend-core/db")
-const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../constants")
+const { EmailTemplatePurpose, TemplateTypes, Config } = require("../constants")
 const { getTemplateByPurpose } = require("../constants/templates")
 const { getSettingsTemplateContext } = require("./templates")
 const { processString } = require("@budibase/string-templates")
@@ -115,7 +115,7 @@ async function buildEmail(purpose, email, context, { user, contents } = {}) {
  */
 async function getSmtpConfiguration(db, workspaceId = null, automation) {
   const params = {
-    type: Configs.SMTP,
+    type: Config.SMTP,
   }
   if (workspaceId) {
     params.workspace = workspaceId

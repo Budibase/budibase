@@ -1,8 +1,7 @@
-require("../../../tests/utilities/TestConfiguration")
+require("../../../tests")
 const context = require("../")
 const { DEFAULT_TENANT_ID } = require("../../constants")
 const env = require("../../environment")
-const dbCore = require("../../db")
 
 describe("context", () => {
   describe("doInTenant", () => {

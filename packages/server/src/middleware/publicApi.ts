@@ -1,4 +1,4 @@
-const { Headers } = require("@budibase/backend-core/constants")
+const { Header } = require("@budibase/backend-core/constants")
 const { getAppIdFromCtx } = require("@budibase/backend-core/utils")
 
 module.exports = function ({ requiresAppId } = {}) {
@@ -7,13 +7,13 @@ module.exports = function ({ requiresAppId } = {}) {
     if (requiresAppId && !appId) {
       ctx.throw(
         400,
-        `Invalid app ID provided, please check the ${Headers.APP_ID} header.`
+        `Invalid app ID provided, please check the ${Header.APP_ID} header.`
       )
     }
-    if (!ctx.headers[Headers.API_KEY]) {
+    if (!ctx.headers[Header.API_KEY]) {
       ctx.throw(
         400,
-        `Invalid API key provided, please check the ${Headers.API_KEY} header.`
+        `Invalid API key provided, please check the ${Header.API_KEY} header.`
       )
     }
     return next()

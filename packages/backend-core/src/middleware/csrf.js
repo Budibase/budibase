@@ -1,4 +1,4 @@
-const { Headers } = require("../constants")
+const { Header } = require("../constants")
 const { buildMatcherRegex, matches } = require("./matchers")
 
 /**
@@ -68,7 +68,7 @@ module.exports = (opts = { noCsrfPatterns: [] }) => {
     }
 
     // reject if no token in request or mismatch
-    const requestToken = ctx.get(Headers.CSRF_TOKEN)
+    const requestToken = ctx.get(Header.CSRF_TOKEN)
     if (!requestToken || requestToken !== userToken) {
       ctx.throw(403, "Invalid CSRF token")
     }

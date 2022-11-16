@@ -18,9 +18,9 @@ export = async (ctx: BBContext, next: any) => {
   // get app cookie if it exists
   let appCookie: { appId?: string } | undefined
   try {
-    appCookie = utils.getCookie(ctx, constants.Cookies.CurrentApp)
+    appCookie = utils.getCookie(ctx, constants.Cookie.CurrentApp)
   } catch (err) {
-    utils.clearCookie(ctx, constants.Cookies.CurrentApp)
+    utils.clearCookie(ctx, constants.Cookie.CurrentApp)
   }
   if (!appCookie && !requestAppId) {
     return next()
@@ -30,7 +30,7 @@ export = async (ctx: BBContext, next: any) => {
     const appId = appCookie.appId
     const exists = await dbCore.dbExists(appId)
     if (!exists) {
-      utils.clearCookie(ctx, constants.Cookies.CurrentApp)
+      utils.clearCookie(ctx, constants.Cookie.CurrentApp)
       return next()
     }
     // if the request app ID wasn't set, update it with the cookie
@@ -44,7 +44,7 @@ export = async (ctx: BBContext, next: any) => {
       !isWebhookEndpoint(ctx) &&
       (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
     ) {
-      utils.clearCookie(ctx, constants.Cookies.CurrentApp)
+      utils.clearCookie(ctx, constants.Cookie.CurrentApp)
       return ctx.redirect("/")
     }
   }
@@ -67,7 +67,7 @@ export = async (ctx: BBContext, next: any) => {
     const isDevApp = appId && isDevAppID(appId)
     const roleHeader =
       ctx.request &&
-      (ctx.request.headers[constants.Headers.PREVIEW_ROLE] as string)
+      (ctx.request.headers[constants.Header.PREVIEW_ROLE] as string)
     if (isBuilder && isDevApp && roleHeader) {
       // Ensure the role is valid by ensuring a definition exists
       try {
@@ -132,7 +132,7 @@ export = async (ctx: BBContext, next: any) => {
         appCookie.appId !== requestAppId) &&
       !skipCookie
     ) {
-      utils.setCookie(ctx, { appId }, constants.Cookies.CurrentApp)
+      utils.setCookie(ctx, { appId }, constants.Cookie.CurrentApp)
     }
 
     return next()

@@ -1,5 +1,5 @@
 import { newid } from "../hashing"
-import { DEFAULT_TENANT_ID, Configs } from "../constants"
+import { DEFAULT_TENANT_ID, Config } from "../constants"
 import env from "../environment"
 import {
   SEPARATOR,
@@ -491,7 +491,7 @@ export const getScopedFullConfig = async function (
   )[0]
 
   // custom logic for settings doc
-  if (type === Configs.SETTINGS) {
+  if (type === Config.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
       // overrides affected by environment variables
       scopedConfig.doc.config.platformUrl = await getPlatformUrl({
@@ -530,7 +530,7 @@ export const getPlatformUrl = async (opts = { tenantAware: true }) => {
     // get the doc directly instead of with getScopedConfig to prevent loop
     let settings
     try {
-      settings = await db.get(generateConfigID({ type: Configs.SETTINGS }))
+      settings = await db.get(generateConfigID({ type: Config.SETTINGS }))
     } catch (e: any) {
       if (e.status !== 404) {
         throw e

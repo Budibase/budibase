@@ -1,6 +1,6 @@
 const { getScopedConfig } = require("@budibase/backend-core/db")
 const {
-  Configs,
+  Config,
   InternalTemplateBindings,
   LOGO_URL,
   EmailTemplatePurpose,
@@ -15,7 +15,7 @@ const BASE_COMPANY = "Budibase"
 exports.getSettingsTemplateContext = async (purpose, code = null) => {
   const db = getGlobalDB()
   // TODO: use more granular settings in the future if required
-  let settings = (await getScopedConfig(db, { type: Configs.SETTINGS })) || {}
+  let settings = (await getScopedConfig(db, { type: Config.SETTINGS })) || {}
   const URL = settings.platformUrl
   const context = {
     [InternalTemplateBindings.LOGO_URL]:
