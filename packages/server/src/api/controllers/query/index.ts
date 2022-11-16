@@ -112,13 +112,13 @@ export async function find(ctx: any) {
 
 //Required to discern between OIDC OAuth config entries
 function getOAuthConfigCookieId(ctx: any) {
-  if (ctx.user.providerType === constants.Configs.OIDC) {
-    return utils.getCookie(ctx, constants.Cookies.OIDC_CONFIG)
+  if (ctx.user.providerType === constants.Config.OIDC) {
+    return utils.getCookie(ctx, constants.Cookie.OIDC_CONFIG)
   }
 }
 
 function getAuthConfig(ctx: any) {
-  const authCookie = utils.getCookie(ctx, constants.Cookies.Auth)
+  const authCookie = utils.getCookie(ctx, constants.Cookie.Auth)
   let authConfigCtx: any = {}
   authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
   authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null

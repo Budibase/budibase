@@ -105,11 +105,12 @@ export async function doInAppContext(appId: string, task: any): Promise<any> {
   }
 
   const tenantId = getTenantIDFromAppID(appId)
+  const updates: ContextMap = { appId }
+  if (tenantId) {
+    updates.tenantId = tenantId
+  }
   return newContext(
-    {
-      tenantId,
-      appId,
-    },
+    updates,
     task
   )
 }

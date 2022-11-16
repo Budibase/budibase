@@ -4,12 +4,12 @@ dbConfig.init()
 import env from "../environment"
 import controllers from "./controllers"
 const supertest = require("supertest")
-import { Configs } from "../constants"
+import { Config } from "../constants"
 import {
   users,
   tenancy,
-  Cookies,
-  Headers,
+  Cookie,
+  Header,
   sessions,
   auth,
 } from "@budibase/backend-core"
@@ -163,8 +163,8 @@ class TestConfiguration {
     const authCookie = auth.jwt.sign(authToken, env.JWT_SECRET)
     return {
       Accept: "application/json",
-      ...this.cookieHeader([`${Cookies.Auth}=${authCookie}`]),
-      [Headers.CSRF_TOKEN]: CSRF_TOKEN,
+      ...this.cookieHeader([`${Cookie.Auth}=${authCookie}`]),
+      [Header.CSRF_TOKEN]: CSRF_TOKEN,
     }
   }
 
@@ -223,7 +223,7 @@ class TestConfiguration {
   // CONFIGS - SETTINGS
 
   async saveSettingsConfig() {
-    await this.deleteConfig(Configs.SETTINGS)
+    await this.deleteConfig(Config.SETTINGS)
     await this._req(
       structures.configs.settings(),
       null,
@@ -234,7 +234,7 @@ class TestConfiguration {
   // CONFIGS - GOOGLE
 
   async saveGoogleConfig() {
-    await this.deleteConfig(Configs.GOOGLE)
+    await this.deleteConfig(Config.GOOGLE)
     await this._req(structures.configs.google(), null, controllers.config.save)
   }
 
@@ -242,11 +242,11 @@ class TestConfiguration {
 
   getOIDConfigCookie(configId: string) {
     const token = auth.jwt.sign(configId, env.JWT_SECRET)
-    return this.cookieHeader([[`${Cookies.OIDC_CONFIG}=${token}`]])
+    return this.cookieHeader([[`${Cookie.OIDC_CONFIG}=${token}`]])
   }
 
   async saveOIDCConfig() {
-    await this.deleteConfig(Configs.OIDC)
+    await this.deleteConfig(Config.OIDC)
     const config = structures.configs.oidc()
 
     await this._req(config, null, controllers.config.save)
@@ -256,12 +256,12 @@ class TestConfiguration {
   // CONFIGS - SMTP
 
   async saveSmtpConfig() {
-    await this.deleteConfig(Configs.SMTP)
+    await this.deleteConfig(Config.SMTP)
     await this._req(structures.configs.smtp(), null, controllers.config.save)
   }
 
   async saveEtherealSmtpConfig() {
-    await this.deleteConfig(Configs.SMTP)
+    await this.deleteConfig(Config.SMTP)
     await this._req(
       structures.configs.smtpEthereal(),
       null,

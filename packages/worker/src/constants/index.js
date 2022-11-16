@@ -1,4 +1,4 @@
-const { Configs } = require("@budibase/backend-core/constants")
+const { Config } = require("@budibase/backend-core/constants")
 
 exports.LOGO_URL =
   "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
@@ -8,7 +8,7 @@ exports.UserStatus = {
   INACTIVE: "inactive",
 }
 
-exports.Configs = Configs
+exports.Config = Config
 
 exports.ConfigUploads = {
   LOGO: "logo",

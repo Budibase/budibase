@@ -1,11 +1,11 @@
-const { Cookies } = require("../../constants")
+const { Cookie } = require("../../constants")
 const env = require("../../environment")
 const { authError } = require("./utils")
 
 exports.options = {
   secretOrKey: env.JWT_SECRET,
   jwtFromRequest: function (ctx) {
-    return ctx.cookies.get(Cookies.Auth)
+    return ctx.cookies.get(Cookie.Auth)
   },
 }
 

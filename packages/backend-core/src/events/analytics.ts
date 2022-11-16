@@ -1,7 +1,7 @@
 import env from "../environment"
 import tenancy from "../tenancy"
 import * as dbUtils from "../db/utils"
-import { Configs } from "../constants"
+import { Config } from "../constants"
 import { withCache, TTL, CacheKeys } from "../cache/generic"
 
 export const enabled = async () => {
@@ -46,7 +46,7 @@ const getSettingsDoc = async () => {
   let settings
   try {
     settings = await db.get(
-      dbUtils.generateConfigID({ type: Configs.SETTINGS })
+      dbUtils.generateConfigID({ type: Config.SETTINGS })
     )
   } catch (e: any) {
     if (e.status !== 404) {

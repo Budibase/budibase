@@ -2,7 +2,7 @@ const { DocumentType, SEPARATOR, ViewName, getAllApps } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { queryGlobalView } = require("./db/views")
-const { Headers, Cookies, MAX_VALID_DATE } = require("./constants")
+const { Header, Cookie, MAX_VALID_DATE } = require("./constants")
 const env = require("./environment")
 const userCache = require("./cache/user")
 const {
@@ -61,7 +61,7 @@ exports.isServingApp = ctx => {
  */
 exports.getAppIdFromCtx = async ctx => {
   // look in headers
-  const options = [ctx.headers[Headers.APP_ID]]
+  const options = [ctx.headers[Header.APP_ID]]
   let appId
   for (let option of options) {
     appId = confirmAppId(option)
@@ -157,7 +157,7 @@ exports.clearCookie = (ctx, name) => {
  * @return {boolean} returns true if the call is from the client lib (a built app rather than the builder).
  */
 exports.isClient = ctx => {
-  return ctx.headers[Headers.TYPE] === "client"
+  return ctx.headers[Header.TYPE] === "client"
 }
 
 const getBuilders = async () => {
@@ -187,7 +187,7 @@ exports.getBuildersCount = async () => {
 exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
-  const currentSession = exports.getCookie(ctx, Cookies.Auth)
+  const currentSession = exports.getCookie(ctx, Cookie.Auth)
   let sessions = await getSessionsForUser(userId)
 
   if (keepActiveSession) {
@@ -196,8 +196,8 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     )
   } else {
     // clear cookies
-    exports.clearCookie(ctx, Cookies.Auth)
-    exports.clearCookie(ctx, Cookies.CurrentApp)
+    exports.clearCookie(ctx, Cookie.Auth)
+    exports.clearCookie(ctx, Cookie.CurrentApp)
   }
 
   const sessionIds = sessions.map(({ sessionId }) => sessionId)
