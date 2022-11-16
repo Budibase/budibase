@@ -30,8 +30,8 @@ async function resolveAppUrl(ctx: BBContext) {
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
   let tenantId = tenancy.getTenantId()
-  if (!env.SELF_HOSTED) {
-    // always use the tenant id from the subdomain in cloud
+  if (env.MULTI_TENANCY) {
+    // always use the tenant id from the subdomain in multi tenancy
     // this ensures the logged-in user tenant id doesn't overwrite
     // e.g. in the case of viewing a public app while already logged-in to another tenant
     tenantId = tenancy.getTenantIDFromCtx(ctx, {

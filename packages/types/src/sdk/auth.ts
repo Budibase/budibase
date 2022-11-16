@@ -31,5 +31,5 @@ export interface ScannedSession {
 export interface PlatformLogoutOpts {
   ctx: BBContext
   userId: string
-  keepActiveSession: boolean
+  keepActiveSession?: boolean
 }

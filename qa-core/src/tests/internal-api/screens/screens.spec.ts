@@ -38,9 +38,7 @@ describe("Internal API - /screens endpoints", () => {
 
     // Create Screen
     appConfig.applications.api.appId = app.appId
-    await config.screen.create(
-      generateScreen("BASIC")
-    )
+    await config.screen.create(generateScreen("BASIC"))
 
     // Check screen exists
     await appConfig.applications.getRoutes(true)
@@ -58,6 +56,5 @@ describe("Internal API - /screens endpoints", () => {
 
     // Delete Screen
     await config.screen.delete(screen._id!, screen._rev!)
-
   })
 })

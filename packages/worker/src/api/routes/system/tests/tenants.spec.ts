@@ -1,7 +1,7 @@
 import { TestConfiguration } from "../../../../tests"
 import { tenancy } from "@budibase/backend-core"
 
-describe("/api/global/workspaces", () => {
+describe("/api/global/tenants", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {

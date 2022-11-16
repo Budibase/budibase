@@ -29,11 +29,13 @@ function buildResetUpdateValidation() {
 }
 
 router
+  // PASSWORD
   .post(
     "/api/global/auth/:tenantId/login",
     buildAuthValidation(),
     authController.authenticate
   )
+  .post("/api/global/auth/logout", authController.logout)
   .post(
     "/api/global/auth/:tenantId/reset",
     buildResetValidation(),
@@ -44,36 +46,43 @@ router
     buildResetUpdateValidation(),
     authController.resetUpdate
   )
-  .post("/api/global/auth/logout", authController.logout)
+  // INIT
   .post("/api/global/auth/init", authController.setInitInfo)
   .get("/api/global/auth/init", authController.getInitInfo)
-  .get("/api/global/auth/:tenantId/google", authController.googlePreAuth)
+
+  // DATASOURCE - MULTI TENANT
   .get(
     "/api/global/auth/:tenantId/datasource/:provider",
     authController.datasourcePreAuth
   )
-  // single tenancy endpoint
-  .get("/api/global/auth/google/callback", authController.googleAuth)
-  .get(
-    "/api/global/auth/datasource/:provider/callback",
-    authController.datasourceAuth
-  )
-  // multi-tenancy endpoint
-  .get("/api/global/auth/:tenantId/google/callback", authController.googleAuth)
   .get(
     "/api/global/auth/:tenantId/datasource/:provider/callback",
     authController.datasourceAuth
   )
+
+  // DATASOURCE - SINGLE TENANT - DEPRECATED
+  .get(
+    "/api/global/auth/datasource/:provider/callback",
+    authController.datasourceAuth
+  )
+
+  // GOOGLE - MULTI TENANT
+  .get("/api/global/auth/:tenantId/google", authController.googlePreAuth)
+  .get("/api/global/auth/:tenantId/google/callback", authController.googleAuth)
+
+  // GOOGLE - SINGLE TENANT - DEPRECATED
+  .get("/api/global/auth/google/callback", authController.googleAuth)
+  .get("/api/admin/auth/google/callback", authController.googleAuth)
+
+  // OIDC - MULTI TENANT
   .get(
     "/api/global/auth/:tenantId/oidc/configs/:configId",
     authController.oidcPreAuth
   )
-  // single tenancy endpoint
-  .get("/api/global/auth/oidc/callback", authController.oidcAuth)
-  // multi-tenancy endpoint
   .get("/api/global/auth/:tenantId/oidc/callback", authController.oidcAuth)
-  // deprecated - used by the default system before tenancy
-  .get("/api/admin/auth/google/callback", authController.googleAuth)
+
+  // OIDC - SINGLE TENANT - DEPRECATED
+  .get("/api/global/auth/oidc/callback", authController.oidcAuth)
   .get("/api/admin/auth/oidc/callback", authController.oidcAuth)
 
 module.exports = router
