@@ -1,7 +1,10 @@
-import { doWithDB } from "../db"
-import { queryPlatformView } from "../db/views"
-import { StaticDatabases, ViewName } from "../db/constants"
-import { getGlobalDBName } from "../db/tenancy"
+import {
+  doWithDB,
+  queryPlatformView,
+  StaticDatabases,
+  getGlobalDBName,
+  ViewName,
+} from "../db"
 import {
   DEFAULT_TENANT_ID,
   getTenantId,
@@ -15,7 +18,7 @@ import {
   TenantResolutionStrategy,
   GetTenantIdOptions,
 } from "@budibase/types"
-import { Headers } from "../constants"
+import { Header } from "../constants"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
@@ -200,7 +203,7 @@ export const getTenantIDFromCtx = (
 
   // header
   if (isAllowed(TenantResolutionStrategy.HEADER)) {
-    const headerTenantId = ctx.request.headers[Headers.TENANT_ID]
+    const headerTenantId = ctx.request.headers[Header.TENANT_ID]
     if (headerTenantId) {
       return headerTenantId as string
     }
