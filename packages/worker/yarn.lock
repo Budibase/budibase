@@ -470,12 +470,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.1.22-alpha.3":
-  version "2.1.22-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.1.22-alpha.3.tgz#5cdff781cf6a448677304aa80a9658e9e51c36a5"
-  integrity sha512-je1mKTb1h9f+tyCAiFNJykg9O8ZM3smVQ3JJf24rXDYvLYN8GG8hxZ5fOJuWoeF/aGu8m+w3v3+EdWuTlQPcKg==
+"@budibase/backend-core@2.1.22-alpha.6":
+  version "2.1.22-alpha.6"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.1.22-alpha.6.tgz#e9886620fcbee6fe0348365cb96ac6484fc5f8fd"
+  integrity sha512-P3NSgNuQXKmdeT8MLfeCji3ibRSeIIMSOQeNSQBWpaOTA69rpXQk753lHRwUWMpqil/ybsOuE/h1/Y3eTa+/UA==
   dependencies:
-    "@budibase/types" "2.1.22-alpha.3"
+    "@budibase/types" "2.1.22-alpha.6"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -507,22 +507,22 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/pro@2.1.22-alpha.3":
-  version "2.1.22-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.1.22-alpha.3.tgz#8f87ffc1c6c158ad467216d5cfcb7844e9a08363"
-  integrity sha512-IE0eHPswBycPYzvduZCAp4T6U8t1qTcT1A9jVJ8TeX2jiL22hPOQ+8nVNIaqTGfQvJ7foGiqtDcugQbk3QLGOg==
+"@budibase/pro@2.1.22-alpha.6":
+  version "2.1.22-alpha.6"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.1.22-alpha.6.tgz#e4d8238f1727eab85ac72b3ce2fcaec2a5c18456"
+  integrity sha512-1CKqQ2HMX+/5p24aHpPlUgxoMjKRZxRoyK5fPD/X35Z0mDj+9Ohny3oqbF1fC20pl/20bmcaE4J+q2ph/pbxdQ==
   dependencies:
-    "@budibase/backend-core" "2.1.22-alpha.3"
-    "@budibase/types" "2.1.22-alpha.3"
+    "@budibase/backend-core" "2.1.22-alpha.6"
+    "@budibase/types" "2.1.22-alpha.6"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
     node-fetch "^2.6.1"
 
-"@budibase/types@2.1.22-alpha.3":
-  version "2.1.22-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.1.22-alpha.3.tgz#30cfcb6a58989a94dfba43ec7f9052e4855b6803"
-  integrity sha512-3WKZ5DVkygUi9H3KJTL8geQf9cjmssM8tsbDEFi8KJHogfszJPia9di/DnN8rd/CXbsx3Zbsbe8LHiAAADz5og==
+"@budibase/types@2.1.22-alpha.6":
+  version "2.1.22-alpha.6"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.1.22-alpha.6.tgz#a280321373c26a5bf1a52ed119de9178292893c0"
+  integrity sha512-rVrhs9u7OTzlCxgUFqBu5H6jsMHhwH8uduPhT8Eo7J+Wr4J/0Io7WeuAt1egK6t83JiEPxDBH3WLzAH+04hPVA==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
@@ -1284,6 +1284,13 @@
   resolved "https://registry.yarnpkg.com/@types/json-buffer/-/json-buffer-3.0.0.tgz#85c1ff0f0948fc159810d4b5be35bf8c20875f64"
   integrity sha512-3YP80IxxFJB4b5tYC2SUPwkg0XQLiu0nWvhRgEatgjf+29IcWO9X1k8xRv5DGssJ/lCrjYTjQPcobJr2yWIVuQ==
 
+"@types/jsonwebtoken@8.5.1":
+  version "8.5.1"
+  resolved "https://registry.yarnpkg.com/@types/jsonwebtoken/-/jsonwebtoken-8.5.1.tgz#56958cb2d80f6d74352bd2e501a018e2506a8a84"
+  integrity sha512-rNAPdomlIUX0i0cg2+I+Q1wOUr531zHBQ+cV/28PJ39bSPKjahatZZ2LMuhiguETkCgLVzfruw/ZvNMNkKoSzw==
+  dependencies:
+    "@types/node" "*"
+
 "@types/keygrip@*":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@types/keygrip/-/keygrip-1.0.2.tgz#513abfd256d7ad0bf1ee1873606317b33b1b2a72"
@@ -1333,6 +1340,14 @@
   version "0.7.31"
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
   integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
+
+"@types/node-fetch@2.6.1":
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-2.6.1.tgz#8f127c50481db65886800ef496f20bbf15518975"
+  integrity sha512-oMqjURCaxoSIsHSr1E47QHzbmzNR5rK8McHuNb11BOM9cHcIK3Avy0s/b2JlXHoQGTYS3NsvWzV1M0iK7l0wbA==
+  dependencies:
+    "@types/node" "*"
+    form-data "^3.0.0"
 
 "@types/node@*":
   version "17.0.41"
@@ -3411,6 +3426,15 @@ forever-agent@~0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/forever-agent/-/forever-agent-0.6.1.tgz#fbc71f0c41adeb37f96c577ad1ed42d8fdacca91"
   integrity sha512-j0KLYPhm6zeac4lz3oJ3o65qvgQCcPubiyotZrXqEaG4hNagNYO8qdlUrX5vwqv9ohqeT/Z3j6+yW067yWWdUw==
+
+form-data@^3.0.0:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/form-data/-/form-data-3.0.1.tgz#ebd53791b78356a99af9a300d4282c4d5eb9755f"
+  integrity sha512-RHkBKtLWUVwd7SqRIvCZMEvAMoGUp0XU+seQiZejj0COz3RI3hWP4sCv3gZWWLjJTd7rGwcsF5eKZGii0r/hbg==
+  dependencies:
+    asynckit "^0.4.0"
+    combined-stream "^1.0.8"
+    mime-types "^2.1.12"
 
 form-data@^4.0.0:
   version "4.0.0"

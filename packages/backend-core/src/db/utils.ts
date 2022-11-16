@@ -16,6 +16,7 @@ import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
 import { PouchLike } from "./couch"
+import { App } from "@budibase/types"
 
 export * from "./constants"
 export * from "./conversions"
@@ -302,7 +303,12 @@ export async function getAllDbs(opts = { efficient: false }) {
  *
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
+export async function getAllApps({
+  dev,
+  all,
+  idsOnly,
+  efficient,
+}: any = {}): Promise<App[] | string[]> {
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
@@ -374,18 +380,16 @@ export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
  * Utility function for getAllApps but filters to production apps only.
  */
 export async function getProdAppIDs() {
-  return (await getAllApps({ idsOnly: true })).filter(
-    (id: any) => !isDevAppID(id)
-  )
+  const apps = (await getAllApps({ idsOnly: true })) as string[]
+  return apps.filter((id: any) => !isDevAppID(id))
 }
 
 /**
  * Utility function for the inverse of above.
  */
 export async function getDevAppIDs() {
-  return (await getAllApps({ idsOnly: true })).filter((id: any) =>
-    isDevAppID(id)
-  )
+  const apps = (await getAllApps({ idsOnly: true })) as string[]
+  return apps.filter((id: any) => isDevAppID(id))
 }
 
 export async function dbExists(dbName: any) {
