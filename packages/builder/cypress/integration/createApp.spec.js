@@ -10,7 +10,7 @@ filterTests(['smoke', 'all'], () => {
     })
 
     if (!(Cypress.env("TEST_ENV"))) {
-      it("should show the new user UI/UX", () => {
+      it.skip("should show the new user UI/UX", () => {
         cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/create`, { timeout: 5000 }) //added /portal/apps/create
         cy.wait(1000)
         cy.get(interact.CREATE_APP_BUTTON, { timeout: 10000 }).contains('Start from scratch').should("exist")
@@ -83,7 +83,7 @@ filterTests(['smoke', 'all'], () => {
       })
     })
 
-    it("should create the first application from scratch", () => {
+    it.skip("should create the first application from scratch", () => {
       const appName = "Cypress Tests"
       cy.createApp(appName, false)
 
@@ -93,7 +93,7 @@ filterTests(['smoke', 'all'], () => {
       cy.deleteApp(appName)
     })
 
-    it("should create the first application from scratch with a default name", () => {
+    it.skip("should create the first application from scratch with a default name", () => {
       cy.updateUserInformation("", "")
       cy.createApp("", false)
       cy.applicationInAppTable("My app")
