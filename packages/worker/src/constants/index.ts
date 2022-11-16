@@ -1,97 +1,97 @@
-const { Config } = require("@budibase/backend-core/constants")
+import { constants } from "@budibase/backend-core"
 
-exports.LOGO_URL =
+export const LOGO_URL =
   "https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg"
 
-exports.UserStatus = {
-  ACTIVE: "active",
-  INACTIVE: "inactive",
+export enum UserStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
 }
 
-exports.Config = Config
+export const Config = constants.Config
 
-exports.ConfigUploads = {
-  LOGO: "logo",
-  OIDC_LOGO: "oidc_logo",
+export enum ConfigUpload {
+  LOGO = "logo",
+  OIDC_LOGO = "oidc_logo",
 }
 
-const TemplateTypes = {
-  EMAIL: "email",
+export enum TemplateType {
+  EMAIL = "email",
 }
 
-const EmailTemplatePurpose = {
-  BASE: "base",
-  PASSWORD_RECOVERY: "password_recovery",
-  INVITATION: "invitation",
-  WELCOME: "welcome",
-  CUSTOM: "custom",
+export enum EmailTemplatePurpose {
+  BASE = "base",
+  PASSWORD_RECOVERY = "password_recovery",
+  INVITATION = "invitation",
+  WELCOME = "welcome",
+  CUSTOM = "custom",
 }
 
-const InternalTemplateBindings = {
-  PLATFORM_URL: "platformUrl",
-  COMPANY: "company",
-  LOGO_URL: "logoUrl",
-  EMAIL: "email",
-  USER: "user",
-  REQUEST: "request",
-  DOCS_URL: "docsUrl",
-  LOGIN_URL: "loginUrl",
-  CURRENT_YEAR: "currentYear",
-  CURRENT_DATE: "currentDate",
-  BODY: "body",
-  STYLES: "styles",
-  RESET_URL: "resetUrl",
-  RESET_CODE: "resetCode",
-  INVITE_URL: "inviteUrl",
-  INVITE_CODE: "inviteUrl",
-  CONTENTS: "contents",
+export enum InternalTemplateBinding {
+  PLATFORM_URL = "platformUrl",
+  COMPANY = "company",
+  LOGO_URL = "logoUrl",
+  EMAIL = "email",
+  USER = "user",
+  REQUEST = "request",
+  DOCS_URL = "docsUrl",
+  LOGIN_URL = "loginUrl",
+  CURRENT_YEAR = "currentYear",
+  CURRENT_DATE = "currentDate",
+  BODY = "body",
+  STYLES = "styles",
+  RESET_URL = "resetUrl",
+  RESET_CODE = "resetCode",
+  INVITE_URL = "inviteUrl",
+  INVITE_CODE = "inviteUrl",
+  CONTENTS = "contents",
 }
 
-const TemplateBindings = {
+export const TemplateBindings = {
   PLATFORM_URL: {
-    name: InternalTemplateBindings.PLATFORM_URL,
+    name: InternalTemplateBinding.PLATFORM_URL,
     description: "The URL used to access the budibase platform",
   },
   COMPANY: {
-    name: InternalTemplateBindings.COMPANY,
+    name: InternalTemplateBinding.COMPANY,
     description: "The name of your organization",
   },
   LOGO_URL: {
-    name: InternalTemplateBindings.LOGO_URL,
+    name: InternalTemplateBinding.LOGO_URL,
     description: "The URL of your organizations logo.",
   },
   EMAIL: {
-    name: InternalTemplateBindings.EMAIL,
+    name: InternalTemplateBinding.EMAIL,
     description: "The recipients email address.",
   },
   USER: {
-    name: InternalTemplateBindings.USER,
+    name: InternalTemplateBinding.USER,
     description: "The recipients user object.",
   },
   REQUEST: {
-    name: InternalTemplateBindings.REQUEST,
+    name: InternalTemplateBinding.REQUEST,
     description: "Additional request metadata.",
   },
   DOCS_URL: {
-    name: InternalTemplateBindings.DOCS_URL,
+    name: InternalTemplateBinding.DOCS_URL,
     description: "Organization documentation URL.",
   },
   LOGIN_URL: {
-    name: InternalTemplateBindings.LOGIN_URL,
+    name: InternalTemplateBinding.LOGIN_URL,
     description: "The URL used to log into the organization budibase instance.",
   },
   CURRENT_YEAR: {
-    name: InternalTemplateBindings.CURRENT_YEAR,
+    name: InternalTemplateBinding.CURRENT_YEAR,
     description: "The current year.",
   },
   CURRENT_DATE: {
-    name: InternalTemplateBindings.CURRENT_DATE,
+    name: InternalTemplateBinding.CURRENT_DATE,
     description: "The current date.",
   },
 }
 
-const TemplateMetadata = {
-  [TemplateTypes.EMAIL]: [
+export const TemplateMetadata = {
+  [TemplateType.EMAIL]: [
     {
       name: "Base format",
       description:
@@ -100,11 +100,11 @@ const TemplateMetadata = {
       purpose: EmailTemplatePurpose.BASE,
       bindings: [
         {
-          name: InternalTemplateBindings.BODY,
+          name: InternalTemplateBinding.BODY,
           description: "The main body of another email template.",
         },
         {
-          name: InternalTemplateBindings.STYLES,
+          name: InternalTemplateBinding.STYLES,
           description: "The contents of the Styling email template.",
         },
       ],
@@ -117,12 +117,12 @@ const TemplateMetadata = {
       purpose: EmailTemplatePurpose.PASSWORD_RECOVERY,
       bindings: [
         {
-          name: InternalTemplateBindings.RESET_URL,
+          name: InternalTemplateBinding.RESET_URL,
           description:
             "The URL the recipient must click to reset their password.",
         },
         {
-          name: InternalTemplateBindings.RESET_CODE,
+          name: InternalTemplateBinding.RESET_CODE,
           description:
             "The temporary password reset code used in the recipients password reset URL.",
         },
@@ -144,12 +144,12 @@ const TemplateMetadata = {
       purpose: EmailTemplatePurpose.INVITATION,
       bindings: [
         {
-          name: InternalTemplateBindings.INVITE_URL,
+          name: InternalTemplateBinding.INVITE_URL,
           description:
             "The URL the recipient must click to accept the invitation and activate their account.",
         },
         {
-          name: InternalTemplateBindings.INVITE_CODE,
+          name: InternalTemplateBinding.INVITE_CODE,
           description:
             "The temporary invite code used in the recipients invitation URL.",
         },
@@ -163,7 +163,7 @@ const TemplateMetadata = {
       purpose: EmailTemplatePurpose.CUSTOM,
       bindings: [
         {
-          name: InternalTemplateBindings.CONTENTS,
+          name: InternalTemplateBinding.CONTENTS,
           description: "Custom content body.",
         },
       ],
@@ -172,12 +172,5 @@ const TemplateMetadata = {
 }
 
 // all purpose combined
-exports.TemplatePurpose = {
-  ...EmailTemplatePurpose,
-}
-exports.TemplateTypes = TemplateTypes
-exports.EmailTemplatePurpose = EmailTemplatePurpose
-exports.TemplateMetadata = TemplateMetadata
-exports.TemplateBindings = TemplateBindings
-exports.InternalTemplateBindings = InternalTemplateBindings
-exports.GLOBAL_OWNER = "global"
+export { EmailTemplatePurpose as TemplatePurpose }
+export const GLOBAL_OWNER = "global"

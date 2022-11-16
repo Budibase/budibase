@@ -1,7 +1,7 @@
 const { readStaticFile } = require("../../utilities/fileSystem")
 const {
   EmailTemplatePurpose,
-  TemplateTypes,
+  TemplateType,
   TemplatePurpose,
   GLOBAL_OWNER,
 } = require("../index")
@@ -26,7 +26,7 @@ exports.EmailTemplates = {
 exports.addBaseTemplates = (templates, type = null) => {
   let purposeList
   switch (type) {
-    case TemplateTypes.EMAIL:
+    case TemplateType.EMAIL:
       purposeList = Object.values(EmailTemplatePurpose)
       break
     default:
