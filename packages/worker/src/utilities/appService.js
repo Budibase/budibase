@@ -1,5 +1,5 @@
 const fetch = require("node-fetch")
-const { Headers } = require("@budibase/backend-core/constants")
+const { Header } = require("@budibase/backend-core/constants")
 const { getTenantId, isTenantIdSet } = require("@budibase/backend-core/tenancy")
 const { checkSlashesInUrl } = require("../utilities")
 const env = require("../environment")

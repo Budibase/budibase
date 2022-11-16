@@ -16,7 +16,7 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
-const { Cookie, Headers } = require("@budibase/backend-core/constants")
+const { Cookie, Header } = require("@budibase/backend-core/constants")
 const { jwt } = require("@budibase/backend-core/auth")
 const { doInTenant, doWithGlobalDB } = require("@budibase/backend-core/tenancy")
 const { createASession } = require("@budibase/backend-core/sessions")

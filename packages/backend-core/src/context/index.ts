@@ -109,10 +109,7 @@ export async function doInAppContext(appId: string, task: any): Promise<any> {
   if (tenantId) {
     updates.tenantId = tenantId
   }
-  return newContext(
-    updates,
-    task
-  )
+  return newContext(updates, task)
 }
 
 export async function doInIdentityContext(
