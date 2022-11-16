@@ -8,34 +8,35 @@ import { Config } from "../constants"
 import {
   users,
   tenancy,
-  Cookie,
-  Header,
   sessions,
   auth,
+  constants,
+  env as coreEnv,
 } from "@budibase/backend-core"
-import { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
-import structures from "./structures"
+import structures, { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
 import { CreateUserResponse, User, AuthToken } from "@budibase/types"
+import API from "./api"
 
 enum Mode {
-  ACCOUNT = "account",
+  CLOUD = "cloud",
   SELF = "self",
 }
 
 class TestConfiguration {
   server: any
   request: any
+  api: API
   defaultUser?: User
   tenant1User?: User
 
   constructor(
     opts: { openServer: boolean; mode: Mode } = {
       openServer: true,
-      mode: Mode.ACCOUNT,
+      mode: Mode.CLOUD,
     }
   ) {
-    if (opts.mode === Mode.ACCOUNT) {
-      this.modeAccount()
+    if (opts.mode === Mode.CLOUD) {
+      this.modeCloud()
     } else if (opts.mode === Mode.SELF) {
       this.modeSelf()
     }
@@ -46,6 +47,8 @@ class TestConfiguration {
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
     }
+
+    this.api = new API(this)
   }
 
   getRequest() {
@@ -54,20 +57,24 @@ class TestConfiguration {
 
   // MODES
 
-  modeAccount = () => {
-    env.SELF_HOSTED = false
-    // @ts-ignore
-    env.MULTI_TENANCY = true
-    // @ts-ignore
-    env.DISABLE_ACCOUNT_PORTAL = false
+  setMultiTenancy = (value: boolean) => {
+    env._set("MULTI_TENANCY", value)
+    coreEnv._set("MULTI_TENANCY", value)
+  }
+
+  setSelfHosted = (value: boolean) => {
+    env._set("SELF_HOSTED", value)
+    coreEnv._set("SELF_HOSTED", value)
+  }
+
+  modeCloud = () => {
+    this.setSelfHosted(false)
+    this.setMultiTenancy(true)
   }
 
   modeSelf = () => {
-    env.SELF_HOSTED = true
-    // @ts-ignore
-    env.MULTI_TENANCY = false
-    // @ts-ignore
-    env.DISABLE_ACCOUNT_PORTAL = true
+    this.setSelfHosted(true)
+    this.setMultiTenancy(false)
   }
 
   // UTILS
@@ -114,6 +121,25 @@ class TestConfiguration {
 
   // TENANCY
 
+  createTenant = async (): Promise<User> => {
+    // create user / new tenant
+    const res = await this.api.users.createAdminUser()
+
+    // return the created user
+    const userRes = await this.api.users.getUser(res.userId, {
+      headers: {
+        ...this.internalAPIHeaders(),
+        [constants.Header.TENANT_ID]: res.tenantId,
+      },
+    })
+
+    // create a session for the new user
+    const user = userRes.body
+    await this.createSession(user)
+
+    return user
+  }
+
   getTenantId() {
     try {
       return tenancy.getTenantId()
@@ -122,7 +148,69 @@ class TestConfiguration {
     }
   }
 
-  // USER / AUTH
+  // AUTH
+
+  async _createSession({
+    userId,
+    tenantId,
+  }: {
+    userId: string
+    tenantId: string
+  }) {
+    await sessions.createASession(userId!, {
+      sessionId: "sessionid",
+      tenantId: tenantId,
+      csrfToken: CSRF_TOKEN,
+    })
+  }
+
+  async createSession(user: User) {
+    return this._createSession({ userId: user._id!, tenantId: user.tenantId })
+  }
+
+  cookieHeader(cookies: any) {
+    if (!Array.isArray(cookies)) {
+      cookies = [cookies]
+    }
+    return {
+      Cookie: cookies,
+    }
+  }
+
+  authHeaders(user: User) {
+    const authToken: AuthToken = {
+      userId: user._id!,
+      sessionId: "sessionid",
+      tenantId: user.tenantId,
+    }
+    const authCookie = auth.jwt.sign(authToken, env.JWT_SECRET)
+    return {
+      Accept: "application/json",
+      ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),
+      [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
+    }
+  }
+
+  defaultHeaders() {
+    const tenantId = this.getTenantId()
+    if (tenantId === TENANT_ID) {
+      return this.authHeaders(this.defaultUser!)
+    } else if (tenantId === TENANT_1) {
+      return this.authHeaders(this.tenant1User!)
+    } else {
+      throw new Error("could not determine auth headers to use")
+    }
+  }
+
+  internalAPIHeaders() {
+    return { [constants.Header.API_KEY]: env.INTERNAL_API_KEY }
+  }
+
+  adminOnlyResponse = () => {
+    return { message: "Admin user only endpoint.", status: 403 }
+  }
+
+  // USERS
 
   async createDefaultUser() {
     const user = structures.users.adminUser({
@@ -138,45 +226,6 @@ class TestConfiguration {
       password: "test",
     })
     this.tenant1User = await this.createUser(user)
-  }
-
-  async createSession(user: User) {
-    await sessions.createASession(user._id!, {
-      sessionId: "sessionid",
-      tenantId: user.tenantId,
-      csrfToken: CSRF_TOKEN,
-    })
-  }
-
-  cookieHeader(cookies: any) {
-    return {
-      Cookie: [cookies],
-    }
-  }
-
-  authHeaders(user: User) {
-    const authToken: AuthToken = {
-      userId: user._id!,
-      sessionId: "sessionid",
-      tenantId: user.tenantId,
-    }
-    const authCookie = auth.jwt.sign(authToken, env.JWT_SECRET)
-    return {
-      Accept: "application/json",
-      ...this.cookieHeader([`${Cookie.Auth}=${authCookie}`]),
-      [Header.CSRF_TOKEN]: CSRF_TOKEN,
-    }
-  }
-
-  defaultHeaders() {
-    const tenantId = this.getTenantId()
-    if (tenantId === TENANT_ID) {
-      return this.authHeaders(this.defaultUser!)
-    } else if (tenantId === TENANT_1) {
-      return this.authHeaders(this.tenant1User!)
-    } else {
-      throw new Error("could not determine auth headers to use")
-    }
   }
 
   async getUser(email: string): Promise<User> {
@@ -242,7 +291,7 @@ class TestConfiguration {
 
   getOIDConfigCookie(configId: string) {
     const token = auth.jwt.sign(configId, env.JWT_SECRET)
-    return this.cookieHeader([[`${Cookie.OIDC_CONFIG}=${token}`]])
+    return this.cookieHeader([[`${constants.Cookie.OIDC_CONFIG}=${token}`]])
   }
 
   async saveOIDCConfig() {

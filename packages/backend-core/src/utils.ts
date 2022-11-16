@@ -1,38 +1,51 @@
-const { DocumentType, SEPARATOR, ViewName, getAllApps } = require("./db/utils")
+import {
+  DocumentType,
+  SEPARATOR,
+  ViewName,
+  getAllApps,
+  queryGlobalView,
+} from "./db"
+import { options } from "./middleware/passport/jwt"
+import { Header, Cookie, MAX_VALID_DATE } from "./constants"
+import env from "./environment"
+import userCache from "./cache/user"
+import { getSessionsForUser, invalidateSessions } from "./security/sessions"
+import * as events from "./events"
+import tenancy from "./tenancy"
+import {
+  App,
+  BBContext,
+  PlatformLogoutOpts,
+  TenantResolutionStrategy,
+} from "@budibase/types"
+import { SetOption } from "cookies"
 const jwt = require("jsonwebtoken")
-const { options } = require("./middleware/passport/jwt")
-const { queryGlobalView } = require("./db/views")
-const { Header, Cookie, MAX_VALID_DATE } = require("./constants")
-const env = require("./environment")
-const userCache = require("./cache/user")
-const {
-  getSessionsForUser,
-  invalidateSessions,
-} = require("./security/sessions")
-const events = require("./events")
-const tenancy = require("./tenancy")
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
-function confirmAppId(possibleAppId) {
+function confirmAppId(possibleAppId: string | undefined) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
     ? possibleAppId
     : undefined
 }
 
-async function resolveAppUrl(ctx) {
+async function resolveAppUrl(ctx: BBContext) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
-  let tenantId = tenancy.getTenantId()
-  if (!env.SELF_HOSTED && ctx.subdomains.length) {
-    // always use the tenant id from the url in cloud
-    tenantId = ctx.subdomains[0]
+  let tenantId: string | null = tenancy.getTenantId()
+  if (env.MULTI_TENANCY) {
+    // always use the tenant id from the subdomain in multi tenancy
+    // this ensures the logged-in user tenant id doesn't overwrite
+    // e.g. in the case of viewing a public app while already logged-in to another tenant
+    tenantId = tenancy.getTenantIDFromCtx(ctx, {
+      includeStrategies: [TenantResolutionStrategy.SUBDOMAIN],
+    })
   }
 
   // search prod apps for a url that matches
-  const apps = await tenancy.doInTenant(tenantId, () =>
+  const apps: App[] = await tenancy.doInTenant(tenantId, () =>
     getAllApps({ dev: false })
   )
   const app = apps.filter(
@@ -42,7 +55,7 @@ async function resolveAppUrl(ctx) {
   return app && app.appId ? app.appId : undefined
 }
 
-exports.isServingApp = ctx => {
+export function isServingApp(ctx: BBContext) {
   // dev app
   if (ctx.path.startsWith(`/${APP_PREFIX}`)) {
     return true
@@ -59,12 +72,12 @@ exports.isServingApp = ctx => {
  * @param {object} ctx The main request body to look through.
  * @returns {string|undefined} If an appId was found it will be returned.
  */
-exports.getAppIdFromCtx = async ctx => {
+export async function getAppIdFromCtx(ctx: BBContext) {
   // look in headers
   const options = [ctx.headers[Header.APP_ID]]
   let appId
   for (let option of options) {
-    appId = confirmAppId(option)
+    appId = confirmAppId(option as string)
     if (appId) {
       break
     }
@@ -95,7 +108,7 @@ exports.getAppIdFromCtx = async ctx => {
  * opens the contents of the specified encrypted JWT.
  * @return {object} the contents of the token.
  */
-exports.openJwt = token => {
+export function openJwt(token: string) {
   if (!token) {
     return token
   }
@@ -107,14 +120,14 @@ exports.openJwt = token => {
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to get.
  */
-exports.getCookie = (ctx, name) => {
+export function getCookie(ctx: BBContext, name: string) {
   const cookie = ctx.cookies.get(name)
 
   if (!cookie) {
     return cookie
   }
 
-  return exports.openJwt(cookie)
+  return openJwt(cookie)
 }
 
 /**
@@ -124,12 +137,17 @@ exports.getCookie = (ctx, name) => {
  * @param {string|object} value The value of cookie which will be set.
  * @param {object} opts options like whether to sign.
  */
-exports.setCookie = (ctx, value, name = "builder", opts = { sign: true }) => {
+export function setCookie(
+  ctx: BBContext,
+  value: any,
+  name = "builder",
+  opts = { sign: true }
+) {
   if (value && opts && opts.sign) {
     value = jwt.sign(value, options.secretOrKey)
   }
 
-  const config = {
+  const config: SetOption = {
     expires: MAX_VALID_DATE,
     path: "/",
     httpOnly: false,
@@ -146,8 +164,8 @@ exports.setCookie = (ctx, value, name = "builder", opts = { sign: true }) => {
 /**
  * Utility function, simply calls setCookie with an empty string for value
  */
-exports.clearCookie = (ctx, name) => {
-  exports.setCookie(ctx, null, name)
+export function clearCookie(ctx: BBContext, name: string) {
+  setCookie(ctx, null, name)
 }
 
 /**
@@ -156,11 +174,11 @@ exports.clearCookie = (ctx, name) => {
  * @param {object} ctx The koa context object to be tested.
  * @return {boolean} returns true if the call is from the client lib (a built app rather than the builder).
  */
-exports.isClient = ctx => {
+export function isClient(ctx: BBContext) {
   return ctx.headers[Header.TYPE] === "client"
 }
 
-const getBuilders = async () => {
+async function getBuilders() {
   const builders = await queryGlobalView(ViewName.USER_BY_BUILDERS, {
     include_docs: false,
   })
@@ -176,7 +194,7 @@ const getBuilders = async () => {
   }
 }
 
-exports.getBuildersCount = async () => {
+export async function getBuildersCount() {
   const builders = await getBuilders()
   return builders.length
 }
@@ -184,10 +202,14 @@ exports.getBuildersCount = async () => {
 /**
  * Logs a user out from budibase. Re-used across account portal and builder.
  */
-exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
+export async function platformLogout(opts: PlatformLogoutOpts) {
+  const ctx = opts.ctx
+  const userId = opts.userId
+  const keepActiveSession = opts.keepActiveSession
+
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
-  const currentSession = exports.getCookie(ctx, Cookie.Auth)
+  const currentSession = getCookie(ctx, Cookie.Auth)
   let sessions = await getSessionsForUser(userId)
 
   if (keepActiveSession) {
@@ -196,8 +218,8 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     )
   } else {
     // clear cookies
-    exports.clearCookie(ctx, Cookie.Auth)
-    exports.clearCookie(ctx, Cookie.CurrentApp)
+    clearCookie(ctx, Cookie.Auth)
+    clearCookie(ctx, Cookie.CurrentApp)
   }
 
   const sessionIds = sessions.map(({ sessionId }) => sessionId)
@@ -206,6 +228,6 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
   await userCache.invalidateUser(userId)
 }
 
-exports.timeout = timeMs => {
+export function timeout(timeMs: number) {
   return new Promise(resolve => setTimeout(resolve, timeMs))
 }

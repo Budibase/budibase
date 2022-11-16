@@ -2,11 +2,11 @@ import { getTenantId } from "@budibase/backend-core/tenancy"
 import { getAllApps } from "@budibase/backend-core/db"
 import { getUniqueRows } from "../../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
-import { StaticQuotaName, QuotaUsageType } from "@budibase/types"
+import { StaticQuotaName, QuotaUsageType, App } from "@budibase/types"
 
 export const run = async () => {
   // get all rows in all apps
-  const allApps = await getAllApps({ all: true })
+  const allApps = (await getAllApps({ all: true })) as App[]
   const appIds = allApps ? allApps.map((app: { appId: any }) => app.appId) : []
   const { appRows } = await getUniqueRows(appIds)
 

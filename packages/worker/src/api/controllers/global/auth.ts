@@ -1,22 +1,26 @@
-const core = require("@budibase/backend-core")
-const { Config, EmailTemplatePurpose } = require("../../../constants")
-const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
+import core from "@budibase/backend-core"
+import {
+  events,
+  users as usersCore,
+  context,
+  tenancy,
+} from "@budibase/backend-core"
+import { Config, EmailTemplatePurpose } from "../../../constants"
+import { sendEmail, isEmailConfigured } from "../../../utilities/email"
+import { checkResetPasswordCode } from "../../../utilities/redis"
+import env from "../../../environment"
+import sdk from "../../../sdk"
+import { User } from "@budibase/types"
 const { setCookie, getCookie, clearCookie, hash, platformLogout } = core.utils
 const { Cookie, Header } = core.constants
 const { passport, ssoCallbackUrl, google, oidc } = core.auth
-const { checkResetPasswordCode } = require("../../../utilities/redis")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-const env = require("../../../environment")
-import { events, users as usersCore, context } from "@budibase/backend-core"
-import sdk from "../../../sdk"
-import { User } from "@budibase/types"
 
 export const googleCallbackUrl = async (config: any) => {
-  return ssoCallbackUrl(getGlobalDB(), config, "google")
+  return ssoCallbackUrl(tenancy.getGlobalDB(), config, "google")
 }
 
 export const oidcCallbackUrl = async (config: any) => {
-  return ssoCallbackUrl(getGlobalDB(), config, "oidc")
+  return ssoCallbackUrl(tenancy.getGlobalDB(), config, "oidc")
 }
 
 async function authInternal(ctx: any, user: any, err = null, info = null) {
@@ -106,7 +110,7 @@ export const resetUpdate = async (ctx: any) => {
   const { resetCode, password } = ctx.request.body
   try {
     const { userId } = await checkResetPasswordCode(resetCode)
-    const db = getGlobalDB()
+    const db = tenancy.getGlobalDB()
     const user = await db.get(userId)
     user.password = await hash(password)
     await db.put(user)
@@ -160,7 +164,7 @@ export const datasourceAuth = async (ctx: any, next: any) => {
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 export const googlePreAuth = async (ctx: any, next: any) => {
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
 
   const config = await core.db.getScopedConfig(db, {
     type: Config.GOOGLE,
@@ -181,7 +185,7 @@ export const googlePreAuth = async (ctx: any, next: any) => {
 }
 
 export const googleAuth = async (ctx: any, next: any) => {
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
 
   const config = await core.db.getScopedConfig(db, {
     type: Config.GOOGLE,
@@ -208,7 +212,7 @@ export const googleAuth = async (ctx: any, next: any) => {
 }
 
 export const oidcStrategyFactory = async (ctx: any, configId: any) => {
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
   const config = await core.db.getScopedConfig(db, {
     type: Config.OIDC,
     group: ctx.query.group,
@@ -235,7 +239,7 @@ export const oidcPreAuth = async (ctx: any, next: any) => {
 
   setCookie(ctx, configId, Cookie.OIDC_CONFIG)
 
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
   const config = await core.db.getScopedConfig(db, {
     type: Config.OIDC,
     group: ctx.query.group,

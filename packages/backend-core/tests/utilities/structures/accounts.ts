@@ -1,23 +1,29 @@
 import { generator, uuid } from "."
-import { AuthType, CloudAccount, Hosting } from "@budibase/types"
 import * as db from "../../../src/db/utils"
+import { Account, AuthType, CloudAccount, Hosting } from "@budibase/types"
 
-export const cloudAccount = (): CloudAccount => {
+export const account = (): Account => {
   return {
     accountId: uuid(),
+    tenantId: generator.word(),
+    email: generator.email(),
+    tenantName: generator.word(),
+    hosting: Hosting.SELF,
     createdAt: Date.now(),
     verified: true,
     verificationSent: true,
-    tier: "",
-    email: generator.email(),
-    tenantId: generator.word(),
-    hosting: Hosting.CLOUD,
+    tier: "FREE", // DEPRECATED
     authType: AuthType.PASSWORD,
-    password: generator.word(),
-    tenantName: generator.word(),
     name: generator.name(),
     size: "10+",
     profession: "Software Engineer",
+  }
+}
+
+export const cloudAccount = (): CloudAccount => {
+  return {
+    ...account(),
+    hosting: Hosting.CLOUD,
     budibaseUserId: db.generateGlobalUserID(),
   }
 }
