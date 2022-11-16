@@ -481,9 +481,26 @@ export const getFrontendStore = () => {
           return null
         }
 
-        const dataSourceField = definition.settings.find(
-          setting => setting.type == "dataSource"
+        let dataSourceField = definition.settings.find(
+          setting => setting.type == "dataSource" || setting.type == "table"
         )
+
+        if (!dataSourceField) {
+          // Check other visible sections for datasource/table elements.
+          const sections = definition.settings.filter(
+            item => item?.section && item.visible
+          )
+
+          for (let section of sections) {
+            let sectionSourceField = section.settings.find(
+              setting => setting.type == "dataSource" || setting.type == "table"
+            )
+            if (sectionSourceField) {
+              dataSourceField = sectionSourceField
+              break
+            }
+          }
+        }
 
         let defaultDatasource
         if (dataSourceField) {
