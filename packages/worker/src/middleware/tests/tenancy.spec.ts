@@ -20,18 +20,18 @@ describe("tenancy middleware", () => {
     const user = await config.createTenant()
     await config.createSession(user)
     const res = await config.api.self.getSelf(user)
-    expect(res.headers[constants.Headers.TENANT_ID]).toBe(user.tenantId)
+    expect(res.headers[constants.Header.TENANT_ID]).toBe(user.tenantId)
   })
 
   it("should get tenant id from header", async () => {
     const tenantId = structures.uuid()
     const headers = {
-      [constants.Headers.TENANT_ID]: tenantId,
+      [constants.Header.TENANT_ID]: tenantId,
     }
     const res = await config.request
       .get(`/api/global/configs/checklist`)
       .set(headers)
-    expect(res.headers[constants.Headers.TENANT_ID]).toBe(tenantId)
+    expect(res.headers[constants.Header.TENANT_ID]).toBe(tenantId)
   })
 
   it("should get tenant id from query param", async () => {
@@ -39,7 +39,7 @@ describe("tenancy middleware", () => {
     const res = await config.request.get(
       `/api/global/configs/checklist?tenantId=${tenantId}`
     )
-    expect(res.headers[constants.Headers.TENANT_ID]).toBe(tenantId)
+    expect(res.headers[constants.Header.TENANT_ID]).toBe(tenantId)
   })
 
   it("should get tenant id from subdomain", async () => {
@@ -50,7 +50,7 @@ describe("tenancy middleware", () => {
     const res = await config.request
       .get(`/api/global/configs/checklist`)
       .set(headers)
-    expect(res.headers[constants.Headers.TENANT_ID]).toBe(tenantId)
+    expect(res.headers[constants.Header.TENANT_ID]).toBe(tenantId)
   })
 
   it("should get tenant id from path variable", async () => {
@@ -61,13 +61,13 @@ describe("tenancy middleware", () => {
         username: user.email,
         password: user.password,
       })
-    expect(res.headers[constants.Headers.TENANT_ID]).toBe(user.tenantId)
+    expect(res.headers[constants.Header.TENANT_ID]).toBe(user.tenantId)
   })
 
   it("should throw when no tenant id is found", async () => {
     const res = await config.request.get(`/api/global/configs/checklist`)
     expect(res.status).toBe(403)
     expect(res.text).toBe("Tenant id not set")
-    expect(res.headers[constants.Headers.TENANT_ID]).toBe(undefined)
+    expect(res.headers[constants.Header.TENANT_ID]).toBe(undefined)
   })
 })
