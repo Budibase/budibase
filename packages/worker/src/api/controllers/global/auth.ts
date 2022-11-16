@@ -1,4 +1,4 @@
-const core = require("@budibase/backend-core")
+import core from "@budibase/backend-core"
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const { setCookie, getCookie, clearCookie, hash, platformLogout } = core.utils

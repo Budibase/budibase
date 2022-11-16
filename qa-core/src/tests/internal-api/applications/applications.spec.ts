@@ -48,7 +48,8 @@ describe("Internal API - Application creation, update, publish and delete", () =
     })
     config.applications.api.appId = app.appId
 
-    const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+    const [appPackageResponse, appPackageJson] =
+      await config.applications.getAppPackage(<string>app.appId)
     expect(appPackageJson.application.name).toEqual(app.name)
     expect(appPackageJson.application.version).toEqual(app.version)
     expect(appPackageJson.application.url).toEqual(app.url)
@@ -71,7 +72,6 @@ describe("Internal API - Application creation, update, publish and delete", () =
     // check published app renders
     config.applications.api.appId = db.getProdAppID(app.appId)
     await config.applications.canRender()
-
 
     // unpublish app
     await config.applications.unpublish(<string>app.appId)
@@ -109,22 +109,16 @@ describe("Internal API - Application creation, update, publish and delete", () =
 
     config.applications.api.appId = app.appId
 
-    await config.applications.update(
-      <string>app.appId,
-      <string>app.name,
-      {
-        name: generator.word(),
-      }
-    )
+    await config.applications.update(<string>app.appId, <string>app.name, {
+      name: generator.word(),
+    })
   })
 
   it("POST - Revert Changes without changes", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
-    await config.applications.revertUnpublished(
-      <string>app.appId
-    )
+    await config.applications.revertUnpublished(<string>app.appId)
   })
 
   it("POST - Revert Changes", async () => {
@@ -134,20 +128,14 @@ describe("Internal API - Application creation, update, publish and delete", () =
     // publish app
     await config.applications.publish(<string>app.url)
 
-
     // Change/add component to the app
-    await config.screen.create(
-      generateScreen("BASIC")
-    )
+    await config.screen.create(generateScreen("BASIC"))
 
     // // Revert the app to published state
-    await config.applications.revertPublished(
-      <string>app.appId
-    )
+    await config.applications.revertPublished(<string>app.appId)
 
     // Check screen is removed
     await config.applications.getRoutes()
-
   })
 
   it("DELETE - Delete an application", async () => {
@@ -155,5 +143,4 @@ describe("Internal API - Application creation, update, publish and delete", () =
 
     await config.applications.delete(<string>app.appId)
   })
-
 })
