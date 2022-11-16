@@ -24,7 +24,7 @@ filterTests(['smoke', 'all'], () => {
       cy.wait(500)
       cy.contains("dog").click()
       // Create action
-      cy.get('[aria-label="AddCircle"]', { timeout: 2000 }).eq(1).click()
+      cy.get('[aria-label="AddCircle"]', { timeout: 2000 }).click()
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.wait(1000)
         cy.contains("Create Row").trigger('mouseover').click().click()
