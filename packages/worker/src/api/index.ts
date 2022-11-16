@@ -45,11 +45,11 @@ const PUBLIC_ENDPOINTS = [
     method: "POST",
   },
   {
-    route: "api/system/environment",
+    route: "/api/system/environment",
     method: "GET",
   },
   {
-    route: "api/system/status",
+    route: "/api/system/status",
     method: "GET",
   },
   // TODO: This should be an internal api
