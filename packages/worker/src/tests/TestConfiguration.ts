@@ -171,8 +171,11 @@ class TestConfiguration {
   }
 
   cookieHeader(cookies: any) {
+    if (!Array.isArray(cookies)) {
+      cookies = [cookies]
+    }
     return {
-      Cookie: [cookies],
+      Cookie: cookies,
     }
   }
 
@@ -287,11 +290,6 @@ class TestConfiguration {
   }
 
   // CONFIGS - OIDC
-
-  getOIDConfigCookie(configId: string) {
-    const token = auth.jwt.sign(configId, env.JWT_SECRET)
-    return this.cookieHeader([[`${Cookies.OIDC_CONFIG}=${token}`]])
-  }
 
   async saveOIDCConfig() {
     await this.deleteConfig(Configs.OIDC)

@@ -231,12 +231,18 @@ export const getTenantIDFromCtx = (
     const match = ctx.matched.find(
       (m: any) => !!m.paramNames.find((p: any) => p.name === "tenantId")
     )
+
+    // get the raw path url - without any query params
+    const ctxUrl = ctx.originalUrl
+    let url
+    if (ctxUrl.includes("?")) {
+      url = ctxUrl.split("?")[0]
+    } else {
+      url = ctxUrl
+    }
+
     if (match) {
-      const params = match.params(
-        ctx.originalUrl,
-        match.captures(ctx.originalUrl),
-        {}
-      )
+      const params = match.params(url, match.captures(url), {})
       if (params.tenantId) {
         return params.tenantId
       }
