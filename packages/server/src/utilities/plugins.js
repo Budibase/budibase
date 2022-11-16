@@ -13,7 +13,7 @@ exports.enrichPluginURLs = plugins => {
 
     // In self host we need to prefix the path, as the bucket name is not part
     // of the bucket path. In cloud, it's already part of the bucket path.
-    let jsUrl = cloud ? "https://cdn.budi.live/" : `/${bucket}/`
+    let jsUrl = cloud ? `${env.CDN_URL}/` : `/${bucket}/`
     jsUrl += ProPlugins.getBucketPath(plugin.name)
     jsUrl += jsFileName
     return { ...plugin, jsUrl }

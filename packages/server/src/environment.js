@@ -46,6 +46,7 @@ module.exports = {
   AWS_REGION: process.env.AWS_REGION,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  CDN_URL: process.env.CDN_URL || "https://cdn.budi.live",
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,

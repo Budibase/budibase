@@ -29,8 +29,6 @@ describe("Internal API - /screens endpoints", () => {
       const [response, screen] = await config.screen.create(
         generateScreen(roleArray[role])
       )
-      expect(response).toHaveStatusCode(200)
-      expect(screen.routing.roleId).toEqual(roleArray[role])
     }
   })
 
@@ -40,14 +38,10 @@ describe("Internal API - /screens endpoints", () => {
 
     // Create Screen
     appConfig.applications.api.appId = app.appId
-    const [response, screen] = await config.screen.create(
-      generateScreen("BASIC")
-    )
+    await config.screen.create(generateScreen("BASIC"))
 
     // Check screen exists
-    const [routesResponse, routes] = await appConfig.applications.getRoutes()
-    expect(routesResponse).toHaveStatusCode(200)
-    expect(routes.routes["/test"]).toBeTruthy()
+    await appConfig.applications.getRoutes(true)
   })
 
   it("DELETE - Delete a screen", async () => {
@@ -61,7 +55,6 @@ describe("Internal API - /screens endpoints", () => {
     )
 
     // Delete Screen
-    const [response] = await config.screen.delete(screen._id!, screen._rev!)
-    expect(response).toHaveStatusCode(200)
+    await config.screen.delete(screen._id!, screen._rev!)
   })
 })

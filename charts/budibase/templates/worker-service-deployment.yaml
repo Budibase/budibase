@@ -147,6 +147,8 @@ spec:
         - name: ELASTIC_APM_SERVER_URL
           value: {{ .Values.globals.elasticApmServerUrl | quote }}
         {{ end }}
+        - name: CDN_URL
+          value: {{ .Values.globals.cdnUrl }}
 
         image: budibase/worker:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always

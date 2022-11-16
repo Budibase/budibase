@@ -167,11 +167,13 @@
   const autoCreateApp = async () => {
     try {
       // Auto name app if has same name
-      let appName = template.key
+      const templateKey = template.key.split("/")[1]
+
+      let appName = templateKey.replace(/-/g, " ")
       const appsWithSameName = $apps.filter(app =>
         app.name?.startsWith(appName)
       )
-      appName = `${appName}-${appsWithSameName.length + 1}`
+      appName = `${appName} ${appsWithSameName.length + 1}`
 
       // Create form data to create app
       let data = new FormData()

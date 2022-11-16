@@ -131,7 +131,7 @@
   const getDefault = (defaultValue, schema, type) => {
     // Remove any values not present in the field schema
     // Convert any values supplied to string
-    if (Array.isArray(defaultValue) && type == "array") {
+    if (Array.isArray(defaultValue) && type == "array" && schema) {
       return defaultValue.reduce((acc, entry) => {
         let processedOption = String(entry)
         let schemaOptions = schema.constraints.inclusion
