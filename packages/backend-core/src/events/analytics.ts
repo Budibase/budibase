@@ -45,9 +45,7 @@ const getSettingsDoc = async () => {
   const db = tenancy.getGlobalDB()
   let settings
   try {
-    settings = await db.get(
-      dbUtils.generateConfigID({ type: Config.SETTINGS })
-    )
+    settings = await db.get(dbUtils.generateConfigID({ type: Config.SETTINGS }))
   } catch (e: any) {
     if (e.status !== 404) {
       throw e

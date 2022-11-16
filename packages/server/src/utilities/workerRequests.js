@@ -3,7 +3,7 @@ const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
 const { getProdAppID } = require("@budibase/backend-core/db")
 const { updateAppRole } = require("./global")
-const { Headers } = require("@budibase/backend-core/constants")
+const { Header } = require("@budibase/backend-core/constants")
 const { getTenantId, isTenantIdSet } = require("@budibase/backend-core/tenancy")
 
 function request(ctx, request) {

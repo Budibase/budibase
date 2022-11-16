@@ -1,19 +1,19 @@
-const { Header } = require("@budibase/backend-core/constants")
-const { getAppIdFromCtx } = require("@budibase/backend-core/utils")
+import { constants, utils } from "@budibase/backend-core"
+import { BBContext } from "@budibase/types"
 
-module.exports = function ({ requiresAppId } = {}) {
-  return async (ctx, next) => {
-    const appId = await getAppIdFromCtx(ctx)
+export = function ({ requiresAppId }: { requiresAppId?: boolean } = {}) {
+  return async (ctx: BBContext, next: any) => {
+    const appId = await utils.getAppIdFromCtx(ctx)
     if (requiresAppId && !appId) {
       ctx.throw(
         400,
-        `Invalid app ID provided, please check the ${Header.APP_ID} header.`
+        `Invalid app ID provided, please check the ${constants.Header.APP_ID} header.`
       )
     }
-    if (!ctx.headers[Header.API_KEY]) {
+    if (!ctx.headers[constants.Header.API_KEY]) {
       ctx.throw(
         400,
-        `Invalid API key provided, please check the ${Header.API_KEY} header.`
+        `Invalid API key provided, please check the ${constants.Header.API_KEY} header.`
       )
     }
     return next()
