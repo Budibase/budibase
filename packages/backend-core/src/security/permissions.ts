@@ -1,31 +1,40 @@
 const { flatten } = require("lodash")
 const { cloneDeep } = require("lodash/fp")
 
-const PermissionLevels = {
-  READ: "read",
-  WRITE: "write",
-  EXECUTE: "execute",
-  ADMIN: "admin",
+export type RoleHierarchy = {
+  permissionId: string
+}[]
+
+export enum PermissionLevels {
+  READ = "read",
+  WRITE = "write",
+  EXECUTE = "execute",
+  ADMIN = "admin",
 }
 
 // these are the global types, that govern the underlying default behaviour
-const PermissionTypes = {
-  APP: "app",
-  TABLE: "table",
-  USER: "user",
-  AUTOMATION: "automation",
-  WEBHOOK: "webhook",
-  BUILDER: "builder",
-  VIEW: "view",
-  QUERY: "query",
+export enum PermissionTypes {
+  APP = "app",
+  TABLE = "table",
+  USER = "user",
+  AUTOMATION = "automation",
+  WEBHOOK = "webhook",
+  BUILDER = "builder",
+  VIEW = "view",
+  QUERY = "query",
 }
 
-function Permission(type, level) {
-  this.level = level
-  this.type = type
+class Permission {
+  type: PermissionTypes
+  level: PermissionLevels
+
+  constructor(type: PermissionTypes, level: PermissionLevels) {
+    this.type = type
+    this.level = level
+  }
 }
 
-function levelToNumber(perm) {
+function levelToNumber(perm: PermissionLevels) {
   switch (perm) {
     // not everything has execute privileges
     case PermissionLevels.EXECUTE:
@@ -46,7 +55,7 @@ function levelToNumber(perm) {
  * @param {string} userPermLevel The permission level of the user.
  * @return {string[]} All the permission levels this user is allowed to carry out.
  */
-function getAllowedLevels(userPermLevel) {
+function getAllowedLevels(userPermLevel: PermissionLevels) {
   switch (userPermLevel) {
     case PermissionLevels.EXECUTE:
       return [PermissionLevels.EXECUTE]
@@ -64,24 +73,24 @@ function getAllowedLevels(userPermLevel) {
   }
 }
 
-exports.BUILTIN_PERMISSION_IDS = {
-  PUBLIC: "public",
-  READ_ONLY: "read_only",
-  WRITE: "write",
-  ADMIN: "admin",
-  POWER: "power",
+export enum BUILTIN_PERMISSION_IDS {
+  PUBLIC = "public",
+  READ_ONLY = "read_only",
+  WRITE = "write",
+  ADMIN = "admin",
+  POWER = "power",
 }
 
 const BUILTIN_PERMISSIONS = {
   PUBLIC: {
-    _id: exports.BUILTIN_PERMISSION_IDS.PUBLIC,
+    _id: BUILTIN_PERMISSION_IDS.PUBLIC,
     name: "Public",
     permissions: [
       new Permission(PermissionTypes.WEBHOOK, PermissionLevels.EXECUTE),
     ],
   },
   READ_ONLY: {
-    _id: exports.BUILTIN_PERMISSION_IDS.READ_ONLY,
+    _id: BUILTIN_PERMISSION_IDS.READ_ONLY,
     name: "Read only",
     permissions: [
       new Permission(PermissionTypes.QUERY, PermissionLevels.READ),
@@ -90,7 +99,7 @@ const BUILTIN_PERMISSIONS = {
     ],
   },
   WRITE: {
-    _id: exports.BUILTIN_PERMISSION_IDS.WRITE,
+    _id: BUILTIN_PERMISSION_IDS.WRITE,
     name: "Read/Write",
     permissions: [
       new Permission(PermissionTypes.QUERY, PermissionLevels.WRITE),
@@ -100,7 +109,7 @@ const BUILTIN_PERMISSIONS = {
     ],
   },
   POWER: {
-    _id: exports.BUILTIN_PERMISSION_IDS.POWER,
+    _id: BUILTIN_PERMISSION_IDS.POWER,
     name: "Power",
     permissions: [
       new Permission(PermissionTypes.TABLE, PermissionLevels.WRITE),
@@ -111,7 +120,7 @@ const BUILTIN_PERMISSIONS = {
     ],
   },
   ADMIN: {
-    _id: exports.BUILTIN_PERMISSION_IDS.ADMIN,
+    _id: BUILTIN_PERMISSION_IDS.ADMIN,
     name: "Admin",
     permissions: [
       new Permission(PermissionTypes.TABLE, PermissionLevels.ADMIN),
@@ -124,16 +133,20 @@ const BUILTIN_PERMISSIONS = {
   },
 }
 
-exports.getBuiltinPermissions = () => {
+export function getBuiltinPermissions() {
   return cloneDeep(BUILTIN_PERMISSIONS)
 }
 
-exports.getBuiltinPermissionByID = id => {
+export function getBuiltinPermissionByID(id: string) {
   const perms = Object.values(BUILTIN_PERMISSIONS)
   return perms.find(perm => perm._id === id)
 }
 
-exports.doesHaveBasePermission = (permType, permLevel, rolesHierarchy) => {
+export function doesHaveBasePermission(
+  permType: PermissionTypes,
+  permLevel: PermissionLevels,
+  rolesHierarchy: RoleHierarchy
+) {
   const basePermissions = [
     ...new Set(rolesHierarchy.map(role => role.permissionId)),
   ]
@@ -154,11 +167,9 @@ exports.doesHaveBasePermission = (permType, permLevel, rolesHierarchy) => {
   return false
 }
 
-exports.isPermissionLevelHigherThanRead = level => {
+export function isPermissionLevelHigherThanRead(level: PermissionLevels) {
   return levelToNumber(level) > 1
 }
 
 // utility as a lot of things need simply the builder permission
-exports.BUILDER = PermissionTypes.BUILDER
-exports.PermissionTypes = PermissionTypes
-exports.PermissionLevels = PermissionLevels
+export const BUILDER = PermissionTypes.BUILDER
