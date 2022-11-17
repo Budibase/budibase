@@ -1,12 +1,9 @@
 import TestConfiguration from "../TestConfiguration"
+import { TestAPI } from "./base"
 
-export class ConfigAPI {
-  config: TestConfiguration
-  request: any
-
+export class ConfigAPI extends TestAPI {
   constructor(config: TestConfiguration) {
-    this.config = config
-    this.request = config.request
+    super(config)
   }
 
   getConfigChecklist = () => {
@@ -26,10 +23,20 @@ export class ConfigAPI {
       .expect(200)
   }
 
-  OIDCCallback = (configId: string) => {
+  OIDCCallback = (configId: string, preAuthRes: any) => {
+    const cookie = this.config.cookieHeader(preAuthRes.get("set-cookie"))
+    const setKoaSession = cookie.Cookie.find((c: string) =>
+      c.includes("koa:sess")
+    )
+    const koaSession = setKoaSession.split("=")[1] + "=="
+    const sessionContent = JSON.parse(
+      Buffer.from(koaSession, "base64").toString("utf-8")
+    )
+    const handle = sessionContent["openidconnect:localhost"].state.handle
     return this.request
       .get(`/api/global/auth/${this.config.getTenantId()}/oidc/callback`)
-      .set(this.config.getOIDConfigCookie(configId))
+      .query({ code: "test", state: handle })
+      .set(cookie)
   }
 
   getOIDCConfig = (configId: string) => {

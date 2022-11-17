@@ -1,15 +1,16 @@
-const { getGlobalUserParams, getAllApps } = require("../db/utils")
-const { doWithDB } = require("../db")
-const { doWithGlobalDB } = require("../tenancy")
-const { StaticDatabases } = require("../db/constants")
+import { getGlobalUserParams, getAllApps } from "../db/utils"
+import { doWithDB } from "../db"
+import { doWithGlobalDB } from "../tenancy"
+import { StaticDatabases } from "../db/constants"
+import { App, Tenants, User } from "@budibase/types"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
-const removeTenantFromInfoDB = async tenantId => {
+const removeTenantFromInfoDB = async (tenantId: string) => {
   try {
-    await doWithDB(PLATFORM_INFO_DB, async infoDb => {
-      let tenants = await infoDb.get(TENANT_DOC)
+    await doWithDB(PLATFORM_INFO_DB, async (infoDb: any) => {
+      const tenants = (await infoDb.get(TENANT_DOC)) as Tenants
       tenants.tenantIds = tenants.tenantIds.filter(id => id !== tenantId)
 
       await infoDb.put(tenants)
@@ -20,14 +21,14 @@ const removeTenantFromInfoDB = async tenantId => {
   }
 }
 
-exports.removeUserFromInfoDB = async dbUser => {
-  await doWithDB(PLATFORM_INFO_DB, async infoDb => {
+export const removeUserFromInfoDB = async (dbUser: User) => {
+  await doWithDB(PLATFORM_INFO_DB, async (infoDb: any) => {
     const keys = [dbUser._id, dbUser.email]
     const userDocs = await infoDb.allDocs({
       keys,
       include_docs: true,
     })
-    const toDelete = userDocs.rows.map(row => {
+    const toDelete = userDocs.rows.map((row: any) => {
       return {
         ...row.doc,
         _deleted: true,
@@ -37,18 +38,18 @@ exports.removeUserFromInfoDB = async dbUser => {
   })
 }
 
-const removeUsersFromInfoDB = async tenantId => {
-  return doWithGlobalDB(tenantId, async db => {
+const removeUsersFromInfoDB = async (tenantId: string) => {
+  return doWithGlobalDB(tenantId, async (db: any) => {
     try {
       const allUsers = await db.allDocs(
         getGlobalUserParams(null, {
           include_docs: true,
         })
       )
-      await doWithDB(PLATFORM_INFO_DB, async infoDb => {
-        const allEmails = allUsers.rows.map(row => row.doc.email)
+      await doWithDB(PLATFORM_INFO_DB, async (infoDb: any) => {
+        const allEmails = allUsers.rows.map((row: any) => row.doc.email)
         // get the id docs
-        let keys = allUsers.rows.map(row => row.id)
+        let keys = allUsers.rows.map((row: any) => row.id)
         // and the email docs
         keys = keys.concat(allEmails)
         // retrieve the docs and delete them
@@ -56,7 +57,7 @@ const removeUsersFromInfoDB = async tenantId => {
           keys,
           include_docs: true,
         })
-        const toDelete = userDocs.rows.map(row => {
+        const toDelete = userDocs.rows.map((row: any) => {
           return {
             ...row.doc,
             _deleted: true,
@@ -71,8 +72,8 @@ const removeUsersFromInfoDB = async tenantId => {
   })
 }
 
-const removeGlobalDB = async tenantId => {
-  return doWithGlobalDB(tenantId, async db => {
+const removeGlobalDB = async (tenantId: string) => {
+  return doWithGlobalDB(tenantId, async (db: any) => {
     try {
       await db.destroy()
     } catch (err) {
@@ -82,11 +83,11 @@ const removeGlobalDB = async tenantId => {
   })
 }
 
-const removeTenantApps = async tenantId => {
+const removeTenantApps = async (tenantId: string) => {
   try {
-    const apps = await getAllApps({ all: true })
+    const apps = (await getAllApps({ all: true })) as App[]
     const destroyPromises = apps.map(app =>
-      doWithDB(app.appId, db => db.destroy())
+      doWithDB(app.appId, (db: any) => db.destroy())
     )
     await Promise.allSettled(destroyPromises)
   } catch (err) {
@@ -96,7 +97,7 @@ const removeTenantApps = async tenantId => {
 }
 
 // can't live in tenancy package due to circular dependency on db/utils
-exports.deleteTenant = async tenantId => {
+export const deleteTenant = async (tenantId: string) => {
   await removeTenantFromInfoDB(tenantId)
   await removeUsersFromInfoDB(tenantId)
   await removeGlobalDB(tenantId)
