@@ -1,13 +1,13 @@
-import { context, PouchLike } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { BudibaseInternalDB, getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
   isExternalTable,
   isSQL,
 } from "../../../integrations/utils"
-import { Table } from "@budibase/types"
+import { Table, Database } from "@budibase/types"
 
-async function getAllInternalTables(db?: PouchLike): Promise<Table[]> {
+async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
     db = context.getAppDB()
   }

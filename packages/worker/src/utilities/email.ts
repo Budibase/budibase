@@ -4,8 +4,8 @@ import { getTemplateByPurpose } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { getResetPasswordCode, getInviteCode } from "./redis"
-import { User } from "@budibase/types"
-import { tenancy, db as dbCore, PouchLike } from "@budibase/backend-core"
+import { User, Database } from "@budibase/types"
+import { tenancy, db as dbCore } from "@budibase/backend-core"
 const nodemailer = require("nodemailer")
 
 type SendEmailOpts = {
@@ -142,7 +142,7 @@ async function buildEmail(
  * @return {Promise<object|null>} returns the SMTP configuration if it exists
  */
 async function getSmtpConfiguration(
-  db: dbCore.PouchLike,
+  db: Database,
   workspaceId?: string,
   automation?: boolean
 ) {

@@ -3,17 +3,16 @@ import {
   getAllApps,
   doWithDB,
   StaticDatabases,
-  PouchLike,
 } from "../db"
 import { doWithGlobalDB } from "../tenancy"
-import { App, Tenants, User } from "@budibase/types"
+import { App, Tenants, User, Database } from "@budibase/types"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
 async function removeTenantFromInfoDB(tenantId: string) {
   try {
-    await doWithDB(PLATFORM_INFO_DB, async (infoDb: PouchLike) => {
+    await doWithDB(PLATFORM_INFO_DB, async (infoDb: Database) => {
       const tenants = (await infoDb.get(TENANT_DOC)) as Tenants
       tenants.tenantIds = tenants.tenantIds.filter(id => id !== tenantId)
 
@@ -26,7 +25,7 @@ async function removeTenantFromInfoDB(tenantId: string) {
 }
 
 export async function removeUserFromInfoDB(dbUser: User) {
-  await doWithDB(PLATFORM_INFO_DB, async (infoDb: PouchLike) => {
+  await doWithDB(PLATFORM_INFO_DB, async (infoDb: Database) => {
     const keys = [dbUser._id!, dbUser.email]
     const userDocs = await infoDb.allDocs({
       keys,
@@ -77,7 +76,7 @@ async function removeUsersFromInfoDB(tenantId: string) {
 }
 
 async function removeGlobalDB(tenantId: string) {
-  return doWithGlobalDB(tenantId, async (db: PouchLike) => {
+  return doWithGlobalDB(tenantId, async (db: Database) => {
     try {
       await db.destroy()
     } catch (err) {
@@ -91,7 +90,7 @@ async function removeTenantApps(tenantId: string) {
   try {
     const apps = (await getAllApps({ all: true })) as App[]
     const destroyPromises = apps.map(app =>
-      doWithDB(app.appId, (db: PouchLike) => db.destroy())
+      doWithDB(app.appId, (db: Database) => db.destroy())
     )
     await Promise.allSettled(destroyPromises)
   } catch (err) {

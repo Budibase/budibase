@@ -1,4 +1,5 @@
-import { db as dbCore, PouchLike } from "@budibase/backend-core"
+import { db as dbCore } from "@budibase/backend-core"
+import { Database } from "@budibase/types"
 import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
@@ -28,7 +29,7 @@ type TemplateType = {
   key?: string
 }
 
-async function updateAttachmentColumns(prodAppId: string, db: PouchLike) {
+async function updateAttachmentColumns(prodAppId: string, db: Database) {
   // iterate through attachment documents and update them
   const tables = await sdk.tables.getAllInternalTables(db)
   for (let table of tables) {
@@ -82,7 +83,7 @@ async function updateAttachmentColumns(prodAppId: string, db: PouchLike) {
   }
 }
 
-async function updateAutomations(prodAppId: string, db: PouchLike) {
+async function updateAutomations(prodAppId: string, db: Database) {
   const automations = (
     await db.allDocs(
       getAutomationParams(null, {
@@ -150,7 +151,7 @@ export function getListOfAppsInMulti(tmpPath: string) {
 
 export async function importApp(
   appId: string,
-  db: PouchLike,
+  db: Database,
   template: TemplateType
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
