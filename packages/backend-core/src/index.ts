@@ -21,10 +21,9 @@ import * as middleware from "./middleware"
 import plugins from "./plugin"
 import encryption from "./security/encryption"
 import * as queue from "./queue"
-import * as types from "./types"
+import * as db from "./db"
 
 // mimic the outer package exports
-import * as db from "./db"
 import * as objectStore from "./pkg/objectStore"
 import * as utils from "./pkg/utils"
 import redis from "./pkg/redis"
@@ -68,7 +67,6 @@ const core = {
   encryption,
   queue,
   permissions,
-  ...types,
 }
 
 export = core

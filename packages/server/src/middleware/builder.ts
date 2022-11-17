@@ -9,9 +9,13 @@ import {
   checkDebounce,
   setDebounce,
 } from "../utilities/redis"
-import { db as dbCore, cache, permissions } from "@budibase/backend-core"
+import {
+  db as dbCore,
+  cache,
+  permissions,
+  PouchLike,
+} from "@budibase/backend-core"
 import { BBContext } from "@budibase/types"
-import { PouchLike } from "@budibase/backend-core/src/db"
 
 const DEBOUNCE_TIME_SEC = 30
 

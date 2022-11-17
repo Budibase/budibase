@@ -12,7 +12,7 @@
     "sourceMap": true,
     "declaration": true,
     "types": [ "node", "jest" ],
-    "outDir": "dist"
+    "outDir": "dist",
   },
   "include": [
     "**/*.js",

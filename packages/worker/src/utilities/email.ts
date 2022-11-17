@@ -142,7 +142,7 @@ async function buildEmail(
  * @return {Promise<object|null>} returns the SMTP configuration if it exists
  */
 async function getSmtpConfiguration(
-  db: PouchLike,
+  db: dbCore.PouchLike,
   workspaceId?: string,
   automation?: boolean
 ) {
