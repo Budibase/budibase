@@ -225,7 +225,10 @@ const changeFormStepHandler = async (action, context) => {
 }
 
 const closeScreenModalHandler = action => {
-  let { url } = action.parameters
+  let url
+  if (action?.parameters) {
+    url = action.parameters.url
+  }
   // Emit this as a window event, so parent screens which are iframing us in
   // can close the modal
   window.parent.postMessage({ type: "close-screen-modal", url })

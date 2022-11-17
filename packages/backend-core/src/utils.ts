@@ -1,4 +1,3 @@
-import { Ctx } from "@budibase/types"
 import { DocumentType, SEPARATOR, ViewName, getAllApps } from "./db/utils"
 const jwt = require("jsonwebtoken")
 import { options } from "./middleware/passport/jwt"
@@ -9,11 +8,18 @@ import userCache from "./cache/user"
 import { getSessionsForUser, invalidateSessions } from "./security/sessions"
 import * as events from "./events"
 import tenancy from "./tenancy"
+import {
+  App,
+  Ctx,
+  PlatformLogoutOpts,
+  TenantResolutionStrategy,
+} from "@budibase/types"
+import { SetOption } from "cookies"
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
-function confirmAppId(possibleAppId: string) {
+function confirmAppId(possibleAppId: string | undefined) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
     ? possibleAppId
     : undefined
@@ -24,17 +30,21 @@ async function resolveAppUrl(ctx: Ctx) {
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
   let tenantId = tenancy.getTenantId()
-  if (!env.SELF_HOSTED && ctx.subdomains.length) {
-    // always use the tenant id from the url in cloud
-    tenantId = ctx.subdomains[0]
+  if (env.MULTI_TENANCY) {
+    // always use the tenant id from the subdomain in multi tenancy
+    // this ensures the logged-in user tenant id doesn't overwrite
+    // e.g. in the case of viewing a public app while already logged-in to another tenant
+    tenantId = tenancy.getTenantIDFromCtx(ctx, {
+      includeStrategies: [TenantResolutionStrategy.SUBDOMAIN],
+    })
   }
 
   // search prod apps for a url that matches
-  const apps = await tenancy.doInTenant(tenantId, () =>
+  const apps: App[] = await tenancy.doInTenant(tenantId, () =>
     getAllApps({ dev: false })
   )
   const app = apps.filter(
-    (a: any) => a.url && a.url.toLowerCase() === possibleAppUrl
+    a => a.url && a.url.toLowerCase() === possibleAppUrl
   )[0]
 
   return app && app.appId ? app.appId : undefined
@@ -132,7 +142,7 @@ export const setCookie = (
     value = jwt.sign(value, options.secretOrKey)
   }
 
-  const config: any = {
+  const config: SetOption = {
     expires: MAX_VALID_DATE,
     path: "/",
     httpOnly: false,
@@ -187,11 +197,11 @@ export const getBuildersCount = async () => {
 /**
  * Logs a user out from budibase. Re-used across account portal and builder.
  */
-export const platformLogout = async ({
-  ctx,
-  userId,
-  keepActiveSession,
-}: any) => {
+export const platformLogout = async (opts: PlatformLogoutOpts) => {
+  const ctx = opts.ctx
+  const userId = opts.userId
+  const keepActiveSession = opts.keepActiveSession
+
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
   const currentSession = getCookie(ctx, Cookies.Auth)

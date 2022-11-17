@@ -383,10 +383,5 @@
     .user-dropdown {
       flex: 0 1 0;
     }
-
-    /* Reduce BBUI page padding */
-    .content :global(> *) {
-      padding: calc(var(--spacing-xl) * 1.5) !important;
-    }
   }
 </style>

@@ -6,7 +6,7 @@ import { getDocParams, DocumentType, isDevAppID } from "../../db/utils"
 import { create } from "./application"
 import { join } from "path"
 import sdk from "../../sdk"
-import { Ctx } from "@budibase/types"
+import { App, Ctx } from "@budibase/types"
 
 async function createApp(appName: string, appDirectory: string) {
   const ctx = {
@@ -38,7 +38,7 @@ export const exportApps = async (ctx: Ctx) => {
   if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
     ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
   }
-  const apps = await db.getAllApps({ all: true })
+  const apps = (await db.getAllApps({ all: true })) as App[]
   const globalDBString = await sdk.backups.exportDB(db.getGlobalDBName(), {
     filter: (doc: any) => !doc._id.startsWith(DocumentType.USER),
   })
@@ -46,7 +46,7 @@ export const exportApps = async (ctx: Ctx) => {
   // in their self-hosted environment
   let appMetadata = apps
     .filter(app => isDevAppID(app.appId || app._id))
-    .map(app => ({ appId: app.appId || app._id, name: app.name }))
+    .map(app => ({ appId: app.appId || app._id!, name: app.name }))
   const tmpPath = await sdk.backups.exportMultipleApps(
     appMetadata,
     globalDBString

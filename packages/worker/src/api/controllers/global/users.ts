@@ -5,6 +5,7 @@ import {
   BulkUserRequest,
   BulkUserResponse,
   CloudAccount,
+  CreateAdminUserRequest,
   InviteUserRequest,
   InviteUsersRequest,
   SearchUsersRequest,
@@ -67,7 +68,8 @@ const parseBooleanParam = (param: any) => {
 }
 
 export const adminUser = async (ctx: any) => {
-  const { email, password, tenantId } = ctx.request.body
+  const { email, password, tenantId } = ctx.request
+    .body as CreateAdminUserRequest
   await tenancy.doInTenant(tenantId, async () => {
     // account portal sends a pre-hashed password - honour param to prevent double hashing
     const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)

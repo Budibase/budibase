@@ -85,13 +85,8 @@
       valueType: "Binding",
     },
   ]
-  // If we're using an "update" form, use the real data provider. If we're
-  // using a create form, we just want a fake array so that our repeater
-  // will actually render the form, but data doesn't matter.
-  $: dataProvider =
-    actionType !== "Create"
-      ? `{{ literal ${safe(providerId)} }}`
-      : { rows: [{}] }
+
+  $: dataProvider = `{{ literal ${safe(providerId)} }}`
   $: renderDeleteButton = showDeleteButton && actionType === "Update"
   $: renderSaveButton = showSaveButton && actionType !== "View"
   $: renderButtons = renderDeleteButton || renderSaveButton

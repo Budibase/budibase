@@ -24,10 +24,15 @@ import {
 } from "./middleware"
 import { invalidateUser } from "./cache/user"
 import { User } from "@budibase/types"
+import { logAlert } from "./logging"
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
-passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
+if (jwt.options.secretOrKey) {
+  passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
+} else {
+  logAlert("No JWT Secret supplied, cannot configure JWT strategy")
+}
 
 passport.serializeUser((user: User, done: any) => done(null, user))
 

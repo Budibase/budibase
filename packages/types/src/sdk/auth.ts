@@ -1,3 +1,5 @@
+import { BBContext } from "./koa"
+
 export interface AuthToken {
   userId: string
   tenantId: string
@@ -24,4 +26,10 @@ export interface SessionKey {
 
 export interface ScannedSession {
   value: Session
+}
+
+export interface PlatformLogoutOpts {
+  ctx: BBContext
+  userId: string
+  keepActiveSession?: boolean
 }

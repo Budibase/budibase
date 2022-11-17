@@ -41,7 +41,7 @@
     time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
-    mode: range ? "range" : null,
+    mode: range ? "range" : "single",
     appendTo,
     disableMobile: "true",
     onReady: () => {

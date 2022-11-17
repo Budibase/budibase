@@ -44,14 +44,7 @@
       valuePlaceholder="Default"
       bindings={[...userBindings]}
       bindingDrawerLeft="260px"
-      on:change={e => {
-        queryBindings = e.detail.map(binding => {
-          return {
-            name: binding.name,
-            default: binding.value,
-          }
-        })
-      }}
+      on:change
     />
   </div>
 </Layout>
