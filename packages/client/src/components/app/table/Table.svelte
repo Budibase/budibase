@@ -28,7 +28,12 @@
       component: SlotRenderer,
     },
   ]
+
   let selectedRows = []
+  rowSelectionStore.subscribe(value => {
+    selectedRows = value[$component.id]?.selectedRows ?? []
+  })
+
   $: hasChildren = $component.children
   $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
@@ -40,14 +45,7 @@
     ActionTypes.SetDataProviderSorting
   )
   $: table = dataProvider?.datasource?.type === "table"
-
-  $: {
-    rowSelectionStore.actions.updateSelection(
-      $component.id,
-      selectedRows.length ? selectedRows[0].tableId : "",
-      selectedRows.map(row => row._id)
-    )
-  }
+  $: tableId = dataProvider?.datasource?.tableId
 
   const getFields = (schema, customColumns, showAutoColumns) => {
     // Check for an invalid column selection
@@ -154,10 +152,33 @@
     autoSortColumns={!columns?.length}
     on:sort={onSort}
     on:click={onClick}
+    on:toggleselectrow={e => {
+      let tempSelectedRows = []
+      if (!allowSelectRows) {
+        return
+      }
+      const row = e.detail
+      if (
+        selectedRows.some(
+          selectedRow => (selectedRow._id || selectedRow) === row._id
+        )
+      ) {
+        tempSelectedRows = selectedRows.filter(
+          selectedRow => (selectedRow._id || selectedRow) !== row._id
+        )
+      } else {
+        tempSelectedRows = [...selectedRows, row]
+      }
+      rowSelectionStore.actions.updateSelection(
+        $component.id,
+        tableId,
+        tempSelectedRows.map(row => row._id || row)
+      )
+    }}
   >
     <slot />
   </Table>
-  {#if allowSelectRows && selectedRows.length}
+  {#if allowSelectRows && selectedRows?.length}
     <div class="row-count">
       {selectedRows.length} row{selectedRows.length === 1 ? "" : "s"} selected
     </div>

@@ -80,11 +80,24 @@ const duplicateRowHandler = async (action, context) => {
 }
 
 const deleteRowHandler = async action => {
-  const { tableId, revId, rowId } = action.parameters
+  const { tableId, revId, rowId, tableComponents } = action.parameters
+
   if (tableId && rowId) {
     try {
       await API.deleteRow({ tableId, rowId, revId })
       notificationStore.actions.success("Row deleted")
+
+      //De-select the row that was deleted
+      for (const tableComponentId of tableComponents || []) {
+        let selection = rowSelectionStore.actions.getSelection(tableComponentId)
+        if (selection.tableId === tableId) {
+          rowSelectionStore.actions.updateSelection(
+            tableComponentId,
+            tableId,
+            selection.selectedRows.filter(row => row !== rowId)
+          )
+        }
+      }
 
       // Refresh related datasources
       await dataSourceStore.actions.invalidateDataSource(tableId, {

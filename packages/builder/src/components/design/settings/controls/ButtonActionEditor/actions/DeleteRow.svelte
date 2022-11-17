@@ -2,11 +2,21 @@
   import { Select, Label, Checkbox, Input } from "@budibase/bbui"
   import { tables } from "stores/backend"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { currentAsset } from "builderStore"
+  import { findAllMatchingComponents } from "builderStore/componentUtils"
 
   export let parameters
   export let bindings = []
 
   $: tableOptions = $tables.list || []
+  $: tableComponents = findAllMatchingComponents(
+    $currentAsset?.props,
+    component => component._component.endsWith("table")
+  ).map(table => table._id)
+  $: tableBlocks = findAllMatchingComponents($currentAsset?.props, component =>
+    component._component.endsWith("tableblock")
+  ).map(block => `${block._id}-table`)
+  $: componentOptions = tableComponents.concat(tableBlocks)
 </script>
 
 <div class="root">
@@ -16,6 +26,7 @@
     options={tableOptions}
     getOptionLabel={table => table.name}
     getOptionValue={table => table._id}
+    on:change={(parameters.tableComponents = componentOptions)}
   />
 
   <Label small>Row ID</Label>

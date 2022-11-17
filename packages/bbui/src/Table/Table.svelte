@@ -219,19 +219,7 @@
     dispatch("editrow", cloneDeep(row))
   }
 
-  const toggleSelectRow = row => {
-    if (!allowSelectRows) {
-      return
-    }
-    if (selectedRows.some(selectedRow => selectedRow._id === row._id)) {
-      selectedRows = selectedRows.filter(
-        selectedRow => selectedRow._id !== row._id
-      )
-    } else {
-      selectedRows = [...selectedRows, row]
-    }
-  }
-
+  //TODO - toggle all
   const toggleSelectAll = e => {
     const select = !!e.detail
     if (select) {
@@ -354,7 +342,7 @@
                 class:noBorderCheckbox={!showHeaderBorder}
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
                 on:click={e => {
-                  toggleSelectRow(row)
+                  dispatch("toggleselectrow", row)
                   e.stopPropagation()
                 }}
               >
@@ -377,7 +365,7 @@
                 on:click={() => {
                   if (!schema[field]?.preventSelectRow) {
                     dispatch("click", row)
-                    toggleSelectRow(row)
+                    dispatch("toggleselectrow", row)
                   }
                 }}
               >
