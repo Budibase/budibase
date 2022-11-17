@@ -4,3 +4,7 @@ export interface Document {
   createdAt?: string | number
   updatedAt?: string
 }
+
+export interface AnyDocument extends Document {
+  [key: string]: any
+}

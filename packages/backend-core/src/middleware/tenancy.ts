@@ -1,6 +1,6 @@
 import { doInTenant, getTenantIDFromCtx } from "../tenancy"
 import { buildMatcherRegex, matches } from "./matchers"
-import { Headers } from "../constants"
+import { Header } from "../constants"
 import {
   BBContext,
   EndpointMatcher,
@@ -29,7 +29,7 @@ const tenancy = (
     }
 
     const tenantId = getTenantIDFromCtx(ctx, tenantOpts)
-    ctx.set(Headers.TENANT_ID, tenantId as string)
+    ctx.set(Header.TENANT_ID, tenantId as string)
     return doInTenant(tenantId, next)
   }
 }

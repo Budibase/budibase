@@ -1,6 +1,6 @@
 const {
-  PermissionLevels,
-  PermissionTypes,
+  PermissionLevel,
+  PermissionType,
   getBuiltinPermissionByID,
   isPermissionLevelHigherThanRead,
 } = require("@budibase/backend-core/permissions")
@@ -11,9 +11,9 @@ const {
 const { DocumentType } = require("../db/utils")
 
 const CURRENTLY_SUPPORTED_LEVELS = [
-  PermissionLevels.WRITE,
-  PermissionLevels.READ,
-  PermissionLevels.EXECUTE,
+  PermissionLevel.WRITE,
+  PermissionLevel.READ,
+  PermissionLevel.EXECUTE,
 ]
 
 exports.getPermissionType = resourceId => {
@@ -23,17 +23,17 @@ exports.getPermissionType = resourceId => {
   switch (docType) {
     case DocumentType.TABLE:
     case DocumentType.ROW:
-      return PermissionTypes.TABLE
+      return PermissionType.TABLE
     case DocumentType.AUTOMATION:
-      return PermissionTypes.AUTOMATION
+      return PermissionType.AUTOMATION
     case DocumentType.WEBHOOK:
-      return PermissionTypes.WEBHOOK
+      return PermissionType.WEBHOOK
     case DocumentType.QUERY:
     case DocumentType.DATASOURCE:
-      return PermissionTypes.QUERY
+      return PermissionType.QUERY
     default:
       // views don't have an ID, will end up here
-      return PermissionTypes.VIEW
+      return PermissionType.VIEW
   }
 }
 
@@ -58,8 +58,8 @@ exports.getBasePermissions = resourceId => {
       const level = typedPermission.level
       permissions[level] = lowerBuiltinRoleID(permissions[level], roleId)
       if (isPermissionLevelHigherThanRead(level)) {
-        permissions[PermissionLevels.READ] = lowerBuiltinRoleID(
-          permissions[PermissionLevels.READ],
+        permissions[PermissionLevel.READ] = lowerBuiltinRoleID(
+          permissions[PermissionLevel.READ],
           roleId
         )
       }

@@ -4,8 +4,8 @@ import {
   BUILTIN_ROLE_IDS,
 } from "@budibase/backend-core/roles"
 const {
-  PermissionTypes,
-  PermissionLevels,
+  PermissionType,
+  PermissionLevel,
   doesHaveBasePermission,
 } = require("@budibase/backend-core/permissions")
 const builderMiddleware = require("./builder")
@@ -33,7 +33,7 @@ const checkAuthorized = async (
 ) => {
   // check if this is a builder api and the user is not a builder
   const isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
-  const isBuilderApi = permType === PermissionTypes.BUILDER
+  const isBuilderApi = permType === PermissionType.BUILDER
   if (isBuilderApi && !isBuilder) {
     return ctx.throw(403, "Not Authorized")
   }
@@ -91,9 +91,9 @@ export = (permType: any, permLevel: any = null, opts = { schema: false }) =>
     let resourceRoles: any = []
     let otherLevelRoles: any = []
     const otherLevel =
-      permLevel === PermissionLevels.READ
-        ? PermissionLevels.WRITE
-        : PermissionLevels.READ
+      permLevel === PermissionLevel.READ
+        ? PermissionLevel.WRITE
+        : PermissionLevel.READ
     const appId = getAppId()
     if (appId && hasResource(ctx)) {
       resourceRoles = await getRequiredResourceRole(permLevel, ctx)

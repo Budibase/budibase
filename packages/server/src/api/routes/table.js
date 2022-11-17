@@ -4,8 +4,8 @@ const authorized = require("../../middleware/authorized")
 const { paramResource, bodyResource } = require("../../middleware/resourceId")
 const {
   BUILDER,
-  PermissionLevels,
-  PermissionTypes,
+  PermissionLevel,
+  PermissionType,
 } = require("@budibase/backend-core/permissions")
 const { tableValidator } = require("./utils/validators")
 
@@ -40,7 +40,7 @@ router
   .get(
     "/api/tables/:tableId",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ, { schema: true }),
+    authorized(PermissionType.TABLE, PermissionLevel.READ, { schema: true }),
     tableController.find
   )
   /**

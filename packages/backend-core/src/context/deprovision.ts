@@ -1,15 +1,18 @@
-import { getGlobalUserParams, getAllApps } from "../db/utils"
-import { doWithDB } from "../db"
+import {
+  getGlobalUserParams,
+  getAllApps,
+  doWithDB,
+  StaticDatabases,
+} from "../db"
 import { doWithGlobalDB } from "../tenancy"
-import { StaticDatabases } from "../db/constants"
-import { App, Tenants, User } from "@budibase/types"
+import { App, Tenants, User, Database } from "@budibase/types"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
-const removeTenantFromInfoDB = async (tenantId: string) => {
+async function removeTenantFromInfoDB(tenantId: string) {
   try {
-    await doWithDB(PLATFORM_INFO_DB, async (infoDb: any) => {
+    await doWithDB(PLATFORM_INFO_DB, async (infoDb: Database) => {
       const tenants = (await infoDb.get(TENANT_DOC)) as Tenants
       tenants.tenantIds = tenants.tenantIds.filter(id => id !== tenantId)
 
@@ -21,9 +24,9 @@ const removeTenantFromInfoDB = async (tenantId: string) => {
   }
 }
 
-export const removeUserFromInfoDB = async (dbUser: User) => {
-  await doWithDB(PLATFORM_INFO_DB, async (infoDb: any) => {
-    const keys = [dbUser._id, dbUser.email]
+export async function removeUserFromInfoDB(dbUser: User) {
+  await doWithDB(PLATFORM_INFO_DB, async (infoDb: Database) => {
+    const keys = [dbUser._id!, dbUser.email]
     const userDocs = await infoDb.allDocs({
       keys,
       include_docs: true,
@@ -38,7 +41,7 @@ export const removeUserFromInfoDB = async (dbUser: User) => {
   })
 }
 
-const removeUsersFromInfoDB = async (tenantId: string) => {
+async function removeUsersFromInfoDB(tenantId: string) {
   return doWithGlobalDB(tenantId, async (db: any) => {
     try {
       const allUsers = await db.allDocs(
@@ -72,8 +75,8 @@ const removeUsersFromInfoDB = async (tenantId: string) => {
   })
 }
 
-const removeGlobalDB = async (tenantId: string) => {
-  return doWithGlobalDB(tenantId, async (db: any) => {
+async function removeGlobalDB(tenantId: string) {
+  return doWithGlobalDB(tenantId, async (db: Database) => {
     try {
       await db.destroy()
     } catch (err) {
@@ -83,11 +86,11 @@ const removeGlobalDB = async (tenantId: string) => {
   })
 }
 
-const removeTenantApps = async (tenantId: string) => {
+async function removeTenantApps(tenantId: string) {
   try {
     const apps = (await getAllApps({ all: true })) as App[]
     const destroyPromises = apps.map(app =>
-      doWithDB(app.appId, (db: any) => db.destroy())
+      doWithDB(app.appId, (db: Database) => db.destroy())
     )
     await Promise.allSettled(destroyPromises)
   } catch (err) {
@@ -97,7 +100,7 @@ const removeTenantApps = async (tenantId: string) => {
 }
 
 // can't live in tenancy package due to circular dependency on db/utils
-export const deleteTenant = async (tenantId: string) => {
+export async function deleteTenant(tenantId: string) {
   await removeTenantFromInfoDB(tenantId)
   await removeUsersFromInfoDB(tenantId)
   await removeGlobalDB(tenantId)

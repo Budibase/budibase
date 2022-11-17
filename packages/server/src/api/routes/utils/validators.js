@@ -1,8 +1,8 @@
 const { joiValidator } = require("@budibase/backend-core/auth")
 const { DataSourceOperation } = require("../../../constants")
 const {
-  BUILTIN_PERMISSION_IDS,
-  PermissionLevels,
+  BuiltinPermissionID,
+  PermissionLevel,
 } = require("@budibase/backend-core/permissions")
 const { WebhookActionType } = require("@budibase/types")
 const Joi = require("joi")
@@ -133,14 +133,14 @@ exports.webhookValidator = () => {
 }
 
 exports.roleValidator = () => {
-  const permLevelArray = Object.values(PermissionLevels)
+  const permLevelArray = Object.values(PermissionLevel)
   // prettier-ignore
   return joiValidator.body(Joi.object({
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
     name: Joi.string().required(),
     // this is the base permission ID (for now a built in)
-    permissionId: Joi.string().valid(...Object.values(BUILTIN_PERMISSION_IDS)).required(),
+    permissionId: Joi.string().valid(...Object.values(BuiltinPermissionID)).required(),
     permissions: Joi.object()
       .pattern(/.*/, [Joi.string().valid(...permLevelArray)])
       .optional(),
@@ -149,7 +149,7 @@ exports.roleValidator = () => {
 }
 
 exports.permissionValidator = () => {
-  const permLevelArray = Object.values(PermissionLevels)
+  const permLevelArray = Object.values(PermissionLevel)
   // prettier-ignore
   return joiValidator.params(Joi.object({
     level: Joi.string().valid(...permLevelArray).required(),
