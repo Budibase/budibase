@@ -120,7 +120,7 @@ class Orchestrator {
   }
 
   async getMetadata(): Promise<AutomationMetadata> {
-    const metadataId = generateAutomationMetadataID(this._automation._id)
+    const metadataId = generateAutomationMetadataID(this._automation._id!)
     const db = getAppDB()
     let metadata: AutomationMetadata
     try {
