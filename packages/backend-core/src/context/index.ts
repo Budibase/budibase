@@ -8,7 +8,7 @@ import {
   getDB,
   PouchLike,
 } from "../db"
-import { Context } from "./localStorage"
+import Context from "./Context"
 import { IdentityContext } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
 import { ContextMap } from "./constants"

@@ -479,7 +479,7 @@ export const bulkDelete = async (
     (user: RowResponse<User>) => {
       return user.doc
     }
-  ) as User[]
+  )
 
   // Delete from DB
   const toDelete = usersToDelete.map(user => ({

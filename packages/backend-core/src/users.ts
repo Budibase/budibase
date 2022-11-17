@@ -3,9 +3,9 @@ import {
   getUsersByAppParams,
   getProdAppID,
   generateAppUserID,
-} from "./db/utils"
-import { queryGlobalView } from "./db/views"
-import { UNICODE_MAX } from "./db/constants"
+  queryGlobalView,
+  UNICODE_MAX,
+} from "./db"
 import { BulkDocsResponse, User } from "@budibase/types"
 import { getGlobalDB } from "./context"
 

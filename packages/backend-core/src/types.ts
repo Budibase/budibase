@@ -1,1 +1,0 @@
-export { PouchLike } from "./db"
