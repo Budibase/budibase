@@ -23,6 +23,15 @@
   let open = false
   let flatpickr, flatpickrOptions
 
+  // Another classic flatpickr issue. Errors were randomly being thrown due to
+  // flatpickr internal code. Making sure that "destroy" is a valid function
+  // fixes it. The sooner we remove flatpickr the better.
+  $: {
+    if (flatpickr && !flatpickr.destroy) {
+      flatpickr.destroy = () => {}
+    }
+  }
+
   const resolveTimeStamp = timestamp => {
     let maskedDate = new Date(`0-${timestamp}`)
 
