@@ -10,7 +10,7 @@ const { inventoryImport } = require("./inventoryImport")
 const { employeeImport } = require("./employeeImport")
 const { jobsImport } = require("./jobsImport")
 const { expensesImport } = require("./expensesImport")
-const { BUDIBASE_DATASOURCE_TYPE } = require("../../constants")
+const { BUDIBASE_DATASOURCE_TYPE } = require("@budibase/backend-core/constants")
 
 exports.DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
 exports.DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"

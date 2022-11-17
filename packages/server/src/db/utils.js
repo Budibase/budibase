@@ -22,7 +22,7 @@ const {
   getGlobalIDFromUserMetadataID,
 } = require("@budibase/backend-core/db")
 
-const { BUDIBASE_DATASOURCE_TYPE } = require("../constants")
+const { BUDIBASE_DATASOURCE_TYPE } = require("@budibase/backend-core/constants")
 
 const UNICODE_MAX = "\ufff0"
 
