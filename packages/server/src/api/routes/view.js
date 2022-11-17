@@ -5,8 +5,8 @@ const authorized = require("../../middleware/authorized")
 const { paramResource } = require("../../middleware/resourceId")
 const {
   BUILDER,
-  PermissionTypes,
-  PermissionLevels,
+  PermissionType,
+  PermissionLevel,
 } = require("@budibase/backend-core/permissions")
 
 const router = new Router()
@@ -16,7 +16,7 @@ router
   .get(
     "/api/views/:viewName",
     paramResource("viewName"),
-    authorized(PermissionTypes.VIEW, PermissionLevels.READ),
+    authorized(PermissionType.VIEW, PermissionLevel.READ),
     rowController.fetchView
   )
   .get("/api/views", authorized(BUILDER), viewController.fetch)

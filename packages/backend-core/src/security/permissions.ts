@@ -5,7 +5,7 @@ export type RoleHierarchy = {
   permissionId: string
 }[]
 
-export enum PermissionLevels {
+export enum PermissionLevel {
   READ = "read",
   WRITE = "write",
   EXECUTE = "execute",
@@ -13,7 +13,7 @@ export enum PermissionLevels {
 }
 
 // these are the global types, that govern the underlying default behaviour
-export enum PermissionTypes {
+export enum PermissionType {
   APP = "app",
   TABLE = "table",
   USER = "user",
@@ -25,25 +25,25 @@ export enum PermissionTypes {
 }
 
 class Permission {
-  type: PermissionTypes
-  level: PermissionLevels
+  type: PermissionType
+  level: PermissionLevel
 
-  constructor(type: PermissionTypes, level: PermissionLevels) {
+  constructor(type: PermissionType, level: PermissionLevel) {
     this.type = type
     this.level = level
   }
 }
 
-function levelToNumber(perm: PermissionLevels) {
+function levelToNumber(perm: PermissionLevel) {
   switch (perm) {
     // not everything has execute privileges
-    case PermissionLevels.EXECUTE:
+    case PermissionLevel.EXECUTE:
       return 0
-    case PermissionLevels.READ:
+    case PermissionLevel.READ:
       return 1
-    case PermissionLevels.WRITE:
+    case PermissionLevel.WRITE:
       return 2
-    case PermissionLevels.ADMIN:
+    case PermissionLevel.ADMIN:
       return 3
     default:
       return -1
@@ -55,25 +55,25 @@ function levelToNumber(perm: PermissionLevels) {
  * @param {string} userPermLevel The permission level of the user.
  * @return {string[]} All the permission levels this user is allowed to carry out.
  */
-function getAllowedLevels(userPermLevel: PermissionLevels) {
+function getAllowedLevels(userPermLevel: PermissionLevel) {
   switch (userPermLevel) {
-    case PermissionLevels.EXECUTE:
-      return [PermissionLevels.EXECUTE]
-    case PermissionLevels.READ:
-      return [PermissionLevels.EXECUTE, PermissionLevels.READ]
-    case PermissionLevels.WRITE:
-    case PermissionLevels.ADMIN:
+    case PermissionLevel.EXECUTE:
+      return [PermissionLevel.EXECUTE]
+    case PermissionLevel.READ:
+      return [PermissionLevel.EXECUTE, PermissionLevel.READ]
+    case PermissionLevel.WRITE:
+    case PermissionLevel.ADMIN:
       return [
-        PermissionLevels.READ,
-        PermissionLevels.WRITE,
-        PermissionLevels.EXECUTE,
+        PermissionLevel.READ,
+        PermissionLevel.WRITE,
+        PermissionLevel.EXECUTE,
       ]
     default:
       return []
   }
 }
 
-export enum BUILTIN_PERMISSION_IDS {
+export enum BuiltinPermissionID {
   PUBLIC = "public",
   READ_ONLY = "read_only",
   WRITE = "write",
@@ -83,52 +83,52 @@ export enum BUILTIN_PERMISSION_IDS {
 
 const BUILTIN_PERMISSIONS = {
   PUBLIC: {
-    _id: BUILTIN_PERMISSION_IDS.PUBLIC,
+    _id: BuiltinPermissionID.PUBLIC,
     name: "Public",
     permissions: [
-      new Permission(PermissionTypes.WEBHOOK, PermissionLevels.EXECUTE),
+      new Permission(PermissionType.WEBHOOK, PermissionLevel.EXECUTE),
     ],
   },
   READ_ONLY: {
-    _id: BUILTIN_PERMISSION_IDS.READ_ONLY,
+    _id: BuiltinPermissionID.READ_ONLY,
     name: "Read only",
     permissions: [
-      new Permission(PermissionTypes.QUERY, PermissionLevels.READ),
-      new Permission(PermissionTypes.TABLE, PermissionLevels.READ),
-      new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
+      new Permission(PermissionType.QUERY, PermissionLevel.READ),
+      new Permission(PermissionType.TABLE, PermissionLevel.READ),
+      new Permission(PermissionType.VIEW, PermissionLevel.READ),
     ],
   },
   WRITE: {
-    _id: BUILTIN_PERMISSION_IDS.WRITE,
+    _id: BuiltinPermissionID.WRITE,
     name: "Read/Write",
     permissions: [
-      new Permission(PermissionTypes.QUERY, PermissionLevels.WRITE),
-      new Permission(PermissionTypes.TABLE, PermissionLevels.WRITE),
-      new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
-      new Permission(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
+      new Permission(PermissionType.QUERY, PermissionLevel.WRITE),
+      new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
+      new Permission(PermissionType.VIEW, PermissionLevel.READ),
+      new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
     ],
   },
   POWER: {
-    _id: BUILTIN_PERMISSION_IDS.POWER,
+    _id: BuiltinPermissionID.POWER,
     name: "Power",
     permissions: [
-      new Permission(PermissionTypes.TABLE, PermissionLevels.WRITE),
-      new Permission(PermissionTypes.USER, PermissionLevels.READ),
-      new Permission(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
-      new Permission(PermissionTypes.VIEW, PermissionLevels.READ),
-      new Permission(PermissionTypes.WEBHOOK, PermissionLevels.READ),
+      new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
+      new Permission(PermissionType.USER, PermissionLevel.READ),
+      new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
+      new Permission(PermissionType.VIEW, PermissionLevel.READ),
+      new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
     ],
   },
   ADMIN: {
-    _id: BUILTIN_PERMISSION_IDS.ADMIN,
+    _id: BuiltinPermissionID.ADMIN,
     name: "Admin",
     permissions: [
-      new Permission(PermissionTypes.TABLE, PermissionLevels.ADMIN),
-      new Permission(PermissionTypes.USER, PermissionLevels.ADMIN),
-      new Permission(PermissionTypes.AUTOMATION, PermissionLevels.ADMIN),
-      new Permission(PermissionTypes.VIEW, PermissionLevels.ADMIN),
-      new Permission(PermissionTypes.WEBHOOK, PermissionLevels.READ),
-      new Permission(PermissionTypes.QUERY, PermissionLevels.ADMIN),
+      new Permission(PermissionType.TABLE, PermissionLevel.ADMIN),
+      new Permission(PermissionType.USER, PermissionLevel.ADMIN),
+      new Permission(PermissionType.AUTOMATION, PermissionLevel.ADMIN),
+      new Permission(PermissionType.VIEW, PermissionLevel.ADMIN),
+      new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
+      new Permission(PermissionType.QUERY, PermissionLevel.ADMIN),
     ],
   },
 }
@@ -143,8 +143,8 @@ export function getBuiltinPermissionByID(id: string) {
 }
 
 export function doesHaveBasePermission(
-  permType: PermissionTypes,
-  permLevel: PermissionLevels,
+  permType: PermissionType,
+  permLevel: PermissionLevel,
   rolesHierarchy: RoleHierarchy
 ) {
   const basePermissions = [
@@ -167,9 +167,9 @@ export function doesHaveBasePermission(
   return false
 }
 
-export function isPermissionLevelHigherThanRead(level: PermissionLevels) {
+export function isPermissionLevelHigherThanRead(level: PermissionLevel) {
   return levelToNumber(level) > 1
 }
 
 // utility as a lot of things need simply the builder permission
-export const BUILDER = PermissionTypes.BUILDER
+export const BUILDER = PermissionType.BUILDER

@@ -70,7 +70,7 @@ export = async function builder(ctx: BBContext, permType: string) {
   if (!appId) {
     return
   }
-  const isBuilderApi = permType === permissions.PermissionTypes.BUILDER
+  const isBuilderApi = permType === permissions.PermissionType.BUILDER
   const referer = ctx.headers["referer"]
 
   const overviewPath = "/builder/portal/overview/"
