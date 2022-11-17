@@ -39,9 +39,7 @@
   hidden
   class="side-panel"
 >
-  {#if open}
-    <slot />
-  {/if}
+  <slot />
 </div>
 
 <style>
