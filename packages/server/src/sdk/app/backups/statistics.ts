@@ -1,4 +1,5 @@
-import { context, db as dbCore, PouchLike } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
+import { Database } from "@budibase/types"
 import {
   getDatasourceParams,
   getTableParams,
@@ -6,7 +7,7 @@ import {
   getScreenParams,
 } from "../../../db/utils"
 
-async function runInContext(appId: string, cb: any, db?: PouchLike) {
+async function runInContext(appId: string, cb: any, db?: Database) {
   if (db) {
     return cb(db)
   } else {
@@ -18,10 +19,10 @@ async function runInContext(appId: string, cb: any, db?: PouchLike) {
   }
 }
 
-export async function calculateDatasourceCount(appId: string, db?: PouchLike) {
+export async function calculateDatasourceCount(appId: string, db?: Database) {
   return runInContext(
     appId,
-    async (db: PouchLike) => {
+    async (db: Database) => {
       const datasourceList = await db.allDocs(getDatasourceParams())
       const tableList = await db.allDocs(getTableParams())
       return datasourceList.rows.length + tableList.rows.length
@@ -30,10 +31,10 @@ export async function calculateDatasourceCount(appId: string, db?: PouchLike) {
   )
 }
 
-export async function calculateAutomationCount(appId: string, db?: PouchLike) {
+export async function calculateAutomationCount(appId: string, db?: Database) {
   return runInContext(
     appId,
-    async (db: PouchLike) => {
+    async (db: Database) => {
       const automationList = await db.allDocs(getAutomationParams())
       return automationList.rows.length
     },
@@ -41,10 +42,10 @@ export async function calculateAutomationCount(appId: string, db?: PouchLike) {
   )
 }
 
-export async function calculateScreenCount(appId: string, db?: PouchLike) {
+export async function calculateScreenCount(appId: string, db?: Database) {
   return runInContext(
     appId,
-    async (db: PouchLike) => {
+    async (db: Database) => {
       const screenList = await db.allDocs(getScreenParams())
       return screenList.rows.length
     },
@@ -53,7 +54,7 @@ export async function calculateScreenCount(appId: string, db?: PouchLike) {
 }
 
 export async function calculateBackupStats(appId: string) {
-  return runInContext(appId, async (db: PouchLike) => {
+  return runInContext(appId, async (db: Database) => {
     const promises = []
     promises.push(calculateDatasourceCount(appId, db))
     promises.push(calculateAutomationCount(appId, db))

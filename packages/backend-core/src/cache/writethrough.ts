@@ -1,7 +1,7 @@
 import BaseCache from "./base"
 import { getWritethroughClient } from "../redis/init"
 import { logWarn } from "../logging"
-import { PouchLike } from "../db"
+import { Database } from "@budibase/types"
 
 const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null
@@ -19,7 +19,7 @@ async function getCache() {
   return CACHE
 }
 
-function makeCacheKey(db: PouchLike, key: string) {
+function makeCacheKey(db: Database, key: string) {
   return db.name + key
 }
 
@@ -28,7 +28,7 @@ function makeCacheItem(doc: any, lastWrite: number | null = null): CacheItem {
 }
 
 export async function put(
-  db: PouchLike,
+  db: Database,
   doc: any,
   writeRateMs: number = DEFAULT_WRITE_RATE_MS
 ) {
@@ -64,7 +64,7 @@ export async function put(
   return { ok: true, id: output._id, rev: output._rev }
 }
 
-export async function get(db: PouchLike, id: string): Promise<any> {
+export async function get(db: Database, id: string): Promise<any> {
   const cache = await getCache()
   const cacheKey = makeCacheKey(db, id)
   let cacheItem: CacheItem = await cache.get(cacheKey)
@@ -77,7 +77,7 @@ export async function get(db: PouchLike, id: string): Promise<any> {
 }
 
 export async function remove(
-  db: PouchLike,
+  db: Database,
   docOrId: any,
   rev?: any
 ): Promise<void> {
@@ -95,10 +95,10 @@ export async function remove(
 }
 
 export class Writethrough {
-  db: PouchLike
+  db: Database
   writeRateMs: number
 
-  constructor(db: PouchLike, writeRateMs: number = DEFAULT_WRITE_RATE_MS) {
+  constructor(db: Database, writeRateMs: number = DEFAULT_WRITE_RATE_MS) {
     this.db = db
     this.writeRateMs = writeRateMs
   }

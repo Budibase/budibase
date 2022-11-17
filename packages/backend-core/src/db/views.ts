@@ -1,8 +1,8 @@
 import { DocumentType, ViewName, DeprecatedViews, SEPARATOR } from "./utils"
 import { getGlobalDB } from "../context"
-import { PouchLike, QueryOpts } from "./couch"
 import { StaticDatabases } from "./constants"
 import { doWithDB } from "./"
+import { Database, DatabaseQueryOpts } from "@budibase/types"
 
 const DESIGN_DB = "_design/database"
 
@@ -19,7 +19,7 @@ interface DesignDocument {
   views: any
 }
 
-async function removeDeprecated(db: PouchLike, viewName: ViewName) {
+async function removeDeprecated(db: Database, viewName: ViewName) {
   // @ts-ignore
   if (!DeprecatedViews[viewName]) {
     return
@@ -70,7 +70,7 @@ export const createAccountEmailView = async () => {
       emit(doc.email.toLowerCase(), doc._id)
     }
   }`
-  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: PouchLike) => {
+  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
     await createView(db, viewJs, ViewName.ACCOUNT_BY_EMAIL)
   })
 }
@@ -114,7 +114,7 @@ export const createPlatformUserView = async () => {
       emit(doc._id.toLowerCase(), doc._id)
     }
   }`
-  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: PouchLike) => {
+  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
     await createView(db, viewJs, ViewName.PLATFORM_USERS_LOWERCASE)
   })
 }
@@ -125,8 +125,8 @@ export interface QueryViewOptions {
 
 export const queryView = async <T>(
   viewName: ViewName,
-  params: QueryOpts,
-  db: PouchLike,
+  params: DatabaseQueryOpts,
+  db: Database,
   createFunc: any,
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
@@ -157,7 +157,7 @@ export const queryView = async <T>(
 
 export const queryPlatformView = async <T>(
   viewName: ViewName,
-  params: QueryOpts,
+  params: DatabaseQueryOpts,
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   const CreateFuncByName: any = {
@@ -165,7 +165,7 @@ export const queryPlatformView = async <T>(
     [ViewName.PLATFORM_USERS_LOWERCASE]: createPlatformUserView,
   }
 
-  return doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: PouchLike) => {
+  return doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
     const createFn = CreateFuncByName[viewName]
     return queryView(viewName, params, db, createFn, opts)
   })
@@ -173,8 +173,8 @@ export const queryPlatformView = async <T>(
 
 export const queryGlobalView = async <T>(
   viewName: ViewName,
-  params: QueryOpts,
-  db?: PouchLike,
+  params: DatabaseQueryOpts,
+  db?: Database,
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   const CreateFuncByName: any = {

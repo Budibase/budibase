@@ -15,8 +15,7 @@ import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-import { PouchLike } from "./couch"
-import { App } from "@budibase/types"
+import { App, Database } from "@budibase/types"
 
 export * from "./constants"
 export * from "./conversions"
@@ -395,7 +394,7 @@ export async function getDevAppIDs() {
 export async function dbExists(dbName: any) {
   return doWithDB(
     dbName,
-    async (db: PouchLike) => {
+    async (db: Database) => {
       return await db.exists()
     },
     { skip_setup: true }

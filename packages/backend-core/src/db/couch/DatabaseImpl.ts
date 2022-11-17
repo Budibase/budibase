@@ -1,47 +1,35 @@
 import Nano from "nano"
-import { AllDocsResponse, AnyDocument } from "@budibase/types"
+import {
+  AllDocsResponse,
+  AnyDocument,
+  Database,
+  DatabaseOpts,
+  DatabaseQueryOpts,
+  DatabasePutOpts,
+} from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 
-export type PouchLikeOpts = {
-  skip_setup?: boolean
-}
-
-export type PutOpts = {
-  force?: boolean
-}
-
-export type QueryOpts = {
-  include_docs?: boolean
-  startkey?: string
-  endkey?: string
-  limit?: number
-  skip?: number
-  descending?: boolean
-  key?: string
-  keys?: string[]
-}
-
-export class PouchLike {
+export class DatabaseImpl implements Database {
   public readonly name: string
   private static nano: Nano.ServerScope
-  private readonly pouchOpts: PouchLikeOpts
+  private readonly pouchOpts: DatabaseOpts
 
-  constructor(dbName?: string, opts?: PouchLikeOpts) {
+  constructor(dbName?: string, opts?: DatabaseOpts) {
     if (dbName == null) {
       throw new Error("Database name cannot be undefined.")
     }
     this.name = dbName
     this.pouchOpts = opts || {}
-    if (!PouchLike.nano) {
-      PouchLike.init()
+    if (!DatabaseImpl.nano) {
+      DatabaseImpl.init()
     }
   }
 
   static init() {
     const couchInfo = getCouchInfo()
-    PouchLike.nano = Nano({
+    DatabaseImpl.nano = Nano({
       url: couchInfo.url,
       requestDefaults: {
         headers: {
@@ -65,9 +53,9 @@ export class PouchLike {
       throw new Error("DB does not exist")
     }
     if (!exists) {
-      await PouchLike.nano.db.create(this.name)
+      await DatabaseImpl.nano.db.create(this.name)
     }
-    return PouchLike.nano.db.use(this.name)
+    return DatabaseImpl.nano.db.use(this.name)
   }
 
   private async updateOutput(fnc: any) {
@@ -97,7 +85,7 @@ export class PouchLike {
     return this.updateOutput(() => db.destroy(id, rev))
   }
 
-  async put(document: AnyDocument, opts?: PutOpts) {
+  async put(document: AnyDocument, opts?: DatabasePutOpts) {
     if (!document._id) {
       throw new Error("Cannot store document without _id field.")
     }
@@ -126,14 +114,14 @@ export class PouchLike {
     return this.updateOutput(() => db.bulk({ docs: documents }))
   }
 
-  async allDocs<T>(params: QueryOpts): Promise<AllDocsResponse<T>> {
+  async allDocs<T>(params: DatabaseQueryOpts): Promise<AllDocsResponse<T>> {
     const db = await this.checkSetup()
     return this.updateOutput(() => db.list(params))
   }
 
   async query<T>(
     viewName: string,
-    params: QueryOpts
+    params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
     const db = await this.checkSetup()
     const [database, view] = viewName.split("/")
@@ -142,7 +130,7 @@ export class PouchLike {
 
   async destroy() {
     try {
-      await PouchLike.nano.db.destroy(this.name)
+      await DatabaseImpl.nano.db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
       if (err.statusCode === 404) {

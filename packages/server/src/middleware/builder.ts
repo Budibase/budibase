@@ -9,13 +9,8 @@ import {
   checkDebounce,
   setDebounce,
 } from "../utilities/redis"
-import {
-  db as dbCore,
-  cache,
-  permissions,
-  PouchLike,
-} from "@budibase/backend-core"
-import { BBContext } from "@budibase/types"
+import { db as dbCore, cache, permissions } from "@budibase/backend-core"
+import { BBContext, Database } from "@budibase/types"
 
 const DEBOUNCE_TIME_SEC = 30
 
@@ -55,7 +50,7 @@ async function updateAppUpdatedAt(ctx: BBContext) {
   if (ctx.method === "GET" || (await checkDebounce(appId))) {
     return
   }
-  await dbCore.doWithDB(appId, async (db: PouchLike) => {
+  await dbCore.doWithDB(appId, async (db: Database) => {
     const metadata = await db.get(DocumentType.APP_METADATA)
     metadata.updatedAt = new Date().toISOString()
 

@@ -6,10 +6,9 @@ import {
   getProdAppID,
   baseGlobalDBName,
   getDB,
-  PouchLike,
 } from "../db"
 import Context from "./Context"
-import { IdentityContext } from "@budibase/types"
+import { IdentityContext, Database } from "@budibase/types"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
 import { ContextMap } from "./constants"
 export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
@@ -182,7 +181,7 @@ export function updateAppId(appId: string) {
   }
 }
 
-export function getGlobalDB(): PouchLike {
+export function getGlobalDB(): Database {
   const context = Context.get()
   if (!context || (env.MULTI_TENANCY && !context.tenantId)) {
     throw new Error("Global DB not found")
@@ -194,7 +193,7 @@ export function getGlobalDB(): PouchLike {
  * Gets the app database based on whatever the request
  * contained, dev or prod.
  */
-export function getAppDB(opts?: any): PouchLike {
+export function getAppDB(opts?: any): Database {
   const appId = getAppId()
   return getDB(appId, opts)
 }
@@ -203,7 +202,7 @@ export function getAppDB(opts?: any): PouchLike {
  * This specifically gets the prod app ID, if the request
  * contained a development app ID, this will get the prod one.
  */
-export function getProdAppDB(opts?: any): PouchLike {
+export function getProdAppDB(opts?: any): Database {
   const appId = getAppId()
   if (!appId) {
     throw new Error("Unable to retrieve prod DB - no app ID.")
@@ -215,7 +214,7 @@ export function getProdAppDB(opts?: any): PouchLike {
  * This specifically gets the dev app ID, if the request
  * contained a prod app ID, this will get the dev one.
  */
-export function getDevAppDB(opts?: any): PouchLike {
+export function getDevAppDB(opts?: any): Database {
   const appId = getAppId()
   if (!appId) {
     throw new Error("Unable to retrieve dev DB - no app ID.")
