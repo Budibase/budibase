@@ -1,5 +1,5 @@
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
-const { BUILTIN_PERMISSION_IDS } = require("@budibase/backend-core/permissions")
+const { BuiltinPermissionID } = require("@budibase/backend-core/permissions")
 const { createHomeScreen } = require("../../constants/screens")
 const { EMPTY_LAYOUT } = require("../../constants/layouts")
 const { cloneDeep } = require("lodash/fp")
@@ -135,7 +135,7 @@ exports.basicRole = () => {
   return {
     name: "NewRole",
     inherits: BUILTIN_ROLE_IDS.BASIC,
-    permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY,
+    permissionId: BuiltinPermissionID.READ_ONLY,
   }
 }
 
