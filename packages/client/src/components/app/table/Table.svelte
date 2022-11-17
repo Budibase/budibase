@@ -132,6 +132,44 @@
   onDestroy(() => {
     rowSelectionStore.actions.updateSelection($component.id, [])
   })
+
+  const toggleSelectRow = row => {
+    let tempSelectedRows = []
+    if (!allowSelectRows) {
+      return
+    }
+    if (
+      selectedRows.some(
+        selectedRow => (selectedRow._id || selectedRow) === row._id
+      )
+    ) {
+      tempSelectedRows = selectedRows.filter(
+        selectedRow => (selectedRow._id || selectedRow) !== row._id
+      )
+    } else {
+      tempSelectedRows = [...selectedRows, row]
+    }
+    rowSelectionStore.actions.updateSelection(
+      $component.id,
+      tableId,
+      tempSelectedRows.map(row => row._id || row)
+    )
+  }
+
+  const toggleSelectAll = e => {
+    const select = e.detail
+    let tempSelectedRows = []
+    if (select) {
+      data.forEach(row => {
+        tempSelectedRows.push(row)
+      })
+    }
+    rowSelectionStore.actions.updateSelection(
+      $component.id,
+      tableId,
+      tempSelectedRows.map(row => row._id || row)
+    )
+  }
 </script>
 
 <div use:styleable={$component.styles} class={size}>
@@ -153,28 +191,9 @@
     on:sort={onSort}
     on:click={onClick}
     on:toggleselectrow={e => {
-      let tempSelectedRows = []
-      if (!allowSelectRows) {
-        return
-      }
-      const row = e.detail
-      if (
-        selectedRows.some(
-          selectedRow => (selectedRow._id || selectedRow) === row._id
-        )
-      ) {
-        tempSelectedRows = selectedRows.filter(
-          selectedRow => (selectedRow._id || selectedRow) !== row._id
-        )
-      } else {
-        tempSelectedRows = [...selectedRows, row]
-      }
-      rowSelectionStore.actions.updateSelection(
-        $component.id,
-        tableId,
-        tempSelectedRows.map(row => row._id || row)
-      )
+      toggleSelectRow(e.detail)
     }}
+    on:toggleselectall={e => toggleSelectAll(e)}
   >
     <slot />
   </Table>

@@ -219,24 +219,6 @@
     dispatch("editrow", cloneDeep(row))
   }
 
-  //TODO - toggle all
-  const toggleSelectAll = e => {
-    const select = !!e.detail
-    if (select) {
-      // Add any rows which are not already in selected rows
-      rows.forEach(row => {
-        if (selectedRows.findIndex(x => x._id === row._id) === -1) {
-          selectedRows.push(row)
-        }
-      })
-    } else {
-      // Remove any rows from selected rows that are in the current data set
-      selectedRows = selectedRows.filter(el =>
-        rows.every(f => f._id !== el._id)
-      )
-    }
-  }
-
   const computeCellStyles = schema => {
     let styles = {}
     Object.keys(schema || {}).forEach(field => {
@@ -281,7 +263,7 @@
               {#if allowSelectRows}
                 <Checkbox
                   bind:value={checkboxStatus}
-                  on:change={toggleSelectAll}
+                  on:change={e => dispatch("toggleselectall", e.detail)}
                 />
               {:else}
                 Edit
