@@ -16,14 +16,14 @@
   let measured = false
 
   $: definition = $componentStore.selectedComponentDefinition
-  $: showBar = definition?.showSettingsBar !== false && !$dndIsDragging
+  $: showBar =
+    definition?.showSettingsBar !== false && !$dndIsDragging && definition
   $: {
     if (!showBar) {
       measured = false
     }
   }
   $: settings = getBarSettings(definition)
-
   $: isScreen =
     $builderStore.selectedComponentId === $builderStore.screen?.props?._id
 
