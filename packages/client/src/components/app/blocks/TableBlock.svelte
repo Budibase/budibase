@@ -184,7 +184,7 @@
         props={{
           dataSource,
           filter: enrichedFilter,
-          sortColumn: sortColumn || normalFields?.[0],
+          sortColumn,
           sortOrder,
           paginate,
           limit: rowCount,
@@ -206,45 +206,49 @@
           }}
         />
       </BlockComponent>
-      <BlockComponent
-        type="sidepanel"
-        bind:id={detailsSidePanelId}
-        context="details-side-panel"
-        order={2}
-      >
+      {#if clickBehaviour === "details"}
         <BlockComponent
-          type="formblock"
-          props={{
-            dataSource,
-            showSaveButton: true,
-            showDeleteButton: true,
-            actionType: "Update",
-            rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
-            fields: normalFields,
-            title: "Row Details",
-            labelPosition: "left",
-          }}
-        />
-      </BlockComponent>
-      <BlockComponent
-        type="sidepanel"
-        bind:id={newRowSidePanelId}
-        context="new-side-panel"
-        order={3}
-      >
+          type="sidepanel"
+          bind:id={detailsSidePanelId}
+          context="details-side-panel"
+          order={2}
+        >
+          <BlockComponent
+            type="formblock"
+            props={{
+              dataSource,
+              showSaveButton: true,
+              showDeleteButton: true,
+              actionType: "Update",
+              rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
+              fields: normalFields,
+              title: "Row Details",
+              labelPosition: "left",
+            }}
+          />
+        </BlockComponent>
+      {/if}
+      {#if showTitleButton && titleButtonClickBehaviour === "new"}
         <BlockComponent
-          type="formblock"
-          props={{
-            dataSource,
-            showSaveButton: true,
-            showDeleteButton: false,
-            actionType: "Create",
-            fields: normalFields,
-            title: "Create Row",
-            labelPosition: "left",
-          }}
-        />
-      </BlockComponent>
+          type="sidepanel"
+          bind:id={newRowSidePanelId}
+          context="new-side-panel"
+          order={3}
+        >
+          <BlockComponent
+            type="formblock"
+            props={{
+              dataSource,
+              showSaveButton: true,
+              showDeleteButton: false,
+              actionType: "Create",
+              fields: normalFields,
+              title: "Create Row",
+              labelPosition: "left",
+            }}
+          />
+        </BlockComponent>
+      {/if}
     </BlockComponent>
   </Block>
 {/if}

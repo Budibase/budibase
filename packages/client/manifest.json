@@ -3667,7 +3667,7 @@
           "Ascending",
           "Descending"
         ],
-        "defaultValue": "Descending"
+        "defaultValue": "Ascending"
       },
       {
         "type": "number",
@@ -4578,7 +4578,7 @@
             "type": "boolean",
             "key": "showTitleButton",
             "label": "Show button above table",
-            "defaultValue": true
+            "defaultValue": false
           },
           {
             "type": "text",
