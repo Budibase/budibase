@@ -46,9 +46,7 @@ export default class TablesApi {
     const response = await this.api.del(`/tables/${id}/${revId}`)
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    expect(json.message).toEqual(
-      `Table ${id} deleted.`
-    )
+    expect(json.message).toEqual(`Table ${id} deleted.`)
     return [response, json]
   }
 }
