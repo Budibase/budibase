@@ -42,3 +42,4 @@ exports.Configs = {
 
 exports.MAX_VALID_DATE = new Date(2147483647000)
 exports.DEFAULT_TENANT_ID = "default"
+exports.BUDIBASE_DATASOURCE_TYPE = "budibase"
