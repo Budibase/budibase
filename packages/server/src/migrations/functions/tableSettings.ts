@@ -6,14 +6,23 @@ import { makePropSafe as safe } from "@budibase/string-templates"
  * November 2022
  *
  * Description:
- * Update table settings to use actions instead of links.
+ * Update table settings to use actions instead of links. We do not remove the
+ * legacy values here as we cannot guarantee that their apps are up-t-date.
+ * It is safe to simply save both the new and old structure in the definition.
+ *
+ * Migration 1:
  * Legacy "linkRows", "linkURL", "linkPeek" and "linkColumn" settings on tables
  * and table blocks are migrated into a "Navigate To" action under the new
  * "onClick" setting.
+ *
+ * Migration 2:
+ * Legacy "titleButtonURL" and "titleButtonPeek" settings on table blocks are
+ * migrated into a "Navigate To" action under the new "onClickTitleButton"
+ * setting.
  */
 export const run = async (appDb: any) => {
+  // Get all app screens
   let screens: Screen[]
-
   try {
     screens = (
       await appDb.allDocs(
@@ -38,7 +47,7 @@ export const run = async (appDb: any) => {
       delete screen.touched
       appDb.put(screen)
       console.log(
-        `Screen ${screen.routing?.route} contained tables which were migrated`
+        `Screen ${screen.routing?.route} contained table settings which were migrated`
       )
     }
   })
@@ -50,24 +59,49 @@ const migrateTableSettings = (component: any, screen: any) => {
   if (!component) {
     return
   }
-  // Migrate table setting
+
+  // Migration 1: migrate table row click settings
   if (
     component._component.endsWith("/table") ||
     component._component.endsWith("/tableblock")
   ) {
     const { linkRows, linkURL, linkPeek, linkColumn, onClick } = component
     if (linkRows && !onClick) {
-      const action = convertLinkSettingToAction(linkURL, linkPeek, linkColumn)
+      const column = linkColumn || "_id"
+      const action = convertLinkSettingToAction(linkURL, !!linkPeek, column)
       if (action) {
         screen.touched = true
         component.onClick = action
+        if (component._component.endsWith("/tableblock")) {
+          component.clickBehaviour = "actions"
+        }
       }
     }
   }
-  if (!component._children?.length) {
-    return
+
+  // Migration 2: migrate table block title button settings
+  if (component._component.endsWith("/tableblock")) {
+    const {
+      showTitleButton,
+      titleButtonURL,
+      titleButtonPeek,
+      onClickTitleButton,
+    } = component
+    if (showTitleButton && !onClickTitleButton) {
+      const action = convertLinkSettingToAction(
+        titleButtonURL,
+        !!titleButtonPeek
+      )
+      if (action) {
+        screen.touched = true
+        component.onClickTitleButton = action
+        component.titleButtonClickBehaviour = "actions"
+      }
+    }
   }
-  component._children.forEach((child: any) => {
+
+  // Recurse down the tree as needed
+  component._children?.forEach((child: any) => {
     migrateTableSettings(child, screen)
   })
 }
@@ -75,26 +109,34 @@ const migrateTableSettings = (component: any, screen: any) => {
 // Util ti convert the legacy settings into a navigation action structure
 const convertLinkSettingToAction = (
   linkURL: string,
-  linkPeek?: boolean,
+  linkPeek: boolean,
   linkColumn?: string
 ) => {
-  if (!linkURL?.includes("/:")) {
+  // Sanity check we have a URL
+  if (!linkURL) {
     return null
   }
 
-  // Convert old link URL setting, which is a screen URL, into a valid
-  // binding using the new clicked row binding
-  const split = linkURL.split("/:")
-  const col = linkColumn || "_id"
-  const binding = `{{ ${safe("eventContext")}.${safe("row")}.${safe(col)} }}`
-  const url = `${split[0]}/${binding}`
+  // Default URL to the old URL setting
+  let url = linkURL
 
+  // If we enriched the old URL with a column, update the url
+  if (linkColumn && linkURL.includes("/:")) {
+    // Convert old link URL setting, which is a screen URL, into a valid
+    // binding using the new clicked row binding
+    const split = linkURL.split("/:")
+    const col = linkColumn || "_id"
+    const binding = `{{ ${safe("eventContext")}.${safe("row")}.${safe(col)} }}`
+    url = `${split[0]}/${binding}`
+  }
+
+  // Create action structure
   return [
     {
       "##eventHandlerType": "Navigate To",
       parameters: {
         url,
-        peek: !!linkPeek,
+        peek: linkPeek,
       },
     },
   ]
