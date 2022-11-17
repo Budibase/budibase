@@ -3734,12 +3734,6 @@
         "required": true
       },
       {
-        "type": "number",
-        "label": "Row count",
-        "key": "rowCount",
-        "defaultValue": 8
-      },
-      {
         "type": "columns",
         "label": "Columns",
         "key": "columns",
@@ -3763,6 +3757,12 @@
         ]
       },
       {
+        "type": "number",
+        "label": "Row count",
+        "key": "rowCount",
+        "defaultValue": 8
+      },
+      {
         "type": "boolean",
         "label": "Quiet",
         "key": "quiet"
@@ -3774,25 +3774,25 @@
       },
       {
         "type": "boolean",
-        "label": "Show auto columns",
-        "key": "showAutoColumns",
-        "defaultValue": false
-      },
-      {
-        "type": "boolean",
         "label": "Allow row selection",
         "key": "allowSelectRows",
         "defaultValue": false,
         "info": "Row selection is only compatible with internal or SQL tables"
       },
+
       {
-        "type": "event",
-        "label": "On row click",
-        "key": "onClick",
-        "context": [
+        "section": true,
+        "name": "On Row Click",
+        "settings": [
           {
-            "label": "Clicked row",
-            "key": "row"
+            "type": "event",
+            "key": "onClick",
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
           }
         ]
       }
@@ -4446,69 +4446,14 @@
         "key": "title"
       },
       {
-        "type": "dataSource",
-        "label": "Data",
-        "key": "dataSource",
-        "required": true
-      },
-      {
-        "type": "searchfield",
-        "label": "Search Columns",
-        "key": "searchColumns",
-        "placeholder": "Choose search columns",
-        "info": "Only the first 5 search columns will be used"
-      },
-      {
-        "type": "filter",
-        "label": "Filtering",
-        "key": "filter"
-      },
-      {
-        "type": "field/sortable",
-        "label": "Sort Column",
-        "key": "sortColumn"
-      },
-      {
-        "type": "select",
-        "label": "Sort Order",
-        "key": "sortOrder",
-        "options": [
-          "Ascending",
-          "Descending"
-        ],
-        "defaultValue": "Descending"
-      },
-      {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "defaultValue": "spectrum--medium",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ]
-      },
-      {
-        "type": "boolean",
-        "label": "Paginate",
-        "key": "paginate",
-        "defaultValue": true
-      },
-      {
         "section": true,
         "name": "Table",
         "settings": [
           {
-            "type": "number",
-            "label": "Scroll Limit",
-            "key": "rowCount",
-            "defaultValue": 8
+            "type": "dataSource",
+            "label": "Data",
+            "key": "dataSource",
+            "required": true
           },
           {
             "type": "columns",
@@ -4519,8 +4464,51 @@
             "nested": true
           },
           {
+            "type": "field/sortable",
+            "label": "Sort By",
+            "key": "sortColumn"
+          },
+          {
+            "type": "select",
+            "label": "Sort Order",
+            "key": "sortOrder",
+            "options": [
+              "Ascending",
+              "Descending"
+            ],
+            "defaultValue": "Descending"
+          },
+          {
+            "type": "select",
+            "label": "Size",
+            "key": "size",
+            "defaultValue": "spectrum--medium",
+            "options": [
+              {
+                "label": "Medium",
+                "value": "spectrum--medium"
+              },
+              {
+                "label": "Large",
+                "value": "spectrum--large"
+              }
+            ]
+          },
+          {
+            "type": "number",
+            "label": "Scroll Limit",
+            "key": "rowCount",
+            "defaultValue": 8
+          },
+          {
             "type": "boolean",
-            "label": "Quiet table variant",
+            "label": "Paginate",
+            "key": "paginate",
+            "defaultValue": true
+          },
+          {
+            "type": "boolean",
+            "label": "Quiet",
             "key": "quiet"
           },
           {
@@ -4530,19 +4518,51 @@
           },
           {
             "type": "boolean",
-            "label": "Show auto columns",
-            "key": "showAutoColumns"
-          },
-          {
-            "type": "boolean",
             "label": "Allow row selection",
             "key": "allowSelectRows",
             "info": "Row selection is only compatible with internal or SQL tables"
           },
           {
+            "type": "filter",
+            "label": "Filtering",
+            "key": "filter"
+          },
+          {
+            "type": "searchfield",
+            "label": "Search Fields",
+            "key": "searchColumns",
+            "placeholder": "Choose search fields",
+            "info": "Only the first 5 search fields will be used"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "On row click",
+        "settings": [
+          {
+            "type": "radio",
+            "key": "clickBehaviour",
+            "defaultValue": "details",
+            "options": [
+              {
+                "label": "Show details side panel",
+                "value": "details"
+              },
+              {
+                "label": "Run actions",
+                "value": "actions"
+              }
+            ]
+          },
+          {
             "type": "event",
-            "label": "On row click",
             "key": "onClick",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "actions"
+            },
             "context": [{
               "label": "Clicked row",
               "key": "row"
@@ -4552,28 +4572,46 @@
       },
       {
         "section": true,
-        "name": "Title button",
+        "name": "Button",
         "settings": [
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show link button",
-            "defaultValue": false
-          },
-          {
-            "type": "boolean",
-            "label": "Open link in modal",
-            "key": "titleButtonPeek"
+            "label": "Show button above table",
+            "defaultValue": true
           },
           {
             "type": "text",
             "key": "titleButtonText",
-            "label": "Button text"
+            "label": "Text",
+            "defaultValue": "Create row",
+            "dependsOn": "showTitleButton"
           },
           {
-            "type": "url",
-            "label": "Button link",
-            "key": "titleButtonURL"
+            "type": "radio",
+            "key": "titleButtonClickBehaviour",
+            "label": "On Click",
+            "dependsOn": "showTitleButton",
+            "defaultValue": "new",
+            "options": [
+              {
+                "label": "Show new row side panel",
+                "value": "new"
+              },
+              {
+                "label": "Run actions",
+                "value": "actions"
+              }
+            ]
+          },
+          {
+            "type": "event",
+            "key": "onClickTitleButton",
+            "nested": true,
+            "dependsOn": {
+              "setting": "titleButtonClickBehaviour",
+              "value": "actions"
+            }
           }
         ]
       }

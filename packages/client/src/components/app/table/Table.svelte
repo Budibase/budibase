@@ -7,7 +7,6 @@
 
   export let dataProvider
   export let columns
-  export let showAutoColumns
   export let rowCount
   export let quiet
   export let size
@@ -32,7 +31,7 @@
   $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
   $: fullSchema = dataProvider?.schema ?? {}
-  $: fields = getFields(fullSchema, columns, showAutoColumns)
+  $: fields = getFields(fullSchema, columns, false)
   $: schema = getFilteredSchema(fullSchema, fields, hasChildren)
   $: setSorting = getAction(
     dataProvider?.id,

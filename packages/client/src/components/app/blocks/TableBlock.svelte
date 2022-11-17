@@ -13,37 +13,68 @@
   export let sortOrder
   export let paginate
   export let tableColumns
-  export let showAutoColumns
   export let rowCount
   export let quiet
   export let compact
   export let size
   export let allowSelectRows
+  export let clickBehaviour
   export let onClick
   export let showTitleButton
   export let titleButtonText
-  export let titleButtonURL
-  export let titleButtonPeek
+  export let titleButtonClickBehaviour
+  export let onClickTitleButton
 
   const { fetchDatasourceSchema } = getContext("sdk")
+  const stateKey = `${Math.random()}-id`
 
   let formId
   let dataProviderId
+  let detailsSidePanelId
+  let newRowSidePanelId
   let schema
   let schemaLoaded = false
 
   $: fetchSchema(dataSource)
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
-  $: titleButtonAction = [
-    {
-      "##eventHandlerType": "Navigate To",
-      parameters: {
-        peek: titleButtonPeek,
-        url: titleButtonURL,
-      },
-    },
-  ]
+  $: normalFields = getNormalFields(schema)
+  $: rowClickActions =
+    clickBehaviour === "actions"
+      ? onClick
+      : [
+          {
+            id: 0,
+            "##eventHandlerType": "Update State",
+            parameters: {
+              key: stateKey,
+              type: "set",
+              persist: false,
+              value: `{{ ${safe("eventContext")}.${safe("row")}.${safe(
+                "_id"
+              )} }}`,
+            },
+          },
+          {
+            id: 1,
+            "##eventHandlerType": "Open Side Panel",
+            parameters: {
+              id: detailsSidePanelId,
+            },
+          },
+        ]
+  $: buttonClickActions =
+    titleButtonClickBehaviour === "actions"
+      ? onClickTitleButton
+      : [
+          {
+            id: 0,
+            "##eventHandlerType": "Open Side Panel",
+            parameters: {
+              id: newRowSidePanelId,
+            },
+          },
+        ]
 
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
@@ -53,6 +84,17 @@
       })
     }
     schemaLoaded = true
+  }
+
+  const getNormalFields = schema => {
+    if (!schema) {
+      return []
+    }
+    return Object.entries(schema)
+      .filter(entry => {
+        return !entry[1].autocolumn
+      })
+      .map(entry => entry[0])
   }
 </script>
 
@@ -126,7 +168,7 @@
               <BlockComponent
                 type="button"
                 props={{
-                  onClick: titleButtonAction,
+                  onClick: buttonClickActions,
                   text: titleButtonText,
                   type: "cta",
                 }}
@@ -142,7 +184,7 @@
         props={{
           dataSource,
           filter: enrichedFilter,
-          sortColumn,
+          sortColumn: sortColumn || normalFields?.[0],
           sortOrder,
           paginate,
           limit: rowCount,
@@ -155,13 +197,51 @@
           props={{
             dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
             columns: tableColumns,
-            showAutoColumns,
             rowCount,
             quiet,
             compact,
             allowSelectRows,
             size,
-            onClick,
+            onClick: rowClickActions,
+          }}
+        />
+      </BlockComponent>
+      <BlockComponent
+        type="sidepanel"
+        bind:id={detailsSidePanelId}
+        context="details-side-panel"
+        order={2}
+      >
+        <BlockComponent
+          type="formblock"
+          props={{
+            dataSource,
+            showSaveButton: true,
+            showDeleteButton: true,
+            actionType: "Update",
+            rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
+            fields: normalFields,
+            title: "Row Details",
+            labelPosition: "left",
+          }}
+        />
+      </BlockComponent>
+      <BlockComponent
+        type="sidepanel"
+        bind:id={newRowSidePanelId}
+        context="new-side-panel"
+        order={3}
+      >
+        <BlockComponent
+          type="formblock"
+          props={{
+            dataSource,
+            showSaveButton: true,
+            showDeleteButton: false,
+            actionType: "Create",
+            fields: normalFields,
+            title: "Create Row",
+            labelPosition: "left",
           }}
         />
       </BlockComponent>

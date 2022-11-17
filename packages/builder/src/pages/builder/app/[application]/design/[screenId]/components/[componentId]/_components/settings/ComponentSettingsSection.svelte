@@ -36,7 +36,9 @@
       section.settings.forEach(setting => {
         setting.visible = canRenderControl(instance, setting, isScreen)
       })
-      section.visible = section.settings.some(setting => setting.visible)
+      section.visible =
+        section.name === "General" ||
+        section.settings.some(setting => setting.visible)
     })
 
     return sections

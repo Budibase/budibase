@@ -66,7 +66,7 @@
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
   $: resetKey = Helpers.hashString(
-    JSON.stringify(initialValues) + JSON.stringify(schema) + disabled
+    JSON.stringify(initialValues) + JSON.stringify(dataSource) + disabled
   )
 </script>
 
