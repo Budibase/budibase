@@ -54,7 +54,7 @@ module AwsMock {
 
     // @ts-ignore
     this.getSignedUrl = (operation, params) => {
-      return `/${params.Bucket}/${params.Key}`
+      return `http://test.com/${params.Bucket}/${params.Key}`
     }
   }
 
