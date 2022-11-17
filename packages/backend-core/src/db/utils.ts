@@ -26,7 +26,7 @@ export * from "./tenancy"
  * Generates a new app ID.
  * @returns {string} The new app ID which the app doc can be stored under.
  */
-export const generateAppID = (tenantId = null) => {
+export const generateAppID = (tenantId?: string | null) => {
   let id = APP_PREFIX
   if (tenantId) {
     id += `${tenantId}${SEPARATOR}`
@@ -251,7 +251,7 @@ export function generateRoleID(id: any) {
 /**
  * Gets parameters for retrieving a role, this is a utility function for the getDocParams function.
  */
-export function getRoleParams(roleId = null, otherProps = {}) {
+export function getRoleParams(roleId?: string | null, otherProps = {}) {
   return getDocParams(DocumentType.ROLE, roleId, otherProps)
 }
 
