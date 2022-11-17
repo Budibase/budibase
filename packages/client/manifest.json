@@ -286,7 +286,7 @@
     "showSettingsBar": true,
     "size": {
       "width": 105,
-      "height": 35
+      "height": 32
     },
     "settings": [
       {
@@ -687,7 +687,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 30
+      "height": 24
     },
     "settings": [
       {
@@ -2462,7 +2462,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 32
     },
     "settings": [
       {
@@ -2993,8 +2993,8 @@
     "icon": "SelectBox",
     "editable": true,
     "size": {
-      "width": 400,
-      "height": 50
+      "width": 20,
+      "height": 20
     },
     "settings": [
       {
