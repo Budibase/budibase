@@ -5,3 +5,9 @@ export interface AppBackupRestoreEvent extends BaseEvent {
   backupName: string
   backupCreatedAt: string
 }
+
+export interface AppBackupTriggeredEvent extends BaseEvent {
+  appId: string
+  backupName?: string
+  backupCreatedAt: string
+}
