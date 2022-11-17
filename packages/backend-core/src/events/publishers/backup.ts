@@ -2,6 +2,7 @@ import {
   AppBackup,
   AppBackupRestoreEvent,
   AppBackupTriggeredEvent,
+  AppBackupTrigger,
   Event,
 } from "@budibase/types"
 import { publishEvent } from "../events"
@@ -16,11 +17,15 @@ export async function appBackupRestored(backup: AppBackup) {
   await publishEvent(Event.APP_BACKUP_RESTORED, properties)
 }
 
-export async function appBackupTriggered(appId: string, name?: string) {
+export async function appBackupTriggered(
+  appId: string,
+  trigger: AppBackupTrigger,
+  name?: string
+) {
   const properties: AppBackupTriggeredEvent = {
     appId: appId,
     backupName: name,
-    backupCreatedAt: new Date().toISOString(),
+    trigger,
   }
   await publishEvent(Event.APP_BACKUP_TRIGGERED, properties)
 }
