@@ -208,12 +208,14 @@
       </BlockComponent>
       {#if clickBehaviour === "details"}
         <BlockComponent
+          name="Details side panel"
           type="sidepanel"
           bind:id={detailsSidePanelId}
           context="details-side-panel"
           order={2}
         >
           <BlockComponent
+            name="Details form block"
             type="formblock"
             props={{
               dataSource,
@@ -230,12 +232,14 @@
       {/if}
       {#if showTitleButton && titleButtonClickBehaviour === "new"}
         <BlockComponent
+          name="New row side panel"
           type="sidepanel"
           bind:id={newRowSidePanelId}
           context="new-side-panel"
           order={3}
         >
           <BlockComponent
+            name="New row form block"
             type="formblock"
             props={{
               dataSource,
