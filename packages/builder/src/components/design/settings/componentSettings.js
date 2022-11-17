@@ -1,4 +1,4 @@
-import { Checkbox, Select, Stepper } from "@budibase/bbui"
+import { Checkbox, Select, RadioGroup, Stepper } from "@budibase/bbui"
 import DataSourceSelect from "./controls/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
@@ -24,6 +24,7 @@ import BarButtonList from "./controls/BarButtonList.svelte"
 const componentMap = {
   text: DrawerBindableCombobox,
   select: Select,
+  radio: RadioGroup,
   dataSource: DataSourceSelect,
   "dataSource/s3": S3DataSourceSelect,
   dataProvider: DataProviderSelect,

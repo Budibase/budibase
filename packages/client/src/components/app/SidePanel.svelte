@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
 
   const component = getContext("component")
   const { styleable, sidePanelStore, builderStore } = getContext("sdk")
@@ -15,11 +15,9 @@
     }
     const update = visible => {
       if (visible) {
-        sidePanelStore.actions.open($component.id)
         target.appendChild(el)
         el.hidden = false
       } else {
-        sidePanelStore.actions.close()
         destroy()
         el.hidden = true
       }
@@ -41,7 +39,9 @@
   hidden
   class="side-panel"
 >
-  <slot />
+  {#if open}
+    <slot />
+  {/if}
 </div>
 
 <style>

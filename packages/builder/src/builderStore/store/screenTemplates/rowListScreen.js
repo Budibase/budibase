@@ -25,7 +25,7 @@ const generateTableBlock = table => {
       linkURL: `${rowListUrl(table)}/:id`,
       showAutoColumns: false,
       showTitleButton: true,
-      titleButtonText: "Create new",
+      titleButtonText: "Create row",
       titleButtonURL: newRowUrl(table),
       title: table.name,
       dataSource: {
