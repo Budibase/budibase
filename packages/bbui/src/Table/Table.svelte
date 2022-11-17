@@ -37,6 +37,7 @@
   export let autoSortColumns = true
   export let compact = false
   export let customPlaceholder = false
+  export let customToggleRowHandlers = false
   export let showHeaderBorder = true
   export let placeholderText = "No rows found"
 
@@ -219,6 +220,36 @@
     dispatch("editrow", cloneDeep(row))
   }
 
+  const toggleSelectRow = row => {
+    if (!allowSelectRows) {
+      return
+    }
+    if (selectedRows.some(selectedRow => selectedRow._id === row._id)) {
+      selectedRows = selectedRows.filter(
+        selectedRow => selectedRow._id !== row._id
+      )
+    } else {
+      selectedRows = [...selectedRows, row]
+    }
+  }
+
+  const toggleSelectAll = e => {
+    const select = !!e.detail
+    if (select) {
+      // Add any rows which are not already in selected rows
+      rows.forEach(row => {
+        if (selectedRows.findIndex(x => x._id === row._id) === -1) {
+          selectedRows.push(row)
+        }
+      })
+    } else {
+      // Remove any rows from selected rows that are in the current data set
+      selectedRows = selectedRows.filter(el =>
+        rows.every(f => f._id !== el._id)
+      )
+    }
+  }
+
   const computeCellStyles = schema => {
     let styles = {}
     Object.keys(schema || {}).forEach(field => {
@@ -263,7 +294,13 @@
               {#if allowSelectRows}
                 <Checkbox
                   bind:value={checkboxStatus}
-                  on:change={e => dispatch("toggleselectall", e.detail)}
+                  on:change={e => {
+                    if (customToggleRowHandlers) {
+                      dispatch("toggleselectall", e.detail)
+                    } else {
+                      toggleSelectAll(e)
+                    }
+                  }}
                 />
               {:else}
                 Edit
@@ -324,7 +361,11 @@
                 class:noBorderCheckbox={!showHeaderBorder}
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
                 on:click={e => {
-                  dispatch("toggleselectrow", row)
+                  if (customToggleRowHandlers) {
+                    dispatch("toggleselectrow", row)
+                  } else {
+                    toggleSelectRow(row)
+                  }
                   e.stopPropagation()
                 }}
               >

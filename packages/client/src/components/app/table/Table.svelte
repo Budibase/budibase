@@ -181,6 +181,7 @@
     {quiet}
     {compact}
     {customRenderers}
+    customToggleRowHandlers={true}
     allowSelectRows={allowSelectRows && table}
     bind:selectedRows
     allowEditRows={false}
