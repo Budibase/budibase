@@ -1,5 +1,5 @@
 <script>
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
 
   const component = getContext("component")
   const { styleable, sidePanelStore, builderStore } = getContext("sdk")

@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import { generate } from "shortid"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
@@ -26,7 +27,7 @@
   export let onClickTitleButton
 
   const { fetchDatasourceSchema } = getContext("sdk")
-  const stateKey = `${Math.random()}-id`
+  const stateKey = `ID_${generate()}`
 
   let formId
   let dataProviderId
@@ -50,9 +51,7 @@
               key: stateKey,
               type: "set",
               persist: false,
-              value: `{{ ${safe("eventContext")}.${safe("row")}.${safe(
-                "_id"
-              )} }}`,
+              value: `{{ ${safe("eventContext")}.${safe("row")}._id }}`,
             },
           },
           {
