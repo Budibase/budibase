@@ -16,7 +16,7 @@
   let measured = false
 
   $: definition = $componentStore.selectedComponentDefinition
-  $: showBar = definition?.showSettingsBar && !$dndIsDragging
+  $: showBar = definition?.showSettingsBar !== false && !$dndIsDragging
   $: {
     if (!showBar) {
       measured = false
