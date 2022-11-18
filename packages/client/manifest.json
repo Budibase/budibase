@@ -3940,7 +3940,7 @@
         "required": true
       },
       {
-        "type": "columns",
+        "type": "allowedFields",
         "label": "Allowed filter columns",
         "key": "allowedFields",
         "dependsOn": "dataProvider",
