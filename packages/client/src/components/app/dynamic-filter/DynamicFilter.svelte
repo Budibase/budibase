@@ -61,8 +61,9 @@
       clonedSchema = schema
     } else {
       allowedFields?.forEach(field => {
-        if (schema[field]) {
-          clonedSchema[field] = schema[field]
+        if (schema[field.name]) {
+          clonedSchema[field.name] = schema[field.name]
+          clonedSchema[field.name].displayName = field.displayName
         }
       })
     }
