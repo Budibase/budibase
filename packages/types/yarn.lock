@@ -471,7 +471,7 @@ ms@2.1.2:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
-nano@^10.1.0:
+nano@10.1.0:
   version "10.1.0"
   resolved "https://registry.yarnpkg.com/nano/-/nano-10.1.0.tgz#afdd5a7440e62f09a8e23f41fcea328d27383922"
   integrity sha512-COeN2TpLcHuSN44QLnPmfZCoCsKAg8/aelPOVqqm/2/MvRHDEA11/Kld5C4sLzDlWlhFZ3SO2WGJGevCsvcEzQ==
