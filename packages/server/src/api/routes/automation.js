@@ -3,8 +3,8 @@ const controller = require("../controllers/automation")
 const authorized = require("../../middleware/authorized")
 const {
   BUILDER,
-  PermissionLevels,
-  PermissionTypes,
+  PermissionLevel,
+  PermissionType,
 } = require("@budibase/backend-core/permissions")
 const { bodyResource, paramResource } = require("../../middleware/resourceId")
 const {
@@ -71,14 +71,14 @@ router
     "/api/automations/:id/trigger",
     appInfoMiddleware({ appType: AppType.PROD }),
     paramResource("id"),
-    authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
+    authorized(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
     controller.trigger
   )
   .post(
     "/api/automations/:id/test",
     appInfoMiddleware({ appType: AppType.DEV }),
     paramResource("id"),
-    authorized(PermissionTypes.AUTOMATION, PermissionLevels.EXECUTE),
+    authorized(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
     controller.test
   )
 

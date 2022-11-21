@@ -1,4 +1,4 @@
-import { TestConfiguration, API } from "../../../../tests"
+import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
 const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
@@ -8,7 +8,6 @@ jest.setTimeout(30000)
 
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
-  const api = new API(config)
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -35,7 +34,7 @@ describe("/api/global/email", () => {
       await Promise.race([config.saveEtherealSmtpConfig(), timeout()])
       await Promise.race([config.saveSettingsConfig(), timeout()])
 
-      const res = await api.emails.sendEmail(purpose).timeout(20000)
+      const res = await config.api.emails.sendEmail(purpose).timeout(20000)
       // ethereal hiccup, can't test right now
       if (res.status >= 300) {
         return

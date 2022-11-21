@@ -73,12 +73,12 @@ export async function fetchAPIKey(ctx: any) {
 }
 
 const checkCurrentApp = (ctx: any) => {
-  const appCookie = getCookie(ctx, constants.Cookies.CurrentApp)
+  const appCookie = getCookie(ctx, constants.Cookie.CurrentApp)
   if (appCookie && !tenancy.isUserInAppTenant(appCookie.appId)) {
     // there is a currentapp cookie from another tenant
     // remove the cookie as this is incompatible with the builder
     // due to builder and admin permissions being removed
-    clearCookie(ctx, constants.Cookies.CurrentApp)
+    clearCookie(ctx, constants.Cookie.CurrentApp)
   }
 }
 

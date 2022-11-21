@@ -4,16 +4,21 @@ jest.mock("node-fetch")
 
 // Mock isProdAppID to we can later mock the implementation and pretend we are
 // using prod app IDs
-const authDb = require("@budibase/backend-core/db")
-const { isProdAppID } = authDb
-const mockIsProdAppID = jest.fn(isProdAppID)
-authDb.isProdAppID = mockIsProdAppID
-
+jest.mock("@budibase/backend-core", () => {
+  const core = jest.requireActual("@budibase/backend-core")
+  return {
+    ...core,
+    db: {
+      ...core.db,
+      isProdAppID: jest.fn(),
+    }
+  }
+})
 const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { checkCacheForDynamicVariable } = require("../../../threads/utils")
 const { basicQuery, basicDatasource } = setup.structures
-const { events } = require("@budibase/backend-core")
+const { events, db: dbCore } = require("@budibase/backend-core")
 
 describe("/queries", () => {
   let request = setup.getRequest()
@@ -152,8 +157,8 @@ describe("/queries", () => {
 
     it("should remove sensitive info for prod apps", async () => {
       // Mock isProdAppID to pretend we are using a prod app
-      mockIsProdAppID.mockClear()
-      mockIsProdAppID.mockImplementation(() => true)
+      dbCore.isProdAppID.mockClear()
+      dbCore.isProdAppID.mockImplementation(() => true)
 
       const query = await config.createQuery()
       const res = await request
@@ -167,8 +172,8 @@ describe("/queries", () => {
       expect(res.body.schema).toBeDefined()
 
       // Reset isProdAppID mock
-      expect(mockIsProdAppID).toHaveBeenCalledTimes(1)
-      mockIsProdAppID.mockImplementation(isProdAppID)
+      expect(dbCore.isProdAppID).toHaveBeenCalledTimes(1)
+      dbCore.isProdAppID.mockImplementation(() => false)
     })
   })
 
