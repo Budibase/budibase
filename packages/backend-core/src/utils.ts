@@ -1,8 +1,12 @@
-import { DocumentType, SEPARATOR, ViewName, getAllApps } from "./db/utils"
-const jwt = require("jsonwebtoken")
+import {
+  DocumentType,
+  SEPARATOR,
+  ViewName,
+  getAllApps,
+  queryGlobalView,
+} from "./db"
 import { options } from "./middleware/passport/jwt"
-import { queryGlobalView } from "./db/views"
-import { Headers, Cookies, MAX_VALID_DATE } from "./constants"
+import { Header, Cookie, MAX_VALID_DATE } from "./constants"
 import env from "./environment"
 import userCache from "./cache/user"
 import { getSessionsForUser, invalidateSessions } from "./security/sessions"
@@ -15,6 +19,7 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 import { SetOption } from "cookies"
+const jwt = require("jsonwebtoken")
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
@@ -29,7 +34,7 @@ async function resolveAppUrl(ctx: BBContext) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
-  let tenantId = tenancy.getTenantId()
+  let tenantId: string | null = tenancy.getTenantId()
   if (env.MULTI_TENANCY) {
     // always use the tenant id from the subdomain in multi tenancy
     // this ensures the logged-in user tenant id doesn't overwrite
@@ -50,7 +55,7 @@ async function resolveAppUrl(ctx: BBContext) {
   return app && app.appId ? app.appId : undefined
 }
 
-export const isServingApp = (ctx: BBContext) => {
+export function isServingApp(ctx: BBContext) {
   // dev app
   if (ctx.path.startsWith(`/${APP_PREFIX}`)) {
     return true
@@ -67,9 +72,9 @@ export const isServingApp = (ctx: BBContext) => {
  * @param {object} ctx The main request body to look through.
  * @returns {string|undefined} If an appId was found it will be returned.
  */
-export const getAppIdFromCtx = async (ctx: BBContext) => {
+export async function getAppIdFromCtx(ctx: BBContext) {
   // look in headers
-  const options = [ctx.headers[Headers.APP_ID]]
+  const options = [ctx.headers[Header.APP_ID]]
   let appId
   for (let option of options) {
     appId = confirmAppId(option as string)
@@ -103,7 +108,7 @@ export const getAppIdFromCtx = async (ctx: BBContext) => {
  * opens the contents of the specified encrypted JWT.
  * @return {object} the contents of the token.
  */
-export const openJwt = (token: string) => {
+export function openJwt(token: string) {
   if (!token) {
     return token
   }
@@ -115,7 +120,7 @@ export const openJwt = (token: string) => {
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to get.
  */
-export const getCookie = (ctx: BBContext, name: string) => {
+export function getCookie(ctx: BBContext, name: string) {
   const cookie = ctx.cookies.get(name)
 
   if (!cookie) {
@@ -132,12 +137,12 @@ export const getCookie = (ctx: BBContext, name: string) => {
  * @param {string|object} value The value of cookie which will be set.
  * @param {object} opts options like whether to sign.
  */
-export const setCookie = (
+export function setCookie(
   ctx: BBContext,
   value: any,
   name = "builder",
   opts = { sign: true }
-) => {
+) {
   if (value && opts && opts.sign) {
     value = jwt.sign(value, options.secretOrKey)
   }
@@ -159,7 +164,7 @@ export const setCookie = (
 /**
  * Utility function, simply calls setCookie with an empty string for value
  */
-export const clearCookie = (ctx: BBContext, name: string) => {
+export function clearCookie(ctx: BBContext, name: string) {
   setCookie(ctx, null, name)
 }
 
@@ -169,11 +174,11 @@ export const clearCookie = (ctx: BBContext, name: string) => {
  * @param {object} ctx The koa context object to be tested.
  * @return {boolean} returns true if the call is from the client lib (a built app rather than the builder).
  */
-export const isClient = (ctx: BBContext) => {
-  return ctx.headers[Headers.TYPE] === "client"
+export function isClient(ctx: BBContext) {
+  return ctx.headers[Header.TYPE] === "client"
 }
 
-const getBuilders = async () => {
+async function getBuilders() {
   const builders = await queryGlobalView(ViewName.USER_BY_BUILDERS, {
     include_docs: false,
   })
@@ -189,7 +194,7 @@ const getBuilders = async () => {
   }
 }
 
-export const getBuildersCount = async () => {
+export async function getBuildersCount() {
   const builders = await getBuilders()
   return builders.length
 }
@@ -197,14 +202,14 @@ export const getBuildersCount = async () => {
 /**
  * Logs a user out from budibase. Re-used across account portal and builder.
  */
-export const platformLogout = async (opts: PlatformLogoutOpts) => {
+export async function platformLogout(opts: PlatformLogoutOpts) {
   const ctx = opts.ctx
   const userId = opts.userId
   const keepActiveSession = opts.keepActiveSession
 
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
-  const currentSession = getCookie(ctx, Cookies.Auth)
+  const currentSession = getCookie(ctx, Cookie.Auth)
   let sessions = await getSessionsForUser(userId)
 
   if (keepActiveSession) {
@@ -213,8 +218,8 @@ export const platformLogout = async (opts: PlatformLogoutOpts) => {
     )
   } else {
     // clear cookies
-    clearCookie(ctx, Cookies.Auth)
-    clearCookie(ctx, Cookies.CurrentApp)
+    clearCookie(ctx, Cookie.Auth)
+    clearCookie(ctx, Cookie.CurrentApp)
   }
 
   const sessionIds = sessions.map(({ sessionId }) => sessionId)
@@ -223,6 +228,6 @@ export const platformLogout = async (opts: PlatformLogoutOpts) => {
   await userCache.invalidateUser(userId)
 }
 
-export const timeout = (timeMs: number) => {
+export function timeout(timeMs: number) {
   return new Promise(resolve => setTimeout(resolve, timeMs))
 }

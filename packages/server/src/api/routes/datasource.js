@@ -3,8 +3,8 @@ const datasourceController = require("../controllers/datasource")
 const authorized = require("../../middleware/authorized")
 const {
   BUILDER,
-  PermissionLevels,
-  PermissionTypes,
+  PermissionLevel,
+  PermissionType,
 } = require("@budibase/backend-core/permissions")
 const {
   datasourceValidator,
@@ -17,17 +17,17 @@ router
   .get("/api/datasources", authorized(BUILDER), datasourceController.fetch)
   .get(
     "/api/datasources/:datasourceId",
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     datasourceController.find
   )
   .put(
     "/api/datasources/:datasourceId",
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     datasourceController.update
   )
   .post(
     "/api/datasources/query",
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     datasourceQueryValidator(),
     datasourceController.query
   )

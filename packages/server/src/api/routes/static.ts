@@ -4,8 +4,8 @@ import { budibaseTempDir } from "../../utilities/budibaseDir"
 import authorized from "../../middleware/authorized"
 import {
   BUILDER,
-  PermissionTypes,
-  PermissionLevels,
+  PermissionType,
+  PermissionLevel,
 } from "@budibase/backend-core/permissions"
 import * as env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
@@ -47,13 +47,13 @@ router
   .post(
     "/api/attachments/:tableId/upload",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     controller.uploadFile
   )
   .post(
     "/api/attachments/:tableId/delete",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     controller.deleteObjects
   )
   .get("/app/preview", authorized(BUILDER), controller.serveBuilderPreview)
@@ -61,7 +61,7 @@ router
   .get("/app/:appUrl/:path*", controller.serveApp)
   .post(
     "/api/attachments/:datasourceId/url",
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     controller.getSignedUploadURL
   )
 

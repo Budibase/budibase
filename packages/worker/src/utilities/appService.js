@@ -1,5 +1,5 @@
 const fetch = require("node-fetch")
-const { Headers } = require("@budibase/backend-core/constants")
+const { Header } = require("@budibase/backend-core/constants")
 const { getTenantId, isTenantIdSet } = require("@budibase/backend-core/tenancy")
 const { checkSlashesInUrl } = require("../utilities")
 const env = require("../environment")
@@ -9,9 +9,9 @@ async function makeAppRequest(url, method, body) {
     return
   }
   const request = { headers: {} }
-  request.headers[Headers.API_KEY] = env.INTERNAL_API_KEY
+  request.headers[Header.API_KEY] = env.INTERNAL_API_KEY
   if (isTenantIdSet()) {
-    request.headers[Headers.TENANT_ID] = getTenantId()
+    request.headers[Header.TENANT_ID] = getTenantId()
   }
   if (body) {
     request.headers["Content-Type"] = "application/json"

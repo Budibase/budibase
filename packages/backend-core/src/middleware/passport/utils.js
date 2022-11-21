@@ -1,6 +1,6 @@
 const { isMultiTenant, getTenantId } = require("../../tenancy")
 const { getScopedConfig } = require("../../db/utils")
-const { Configs } = require("../../constants")
+const { Config } = require("../../constants")
 
 /**
  * Utility to handle authentication errors.
@@ -24,7 +24,7 @@ exports.ssoCallbackUrl = async (db, config, type) => {
     return config.callbackURL
   }
   const publicConfig = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
+    type: Config.SETTINGS,
   })
 
   let callbackUrl = `/api/global/auth`
