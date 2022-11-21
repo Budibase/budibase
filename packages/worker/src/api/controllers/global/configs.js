@@ -4,7 +4,7 @@ const {
   getScopedFullConfig,
   getAllApps,
 } = require("@budibase/backend-core/db")
-const { Configs } = require("../../../constants")
+const { Config } = require("../../../constants")
 const email = require("../../../utilities/email")
 const {
   upload,
@@ -33,25 +33,25 @@ const getEventFns = async (db, config) => {
 
   if (!existing) {
     switch (config.type) {
-      case Configs.SMTP: {
+      case Config.SMTP: {
         fns.push(events.email.SMTPCreated)
         break
       }
-      case Configs.GOOGLE: {
+      case Config.GOOGLE: {
         fns.push(() => events.auth.SSOCreated(type))
         if (config.config.activated) {
           fns.push(() => events.auth.SSOActivated(type))
         }
         break
       }
-      case Configs.OIDC: {
+      case Config.OIDC: {
         fns.push(() => events.auth.SSOCreated(type))
         if (config.config.configs[0].activated) {
           fns.push(() => events.auth.SSOActivated(type))
         }
         break
       }
-      case Configs.SETTINGS: {
+      case Config.SETTINGS: {
         // company
         const company = config.config.company
         if (company && company !== "Budibase") {
@@ -78,11 +78,11 @@ const getEventFns = async (db, config) => {
     }
   } else {
     switch (config.type) {
-      case Configs.SMTP: {
+      case Config.SMTP: {
         fns.push(events.email.SMTPUpdated)
         break
       }
-      case Configs.GOOGLE: {
+      case Config.GOOGLE: {
         fns.push(() => events.auth.SSOUpdated(type))
         if (!existing.config.activated && config.config.activated) {
           fns.push(() => events.auth.SSOActivated(type))
@@ -91,7 +91,7 @@ const getEventFns = async (db, config) => {
         }
         break
       }
-      case Configs.OIDC: {
+      case Config.OIDC: {
         fns.push(() => events.auth.SSOUpdated(type))
         if (
           !existing.config.configs[0].activated &&
@@ -106,7 +106,7 @@ const getEventFns = async (db, config) => {
         }
         break
       }
-      case Configs.SETTINGS: {
+      case Config.SETTINGS: {
         // company
         const existingCompany = existing.config.company
         const company = config.config.company
@@ -155,7 +155,7 @@ exports.save = async function (ctx) {
   try {
     // verify the configuration
     switch (type) {
-      case Configs.SMTP:
+      case Config.SMTP:
         await email.verifyConfig(config)
         break
     }
@@ -237,7 +237,7 @@ exports.publicOidc = async function (ctx) {
   try {
     // Find the config with the most granular scope based on context
     const oidcConfig = await getScopedFullConfig(db, {
-      type: Configs.OIDC,
+      type: Config.OIDC,
     })
 
     if (!oidcConfig) {
@@ -260,15 +260,15 @@ exports.publicSettings = async function (ctx) {
   try {
     // Find the config with the most granular scope based on context
     const publicConfig = await getScopedFullConfig(db, {
-      type: Configs.SETTINGS,
+      type: Config.SETTINGS,
     })
 
     const googleConfig = await getScopedFullConfig(db, {
-      type: Configs.GOOGLE,
+      type: Config.GOOGLE,
     })
 
     const oidcConfig = await getScopedFullConfig(db, {
-      type: Configs.OIDC,
+      type: Config.OIDC,
     })
 
     let config
@@ -390,17 +390,17 @@ exports.configChecklist = async function (ctx) {
 
         // They have set up SMTP
         const smtpConfig = await getScopedFullConfig(db, {
-          type: Configs.SMTP,
+          type: Config.SMTP,
         })
 
         // They have set up Google Auth
         const googleConfig = await getScopedFullConfig(db, {
-          type: Configs.GOOGLE,
+          type: Config.GOOGLE,
         })
 
         // They have set up OIDC
         const oidcConfig = await getScopedFullConfig(db, {
-          type: Configs.OIDC,
+          type: Config.OIDC,
         })
 
         // They have set up an global user

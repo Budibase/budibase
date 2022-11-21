@@ -1,20 +1,21 @@
-const Joi = require("joi")
+import Joi from "joi"
+import { BBContext } from "@budibase/types"
 
-function validate(schema, property) {
+function validate(schema: Joi.Schema, property: string) {
   // Return a Koa middleware function
-  return (ctx, next) => {
+  return (ctx: BBContext, next: any) => {
     if (!schema) {
       return next()
     }
     let params = null
     if (ctx[property] != null) {
       params = ctx[property]
-    } else if (ctx.request[property] != null) {
-      params = ctx.request[property]
+    } else if (ctx.request.get(property) != null) {
+      params = ctx.request.get(property)
     }
 
     // not all schemas have the append property e.g. array schemas
-    if (schema.append) {
+    if ("append" in schema && schema.append) {
       schema = schema.append({
         createdAt: Joi.any().optional(),
         updatedAt: Joi.any().optional(),
@@ -30,10 +31,10 @@ function validate(schema, property) {
   }
 }
 
-module.exports.body = schema => {
+export function body(schema: Joi.Schema) {
   return validate(schema, "body")
 }
 
-module.exports.params = schema => {
+export function params(schema: Joi.Schema) {
   return validate(schema, "params")
 }

@@ -1,6 +1,6 @@
 const google = require("../google")
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
-const { Cookies, Configs } = require("../../../constants")
+const { Cookie, Config } = require("../../../constants")
 const { clearCookie, getCookie } = require("../../../utils")
 const { getScopedConfig, getPlatformUrl } = require("../../../db/utils")
 const { doWithDB } = require("../../../db")
@@ -11,7 +11,7 @@ async function fetchGoogleCreds() {
   // try and get the config from the tenant
   const db = getGlobalDB()
   const googleConfig = await getScopedConfig(db, {
-    type: Configs.GOOGLE,
+    type: Config.GOOGLE,
   })
   // or fall back to env variables
   return (
@@ -47,7 +47,7 @@ async function postAuth(passport, ctx, next) {
   const platformUrl = await getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
-  const authStateCookie = getCookie(ctx, Cookies.DatasourceAuth)
+  const authStateCookie = getCookie(ctx, Cookie.DatasourceAuth)
 
   return passport.authenticate(
     new GoogleStrategy(
@@ -57,7 +57,7 @@ async function postAuth(passport, ctx, next) {
         callbackURL: callbackUrl,
       },
       (accessToken, refreshToken, profile, done) => {
-        clearCookie(ctx, Cookies.DatasourceAuth)
+        clearCookie(ctx, Cookie.DatasourceAuth)
         done(null, { accessToken, refreshToken })
       }
     ),

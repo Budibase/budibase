@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "2.1.22-alpha.6",
+  "version": "2.1.22-alpha.8",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -20,7 +20,7 @@
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
-    "@budibase/types": "2.1.22-alpha.6",
+    "@budibase/types": "2.1.22-alpha.8",
     "@shopify/jest-koa-mocks": "5.0.1",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-sdk": "2.1030.0",
@@ -35,6 +35,7 @@
     "koa-passport": "4.1.4",
     "lodash": "4.17.21",
     "lodash.isarguments": "3.1.0",
+    "nano": "^10.1.0",
     "node-fetch": "2.6.7",
     "passport-google-auth": "1.0.2",
     "passport-google-oauth": "2.0.0",

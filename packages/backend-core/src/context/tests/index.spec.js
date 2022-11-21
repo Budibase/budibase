@@ -1,18 +1,9 @@
-import "../../../tests"
-import * as context from ".."
-import { DEFAULT_TENANT_ID } from "../../constants"
-import env from "../../environment"
-
-// must use require to spy index file exports due to known issue in jest
-const dbUtils = require("../../db")
-jest.spyOn(dbUtils, "closeDB")
-jest.spyOn(dbUtils, "dangerousGetDB")
+require("../../../tests")
+const context = require("../")
+const { DEFAULT_TENANT_ID } = require("../../constants")
+const env = require("../../environment")
 
 describe("context", () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
   describe("doInTenant", () => {
     describe("single-tenancy", () => {
       it("defaults to the default tenant", () => {
@@ -25,8 +16,6 @@ describe("context", () => {
           const db = context.getGlobalDB()
           expect(db.name).toBe("global-db")
         })
-        expect(dbUtils.dangerousGetDB).toHaveBeenCalledTimes(1)
-        expect(dbUtils.closeDB).toHaveBeenCalledTimes(1)
       })
     })
 
@@ -40,7 +29,7 @@ describe("context", () => {
           let error
           try {
             context.getTenantId()
-          } catch (e: any) {
+          } catch (e) {
             error = e
           }
           expect(error.message).toBe("Tenant id not found")
@@ -59,7 +48,7 @@ describe("context", () => {
           let error
           try {
             context.getGlobalDB()
-          } catch (e: any) {
+          } catch (e) {
             error = e
           }
           expect(error.message).toBe("Global DB not found")
@@ -85,8 +74,6 @@ describe("context", () => {
           const db = context.getGlobalDB()
           expect(db.name).toBe("test_global-db")
         })
-        expect(dbUtils.dangerousGetDB).toHaveBeenCalledTimes(1)
-        expect(dbUtils.closeDB).toHaveBeenCalledTimes(1)
       })
 
       it("sets the tenant id when nested with same tenant id", async () => {
@@ -121,10 +108,6 @@ describe("context", () => {
             })
           })
         })
-
-        // only 1 db is opened and closed
-        expect(dbUtils.dangerousGetDB).toHaveBeenCalledTimes(1)
-        expect(dbUtils.closeDB).toHaveBeenCalledTimes(1)
       })
 
       it("sets different tenant id inside another context", () => {

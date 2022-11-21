@@ -4,12 +4,10 @@ dbConfig.init()
 import env from "../environment"
 import controllers from "./controllers"
 const supertest = require("supertest")
-import { Configs } from "../constants"
+import { Config } from "../constants"
 import {
   users,
   tenancy,
-  Cookies,
-  Headers,
   sessions,
   auth,
   constants,
@@ -131,7 +129,7 @@ class TestConfiguration {
     const userRes = await this.api.users.getUser(res.userId, {
       headers: {
         ...this.internalAPIHeaders(),
-        [constants.Headers.TENANT_ID]: res.tenantId,
+        [constants.Header.TENANT_ID]: res.tenantId,
       },
     })
 
@@ -188,8 +186,8 @@ class TestConfiguration {
     const authCookie = auth.jwt.sign(authToken, env.JWT_SECRET)
     return {
       Accept: "application/json",
-      ...this.cookieHeader([`${Cookies.Auth}=${authCookie}`]),
-      [Headers.CSRF_TOKEN]: CSRF_TOKEN,
+      ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),
+      [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
     }
   }
 
@@ -205,7 +203,7 @@ class TestConfiguration {
   }
 
   internalAPIHeaders() {
-    return { [constants.Headers.API_KEY]: env.INTERNAL_API_KEY }
+    return { [constants.Header.API_KEY]: env.INTERNAL_API_KEY }
   }
 
   adminOnlyResponse = () => {
@@ -274,7 +272,7 @@ class TestConfiguration {
   // CONFIGS - SETTINGS
 
   async saveSettingsConfig() {
-    await this.deleteConfig(Configs.SETTINGS)
+    await this.deleteConfig(Config.SETTINGS)
     await this._req(
       structures.configs.settings(),
       null,
@@ -285,14 +283,19 @@ class TestConfiguration {
   // CONFIGS - GOOGLE
 
   async saveGoogleConfig() {
-    await this.deleteConfig(Configs.GOOGLE)
+    await this.deleteConfig(Config.GOOGLE)
     await this._req(structures.configs.google(), null, controllers.config.save)
   }
 
   // CONFIGS - OIDC
 
+  getOIDConfigCookie(configId: string) {
+    const token = auth.jwt.sign(configId, env.JWT_SECRET)
+    return this.cookieHeader([[`${constants.Cookie.OIDC_CONFIG}=${token}`]])
+  }
+
   async saveOIDCConfig() {
-    await this.deleteConfig(Configs.OIDC)
+    await this.deleteConfig(Config.OIDC)
     const config = structures.configs.oidc()
 
     await this._req(config, null, controllers.config.save)
@@ -302,12 +305,12 @@ class TestConfiguration {
   // CONFIGS - SMTP
 
   async saveSmtpConfig() {
-    await this.deleteConfig(Configs.SMTP)
+    await this.deleteConfig(Config.SMTP)
     await this._req(structures.configs.smtp(), null, controllers.config.save)
   }
 
   async saveEtherealSmtpConfig() {
-    await this.deleteConfig(Configs.SMTP)
+    await this.deleteConfig(Config.SMTP)
     await this._req(
       structures.configs.smtpEthereal(),
       null,
