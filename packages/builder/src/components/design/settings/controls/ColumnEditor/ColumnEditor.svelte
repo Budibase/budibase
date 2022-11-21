@@ -11,6 +11,7 @@
 
   export let componentInstance
   export let value = []
+  export let allowCellEditing = true
 
   const dispatch = createEventDispatcher()
 
@@ -73,5 +74,11 @@
     Configure the columns in your table.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={save}>Save</Button>
-  <ColumnDrawer slot="body" bind:columns={boundValue} {options} {schema} />
+  <ColumnDrawer
+    slot="body"
+    bind:columns={boundValue}
+    {options}
+    {schema}
+    {allowCellEditing}
+  />
 </Drawer>

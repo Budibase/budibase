@@ -3940,11 +3940,10 @@
         "required": true
       },
       {
-        "type": "allowedFields",
+        "type": "columns/basic",
         "label": "Allowed filter columns",
         "key": "allowedFields",
-        "dependsOn": "dataProvider",
-        "nested": true
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
