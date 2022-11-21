@@ -11,6 +11,7 @@ import { publishEvent } from "../events"
 export async function appBackupRestored(backup: AppBackup) {
   const properties: AppBackupRestoreEvent = {
     appId: backup.appId,
+    restoreId: backup._id!,
     backupCreatedAt: backup.timestamp,
   }
 
@@ -19,11 +20,13 @@ export async function appBackupRestored(backup: AppBackup) {
 
 export async function appBackupTriggered(
   appId: string,
+  backupId: string,
   type: AppBackupType,
   trigger: AppBackupTrigger
 ) {
   const properties: AppBackupTriggeredEvent = {
     appId: appId,
+    backupId,
     type,
     trigger,
   }
