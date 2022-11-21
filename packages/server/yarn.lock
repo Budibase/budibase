@@ -1273,12 +1273,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.1.22-alpha.6":
-  version "2.1.22-alpha.6"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.1.22-alpha.6.tgz#e9886620fcbee6fe0348365cb96ac6484fc5f8fd"
-  integrity sha512-P3NSgNuQXKmdeT8MLfeCji3ibRSeIIMSOQeNSQBWpaOTA69rpXQk753lHRwUWMpqil/ybsOuE/h1/Y3eTa+/UA==
+"@budibase/backend-core@2.1.31":
+  version "2.1.31"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.1.31.tgz#ba85cb70b71e0c1758b3e3d77f04562484aa3f26"
+  integrity sha512-k/LNehcX8JcjaWVP9PBySiOlFwnq3iE0a3H8SpXhSeMMNzPWM6hDhOKnnoV4Nvi82JUZQ/PH6qljL6NrvZqYRQ==
   dependencies:
-    "@budibase/types" "2.1.22-alpha.6"
+    "@budibase/types" "^2.1.31"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -1360,13 +1360,13 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@2.1.22-alpha.6":
-  version "2.1.22-alpha.6"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.1.22-alpha.6.tgz#e4d8238f1727eab85ac72b3ce2fcaec2a5c18456"
-  integrity sha512-1CKqQ2HMX+/5p24aHpPlUgxoMjKRZxRoyK5fPD/X35Z0mDj+9Ohny3oqbF1fC20pl/20bmcaE4J+q2ph/pbxdQ==
+"@budibase/pro@2.1.31":
+  version "2.1.31"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.1.31.tgz#98e7f2d39511981c0da0df9378c3ce5a6e7dce6b"
+  integrity sha512-bWbuuAvdASugA1+45upQsr1nCg7RAtWHRM0qdY6rbGIZVM/7NuNtYzzWPanKQQ4WYjlm2BO4XWPcI7CnkNebCw==
   dependencies:
-    "@budibase/backend-core" "2.1.22-alpha.6"
-    "@budibase/types" "2.1.22-alpha.6"
+    "@budibase/backend-core" "2.1.31"
+    "@budibase/types" "2.1.31"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1390,10 +1390,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@2.1.22-alpha.6":
-  version "2.1.22-alpha.6"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.1.22-alpha.6.tgz#a280321373c26a5bf1a52ed119de9178292893c0"
-  integrity sha512-rVrhs9u7OTzlCxgUFqBu5H6jsMHhwH8uduPhT8Eo7J+Wr4J/0Io7WeuAt1egK6t83JiEPxDBH3WLzAH+04hPVA==
+"@budibase/types@2.1.31", "@budibase/types@^2.1.31":
+  version "2.1.31"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.1.31.tgz#a644ff4eda77717fccf7572423739db53707ce1e"
+  integrity sha512-7N+ekrefxSH6tVB9624Z5fnwjpg5w9MxwvKQ9vpIuez7AEwx7th3qYKkDRaN6yuiarpejEzcrwZ73ngN6AnFPw==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -10076,9 +10076,9 @@ loader-runner@^4.2.0:
   integrity sha512-3R/1M+yS3j5ou80Me59j7F9IMs4PXs3VqRrm0TU3AbKPxlmpoY1TNscJV/oGJXo8qCatFGTfDbY6W6ipGOYXfg==
 
 loader-utils@^2.0.0:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/loader-utils/-/loader-utils-2.0.3.tgz#d4b15b8504c63d1fc3f2ade52d41bc8459d6ede1"
-  integrity sha512-THWqIsn8QRnvLl0shHYVBN9syumU8pYWEHPTmkiVGd+7K5eFNVSY6AJhRvgGF70gg1Dz+l/k8WicvFCxdEs60A==
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/loader-utils/-/loader-utils-2.0.4.tgz#8b5cb38b5c34a9a018ee1fc0e6a066d1dfcc528c"
+  integrity sha512-xXqpXoINfFhgua9xiqD8fPFHgkoq1mmmpE92WlDbm9rNRd/EbRb+Gqf908T2DMfuHjjJlksiK2RbHVOdD/MqSw==
   dependencies:
     big.js "^5.2.2"
     emojis-list "^3.0.0"

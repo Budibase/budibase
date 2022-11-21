@@ -31,7 +31,7 @@ async function makeRequest(method, endpoint, body, appId = config.getAppId()) {
   if (body) {
     req.send(body)
   }
-  const res = await req.expect("Content-Type", /json/).expect(200)
+  const res = await req
   expect(res.body).toBeDefined()
   return res
 }

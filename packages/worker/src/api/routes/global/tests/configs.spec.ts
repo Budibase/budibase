@@ -2,7 +2,7 @@
 jest.mock("nodemailer")
 import { TestConfiguration, structures, mocks } from "../../../../tests"
 mocks.email.mock()
-import { Configs, events } from "@budibase/backend-core"
+import { Config, events } from "@budibase/backend-core"
 
 describe("configs", () => {
   const config = new TestConfiguration()
@@ -49,20 +49,20 @@ describe("configs", () => {
         it("should create activated google config", async () => {
           await saveGoogleConfig()
           expect(events.auth.SSOCreated).toBeCalledTimes(1)
-          expect(events.auth.SSOCreated).toBeCalledWith(Configs.GOOGLE)
+          expect(events.auth.SSOCreated).toBeCalledWith(Config.GOOGLE)
           expect(events.auth.SSODeactivated).not.toBeCalled()
           expect(events.auth.SSOActivated).toBeCalledTimes(1)
-          expect(events.auth.SSOActivated).toBeCalledWith(Configs.GOOGLE)
-          await config.deleteConfig(Configs.GOOGLE)
+          expect(events.auth.SSOActivated).toBeCalledWith(Config.GOOGLE)
+          await config.deleteConfig(Config.GOOGLE)
         })
 
         it("should create deactivated google config", async () => {
           await saveGoogleConfig({ activated: false })
           expect(events.auth.SSOCreated).toBeCalledTimes(1)
-          expect(events.auth.SSOCreated).toBeCalledWith(Configs.GOOGLE)
+          expect(events.auth.SSOCreated).toBeCalledWith(Config.GOOGLE)
           expect(events.auth.SSOActivated).not.toBeCalled()
           expect(events.auth.SSODeactivated).not.toBeCalled()
-          await config.deleteConfig(Configs.GOOGLE)
+          await config.deleteConfig(Config.GOOGLE)
         })
       })
 
@@ -76,11 +76,11 @@ describe("configs", () => {
             googleConf._rev
           )
           expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-          expect(events.auth.SSOUpdated).toBeCalledWith(Configs.GOOGLE)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Config.GOOGLE)
           expect(events.auth.SSOActivated).not.toBeCalled()
           expect(events.auth.SSODeactivated).toBeCalledTimes(1)
-          expect(events.auth.SSODeactivated).toBeCalledWith(Configs.GOOGLE)
-          await config.deleteConfig(Configs.GOOGLE)
+          expect(events.auth.SSODeactivated).toBeCalledWith(Config.GOOGLE)
+          await config.deleteConfig(Config.GOOGLE)
         })
 
         it("should update google config to activated", async () => {
@@ -92,11 +92,11 @@ describe("configs", () => {
             googleConf._rev
           )
           expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-          expect(events.auth.SSOUpdated).toBeCalledWith(Configs.GOOGLE)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Config.GOOGLE)
           expect(events.auth.SSODeactivated).not.toBeCalled()
           expect(events.auth.SSOActivated).toBeCalledTimes(1)
-          expect(events.auth.SSOActivated).toBeCalledWith(Configs.GOOGLE)
-          await config.deleteConfig(Configs.GOOGLE)
+          expect(events.auth.SSOActivated).toBeCalledWith(Config.GOOGLE)
+          await config.deleteConfig(Config.GOOGLE)
         })
       })
     })
@@ -115,20 +115,20 @@ describe("configs", () => {
         it("should create activated OIDC config", async () => {
           await saveOIDCConfig()
           expect(events.auth.SSOCreated).toBeCalledTimes(1)
-          expect(events.auth.SSOCreated).toBeCalledWith(Configs.OIDC)
+          expect(events.auth.SSOCreated).toBeCalledWith(Config.OIDC)
           expect(events.auth.SSODeactivated).not.toBeCalled()
           expect(events.auth.SSOActivated).toBeCalledTimes(1)
-          expect(events.auth.SSOActivated).toBeCalledWith(Configs.OIDC)
-          await config.deleteConfig(Configs.OIDC)
+          expect(events.auth.SSOActivated).toBeCalledWith(Config.OIDC)
+          await config.deleteConfig(Config.OIDC)
         })
 
         it("should create deactivated OIDC config", async () => {
           await saveOIDCConfig({ activated: false })
           expect(events.auth.SSOCreated).toBeCalledTimes(1)
-          expect(events.auth.SSOCreated).toBeCalledWith(Configs.OIDC)
+          expect(events.auth.SSOCreated).toBeCalledWith(Config.OIDC)
           expect(events.auth.SSOActivated).not.toBeCalled()
           expect(events.auth.SSODeactivated).not.toBeCalled()
-          await config.deleteConfig(Configs.OIDC)
+          await config.deleteConfig(Config.OIDC)
         })
       })
 
@@ -142,11 +142,11 @@ describe("configs", () => {
             oidcConf._rev
           )
           expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-          expect(events.auth.SSOUpdated).toBeCalledWith(Configs.OIDC)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Config.OIDC)
           expect(events.auth.SSOActivated).not.toBeCalled()
           expect(events.auth.SSODeactivated).toBeCalledTimes(1)
-          expect(events.auth.SSODeactivated).toBeCalledWith(Configs.OIDC)
-          await config.deleteConfig(Configs.OIDC)
+          expect(events.auth.SSODeactivated).toBeCalledWith(Config.OIDC)
+          await config.deleteConfig(Config.OIDC)
         })
 
         it("should update OIDC config to activated", async () => {
@@ -158,11 +158,11 @@ describe("configs", () => {
             oidcConf._rev
           )
           expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-          expect(events.auth.SSOUpdated).toBeCalledWith(Configs.OIDC)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Config.OIDC)
           expect(events.auth.SSODeactivated).not.toBeCalled()
           expect(events.auth.SSOActivated).toBeCalledTimes(1)
-          expect(events.auth.SSOActivated).toBeCalledWith(Configs.OIDC)
-          await config.deleteConfig(Configs.OIDC)
+          expect(events.auth.SSOActivated).toBeCalledWith(Config.OIDC)
+          await config.deleteConfig(Config.OIDC)
         })
       })
     })
@@ -179,11 +179,11 @@ describe("configs", () => {
 
       describe("create", () => {
         it("should create SMTP config", async () => {
-          await config.deleteConfig(Configs.SMTP)
+          await config.deleteConfig(Config.SMTP)
           await saveSMTPConfig()
           expect(events.email.SMTPUpdated).not.toBeCalled()
           expect(events.email.SMTPCreated).toBeCalledTimes(1)
-          await config.deleteConfig(Configs.SMTP)
+          await config.deleteConfig(Config.SMTP)
         })
       })
 
@@ -194,7 +194,7 @@ describe("configs", () => {
           await saveSMTPConfig(smtpConf.config, smtpConf._id, smtpConf._rev)
           expect(events.email.SMTPCreated).not.toBeCalled()
           expect(events.email.SMTPUpdated).toBeCalledTimes(1)
-          await config.deleteConfig(Configs.SMTP)
+          await config.deleteConfig(Config.SMTP)
         })
       })
     })
@@ -211,7 +211,7 @@ describe("configs", () => {
 
       describe("create", () => {
         it("should create settings config with default settings", async () => {
-          await config.deleteConfig(Configs.SETTINGS)
+          await config.deleteConfig(Config.SETTINGS)
 
           await saveSettingsConfig()
 
@@ -222,7 +222,7 @@ describe("configs", () => {
 
         it("should create settings config with non-default settings", async () => {
           config.modeSelf()
-          await config.deleteConfig(Configs.SETTINGS)
+          await config.deleteConfig(Config.SETTINGS)
           const conf = {
             company: "acme",
             logoUrl: "http://example.com",
@@ -241,7 +241,7 @@ describe("configs", () => {
       describe("update", () => {
         it("should update settings config", async () => {
           config.modeSelf()
-          await config.deleteConfig(Configs.SETTINGS)
+          await config.deleteConfig(Config.SETTINGS)
           const settingsConfig = await saveSettingsConfig()
           settingsConfig.config.company = "acme"
           settingsConfig.config.logoUrl = "http://example.com"

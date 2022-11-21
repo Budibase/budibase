@@ -1,15 +1,17 @@
 const TestConfig = require("../../tests/utilities/TestConfiguration")
 const { basicRow, basicLinkedRow, basicTable } = require("../../tests/utilities/structures")
 const LinkController = require("../linkedRows/LinkController")
+const { context } = require("@budibase/backend-core")
 const { RelationshipTypes } = require("../../constants")
 const { cloneDeep } = require("lodash/fp")
 
 describe("test the link controller", () => {
   let config = new TestConfig(false)
-  let table1, table2
+  let table1, table2, appId
 
   beforeEach(async () => {
-    await config.init()
+    const app = await config.init()
+    appId = app.appId
     const { _id } = await config.createTable()
     table2 = await config.createLinkedTable(RelationshipTypes.MANY_TO_MANY, ["link", "link2"])
     // update table after creating link
@@ -18,18 +20,20 @@ describe("test the link controller", () => {
 
   afterAll(config.end)
 
-  function createLinkController(table, row = null, oldTable = null) {
-    const linkConfig = {
-      tableId: table._id,
-      table,
-    }
-    if (row) {
-      linkConfig.row = row
-    }
-    if (oldTable) {
-      linkConfig.oldTable = oldTable
-    }
-    return new LinkController(linkConfig)
+  async function createLinkController(table, row = null, oldTable = null) {
+    return context.doInAppContext(appId, () => {
+      const linkConfig = {
+        tableId: table._id,
+        table,
+      }
+      if (row) {
+        linkConfig.row = row
+      }
+      if (oldTable) {
+        linkConfig.oldTable = oldTable
+      }
+      return new LinkController(linkConfig)
+    })
   }
 
   async function createLinkedRow(linkField = "link", t1 = table1, t2 = table2) {
@@ -38,16 +42,16 @@ describe("test the link controller", () => {
     return config.getRow(t1._id, _id)
   }
 
-  it("should be able to confirm if two table schemas are equal", () => {
-    const controller = createLinkController(table1)
+  it("should be able to confirm if two table schemas are equal", async () => {
+    const controller = await createLinkController(table1)
     let equal = controller.areLinkSchemasEqual(table2.schema.link, table2.schema.link)
     expect(equal).toEqual(true)
     equal = controller.areLinkSchemasEqual(table1.schema.link, table2.schema.link)
     expect(equal).toEqual(false)
   })
 
-  it("should be able to check the relationship types across two fields", () => {
-    const controller = createLinkController(table1)
+  it("should be able to check the relationship types across two fields", async () => {
+    const controller = await createLinkController(table1)
     // empty case
     let output = controller.handleRelationshipType({}, {})
     expect(output.linkedField.relationshipType).toEqual(RelationshipTypes.MANY_TO_MANY)
@@ -65,29 +69,33 @@ describe("test the link controller", () => {
 
   it("should be able to delete a row", async () => {
     const row = await createLinkedRow()
-    const controller = createLinkController(table1, row)
-    // get initial count
-    const beforeLinks = await controller.getRowLinkDocs(row._id)
-    await controller.rowDeleted()
-    let afterLinks = await controller.getRowLinkDocs(row._id)
-    expect(beforeLinks.length).toEqual(1)
-    expect(afterLinks.length).toEqual(0)
+    const controller = await createLinkController(table1, row)
+    await context.doInAppContext(appId, async () => {
+      // get initial count
+      const beforeLinks = await controller.getRowLinkDocs(row._id)
+      await controller.rowDeleted()
+      let afterLinks = await controller.getRowLinkDocs(row._id)
+      expect(beforeLinks.length).toEqual(1)
+      expect(afterLinks.length).toEqual(0)
+    })
   })
 
   it("shouldn't throw an error when deleting a row with no links", async () => {
     const row = await config.createRow(basicRow(table1._id))
-    const controller = createLinkController(table1, row)
-    let error
-    try {
-      await controller.rowDeleted()
-    } catch (err) {
-      error = err
-    }
-    expect(error).toBeUndefined()
+    const controller = await createLinkController(table1, row)
+    await context.doInAppContext(appId, async () => {
+      let error
+      try {
+        await controller.rowDeleted()
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeUndefined()
+    })
   })
 
-  it("should throw an error when validating a table which is invalid", () => {
-    const controller = createLinkController(table1)
+  it("should throw an error when validating a table which is invalid", async () => {
+    const controller = await createLinkController(table1)
     const copyTable = {
       ...table1
     }
@@ -110,32 +118,38 @@ describe("test the link controller", () => {
     const row = await createLinkedRow()
     // remove the link from the row
     row.link = []
-    const controller = createLinkController(table1, row)
-    await controller.rowSaved()
-    let links = await controller.getRowLinkDocs(row._id)
-    expect(links.length).toEqual(0)
+    const controller = await createLinkController(table1, row)
+    await context.doInAppContext(appId, async () => {
+      await controller.rowSaved()
+      let links = await controller.getRowLinkDocs(row._id)
+      expect(links.length).toEqual(0)
+    })
   })
 
   it("should be able to delete a table and have links deleted", async () => {
     await createLinkedRow()
-    const controller = createLinkController(table1)
-    let before = await controller.getTableLinkDocs()
-    await controller.tableDeleted()
-    let after = await controller.getTableLinkDocs()
-    expect(before.length).toEqual(1)
-    expect(after.length).toEqual(0)
+    const controller = await createLinkController(table1)
+    await context.doInAppContext(appId, async () => {
+      let before = await controller.getTableLinkDocs()
+      await controller.tableDeleted()
+      let after = await controller.getTableLinkDocs()
+      expect(before.length).toEqual(1)
+      expect(after.length).toEqual(0)
+    })
   })
 
   it("should be able to remove a linked field from a table", async () => {
     await createLinkedRow()
     await createLinkedRow("link2")
-    const controller = createLinkController(table1, null, table1)
-    let before = await controller.getTableLinkDocs()
-    await controller.removeFieldFromTable("link")
-    let after = await controller.getTableLinkDocs()
-    expect(before.length).toEqual(2)
-    // shouldn't delete the other field
-    expect(after.length).toEqual(1)
+    const controller = await createLinkController(table1, null, table1)
+    await context.doInAppContext(appId, async () => {
+      let before = await controller.getTableLinkDocs()
+      await controller.removeFieldFromTable("link")
+      let after = await controller.getTableLinkDocs()
+      expect(before.length).toEqual(2)
+      // shouldn't delete the other field
+      expect(after.length).toEqual(1)
+    })
   })
 
   it("should throw an error when overwriting a link column", async () => {
@@ -143,7 +157,7 @@ describe("test the link controller", () => {
     update.schema.link.relationshipType = RelationshipTypes.MANY_TO_ONE
     let error
     try {
-      const controller = createLinkController(update)
+      const controller = await createLinkController(update)
       await controller.tableSaved()
     } catch (err) {
       error = err
@@ -156,10 +170,12 @@ describe("test the link controller", () => {
     await createLinkedRow()
     const newTable = cloneDeep(table1)
     delete newTable.schema.link
-    const controller = createLinkController(newTable, null, table1)
-    await controller.tableUpdated()
-    const links = await controller.getTableLinkDocs()
-    expect(links.length).toEqual(0)
+    const controller = await createLinkController(newTable, null, table1)
+    await context.doInAppContext(appId, async () => {
+      await controller.tableUpdated()
+      const links = await controller.getTableLinkDocs()
+      expect(links.length).toEqual(0)
+    })
   })
 
   it("shouldn't allow one to many having many relationships against it", async () => {

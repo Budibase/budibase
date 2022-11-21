@@ -1,6 +1,6 @@
 {
   "name": "@budibase/cli",
-  "version": "2.1.22-alpha.6",
+  "version": "2.1.32-alpha.1",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "src/index.js",
   "bin": {
@@ -26,9 +26,9 @@
     "outputPath": "build"
   },
   "dependencies": {
-    "@budibase/backend-core": "2.1.22-alpha.6",
-    "@budibase/string-templates": "2.1.22-alpha.6",
-    "@budibase/types": "2.1.22-alpha.6",
+    "@budibase/backend-core": "2.1.32-alpha.1",
+    "@budibase/string-templates": "2.1.32-alpha.1",
+    "@budibase/types": "2.1.32-alpha.1",
     "axios": "0.21.2",
     "chalk": "4.1.0",
     "cli-progress": "3.11.2",
@@ -41,7 +41,7 @@
     "joi": "17.6.0",
     "lookpath": "1.1.0",
     "node-fetch": "2",
-    "pkg": "5.7.0",
+    "pkg": "5.8.0",
     "posthog-node": "1.0.7",
     "pouchdb": "7.3.0",
     "pouchdb-replication-stream": "1.2.9",

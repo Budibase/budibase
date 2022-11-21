@@ -1,9 +1,9 @@
-const { Configs } = require("../../constants")
+const { Config } = require("../../constants")
 const { utils } = require("@budibase/backend-core")
 
 exports.oidc = conf => {
   return {
-    type: Configs.OIDC,
+    type: Config.OIDC,
     config: {
       configs: [
         {
@@ -23,7 +23,7 @@ exports.oidc = conf => {
 
 exports.google = conf => {
   return {
-    type: Configs.GOOGLE,
+    type: Config.GOOGLE,
     config: {
       clientID: "clientId",
       clientSecret: "clientSecret",
@@ -35,7 +35,7 @@ exports.google = conf => {
 
 exports.smtp = conf => {
   return {
-    type: Configs.SMTP,
+    type: Config.SMTP,
     config: {
       port: 12345,
       host: "smtptesthost.com",
@@ -49,7 +49,7 @@ exports.smtp = conf => {
 
 exports.smtpEthereal = () => {
   return {
-    type: Configs.SMTP,
+    type: Config.SMTP,
     config: {
       port: 587,
       host: "smtp.ethereal.email",
@@ -65,7 +65,7 @@ exports.smtpEthereal = () => {
 
 exports.settings = conf => {
   return {
-    type: Configs.SETTINGS,
+    type: Config.SETTINGS,
     config: {
       platformUrl: "http://localhost:10000",
       logoUrl: "",

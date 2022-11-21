@@ -1,36 +1,35 @@
-const { Client, utils } = require("@budibase/backend-core/redis")
-const { newid } = require("@budibase/backend-core/utils")
+import { redis, utils } from "@budibase/backend-core"
 
-function getExpirySecondsForDB(db) {
+function getExpirySecondsForDB(db: string) {
   switch (db) {
-    case utils.Databases.PW_RESETS:
+    case redis.utils.Databases.PW_RESETS:
       // a hour
       return 3600
-    case utils.Databases.INVITATIONS:
+    case redis.utils.Databases.INVITATIONS:
       // a day
       return 86400
   }
 }
 
-let pwResetClient, invitationClient
+let pwResetClient: any, invitationClient: any
 
-function getClient(db) {
+function getClient(db: string) {
   switch (db) {
-    case utils.Databases.PW_RESETS:
+    case redis.utils.Databases.PW_RESETS:
       return pwResetClient
-    case utils.Databases.INVITATIONS:
+    case redis.utils.Databases.INVITATIONS:
       return invitationClient
   }
 }
 
-async function writeACode(db, value) {
+async function writeACode(db: string, value: any) {
   const client = await getClient(db)
-  const code = newid()
+  const code = utils.newid()
   await client.store(code, value, getExpirySecondsForDB(db))
   return code
 }
 
-async function getACode(db, code, deleteCode = true) {
+async function getACode(db: string, code: string, deleteCode = true) {
   const client = await getClient(db)
   const value = await client.get(code)
   if (!value) {
@@ -42,9 +41,9 @@ async function getACode(db, code, deleteCode = true) {
   return value
 }
 
-exports.init = async () => {
-  pwResetClient = new Client(utils.Databases.PW_RESETS)
-  invitationClient = new Client(utils.Databases.INVITATIONS)
+export async function init() {
+  pwResetClient = new redis.Client(redis.utils.Databases.PW_RESETS)
+  invitationClient = new redis.Client(redis.utils.Databases.INVITATIONS)
   await pwResetClient.init()
   await invitationClient.init()
 }
@@ -52,7 +51,7 @@ exports.init = async () => {
 /**
  * make sure redis connection is closed.
  */
-exports.shutdown = async () => {
+export async function shutdown() {
   if (pwResetClient) await pwResetClient.finish()
   if (invitationClient) await invitationClient.finish()
   console.log("Redis shutdown")
@@ -65,8 +64,8 @@ exports.shutdown = async () => {
  * @param {object} info Info about the user/the reset process.
  * @return {Promise<string>} returns the code that was stored to redis.
  */
-exports.getResetPasswordCode = async (userId, info) => {
-  return writeACode(utils.Databases.PW_RESETS, { userId, info })
+export async function getResetPasswordCode(userId: string, info: any) {
+  return writeACode(redis.utils.Databases.PW_RESETS, { userId, info })
 }
 
 /**
@@ -75,9 +74,12 @@ exports.getResetPasswordCode = async (userId, info) => {
  * @param {boolean} deleteCode If the code is used/finished with this will delete it - defaults to true.
  * @return {Promise<string>} returns the user ID if it is found
  */
-exports.checkResetPasswordCode = async (resetCode, deleteCode = true) => {
+export async function checkResetPasswordCode(
+  resetCode: string,
+  deleteCode = true
+) {
   try {
-    return getACode(utils.Databases.PW_RESETS, resetCode, deleteCode)
+    return getACode(redis.utils.Databases.PW_RESETS, resetCode, deleteCode)
   } catch (err) {
     throw "Provided information is not valid, cannot reset password - please try again."
   }
@@ -89,8 +91,8 @@ exports.checkResetPasswordCode = async (resetCode, deleteCode = true) => {
  * @param {object|null} info Information to be carried along with the invitation.
  * @return {Promise<string>} returns the code that was stored to redis.
  */
-exports.getInviteCode = async (email, info) => {
-  return writeACode(utils.Databases.INVITATIONS, { email, info })
+export async function getInviteCode(email: string, info: any) {
+  return writeACode(redis.utils.Databases.INVITATIONS, { email, info })
 }
 
 /**
@@ -99,9 +101,12 @@ exports.getInviteCode = async (email, info) => {
  * @param {boolean} deleteCode whether or not the code should be deleted after retrieval - defaults to true.
  * @return {Promise<object>} If the code is valid then an email address will be returned.
  */
-exports.checkInviteCode = async (inviteCode, deleteCode = true) => {
+export async function checkInviteCode(
+  inviteCode: string,
+  deleteCode: boolean = true
+) {
   try {
-    return getACode(utils.Databases.INVITATIONS, inviteCode, deleteCode)
+    return getACode(redis.utils.Databases.INVITATIONS, inviteCode, deleteCode)
   } catch (err) {
     throw "Invitation is not valid or has expired, please request a new one."
   }
