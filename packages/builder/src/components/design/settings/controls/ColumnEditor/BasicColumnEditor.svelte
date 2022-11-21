@@ -9,4 +9,5 @@
   {...$$props}
   on:change={e => dispatch("change", e.detail)}
   allowCellEditing={false}
+  subject="Dynamic Filter"
 />
