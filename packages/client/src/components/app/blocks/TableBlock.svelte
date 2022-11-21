@@ -26,19 +26,22 @@
   export let titleButtonClickBehaviour
   export let onClickTitleButton
 
-  const { fetchDatasourceSchema } = getContext("sdk")
+  const { fetchDatasourceSchema, API } = getContext("sdk")
   const stateKey = `ID_${generate()}`
 
   let formId
   let dataProviderId
+  let detailsFormBlockId
   let detailsSidePanelId
   let newRowSidePanelId
   let schema
+  let primaryDisplay
   let schemaLoaded = false
 
   $: fetchSchema(dataSource)
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
+  $: editTitle = getEditTitle(detailsFormBlockId, primaryDisplay)
   $: normalFields = getNormalFields(schema)
   $: rowClickActions =
     clickBehaviour === "actions"
@@ -77,7 +80,11 @@
 
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
-    if (dataSource) {
+    if (dataSource?.type === "table") {
+      const definition = await API.fetchTableDefinition(dataSource?.tableId)
+      schema = definition.schema
+      primaryDisplay = definition.primaryDisplay
+    } else if (dataSource) {
       schema = await fetchDatasourceSchema(dataSource, {
         enrichRelationships: true,
       })
@@ -94,6 +101,14 @@
         return !entry[1].autocolumn
       })
       .map(entry => entry[0])
+  }
+
+  const getEditTitle = (detailsFormBlockId, primaryDisplay) => {
+    if (!primaryDisplay || !detailsFormBlockId) {
+      return "Edit"
+    }
+    const prefix = safe(detailsFormBlockId + "-repeater")
+    return `{{ ${prefix}.${safe(primaryDisplay)} }}`
   }
 </script>
 
@@ -183,7 +198,7 @@
         props={{
           dataSource,
           filter: enrichedFilter,
-          sortColumn,
+          sortColumn: sortColumn || primaryDisplay,
           sortOrder,
           paginate,
           limit: rowCount,
@@ -216,6 +231,7 @@
           <BlockComponent
             name="Details form block"
             type="formblock"
+            bind:id={detailsFormBlockId}
             props={{
               dataSource,
               showSaveButton: true,
@@ -223,7 +239,7 @@
               actionType: "Update",
               rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
               fields: normalFields,
-              title: "Row Details",
+              title: editTitle,
               labelPosition: "left",
             }}
           />
