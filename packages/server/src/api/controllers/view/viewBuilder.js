@@ -31,6 +31,12 @@ const GROUP_PROPERTY = {
   },
 }
 
+const GROUP_PROPERTY_MULTI = {
+  group: {
+    type: "array",
+  },
+}
+
 const FIELD_PROPERTY = {
   field: {
     type: "string",
@@ -126,7 +132,10 @@ function parseEmitExpression(field, groupBy) {
  * filters: Array of filter objects containing predicates that are parsed into a JS expression
  * calculation: an optional calculation to be performed over the view data.
  */
-function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
+function viewTemplate(
+  { field, tableId, groupBy, filters = [], calculation },
+  groupByMulti
+) {
   // first filter can't have a conjunction
   if (filters && filters.length > 0 && filters[0].conjunction) {
     delete filters[0].conjunction
@@ -135,9 +144,11 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
   let schema = null,
     statFilter = null
 
+  let groupBySchema = groupByMulti ? GROUP_PROPERTY_MULTI : GROUP_PROPERTY
+
   if (calculation) {
     schema = {
-      ...(groupBy ? GROUP_PROPERTY : FIELD_PROPERTY),
+      ...(groupBy ? groupBySchema : FIELD_PROPERTY),
       ...SCHEMA_MAP[calculation],
     }
     if (

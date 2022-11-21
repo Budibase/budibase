@@ -17,7 +17,15 @@ exports.fetch = async ctx => {
 exports.save = async ctx => {
   const db = getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
-  const view = viewTemplate(viewToSave)
+
+  const existingTable = await db.get(ctx.request.body.tableId)
+  const table = cloneDeep(existingTable)
+
+  const groupByField = Object.values(table.schema).find(
+    field => field.name == viewToSave.groupBy
+  )
+
+  const view = viewTemplate(viewToSave, groupByField?.type === FieldTypes.ARRAY)
   const viewName = viewToSave.name
 
   if (!viewName) {
@@ -27,8 +35,6 @@ exports.save = async ctx => {
   await saveView(originalName, viewName, view)
 
   // add views to table document
-  const existingTable = await db.get(ctx.request.body.tableId)
-  const table = cloneDeep(existingTable)
   if (!table.views) table.views = {}
   if (!view.meta.schema) {
     view.meta.schema = table.schema
