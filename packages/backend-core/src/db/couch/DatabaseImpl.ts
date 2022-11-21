@@ -6,12 +6,15 @@ import {
   DatabaseOpts,
   DatabaseQueryOpts,
   DatabasePutOpts,
+  DatabaseCreateIndexOpts,
+  DatabaseDeleteIndexOpts,
   Document,
   isDocument,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
+import { WriteStream, ReadStream } from "fs"
 
 export class DatabaseImpl implements Database {
   public readonly name: string
@@ -159,34 +162,32 @@ export class DatabaseImpl implements Database {
     return this.updateOutput(() => db.compact())
   }
 
-  private doWithPouchDB(func: string) {
-    const dbName = this.name
-    return async (args: any[]) => {
-      const pouch = getPouchDB(dbName)
-      // @ts-ignore
-      return pouch[func](...args)
-    }
-  }
-
   // All below functions are in-frequently called, just utilise PouchDB
   // for them as it implements them better than we can
-  async dump(...args: any[]) {
-    return this.doWithPouchDB("dump")(args)
+  async dump(stream: WriteStream, opts?: { filter?: any }) {
+    const pouch = getPouchDB(this.name)
+    // @ts-ignore
+    return pouch.dump(stream, opts)
   }
 
-  async load(...args: any[]) {
-    return this.doWithPouchDB("load")(args)
+  async load(stream: ReadStream) {
+    const pouch = getPouchDB(this.name)
+    // @ts-ignore
+    return pouch.load(stream)
   }
 
-  async createIndex(...args: any[]) {
-    return this.doWithPouchDB("createIndex")(args)
+  async createIndex(opts: DatabaseCreateIndexOpts) {
+    const pouch = getPouchDB(this.name)
+    return pouch.createIndex(opts)
   }
 
-  async deleteIndex(...args: any[]) {
-    return this.doWithPouchDB("createIndex")(args)
+  async deleteIndex(opts: DatabaseDeleteIndexOpts) {
+    const pouch = getPouchDB(this.name)
+    return pouch.deleteIndex(opts)
   }
 
-  async getIndexes(...args: any[]) {
-    return this.doWithPouchDB("createIndex")(args)
+  async getIndexes() {
+    const pouch = getPouchDB(this.name)
+    return pouch.getIndexes()
   }
 }

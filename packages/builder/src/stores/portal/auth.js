@@ -155,9 +155,9 @@ export function createAuthStore() {
       await actions.getSelf()
     },
     logout: async () => {
-      setUser(null)
-      setPostLogout()
       await API.logOut()
+      setPostLogout()
+      setUser(null)
       await setInitInfo({})
     },
     updateSelf: async fields => {
