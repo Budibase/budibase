@@ -1,6 +1,6 @@
 import PouchDB from "pouchdb"
 import Nano from "nano"
-import { AllDocsResponse, AnyDocument } from "../"
+import { AllDocsResponse, AnyDocument, Document } from "../"
 
 export type PouchOptions = {
   inMemory?: boolean
@@ -33,6 +33,21 @@ export type DatabasePutOpts = {
   force?: boolean
 }
 
+export type DatabaseCreateIndexOpts = {
+  index: {
+    fields: string[]
+    name?: string | undefined
+    ddoc?: string | undefined
+    type?: string | undefined
+  }
+}
+
+export type DatabaseDeleteIndexOpts = {
+  name: string
+  ddoc: string
+  type?: string | undefined
+}
+
 export type DatabaseQueryOpts = {
   include_docs?: boolean
   startkey?: string
@@ -44,13 +59,20 @@ export type DatabaseQueryOpts = {
   keys?: string[]
 }
 
+export const isDocument = (doc: any): doc is Document => {
+  return typeof doc === "object" && doc._id && doc._rev
+}
+
 export interface Database {
   name: string
 
   exists(): Promise<boolean>
   checkSetup(): Promise<Nano.DocumentScope<any>>
   get<T>(id?: string): Promise<T | any>
-  remove(id?: string, rev?: string): Promise<Nano.DocumentDestroyResponse>
+  remove(
+    id: string | Document,
+    rev?: string
+  ): Promise<Nano.DocumentDestroyResponse>
   put(
     document: AnyDocument,
     opts?: DatabasePutOpts

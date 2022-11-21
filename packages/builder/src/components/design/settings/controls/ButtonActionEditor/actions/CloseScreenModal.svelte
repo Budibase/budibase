@@ -1,14 +1,16 @@
 <script>
-  import { Label, Body } from "@budibase/bbui"
+  import { Label } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
   export let bindings = []
 </script>
 
-<Body size="S">Navigate To screen, or leave blank.</Body>
-<br />
 <div class="root">
+  <span>
+    You can optionally navigate to another screen after closing the screen
+    modal.
+  </span>
   <Label small>Screen</Label>
   <DrawerBindableInput
     title="Destination URL"
@@ -20,6 +22,9 @@
 </div>
 
 <style>
+  span {
+    grid-column: 1 / 3;
+  }
   .root {
     display: grid;
     align-items: center;
