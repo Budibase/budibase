@@ -1,7 +1,7 @@
 <script>
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
-  import { Heading, Icon } from "@budibase/bbui"
+  import { Heading, Icon, clickOutside, Checkbox } from "@budibase/bbui"
   import { FieldTypes } from "constants"
   import active from "svelte-spa-router/active"
   import { RoleUtils } from "@budibase/frontend-core"
@@ -247,7 +247,11 @@
       </div>
     </div>
   </div>
-  <div id="side-panel-container" class:open={$sidePanelStore.open}>
+  <div
+    id="side-panel-container"
+    class:open={$sidePanelStore.open}
+    use:clickOutside={sidePanelStore.actions.close}
+  >
     <div class="side-panel-header">
       <Icon
         color="var(--spectrum-global-color-gray-600)"
@@ -341,20 +345,23 @@
   }
 
   #side-panel-container {
-    flex: 0 0 400px;
     max-width: calc(100vw - 40px);
     background: var(--spectrum-global-color-gray-50);
-    transition: margin-right 130ms ease-out;
     z-index: 3;
     padding: var(--spacing-xl);
-    margin-right: -410px;
     display: flex;
     flex-direction: column;
     gap: 30px;
     overflow-y: auto;
-    border-left: 1px solid var(--spectrum-global-color-gray-300);
+    transition: margin-right 260ms ease-out;
+    position: absolute;
+    width: 400px;
+    right: 0;
+    margin-right: -400px;
+    height: 100%;
   }
   #side-panel-container.open {
+    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
     margin-right: 0;
   }
   .side-panel-header {

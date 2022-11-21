@@ -4476,7 +4476,7 @@
               "Ascending",
               "Descending"
             ],
-            "defaultValue": "Descending"
+            "defaultValue": "Ascending"
           },
           {
             "type": "select",
