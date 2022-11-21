@@ -6,6 +6,8 @@ import {
   DatabaseOpts,
   DatabaseQueryOpts,
   DatabasePutOpts,
+  Document,
+  isDocument,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchCall } from "./utils"
@@ -77,12 +79,23 @@ export class DatabaseImpl implements Database {
     return this.updateOutput(() => db.get(id))
   }
 
-  async remove(id?: string, rev?: string) {
+  async remove(idOrDoc: string | Document, rev?: string) {
     const db = await this.checkSetup()
-    if (!id || !rev) {
+    let _id: string
+    let _rev: string
+
+    if (isDocument(idOrDoc)) {
+      _id = idOrDoc._id!
+      _rev = idOrDoc._rev!
+    } else {
+      _id = idOrDoc
+      _rev = rev!
+    }
+
+    if (!_id || !_rev) {
       throw new Error("Unable to remove doc without a valid _id and _rev.")
     }
-    return this.updateOutput(() => db.destroy(id, rev))
+    return this.updateOutput(() => db.destroy(_id, _rev))
   }
 
   async put(document: AnyDocument, opts?: DatabasePutOpts) {
