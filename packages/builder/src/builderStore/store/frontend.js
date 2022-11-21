@@ -481,26 +481,12 @@ export const getFrontendStore = () => {
           return null
         }
 
-        let dataSourceField = definition.settings.find(
+        // Flattened settings
+        const settings = getComponentSettings(componentName)
+
+        let dataSourceField = settings.find(
           setting => setting.type == "dataSource" || setting.type == "table"
         )
-
-        if (!dataSourceField) {
-          // Check other visible sections for datasource/table elements.
-          const sections = definition.settings.filter(
-            item => item?.section && item.visible
-          )
-
-          for (let section of sections) {
-            let sectionSourceField = section.settings.find(
-              setting => setting.type == "dataSource" || setting.type == "table"
-            )
-            if (sectionSourceField) {
-              dataSourceField = sectionSourceField
-              break
-            }
-          }
-        }
 
         let defaultDatasource
         if (dataSourceField) {
@@ -533,7 +519,6 @@ export const getFrontendStore = () => {
         }
 
         // Generate default props
-        const settings = getComponentSettings(componentName)
         let props = { ...presetProps }
         settings.forEach(setting => {
           if (setting.defaultValue !== undefined) {
@@ -543,7 +528,7 @@ export const getFrontendStore = () => {
 
         // Set a default datasource
         if (dataSourceField && defaultDatasource) {
-          props["dataSource"] = {
+          props[dataSourceField.key] = {
             label: defaultDatasource.name,
             tableId: defaultDatasource._id,
             type: "table",
