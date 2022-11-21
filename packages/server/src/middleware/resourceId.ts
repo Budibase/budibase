@@ -1,17 +1,23 @@
-class ResourceIdGetter {
-  constructor(ctxProperty) {
+import { BBContext } from "@budibase/types"
+
+export class ResourceIdGetter {
+  parameter: string
+  main: string | null
+  sub: string | null
+
+  constructor(ctxProperty: string) {
     this.parameter = ctxProperty
     this.main = null
     this.sub = null
     return this
   }
 
-  mainResource(field) {
+  mainResource(field: string) {
     this.main = field
     return this
   }
 
-  subResource(field) {
+  subResource(field: string) {
     this.sub = field
     return this
   }
@@ -20,7 +26,8 @@ class ResourceIdGetter {
     const parameter = this.parameter,
       main = this.main,
       sub = this.sub
-    return (ctx, next) => {
+    return (ctx: BBContext, next: any) => {
+      // @ts-ignore
       const request = ctx.request[parameter] || ctx[parameter]
       if (request == null) {
         return next()
@@ -36,24 +43,22 @@ class ResourceIdGetter {
   }
 }
 
-module.exports.ResourceIdGetter = ResourceIdGetter
-
-module.exports.paramResource = main => {
+export function paramResource(main: string) {
   return new ResourceIdGetter("params").mainResource(main).build()
 }
 
-module.exports.paramSubResource = (main, sub) => {
+export function paramSubResource(main: string, sub: string) {
   return new ResourceIdGetter("params")
     .mainResource(main)
     .subResource(sub)
     .build()
 }
 
-module.exports.bodyResource = main => {
+export function bodyResource(main: string) {
   return new ResourceIdGetter("body").mainResource(main).build()
 }
 
-module.exports.bodySubResource = (main, sub) => {
+export function bodySubResource(main: string, sub: string) {
   return new ResourceIdGetter("body")
     .mainResource(main)
     .subResource(sub)

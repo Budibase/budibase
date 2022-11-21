@@ -1,5 +1,5 @@
 require("../../../tests")
-const getUrlInfo = require("../pouch").getUrlInfo
+const getUrlInfo = require("../couch").getUrlInfo
 
 describe("pouch", () => {
   describe("Couch DB URL parsing", () => {

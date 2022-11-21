@@ -3,7 +3,7 @@ const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
 const { getProdAppID } = require("@budibase/backend-core/db")
 const { updateAppRole } = require("./global")
-const { Headers } = require("@budibase/backend-core/constants")
+const { Header } = require("@budibase/backend-core/constants")
 const { getTenantId, isTenantIdSet } = require("@budibase/backend-core/tenancy")
 
 function request(ctx, request) {
@@ -11,9 +11,9 @@ function request(ctx, request) {
     request.headers = {}
   }
   if (!ctx) {
-    request.headers[Headers.API_KEY] = env.INTERNAL_API_KEY
+    request.headers[Header.API_KEY] = env.INTERNAL_API_KEY
     if (isTenantIdSet()) {
-      request.headers[Headers.TENANT_ID] = getTenantId()
+      request.headers[Header.TENANT_ID] = getTenantId()
     }
   }
   if (request.body && Object.keys(request.body).length > 0) {

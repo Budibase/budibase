@@ -46,7 +46,7 @@ describe("/static", () => {
 
     it("should serve the app by id", async () => {
       const headers = config.defaultHeaders()
-      delete headers[constants.Headers.APP_ID]
+      delete headers[constants.Header.APP_ID]
 
       const res = await request
         .get(`/${config.prodAppId}`)
@@ -58,7 +58,7 @@ describe("/static", () => {
 
     it("should serve the app by url", async () => {
       const headers = config.defaultHeaders()
-      delete headers[constants.Headers.APP_ID]
+      delete headers[constants.Header.APP_ID]
 
       const res = await request
         .get(`/app${config.prodApp.url}`)

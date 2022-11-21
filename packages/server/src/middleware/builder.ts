@@ -1,14 +1,16 @@
-const { APP_DEV_PREFIX } = require("../db/utils")
-const {
+import {
+  APP_DEV_PREFIX,
+  DocumentType,
+  getGlobalIDFromUserMetadataID,
+} from "../db/utils"
+import {
   doesUserHaveLock,
   updateLock,
   checkDebounce,
   setDebounce,
-} = require("../utilities/redis")
-const { doWithDB } = require("@budibase/backend-core/db")
-const { DocumentType, getGlobalIDFromUserMetadataID } = require("../db/utils")
-const { PermissionTypes } = require("@budibase/backend-core/permissions")
-const { app: appCache } = require("@budibase/backend-core/cache")
+} from "../utilities/redis"
+import { db as dbCore, cache, permissions } from "@budibase/backend-core"
+import { BBContext, Database } from "@budibase/types"
 
 const DEBOUNCE_TIME_SEC = 30
 
@@ -21,11 +23,11 @@ const DEBOUNCE_TIME_SEC = 30
  * through the authorized middleware                *
  ****************************************************/
 
-async function checkDevAppLocks(ctx) {
+async function checkDevAppLocks(ctx: BBContext) {
   const appId = ctx.appId
 
   // if any public usage, don't proceed
-  if (!ctx.user._id && !ctx.user.userId) {
+  if (!ctx.user?._id && !ctx.user?.userId) {
     return
   }
 
@@ -41,34 +43,34 @@ async function checkDevAppLocks(ctx) {
   await updateLock(appId, ctx.user)
 }
 
-async function updateAppUpdatedAt(ctx) {
+async function updateAppUpdatedAt(ctx: BBContext) {
   const appId = ctx.appId
   // if debouncing skip this update
   // get methods also aren't updating
   if (ctx.method === "GET" || (await checkDebounce(appId))) {
     return
   }
-  await doWithDB(appId, async db => {
+  await dbCore.doWithDB(appId, async (db: Database) => {
     const metadata = await db.get(DocumentType.APP_METADATA)
     metadata.updatedAt = new Date().toISOString()
 
-    metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user.userId)
+    metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user?.userId!)
 
     const response = await db.put(metadata)
     metadata._rev = response.rev
-    await appCache.invalidateAppMetadata(appId, metadata)
+    await cache.app.invalidateAppMetadata(appId, metadata)
     // set a new debounce record with a short TTL
     await setDebounce(appId, DEBOUNCE_TIME_SEC)
   })
 }
 
-module.exports = async (ctx, permType) => {
+export = async function builder(ctx: BBContext, permType: string) {
   const appId = ctx.appId
   // this only functions within an app context
   if (!appId) {
     return
   }
-  const isBuilderApi = permType === PermissionTypes.BUILDER
+  const isBuilderApi = permType === permissions.PermissionType.BUILDER
   const referer = ctx.headers["referer"]
 
   const overviewPath = "/builder/portal/overview/"
