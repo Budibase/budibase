@@ -33,6 +33,21 @@ export type DatabasePutOpts = {
   force?: boolean
 }
 
+export type DatabaseCreateIndexOpts = {
+  index: {
+    fields: string[]
+    name?: string | undefined
+    ddoc?: string | undefined
+    type?: string | undefined
+  }
+}
+
+export type DatabaseDeleteIndexOpts = {
+  name: string
+  ddoc: string
+  type?: string | undefined
+}
+
 export type DatabaseQueryOpts = {
   include_docs?: boolean
   startkey?: string
