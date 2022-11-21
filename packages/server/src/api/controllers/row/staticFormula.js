@@ -62,6 +62,7 @@ exports.updateRelatedFormula = async (table, enrichedRows) => {
               })
             )
           )
+          break
         }
       }
     }
@@ -124,7 +125,6 @@ exports.finaliseRow = async (
     dynamic: false,
     contextRows: enrichedRow,
   })
-
   // don't worry about rev, tables handle rev/lastID updates
   // if another row has been written since processing this will
   // handle the auto ID clash
