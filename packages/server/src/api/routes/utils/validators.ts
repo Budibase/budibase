@@ -1,20 +1,16 @@
-const { joiValidator } = require("@budibase/backend-core/auth")
-const { DataSourceOperation } = require("../../../constants")
-const {
-  BuiltinPermissionID,
-  PermissionLevel,
-} = require("@budibase/backend-core/permissions")
-const { WebhookActionType } = require("@budibase/types")
-const Joi = require("joi")
+import { auth, permissions } from "@budibase/backend-core"
+import { DataSourceOperation } from "../../../constants"
+import { WebhookActionType } from "@budibase/types"
+import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
 const OPTIONAL_BOOLEAN = Joi.boolean().optional().allow(null)
 const APP_NAME_REGEX = /^[\w\s]+$/
 
-exports.tableValidator = () => {
+export function tableValidator() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
     type: OPTIONAL_STRING.valid("table", "internal", "external"),
@@ -26,16 +22,16 @@ exports.tableValidator = () => {
   }).unknown(true))
 }
 
-exports.nameValidator = () => {
+export function nameValidator() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     name: OPTIONAL_STRING,
   }))
 }
 
-exports.datasourceValidator = () => {
+export function datasourceValidator() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     _id: Joi.string(),
     _rev: Joi.string(),
     type: OPTIONAL_STRING.allow("datasource_plus"),
@@ -64,9 +60,9 @@ function filterObject() {
   }).unknown(true)
 }
 
-exports.internalSearchValidator = () => {
+export function internalSearchValidator() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     tableId: OPTIONAL_STRING,
     query: filterObject(),
     limit: OPTIONAL_NUMBER,
@@ -78,8 +74,8 @@ exports.internalSearchValidator = () => {
   }))
 }
 
-exports.externalSearchValidator = () => {
-  return joiValidator.body(
+export function externalSearchValidator() {
+  return auth.joiValidator.body(
     Joi.object({
       query: filterObject(),
       paginate: Joi.boolean().optional(),
@@ -96,9 +92,9 @@ exports.externalSearchValidator = () => {
   )
 }
 
-exports.datasourceQueryValidator = () => {
+export function datasourceQueryValidator() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     endpoint: Joi.object({
       datasourceId: Joi.string().required(),
       operation: Joi.string().required().valid(...Object.values(DataSourceOperation)),
@@ -117,9 +113,9 @@ exports.datasourceQueryValidator = () => {
   }))
 }
 
-exports.webhookValidator = () => {
+export function webhookValidator() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     live: Joi.bool(),
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
@@ -132,15 +128,15 @@ exports.webhookValidator = () => {
   }).unknown(true))
 }
 
-exports.roleValidator = () => {
-  const permLevelArray = Object.values(PermissionLevel)
+export function roleValidator() {
+  const permLevelArray = Object.values(permissions.PermissionLevel)
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
     name: Joi.string().required(),
     // this is the base permission ID (for now a built in)
-    permissionId: Joi.string().valid(...Object.values(BuiltinPermissionID)).required(),
+    permissionId: Joi.string().valid(...Object.values(permissions.BuiltinPermissionID)).required(),
     permissions: Joi.object()
       .pattern(/.*/, [Joi.string().valid(...permLevelArray)])
       .optional(),
@@ -148,19 +144,19 @@ exports.roleValidator = () => {
   }).unknown(true))
 }
 
-exports.permissionValidator = () => {
-  const permLevelArray = Object.values(PermissionLevel)
+export function permissionValidator() {
+  const permLevelArray = Object.values(permissions.PermissionLevel)
   // prettier-ignore
-  return joiValidator.params(Joi.object({
+  return auth.joiValidator.params(Joi.object({
     level: Joi.string().valid(...permLevelArray).required(),
     resourceId: Joi.string(),
     roleId: Joi.string(),
   }).unknown(true))
 }
 
-exports.screenValidator = () => {
+export function screenValidator() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     name: Joi.string().required(),
     showNavigation: OPTIONAL_BOOLEAN,
     width: OPTIONAL_STRING,
@@ -181,7 +177,7 @@ exports.screenValidator = () => {
   }).unknown(true))
 }
 
-function generateStepSchema(allowStepTypes) {
+function generateStepSchema(allowStepTypes: string[]) {
   // prettier-ignore
   return Joi.object({
     stepId: Joi.string().required(),
@@ -196,9 +192,9 @@ function generateStepSchema(allowStepTypes) {
   }).unknown(true)
 }
 
-exports.automationValidator = (existing = false) => {
+export function automationValidator(existing = false) {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     _id: existing ? Joi.string().required() : OPTIONAL_STRING,
     _rev: existing ? Joi.string().required() : OPTIONAL_STRING,
     name: Joi.string().required(),
@@ -210,9 +206,9 @@ exports.automationValidator = (existing = false) => {
   }).unknown(true))
 }
 
-exports.applicationValidator = (opts = { isCreate: true }) => {
+export function applicationValidator(opts = { isCreate: true }) {
   // prettier-ignore
-  const base = {
+  const base: any = {
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
     url: OPTIONAL_STRING,
@@ -230,7 +226,7 @@ exports.applicationValidator = (opts = { isCreate: true }) => {
     base.name = appNameValidator.optional()
   }
 
-  return joiValidator.body(
+  return auth.joiValidator.body(
     Joi.object({
       _id: OPTIONAL_STRING,
       _rev: OPTIONAL_STRING,

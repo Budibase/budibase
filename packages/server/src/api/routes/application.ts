@@ -4,7 +4,7 @@ import authorized from "../../middleware/authorized"
 import { BUILDER } from "@budibase/backend-core/permissions"
 import { applicationValidator } from "./utils/validators"
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   .post("/api/applications/:appId/sync", authorized(BUILDER), controller.sync)
