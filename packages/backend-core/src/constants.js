@@ -3,7 +3,7 @@ exports.UserStatus = {
   INACTIVE: "inactive",
 }
 
-exports.Cookies = {
+exports.Cookie = {
   CurrentApp: "budibase:currentapp",
   Auth: "budibase:auth",
   Init: "budibase:init",
@@ -12,7 +12,7 @@ exports.Cookies = {
   OIDC_CONFIG: "budibase:oidc:config",
 }
 
-exports.Headers = {
+exports.Header = {
   API_KEY: "x-budibase-api-key",
   LICENSE_KEY: "x-budibase-license-key",
   API_VER: "x-budibase-api-version",
@@ -31,7 +31,7 @@ exports.GlobalRoles = {
   WORKSPACE_MANAGER: "workspace_manager",
 }
 
-exports.Configs = {
+exports.Config = {
   SETTINGS: "settings",
   ACCOUNT: "account",
   SMTP: "smtp",

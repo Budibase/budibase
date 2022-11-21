@@ -20,7 +20,7 @@ exports.DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
 exports.DEFAULT_BB_DATASOURCE = {
   _id: this.DEFAULT_BB_DATASOURCE_ID,
   type: BUDIBASE_DATASOURCE_TYPE,
-  name: "Test DB",
+  name: "Sample Data",
   source: "BUDIBASE",
   config: {},
 }
