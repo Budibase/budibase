@@ -58,6 +58,7 @@ const SCHEMA: Integration = {
     },
     aggregate: {
       type: QueryType.JSON,
+      readable: true,
       steps: [
         {
           key: "$addFields",

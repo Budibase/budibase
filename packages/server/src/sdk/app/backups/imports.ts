@@ -97,7 +97,7 @@ async function updateAutomations(prodAppId: string, db: Database) {
     const oldDevAppId = automation.appId,
       oldProdAppId = dbCore.getProdAppID(automation.appId)
     if (
-      automation.definition.trigger.stepId === AutomationTriggerStepId.WEBHOOK
+      automation.definition.trigger?.stepId === AutomationTriggerStepId.WEBHOOK
     ) {
       const old = automation.definition.trigger.inputs
       automation.definition.trigger.inputs = {
