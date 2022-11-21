@@ -21,7 +21,7 @@
     <Layout gap="XS" noPadding>
       <header>
         <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
-        <Heading size="M">Test DB</Heading>
+        <Heading size="M">Sample Data</Heading>
       </header>
       <Body size="M">A little something to get you up and running!</Body>
       <Body size="M"
