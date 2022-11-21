@@ -50,7 +50,7 @@ export interface Database {
   exists(): Promise<boolean>
   checkSetup(): Promise<Nano.DocumentScope<any>>
   get<T>(id?: string): Promise<T | any>
-  remove(id?: string, rev?: string): Promise<Nano.DocumentDestroyResponse>
+  remove(id: string, rev: string): Promise<Nano.DocumentDestroyResponse>
   put(
     document: AnyDocument,
     opts?: DatabasePutOpts
