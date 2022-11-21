@@ -2,7 +2,7 @@ const fetch = require("node-fetch")
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 const { authenticateThirdParty } = require("./third-party-common")
 const { ssoCallbackUrl } = require("./utils")
-const { Configs } = require("../../../constants")
+const { Config } = require("../../../constants")
 
 const buildVerifyFn = saveUserFn => {
   /**
@@ -140,7 +140,7 @@ exports.fetchStrategyConfig = async function (enrichedConfig, callbackUrl) {
 }
 
 exports.getCallbackUrl = async function (db, config) {
-  return ssoCallbackUrl(db, config, Configs.OIDC)
+  return ssoCallbackUrl(db, config, Config.OIDC)
 }
 
 // expose for testing

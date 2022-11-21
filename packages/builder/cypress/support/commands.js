@@ -440,7 +440,7 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
   // Creates an internal Budibase DB table
   if (!initialTable) {
     cy.navigateToDataSection()
-    cy.get(`[data-cy="new-table"]`, { timeout: 2000 }).click()
+    cy.get(`[data-cy="new-datasource"]`, { timeout: 2000 }).click()
   }
   cy.wait(2000)
   cy.get(".item", { timeout: 2000 })

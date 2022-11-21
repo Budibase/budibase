@@ -3,7 +3,7 @@ const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
 import { getGlobalDB } from "./tenancy"
 const refresh = require("passport-oauth2-refresh")
-import { Configs } from "./constants"
+import { Config } from "./constants"
 import { getScopedConfig } from "./db/utils"
 import {
   jwt,
@@ -76,7 +76,7 @@ async function refreshOIDCAccessToken(
 
   return new Promise(resolve => {
     refresh.requestNewAccessToken(
-      Configs.OIDC,
+      Config.OIDC,
       refreshToken,
       (err: any, accessToken: string, refreshToken: any, params: any) => {
         resolve({ err, accessToken, refreshToken, params })
@@ -106,7 +106,7 @@ async function refreshGoogleAccessToken(
 
   return new Promise(resolve => {
     refresh.requestNewAccessToken(
-      Configs.GOOGLE,
+      Config.GOOGLE,
       refreshToken,
       (err: any, accessToken: string, refreshToken: string, params: any) => {
         resolve({ err, accessToken, refreshToken, params })
@@ -129,7 +129,7 @@ async function refreshOAuthToken(
 
   let chosenConfig = {}
   let refreshResponse
-  if (configType === Configs.OIDC) {
+  if (configType === Config.OIDC) {
     // configId - retrieved from cookie.
     chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
     if (!chosenConfig) {

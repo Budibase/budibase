@@ -1,12 +1,9 @@
 import TestConfiguration from "../TestConfiguration"
+import { TestAPI } from "./base"
 
-export class AuthAPI {
-  config: TestConfiguration
-  request: any
-
+export class AuthAPI extends TestAPI {
   constructor(config: TestConfiguration) {
-    this.config = config
-    this.request = config.request
+    super(config)
   }
 
   updatePassword = (code: string) => {

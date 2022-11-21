@@ -19,7 +19,7 @@ import {
 } from "@budibase/types"
 import { processors } from "./processors"
 import * as dbUtils from "../db/utils"
-import { Configs } from "../constants"
+import { Config } from "../constants"
 import * as hashing from "../hashing"
 import * as installation from "../installation"
 import { withCache, TTL, CacheKeys } from "../cache/generic"
@@ -273,7 +273,7 @@ const getUniqueTenantId = async (tenantId: string): Promise<string> => {
     return withCache(CacheKeys.UNIQUE_TENANT_ID, TTL.ONE_DAY, async () => {
       const db = context.getGlobalDB()
       const config: SettingsConfig = await dbUtils.getScopedFullConfig(db, {
-        type: Configs.SETTINGS,
+        type: Config.SETTINGS,
       })
 
       let uniqueTenantId: string

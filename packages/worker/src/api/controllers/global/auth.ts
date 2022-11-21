@@ -1,22 +1,26 @@
-const core = require("@budibase/backend-core")
-const { Configs, EmailTemplatePurpose } = require("../../../constants")
-const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
-const { setCookie, getCookie, clearCookie, hash, platformLogout } = core.utils
-const { Cookies, Headers } = core.constants
-const { passport, ssoCallbackUrl, google, oidc } = core.auth
-const { checkResetPasswordCode } = require("../../../utilities/redis")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-const env = require("../../../environment")
-import { events, users as usersCore, context } from "@budibase/backend-core"
+import core from "@budibase/backend-core"
+import {
+  events,
+  users as usersCore,
+  context,
+  tenancy,
+} from "@budibase/backend-core"
+import { Config, EmailTemplatePurpose } from "../../../constants"
+import { sendEmail, isEmailConfigured } from "../../../utilities/email"
+import { checkResetPasswordCode } from "../../../utilities/redis"
+import env from "../../../environment"
 import sdk from "../../../sdk"
 import { User } from "@budibase/types"
+const { setCookie, getCookie, clearCookie, hash, platformLogout } = core.utils
+const { Cookie, Header } = core.constants
+const { passport, ssoCallbackUrl, google, oidc } = core.auth
 
 export const googleCallbackUrl = async (config: any) => {
-  return ssoCallbackUrl(getGlobalDB(), config, "google")
+  return ssoCallbackUrl(tenancy.getGlobalDB(), config, "google")
 }
 
 export const oidcCallbackUrl = async (config: any) => {
-  return ssoCallbackUrl(getGlobalDB(), config, "oidc")
+  return ssoCallbackUrl(tenancy.getGlobalDB(), config, "oidc")
 }
 
 async function authInternal(ctx: any, user: any, err = null, info = null) {
@@ -30,13 +34,13 @@ async function authInternal(ctx: any, user: any, err = null, info = null) {
   }
 
   // set a cookie for browser access
-  setCookie(ctx, user.token, Cookies.Auth, { sign: false })
+  setCookie(ctx, user.token, Cookie.Auth, { sign: false })
   // set the token in a header as well for APIs
-  ctx.set(Headers.TOKEN, user.token)
+  ctx.set(Header.TOKEN, user.token)
   // get rid of any app cookies on login
   // have to check test because this breaks cypress
   if (!env.isTest()) {
-    clearCookie(ctx, Cookies.CurrentApp)
+    clearCookie(ctx, Cookie.CurrentApp)
   }
 }
 
@@ -55,15 +59,15 @@ export const authenticate = async (ctx: any, next: any) => {
 
 export const setInitInfo = (ctx: any) => {
   const initInfo = ctx.request.body
-  setCookie(ctx, initInfo, Cookies.Init)
+  setCookie(ctx, initInfo, Cookie.Init)
   ctx.status = 200
 }
 
 export const getInitInfo = (ctx: any) => {
   try {
-    ctx.body = getCookie(ctx, Cookies.Init) || {}
+    ctx.body = getCookie(ctx, Cookie.Init) || {}
   } catch (err) {
-    clearCookie(ctx, Cookies.Init)
+    clearCookie(ctx, Cookie.Init)
     ctx.body = {}
   }
 }
@@ -106,7 +110,7 @@ export const resetUpdate = async (ctx: any) => {
   const { resetCode, password } = ctx.request.body
   try {
     const { userId } = await checkResetPasswordCode(resetCode)
-    const db = getGlobalDB()
+    const db = tenancy.getGlobalDB()
     const user = await db.get(userId)
     user.password = await hash(password)
     await db.put(user)
@@ -141,14 +145,14 @@ export const datasourcePreAuth = async (ctx: any, next: any) => {
       appId: ctx.query.appId,
       datasourceId: ctx.query.datasourceId,
     },
-    Cookies.DatasourceAuth
+    Cookie.DatasourceAuth
   )
 
   return handler.preAuth(passport, ctx, next)
 }
 
 export const datasourceAuth = async (ctx: any, next: any) => {
-  const authStateCookie = getCookie(ctx, Cookies.DatasourceAuth)
+  const authStateCookie = getCookie(ctx, Cookie.DatasourceAuth)
   const provider = authStateCookie.provider
   const middleware = require(`@budibase/backend-core/middleware`)
   const handler = middleware.datasource[provider]
@@ -160,10 +164,10 @@ export const datasourceAuth = async (ctx: any, next: any) => {
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 export const googlePreAuth = async (ctx: any, next: any) => {
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
 
   const config = await core.db.getScopedConfig(db, {
-    type: Configs.GOOGLE,
+    type: Config.GOOGLE,
     workspace: ctx.query.workspace,
   })
   let callbackUrl = await exports.googleCallbackUrl(config)
@@ -181,10 +185,10 @@ export const googlePreAuth = async (ctx: any, next: any) => {
 }
 
 export const googleAuth = async (ctx: any, next: any) => {
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
 
   const config = await core.db.getScopedConfig(db, {
-    type: Configs.GOOGLE,
+    type: Config.GOOGLE,
     workspace: ctx.query.workspace,
   })
   const callbackUrl = await exports.googleCallbackUrl(config)
@@ -208,9 +212,9 @@ export const googleAuth = async (ctx: any, next: any) => {
 }
 
 export const oidcStrategyFactory = async (ctx: any, configId: any) => {
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
   const config = await core.db.getScopedConfig(db, {
-    type: Configs.OIDC,
+    type: Config.OIDC,
     group: ctx.query.group,
   })
 
@@ -233,11 +237,11 @@ export const oidcPreAuth = async (ctx: any, next: any) => {
   const { configId } = ctx.params
   const strategy = await oidcStrategyFactory(ctx, configId)
 
-  setCookie(ctx, configId, Cookies.OIDC_CONFIG)
+  setCookie(ctx, configId, Cookie.OIDC_CONFIG)
 
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
   const config = await core.db.getScopedConfig(db, {
-    type: Configs.OIDC,
+    type: Config.OIDC,
     group: ctx.query.group,
   })
 
@@ -255,7 +259,7 @@ export const oidcPreAuth = async (ctx: any, next: any) => {
 }
 
 export const oidcAuth = async (ctx: any, next: any) => {
-  const configId = getCookie(ctx, Cookies.OIDC_CONFIG)
+  const configId = getCookie(ctx, Cookie.OIDC_CONFIG)
   const strategy = await oidcStrategyFactory(ctx, configId)
 
   return passport.authenticate(

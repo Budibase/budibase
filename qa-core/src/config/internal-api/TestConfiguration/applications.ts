@@ -114,8 +114,6 @@ export default class AppApi {
     return [response, json]
   }
 
-
-
   async delete(appId: string): Promise<[Response, any]> {
     const response = await this.api.del(`/applications/${appId}`)
     const json = await response.json()
@@ -123,7 +121,11 @@ export default class AppApi {
     return [response, json]
   }
 
-  async update(appId: string, oldName: string, body: any): Promise<[Response, Application]> {
+  async update(
+    appId: string,
+    oldName: string,
+    body: any
+  ): Promise<[Response, Application]> {
     const response = await this.api.put(`/applications/${appId}`, { body })
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
@@ -142,7 +144,6 @@ export default class AppApi {
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
     if (screenExists) {
-
       expect(json.routes["/test"]).toBeTruthy()
     } else {
       expect(json.routes["/test"]).toBeUndefined()
