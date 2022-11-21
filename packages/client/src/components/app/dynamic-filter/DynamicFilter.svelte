@@ -64,6 +64,8 @@
         if (schema[field.name]) {
           clonedSchema[field.name] = schema[field.name]
           clonedSchema[field.name].displayName = field.displayName
+        } else if (schema[field]) {
+          clonedSchema[field] = schema[field]
         }
       })
     }
