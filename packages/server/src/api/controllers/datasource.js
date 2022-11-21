@@ -13,7 +13,7 @@ const { getDatasourceAndQuery } = require("./row/utils")
 const { invalidateDynamicVariables } = require("../../threads/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
-const { BUDIBASE_DATASOURCE_TYPE } = require("@budibase/backend-core/constants")
+const { db: dbCore } = require("@budibase/backend-core")
 
 exports.fetch = async function (ctx) {
   // Get internal tables
@@ -52,7 +52,7 @@ exports.fetch = async function (ctx) {
       delete datasource.config.auth
     }
 
-    if (datasource.type === BUDIBASE_DATASOURCE_TYPE) {
+    if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
       datasource.entities = internal[datasource._id]
     }
   }
@@ -244,7 +244,7 @@ exports.destroy = async function (ctx) {
   const datasource = await db.get(datasourceId)
   // Delete all queries for the datasource
 
-  if (datasource.type === BUDIBASE_DATASOURCE_TYPE) {
+  if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
     await destroyInternalTablesBySourceId(datasourceId)
   } else {
     const queries = await db.allDocs(getQueryParams(datasourceId, null))

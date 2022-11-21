@@ -42,4 +42,3 @@ export enum Config {
 
 export const MAX_VALID_DATE = new Date(2147483647000)
 export const DEFAULT_TENANT_ID = "default"
-export const BUDIBASE_DATASOURCE_TYPE = "budibase"

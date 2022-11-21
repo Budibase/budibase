@@ -10,7 +10,7 @@ const { inventoryImport } = require("./inventoryImport")
 const { employeeImport } = require("./employeeImport")
 const { jobsImport } = require("./jobsImport")
 const { expensesImport } = require("./expensesImport")
-const { BUDIBASE_DATASOURCE_TYPE } = require("@budibase/backend-core/constants")
+const { db: dbCore } = require("@budibase/backend-core")
 
 exports.DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
 exports.DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
@@ -19,7 +19,7 @@ exports.DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
 exports.DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
 exports.DEFAULT_BB_DATASOURCE = {
   _id: this.DEFAULT_BB_DATASOURCE_ID,
-  type: BUDIBASE_DATASOURCE_TYPE,
+  type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Sample Data",
   source: "BUDIBASE",
   config: {},
