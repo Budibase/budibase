@@ -10,7 +10,7 @@ import {
 import * as env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
 
-const router = new Router()
+const router: Router = new Router()
 
 /* istanbul ignore next */
 router.param("file", async (file: any, ctx: any, next: any) => {

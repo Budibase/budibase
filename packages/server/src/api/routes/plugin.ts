@@ -3,7 +3,7 @@ import * as controller from "../controllers/plugin"
 import authorized from "../../middleware/authorized"
 import { BUILDER } from "@budibase/backend-core/permissions"
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   .post("/api/plugin/upload", authorized(BUILDER), controller.upload)
