@@ -7,7 +7,7 @@
 
   let modal
 
-  let internalTablesBySourceId = $tables.list.filter(
+  $: internalTablesBySourceId = $tables.list.filter(
     table =>
       table.type !== "external" && $datasources.selected === table.sourceId
   )
