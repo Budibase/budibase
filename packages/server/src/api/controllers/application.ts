@@ -25,8 +25,14 @@ import {
   migrations,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
+import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
+
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { clientLibraryPath, stringToReadStream } from "../../utilities"
+import {
+  clientLibraryPath,
+  stringToReadStream,
+  isQsTrue,
+} from "../../utilities"
 import { getLocksById } from "../../utilities/redis"
 import {
   updateClientLibrary,
@@ -117,7 +123,7 @@ const checkAppName = (
   }
 }
 
-async function createInstance(template: any) {
+async function createInstance(template: any, includeSampleData: boolean) {
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
@@ -149,9 +155,21 @@ async function createInstance(template: any) {
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
+
+    if (includeSampleData) {
+      // create ootb stock db
+      await addDefaultTables(db)
+    }
   }
 
   return { _id: appId }
+}
+
+const addDefaultTables = async (db: any) => {
+  const defaultDbDocs = buildDefaultDocs()
+
+  // add in the default db data docs - tables, datasource, rows and links
+  await db.bulkDocs([...defaultDbDocs])
 }
 
 export const fetch = async (ctx: any) => {
@@ -234,7 +252,8 @@ const performAppCreate = async (ctx: any) => {
   if (ctx.request.files && ctx.request.files.templateFile) {
     instanceConfig.file = ctx.request.files.templateFile
   }
-  const instance = await createInstance(instanceConfig)
+  const includeSampleData = isQsTrue(ctx.request.body.sampleData)
+  const instance = await createInstance(instanceConfig, includeSampleData)
   const appId = instance._id
   const db = context.getAppDB()
 
