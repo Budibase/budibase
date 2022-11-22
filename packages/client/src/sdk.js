@@ -11,6 +11,7 @@ import {
   currentRole,
   environmentStore,
   sidePanelStore,
+  dndIsDragging,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -32,6 +33,7 @@ export default {
   componentStore,
   environmentStore,
   sidePanelStore,
+  dndIsDragging,
   currentRole,
   styleable,
   linkable,
