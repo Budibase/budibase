@@ -1,6 +1,6 @@
 import { redis } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
-import { User } from "@budibase/types"
+import { ContextUser } from "@budibase/types"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
@@ -24,7 +24,7 @@ export async function shutdown() {
   console.log("Redis shutdown")
 }
 
-export async function doesUserHaveLock(devAppId: string, user: User) {
+export async function doesUserHaveLock(devAppId: string, user: ContextUser) {
   const value = await devAppClient.get(devAppId)
   if (!value) {
     return true
@@ -39,7 +39,7 @@ export async function getLocksById(appIds: string[]) {
   return await devAppClient.bulkGet(appIds)
 }
 
-export async function updateLock(devAppId: string, user: User) {
+export async function updateLock(devAppId: string, user: ContextUser) {
   // make sure always global user ID
   const globalId = getGlobalIDFromUserMetadataID(user._id!)
   const inputUser = {
@@ -52,7 +52,7 @@ export async function updateLock(devAppId: string, user: User) {
   await devAppClient.store(devAppId, inputUser, APP_DEV_LOCK_SECONDS)
 }
 
-export async function clearLock(devAppId: string, user: User) {
+export async function clearLock(devAppId: string, user: ContextUser) {
   const value = await devAppClient.get(devAppId)
   if (!value) {
     return

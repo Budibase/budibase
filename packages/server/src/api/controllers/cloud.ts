@@ -7,7 +7,6 @@ import { create } from "./application"
 import { join } from "path"
 import { App, BBContext, Database } from "@budibase/types"
 import sdk from "../../sdk"
-import { getAllApps } from "@budibase/backend-core/src/db"
 
 async function createApp(appName: string, appDirectory: string) {
   const ctx = {
@@ -39,7 +38,7 @@ export async function exportApps(ctx: BBContext) {
   if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
     ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
   }
-  const apps = (await getAllApps({ all: true })) as App[]
+  const apps = (await dbCore.getAllApps({ all: true })) as App[]
   const globalDBString = await sdk.backups.exportDB(dbCore.getGlobalDBName(), {
     filter: (doc: any) => !doc._id.startsWith(DocumentType.USER),
   })
@@ -61,7 +60,7 @@ async function checkHasBeenImported() {
   if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
     return true
   }
-  const apps = await getAllApps({ all: true })
+  const apps = await dbCore.getAllApps({ all: true })
   return apps.length !== 0
 }
 

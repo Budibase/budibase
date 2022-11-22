@@ -70,7 +70,7 @@ export async function getViews() {
 }
 
 export async function saveView(
-  originalName: string,
+  originalName: string | null,
   viewName: string,
   viewTemplate: any
 ) {

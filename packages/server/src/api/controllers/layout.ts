@@ -1,10 +1,10 @@
-const { EMPTY_LAYOUT } = require("../../constants/layouts")
-const { generateLayoutID, getScreenParams } = require("../../db/utils")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { events } = require("@budibase/backend-core")
+import { EMPTY_LAYOUT } from "../../constants/layouts"
+import { generateLayoutID, getScreenParams } from "../../db/utils"
+import { events, context } from "@budibase/backend-core"
+import { BBContext } from "@budibase/types"
 
-exports.save = async function (ctx) {
-  const db = getAppDB()
+export async function save(ctx: BBContext) {
+  const db = context.getAppDB()
   let layout = ctx.request.body
 
   if (!layout.props) {
@@ -24,8 +24,8 @@ exports.save = async function (ctx) {
   ctx.status = 200
 }
 
-exports.destroy = async function (ctx) {
-  const db = getAppDB()
+export async function destroy(ctx: BBContext) {
+  const db = context.getAppDB()
   const layoutId = ctx.params.layoutId,
     layoutRev = ctx.params.layoutRev
 

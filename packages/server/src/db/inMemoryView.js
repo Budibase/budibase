@@ -2,8 +2,8 @@ const newid = require("./newid")
 
 // bypass the main application db config
 // use in memory pouchdb directly
-const { getPouch, closePouchDB } = require("@budibase/backend-core/db")
-const Pouch = getPouch({ inMemory: true })
+const { db: dbCore } = require("@budibase/backend-core")
+const Pouch = dbCore.getPouch({ inMemory: true })
 
 exports.runView = async (view, calculation, group, data) => {
   // use a different ID each time for the DB, make sure they
@@ -44,6 +44,6 @@ exports.runView = async (view, calculation, group, data) => {
     return response
   } finally {
     await db.destroy()
-    await closePouchDB(db)
+    await dbCore.closePouchDB(db)
   }
 }
