@@ -145,7 +145,9 @@ export const queryView = async <T>(
       return docs.length <= 1 ? (docs[0] as T) : (docs as T[])
     }
   } catch (err: any) {
-    if (err != null && err.name === "not_found") {
+    const pouchNotFound = err && err.name === "not_found"
+    const couchNotFound = err && err.status === 404
+    if (pouchNotFound || couchNotFound) {
       await removeDeprecated(db, viewName)
       await createFunc()
       return queryView(viewName, params, db, createFunc, opts)
