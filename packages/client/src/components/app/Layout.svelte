@@ -1,7 +1,7 @@
 <script>
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
-  import { Heading, Icon, clickOutside, Checkbox } from "@budibase/bbui"
+  import { Heading, Icon, clickOutside } from "@budibase/bbui"
   import { FieldTypes } from "constants"
   import active from "svelte-spa-router/active"
   import { RoleUtils } from "@budibase/frontend-core"
@@ -72,6 +72,7 @@
     $context.device.width,
     $context.device.height
   )
+  $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
 
   // Scroll navigation into view if selected
   $: {
@@ -250,7 +251,7 @@
   <div
     id="side-panel-container"
     class:open={$sidePanelStore.open}
-    use:clickOutside={sidePanelStore.actions.close}
+    use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
     class:builder={$builderStore.inBuilder}
   >
     <div class="side-panel-header">
