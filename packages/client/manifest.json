@@ -5200,7 +5200,7 @@
       "section"
     ],
     "showEmptyState": false,
-    "static": true
+    "draggable": false
   },
   "rowexplorer": {
     "block": true,
