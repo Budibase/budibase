@@ -1,18 +1,11 @@
-const { getBuiltinPermissions } = require("@budibase/backend-core/permissions")
-const {
-  isBuiltin,
-  getDBRoleID,
-  getExternalRoleID,
-  getBuiltinRoles,
-  checkForRoleResourceArray,
-} = require("@budibase/backend-core/roles")
-const { getRoleParams } = require("../../db/utils")
-const {
+import { permissions, roles, context } from "@budibase/backend-core"
+import { getRoleParams } from "../../db/utils"
+import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
-} = require("../../utilities/security")
-const { removeFromArray } = require("../../utilities")
-const { getAppDB } = require("@budibase/backend-core/context")
+} from "../../utilities/security"
+import { removeFromArray } from "../../utilities"
+import { BBContext, Database, Role } from "@budibase/types"
 
 const PermissionUpdateType = {
   REMOVE: "remove",
@@ -22,7 +15,7 @@ const PermissionUpdateType = {
 const SUPPORTED_LEVELS = CURRENTLY_SUPPORTED_LEVELS
 
 // utility function to stop this repetition - permissions always stored under roles
-async function getAllDBRoles(db) {
+async function getAllDBRoles(db: Database) {
   const body = await db.allDocs(
     getRoleParams(null, {
       include_docs: true,
@@ -32,21 +25,25 @@ async function getAllDBRoles(db) {
 }
 
 async function updatePermissionOnRole(
-  appId,
-  { roleId, resourceId, level },
-  updateType
+  appId: string,
+  {
+    roleId,
+    resourceId,
+    level,
+  }: { roleId: string; resourceId: string; level: string },
+  updateType: string
 ) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const remove = updateType === PermissionUpdateType.REMOVE
-  const isABuiltin = isBuiltin(roleId)
-  const dbRoleId = getDBRoleID(roleId)
+  const isABuiltin = roles.isBuiltin(roleId)
+  const dbRoleId = roles.getDBRoleID(roleId)
   const dbRoles = await getAllDBRoles(db)
   const docUpdates = []
 
   // the permission is for a built in, make sure it exists
   if (isABuiltin && !dbRoles.some(role => role._id === dbRoleId)) {
-    const builtin = getBuiltinRoles()[roleId]
-    builtin._id = getDBRoleID(builtin._id)
+    const builtin = roles.getBuiltinRoles()[roleId]
+    builtin._id = roles.getDBRoleID(builtin._id)
     dbRoles.push(builtin)
   }
 
@@ -90,41 +87,44 @@ async function updatePermissionOnRole(
   }
 
   const response = await db.bulkDocs(docUpdates)
-  return response.map(resp => {
-    resp._id = getExternalRoleID(resp.id)
+  return response.map((resp: any) => {
+    resp._id = roles.getExternalRoleID(resp.id)
     delete resp.id
     return resp
   })
 }
 
-exports.fetchBuiltin = function (ctx) {
-  ctx.body = Object.values(getBuiltinPermissions())
+export function fetchBuiltin(ctx: BBContext) {
+  ctx.body = Object.values(permissions.getBuiltinPermissions())
 }
 
-exports.fetchLevels = function (ctx) {
+export function fetchLevels(ctx: BBContext) {
   // for now only provide the read/write perms externally
   ctx.body = SUPPORTED_LEVELS
 }
 
-exports.fetch = async function (ctx) {
-  const db = getAppDB()
-  const roles = await getAllDBRoles(db)
-  let permissions = {}
+export async function fetch(ctx: BBContext) {
+  const db = context.getAppDB()
+  const dbRoles: Role[] = await getAllDBRoles(db)
+  let permissions: any = {}
   // create an object with structure role ID -> resource ID -> level
-  for (let role of roles) {
+  for (let role of dbRoles) {
     if (!role.permissions) {
       continue
     }
-    const roleId = getExternalRoleID(role._id)
+    const roleId = roles.getExternalRoleID(role._id)
+    if (!roleId) {
+      ctx.throw(400, "Unable to retrieve role")
+    }
     for (let [resource, levelArr] of Object.entries(role.permissions)) {
-      const levels = Array.isArray(levelArr) ? [levelArr] : levelArr
-      const perms = {}
-      levels.forEach(level => (perms[level] = roleId))
+      const levels: string[] = Array.isArray(levelArr) ? levelArr : [levelArr]
+      const perms: Record<string, string> = {}
+      levels.forEach(level => (perms[level] = roleId!))
       permissions[resource] = perms
     }
   }
   // apply the base permissions
-  const finalPermissions = {}
+  const finalPermissions: Record<string, Record<string, string>> = {}
   for (let [resource, permission] of Object.entries(permissions)) {
     const basePerms = getBasePermissions(resource)
     finalPermissions[resource] = Object.assign(basePerms, permission)
@@ -132,33 +132,36 @@ exports.fetch = async function (ctx) {
   ctx.body = finalPermissions
 }
 
-exports.getResourcePerms = async function (ctx) {
+export async function getResourcePerms(ctx: BBContext) {
   const resourceId = ctx.params.resourceId
-  const db = getAppDB()
+  const db = context.getAppDB()
   const body = await db.allDocs(
     getRoleParams(null, {
       include_docs: true,
     })
   )
-  const roles = body.rows.map(row => row.doc)
-  let permissions = {}
+  const rolesList = body.rows.map(row => row.doc)
+  let permissions: Record<string, string> = {}
   for (let level of SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
-    for (let role of roles) {
-      const rolePerms = checkForRoleResourceArray(role.permissions, resourceId)
+    for (let role of rolesList) {
+      const rolePerms = roles.checkForRoleResourceArray(
+        role.permissions,
+        resourceId
+      )
       if (
         rolePerms &&
         rolePerms[resourceId] &&
         rolePerms[resourceId].indexOf(level) !== -1
       ) {
-        permissions[level] = getExternalRoleID(role._id)
+        permissions[level] = roles.getExternalRoleID(role._id)!
       }
     }
   }
   ctx.body = Object.assign(getBasePermissions(resourceId), permissions)
 }
 
-exports.addPermission = async function (ctx) {
+export async function addPermission(ctx: BBContext) {
   ctx.body = await updatePermissionOnRole(
     ctx.appId,
     ctx.params,
@@ -166,7 +169,7 @@ exports.addPermission = async function (ctx) {
   )
 }
 
-exports.removePermission = async function (ctx) {
+export async function removePermission(ctx: BBContext) {
   ctx.body = await updatePermissionOnRole(
     ctx.appId,
     ctx.params,

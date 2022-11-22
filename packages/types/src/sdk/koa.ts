@@ -14,6 +14,7 @@ export interface ContextUser extends Omit<User, "roles"> {
 
 export interface BBRequest extends Request {
   body: any
+  files?: any
 }
 
 export interface BBContext extends Context {

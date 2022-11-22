@@ -1,4 +1,6 @@
-exports.csv = function (headers, rows) {
+import { Row } from "@budibase/types"
+
+export function csv(headers: string[], rows: Row[]) {
   let csv = headers.map(key => `"${key}"`).join(",")
 
   for (let row of rows) {
@@ -16,11 +18,11 @@ exports.csv = function (headers, rows) {
   return csv
 }
 
-exports.json = function (headers, rows) {
+export function json(headers: string[], rows: Row[]) {
   return JSON.stringify(rows, undefined, 2)
 }
 
-exports.ExportFormats = {
+export const ExportFormats = {
   CSV: "csv",
   JSON: "json",
 }

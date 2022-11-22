@@ -1,40 +1,41 @@
-const { getRoutingInfo } = require("../../utilities/routing")
-const {
-  getUserRoleHierarchy,
-  BUILTIN_ROLE_IDS,
-} = require("@budibase/backend-core/roles")
+import { getRoutingInfo } from "../../utilities/routing"
+import { roles } from "@budibase/backend-core"
+import { BBContext } from "@budibase/types"
 
 const URL_SEPARATOR = "/"
 
-function Routing() {
-  this.json = {}
-}
-
-Routing.prototype.getTopLevel = function (fullpath) {
-  if (fullpath.charAt(0) !== URL_SEPARATOR) {
-    fullpath = URL_SEPARATOR + fullpath
+class Routing {
+  json: any
+  constructor() {
+    this.json = {}
   }
-  // replace the first value with the home route
-  return URL_SEPARATOR + fullpath.split(URL_SEPARATOR)[1]
-}
 
-Routing.prototype.getScreensProp = function (fullpath) {
-  const topLevel = this.getTopLevel(fullpath)
-  if (!this.json[topLevel]) {
-    this.json[topLevel] = {
-      subpaths: {},
+  getTopLevel(fullpath: string) {
+    if (fullpath.charAt(0) !== URL_SEPARATOR) {
+      fullpath = URL_SEPARATOR + fullpath
     }
+    // replace the first value with the home route
+    return URL_SEPARATOR + fullpath.split(URL_SEPARATOR)[1]
   }
-  if (!this.json[topLevel].subpaths[fullpath]) {
-    this.json[topLevel].subpaths[fullpath] = {
-      screens: {},
-    }
-  }
-  return this.json[topLevel].subpaths[fullpath].screens
-}
 
-Routing.prototype.addScreenId = function (fullpath, roleId, screenId) {
-  this.getScreensProp(fullpath)[roleId] = screenId
+  getScreensProp(fullpath: string) {
+    const topLevel = this.getTopLevel(fullpath)
+    if (!this.json[topLevel]) {
+      this.json[topLevel] = {
+        subpaths: {},
+      }
+    }
+    if (!this.json[topLevel].subpaths[fullpath]) {
+      this.json[topLevel].subpaths[fullpath] = {
+        screens: {},
+      }
+    }
+    return this.json[topLevel].subpaths[fullpath].screens
+  }
+
+  addScreenId(fullpath: string, roleId: string, screenId: string) {
+    this.getScreensProp(fullpath)[roleId] = screenId
+  }
 }
 
 /**
@@ -55,26 +56,28 @@ async function getRoutingStructure() {
   return { routes: routing.json }
 }
 
-exports.fetch = async ctx => {
+export async function fetch(ctx: BBContext) {
   ctx.body = await getRoutingStructure()
 }
 
-exports.clientFetch = async ctx => {
+export async function clientFetch(ctx: BBContext) {
   const routing = await getRoutingStructure()
-  let roleId = ctx.user.role._id
-  const roleIds = await getUserRoleHierarchy(roleId)
-  for (let topLevel of Object.values(routing.routes)) {
+  let roleId = ctx.user?.role?._id
+  const roleIds = (await roles.getUserRoleHierarchy(roleId, {
+    idOnly: true,
+  })) as string[]
+  for (let topLevel of Object.values(routing.routes) as any) {
     for (let subpathKey of Object.keys(topLevel.subpaths)) {
       let found = false
       const subpath = topLevel.subpaths[subpathKey]
       const roleOptions = Object.keys(subpath.screens)
       if (roleOptions.length === 1 && !roleOptions[0]) {
         subpath.screenId = subpath.screens[roleOptions[0]]
-        subpath.roleId = BUILTIN_ROLE_IDS.BASIC
+        subpath.roleId = roles.BUILTIN_ROLE_IDS.BASIC
         found = true
       } else {
         for (let roleId of roleIds) {
-          if (roleOptions.indexOf(roleId) !== -1) {
+          if (roleId && roleOptions.indexOf(roleId) !== -1) {
             subpath.screenId = subpath.screens[roleId]
             subpath.roleId = roleId
             found = true

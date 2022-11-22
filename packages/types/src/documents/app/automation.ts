@@ -35,6 +35,7 @@ export interface Automation extends Document {
     trigger: AutomationTrigger
   }
   appId: string
+  live?: boolean
   name: string
 }
 
