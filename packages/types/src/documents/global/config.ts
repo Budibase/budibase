@@ -18,7 +18,9 @@ export interface SMTPConfig extends Config {
 export interface SettingsConfig extends Config {
   config: {
     company: string
-    logoUrl: string
+    // Populated on read
+    logoUrl?: string
+    logoUrlEtag?: boolean
     platformUrl: string
     uniqueTenantId?: string
     analyticsEnabled?: boolean

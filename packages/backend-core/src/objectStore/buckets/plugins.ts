@@ -18,7 +18,6 @@ export const enrichPluginURLs = (plugins: Plugin[]) => {
 const getPluginJSUrl = (plugin: Plugin) => {
   let file = getPluginJSPath(plugin)
   if (env.CLOUDFRONT_CDN) {
-    // file = `${file}?r=${uuid()}`
     return cloudfront.getPresignedUrl(file)
   } else {
     return objectStore.getPresignedUrl(env.PLUGIN_BUCKET_NAME, file)
@@ -26,7 +25,7 @@ const getPluginJSUrl = (plugin: Plugin) => {
 }
 
 const getPluginIconUrl = (plugin: Plugin): string | undefined => {
-  const path = getPluginPath(plugin.name)
+  const path = getPluginKey(plugin.name)
   // iconUrl is deprecated - hardcode to icon.svg in this case
   const iconFile = plugin.iconUrl ? "icon.svg" : plugin.iconFile
   if (!iconFile) {
@@ -39,11 +38,11 @@ const getPluginIconUrl = (plugin: Plugin): string | undefined => {
 }
 
 export const getPluginJSPath = (plugin: Plugin) => {
-  const path = getPluginPath(plugin.name)
+  const path = getPluginKey(plugin.name)
   return `${path}/plugin.min.js`
 }
 
-export const getPluginPath = (pluginName: string) => {
+export const getPluginKey = (pluginName: string) => {
   let file = `${pluginName}`
   if (env.MULTI_TENANCY) {
     const tenantId = tenancy.getTenantId()

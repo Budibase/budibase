@@ -20,9 +20,6 @@ export interface Plugin extends Document {
   description: string
   name: string
   version: string
-  jsUrl?: string
-  iconUrl?: string
-  iconFile?: string
   source: PluginSource
   package: { [key: string]: any }
   hash: string
@@ -30,6 +27,11 @@ export interface Plugin extends Document {
     type: PluginType
     [key: string]: any
   }
+  iconFile?: string
+  // Populated on read
+  jsUrl?: string
+  // Populated on read
+  iconUrl?: string
 }
 
 export const PLUGIN_TYPE_ARR = Object.values(PluginType)

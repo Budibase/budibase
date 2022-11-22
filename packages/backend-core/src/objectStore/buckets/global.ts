@@ -4,7 +4,7 @@ import * as objectStore from "../objectStore"
 import * as cloudfront from "../cloudfront"
 
 export const getGlobalFileUrl = (type: string, name: string, etag?: string) => {
-  let file = getGlobalFilePath(type, name)
+  let file = getGlobalFileKey(type, name)
   if (env.CLOUDFRONT_CDN) {
     if (etag) {
       file = `${file}?etag=${etag}`
@@ -15,7 +15,7 @@ export const getGlobalFileUrl = (type: string, name: string, etag?: string) => {
   }
 }
 
-export const getGlobalFilePath = (type: string, name: string) => {
+const getGlobalFileKey = (type: string, name: string) => {
   let file = `${type}/${name}`
   if (env.MULTI_TENANCY) {
     const tenantId = tenancy.getTenantId()

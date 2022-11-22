@@ -339,17 +339,17 @@ export const upload = async function (ctx: UserCtx) {
     }
   }
 
-  const url = objectStore.getGlobalFilePath(type, name)
-  cfgStructure.config[`${name}`] = url
-  if (result.ETag) {
-    cfgStructure.config[`${name}Etag`] = result.ETag.replace(/"/g, "")
+  // save the Etag for cache bursting
+  const etag = result.ETag
+  if (etag) {
+    cfgStructure.config[`${name}Etag`] = etag.replace(/"/g, "")
   }
-  // write back to db with url updated
+  // write back to db
   await db.put(cfgStructure)
 
   ctx.body = {
     message: "File has been uploaded and url stored to config.",
-    url,
+    url: objectStore.getGlobalFileUrl(type, name, etag),
   }
 }
 

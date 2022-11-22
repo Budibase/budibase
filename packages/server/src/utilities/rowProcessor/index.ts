@@ -11,7 +11,7 @@ const {
 const { getAppId } = require("@budibase/backend-core/context")
 const { InternalTables } = require("../../db/utils")
 import { objectStore } from "@budibase/backend-core"
-import { Row, Table } from "@budibase/types"
+import { Row, RowAttachment, Table } from "@budibase/types"
 
 export * from "./utils"
 
@@ -274,6 +274,12 @@ export const inputProcessing = (
     if (field.type === FieldTypes.FORMULA) {
       delete clonedRow[key]
     }
+    // remove any attachment urls, they are generated on read
+    if (field.type === FieldTypes.ATTACHMENT) {
+      clonedRow[key].forEach((attachment: RowAttachment) => {
+        delete attachment.url
+      })
+    }
     // otherwise coerce what is there to correct types
     else {
       clonedRow[key] = coerce(value, field.type)
@@ -314,14 +320,14 @@ export const outputProcessing = async (
   // process formulas
   enriched = processFormulas(table, enriched, { dynamic: true })
 
-  // update the attachments URL depending on hosting
+  // set the attachments URLs
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
       for (let row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue
         }
-        row[property].forEach((attachment: any) => {
+        row[property].forEach((attachment: RowAttachment) => {
           attachment.url = objectStore.getAppFileUrl(attachment.key)
         })
       }
