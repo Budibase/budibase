@@ -6,12 +6,14 @@ const {
   BudibaseInternalDB,
   getTableParams,
 } = require("../../db/utils")
+const { destroy: tableDestroy } = require("./table/internal")
 const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
 const { getIntegration } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
 const { invalidateDynamicVariables } = require("../../threads/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
+const { db: dbCore } = require("@budibase/backend-core")
 
 exports.fetch = async function (ctx) {
   // Get internal tables
@@ -21,11 +23,16 @@ exports.fetch = async function (ctx) {
       include_docs: true,
     })
   )
-  const internal = internalTables.rows.map(row => row.doc)
+
+  const internal = internalTables.rows.reduce((acc, row) => {
+    const sourceId = row.doc.sourceId || "bb_internal"
+    acc[sourceId] = acc[sourceId] || []
+    acc[sourceId].push(row.doc)
+    return acc
+  }, {})
 
   const bbInternalDb = {
     ...BudibaseInternalDB,
-    entities: internal,
   }
 
   // Get external datasources
@@ -37,10 +44,16 @@ exports.fetch = async function (ctx) {
     )
   ).rows.map(row => row.doc)
 
-  for (let datasource of datasources) {
+  const allDatasources = [bbInternalDb, ...datasources]
+
+  for (let datasource of allDatasources) {
     if (datasource.config && datasource.config.auth) {
       // strip secrets from response so they don't show in the network request
       delete datasource.config.auth
+    }
+
+    if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
+      datasource.entities = internal[datasource._id]
     }
   }
 
@@ -196,20 +209,53 @@ exports.save = async function (ctx) {
   ctx.body = response
 }
 
+const destroyInternalTablesBySourceId = async datasourceId => {
+  const db = getAppDB()
+
+  // Get all internal tables
+  const internalTables = await db.allDocs(
+    getTableParams(null, {
+      include_docs: true,
+    })
+  )
+
+  // Filter by datasource and return the docs.
+  const datasourceTableDocs = internalTables.rows.reduce((acc, table) => {
+    if (table.doc.sourceId == datasourceId) {
+      acc.push(table.doc)
+    }
+    return acc
+  }, [])
+
+  // Destroy the tables.
+  for (const table of datasourceTableDocs) {
+    await tableDestroy({
+      params: {
+        tableId: table._id,
+      },
+    })
+  }
+}
+
 exports.destroy = async function (ctx) {
   const db = getAppDB()
   const datasourceId = ctx.params.datasourceId
 
   const datasource = await db.get(datasourceId)
   // Delete all queries for the datasource
-  const queries = await db.allDocs(getQueryParams(datasourceId, null))
-  await db.bulkDocs(
-    queries.rows.map(row => ({
-      _id: row.id,
-      _rev: row.value.rev,
-      _deleted: true,
-    }))
-  )
+
+  if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
+    await destroyInternalTablesBySourceId(datasourceId)
+  } else {
+    const queries = await db.allDocs(getQueryParams(datasourceId, null))
+    await db.bulkDocs(
+      queries.rows.map(row => ({
+        _id: row.id,
+        _rev: row.value.rev,
+        _deleted: true,
+      }))
+    )
+  }
 
   // delete the datasource
   await db.remove(datasourceId, ctx.params.revId)
