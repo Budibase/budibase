@@ -1,46 +1,47 @@
-const { Client, utils } = require("@budibase/backend-core/redis")
-const { getGlobalIDFromUserMetadataID } = require("../db/utils")
+import { redis } from "@budibase/backend-core"
+import { getGlobalIDFromUserMetadataID } from "../db/utils"
+import { User } from "@budibase/types"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
-let devAppClient, debounceClient, flagClient
+let devAppClient: any, debounceClient: any, flagClient: any
 
 // we init this as we want to keep the connection open all the time
 // reduces the performance hit
-exports.init = async () => {
-  devAppClient = new Client(utils.Databases.DEV_LOCKS)
-  debounceClient = new Client(utils.Databases.DEBOUNCE)
-  flagClient = new Client(utils.Databases.FLAGS)
+export async function init() {
+  devAppClient = new redis.Client(redis.utils.Databases.DEV_LOCKS)
+  debounceClient = new redis.Client(redis.utils.Databases.DEBOUNCE)
+  flagClient = new redis.Client(redis.utils.Databases.FLAGS)
   await devAppClient.init()
   await debounceClient.init()
   await flagClient.init()
 }
 
-exports.shutdown = async () => {
+export async function shutdown() {
   if (devAppClient) await devAppClient.finish()
   if (debounceClient) await debounceClient.finish()
   if (flagClient) await flagClient.finish()
   console.log("Redis shutdown")
 }
 
-exports.doesUserHaveLock = async (devAppId, user) => {
+export async function doesUserHaveLock(devAppId: string, user: User) {
   const value = await devAppClient.get(devAppId)
   if (!value) {
     return true
   }
   // make sure both IDs are global
   const expected = getGlobalIDFromUserMetadataID(value._id)
-  const userId = getGlobalIDFromUserMetadataID(user._id)
+  const userId = getGlobalIDFromUserMetadataID(user._id!)
   return expected === userId
 }
 
-exports.getLocksById = async appIds => {
+export async function getLocksById(appIds: string[]) {
   return await devAppClient.bulkGet(appIds)
 }
 
-exports.updateLock = async (devAppId, user) => {
+export async function updateLock(devAppId: string, user: User) {
   // make sure always global user ID
-  const globalId = getGlobalIDFromUserMetadataID(user._id)
+  const globalId = getGlobalIDFromUserMetadataID(user._id!)
   const inputUser = {
     ...user,
     userId: globalId,
@@ -51,35 +52,35 @@ exports.updateLock = async (devAppId, user) => {
   await devAppClient.store(devAppId, inputUser, APP_DEV_LOCK_SECONDS)
 }
 
-exports.clearLock = async (devAppId, user) => {
+export async function clearLock(devAppId: string, user: User) {
   const value = await devAppClient.get(devAppId)
   if (!value) {
     return
   }
-  const userId = getGlobalIDFromUserMetadataID(user._id)
+  const userId = getGlobalIDFromUserMetadataID(user._id!)
   if (value._id !== userId) {
     throw "User does not hold lock, cannot clear it."
   }
   await devAppClient.delete(devAppId)
 }
 
-exports.checkDebounce = async id => {
+export async function checkDebounce(id: string) {
   return debounceClient.get(id)
 }
 
-exports.setDebounce = async (id, seconds) => {
+export async function setDebounce(id: string, seconds: number) {
   await debounceClient.store(id, "debouncing", seconds)
 }
 
-exports.setTestFlag = async id => {
+export async function setTestFlag(id: string) {
   await flagClient.store(id, { testing: true }, AUTOMATION_TEST_FLAG_SECONDS)
 }
 
-exports.checkTestFlag = async id => {
+export async function checkTestFlag(id: string) {
   const flag = await flagClient.get(id)
   return !!(flag && flag.testing)
 }
 
-exports.clearTestFlag = async id => {
+export async function clearTestFlag(id: string) {
   await devAppClient.delete(id)
 }

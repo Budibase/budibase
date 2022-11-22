@@ -12,14 +12,16 @@ export interface ScreenProps extends Document {
   hAlign?: string
 }
 
+export interface ScreenRouting {
+  route: string
+  roleId: string
+  homeScreen?: boolean
+}
+
 export interface Screen extends Document {
   layoutId?: string
   showNavigation?: boolean
   width?: string
-  routing: {
-    route: string
-    roleId: string
-    homeScreen?: boolean
-  }
+  routing: ScreenRouting
   props: ScreenProps
 }
