@@ -275,6 +275,7 @@
     z-index: 1;
     border-top: 1px solid var(--spectrum-global-color-gray-300);
     overflow: hidden;
+    position: relative;
   }
   .component {
     display: contents;
