@@ -1,5 +1,5 @@
 import { InternalTables } from "../../../db/utils"
-import userController from "../user"
+import * as userController from "../user"
 import { FieldTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { makeExternalQuery } from "../../../integrations/base/query"

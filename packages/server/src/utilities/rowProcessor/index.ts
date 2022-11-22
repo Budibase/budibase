@@ -180,7 +180,7 @@ export function inputProcessing(
  */
 export async function outputProcessing(
   table: Table,
-  rows: Row[],
+  rows: Row[] | Row,
   opts = { squash: true }
 ) {
   let wasArray = true

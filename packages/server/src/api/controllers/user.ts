@@ -1,23 +1,22 @@
-const {
+import {
   generateUserMetadataID,
   getUserMetadataParams,
   generateUserFlagID,
-} = require("../../db/utils")
-const { InternalTables } = require("../../db/utils")
-const { getGlobalUsers, getRawGlobalUser } = require("../../utilities/global")
-const { getFullUser } = require("../../utilities/users")
-const { isEqual } = require("lodash")
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
-const {
-  getDevelopmentAppID,
-  getProdAppIDs,
-  dbExists,
-} = require("@budibase/backend-core/db")
-const { UserStatus } = require("@budibase/backend-core/constants")
-const { getAppDB, doInAppContext } = require("@budibase/backend-core/context")
+} from "../../db/utils"
+import { InternalTables } from "../../db/utils"
+import { getGlobalUsers, getRawGlobalUser } from "../../utilities/global"
+import { getFullUser } from "../../utilities/users"
+import { isEqual } from "lodash"
+import {
+  context,
+  constants,
+  roles as rolesCore,
+  db as dbCore,
+} from "@budibase/backend-core"
+import { BBContext, User } from "@budibase/types"
 
 async function rawMetadata() {
-  const db = getAppDB()
+  const db = context.getAppDB()
   return (
     await db.allDocs(
       getUserMetadataParams(null, {
@@ -27,9 +26,9 @@ async function rawMetadata() {
   ).rows.map(row => row.doc)
 }
 
-function combineMetadataAndUser(user, metadata) {
+function combineMetadataAndUser(user: any, metadata: any) {
   // skip users with no access
-  if (user.roleId === BUILTIN_ROLE_IDS.PUBLIC) {
+  if (user.roleId === rolesCore.BUILTIN_ROLE_IDS.PUBLIC) {
     return null
   }
   delete user._rev
@@ -55,9 +54,9 @@ function combineMetadataAndUser(user, metadata) {
   return null
 }
 
-exports.syncGlobalUsers = async () => {
+export async function syncGlobalUsers() {
   // sync user metadata
-  const db = getAppDB()
+  const db = context.getAppDB()
   const [users, metadata] = await Promise.all([getGlobalUsers(), rawMetadata()])
   const toWrite = []
   for (let user of users) {
@@ -69,13 +68,13 @@ exports.syncGlobalUsers = async () => {
   await db.bulkDocs(toWrite)
 }
 
-exports.syncUser = async function (ctx) {
+export async function syncUser(ctx: BBContext) {
   let deleting = false,
-    user
+    user: User | any
   const userId = ctx.params.id
   try {
     user = await getRawGlobalUser(userId)
-  } catch (err) {
+  } catch (err: any) {
     if (err && err.status === 404) {
       user = {}
       deleting = true
@@ -92,21 +91,21 @@ exports.syncUser = async function (ctx) {
   let prodAppIds
   // if they are a builder then get all production app IDs
   if ((user.builder && user.builder.global) || deleting) {
-    prodAppIds = await getProdAppIDs()
+    prodAppIds = await dbCore.getProdAppIDs()
   } else {
     prodAppIds = Object.entries(roles)
-      .filter(entry => entry[1] !== BUILTIN_ROLE_IDS.PUBLIC)
+      .filter(entry => entry[1] !== rolesCore.BUILTIN_ROLE_IDS.PUBLIC)
       .map(([appId]) => appId)
   }
   for (let prodAppId of prodAppIds) {
     const roleId = roles[prodAppId]
-    const devAppId = getDevelopmentAppID(prodAppId)
+    const devAppId = dbCore.getDevelopmentAppID(prodAppId)
     for (let appId of [prodAppId, devAppId]) {
-      if (!(await dbExists(appId))) {
+      if (!(await dbCore.dbExists(appId))) {
         continue
       }
-      await doInAppContext(appId, async () => {
-        const db = getAppDB()
+      await context.doInAppContext(appId, async () => {
+        const db = context.getAppDB()
         const metadataId = generateUserMetadataID(userId)
         let metadata
         try {
@@ -127,8 +126,8 @@ exports.syncUser = async function (ctx) {
           ? combineMetadataAndUser(user, metadata)
           : {
               ...metadata,
-              status: UserStatus.INACTIVE,
-              metadata: BUILTIN_ROLE_IDS.PUBLIC,
+              status: constants.UserStatus.INACTIVE,
+              metadata: rolesCore.BUILTIN_ROLE_IDS.PUBLIC,
             }
         // if its null then there was no updates required
         if (combined) {
@@ -142,10 +141,9 @@ exports.syncUser = async function (ctx) {
   }
 }
 
-exports.fetchMetadata = async function (ctx) {
-  const database = getAppDB()
+export async function fetchMetadata(ctx: BBContext) {
   const global = await getGlobalUsers()
-  const metadata = await rawMetadata(database)
+  const metadata = await rawMetadata()
   const users = []
   for (let user of global) {
     // find the metadata that matches up to the global ID
@@ -162,18 +160,18 @@ exports.fetchMetadata = async function (ctx) {
   ctx.body = users
 }
 
-exports.updateSelfMetadata = async function (ctx) {
+export async function updateSelfMetadata(ctx: BBContext) {
   // overwrite the ID with current users
-  ctx.request.body._id = ctx.user._id
+  ctx.request.body._id = ctx.user?._id
   // make sure no stale rev
   delete ctx.request.body._rev
   // make sure no csrf token
   delete ctx.request.body.csrfToken
-  await exports.updateMetadata(ctx)
+  await updateMetadata(ctx)
 }
 
-exports.updateMetadata = async function (ctx) {
-  const db = getAppDB()
+export async function updateMetadata(ctx: BBContext) {
+  const db = context.getAppDB()
   const user = ctx.request.body
   // this isn't applicable to the user
   delete user.roles
@@ -184,8 +182,8 @@ exports.updateMetadata = async function (ctx) {
   ctx.body = await db.put(metadata)
 }
 
-exports.destroyMetadata = async function (ctx) {
-  const db = getAppDB()
+export async function destroyMetadata(ctx: BBContext) {
+  const db = context.getAppDB()
   try {
     const dbUser = await db.get(ctx.params.id)
     await db.remove(dbUser._id, dbUser._rev)
@@ -197,18 +195,18 @@ exports.destroyMetadata = async function (ctx) {
   }
 }
 
-exports.findMetadata = async function (ctx) {
+export async function findMetadata(ctx: BBContext) {
   ctx.body = await getFullUser(ctx, ctx.params.id)
 }
 
-exports.setFlag = async function (ctx) {
-  const userId = ctx.user._id
+export async function setFlag(ctx: BBContext) {
+  const userId = ctx.user?._id
   const { flag, value } = ctx.request.body
   if (!flag) {
     ctx.throw(400, "Must supply a 'flag' field in request body.")
   }
-  const flagDocId = generateUserFlagID(userId)
-  const db = getAppDB()
+  const flagDocId = generateUserFlagID(userId!)
+  const db = context.getAppDB()
   let doc
   try {
     doc = await db.get(flagDocId)
@@ -220,10 +218,10 @@ exports.setFlag = async function (ctx) {
   ctx.body = { message: "Flag set successfully" }
 }
 
-exports.getFlags = async function (ctx) {
-  const userId = ctx.user._id
-  const docId = generateUserFlagID(userId)
-  const db = getAppDB()
+export async function getFlags(ctx: BBContext) {
+  const userId = ctx.user?._id
+  const docId = generateUserFlagID(userId!)
+  const db = context.getAppDB()
   let doc
   try {
     doc = await db.get(docId)

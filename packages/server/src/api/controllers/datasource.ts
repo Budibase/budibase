@@ -1,30 +1,29 @@
-const {
+import {
   generateDatasourceID,
   getDatasourceParams,
   getQueryParams,
   DocumentType,
   BudibaseInternalDB,
   getTableParams,
-} = require("../../db/utils")
-const { destroy: tableDestroy } = require("./table/internal")
-const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
-const { getIntegration } = require("../../integrations")
-const { getDatasourceAndQuery } = require("./row/utils")
-const { invalidateDynamicVariables } = require("../../threads/utils")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { events } = require("@budibase/backend-core")
-const { db: dbCore } = require("@budibase/backend-core")
+} from "../../db/utils"
+import { destroy as tableDestroy } from "./table/internal"
+import { BuildSchemaErrors, InvalidColumns } from "../../constants"
+import { getIntegration } from "../../integrations"
+import { getDatasourceAndQuery } from "./row/utils"
+import { invalidateDynamicVariables } from "../../threads/utils"
+import { db as dbCore, context, events } from "@budibase/backend-core"
+import { BBContext, Datasource, Row } from "@budibase/types"
 
-exports.fetch = async function (ctx) {
+export async function fetch(ctx: BBContext) {
   // Get internal tables
-  const db = getAppDB()
+  const db = context.getAppDB()
   const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
     })
   )
 
-  const internal = internalTables.rows.reduce((acc, row) => {
+  const internal = internalTables.rows.reduce((acc: any, row: Row) => {
     const sourceId = row.doc.sourceId || "bb_internal"
     acc[sourceId] = acc[sourceId] || []
     acc[sourceId].push(row.doc)
@@ -60,8 +59,8 @@ exports.fetch = async function (ctx) {
   ctx.body = [bbInternalDb, ...datasources]
 }
 
-exports.buildSchemaFromDb = async function (ctx) {
-  const db = getAppDB()
+export async function buildSchemaFromDb(ctx: BBContext) {
+  const db = context.getAppDB()
   const datasource = await db.get(ctx.params.datasourceId)
   const tablesFilter = ctx.request.body.tablesFilter
 
@@ -72,7 +71,9 @@ exports.buildSchemaFromDb = async function (ctx) {
     }
     for (let key in tables) {
       if (
-        tablesFilter.some(filter => filter.toLowerCase() === key.toLowerCase())
+        tablesFilter.some(
+          (filter: any) => filter.toLowerCase() === key.toLowerCase()
+        )
       ) {
         datasource.entities[key] = tables[key]
       }
@@ -85,7 +86,7 @@ exports.buildSchemaFromDb = async function (ctx) {
   const dbResp = await db.put(datasource)
   datasource._rev = dbResp.rev
 
-  const response = { datasource }
+  const response: any = { datasource }
   if (error) {
     response.error = error
   }
@@ -95,9 +96,9 @@ exports.buildSchemaFromDb = async function (ctx) {
 /**
  * Make sure all datasource entities have a display name selected
  */
-const setDefaultDisplayColumns = datasource => {
+function setDefaultDisplayColumns(datasource: Datasource) {
   //
-  for (let entity of Object.values(datasource.entities)) {
+  for (let entity of Object.values(datasource.entities || {})) {
     if (entity.primaryDisplay) {
       continue
     }
@@ -113,9 +114,12 @@ const setDefaultDisplayColumns = datasource => {
 /**
  * Check for variables that have been updated or removed and invalidate them.
  */
-const invalidateVariables = async (existingDatasource, updatedDatasource) => {
-  const existingVariables = existingDatasource.config.dynamicVariables
-  const updatedVariables = updatedDatasource.config.dynamicVariables
+async function invalidateVariables(
+  existingDatasource: Datasource,
+  updatedDatasource: Datasource
+) {
+  const existingVariables: any = existingDatasource.config?.dynamicVariables
+  const updatedVariables: any = updatedDatasource.config?.dynamicVariables
   const toInvalidate = []
 
   if (!existingVariables) {
@@ -127,9 +131,9 @@ const invalidateVariables = async (existingDatasource, updatedDatasource) => {
     toInvalidate.push(...existingVariables)
   } else {
     // invaldate changed / removed
-    existingVariables.forEach(existing => {
+    existingVariables.forEach((existing: any) => {
       const unchanged = updatedVariables.find(
-        updated =>
+        (updated: any) =>
           existing.name === updated.name &&
           existing.queryId === updated.queryId &&
           existing.value === updated.value
@@ -142,8 +146,8 @@ const invalidateVariables = async (existingDatasource, updatedDatasource) => {
   await invalidateDynamicVariables(toInvalidate)
 }
 
-exports.update = async function (ctx) {
-  const db = getAppDB()
+export async function update(ctx: BBContext) {
+  const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
   let datasource = await db.get(datasourceId)
   const auth = datasource.config.auth
@@ -171,8 +175,8 @@ exports.update = async function (ctx) {
   ctx.body = { datasource }
 }
 
-exports.save = async function (ctx) {
-  const db = getAppDB()
+export async function save(ctx: BBContext) {
+  const db = context.getAppDB()
   const plus = ctx.request.body.datasource.plus
   const fetchSchema = ctx.request.body.fetchSchema
 
@@ -202,15 +206,15 @@ exports.save = async function (ctx) {
     }
   }
 
-  const response = { datasource }
+  const response: any = { datasource }
   if (schemaError) {
     response.error = schemaError
   }
   ctx.body = response
 }
 
-const destroyInternalTablesBySourceId = async datasourceId => {
-  const db = getAppDB()
+async function destroyInternalTablesBySourceId(datasourceId: string) {
+  const db = context.getAppDB()
 
   // Get all internal tables
   const internalTables = await db.allDocs(
@@ -220,12 +224,15 @@ const destroyInternalTablesBySourceId = async datasourceId => {
   )
 
   // Filter by datasource and return the docs.
-  const datasourceTableDocs = internalTables.rows.reduce((acc, table) => {
-    if (table.doc.sourceId == datasourceId) {
-      acc.push(table.doc)
-    }
-    return acc
-  }, [])
+  const datasourceTableDocs = internalTables.rows.reduce(
+    (acc: any, table: any) => {
+      if (table.doc.sourceId == datasourceId) {
+        acc.push(table.doc)
+      }
+      return acc
+    },
+    []
+  )
 
   // Destroy the tables.
   for (const table of datasourceTableDocs) {
@@ -237,8 +244,8 @@ const destroyInternalTablesBySourceId = async datasourceId => {
   }
 }
 
-exports.destroy = async function (ctx) {
-  const db = getAppDB()
+export async function destroy(ctx: BBContext) {
+  const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
 
   const datasource = await db.get(datasourceId)
@@ -249,7 +256,7 @@ exports.destroy = async function (ctx) {
   } else {
     const queries = await db.allDocs(getQueryParams(datasourceId, null))
     await db.bulkDocs(
-      queries.rows.map(row => ({
+      queries.rows.map((row: any) => ({
         _id: row.id,
         _rev: row.value.rev,
         _deleted: true,
@@ -265,28 +272,28 @@ exports.destroy = async function (ctx) {
   ctx.status = 200
 }
 
-exports.find = async function (ctx) {
-  const database = getAppDB()
+export async function find(ctx: BBContext) {
+  const database = context.getAppDB()
   ctx.body = await database.get(ctx.params.datasourceId)
 }
 
 // dynamic query functionality
-exports.query = async function (ctx) {
+export async function query(ctx: BBContext) {
   const queryJson = ctx.request.body
   try {
     ctx.body = await getDatasourceAndQuery(queryJson)
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
 
-function getErrorTables(errors, errorType) {
+function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
     .filter(entry => entry[1] === errorType)
     .map(([name]) => name)
 }
 
-function updateError(error, newError, tables) {
+function updateError(error: any, newError: any, tables: string[]) {
   if (!error) {
     error = ""
   }
@@ -297,7 +304,7 @@ function updateError(error, newError, tables) {
   return error
 }
 
-const buildSchemaHelper = async datasource => {
+async function buildSchemaHelper(datasource: Datasource) {
   const Connector = await getIntegration(datasource.source)
 
   // Connect to the DB and build the schema

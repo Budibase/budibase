@@ -4,7 +4,7 @@ import { context } from "@budibase/backend-core"
 /**
  * This is used to pass around information about the deployment that is occurring
  */
-export class Deployment {
+export default class Deployment {
   _id: string
   verification: any
   status?: string

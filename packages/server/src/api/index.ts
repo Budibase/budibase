@@ -1,20 +1,15 @@
-const Router = require("@koa/router")
-const {
-  buildAuthMiddleware,
-  auditLog,
-  buildTenancyMiddleware,
-} = require("@budibase/backend-core/auth")
-const { errors } = require("@budibase/backend-core")
-const currentApp = require("../middleware/currentapp")
+import Router from "@koa/router"
+import { errors, auth } from "@budibase/backend-core"
+import currentApp from "../middleware/currentapp"
+import zlib from "zlib"
+import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
+import pkg from "../../package.json"
+import env from "../environment"
+import { middleware as pro } from "@budibase/pro"
+export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
-const zlib = require("zlib")
-const { mainRoutes, staticRoutes, publicRoutes } = require("./routes")
-const pkg = require("../../package.json")
-const env = require("../environment")
-const { middleware: pro } = require("@budibase/pro")
-const { shutdown } = require("./routes/public")
 
-const router = new Router()
+export const router: Router = new Router()
 
 router.get("/health", ctx => (ctx.status = 200))
 router.get("/version", ctx => (ctx.body = pkg.version))
@@ -42,7 +37,7 @@ router
   // re-direct before any middlewares occur
   .redirect("/", "/builder")
   .use(
-    buildAuthMiddleware(null, {
+    auth.buildAuthMiddleware(null, {
       publicAllowed: true,
     })
   )
@@ -50,19 +45,20 @@ router
   // the server can be public anywhere, so nowhere should throw errors
   // if the tenancy has not been set, it'll have to be discovered at application layer
   .use(
-    buildTenancyMiddleware(null, null, {
+    auth.buildTenancyMiddleware(null, null, {
       noTenancyRequired: true,
     })
   )
   .use(pro.licensing())
+  // @ts-ignore
   .use(currentApp)
-  .use(auditLog)
+  .use(auth.auditLog)
 
 // error handling middleware
 router.use(async (ctx, next) => {
   try {
     await next()
-  } catch (err) {
+  } catch (err: any) {
     ctx.status = err.status || err.statusCode || 500
     const error = errors.getPublicError(err)
     ctx.body = {
@@ -91,6 +87,3 @@ router.use(publicRoutes.allowedMethods())
 // WARNING - static routes will catch everything else after them this must be last
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
-
-module.exports.router = router
-module.exports.shutdown = shutdown
