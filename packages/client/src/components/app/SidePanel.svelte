@@ -2,29 +2,44 @@
   import { getContext } from "svelte"
 
   const component = getContext("component")
-  const { styleable, sidePanelStore, builderStore } = getContext("sdk")
+  const { styleable, sidePanelStore, builderStore, dndIsDragging } =
+    getContext("sdk")
 
-  $: open = $sidePanelStore.contentId === $component.id
-
-  // Automatically show and hide the side panel when inside the builder
+  // Automatically show and hide the side panel when inside the builder.
+  // For some unknown reason, svelte reactivity breaks if we reference the
+  // reactive variable "open" inside the following expression, or if we define
+  // "open" above this expression.
   $: {
     if ($builderStore.inBuilder) {
-      if ($component.inSelectedPath && !open) {
+      if (
+        $component.inSelectedPath &&
+        $sidePanelStore.contentId !== $component.id
+      ) {
         sidePanelStore.actions.open($component.id)
-      } else if (!$component.inSelectedPath && open) {
+      } else if (
+        !$component.inSelectedPath &&
+        $sidePanelStore.contentId === $component.id &&
+        !$dndIsDragging
+      ) {
         sidePanelStore.actions.close()
       }
     }
   }
+  $: open = $sidePanelStore.contentId === $component.id
 
   const showInSidePanel = (el, visible) => {
     const target = document.getElementById("side-panel-container")
+    const node = el.parentNode
     const destroy = () => {
-      el.parentNode?.removeChild(el)
+      if (target.contains(node)) {
+        target.removeChild(node)
+      }
     }
     const update = visible => {
       if (visible) {
-        target.appendChild(el)
+        if (!target.contains(node)) {
+          target.appendChild(node)
+        }
         el.hidden = false
       } else {
         destroy()
@@ -59,5 +74,8 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-xl);
+  }
+  .side-panel :global(.component > *) {
+    max-width: 100%;
   }
 </style>
