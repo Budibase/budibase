@@ -20,6 +20,7 @@ const tk = require("timekeeper")
 tk.freeze(mocks.date.MOCK_DATE)
 
 global.console.log = jest.fn() // console.log are ignored in tests
+global.console.warn = jest.fn() // console.warn are ignored in tests
 
 if (!process.env.CI) {
   // set a longer timeout in dev for debugging

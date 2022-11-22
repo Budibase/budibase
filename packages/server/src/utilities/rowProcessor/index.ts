@@ -274,15 +274,19 @@ export const inputProcessing = (
     if (field.type === FieldTypes.FORMULA) {
       delete clonedRow[key]
     }
-    // remove any attachment urls, they are generated on read
-    if (field.type === FieldTypes.ATTACHMENT) {
-      clonedRow[key].forEach((attachment: RowAttachment) => {
-        delete attachment.url
-      })
-    }
     // otherwise coerce what is there to correct types
     else {
       clonedRow[key] = coerce(value, field.type)
+    }
+
+    // remove any attachment urls, they are generated on read
+    if (field.type === FieldTypes.ATTACHMENT) {
+      const attachments = clonedRow[key]
+      if (attachments?.length) {
+        attachments.forEach((attachment: RowAttachment) => {
+          delete attachment.url
+        })
+      }
     }
   }
 

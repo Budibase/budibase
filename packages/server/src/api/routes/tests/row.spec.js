@@ -512,7 +512,7 @@ describe("/rows", () => {
         doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
           expect(enriched[0].attachment[0].url).toBe(
-            `/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
+            `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
           )
         })
       })
