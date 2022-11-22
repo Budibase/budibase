@@ -17,6 +17,7 @@
   export let columns = []
   export let options = []
   export let schema = {}
+  export let allowCellEditing = true
 
   const flipDurationMs = 150
   let dragDisabled = true
@@ -123,7 +124,9 @@
                   on:change={e => (column.displayName = e.detail)}
                 />
                 <Input bind:value={column.displayName} placeholder="Label" />
-                <CellEditor bind:column />
+                {#if allowCellEditing}
+                  <CellEditor bind:column />
+                {/if}
                 <Icon
                   name="Close"
                   hoverable

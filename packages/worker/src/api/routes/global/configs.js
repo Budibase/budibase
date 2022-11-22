@@ -3,7 +3,7 @@ const controller = require("../../controllers/global/configs")
 const { joiValidator } = require("@budibase/backend-core/auth")
 const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
-const { Config } = require("../../../constants")
+const { Config } = require("@budibase/backend-core/constants")
 
 const router = new Router()
 

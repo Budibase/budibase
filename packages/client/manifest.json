@@ -84,7 +84,6 @@
     "description": "This component contains things within itself",
     "icon": "Selection",
     "hasChildren": true,
-    "showSettingsBar": true,
     "size": {
       "width": 400,
       "height": 200
@@ -283,7 +282,6 @@
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
     "editable": true,
-    "showSettingsBar": true,
     "size": {
       "width": 105,
       "height": 35
@@ -420,7 +418,6 @@
       "section"
     ],
     "hasChildren": true,
-    "showSettingsBar": true,
     "size": {
       "width": 400,
       "height": 100
@@ -683,7 +680,6 @@
     "illegalChildren": [
       "section"
     ],
-    "showSettingsBar": true,
     "editable": true,
     "size": {
       "width": 400,
@@ -809,7 +805,6 @@
     "illegalChildren": [
       "section"
     ],
-    "showSettingsBar": true,
     "editable": true,
     "size": {
       "width": 400,
@@ -931,7 +926,6 @@
   "tag": {
     "name": "Tag",
     "icon": "Label",
-    "showSettingsBar": true,
     "size": {
       "width": 100,
       "height": 25
@@ -1189,7 +1183,6 @@
     "name": "Link",
     "description": "A basic link component for internal and external links",
     "icon": "Link",
-    "showSettingsBar": true,
     "editable": true,
     "size": {
       "width": 200,
@@ -3927,7 +3920,6 @@
   "dynamicfilter": {
     "name": "Dynamic Filter",
     "icon": "Filter",
-    "showSettingsBar": true,
     "size": {
       "width": 100,
       "height": 35
@@ -3940,10 +3932,10 @@
         "required": true
       },
       {
-        "type": "multifield",
-        "label": "Allowed filter fields",
+        "type": "columns/basic",
+        "label": "Allowed filter columns",
         "key": "allowedFields",
-        "placeholder": "All fields"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -4797,7 +4789,6 @@
       "section"
     ],
     "hasChildren": true,
-    "showSettingsBar": true,
     "size": {
       "width": 400,
       "height": 100
