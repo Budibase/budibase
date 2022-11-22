@@ -8,6 +8,7 @@ import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import { Row, User, Table } from "@budibase/types"
 const { cloneDeep } = require("lodash/fp")
+export * from "./utils"
 
 type AutoColumnProcessingOpts = {
   reprocessing?: boolean
@@ -229,7 +230,7 @@ export async function cleanupAttachments(
     rows,
     oldRow,
     oldTable,
-  }: { row?: Row; rows?: Row[]; oldRow?: Row; oldTable: Table }
+  }: { row?: Row; rows?: Row[]; oldRow?: Row; oldTable?: Table }
 ): Promise<any> {
   const appId = context.getAppId()
   if (!dbCore.isProdAppID(appId)) {

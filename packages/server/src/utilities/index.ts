@@ -1,17 +1,20 @@
-const env = require("../environment")
-const { OBJ_STORE_DIRECTORY } = require("../constants")
-const { sanitizeKey } = require("@budibase/backend-core/objectStore")
-const { generateMetadataID } = require("../db/utils")
-const Readable = require("stream").Readable
-const { getAppDB } = require("@budibase/backend-core/context")
+import env from "../environment"
+import { OBJ_STORE_DIRECTORY } from "../constants"
+import { objectStore, context } from "@budibase/backend-core"
+import { generateMetadataID } from "../db/utils"
+import { Document } from "@budibase/types"
+import stream from "stream"
+const Readable = stream.Readable
 
-exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+export function wait(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
-exports.isDev = env.isDev
+export const isDev = env.isDev
 
-exports.NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
+export const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
 
-exports.removeFromArray = (array, element) => {
+export function removeFromArray(array: any[], element: any) {
   const index = array.indexOf(element)
   if (index !== -1) {
     array.splice(index, 1)
@@ -25,7 +28,7 @@ exports.removeFromArray = (array, element) => {
  * @param {string} url The URL to test and remove any extra double slashes.
  * @return {string} The updated url.
  */
-exports.checkSlashesInUrl = url => {
+export function checkSlashesInUrl(url: string) {
   return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
 }
 
@@ -33,7 +36,7 @@ exports.checkSlashesInUrl = url => {
  * Gets the address of the object store, depending on whether self hosted or in cloud.
  * @return {string} The base URL of the object store (MinIO or S3).
  */
-exports.objectStoreUrl = () => {
+export function objectStoreUrl() {
   if (env.SELF_HOSTED || env.MINIO_URL) {
     // can use a relative url for this as all goes through the proxy (this is hosted in minio)
     return OBJ_STORE_DIRECTORY
@@ -52,9 +55,9 @@ exports.objectStoreUrl = () => {
  * @return {string} The URL to be inserted into appPackage response or server rendered
  * app index file.
  */
-exports.clientLibraryPath = (appId, version) => {
+export function clientLibraryPath(appId: string, version: string) {
   if (env.isProd()) {
-    let url = `${exports.objectStoreUrl()}/${sanitizeKey(
+    let url = `${objectStoreUrl()}/${objectStore.sanitizeKey(
       appId
     )}/budibase-client.js`
 
@@ -68,18 +71,19 @@ exports.clientLibraryPath = (appId, version) => {
   }
 }
 
-exports.attachmentsRelativeURL = attachmentKey => {
-  return exports.checkSlashesInUrl(
-    `${exports.objectStoreUrl()}/${attachmentKey}`
-  )
+export function attachmentsRelativeURL(attachmentKey: string) {
+  return checkSlashesInUrl(`${objectStoreUrl()}/${attachmentKey}`)
 }
 
-exports.updateEntityMetadata = async (type, entityId, updateFn) => {
-  const db = getAppDB()
+export async function updateEntityMetadata(
+  type: string,
+  entityId: string,
+  updateFn: any
+) {
+  const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
   // read it to see if it exists, we'll overwrite it no matter what
-  let rev,
-    metadata = {}
+  let rev, metadata: Document
   try {
     const oldMetadata = await db.get(id)
     rev = oldMetadata._rev
@@ -100,14 +104,18 @@ exports.updateEntityMetadata = async (type, entityId, updateFn) => {
   }
 }
 
-exports.saveEntityMetadata = async (type, entityId, metadata) => {
-  return exports.updateEntityMetadata(type, entityId, () => {
+export async function saveEntityMetadata(
+  type: string,
+  entityId: string,
+  metadata: Document
+) {
+  return updateEntityMetadata(type, entityId, () => {
     return metadata
   })
 }
 
-exports.deleteEntityMetadata = async (type, entityId) => {
-  const db = getAppDB()
+export async function deleteEntityMetadata(type: string, entityId: string) {
+  const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
   let rev
   try {
@@ -123,7 +131,7 @@ exports.deleteEntityMetadata = async (type, entityId) => {
   }
 }
 
-exports.escapeDangerousCharacters = string => {
+export function escapeDangerousCharacters(string: string) {
   return string
     .replace(/[\\]/g, "\\\\")
     .replace(/[\b]/g, "\\b")
@@ -133,7 +141,7 @@ exports.escapeDangerousCharacters = string => {
     .replace(/[\t]/g, "\\t")
 }
 
-exports.stringToReadStream = string => {
+export function stringToReadStream(string: string) {
   return new Readable({
     read() {
       this.push(string)
@@ -142,7 +150,7 @@ exports.stringToReadStream = string => {
   })
 }
 
-exports.formatBytes = bytes => {
+export function formatBytes(bytes: string) {
   const units = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
   const byteIncrements = 1024
   let unit = 0
@@ -153,7 +161,7 @@ exports.formatBytes = bytes => {
   return `${size.toFixed(size < 10 && unit > 0 ? 1 : 0)}${units[unit]}`
 }
 
-exports.convertBookmark = bookmark => {
+export function convertBookmark(bookmark: string) {
   const IS_NUMBER = /^\d+\.?\d*$/
   if (typeof bookmark === "string" && bookmark.match(IS_NUMBER)) {
     return parseFloat(bookmark)
@@ -161,7 +169,7 @@ exports.convertBookmark = bookmark => {
   return bookmark
 }
 
-exports.isQsTrue = param => {
+export function isQsTrue(param: string) {
   if (typeof param === "string") {
     return param.toLowerCase() === "true"
   } else {

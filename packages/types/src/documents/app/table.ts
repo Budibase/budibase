@@ -1,5 +1,6 @@
 import { Document } from "../document"
 import { View } from "./view"
+import { RenameColumn } from "../../sdk"
 
 export interface FieldSchema {
   // TODO: replace with field types enum when done
@@ -54,4 +55,9 @@ export interface Table extends Document {
   sql?: boolean
   indexes?: { [key: string]: any }
   dataImport?: { [key: string]: any }
+}
+
+export interface TableRequest extends Table {
+  _rename?: RenameColumn
+  created?: boolean
 }
