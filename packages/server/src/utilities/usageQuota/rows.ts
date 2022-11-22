@@ -1,23 +1,19 @@
-const { getRowParams, USER_METDATA_PREFIX } = require("../../db/utils")
-const {
-  isDevAppID,
-  getDevelopmentAppID,
-  getProdAppID,
-  doWithDB,
-} = require("@budibase/backend-core/db")
+import { getRowParams, USER_METDATA_PREFIX } from "../../db/utils"
+import { db as dbCore } from "@budibase/backend-core"
+import { Database, Row } from "@budibase/types"
 
 const ROW_EXCLUSIONS = [USER_METDATA_PREFIX]
 
-const getAppPairs = appIds => {
+function getAppPairs(appIds: string[]) {
   // collect the app ids into dev / prod pairs
   // keyed by the dev app id
-  const pairs = {}
+  const pairs: { [key: string]: { devId?: string; prodId?: string } } = {}
   for (let appId of appIds) {
-    const devId = getDevelopmentAppID(appId)
+    const devId = dbCore.getDevelopmentAppID(appId)
     if (!pairs[devId]) {
       pairs[devId] = {}
     }
-    if (isDevAppID(appId)) {
+    if (dbCore.isDevAppID(appId)) {
       pairs[devId].devId = appId
     } else {
       pairs[devId].prodId = appId
@@ -26,9 +22,9 @@ const getAppPairs = appIds => {
   return pairs
 }
 
-const getAppRows = async appId => {
+async function getAppRows(appId: string) {
   // need to specify the app ID, as this is used for different apps in one call
-  return doWithDB(appId, async db => {
+  return dbCore.doWithDB(appId, async (db: Database) => {
     const response = await db.allDocs(
       getRowParams(null, null, {
         include_docs: false,
@@ -52,13 +48,13 @@ const getAppRows = async appId => {
  * The returned rows will be unique on a per dev/prod app basis.
  * Rows duplicates may exist across apps due to data import so they are not filtered out.
  */
-exports.getUniqueRows = async appIds => {
-  let uniqueRows = [],
-    rowsByApp = {}
+export async function getUniqueRows(appIds: string[]) {
+  let uniqueRows: Row[] = [],
+    rowsByApp: { [key: string]: Row[] } = {}
   const pairs = getAppPairs(appIds)
 
   for (let pair of Object.values(pairs)) {
-    let appRows = []
+    let appRows: Row[] = []
     for (let appId of [pair.devId, pair.prodId]) {
       if (!appId) {
         continue
@@ -75,7 +71,7 @@ exports.getUniqueRows = async appIds => {
     // this can't be done on all rows because app import results in
     // duplicate row ids across apps
     // the array pre-concat is important to avoid stack overflow
-    const prodId = getProdAppID(pair.devId || pair.prodId)
+    const prodId = dbCore.getProdAppID((pair.devId || pair.prodId)!)
     rowsByApp[prodId] = [...new Set(appRows)]
     uniqueRows = uniqueRows.concat(rowsByApp[prodId])
   }
