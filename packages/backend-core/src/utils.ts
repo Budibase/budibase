@@ -83,12 +83,16 @@ export const getAppIdFromCtx = async (ctx: Ctx) => {
     appId = confirmAppId(ctx.request.body.appId)
   }
 
-  // look in the url - dev app
-  let appPath =
-    ctx.request.headers.referrer ||
-    ctx.path.split("/").filter(subPath => subPath.startsWith(APP_PREFIX))
-  if (!appId && appPath.length) {
-    appId = confirmAppId(appPath[0])
+  // look in the path
+  const pathId = parseAppIdFromUrl(ctx.path)
+  if (!appId && pathId) {
+    appId = confirmAppId(pathId)
+  }
+
+  // look in the referer
+  const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
+  if (!appId && refererId) {
+    appId = confirmAppId(refererId)
   }
 
   // look in the url - prod app
@@ -97,6 +101,13 @@ export const getAppIdFromCtx = async (ctx: Ctx) => {
   }
 
   return appId
+}
+
+function parseAppIdFromUrl(url?: string) {
+  if (!url) {
+    return
+  }
+  return url.split("/").find(subPath => subPath.startsWith(APP_PREFIX))
 }
 
 /**
