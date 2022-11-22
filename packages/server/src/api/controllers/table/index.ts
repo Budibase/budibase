@@ -1,13 +1,13 @@
-const internal = require("./internal")
-const external = require("./external")
-const csvParser = require("../../../utilities/csvParser")
-const { isExternalTable, isSQL } = require("../../../integrations/utils")
-const { getDatasourceParams } = require("../../../db/utils")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { events } = require("@budibase/backend-core")
-const sdk = require("../../../sdk")
+import * as internal from "./internal"
+import * as external from "./external"
+import csvParser from "../../../utilities/csvParser"
+import { isExternalTable, isSQL } from "../../../integrations/utils"
+import { getDatasourceParams } from "../../../db/utils"
+import { context, events } from "@budibase/backend-core"
+import { Table, BBContext } from "@budibase/types"
+import sdk from "../../../sdk"
 
-function pickApi({ tableId, table }) {
+function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
     tableId = table._id
   }
@@ -20,8 +20,8 @@ function pickApi({ tableId, table }) {
 }
 
 // covers both internal and external
-exports.fetch = async function (ctx) {
-  const db = getAppDB()
+export async function fetch(ctx: BBContext) {
+  const db = context.getAppDB()
 
   const internal = await sdk.tables.getAllInternalTables()
 
@@ -34,7 +34,7 @@ exports.fetch = async function (ctx) {
   const external = externalTables.rows.flatMap(tableDoc => {
     let entities = tableDoc.doc.entities
     if (entities) {
-      return Object.values(entities).map(entity => ({
+      return Object.values(entities).map((entity: any) => ({
         ...entity,
         type: "external",
         sourceId: tableDoc.doc._id,
@@ -48,12 +48,12 @@ exports.fetch = async function (ctx) {
   ctx.body = [...internal, ...external]
 }
 
-exports.find = async function (ctx) {
+export async function find(ctx: BBContext) {
   const tableId = ctx.params.tableId
   ctx.body = await sdk.tables.getTable(tableId)
 }
 
-exports.save = async function (ctx) {
+export async function save(ctx: BBContext) {
   const appId = ctx.appId
   const table = ctx.request.body
   const importFormat =
@@ -74,7 +74,7 @@ exports.save = async function (ctx) {
   ctx.body = savedTable
 }
 
-exports.destroy = async function (ctx) {
+export async function destroy(ctx: BBContext) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
@@ -86,7 +86,7 @@ exports.destroy = async function (ctx) {
   ctx.body = { message: `Table ${tableId} deleted.` }
 }
 
-exports.bulkImport = async function (ctx) {
+export async function bulkImport(ctx: BBContext) {
   const tableId = ctx.params.tableId
   await pickApi({ tableId }).bulkImport(ctx)
   // right now we don't trigger anything for bulk import because it
@@ -96,7 +96,7 @@ exports.bulkImport = async function (ctx) {
   ctx.body = { message: `Bulk rows created.` }
 }
 
-exports.validateCSVSchema = async function (ctx) {
+export async function validateCSVSchema(ctx: BBContext) {
   // tableId being specified means its an import to an existing table
   const { csvString, schema = {}, tableId } = ctx.request.body
   let existingTable

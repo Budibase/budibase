@@ -13,28 +13,28 @@ import {
 } from "../../../constants"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
-const { getAppDB } = require("@budibase/backend-core/context")
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { events } from "@budibase/backend-core"
+import { events, context } from "@budibase/backend-core"
+import { Database } from "@budibase/types"
 
 export async function clearColumns(table: any, columnNames: any) {
-  const db = getAppDB()
+  const db: Database = context.getAppDB()
   const rows = await db.allDocs(
     getRowParams(table._id, null, {
       include_docs: true,
     })
   )
-  return db.bulkDocs(
+  return (await db.bulkDocs(
     rows.rows.map(({ doc }: any) => {
       columnNames.forEach((colName: any) => delete doc[colName])
       return doc
     })
-  )
+  )) as { id: string; _rev?: string }[]
 }
 
 export async function checkForColumnUpdates(oldTable: any, updatedTable: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   let updatedRows = []
   const rename = updatedTable._rename
   let deletedColumns: any = []
@@ -133,7 +133,7 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
     return table
   }
 
-  const db = getAppDB()
+  const db = context.getAppDB()
   // Populate the table with rows imported from CSV in a bulk update
   const data = await transform({
     ...dataImport,
@@ -150,7 +150,7 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
 }
 
 export async function handleSearchIndexes(table: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   // create relevant search indexes
   if (table.indexes && table.indexes.length > 0) {
     const currentIndexes = await db.getIndexes()
@@ -214,7 +214,7 @@ class TableSaveFunctions {
   rows: any
 
   constructor({ user, oldTable, dataImport }: any) {
-    this.db = getAppDB()
+    this.db = context.getAppDB()
     this.user = user
     this.oldTable = oldTable
     this.dataImport = dataImport
@@ -338,7 +338,7 @@ export function generateJunctionTableName(
   return `jt_${table.name}_${relatedTable.name}_${column.name}_${column.fieldName}`
 }
 
-export function foreignKeyStructure(keyName: any, meta = null) {
+export function foreignKeyStructure(keyName: any, meta?: any) {
   const structure: any = {
     type: FieldTypes.NUMBER,
     constraints: {},

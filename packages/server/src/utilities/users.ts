@@ -1,12 +1,11 @@
-const { InternalTables } = require("../db/utils")
-const { getGlobalUser } = require("../utilities/global")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { getProdAppID } = require("@budibase/backend-core/db")
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+import { InternalTables } from "../db/utils"
+import { getGlobalUser } from "./global"
+import { context, db as dbCore, roles } from "@budibase/backend-core"
+import { BBContext } from "@budibase/types"
 
-exports.getFullUser = async (ctx, userId) => {
+export async function getFullUser(ctx: BBContext, userId: string) {
   const global = await getGlobalUser(userId)
-  let metadata = {}
+  let metadata: any = {}
 
   // always prefer the user metadata _id and _rev
   delete global._id
@@ -14,7 +13,7 @@ exports.getFullUser = async (ctx, userId) => {
 
   try {
     // this will throw an error if the db doesn't exist, or there is no appId
-    const db = getAppDB()
+    const db = context.getAppDB()
     metadata = await db.get(userId)
   } catch (err) {
     // it is fine if there is no user metadata yet
@@ -23,14 +22,14 @@ exports.getFullUser = async (ctx, userId) => {
   return {
     ...metadata,
     ...global,
-    roleId: global.roleId || BUILTIN_ROLE_IDS.PUBLIC,
+    roleId: global.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC,
     tableId: InternalTables.USER_METADATA,
     // make sure the ID is always a local ID, not a global one
     _id: userId,
   }
 }
 
-exports.publicApiUserFix = ctx => {
+export function publicApiUserFix(ctx: BBContext) {
   if (!ctx.request.body) {
     return ctx
   }
@@ -40,10 +39,9 @@ exports.publicApiUserFix = ctx => {
   if (!ctx.request.body.roles) {
     ctx.request.body.roles = {}
   } else {
-    const newRoles = {}
+    const newRoles: { [key: string]: any } = {}
     for (let [appId, role] of Object.entries(ctx.request.body.roles)) {
-      // @ts-ignore
-      newRoles[getProdAppID(appId)] = role
+      newRoles[dbCore.getProdAppID(appId)] = role
     }
     ctx.request.body.roles = newRoles
   }

@@ -1,13 +1,14 @@
-const { FieldTypes, FormulaTypes } = require("../../../constants")
-const { clearColumns } = require("./utils")
-const { doesContainStrings } = require("@budibase/string-templates")
-const { cloneDeep } = require("lodash/fp")
-const { isEqual, uniq } = require("lodash")
-const { updateAllFormulasInTable } = require("../row/staticFormula")
-const { getAppDB } = require("@budibase/backend-core/context")
-const sdk = require("../../../sdk")
+import { FieldTypes, FormulaTypes } from "../../../constants"
+import { clearColumns } from "./utils"
+import { doesContainStrings } from "@budibase/string-templates"
+import { cloneDeep } from "lodash/fp"
+import { isEqual, uniq } from "lodash"
+import { updateAllFormulasInTable } from "../row/staticFormula"
+import { context } from "@budibase/backend-core"
+import { FieldSchema, Table } from "@budibase/types"
+import sdk from "../../../sdk"
 
-function isStaticFormula(column) {
+function isStaticFormula(column: FieldSchema) {
   return (
     column.type === FieldTypes.FORMULA &&
     column.formulaType === FormulaTypes.STATIC
@@ -18,8 +19,8 @@ function isStaticFormula(column) {
  * This retrieves the formula columns from a table schema that use a specified column name
  * in the formula.
  */
-function getFormulaThatUseColumn(table, columnNames) {
-  let formula = []
+function getFormulaThatUseColumn(table: Table, columnNames: string[] | string) {
+  let formula: string[] = []
   columnNames = Array.isArray(columnNames) ? columnNames : [columnNames]
   for (let column of Object.values(table.schema)) {
     // not a static formula, or doesn't contain a relationship
@@ -38,7 +39,10 @@ function getFormulaThatUseColumn(table, columnNames) {
  * This functions checks for when a related table, column or related column is deleted, if any
  * tables need to have the formula column removed.
  */
-async function checkIfFormulaNeedsCleared(table, { oldTable, deletion }) {
+async function checkIfFormulaNeedsCleared(
+  table: Table,
+  { oldTable, deletion }: { oldTable?: Table; deletion?: boolean }
+) {
   // start by retrieving all tables, remove the current table from the list
   const tables = (await sdk.tables.getAllInternalTables()).filter(
     tbl => tbl._id !== table._id
@@ -49,10 +53,13 @@ async function checkIfFormulaNeedsCleared(table, { oldTable, deletion }) {
   )
   // remove any formula columns that used related columns
   for (let removed of removedColumns) {
-    let tableToUse = table
+    let tableToUse: Table | undefined = table
     // if relationship, get the related table
     if (removed.type === FieldTypes.LINK) {
       tableToUse = tables.find(table => table._id === removed.tableId)
+    }
+    if (!tableToUse) {
+      continue
     }
     const columnsToDelete = getFormulaThatUseColumn(tableToUse, removed.name)
     if (columnsToDelete.length > 0) {
@@ -71,11 +78,11 @@ async function checkIfFormulaNeedsCleared(table, { oldTable, deletion }) {
       // look to see if the column was used in a relationship formula,
       // relationships won't be used for this
       if (relatedTable && relatedColumns && removed.type !== FieldTypes.LINK) {
-        let relatedFormulaToRemove = []
+        let relatedFormulaToRemove: string[] = []
         for (let column of relatedColumns) {
           relatedFormulaToRemove = relatedFormulaToRemove.concat(
             getFormulaThatUseColumn(relatedTable, [
-              column.fieldName,
+              column.fieldName!,
               removed.name,
             ])
           )
@@ -95,13 +102,14 @@ async function checkIfFormulaNeedsCleared(table, { oldTable, deletion }) {
  * specifically only for static formula.
  */
 async function updateRelatedFormulaLinksOnTables(
-  table,
-  { deletion } = { deletion: false }
+  table: Table,
+  { deletion }: { deletion?: boolean } = {}
 ) {
-  const db = getAppDB()
+  const tableId: string = table._id!
+  const db = context.getAppDB()
   // start by retrieving all tables, remove the current table from the list
   const tables = (await sdk.tables.getAllInternalTables()).filter(
-    tbl => tbl._id !== table._id
+    tbl => tbl._id !== tableId
   )
   // clone the tables, so we can compare at end
   const initialTables = cloneDeep(tables)
@@ -114,7 +122,7 @@ async function updateRelatedFormulaLinksOnTables(
     if (!otherTable.relatedFormula) {
       continue
     }
-    const index = otherTable.relatedFormula.indexOf(table._id)
+    const index = otherTable.relatedFormula.indexOf(tableId)
     if (index !== -1) {
       otherTable.relatedFormula.splice(index, 1)
     }
@@ -133,11 +141,11 @@ async function updateRelatedFormulaLinksOnTables(
       if (
         relatedTable &&
         (!relatedTable.relatedFormula ||
-          !relatedTable.relatedFormula.includes(table._id))
+          !relatedTable.relatedFormula.includes(tableId))
       ) {
         relatedTable.relatedFormula = relatedTable.relatedFormula
-          ? [...relatedTable.relatedFormula, table._id]
-          : [table._id]
+          ? [...relatedTable.relatedFormula, tableId]
+          : [tableId]
       }
     }
   }
@@ -150,7 +158,10 @@ async function updateRelatedFormulaLinksOnTables(
   }
 }
 
-async function checkIfFormulaUpdated(table, { oldTable }) {
+async function checkIfFormulaUpdated(
+  table: Table,
+  { oldTable }: { oldTable?: Table }
+) {
   // look to see if any formula values have changed
   const shouldUpdate = Object.values(table.schema).find(
     column =>
@@ -165,7 +176,10 @@ async function checkIfFormulaUpdated(table, { oldTable }) {
   }
 }
 
-exports.runStaticFormulaChecks = async (table, { oldTable, deletion }) => {
+export async function runStaticFormulaChecks(
+  table: Table,
+  { oldTable, deletion }: { oldTable?: Table; deletion?: boolean }
+) {
   await updateRelatedFormulaLinksOnTables(table, { deletion })
   await checkIfFormulaNeedsCleared(table, { oldTable, deletion })
   if (!deletion) {
