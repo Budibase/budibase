@@ -11,7 +11,6 @@ import env from "../environment"
 import { budibaseTempDir, ObjectStoreBuckets } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db/constants"
-import localStorage from "../localStorage"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -109,7 +108,7 @@ export const ObjectStore = (
 
   // custom S3 is in use i.e. minio
   if (env.MINIO_URL) {
-    if (opts.presigning) {
+    if (opts.presigning && !env.MINIO_ENABLED) {
       // IMPORTANT: Signed urls will inspect the host header of the request.
       // Normally a signed url will need to be generated with a specified host in mind.
       // To support dynamic hosts, e.g. some unknown self-hosted installation url,
@@ -344,18 +343,29 @@ export const listAllObjects = async (bucketName: string, path: string) => {
  */
 export const getPresignedUrl = (
   bucketName: string,
-  filepath: string,
+  key: string,
   durationSeconds: number = 3600
 ) => {
   const objectStore = ObjectStore(bucketName, { presigning: true })
   const params = {
     Bucket: sanitizeBucket(bucketName),
-    Key: sanitizeKey(filepath),
+    Key: sanitizeKey(key),
     Expires: durationSeconds,
   }
   const url = objectStore.getSignedUrl("getObject", params)
-  const signedUrl = new URL(url)
-  return `${signedUrl.pathname}${signedUrl.search}`
+
+  if (!env.MINIO_ENABLED) {
+    // return the full URL to the client
+    return url
+  } else {
+    // return the path only to the client
+    // use the presigned url route to ensure the static
+    // hostname will be used in the request
+    const signedUrl = new URL(url)
+    const path = signedUrl.pathname
+    const query = signedUrl.search
+    return `/files/signed${path}${query}`
+  }
 }
 
 /**

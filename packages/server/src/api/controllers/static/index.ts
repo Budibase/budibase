@@ -12,11 +12,10 @@ const {
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const { DocumentType } = require("../../../db/utils")
-import { context } from "@budibase/backend-core"
 const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
 const fs = require("fs")
-import { objectStore } from "@budibase/backend-core"
+import { objectStore, context } from "@budibase/backend-core"
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   const response = await objectStore.upload({
@@ -82,7 +81,7 @@ export const uploadFile = async function (ctx: any) {
 
     return prepareUpload({
       file,
-      s3Key: `${ctx.appId}/attachments/${processedFileName}`,
+      s3Key: `${context.getProdAppId()}/attachments/${processedFileName}`,
       bucket: ObjectStoreBuckets.APPS,
     })
   })

@@ -107,7 +107,6 @@ const NO_CSRF_ENDPOINTS = [...PUBLIC_ENDPOINTS]
 export const router: Router = new Router()
 
 router
-  .use(middleware.localStorage)
   .use(
     compress({
       threshold: 2048,

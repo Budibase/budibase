@@ -15,5 +15,9 @@ export const getPresignedUrl = (file: string) => {
 }
 
 export const getUrl = (file: string) => {
-  return `${env.CLOUDFRONT_CDN}/${file}`
+  let prefix = "/"
+  if (file.startsWith("/")) {
+    prefix = ""
+  }
+  return `${env.CLOUDFRONT_CDN}${prefix}${file}`
 }

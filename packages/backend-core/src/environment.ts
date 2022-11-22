@@ -44,6 +44,7 @@ const env = {
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   AWS_REGION: process.env.AWS_REGION,
   MINIO_URL: process.env.MINIO_URL,
+  MINIO_ENABLED: process.env.MINIO_ENABLED || 1,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ACCOUNT_PORTAL_URL:
@@ -87,6 +88,11 @@ const env = {
 for (let [key, value] of Object.entries(env)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
+    // @ts-ignore
+    env[key] = 0
+  }
+  // handle the edge case of "false" to disable an environment variable
+  if (value === "false") {
     // @ts-ignore
     env[key] = 0
   }

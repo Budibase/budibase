@@ -22,7 +22,6 @@ router.get("/health", ctx => (ctx.status = 200))
 router.get("/version", ctx => (ctx.body = pkg.version))
 
 router
-  .use(middleware.localStorage)
   .use(
     compress({
       threshold: 2048,

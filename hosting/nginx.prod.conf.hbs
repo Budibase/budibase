@@ -185,7 +185,7 @@ http {
       proxy_pass          http://$apps:4002;
     }
 
-    location / {
+    location /files/signed/ {
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $scheme;
@@ -201,7 +201,8 @@ http {
       proxy_set_header Connection "";
       chunked_transfer_encoding off;
 
-      proxy_pass      http://$minio:9000;
+      proxy_pass      http://minio-service:9000;
+      rewrite ^/files/signed/(.*)$ /$1 break;
     }
 
     client_header_timeout 60;

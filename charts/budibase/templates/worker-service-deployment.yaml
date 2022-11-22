@@ -65,6 +65,8 @@ spec:
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}
         {{ end }}
+        - name: MINIO_ENABLED
+          value: {{ .Values.services.objectStore.minio }}
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:

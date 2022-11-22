@@ -117,4 +117,9 @@ for (let [key, value] of Object.entries(module.exports)) {
   if (value === "0") {
     module.exports[key] = 0
   }
+  // handle the edge case of "false" to disable an environment variable
+  if (value === "false") {
+    // @ts-ignore
+    module.exports[key] = 0
+  }
 }
