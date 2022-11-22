@@ -251,6 +251,7 @@
     id="side-panel-container"
     class:open={$sidePanelStore.open}
     use:clickOutside={sidePanelStore.actions.close}
+    class:builder={$builderStore.inBuilder}
   >
     <div class="side-panel-header">
       <Icon
@@ -361,9 +362,18 @@
     margin-right: -400px;
     height: 100%;
   }
+  #side-panel-container.builder {
+    margin-right: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
   #side-panel-container.open {
     box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
     margin-right: 0;
+  }
+  #side-panel-container.builder.open {
+    opacity: 1;
+    pointer-events: all;
   }
   .side-panel-header {
     display: flex;
