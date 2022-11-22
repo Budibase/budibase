@@ -150,9 +150,11 @@
       {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
         <ResetFieldsButton {componentInstance} />
       {/if}
-      {#if idx === 0 && componentDefinition?.block}
-        <EjectBlockButton />
-      {/if}
     </DetailSummary>
   {/if}
 {/each}
+{#if componentDefinition?.block}
+  <DetailSummary name="Eject" collapsible={false}>
+    <EjectBlockButton />
+  </DetailSummary>
+{/if}
