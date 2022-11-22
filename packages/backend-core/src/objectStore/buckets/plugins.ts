@@ -16,7 +16,7 @@ export const enrichPluginURLs = (plugins: Plugin[]) => {
 }
 
 const getPluginJSUrl = (plugin: Plugin) => {
-  let file = getPluginJSPath(plugin)
+  let file = getPluginJSKey(plugin)
   if (env.CLOUDFRONT_CDN) {
     return cloudfront.getPresignedUrl(file)
   } else {
@@ -37,7 +37,7 @@ const getPluginIconUrl = (plugin: Plugin): string | undefined => {
   return objectStore.getPresignedUrl(env.PLUGIN_BUCKET_NAME, file)
 }
 
-export const getPluginJSPath = (plugin: Plugin) => {
+export const getPluginJSKey = (plugin: Plugin) => {
   const path = getPluginKey(plugin.name)
   return `${path}/plugin.min.js`
 }

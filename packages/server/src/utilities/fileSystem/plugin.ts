@@ -52,10 +52,10 @@ export const getDatasourcePlugin = async (plugin: Plugin) => {
       fs.unlinkSync(filename)
     }
   }
-  const pluginPath = objectStore.getPluginJSPath(plugin)
+  const pluginKey = objectStore.getPluginJSKey(plugin)
   const pluginJs = await objectStore.retrieve(
     objectStore.ObjectStoreBuckets.PLUGINS,
-    pluginPath
+    pluginKey
   )
 
   fs.writeFileSync(filename, pluginJs)
