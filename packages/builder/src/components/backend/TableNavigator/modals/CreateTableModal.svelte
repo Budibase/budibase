@@ -10,10 +10,23 @@
     Divider,
     Layout,
   } from "@budibase/bbui"
+  import { datasources } from "stores/backend"
   import TableDataImport from "../TableDataImport.svelte"
+  import {
+    BUDIBASE_INTERNAL_DB_ID,
+    BUDIBASE_DATASOURCE_TYPE,
+  } from "constants/backend"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
 
   $: tableNames = $tables.list.map(table => table.name)
+  $: selectedSource = $datasources.list.find(
+    source => source._id === $datasources.selected
+  )
+
+  $: isSelectedInternal = selectedSource?.type === BUDIBASE_DATASOURCE_TYPE
+  $: targetDatasourceId = isSelectedInternal
+    ? selectedSource._id
+    : BUDIBASE_INTERNAL_DB_ID
 
   export let name
   let dataImport
@@ -45,7 +58,7 @@
       schema: addAutoColumns(name, dataImport.schema || {}),
       dataImport,
       type: "internal",
-      sourceId: "bb_internal",
+      sourceId: targetDatasourceId,
     }
 
     // Only set primary display if defined

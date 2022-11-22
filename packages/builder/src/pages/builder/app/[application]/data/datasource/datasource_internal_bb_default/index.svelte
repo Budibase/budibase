@@ -6,7 +6,6 @@
   import { goto } from "@roxi/routify"
 
   let modal
-
   $: internalTablesBySourceId = $tables.list.filter(
     table =>
       table.type !== "external" && $datasources.selected === table.sourceId
@@ -22,16 +21,17 @@
     <Layout gap="XS" noPadding>
       <header>
         <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
-        <Heading size="M">Budibase Internal</Heading>
+        <Heading size="M">Sample Data</Heading>
       </header>
-      <Body size="M">
-        Budibase internal tables are part of your app, so the data will be
-        stored in your apps context.
-      </Body>
+      <Body size="M">A little something to get you up and running!</Body>
+      <Body size="M"
+        >If you have no need for this datasource, feel free to delete it.</Body
+      >
     </Layout>
     <Divider />
     <Heading size="S">Tables</Heading>
     <div class="table-list">
+      <!-- {JSON.stringify($tables.list.map(source => source.sourceId))} -->
       {#each internalTablesBySourceId as table}
         <div
           class="table-list-item"
