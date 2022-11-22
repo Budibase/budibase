@@ -15,7 +15,7 @@ export const SearchIndexes = {
 
 export const BudibaseInternalDB = {
   _id: "bb_internal",
-  type: "budibase",
+  type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Budibase DB",
   source: "BUDIBASE",
   config: {},
