@@ -1,16 +1,17 @@
-const {
+import {
   ViewName,
   generateMemoryViewID,
   getMemoryViewParams,
   DocumentType,
   SEPARATOR,
-} = require("../../../db/utils")
-const env = require("../../../environment")
-const { getAppDB } = require("@budibase/backend-core/context")
-const viewBuilder = require("./viewBuilder")
+} from "../../../db/utils"
+import env from "../../../environment"
+import { context } from "@budibase/backend-core"
+import viewBuilder from "./viewBuilder"
+import { Database } from "@budibase/types"
 
-exports.getView = async viewName => {
-  const db = getAppDB()
+export async function getView(viewName: string) {
+  const db = context.getAppDB()
   if (env.SELF_HOSTED) {
     const designDoc = await db.get("_design/database")
     return designDoc.views[viewName]
@@ -23,7 +24,7 @@ exports.getView = async viewName => {
     try {
       const viewDoc = await db.get(generateMemoryViewID(viewName))
       return viewDoc.view
-    } catch (err) {
+    } catch (err: any) {
       // Return null when PouchDB doesn't found the view
       if (err.status === 404) {
         return null
@@ -34,14 +35,15 @@ exports.getView = async viewName => {
   }
 }
 
-exports.getViews = async () => {
-  const db = getAppDB()
+export async function getViews() {
+  const db = context.getAppDB()
   const response = []
   if (env.SELF_HOSTED) {
     const designDoc = await db.get("_design/database")
     for (let name of Object.keys(designDoc.views)) {
       // Only return custom views, not built ins
-      if (Object.values(ViewName).indexOf(name) !== -1) {
+      const viewNames = Object.values(ViewName) as string[]
+      if (viewNames.indexOf(name) !== -1) {
         continue
       }
       response.push({
@@ -67,8 +69,12 @@ exports.getViews = async () => {
   return response
 }
 
-exports.saveView = async (originalName, viewName, viewTemplate) => {
-  const db = getAppDB()
+export async function saveView(
+  originalName: string,
+  viewName: string,
+  viewTemplate: any
+) {
+  const db = context.getAppDB()
   if (env.SELF_HOSTED) {
     const designDoc = await db.get("_design/database")
     designDoc.views = {
@@ -83,7 +89,7 @@ exports.saveView = async (originalName, viewName, viewTemplate) => {
   } else {
     const id = generateMemoryViewID(viewName)
     const originalId = originalName ? generateMemoryViewID(originalName) : null
-    const viewDoc = {
+    const viewDoc: any = {
       _id: id,
       view: viewTemplate,
       name: viewName,
@@ -105,8 +111,8 @@ exports.saveView = async (originalName, viewName, viewTemplate) => {
   }
 }
 
-exports.deleteView = async viewName => {
-  const db = getAppDB()
+export async function deleteView(viewName: string) {
+  const db = context.getAppDB()
   if (env.SELF_HOSTED) {
     const designDoc = await db.get("_design/database")
     const view = designDoc.views[viewName]
@@ -121,7 +127,7 @@ exports.deleteView = async viewName => {
   }
 }
 
-exports.migrateToInMemoryView = async (db, viewName) => {
+export async function migrateToInMemoryView(db: Database, viewName: string) {
   // delete the view initially
   const designDoc = await db.get("_design/database")
   // run the view back through the view builder to update it
@@ -131,7 +137,7 @@ exports.migrateToInMemoryView = async (db, viewName) => {
   await exports.saveView(db, null, viewName, view)
 }
 
-exports.migrateToDesignView = async (db, viewName) => {
+export async function migrateToDesignView(db: Database, viewName: string) {
   let view = await db.get(generateMemoryViewID(viewName))
   const designDoc = await db.get("_design/database")
   designDoc.views[viewName] = viewBuilder(view.view.meta)
@@ -139,7 +145,7 @@ exports.migrateToDesignView = async (db, viewName) => {
   await db.remove(view._id, view._rev)
 }
 
-exports.getFromDesignDoc = async (db, viewName) => {
+export async function getFromDesignDoc(db: Database, viewName: string) {
   const designDoc = await db.get("_design/database")
   let view = designDoc.views[viewName]
   if (view == null) {
@@ -148,7 +154,7 @@ exports.getFromDesignDoc = async (db, viewName) => {
   return view
 }
 
-exports.getFromMemoryDoc = async (db, viewName) => {
+export async function getFromMemoryDoc(db: Database, viewName: string) {
   let view = await db.get(generateMemoryViewID(viewName))
   if (view) {
     view = view.view

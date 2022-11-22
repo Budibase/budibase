@@ -1,23 +1,21 @@
-const {
-  Role,
-  getRole,
-  isBuiltin,
-  getAllRoles,
-} = require("@budibase/backend-core/roles")
-const {
+import { roles, context, events } from "@budibase/backend-core"
+import {
   generateRoleID,
   getUserMetadataParams,
   InternalTables,
-} = require("../../db/utils")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { events } = require("@budibase/backend-core")
+} from "../../db/utils"
+import { BBContext, Database } from "@budibase/types"
 
 const UpdateRolesOptions = {
   CREATED: "created",
   REMOVED: "removed",
 }
 
-async function updateRolesOnUserTable(db, roleId, updateOption) {
+async function updateRolesOnUserTable(
+  db: Database,
+  roleId: string,
+  updateOption: string
+) {
   const table = await db.get(InternalTables.USER_METADATA)
   const schema = table.schema
   const remove = updateOption === UpdateRolesOptions.REMOVED
@@ -40,27 +38,25 @@ async function updateRolesOnUserTable(db, roleId, updateOption) {
   }
 }
 
-exports.fetch = async function (ctx) {
-  ctx.body = await getAllRoles()
+export async function fetch(ctx: BBContext) {
+  ctx.body = await roles.getAllRoles()
 }
 
-exports.find = async function (ctx) {
-  ctx.body = await getRole(ctx.params.roleId)
+export async function find(ctx: BBContext) {
+  ctx.body = await roles.getRole(ctx.params.roleId)
 }
 
-exports.save = async function (ctx) {
-  const db = getAppDB()
+export async function save(ctx: BBContext) {
+  const db = context.getAppDB()
   let { _id, name, inherits, permissionId } = ctx.request.body
   let isCreate = false
   if (!_id) {
     _id = generateRoleID()
     isCreate = true
-  } else if (isBuiltin(_id)) {
+  } else if (roles.isBuiltin(_id)) {
     ctx.throw(400, "Cannot update builtin roles.")
   }
-  const role = new Role(_id, name)
-    .addPermission(permissionId)
-    .addInheritance(inherits)
+  const role = new roles.Role(_id, name, permissionId).addInheritance(inherits)
   if (ctx.request.body._rev) {
     role._rev = ctx.request.body._rev
   }
@@ -76,17 +72,17 @@ exports.save = async function (ctx) {
   ctx.message = `Role '${role.name}' created successfully.`
 }
 
-exports.destroy = async function (ctx) {
-  const db = getAppDB()
+export async function destroy(ctx: BBContext) {
+  const db = context.getAppDB()
   const roleId = ctx.params.roleId
   const role = await db.get(roleId)
-  if (isBuiltin(roleId)) {
+  if (roles.isBuiltin(roleId)) {
     ctx.throw(400, "Cannot delete builtin role.")
   }
   // first check no users actively attached to role
   const users = (
     await db.allDocs(
-      getUserMetadataParams(null, {
+      getUserMetadataParams(undefined, {
         include_docs: true,
       })
     )

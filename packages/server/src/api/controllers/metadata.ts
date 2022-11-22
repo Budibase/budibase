@@ -1,15 +1,16 @@
-const { MetadataTypes } = require("../../constants")
-const { generateMetadataID } = require("../../db/utils")
-const { saveEntityMetadata, deleteEntityMetadata } = require("../../utilities")
-const { getAppDB } = require("@budibase/backend-core/context")
+import { MetadataTypes } from "../../constants"
+import { generateMetadataID } from "../../db/utils"
+import { saveEntityMetadata, deleteEntityMetadata } from "../../utilities"
+import { context } from "@budibase/backend-core"
+import { BBContext } from "@budibase/types"
 
-exports.getTypes = async ctx => {
+export async function getTypes(ctx: BBContext) {
   ctx.body = {
     types: MetadataTypes,
   }
 }
 
-exports.saveMetadata = async ctx => {
+export async function saveMetadata(ctx: BBContext) {
   const { type, entityId } = ctx.params
   if (type === MetadataTypes.AUTOMATION_TEST_HISTORY) {
     ctx.throw(400, "Cannot save automation history type")
@@ -17,7 +18,7 @@ exports.saveMetadata = async ctx => {
   ctx.body = await saveEntityMetadata(type, entityId, ctx.request.body)
 }
 
-exports.deleteMetadata = async ctx => {
+export async function deleteMetadata(ctx: BBContext) {
   const { type, entityId } = ctx.params
   await deleteEntityMetadata(type, entityId)
   ctx.body = {
@@ -25,13 +26,13 @@ exports.deleteMetadata = async ctx => {
   }
 }
 
-exports.getMetadata = async ctx => {
+export async function getMetadata(ctx: BBContext) {
   const { type, entityId } = ctx.params
-  const db = getAppDB()
+  const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
   try {
     ctx.body = await db.get(id)
-  } catch (err) {
+  } catch (err: any) {
     if (err.status === 404) {
       ctx.body = {}
     } else {

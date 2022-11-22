@@ -1,26 +1,21 @@
-const actions = require("../../automations/actions")
-const triggers = require("../../automations/triggers")
-const {
+import actions from "../../automations/actions"
+import triggers from "../../automations/triggers"
+import {
   getAutomationParams,
   generateAutomationID,
   DocumentType,
-} = require("../../db/utils")
-const {
+} from "../../db/utils"
+import {
   checkForWebhooks,
   updateTestHistory,
   removeDeprecated,
-} = require("../../automations/utils")
-const { deleteEntityMetadata } = require("../../utilities")
-const { MetadataTypes } = require("../../constants")
-const { setTestFlag, clearTestFlag } = require("../../utilities/redis")
-const {
-  getAppDB,
-  getProdAppDB,
-  doInAppContext,
-} = require("@budibase/backend-core/context")
-const { events } = require("@budibase/backend-core")
-const { app } = require("@budibase/backend-core/cache")
-const { automations } = require("@budibase/pro")
+} from "../../automations/utils"
+import { deleteEntityMetadata } from "../../utilities"
+import { MetadataTypes } from "../../constants"
+import { setTestFlag, clearTestFlag } from "../../utilities/redis"
+import { context, cache, events } from "@budibase/backend-core"
+import { automations } from "@budibase/pro"
+import { Automation, BBContext } from "@budibase/types"
 
 const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
 const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
@@ -31,7 +26,7 @@ const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
  *                       *
  *************************/
 
-async function cleanupAutomationMetadata(automationId) {
+async function cleanupAutomationMetadata(automationId: string) {
   await deleteEntityMetadata(MetadataTypes.AUTOMATION_TEST_INPUT, automationId)
   await deleteEntityMetadata(
     MetadataTypes.AUTOMATION_TEST_HISTORY,
@@ -39,7 +34,7 @@ async function cleanupAutomationMetadata(automationId) {
   )
 }
 
-function cleanAutomationInputs(automation) {
+function cleanAutomationInputs(automation: Automation) {
   if (automation == null) {
     return automation
   }
@@ -63,14 +58,14 @@ function cleanAutomationInputs(automation) {
   return automation
 }
 
-exports.create = async function (ctx) {
-  const db = getAppDB()
+export async function create(ctx: BBContext) {
+  const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
-    return exports.update(ctx)
+    return update(ctx)
   }
 
   automation._id = generateAutomationID()
@@ -97,17 +92,23 @@ exports.create = async function (ctx) {
   }
 }
 
-const getNewSteps = (oldAutomation, automation) => {
+export function getNewSteps(oldAutomation: Automation, automation: Automation) {
   const oldStepIds = oldAutomation.definition.steps.map(s => s.id)
   return automation.definition.steps.filter(s => !oldStepIds.includes(s.id))
 }
 
-const getDeletedSteps = (oldAutomation, automation) => {
+export function getDeletedSteps(
+  oldAutomation: Automation,
+  automation: Automation
+) {
   const stepIds = automation.definition.steps.map(s => s.id)
   return oldAutomation.definition.steps.filter(s => !stepIds.includes(s.id))
 }
 
-const handleStepEvents = async (oldAutomation, automation) => {
+export async function handleStepEvents(
+  oldAutomation: Automation,
+  automation: Automation
+) {
   // new steps
   const newSteps = getNewSteps(oldAutomation, automation)
   for (let step of newSteps) {
@@ -121,8 +122,8 @@ const handleStepEvents = async (oldAutomation, automation) => {
   }
 }
 
-exports.update = async function (ctx) {
-  const db = getAppDB()
+export async function update(ctx: BBContext) {
+  const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
   const oldAutomation = await db.get(automation._id)
@@ -146,9 +147,8 @@ exports.update = async function (ctx) {
   if (oldAutoTrigger && oldAutoTrigger.id !== newAutoTrigger.id) {
     await events.automation.triggerUpdated(automation)
     await deleteEntityMetadata(
-      ctx.appId,
       MetadataTypes.AUTOMATION_TEST_INPUT,
-      automation._id
+      automation._id!
     )
   }
 
@@ -165,8 +165,8 @@ exports.update = async function (ctx) {
   }
 }
 
-exports.fetch = async function (ctx) {
-  const db = getAppDB()
+export async function fetch(ctx: BBContext) {
+  const db = context.getAppDB()
   const response = await db.allDocs(
     getAutomationParams(null, {
       include_docs: true,
@@ -175,13 +175,13 @@ exports.fetch = async function (ctx) {
   ctx.body = response.rows.map(row => row.doc)
 }
 
-exports.find = async function (ctx) {
-  const db = getAppDB()
+export async function find(ctx: BBContext) {
+  const db = context.getAppDB()
   ctx.body = await db.get(ctx.params.id)
 }
 
-exports.destroy = async function (ctx) {
-  const db = getAppDB()
+export async function destroy(ctx: BBContext) {
+  const db = context.getAppDB()
   const automationId = ctx.params.id
   const oldAutomation = await db.get(automationId)
   await checkForWebhooks({
@@ -193,14 +193,14 @@ exports.destroy = async function (ctx) {
   await events.automation.deleted(oldAutomation)
 }
 
-exports.logSearch = async function (ctx) {
+export async function logSearch(ctx: BBContext) {
   ctx.body = await automations.logs.logSearch(ctx.request.body)
 }
 
-exports.clearLogError = async function (ctx) {
+export async function clearLogError(ctx: BBContext) {
   const { automationId, appId } = ctx.request.body
-  await doInAppContext(appId, async () => {
-    const db = getProdAppDB()
+  await context.doInAppContext(appId, async () => {
+    const db = context.getProdAppDB()
     const metadata = await db.get(DocumentType.APP_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
@@ -211,20 +211,20 @@ exports.clearLogError = async function (ctx) {
       delete metadata.automationErrors[automationId]
     }
     await db.put(metadata)
-    await app.invalidateAppMetadata(metadata.appId, metadata)
+    await cache.app.invalidateAppMetadata(metadata.appId, metadata)
     ctx.body = { message: `Error logs cleared.` }
   })
 }
 
-exports.getActionList = async function (ctx) {
+export async function getActionList(ctx: BBContext) {
   ctx.body = ACTION_DEFS
 }
 
-exports.getTriggerList = async function (ctx) {
+export async function getTriggerList(ctx: BBContext) {
   ctx.body = TRIGGER_DEFS
 }
 
-module.exports.getDefinitionList = async function (ctx) {
+export async function getDefinitionList(ctx: BBContext) {
   ctx.body = {
     trigger: TRIGGER_DEFS,
     action: ACTION_DEFS,
@@ -237,8 +237,8 @@ module.exports.getDefinitionList = async function (ctx) {
  *                   *
  *********************/
 
-exports.trigger = async function (ctx) {
-  const db = getAppDB()
+export async function trigger(ctx: BBContext) {
+  const db = context.getAppDB()
   let automation = await db.get(ctx.params.id)
   await triggers.externalTrigger(automation, {
     ...ctx.request.body,
@@ -250,7 +250,7 @@ exports.trigger = async function (ctx) {
   }
 }
 
-function prepareTestInput(input) {
+function prepareTestInput(input: any) {
   // prepare the test parameters
   if (input.id && input.row) {
     input.row._id = input.id
@@ -261,8 +261,8 @@ function prepareTestInput(input) {
   return input
 }
 
-exports.test = async function (ctx) {
-  const db = getAppDB()
+export async function test(ctx: BBContext) {
+  const db = context.getAppDB()
   let automation = await db.get(ctx.params.id)
   await setTestFlag(automation._id)
   const testInput = prepareTestInput(ctx.request.body)

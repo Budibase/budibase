@@ -1,21 +1,29 @@
-const viewTemplate = require("./viewBuilder")
-const { apiFileReturn } = require("../../../utilities/fileSystem")
-const exporters = require("./exporters")
-const { saveView, getView, getViews, deleteView } = require("./utils")
-const { fetchView } = require("../row")
-const { FieldTypes } = require("../../../constants")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { events } = require("@budibase/backend-core")
-const { DocumentType } = require("../../../db/utils")
-const { cloneDeep, isEqual } = require("lodash")
-const sdk = require("../../../sdk")
+import viewTemplate from "./viewBuilder"
+import { apiFileReturn } from "../../../utilities/fileSystem"
+import * as exporters from "./exporters"
+import { deleteView, getView, getViews, saveView } from "./utils"
+import { fetchView } from "../row"
+import { FieldTypes } from "../../../constants"
+import { context, events } from "@budibase/backend-core"
+import { DocumentType } from "../../../db/utils"
+import sdk from "../../../sdk"
+import {
+  BBContext,
+  Row,
+  Table,
+  TableExportFormat,
+  TableSchema,
+  View,
+} from "@budibase/types"
 
-exports.fetch = async ctx => {
+const { cloneDeep, isEqual } = require("lodash")
+
+export async function fetch(ctx: BBContext) {
   ctx.body = await getViews()
 }
 
-exports.save = async ctx => {
-  const db = getAppDB()
+export async function save(ctx: BBContext) {
+  const db = context.getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
   const view = viewTemplate(viewToSave)
   const viewName = viewToSave.name
@@ -47,7 +55,7 @@ exports.save = async ctx => {
   }
 }
 
-const calculationEvents = async (existingView, newView) => {
+export async function calculationEvents(existingView: View, newView: View) {
   const existingCalculation = existingView && existingView.calculation
   const newCalculation = newView && newView.calculation
 
@@ -68,7 +76,7 @@ const calculationEvents = async (existingView, newView) => {
   }
 }
 
-const filterEvents = async (existingView, newView) => {
+export async function filterEvents(existingView: View, newView: View) {
   const hasExistingFilters = !!(
     existingView &&
     existingView.filters &&
@@ -93,7 +101,7 @@ const filterEvents = async (existingView, newView) => {
   }
 }
 
-const handleViewEvents = async (existingView, newView) => {
+async function handleViewEvents(existingView: View, newView: View) {
   if (!existingView) {
     await events.view.created(newView)
   } else {
@@ -103,8 +111,8 @@ const handleViewEvents = async (existingView, newView) => {
   await filterEvents(existingView, newView)
 }
 
-exports.destroy = async ctx => {
-  const db = getAppDB()
+export async function destroy(ctx: BBContext) {
+  const db = context.getAppDB()
   const viewName = decodeURI(ctx.params.viewName)
   const view = await deleteView(viewName)
   const table = await db.get(view.meta.tableId)
@@ -115,11 +123,11 @@ exports.destroy = async ctx => {
   ctx.body = view
 }
 
-exports.exportView = async ctx => {
-  const viewName = decodeURI(ctx.query.view)
+export async function exportView(ctx: BBContext) {
+  const viewName = decodeURI(ctx.query.view as string)
   const view = await getView(viewName)
 
-  const format = ctx.query.format
+  const format = ctx.query.format as string
   if (!format || !Object.values(exporters.ExportFormats).includes(format)) {
     ctx.throw(400, "Format must be specified, either csv or json")
   }
@@ -130,6 +138,7 @@ exports.exportView = async ctx => {
     ctx.query = {
       group: view.meta.groupBy,
       calculation: view.meta.calculation,
+      // @ts-ignore
       stats: !!view.meta.field,
       field: view.meta.field,
     }
@@ -140,11 +149,11 @@ exports.exportView = async ctx => {
   }
 
   await fetchView(ctx)
-  let rows = ctx.body
+  let rows = ctx.body as Row[]
 
-  let schema = view && view.meta && view.meta.schema
+  let schema: TableSchema = view && view.meta && view.meta.schema
   const tableId = ctx.params.tableId || view.meta.tableId
-  const table = await sdk.tables.getTable(tableId)
+  const table: Table = await sdk.tables.getTable(tableId)
   if (!schema) {
     schema = table.schema
   }
@@ -175,15 +184,15 @@ exports.exportView = async ctx => {
 
   // Export part
   let headers = Object.keys(schema)
-  const exporter = exporters[format]
+  const exporter = format === "csv" ? exporters.csv : exporters.json
   const filename = `${viewName}.${format}`
   // send down the file
   ctx.attachment(filename)
   ctx.body = apiFileReturn(exporter(headers, rows))
 
   if (viewName.startsWith(DocumentType.TABLE)) {
-    await events.table.exported(table, format)
+    await events.table.exported(table, format as TableExportFormat)
   } else {
-    await events.view.exported(table, format)
+    await events.view.exported(table, format as TableExportFormat)
   }
 }

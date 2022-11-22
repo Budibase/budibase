@@ -1,9 +1,9 @@
-const { joiValidator } = require("@budibase/backend-core/auth")
-const Joi = require("joi")
+import { auth } from "@budibase/backend-core"
+import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 
-exports.queryValidation = () => {
+export function queryValidation() {
   return Joi.object({
     _id: Joi.string(),
     _rev: Joi.string(),
@@ -25,14 +25,14 @@ exports.queryValidation = () => {
   }).unknown(true)
 }
 
-exports.generateQueryValidation = () => {
+export function generateQueryValidation() {
   // prettier-ignore
-  return joiValidator.body(exports.queryValidation())
+  return auth.joiValidator.body(queryValidation())
 }
 
-exports.generateQueryPreviewValidation = () => {
+export function generateQueryPreviewValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
     readable: Joi.boolean().optional(),

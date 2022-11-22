@@ -27,6 +27,7 @@ const EXTERNAL_BUILTIN_ROLE_IDS = [
 
 export class Role implements RoleDoc {
   _id: string
+  _rev?: string
   name: string
   permissionId: string
   inherits?: string

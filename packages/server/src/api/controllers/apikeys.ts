@@ -1,10 +1,10 @@
-const { StaticDatabases } = require("@budibase/backend-core/db")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+import { db as dbCore, tenancy } from "@budibase/backend-core"
+import { BBContext, Document } from "@budibase/types"
 
-const KEYS_DOC = StaticDatabases.GLOBAL.docs.apiKeys
+const KEYS_DOC = dbCore.StaticDatabases.GLOBAL.docs.apiKeys
 
 async function getBuilderMainDoc() {
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
   try {
     return await db.get(KEYS_DOC)
   } catch (err) {
@@ -15,24 +15,24 @@ async function getBuilderMainDoc() {
   }
 }
 
-async function setBuilderMainDoc(doc) {
+async function setBuilderMainDoc(doc: Document) {
   // make sure to override the ID
   doc._id = KEYS_DOC
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
   return db.put(doc)
 }
 
-exports.fetch = async function (ctx) {
+export async function fetch(ctx: BBContext) {
   try {
     const mainDoc = await getBuilderMainDoc()
     ctx.body = mainDoc.apiKeys ? mainDoc.apiKeys : {}
-  } catch (err) {
+  } catch (err: any) {
     /* istanbul ignore next */
     ctx.throw(400, err)
   }
 }
 
-exports.update = async function (ctx) {
+export async function update(ctx: BBContext) {
   const key = ctx.params.key
   const value = ctx.request.body.value
 
@@ -47,7 +47,7 @@ exports.update = async function (ctx) {
       _id: resp.id,
       _rev: resp.rev,
     }
-  } catch (err) {
+  } catch (err: any) {
     /* istanbul ignore next */
     ctx.throw(400, err)
   }
