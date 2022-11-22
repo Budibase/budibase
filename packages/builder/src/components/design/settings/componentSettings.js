@@ -19,6 +19,7 @@ import FormFieldSelect from "./controls/FormFieldSelect.svelte"
 import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelte"
 import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
+import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 
 const componentMap = {
@@ -43,6 +44,7 @@ const componentMap = {
   filter: FilterEditor,
   url: URLSelect,
   columns: ColumnEditor,
+  "columns/basic": BasicColumnEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
