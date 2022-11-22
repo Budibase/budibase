@@ -4,9 +4,18 @@
   const component = getContext("component")
   const { styleable, sidePanelStore, builderStore } = getContext("sdk")
 
-  $: appOpen = $sidePanelStore.contentId === $component.id
-  $: builderOpen = $component.inSelectedPath
-  $: open = $builderStore.inBuilder ? builderOpen : appOpen
+  $: open = $sidePanelStore.contentId === $component.id
+
+  // Automatically show and hide the side panel when inside the builder
+  $: {
+    if ($builderStore.inBuilder) {
+      if ($component.inSelectedPath && !open) {
+        sidePanelStore.actions.open($component.id)
+      } else if (!$component.inSelectedPath && open) {
+        sidePanelStore.actions.close()
+      }
+    }
+  }
 
   const showInSidePanel = (el, visible) => {
     const target = document.getElementById("side-panel-container")
