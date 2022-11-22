@@ -35,13 +35,16 @@ export function fixAutoColumnSubType(column: FieldSchema) {
  */
 export function processFormulas(
   table: Table,
-  rows: Row[],
+  rows: Row[] | Row,
   { dynamic, contextRows }: any = { dynamic: true }
 ) {
   const single = !Array.isArray(rows)
+  let rowArray: Row[]
   if (single) {
-    rows = [rows]
+    rowArray = [rows]
     contextRows = contextRows ? [contextRows] : contextRows
+  } else {
+    rowArray = rows
   }
   for (let [column, schema] of Object.entries(table.schema)) {
     const isStatic = schema.formulaType === FormulaTypes.STATIC
@@ -53,18 +56,18 @@ export function processFormulas(
       continue
     }
     // iterate through rows and process formula
-    for (let i = 0; i < rows.length; i++) {
+    for (let i = 0; i < rowArray.length; i++) {
       if (schema.formula) {
-        let row = rows[i]
+        let row = rowArray[i]
         let context = contextRows ? contextRows[i] : row
-        rows[i] = {
+        rowArray[i] = {
           ...row,
           [column]: processStringSync(schema.formula, context),
         }
       }
     }
   }
-  return single ? rows[0] : rows
+  return single ? rowArray[0] : rowArray
 }
 
 /**

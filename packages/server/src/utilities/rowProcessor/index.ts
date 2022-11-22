@@ -49,7 +49,7 @@ function getRemovedAttachmentKeys(
  * for automatic ID purposes.
  */
 export function processAutoColumn(
-  user: User,
+  user: User | null,
   table: Table,
   row: Row,
   opts: AutoColumnProcessingOpts
@@ -71,7 +71,7 @@ export function processAutoColumn(
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (creating && shouldUpdateUserFields) {
+        if (creating && shouldUpdateUserFields && user) {
           row[key] = [user.userId]
         }
         break
@@ -81,7 +81,7 @@ export function processAutoColumn(
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        if (shouldUpdateUserFields) {
+        if (shouldUpdateUserFields && user) {
           row[key] = [user.userId]
         }
         break

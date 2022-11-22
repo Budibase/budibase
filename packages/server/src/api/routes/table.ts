@@ -1,15 +1,12 @@
-const Router = require("@koa/router")
-const tableController = require("../controllers/table")
-const authorized = require("../../middleware/authorized")
-const { paramResource, bodyResource } = require("../../middleware/resourceId")
-const {
-  BUILDER,
-  PermissionLevel,
-  PermissionType,
-} = require("@budibase/backend-core/permissions")
-const { tableValidator } = require("./utils/validators")
+import Router from "@koa/router"
+import * as tableController from "../controllers/table"
+import authorized from "../../middleware/authorized"
+import { paramResource, bodyResource } from "../../middleware/resourceId"
+import { permissions } from "@budibase/backend-core"
+import { tableValidator } from "./utils/validators"
+const { BUILDER, PermissionLevel, PermissionType } = permissions
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   /**
@@ -193,4 +190,4 @@ router
     tableController.bulkImport
   )
 
-module.exports = router
+export = router

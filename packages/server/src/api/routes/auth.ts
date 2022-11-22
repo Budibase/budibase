@@ -5,4 +5,4 @@ const router: Router = new Router()
 
 router.get("/api/self", controller.fetchSelf)
 
-export default router
+export = router

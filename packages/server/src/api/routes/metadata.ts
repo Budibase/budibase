@@ -1,38 +1,38 @@
-const Router = require("@koa/router")
-const controller = require("../controllers/metadata")
-const {
-  middleware: appInfoMiddleware,
+import Router from "@koa/router"
+import * as controller from "../controllers/metadata"
+import {
+  middleware as appInfoMiddleware,
   AppType,
-} = require("../../middleware/appInfo")
-const authorized = require("../../middleware/authorized")
-const { BUILDER } = require("@budibase/backend-core/permissions")
+} from "../../middleware/appInfo"
+import authorized from "../../middleware/authorized"
+import { permissions } from "@budibase/backend-core"
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   .post(
     "/api/metadata/:type/:entityId",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     appInfoMiddleware({ appType: AppType.DEV }),
     controller.saveMetadata
   )
   .delete(
     "/api/metadata/:type/:entityId",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     appInfoMiddleware({ appType: AppType.DEV }),
     controller.deleteMetadata
   )
   .get(
     "/api/metadata/type",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     appInfoMiddleware({ appType: AppType.DEV }),
     controller.getTypes
   )
   .get(
     "/api/metadata/:type/:entityId",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     appInfoMiddleware({ appType: AppType.DEV }),
     controller.getMetadata
   )
 
-module.exports = router
+export = router

@@ -1,33 +1,32 @@
+import { InternalTables } from "../../../db/utils"
+import userController from "../user"
+import { FieldTypes } from "../../../constants"
+import { context } from "@budibase/backend-core"
+import { makeExternalQuery } from "../../../integrations/base/query"
+import { BBContext, Row, Table } from "@budibase/types"
+export { removeKeyNumbering } from "../../../integrations/base/utils"
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
-const { InternalTables } = require("../../../db/utils")
-const userController = require("../user")
-const { FieldTypes } = require("../../../constants")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { makeExternalQuery } = require("../../../integrations/base/query")
-const { removeKeyNumbering } = require("../../../integrations/base/utils")
 
 validateJs.extend(validateJs.validators.datetime, {
-  parse: function (value) {
+  parse: function (value: string) {
     return new Date(value).getTime()
   },
   // Input is a unix timestamp
-  format: function (value) {
+  format: function (value: string) {
     return new Date(value).toISOString()
   },
 })
 
-exports.removeKeyNumbering = removeKeyNumbering
-
-exports.getDatasourceAndQuery = async json => {
+export async function getDatasourceAndQuery(json: any) {
   const datasourceId = json.endpoint.datasourceId
-  const db = getAppDB()
+  const db = context.getAppDB()
   const datasource = await db.get(datasourceId)
   return makeExternalQuery(datasource, json)
 }
 
-exports.findRow = async (ctx, tableId, rowId) => {
-  const db = getAppDB()
+export async function findRow(ctx: BBContext, tableId: string, rowId: string) {
+  const db = context.getAppDB()
   let row
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
@@ -45,12 +44,20 @@ exports.findRow = async (ctx, tableId, rowId) => {
   return row
 }
 
-exports.validate = async ({ tableId, row, table }) => {
+export async function validate({
+  tableId,
+  row,
+  table,
+}: {
+  tableId?: string
+  row: Row
+  table: Table
+}) {
   if (!table) {
-    const db = getAppDB()
+    const db = context.getAppDB()
     table = await db.get(tableId)
   }
-  const errors = {}
+  const errors: any = {}
   for (let fieldName of Object.keys(table.schema)) {
     const constraints = cloneDeep(table.schema[fieldName].constraints)
     const type = table.schema[fieldName].type
@@ -70,7 +77,7 @@ exports.validate = async ({ tableId, row, table }) => {
         if (!Array.isArray(row[fieldName])) {
           row[fieldName] = row[fieldName].split(",")
         }
-        row[fieldName].map(val => {
+        row[fieldName].map((val: any) => {
           if (
             !constraints.inclusion.includes(val) &&
             constraints.inclusion.length !== 0
