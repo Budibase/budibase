@@ -1,5 +1,4 @@
 import { writable, derived } from "svelte/store"
-import { screenStore } from "./screens.js"
 
 export const createSidePanelStore = () => {
   const initialState = {
@@ -36,11 +35,3 @@ export const createSidePanelStore = () => {
 }
 
 export const sidePanelStore = createSidePanelStore()
-
-// Close side panel every time we change screen
-const activeScreenId = derived(screenStore, $screenStore => {
-  return $screenStore?.activeScreen?._id
-})
-activeScreenId.subscribe(() => {
-  sidePanelStore.actions.close()
-})
