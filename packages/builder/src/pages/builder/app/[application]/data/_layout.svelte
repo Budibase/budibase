@@ -1,17 +1,12 @@
 <script>
-  import { redirect, params } from "@roxi/routify"
+  import { redirect } from "@roxi/routify"
   import { Button, Tabs, Tab, Layout } from "@budibase/bbui"
-  import { BUDIBASE_INTERNAL_DB } from "constants"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
 
   let selected = "Sources"
 
   let modal
-
-  $: isExternal =
-    $params.selectedDatasource &&
-    $params.selectedDatasource !== BUDIBASE_INTERNAL_DB
 
   function selectFirstDatasource() {
     $redirect("./table")

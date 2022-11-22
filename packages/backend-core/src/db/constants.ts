@@ -92,3 +92,4 @@ export const StaticDatabases = {
 export const APP_PREFIX = DocumentType.APP + SEPARATOR
 export const APP_DEV = DocumentType.APP_DEV + SEPARATOR
 export const APP_DEV_PREFIX = APP_DEV
+export const BUDIBASE_DATASOURCE_TYPE = "budibase"
