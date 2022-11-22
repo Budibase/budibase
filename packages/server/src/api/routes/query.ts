@@ -1,22 +1,19 @@
-const Router = require("@koa/router")
-const queryController = require("../controllers/query")
-const authorized = require("../../middleware/authorized")
-const {
-  PermissionLevel,
-  PermissionType,
-  BUILDER,
-} = require("@budibase/backend-core/permissions")
-const {
+import Router from "@koa/router"
+import * as queryController from "../controllers/query"
+import authorized from "../../middleware/authorized"
+import { permissions } from "@budibase/backend-core"
+import {
   bodyResource,
   bodySubResource,
   paramResource,
-} = require("../../middleware/resourceId")
-const {
+} from "../../middleware/resourceId"
+import {
   generateQueryPreviewValidation,
   generateQueryValidation,
-} = require("../controllers/query/validation")
+} from "../controllers/query/validation"
+const { BUILDER, PermissionType, PermissionLevel } = permissions
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   .get("/api/queries", authorized(BUILDER), queryController.fetch)
@@ -48,17 +45,17 @@ router
     authorized(PermissionType.QUERY, PermissionLevel.WRITE),
     queryController.executeV1
   )
-  .post(
-    "/api/v2/queries/:queryId",
-    paramResource("queryId"),
-    authorized(PermissionType.QUERY, PermissionLevel.WRITE),
-    queryController.executeV2
-  )
   .delete(
     "/api/queries/:queryId/:revId",
     paramResource("queryId"),
     authorized(BUILDER),
     queryController.destroy
   )
+  .post(
+    "/api/v2/queries/:queryId",
+    paramResource("queryId"),
+    authorized(PermissionType.QUERY, PermissionLevel.WRITE),
+    queryController.executeV2 as any
+  )
 
-module.exports = router
+export = router

@@ -2,13 +2,10 @@ import Router from "@koa/router"
 import * as controller from "../controllers/static"
 import { budibaseTempDir } from "../../utilities/budibaseDir"
 import authorized from "../../middleware/authorized"
-import {
-  BUILDER,
-  PermissionType,
-  PermissionLevel,
-} from "@budibase/backend-core/permissions"
+import { permissions } from "@budibase/backend-core"
 import * as env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
+const { BUILDER, PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
 
@@ -65,4 +62,4 @@ router
     controller.getSignedUploadURL
   )
 
-export default router
+export = router

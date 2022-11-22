@@ -1,14 +1,14 @@
 import Router from "@koa/router"
-import * as controller from "../controllers/backup"
+import * as controller from "../controllers/component"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 
 const router: Router = new Router()
 
 router.get(
-  "/api/backups/export",
+  "/api/:appId/components/definitions",
   authorized(permissions.BUILDER),
-  controller.exportAppDump
+  controller.fetchAppComponentDefinitions
 )
 
 export = router

@@ -1,15 +1,35 @@
-const { SearchIndexes } = require("../../../db/utils")
-const { removeKeyNumbering } = require("./utils")
-const fetch = require("node-fetch")
-const { getCouchInfo } = require("@budibase/backend-core/db")
-const { getAppId } = require("@budibase/backend-core/context")
+import { SearchIndexes } from "../../../db/utils"
+import { removeKeyNumbering } from "./utils"
+import fetch from "node-fetch"
+import { db as dbCore, context } from "@budibase/backend-core"
+import { SearchFilters, Row } from "@budibase/types"
+
+type SearchParams = {
+  tableId: string
+  sort?: string
+  sortOrder?: string
+  sortType?: string
+  limit?: number
+  bookmark?: string
+  version?: string
+  rows?: Row[]
+}
 
 /**
  * Class to build lucene query URLs.
  * Optionally takes a base lucene query object.
  */
-class QueryBuilder {
-  constructor(base) {
+export class QueryBuilder {
+  query: SearchFilters
+  limit: number
+  sort?: string
+  bookmark?: string
+  sortOrder: string
+  sortType: string
+  includeDocs: boolean
+  version?: string
+
+  constructor(base?: SearchFilters) {
     this.query = {
       allOr: false,
       string: {},
@@ -29,49 +49,52 @@ class QueryBuilder {
     this.sortOrder = "ascending"
     this.sortType = "string"
     this.includeDocs = true
-    this.version = null
   }
 
-  setVersion(version) {
-    this.version = version
+  setVersion(version?: string) {
+    if (version != null) {
+      this.version = version
+    }
     return this
   }
 
-  setTable(tableId) {
-    this.query.equal.tableId = tableId
+  setTable(tableId: string) {
+    this.query.equal!.tableId = tableId
     return this
   }
 
-  setLimit(limit) {
+  setLimit(limit?: number) {
     if (limit != null) {
       this.limit = limit
     }
     return this
   }
 
-  setSort(sort) {
+  setSort(sort?: string) {
     if (sort != null) {
       this.sort = sort
     }
     return this
   }
 
-  setSortOrder(sortOrder) {
+  setSortOrder(sortOrder?: string) {
     if (sortOrder != null) {
       this.sortOrder = sortOrder
     }
     return this
   }
 
-  setSortType(sortType) {
+  setSortType(sortType?: string) {
     if (sortType != null) {
       this.sortType = sortType
     }
     return this
   }
 
-  setBookmark(bookmark) {
-    this.bookmark = bookmark
+  setBookmark(bookmark?: string) {
+    if (bookmark != null) {
+      this.bookmark = bookmark
+    }
     return this
   }
 
@@ -80,61 +103,61 @@ class QueryBuilder {
     return this
   }
 
-  addString(key, partial) {
-    this.query.string[key] = partial
+  addString(key: string, partial: string) {
+    this.query.string![key] = partial
     return this
   }
 
-  addFuzzy(key, fuzzy) {
-    this.query.fuzzy[key] = fuzzy
+  addFuzzy(key: string, fuzzy: string) {
+    this.query.fuzzy![key] = fuzzy
     return this
   }
 
-  addRange(key, low, high) {
-    this.query.range = {
+  addRange(key: string, low: string | number, high: string | number) {
+    this.query.range![key] = {
       low,
       high,
     }
     return this
   }
 
-  addEqual(key, value) {
-    this.query.equal[key] = value
+  addEqual(key: string, value: any) {
+    this.query.equal![key] = value
     return this
   }
 
-  addNotEqual(key, value) {
-    this.query.notEqual[key] = value
+  addNotEqual(key: string, value: any) {
+    this.query.notEqual![key] = value
     return this
   }
 
-  addEmpty(key, value) {
-    this.query.empty[key] = value
+  addEmpty(key: string, value: any) {
+    this.query.empty![key] = value
     return this
   }
 
-  addNotEmpty(key, value) {
-    this.query.notEmpty[key] = value
+  addNotEmpty(key: string, value: any) {
+    this.query.notEmpty![key] = value
     return this
   }
 
-  addOneOf(key, value) {
-    this.query.oneOf[key] = value
+  addOneOf(key: string, value: any) {
+    this.query.oneOf![key] = value
     return this
   }
 
-  addContains(key, value) {
-    this.query.contains[key] = value
+  addContains(key: string, value: any) {
+    this.query.contains![key] = value
     return this
   }
 
-  addNotContains(key, value) {
-    this.query.notContains[key] = value
+  addNotContains(key: string, value: any) {
+    this.query.notContains![key] = value
     return this
   }
 
-  addContainsAny(key, value) {
-    this.query.containsAny[key] = value
+  addContainsAny(key: string, value: any) {
+    this.query.containsAny![key] = value
     return this
   }
 
@@ -145,7 +168,7 @@ class QueryBuilder {
    * @param options The preprocess options
    * @returns {string|*}
    */
-  preprocess(value, { escape, lowercase, wrap, type } = {}) {
+  preprocess(value: any, { escape, lowercase, wrap, type }: any = {}) {
     const hasVersion = !!this.version
     // Determine if type needs wrapped
     const originalType = typeof value
@@ -173,12 +196,12 @@ class QueryBuilder {
     let query = allOr ? "" : "*:*"
     const allPreProcessingOpts = { escape: true, lowercase: true, wrap: true }
     let tableId
-    if (this.query.equal.tableId) {
-      tableId = this.query.equal.tableId
-      delete this.query.equal.tableId
+    if (this.query.equal!.tableId) {
+      tableId = this.query.equal!.tableId
+      delete this.query.equal!.tableId
     }
 
-    const equal = (key, value) => {
+    const equal = (key: string, value: any) => {
       // 0 evaluates to false, which means we would return all rows if we don't check it
       if (!value && value !== 0) {
         return null
@@ -186,7 +209,7 @@ class QueryBuilder {
       return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
     }
 
-    const contains = (key, value, mode = "AND") => {
+    const contains = (key: string, value: any, mode = "AND") => {
       if (Array.isArray(value) && value.length === 0) {
         return null
       }
@@ -202,16 +225,17 @@ class QueryBuilder {
       return `${key}:(${statement})`
     }
 
-    const notContains = (key, value) => {
+    const notContains = (key: string, value: any) => {
+      // @ts-ignore
       const allPrefix = allOr === "" ? "*:* AND" : ""
       return allPrefix + "NOT " + contains(key, value)
     }
 
-    const containsAny = (key, value) => {
+    const containsAny = (key: string, value: any) => {
       return contains(key, value, "OR")
     }
 
-    const oneOf = (key, value) => {
+    const oneOf = (key: string, value: any) => {
       if (!Array.isArray(value)) {
         if (typeof value === "string") {
           value = value.split(",")
@@ -229,7 +253,7 @@ class QueryBuilder {
       return `${key}:(${orStatement})`
     }
 
-    function build(structure, queryFn) {
+    function build(structure: any, queryFn: any) {
       for (let [key, value] of Object.entries(structure)) {
         // check for new format - remove numbering if needed
         key = removeKeyNumbering(key)
@@ -249,7 +273,7 @@ class QueryBuilder {
 
     // Construct the actual lucene search query string from JSON structure
     if (this.query.string) {
-      build(this.query.string, (key, value) => {
+      build(this.query.string, (key: string, value: any) => {
         if (!value) {
           return null
         }
@@ -262,7 +286,7 @@ class QueryBuilder {
       })
     }
     if (this.query.range) {
-      build(this.query.range, (key, value) => {
+      build(this.query.range, (key: string, value: any) => {
         if (!value) {
           return null
         }
@@ -278,7 +302,7 @@ class QueryBuilder {
       })
     }
     if (this.query.fuzzy) {
-      build(this.query.fuzzy, (key, value) => {
+      build(this.query.fuzzy, (key: string, value: any) => {
         if (!value) {
           return null
         }
@@ -294,7 +318,7 @@ class QueryBuilder {
       build(this.query.equal, equal)
     }
     if (this.query.notEqual) {
-      build(this.query.notEqual, (key, value) => {
+      build(this.query.notEqual, (key: string, value: any) => {
         if (!value) {
           return null
         }
@@ -302,10 +326,10 @@ class QueryBuilder {
       })
     }
     if (this.query.empty) {
-      build(this.query.empty, key => `!${key}:["" TO *]`)
+      build(this.query.empty, (key: string) => `!${key}:["" TO *]`)
     }
     if (this.query.notEmpty) {
-      build(this.query.notEmpty, key => `${key}:["" TO *]`)
+      build(this.query.notEmpty, (key: string) => `${key}:["" TO *]`)
     }
     if (this.query.oneOf) {
       build(this.query.oneOf, oneOf)
@@ -329,7 +353,7 @@ class QueryBuilder {
   }
 
   buildSearchBody() {
-    let body = {
+    let body: any = {
       q: this.buildSearchQuery(),
       limit: Math.min(this.limit, 200),
       include_docs: this.includeDocs,
@@ -346,16 +370,13 @@ class QueryBuilder {
   }
 
   async run() {
-    const appId = getAppId()
-    const { url, cookie } = getCouchInfo()
+    const appId = context.getAppId()
+    const { url, cookie } = dbCore.getCouchInfo()
     const fullPath = `${url}/${appId}/_design/database/_search/${SearchIndexes.ROWS}`
     const body = this.buildSearchBody()
     return await runQuery(fullPath, body, cookie)
   }
 }
-
-// exported for unit testing
-exports.QueryBuilder = QueryBuilder
 
 /**
  * Executes a lucene search query.
@@ -364,7 +385,7 @@ exports.QueryBuilder = QueryBuilder
  * @param cookie The auth cookie for CouchDB
  * @returns {Promise<{rows: []}>}
  */
-const runQuery = async (url, body, cookie) => {
+const runQuery = async (url: string, body: any, cookie: string) => {
   const response = await fetch(url, {
     body: JSON.stringify(body),
     method: "POST",
@@ -374,11 +395,11 @@ const runQuery = async (url, body, cookie) => {
   })
   const json = await response.json()
 
-  let output = {
+  let output: any = {
     rows: [],
   }
   if (json.rows != null && json.rows.length > 0) {
-    output.rows = json.rows.map(row => row.doc)
+    output.rows = json.rows.map((row: any) => row.doc)
   }
   if (json.bookmark) {
     output.bookmark = json.bookmark
@@ -402,7 +423,7 @@ const runQuery = async (url, body, cookie) => {
  *   rows {array|null} Current results in the recursive search
  * @returns {Promise<*[]|*>}
  */
-const recursiveSearch = async (query, params) => {
+async function recursiveSearch(query: any, params: any): Promise<any> {
   const bookmark = params.bookmark
   const rows = params.rows || []
   if (rows.length >= params.limit) {
@@ -450,7 +471,10 @@ const recursiveSearch = async (query, params) => {
  *   bookmark {string} The bookmark to resume from
  * @returns {Promise<{hasNextPage: boolean, rows: *[]}>}
  */
-exports.paginatedSearch = async (query, params) => {
+export async function paginatedSearch(
+  query: SearchFilters,
+  params: SearchParams
+) {
   let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 50
@@ -496,7 +520,7 @@ exports.paginatedSearch = async (query, params) => {
  *   limit {number} The desired number of results
  * @returns {Promise<{rows: *}>}
  */
-exports.fullSearch = async (query, params) => {
+export async function fullSearch(query: SearchFilters, params: SearchParams) {
   let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 1000

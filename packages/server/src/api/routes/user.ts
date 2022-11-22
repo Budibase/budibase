@@ -1,12 +1,10 @@
-const Router = require("@koa/router")
-const controller = require("../controllers/user")
-const authorized = require("../../middleware/authorized")
-const {
-  PermissionLevel,
-  PermissionType,
-} = require("@budibase/backend-core/permissions")
+import Router from "@koa/router"
+import controller from "../controllers/user"
+import authorized from "../../middleware/authorized"
+import { permissions } from "@budibase/backend-core"
+const { PermissionType, PermissionLevel } = permissions
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   .get(
@@ -50,4 +48,4 @@ router
     controller.getFlags
   )
 
-module.exports = router
+export = router

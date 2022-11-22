@@ -18,4 +18,4 @@ router
   )
   .post("/api/deploy", authorized(permissions.BUILDER), controller.deployApp)
 
-export default router
+export = router

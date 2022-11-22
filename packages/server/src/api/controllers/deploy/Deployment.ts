@@ -1,15 +1,20 @@
-const newid = require("../../../db/newid")
-const { getAppId } = require("@budibase/backend-core/context")
+import newid from "../../../db/newid"
+import { context } from "@budibase/backend-core"
 
 /**
  * This is used to pass around information about the deployment that is occurring
  */
-class Deployment {
+export class Deployment {
+  _id: string
+  verification: any
+  status?: string
+  err?: any
+
   constructor(id = null) {
     this._id = id || newid()
   }
 
-  setVerification(verification) {
+  setVerification(verification: any) {
     if (!verification) {
       return
     }
@@ -20,14 +25,14 @@ class Deployment {
     return this.verification
   }
 
-  setStatus(status, err = null) {
+  setStatus(status: string, err?: any) {
     this.status = status
     if (err) {
       this.err = err
     }
   }
 
-  fromJSON(json) {
+  fromJSON(json: any) {
     if (json.verification) {
       this.setVerification(json.verification)
     }
@@ -37,9 +42,9 @@ class Deployment {
   }
 
   getJSON() {
-    const obj = {
+    const obj: any = {
       _id: this._id,
-      appId: getAppId(),
+      appId: context.getAppId(),
       status: this.status,
     }
     if (this.err) {
@@ -51,5 +56,3 @@ class Deployment {
     return obj
   }
 }
-
-module.exports = Deployment
