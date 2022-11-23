@@ -4,7 +4,7 @@ const JwtStrategy = require("passport-jwt").Strategy
 import { getGlobalDB } from "./tenancy"
 const refresh = require("passport-oauth2-refresh")
 import { Config } from "./constants"
-import { getScopedConfig } from "./db/utils"
+import { getScopedConfig } from "./db"
 import {
   jwt,
   local,

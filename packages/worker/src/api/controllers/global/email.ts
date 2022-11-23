@@ -1,7 +1,8 @@
-const { sendEmail } = require("../../../utilities/email")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+import { sendEmail as sendEmailFn } from "../../../utilities/email"
+import { tenancy } from "@budibase/backend-core"
+import { BBContext } from "@budibase/types"
 
-exports.sendEmail = async ctx => {
+export async function sendEmail(ctx: BBContext) {
   let {
     workspaceId,
     email,
@@ -16,10 +17,10 @@ exports.sendEmail = async ctx => {
   } = ctx.request.body
   let user
   if (userId) {
-    const db = getGlobalDB()
+    const db = tenancy.getGlobalDB()
     user = await db.get(userId)
   }
-  const response = await sendEmail(email, purpose, {
+  const response = await sendEmailFn(email, purpose, {
     workspaceId,
     user,
     contents,

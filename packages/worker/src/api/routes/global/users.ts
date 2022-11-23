@@ -1,17 +1,15 @@
-const Router = require("@koa/router")
-const controller = require("../../controllers/global/users")
-const { joiValidator } = require("@budibase/backend-core/auth")
-const { adminOnly } = require("@budibase/backend-core/auth")
-const Joi = require("joi")
-const cloudRestricted = require("../../../middleware/cloudRestricted")
-const { users } = require("../validation")
-const selfController = require("../../controllers/global/self")
-const { builderOrAdmin } = require("@budibase/backend-core/auth")
+import Router from "@koa/router"
+import * as controller from "../../controllers/global/users"
+import { auth } from "@budibase/backend-core"
+import Joi from "joi"
+import cloudRestricted from "../../../middleware/cloudRestricted"
+import { users } from "../validation"
+import * as selfController from "../../controllers/global/self"
 
-const router = new Router()
+const router: Router = new Router()
 
 function buildAdminInitValidation() {
-  return joiValidator.body(
+  return auth.joiValidator.body(
     Joi.object({
       email: Joi.string().required(),
       password: Joi.string(),
@@ -24,7 +22,7 @@ function buildAdminInitValidation() {
 
 function buildInviteValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     email: Joi.string().required(),
     userInfo: Joi.object().optional(),
   }).required())
@@ -32,7 +30,7 @@ function buildInviteValidation() {
 
 function buildInviteMultipleValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.array().required().items(
+  return auth.joiValidator.body(Joi.array().required().items(
     Joi.object({
       email: Joi.string(),
       userInfo: Joi.object().optional(),
@@ -42,7 +40,7 @@ function buildInviteMultipleValidation() {
 
 function buildInviteAcceptValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     inviteCode: Joi.string().required(),
     password: Joi.string().required(),
   }).required().unknown(true))
@@ -51,31 +49,35 @@ function buildInviteAcceptValidation() {
 router
   .post(
     "/api/global/users",
-    adminOnly,
+    auth.adminOnly,
     users.buildUserSaveValidation(),
     controller.save
   )
   .post(
     "/api/global/users/bulk",
-    adminOnly,
+    auth.adminOnly,
     users.buildUserBulkUserValidation(),
     controller.bulkUpdate
   )
 
-  .get("/api/global/users", builderOrAdmin, controller.fetch)
-  .post("/api/global/users/search", builderOrAdmin, controller.search)
-  .delete("/api/global/users/:id", adminOnly, controller.destroy)
-  .get("/api/global/users/count/:appId", builderOrAdmin, controller.countByApp)
+  .get("/api/global/users", auth.builderOrAdmin, controller.fetch)
+  .post("/api/global/users/search", auth.builderOrAdmin, controller.search)
+  .delete("/api/global/users/:id", auth.adminOnly, controller.destroy)
+  .get(
+    "/api/global/users/count/:appId",
+    auth.builderOrAdmin,
+    controller.countByApp
+  )
   .get("/api/global/roles/:appId")
   .post(
     "/api/global/users/invite",
-    adminOnly,
+    auth.adminOnly,
     buildInviteValidation(),
     controller.invite
   )
   .post(
     "/api/global/users/multi/invite",
-    adminOnly,
+    auth.adminOnly,
     buildInviteMultipleValidation(),
     controller.inviteMultiple
   )
@@ -94,7 +96,7 @@ router
   )
   .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
-  .get("/api/global/users/:id", builderOrAdmin, controller.find)
+  .get("/api/global/users/:id", auth.builderOrAdmin, controller.find)
   // DEPRECATED - use new versions with self API
   .get("/api/global/users/self", selfController.getSelf)
   .post(
@@ -103,4 +105,4 @@ router
     selfController.updateSelf
   )
 
-module.exports = router
+export = router

@@ -1,13 +1,13 @@
-const Router = require("@koa/router")
-const authController = require("../../controllers/global/auth")
-const { joiValidator } = require("@budibase/backend-core/auth")
-const Joi = require("joi")
+import Router from "@koa/router"
+import * as authController from "../../controllers/global/auth"
+import { auth } from "@budibase/backend-core"
+import Joi from "joi"
 
-const router = new Router()
+const router: Router = new Router()
 
 function buildAuthValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
   }).required().unknown(false))
@@ -15,14 +15,14 @@ function buildAuthValidation() {
 
 function buildResetValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     email: Joi.string().required(),
   }).required().unknown(false))
 }
 
 function buildResetUpdateValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     resetCode: Joi.string().required(),
     password: Joi.string().required(),
   }).required().unknown(false))
@@ -85,4 +85,4 @@ router
   .get("/api/global/auth/oidc/callback", authController.oidcAuth)
   .get("/api/admin/auth/oidc/callback", authController.oidcAuth)
 
-module.exports = router
+export = router

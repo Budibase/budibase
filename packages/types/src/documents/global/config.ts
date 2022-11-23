@@ -62,7 +62,9 @@ export const isOIDCConfig = (config: Config): config is OIDCConfig =>
 
 export enum ConfigType {
   SETTINGS = "settings",
+  ACCOUNT = "account",
   SMTP = "smtp",
   GOOGLE = "google",
   OIDC = "oidc",
+  OIDC_LOGOS = "logos_oidc",
 }

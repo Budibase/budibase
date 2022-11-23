@@ -3,7 +3,7 @@ import * as controller from "../../controllers/global/self"
 import { auth } from "@budibase/backend-core"
 import { users } from "../validation"
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   .post("/api/global/self/api_key", auth.builderOnly, controller.generateAPIKey)
@@ -15,4 +15,4 @@ router
     controller.updateSelf
   )
 
-export default router as any
+export = router
