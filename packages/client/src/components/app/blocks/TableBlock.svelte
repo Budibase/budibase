@@ -44,7 +44,7 @@
   $: editTitle = getEditTitle(detailsFormBlockId, primaryDisplay)
   $: normalFields = getNormalFields(schema)
   $: rowClickActions =
-    clickBehaviour === "actions"
+    clickBehaviour === "actions" || dataSource?.type !== "table"
       ? onClick
       : [
           {
@@ -66,7 +66,7 @@
           },
         ]
   $: buttonClickActions =
-    titleButtonClickBehaviour === "actions"
+    clickBehaviour === "actions" || dataSource?.type !== "table"
       ? onClickTitleButton
       : [
           {
@@ -108,7 +108,8 @@
       return "Edit"
     }
     const prefix = safe(detailsFormBlockId + "-repeater")
-    return `{{ ${prefix}.${safe(primaryDisplay)} }}`
+    const binding = `${prefix}.${safe(primaryDisplay)}`
+    return `{{#if ${binding}}}{{${binding}}}{{else}}Details{{/if}}`
   }
 </script>
 

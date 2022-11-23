@@ -1,12 +1,9 @@
 <script>
-  import { getContext, onDestroy } from "svelte"
+  import { getContext } from "svelte"
 
   const component = getContext("component")
   const { styleable, sidePanelStore, builderStore, dndIsDragging } =
     getContext("sdk")
-
-  let renderContent = false
-  let contentTimeout
 
   // Automatically show and hide the side panel when inside the builder.
   // For some unknown reason, svelte reactivity breaks if we reference the
@@ -32,18 +29,6 @@
   // Derive visibility
   $: open = $sidePanelStore.contentId === $component.id
 
-  // When we hide the side panel we want to kick off a short timeout which will
-  // eventually hide the content. We don't do this immediately as this causes
-  // things like cycling through a table to constantly remount the side panel
-  // contents.
-  $: updateContentVisibility(open)
-  const updateContentVisibility = open => {
-    clearTimeout(contentTimeout)
-    contentTimeout = setTimeout(() => {
-      renderContent = open
-    }, 130)
-  }
-
   const showInSidePanel = (el, visible) => {
     const update = visible => {
       const target = document.getElementById("side-panel-container")
@@ -64,10 +49,6 @@
 
     return { update }
   }
-
-  onDestroy(() => {
-    clearTimeout(contentTimeout)
-  })
 </script>
 
 <div
@@ -76,9 +57,7 @@
   class="side-panel"
   class:open
 >
-  {#if renderContent}
-    <slot />
-  {/if}
+  <slot />
 </div>
 
 <style>
