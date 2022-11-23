@@ -191,7 +191,6 @@ export const makeComponentUnique = component => {
     component._children?.forEach(x => generateIdReplacements(x, replacements))
   }
   generateIdReplacements(component, idReplacements)
-  console.log(idReplacements)
 
   // Replace all instances of this ID in HBS bindings
   let definition = JSON.stringify(component)
