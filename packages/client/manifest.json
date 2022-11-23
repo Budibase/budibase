@@ -4535,15 +4535,16 @@
           {
             "type": "radio",
             "key": "clickBehaviour",
-            "defaultValue": "details",
+            "defaultValue": "actions",
+            "info": "Details side panel is only compatible with internal or SQL tables",
             "options": [
-              {
-                "label": "Show details side panel",
-                "value": "details"
-              },
               {
                 "label": "Run actions",
                 "value": "actions"
+              },
+              {
+                "label": "Show details side panel",
+                "value": "details"
               }
             ]
           },
@@ -4584,15 +4585,16 @@
             "key": "titleButtonClickBehaviour",
             "label": "On Click",
             "dependsOn": "showTitleButton",
-            "defaultValue": "new",
+            "defaultValue": "actions",
+            "info": "New row side panel is only compatible with internal or SQL tables",
             "options": [
-              {
-                "label": "Show new row side panel",
-                "value": "new"
-              },
               {
                 "label": "Run actions",
                 "value": "actions"
+              },
+              {
+                "label": "Show new row side panel",
+                "value": "new"
               }
             ]
           },
