@@ -36,8 +36,7 @@
 
   // Util to get the inner DOM node by a component ID
   const getDOMNode = id => {
-    const component = document.getElementsByClassName(id)[0]
-    return [...component.children][0]
+    return document.getElementsByClassName(`${id}-dom`)[0]
   }
 
   // Util to calculate the variance of a set of data
