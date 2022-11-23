@@ -477,7 +477,8 @@
     $loading &&
     definition.name !== "Screenslot" &&
     children.length === 0 &&
-    !instance._blockElementHasChildren
+    !instance._blockElementHasChildren &&
+    definition.skeleton !== false
 </script>
 
 {#if showSkeleton}

@@ -80,7 +80,6 @@
       sortColumn: $fetch.sortColumn,
       sortOrder: $fetch.sortOrder,
     },
-    loaded: $fetch.loaded,
     limit: limit,
   }
 
