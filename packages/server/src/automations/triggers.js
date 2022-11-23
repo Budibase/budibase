@@ -8,8 +8,7 @@ const { automationQueue } = require("./bullboard")
 const { checkTestFlag } = require("../utilities/redis")
 const utils = require("./utils")
 const env = require("../environment")
-const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
-const { getAllApps } = require("@budibase/backend-core/db")
+const { context, db: dbCore } = require("@budibase/backend-core")
 
 const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
@@ -18,7 +17,7 @@ const JOB_OPTS = {
 }
 
 async function getAllAutomations() {
-  const db = getAppDB()
+  const db = context.getAppDB()
   let automations = await db.allDocs(
     getAutomationParams(null, { include_docs: true })
   )
@@ -30,7 +29,7 @@ async function queueRelevantRowAutomations(event, eventType) {
     throw `No appId specified for ${eventType} - check event emitters.`
   }
 
-  doInAppContext(event.appId, async () => {
+  context.doInAppContext(event.appId, async () => {
     let automations = await getAllAutomations()
 
     // filter down to the correct event type
@@ -122,9 +121,9 @@ exports.rebootTrigger = async () => {
   }
   // iterate through all production apps, find the reboot crons
   // and trigger events for them
-  const appIds = await getAllApps({ dev: false, idsOnly: true })
+  const appIds = await dbCore.getAllApps({ dev: false, idsOnly: true })
   for (let prodAppId of appIds) {
-    await doInAppContext(prodAppId, async () => {
+    await context.doInAppContext(prodAppId, async () => {
       let automations = await getAllAutomations()
       let rebootEvents = []
       for (let automation of automations) {

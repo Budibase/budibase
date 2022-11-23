@@ -1,10 +1,8 @@
 import * as rowController from "../../../controllers/row"
 import * as appController from "../../../controllers/application"
 import { AppStatus } from "../../../../db/utils"
-import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/roles"
-import { doInTenant } from "@budibase/backend-core/tenancy"
+import { roles, tenancy, context } from "@budibase/backend-core"
 import { TENANT_ID } from "../../../../tests/utilities/structures"
-import { getAppDB, doInAppContext } from "@budibase/backend-core/context"
 import * as env from "../../../../environment"
 
 class Request {
@@ -21,7 +19,7 @@ class Request {
 }
 
 function runRequest(appId: any, controlFunc: any, request?: any) {
-  return doInAppContext(appId, async () => {
+  return context.doInAppContext(appId, async () => {
     return controlFunc(request)
   })
 }
@@ -33,7 +31,7 @@ export const getAllTableRows = async (config: any) => {
 }
 
 export const clearAllApps = async (tenantId = TENANT_ID) => {
-  await doInTenant(tenantId, async () => {
+  await tenancy.doInTenant(tenantId, async () => {
     const req: any = { query: { status: AppStatus.DEV }, user: { tenantId } }
     await appController.fetch(req)
     const apps = req.body
@@ -51,7 +49,7 @@ export const clearAllApps = async (tenantId = TENANT_ID) => {
 export const clearAllAutomations = async (config: any) => {
   const automations = await config.getAllAutomations()
   for (let auto of automations) {
-    await doInAppContext(config.appId, async () => {
+    await context.doInAppContext(config.appId, async () => {
       await config.deleteAutomation(auto)
     })
   }
@@ -110,7 +108,7 @@ export const checkPermissionsEndpoint = async ({
     .expect(200)
 
   let failHeader
-  if (failRole === BUILTIN_ROLE_IDS.PUBLIC) {
+  if (failRole === roles.BUILTIN_ROLE_IDS.PUBLIC) {
     failHeader = config.publicHeaders({ prodApp: true })
   } else {
     failHeader = await config.login({
@@ -127,7 +125,7 @@ export const checkPermissionsEndpoint = async ({
 }
 
 export const getDB = () => {
-  return getAppDB()
+  return context.getAppDB()
 }
 
 export const testAutomation = async (config: any, automation: any) => {
