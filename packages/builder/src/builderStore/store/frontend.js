@@ -20,6 +20,11 @@ import {
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { Utils } from "@budibase/frontend-core"
+import {
+  BUDIBASE_INTERNAL_DB_ID,
+  DB_TYPE_INTERNAL,
+  DB_TYPE_EXTERNAL,
+} from "constants/backend"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -497,25 +502,22 @@ export const getFrontendStore = () => {
 
           const internalTable = filteredTables.find(
             table =>
-              table.sourceId === "bb_internal" && table.type == "internal"
+              table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+              table.type == DB_TYPE_INTERNAL
           )
 
           const defaultSourceTable = filteredTables.find(
             table =>
-              table.sourceId !== "bb_internal" && table.type == "internal"
+              table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
+              table.type == DB_TYPE_INTERNAL
           )
 
           const defaultExternalTable = filteredTables.find(
-            table => table.type == "external"
+            table => table.type == DB_TYPE_EXTERNAL
           )
 
-          if (defaultSourceTable) {
-            defaultDatasource = defaultSourceTable
-          } else if (internalTable) {
-            defaultDatasource = internalTable
-          } else if (defaultExternalTable) {
-            defaultDatasource = defaultExternalTable
-          }
+          defaultDatasource =
+            defaultSourceTable || internalTable || defaultExternalTable
         }
 
         // Generate default props
