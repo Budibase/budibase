@@ -356,7 +356,7 @@
     flex-direction: column;
     gap: 30px;
     overflow-y: auto;
-    transition: margin-right 260ms ease-out;
+    transition: margin-right 130ms ease-out;
     position: absolute;
     width: 400px;
     right: 0;
