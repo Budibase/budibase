@@ -52,7 +52,7 @@ export function processAutoColumn(
   user: User | null,
   table: Table,
   row: Row,
-  opts: AutoColumnProcessingOpts
+  opts?: AutoColumnProcessingOpts
 ) {
   let noUser = !user || !user.userId
   let isUserTable = table._id === InternalTables.USER_METADATA
@@ -61,7 +61,7 @@ export function processAutoColumn(
   const creating = !row._rev
   // check its not user table, or whether any of the processing options have been disabled
   const shouldUpdateUserFields =
-    !isUserTable && !opts.reprocessing && !opts.noAutoRelationships && !noUser
+    !isUserTable && !opts?.reprocessing && !opts?.noAutoRelationships && !noUser
   for (let [key, schema] of Object.entries(table.schema)) {
     if (!schema.autocolumn) {
       continue

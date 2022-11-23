@@ -154,7 +154,7 @@ describe("Authorization middleware", () => {
           _id: ""
         },
       })
-      config.setMiddlewareRequiredPermission(PermissionType.ADMIN, PermissionLevel.BASIC)
+      config.setMiddlewareRequiredPermission(permissions.PermissionType.ADMIN, permissions.PermissionLevel.BASIC)
       
       await config.executeMiddleware()
       expect(config.throw).toHaveBeenCalledWith(403, "User does not have permission")
