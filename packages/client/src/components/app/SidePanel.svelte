@@ -28,40 +28,32 @@
   $: open = $sidePanelStore.contentId === $component.id
 
   const showInSidePanel = (el, visible) => {
-    const target = document.getElementById("side-panel-container")
-    const node = el.parentNode
-    const destroy = () => {
-      if (target.contains(node)) {
-        target.removeChild(node)
-      }
-    }
     const update = visible => {
+      const target = document.getElementById("side-panel-container")
+      const node = el
       if (visible) {
         if (!target.contains(node)) {
           target.appendChild(node)
         }
-        el.hidden = false
       } else {
-        destroy()
-        el.hidden = true
+        if (target.contains(node)) {
+          target.removeChild(node)
+        }
       }
     }
 
     // Apply initial visibility
     update(visible)
 
-    return {
-      update,
-      destroy,
-    }
+    return { update }
   }
 </script>
 
 <div
   use:styleable={$component.styles}
   use:showInSidePanel={open}
-  hidden
   class="side-panel"
+  class:open
 >
   <slot />
 </div>
@@ -69,11 +61,14 @@
 <style>
   .side-panel {
     flex: 1 1 auto;
-    display: flex;
+    display: none;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-xl);
+  }
+  .side-panel.open {
+    display: flex;
   }
   .side-panel :global(.component > *) {
     max-width: 100%;
