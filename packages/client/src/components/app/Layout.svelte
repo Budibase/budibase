@@ -356,21 +356,21 @@
     flex-direction: column;
     gap: 30px;
     overflow-y: auto;
-    transition: margin-right 130ms ease-out;
+    transition: transform 130ms ease-out;
     position: absolute;
     width: 400px;
     right: 0;
-    margin-right: -400px;
+    transform: translateX(100%);
     height: 100%;
   }
   #side-panel-container.builder {
-    margin-right: 0;
+    transform: translateX(0);
     opacity: 0;
     pointer-events: none;
   }
   #side-panel-container.open {
+    transform: translateX(0);
     box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
-    margin-right: 0;
   }
   #side-panel-container.builder.open {
     opacity: 1;
