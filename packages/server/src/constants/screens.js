@@ -1,4 +1,4 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const { roles } = require("@budibase/backend-core")
 const { BASE_LAYOUT_PROP_IDS } = require("./layouts")
 
 exports.createHomeScreen = () => ({
@@ -40,7 +40,7 @@ exports.createHomeScreen = () => ({
   },
   routing: {
     route: "/",
-    roleId: BUILTIN_ROLE_IDS.BASIC,
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
   },
   name: "home-screen",
 })
