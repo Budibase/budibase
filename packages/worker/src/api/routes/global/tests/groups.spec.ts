@@ -24,7 +24,7 @@ describe("/api/global/groups", () => {
 
             let result = await config.api.groups.saveGroup(group)
 
-            expect(() => events.group.created).toBeCalledTimes(1)
+            expect(events.group.created).toBeCalledTimes(1)
         })
     })
 
