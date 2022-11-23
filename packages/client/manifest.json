@@ -4556,10 +4556,12 @@
               "setting": "clickBehaviour",
               "value": "actions"
             },
-            "context": [{
-              "label": "Clicked row",
-              "key": "row"
-            }]
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
           }
         ]
       },
