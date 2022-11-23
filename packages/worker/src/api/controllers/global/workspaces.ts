@@ -1,16 +1,13 @@
-const {
-  getWorkspaceParams,
-  generateWorkspaceID,
-} = require("@budibase/backend-core/db")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+import { tenancy, db as dbCore } from "@budibase/backend-core"
+import { BBContext } from "@budibase/types"
 
-exports.save = async function (ctx) {
-  const db = getGlobalDB()
+export async function save(ctx: BBContext) {
+  const db = tenancy.getGlobalDB()
   const workspaceDoc = ctx.request.body
 
   // workspace does not exist yet
   if (!workspaceDoc._id) {
-    workspaceDoc._id = generateWorkspaceID()
+    workspaceDoc._id = dbCore.generateWorkspaceID()
   }
 
   try {
@@ -19,38 +16,38 @@ exports.save = async function (ctx) {
       _id: response.id,
       _rev: response.rev,
     }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-exports.fetch = async function (ctx) {
-  const db = getGlobalDB()
+export async function fetch(ctx: BBContext) {
+  const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
-    getWorkspaceParams(undefined, {
+    dbCore.getWorkspaceParams(undefined, {
       include_docs: true,
     })
   )
   ctx.body = response.rows.map(row => row.doc)
 }
 
-exports.find = async function (ctx) {
-  const db = getGlobalDB()
+export async function find(ctx: BBContext) {
+  const db = tenancy.getGlobalDB()
   try {
     ctx.body = await db.get(ctx.params.id)
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-exports.destroy = async function (ctx) {
-  const db = getGlobalDB()
+export async function destroy(ctx: BBContext) {
+  const db = tenancy.getGlobalDB()
   const { id, rev } = ctx.params
 
   try {
     await db.remove(id, rev)
     ctx.body = { message: "Workspace deleted successfully" }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }

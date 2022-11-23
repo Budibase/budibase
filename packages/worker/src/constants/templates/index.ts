@@ -1,15 +1,15 @@
-const { readStaticFile } = require("../../utilities/fileSystem")
-const {
+import { readStaticFile } from "../../utilities/fileSystem"
+import {
   EmailTemplatePurpose,
   TemplateType,
   TemplatePurpose,
   GLOBAL_OWNER,
-} = require("../index")
-const { join } = require("path")
-const { getTemplateParams } = require("@budibase/backend-core/db")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+} from "../index"
+import { join } from "path"
+import { db as dbCore, tenancy } from "@budibase/backend-core"
+import { Template } from "@budibase/types"
 
-exports.EmailTemplates = {
+export const EmailTemplates = {
   [EmailTemplatePurpose.PASSWORD_RECOVERY]: readStaticFile(
     join(__dirname, "passwordRecovery.hbs")
   ),
@@ -23,7 +23,7 @@ exports.EmailTemplates = {
   [EmailTemplatePurpose.CUSTOM]: readStaticFile(join(__dirname, "custom.hbs")),
 }
 
-exports.addBaseTemplates = (templates, type = null) => {
+export function addBaseTemplates(templates: Template[], type?: string) {
   let purposeList
   switch (type) {
     case TemplateType.EMAIL:
@@ -38,9 +38,9 @@ exports.addBaseTemplates = (templates, type = null) => {
     if (templates.find(template => template.purpose === purpose)) {
       continue
     }
-    if (exports.EmailTemplates[purpose]) {
+    if (EmailTemplates[purpose]) {
       templates.push({
-        contents: exports.EmailTemplates[purpose],
+        contents: EmailTemplates[purpose],
         purpose,
         type,
       })
@@ -49,10 +49,14 @@ exports.addBaseTemplates = (templates, type = null) => {
   return templates
 }
 
-exports.getTemplates = async ({ ownerId, type, id } = {}) => {
-  const db = getGlobalDB()
+export async function getTemplates({
+  ownerId,
+  type,
+  id,
+}: { ownerId?: string; type?: string; id?: string } = {}) {
+  const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
-    getTemplateParams(ownerId || GLOBAL_OWNER, id, {
+    dbCore.getTemplateParams(ownerId || GLOBAL_OWNER, id, {
       include_docs: true,
     })
   )
@@ -64,10 +68,10 @@ exports.getTemplates = async ({ ownerId, type, id } = {}) => {
   if (type) {
     templates = templates.filter(template => template.type === type)
   }
-  return exports.addBaseTemplates(templates, type)
+  return addBaseTemplates(templates, type)
 }
 
-exports.getTemplateByPurpose = async (type, purpose) => {
-  const templates = await exports.getTemplates({ type })
-  return templates.find(template => template.purpose === purpose)
+export async function getTemplateByPurpose(type: string, purpose: string) {
+  const templates = await getTemplates({ type })
+  return templates.find((template: Template) => template.purpose === purpose)
 }

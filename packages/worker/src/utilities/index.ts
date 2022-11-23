@@ -4,6 +4,6 @@
  * @param {string} url The URL to test and remove any extra double slashes.
  * @return {string} The updated url.
  */
-exports.checkSlashesInUrl = url => {
+export function checkSlashesInUrl(url: string) {
   return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
 }

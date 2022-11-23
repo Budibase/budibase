@@ -1,14 +1,13 @@
-const Router = require("@koa/router")
-const controller = require("../../controllers/global/workspaces")
-const { joiValidator } = require("@budibase/backend-core/auth")
-const { adminOnly } = require("@budibase/backend-core/auth")
-const Joi = require("joi")
+import Router from "@koa/router"
+import * as controller from "../../controllers/global/workspaces"
+import { auth } from "@budibase/backend-core"
+import Joi from "joi"
 
-const router = new Router()
+const router: Router = new Router()
 
 function buildWorkspaceSaveValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     _id: Joi.string().optional(),
     _rev: Joi.string().optional(),
     name: Joi.string().required(),
@@ -27,12 +26,12 @@ function buildWorkspaceSaveValidation() {
 router
   .post(
     "/api/global/workspaces",
-    adminOnly,
+    auth.adminOnly,
     buildWorkspaceSaveValidation(),
     controller.save
   )
-  .delete("/api/global/workspaces/:id", adminOnly, controller.destroy)
+  .delete("/api/global/workspaces/:id", auth.adminOnly, controller.destroy)
   .get("/api/global/workspaces", controller.fetch)
   .get("/api/global/workspaces/:id", controller.find)
 
-module.exports = router
+export = router

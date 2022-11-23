@@ -1,15 +1,14 @@
-const Router = require("@koa/router")
-const controller = require("../../controllers/global/email")
-const { EmailTemplatePurpose } = require("../../../constants")
-const { joiValidator } = require("@budibase/backend-core/auth")
-const { adminOnly } = require("@budibase/backend-core/auth")
-const Joi = require("joi")
+import Router from "@koa/router"
+import * as controller from "../../controllers/global/email"
+import { EmailTemplatePurpose } from "../../../constants"
+import { auth } from "@budibase/backend-core"
+import Joi from "joi"
 
-const router = new Router()
+const router: Router = new Router()
 
 function buildEmailSendValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     email: Joi.string().email({
       multiple: true,
     }),
@@ -30,8 +29,8 @@ function buildEmailSendValidation() {
 router.post(
   "/api/global/email/send",
   buildEmailSendValidation(),
-  adminOnly,
+  auth.adminOnly,
   controller.sendEmail
 )
 
-module.exports = router
+export = router

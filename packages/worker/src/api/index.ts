@@ -104,7 +104,7 @@ const NO_TENANCY_ENDPOINTS = [
 // add them all to be safe
 const NO_CSRF_ENDPOINTS = [...PUBLIC_ENDPOINTS]
 
-const router = new Router()
+const router: Router = new Router()
 router
   .use(
     compress({
@@ -163,4 +163,4 @@ for (let route of routes) {
   router.use(route.allowedMethods())
 }
 
-module.exports = router
+export = router

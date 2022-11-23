@@ -1,11 +1,10 @@
-const Router = require("@koa/router")
-const controller = require("../../controllers/global/configs")
-const { joiValidator } = require("@budibase/backend-core/auth")
-const { adminOnly } = require("@budibase/backend-core/auth")
-const Joi = require("joi")
-const { Config } = require("@budibase/backend-core/constants")
+import Router from "@koa/router"
+import * as controller from "../../controllers/global/configs"
+import { auth } from "@budibase/backend-core"
+import Joi from "joi"
+import { ConfigType } from "@budibase/types"
 
-const router = new Router()
+const router: Router = new Router()
 
 function smtpValidation() {
   // prettier-ignore
@@ -55,27 +54,27 @@ function oidcValidation() {
         activated: Joi.boolean().required(),
         scopes: Joi.array().optional()
       })
-    ).required(true)
+    ).required()
   }).unknown(true)
 }
 
 function buildConfigSaveValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
+  return auth.joiValidator.body(Joi.object({
     _id: Joi.string().optional(),
     _rev: Joi.string().optional(),
     workspace: Joi.string().optional(),
-    type: Joi.string().valid(...Object.values(Config)).required(),
+    type: Joi.string().valid(...Object.values(ConfigType)).required(),
     createdAt: Joi.string().optional(),
     updatedAt: Joi.string().optional(),
     config: Joi.alternatives()
       .conditional("type", {
         switch: [
-          { is: Config.SMTP, then: smtpValidation() },
-          { is: Config.SETTINGS, then: settingValidation() },
-          { is: Config.ACCOUNT, then: Joi.object().unknown(true) },
-          { is: Config.GOOGLE, then: googleValidation() },
-          { is: Config.OIDC, then: oidcValidation() }
+          { is: ConfigType.SMTP, then: smtpValidation() },
+          { is: ConfigType.SETTINGS, then: settingValidation() },
+          { is: ConfigType.ACCOUNT, then: Joi.object().unknown(true) },
+          { is: ConfigType.GOOGLE, then: googleValidation() },
+          { is: ConfigType.OIDC, then: oidcValidation() }
         ],
       }),
   }).required().unknown(true),
@@ -84,27 +83,27 @@ function buildConfigSaveValidation() {
 
 function buildUploadValidation() {
   // prettier-ignore
-  return joiValidator.params(Joi.object({
-    type: Joi.string().valid(...Object.values(Config)).required(),
+  return auth.joiValidator.params(Joi.object({
+    type: Joi.string().valid(...Object.values(ConfigType)).required(),
     name: Joi.string().required(),
   }).required().unknown(true))
 }
 
 function buildConfigGetValidation() {
   // prettier-ignore
-  return joiValidator.params(Joi.object({
-    type: Joi.string().valid(...Object.values(Config)).required()
+  return auth.joiValidator.params(Joi.object({
+    type: Joi.string().valid(...Object.values(ConfigType)).required()
   }).required().unknown(true))
 }
 
 router
   .post(
     "/api/global/configs",
-    adminOnly,
+    auth.adminOnly,
     buildConfigSaveValidation(),
     controller.save
   )
-  .delete("/api/global/configs/:id/:rev", adminOnly, controller.destroy)
+  .delete("/api/global/configs/:id/:rev", auth.adminOnly, controller.destroy)
   .get("/api/global/configs", controller.fetch)
   .get("/api/global/configs/checklist", controller.configChecklist)
   .get(
@@ -117,9 +116,9 @@ router
   .get("/api/global/configs/:type", buildConfigGetValidation(), controller.find)
   .post(
     "/api/global/configs/upload/:type/:name",
-    adminOnly,
+    auth.adminOnly,
     buildUploadValidation(),
     controller.upload
   )
 
-module.exports = router
+export = router

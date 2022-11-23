@@ -1,25 +1,25 @@
-import core from "@budibase/backend-core"
+import { utils, constants, auth, db as dbCore } from "@budibase/backend-core"
 import {
   events,
   users as usersCore,
   context,
   tenancy,
 } from "@budibase/backend-core"
-import { Config, EmailTemplatePurpose } from "../../../constants"
+import { EmailTemplatePurpose } from "../../../constants"
 import { sendEmail, isEmailConfigured } from "../../../utilities/email"
 import { checkResetPasswordCode } from "../../../utilities/redis"
 import env from "../../../environment"
 import sdk from "../../../sdk"
-import { User } from "@budibase/types"
-const { setCookie, getCookie, clearCookie, hash, platformLogout } = core.utils
-const { Cookie, Header } = core.constants
-const { passport, ssoCallbackUrl, google, oidc } = core.auth
+import { User, Config, ConfigType } from "@budibase/types"
+const { setCookie, getCookie, clearCookie, hash, platformLogout } = utils
+const { Cookie, Header } = constants
+const { passport, ssoCallbackUrl, google, oidc } = auth
 
-export const googleCallbackUrl = async (config: any) => {
+export async function googleCallbackUrl(config?: Config) {
   return ssoCallbackUrl(tenancy.getGlobalDB(), config, "google")
 }
 
-export const oidcCallbackUrl = async (config: any) => {
+export async function oidcCallbackUrl(config?: Config) {
   return ssoCallbackUrl(tenancy.getGlobalDB(), config, "oidc")
 }
 
@@ -135,7 +135,7 @@ export const logout = async (ctx: any) => {
 
 export const datasourcePreAuth = async (ctx: any, next: any) => {
   const provider = ctx.params.provider
-  const middleware = require(`@budibase/backend-core/middleware`)
+  const { middleware } = require(`@budibase/backend-core`)
   const handler = middleware.datasource[provider]
 
   setCookie(
@@ -154,7 +154,7 @@ export const datasourcePreAuth = async (ctx: any, next: any) => {
 export const datasourceAuth = async (ctx: any, next: any) => {
   const authStateCookie = getCookie(ctx, Cookie.DatasourceAuth)
   const provider = authStateCookie.provider
-  const middleware = require(`@budibase/backend-core/middleware`)
+  const { middleware } = require(`@budibase/backend-core`)
   const handler = middleware.datasource[provider]
   return handler.postAuth(passport, ctx, next)
 }
@@ -166,11 +166,11 @@ export const datasourceAuth = async (ctx: any, next: any) => {
 export const googlePreAuth = async (ctx: any, next: any) => {
   const db = tenancy.getGlobalDB()
 
-  const config = await core.db.getScopedConfig(db, {
-    type: Config.GOOGLE,
+  const config = await dbCore.getScopedConfig(db, {
+    type: ConfigType.GOOGLE,
     workspace: ctx.query.workspace,
   })
-  let callbackUrl = await exports.googleCallbackUrl(config)
+  let callbackUrl = await googleCallbackUrl(config)
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
@@ -187,11 +187,11 @@ export const googlePreAuth = async (ctx: any, next: any) => {
 export const googleAuth = async (ctx: any, next: any) => {
   const db = tenancy.getGlobalDB()
 
-  const config = await core.db.getScopedConfig(db, {
-    type: Config.GOOGLE,
+  const config = await dbCore.getScopedConfig(db, {
+    type: ConfigType.GOOGLE,
     workspace: ctx.query.workspace,
   })
-  const callbackUrl = await exports.googleCallbackUrl(config)
+  const callbackUrl = await googleCallbackUrl(config)
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
@@ -213,13 +213,13 @@ export const googleAuth = async (ctx: any, next: any) => {
 
 export const oidcStrategyFactory = async (ctx: any, configId: any) => {
   const db = tenancy.getGlobalDB()
-  const config = await core.db.getScopedConfig(db, {
-    type: Config.OIDC,
+  const config = await dbCore.getScopedConfig(db, {
+    type: ConfigType.OIDC,
     group: ctx.query.group,
   })
 
   const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
-  let callbackUrl = await exports.oidcCallbackUrl(chosenConfig)
+  let callbackUrl = await oidcCallbackUrl(chosenConfig)
 
   //Remote Config
   const enrichedConfig = await oidc.fetchStrategyConfig(
@@ -240,8 +240,8 @@ export const oidcPreAuth = async (ctx: any, next: any) => {
   setCookie(ctx, configId, Cookie.OIDC_CONFIG)
 
   const db = tenancy.getGlobalDB()
-  const config = await core.db.getScopedConfig(db, {
-    type: Config.OIDC,
+  const config = await dbCore.getScopedConfig(db, {
+    type: ConfigType.OIDC,
     group: ctx.query.group,
   })
 
