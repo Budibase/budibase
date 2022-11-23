@@ -19,10 +19,9 @@ const http = require("http")
 const api = require("./api")
 const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
-const { logAlert } = require("@budibase/backend-core/logging")
 const { Thread } = require("./threads")
-import redis from "./utilities/redis"
-import { events } from "@budibase/backend-core"
+import * as redis from "./utilities/redis"
+import { events, logging } from "@budibase/backend-core"
 import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
 
@@ -93,7 +92,7 @@ process.on("uncaughtException", err => {
     return
   }
   errCode = -1
-  logAlert("Uncaught exception.", err)
+  logging.logAlert("Uncaught exception.", err)
   shutdown()
 })
 
