@@ -175,6 +175,8 @@ export const SWITCHABLE_TYPES = [
 
 export const BUDIBASE_INTERNAL_DB_ID = "bb_internal"
 export const BUDIBASE_DATASOURCE_TYPE = "budibase"
+export const DB_TYPE_INTERNAL = "internal"
+export const DB_TYPE_EXTERNAL = "external"
 
 export const IntegrationTypes = {
   POSTGRES: "POSTGRES",
