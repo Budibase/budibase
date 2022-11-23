@@ -133,7 +133,7 @@ export async function save(ctx: any) {
     tableToSave._rev = result.rev
   }
   // has to run after, make sure it has _id
-  await runStaticFormulaChecks(tableToSave, { oldTable, deletion: null })
+  await runStaticFormulaChecks(tableToSave, { oldTable, deletion: false })
   return tableToSave
 }
 
@@ -176,7 +176,6 @@ export async function destroy(ctx: any) {
 
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(tableToDelete, {
-    oldTable: null,
     deletion: true,
   })
   await cleanupAttachments(tableToDelete, {

@@ -14,7 +14,7 @@ const { getMultiIDParams, USER_METDATA_PREFIX } = require("../../db/utils")
 const { partition } = require("lodash")
 const { getGlobalUsersFromMetadata } = require("../../utilities/global")
 const { processFormulas } = require("../../utilities/rowProcessor/utils")
-const { getAppDB } = require("@budibase/backend-core/context")
+const { context } = require("@budibase/backend-core")
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
@@ -74,7 +74,7 @@ async function getLinksForRows(rows) {
 
 async function getFullLinkedDocs(links) {
   // create DBs
-  const db = getAppDB()
+  const db = context.getAppDB()
   const linkedRowIds = links.map(link => link.id)
   const uniqueRowIds = [...new Set(linkedRowIds)]
   let dbRows = (await db.allDocs(getMultiIDParams(uniqueRowIds))).rows.map(
