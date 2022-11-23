@@ -27,12 +27,8 @@ import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
 // @ts-ignore
 import { cloneDeep } from "lodash/fp"
-import {
-  processFormulas,
-  processDates,
-} from "../../../utilities/rowProcessor/utils"
-// @ts-ignore
-import { getAppDB } from "@budibase/backend-core/context"
+import { processFormulas, processDates } from "../../../utilities/rowProcessor"
+import { context } from "@budibase/backend-core"
 
 interface ManyRelationship {
   tableId?: string
@@ -444,7 +440,7 @@ module External {
       // Process some additional data types
       let finalRowArray = Object.values(finalRows)
       finalRowArray = processDates(table, finalRowArray)
-      finalRowArray = processFormulas(table, finalRowArray)
+      finalRowArray = processFormulas(table, finalRowArray) as Row[]
 
       return finalRowArray.map((row: Row) =>
         this.squashRelationshipColumns(table, row, relationships)
@@ -673,7 +669,7 @@ module External {
         throw "Unable to run without a table name"
       }
       if (!this.datasource) {
-        const db = getAppDB()
+        const db = context.getAppDB()
         this.datasource = await db.get(datasourceId)
         if (!this.datasource || !this.datasource.entities) {
           throw "No tables found, fetch tables before query."

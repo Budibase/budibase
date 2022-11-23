@@ -5,7 +5,7 @@ import { permissions } from "@budibase/backend-core"
 import { webhookValidator } from "./utils/validators"
 
 const BUILDER = permissions.BUILDER
-const router = new Router()
+const router: Router = new Router()
 
 router
   .get("/api/webhooks", authorized(BUILDER), controller.fetch)
@@ -24,4 +24,4 @@ router
   // this shouldn't have authorisation, right now its always public
   .post("/api/webhooks/trigger/:instance/:id", controller.trigger)
 
-export default router
+export = router

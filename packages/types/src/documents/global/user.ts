@@ -17,6 +17,7 @@ export interface User extends Document {
   userGroups?: string[]
   forceResetPassword?: boolean
   dayPassRecordedAt?: string
+  userId?: string
 }
 
 export interface UserRoles {
