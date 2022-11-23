@@ -5,7 +5,7 @@ let { basicDatasource } = setup.structures
 let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const pg = require("pg")
 const { checkCacheForDynamicVariable } = require("../../../threads/utils")
-const { events } = require("@budibase/backend-core") 
+const { events } = require("@budibase/backend-core")
 
 describe("/datasources", () => {
   let request = setup.getRequest()
@@ -62,7 +62,7 @@ describe("/datasources", () => {
         // check variables in cache
         let contents = await checkCacheForDynamicVariable(query._id, "variable3")
         expect(contents.rows.length).toEqual(1)
-        
+
         // update the datasource to remove the variables
         datasource.config.dynamicVariables = []
         const res = await request
@@ -175,5 +175,19 @@ describe("/datasources", () => {
       })
     })
 
+  })
+
+  describe("schema", () => {
+    it("builds the datasource schema", async () => {
+      await config.createQuery()
+
+      const res = await request
+        .post(`api/datasources/${datasource._id}/schema`)
+        .set(config.defaultHeaders())
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      expect(res.body.length).toEqual(1)
+    })
   })
 })

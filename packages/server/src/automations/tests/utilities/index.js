@@ -31,7 +31,7 @@ exports.runInProd = async fn => {
   }
 }
 
-exports.runStep = async function runStep(stepId, inputs) {
+exports.runStep = async function runStep(stepId, inputs, stepContext) {
   async function run() {
     let step = await actions.getAction(stepId)
     expect(step).toBeDefined()
@@ -41,6 +41,7 @@ exports.runStep = async function runStep(stepId, inputs) {
       // don't really need an API key, mocked out usage quota, not being tested here
       apiKey: exports.apiKey,
       emitter,
+      context: stepContext
     })
   }
   if (config?.appId) {

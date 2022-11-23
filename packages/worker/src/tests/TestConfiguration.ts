@@ -14,7 +14,8 @@ import {
   env as coreEnv,
 } from "@budibase/backend-core"
 import structures, { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
-import { CreateUserResponse, User, AuthToken } from "@budibase/types"
+import { CreateUserResponse, User, AuthToken, UserGroup } from "@budibase/types"
+import { groups } from "@budibase/pro"
 import API from "./api"
 
 enum Mode {
@@ -82,7 +83,7 @@ class TestConfiguration {
   async _req(config: any, params: any, controlFunc: any) {
     const request: any = {}
     // fake cookies, we don't need them
-    request.cookies = { set: () => {}, get: () => {} }
+    request.cookies = { set: () => { }, get: () => { } }
     request.config = { jwtSecret: env.JWT_SECRET }
     request.user = { tenantId: this.getTenantId() }
     request.query = {}
@@ -241,6 +242,22 @@ class TestConfiguration {
     const response = await this._req(user, null, controllers.users.save)
     const body = response as CreateUserResponse
     return this.getUser(body.email)
+  }
+
+  async getGroup(id: string) {
+    return tenancy.doInTenant(this.getTenantId(), () => {
+      return groups.get(id)
+    })
+  }
+
+  async saveGroup(group: UserGroup) {
+    const res = await this.getRequest()
+      .post(`/api/global/groups`)
+      .send(group)
+      .set(this.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+    return res.body
   }
 
   // CONFIGS
