@@ -89,6 +89,7 @@ export async function createASession(
     userId,
   }
   await client.store(key, session, EXPIRY_SECONDS)
+  return session
 }
 
 export async function updateSessionTTL(session: Session) {
