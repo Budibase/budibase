@@ -28,7 +28,11 @@
   function addNumbering(filters) {
     let count = 1
     for (let value of filters) {
-      if (value.field && value.field?.match(QUERY_START_REGEX) == null) {
+      if (
+        value.field &&
+        value.field?.match(QUERY_START_REGEX) == null &&
+        value.field !== "_id"
+      ) {
         value.field = `${count++}:${value.field}`
       }
     }
