@@ -39,25 +39,25 @@ export const run = async (appDb: any) => {
   }
 
   // Recursively update any relevant components and mutate the screen docs
-  screens.forEach((screen: any) => {
-    migrateTableSettings(screen.props, screen)
+  for (let screen of screens) {
+    const changed = migrateTableSettings(screen.props)
 
     // Save screen if we updated it
-    if (screen.touched) {
-      delete screen.touched
-      appDb.put(screen)
+    if (changed) {
+      await appDb.put(screen)
       console.log(
         `Screen ${screen.routing?.route} contained table settings which were migrated`
       )
     }
-  })
+  }
 }
 
 // Recursively searches and mutates a screen doc to migrate table component
 // and table block settings
-const migrateTableSettings = (component: any, screen: any) => {
+const migrateTableSettings = (component: any) => {
+  let changed = false
   if (!component) {
-    return
+    return changed
   }
 
   // Migration 1: migrate table row click settings
@@ -70,7 +70,7 @@ const migrateTableSettings = (component: any, screen: any) => {
       const column = linkColumn || "_id"
       const action = convertLinkSettingToAction(linkURL, !!linkPeek, column)
       if (action) {
-        screen.touched = true
+        changed = true
         component.onClick = action
         if (component._component.endsWith("/tableblock")) {
           component.clickBehaviour = "actions"
@@ -93,7 +93,7 @@ const migrateTableSettings = (component: any, screen: any) => {
         !!titleButtonPeek
       )
       if (action) {
-        screen.touched = true
+        changed = true
         component.onClickTitleButton = action
         component.titleButtonClickBehaviour = "actions"
       }
@@ -102,8 +102,10 @@ const migrateTableSettings = (component: any, screen: any) => {
 
   // Recurse down the tree as needed
   component._children?.forEach((child: any) => {
-    migrateTableSettings(child, screen)
+    const childChanged = migrateTableSettings(child)
+    changed = changed || childChanged
   })
+  return changed
 }
 
 // Util ti convert the legacy settings into a navigation action structure
