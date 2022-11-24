@@ -5189,7 +5189,7 @@
   },
   "sidepanel": {
     "name": "Side Panel",
-    "icon": "AdDisplay",
+    "icon": "RailRight",
     "hasChildren": true,
     "illegalChildren": [
       "section"
