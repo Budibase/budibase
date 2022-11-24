@@ -190,6 +190,9 @@ exports.save = async function (ctx) {
 
   const db = getAppDB()
   const datasource = await db.get(datasourceId)
+  if (!datasource.entities) {
+    datasource.entities = {}
+  }
   const oldTables = cloneDeep(datasource.entities)
   const tables = datasource.entities
 
