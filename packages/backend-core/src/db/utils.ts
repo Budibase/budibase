@@ -1,4 +1,4 @@
-import { newid } from "../hashing"
+import { newid } from "../utils"
 import { DEFAULT_TENANT_ID, Config } from "../constants"
 import env from "../environment"
 import {

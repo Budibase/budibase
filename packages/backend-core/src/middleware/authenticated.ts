@@ -6,10 +6,12 @@ import { buildMatcherRegex, matches } from "./matchers"
 import { SEPARATOR, queryGlobalView, ViewName } from "../db"
 import { getGlobalDB, doInTenant } from "../tenancy"
 import { decrypt } from "../security/encryption"
-const identity = require("../context/identity")
-const env = require("../environment")
+import * as identity from "../context/identity"
+import env from "../environment"
 
-const ONE_MINUTE = env.SESSION_UPDATE_PERIOD || 60 * 1000
+const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
+  ? parseInt(env.SESSION_UPDATE_PERIOD)
+  : 60 * 1000
 
 interface FinaliseOpts {
   authenticated?: boolean
@@ -40,13 +42,13 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
   return doInTenant(tenantId, async () => {
     const db = getGlobalDB()
     // api key is encrypted in the database
-    const userId = await queryGlobalView(
+    const userId = (await queryGlobalView(
       ViewName.BY_API_KEY,
       {
         key: apiKey,
       },
       db
-    )
+    )) as string
     if (userId) {
       return {
         valid: true,

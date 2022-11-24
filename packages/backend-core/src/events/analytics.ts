@@ -2,7 +2,7 @@ import env from "../environment"
 import tenancy from "../tenancy"
 import * as dbUtils from "../db/utils"
 import { Config } from "../constants"
-import { withCache, TTL, CacheKeys } from "../cache/generic"
+import { withCache, TTL, CacheKey } from "../cache/generic"
 
 export const enabled = async () => {
   // cloud - always use the environment variable
@@ -13,7 +13,7 @@ export const enabled = async () => {
   // self host - prefer the settings doc
   // use cache as events have high throughput
   const enabledInDB = await withCache(
-    CacheKeys.ANALYTICS_ENABLED,
+    CacheKey.ANALYTICS_ENABLED,
     TTL.ONE_DAY,
     async () => {
       const settings = await getSettingsDoc()

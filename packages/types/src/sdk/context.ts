@@ -1,5 +1,5 @@
 import { User, Account } from "../documents"
-import { IdentityType } from "./events/identification"
+import { IdentityType } from "./events"
 
 export interface BaseContext {
   _id: string
