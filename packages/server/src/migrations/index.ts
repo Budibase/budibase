@@ -74,10 +74,10 @@ export const buildMigrations = () => {
         })
         break
       }
-      case MigrationName.TABLE_SETTINGS: {
+      case MigrationName.TABLE_SETTINGS_LINKS_TO_ACTIONS: {
         serverMigrations.push({
           ...definition,
-          appOpts: { all: true },
+          appOpts: { dev: true },
           fn: tableSettings.run,
         })
         break
