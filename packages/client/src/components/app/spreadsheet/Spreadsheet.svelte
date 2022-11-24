@@ -11,7 +11,8 @@
   export let sortColumn
   export let sortOrder
 
-  const { styleable, API } = getContext("sdk")
+  const { styleable, API, confirmationStore, notificationStore } =
+    getContext("sdk")
   const component = getContext("component")
   const limit = 100
   const defaultWidth = 200
@@ -121,6 +122,47 @@
     await fetch.refresh()
     delete changeCache[rowId]
   }
+
+  const deleteRows = () => {
+    // Fetch full row objects to be deleted
+    const rows = Object.entries(selectedRows)
+      .map(entry => {
+        if (entry[1] === true) {
+          return $fetch.rows.find(x => x._id === entry[0])
+        } else {
+          return null
+        }
+      })
+      .filter(x => x != null)
+
+    // Deletion callback when confirmed
+    const performDeletion = async () => {
+      await API.deleteRows({
+        tableId: table.tableId,
+        rows,
+      })
+      await fetch.refresh()
+      notificationStore.actions.success(
+        `${selectedRowCount} row${
+          selectedRowCount === 1 ? "" : "s"
+        } deleted successfully`
+      )
+
+      // Refresh state
+      selectedCell = null
+      hoveredRow = null
+      selectedRows = {}
+    }
+
+    // Show confirmation
+    confirmationStore.actions.showConfirmation(
+      "Delete rows",
+      `Are you sure you want to delete ${selectedRowCount} row${
+        selectedRowCount === 1 ? "" : "s"
+      }?`,
+      performDeletion
+    )
+  }
 </script>
 
 <div use:styleable={$component.styles}>
@@ -133,12 +175,14 @@
         <ActionButton icon="VisibilityOff" size="S">Hide fields</ActionButton>
       </div>
       <div class="title">Sales Records</div>
-      <div class="search">
-        <Icon
-          name="Search"
-          size="S"
-          color="var(--spectrum-global-color-gray-400"
-        />
+      <div class="delete">
+        {#if selectedRowCount}
+          <ActionButton icon="Delete" size="S" on:click={deleteRows}>
+            Delete {selectedRowCount} row{selectedRowCount === 1 ? "" : "s"}
+          </ActionButton>
+        {:else}
+          {rowCount} row{rowCount === 1 ? "" : "s"}
+        {/if}
       </div>
     </div>
     <div class="spreadsheet" on:scroll={handleScroll} style={gridStyles}>
@@ -221,13 +265,6 @@
         />
       {/each}
     </div>
-    <div class="footer">
-      {#if selectedRowCount}
-        {selectedRowCount} row{selectedRowCount === 1 ? "" : "s"} selected
-      {:else}
-        {rowCount} row{rowCount === 1 ? "" : "s"}
-      {/if}
-    </div>
   </div>
 </div>
 
@@ -247,9 +284,9 @@
     justify-content: flex-start;
     align-items: stretch;
     overflow: auto;
-    height: 800px;
+    max-height: 800px;
     position: relative;
-    padding-bottom: 100px;
+    padding-bottom: 80px;
     padding-right: 100px;
   }
 
@@ -277,11 +314,18 @@
     align-items: center;
     gap: 4px;
   }
-  .search {
+  .delete {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
+    color: var(--spectrum-global-color-gray-700);
+  }
+  .delete :global(.spectrum-ActionButton) {
+    color: var(--spectrum-global-color-red-600);
+  }
+  .delete :global(.spectrum-Icon) {
+    fill: var(--spectrum-global-color-red-600);
   }
 
   .cell {
@@ -359,17 +403,5 @@
 
   input[type="checkbox"] {
     margin: 0;
-  }
-
-  .footer {
-    height: 32px;
-    width: 100%;
-    border-top: 1px solid var(--spectrum-global-color-gray-400);
-    padding: 0 12px;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    background: var(--spectrum-global-color-gray-50);
   }
 </style>

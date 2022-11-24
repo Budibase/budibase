@@ -115,8 +115,7 @@
     justify-content: flex-start;
     align-items: stretch;
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
-    border-radius: 4px;
-    max-height: 192px;
+    max-height: 191px;
     overflow-y: auto;
   }
   .option {
