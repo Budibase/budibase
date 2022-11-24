@@ -369,7 +369,7 @@ export const getFrontendStore = () => {
             s._id !== screen._id
           )
         })
-        if (otherHomeScreens.length) {
+        if (otherHomeScreens.length && updatedScreen.routing.homeScreen) {
           const patch = screen => {
             screen.routing.homeScreen = false
           }
