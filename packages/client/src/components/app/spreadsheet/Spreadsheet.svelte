@@ -106,17 +106,18 @@
   }
 
   const handleChange = async (rowId, field, value) => {
-    selectedCell = null
     let row = $fetch.rows.find(x => x._id === rowId)
     if (!row) {
       return
     }
-    const newRow = {
-      ...row,
-      [field]: value,
+    if (row[field] === value) {
+      return
     }
     changeCache[rowId] = { [field]: value }
-    await API.saveRow(newRow)
+    await API.saveRow({
+      ...row,
+      ...changeCache[rowId],
+    })
     await fetch.refresh()
     delete changeCache[rowId]
   }
@@ -237,6 +238,7 @@
     justify-content: flex-start;
     align-items: stretch;
     border: 1px solid var(--spectrum-global-color-gray-400);
+    border-radius: 4px;
   }
   .spreadsheet {
     display: grid;
@@ -294,12 +296,13 @@
     font-size: 14px;
     gap: 4px;
     background: var(--spectrum-global-color-gray-50);
+    position: relative;
   }
   .cell.hovered {
     background: var(--spectrum-global-color-gray-100);
   }
   .cell.selected {
-    box-shadow: inset 0 0 0 2px rgb(89, 167, 246);
+    box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
     z-index: 1;
   }
   .cell:hover {
@@ -309,6 +312,9 @@
     position: sticky;
     left: 50px;
     z-index: 2;
+  }
+  .cell.sticky.selected {
+    z-index: 3;
   }
   .cell.row-selected {
     background-color: rgb(224, 242, 255);
