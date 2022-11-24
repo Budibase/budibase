@@ -58,7 +58,6 @@ class QueryRunner {
 
   async execute(): Promise<any> {
     let { datasource, fields, queryVerb, transformer } = this
-
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
 
@@ -181,6 +180,7 @@ class QueryRunner {
         parameters,
         transformer: query.transformer,
         queryId,
+        ctx: this.ctx,
       },
       { noRecursiveQuery: true }
     ).execute()
