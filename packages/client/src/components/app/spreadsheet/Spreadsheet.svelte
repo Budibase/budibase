@@ -13,13 +13,13 @@
 
   const { styleable, API } = getContext("sdk")
   const component = getContext("component")
-
-  // Config
   const limit = 100
   const defaultWidth = 200
+
   let widths
   let hoveredRow
   let selectedCell
+  let selectedRows = {}
   let horizontallyScrolled = false
 
   $: query = LuceneUtils.buildLuceneQuery(filter)
@@ -34,6 +34,8 @@
   $: initWidths(fields)
   $: gridStyles = getGridStyles(widths)
   $: schema = $fetch.schema
+  $: rowCount = $fetch.rows?.length || 0
+  $: selectedRowCount = Object.values(selectedRows).filter(x => !!x).length
 
   const createFetch = datasource => {
     return fetchData({
@@ -57,7 +59,7 @@
     if (!widths?.length) {
       return "--grid: 1fr;"
     }
-    return `--grid: 60px ${widths.map(x => `${x}px`).join(" ")};`
+    return `--grid: 50px ${widths.map(x => `${x}px`).join(" ")};`
   }
 
   const handleScroll = e => {
@@ -86,6 +88,21 @@
     }
     return "Text"
   }
+
+  const selectRow = idx => {
+    selectedRows[idx] = !selectedRows[idx]
+  }
+
+  const selectAll = () => {
+    const allSelected = selectedRowCount === rowCount
+    if (allSelected) {
+      selectedRows = {}
+    } else {
+      for (let i = 0; i < rowCount; i++) {
+        selectedRows[i] = true
+      }
+    }
+  }
 </script>
 
 <div use:styleable={$component.styles}>
@@ -107,8 +124,12 @@
       </div>
     </div>
     <div class="spreadsheet" on:scroll={handleScroll} style={gridStyles}>
-      <div class="header cell label">
-        <input type="checkbox" />
+      <!-- Field headers -->
+      <div class="header cell label" on:click={selectAll}>
+        <input
+          type="checkbox"
+          checked={rowCount && selectedRowCount === rowCount}
+        />
       </div>
       {#each fields as field, fieldIdx}
         <div
@@ -124,16 +145,34 @@
           {field}
         </div>
       {/each}
+
+      <!-- All real rows -->
       {#each $fetch.rows as row, rowIdx}
-        <div class="cell label" class:hovered={hoveredRow === rowIdx}>
-          {rowIdx + 1}
+        {@const rowSelected = !!selectedRows[rowIdx]}
+        {@const rowHovered = hoveredRow === rowIdx}
+        <div
+          class="cell label"
+          class:row-selected={rowSelected}
+          class:hovered={rowHovered}
+          on:focus
+          on:mouseover={() => (hoveredRow = rowIdx)}
+          on:click={() => selectRow(rowIdx)}
+        >
+          {#if rowSelected || rowHovered}
+            <input type="checkbox" checked={rowSelected} />
+          {:else}
+            <span>
+              {rowIdx + 1}
+            </span>
+          {/if}
         </div>
         {#each fields as field, fieldIdx}
           {@const cellIdx = rowIdx * fields.length + fieldIdx}
           <div
             class="cell"
+            class:row-selected={rowSelected}
             class:sticky={fieldIdx === 0}
-            class:hovered={hoveredRow === rowIdx}
+            class:hovered={rowHovered}
             class:selected={selectedCell === cellIdx}
             class:shadow={horizontallyScrolled}
             on:focus
@@ -149,6 +188,25 @@
           </div>
         {/each}
       {/each}
+
+      <!-- New row placeholder -->
+      <div class="cell label">
+        <Icon hoverable name="Add" />
+      </div>
+      {#each fields as field, fieldIdx}
+        <div
+          class="cell"
+          class:sticky={fieldIdx === 0}
+          class:shadow={horizontallyScrolled}
+        />
+      {/each}
+    </div>
+    <div class="footer">
+      {#if selectedRowCount}
+        {selectedRowCount} row{selectedRowCount === 1 ? "" : "s"} selected
+      {:else}
+        {rowCount} row{rowCount === 1 ? "" : "s"}
+      {/if}
     </div>
   </div>
 </div>
@@ -170,6 +228,12 @@
     overflow: auto;
     height: 800px;
     position: relative;
+    padding-bottom: 100px;
+    padding-right: 100px;
+  }
+
+  .wrapper ::-webkit-scrollbar-track {
+    background: var(--spectrum-global-color-gray-50);
   }
 
   .controls {
@@ -177,7 +241,7 @@
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
     height: 36px;
-    padding: 0 16px;
+    padding: 0 12px;
     background: var(--spectrum-global-color-gray-200);
     gap: 8px;
     border-bottom: 1px solid var(--spectrum-global-color-gray-400);
@@ -207,28 +271,28 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    background: var(--spectrum-global-color-gray-50);
     color: var(--spectrum-global-color-gray-900);
     font-size: 14px;
     gap: 4px;
-  }
-  .cell:last-child {
-    border-right: none;
+    background: var(--spectrum-global-color-gray-50);
   }
   .cell.hovered {
     background: var(--spectrum-global-color-gray-100);
   }
   .cell.selected {
-    box-shadow: inset 0 0 0 2px var(--primaryColorHover);
+    box-shadow: inset 0 0 0 2px rgb(89, 167, 246);
     z-index: 1;
   }
   .cell:hover {
-    cursor: pointer;
+    cursor: default;
   }
   .cell.sticky {
     position: sticky;
-    left: 60px;
+    left: 50px;
     z-index: 2;
+  }
+  .cell.row-selected {
+    background-color: rgba(20, 122, 243, 0.05);
   }
 
   .header {
@@ -253,9 +317,8 @@
   }
 
   .label {
-    padding: 0 16px;
+    padding: 0 12px;
     border-right: none;
-    color: var(--spectrum-global-color-gray-500);
     position: sticky;
     left: 0;
     z-index: 2;
@@ -263,7 +326,25 @@
   .label.header {
     z-index: 4;
   }
-  .label.header input {
+  .label span {
+    min-width: 14px;
+    text-align: center;
+    color: var(--spectrum-global-color-gray-500);
+  }
+
+  input[type="checkbox"] {
     margin: 0;
+  }
+
+  .footer {
+    height: 32px;
+    width: 100%;
+    border-top: 1px solid var(--spectrum-global-color-gray-400);
+    padding: 0 12px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    background: var(--spectrum-global-color-gray-50);
   }
 </style>
