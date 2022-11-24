@@ -21,6 +21,7 @@
   let selectedCell
   let selectedRows = {}
   let horizontallyScrolled = false
+  let changeCache = {}
 
   $: query = LuceneUtils.buildLuceneQuery(filter)
   $: fetch = createFetch(table)
@@ -89,8 +90,8 @@
     return "Text"
   }
 
-  const selectRow = idx => {
-    selectedRows[idx] = !selectedRows[idx]
+  const selectRow = id => {
+    selectedRows[id] = !selectedRows[id]
   }
 
   const selectAll = () => {
@@ -98,10 +99,26 @@
     if (allSelected) {
       selectedRows = {}
     } else {
-      for (let i = 0; i < rowCount; i++) {
-        selectedRows[i] = true
-      }
+      $fetch.rows.forEach(row => {
+        selectedRows[row._id] = true
+      })
     }
+  }
+
+  const handleChange = async (rowId, field, value) => {
+    selectedCell = null
+    let row = $fetch.rows.find(x => x._id === rowId)
+    if (!row) {
+      return
+    }
+    const newRow = {
+      ...row,
+      [field]: value,
+    }
+    changeCache[rowId] = { [field]: value }
+    await API.saveRow(newRow)
+    await fetch.refresh()
+    delete changeCache[rowId]
   }
 </script>
 
@@ -147,16 +164,17 @@
       {/each}
 
       <!-- All real rows -->
-      {#each $fetch.rows as row, rowIdx}
-        {@const rowSelected = !!selectedRows[rowIdx]}
-        {@const rowHovered = hoveredRow === rowIdx}
+      {#each $fetch.rows as row, rowIdx (row._id)}
+        {@const rowSelected = !!selectedRows[row._id]}
+        {@const rowHovered = hoveredRow === row._id}
+        {@const data = { ...row, ...changeCache[row._id] }}
         <div
           class="cell label"
           class:row-selected={rowSelected}
           class:hovered={rowHovered}
           on:focus
-          on:mouseover={() => (hoveredRow = rowIdx)}
-          on:click={() => selectRow(rowIdx)}
+          on:mouseover={() => (hoveredRow = row._id)}
+          on:click={() => selectRow(row._id)}
         >
           {#if rowSelected || rowHovered}
             <input type="checkbox" checked={rowSelected} />
@@ -167,7 +185,7 @@
           {/if}
         </div>
         {#each fields as field, fieldIdx}
-          {@const cellIdx = rowIdx * fields.length + fieldIdx}
+          {@const cellIdx = `${row._id}-${field}`}
           <div
             class="cell"
             class:row-selected={rowSelected}
@@ -176,14 +194,15 @@
             class:selected={selectedCell === cellIdx}
             class:shadow={horizontallyScrolled}
             on:focus
-            on:mouseover={() => (hoveredRow = rowIdx)}
+            on:mouseover={() => (hoveredRow = row._id)}
             on:click={() => (selectedCell = cellIdx)}
           >
             <svelte:component
               this={getCellForField(field)}
-              value={row[field]}
+              value={data[field]}
               schema={schema[field]}
               selected={selectedCell === cellIdx}
+              onChange={val => handleChange(row._id, field, val)}
             />
           </div>
         {/each}
@@ -292,7 +311,7 @@
     z-index: 2;
   }
   .cell.row-selected {
-    background-color: rgba(20, 122, 243, 0.05);
+    background-color: rgb(224, 242, 255);
   }
 
   .header {
