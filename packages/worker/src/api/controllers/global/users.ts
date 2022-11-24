@@ -104,7 +104,7 @@ export const adminUser = async (ctx: any) => {
     try {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
       // stuck in a cycle
-      await cache.bustCache(cache.CacheKeys.CHECKLIST)
+      await cache.bustCache(cache.CacheKey.CHECKLIST)
       const finalUser = await sdk.users.save(user, {
         hashPassword,
         requirePassword,

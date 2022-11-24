@@ -170,8 +170,8 @@ export async function save(ctx: BBContext) {
 
   try {
     const response = await db.put(ctx.request.body)
-    await cache.bustCache(cache.CacheKeys.CHECKLIST)
-    await cache.bustCache(cache.CacheKeys.ANALYTICS_ENABLED)
+    await cache.bustCache(cache.CacheKey.CHECKLIST)
+    await cache.bustCache(cache.CacheKey.ANALYTICS_ENABLED)
 
     for (const fn of eventFns) {
       await fn()
@@ -371,7 +371,7 @@ export async function destroy(ctx: BBContext) {
   const { id, rev } = ctx.params
   try {
     await db.remove(id, rev)
-    await cache.delete(cache.CacheKeys.CHECKLIST)
+    await cache.delete(cache.CacheKey.CHECKLIST)
     ctx.body = { message: "Config deleted successfully" }
   } catch (err: any) {
     ctx.throw(err.status, err)
@@ -384,7 +384,7 @@ export async function configChecklist(ctx: BBContext) {
 
   try {
     ctx.body = await cache.withCache(
-      cache.CacheKeys.CHECKLIST,
+      cache.CacheKey.CHECKLIST,
       env.CHECKLIST_CACHE_TTL,
       async () => {
         let apps = []

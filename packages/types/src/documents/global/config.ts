@@ -31,17 +31,19 @@ export interface GoogleConfig extends Config {
   }
 }
 
+export interface OIDCInnerCfg {
+  configUrl: string
+  clientID: string
+  clientSecret: string
+  logo: string
+  name: string
+  uuid: string
+  activated: boolean
+}
+
 export interface OIDCConfig extends Config {
   config: {
-    configs: {
-      configUrl: string
-      clientID: string
-      clientSecret: string
-      logo: string
-      name: string
-      uuid: string
-      activated: boolean
-    }[]
+    configs: OIDCInnerCfg[]
   }
 }
 

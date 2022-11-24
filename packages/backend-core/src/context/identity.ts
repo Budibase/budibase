@@ -18,7 +18,7 @@ export const doInIdentityContext = (identity: IdentityContext, task: any) => {
 }
 
 export const doInUserContext = (user: User, task: any) => {
-  const userContext: UserContext = {
+  const userContext: any = {
     ...user,
     _id: user._id as string,
     type: IdentityType.USER,

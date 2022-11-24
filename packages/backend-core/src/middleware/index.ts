@@ -1,18 +1,18 @@
-const jwt = require("./passport/jwt")
-const local = require("./passport/local")
-const google = require("./passport/google")
-const oidc = require("./passport/oidc")
-const { authError, ssoCallbackUrl } = require("./passport/utils")
-const authenticated = require("./authenticated")
-const auditLog = require("./auditLog")
-const tenancy = require("./tenancy")
-const internalApi = require("./internalApi")
-const datasourceGoogle = require("./passport/datasource/google")
-const csrf = require("./csrf")
-const adminOnly = require("./adminOnly")
-const builderOrAdmin = require("./builderOrAdmin")
-const builderOnly = require("./builderOnly")
-const joiValidator = require("./joi-validator")
+import * as jwt from "./passport/jwt"
+import * as local from "./passport/local"
+import * as google from "./passport/google"
+import * as oidc from "./passport/oidc"
+import { authError, ssoCallbackUrl } from "./passport/utils"
+import authenticated from "./authenticated"
+import auditLog from "./auditLog"
+import tenancy from "./tenancy"
+import internalApi from "./internalApi"
+import * as datasourceGoogle from "./passport/datasource/google"
+import csrf from "./csrf"
+import adminOnly from "./adminOnly"
+import builderOrAdmin from "./builderOrAdmin"
+import builderOnly from "./builderOnly"
+import * as joiValidator from "./joi-validator"
 
 const pkg = {
   google,
