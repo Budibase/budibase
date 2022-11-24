@@ -23,7 +23,7 @@ export const DEFINITIONS: MigrationDefinition[] = [
   },
   {
     type: MigrationType.APP,
-    name: MigrationName.TABLE_SETTINGS,
+    name: MigrationName.TABLE_SETTINGS_LINKS_TO_ACTIONS,
   },
   {
     type: MigrationType.GLOBAL,
