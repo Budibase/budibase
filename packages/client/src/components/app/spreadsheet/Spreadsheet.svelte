@@ -144,11 +144,11 @@
         rows: rowsToDelete,
       })
       await fetch.refresh()
-      notificationStore.actions.success(
-        `${selectedRowCount} row${
-          selectedRowCount === 1 ? "" : "s"
-        } deleted successfully`
-      )
+      // notificationStore.actions.success(
+      //   `${selectedRowCount} row${
+      //     selectedRowCount === 1 ? "" : "s"
+      //   } deleted successfully`
+      // )
 
       // Refresh state
       selectedCell = null
@@ -278,15 +278,24 @@
       {/each}
 
       <!-- New row placeholder -->
-      <div class="cell label new" on:click={addRow}>
-        <Icon hoverable name="Add" />
+      <div
+        class="cell label new"
+        on:click={addRow}
+        on:focus
+        on:mouseover={() => (hoveredRow = "new")}
+        class:hovered={hoveredRow === "new"}
+      >
+        <Icon hoverable name="Add" size="S" />
       </div>
       {#each fields as field, fieldIdx}
         <div
           class="cell new"
           class:sticky={fieldIdx === 0}
           class:shadow={horizontallyScrolled}
+          class:hovered={hoveredRow === "new"}
           on:click={() => addRow(field)}
+          on:focus
+          on:mouseover={() => (hoveredRow = "new")}
         />
       {/each}
     </div>
@@ -373,6 +382,9 @@
   .cell.selected {
     box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
     z-index: 1;
+  }
+  .cell:not(.selected) {
+    user-select: none;
   }
   .cell:hover {
     cursor: default;
