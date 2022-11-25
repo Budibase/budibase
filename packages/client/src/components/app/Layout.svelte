@@ -356,6 +356,7 @@
     flex-direction: column;
     gap: 30px;
     overflow-y: auto;
+    overflow-x: hidden;
     transition: transform 130ms ease-out;
     position: absolute;
     width: 400px;
