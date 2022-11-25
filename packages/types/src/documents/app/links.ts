@@ -1,4 +1,6 @@
-export interface LinkDocument {
+import { Document } from "../document"
+
+export interface LinkDocument extends Document {
   type: string
   doc1: {
     rowId: string
@@ -10,4 +12,10 @@ export interface LinkDocument {
     fieldName: string
     tableId: string
   }
+}
+
+export interface LinkDocumentValue {
+  id: string
+  thisId: string
+  fieldName: string
 }

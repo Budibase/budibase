@@ -1,19 +1,23 @@
-const Sentry = require("@sentry/node")
-const { ViewName, getQueryIndex } = require("../utils")
-const { FieldTypes } = require("../../constants")
-const { createLinkView } = require("../views/staticViews")
-const { context } = require("@budibase/backend-core")
+import { ViewName, getQueryIndex } from "../utils"
+import { FieldTypes } from "../../constants"
+import { createLinkView } from "../views/staticViews"
+import { context, logging } from "@budibase/backend-core"
+import {
+  FieldSchema,
+  LinkDocument,
+  LinkDocumentValue,
+  Table,
+} from "@budibase/types"
+export { createLinkView } from "../views/staticViews"
 
 /**
  * Only needed so that boolean parameters are being used for includeDocs
  * @type {{EXCLUDE: boolean, INCLUDE: boolean}}
  */
-exports.IncludeDocs = {
+export const IncludeDocs = {
   INCLUDE: true,
   EXCLUDE: false,
 }
-
-exports.createLinkView = createLinkView
 
 /**
  * Gets the linking documents, not the linked documents themselves.
@@ -28,10 +32,14 @@ exports.createLinkView = createLinkView
  * @returns {Promise<object[]>} This will return an array of the linking documents that were found
  * (if any).
  */
-exports.getLinkDocuments = async function (args) {
+export async function getLinkDocuments(args: {
+  tableId?: string
+  rowId?: string
+  includeDocs?: any
+}): Promise<LinkDocumentValue[] | LinkDocument[]> {
   const { tableId, rowId, includeDocs } = args
   const db = context.getAppDB()
-  let params
+  let params: any
   if (rowId != null) {
     params = { key: [tableId, rowId] }
   }
@@ -43,7 +51,7 @@ exports.getLinkDocuments = async function (args) {
   try {
     let linkRows = (await db.query(getQueryIndex(ViewName.LINK), params)).rows
     // filter to get unique entries
-    const foundIds = []
+    const foundIds: string[] = []
     linkRows = linkRows.filter(link => {
       // make sure anything unique is the correct key
       if (
@@ -60,35 +68,36 @@ exports.getLinkDocuments = async function (args) {
     })
 
     if (includeDocs) {
-      return linkRows.map(row => row.doc)
+      return linkRows.map(row => row.doc) as LinkDocument[]
     } else {
-      return linkRows.map(row => row.value)
+      return linkRows.map(row => row.value) as LinkDocumentValue[]
     }
-  } catch (err) {
+  } catch (err: any) {
     // check if the view doesn't exist, it should for all new instances
     if (err != null && err.name === "not_found") {
-      await exports.createLinkView()
-      return exports.getLinkDocuments(arguments[0])
+      await createLinkView()
+      return getLinkDocuments(arguments[0])
     } else {
       /* istanbul ignore next */
-      Sentry.captureException(err)
+      logging.logAlert("Failed to get link documents", err)
+      throw err
     }
   }
 }
 
-exports.getUniqueByProp = (array, prop) => {
+export function getUniqueByProp(array: any[], prop: string) {
   return array.filter((obj, pos, arr) => {
     return arr.map(mapObj => mapObj[prop]).indexOf(obj[prop]) === pos
   })
 }
 
-exports.getLinkedTableIDs = table => {
+export function getLinkedTableIDs(table: Table) {
   return Object.values(table.schema)
-    .filter(column => column.type === FieldTypes.LINK)
+    .filter((column: FieldSchema) => column.type === FieldTypes.LINK)
     .map(column => column.tableId)
 }
 
-exports.getLinkedTable = async (id, tables) => {
+export async function getLinkedTable(id: string, tables: Table[]) {
   const db = context.getAppDB()
   let linkedTable = tables.find(table => table._id === id)
   if (linkedTable) {
@@ -101,7 +110,7 @@ exports.getLinkedTable = async (id, tables) => {
   return linkedTable
 }
 
-exports.getRelatedTableForField = (table, fieldName) => {
+export function getRelatedTableForField(table: Table, fieldName: string) {
   // look to see if its on the table, straight in the schema
   const field = table.schema[fieldName]
   if (field != null) {
