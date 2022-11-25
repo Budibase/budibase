@@ -131,6 +131,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     background-color: var(--spectrum-global-color-gray-50);
   }
   .option:hover {
