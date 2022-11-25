@@ -23,6 +23,7 @@
   let selectedRows = {}
   let horizontallyScrolled = false
   let changeCache = {}
+  let newRows = []
 
   $: query = LuceneUtils.buildLuceneQuery(filter)
   $: fetch = createFetch(table)
@@ -38,6 +39,7 @@
   $: schema = $fetch.schema
   $: rowCount = $fetch.rows?.length || 0
   $: selectedRowCount = Object.values(selectedRows).filter(x => !!x).length
+  $: rows = getSortedRows($fetch.rows, newRows)
 
   const createFetch = datasource => {
     return fetchData({
@@ -100,14 +102,14 @@
     if (allSelected) {
       selectedRows = {}
     } else {
-      $fetch.rows.forEach(row => {
+      rows.forEach(row => {
         selectedRows[row._id] = true
       })
     }
   }
 
   const handleChange = async (rowId, field, value) => {
-    let row = $fetch.rows.find(x => x._id === rowId)
+    let row = rows.find(x => x._id === rowId)
     if (!row) {
       return
     }
@@ -125,10 +127,10 @@
 
   const deleteRows = () => {
     // Fetch full row objects to be deleted
-    const rows = Object.entries(selectedRows)
+    const rowsToDelete = Object.entries(selectedRows)
       .map(entry => {
         if (entry[1] === true) {
-          return $fetch.rows.find(x => x._id === entry[0])
+          return rows.find(x => x._id === entry[0])
         } else {
           return null
         }
@@ -139,7 +141,7 @@
     const performDeletion = async () => {
       await API.deleteRows({
         tableId: table.tableId,
-        rows,
+        rows: rowsToDelete,
       })
       await fetch.refresh()
       notificationStore.actions.success(
@@ -163,6 +165,23 @@
       performDeletion
     )
   }
+
+  const addRow = async field => {
+    const res = await API.saveRow({ tableId: table.tableId })
+    selectedCell = `${res._id}-${field}`
+    newRows.push(res._id)
+    await fetch.refresh()
+  }
+
+  const getSortedRows = (rows, newRows) => {
+    let sortedRows = rows.slice()
+    sortedRows.sort((a, b) => {
+      const aIndex = newRows.indexOf(a._id)
+      const bIndex = newRows.indexOf(b._id)
+      return aIndex < bIndex ? -1 : 1
+    })
+    return sortedRows
+  }
 </script>
 
 <div use:styleable={$component.styles}>
@@ -185,7 +204,12 @@
         {/if}
       </div>
     </div>
-    <div class="spreadsheet" on:scroll={handleScroll} style={gridStyles}>
+    <div
+      class="spreadsheet"
+      on:scroll={handleScroll}
+      style={gridStyles}
+      on:click|self={() => (selectedCell = null)}
+    >
       <!-- Field headers -->
       <div class="header cell label" on:click={selectAll}>
         <input
@@ -209,7 +233,7 @@
       {/each}
 
       <!-- All real rows -->
-      {#each $fetch.rows as row, rowIdx (row._id)}
+      {#each rows as row, rowIdx (row._id)}
         {@const rowSelected = !!selectedRows[row._id]}
         {@const rowHovered = hoveredRow === row._id}
         {@const data = { ...row, ...changeCache[row._id] }}
@@ -254,14 +278,15 @@
       {/each}
 
       <!-- New row placeholder -->
-      <div class="cell label">
+      <div class="cell label new" on:click={addRow}>
         <Icon hoverable name="Add" />
       </div>
       {#each fields as field, fieldIdx}
         <div
-          class="cell"
+          class="cell new"
           class:sticky={fieldIdx === 0}
           class:shadow={horizontallyScrolled}
+          on:click={() => addRow(field)}
         />
       {/each}
     </div>
@@ -284,9 +309,9 @@
     justify-content: flex-start;
     align-items: stretch;
     overflow: auto;
-    max-height: 800px;
+    max-height: 1014px;
     position: relative;
-    padding-bottom: 80px;
+    padding-bottom: 180px;
     padding-right: 100px;
   }
 
@@ -362,6 +387,9 @@
   }
   .cell.row-selected {
     background-color: rgb(224, 242, 255);
+  }
+  .cell.new:hover {
+    cursor: pointer;
   }
 
   .header {

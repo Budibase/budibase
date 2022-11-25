@@ -52,9 +52,9 @@
     <div class="badge text" style="--color: {color}">
       {value}
     </div>
-  {:else if value}
+  {:else}
     <div class="text">
-      {value}
+      {value || ""}
     </div>
   {/if}
   {#if selected}
@@ -62,12 +62,17 @@
   {/if}
   {#if open}
     <div class="options">
-      <div class="option">
-        <div class="badge text" style="--color: {color}">
-          {value}
+      {#if value}
+        <div class="option">
+          <div class="badge text" style="--color: {color}">
+            {value}
+          </div>
+          <Icon
+            name="Checkmark"
+            color="var(--spectrum-global-color-blue-400)"
+          />
         </div>
-        <Icon name="Checkmark" color="var(--spectrum-global-color-blue-400)" />
-      </div>
+      {/if}
       {#each options.filter(x => x !== value) as option}
         <div class="option" on:click={() => onChange(option)}>
           <div class="badge text" style="--color: {getColor(option)}">
