@@ -1,11 +1,17 @@
-const newid = require("./newid")
+import newid from "./newid"
+import { Row, View, Document } from "@budibase/types"
 
 // bypass the main application db config
 // use in memory pouchdb directly
-const { db: dbCore } = require("@budibase/backend-core")
+import { db as dbCore } from "@budibase/backend-core"
 const Pouch = dbCore.getPouch({ inMemory: true })
 
-exports.runView = async (view, calculation, group, data) => {
+export async function runView(
+  view: View,
+  calculation: boolean,
+  group: string,
+  data: Row[]
+) {
   // use a different ID each time for the DB, make sure they
   // are always unique for each query, don't want overlap
   // which could cause 409s
@@ -18,16 +24,16 @@ exports.runView = async (view, calculation, group, data) => {
         _rev: undefined,
       }))
     )
-    let fn = (doc, emit) => emit(doc._id)
-    eval("fn = " + view.map.replace("function (doc)", "function (doc, emit)"))
-    const queryFns = {
+    let fn = (doc: Document, emit: any) => emit(doc._id)
+    eval("fn = " + view?.map?.replace("function (doc)", "function (doc, emit)"))
+    const queryFns: any = {
       meta: view.meta,
       map: fn,
     }
     if (view.reduce) {
       queryFns.reduce = view.reduce
     }
-    const response = await db.query(queryFns, {
+    const response: { rows: Row[] } = await db.query(queryFns, {
       include_docs: !calculation,
       group: !!group,
     })

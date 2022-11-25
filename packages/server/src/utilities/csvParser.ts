@@ -1,18 +1,25 @@
-const csv = require("csvtojson")
-const { FieldTypes } = require("../constants")
+import { FieldSchema, Table } from "@budibase/types"
+import csv from "csvtojson"
+import { FieldTypes } from "../constants"
+
+type CsvParseOpts = {
+  schema?: { [key: string]: any }
+  existingTable: Table
+  csvString?: string
+}
 
 const VALIDATORS = {
   [FieldTypes.STRING]: () => true,
   [FieldTypes.OPTIONS]: () => true,
   [FieldTypes.BARCODEQR]: () => true,
-  [FieldTypes.NUMBER]: attribute => {
+  [FieldTypes.NUMBER]: (attribute?: string) => {
     // allow not to be present
     if (!attribute) {
       return true
     }
     return !isNaN(Number(attribute))
   },
-  [FieldTypes.DATETIME]: attribute => {
+  [FieldTypes.DATETIME]: (attribute?: string) => {
     // allow not to be present
     if (!attribute) {
       return true
@@ -22,13 +29,13 @@ const VALIDATORS = {
 }
 
 const PARSERS = {
-  [FieldTypes.NUMBER]: attribute => {
+  [FieldTypes.NUMBER]: (attribute?: string) => {
     if (!attribute) {
       return attribute
     }
     return Number(attribute)
   },
-  [FieldTypes.DATETIME]: attribute => {
+  [FieldTypes.DATETIME]: (attribute?: string) => {
     if (!attribute) {
       return attribute
     }
@@ -36,10 +43,10 @@ const PARSERS = {
   },
 }
 
-function parse(csvString, parsers) {
+export function parse(csvString: string, parsers: any) {
   const result = csv().fromString(csvString)
 
-  const schema = {}
+  const schema: Record<string, any> = {}
 
   return new Promise((resolve, reject) => {
     result.on("header", headers => {
@@ -77,16 +84,22 @@ function parse(csvString, parsers) {
   })
 }
 
-function updateSchema({ schema, existingTable }) {
+export function updateSchema({
+  schema,
+  existingTable,
+}: {
+  schema?: Record<string, any>
+  existingTable: Table
+}) {
   if (!schema) {
     return schema
   }
-  const finalSchema = {}
-  const schemaKeyMap = {}
+  const finalSchema: Record<string, FieldSchema> = {}
+  const schemaKeyMap: Record<string, any> = {}
   Object.keys(schema).forEach(key => (schemaKeyMap[key.toLowerCase()] = key))
   for (let [key, field] of Object.entries(existingTable.schema)) {
     const lcKey = key.toLowerCase()
-    const foundKey = schemaKeyMap[lcKey]
+    const foundKey: string = schemaKeyMap[lcKey]
     if (foundKey) {
       finalSchema[key] = schema[foundKey]
       finalSchema[key].type = field.type
@@ -95,15 +108,22 @@ function updateSchema({ schema, existingTable }) {
   return finalSchema
 }
 
-async function transform({ schema, csvString, existingTable }) {
-  const colParser = {}
+export async function transform({
+  schema,
+  csvString,
+  existingTable,
+}: CsvParseOpts) {
+  if (!schema || !csvString) {
+    throw new Error("Unable to transform CSV without schema")
+  }
+  const colParser: any = {}
 
   // make sure the table has all the columns required for import
   if (existingTable) {
     schema = updateSchema({ schema, existingTable })
   }
 
-  for (let [key, field] of Object.entries(schema)) {
+  for (let [key, field] of Object.entries(schema || {})) {
     // don't import data to auto columns
     if (!field.autocolumn) {
       colParser[key] = PARSERS[field.type] || field.type
@@ -112,8 +132,10 @@ async function transform({ schema, csvString, existingTable }) {
 
   try {
     const data = await csv({ colParser }).fromString(csvString)
-    const schemaKeyMap = {}
-    Object.keys(schema).forEach(key => (schemaKeyMap[key.toLowerCase()] = key))
+    const schemaKeyMap: any = {}
+    Object.keys(schema || {}).forEach(
+      key => (schemaKeyMap[key.toLowerCase()] = key)
+    )
     for (let element of data) {
       if (!data) {
         continue
@@ -136,10 +158,4 @@ async function transform({ schema, csvString, existingTable }) {
     console.error(`Error transforming CSV to JSON for data import`, err)
     throw err
   }
-}
-
-module.exports = {
-  parse,
-  transform,
-  updateSchema,
 }

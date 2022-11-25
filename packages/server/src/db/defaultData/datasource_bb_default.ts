@@ -1,31 +1,32 @@
-const {
+import {
   FieldTypes,
   AutoFieldSubTypes,
   RelationshipTypes,
-} = require("../../constants/index")
-const { importToRows } = require("../../api/controllers/table/utils")
-const { cloneDeep } = require("lodash/fp")
-const LinkDocument = require("../linkedRows/LinkDocument")
-const { inventoryImport } = require("./inventoryImport")
-const { employeeImport } = require("./employeeImport")
-const { jobsImport } = require("./jobsImport")
-const { expensesImport } = require("./expensesImport")
-const { db: dbCore } = require("@budibase/backend-core")
+} from "../../constants"
+import { importToRows } from "../../api/controllers/table/utils"
+import { cloneDeep } from "lodash/fp"
+import LinkDocument from "../linkedRows/LinkDocument"
+import { inventoryImport } from "./inventoryImport"
+import { employeeImport } from "./employeeImport"
+import { jobsImport } from "./jobsImport"
+import { expensesImport } from "./expensesImport"
+import { db as dbCore } from "@budibase/backend-core"
+import { Table, Row } from "@budibase/types"
 
-exports.DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
-exports.DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
-exports.DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
-exports.DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
-exports.DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
-exports.DEFAULT_BB_DATASOURCE = {
-  _id: this.DEFAULT_BB_DATASOURCE_ID,
+export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
+export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
+export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
+export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
+export const DEFAULT_BB_DATASOURCE = {
+  _id: DEFAULT_BB_DATASOURCE_ID,
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Sample Data",
   source: "BUDIBASE",
   config: {},
 }
 
-const syncLastIds = (table, rowCount) => {
+function syncLastIds(table: Table, rowCount: number) {
   Object.keys(table.schema).forEach(key => {
     const entry = table.schema[key]
     if (entry.autocolumn && entry.subtype == "autoID") {
@@ -34,7 +35,7 @@ const syncLastIds = (table, rowCount) => {
   })
 }
 
-const tableImport = (table, data) => {
+function tableImport(table: Table, data: Row) {
   const cloneTable = cloneDeep(table)
   const rowDocs = importToRows(data, cloneTable)
   syncLastIds(cloneTable, rowDocs.length)
@@ -77,11 +78,11 @@ const AUTO_COLUMNS = {
   },
 }
 
-exports.DEFAULT_INVENTORY_TABLE_SCHEMA = {
-  _id: this.DEFAULT_INVENTORY_TABLE_ID,
+export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
+  _id: DEFAULT_INVENTORY_TABLE_ID,
   type: "internal",
   views: {},
-  sourceId: exports.DEFAULT_BB_DATASOURCE_ID,
+  sourceId: DEFAULT_BB_DATASOURCE_ID,
   primaryDisplay: "Item Name",
   name: "Inventory",
   schema: {
@@ -186,12 +187,12 @@ exports.DEFAULT_INVENTORY_TABLE_SCHEMA = {
   },
 }
 
-exports.DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
-  _id: this.DEFAULT_EMPLOYEE_TABLE_ID,
+export const DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
+  _id: DEFAULT_EMPLOYEE_TABLE_ID,
   type: "internal",
   views: {},
   name: "Employees",
-  sourceId: exports.DEFAULT_BB_DATASOURCE_ID,
+  sourceId: DEFAULT_BB_DATASOURCE_ID,
   primaryDisplay: "First Name",
   schema: {
     "First Name": {
@@ -300,7 +301,7 @@ exports.DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
       fieldName: "Assigned",
       name: "Jobs",
       relationshipType: RelationshipTypes.MANY_TO_MANY,
-      tableId: this.DEFAULT_JOBS_TABLE_ID,
+      tableId: DEFAULT_JOBS_TABLE_ID,
     },
     "Start Date": {
       type: FieldTypes.DATETIME,
@@ -334,11 +335,11 @@ exports.DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
   },
 }
 
-exports.DEFAULT_JOBS_TABLE_SCHEMA = {
-  _id: this.DEFAULT_JOBS_TABLE_ID,
+export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
+  _id: DEFAULT_JOBS_TABLE_ID,
   type: "internal",
   name: "Jobs",
-  sourceId: exports.DEFAULT_BB_DATASOURCE_ID,
+  sourceId: DEFAULT_BB_DATASOURCE_ID,
   primaryDisplay: "Job ID",
   schema: {
     "Job ID": {
@@ -456,7 +457,7 @@ exports.DEFAULT_JOBS_TABLE_SCHEMA = {
     Assigned: {
       name: "Assigned",
       type: FieldTypes.LINK,
-      tableId: this.DEFAULT_EMPLOYEE_TABLE_ID,
+      tableId: DEFAULT_EMPLOYEE_TABLE_ID,
       fieldName: "Jobs",
       relationshipType: RelationshipTypes.MANY_TO_MANY,
       // sortable: true,
@@ -491,12 +492,12 @@ exports.DEFAULT_JOBS_TABLE_SCHEMA = {
   },
 }
 
-exports.DEFAULT_EXPENSES_TABLE_SCHEMA = {
-  _id: this.DEFAULT_EXPENSES_TABLE_ID,
+export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
+  _id: DEFAULT_EXPENSES_TABLE_ID,
   type: "internal",
   views: {},
   name: "Expenses",
-  sourceId: exports.DEFAULT_BB_DATASOURCE_ID,
+  sourceId: DEFAULT_BB_DATASOURCE_ID,
   primaryDisplay: "Expense ID",
   schema: {
     "Expense ID": {
@@ -601,38 +602,40 @@ exports.DEFAULT_EXPENSES_TABLE_SCHEMA = {
   },
 }
 
-exports.buildDefaultDocs = () => {
+export function buildDefaultDocs() {
   const inventoryData = tableImport(
-    this.DEFAULT_INVENTORY_TABLE_SCHEMA,
+    DEFAULT_INVENTORY_TABLE_SCHEMA,
     inventoryImport
   )
 
   const employeeData = tableImport(
-    this.DEFAULT_EMPLOYEE_TABLE_SCHEMA,
+    DEFAULT_EMPLOYEE_TABLE_SCHEMA,
     employeeImport
   )
 
-  const jobData = tableImport(this.DEFAULT_JOBS_TABLE_SCHEMA, jobsImport)
+  const jobData = tableImport(DEFAULT_JOBS_TABLE_SCHEMA, jobsImport)
 
   const expensesData = tableImport(
-    this.DEFAULT_EXPENSES_TABLE_SCHEMA,
+    DEFAULT_EXPENSES_TABLE_SCHEMA,
     expensesImport
   )
 
   // Build one link doc for each employee/job
-  const jobEmployeeLinks = employeeData.rows.map((employee, index) => {
-    return new LinkDocument(
-      employeeData.table._id,
-      "Jobs",
-      employeeData.rows[index]._id,
-      jobData.table._id,
-      "Assigned",
-      jobData.rows[index]._id
-    )
-  })
+  const jobEmployeeLinks = employeeData.rows.map(
+    (employee: any, index: any) => {
+      return new LinkDocument(
+        employeeData.table._id!,
+        "Jobs",
+        employeeData.rows[index]._id,
+        jobData.table._id!,
+        "Assigned",
+        jobData.rows[index]._id
+      )
+    }
+  )
 
   return [
-    this.DEFAULT_BB_DATASOURCE,
+    DEFAULT_BB_DATASOURCE,
     inventoryData.table,
     employeeData.table,
     jobData.table,

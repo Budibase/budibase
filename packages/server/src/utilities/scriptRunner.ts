@@ -1,9 +1,13 @@
-const fetch = require("node-fetch")
-const { VM, VMScript } = require("vm2")
+import fetch from "node-fetch"
+import { VM, VMScript } from "vm2"
 const JS_TIMEOUT_MS = 1000
 
 class ScriptRunner {
-  constructor(script, context) {
+  vm: VM
+  results: { out: string }
+  script: VMScript
+
+  constructor(script: string, context: any) {
     const code = `let fn = () => {\n${script}\n}; results.out = fn();`
     this.vm = new VM({
       timeout: JS_TIMEOUT_MS,
@@ -21,4 +25,4 @@ class ScriptRunner {
   }
 }
 
-module.exports = ScriptRunner
+export = ScriptRunner

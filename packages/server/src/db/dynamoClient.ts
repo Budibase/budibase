@@ -1,8 +1,7 @@
-let { merge } = require("lodash")
-let env = require("../environment")
+import { merge } from "lodash"
+import env from "../environment"
 
-const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
-exports.AWS_REGION = AWS_REGION
+export const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
 const TableInfo = {
   API_KEYS: {
@@ -16,10 +15,36 @@ const TableInfo = {
   },
 }
 
-let docClient = null
+let docClient: any = null
+
+type GetOpts = {
+  primary: string
+  sort?: string
+  otherProps?: any
+}
+
+type UpdateOpts = {
+  primary: string
+  sort?: string
+  expression?: string
+  condition?: string
+  names?: string[]
+  values?: any[]
+  exists?: boolean
+  otherProps?: any
+}
+
+type PutOpts = {
+  item: any
+  otherProps?: any
+}
 
 class Table {
-  constructor(tableInfo) {
+  _name: string
+  _primary: string
+  _sort?: string
+
+  constructor(tableInfo: { name: string; primary: string; sort?: string }) {
     if (!tableInfo.name || !tableInfo.primary) {
       throw "Table info must specify a name and a primary key"
     }
@@ -28,7 +53,7 @@ class Table {
     this._sort = tableInfo.sort
   }
 
-  async get({ primary, sort, otherProps }) {
+  async get({ primary, sort, otherProps }: GetOpts) {
     let params = {
       TableName: this._name,
       Key: {
@@ -54,8 +79,8 @@ class Table {
     values,
     exists,
     otherProps,
-  }) {
-    let params = {
+  }: UpdateOpts) {
+    let params: any = {
       TableName: this._name,
       Key: {
         [this._primary]: primary,
@@ -83,7 +108,7 @@ class Table {
     return docClient.update(params).promise()
   }
 
-  async put({ item, otherProps }) {
+  async put({ item, otherProps }: PutOpts) {
     if (
       item[this._primary] == null ||
       (this._sort && item[this._sort] == null)
@@ -101,9 +126,9 @@ class Table {
   }
 }
 
-exports.init = endpoint => {
+export function init(endpoint: string) {
   let AWS = require("aws-sdk")
-  let docClientParams = {
+  let docClientParams: any = {
     correctClockSkew: true,
     region: AWS_REGION,
   }
@@ -115,13 +140,8 @@ exports.init = endpoint => {
   docClient = new AWS.DynamoDB.DocumentClient(docClientParams)
 }
 
-exports.apiKeyTable = new Table(TableInfo.API_KEYS)
-exports.userTable = new Table(TableInfo.USERS)
-
-if (env.isProd()) {
-  exports.init(`https://dynamodb.${AWS_REGION}.amazonaws.com`)
-} else {
+if (!env.isProd()) {
   env._set("AWS_ACCESS_KEY_ID", "KEY_ID")
   env._set("AWS_SECRET_ACCESS_KEY", "SECRET_KEY")
-  exports.init("http://localhost:8333")
+  init("http://localhost:8333")
 }

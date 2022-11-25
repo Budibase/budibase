@@ -1,4 +1,4 @@
-exports.jobsImport = [
+export const jobsImport = [
   {
     "Works End": "2023-01-28T12:00:00.000",
     "Customer Email": "susie.peterson@example.com",

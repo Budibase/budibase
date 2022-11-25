@@ -1,9 +1,9 @@
-const { join } = require("path")
-const { ObjectStoreBuckets } = require("../../constants")
-const fs = require("fs")
-const { objectStore } = require("@budibase/backend-core")
-const { resolve } = require("../centralPath")
-const env = require("../../environment")
+import { join } from "path"
+import { ObjectStoreBuckets } from "../../constants"
+import fs from "fs"
+import { objectStore } from "@budibase/backend-core"
+import { resolve } from "../centralPath"
+import env from "../../environment"
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 
 /**
@@ -33,7 +33,7 @@ const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
  * @param appId The app ID to backup
  * @returns {Promise<void>}
  */
-exports.backupClientLibrary = async appId => {
+export async function backupClientLibrary(appId: string) {
   // Copy existing manifest to tmp
   let tmpManifestPath
   try {
@@ -85,7 +85,7 @@ exports.backupClientLibrary = async appId => {
  * @param appId The app ID to update
  * @returns {Promise<void>}
  */
-exports.updateClientLibrary = async appId => {
+export async function updateClientLibrary(appId: string) {
   let manifest, client
 
   if (env.isDev()) {
@@ -124,7 +124,7 @@ exports.updateClientLibrary = async appId => {
  * @param appId The app ID to revert
  * @returns {Promise<void>}
  */
-exports.revertClientLibrary = async appId => {
+export async function revertClientLibrary(appId: string) {
   // Copy backups manifest to tmp directory
   const tmpManifestPath = await objectStore.retrieveToTmp(
     ObjectStoreBuckets.APPS,

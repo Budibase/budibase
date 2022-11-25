@@ -1,9 +1,9 @@
-const BASE_LAYOUT_PROP_IDS = {
+export const BASE_LAYOUT_PROP_IDS = {
   PRIVATE: "layout_private_master",
   PUBLIC: "layout_public_master",
 }
 
-const EMPTY_LAYOUT = {
+export const EMPTY_LAYOUT = {
   componentLibraries: ["@budibase/standard-components"],
   title: "{{ name }}",
   favicon: "./_shared/favicon.png",
@@ -48,7 +48,7 @@ const EMPTY_LAYOUT = {
   },
 }
 
-const BASE_LAYOUTS = [
+export const BASE_LAYOUTS = [
   {
     _id: BASE_LAYOUT_PROP_IDS.PRIVATE,
     componentLibraries: ["@budibase/standard-components"],
@@ -145,9 +145,3 @@ const BASE_LAYOUTS = [
     },
   },
 ]
-
-module.exports = {
-  BASE_LAYOUTS,
-  BASE_LAYOUT_PROP_IDS,
-  EMPTY_LAYOUT,
-}

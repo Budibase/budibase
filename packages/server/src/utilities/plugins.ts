@@ -1,8 +1,9 @@
-const env = require("../environment")
-const { plugins: ProPlugins } = require("@budibase/pro")
-const { objectStore } = require("@budibase/backend-core")
+import env from "../environment"
+import { plugins as ProPlugins } from "@budibase/pro"
+import { objectStore } from "@budibase/backend-core"
+import { Plugin } from "@budibase/types"
 
-exports.enrichPluginURLs = plugins => {
+export function enrichPluginURLs(plugins: Plugin[]) {
   if (!plugins || !plugins.length) {
     return []
   }

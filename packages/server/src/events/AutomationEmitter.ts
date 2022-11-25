@@ -1,6 +1,7 @@
-const { rowEmission, tableEmission } = require("./utils")
-const mainEmitter = require("./index")
-const env = require("../environment")
+import { rowEmission, tableEmission } from "./utils"
+import mainEmitter from "./index"
+import env from "../environment"
+import { Table, Row } from "@budibase/types"
 
 // max number of automations that can chain on top of each other
 // TODO: in future make this configurable at the automation level
@@ -13,14 +14,17 @@ const MAX_AUTOMATION_CHAIN = env.SELF_HOSTED ? 5 : 0
  * from getting stuck endlessly chaining.
  */
 class AutomationEmitter {
-  constructor(chainCount) {
+  chainCount: number
+  metadata: { automationChainCount: number }
+
+  constructor(chainCount: number) {
     this.chainCount = chainCount
     this.metadata = {
       automationChainCount: chainCount,
     }
   }
 
-  emitRow(eventName, appId, row, table = null) {
+  emitRow(eventName: string, appId: string, row: Row, table?: Table) {
     // don't emit even if we've reached max automation chain
     if (this.chainCount >= MAX_AUTOMATION_CHAIN) {
       return
@@ -35,11 +39,12 @@ class AutomationEmitter {
     })
   }
 
-  emitTable(eventName, appId, table = null) {
+  emitTable(eventName: string, appId: string, table?: Table) {
     // don't emit even if we've reached max automation chain
     if (this.chainCount > MAX_AUTOMATION_CHAIN) {
       return
     }
+
     tableEmission({
       emitter: mainEmitter,
       eventName,
@@ -50,4 +55,4 @@ class AutomationEmitter {
   }
 }
 
-module.exports = AutomationEmitter
+export = AutomationEmitter

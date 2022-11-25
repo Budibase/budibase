@@ -1,5 +1,5 @@
 const { v4 } = require("uuid")
 
-module.exports = function () {
+export = function (): string {
   return v4().replace(/-/g, "")
 }

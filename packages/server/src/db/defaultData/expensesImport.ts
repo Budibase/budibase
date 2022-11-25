@@ -1,4 +1,4 @@
-exports.expensesImport = [
+export const expensesImport = [
   {
     "Date Paid": "2022-11-12T12:00:00.000",
     "Payment Due": "2022-11-01T12:00:00.000",
