@@ -8,7 +8,6 @@ const handleClick = event => {
   // Ignore click if needed
   for (let className of ignoredClasses) {
     if (event.target.closest(className)) {
-      console.log("ignore")
       return
     }
   }
