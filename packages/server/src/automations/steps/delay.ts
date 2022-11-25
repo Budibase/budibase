@@ -1,11 +1,16 @@
-let { wait } = require("../../utilities")
+import { wait } from "../../utilities"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
-exports.definition = {
+export const definition: AutomationStep = {
   name: "Delay",
   icon: "Clock",
   tagline: "Delay for {{inputs.time}} milliseconds",
   description: "Delay the automation until an amount of time has passed",
-  stepId: "DELAY",
+  stepId: AutomationActionStepId.DELAY,
   internal: true,
   inputs: {},
   schema: {
@@ -31,7 +36,7 @@ exports.definition = {
   type: "LOGIC",
 }
 
-exports.run = async function delay({ inputs }) {
+export async function run({ inputs }: AutomationStepInput) {
   await wait(inputs.time)
   return {
     success: true,

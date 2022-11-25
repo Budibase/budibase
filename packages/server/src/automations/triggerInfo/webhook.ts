@@ -1,10 +1,12 @@
-exports.definition = {
+import { AutomationTrigger, AutomationTriggerStepId } from "@budibase/types"
+
+export const definition: AutomationTrigger = {
   name: "Webhook",
   event: "web:trigger",
   icon: "Send",
   tagline: "Webhook endpoint is hit",
   description: "Trigger an automation when a HTTP POST webhook is hit",
-  stepId: "WEBHOOK",
+  stepId: AutomationTriggerStepId.WEBHOOK,
   inputs: {},
   schema: {
     inputs: {

@@ -1,14 +1,19 @@
-const { sendSmtpEmail } = require("../../utilities/workerRequests")
-const automationUtils = require("../automationUtils")
+import { sendSmtpEmail } from "../../utilities/workerRequests"
+import automationUtils from "../automationUtils"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
-exports.definition = {
+export const definition: AutomationStep = {
   description: "Send an email using SMTP",
   tagline: "Send SMTP email to {{inputs.to}}",
   icon: "Email",
   name: "Send Email (SMTP)",
   type: "ACTION",
   internal: true,
-  stepId: "SEND_EMAIL_SMTP",
+  stepId: AutomationActionStepId.SEND_EMAIL_SMTP,
   inputs: {},
   schema: {
     inputs: {
@@ -56,7 +61,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs }) {
+export async function run({ inputs }: AutomationStepInput) {
   let { to, from, subject, contents, cc, bcc } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"

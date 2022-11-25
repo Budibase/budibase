@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { EventEmitter } from "events"
 
 export enum AutomationTriggerStepId {
   ROW_SAVED = "ROW_SAVED",
@@ -14,6 +15,7 @@ export enum AutomationActionStepId {
   CREATE_ROW = "CREATE_ROW",
   UPDATE_ROW = "UPDATE_ROW",
   DELETE_ROW = "DELETE_ROW",
+  EXECUTE_BASH = "EXECUTE_BASH",
   OUTGOING_WEBHOOK = "OUTGOING_WEBHOOK",
   EXECUTE_SCRIPT = "EXECUTE_SCRIPT",
   EXECUTE_QUERY = "EXECUTE_QUERY",
@@ -40,7 +42,14 @@ export interface Automation extends Document {
 }
 
 export interface AutomationStep {
-  id: string
+  id?: string
+  name: string
+  tagline: string
+  icon: string
+  description: string
+  type: string
+  internal?: boolean
+  deprecated?: boolean
   stepId: AutomationTriggerStepId | AutomationActionStepId
   inputs: {
     [key: string]: any
@@ -52,10 +61,12 @@ export interface AutomationStep {
     outputs: {
       [key: string]: any
     }
+    required?: string[]
   }
 }
 
 export interface AutomationTrigger extends AutomationStep {
+  event?: string
   cronJobId?: string
 }
 
@@ -90,4 +101,11 @@ export interface AutomationLogPage {
   data: AutomationLog[]
   hasNextPage: boolean
   nextPage?: string
+}
+
+export type AutomationStepInput = {
+  inputs: Record<string, any>
+  context: Record<string, any>
+  emitter: EventEmitter
+  appId: string
 }

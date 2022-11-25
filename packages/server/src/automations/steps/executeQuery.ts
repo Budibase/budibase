@@ -1,14 +1,19 @@
-const queryController = require("../../api/controllers/query")
-const { buildCtx } = require("./utils")
-const automationUtils = require("../automationUtils")
+import * as queryController from "../../api/controllers/query"
+import { buildCtx } from "./utils"
+import automationUtils from "../automationUtils"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
-exports.definition = {
+export const definition: AutomationStep = {
   name: "External Data Connector",
   tagline: "Execute Data Connector",
   icon: "Data",
   description: "Execute a query in an external data connector",
   type: "ACTION",
-  stepId: "EXECUTE_QUERY",
+  stepId: AutomationActionStepId.EXECUTE_QUERY,
   internal: true,
   inputs: {},
   schema: {
@@ -50,7 +55,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, appId, emitter }) {
+export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   if (inputs.query == null) {
     return {
       success: false,
@@ -62,7 +67,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
 
   const { queryId, ...rest } = inputs.query
 
-  const ctx = buildCtx(appId, emitter, {
+  const ctx: any = buildCtx(appId, emitter, {
     body: {
       parameters: rest,
     },

@@ -1,15 +1,20 @@
-const scriptController = require("../../api/controllers/script")
-const { buildCtx } = require("./utils")
-const automationUtils = require("../automationUtils")
+import * as scriptController from "../../api/controllers/script"
+import { buildCtx } from "./utils"
+import automationUtils from "../automationUtils"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
-exports.definition = {
+export const definition: AutomationStep = {
   name: "JS Scripting",
   tagline: "Execute JavaScript Code",
   icon: "Code",
   description: "Run a piece of JavaScript code in your automation",
   type: "ACTION",
   internal: true,
-  stepId: "EXECUTE_SCRIPT",
+  stepId: AutomationActionStepId.EXECUTE_SCRIPT,
   inputs: {},
   schema: {
     inputs: {
@@ -38,7 +43,12 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, appId, context, emitter }) {
+export async function run({
+  inputs,
+  appId,
+  context,
+  emitter,
+}: AutomationStepInput) {
   if (inputs.code == null) {
     return {
       success: false,
@@ -48,7 +58,7 @@ exports.run = async function ({ inputs, appId, context, emitter }) {
     }
   }
 
-  const ctx = buildCtx(appId, emitter, {
+  const ctx: any = buildCtx(appId, emitter, {
     body: {
       script: inputs.code,
       context,

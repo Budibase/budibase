@@ -1,22 +1,26 @@
-const sendSmtpEmail = require("./steps/sendSmtpEmail")
-const createRow = require("./steps/createRow")
-const updateRow = require("./steps/updateRow")
-const deleteRow = require("./steps/deleteRow")
-const executeScript = require("./steps/executeScript")
-const executeQuery = require("./steps/executeQuery")
-const outgoingWebhook = require("./steps/outgoingWebhook")
-const serverLog = require("./steps/serverLog")
-const discord = require("./steps/discord")
-const slack = require("./steps/slack")
-const zapier = require("./steps/zapier")
-const integromat = require("./steps/integromat")
-let filter = require("./steps/filter")
-let delay = require("./steps/delay")
-let queryRow = require("./steps/queryRows")
-let loop = require("./steps/loop")
-const env = require("../environment")
+import * as sendSmtpEmail from "./steps/sendSmtpEmail"
+import * as createRow from "./steps/createRow"
+import * as updateRow from "./steps/updateRow"
+import * as deleteRow from "./steps/deleteRow"
+import * as executeScript from "./steps/executeScript"
+import * as executeQuery from "./steps/executeQuery"
+import * as outgoingWebhook from "./steps/outgoingWebhook"
+import * as serverLog from "./steps/serverLog"
+import * as discord from "./steps/discord"
+import * as slack from "./steps/slack"
+import * as zapier from "./steps/zapier"
+import * as integromat from "./steps/integromat"
+import * as filter from "./steps/filter"
+import * as delay from "./steps/delay"
+import * as queryRow from "./steps/queryRows"
+import * as loop from "./steps/loop"
+import env from "../environment"
+import { AutomationStep, AutomationStepInput } from "@budibase/types"
 
-const ACTION_IMPLS = {
+const ACTION_IMPLS: Record<
+  string,
+  (opts: AutomationStepInput) => Promise<any>
+> = {
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
   CREATE_ROW: createRow.run,
   UPDATE_ROW: updateRow.run,
@@ -28,14 +32,13 @@ const ACTION_IMPLS = {
   DELAY: delay.run,
   FILTER: filter.run,
   QUERY_ROWS: queryRow.run,
-  LOOP: loop.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
   zapier: zapier.run,
   integromat: integromat.run,
 }
-const ACTION_DEFINITIONS = {
+export const ACTION_DEFINITIONS: Record<string, AutomationStep> = {
   SEND_EMAIL_SMTP: sendSmtpEmail.definition,
   CREATE_ROW: createRow.definition,
   UPDATE_ROW: updateRow.definition,
@@ -60,15 +63,15 @@ const ACTION_DEFINITIONS = {
 // ran at all
 if (env.SELF_HOSTED) {
   const bash = require("./steps/bash")
+  // @ts-ignore
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
+  // @ts-ignore
   ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
 }
 
 /* istanbul ignore next */
-exports.getAction = async function (actionName) {
+export async function getAction(actionName: string) {
   if (ACTION_IMPLS[actionName] != null) {
     return ACTION_IMPLS[actionName]
   }
 }
-
-exports.ACTION_DEFINITIONS = ACTION_DEFINITIONS

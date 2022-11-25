@@ -1,13 +1,18 @@
-const fetch = require("node-fetch")
-const { getFetchResponse } = require("./utils")
-const automationUtils = require("../automationUtils")
+import fetch from "node-fetch"
+import { getFetchResponse } from "./utils"
+import automationUtils from "../automationUtils"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
-const RequestType = {
-  POST: "POST",
-  GET: "GET",
-  PUT: "PUT",
-  DELETE: "DELETE",
-  PATCH: "PATCH",
+enum RequestType {
+  POST = "POST",
+  GET = "GET",
+  PUT = "PUT",
+  DELETE = "DELETE",
+  PATCH = "PATCH",
 }
 
 const BODY_REQUESTS = [RequestType.POST, RequestType.PUT, RequestType.PATCH]
@@ -16,7 +21,7 @@ const BODY_REQUESTS = [RequestType.POST, RequestType.PUT, RequestType.PATCH]
  * NOTE: this functionality is deprecated - it no longer should be used.
  */
 
-exports.definition = {
+export const definition: AutomationStep = {
   deprecated: true,
   name: "Outgoing webhook",
   tagline: "Send a {{inputs.requestMethod}} request",
@@ -24,7 +29,7 @@ exports.definition = {
   description: "Send a request of specified method to a URL",
   type: "ACTION",
   internal: true,
-  stepId: "OUTGOING_WEBHOOK",
+  stepId: AutomationActionStepId.OUTGOING_WEBHOOK,
   inputs: {
     requestMethod: "POST",
     url: "http://",
@@ -76,12 +81,12 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs }) {
+export async function run({ inputs }: AutomationStepInput) {
   let { requestMethod, url, requestBody, headers } = inputs
   if (!url.startsWith("http")) {
     url = `http://${url}`
   }
-  const request = {
+  const request: any = {
     method: requestMethod,
   }
   if (headers) {

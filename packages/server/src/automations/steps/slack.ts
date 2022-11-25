@@ -1,12 +1,17 @@
-const fetch = require("node-fetch")
-const { getFetchResponse } = require("./utils")
+import fetch from "node-fetch"
+import { getFetchResponse } from "./utils"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
-exports.definition = {
+export const definition: AutomationStep = {
   name: "Slack Message",
   tagline: "Send a message to Slack",
   description: "Send a message to Slack",
   icon: "ri-slack-line",
-  stepId: "slack",
+  stepId: AutomationActionStepId.slack,
   type: "ACTION",
   internal: false,
   inputs: {},
@@ -43,7 +48,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs }) {
+export async function run({ inputs }: AutomationStepInput) {
   let { url, text } = inputs
   const response = await fetch(url, {
     method: "post",

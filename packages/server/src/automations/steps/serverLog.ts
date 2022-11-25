@@ -1,17 +1,23 @@
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
+
 /**
  * Note, there is some functionality in this that is not currently exposed as it
  * is complex and maybe better to be opinionated here.
  * GET/DELETE requests cannot handle body elements so they will not be sent if configured.
  */
 
-exports.definition = {
+export const definition: AutomationStep = {
   name: "Backend log",
   tagline: "Console log a value in the backend",
   icon: "Monitoring",
   description: "Logs the given text to the server (using console.log)",
   type: "ACTION",
   internal: true,
-  stepId: "SERVER_LOG",
+  stepId: AutomationActionStepId.SERVER_LOG,
   inputs: {
     text: "",
   },
@@ -41,7 +47,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, appId }) {
+export async function run({ inputs, appId }: AutomationStepInput) {
   const message = `App ${appId} - ${inputs.text}`
   console.log(message)
   return {

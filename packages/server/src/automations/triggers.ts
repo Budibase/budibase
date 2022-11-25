@@ -1,16 +1,17 @@
-const emitter = require("../events/index")
-const { getAutomationParams } = require("../db/utils")
-const { coerce } = require("../utilities/rowProcessor")
-const { definitions } = require("./triggerInfo")
-const { isDevAppID } = require("../db/utils")
+import emitter from "../events/index"
+import { getAutomationParams } from "../db/utils"
+import { coerce } from "../utilities/rowProcessor"
+import { definitions } from "./triggerInfo"
+import { isDevAppID } from "../db/utils"
 // need this to call directly, so we can get a response
-const { automationQueue } = require("./bullboard")
-const { checkTestFlag } = require("../utilities/redis")
-const utils = require("./utils")
-const env = require("../environment")
-const { context, db: dbCore } = require("@budibase/backend-core")
+import { automationQueue } from "./bullboard"
+import { checkTestFlag } from "../utilities/redis"
+import * as utils from "./utils"
+import env from "../environment"
+import { context, db as dbCore } from "@budibase/backend-core"
+import { Automation, Row } from "@budibase/types"
 
-const TRIGGER_DEFINITIONS = definitions
+export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
   removeOnComplete: true,
   removeOnFail: true,
@@ -24,12 +25,15 @@ async function getAllAutomations() {
   return automations.rows.map(row => row.doc)
 }
 
-async function queueRelevantRowAutomations(event, eventType) {
+async function queueRelevantRowAutomations(
+  event: { appId: string; row: Row },
+  eventType: string
+) {
   if (event.appId == null) {
     throw `No appId specified for ${eventType} - check event emitters.`
   }
 
-  context.doInAppContext(event.appId, async () => {
+  await context.doInAppContext(event.appId, async () => {
     let automations = await getAllAutomations()
 
     // filter down to the correct event type
@@ -85,20 +89,20 @@ emitter.on("row:delete", async function (event) {
   await queueRelevantRowAutomations(event, "row:delete")
 })
 
-exports.externalTrigger = async function (
-  automation,
-  params,
-  { getResponses } = {}
+export async function externalTrigger(
+  automation: Automation,
+  params: { fields: Record<string, any> },
+  { getResponses }: { getResponses?: boolean } = {}
 ) {
   if (
     automation.definition != null &&
     automation.definition.trigger != null &&
     automation.definition.trigger.stepId === definitions.APP.stepId &&
     automation.definition.trigger.stepId === "APP" &&
-    !(await checkTestFlag(automation._id))
+    !(await checkTestFlag(automation._id!))
   ) {
     // values are likely to be submitted as strings, so we shall convert to correct type
-    const coercedFields = {}
+    const coercedFields: any = {}
     const fields = automation.definition.trigger.inputs.fields
     for (let key of Object.keys(fields || {})) {
       coercedFields[key] = coerce(params.fields[key], fields[key])
@@ -113,7 +117,7 @@ exports.externalTrigger = async function (
   }
 }
 
-exports.rebootTrigger = async () => {
+export async function rebootTrigger() {
   // reboot cron option is only available on the main thread at
   // startup and only usable in self host and single tenant environments
   if (env.isInThread() || !env.SELF_HOSTED || env.MULTI_TENANCY) {
@@ -121,7 +125,10 @@ exports.rebootTrigger = async () => {
   }
   // iterate through all production apps, find the reboot crons
   // and trigger events for them
-  const appIds = await dbCore.getAllApps({ dev: false, idsOnly: true })
+  const appIds = (await dbCore.getAllApps({
+    dev: false,
+    idsOnly: true,
+  })) as string[]
   for (let prodAppId of appIds) {
     await context.doInAppContext(prodAppId, async () => {
       let automations = await getAllAutomations()
@@ -142,5 +149,3 @@ exports.rebootTrigger = async () => {
     })
   }
 }
-
-exports.TRIGGER_DEFINITIONS = TRIGGER_DEFINITIONS

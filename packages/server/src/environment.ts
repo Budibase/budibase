@@ -1,4 +1,4 @@
-const { join } = require("path")
+import { join } from "path"
 
 function isTest() {
   return isCypress() || isJest()
@@ -28,7 +28,7 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
-function parseIntSafe(number) {
+function parseIntSafe(number?: string) {
   if (number) {
     return parseInt(number)
   }
@@ -36,7 +36,7 @@ function parseIntSafe(number) {
 
 let inThread = false
 
-module.exports = {
+const environment = {
   // important - prefer app port to generic port
   PORT: process.env.APP_PORT || process.env.PORT,
   JWT_SECRET: process.env.JWT_SECRET,
@@ -86,7 +86,7 @@ module.exports = {
   SELF_HOSTED: process.env.SELF_HOSTED,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
-  _set(key, value) {
+  _set(key: string, value: any) {
     process.env[key] = value
     module.exports[key] = value
   },
@@ -108,13 +108,16 @@ module.exports = {
 
 // threading can cause memory issues with node-ts in development
 if (isDev() && module.exports.DISABLE_THREADING == null) {
-  module.exports._set("DISABLE_THREADING", "1")
+  environment._set("DISABLE_THREADING", "1")
 }
 
 // clean up any environment variable edge cases
 for (let [key, value] of Object.entries(module.exports)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
-    module.exports[key] = 0
+    // @ts-ignore
+    environment[key] = 0
   }
 }
+
+export = environment

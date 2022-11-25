@@ -1,10 +1,12 @@
-exports.definition = {
-  name: "Row Updated",
-  event: "row:update",
-  icon: "Refresh",
-  tagline: "Row is updated in {{inputs.enriched.table.name}}",
-  description: "Fired when a row is updated in your database",
-  stepId: "ROW_UPDATED",
+import { AutomationTrigger, AutomationTriggerStepId } from "@budibase/types"
+
+export const definition: AutomationTrigger = {
+  name: "Row Created",
+  event: "row:save",
+  icon: "TableRowAddBottom",
+  tagline: "Row is added to {{inputs.enriched.table.name}}",
+  description: "Fired when a row is added to your database",
+  stepId: AutomationTriggerStepId.ROW_SAVED,
   inputs: {},
   schema: {
     inputs: {
@@ -22,7 +24,7 @@ exports.definition = {
         row: {
           type: "object",
           customType: "row",
-          description: "The row that was updated",
+          description: "The new row that was created",
         },
         id: {
           type: "string",

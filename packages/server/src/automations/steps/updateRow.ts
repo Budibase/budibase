@@ -1,15 +1,20 @@
-const rowController = require("../../api/controllers/row")
-const automationUtils = require("../automationUtils")
-const { buildCtx } = require("./utils")
+import * as rowController from "../../api/controllers/row"
+import automationUtils from "../automationUtils"
+import { buildCtx } from "./utils"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
-exports.definition = {
+export const definition: AutomationStep = {
   name: "Update Row",
   tagline: "Update a {{inputs.enriched.table.name}} row",
   icon: "Refresh",
   description: "Update a row in your database",
   type: "ACTION",
   internal: true,
-  stepId: "UPDATE_ROW",
+  stepId: AutomationActionStepId.UPDATE_ROW,
   inputs: {},
   schema: {
     inputs: {
@@ -55,7 +60,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, appId, emitter }) {
+export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   if (inputs.rowId == null || inputs.row == null) {
     return {
       success: false,
@@ -74,7 +79,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
   }
 
   // have to clean up the row, remove the table from it
-  const ctx = buildCtx(appId, emitter, {
+  const ctx: any = buildCtx(appId, emitter, {
     body: {
       ...inputs.row,
       _id: inputs.rowId,
