@@ -7,7 +7,7 @@ function getNewQuotaReset() {
   return Date.now() + 2592000000
 }
 
-function resetQuotasIfRequired(quota) {
+function resetQuotasIfRequired(quota: { quotaReset: number; usageQuota: any }) {
   // Check if the quota needs reset
   if (Date.now() >= quota.quotaReset) {
     quota.quotaReset = getNewQuotaReset()

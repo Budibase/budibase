@@ -1,4 +1,4 @@
-exports.employeeImport = [
+export const employeeImport = [
   {
     "First Name": "Julie",
     "Last Name": "Jimenez",

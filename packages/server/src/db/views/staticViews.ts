@@ -1,5 +1,6 @@
-const { context } = require("@budibase/backend-core")
-const { DocumentType, SEPARATOR, ViewName, SearchIndexes } = require("../utils")
+import { context } from "@budibase/backend-core"
+import { DocumentType, SEPARATOR, ViewName, SearchIndexes } from "../utils"
+import { LinkDocument, Row } from "@budibase/types"
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 
 /**************************************************
@@ -19,16 +20,17 @@ const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
  * @returns {Promise<void>} The view now exists, please note that the next view of this query will actually build it,
  * so it may be slow.
  */
-exports.createLinkView = async () => {
+export async function createLinkView() {
   const db = context.getAppDB()
   const designDoc = await db.get("_design/database")
   const view = {
-    map: function (doc) {
+    map: function (doc: LinkDocument) {
       // everything in this must remain constant as its going to Pouch, no external variables
       if (doc.type === "link") {
         let doc1 = doc.doc1
         let doc2 = doc.doc2
         // eslint-disable-next-line no-undef
+        // @ts-ignore
         emit([doc1.tableId, doc1.rowId], {
           id: doc2.rowId,
           thisId: doc1.rowId,
@@ -37,6 +39,7 @@ exports.createLinkView = async () => {
         // if linking to same table can't emit twice
         if (doc1.tableId !== doc2.tableId) {
           // eslint-disable-next-line no-undef
+          // @ts-ignore
           emit([doc2.tableId, doc2.rowId], {
             id: doc1.rowId,
             thisId: doc2.rowId,
@@ -53,7 +56,7 @@ exports.createLinkView = async () => {
   await db.put(designDoc)
 }
 
-exports.createRoutingView = async () => {
+export async function createRoutingView() {
   const db = context.getAppDB()
   const designDoc = await db.get("_design/database")
   const view = {
@@ -74,7 +77,7 @@ exports.createRoutingView = async () => {
   await db.put(designDoc)
 }
 
-async function searchIndex(indexName, fnString) {
+async function searchIndex(indexName: string, fnString: string) {
   const db = context.getAppDB()
   const designDoc = await db.get("_design/database")
   designDoc.indexes = {
@@ -86,11 +89,11 @@ async function searchIndex(indexName, fnString) {
   await db.put(designDoc)
 }
 
-exports.createAllSearchIndex = async () => {
+export async function createAllSearchIndex() {
   await searchIndex(
     SearchIndexes.ROWS,
-    function (doc) {
-      function idx(input, prev) {
+    function (doc: Row) {
+      function idx(input: Row, prev?: string) {
         for (let key of Object.keys(input)) {
           let idxKey = prev != null ? `${prev}.${key}` : key
           idxKey = idxKey.replace(/ /g, "_")
@@ -98,6 +101,7 @@ exports.createAllSearchIndex = async () => {
             for (let val of input[key]) {
               if (typeof val !== "object") {
                 // eslint-disable-next-line no-undef
+                // @ts-ignore
                 index(idxKey, val, { store: true })
               }
             }
@@ -106,17 +110,20 @@ exports.createAllSearchIndex = async () => {
           }
           if (typeof input[key] === "string") {
             // eslint-disable-next-line no-undef
+            // @ts-ignore
             index(idxKey, input[key].toLowerCase(), { store: true })
           } else if (typeof input[key] !== "object") {
             // eslint-disable-next-line no-undef
+            // @ts-ignore
             index(idxKey, input[key], { store: true })
           } else {
             idx(input[key], idxKey)
           }
         }
       }
-      if (doc._id.startsWith("ro_")) {
+      if (doc._id!.startsWith("ro_")) {
         // eslint-disable-next-line no-undef
+        // @ts-ignore
         index("default", doc._id)
         idx(doc)
       }

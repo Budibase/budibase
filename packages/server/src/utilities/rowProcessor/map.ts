@@ -1,4 +1,5 @@
-const { FieldTypes } = require("../../constants")
+// @ts-nocheck
+import { FieldTypes } from "../../constants"
 
 /**
  * A map of how we convert various properties in rows to each other based on the row type.

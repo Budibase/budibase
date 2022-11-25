@@ -1,26 +1,17 @@
-const { budibaseTempDir } = require("../budibaseDir")
-const fs = require("fs")
-const { join } = require("path")
+import { budibaseTempDir } from "../budibaseDir"
+import fs from "fs"
+import { join } from "path"
+import { context, objectStore } from "@budibase/backend-core"
+import { ObjectStoreBuckets } from "../../constants"
+import { updateClientLibrary } from "./clientLibrary"
+import { checkSlashesInUrl } from "../"
+import env from "../../environment"
+import fetch from "node-fetch"
 const uuid = require("uuid/v4")
-const { context, objectStore } = require("@budibase/backend-core")
-const { ObjectStoreBuckets } = require("../../constants")
-const { updateClientLibrary } = require("./clientLibrary")
-const { checkSlashesInUrl } = require("../")
-const env = require("../../environment")
 const tar = require("tar")
-const fetch = require("node-fetch")
-const {
-  upload,
-  retrieve,
-  retrieveToTmp,
-  deleteFolder,
-  downloadTarball,
-  downloadTarballDirect,
-  deleteFiles,
-} = objectStore
 
-const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
-const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
+export const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
+export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 
 /**
@@ -34,14 +25,14 @@ const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 /**
  * Upon first startup of instance there may not be everything we need in tmp directory, set it up.
  */
-exports.init = () => {
+export function init() {
   const tempDir = budibaseTempDir()
   if (!fs.existsSync(tempDir)) {
     // some test cases fire this quickly enough that
     // synchronous cases can end up here at the same time
     try {
       fs.mkdirSync(tempDir)
-    } catch (err) {
+    } catch (err: any) {
       if (!err || err.code !== "EEXIST") {
         throw err
       }
@@ -81,7 +72,7 @@ exports.checkDevelopmentEnvironment = () => {
  * @param {string} path The path to the handlebars file which is to be loaded.
  * @returns {string} The loaded handlebars file as a string - loaded as utf8.
  */
-exports.loadHandlebarsFile = path => {
+export function loadHandlebarsFile(path: string) {
   return fs.readFileSync(path, "utf8")
 }
 
@@ -91,13 +82,13 @@ exports.loadHandlebarsFile = path => {
  * @param {string} contents the contents of the file which is to be returned from the API.
  * @return {Object} the read stream which can be put into the koa context body.
  */
-exports.apiFileReturn = contents => {
+export function apiFileReturn(contents: string) {
   const path = join(budibaseTempDir(), uuid())
   fs.writeFileSync(path, contents)
   return fs.createReadStream(path)
 }
 
-exports.streamFile = path => {
+export function streamFile(path: string) {
   return fs.createReadStream(path)
 }
 
@@ -106,7 +97,7 @@ exports.streamFile = path => {
  * @param {string} fileContents contents which will be written to a temp file.
  * @return {string} the path to the temp file.
  */
-exports.storeTempFile = fileContents => {
+export function storeTempFile(fileContents: string) {
   const path = join(budibaseTempDir(), uuid())
   fs.writeFileSync(path, fileContents)
   return path
@@ -116,7 +107,7 @@ exports.storeTempFile = fileContents => {
  * Utility function for getting a file read stream - a simple in memory buffered read
  * stream doesn't work for pouchdb.
  */
-exports.stringToFileStream = contents => {
+export function stringToFileStream(contents: string) {
   const path = exports.storeTempFile(contents)
   return fs.createReadStream(path)
 }
@@ -125,7 +116,7 @@ exports.stringToFileStream = contents => {
  * Creates a temp file and returns it from the API.
  * @param {string} fileContents the contents to be returned in file.
  */
-exports.sendTempFile = fileContents => {
+export function sendTempFile(fileContents: string) {
   const path = exports.storeTempFile(fileContents)
   return fs.createReadStream(path)
 }
@@ -135,7 +126,7 @@ exports.sendTempFile = fileContents => {
  * @param {string} appId The ID of the app which is being created.
  * @return {Promise<void>} once promise completes app resources should be ready in object store.
  */
-exports.createApp = async appId => {
+export async function createApp(appId: string) {
   await updateClientLibrary(appId)
 }
 
@@ -144,8 +135,8 @@ exports.createApp = async appId => {
  * @param {string} appId The ID of the app which is being deleted.
  * @return {Promise<void>} once promise completes the app resources will be removed from object store.
  */
-exports.deleteApp = async appId => {
-  await deleteFolder(ObjectStoreBuckets.APPS, `${appId}/`)
+export async function deleteApp(appId: string) {
+  await objectStore.deleteFolder(ObjectStoreBuckets.APPS, `${appId}/`)
 }
 
 /**
@@ -154,17 +145,21 @@ exports.deleteApp = async appId => {
  * @param name
  * @return {Promise<*>}
  */
-exports.downloadTemplate = async (type, name) => {
+export async function downloadTemplate(type: string, name: string) {
   const DEFAULT_TEMPLATES_BUCKET =
     "prod-budi-templates.s3-eu-west-1.amazonaws.com"
   const templateUrl = `https://${DEFAULT_TEMPLATES_BUCKET}/templates/${type}/${name}.tar.gz`
-  return downloadTarball(templateUrl, ObjectStoreBuckets.TEMPLATES, type)
+  return objectStore.downloadTarball(
+    templateUrl,
+    ObjectStoreBuckets.TEMPLATES,
+    type
+  )
 }
 
 /**
  * Retrieves component libraries from object store (or tmp symlink if in local)
  */
-exports.getComponentLibraryManifest = async library => {
+export async function getComponentLibraryManifest(library: string) {
   const appId = context.getAppId()
   const filename = "manifest.json"
   /* istanbul ignore next */
@@ -182,12 +177,16 @@ exports.getComponentLibraryManifest = async library => {
     return require(path)
   }
 
+  if (!appId) {
+    throw new Error("No app ID found - cannot get component libraries")
+  }
+
   let resp
   let path
   try {
     // Try to load the manifest from the new file location
     path = join(appId, filename)
-    resp = await retrieve(ObjectStoreBuckets.APPS, path)
+    resp = await objectStore.retrieve(ObjectStoreBuckets.APPS, path)
   } catch (error) {
     console.error(
       `component-manifest-objectstore=failed appId=${appId} path=${path}`,
@@ -195,7 +194,7 @@ exports.getComponentLibraryManifest = async library => {
     )
     // Fallback to loading it from the old location for old apps
     path = join(appId, "node_modules", library, "package", filename)
-    resp = await retrieve(ObjectStoreBuckets.APPS, path)
+    resp = await objectStore.retrieve(ObjectStoreBuckets.APPS, path)
   }
   if (typeof resp !== "string") {
     resp = resp.toString("utf8")
@@ -207,14 +206,17 @@ exports.getComponentLibraryManifest = async library => {
  * All file reads come through here just to make sure all of them make sense
  * allows a centralised location to check logic is all good.
  */
-exports.readFileSync = (filepath, options = "utf8") => {
-  return fs.readFileSync(filepath, options)
+export function readFileSync(
+  filepath: string,
+  options: BufferEncoding = "utf8"
+) {
+  return fs.readFileSync(filepath, { encoding: options })
 }
 
 /**
  * Given a set of app IDs makes sure file system is cleared of any of their temp info.
  */
-exports.cleanup = appIds => {
+export function cleanup(appIds: string[]) {
   for (let appId of appIds) {
     const path = join(budibaseTempDir(), appId)
     if (fs.existsSync(path)) {
@@ -223,7 +225,7 @@ exports.cleanup = appIds => {
   }
 }
 
-const createTempFolder = item => {
+export function createTempFolder(item: string) {
   const path = join(budibaseTempDir(), item)
   try {
     // remove old tmp directories automatically - don't combine
@@ -231,24 +233,22 @@ const createTempFolder = item => {
       fs.rmSync(path, { recursive: true, force: true })
     }
     fs.mkdirSync(path)
-  } catch (err) {
+  } catch (err: any) {
     throw new Error(`Path cannot be created: ${err.message}`)
   }
 
   return path
 }
-exports.createTempFolder = createTempFolder
 
-const extractTarball = async (fromFilePath, toPath) => {
+export async function extractTarball(fromFilePath: string, toPath: string) {
   await tar.extract({
     file: fromFilePath,
     C: toPath,
   })
 }
-exports.extractTarball = extractTarball
 
-const getPluginMetadata = async path => {
-  let metadata = {}
+export async function getPluginMetadata(path: string) {
+  let metadata: { schema?: any; package?: any } = {}
   try {
     const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
     const schema = fs.readFileSync(join(path, "schema.json"), "utf8")
@@ -265,7 +265,7 @@ const getPluginMetadata = async path => {
         "package.json is missing one of 'name', 'version' or 'description'."
       )
     }
-  } catch (err) {
+  } catch (err: any) {
     throw new Error(
       `Unable to process schema.json/package.json in plugin. ${err.message}`
     )
@@ -273,9 +273,12 @@ const getPluginMetadata = async path => {
 
   return { metadata, directory: path }
 }
-exports.getPluginMetadata = getPluginMetadata
 
-exports.getDatasourcePlugin = async (name, url, hash) => {
+export async function getDatasourcePlugin(
+  name: string,
+  url: string,
+  hash: string
+) {
   if (!fs.existsSync(DATASOURCE_PATH)) {
     fs.mkdirSync(DATASOURCE_PATH)
   }
@@ -311,7 +314,7 @@ exports.getDatasourcePlugin = async (name, url, hash) => {
 /**
  * Find for a file recursively from start path applying filter, return first match
  */
-exports.findFileRec = (startPath, filter) => {
+export function findFileRec(startPath: string, filter: any) {
   if (!fs.existsSync(startPath)) {
     return
   }
@@ -332,21 +335,10 @@ exports.findFileRec = (startPath, filter) => {
 /**
  * Remove a folder which is not empty from the file system
  */
-exports.deleteFolderFileSystem = path => {
+export function deleteFolderFileSystem(path: string) {
   if (!fs.existsSync(path)) {
     return
   }
 
   fs.rmSync(path, { recursive: true, force: true })
 }
-
-/**
- * Full function definition for below can be found in the utilities.
- */
-exports.upload = upload
-exports.retrieve = retrieve
-exports.retrieveToTmp = retrieveToTmp
-exports.deleteFiles = deleteFiles
-exports.downloadTarballDirect = downloadTarballDirect
-exports.TOP_LEVEL_PATH = TOP_LEVEL_PATH
-exports.NODE_MODULES_PATH = NODE_MODULES_PATH

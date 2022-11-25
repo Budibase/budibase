@@ -14,7 +14,6 @@ const {
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const { clientLibraryPath } = require("../../../utilities")
-const { upload, deleteFiles } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentType } = require("../../../db/utils")
 const { context, objectStore, utils } = require("@budibase/backend-core")
@@ -22,7 +21,7 @@ const AWS = require("aws-sdk")
 const fs = require("fs")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
-  const response = await upload({
+  const response = await objectStore.upload({
     bucket,
     metadata,
     filename: s3Key,
@@ -95,7 +94,10 @@ export const uploadFile = async function (ctx: any) {
 }
 
 export const deleteObjects = async function (ctx: any) {
-  ctx.body = await deleteFiles(ObjectStoreBuckets.APPS, ctx.request.body.keys)
+  ctx.body = await objectStore.deleteFiles(
+    ObjectStoreBuckets.APPS,
+    ctx.request.body.keys
+  )
 }
 
 export const serveApp = async function (ctx: any) {

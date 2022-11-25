@@ -1,4 +1,4 @@
-exports.inventoryImport = [
+export const inventoryImport = [
   {
     Status: ["Available"],
     "Item Name": "Little Blue Van",

@@ -1,5 +1,6 @@
-const EventEmitter = require("events").EventEmitter
-const { rowEmission, tableEmission } = require("./utils")
+import { EventEmitter } from "events"
+import { rowEmission, tableEmission } from "./utils"
+import { Table, Row } from "@budibase/types"
 
 /**
  * keeping event emitter in one central location as it might be used for things other than
@@ -12,19 +13,17 @@ const { rowEmission, tableEmission } = require("./utils")
  * This is specifically quite important for template strings used in automations.
  */
 class BudibaseEmitter extends EventEmitter {
-  emitRow(eventName, appId, row, table = null) {
+  emitRow(eventName: string, appId: string, row: Row, table?: Table) {
     rowEmission({ emitter: this, eventName, appId, row, table })
   }
 
-  emitTable(eventName, appId, table = null) {
+  emitTable(eventName: string, appId: string, table?: Table) {
     tableEmission({ emitter: this, eventName, appId, table })
   }
 
-  emitPort(portNumber) {
+  emitPort(portNumber: number) {
     this.emit("internal:port", portNumber)
   }
 }
 
-const emitter = new BudibaseEmitter()
-
-module.exports = emitter
+export = BudibaseEmitter

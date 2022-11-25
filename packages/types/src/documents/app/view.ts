@@ -5,6 +5,9 @@ export interface View {
   filters: ViewFilter[]
   schema: ViewSchema
   calculation?: ViewCalculation
+  map?: string
+  reduce?: any
+  meta?: Record<string, any>
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
