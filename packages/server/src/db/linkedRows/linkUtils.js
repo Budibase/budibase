@@ -2,7 +2,7 @@ const Sentry = require("@sentry/node")
 const { ViewName, getQueryIndex } = require("../utils")
 const { FieldTypes } = require("../../constants")
 const { createLinkView } = require("../views/staticViews")
-const { getAppDB } = require("@budibase/backend-core/context")
+const { context } = require("@budibase/backend-core")
 
 /**
  * Only needed so that boolean parameters are being used for includeDocs
@@ -30,7 +30,7 @@ exports.createLinkView = createLinkView
  */
 exports.getLinkDocuments = async function (args) {
   const { tableId, rowId, includeDocs } = args
-  const db = getAppDB()
+  const db = context.getAppDB()
   let params
   if (rowId != null) {
     params = { key: [tableId, rowId] }
@@ -89,7 +89,7 @@ exports.getLinkedTableIDs = table => {
 }
 
 exports.getLinkedTable = async (id, tables) => {
-  const db = getAppDB()
+  const db = context.getAppDB()
   let linkedTable = tables.find(table => table._id === id)
   if (linkedTable) {
     return linkedTable

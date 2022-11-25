@@ -1,12 +1,8 @@
-import { db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, objectStore } from "@budibase/backend-core"
 import { Database } from "@budibase/types"
 import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
-import {
-  upload,
-  uploadDirectory,
-} from "../../../utilities/fileSystem/utilities"
 import { downloadTemplate } from "../../../utilities/fileSystem"
 import { FieldTypes, ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
@@ -174,11 +170,11 @@ export async function importApp(
         filename = join(prodAppId, filename)
         if (fs.lstatSync(path).isDirectory()) {
           promises.push(
-            uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
+            objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
           )
         } else {
           promises.push(
-            upload({
+            objectStore.upload({
               bucket: ObjectStoreBuckets.APPS,
               path,
               filename,
