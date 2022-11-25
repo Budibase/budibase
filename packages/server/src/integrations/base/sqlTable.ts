@@ -185,7 +185,7 @@ class SqlTableQueryBuilder {
           json.table,
           json.meta.tables,
           json.meta.table,
-          json.meta.renamed
+          json.meta.renamed!
         )
         break
       case Operation.DELETE_TABLE:

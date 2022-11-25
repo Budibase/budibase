@@ -285,7 +285,7 @@
     "editable": true,
     "size": {
       "width": 105,
-      "height": 35
+      "height": 32
     },
     "settings": [
       {
@@ -684,7 +684,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 30
+      "height": 24
     },
     "settings": [
       {
@@ -809,7 +809,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 40
+      "height": 32
     },
     "settings": [
       {
@@ -2448,6 +2448,7 @@
     ]
   },
   "stringfield": {
+    "skeleton": false,
     "name": "Text Field",
     "icon": "Text",
     "styles": [
@@ -2456,7 +2457,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 32
     },
     "settings": [
       {
@@ -2539,6 +2540,7 @@
     ]
   },
   "numberfield": {
+    "skeleton": false,
     "name": "Number Field",
     "icon": "123",
     "styles": [
@@ -2653,6 +2655,7 @@
     ]
   },
   "optionsfield": {
+    "skeleton": false,
     "name": "Options Picker",
     "icon": "Menu",
     "styles": [
@@ -2821,6 +2824,7 @@
     ]
   },
   "multifieldselect": {
+    "skeleton": false,
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": [
@@ -2983,12 +2987,13 @@
     ]
   },
   "booleanfield": {
+    "skeleton": false,
     "name": "Checkbox",
     "icon": "SelectBox",
     "editable": true,
     "size": {
-      "width": 400,
-      "height": 50
+      "width": 20,
+      "height": 20
     },
     "settings": [
       {
@@ -3140,6 +3145,7 @@
     ]
   },
   "datetimefield": {
+    "skeleton": false,
     "name": "Date Picker",
     "icon": "Date",
     "styles": [
@@ -3221,6 +3227,7 @@
     ]
   },
   "codescanner": {
+    "skeleton": false,
     "name": "Barcode/QR Scanner",
     "icon": "Camera",
     "styles": [
@@ -3386,6 +3393,7 @@
     ]
   },
   "attachmentfield": {
+    "skeleton": false,
     "name": "Attachment",
     "icon": "Attach",
     "styles": [
@@ -3444,6 +3452,7 @@
     ]
   },
   "relationshipfield": {
+    "skeleton": false,
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": [
@@ -3507,6 +3516,7 @@
     ]
   },
   "jsonfield": {
+    "skeleton": false,
     "name": "JSON Field",
     "icon": "Brackets",
     "styles": [
@@ -3708,6 +3718,7 @@
     }
   },
   "table": {
+    "skeleton": false,
     "name": "Table",
     "icon": "Table",
     "illegalChildren": [

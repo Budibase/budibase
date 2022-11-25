@@ -1,10 +1,5 @@
 import { BuiltinPermissionID, PermissionLevel } from "./permissions"
-import {
-  generateRoleID,
-  getRoleParams,
-  DocumentType,
-  SEPARATOR,
-} from "../db/utils"
+import { generateRoleID, getRoleParams, DocumentType, SEPARATOR } from "../db"
 import { getAppDB } from "../context"
 import { doWithDB } from "../db"
 import { Screen, Role as RoleDoc } from "@budibase/types"
@@ -30,20 +25,18 @@ const EXTERNAL_BUILTIN_ROLE_IDS = [
   BUILTIN_IDS.PUBLIC,
 ]
 
-export class Role {
+export class Role implements RoleDoc {
   _id: string
+  _rev?: string
   name: string
-  permissionId?: string
+  permissionId: string
   inherits?: string
+  permissions = {}
 
-  constructor(id: string, name: string) {
+  constructor(id: string, name: string, permissionId: string) {
     this._id = id
     this.name = name
-  }
-
-  addPermission(permissionId: string) {
     this.permissionId = permissionId
-    return this
   }
 
   addInheritance(inherits: string) {
@@ -53,24 +46,26 @@ export class Role {
 }
 
 const BUILTIN_ROLES = {
-  ADMIN: new Role(BUILTIN_IDS.ADMIN, "Admin")
-    .addPermission(BuiltinPermissionID.ADMIN)
-    .addInheritance(BUILTIN_IDS.POWER),
-  POWER: new Role(BUILTIN_IDS.POWER, "Power")
-    .addPermission(BuiltinPermissionID.POWER)
-    .addInheritance(BUILTIN_IDS.BASIC),
-  BASIC: new Role(BUILTIN_IDS.BASIC, "Basic")
-    .addPermission(BuiltinPermissionID.WRITE)
-    .addInheritance(BUILTIN_IDS.PUBLIC),
-  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public").addPermission(
-    BuiltinPermissionID.PUBLIC
-  ),
-  BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder").addPermission(
+  ADMIN: new Role(
+    BUILTIN_IDS.ADMIN,
+    "Admin",
     BuiltinPermissionID.ADMIN
-  ),
+  ).addInheritance(BUILTIN_IDS.POWER),
+  POWER: new Role(
+    BUILTIN_IDS.POWER,
+    "Power",
+    BuiltinPermissionID.POWER
+  ).addInheritance(BUILTIN_IDS.BASIC),
+  BASIC: new Role(
+    BUILTIN_IDS.BASIC,
+    "Basic",
+    BuiltinPermissionID.WRITE
+  ).addInheritance(BUILTIN_IDS.PUBLIC),
+  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public", BuiltinPermissionID.PUBLIC),
+  BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder", BuiltinPermissionID.ADMIN),
 }
 
-export function getBuiltinRoles() {
+export function getBuiltinRoles(): { [key: string]: RoleDoc } {
   return cloneDeep(BUILTIN_ROLES)
 }
 
@@ -104,7 +99,7 @@ export function builtinRoleToNumber(id?: string) {
     if (!role) {
       break
     }
-    role = builtins[role.inherits]
+    role = builtins[role.inherits!]
     count++
   } while (role !== null)
   return count
@@ -129,12 +124,12 @@ export async function roleToNumber(id?: string) {
 /**
  * Returns whichever builtin roleID is lower.
  */
-export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string) {
+export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
   if (!roleId1) {
-    return roleId2
+    return roleId2 as string
   }
   if (!roleId2) {
-    return roleId1
+    return roleId1 as string
   }
   return builtinRoleToNumber(roleId1) > builtinRoleToNumber(roleId2)
     ? roleId2

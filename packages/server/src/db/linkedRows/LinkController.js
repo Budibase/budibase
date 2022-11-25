@@ -2,12 +2,12 @@ const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 const { InternalTables, getUserMetadataParams } = require("../utils")
 const Sentry = require("@sentry/node")
 const { FieldTypes, RelationshipTypes } = require("../../constants")
-const { getAppDB } = require("@budibase/backend-core/context")
+const { context } = require("@budibase/backend-core")
 const LinkDocument = require("./LinkDocument")
 
 class LinkController {
   constructor({ tableId, row, table, oldTable }) {
-    this._db = getAppDB()
+    this._db = context.getAppDB()
     this._tableId = tableId
     this._row = row
     this._table = table

@@ -1,6 +1,4 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
-const { UserStatus } = require("@budibase/backend-core/constants")
-const { objectStore } = require("@budibase/backend-core")
+const { objectStore, roles, constants } = require("@budibase/backend-core")
 
 const FilterTypes = {
   STRING: "string",
@@ -139,7 +137,7 @@ exports.USERS_TABLE_SCHEMA = {
       constraints: {
         type: exports.FieldTypes.STRING,
         presence: false,
-        inclusion: Object.values(BUILTIN_ROLE_IDS),
+        inclusion: Object.values(roles.BUILTIN_ROLE_IDS),
       },
     },
     status: {
@@ -149,7 +147,7 @@ exports.USERS_TABLE_SCHEMA = {
       constraints: {
         type: exports.FieldTypes.STRING,
         presence: false,
-        inclusion: Object.values(UserStatus),
+        inclusion: Object.values(constants.UserStatus),
       },
     },
   },
