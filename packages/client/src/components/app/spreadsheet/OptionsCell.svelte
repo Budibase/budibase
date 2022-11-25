@@ -122,6 +122,7 @@
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
     max-height: 191px;
     overflow-y: auto;
+    z-index: 1;
   }
   .option {
     flex: 0 0 32px;
