@@ -260,6 +260,7 @@
     width: 100vw;
     height: 100vh;
     z-index: 999;
+    max-height: 100%;
   }
   :global(.flatpickr-calendar) {
     font-family: "Source Sans Pro", sans-serif;
