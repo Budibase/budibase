@@ -131,8 +131,11 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     background-color: var(--spectrum-global-color-gray-50);
+  }
+  .option:first-child {
+    flex: 0 0 31px;
   }
   .option:hover {
     background-color: var(--spectrum-global-color-gray-100);
