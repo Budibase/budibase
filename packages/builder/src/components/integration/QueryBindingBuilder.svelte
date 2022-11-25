@@ -1,5 +1,5 @@
 <script>
-  import { Body, Button, Heading, Icon, Input, Layout } from "@budibase/bbui"
+  import { Body, Heading, Icon, Input, Layout } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -10,10 +10,6 @@
   export let queryBindings = []
   export let bindings = []
   export let customParams = {}
-
-  function newQueryBinding() {
-    queryBindings = [...queryBindings, {}]
-  }
 
   function deleteQueryBinding(idx) {
     queryBindings.splice(idx, 1)
@@ -31,9 +27,6 @@
 <Layout noPadding={bindable} gap="S">
   <div class="controls" class:height={!bindable}>
     <Heading size="XS">Bindings</Heading>
-    {#if !bindable}
-      <Button secondary on:click={newQueryBinding}>Add Binding</Button>
-    {/if}
   </div>
   <Body size="S">
     {#if !bindable}
