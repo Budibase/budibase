@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { Table } from "@budibase/bbui"
+  import { Table, Skeleton } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
   import { UnsortableTypes } from "../../../constants"
   import { onDestroy } from "svelte"
@@ -18,6 +18,7 @@
   export let allowSelectRows
   export let compact
 
+  const loading = getContext("loading")
   const component = getContext("component")
   const { styleable, getAction, ActionTypes, routeStore, rowSelectionStore } =
     getContext("sdk")
@@ -30,7 +31,6 @@
   ]
   let selectedRows = []
   $: hasChildren = $component.children
-  $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
   $: fullSchema = dataProvider?.schema ?? {}
   $: fields = getFields(fullSchema, columns, showAutoColumns)
@@ -140,7 +140,7 @@
   <Table
     {data}
     {schema}
-    {loading}
+    loading={$loading}
     {rowCount}
     {quiet}
     {compact}
@@ -155,6 +155,9 @@
     on:sort={onSort}
     on:click={onClick}
   >
+    <div class="skeleton" slot="loadingIndicator">
+      <Skeleton />
+    </div>
     <slot />
   </Table>
   {#if allowSelectRows && selectedRows.length}
@@ -167,6 +170,11 @@
 <style>
   div {
     background-color: var(--spectrum-alias-background-color-secondary);
+  }
+
+  .skeleton {
+    height: 100%;
+    width: 100%;
   }
 
   .row-count {
