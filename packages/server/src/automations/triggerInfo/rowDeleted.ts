@@ -1,10 +1,12 @@
-exports.definition = {
+import { AutomationTrigger, AutomationTriggerStepId } from "@budibase/types"
+
+export const definition: AutomationTrigger = {
   name: "Row Deleted",
   event: "row:delete",
   icon: "TableRowRemoveCenter",
   tagline: "Row is deleted from {{inputs.enriched.table.name}}",
   description: "Fired when a row is deleted from your database",
-  stepId: "ROW_DELETED",
+  stepId: AutomationTriggerStepId.ROW_DELETED,
   inputs: {},
   schema: {
     inputs: {

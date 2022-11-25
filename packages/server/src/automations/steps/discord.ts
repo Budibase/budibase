@@ -1,15 +1,20 @@
-const fetch = require("node-fetch")
-const { getFetchResponse } = require("./utils")
+import fetch from "node-fetch"
+import { getFetchResponse } from "./utils"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
 const DEFAULT_AVATAR_URL = "https://i.imgur.com/a1cmTKM.png"
 
-exports.definition = {
+export const definition: AutomationStep = {
   name: "Discord Message",
   tagline: "Send a message to a Discord server",
   description: "Send a message to a Discord server",
   icon: "ri-discord-line",
-  stepId: "discord",
+  stepId: AutomationActionStepId.discord,
   type: "ACTION",
   internal: false,
   inputs: {},
@@ -54,7 +59,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs }) {
+export async function run({ inputs }: AutomationStepInput) {
   let { url, username, avatar_url, content } = inputs
   if (!username) {
     username = DEFAULT_USERNAME

@@ -1,14 +1,20 @@
-const fetch = require("node-fetch")
-const { getFetchResponse } = require("./utils")
+import fetch from "node-fetch"
+import { getFetchResponse } from "./utils"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
-exports.definition = {
+export const definition: AutomationStep = {
   name: "Zapier Webhook",
-  stepId: "zapier",
+  stepId: AutomationActionStepId.zapier,
   type: "ACTION",
   internal: false,
   description: "Trigger a Zapier Zap via webhooks",
   tagline: "Trigger a Zapier Zap",
   icon: "ri-flashlight-line",
+  inputs: {},
   schema: {
     inputs: {
       properties: {
@@ -54,7 +60,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs }) {
+export async function run({ inputs }: AutomationStepInput) {
   const { url, value1, value2, value3, value4, value5 } = inputs
 
   // send the platform to make sure zaps always work, even

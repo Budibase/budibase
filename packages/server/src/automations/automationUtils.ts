@@ -1,9 +1,10 @@
-const {
+import {
   decodeJSBinding,
   isJSBinding,
   encodeJSBinding,
-} = require("@budibase/string-templates")
-const sdk = require("../sdk")
+} from "@budibase/string-templates"
+import sdk from "../sdk"
+import { Row } from "@budibase/types"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -21,7 +22,7 @@ const sdk = require("../sdk")
  * @returns {object} The inputs object which has had all the various types supported by this function converted to their
  * primitive types.
  */
-exports.cleanInputValues = (inputs, schema) => {
+export function cleanInputValues(inputs: Record<string, any>, schema: any) {
   if (schema == null) {
     return inputs
   }
@@ -62,12 +63,12 @@ exports.cleanInputValues = (inputs, schema) => {
  * @param {object} row The input row structure which requires clean-up after having been through template statements.
  * @returns {Promise<Object>} The cleaned up rows object, will should now have all the required primitive types.
  */
-exports.cleanUpRow = async (tableId, row) => {
+export async function cleanUpRow(tableId: string, row: Row) {
   let table = await sdk.tables.getTable(tableId)
-  return exports.cleanInputValues(row, { properties: table.schema })
+  return cleanInputValues(row, { properties: table.schema })
 }
 
-exports.getError = err => {
+export function getError(err: any) {
   if (err == null) {
     return "No error provided."
   }
@@ -80,13 +81,13 @@ exports.getError = err => {
   return typeof err !== "string" ? err.toString() : err
 }
 
-exports.substituteLoopStep = (hbsString, substitute) => {
+export function substituteLoopStep(hbsString: string, substitute: string) {
   let checkForJS = isJSBinding(hbsString)
   let substitutedHbsString = ""
   let open = checkForJS ? `$("` : "{{"
   let closed = checkForJS ? `")` : "}}"
   if (checkForJS) {
-    hbsString = decodeJSBinding(hbsString)
+    hbsString = decodeJSBinding(hbsString) as string
   }
   let pointer = 0,
     openPointer = 0,
@@ -111,9 +112,9 @@ exports.substituteLoopStep = (hbsString, substitute) => {
   return substitutedHbsString
 }
 
-exports.stringSplit = value => {
-  if (value == null) {
-    return []
+export function stringSplit(value: string | string[]) {
+  if (value == null || Array.isArray(value)) {
+    return value || []
   }
   if (value.split("\n").length > 1) {
     value = value.split("\n")

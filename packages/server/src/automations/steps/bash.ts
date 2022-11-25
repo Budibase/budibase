@@ -1,16 +1,21 @@
-const { execSync } = require("child_process")
-const { processStringSync } = require("@budibase/string-templates")
-const automationUtils = require("../automationUtils")
-const environment = require("../../environment")
+import { execSync } from "child_process"
+import { processStringSync } from "@budibase/string-templates"
+import automationUtils from "../automationUtils"
+import environment from "../../environment"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
 
-exports.definition = {
+export const definition: AutomationStep = {
   name: "Bash Scripting",
   tagline: "Execute a bash command",
   icon: "JourneyEvent",
   description: "Run a bash script",
   type: "ACTION",
   internal: true,
-  stepId: "EXECUTE_BASH",
+  stepId: AutomationActionStepId.EXECUTE_BASH,
   inputs: {},
   schema: {
     inputs: {
@@ -39,7 +44,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, context }) {
+export async function run({ inputs, context }: AutomationStepInput) {
   if (inputs.code == null) {
     return {
       stdout: "Budibase bash automation failed: Invalid inputs",
@@ -55,7 +60,7 @@ exports.run = async function ({ inputs, context }) {
       stdout = execSync(command, {
         timeout: environment.QUERY_THREAD_TIMEOUT || 500,
       }).toString()
-    } catch (err) {
+    } catch (err: any) {
       stdout = err.message
       success = false
     }

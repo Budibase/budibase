@@ -1,36 +1,43 @@
-const rowController = require("../../api/controllers/row")
-const tableController = require("../../api/controllers/table")
-const { FieldTypes } = require("../../constants")
-const { buildCtx } = require("./utils")
-const automationUtils = require("../automationUtils")
+import * as rowController from "../../api/controllers/row"
+import * as tableController from "../../api/controllers/table"
+import { FieldTypes } from "../../constants"
+import { buildCtx } from "./utils"
+import automationUtils from "../automationUtils"
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+  SearchFilters,
+  Table,
+} from "@budibase/types"
 
-const SortOrders = {
-  ASCENDING: "ascending",
-  DESCENDING: "descending",
+enum SortOrder {
+  ASCENDING = "ascending",
+  DESCENDING = "descending",
 }
 
-const SortOrdersPretty = {
-  [SortOrders.ASCENDING]: "Ascending",
-  [SortOrders.DESCENDING]: "Descending",
+const SortOrderPretty = {
+  [SortOrder.ASCENDING]: "Ascending",
+  [SortOrder.DESCENDING]: "Descending",
 }
 
-const EmptyFilterOptions = {
-  RETURN_ALL: "all",
-  RETURN_NONE: "none",
+enum EmptyFilterOption {
+  RETURN_ALL = "all",
+  RETURN_NONE = "none",
 }
 
-const EmptyFilterOptionsPretty = {
-  [EmptyFilterOptions.RETURN_ALL]: "Return all table rows",
-  [EmptyFilterOptions.RETURN_NONE]: "Return no rows",
+const EmptyFilterOptionPretty = {
+  [EmptyFilterOption.RETURN_ALL]: "Return all table rows",
+  [EmptyFilterOption.RETURN_NONE]: "Return no rows",
 }
 
-exports.definition = {
+export const definition: AutomationStep = {
   description: "Query rows from the database",
   icon: "Search",
   name: "Query rows",
   tagline: "Query rows from {{inputs.enriched.table.name}} table",
   type: "ACTION",
-  stepId: "QUERY_ROWS",
+  stepId: AutomationActionStepId.QUERY_ROWS,
   internal: true,
   inputs: {},
   schema: {
@@ -54,8 +61,8 @@ exports.definition = {
         sortOrder: {
           type: "string",
           title: "Sort Order",
-          enum: Object.values(SortOrders),
-          pretty: Object.values(SortOrdersPretty),
+          enum: Object.values(SortOrder),
+          pretty: Object.values(SortOrderPretty),
         },
         limit: {
           type: "number",
@@ -63,8 +70,8 @@ exports.definition = {
           customType: "queryLimit",
         },
         onEmptyFilter: {
-          pretty: Object.values(EmptyFilterOptionsPretty),
-          enum: Object.values(EmptyFilterOptions),
+          pretty: Object.values(EmptyFilterOptionPretty),
+          enum: Object.values(EmptyFilterOption),
           type: "string",
           title: "When Filter Empty",
         },
@@ -88,8 +95,8 @@ exports.definition = {
   },
 }
 
-async function getTable(appId, tableId) {
-  const ctx = buildCtx(appId, null, {
+async function getTable(appId: string, tableId: string) {
+  const ctx: any = buildCtx(appId, null, {
     params: {
       tableId,
     },
@@ -98,20 +105,22 @@ async function getTable(appId, tableId) {
   return ctx.body
 }
 
-function typeCoercion(filters, table) {
+function typeCoercion(filters: SearchFilters, table: Table) {
   if (!filters || !table) {
     return filters
   }
   for (let key of Object.keys(filters)) {
-    if (typeof filters[key] === "object") {
-      for (let [property, value] of Object.entries(filters[key])) {
+    // @ts-ignore
+    const searchParam = filters[key]
+    if (typeof searchParam === "object") {
+      for (let [property, value] of Object.entries(searchParam)) {
         const column = table.schema[property]
         // convert string inputs
         if (!column || typeof value !== "string") {
           continue
         }
         if (column.type === FieldTypes.NUMBER) {
-          filters[key][property] = parseFloat(value)
+          searchParam[property] = parseFloat(value)
         }
       }
     }
@@ -119,11 +128,14 @@ function typeCoercion(filters, table) {
   return filters
 }
 
-const hasNullFilters = filters =>
-  filters.length === 0 ||
-  filters.some(filter => filter.value === null || filter.value === "")
+function hasNullFilters(filters: any[]) {
+  return (
+    filters.length === 0 ||
+    filters.some(filter => filter.value === null || filter.value === "")
+  )
+}
 
-exports.run = async function ({ inputs, appId }) {
+export async function run({ inputs, appId }: AutomationStepInput) {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs
   if (!tableId) {
     return {
@@ -140,7 +152,7 @@ exports.run = async function ({ inputs, appId }) {
     sortType =
       fieldType === FieldTypes.NUMBER ? FieldTypes.NUMBER : FieldTypes.STRING
   }
-  const ctx = buildCtx(appId, null, {
+  const ctx: any = buildCtx(appId, null, {
     params: {
       tableId,
     },
@@ -150,7 +162,7 @@ exports.run = async function ({ inputs, appId }) {
       sort: sortColumn,
       query: typeCoercion(filters || {}, table),
       // default to ascending, like data tab
-      sortOrder: sortOrder || SortOrders.ASCENDING,
+      sortOrder: sortOrder || SortOrder.ASCENDING,
     },
     version: "1",
   })
@@ -158,7 +170,7 @@ exports.run = async function ({ inputs, appId }) {
     let rows
 
     if (
-      inputs.onEmptyFilter === EmptyFilterOptions.RETURN_NONE &&
+      inputs.onEmptyFilter === EmptyFilterOption.RETURN_NONE &&
       inputs["filters-def"] &&
       hasNullFilters(inputs["filters-def"])
     ) {

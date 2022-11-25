@@ -1,21 +1,24 @@
-const FilterConditions = {
+import {
+  AutomationActionStepId,
+  AutomationStep,
+  AutomationStepInput,
+} from "@budibase/types"
+
+export const FilterConditions = {
   EQUAL: "EQUAL",
   NOT_EQUAL: "NOT_EQUAL",
   GREATER_THAN: "GREATER_THAN",
   LESS_THAN: "LESS_THAN",
 }
 
-const PrettyFilterConditions = {
+export const PrettyFilterConditions = {
   [FilterConditions.EQUAL]: "Equals",
   [FilterConditions.NOT_EQUAL]: "Not equals",
   [FilterConditions.GREATER_THAN]: "Greater than",
   [FilterConditions.LESS_THAN]: "Less than",
 }
 
-exports.FilterConditions = FilterConditions
-exports.PrettyFilterConditions = PrettyFilterConditions
-
-exports.definition = {
+export const definition: AutomationStep = {
   name: "Condition",
   tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
   icon: "Branch2",
@@ -23,9 +26,9 @@ exports.definition = {
     "Conditionally halt automations which do not meet certain conditions",
   type: "LOGIC",
   internal: true,
-  stepId: "FILTER",
+  stepId: AutomationActionStepId.FILTER,
   inputs: {
-    condition: FilterConditions.EQUALS,
+    condition: FilterConditions.EQUAL,
   },
   schema: {
     inputs: {
@@ -63,7 +66,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function filter({ inputs }) {
+export async function run({ inputs }: AutomationStepInput) {
   try {
     let { field, condition, value } = inputs
     // coerce types so that we can use them

@@ -1,4 +1,6 @@
-exports.getFetchResponse = async fetched => {
+import { EventEmitter } from "events"
+
+export async function getFetchResponse(fetched: any) {
   let status = fetched.status,
     message
   const contentType = fetched.headers.get("content-type")
@@ -18,12 +20,16 @@ exports.getFetchResponse = async fetched => {
 // throw added to them, so that controllers don't
 // throw a ctx.throw undefined when error occurs
 // opts can contain, body, params and version
-exports.buildCtx = (appId, emitter, opts = {}) => {
-  const ctx = {
+export async function buildCtx(
+  appId: string,
+  emitter?: EventEmitter | null,
+  opts: any = {}
+) {
+  const ctx: any = {
     appId,
     user: { appId },
     eventEmitter: emitter,
-    throw: (code, error) => {
+    throw: (code: string, error: any) => {
       throw error
     },
   }

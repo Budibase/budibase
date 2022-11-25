@@ -1,10 +1,12 @@
-exports.definition = {
+import { AutomationTrigger, AutomationTriggerStepId } from "@budibase/types"
+
+export const definition: AutomationTrigger = {
   name: "Cron Trigger",
   event: "cron:trigger",
   icon: "Clock",
   tagline: "Cron Trigger (<b>{{inputs.cron}}</b>)",
   description: "Triggers automation on a cron schedule.",
-  stepId: "CRON",
+  stepId: AutomationTriggerStepId.CRON,
   inputs: {},
   schema: {
     inputs: {

@@ -1,9 +1,11 @@
-exports.definition = {
+import { AutomationActionStepId, AutomationStep } from "@budibase/types"
+
+export const definition: AutomationStep = {
   name: "Looping",
   icon: "Reuse",
   tagline: "Loop the block",
   description: "Loop",
-  stepId: "LOOP",
+  stepId: AutomationActionStepId.LOOP,
   internal: true,
   inputs: {},
   schema: {
