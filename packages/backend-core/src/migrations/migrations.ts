@@ -1,10 +1,13 @@
 import { DEFAULT_TENANT_ID } from "../constants"
-import { doWithDB } from "../db"
-import { DocumentType, StaticDatabases } from "../db/constants"
-import { getAllApps } from "../db/utils"
+import {
+  DocumentType,
+  StaticDatabases,
+  getAllApps,
+  getGlobalDBName,
+  doWithDB,
+} from "../db"
 import environment from "../environment"
 import { doInTenant, getTenantIds, getTenantId } from "../tenancy"
-import { getGlobalDBName } from "../db/tenancy"
 import * as context from "../context"
 import { DEFINITIONS } from "."
 import {

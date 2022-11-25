@@ -1,4 +1,4 @@
-const { getAppDB } = require("@budibase/backend-core/context")
+const { context } = require("@budibase/backend-core")
 const { DocumentType, SEPARATOR, ViewName, SearchIndexes } = require("../utils")
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 
@@ -20,7 +20,7 @@ const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
  * so it may be slow.
  */
 exports.createLinkView = async () => {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const designDoc = await db.get("_design/database")
   const view = {
     map: function (doc) {
@@ -54,7 +54,7 @@ exports.createLinkView = async () => {
 }
 
 exports.createRoutingView = async () => {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const designDoc = await db.get("_design/database")
   const view = {
     // if using variables in a map function need to inject them before use
@@ -75,7 +75,7 @@ exports.createRoutingView = async () => {
 }
 
 async function searchIndex(indexName, fnString) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const designDoc = await db.get("_design/database")
   designDoc.indexes = {
     [indexName]: {

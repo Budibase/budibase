@@ -1,6 +1,5 @@
 import { npmUpload, urlUpload, githubUpload, fileUpload } from "./uploaders"
-import { getGlobalDB } from "@budibase/backend-core/tenancy"
-import { validate } from "@budibase/backend-core/plugins"
+import { plugins as pluginCore, tenancy } from "@budibase/backend-core"
 import { PluginType, FileType, PluginSource } from "@budibase/types"
 import env from "../../../environment"
 import { ClientAppSocket } from "../../../websocket"
@@ -8,7 +7,7 @@ import { db as dbCore } from "@budibase/backend-core"
 import { plugins } from "@budibase/pro"
 
 export async function getPlugins(type?: PluginType) {
-  const db = getGlobalDB()
+  const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
     dbCore.getPluginParams(null, {
       include_docs: true,
@@ -76,7 +75,7 @@ export async function create(ctx: any) {
         break
     }
 
-    validate(metadata?.schema)
+    pluginCore.validate(metadata?.schema)
 
     // Only allow components in cloud
     if (!env.SELF_HOSTED && metadata?.schema?.type !== PluginType.COMPONENT) {
@@ -121,7 +120,7 @@ export async function processUploadedPlugin(
   source?: PluginSource
 ) {
   const { metadata, directory } = await fileUpload(plugin)
-  validate(metadata?.schema)
+  pluginCore.validate(metadata?.schema)
 
   // Only allow components in cloud
   if (!env.SELF_HOSTED && metadata?.schema?.type !== PluginType.COMPONENT) {

@@ -390,7 +390,7 @@ export const uploadDirectory = async (
   return files
 }
 
-exports.downloadTarballDirect = async (
+export const downloadTarballDirect = async (
   url: string,
   path: string,
   headers = {}

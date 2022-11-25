@@ -171,7 +171,7 @@ export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-export function getUserMetadataParams(userId?: string, otherProps = {}) {
+export function getUserMetadataParams(userId?: string | null, otherProps = {}) {
   return getRowParams(InternalTable.USER_METADATA, userId, otherProps)
 }
 
@@ -244,7 +244,7 @@ export function getTemplateParams(
  * Generates a new role ID.
  * @returns {string} The new role ID which the role doc can be stored under.
  */
-export function generateRoleID(id: any) {
+export function generateRoleID(id?: any) {
   return `${DocumentType.ROLE}${SEPARATOR}${id || newid()}`
 }
 

@@ -2,7 +2,13 @@ const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
 const uuid = require("uuid/v4")
+const { context, objectStore } = require("@budibase/backend-core")
 const { ObjectStoreBuckets } = require("../../constants")
+const { updateClientLibrary } = require("./clientLibrary")
+const { checkSlashesInUrl } = require("../")
+const env = require("../../environment")
+const tar = require("tar")
+const fetch = require("node-fetch")
 const {
   upload,
   retrieve,
@@ -11,13 +17,7 @@ const {
   downloadTarball,
   downloadTarballDirect,
   deleteFiles,
-} = require("./utilities")
-const { updateClientLibrary } = require("./clientLibrary")
-const { checkSlashesInUrl } = require("../")
-const env = require("../../environment")
-const { getAppId } = require("@budibase/backend-core/context")
-const tar = require("tar")
-const fetch = require("node-fetch")
+} = objectStore
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
@@ -165,7 +165,7 @@ exports.downloadTemplate = async (type, name) => {
  * Retrieves component libraries from object store (or tmp symlink if in local)
  */
 exports.getComponentLibraryManifest = async library => {
-  const appId = getAppId()
+  const appId = context.getAppId()
   const filename = "manifest.json"
   /* istanbul ignore next */
   // when testing in cypress and so on we need to get the package
