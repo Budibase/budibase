@@ -1,4 +1,4 @@
-const ignoredClasses = [".flatpickr-calendar"]
+const ignoredClasses = [".flatpickr-calendar", ".modal-container"]
 let clickHandlers = []
 
 /**
