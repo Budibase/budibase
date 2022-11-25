@@ -1,12 +1,32 @@
-const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
-const { InternalTables, getUserMetadataParams } = require("../utils")
-const Sentry = require("@sentry/node")
-const { FieldTypes, RelationshipTypes } = require("../../constants")
-const { context } = require("@budibase/backend-core")
-const LinkDocument = require("./LinkDocument")
+import { IncludeDocs, getLinkDocuments } from "./linkUtils"
+import { InternalTables, getUserMetadataParams } from "../utils"
+import Sentry from "@sentry/node"
+import { FieldTypes, RelationshipTypes } from "../../constants"
+import { context } from "@budibase/backend-core"
+import LinkDocument from "./LinkDocument"
+import {
+  Database,
+  FieldSchema,
+  LinkDocumentValue,
+  Row,
+  Table,
+} from "@budibase/types"
+
+type LinkControllerOpts = {
+  tableId: string
+  row?: Row
+  table?: Table
+  oldTable?: Table
+}
 
 class LinkController {
-  constructor({ tableId, row, table, oldTable }) {
+  _db: Database
+  _tableId: string
+  _row?: Row
+  _table?: Table
+  _oldTable?: Table
+
+  constructor({ tableId, row, table, oldTable }: LinkControllerOpts) {
     this._db = context.getAppDB()
     this._tableId = tableId
     this._row = row
@@ -24,7 +44,7 @@ class LinkController {
       this._table =
         this._table == null ? await this._db.get(this._tableId) : this._table
     }
-    return this._table
+    return this._table!
   }
 
   /**
@@ -34,7 +54,7 @@ class LinkController {
    * @returns {Promise<boolean>} True if there are any linked fields, otherwise it will return
    * false.
    */
-  async doesTableHaveLinkedFields(table = null) {
+  async doesTableHaveLinkedFields(table?: Table) {
     if (table == null) {
       table = await this.table()
     }
@@ -50,7 +70,7 @@ class LinkController {
   /**
    * Utility function for main getLinkDocuments function - refer to it for functionality.
    */
-  getRowLinkDocs(rowId) {
+  getRowLinkDocs(rowId: string) {
     return getLinkDocuments({
       tableId: this._tableId,
       rowId,
@@ -61,23 +81,23 @@ class LinkController {
   /**
    * Utility function for main getLinkDocuments function - refer to it for functionality.
    */
-  getTableLinkDocs() {
-    return getLinkDocuments({
+  async getTableLinkDocs() {
+    return (await getLinkDocuments({
       tableId: this._tableId,
       includeDocs: IncludeDocs.INCLUDE,
-    })
+    })) as LinkDocument[]
   }
 
   /**
    * Makes sure the passed in table schema contains valid relationship structures.
    */
-  validateTable(table) {
+  validateTable(table: Table) {
     const usedAlready = []
     for (let schema of Object.values(table.schema)) {
       if (schema.type !== FieldTypes.LINK) {
         continue
       }
-      const unique = schema.tableId + schema.fieldName
+      const unique = schema.tableId! + schema?.fieldName
       if (usedAlready.indexOf(unique) !== -1) {
         throw new Error(
           "Cannot re-use the linked column name for a linked table."
@@ -90,7 +110,7 @@ class LinkController {
   /**
    * Returns whether the two link schemas are equal (in the important parts, not a pure equality check)
    */
-  areLinkSchemasEqual(linkSchema1, linkSchema2) {
+  areLinkSchemasEqual(linkSchema1: FieldSchema, linkSchema2: FieldSchema) {
     const compareFields = [
       "name",
       "type",
@@ -100,6 +120,7 @@ class LinkController {
       "relationshipType",
     ]
     for (let field of compareFields) {
+      // @ts-ignore
       if (linkSchema1[field] !== linkSchema2[field]) {
         return false
       }
@@ -111,7 +132,7 @@ class LinkController {
    * Given the link field of this table, and the link field of the linked table, this makes sure
    * the state of relationship type is accurate on both.
    */
-  handleRelationshipType(linkerField, linkedField) {
+  handleRelationshipType(linkerField: FieldSchema, linkedField: FieldSchema) {
     if (
       !linkerField.relationshipType ||
       linkerField.relationshipType === RelationshipTypes.MANY_TO_MANY
@@ -138,10 +159,10 @@ class LinkController {
    */
   async rowSaved() {
     const table = await this.table()
-    const row = this._row
+    const row = this._row!
     const operations = []
     // get link docs to compare against
-    const linkDocs = await this.getRowLinkDocs(row._id)
+    const linkDocs = (await this.getRowLinkDocs(row._id!)) as LinkDocument[]
     for (let fieldName of Object.keys(table.schema)) {
       // get the links this row wants to make
       const rowField = row[fieldName]
@@ -161,30 +182,32 @@ class LinkController {
 
         // if 1:N, ensure that this ID is not already attached to another record
         const linkedTable = await this._db.get(field.tableId)
-        const linkedSchema = linkedTable.schema[field.fieldName]
+        const linkedSchema = linkedTable.schema[field.fieldName!]
 
         // We need to map the global users to metadata in each app for relationships
         if (field.tableId === InternalTables.USER_METADATA) {
           const users = await this._db.allDocs(getUserMetadataParams(null, {}))
           const metadataRequired = rowField.filter(
-            userId => !users.rows.some(user => user.id === userId)
+            (userId: string) => !users.rows.some(user => user.id === userId)
           )
 
           // ensure non-existing user metadata is created in the app DB
           await this._db.bulkDocs(
-            metadataRequired.map(userId => ({ _id: userId }))
+            metadataRequired.map((userId: string) => ({ _id: userId }))
           )
         }
 
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
-          if (linkedSchema.relationshipType === RelationshipTypes.ONE_TO_MANY) {
+          if (
+            linkedSchema?.relationshipType === RelationshipTypes.ONE_TO_MANY
+          ) {
             let links = (
-              await getLinkDocuments({
+              (await getLinkDocuments({
                 tableId: field.tableId,
                 rowId: linkId,
                 includeDocs: IncludeDocs.EXCLUDE,
-              })
+              })) as LinkDocumentValue[]
             ).filter(
               link =>
                 link.id !== row._id && link.fieldName === linkedSchema.name
@@ -209,11 +232,11 @@ class LinkController {
             }
             operations.push(
               new LinkDocument(
-                table._id,
+                table._id!,
                 fieldName,
-                row._id,
-                field.tableId,
-                field.fieldName,
+                row._id!,
+                field.tableId!,
+                field.fieldName!,
                 linkId
               )
             )
@@ -246,9 +269,9 @@ class LinkController {
    * be accurate. This also returns the row that was deleted.
    */
   async rowDeleted() {
-    const row = this._row
+    const row = this._row!
     // need to get the full link docs to be be able to delete it
-    const linkDocs = await this.getRowLinkDocs(row._id)
+    const linkDocs = await this.getRowLinkDocs(row._id!)
     if (linkDocs.length === 0) {
       return null
     }
@@ -267,13 +290,13 @@ class LinkController {
    * @param {string} fieldName The field to be removed from the table.
    * @returns {Promise<void>} The table has now been updated.
    */
-  async removeFieldFromTable(fieldName) {
+  async removeFieldFromTable(fieldName: string) {
     let oldTable = this._oldTable
-    let field = oldTable.schema[fieldName]
+    let field = oldTable?.schema[fieldName] as FieldSchema
     const linkDocs = await this.getTableLinkDocs()
     let toDelete = linkDocs.filter(linkDoc => {
       let correctFieldName =
-        linkDoc.doc1.tableId === oldTable._id
+        linkDoc.doc1.tableId === oldTable?._id
           ? linkDoc.doc1.fieldName
           : linkDoc.doc2.fieldName
       return correctFieldName === fieldName
@@ -288,7 +311,9 @@ class LinkController {
     )
     // remove schema from other table
     let linkedTable = await this._db.get(field.tableId)
-    delete linkedTable.schema[field.fieldName]
+    if (field.fieldName) {
+      delete linkedTable.schema[field.fieldName]
+    }
     await this._db.put(linkedTable)
   }
 
@@ -305,7 +330,7 @@ class LinkController {
     const schema = table.schema
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
-      if (field.type === FieldTypes.LINK) {
+      if (field.type === FieldTypes.LINK && field.fieldName) {
         // handle this in a separate try catch, want
         // the put to bubble up as an error, if can't update
         // table for some reason
@@ -362,8 +387,8 @@ class LinkController {
     const oldTable = this._oldTable
     // first start by checking if any link columns have been deleted
     const newTable = await this.table()
-    for (let fieldName of Object.keys(oldTable.schema)) {
-      const field = oldTable.schema[fieldName]
+    for (let fieldName of Object.keys(oldTable?.schema || {})) {
+      const field = oldTable?.schema[fieldName] as FieldSchema
       // this field has been removed from the table schema
       if (
         field.type === FieldTypes.LINK &&
@@ -389,7 +414,7 @@ class LinkController {
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       try {
-        if (field.type === FieldTypes.LINK) {
+        if (field.type === FieldTypes.LINK && field.fieldName) {
           const linkedTable = await this._db.get(field.tableId)
           delete linkedTable.schema[field.fieldName]
           await this._db.put(linkedTable)
@@ -416,4 +441,4 @@ class LinkController {
   }
 }
 
-module.exports = LinkController
+export = LinkController

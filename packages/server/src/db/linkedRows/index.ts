@@ -1,5 +1,5 @@
-const LinkController = require("./LinkController")
-const {
+import LinkController from "./LinkController"
+import {
   IncludeDocs,
   getLinkDocuments,
   createLinkView,
@@ -7,21 +7,24 @@ const {
   getRelatedTableForField,
   getLinkedTableIDs,
   getLinkedTable,
-} = require("./linkUtils")
-const { flatten } = require("lodash")
-const { FieldTypes } = require("../../constants")
-const { getMultiIDParams, USER_METDATA_PREFIX } = require("../../db/utils")
-const { partition } = require("lodash")
-const { getGlobalUsersFromMetadata } = require("../../utilities/global")
-const { processFormulas } = require("../../utilities/rowProcessor/utils")
-const { context } = require("@budibase/backend-core")
+} from "./linkUtils"
+import { flatten } from "lodash"
+import { FieldTypes } from "../../constants"
+import { getMultiIDParams, USER_METDATA_PREFIX } from "../utils"
+import { partition } from "lodash"
+import { getGlobalUsersFromMetadata } from "../../utilities/global"
+import { processFormulas } from "../../utilities/rowProcessor"
+import { context } from "@budibase/backend-core"
+import { Table, Row, LinkDocumentValue } from "@budibase/types"
+
+export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
 
 /**
  * This functionality makes sure that when rows with links are created, updated or deleted they are processed
  * correctly - making sure that no stale links are left around and that all links have been made successfully.
  */
 
-const EventType = {
+export const EventType = {
   ROW_SAVE: "row:save",
   ROW_UPDATE: "row:update",
   ROW_DELETE: "row:delete",
@@ -30,13 +33,7 @@ const EventType = {
   TABLE_DELETE: "table:delete",
 }
 
-exports.EventType = EventType
-// re-export search here for ease of use
-exports.IncludeDocs = IncludeDocs
-exports.getLinkDocuments = getLinkDocuments
-exports.createLinkView = createLinkView
-
-function clearRelationshipFields(table, rows) {
+function clearRelationshipFields(table: Table, rows: Row[]) {
   for (let [key, field] of Object.entries(table.schema)) {
     if (field.type === FieldTypes.LINK) {
       rows = rows.map(row => {
@@ -48,18 +45,17 @@ function clearRelationshipFields(table, rows) {
   return rows
 }
 
-async function getLinksForRows(rows) {
+async function getLinksForRows(rows: Row[]) {
   const tableIds = [...new Set(rows.map(el => el.tableId))]
   // start by getting all the link values for performance reasons
+  const promises = tableIds.map(tableId =>
+    getLinkDocuments({
+      tableId: tableId,
+      includeDocs: IncludeDocs.EXCLUDE,
+    })
+  )
   const responses = flatten(
-    await Promise.all(
-      tableIds.map(tableId =>
-        getLinkDocuments({
-          tableId: tableId,
-          includeDocs: IncludeDocs.EXCLUDE,
-        })
-      )
-    )
+    (await Promise.all(promises)) as LinkDocumentValue[][]
   )
   // have to get unique as the previous table query can
   // return duplicates, could be querying for both tables in a relation
@@ -72,7 +68,7 @@ async function getLinksForRows(rows) {
   )
 }
 
-async function getFullLinkedDocs(links) {
+async function getFullLinkedDocs(links: LinkDocumentValue[]) {
   // create DBs
   const db = context.getAppDB()
   const linkedRowIds = links.map(link => link.id)
@@ -103,12 +99,18 @@ async function getFullLinkedDocs(links) {
  * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the row for
  * row operations and the table for table operations.
  */
-exports.updateLinks = async function (args) {
+export async function updateLinks(args: {
+  tableId: string
+  eventType: string
+  row?: Row
+  table?: Table
+  oldTable?: Table
+}) {
   const { eventType, row, tableId, table, oldTable } = args
   const baseReturnObj = row == null ? table : row
   // make sure table ID is set
   if (tableId == null && table != null) {
-    args.tableId = table._id
+    args.tableId = table._id!
   }
   let linkController = new LinkController(args)
   try {
@@ -146,7 +148,7 @@ exports.updateLinks = async function (args) {
  * @param {array<object>} rows The rows which are to be enriched.
  * @return {Promise<*>} returns the rows with all of the enriched relationships on it.
  */
-exports.attachFullLinkedDocs = async (table, rows) => {
+export async function attachFullLinkedDocs(table: Table, rows: Row[]) {
   const linkedTableIds = getLinkedTableIDs(table)
   if (linkedTableIds.length === 0) {
     return rows
@@ -159,7 +161,7 @@ exports.attachFullLinkedDocs = async (table, rows) => {
   rows = clearRelationshipFields(table, rows)
   // now get the docs and combine into the rows
   let linked = await getFullLinkedDocs(links)
-  const linkedTables = []
+  const linkedTables: Table[] = []
   for (let row of rows) {
     for (let link of links.filter(link => link.thisId === row._id)) {
       if (row[link.fieldName] == null) {
@@ -185,13 +187,16 @@ exports.attachFullLinkedDocs = async (table, rows) => {
  * @param {array<object>} enriched The pre-enriched rows (full docs) which are to be squashed.
  * @returns {Promise<Array>} The rows after having their links squashed to only contain the ID and primary display.
  */
-exports.squashLinksToPrimaryDisplay = async (table, enriched) => {
+export async function squashLinksToPrimaryDisplay(
+  table: Table,
+  enriched: Row[]
+) {
   // will populate this as we find them
   const linkedTables = [table]
   for (let row of enriched) {
     // this only fetches the table if its not already in array
-    const rowTable = await getLinkedTable(row.tableId, linkedTables)
-    for (let [column, schema] of Object.entries(rowTable.schema)) {
+    const rowTable = await getLinkedTable(row.tableId!, linkedTables)
+    for (let [column, schema] of Object.entries(rowTable?.schema || {})) {
       if (schema.type !== FieldTypes.LINK || !Array.isArray(row[column])) {
         continue
       }
@@ -199,8 +204,8 @@ exports.squashLinksToPrimaryDisplay = async (table, enriched) => {
       for (let link of row[column]) {
         const linkTblId = link.tableId || getRelatedTableForField(table, column)
         const linkedTable = await getLinkedTable(linkTblId, linkedTables)
-        const obj = { _id: link._id }
-        if (link[linkedTable.primaryDisplay]) {
+        const obj: any = { _id: link._id }
+        if (linkedTable?.primaryDisplay && link[linkedTable.primaryDisplay]) {
           obj.primaryDisplay = link[linkedTable.primaryDisplay]
         }
         newLinks.push(obj)
