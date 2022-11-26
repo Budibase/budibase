@@ -1,7 +1,10 @@
 import Joi, { ObjectSchema } from "joi"
 import { BBContext } from "@budibase/types"
 
-function validate(schema: Joi.ObjectSchema, property: string) {
+function validate(
+  schema: Joi.ObjectSchema | Joi.ArraySchema,
+  property: string
+) {
   // Return a Koa middleware function
   return (ctx: BBContext, next: any) => {
     if (!schema) {
@@ -17,8 +20,8 @@ function validate(schema: Joi.ObjectSchema, property: string) {
     }
 
     // not all schemas have the append property e.g. array schemas
-    if (schema.append) {
-      schema = schema.append({
+    if ((schema as Joi.ObjectSchema).append) {
+      schema = (schema as Joi.ObjectSchema).append({
         createdAt: Joi.any().optional(),
         updatedAt: Joi.any().optional(),
       })
@@ -33,10 +36,10 @@ function validate(schema: Joi.ObjectSchema, property: string) {
   }
 }
 
-export function body(schema: Joi.ObjectSchema) {
+export function body(schema: Joi.ObjectSchema | Joi.ArraySchema) {
   return validate(schema, "body")
 }
 
-export function params(schema: Joi.ObjectSchema) {
+export function params(schema: Joi.ObjectSchema | Joi.ArraySchema) {
   return validate(schema, "params")
 }
