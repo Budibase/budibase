@@ -1,6 +1,6 @@
 import env from "../environment"
+export * from "../newid"
 const bcrypt = env.JS_BCRYPT ? require("bcryptjs") : require("bcrypt")
-import { v4 } from "uuid"
 
 const SALT_ROUNDS = env.SALT_ROUNDS || 10
 
@@ -11,8 +11,4 @@ export async function hash(data: string) {
 
 export async function compare(data: string, encrypted: string) {
   return bcrypt.compare(data, encrypted)
-}
-
-export function newid() {
-  return v4().replace(/-/g, "")
 }
