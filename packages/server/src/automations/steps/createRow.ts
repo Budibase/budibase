@@ -3,11 +3,11 @@ import { cleanUpRow, getError } from "../automationUtils"
 import { buildCtx } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
 } from "@budibase/types"
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   name: "Create Row",
   tagline: "Create a {{inputs.enriched.table.name}} row",
   icon: "TableRowAddBottom",

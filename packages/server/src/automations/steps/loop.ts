@@ -1,6 +1,6 @@
-import { AutomationActionStepId, AutomationStep } from "@budibase/types"
+import { AutomationActionStepId, AutomationStepSchema } from "@budibase/types"
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   name: "Looping",
   icon: "Reuse",
   tagline: "Loop the block",

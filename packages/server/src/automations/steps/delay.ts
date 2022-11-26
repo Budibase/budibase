@@ -1,11 +1,11 @@
 import { wait } from "../../utilities"
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
 } from "@budibase/types"
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   name: "Delay",
   icon: "Clock",
   tagline: "Delay for {{inputs.time}} milliseconds",

@@ -41,8 +41,7 @@ export interface Automation extends Document {
   name: string
 }
 
-export interface AutomationStep {
-  id?: string
+export interface AutomationStepSchema {
   name: string
   tagline: string
   icon: string
@@ -65,9 +64,17 @@ export interface AutomationStep {
   }
 }
 
-export interface AutomationTrigger extends AutomationStep {
+export interface AutomationStep extends AutomationStepSchema {
+  id: string
+}
+
+export interface AutomationTriggerSchema extends AutomationStepSchema {
   event?: string
   cronJobId?: string
+}
+
+export interface AutomationTrigger extends AutomationTriggerSchema {
+  id: string
 }
 
 export enum AutomationStatus {

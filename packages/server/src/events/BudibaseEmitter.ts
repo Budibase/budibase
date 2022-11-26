@@ -21,7 +21,7 @@ class BudibaseEmitter extends EventEmitter {
     tableEmission({ emitter: this, eventName, appId, table })
   }
 
-  emitPort(portNumber: number) {
+  emitPort(portNumber?: number | string) {
     this.emit("internal:port", portNumber)
   }
 }

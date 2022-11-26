@@ -1,9 +1,9 @@
-import app from "./app"
-import cron from "./cron"
-import rowDeleted from "./rowDeleted"
-import rowSaved from "./rowSaved"
-import rowUpdated from "./rowUpdated"
-import webhook from "./webhook"
+import * as app from "./app"
+import * as cron from "./cron"
+import * as rowDeleted from "./rowDeleted"
+import * as rowSaved from "./rowSaved"
+import * as rowUpdated from "./rowUpdated"
+import * as webhook from "./webhook"
 
 export const definitions = {
   ROW_SAVED: rowSaved.definition,

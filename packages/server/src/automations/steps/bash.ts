@@ -1,14 +1,14 @@
 import { execSync } from "child_process"
 import { processStringSync } from "@budibase/string-templates"
-import automationUtils from "../automationUtils"
+import * as automationUtils from "../automationUtils"
 import environment from "../../environment"
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
 } from "@budibase/types"
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   name: "Bash Scripting",
   tagline: "Execute a bash command",
   icon: "JourneyEvent",

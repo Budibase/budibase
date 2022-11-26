@@ -1,5 +1,5 @@
 import Router from "@koa/router"
-import controller from "../controllers/integration"
+import * as controller from "../controllers/integration"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 

@@ -14,7 +14,7 @@ import {
   RelationshipTypes,
 } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import csvParser from "../../../utilities/csvParser"
+import * as csvParser from "../../../utilities/csvParser"
 import { handleRequest } from "../row/external"
 import { events, context } from "@budibase/backend-core"
 import {

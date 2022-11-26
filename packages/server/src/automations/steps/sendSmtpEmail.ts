@@ -1,12 +1,12 @@
 import { sendSmtpEmail } from "../../utilities/workerRequests"
-import automationUtils from "../automationUtils"
+import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
 } from "@budibase/types"
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   description: "Send an email using SMTP",
   tagline: "Send SMTP email to {{inputs.to}}",
   icon: "Email",

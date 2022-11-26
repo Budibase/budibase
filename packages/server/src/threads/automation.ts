@@ -6,8 +6,8 @@ import {
   disableCronById,
   isErrorInOutput,
 } from "../automations/utils"
-import { default as actions } from "../automations/actions"
-import { default as automationUtils } from "../automations/automationUtils"
+import * as actions from "../automations/actions"
+import * as automationUtils from "../automations/automationUtils"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
 import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { definitions as triggerDefs } from "../automations/triggerInfo"
@@ -335,7 +335,7 @@ class Orchestrator {
                   )) {
                     originalStepInput[key][innerKey][innerObject] =
                       automationUtils.substituteLoopStep(
-                        innerValue,
+                        innerValue as string,
                         `steps.${loopStepNumber}`
                       )
                   }

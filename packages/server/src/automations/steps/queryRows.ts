@@ -2,10 +2,10 @@ import * as rowController from "../../api/controllers/row"
 import * as tableController from "../../api/controllers/table"
 import { FieldTypes } from "../../constants"
 import { buildCtx } from "./utils"
-import automationUtils from "../automationUtils"
+import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
   SearchFilters,
   Table,
@@ -31,7 +31,7 @@ const EmptyFilterOptionPretty = {
   [EmptyFilterOption.RETURN_NONE]: "Return no rows",
 }
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   description: "Query rows from the database",
   icon: "Search",
   name: "Query rows",

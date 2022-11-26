@@ -1,6 +1,6 @@
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
 } from "@budibase/types"
 
@@ -18,7 +18,7 @@ export const PrettyFilterConditions = {
   [FilterConditions.LESS_THAN]: "Less than",
 }
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   name: "Condition",
   tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
   icon: "Branch2",

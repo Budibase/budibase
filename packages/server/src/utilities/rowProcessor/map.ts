@@ -4,7 +4,7 @@ import { FieldTypes } from "../../constants"
 /**
  * A map of how we convert various properties in rows to each other based on the row type.
  */
-exports.TYPE_TRANSFORM_MAP = {
+export const TYPE_TRANSFORM_MAP: any = {
   [FieldTypes.LINK]: {
     "": [],
     [null]: [],

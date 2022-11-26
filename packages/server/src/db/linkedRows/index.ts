@@ -100,7 +100,7 @@ async function getFullLinkedDocs(links: LinkDocumentValue[]) {
  * row operations and the table for table operations.
  */
 export async function updateLinks(args: {
-  tableId: string
+  tableId?: string
   eventType: string
   row?: Row
   table?: Table

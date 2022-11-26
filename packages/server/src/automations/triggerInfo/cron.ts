@@ -1,6 +1,9 @@
-import { AutomationTrigger, AutomationTriggerStepId } from "@budibase/types"
+import {
+  AutomationTriggerSchema,
+  AutomationTriggerStepId,
+} from "@budibase/types"
 
-export const definition: AutomationTrigger = {
+export const definition: AutomationTriggerSchema = {
   name: "Cron Trigger",
   event: "cron:trigger",
   icon: "Clock",

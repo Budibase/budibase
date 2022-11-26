@@ -1,4 +1,4 @@
-import linkRows from "../../db/linkedRows"
+import * as linkRows from "../../db/linkedRows"
 import { FieldTypes, AutoFieldSubTypes } from "../../constants"
 import { attachmentsRelativeURL } from "../index"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
@@ -189,10 +189,10 @@ export async function outputProcessing(
     wasArray = false
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(table, rows)
+  let enriched = await linkRows.attachFullLinkedDocs(table, rows as Row[])
 
   // process formulas
-  enriched = processFormulas(table, enriched, { dynamic: true })
+  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
 
   // update the attachments URL depending on hosting
   for (let [property, column] of Object.entries(table.schema)) {

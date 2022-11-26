@@ -122,9 +122,9 @@ export async function finaliseRow(
   const db = context.getAppDB()
   row.type = "row"
   // process the row before return, to include relationships
-  let enrichedRow = await outputProcessing(table, cloneDeep(row), {
+  let enrichedRow = (await outputProcessing(table, cloneDeep(row), {
     squash: false,
-  })
+  })) as Row
   // use enriched row to generate formulas for saving, specifically only use as context
   row = processFormulas(table, row, {
     dynamic: false,

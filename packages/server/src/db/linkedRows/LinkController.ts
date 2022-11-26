@@ -13,7 +13,7 @@ import {
 } from "@budibase/types"
 
 type LinkControllerOpts = {
-  tableId: string
+  tableId?: string
   row?: Row
   table?: Table
   oldTable?: Table
@@ -21,7 +21,7 @@ type LinkControllerOpts = {
 
 class LinkController {
   _db: Database
-  _tableId: string
+  _tableId?: string
   _row?: Row
   _table?: Table
   _oldTable?: Table
