@@ -191,7 +191,7 @@ export async function fetchView(ctx: BBContext) {
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(DocumentType.TABLE)) {
     ctx.params.tableId = viewName
-    return exports.fetch(ctx)
+    return fetch(ctx)
   }
 
   const db = context.getAppDB()
@@ -347,7 +347,7 @@ export async function bulkDestroy(ctx: BBContext) {
 export async function search(ctx: BBContext) {
   // Fetch the whole table when running in cypress, as search doesn't work
   if (!env.COUCH_DB_URL && env.isCypress()) {
-    return { rows: await exports.fetch(ctx) }
+    return { rows: await fetch(ctx) }
   }
 
   const { tableId } = ctx.params
