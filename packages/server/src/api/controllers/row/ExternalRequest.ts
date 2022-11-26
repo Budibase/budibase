@@ -209,12 +209,16 @@ module External {
   }
 
   class ExternalRequest {
-    private operation: Operation
+    private operation: DataSourceOperation
     private tableId: string
     private datasource: Datasource
     private tables: { [key: string]: Table } = {}
 
-    constructor(operation: Operation, tableId: string, datasource: Datasource) {
+    constructor(
+      operation: DataSourceOperation,
+      tableId: string,
+      datasource: Datasource
+    ) {
       this.operation = operation
       this.tableId = tableId
       this.datasource = datasource

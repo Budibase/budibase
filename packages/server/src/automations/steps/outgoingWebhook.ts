@@ -1,9 +1,9 @@
 import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
-import automationUtils from "../automationUtils"
+import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
 } from "@budibase/types"
 
@@ -21,7 +21,7 @@ const BODY_REQUESTS = [RequestType.POST, RequestType.PUT, RequestType.PATCH]
  * NOTE: this functionality is deprecated - it no longer should be used.
  */
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   deprecated: true,
   name: "Outgoing webhook",
   tagline: "Send a {{inputs.requestMethod}} request",

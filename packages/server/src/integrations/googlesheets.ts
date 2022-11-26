@@ -266,6 +266,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         this.deleteTable(json?.table?.name),
     }
 
+    // @ts-ignore
     const internalQueryMethod = handlers[json.endpoint.operation]
 
     return await internalQueryMethod()

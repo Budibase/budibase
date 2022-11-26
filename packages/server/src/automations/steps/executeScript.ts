@@ -1,13 +1,13 @@
 import * as scriptController from "../../api/controllers/script"
 import { buildCtx } from "./utils"
-import automationUtils from "../automationUtils"
+import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
 } from "@budibase/types"
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   name: "JS Scripting",
   tagline: "Execute JavaScript Code",
   icon: "Code",

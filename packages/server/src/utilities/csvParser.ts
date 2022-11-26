@@ -8,7 +8,7 @@ type CsvParseOpts = {
   csvString?: string
 }
 
-const VALIDATORS = {
+const VALIDATORS: any = {
   [FieldTypes.STRING]: () => true,
   [FieldTypes.OPTIONS]: () => true,
   [FieldTypes.BARCODEQR]: () => true,
@@ -28,7 +28,7 @@ const VALIDATORS = {
   },
 }
 
-const PARSERS = {
+const PARSERS: any = {
   [FieldTypes.NUMBER]: (attribute?: string) => {
     if (!attribute) {
       return attribute
@@ -43,7 +43,7 @@ const PARSERS = {
   },
 }
 
-export function parse(csvString: string, parsers: any) {
+export function parse(csvString: string, parsers: any): Record<string, any> {
   const result = csv().fromString(csvString)
 
   const schema: Record<string, any> = {}
@@ -89,7 +89,7 @@ export function updateSchema({
   existingTable,
 }: {
   schema?: Record<string, any>
-  existingTable: Table
+  existingTable?: Table
 }) {
   if (!schema) {
     return schema
@@ -97,7 +97,7 @@ export function updateSchema({
   const finalSchema: Record<string, FieldSchema> = {}
   const schemaKeyMap: Record<string, any> = {}
   Object.keys(schema).forEach(key => (schemaKeyMap[key.toLowerCase()] = key))
-  for (let [key, field] of Object.entries(existingTable.schema)) {
+  for (let [key, field] of Object.entries(existingTable?.schema || {})) {
     const lcKey = key.toLowerCase()
     const foundKey: string = schemaKeyMap[lcKey]
     if (foundKey) {

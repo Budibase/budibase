@@ -1,6 +1,6 @@
 import * as internal from "./internal"
 import * as external from "./external"
-import csvParser from "../../../utilities/csvParser"
+import * as csvParser from "../../../utilities/csvParser"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { getDatasourceParams } from "../../../db/utils"
 import { context, events } from "@budibase/backend-core"
@@ -103,7 +103,10 @@ export async function validateCSVSchema(ctx: BBContext) {
   if (tableId) {
     existingTable = await sdk.tables.getTable(tableId)
   }
-  let result = await csvParser.parse(csvString, schema)
+  let result: Record<string, any> | undefined = await csvParser.parse(
+    csvString,
+    schema
+  )
   if (existingTable) {
     result = csvParser.updateSchema({ schema: result, existingTable })
   }

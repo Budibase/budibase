@@ -2,11 +2,11 @@ import fetch from "node-fetch"
 import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
 } from "@budibase/types"
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   name: "Zapier Webhook",
   stepId: AutomationActionStepId.zapier,
   type: "ACTION",

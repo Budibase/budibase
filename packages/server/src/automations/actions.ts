@@ -15,7 +15,7 @@ import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
 import * as loop from "./steps/loop"
 import env from "../environment"
-import { AutomationStep, AutomationStepInput } from "@budibase/types"
+import { AutomationStepSchema, AutomationStepInput } from "@budibase/types"
 
 const ACTION_IMPLS: Record<
   string,
@@ -38,7 +38,7 @@ const ACTION_IMPLS: Record<
   zapier: zapier.run,
   integromat: integromat.run,
 }
-export const ACTION_DEFINITIONS: Record<string, AutomationStep> = {
+export const ACTION_DEFINITIONS: Record<string, AutomationStepSchema> = {
   SEND_EMAIL_SMTP: sendSmtpEmail.definition,
   CREATE_ROW: createRow.definition,
   UPDATE_ROW: updateRow.definition,

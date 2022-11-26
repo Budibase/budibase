@@ -10,7 +10,7 @@ if (process.env.ELASTIC_APM_ENABLED) {
 }
 
 import { ExtendableContext } from "koa"
-import db from "./db"
+import * as db from "./db"
 db.init()
 const Koa = require("koa")
 const destroyable = require("server-destroy")

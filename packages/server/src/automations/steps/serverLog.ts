@@ -1,6 +1,6 @@
 import {
   AutomationActionStepId,
-  AutomationStep,
+  AutomationStepSchema,
   AutomationStepInput,
 } from "@budibase/types"
 
@@ -10,7 +10,7 @@ import {
  * GET/DELETE requests cannot handle body elements so they will not be sent if configured.
  */
 
-export const definition: AutomationStep = {
+export const definition: AutomationStepSchema = {
   name: "Backend log",
   tagline: "Console log a value in the backend",
   icon: "Monitoring",
