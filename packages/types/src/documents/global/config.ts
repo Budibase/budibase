@@ -31,6 +31,16 @@ export interface GoogleConfig extends Config {
   }
 }
 
+export interface OIDCConfiguration {
+  issuer: string
+  authorizationURL: string
+  tokenURL: string
+  userInfoURL: string
+  clientID: string
+  clientSecret: string
+  callbackURL: string
+}
+
 export interface OIDCInnerCfg {
   configUrl: string
   clientID: string

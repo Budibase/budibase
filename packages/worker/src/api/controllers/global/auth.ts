@@ -1,26 +1,30 @@
-import { utils, constants, auth, db as dbCore } from "@budibase/backend-core"
 import {
-  events,
-  users as usersCore,
+  auth,
+  constants,
   context,
+  db as dbCore,
+  events,
   tenancy,
+  users as usersCore,
+  utils,
 } from "@budibase/backend-core"
 import { EmailTemplatePurpose } from "../../../constants"
-import { sendEmail, isEmailConfigured } from "../../../utilities/email"
+import { isEmailConfigured, sendEmail } from "../../../utilities/email"
 import { checkResetPasswordCode } from "../../../utilities/redis"
 import env from "../../../environment"
 import sdk from "../../../sdk"
-import { User, Config, ConfigType } from "@budibase/types"
+import { Config, ConfigType, User } from "@budibase/types"
+
 const { setCookie, getCookie, clearCookie, hash, platformLogout } = utils
 const { Cookie, Header } = constants
 const { passport, ssoCallbackUrl, google, oidc } = auth
 
-export async function googleCallbackUrl(config?: Config) {
-  return ssoCallbackUrl(tenancy.getGlobalDB(), config, "google")
+export async function googleCallbackUrl(config?: { callbackURL?: string }) {
+  return ssoCallbackUrl(tenancy.getGlobalDB(), config, ConfigType.GOOGLE)
 }
 
-export async function oidcCallbackUrl(config?: Config) {
-  return ssoCallbackUrl(tenancy.getGlobalDB(), config, "oidc")
+export async function oidcCallbackUrl(config?: { callbackURL?: string }) {
+  return ssoCallbackUrl(tenancy.getGlobalDB(), config, ConfigType.OIDC)
 }
 
 async function authInternal(ctx: any, user: any, err = null, info = null) {

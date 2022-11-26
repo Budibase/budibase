@@ -371,7 +371,7 @@ export async function destroy(ctx: BBContext) {
   const { id, rev } = ctx.params
   try {
     await db.remove(id, rev)
-    await cache.delete(cache.CacheKey.CHECKLIST)
+    await cache.destroy(cache.CacheKey.CHECKLIST)
     ctx.body = { message: "Config deleted successfully" }
   } catch (err: any) {
     ctx.throw(err.status, err)

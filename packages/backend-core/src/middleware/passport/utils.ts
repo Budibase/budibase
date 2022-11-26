@@ -20,8 +20,8 @@ export function authError(done: Function, message: string, err?: any) {
 
 export async function ssoCallbackUrl(
   db: Database,
-  config: { callbackURL?: string },
-  type: ConfigType
+  config?: { callbackURL?: string },
+  type?: ConfigType
 ) {
   // incase there is a callback URL from before
   if (config && config.callbackURL) {

@@ -8,6 +8,7 @@ import { getGlobalDB, doInTenant } from "../tenancy"
 import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
+import { BBContext, EndpointMatcher } from "@budibase/types"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
   ? parseInt(env.SESSION_UPDATE_PERIOD)
@@ -65,14 +66,14 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
  * The tenancy modules should not be used here and it should be assumed that the tenancy context
  * has not yet been populated.
  */
-export = (
-  noAuthPatterns = [],
+export = function (
+  noAuthPatterns: EndpointMatcher[] = [],
   opts: { publicAllowed: boolean; populateUser?: Function } = {
     publicAllowed: false,
   }
-) => {
+) {
   const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
-  return async (ctx: any, next: any) => {
+  return async (ctx: BBContext | any, next: any) => {
     let publicEndpoint = false
     const version = ctx.request.headers[Header.API_VER]
     // the path is not authenticated

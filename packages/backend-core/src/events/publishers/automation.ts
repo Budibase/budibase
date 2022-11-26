@@ -19,7 +19,7 @@ export async function created(
   const properties: AutomationCreatedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
-    triggerId: automation.definition?.trigger?.id,
+    triggerId: automation.definition?.trigger?.id!,
     triggerType: automation.definition?.trigger?.stepId,
   }
   await publishEvent(Event.AUTOMATION_CREATED, properties, timestamp)
@@ -29,7 +29,7 @@ export async function triggerUpdated(automation: Automation) {
   const properties: AutomationTriggerUpdatedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
-    triggerId: automation.definition?.trigger?.id,
+    triggerId: automation.definition?.trigger?.id!,
     triggerType: automation.definition?.trigger?.stepId,
   }
   await publishEvent(Event.AUTOMATION_TRIGGER_UPDATED, properties)
@@ -39,7 +39,7 @@ export async function deleted(automation: Automation) {
   const properties: AutomationDeletedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
-    triggerId: automation.definition?.trigger?.id,
+    triggerId: automation.definition?.trigger?.id!,
     triggerType: automation.definition?.trigger?.stepId,
   }
   await publishEvent(Event.AUTOMATION_DELETED, properties)
@@ -49,7 +49,7 @@ export async function tested(automation: Automation) {
   const properties: AutomationTestedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
-    triggerId: automation.definition?.trigger?.id,
+    triggerId: automation.definition?.trigger?.id!,
     triggerType: automation.definition?.trigger?.stepId,
   }
   await publishEvent(Event.AUTOMATION_TESTED, properties)
@@ -70,9 +70,9 @@ export async function stepCreated(
   const properties: AutomationStepCreatedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
-    triggerId: automation.definition?.trigger?.id,
+    triggerId: automation.definition?.trigger?.id!,
     triggerType: automation.definition?.trigger?.stepId,
-    stepId: step.id,
+    stepId: step.id!,
     stepType: step.stepId,
   }
   await publishEvent(Event.AUTOMATION_STEP_CREATED, properties, timestamp)
@@ -85,9 +85,9 @@ export async function stepDeleted(
   const properties: AutomationStepDeletedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
-    triggerId: automation.definition?.trigger?.id,
+    triggerId: automation.definition?.trigger?.id!,
     triggerType: automation.definition?.trigger?.stepId,
-    stepId: step.id,
+    stepId: step.id!,
     stepType: step.stepId,
   }
   await publishEvent(Event.AUTOMATION_STEP_DELETED, properties)

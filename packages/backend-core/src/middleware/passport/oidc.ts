@@ -8,6 +8,7 @@ import {
   Database,
   SSOProfile,
   ThirdPartyUser,
+  OIDCConfiguration,
 } from "@budibase/types"
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 
@@ -103,7 +104,10 @@ function validEmail(value: string) {
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
  * @returns Dynamically configured Passport OIDC Strategy
  */
-export async function strategyFactory(config: Config, saveUserFn?: Function) {
+export async function strategyFactory(
+  config: OIDCConfiguration,
+  saveUserFn?: Function
+) {
   try {
     const verify = buildVerifyFn(saveUserFn)
     const strategy = new OIDCStrategy(config, verify)
@@ -118,7 +122,7 @@ export async function strategyFactory(config: Config, saveUserFn?: Function) {
 export async function fetchStrategyConfig(
   enrichedConfig: OIDCInnerCfg,
   callbackUrl?: string
-) {
+): Promise<OIDCConfiguration> {
   try {
     const { clientID, clientSecret, configUrl } = enrichedConfig
 

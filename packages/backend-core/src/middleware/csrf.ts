@@ -1,6 +1,6 @@
 import { Header } from "../constants"
 import { buildMatcherRegex, matches } from "./matchers"
-import { BBContext } from "@budibase/types"
+import { BBContext, EndpointMatcher } from "@budibase/types"
 
 /**
  * GET, HEAD and OPTIONS methods are considered safe operations
@@ -32,9 +32,11 @@ const INCLUDED_CONTENT_TYPES = [
  * https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern
  *
  */
-export = (opts = { noCsrfPatterns: [] }) => {
+export = function (
+  opts: { noCsrfPatterns: EndpointMatcher[] } = { noCsrfPatterns: [] }
+) {
   const noCsrfOptions = buildMatcherRegex(opts.noCsrfPatterns)
-  return async (ctx: BBContext, next: any) => {
+  return async (ctx: BBContext | any, next: any) => {
     // don't apply for excluded paths
     const found = matches(ctx, noCsrfOptions)
     if (found) {
