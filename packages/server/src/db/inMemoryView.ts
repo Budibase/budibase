@@ -8,8 +8,8 @@ const Pouch = dbCore.getPouch({ inMemory: true })
 
 export async function runView(
   view: View,
-  calculation: boolean,
-  group: string,
+  calculation: string,
+  group: boolean,
   data: Row[]
 ) {
   // use a different ID each time for the DB, make sure they

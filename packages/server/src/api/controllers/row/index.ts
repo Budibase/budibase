@@ -1,6 +1,6 @@
 import { quotas } from "@budibase/pro"
-import internal from "./internal"
-import external from "./external"
+import * as internal from "./internal"
+import * as external from "./external"
 import { isExternalTable } from "../../../integrations/utils"
 
 function pickApi(tableId: any) {
