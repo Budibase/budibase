@@ -67,7 +67,8 @@ const environment = {
   ENCRYPTED_TEST_PUBLIC_API_KEY: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY,
   _set(key: any, value: any) {
     process.env[key] = value
-    module.exports[key] = value
+    // @ts-ignore
+    env[key] = value
   },
   isDev,
   isTest,
@@ -84,7 +85,7 @@ if (!environment.APPS_URL) {
 }
 
 // clean up any environment variable edge cases
-for (let [key, value] of Object.entries(module.exports)) {
+for (let [key, value] of Object.entries(env)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
     // @ts-ignore
