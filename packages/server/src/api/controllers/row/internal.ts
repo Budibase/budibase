@@ -1,34 +1,41 @@
-const linkRows = require("../../../db/linkedRows")
-const {
+import * as linkRows from "../../../db/linkedRows"
+import {
   generateRowID,
   getRowParams,
   getTableIDFromRowID,
   DocumentType,
   InternalTables,
-} = require("../../../db/utils")
-const userController = require("../user")
-const {
+} from "../../../db/utils"
+import * as userController from "../user"
+import {
   inputProcessing,
   outputProcessing,
   cleanupAttachments,
-} = require("../../../utilities/rowProcessor")
-const { FieldTypes } = require("../../../constants")
-const { validate, findRow } = require("./utils")
-const { fullSearch, paginatedSearch } = require("./internalSearch")
-const { getGlobalUsersFromMetadata } = require("../../../utilities/global")
-const inMemoryViews = require("../../../db/inMemoryView")
-const env = require("../../../environment")
-const {
+} from "../../../utilities/rowProcessor"
+import { FieldTypes } from "../../../constants"
+import { validate as rowValidate, findRow } from "./utils"
+import { fullSearch, paginatedSearch } from "./internalSearch"
+import { getGlobalUsersFromMetadata } from "../../../utilities/global"
+import * as inMemoryViews from "../../../db/inMemoryView"
+import env from "../../../environment"
+import {
   migrateToInMemoryView,
   migrateToDesignView,
   getFromDesignDoc,
   getFromMemoryDoc,
-} = require("../view/utils")
-const { cloneDeep } = require("lodash/fp")
-const { context, db: dbCore } = require("@budibase/backend-core")
-const { finaliseRow, updateRelatedFormula } = require("./staticFormula")
-const exporters = require("../view/exporters")
-const { apiFileReturn } = require("../../../utilities/fileSystem")
+} from "../view/utils"
+import { cloneDeep } from "lodash/fp"
+import { context, db as dbCore } from "@budibase/backend-core"
+import { finaliseRow, updateRelatedFormula } from "./staticFormula"
+import * as exporters from "../view/exporters"
+import { apiFileReturn } from "../../../utilities/fileSystem"
+import {
+  BBContext,
+  Database,
+  LinkDocumentValue,
+  Row,
+  Table,
+} from "@budibase/types"
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -36,7 +43,7 @@ const CALCULATION_TYPES = {
   STATS: "stats",
 }
 
-async function getView(db, viewName) {
+async function getView(db: Database, viewName: string) {
   let mainGetter = env.SELF_HOSTED ? getFromDesignDoc : getFromMemoryDoc
   let secondaryGetter = env.SELF_HOSTED ? getFromMemoryDoc : getFromDesignDoc
   let migration = env.SELF_HOSTED ? migrateToDesignView : migrateToInMemoryView
@@ -44,7 +51,7 @@ async function getView(db, viewName) {
     migrate = false
   try {
     viewInfo = await mainGetter(db, viewName)
-  } catch (err) {
+  } catch (err: any) {
     // check if it can be retrieved from design doc (needs migrated)
     if (err.status !== 404) {
       viewInfo = null
@@ -62,7 +69,7 @@ async function getView(db, viewName) {
   return viewInfo
 }
 
-async function getRawTableData(ctx, db, tableId) {
+async function getRawTableData(ctx: BBContext, db: Database, tableId: string) {
   let rows
   if (tableId === InternalTables.USER_METADATA) {
     await userController.fetchMetadata(ctx)
@@ -75,10 +82,10 @@ async function getRawTableData(ctx, db, tableId) {
     )
     rows = response.rows.map(row => row.doc)
   }
-  return rows
+  return rows as Row[]
 }
 
-exports.patch = async ctx => {
+export async function patch(ctx: BBContext) {
   const db = context.getAppDB()
   const inputs = ctx.request.body
   const tableId = inputs.tableId
@@ -103,15 +110,15 @@ exports.patch = async ctx => {
   }
   let dbTable = await db.get(tableId)
   // need to build up full patch fields before coerce
-  let combinedRow = cloneDeep(oldRow)
+  let combinedRow: any = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
     if (!dbTable.schema[key]) continue
     combinedRow[key] = inputs[key]
   }
 
   // this returns the table and row incase they have been updated
-  let { table, row } = inputProcessing(ctx.user, dbTable, combinedRow)
-  const validateResult = await validate({
+  let { table, row } = inputProcessing(ctx.user!, dbTable, combinedRow)
+  const validateResult = await rowValidate({
     row,
     table,
   })
@@ -121,12 +128,12 @@ exports.patch = async ctx => {
   }
 
   // returned row is cleaned and prepared for writing to DB
-  row = await linkRows.updateLinks({
+  row = (await linkRows.updateLinks({
     eventType: linkRows.EventType.ROW_UPDATE,
     row,
     tableId: row.tableId,
     table,
-  })
+  })) as Row
   // check if any attachments removed
   await cleanupAttachments(table, { oldRow, row })
 
@@ -143,7 +150,7 @@ exports.patch = async ctx => {
   })
 }
 
-exports.save = async function (ctx) {
+export async function save(ctx: BBContext) {
   const db = context.getAppDB()
   let inputs = ctx.request.body
   inputs.tableId = ctx.params.tableId
@@ -154,8 +161,8 @@ exports.save = async function (ctx) {
 
   // this returns the table and row incase they have been updated
   const dbTable = await db.get(inputs.tableId)
-  let { table, row } = inputProcessing(ctx.user, dbTable, inputs)
-  const validateResult = await validate({
+  let { table, row } = inputProcessing(ctx.user!, dbTable, inputs)
+  const validateResult = await rowValidate({
     row,
     table,
   })
@@ -165,12 +172,12 @@ exports.save = async function (ctx) {
   }
 
   // make sure link rows are up to date
-  row = await linkRows.updateLinks({
+  row = (await linkRows.updateLinks({
     eventType: linkRows.EventType.ROW_SAVE,
     row,
     tableId: row.tableId,
     table,
-  })
+  })) as Row
 
   return finaliseRow(table, row, {
     oldTable: dbTable,
@@ -178,7 +185,7 @@ exports.save = async function (ctx) {
   })
 }
 
-exports.fetchView = async ctx => {
+export async function fetchView(ctx: BBContext) {
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
@@ -199,7 +206,12 @@ exports.fetchView = async ctx => {
   } else {
     const tableId = viewInfo.meta.tableId
     const data = await getRawTableData(ctx, db, tableId)
-    response = await inMemoryViews.runView(viewInfo, calculation, group, data)
+    response = await inMemoryViews.runView(
+      viewInfo,
+      calculation as string,
+      !!group,
+      data
+    )
   }
 
   let rows
@@ -240,7 +252,7 @@ exports.fetchView = async ctx => {
   return rows
 }
 
-exports.fetch = async ctx => {
+export async function fetch(ctx: BBContext) {
   const db = context.getAppDB()
 
   const tableId = ctx.params.tableId
@@ -249,7 +261,7 @@ exports.fetch = async ctx => {
   return outputProcessing(table, rows)
 }
 
-exports.find = async ctx => {
+export async function find(ctx: BBContext) {
   const db = dbCore.getDB(ctx.appId)
   const table = await db.get(ctx.params.tableId)
   let row = await findRow(ctx, ctx.params.tableId, ctx.params.rowId)
@@ -257,7 +269,7 @@ exports.find = async ctx => {
   return row
 }
 
-exports.destroy = async function (ctx) {
+export async function destroy(ctx: BBContext) {
   const db = context.getAppDB()
   const { _id } = ctx.request.body
   let row = await db.get(_id)
@@ -293,7 +305,7 @@ exports.destroy = async function (ctx) {
   return { response, row }
 }
 
-exports.bulkDestroy = async ctx => {
+export async function bulkDestroy(ctx: BBContext) {
   const db = context.getAppDB()
   const tableId = ctx.params.tableId
   const table = await db.get(tableId)
@@ -301,10 +313,12 @@ exports.bulkDestroy = async ctx => {
 
   // before carrying out any updates, make sure the rows are ready to be returned
   // they need to be the full rows (including previous relationships) for automations
-  rows = await outputProcessing(table, rows, { squash: false })
+  const processedRows = (await outputProcessing(table, rows, {
+    squash: false,
+  })) as Row[]
 
   // remove the relationships first
-  let updates = rows.map(row =>
+  let updates: Promise<any>[] = processedRows.map(row =>
     linkRows.updateLinks({
       eventType: linkRows.EventType.ROW_DELETE,
       row,
@@ -313,7 +327,7 @@ exports.bulkDestroy = async ctx => {
   )
   if (tableId === InternalTables.USER_METADATA) {
     updates = updates.concat(
-      rows.map(row => {
+      processedRows.map(row => {
         ctx.params = {
           id: row._id,
         }
@@ -321,16 +335,16 @@ exports.bulkDestroy = async ctx => {
       })
     )
   } else {
-    await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
+    await db.bulkDocs(processedRows.map(row => ({ ...row, _deleted: true })))
   }
   // remove any attachments that were on the rows from object storage
-  await cleanupAttachments(table, { rows })
-  await updateRelatedFormula(table, rows)
+  await cleanupAttachments(table, { rows: processedRows })
+  await updateRelatedFormula(table, processedRows)
   await Promise.all(updates)
-  return { response: { ok: true }, rows }
+  return { response: { ok: true }, rows: processedRows }
 }
 
-exports.search = async ctx => {
+export async function search(ctx: BBContext) {
   // Fetch the whole table when running in cypress, as search doesn't work
   if (!env.COUCH_DB_URL && env.isCypress()) {
     return { rows: await exports.fetch(ctx) }
@@ -362,14 +376,14 @@ exports.search = async ctx => {
   return response
 }
 
-exports.validate = async ctx => {
-  return validate({
+export async function validate(ctx: BBContext) {
+  return rowValidate({
     tableId: ctx.params.tableId,
     row: ctx.request.body,
   })
 }
 
-exports.exportRows = async ctx => {
+export async function exportRows(ctx: BBContext) {
   const db = context.getAppDB()
   const table = await db.get(ctx.params.tableId)
   const rowIds = ctx.request.body.rows
@@ -382,8 +396,8 @@ exports.exportRows = async ctx => {
     })
   ).rows.map(row => row.doc)
 
-  let result = await outputProcessing(table, response)
-  let rows = []
+  let result = (await outputProcessing(table, response)) as Row[]
+  let rows: Row[] = []
 
   // Filter data to only specified columns if required
   if (columns && columns.length) {
@@ -398,6 +412,7 @@ exports.exportRows = async ctx => {
   }
 
   let headers = Object.keys(rows[0])
+  // @ts-ignore
   const exporter = exporters[format]
   const filename = `export.${format}`
 
@@ -406,7 +421,7 @@ exports.exportRows = async ctx => {
   return apiFileReturn(exporter(headers, rows))
 }
 
-exports.fetchEnrichedRow = async ctx => {
+export async function fetchEnrichedRow(ctx: BBContext) {
   const db = context.getAppDB()
   const tableId = ctx.params.tableId
   const rowId = ctx.params.rowId
@@ -416,10 +431,10 @@ exports.fetchEnrichedRow = async ctx => {
     findRow(ctx, tableId, rowId),
   ])
   // get the link docs
-  const linkVals = await linkRows.getLinkDocuments({
+  const linkVals = (await linkRows.getLinkDocuments({
     tableId,
     rowId,
-  })
+  })) as LinkDocumentValue[]
   // look up the actual rows based on the ids
   let response = (
     await db.allDocs({
@@ -428,8 +443,8 @@ exports.fetchEnrichedRow = async ctx => {
     })
   ).rows.map(row => row.doc)
   // group responses by table
-  let groups = {},
-    tables = {}
+  let groups: any = {},
+    tables: Record<string, Table> = {}
   for (let row of response) {
     if (!row.tableId) {
       row.tableId = getTableIDFromRowID(row._id)
@@ -442,11 +457,11 @@ exports.fetchEnrichedRow = async ctx => {
       groups[linkedTableId].push(row)
     }
   }
-  let linkedRows = []
+  let linkedRows: Row[] = []
   for (let [tableId, rows] of Object.entries(groups)) {
     // need to include the IDs in these rows for any links they may have
     linkedRows = linkedRows.concat(
-      await outputProcessing(tables[tableId], rows)
+      await outputProcessing(tables[tableId], rows as Row[])
     )
   }
 

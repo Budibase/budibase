@@ -16,7 +16,7 @@ const { cloneDeep } = require("lodash/fp")
  * updated.
  * NOTE: this will only for affect static formulas.
  */
-exports.updateRelatedFormula = async (table: Table, enrichedRows: Row[]) => {
+export async function updateRelatedFormula(table: Table, enrichedRows: Row[]) {
   const db = context.getAppDB()
   // no formula to update, we're done
   if (!table.relatedFormula) {

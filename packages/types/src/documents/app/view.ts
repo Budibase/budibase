@@ -33,7 +33,7 @@ export interface ViewStatisticsSchema {
 }
 
 export interface ViewFilter {
-  value: any
+  value?: any
   condition: string
   key: string
   conjunction?: string

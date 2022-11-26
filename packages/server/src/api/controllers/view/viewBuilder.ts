@@ -1,4 +1,14 @@
-const TOKEN_MAP = {
+import { ViewFilter } from "@budibase/types"
+
+type ViewTemplateOpts = {
+  field: string
+  tableId: string
+  groupBy: string
+  filters: ViewFilter[]
+  calculation: string
+}
+
+const TOKEN_MAP: Record<string, string> = {
   EQUALS: "===",
   NOT_EQUALS: "!==",
   LT: "<",
@@ -10,13 +20,13 @@ const TOKEN_MAP = {
   OR: "||",
 }
 
-const CONDITIONS = {
+const CONDITIONS: Record<string, string> = {
   EMPTY: "EMPTY",
   NOT_EMPTY: "NOT_EMPTY",
   CONTAINS: "CONTAINS",
 }
 
-const isEmptyExpression = key => {
+function isEmptyExpression(key: string) {
   return `(
       doc["${key}"] === undefined ||
       doc["${key}"] === null ||
@@ -25,19 +35,19 @@ const isEmptyExpression = key => {
   )`
 }
 
-const GROUP_PROPERTY = {
+const GROUP_PROPERTY: Record<string, { type: string }> = {
   group: {
     type: "string",
   },
 }
 
-const FIELD_PROPERTY = {
+const FIELD_PROPERTY: Record<string, { type: string }> = {
   field: {
     type: "string",
   },
 }
 
-const SCHEMA_MAP = {
+const SCHEMA_MAP: Record<string, any> = {
   sum: {
     field: "string",
     value: "number",
@@ -74,7 +84,7 @@ const SCHEMA_MAP = {
  * @param {Array} filters - an array of filter objects
  * @returns {String} JS Expression
  */
-function parseFilterExpression(filters) {
+function parseFilterExpression(filters: ViewFilter[]) {
   const expression = []
 
   let first = true
@@ -111,7 +121,7 @@ function parseFilterExpression(filters) {
  * @param {String?} field - field to use for calculations, if any
  * @param {String?} groupBy - field to group calculation results on, if any
  */
-function parseEmitExpression(field, groupBy) {
+function parseEmitExpression(field: string, groupBy: string) {
   return `emit(doc["${groupBy || "_id"}"], doc["${field}"]);`
 }
 
@@ -126,7 +136,13 @@ function parseEmitExpression(field, groupBy) {
  * filters: Array of filter objects containing predicates that are parsed into a JS expression
  * calculation: an optional calculation to be performed over the view data.
  */
-function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
+export = function ({
+  field,
+  tableId,
+  groupBy,
+  filters = [],
+  calculation,
+}: ViewTemplateOpts) {
   // first filter can't have a conjunction
   if (filters && filters.length > 0 && filters[0].conjunction) {
     delete filters[0].conjunction
@@ -179,5 +195,3 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
     ...reduction,
   }
 }
-
-module.exports = viewTemplate
