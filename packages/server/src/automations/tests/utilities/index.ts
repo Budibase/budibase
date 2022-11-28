@@ -1,23 +1,23 @@
-const TestConfig = require("../../../tests/utilities/TestConfiguration")
-const { context } = require("@budibase/backend-core")
-const actions = require("../../actions")
-const emitter = require("../../../events/index")
-const env = require("../../../environment")
+import TestConfig from "../../../tests/utilities/TestConfiguration"
+import { context } from "@budibase/backend-core"
+import { ACTION_DEFINITIONS, getAction } from "../../actions"
+import emitter from "../../../events/index"
+import env from "../../../environment"
 
-let config
+let config: any
 
-exports.getConfig = () => {
+export function getConfig() {
   if (!config) {
     config = new TestConfig(false)
   }
   return config
 }
 
-exports.afterAll = () => {
+export function afterAll() {
   config.end()
 }
 
-exports.runInProd = async fn => {
+export async function runInProd(fn: any) {
   env._set("NODE_ENV", "production")
   let error
   try {
@@ -31,15 +31,19 @@ exports.runInProd = async fn => {
   }
 }
 
-exports.runStep = async function runStep(stepId, inputs) {
+export async function runStep(stepId: string, inputs: any) {
   async function run() {
-    let step = await actions.getAction(stepId)
+    let step = await getAction(stepId)
     expect(step).toBeDefined()
+    if (!step) {
+      throw new Error("No step found")
+    }
     return step({
+      context: {},
       inputs,
       appId: config ? config.getAppId() : null,
       // don't really need an API key, mocked out usage quota, not being tested here
-      apiKey: exports.apiKey,
+      apiKey,
       emitter,
     })
   }
@@ -52,6 +56,5 @@ exports.runStep = async function runStep(stepId, inputs) {
   }
 }
 
-exports.apiKey = "test"
-
-exports.actions = actions.ACTION_DEFINITIONS
+export const apiKey = "test"
+export const actions = ACTION_DEFINITIONS

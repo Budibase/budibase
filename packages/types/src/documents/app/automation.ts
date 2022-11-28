@@ -115,4 +115,5 @@ export type AutomationStepInput = {
   context: Record<string, any>
   emitter: EventEmitter
   appId: string
+  apiKey?: string
 }
