@@ -1,5 +1,4 @@
 require("../../db").init()
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const env = require("../../environment")
 const {
   basicTable,
@@ -13,18 +12,21 @@ const {
   basicWebhook,
   TENANT_ID,
 } = require("./structures")
+const {
+  constants,
+  tenancy,
+  sessions,
+  cache,
+  context,
+  db: dbCore,
+  encryption,
+  auth,
+  roles,
+} = require("@budibase/backend-core")
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
-const { Cookie, Header } = require("@budibase/backend-core/constants")
-const { jwt } = require("@budibase/backend-core/auth")
-const { doInTenant, doWithGlobalDB } = require("@budibase/backend-core/tenancy")
-const { createASession } = require("@budibase/backend-core/sessions")
-const { user: userCache } = require("@budibase/backend-core/cache")
 const newid = require("../../db/newid")
-const context = require("@budibase/backend-core/context")
-const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
-const { encrypt } = require("@budibase/backend-core/encryption")
 const { DocumentType, generateUserMetadataID } = require("../../db/utils")
 const { startup } = require("../../startup")
 
@@ -83,7 +85,7 @@ class TestConfiguration {
     if (!appId) {
       appId = this.appId
     }
-    return doInTenant(TENANT_ID, () => {
+    return tenancy.doInTenant(TENANT_ID, () => {
       // check if already in a context
       if (context.getAppId() == null && appId !== null) {
         return context.doInAppContext(appId, async () => {
@@ -155,7 +157,7 @@ class TestConfiguration {
     email = EMAIL,
     roles,
   } = {}) {
-    return doWithGlobalDB(TENANT_ID, async db => {
+    return tenancy.doWithGlobalDB(TENANT_ID, async db => {
       let existing
       try {
         existing = await db.get(id)
@@ -170,7 +172,7 @@ class TestConfiguration {
         firstName,
         lastName,
       }
-      await createASession(id, {
+      await sessions.createASession(id, {
         sessionId: "sessionid",
         tenantId: TENANT_ID,
         csrfToken: CSRF_TOKEN,
@@ -212,7 +214,7 @@ class TestConfiguration {
       admin,
       roles,
     })
-    await userCache.invalidateUser(globalId)
+    await cache.user.invalidateUser(globalId)
     return {
       ...resp,
       globalId,
@@ -227,19 +229,19 @@ class TestConfiguration {
         throw "Server has not been opened, cannot login."
       }
       // make sure the user exists in the global DB
-      if (roleId !== BUILTIN_ROLE_IDS.PUBLIC) {
+      if (roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
         await this.globalUser({
           id: userId,
           builder,
           roles: { [this.prodAppId]: roleId },
         })
       }
-      await createASession(userId, {
+      await sessions.createASession(userId, {
         sessionId: "sessionid",
         tenantId: TENANT_ID,
       })
       // have to fake this
-      const auth = {
+      const authObj = {
         userId,
         sessionId: "sessionid",
         tenantId: TENANT_ID,
@@ -248,45 +250,45 @@ class TestConfiguration {
         roleId: roleId,
         appId,
       }
-      const authToken = jwt.sign(auth, env.JWT_SECRET)
-      const appToken = jwt.sign(app, env.JWT_SECRET)
+      const authToken = auth.jwt.sign(authObj, env.JWT_SECRET)
+      const appToken = auth.jwt.sign(app, env.JWT_SECRET)
 
       // returning necessary request headers
-      await userCache.invalidateUser(userId)
+      await cache.user.invalidateUser(userId)
       return {
         Accept: "application/json",
         Cookie: [
-          `${Cookie.Auth}=${authToken}`,
-          `${Cookie.CurrentApp}=${appToken}`,
+          `${constants.Cookie.Auth}=${authToken}`,
+          `${constants.Cookie.CurrentApp}=${appToken}`,
         ],
-        [Header.APP_ID]: appId,
+        [constants.Header.APP_ID]: appId,
       }
     })
   }
 
   defaultHeaders(extras = {}) {
-    const auth = {
+    const authObj = {
       userId: GLOBAL_USER_ID,
       sessionId: "sessionid",
       tenantId: TENANT_ID,
     }
     const app = {
-      roleId: BUILTIN_ROLE_IDS.ADMIN,
+      roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
       appId: this.appId,
     }
-    const authToken = jwt.sign(auth, env.JWT_SECRET)
-    const appToken = jwt.sign(app, env.JWT_SECRET)
+    const authToken = auth.jwt.sign(authObj, env.JWT_SECRET)
+    const appToken = auth.jwt.sign(app, env.JWT_SECRET)
     const headers = {
       Accept: "application/json",
       Cookie: [
-        `${Cookie.Auth}=${authToken}`,
-        `${Cookie.CurrentApp}=${appToken}`,
+        `${constants.Cookie.Auth}=${authToken}`,
+        `${constants.Cookie.CurrentApp}=${appToken}`,
       ],
-      [Header.CSRF_TOKEN]: CSRF_TOKEN,
+      [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
       ...extras,
     }
     if (this.appId) {
-      headers[Header.APP_ID] = this.appId
+      headers[constants.Header.APP_ID] = this.appId
     }
     return headers
   }
@@ -298,14 +300,14 @@ class TestConfiguration {
       Accept: "application/json",
     }
     if (appId) {
-      headers[Header.APP_ID] = appId
+      headers[constants.Header.APP_ID] = appId
     }
     return headers
   }
 
   async roleHeaders({
     email = EMAIL,
-    roleId = BUILTIN_ROLE_IDS.ADMIN,
+    roleId = roles.BUILTIN_ROLE_IDS.ADMIN,
     builder = false,
     prodApp = true,
   } = {}) {
@@ -315,15 +317,17 @@ class TestConfiguration {
   // API
 
   async generateApiKey(userId = GLOBAL_USER_ID) {
-    return doWithGlobalDB(TENANT_ID, async db => {
-      const id = generateDevInfoID(userId)
+    return tenancy.doWithGlobalDB(TENANT_ID, async db => {
+      const id = dbCore.generateDevInfoID(userId)
       let devInfo
       try {
         devInfo = await db.get(id)
       } catch (err) {
         devInfo = { _id: id, userId }
       }
-      devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
+      devInfo.apiKey = encryption.encrypt(
+        `${TENANT_ID}${dbCore.SEPARATOR}${newid()}`
+      )
       await db.put(devInfo)
       return devInfo.apiKey
     })

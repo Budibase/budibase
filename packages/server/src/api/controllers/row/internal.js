@@ -6,7 +6,6 @@ const {
   DocumentType,
   InternalTables,
 } = require("../../../db/utils")
-const { getDB } = require("@budibase/backend-core/db")
 const userController = require("../user")
 const {
   inputProcessing,
@@ -26,7 +25,7 @@ const {
   getFromMemoryDoc,
 } = require("../view/utils")
 const { cloneDeep } = require("lodash/fp")
-const { getAppDB } = require("@budibase/backend-core/context")
+const { context, db: dbCore } = require("@budibase/backend-core")
 const { finaliseRow, updateRelatedFormula } = require("./staticFormula")
 const exporters = require("../view/exporters")
 const { apiFileReturn } = require("../../../utilities/fileSystem")
@@ -80,7 +79,7 @@ async function getRawTableData(ctx, db, tableId) {
 }
 
 exports.patch = async ctx => {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const inputs = ctx.request.body
   const tableId = inputs.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
@@ -145,7 +144,7 @@ exports.patch = async ctx => {
 }
 
 exports.save = async function (ctx) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   let inputs = ctx.request.body
   inputs.tableId = ctx.params.tableId
 
@@ -188,7 +187,7 @@ exports.fetchView = async ctx => {
     return exports.fetch(ctx)
   }
 
-  const db = getAppDB()
+  const db = context.getAppDB()
   const { calculation, group, field } = ctx.query
   const viewInfo = await getView(db, viewName)
   let response
@@ -242,7 +241,7 @@ exports.fetchView = async ctx => {
 }
 
 exports.fetch = async ctx => {
-  const db = getAppDB()
+  const db = context.getAppDB()
 
   const tableId = ctx.params.tableId
   let table = await db.get(tableId)
@@ -251,7 +250,7 @@ exports.fetch = async ctx => {
 }
 
 exports.find = async ctx => {
-  const db = getDB(ctx.appId)
+  const db = dbCore.getDB(ctx.appId)
   const table = await db.get(ctx.params.tableId)
   let row = await findRow(ctx, ctx.params.tableId, ctx.params.rowId)
   row = await outputProcessing(table, row)
@@ -259,7 +258,7 @@ exports.find = async ctx => {
 }
 
 exports.destroy = async function (ctx) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const { _id } = ctx.request.body
   let row = await db.get(_id)
   let _rev = ctx.request.body._rev || row._rev
@@ -295,7 +294,7 @@ exports.destroy = async function (ctx) {
 }
 
 exports.bulkDestroy = async ctx => {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const tableId = ctx.params.tableId
   const table = await db.get(tableId)
   let { rows } = ctx.request.body
@@ -338,7 +337,7 @@ exports.search = async ctx => {
   }
 
   const { tableId } = ctx.params
-  const db = getAppDB()
+  const db = context.getAppDB()
   const { paginate, query, ...params } = ctx.request.body
   params.version = ctx.version
   params.tableId = tableId
@@ -371,7 +370,7 @@ exports.validate = async ctx => {
 }
 
 exports.exportRows = async ctx => {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const table = await db.get(ctx.params.tableId)
   const rowIds = ctx.request.body.rows
   let format = ctx.query.format
@@ -408,7 +407,7 @@ exports.exportRows = async ctx => {
 }
 
 exports.fetchEnrichedRow = async ctx => {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const tableId = ctx.params.tableId
   const rowId = ctx.params.rowId
   // need table to work out where links go in row

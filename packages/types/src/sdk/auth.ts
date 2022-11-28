@@ -1,4 +1,5 @@
 import { BBContext } from "./koa"
+import { Hosting } from "./hosting"
 
 export interface AuthToken {
   userId: string
@@ -10,6 +11,7 @@ export interface CreateSession {
   sessionId: string
   tenantId: string
   csrfToken?: string
+  hosting?: Hosting
 }
 
 export interface Session extends CreateSession {
