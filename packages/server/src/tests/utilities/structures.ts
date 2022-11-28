@@ -1,13 +1,13 @@
-const { roles, permissions } = require("@budibase/backend-core")
-const { createHomeScreen } = require("../../constants/screens")
-const { EMPTY_LAYOUT } = require("../../constants/layouts")
-const { cloneDeep } = require("lodash/fp")
+import { roles, permissions } from "@budibase/backend-core"
+import { createHomeScreen } from "../../constants/screens"
+import { EMPTY_LAYOUT } from "../../constants/layouts"
+import { cloneDeep } from "lodash/fp"
+import { TRIGGER_DEFINITIONS, ACTION_DEFINITIONS } from "../../automations"
 const { v4: uuidv4 } = require("uuid")
-const { TRIGGER_DEFINITIONS, ACTION_DEFINITIONS } = require("../../automations")
 
-exports.TENANT_ID = "default"
+export const TENANT_ID = "default"
 
-exports.basicTable = () => {
+export function basicTable() {
   return {
     name: "TestTable",
     type: "table",
@@ -29,16 +29,16 @@ exports.basicTable = () => {
   }
 }
 
-exports.basicView = tableId => {
+export function basicView(tableId: string) {
   return {
     tableId,
     name: "ViewTest",
   }
 }
 
-exports.filterView = tableId => {
+export function filterView(tableId: string) {
   return {
-    ...this.basicView(tableId),
+    ...basicView(tableId),
     filters: [
       {
         value: 0,
@@ -49,56 +49,58 @@ exports.filterView = tableId => {
   }
 }
 
-exports.calculationView = tableId => {
+export function calculationView(tableId: string) {
   return {
-    ...this.basicView(tableId),
+    ...basicView(tableId),
     field: "count",
     calculation: "sum",
   }
 }
 
-exports.view = tableId => {
+export function view(tableId: string) {
   return {
-    ...this.filterView(tableId),
-    ...this.calculationView(tableId),
+    ...filterView(tableId),
+    ...calculationView(tableId),
   }
 }
 
-exports.automationStep = (actionDefinition = ACTION_DEFINITIONS.CREATE_ROW) => {
+export function automationStep(
+  actionDefinition = ACTION_DEFINITIONS.CREATE_ROW
+) {
   return {
     id: uuidv4(),
     ...actionDefinition,
   }
 }
 
-exports.automationTrigger = (
+export function automationTrigger(
   triggerDefinition = TRIGGER_DEFINITIONS.ROW_SAVED
-) => {
+) {
   return {
     id: uuidv4(),
     ...triggerDefinition,
   }
 }
 
-exports.newAutomation = ({ steps, trigger } = {}) => {
-  const automation = exports.basicAutomation()
+export function newAutomation({ steps, trigger }: any = {}) {
+  const automation: any = basicAutomation()
 
   if (trigger) {
     automation.definition.trigger = trigger
   } else {
-    automation.definition.trigger = exports.automationTrigger()
+    automation.definition.trigger = automationTrigger()
   }
 
   if (steps) {
     automation.definition.steps = steps
   } else {
-    automation.definition.steps = [exports.automationStep()]
+    automation.definition.steps = [automationStep()]
   }
 
   return automation
 }
 
-exports.basicAutomation = () => {
+export function basicAutomation() {
   return {
     name: "My Automation",
     screenId: "kasdkfldsafkl",
@@ -114,7 +116,7 @@ exports.basicAutomation = () => {
   }
 }
 
-exports.basicRow = tableId => {
+export function basicRow(tableId: string) {
   return {
     name: "Test Contact",
     description: "original description",
@@ -122,15 +124,19 @@ exports.basicRow = tableId => {
   }
 }
 
-exports.basicLinkedRow = (tableId, linkedRowId, linkField = "link") => {
+export function basicLinkedRow(
+  tableId: string,
+  linkedRowId: string,
+  linkField: string = "link"
+) {
   // this is based on the basic linked tables you get from the test configuration
   return {
-    ...exports.basicRow(tableId),
+    ...basicRow(tableId),
     [linkField]: [linkedRowId],
   }
 }
 
-exports.basicRole = () => {
+export function basicRole() {
   return {
     name: "NewRole",
     inherits: roles.BUILTIN_ROLE_IDS.BASIC,
@@ -138,7 +144,7 @@ exports.basicRole = () => {
   }
 }
 
-exports.basicDatasource = () => {
+export function basicDatasource() {
   return {
     datasource: {
       type: "datasource",
@@ -149,7 +155,7 @@ exports.basicDatasource = () => {
   }
 }
 
-exports.basicQuery = datasourceId => {
+export function basicQuery(datasourceId: string) {
   return {
     datasourceId: datasourceId,
     name: "New Query",
@@ -160,7 +166,7 @@ exports.basicQuery = datasourceId => {
   }
 }
 
-exports.basicUser = role => {
+export function basicUser(role: string) {
   return {
     email: "bill@bill.com",
     password: "yeeooo",
@@ -168,15 +174,15 @@ exports.basicUser = role => {
   }
 }
 
-exports.basicScreen = () => {
+export function basicScreen() {
   return createHomeScreen()
 }
 
-exports.basicLayout = () => {
+export function basicLayout() {
   return cloneDeep(EMPTY_LAYOUT)
 }
 
-exports.basicWebhook = automationId => {
+export function basicWebhook(automationId: string) {
   return {
     live: true,
     name: "webhook",
