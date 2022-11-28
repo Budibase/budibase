@@ -20,7 +20,7 @@ export async function getFetchResponse(fetched: any) {
 // throw added to them, so that controllers don't
 // throw a ctx.throw undefined when error occurs
 // opts can contain, body, params and version
-export async function buildCtx(
+export function buildCtx(
   appId: string,
   emitter?: EventEmitter | null,
   opts: any = {}

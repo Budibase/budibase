@@ -12,11 +12,8 @@ import env from "../../../environment"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
-const {
-  PermissionLevel,
-  PermissionType,
-} = require("@budibase/backend-core/permissions")
-const { getRedisOptions } = require("@budibase/backend-core/redis").utils
+import { redis, permissions } from "@budibase/backend-core"
+const { PermissionType, PermissionLevel } = permissions
 
 const PREFIX = "/api/public/v1"
 // allow a lot more requests when in test
@@ -31,7 +28,7 @@ function getApiLimitPerSecond(): number {
 
 let rateLimitStore: any = null
 if (!env.isTest()) {
-  const REDIS_OPTS = getRedisOptions()
+  const REDIS_OPTS = redis.utils.getRedisOptions()
   let options
   if (REDIS_OPTS.redisProtocolUrl) {
     // fully qualified redis URL
