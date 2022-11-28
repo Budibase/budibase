@@ -3,7 +3,7 @@ const yargs = require("yargs")
 const fs = require("fs")
 const { join } = require("path")
 require("../src/db").init()
-const { doWithDB } = require("@budibase/backend-core/db")
+const { db: dbCore } = require("@budibase/backend-core")
 // load environment
 const env = require("../src/environment")
 const {
@@ -48,7 +48,7 @@ yargs
       const writeStream = fs.createWriteStream(join(exportPath, "dump.text"))
       // perform couch dump
 
-      await doWithDB(appId, async db => {
+      await dbCore.doWithDB(appId, async db => {
         return db.dump(writeStream, {
           filter: doc =>
             !(

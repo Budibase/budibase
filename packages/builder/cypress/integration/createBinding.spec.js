@@ -9,9 +9,10 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should add a current user binding", () => {
-      cy.searchAndAddComponent("Paragraph").then(() => {
+      cy.searchAndAddComponent("Paragraph").then(componentId => {
         addSettingBinding("text", ["Current User", "_id"], "Current User._id")
       })
+      cy.deleteComponentByName("New Paragraph")
     })
 
     it("should handle an invalid binding", () => {
@@ -21,6 +22,7 @@ filterTests(['smoke', 'all'], () => {
           .type("{{}{{}{{} Current User._id {}}{}}")
           .blur()
         cy.getComponent(componentId).should("have.text", "{{{ [user].[_id] }}")
+        cy.deleteComponentByName("New Paragraph")
       })
     })
 
