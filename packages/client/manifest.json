@@ -3791,13 +3791,15 @@
       },
       {
         "type": "boolean",
-        "label": "Open link screens in modal",
-        "key": "linkPeek"
+        "label": "Open link in modal",
+        "key": "linkPeek",
+        "dependsOn": "linkRows"
       },
       {
         "type": "url",
         "label": "Link screen",
-        "key": "linkURL"
+        "key": "linkURL",
+        "dependsOn": "linkRows"
       },
       {
         "section": true,
@@ -4562,12 +4564,14 @@
           {
             "type": "boolean",
             "label": "Open link in modal",
-            "key": "linkPeek"
+            "key": "linkPeek",
+            "dependsOn": "linkRows"
           },
           {
             "type": "url",
             "label": "Link screen",
-            "key": "linkURL"
+            "key": "linkURL",
+            "dependsOn": "linkRows"
           }
         ]
       },
@@ -4584,17 +4588,20 @@
           {
             "type": "boolean",
             "label": "Open link in modal",
-            "key": "titleButtonPeek"
+            "key": "titleButtonPeek",
+            "dependsOn": "showTitleButton"
           },
           {
             "type": "text",
             "key": "titleButtonText",
-            "label": "Button text"
+            "label": "Button text",
+            "dependsOn": "showTitleButton"
           },
           {
             "type": "url",
             "label": "Button link",
-            "key": "titleButtonURL"
+            "key": "titleButtonURL",
+            "dependsOn": "showTitleButton"
           }
         ]
       },
@@ -4712,13 +4719,15 @@
           {
             "type": "boolean",
             "key": "cardPeek",
-            "label": "Open link in modal"
+            "label": "Open link in modal",
+            "dependsOn": "linkCardTitle"
           },
           {
             "type": "url",
             "label": "Link screen",
             "key": "cardURL",
-            "nested": true
+            "nested": true,
+            "dependsOn": "linkCardTitle"
           },
           {
             "type": "boolean",
@@ -4757,17 +4766,20 @@
           {
             "type": "boolean",
             "label": "Open link in modal",
-            "key": "titleButtonPeek"
+            "key": "titleButtonPeek",
+            "dependsOn": "showTitleButton"
           },
           {
             "type": "text",
             "key": "titleButtonText",
-            "label": "Button text"
+            "label": "Button text",
+            "dependsOn": "showTitleButton"
           },
           {
             "type": "url",
             "label": "Button link",
-            "key": "titleButtonURL"
+            "key": "titleButtonURL",
+            "dependsOn": "showTitleButton"
           }
         ]
       },
