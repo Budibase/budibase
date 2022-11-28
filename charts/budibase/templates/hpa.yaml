@@ -3,6 +3,7 @@ apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "budibase.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "budibase.labels" . | nindent 4 }}
 spec:

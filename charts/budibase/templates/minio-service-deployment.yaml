@@ -9,6 +9,7 @@ metadata:
   labels:
     io.kompose.service: minio-service
   name: minio-service
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:

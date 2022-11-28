@@ -6,6 +6,7 @@ metadata:
   labels:
     io.kompose.service: redis-data
   name: redis-data
+  namespace: {{ .Release.Namespace }}
 spec:
   accessModes:
   - ReadWriteOnce

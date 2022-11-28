@@ -8,6 +8,7 @@ metadata:
   labels:
     io.kompose.service: worker-service
   name: worker-service
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   - name: {{ .Values.services.worker.port | quote }}

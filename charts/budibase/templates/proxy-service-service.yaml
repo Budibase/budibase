@@ -8,6 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: budibase-proxy
   name: proxy-service
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   - name: {{ .Values.services.proxy.port | quote }}

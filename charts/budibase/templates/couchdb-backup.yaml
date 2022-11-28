@@ -9,6 +9,7 @@ metadata:
   labels:
     app.kubernetes.io/name: couchdb-backup
   name: couchdb-backup
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1 
   selector:
