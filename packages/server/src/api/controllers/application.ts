@@ -470,7 +470,7 @@ const destroyApp = async (ctx: any) => {
   }
 
   /* istanbul ignore next */
-  if (!env.isTest() && !isUnpublish) {
+  if (!env.isTest() && !isUnpublish && isDevAppID(appId)) {
     await deleteApp(appId)
   }
   // automations only in production

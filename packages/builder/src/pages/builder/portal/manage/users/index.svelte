@@ -279,7 +279,7 @@
     confirmText="Done"
   >
     <Body size="S">
-      Your users should now recieve an email invite to get access to their
+      Your users should now receive an email invite to get access to their
       Budibase account
     </Body>
   </ModalContent>
