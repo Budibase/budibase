@@ -37,7 +37,6 @@
     "lodash.isarguments": "3.1.0",
     "nano": "^10.1.0",
     "node-fetch": "2.6.7",
-    "passport-google-auth": "1.0.2",
     "passport-google-oauth": "2.0.0",
     "passport-jwt": "4.0.0",
     "passport-local": "1.0.0",
