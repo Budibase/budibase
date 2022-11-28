@@ -2,19 +2,42 @@
 // store an app ID to pretend there is a context
 import env from "../environment"
 import Context from "./Context"
+import { getDevelopmentAppID, getProdAppID } from "../db/conversions"
+import { getDB } from "../db/db"
 import {
-  baseGlobalDBName,
   DocumentType,
-  getDB,
-  getDevelopmentAppID,
-  getProdAppID,
   SEPARATOR,
-} from "../db"
-import { ContextMap } from "./constants"
+  StaticDatabases,
+  DEFAULT_TENANT_ID,
+} from "../constants"
 import { Database, IdentityContext } from "@budibase/types"
-import { DEFAULT_TENANT_ID } from "./index"
+
+export type ContextMap = {
+  tenantId?: string
+  appId?: string
+  identity?: IdentityContext
+}
 
 let TEST_APP_ID: string | null = null
+
+export function getGlobalDBName(tenantId?: string) {
+  // tenant ID can be set externally, for example user API where
+  // new tenants are being created, this may be the case
+  if (!tenantId) {
+    tenantId = getTenantId()
+  }
+  return baseGlobalDBName(tenantId)
+}
+
+export function baseGlobalDBName(tenantId: string | undefined | null) {
+  let dbName
+  if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
+    dbName = StaticDatabases.GLOBAL.name
+  } else {
+    dbName = `${tenantId}${SEPARATOR}${StaticDatabases.GLOBAL.name}`
+  }
+  return dbName
+}
 
 export function isMultiTenant() {
   return env.MULTI_TENANCY

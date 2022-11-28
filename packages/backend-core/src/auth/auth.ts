@@ -1,16 +1,14 @@
-const passport = require("koa-passport")
+const _passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
-import { getGlobalDB } from "./tenancy"
+import { getGlobalDB } from "../tenancy"
 const refresh = require("passport-oauth2-refresh")
-import { Config } from "./constants"
-import { getScopedConfig } from "./db"
+import { Config } from "../constants"
+import { getScopedConfig } from "../db"
 import {
-  jwt,
+  jwt as jwtPassport,
   local,
   authenticated,
-  google,
-  oidc,
   auditLog,
   tenancy,
   authError,
@@ -21,22 +19,41 @@ import {
   builderOnly,
   builderOrAdmin,
   joiValidator,
-} from "./middleware"
-import { invalidateUser } from "./cache/user"
+  oidc,
+  google,
+} from "../middleware"
+import { invalidateUser } from "../cache/user"
 import { User } from "@budibase/types"
-import { logAlert } from "./logging"
+import { logAlert } from "../logging"
+export {
+  auditLog,
+  authError,
+  internalApi,
+  ssoCallbackUrl,
+  adminOnly,
+  builderOnly,
+  builderOrAdmin,
+  joiValidator,
+  google,
+  oidc,
+} from "../middleware"
+export const buildAuthMiddleware = authenticated
+export const buildTenancyMiddleware = tenancy
+export const buildCsrfMiddleware = csrf
+export const passport = _passport
+export const jwt = require("jsonwebtoken")
 
 // Strategies
-passport.use(new LocalStrategy(local.options, local.authenticate))
-if (jwt.options.secretOrKey) {
-  passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
+_passport.use(new LocalStrategy(local.options, local.authenticate))
+if (jwtPassport.options.secretOrKey) {
+  _passport.use(new JwtStrategy(jwtPassport.options, jwtPassport.authenticate))
 } else {
   logAlert("No JWT Secret supplied, cannot configure JWT strategy")
 }
 
-passport.serializeUser((user: User, done: any) => done(null, user))
+_passport.serializeUser((user: User, done: any) => done(null, user))
 
-passport.deserializeUser(async (user: User, done: any) => {
+_passport.deserializeUser(async (user: User, done: any) => {
   const db = getGlobalDB()
 
   try {
@@ -115,7 +132,7 @@ async function refreshGoogleAccessToken(
   })
 }
 
-async function refreshOAuthToken(
+export async function refreshOAuthToken(
   refreshToken: string,
   configType: string,
   configId: string
@@ -152,7 +169,7 @@ async function refreshOAuthToken(
   return refreshResponse
 }
 
-async function updateUserOAuth(userId: string, oAuthConfig: any) {
+export async function updateUserOAuth(userId: string, oAuthConfig: any) {
   const details = {
     accessToken: oAuthConfig.accessToken,
     refreshToken: oAuthConfig.refreshToken,
@@ -178,24 +195,4 @@ async function updateUserOAuth(userId: string, oAuthConfig: any) {
   } catch (e) {
     console.error("Could not update OAuth details for current user", e)
   }
-}
-
-export = {
-  buildAuthMiddleware: authenticated,
-  passport,
-  google,
-  oidc,
-  jwt: require("jsonwebtoken"),
-  buildTenancyMiddleware: tenancy,
-  auditLog,
-  authError,
-  buildCsrfMiddleware: csrf,
-  internalApi,
-  refreshOAuthToken,
-  updateUserOAuth,
-  ssoCallbackUrl,
-  adminOnly,
-  builderOnly,
-  builderOrAdmin,
-  joiValidator,
 }

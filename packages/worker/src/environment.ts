@@ -68,7 +68,7 @@ const environment = {
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
-    env[key] = value
+    environment[key] = value
   },
   isDev,
   isTest,

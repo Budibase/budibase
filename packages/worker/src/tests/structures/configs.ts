@@ -1,7 +1,7 @@
 const { Config } = require("../../constants")
 const { utils } = require("@budibase/backend-core")
 
-exports.oidc = conf => {
+export function oidc(conf?: any) {
   return {
     type: Config.OIDC,
     config: {
@@ -21,7 +21,7 @@ exports.oidc = conf => {
   }
 }
 
-exports.google = conf => {
+export function google(conf?: any) {
   return {
     type: Config.GOOGLE,
     config: {
@@ -33,7 +33,7 @@ exports.google = conf => {
   }
 }
 
-exports.smtp = conf => {
+export function smtp(conf?: any) {
   return {
     type: Config.SMTP,
     config: {
@@ -47,7 +47,7 @@ exports.smtp = conf => {
   }
 }
 
-exports.smtpEthereal = () => {
+export function smtpEthereal() {
   return {
     type: Config.SMTP,
     config: {
@@ -63,7 +63,7 @@ exports.smtpEthereal = () => {
   }
 }
 
-exports.settings = conf => {
+export function settings(conf?: any) {
   return {
     type: Config.SETTINGS,
     config: {

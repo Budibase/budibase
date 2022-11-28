@@ -1,8 +1,8 @@
 import env from "../environment"
-import tenancy from "../tenancy"
+import * as tenancy from "../tenancy"
 import * as dbUtils from "../db/utils"
 import { Config } from "../constants"
-import { withCache, TTL, CacheKey } from "../cache/generic"
+import { withCache, TTL, CacheKey } from "../cache"
 
 export const enabled = async () => {
   // cloud - always use the environment variable

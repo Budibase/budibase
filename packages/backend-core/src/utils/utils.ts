@@ -1,17 +1,11 @@
-import {
-  DocumentType,
-  SEPARATOR,
-  ViewName,
-  getAllApps,
-  queryGlobalView,
-} from "../db"
+import { getAllApps, queryGlobalView } from "../db"
 import { options } from "../middleware/passport/jwt"
 import { Header, Cookie, MAX_VALID_DATE } from "../constants"
 import env from "../environment"
 import * as userCache from "../cache/user"
 import { getSessionsForUser, invalidateSessions } from "../security/sessions"
 import * as events from "../events"
-import tenancy from "../tenancy"
+import * as tenancy from "../tenancy"
 import {
   App,
   BBContext,
@@ -19,6 +13,7 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 import { SetOption } from "cookies"
+import { DocumentType, SEPARATOR, ViewName } from "../constants"
 const jwt = require("jsonwebtoken")
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
