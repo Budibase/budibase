@@ -1,5 +1,5 @@
 import { Response } from "node-fetch"
-import { User } from "@budibase/types"
+import { User, UserDeletedEvent } from "@budibase/types"
 import InternalAPIClient from "./InternalAPIClient"
 import { responseMessage } from "../fixtures/types/responseMessage"
 
@@ -14,7 +14,8 @@ export default class UserManagementApi {
         const response = await this.api.post(`/global/users/search`, {})
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
-        expect(json.length).toBeGreaterThan(0)
+        expect(json.data.length).toBeGreaterThan(0)
+        expect(json.hasNextPage).toBe(false)
         return [response, json]
     }
 
@@ -38,6 +39,23 @@ export default class UserManagementApi {
         expect(response).toHaveStatusCode(200)
         expect(json.successful.length).toEqual(body.length)
         expect(json.unsuccessful.length).toEqual(0)
+        return [response, json]
+    }
+
+    async deleteUser(userId: string): Promise<[Response, responseMessage]> {
+        const body = {
+            delete: {
+                userIds: [
+                    userId
+                ]
+            }
+        }
+        const response = await this.api.post(`/global/users/bulk`, { body })
+        const json = await response.json()
+        expect(response).toHaveStatusCode(200)
+        expect(json.deleted.successful.length).toEqual(1)
+        expect(json.deleted.unsuccessful.length).toEqual(0)
+        expect(json.deleted.successful[0].userId).toEqual(userId)
         return [response, json]
     }
 }
