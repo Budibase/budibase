@@ -1,6 +1,7 @@
-require("../../db").init()
-const env = require("../../environment")
-const {
+import { init as dbInit } from "../../db"
+dbInit()
+import env from "../../environment"
+import {
   basicTable,
   basicRow,
   basicRole,
@@ -11,24 +12,24 @@ const {
   basicLayout,
   basicWebhook,
   TENANT_ID,
-} = require("./structures")
-const {
+} from "./structures"
+import {
   constants,
   tenancy,
   sessions,
   cache,
   context,
-  db: dbCore,
+  db as dbCore,
   encryption,
   auth,
   roles,
-} = require("@budibase/backend-core")
-const controllers = require("./controllers")
+} from "@budibase/backend-core"
+import * as controllers from "./controllers"
+import { cleanup } from "../../utilities/fileSystem"
+import newid from "../../db/newid"
+import { generateUserMetadataID } from "../../db/utils"
+import { startup } from "../../startup"
 const supertest = require("supertest")
-const { cleanup } = require("../../utilities/fileSystem")
-const newid = require("../../db/newid")
-const { generateUserMetadataID } = require("../../db/utils")
-const { startup } = require("../../startup")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -37,10 +38,26 @@ const LASTNAME = "Barbington"
 const CSRF_TOKEN = "e3727778-7af0-4226-b5eb-f43cbe60a306"
 
 class TestConfiguration {
+  server: any
+  request: any
+  started: boolean
+  appId: string | null
+  allApps: any[]
+  app: any
+  prodApp: any
+  prodAppId: any
+  user: any
+  globalUserId: any
+  userMetadataId: any
+  table: any
+  linkedTable: any
+  automation: any
+  datasource: any
+
   constructor(openServer = true) {
     if (openServer) {
       // use a random port because it doesn't matter
-      env.PORT = 0
+      env.PORT = "0"
       this.server = require("../../app")
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
@@ -81,7 +98,7 @@ class TestConfiguration {
     }
   }
 
-  async doInContext(appId, task) {
+  async doInContext(appId: string | null, task: any) {
     if (!appId) {
       appId = this.appId
     }
@@ -125,9 +142,9 @@ class TestConfiguration {
 
   // UTILS
 
-  async _req(body, params, controlFunc) {
+  async _req(body: any, params: any, controlFunc: any) {
     // create a fake request ctx
-    const request = {}
+    const request: any = {}
     const appId = this.appId
     request.appId = appId
     // fake cookies, we don't need them
@@ -156,8 +173,8 @@ class TestConfiguration {
     admin = false,
     email = EMAIL,
     roles,
-  } = {}) {
-    return tenancy.doWithGlobalDB(TENANT_ID, async db => {
+  }: any = {}) {
+    return tenancy.doWithGlobalDB(TENANT_ID, async (db: any) => {
       let existing
       try {
         existing = await db.get(id)
@@ -221,7 +238,7 @@ class TestConfiguration {
     }
   }
 
-  async login({ roleId, userId, builder, prodApp = false } = {}) {
+  async login({ roleId, userId, builder, prodApp = false }: any = {}) {
     const appId = prodApp ? this.prodAppId : this.appId
     return context.doInAppContext(appId, async () => {
       userId = !userId ? `us_uuid1` : userId
@@ -278,7 +295,7 @@ class TestConfiguration {
     }
     const authToken = auth.jwt.sign(authObj, env.JWT_SECRET)
     const appToken = auth.jwt.sign(app, env.JWT_SECRET)
-    const headers = {
+    const headers: any = {
       Accept: "application/json",
       Cookie: [
         `${constants.Cookie.Auth}=${authToken}`,
@@ -296,7 +313,7 @@ class TestConfiguration {
   publicHeaders({ prodApp = true } = {}) {
     const appId = prodApp ? this.prodAppId : this.appId
 
-    const headers = {
+    const headers: any = {
       Accept: "application/json",
     }
     if (appId) {
@@ -317,7 +334,7 @@ class TestConfiguration {
   // API
 
   async generateApiKey(userId = GLOBAL_USER_ID) {
-    return tenancy.doWithGlobalDB(TENANT_ID, async db => {
+    return tenancy.doWithGlobalDB(TENANT_ID, async (db: any) => {
       const id = dbCore.generateDevInfoID(userId)
       let devInfo
       try {
@@ -335,13 +352,15 @@ class TestConfiguration {
 
   // APP
 
-  async createApp(appName) {
+  async createApp(appName: string) {
     // create dev app
     // clear any old app
     this.appId = null
+    // @ts-ignore
     await context.updateAppId(null)
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app.appId
+    // @ts-ignore
     await context.updateAppId(this.appId)
 
     // create production app
@@ -355,6 +374,7 @@ class TestConfiguration {
 
   async deploy() {
     await this._req(null, null, controllers.deploy.deployApp)
+    // @ts-ignore
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
 
@@ -366,29 +386,29 @@ class TestConfiguration {
 
   // TABLE
 
-  async updateTable(config = null) {
+  async updateTable(config?: any) {
     config = config || basicTable()
     this.table = await this._req(config, null, controllers.table.save)
     return this.table
   }
 
-  async createTable(config = null) {
+  async createTable(config?: any) {
     if (config != null && config._id) {
       delete config._id
     }
     return this.updateTable(config)
   }
 
-  async getTable(tableId = null) {
+  async getTable(tableId?: string) {
     tableId = tableId || this.table._id
     return this._req(null, { tableId }, controllers.table.find)
   }
 
-  async createLinkedTable(relationshipType = null, links = ["link"]) {
+  async createLinkedTable(relationshipType?: string, links: any = ["link"]) {
     if (!this.table) {
       throw "Must have created a table first."
     }
-    const tableConfig = basicTable()
+    const tableConfig: any = basicTable()
     tableConfig.primaryDisplay = "name"
     for (let link of links) {
       tableConfig.schema[link] = {
@@ -407,7 +427,7 @@ class TestConfiguration {
   }
 
   async createAttachmentTable() {
-    const table = basicTable()
+    const table: any = basicTable()
     table.schema.attachment = {
       type: "attachment",
     }
@@ -416,7 +436,7 @@ class TestConfiguration {
 
   // ROW
 
-  async createRow(config = null) {
+  async createRow(config: any = null) {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
@@ -425,11 +445,11 @@ class TestConfiguration {
     return this._req(config, { tableId }, controllers.row.save)
   }
 
-  async getRow(tableId, rowId) {
+  async getRow(tableId: string, rowId: string) {
     return this._req(null, { tableId, rowId }, controllers.row.find)
   }
 
-  async getRows(tableId) {
+  async getRows(tableId: string) {
     if (!tableId && this.table) {
       tableId = this.table._id
     }
@@ -438,12 +458,12 @@ class TestConfiguration {
 
   // ROLE
 
-  async createRole(config = null) {
+  async createRole(config?: any) {
     config = config || basicRole()
     return this._req(config, null, controllers.role.save)
   }
 
-  async addPermission(roleId, resourceId, level = "read") {
+  async addPermission(roleId: string, resourceId: string, level = "read") {
     return this._req(
       null,
       {
@@ -457,7 +477,7 @@ class TestConfiguration {
 
   // VIEW
 
-  async createView(config) {
+  async createView(config?: any) {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
@@ -470,7 +490,7 @@ class TestConfiguration {
 
   // AUTOMATION
 
-  async createAutomation(config) {
+  async createAutomation(config?: any) {
     config = config || basicAutomation()
     if (config._rev) {
       delete config._rev
@@ -485,7 +505,7 @@ class TestConfiguration {
     return this._req(null, null, controllers.automation.fetch)
   }
 
-  async deleteAutomation(automation = null) {
+  async deleteAutomation(automation?: any) {
     automation = automation || this.automation
     if (!automation) {
       return
@@ -497,7 +517,7 @@ class TestConfiguration {
     )
   }
 
-  async createWebhook(config = null) {
+  async createWebhook(config?: any) {
     if (!this.automation) {
       throw "Must create an automation before creating webhook."
     }
@@ -507,14 +527,14 @@ class TestConfiguration {
 
   // DATASOURCE
 
-  async createDatasource(config = null) {
+  async createDatasource(config?: any) {
     config = config || basicDatasource()
     const response = await this._req(config, null, controllers.datasource.save)
     this.datasource = response.datasource
     return this.datasource
   }
 
-  async updateDatasource(datasource) {
+  async updateDatasource(datasource: any) {
     const response = await this._req(
       datasource,
       { datasourceId: datasource._id },
@@ -524,7 +544,7 @@ class TestConfiguration {
     return this.datasource
   }
 
-  async restDatasource(cfg) {
+  async restDatasource(cfg?: any) {
     return this.createDatasource({
       datasource: {
         ...basicDatasource().datasource,
@@ -559,7 +579,14 @@ class TestConfiguration {
 
   // QUERY
 
-  async previewQuery(request, config, datasource, fields, params, verb) {
+  async previewQuery(
+    request: any,
+    config: any,
+    datasource: any,
+    fields: any,
+    params: any,
+    verb: string
+  ) {
     return request
       .post(`/api/queries/preview`)
       .send({
@@ -574,7 +601,7 @@ class TestConfiguration {
       .expect(200)
   }
 
-  async createQuery(config = null) {
+  async createQuery(config?: any) {
     if (!this.datasource && !config) {
       throw "No datasource created for query."
     }
@@ -584,17 +611,17 @@ class TestConfiguration {
 
   // SCREEN
 
-  async createScreen(config = null) {
+  async createScreen(config?: any) {
     config = config || basicScreen()
     return this._req(config, null, controllers.screen.save)
   }
 
   // LAYOUT
 
-  async createLayout(config = null) {
+  async createLayout(config?: any) {
     config = config || basicLayout()
     return await this._req(config, null, controllers.layout.save)
   }
 }
 
-module.exports = TestConfiguration
+export = TestConfiguration

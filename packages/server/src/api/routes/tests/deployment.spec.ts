@@ -1,4 +1,4 @@
-import setup from "./utilities"
+import * as setup from "./utilities"
 import { events } from "@budibase/backend-core"
 
 describe("/deployments", () => {
