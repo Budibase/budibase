@@ -27,7 +27,7 @@ const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const newid = require("../../db/newid")
-const { DocumentType, generateUserMetadataID } = require("../../db/utils")
+const { generateUserMetadataID } = require("../../db/utils")
 const { startup } = require("../../startup")
 
 const GLOBAL_USER_ID = "us_uuid1"
@@ -360,7 +360,7 @@ class TestConfiguration {
 
     return context.doInAppContext(prodAppId, async () => {
       const db = context.getProdAppDB()
-      return await db.get(DocumentType.APP_METADATA)
+      return await db.get(dbCore.DocumentType.APP_METADATA)
     })
   }
 
