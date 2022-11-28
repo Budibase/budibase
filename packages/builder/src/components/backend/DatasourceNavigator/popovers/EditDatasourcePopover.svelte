@@ -5,6 +5,7 @@
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UpdateDatasourceModal from "components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
+  import { BUDIBASE_DATASOURCE_TYPE } from "constants/backend"
 
   export let datasource
 
@@ -42,7 +43,9 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Edit</MenuItem>
+  {#if datasource.type !== BUDIBASE_DATASOURCE_TYPE}
+    <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Edit</MenuItem>
+  {/if}
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 
