@@ -1,6 +1,7 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/users")
 const { joiValidator } = require("@budibase/backend-core/auth")
+const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const cloudRestricted = require("../../../middleware/cloudRestricted")
 const { users } = require("../validation")
@@ -68,13 +69,13 @@ router
   .get("/api/global/roles/:appId")
   .post(
     "/api/global/users/invite",
-    builderOrAdmin,
+    adminOnly,
     buildInviteValidation(),
     controller.invite
   )
   .post(
     "/api/global/users/multi/invite",
-    builderOrAdmin,
+    adminOnly,
     buildInviteMultipleValidation(),
     controller.inviteMultiple
   )
