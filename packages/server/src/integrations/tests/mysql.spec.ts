@@ -80,30 +80,42 @@ describe("MySQL Integration", () => {
       const date = new Date()
       await config.integration.read({
         sql,
-        bindings: [11, date, ["a", "b", "c"], { id: 1}]
+        bindings: [11, date, ["a", "b", "c"], { id: 1 }],
       })
-      expect(config.integration.client.query).toHaveBeenCalledWith(sql, [11, date, ["a", "b", "c"], { id: 1}])
+      expect(config.integration.client.query).toHaveBeenCalledWith(sql, [
+        11,
+        date,
+        ["a", "b", "c"],
+        { id: 1 },
+      ])
     })
 
     it("parses strings matching a number regex", async () => {
       const sql = "select * from users;"
       await config.integration.read({
         sql,
-        bindings: ["101", "3.14"]
+        bindings: ["101", "3.14"],
       })
-      expect(config.integration.client.query).toHaveBeenCalledWith(sql, [101, 3.14])
+      expect(config.integration.client.query).toHaveBeenCalledWith(
+        sql,
+        [101, 3.14]
+      )
     })
 
     it("parses strings matching a valid date format", async () => {
       const sql = "select * from users;"
       await config.integration.read({
         sql,
-        bindings: ["2001-10-30", "2010-09-01T13:30:59.123Z", "2021-02-05 12:01 PM"]
+        bindings: [
+          "2001-10-30",
+          "2010-09-01T13:30:59.123Z",
+          "2021-02-05 12:01 PM",
+        ],
       })
       expect(config.integration.client.query).toHaveBeenCalledWith(sql, [
-        new Date("2001-10-30T00:00:00.000Z"), 
+        new Date("2001-10-30T00:00:00.000Z"),
         new Date("2010-09-01T13:30:59.123Z"),
-        new Date("2021-02-05T12:01:00.000Z")
+        new Date("2021-02-05T12:01:00.000Z"),
       ])
     })
 
@@ -111,10 +123,10 @@ describe("MySQL Integration", () => {
       const sql = "select * from users;"
       await config.integration.read({
         sql,
-        bindings: ["1,2,2017"]
+        bindings: ["1,2,2017"],
       })
       expect(config.integration.client.query).toHaveBeenCalledWith(sql, [
-        "1,2,2017"
+        "1,2,2017",
       ])
     })
   })
