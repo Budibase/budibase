@@ -8,17 +8,16 @@ import * as permissions from "./security/permissions"
 import * as accounts from "./cloud/accounts"
 import * as installation from "./installation"
 import env from "./environment"
-import tenancy from "./tenancy"
+import * as tenancy from "./tenancy"
 import * as featureFlags from "./featureFlags"
 import * as sessions from "./security/sessions"
 import * as deprovisioning from "./context/deprovision"
-import auth from "./auth"
+import * as auth from "./auth"
 import * as constants from "./constants"
-import * as dbConstants from "./db/constants"
 import * as logging from "./logging"
 import * as pino from "./pino"
 import * as middleware from "./middleware"
-import plugins from "./plugin"
+import * as plugins from "./plugin"
 import * as encryption from "./security/encryption"
 import * as queue from "./queue"
 import * as db from "./db"
@@ -35,7 +34,7 @@ const init = (opts: any = {}) => {
 const core = {
   init,
   db,
-  ...dbConstants,
+  ...constants,
   redis,
   locks: redis.redlock,
   objectStore,
@@ -44,7 +43,6 @@ const core = {
   cache,
   auth,
   constants,
-  ...constants,
   migrations,
   env,
   accounts,

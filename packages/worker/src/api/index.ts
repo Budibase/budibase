@@ -163,4 +163,4 @@ for (let route of routes) {
   router.use(route.allowedMethods())
 }
 
-export = router
+export default router

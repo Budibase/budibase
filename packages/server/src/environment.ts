@@ -88,7 +88,8 @@ const environment = {
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {
     process.env[key] = value
-    module.exports[key] = value
+    // @ts-ignore
+    environment[key] = value
   },
   isTest,
   isJest,

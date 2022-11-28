@@ -19,7 +19,7 @@ db.init()
 import Koa from "koa"
 import koaBody from "koa-body"
 import http from "http"
-import * as api from "./api"
+import api from "./api"
 import * as redis from "./utilities/redis"
 import Sentry from "@sentry/node"
 const koaSession = require("koa-session")

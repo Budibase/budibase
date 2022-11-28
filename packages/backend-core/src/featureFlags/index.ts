@@ -1,5 +1,5 @@
 import env from "../environment"
-import tenancy from "../tenancy"
+import * as tenancy from "../tenancy"
 
 /**
  * Read the TENANT_FEATURE_FLAGS env var and return an array of features flags for each tenant.

@@ -75,7 +75,8 @@ const environment = {
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
   _set(key: any, value: any) {
     process.env[key] = value
-    module.exports[key] = value
+    // @ts-ignore
+    environment[key] = value
   },
 }
 
