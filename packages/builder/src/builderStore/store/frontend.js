@@ -20,6 +20,11 @@ import {
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { Utils } from "@budibase/frontend-core"
+import {
+  BUDIBASE_INTERNAL_DB_ID,
+  DB_TYPE_INTERNAL,
+  DB_TYPE_EXTERNAL,
+} from "constants/backend"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -481,14 +486,56 @@ export const getFrontendStore = () => {
           return null
         }
 
-        // Generate default props
+        // Flattened settings
         const settings = getComponentSettings(componentName)
+
+        let dataSourceField = settings.find(
+          setting => setting.type == "dataSource" || setting.type == "table"
+        )
+
+        let defaultDatasource
+        if (dataSourceField) {
+          const _tables = get(tables)
+          const filteredTables = _tables.list.filter(
+            table => table._id != "ta_users"
+          )
+
+          const internalTable = filteredTables.find(
+            table =>
+              table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+              table.type == DB_TYPE_INTERNAL
+          )
+
+          const defaultSourceTable = filteredTables.find(
+            table =>
+              table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
+              table.type == DB_TYPE_INTERNAL
+          )
+
+          const defaultExternalTable = filteredTables.find(
+            table => table.type == DB_TYPE_EXTERNAL
+          )
+
+          defaultDatasource =
+            defaultSourceTable || internalTable || defaultExternalTable
+        }
+
+        // Generate default props
         let props = { ...presetProps }
         settings.forEach(setting => {
           if (setting.defaultValue !== undefined) {
             props[setting.key] = setting.defaultValue
           }
         })
+
+        // Set a default datasource
+        if (dataSourceField && defaultDatasource) {
+          props[dataSourceField.key] = {
+            label: defaultDatasource.name,
+            tableId: defaultDatasource._id,
+            type: "table",
+          }
+        }
 
         // Add any extra properties the component needs
         let extras = {}
