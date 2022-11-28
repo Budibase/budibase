@@ -11,6 +11,8 @@ import { StatusAPI } from "./status"
 import { RestoreAPI } from "./restore"
 import { TenantAPI } from "./tenants"
 import { GroupsAPI } from "./groups"
+import { RolesAPI } from "./roles"
+import { TemplatesAPI } from "./templates"
 export default class API {
   accounts: AccountAPI
   auth: AuthAPI
@@ -24,6 +26,8 @@ export default class API {
   restore: RestoreAPI
   tenants: TenantAPI
   groups: GroupsAPI
+  roles: RolesAPI
+  templates: TemplatesAPI
 
   constructor(config: TestConfiguration) {
     this.accounts = new AccountAPI(config)
@@ -38,5 +42,7 @@ export default class API {
     this.restore = new RestoreAPI(config)
     this.tenants = new TenantAPI(config)
     this.groups = new GroupsAPI(config)
+    this.roles = new RolesAPI(config)
+    this.templates = new TemplatesAPI(config)
   }
 }

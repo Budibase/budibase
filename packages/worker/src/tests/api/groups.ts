@@ -16,6 +16,15 @@ export class GroupsAPI extends TestAPI {
             .expect(200)
     }
 
+    deleteGroup = (id: string, rev: string) => {
+        return this.request
+            .delete(`/api/global/groups/${id}/${rev}`)
+            .set(this.config.defaultHeaders())
+            .expect("Content-Type", /json/)
+            .expect(200)
+    }
+
+
 
 }
 

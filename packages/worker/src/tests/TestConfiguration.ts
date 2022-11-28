@@ -334,6 +334,18 @@ class TestConfiguration {
       controllers.config.save
     )
   }
+
+  /*
+  async createRole() ={
+    return {
+      name: "NewRole",
+      inherits: BUILTIN_ROLE_IDS.BASIC,
+      permissionId: BuiltinPermissionID.READ_ONLY,
+    }
+  }
+  */
+
 }
+
 
 export = TestConfiguration
