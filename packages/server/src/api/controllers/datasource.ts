@@ -152,7 +152,12 @@ export async function update(ctx: BBContext) {
   let datasource = await db.get(datasourceId)
   const auth = datasource.config.auth
   await invalidateVariables(datasource, ctx.request.body)
-  datasource = { ...datasource, ...ctx.request.body }
+
+  const dataSourceBody = !datasource.plus
+    ? { name: ctx.request.body?.name }
+    : ctx.request.body
+
+  datasource = { ...datasource, ...dataSourceBody }
   if (auth && !ctx.request.body.auth) {
     // don't strip auth config from DB
     datasource.config.auth = auth
@@ -163,7 +168,7 @@ export async function update(ctx: BBContext) {
   datasource._rev = response.rev
 
   // Drain connection pools when configuration is changed
-  if (datasource.source) {
+  if (datasource.source && datasource.plus) {
     const source = await getIntegration(datasource.source)
     if (source && source.pool) {
       await source.pool.end()

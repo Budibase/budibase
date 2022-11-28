@@ -631,8 +631,14 @@ exports.buildDefaultDocs = () => {
     )
   })
 
+  const dataSource = {
+    ...this.DEFAULT_BB_DATASOURCE,
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  }
+
   return [
-    this.DEFAULT_BB_DATASOURCE,
+    dataSource,
     inventoryData.table,
     employeeData.table,
     jobData.table,
