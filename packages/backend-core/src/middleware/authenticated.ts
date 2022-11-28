@@ -68,7 +68,7 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
  */
 export = function (
   noAuthPatterns: EndpointMatcher[] = [],
-  opts: { publicAllowed: boolean; populateUser?: Function } = {
+  opts: { publicAllowed?: boolean; populateUser?: Function } = {
     publicAllowed: false,
   }
 ) {
