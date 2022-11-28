@@ -1,7 +1,6 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/users")
 const { joiValidator } = require("@budibase/backend-core/auth")
-const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const cloudRestricted = require("../../../middleware/cloudRestricted")
 const { users } = require("../validation")
@@ -51,31 +50,31 @@ function buildInviteAcceptValidation() {
 router
   .post(
     "/api/global/users",
-    adminOnly,
+    builderOrAdmin,
     users.buildUserSaveValidation(),
     controller.save
   )
   .post(
     "/api/global/users/bulk",
-    adminOnly,
+    builderOrAdmin,
     users.buildUserBulkUserValidation(),
     controller.bulkUpdate
   )
 
   .get("/api/global/users", builderOrAdmin, controller.fetch)
   .post("/api/global/users/search", builderOrAdmin, controller.search)
-  .delete("/api/global/users/:id", adminOnly, controller.destroy)
+  .delete("/api/global/users/:id", builderOrAdmin, controller.destroy)
   .get("/api/global/users/count/:appId", builderOrAdmin, controller.countByApp)
   .get("/api/global/roles/:appId")
   .post(
     "/api/global/users/invite",
-    adminOnly,
+    builderOrAdmin,
     buildInviteValidation(),
     controller.invite
   )
   .post(
     "/api/global/users/multi/invite",
-    adminOnly,
+    builderOrAdmin,
     buildInviteMultipleValidation(),
     controller.inviteMultiple
   )
