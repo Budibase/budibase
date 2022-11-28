@@ -32,8 +32,8 @@ The command deploys Budibase on the Kubernetes cluster in the default configurat
 
 ## Uninstalling the Chart
 
-To uninstall/delete the `my-release` deployment:
+To uninstall/delete the `budi-release` deployment:
 
 ```console
-$ helm delete my-release
+$ helm delete budi-release
 ```
