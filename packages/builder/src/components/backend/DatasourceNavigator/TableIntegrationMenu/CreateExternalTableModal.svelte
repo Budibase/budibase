@@ -7,9 +7,9 @@
 
   let name = ""
   let submitted = false
-  $: valid = name && name.length > 0 && !datasource?.entities[name]
+  $: valid = name && name.length > 0 && !datasource?.entities?.[name]
   $: error =
-    !submitted && name && datasource?.entities[name]
+    !submitted && name && datasource?.entities?.[name]
       ? "Table name already in use."
       : null
 

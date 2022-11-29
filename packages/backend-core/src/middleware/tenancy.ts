@@ -8,15 +8,15 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 
-const tenancy = (
+export = function (
   allowQueryStringPatterns: EndpointMatcher[],
   noTenancyPatterns: EndpointMatcher[],
-  opts = { noTenancyRequired: false }
-) => {
+  opts: { noTenancyRequired?: boolean } = { noTenancyRequired: false }
+) {
   const allowQsOptions = buildMatcherRegex(allowQueryStringPatterns)
   const noTenancyOptions = buildMatcherRegex(noTenancyPatterns)
 
-  return async function (ctx: BBContext, next: any) {
+  return async function (ctx: BBContext | any, next: any) {
     const allowNoTenant =
       opts.noTenancyRequired || !!matches(ctx, noTenancyOptions)
     const tenantOpts: GetTenantIdOptions = {
@@ -33,5 +33,3 @@ const tenancy = (
     return doInTenant(tenantId, next)
   }
 }
-
-export = tenancy

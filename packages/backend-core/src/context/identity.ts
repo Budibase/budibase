@@ -2,23 +2,22 @@ import {
   IdentityContext,
   IdentityType,
   User,
-  UserContext,
   isCloudAccount,
   Account,
   AccountUserContext,
 } from "@budibase/types"
 import * as context from "."
 
-export const getIdentity = (): IdentityContext | undefined => {
+export function getIdentity(): IdentityContext | undefined {
   return context.getIdentity()
 }
 
-export const doInIdentityContext = (identity: IdentityContext, task: any) => {
+export function doInIdentityContext(identity: IdentityContext, task: any) {
   return context.doInIdentityContext(identity, task)
 }
 
-export const doInUserContext = (user: User, task: any) => {
-  const userContext: UserContext = {
+export function doInUserContext(user: User, task: any) {
+  const userContext: any = {
     ...user,
     _id: user._id as string,
     type: IdentityType.USER,
@@ -26,7 +25,7 @@ export const doInUserContext = (user: User, task: any) => {
   return doInIdentityContext(userContext, task)
 }
 
-export const doInAccountContext = (account: Account, task: any) => {
+export function doInAccountContext(account: Account, task: any) {
   const _id = getAccountUserId(account)
   const tenantId = account.tenantId
   const accountContext: AccountUserContext = {
@@ -38,12 +37,12 @@ export const doInAccountContext = (account: Account, task: any) => {
   return doInIdentityContext(accountContext, task)
 }
 
-export const getAccountUserId = (account: Account) => {
+export function getAccountUserId(account: Account) {
   let userId: string
   if (isCloudAccount(account)) {
     userId = account.budibaseUserId
   } else {
-    // use account id as user id for self hosting
+    // use account id as user id for self-hosting
     userId = account.accountId
   }
   return userId
