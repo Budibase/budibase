@@ -1,6 +1,11 @@
-import { DocumentType, ViewName, DeprecatedViews, SEPARATOR } from "./utils"
+import {
+  DocumentType,
+  ViewName,
+  DeprecatedViews,
+  SEPARATOR,
+  StaticDatabases,
+} from "../constants"
 import { getGlobalDB } from "../context"
-import { StaticDatabases } from "./constants"
 import { doWithDB } from "./"
 import { Database, DatabaseQueryOpts } from "@budibase/types"
 

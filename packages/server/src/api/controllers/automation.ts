@@ -1,5 +1,5 @@
-import actions from "../../automations/actions"
-import triggers from "../../automations/triggers"
+import * as actions from "../../automations/actions"
+import * as triggers from "../../automations/triggers"
 import {
   getAutomationParams,
   generateAutomationID,

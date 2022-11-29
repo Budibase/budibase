@@ -39,7 +39,7 @@ export function createQueue<T>(
   return queue
 }
 
-exports.shutdown = async () => {
+export async function shutdown() {
   if (QUEUES.length) {
     clearInterval(cleanupInterval)
     for (let queue of QUEUES) {

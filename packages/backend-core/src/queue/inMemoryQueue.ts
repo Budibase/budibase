@@ -1,5 +1,5 @@
 import events from "events"
-import { timeout } from "../../utils"
+import { timeout } from "../utils"
 
 /**
  * Bull works with a Job wrapper around all messages that contains a lot more information about

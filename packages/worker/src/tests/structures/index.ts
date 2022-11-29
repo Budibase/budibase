@@ -1,5 +1,5 @@
 import { structures } from "@budibase/backend-core/tests"
-import configs from "./configs"
+import * as configs from "./configs"
 import * as users from "./users"
 import * as groups from "./groups"
 import { v4 as uuid } from "uuid"
