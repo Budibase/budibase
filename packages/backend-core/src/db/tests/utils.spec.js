@@ -1,10 +1,12 @@
 require("../../../tests")
 const {
-  generateAppID,
   getDevelopmentAppID,
   getProdAppID,
   isDevAppID,
   isProdAppID,
+} = require("../conversions")
+const {
+  generateAppID,
   getPlatformUrl,
   getScopedConfig
 } = require("../utils")

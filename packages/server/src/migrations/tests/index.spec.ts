@@ -6,7 +6,7 @@ import {
   context,
 } from "@budibase/backend-core"
 import TestConfig from "../../tests/utilities/TestConfiguration"
-import structures from "../../tests/utilities/structures"
+import * as structures from "../../tests/utilities/structures"
 import { MIGRATIONS } from "../"
 import * as helpers from "./helpers"
 

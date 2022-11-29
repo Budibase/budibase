@@ -1,16 +1,16 @@
-import * as hashing from "./hashing"
+import { newid } from "./utils"
 import * as events from "./events"
-import { StaticDatabases } from "./db/constants"
+import { StaticDatabases } from "./db"
 import { doWithDB } from "./db"
 import { Installation, IdentityType } from "@budibase/types"
 import * as context from "./context"
 import semver from "semver"
-import { bustCache, withCache, TTL, CacheKeys } from "./cache/generic"
+import { bustCache, withCache, TTL, CacheKey } from "./cache/generic"
 
 const pkg = require("../package.json")
 
 export const getInstall = async (): Promise<Installation> => {
-  return withCache(CacheKeys.INSTALLATION, TTL.ONE_DAY, getInstallFromDB, {
+  return withCache(CacheKey.INSTALLATION, TTL.ONE_DAY, getInstallFromDB, {
     useTenancy: false,
   })
 }
@@ -28,7 +28,7 @@ const getInstallFromDB = async (): Promise<Installation> => {
         if (e.status === 404) {
           install = {
             _id: StaticDatabases.PLATFORM_INFO.docs.install,
-            installId: hashing.newid(),
+            installId: newid(),
             version: pkg.version,
           }
           const resp = await platformDb.put(install)
@@ -50,7 +50,7 @@ const updateVersion = async (version: string): Promise<boolean> => {
         const install = await getInstall()
         install.version = version
         await platformDb.put(install)
-        await bustCache(CacheKeys.INSTALLATION)
+        await bustCache(CacheKey.INSTALLATION)
       }
     )
   } catch (e: any) {

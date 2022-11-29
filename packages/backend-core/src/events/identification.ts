@@ -20,9 +20,9 @@ import {
 import { processors } from "./processors"
 import * as dbUtils from "../db/utils"
 import { Config } from "../constants"
-import * as hashing from "../hashing"
+import { newid } from "../utils"
 import * as installation from "../installation"
-import { withCache, TTL, CacheKeys } from "../cache/generic"
+import { withCache, TTL, CacheKey } from "../cache/generic"
 
 const pkg = require("../../package.json")
 
@@ -270,7 +270,7 @@ const getEventTenantId = async (tenantId: string): Promise<string> => {
 const getUniqueTenantId = async (tenantId: string): Promise<string> => {
   // make sure this tenantId always matches the tenantId in context
   return context.doInTenant(tenantId, () => {
-    return withCache(CacheKeys.UNIQUE_TENANT_ID, TTL.ONE_DAY, async () => {
+    return withCache(CacheKey.UNIQUE_TENANT_ID, TTL.ONE_DAY, async () => {
       const db = context.getGlobalDB()
       const config: SettingsConfig = await dbUtils.getScopedFullConfig(db, {
         type: Config.SETTINGS,
@@ -280,7 +280,7 @@ const getUniqueTenantId = async (tenantId: string): Promise<string> => {
       if (config.config.uniqueTenantId) {
         return config.config.uniqueTenantId
       } else {
-        uniqueTenantId = `${hashing.newid()}_${tenantId}`
+        uniqueTenantId = `${newid()}_${tenantId}`
         config.config.uniqueTenantId = uniqueTenantId
         await db.put(config)
         return uniqueTenantId

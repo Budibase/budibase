@@ -106,7 +106,11 @@ function bindingTypeCoerce(bindings: any[]) {
     }
     // if not a number, see if it is a date - important to do in this order as any
     // integer will be considered a valid date
-    else if (/^\d/.test(binding) && dayjs(binding).isValid()) {
+    else if (
+      /^\d/.test(binding) &&
+      dayjs(binding).isValid() &&
+      !binding.includes(",")
+    ) {
       bindings[i] = dayjs(binding).toDate()
     }
   }
