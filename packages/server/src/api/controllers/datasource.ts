@@ -153,7 +153,9 @@ export async function update(ctx: BBContext) {
   const auth = datasource.config.auth
   await invalidateVariables(datasource, ctx.request.body)
 
-  const dataSourceBody = !datasource.plus
+  const isBudibaseSource = datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
+
+  const dataSourceBody = isBudibaseSource
     ? { name: ctx.request.body?.name }
     : ctx.request.body
 
@@ -168,7 +170,7 @@ export async function update(ctx: BBContext) {
   datasource._rev = response.rev
 
   // Drain connection pools when configuration is changed
-  if (datasource.source && datasource.plus) {
+  if (datasource.source && !isBudibaseSource) {
     const source = await getIntegration(datasource.source)
     if (source && source.pool) {
       await source.pool.end()
