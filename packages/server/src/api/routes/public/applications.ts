@@ -1,3 +1,4 @@
+import { isProdAppID } from "@budibase/backend-core/db"
 import controller from "../../controllers/public/applications"
 import Endpoint from "./utils/Endpoint"
 const { nameValidator, applicationValidator } = require("../utils/validators")
@@ -92,7 +93,19 @@ write.push(
  *               application:
  *                 $ref: '#/components/examples/application'
  */
-write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
+write.push(
+  new Endpoint(
+    "delete",
+    "/applications/:appId",
+    controller.destroy
+  ).addMiddleware((ctx, next) => {
+    // set unpublish if the appId is production, so we don't delete the object store bucket
+    if (isProdAppID(ctx.params.appId)) {
+      ctx.query.unpublish = true
+    }
+    return next()
+  })
+)
 
 /**
  * @openapi

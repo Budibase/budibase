@@ -47,6 +47,7 @@ import { App, Layout, Screen, MigrationType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { enrichPluginURLs } from "../../utilities/plugins"
 import sdk from "../../sdk"
+import { isProdAppID } from "@budibase/backend-core/db"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -454,6 +455,13 @@ const destroyApp = async (ctx: any) => {
   let appId = ctx.params.appId
   let isUnpublish = ctx.query && ctx.query.unpublish
 
+  if (isProdAppID(appId) && !isUnpublish) {
+    return ctx.throw(
+      400,
+      "Publish flag must be set to delete a published app ID"
+    )
+  }
+
   if (isUnpublish) {
     appId = getProdAppID(appId)
   }
@@ -470,7 +478,7 @@ const destroyApp = async (ctx: any) => {
   }
 
   /* istanbul ignore next */
-  if (!env.isTest() && !isUnpublish && isDevAppID(appId)) {
+  if (!env.isTest() && !isUnpublish) {
     await deleteApp(appId)
   }
   // automations only in production
