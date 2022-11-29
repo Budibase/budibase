@@ -21,7 +21,7 @@ import koaBody from "koa-body"
 import http from "http"
 import api from "./api"
 import * as redis from "./utilities/redis"
-import Sentry from "@sentry/node"
+const Sentry = require("@sentry/node")
 const koaSession = require("koa-session")
 const logger = require("koa-pino-logger")
 const destroyable = require("server-destroy")
@@ -46,18 +46,18 @@ app.use(auth.passport.session())
 app.use(api.routes())
 
 // sentry
-if (env.isProd()) {
-  Sentry.init()
+//if (env.isProd()) {
+Sentry.init()
 
-  app.on("error", (err, ctx) => {
-    Sentry.withScope(function (scope: Scope) {
-      scope.addEventProcessor(function (event: Event) {
-        return Sentry.Handlers.parseRequest(event, ctx.request)
-      })
-      Sentry.captureException(err)
+app.on("error", (err, ctx) => {
+  Sentry.withScope(function (scope: Scope) {
+    scope.addEventProcessor(function (event: Event) {
+      return Sentry.Handlers.parseRequest(event, ctx.request)
     })
+    Sentry.captureException(err)
   })
-}
+})
+//}
 
 const server = http.createServer(app.callback())
 destroyable(server)
