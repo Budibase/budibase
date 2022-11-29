@@ -72,7 +72,7 @@ export async function stepCreated(
     automationId: automation._id as string,
     triggerId: automation.definition?.trigger?.id,
     triggerType: automation.definition?.trigger?.stepId,
-    stepId: step.id,
+    stepId: step.id!,
     stepType: step.stepId,
   }
   await publishEvent(Event.AUTOMATION_STEP_CREATED, properties, timestamp)
@@ -87,7 +87,7 @@ export async function stepDeleted(
     automationId: automation._id as string,
     triggerId: automation.definition?.trigger?.id,
     triggerType: automation.definition?.trigger?.stepId,
-    stepId: step.id,
+    stepId: step.id!,
     stepType: step.stepId,
   }
   await publishEvent(Event.AUTOMATION_STEP_DELETED, properties)

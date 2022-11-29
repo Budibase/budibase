@@ -1,5 +1,5 @@
 import { getWebhookParams } from "../../db/utils"
-import triggers from "../../automations/triggers"
+import * as triggers from "../../automations/triggers"
 import { db as dbCore, context } from "@budibase/backend-core"
 import {
   Webhook,

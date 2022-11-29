@@ -1,14 +1,15 @@
+const { objectStore } = require("@budibase/backend-core")
+const fs = require("fs")
+const { join } = require("path")
+const { TEMP_DIR, MINIO_DIR } = require("./utils")
+const { progressBar } = require("../utils")
 const {
   ObjectStoreBuckets,
   ObjectStore,
   retrieve,
   uploadDirectory,
   makeSureBucketExists,
-} = require("@budibase/backend-core/objectStore")
-const fs = require("fs")
-const { join } = require("path")
-const { TEMP_DIR, MINIO_DIR } = require("./utils")
-const { progressBar } = require("../utils")
+} = objectStore
 
 const bucketList = Object.values(ObjectStoreBuckets)
 

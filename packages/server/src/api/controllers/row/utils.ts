@@ -51,16 +51,19 @@ export async function validate({
 }: {
   tableId?: string
   row: Row
-  table: Table
+  table?: Table
 }) {
+  let fetchedTable: Table
   if (!table) {
     const db = context.getAppDB()
-    table = await db.get(tableId)
+    fetchedTable = await db.get(tableId)
+  } else {
+    fetchedTable = table
   }
   const errors: any = {}
-  for (let fieldName of Object.keys(table.schema)) {
-    const constraints = cloneDeep(table.schema[fieldName].constraints)
-    const type = table.schema[fieldName].type
+  for (let fieldName of Object.keys(fetchedTable.schema)) {
+    const constraints = cloneDeep(fetchedTable.schema[fieldName].constraints)
+    const type = fetchedTable.schema[fieldName].type
     // formulas shouldn't validated, data will be deleted anyway
     if (type === FieldTypes.FORMULA) {
       continue
