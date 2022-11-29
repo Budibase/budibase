@@ -312,14 +312,7 @@ export const upload = async function (ctx: UserCtx) {
   const { type, name } = ctx.params
 
   let bucket = coreEnv.GLOBAL_BUCKET_NAME
-
-  let baseKey = `${type}/${name}`
-  let key
-  if (env.MULTI_TENANCY) {
-    key = `${getTenantId()}/${baseKey}`
-  } else {
-    key = baseKey
-  }
+  const key = objectStore.getGlobalFileKey(type, name)
 
   const result = await objectStore.upload({
     bucket,
@@ -338,6 +331,9 @@ export const upload = async function (ctx: UserCtx) {
       config: {},
     }
   }
+
+  // save the file key
+  cfgStructure.config[`${name}`] = key
 
   // save the Etag for cache bursting
   const etag = result.ETag

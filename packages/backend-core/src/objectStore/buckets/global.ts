@@ -15,11 +15,11 @@ export const getGlobalFileUrl = (type: string, name: string, etag?: string) => {
   }
 }
 
-const getGlobalFileKey = (type: string, name: string) => {
+export const getGlobalFileKey = (type: string, name: string) => {
   let file = `${type}/${name}`
   if (env.MULTI_TENANCY) {
     const tenantId = tenancy.getTenantId()
-    file = `/${tenantId}/${file}`
+    file = `${tenantId}/${file}`
   }
   return file
 }
