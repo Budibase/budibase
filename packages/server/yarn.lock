@@ -1273,12 +1273,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.1.40-alpha.1":
-  version "2.1.40-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.1.40-alpha.1.tgz#fd1a002e6a4b42a43c25937abe99afa5d4c68bab"
-  integrity sha512-XXj3QPqylmKwO27lhfcJ2lhBxjN3Q91bZ0nv/SDVwOMqTT/FzypG00cA/dL3E91BoibwGYd9KYvs6FAEFscG8A==
+"@budibase/backend-core@2.1.40-alpha.2":
+  version "2.1.40-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.1.40-alpha.2.tgz#8f761eecc425db1c199825fb178c063b07fad56b"
+  integrity sha512-SnBGufcwadOVTANVu4Y/IQHGPAr84MRZiHEd0DapK8nAxOWsHhZZrYc/t0ReROMwTfOevRHUXEarMB70t8asdg==
   dependencies:
-    "@budibase/types" "2.1.40-alpha.1"
+    "@budibase/types" "2.1.40-alpha.2"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -1360,13 +1360,13 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@2.1.40-alpha.1":
-  version "2.1.40-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.1.40-alpha.1.tgz#a5cd55772be5f2b9d30b9cbed6cb01b69b64870f"
-  integrity sha512-e3Rkk+qvMwPDhw2HqDOe9NvRN91C/lTA9pwwgP25aNzMGLjIlIt9gbpEOj9LkWCVhLypmyPxlbHA9DtJinBpzg==
+"@budibase/pro@2.1.40-alpha.2":
+  version "2.1.40-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.1.40-alpha.2.tgz#eaf5cec93ffb8d499de8e030894b8e9b017303e5"
+  integrity sha512-Plq3RzWE9hdXPEQgZWF3fNWrf3sTEf06Qh1OgAIH1S/xna9LN3lQaZ79u7UFphYtCb9mv7SPRUSa1hrC4x1jjA==
   dependencies:
-    "@budibase/backend-core" "2.1.40-alpha.1"
-    "@budibase/types" "2.1.40-alpha.1"
+    "@budibase/backend-core" "2.1.40-alpha.2"
+    "@budibase/types" "2.1.40-alpha.2"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1390,10 +1390,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@2.1.40-alpha.1":
-  version "2.1.40-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.1.40-alpha.1.tgz#b94b19dad8bc652d6ca7020173468e758db77737"
-  integrity sha512-k6oOeyitqW61mRHmxXZLRxeK/F7To+pWoOnSdwJxYedD5SWPdnMdR01KZFj2ahnKU+VBWNf67NppWLDfDeKM9g==
+"@budibase/types@2.1.40-alpha.2":
+  version "2.1.40-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.1.40-alpha.2.tgz#0aef32164ac10202afb3227fdb1ca3a9a021a227"
+  integrity sha512-AHNwIF3DpIOMagYE77ugpaTVcp0mxoBxoevWhenhhaHhqPTNmHg8Wn5JH0UhawTlYnGM0y/m6gRiixwwIzm5YA==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
