@@ -57,14 +57,14 @@ router
   )
   .post(
     "/api/global/users/bulk",
-    builderOrAdmin,
+    adminOnly,
     users.buildUserBulkUserValidation(),
     controller.bulkUpdate
   )
 
   .get("/api/global/users", builderOrAdmin, controller.fetch)
   .post("/api/global/users/search", builderOrAdmin, controller.search)
-  .delete("/api/global/users/:id", builderOrAdmin, controller.destroy)
+  .delete("/api/global/users/:id", adminOnly, controller.destroy)
   .get("/api/global/users/count/:appId", builderOrAdmin, controller.countByApp)
   .get("/api/global/roles/:appId")
   .post(
