@@ -72,12 +72,24 @@ class TestConfiguration {
 
   // UTILS
 
-  async _req(config: any, params: any, controlFunc: any) {
+  async _req(config: any, params: any, controlFunc: any, opts: { force?: boolean } = {}) {
     const request: any = {}
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
-    request.user = { tenantId: this.getTenantId() }
+    if (opts.force) {
+      request.user = {
+        tenantId: this.getTenantId(),
+        admin: { global: true },
+        builder: { global: true },
+      }
+    } else if (this.defaultUser) {
+      request.user = this.defaultUser
+    } else {
+      request.user = { 
+        tenantId: this.getTenantId()
+      }
+    }
     request.query = {}
     request.request = {
       body: config,
@@ -129,7 +141,7 @@ class TestConfiguration {
       email: "test@test.com",
       password: "test",
     })
-    this.defaultUser = await this.createUser(user)
+    this.defaultUser = await this.createUser(user, { force: true })
   }
 
   async createTenant1User() {
@@ -137,15 +149,16 @@ class TestConfiguration {
       email: "tenant1@test.com",
       password: "test",
     })
-    this.tenant1User = await this.createUser(user)
+    this.tenant1User = await this.createUser(user, { force: true })
   }
 
   async createSession(user: User) {
-    await sessions.createASession(user._id!, {
+    const session: any =  {
       sessionId: "sessionid",
       tenantId: user.tenantId,
       csrfToken: CSRF_TOKEN,
-    })
+    }
+    await sessions.createASession(user._id!, session)
   }
 
   cookieHeader(cookies: any) {
@@ -185,11 +198,11 @@ class TestConfiguration {
     })
   }
 
-  async createUser(user?: User) {
+  async createUser(user?: User, opts: any = {}) {
     if (!user) {
       user = structures.users.user()
     }
-    const response = await this._req(user, null, controllers.users.save)
+    const response = await this._req(user, null, controllers.users.save, opts)
     const body = response as CreateUserResponse
     return this.getUser(body.email)
   }
