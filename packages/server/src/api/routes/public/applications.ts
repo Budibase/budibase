@@ -93,19 +93,7 @@ write.push(
  *               application:
  *                 $ref: '#/components/examples/application'
  */
-write.push(
-  new Endpoint(
-    "delete",
-    "/applications/:appId",
-    controller.destroy
-  ).addMiddleware((ctx, next) => {
-    // set unpublish if the appId is production, so we don't delete the object store bucket
-    if (isProdAppID(ctx.params.appId)) {
-      ctx.query.unpublish = true
-    }
-    return next()
-  })
-)
+write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
 
 /**
  * @openapi

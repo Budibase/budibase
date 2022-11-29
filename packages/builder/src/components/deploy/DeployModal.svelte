@@ -23,13 +23,13 @@
 
   export let onOk
 
-  async function deployApp() {
+  async function publishApp() {
     try {
       //In Progress
       asyncModal.show()
       publishModal.hide()
 
-      published = await API.deployAppChanges()
+      published = await API.publishAppChanges()
 
       if (typeof onOk === "function") {
         await onOk()
@@ -69,7 +69,7 @@
   <ModalContent
     title="Publish to Production"
     confirmText="Publish"
-    onConfirm={deployApp}
+    onConfirm={publishApp}
     dataCy={"deploy-app-modal"}
   >
     <span

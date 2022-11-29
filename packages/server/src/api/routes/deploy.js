@@ -12,6 +12,5 @@ router
     authorized(BUILDER),
     controller.deploymentProgress
   )
-  .post("/api/deploy", authorized(BUILDER), controller.deployApp)
 
 module.exports = router

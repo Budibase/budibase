@@ -35,7 +35,7 @@ export default class AppApi {
   }
 
   async publish(): Promise<[Response, DeployConfig]> {
-    const response = await this.api.post("/deploy")
+    const response = await this.api.post("/applications/publish")
     const json = await response.json()
     return [response, json]
   }
@@ -103,7 +103,7 @@ export default class AppApi {
   }
 
   async unpublish(appId: string): Promise<[Response, UnpublishAppResponse]> {
-    const response = await this.api.del(`/applications/${appId}?unpublish=1`)
+    const response = await this.api.del(`/applications/${appId}/unpublish`)
     expect(response).toHaveStatusCode(200)
     const json = await response.json()
     expect(json.data.ok).toBe(true)

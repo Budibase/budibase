@@ -451,16 +451,32 @@ export const revertClient = async (ctx: any) => {
   ctx.body = app
 }
 
+const unpublishApp = async (ctx: any) => {
+  let appId = ctx.params.appId
+  // TODO: write test
+  if (isDevAppID(appId)) {
+    ctx.throw(400, "Cannot unpublish dev app.")
+  }
+
+  appId = getProdAppID(appId)
+
+  const db = context.getProdAppDB()
+  const app = await db.get(DocumentType.APP_METADATA)
+  const result = await db.destroy()
+
+  await events.app.unpublished(app)
+
+  // automations only in production
+  await cleanupAutomations(appId)
+
+  // TODO: this gets called in the destroy function as well
+  await appCache.invalidateAppMetadata(appId)
+  return result
+}
+
 const destroyApp = async (ctx: any) => {
   let appId = ctx.params.appId
   let isUnpublish = ctx.query && ctx.query.unpublish
-
-  if (isProdAppID(appId) && !isUnpublish) {
-    return ctx.throw(
-      400,
-      "Publish flag must be set to delete a published app ID"
-    )
-  }
 
   if (isUnpublish) {
     appId = getProdAppID(appId)
@@ -509,6 +525,14 @@ const postDestroyApp = async (ctx: any) => {
 export const destroy = async (ctx: any) => {
   await preDestroyApp(ctx)
   const result = await destroyApp(ctx)
+  await postDestroyApp(ctx)
+  ctx.status = 200
+  ctx.body = result
+}
+
+export const unpublish = async (ctx: any) => {
+  await preDestroyApp(ctx)
+  const result = await unpublishApp(ctx)
   await postDestroyApp(ctx)
   ctx.status = 200
   ctx.body = result

@@ -339,7 +339,7 @@ class TestConfiguration {
     await context.updateAppId(this.appId)
 
     // create production app
-    this.prodApp = await this.deploy()
+    this.prodApp = await this.publish()
 
     this.allApps.push(this.prodApp)
     this.allApps.push(this.app)
@@ -347,8 +347,8 @@ class TestConfiguration {
     return this.app
   }
 
-  async deploy() {
-    await this._req(null, null, controllers.deploy.deployApp)
+  async publish() {
+    await this._req(null, null, controllers.deploy.publishApp)
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
 

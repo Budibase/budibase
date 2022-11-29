@@ -13,9 +13,9 @@ describe("/deployments", () => {
   })
 
   describe("deploy", () => {
-    it("should deploy the application", async () => {
+    it("should publish the application", async () => {
       await request
-        .post(`/api/deploy`)
+        .post(`/api/applications/publish`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)

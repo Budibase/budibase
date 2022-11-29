@@ -168,7 +168,7 @@ describe("/applications", () => {
       await config.createApp("to-delete")
       const appId = config.getAppId()
       await request
-        .delete(`/api/applications/${appId}`)
+        .post(`/api/applications/${appId}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -179,7 +179,7 @@ describe("/applications", () => {
       await config.createApp("to-unpublish")
       const appId = config.getProdAppId()
       await request
-        .delete(`/api/applications/${appId}?unpublish=true`)
+        .delete(`/api/applications/${appId}/unpublish`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)

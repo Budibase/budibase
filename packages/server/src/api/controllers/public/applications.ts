@@ -68,10 +68,35 @@ export async function destroy(ctx: any, next: any) {
   })
 }
 
+export async function unpublish(ctx: any, next: any) {
+  await doInAppContext(ctx.params.appId, async () => {
+    // get the app before deleting it
+    await setResponseApp(ctx)
+    const body = ctx.body
+    await controller.unpublish(ctx)
+    // overwrite the body again
+    ctx.body = body
+    await next()
+  })
+}
+
+// export async function publish(ctx: any, next: any) {
+//   await doInAppContext(ctx.params.appId, async () => {
+//     // get the app before deleting it
+//     await setResponseApp(ctx)
+//     const body = ctx.body
+//     await controller.publish(ctx)
+//     // overwrite the body again
+//     ctx.body = body
+//     await next()
+//   })
+// }
+
 export default {
   create,
   update,
   read,
   destroy,
   search,
+  // unpublish,
 }

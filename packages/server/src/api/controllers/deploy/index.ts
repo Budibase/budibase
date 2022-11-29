@@ -100,7 +100,7 @@ async function initDeployedApp(prodAppId: any) {
   console.log("Enabled cron triggers for deployed app..")
 }
 
-async function deployApp(deployment: any, userId: string) {
+async function publishApp(deployment: any, userId: string) {
   let replication
   try {
     const appId = getAppId()
@@ -195,20 +195,7 @@ export async function deploymentProgress(ctx: any) {
   }
 }
 
-const isFirstDeploy = async () => {
-  try {
-    const db = getProdAppDB()
-    await db.get(DocumentType.APP_METADATA)
-  } catch (e: any) {
-    if (e.status === 404) {
-      return true
-    }
-    throw e
-  }
-  return false
-}
-
-const _deployApp = async function (ctx: any) {
+const _publishApp = async function (ctx: any) {
   let deployment = new Deployment()
   console.log("Deployment object created")
   deployment.setStatus(DeploymentStatus.PENDING)
@@ -218,10 +205,10 @@ const _deployApp = async function (ctx: any) {
 
   console.log("Deploying app...")
 
-  let app = await deployApp(deployment, ctx.user._id)
+  let app = await publishApp(deployment, ctx.user._id)
 
   await events.app.published(app)
   ctx.body = deployment
 }
 
-export { _deployApp as deployApp }
+export { _publishApp as publishApp }
