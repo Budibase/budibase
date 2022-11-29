@@ -1,26 +1,20 @@
-import { newid } from "../hashing"
-import { DEFAULT_TENANT_ID, Config } from "../constants"
+import { newid } from "../newid"
 import env from "../environment"
 import {
+  DEFAULT_TENANT_ID,
   SEPARATOR,
   DocumentType,
   UNICODE_MAX,
   ViewName,
   InternalTable,
-} from "./constants"
-import { getTenantId, getGlobalDB } from "../context"
-import { getGlobalDBName } from "./tenancy"
+  APP_PREFIX,
+} from "../constants"
+import { getTenantId, getGlobalDB, getGlobalDBName } from "../context"
 import { doWithDB, allDbs, directCouchAllDbs } from "./db"
 import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
-import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-import { App, Database } from "@budibase/types"
-
-export * from "./constants"
-export * from "./conversions"
-export { default as Replication } from "./Replication"
-export * from "./tenancy"
+import { App, Database, ConfigType } from "@budibase/types"
 
 /**
  * Generates a new app ID.
@@ -494,7 +488,7 @@ export const getScopedFullConfig = async function (
   )[0]
 
   // custom logic for settings doc
-  if (type === Config.SETTINGS) {
+  if (type === ConfigType.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
       // overrides affected by environment variables
       scopedConfig.doc.config.platformUrl = await getPlatformUrl({
@@ -533,7 +527,7 @@ export const getPlatformUrl = async (opts = { tenantAware: true }) => {
     // get the doc directly instead of with getScopedConfig to prevent loop
     let settings
     try {
-      settings = await db.get(generateConfigID({ type: Config.SETTINGS }))
+      settings = await db.get(generateConfigID({ type: ConfigType.SETTINGS }))
     } catch (e: any) {
       if (e.status !== 404) {
         throw e

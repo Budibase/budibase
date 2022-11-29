@@ -37,7 +37,7 @@ router
   // re-direct before any middlewares occur
   .redirect("/", "/builder")
   .use(
-    auth.buildAuthMiddleware(null, {
+    auth.buildAuthMiddleware([], {
       publicAllowed: true,
     })
   )
@@ -45,7 +45,7 @@ router
   // the server can be public anywhere, so nowhere should throw errors
   // if the tenancy has not been set, it'll have to be discovered at application layer
   .use(
-    auth.buildTenancyMiddleware(null, null, {
+    auth.buildTenancyMiddleware([], [], {
       noTenancyRequired: true,
     })
   )

@@ -8,13 +8,9 @@ import {
   foreignKeyStructure,
   hasTypeChanged,
 } from "./utils"
-import {
-  DataSourceOperation,
-  FieldTypes,
-  RelationshipTypes,
-} from "../../../constants"
+import { FieldTypes, RelationshipTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import csvParser from "../../../utilities/csvParser"
+import * as csvParser from "../../../utilities/csvParser"
 import { handleRequest } from "../row/external"
 import { events, context } from "@budibase/backend-core"
 import {
@@ -347,7 +343,7 @@ export async function bulkImport(ctx: BBContext) {
     ...dataImport,
     existingTable: table,
   })
-  await handleRequest(DataSourceOperation.BULK_CREATE, table._id, {
+  await handleRequest(Operation.BULK_CREATE, table._id!, {
     rows,
   })
   await events.rows.imported(table, "csv", rows.length)

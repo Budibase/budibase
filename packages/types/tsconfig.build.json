@@ -3,7 +3,6 @@
     "target": "es6",
     "module": "commonjs",
     "lib": ["es2020"],
-    "allowJs": true,
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,

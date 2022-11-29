@@ -1,4 +1,4 @@
-import linkRows from "../../db/linkedRows"
+import * as linkRows from "../../db/linkedRows"
 import { FieldTypes, AutoFieldSubTypes } from "../../constants"
 import { attachmentsRelativeURL } from "../index"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
@@ -6,7 +6,7 @@ import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { Row, User, Table } from "@budibase/types"
+import { Row, Table, ContextUser } from "@budibase/types"
 const { cloneDeep } = require("lodash/fp")
 export * from "./utils"
 
@@ -49,7 +49,7 @@ function getRemovedAttachmentKeys(
  * for automatic ID purposes.
  */
 export function processAutoColumn(
-  user: User | null,
+  user: ContextUser | null,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts
@@ -132,10 +132,10 @@ export function coerce(row: any, type: any) {
  * @returns {object} the row which has been prepared to be written to the DB.
  */
 export function inputProcessing(
-  user: User,
+  user: ContextUser,
   table: Table,
   row: Row,
-  opts: AutoColumnProcessingOpts
+  opts?: AutoColumnProcessingOpts
 ) {
   let clonedRow = cloneDeep(row)
   // need to copy the table so it can be differenced on way out
@@ -189,10 +189,10 @@ export async function outputProcessing(
     wasArray = false
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(table, rows)
+  let enriched = await linkRows.attachFullLinkedDocs(table, rows as Row[])
 
   // process formulas
-  enriched = processFormulas(table, enriched, { dynamic: true })
+  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
 
   // update the attachments URL depending on hosting
   for (let [property, column] of Object.entries(table.schema)) {
