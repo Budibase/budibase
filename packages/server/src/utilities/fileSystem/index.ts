@@ -80,14 +80,16 @@ export function loadHandlebarsFile(path: string) {
  * When return a file from the API need to write the file to the system temporarily so we
  * can create a read stream to send.
  * @param {string} contents the contents of the file which is to be returned from the API.
+ * @param {string} encoding the encoding of the file to return (utf8 default)
  * @return {Object} the read stream which can be put into the koa context body.
  */
-export function apiFileReturn(contents: string) {
+export function apiFileReturn(
+  contents: string,
+  encoding: BufferEncoding = "utf8"
+) {
   const path = join(budibaseTempDir(), uuid())
-  fs.writeFileSync(path, "\ufeff" + contents)
-  const readerStream = fs.createReadStream(path)
-  readerStream.setEncoding("binary")
-  return readerStream
+  fs.writeFileSync(path, contents, { encoding })
+  return fs.createReadStream(path, { encoding })
 }
 
 export function streamFile(path: string) {
