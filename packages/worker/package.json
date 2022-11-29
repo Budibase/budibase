@@ -78,7 +78,7 @@
     "@types/node-fetch": "2.6.1",
     "@types/pouchdb": "6.4.0",
     "@types/uuid": "8.3.4",
-    "@typescript-eslint/parser": "5.12.0",
+    "@typescript-eslint/parser": "5.45.0",
     "copyfiles": "2.4.1",
     "eslint": "6.8.0",
     "jest": "28.1.1",
