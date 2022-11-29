@@ -17,6 +17,7 @@
   export let legend
   export let yAxisUnits
   export let palette
+  export let c1, c2, c3, c4, c5
 
   // Area specific props
   export let area
@@ -40,8 +41,12 @@
     palette,
     area,
     stacked,
-    gradient
+    gradient,
+    c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null,
+    customColor
   )
+
+  $: customColor = palette === "Custom"
 
   const setUpChart = (
     title,
@@ -60,7 +65,9 @@
     palette,
     area,
     stacked,
-    gradient
+    gradient,
+    colors,
+    customColor
   ) => {
     const allCols = [labelColumn, ...(valueColumns || [null])]
     if (
@@ -96,6 +103,7 @@
       .legend(legend)
       .yUnits(yAxisUnits)
       .palette(palette)
+      .colors(customColor ? colors : null)
 
     // Add data
     let useDates = false

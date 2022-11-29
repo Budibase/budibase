@@ -1,7 +1,7 @@
 import filterTests from "../../support/filterTests"
 
 filterTests(["all"], () => {
-  context("MySQL Datasource Testing", () => {
+  xcontext("MySQL Datasource Testing", () => {
     if (Cypress.env("TEST_ENV")) {
       before(() => {
         cy.login()
@@ -11,8 +11,8 @@ filterTests(["all"], () => {
       const queryName = "Cypress Test Query"
       const queryRename = "CT Query Rename"
 
-      it("Should add MySQL data source without configuration", () => {
-        // Select MySQL data source
+      it("Should add MySQL datasource without configuration", () => {
+        // Select MySQL datasource
         cy.selectExternalDatasource(datasource)
         // Attempt to fetch tables without applying configuration
         cy.intercept("**/datasources").as("datasource")
@@ -35,8 +35,8 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button").contains("Skip table fetch").click({ force: true })
       })
 
-      it("should add MySQL data source and fetch tables", () => {
-        // Add & configure MySQL data source
+      it("should add MySQL datasource and fetch tables", () => {
+        // Add & configure MySQL datasource
         cy.selectExternalDatasource(datasource)
         cy.intercept("**/datasources").as("datasource")
         cy.addDatasourceConfig(datasource)
@@ -52,7 +52,7 @@ filterTests(["all"], () => {
       })
 
       it("should check table fetching error", () => {
-        // MySQL test data source contains tables without primary keys
+        // MySQL test datasource contains tables without primary keys
         cy.get(".spectrum-InLineAlert")
           .should("contain", "Error fetching tables")
           .and("contain", "No primary key constraint found")
@@ -175,7 +175,10 @@ filterTests(["all"], () => {
         cy.get("@query").its("response.statusCode").should("eq", 200)
         cy.get("@query").its("response.body").should("not.be.empty")
         // Save query
+        cy.intercept("POST", "**/queries").as("saveQuery")
         cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
+        cy.wait("@saveQuery")
+        cy.get("@saveQuery").its("response.statusCode").should("eq", 200)
         cy.get(".nav-item").should("contain", queryName)
       })
 

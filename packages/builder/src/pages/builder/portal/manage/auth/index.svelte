@@ -18,16 +18,21 @@
     Body,
     Select,
     Toggle,
+    Tag,
+    Tags,
+    Icon,
+    Helpers,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
   import { organisation, admin } from "stores/portal"
-  import { Helpers } from "@budibase/bbui"
 
   const ConfigTypes = {
     Google: "google",
     OIDC: "oidc",
   }
+
+  const HasSpacesRegex = /[\\"\s]/
 
   // Some older google configs contain a manually specified value - retain the functionality to edit the field
   // When there is no value or we are in the cloud - prohibit editing the field, must use platform url to change
@@ -36,7 +41,9 @@
 
   // Indicate to user that callback is based on platform url
   // If there is an existing value, indicate that it may be removed to return to default behaviour
-  $: googleCallbackTooltip = googleCallbackReadonly
+  $: googleCallbackTooltip = $admin.cloud
+    ? null
+    : googleCallbackReadonly
     ? "Vist the organisation page to update the platform URL"
     : "Leave blank to use the default callback URL"
 
@@ -50,6 +57,7 @@
         readonly: googleCallbackReadonly,
         tooltip: googleCallbackTooltip,
         placeholder: $organisation.googleCallbackUrl,
+        copyButton: true,
       },
     ],
   }
@@ -62,9 +70,12 @@
       {
         name: "callbackURL",
         readonly: true,
-        tooltip: "Vist the organisation page to update the platform URL",
+        tooltip: $admin.cloud
+          ? null
+          : "Vist the organisation page to update the platform URL",
         label: "Callback URL",
         placeholder: $organisation.oidcCallbackUrl,
+        copyButton: true,
       },
     ],
   }
@@ -145,7 +156,6 @@
 
   async function save(docs) {
     let calls = []
-
     // Only if the user has provided an image, upload it
     if (image) {
       let data = new FormData()
@@ -157,7 +167,6 @@
         })
       )
     }
-
     docs.forEach(element => {
       // Delete unsupported fields
       delete element.createdAt
@@ -199,7 +208,6 @@
         }
       }
     })
-
     if (calls.length) {
       Promise.all(calls)
         .then(data => {
@@ -213,6 +221,26 @@
           notifications.error("Failed to update auth settings")
         })
     }
+  }
+
+  let defaultScopes = ["profile", "email", "offline_access"]
+
+  const refreshScopes = idx => {
+    providers.oidc.config.configs[idx]["scopes"] =
+      providers.oidc.config.configs[idx]["scopes"]
+  }
+
+  let scopesFields = [
+    {
+      editing: true,
+      inputText: null,
+      error: null,
+    },
+  ]
+
+  const copyToClipboard = async value => {
+    await Helpers.copyToClipboard(value)
+    notifications.success("Copied")
   }
 
   onMount(async () => {
@@ -276,7 +304,7 @@
     if (!oidcDoc?._id) {
       providers.oidc = {
         type: ConfigTypes.OIDC,
-        config: { configs: [{ activated: true }] },
+        config: { configs: [{ activated: true, scopes: defaultScopes }] },
       }
     } else {
       originalOidcDoc = cloneDeep(oidcDoc)
@@ -295,7 +323,7 @@
     </Body>
   </Layout>
   {#if providers.google}
-    <Divider size="S" />
+    <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">
         <div class="provider-title">
@@ -320,11 +348,23 @@
       {#each GoogleConfigFields.Google as field}
         <div class="form-row">
           <Label size="L" tooltip={field.tooltip}>{field.label}</Label>
-          <Input
-            bind:value={providers.google.config[field.name]}
-            readonly={field.readonly}
-            placeholder={field.placeholder}
-          />
+          <div class="inputContainer">
+            <div class="input">
+              <Input
+                bind:value={providers.google.config[field.name]}
+                readonly={field.readonly}
+                placeholder={field.placeholder}
+              />
+            </div>
+            {#if field.copyButton}
+              <div
+                class="copy"
+                on:click={() => copyToClipboard(field.placeholder)}
+              >
+                <Icon size="S" name="Copy" />
+              </div>
+            {/if}
+          </div>
         </div>
       {/each}
       <div class="form-row">
@@ -334,7 +374,7 @@
     </Layout>
   {/if}
   {#if providers.oidc}
-    <Divider size="S" />
+    <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">
         <div class="provider-title">
@@ -345,6 +385,7 @@
             size="s"
             cta
             on:click={() => save([providers.oidc])}
+            dataCy={"oidc-save"}
           >
             Save
           </Button>
@@ -358,11 +399,24 @@
       {#each OIDCConfigFields.Oidc as field}
         <div class="form-row">
           <Label size="L" tooltip={field.tooltip}>{field.label}</Label>
-          <Input
-            bind:value={providers.oidc.config.configs[0][field.name]}
-            readonly={field.readonly}
-            placeholder={field.placeholder}
-          />
+          <div class="inputContainer">
+            <div class="input">
+              <Input
+                bind:value={providers.oidc.config.configs[0][field.name]}
+                readonly={field.readonly}
+                placeholder={field.placeholder}
+                dataCy={field.name}
+              />
+            </div>
+            {#if field.copyButton}
+              <div
+                class="copy"
+                on:click={() => copyToClipboard(field.placeholder)}
+              >
+                <Icon size="S" name="Copy" />
+              </div>
+            {/if}
+          </div>
         </div>
       {/each}
     </Layout>
@@ -392,15 +446,132 @@
       <div class="form-row">
         <Label size="L">Activated</Label>
         <Toggle
+          dataCy={"oidc-active"}
           text=""
           bind:value={providers.oidc.config.configs[0].activated}
         />
       </div>
     </Layout>
+    <span class="advanced-config">
+      <Layout gap="XS" noPadding>
+        <Heading size="XS">
+          <div class="auth-scopes">
+            <div>Advanced</div>
+            <Button
+              secondary
+              newStyles
+              size="S"
+              on:click={() => {
+                providers.oidc.config.configs[0]["scopes"] = [...defaultScopes]
+              }}
+              dataCy={"restore-oidc-default-scopes"}
+            >
+              Restore Defaults
+            </Button>
+          </div>
+        </Heading>
+        <Body size="S">
+          Changes to your authentication scopes will only take effect when you
+          next log in. Please refer to your vendor documentation before
+          modification.
+        </Body>
+
+        <div class="auth-form">
+          <span class="add-new">
+            <Label size="L">{"Auth Scopes"}</Label>
+            <Input
+              dataCy={"new-scope-input"}
+              error={scopesFields[0].error}
+              placeholder={"New Scope"}
+              bind:value={scopesFields[0].inputText}
+              on:keyup={e => {
+                if (!scopesFields[0].inputText) {
+                  scopesFields[0].error = null
+                }
+                if (
+                  e.key === "Enter" ||
+                  e.keyCode === 13 ||
+                  e.code == "Space" ||
+                  e.keyCode == 32
+                ) {
+                  let scopes = providers.oidc.config.configs[0]["scopes"]
+                    ? providers.oidc.config.configs[0]["scopes"]
+                    : [...defaultScopes]
+
+                  let update = scopesFields[0].inputText.trim()
+
+                  if (HasSpacesRegex.test(update)) {
+                    scopesFields[0].error =
+                      "Auth scopes cannot contain spaces, double quotes or backslashes"
+                    return
+                  } else if (scopes.indexOf(update) > -1) {
+                    scopesFields[0].error = "Auth scope already exists"
+                    return
+                  } else if (!update.length) {
+                    scopesFields[0].inputText = null
+                    scopesFields[0].error = null
+                    return
+                  } else {
+                    scopesFields[0].error = null
+                    scopes.push(update)
+                    providers.oidc.config.configs[0]["scopes"] = scopes
+                    scopesFields[0].inputText = null
+                  }
+                }
+              }}
+            />
+          </span>
+          <div class="tag-wrap">
+            <span />
+            <Tags>
+              <Tag closable={false}>openid</Tag>
+              {#each providers.oidc.config.configs[0]["scopes"] || [...defaultScopes] as tag, idx}
+                <Tag
+                  closable={scopesFields[0].editing}
+                  on:click={() => {
+                    let idxScopes = providers.oidc.config.configs[0]["scopes"]
+                    if (idxScopes.length == 1) {
+                      idxScopes.pop()
+                    } else {
+                      idxScopes.splice(idx, 1)
+                      refreshScopes(0)
+                    }
+                  }}
+                >
+                  {tag}
+                </Tag>
+              {/each}
+            </Tags>
+          </div>
+        </div>
+      </Layout>
+    </span>
   {/if}
 </Layout>
 
 <style>
+  .auth-scopes {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .advanced-config :global(.spectrum-Tags-item) {
+    margin-left: 0px;
+    margin-top: var(--spacing-m);
+    margin-right: var(--spacing-m);
+  }
+
+  .auth-form > * {
+    display: grid;
+    grid-gap: var(--spacing-l);
+    grid-template-columns: 100px 1fr;
+  }
+
+  .advanced-config .auth-form .tag-wrap {
+    padding: 0px 5px 5px 0px;
+  }
+
   .form-row {
     display: grid;
     grid-template-columns: 100px 1fr;
@@ -421,5 +592,17 @@
   }
   .provider-title span {
     flex: 1 1 auto;
+  }
+  .inputContainer {
+    display: flex;
+    flex-direction: row;
+  }
+  .input {
+    flex: 1;
+  }
+  .copy {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
   }
 </style>

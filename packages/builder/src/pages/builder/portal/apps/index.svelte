@@ -15,13 +15,19 @@
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-  import ExportAppModal from "components/start/ExportAppModal.svelte"
+  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, templates, groups } from "stores/portal"
-  import download from "downloadjs"
+  import {
+    apps,
+    auth,
+    admin,
+    templates,
+    licensing,
+    groups,
+  } from "stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
@@ -33,7 +39,7 @@
   let selectedApp
   let creationModal
   let updatingModal
-  let exportModal
+  let appLimitModal
   let creatingApp = false
   let loaded = $apps?.length || $templates?.length
   let searchTerm = ""
@@ -60,10 +66,15 @@
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(
     app =>
-      app?.name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (accessFilterList !== null ? accessFilterList.includes(app?.appId) : true)
+      (searchTerm
+        ? app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        : true) &&
+      (accessFilterList !== null
+        ? accessFilterList?.includes(
+            `${app?.type}_${app?.tenantId}_${app?.appId}`
+          )
+        : true)
   )
-
   $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
   $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
@@ -126,8 +137,10 @@
     return `${app.name} - Automation error (${errorCount(errors)})`
   }
 
-  const initiateAppCreation = () => {
-    if ($apps?.length) {
+  const initiateAppCreation = async () => {
+    if ($licensing?.usageMetrics?.apps >= 100) {
+      appLimitModal.show()
+    } else if ($apps?.length) {
       $goto("/builder/portal/apps/create")
     } else {
       template = null
@@ -138,7 +151,7 @@
 
   const initiateAppsExport = () => {
     try {
-      download(`/api/cloud/export`)
+      window.location = `/api/cloud/export`
       notifications.success("Apps exported successfully")
     } catch (err) {
       notifications.error(`Error exporting apps: ${err}`)
@@ -154,11 +167,13 @@
   const autoCreateApp = async () => {
     try {
       // Auto name app if has same name
-      let appName = template.key
+      const templateKey = template.key.split("/")[1]
+
+      let appName = templateKey.replace(/-/g, " ")
       const appsWithSameName = $apps.filter(app =>
         app.name?.startsWith(appName)
       )
-      appName = `${appName}-${appsWithSameName.length + 1}`
+      appName = `${appName} ${appsWithSameName.length + 1}`
 
       // Create form data to create app
       let data = new FormData()
@@ -227,6 +242,13 @@
     try {
       await apps.load()
       await templates.load()
+      // always load latest
+      await licensing.init()
+
+      if ($licensing.groupsEnabled) {
+        await groups.actions.init()
+      }
+
       if ($templates?.length === 0) {
         notifications.error(
           "There was a problem loading quick start templates."
@@ -355,7 +377,7 @@
                   </Button>
                 {/if}
                 <div class="filter">
-                  {#if $auth.groupsEnabled && $groups.length}
+                  {#if $licensing.groupsEnabled}
                     <AccessFilter on:change={accessFilterAction} />
                   {/if}
                   <Select
@@ -407,9 +429,7 @@
   <UpdateAppModal app={selectedApp} />
 </Modal>
 
-<Modal bind:this={exportModal} padding={false} width="600px">
-  <ExportAppModal app={selectedApp} />
-</Modal>
+<AppLimitModal bind:this={appLimitModal} />
 
 <style>
   .appTable {
@@ -474,9 +494,10 @@
   .appTable :global(> div) {
     border-bottom: var(--border-light);
   }
+
   @media (max-width: 640px) {
     .appTable {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto !important;
     }
   }
   .empty-wrapper {

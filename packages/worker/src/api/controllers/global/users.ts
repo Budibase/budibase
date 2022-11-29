@@ -1,58 +1,66 @@
-import { EmailTemplatePurpose } from "../../../constants"
 import { checkInviteCode } from "../../../utilities/redis"
-import { sendEmail } from "../../../utilities/email"
-import { users } from "../../../sdk"
+import sdk from "../../../sdk"
 import env from "../../../environment"
-import { CloudAccount, User } from "@budibase/types"
+import {
+  BulkUserRequest,
+  BulkUserResponse,
+  CloudAccount,
+  CreateAdminUserRequest,
+  InviteUserRequest,
+  InviteUsersRequest,
+  SearchUsersRequest,
+  User,
+} from "@budibase/types"
 import {
   accounts,
   cache,
   errors,
   events,
   tenancy,
-  users as usersCore,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
-import { groups as groupUtils } from "@budibase/pro"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
   try {
-    ctx.body = await users.save(ctx.request.body)
+    ctx.body = await sdk.users.save(ctx.request.body)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
 }
 
-export const bulkCreate = async (ctx: any) => {
-  let { users: newUsersRequested, groups } = ctx.request.body
+const bulkDelete = async (userIds: string[], currentUserId: string) => {
+  if (userIds?.indexOf(currentUserId) !== -1) {
+    throw new Error("Unable to delete self.")
+  }
+  return await sdk.users.bulkDelete(userIds)
+}
 
-  if (!env.SELF_HOSTED && newUsersRequested.length > MAX_USERS_UPLOAD_LIMIT) {
-    ctx.throw(
-      400,
+const bulkCreate = async (users: User[], groupIds: string[]) => {
+  if (!env.SELF_HOSTED && users.length > MAX_USERS_UPLOAD_LIMIT) {
+    throw new Error(
       "Max limit for upload is 1000 users. Please reduce file size and try again."
     )
   }
+  return await sdk.users.bulkCreate(users, groupIds)
+}
 
-  const db = tenancy.getGlobalDB()
-  let groupsToSave: any[] = []
-
-  if (groups.length) {
-    for (const groupId of groups) {
-      let oldGroup = await db.get(groupId)
-      groupsToSave.push(oldGroup)
-    }
-  }
-
+export const bulkUpdate = async (ctx: any) => {
+  const currentUserId = ctx.user._id
+  const input = ctx.request.body as BulkUserRequest
+  let created, deleted
   try {
-    let response = await users.bulkCreate(newUsersRequested, groups)
-    await groupUtils.bulkSaveGroupUsers(groupsToSave, response)
-
-    ctx.body = response
+    if (input.create) {
+      created = await bulkCreate(input.create.users, input.create.groups)
+    }
+    if (input.delete) {
+      deleted = await bulkDelete(input.delete.userIds, currentUserId)
+    }
   } catch (err: any) {
-    ctx.throw(err.status || 400, err)
+    ctx.throw(err.status || 400, err?.message || err)
   }
+  ctx.body = { created, deleted } as BulkUserResponse
 }
 
 const parseBooleanParam = (param: any) => {
@@ -60,7 +68,8 @@ const parseBooleanParam = (param: any) => {
 }
 
 export const adminUser = async (ctx: any) => {
-  const { email, password, tenantId } = ctx.request.body
+  const { email, password, tenantId } = ctx.request
+    .body as CreateAdminUserRequest
   await tenancy.doInTenant(tenantId, async () => {
     // account portal sends a pre-hashed password - honour param to prevent double hashing
     const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
@@ -95,8 +104,8 @@ export const adminUser = async (ctx: any) => {
     try {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
       // stuck in a cycle
-      await cache.bustCache(cache.CacheKeys.CHECKLIST)
-      const finalUser = await users.save(user, {
+      await cache.bustCache(cache.CacheKey.CHECKLIST)
+      const finalUser = await sdk.users.save(user, {
         hashPassword,
         requirePassword,
       })
@@ -118,7 +127,7 @@ export const adminUser = async (ctx: any) => {
 export const countByApp = async (ctx: any) => {
   const appId = ctx.params.appId
   try {
-    ctx.body = await users.countUsersByApp(appId)
+    ctx.body = await sdk.users.countUsersByApp(appId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -130,32 +139,16 @@ export const destroy = async (ctx: any) => {
     ctx.throw(400, "Unable to delete self.")
   }
 
-  await users.destroy(id, ctx.user)
+  await sdk.users.destroy(id, ctx.user)
 
   ctx.body = {
     message: `User ${id} deleted.`,
   }
 }
 
-export const bulkDelete = async (ctx: any) => {
-  const { userIds } = ctx.request.body
-  if (userIds?.indexOf(ctx.user._id) !== -1) {
-    ctx.throw(400, "Unable to delete self.")
-  }
-
-  try {
-    let usersResponse = await users.bulkDelete(userIds)
-
-    ctx.body = {
-      message: `${usersResponse.length} user(s) deleted`,
-    }
-  } catch (err) {
-    ctx.throw(err)
-  }
-}
-
 export const search = async (ctx: any) => {
-  const paginated = await users.paginatedUsers(ctx.request.body)
+  const body = ctx.request.body as SearchUsersRequest
+  const paginated = await sdk.users.paginatedUsers(body)
   // user hashed password shouldn't ever be returned
   for (let user of paginated.data) {
     if (user) {
@@ -167,7 +160,7 @@ export const search = async (ctx: any) => {
 
 // called internally by app server user fetch
 export const fetch = async (ctx: any) => {
-  const all = await users.allUsers()
+  const all = await sdk.users.allUsers()
   // user hashed password shouldn't ever be returned
   for (let user of all) {
     if (user) {
@@ -179,7 +172,7 @@ export const fetch = async (ctx: any) => {
 
 // called internally by app server user find
 export const find = async (ctx: any) => {
-  ctx.body = await users.getUser(ctx.params.id)
+  ctx.body = await sdk.users.getUser(ctx.params.id)
 }
 
 export const tenantUserLookup = async (ctx: any) => {
@@ -193,58 +186,27 @@ export const tenantUserLookup = async (ctx: any) => {
 }
 
 export const invite = async (ctx: any) => {
-  let { email, userInfo } = ctx.request.body
-  const existing = await usersCore.getGlobalUserByEmail(email)
-  if (existing) {
-    ctx.throw(400, "Email address already in use.")
+  const request = ctx.request.body as InviteUserRequest
+  const response = await sdk.users.invite([request])
+
+  // explicitly throw for single user invite
+  if (response.unsuccessful.length) {
+    const reason = response.unsuccessful[0].reason
+    if (reason === "Unavailable") {
+      ctx.throw(400, reason)
+    } else {
+      ctx.throw(500, reason)
+    }
   }
-  if (!userInfo) {
-    userInfo = {}
-  }
-  userInfo.tenantId = tenancy.getTenantId()
-  const opts: any = {
-    subject: "{{ company }} platform invitation",
-    info: userInfo,
-  }
-  await sendEmail(email, EmailTemplatePurpose.INVITATION, opts)
+
   ctx.body = {
     message: "Invitation has been sent.",
   }
-  await events.user.invited()
 }
 
 export const inviteMultiple = async (ctx: any) => {
-  let users = ctx.request.body
-  let existing = false
-  let existingEmail
-  for (let user of users) {
-    if (await usersCore.getGlobalUserByEmail(user.email)) {
-      existing = true
-      existingEmail = user.email
-      break
-    }
-  }
-
-  if (existing) {
-    ctx.throw(400, `${existingEmail} already exists`)
-  }
-
-  for (let i = 0; i < users.length; i++) {
-    let userInfo = users[i].userInfo
-    if (!userInfo) {
-      userInfo = {}
-    }
-    userInfo.tenantId = tenancy.getTenantId()
-    const opts: any = {
-      subject: "{{ company }} platform invitation",
-      info: userInfo,
-    }
-    await sendEmail(users[i].email, EmailTemplatePurpose.INVITATION, opts)
-  }
-
-  ctx.body = {
-    message: "Invitations have been sent.",
-  }
+  const request = ctx.request.body as InviteUsersRequest
+  ctx.body = await sdk.users.invite(request)
 }
 
 export const inviteAccept = async (ctx: any) => {
@@ -253,7 +215,7 @@ export const inviteAccept = async (ctx: any) => {
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
     ctx.body = await tenancy.doInTenant(info.tenantId, async () => {
-      const saved = await users.save({
+      const saved = await sdk.users.save({
         firstName,
         lastName,
         password,

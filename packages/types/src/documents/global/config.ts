@@ -31,17 +31,29 @@ export interface GoogleConfig extends Config {
   }
 }
 
+export interface OIDCConfiguration {
+  issuer: string
+  authorizationURL: string
+  tokenURL: string
+  userInfoURL: string
+  clientID: string
+  clientSecret: string
+  callbackURL: string
+}
+
+export interface OIDCInnerCfg {
+  configUrl: string
+  clientID: string
+  clientSecret: string
+  logo: string
+  name: string
+  uuid: string
+  activated: boolean
+}
+
 export interface OIDCConfig extends Config {
   config: {
-    configs: {
-      configUrl: string
-      clientID: string
-      clientSecret: string
-      logo: string
-      name: string
-      uuid: string
-      activated: boolean
-    }[]
+    configs: OIDCInnerCfg[]
   }
 }
 
@@ -62,7 +74,9 @@ export const isOIDCConfig = (config: Config): config is OIDCConfig =>
 
 export enum ConfigType {
   SETTINGS = "settings",
+  ACCOUNT = "account",
   SMTP = "smtp",
   GOOGLE = "google",
   OIDC = "oidc",
+  OIDC_LOGOS = "logos_oidc",
 }

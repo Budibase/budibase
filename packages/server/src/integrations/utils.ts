@@ -1,6 +1,5 @@
-import { SourceNames, SqlQuery } from "../definitions/datasource"
-import { Datasource, Table } from "../definitions/common"
-import { DocumentTypes, SEPARATOR } from "../db/utils"
+import { SourceName, SqlQuery, Datasource, Table } from "@budibase/types"
+import { DocumentType, SEPARATOR } from "../db/utils"
 import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
@@ -68,7 +67,7 @@ const SQL_TYPE_MAP = {
   ...SQL_MISC_TYPE_MAP,
 }
 
-export enum SqlClients {
+export enum SqlClient {
   MS_SQL = "mssql",
   POSTGRES = "pg",
   MY_SQL = "mysql2",
@@ -76,7 +75,7 @@ export enum SqlClients {
 }
 
 export function isExternalTable(tableId: string) {
-  return tableId.includes(DocumentTypes.DATASOURCE)
+  return tableId.includes(DocumentType.DATASOURCE)
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
@@ -169,10 +168,10 @@ export function isSQL(datasource: Datasource): boolean {
     return false
   }
   const SQL = [
-    SourceNames.POSTGRES,
-    SourceNames.SQL_SERVER,
-    SourceNames.MYSQL,
-    SourceNames.ORACLE,
+    SourceName.POSTGRES,
+    SourceName.SQL_SERVER,
+    SourceName.MYSQL,
+    SourceName.ORACLE,
   ]
   return SQL.indexOf(datasource.source) !== -1
 }
@@ -231,7 +230,7 @@ function shouldCopySpecialColumn(
   const fetchedIsNumber =
     !fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER
   return (
-    specialTypes.indexOf(column.type) !== -1 ||
+    specialTypes.indexOf(column.type as FieldTypes) !== -1 ||
     (fetchedIsNumber && column.type === FieldTypes.BOOLEAN)
   )
 }
@@ -293,7 +292,11 @@ export function finaliseExternalTables(
     if (table.primary == null || table.primary.length === 0) {
       errors[name] = BuildSchemaErrors.NO_KEY
       continue
-    } else if (schemaFields.find(field => invalidColumns.includes(field))) {
+    } else if (
+      schemaFields.find(field =>
+        invalidColumns.includes(field as InvalidColumns)
+      )
+    ) {
       errors[name] = BuildSchemaErrors.INVALID_COLUMN
       continue
     }

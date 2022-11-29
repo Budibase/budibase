@@ -2,7 +2,7 @@ module FetchMock {
   const fetch = jest.requireActual("node-fetch")
   let failCount = 0
 
-  module.exports = async (url: any, opts: any) => {
+  const func = async (url: any, opts: any) => {
     function json(body: any, status = 200) {
       return {
         status,
@@ -30,11 +30,21 @@ module FetchMock {
     }
 
     if (url.includes("/api/global")) {
-      return json({
+      const user = {
         email: "test@test.com",
         _id: "us_test@test.com",
         status: "active",
-      })
+        roles: {},
+        builder: {
+          global: false,
+        },
+        admin: {
+          global: false,
+        },
+      }
+      return url.endsWith("/users") && opts.method === "GET"
+        ? json([user])
+        : json(user)
     }
     // mocked data based on url
     else if (url.includes("api/apps")) {
@@ -57,12 +67,19 @@ module FetchMock {
         404
       )
     } else if (url.includes("_search")) {
+      const body = opts.body
+      const parts = body.split("tableId:")
+      let tableId
+      if (parts && parts[1]) {
+        tableId = parts[1].split('"')[0]
+      }
       return json({
         rows: [
           {
             doc: {
               _id: "test",
-              tableId: opts.body.split("tableId:")[1].split('"')[0],
+              tableId: tableId,
+              query: opts.body,
             },
           },
         ],
@@ -89,4 +106,8 @@ module FetchMock {
     }
     return fetch(url, opts)
   }
+
+  func.Headers = fetch.Headers
+
+  module.exports = func
 }

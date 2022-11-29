@@ -1,5 +1,5 @@
 import { capitalise } from "helpers"
-import { object } from "yup"
+import { object, string, number } from "yup"
 import { writable, get } from "svelte/store"
 import { notifications } from "@budibase/bbui"
 
@@ -17,6 +17,30 @@ export const createValidationStore = () => {
     if (!propertyValidator || !propertyName) {
       return
     }
+    validator[propertyName] = propertyValidator
+  }
+
+  const addValidatorType = (propertyName, type, required) => {
+    if (!type || !propertyName) {
+      return
+    }
+
+    let propertyValidator
+    switch (type) {
+      case "number":
+        propertyValidator = number().nullable()
+        break
+      case "email":
+        propertyValidator = string().email().nullable()
+        break
+      default:
+        propertyValidator = string().nullable()
+    }
+
+    if (required) {
+      propertyValidator = propertyValidator.required()
+    }
+
     validator[propertyName] = propertyValidator
   }
 
@@ -62,5 +86,6 @@ export const createValidationStore = () => {
     set: validation.set,
     check,
     addValidator,
+    addValidatorType,
   }
 }

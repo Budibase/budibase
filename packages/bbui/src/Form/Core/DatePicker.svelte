@@ -16,7 +16,8 @@
   export let appendTo = undefined
   export let timeOnly = false
   export let ignoreTimezones = false
-
+  export let time24hr = false
+  export let range = false
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
   let open = false
@@ -37,8 +38,10 @@
     enableTime: timeOnly || enableTime || false,
     noCalendar: timeOnly || false,
     altInput: true,
+    time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
+    mode: range ? "range" : "single",
     appendTo,
     disableMobile: "true",
     onReady: () => {
@@ -49,6 +52,12 @@
     },
   }
 
+  $: redrawOptions = {
+    timeOnly,
+    enableTime,
+    time24hr,
+  }
+
   const handleChange = event => {
     const [dates] = event.detail
     const noTimezone = enableTime && !timeOnly && ignoreTimezones
@@ -56,9 +65,15 @@
     if (newValue) {
       newValue = newValue.toISOString()
     }
-
     // If time only set date component to 2000-01-01
     if (timeOnly) {
+      // Classic flackpickr causing issues.
+      // When selecting a value for the first time for a "time only" field,
+      // the time is always offset by 1 hour for some reason (regardless of time
+      // zone) so we need to correct it.
+      if (!value && newValue) {
+        newValue = new Date(dates[0].getTime() + 60 * 60 * 1000).toISOString()
+      }
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
 
@@ -80,7 +95,11 @@
         .slice(0, -1)
     }
 
-    dispatch("change", newValue)
+    if (range) {
+      dispatch("change", event.detail)
+    } else {
+      dispatch("change", newValue)
+    }
   }
 
   const clearDateOnBackspace = event => {
@@ -142,10 +161,10 @@
   }
 </script>
 
-{#key timeOnly}
+{#key redrawOptions}
   <Flatpickr
     bind:flatpickr
-    value={parseDate(value)}
+    value={range ? value : parseDate(value)}
     on:open={onOpen}
     on:close={onClose}
     options={flatpickrOptions}
@@ -178,6 +197,7 @@
           </svg>
         {/if}
         <input
+          {disabled}
           data-input
           type="text"
           class="spectrum-Textfield-input spectrum-InputGroup-input"

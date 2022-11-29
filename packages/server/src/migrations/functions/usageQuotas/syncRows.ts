@@ -1,19 +1,28 @@
-import { getTenantId } from "@budibase/backend-core/tenancy"
-import { getAllApps } from "@budibase/backend-core/db"
+import { tenancy, db as dbCore } from "@budibase/backend-core"
 import { getUniqueRows } from "../../../utilities/usageQuota/rows"
-import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
+import { quotas } from "@budibase/pro"
+import { StaticQuotaName, QuotaUsageType, App } from "@budibase/types"
 
 export const run = async () => {
   // get all rows in all apps
-  // @ts-ignore
-  const allApps = await getAllApps({ all: true })
-  // @ts-ignore
+  const allApps = (await dbCore.getAllApps({ all: true })) as App[]
   const appIds = allApps ? allApps.map((app: { appId: any }) => app.appId) : []
-  const rows = await getUniqueRows(appIds)
-  const rowCount = rows ? rows.length : 0
+  const { appRows } = await getUniqueRows(appIds)
+
+  // get the counts per app
+  const counts: { [key: string]: number } = {}
+  let rowCount = 0
+  Object.entries(appRows).forEach(([appId, rows]) => {
+    counts[appId] = rows.length
+    rowCount += rows.length
+  })
 
   // sync row count
-  const tenantId = getTenantId()
+  const tenantId = tenancy.getTenantId()
   console.log(`[Tenant: ${tenantId}] Syncing row count: ${rowCount}`)
-  await quotas.setUsage(rowCount, StaticQuotaName.ROWS, QuotaUsageType.STATIC)
+  await quotas.setUsagePerApp(
+    counts,
+    StaticQuotaName.ROWS,
+    QuotaUsageType.STATIC
+  )
 }

@@ -77,7 +77,7 @@
     size="L"
   >
     <Body size="S">
-      Select which data source you would like to use to create your screens
+      Select which datasource you would like to use to create your screens
     </Body>
     <Layout noPadding gap="S">
       {#each filteredSources as datasource}

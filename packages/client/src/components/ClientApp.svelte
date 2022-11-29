@@ -30,6 +30,7 @@
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import DNDHandler from "components/preview/DNDHandler.svelte"
+  import GridDNDHandler from "components/preview/GridDNDHandler.svelte"
   import KeyboardManager from "components/preview/KeyboardManager.svelte"
   import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
   import DevTools from "components/devtools/DevTools.svelte"
@@ -83,16 +84,26 @@
     dataLoaded = true
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
+    } else {
+      builderStore.actions.analyticsPing({ source: "app" })
     }
   })
 </script>
+
+<svelte:head>
+  {#if $builderStore.usedPlugins?.length}
+    {#each $builderStore.usedPlugins as plugin (plugin.hash)}
+      <script src={`${plugin.jsUrl}?r=${plugin.hash || ""}`}></script>
+    {/each}
+  {/if}
+</svelte:head>
 
 {#if dataLoaded}
   <div
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium spectrum--darkest {$themeStore.theme}"
+    class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
   >
     <DeviceBindingsProvider>
       <UserBindingsProvider>
@@ -186,6 +197,7 @@
                 {/if}
                 {#if $builderStore.inBuilder}
                   <DNDHandler />
+                  <GridDNDHandler />
                 {/if}
               </div>
             </QueryParamsProvider>

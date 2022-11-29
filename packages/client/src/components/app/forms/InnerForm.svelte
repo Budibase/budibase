@@ -128,6 +128,23 @@
     return fields.find(field => get(field).name === name)
   }
 
+  const getDefault = (defaultValue, schema, type) => {
+    // Remove any values not present in the field schema
+    // Convert any values supplied to string
+    if (Array.isArray(defaultValue) && type == "array" && schema) {
+      return defaultValue.reduce((acc, entry) => {
+        let processedOption = String(entry)
+        let schemaOptions = schema.constraints.inclusion
+        if (schemaOptions.indexOf(processedOption) > -1) {
+          acc.push(processedOption)
+        }
+        return acc
+      }, [])
+    } else {
+      return defaultValue
+    }
+  }
+
   const formApi = {
     registerField: (
       field,
@@ -143,6 +160,7 @@
 
       // Create validation function based on field schema
       const schemaConstraints = schema?.[field]?.constraints
+
       const validator = disableValidation
         ? null
         : createValidatorFromConstraints(
@@ -152,8 +170,10 @@
             table
           )
 
+      const parsedDefault = getDefault(defaultValue, schema?.[field], type)
+
       // If we've already registered this field then keep some existing state
-      let initialValue = Helpers.deepGet(initialValues, field) ?? defaultValue
+      let initialValue = Helpers.deepGet(initialValues, field) ?? parsedDefault
       let initialError = null
       let fieldId = `id-${Helpers.uuid()}`
       const existingField = getField(field)
@@ -186,11 +206,11 @@
           error: initialError,
           disabled:
             disabled || fieldDisabled || (isAutoColumn && !editAutoColumns),
-          defaultValue,
+          defaultValue: parsedDefault,
           validator,
           lastUpdate: Date.now(),
         },
-        fieldApi: makeFieldApi(field, defaultValue),
+        fieldApi: makeFieldApi(field, parsedDefault),
         fieldSchema: schema?.[field] ?? {},
       })
 
@@ -268,7 +288,7 @@
 
       // Skip if the value is the same
       if (!skipCheck && fieldState.value === value) {
-        return
+        return false
       }
 
       // Update field state
@@ -372,7 +392,7 @@
     formState,
     formApi,
 
-    // Data source is needed by attachment fields to be able to upload files
+    // Datasource is needed by attachment fields to be able to upload files
     // to the correct table ID
     dataSource,
   })

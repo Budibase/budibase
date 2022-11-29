@@ -13,6 +13,7 @@
   export let legend
   export let donut
   export let palette
+  export let c1, c2, c3, c4, c5
 
   $: options = setUpChart(
     title,
@@ -25,8 +26,12 @@
     animate,
     legend,
     donut,
-    palette
+    palette,
+    c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null,
+    customColor
   )
+
+  $: customColor = palette === "Custom"
 
   const setUpChart = (
     title,
@@ -39,7 +44,9 @@
     animate,
     legend,
     donut,
-    palette
+    palette,
+    colors,
+    customColor
   ) => {
     if (
       !dataProvider ||
@@ -70,6 +77,7 @@
       .legend(legend)
       .legendPosition("right")
       .palette(palette)
+      .colors(customColor ? colors : null)
 
     // Add data if valid datasource
     const series = data.map(row => parseFloat(row[valueColumn]))

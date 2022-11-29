@@ -2,7 +2,7 @@
   import { onMount } from "svelte"
   import { get } from "svelte/store"
   import { goto, params } from "@roxi/routify"
-  import { BUDIBASE_INTERNAL_DB } from "constants"
+  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import { database, datasources, queries, tables, views } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
@@ -13,7 +13,7 @@
     customQueryIconColor,
     customQueryText,
   } from "helpers/data/utils"
-  import ICONS from "./icons"
+  import IntegrationIcon from "./IntegrationIcon.svelte"
   import { notifications } from "@budibase/bbui"
 
   let openDataSources = []
@@ -32,8 +32,8 @@
     : []
   $: openDataSource = enrichedDataSources.find(x => x.open)
   $: {
-    // Ensure the open data source is always included in the list of open
-    // data sources
+    // Ensure the open datasource is always included in the list of open
+    // datasources
     if (openDataSource) {
       openNode(openDataSource)
     }
@@ -79,7 +79,7 @@
   })
 
   const containsActiveEntity = datasource => {
-    // If we're view a query then the data source ID is in the URL
+    // If we're view a query then the datasource ID is in the URL
     if ($params.selectedDatasource === datasource._id) {
       return true
     }
@@ -123,13 +123,13 @@
         on:iconClick={() => toggleNode(datasource)}
       >
         <div class="datasource-icon" slot="icon">
-          <svelte:component
-            this={ICONS[datasource.source]}
-            height="18"
-            width="18"
+          <IntegrationIcon
+            integrationType={datasource.source}
+            schema={datasource.schema}
+            size="18"
           />
         </div>
-        {#if datasource._id !== BUDIBASE_INTERNAL_DB}
+        {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
           <EditDatasourcePopover {datasource} />
         {/if}
       </NavItem>

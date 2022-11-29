@@ -3,6 +3,10 @@
   import { datasources, integrations, queries } from "stores/backend"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
+  import {
+    BUDIBASE_INTERNAL_DB_ID,
+    BUDIBASE_DATASOURCE_TYPE,
+  } from "constants/backend"
 
   export let parameters
   export let bindings = []
@@ -10,6 +14,11 @@
   $: query = $queries.list.find(q => q._id === parameters.queryId)
   $: datasource = $datasources.list.find(
     ds => ds._id === parameters.datasourceId
+  )
+  // Executequery must exclude budibase datasource
+  $: executeQueryDatasources = $datasources.list.filter(
+    x =>
+      x._id !== BUDIBASE_INTERNAL_DB_ID && x.type !== BUDIBASE_DATASOURCE_TYPE
   )
 
   function fetchQueryDefinition(query) {
@@ -24,7 +33,7 @@
   <Select
     label="Datasource"
     bind:value={parameters.datasourceId}
-    options={$datasources.list}
+    options={executeQueryDatasources}
     getOptionLabel={source => source.name}
     getOptionValue={source => source._id}
   />

@@ -10,6 +10,7 @@
   export let noHorizPadding = false
   export let quiet = false
   export let emphasized = false
+  export let onTop = false
   export let size = "M"
 
   let thisSelected = undefined
@@ -75,6 +76,7 @@
   bind:this={container}
   class:spectrum-Tabs--quiet={quiet}
   class:noHorizPadding
+  class:onTop
   class:spectrum-Tabs--vertical={vertical}
   class:spectrum-Tabs--horizontal={!vertical}
   class="spectrum-Tabs spectrum-Tabs--size{size}"
@@ -121,5 +123,8 @@
   }
   .noPadding {
     margin: 0;
+  }
+  .onTop {
+    z-index: 100;
   }
 </style>

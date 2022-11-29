@@ -4,16 +4,21 @@ jest.mock("node-fetch")
 
 // Mock isProdAppID to we can later mock the implementation and pretend we are
 // using prod app IDs
-const authDb = require("@budibase/backend-core/db")
-const { isProdAppID } = authDb
-const mockIsProdAppID = jest.fn(isProdAppID)
-authDb.isProdAppID = mockIsProdAppID
-
+jest.mock("@budibase/backend-core", () => {
+  const core = jest.requireActual("@budibase/backend-core")
+  return {
+    ...core,
+    db: {
+      ...core.db,
+      isProdAppID: jest.fn(),
+    }
+  }
+})
 const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { checkCacheForDynamicVariable } = require("../../../threads/utils")
 const { basicQuery, basicDatasource } = setup.structures
-const { events } = require("@budibase/backend-core")
+const { events, db: dbCore } = require("@budibase/backend-core")
 
 describe("/queries", () => {
   let request = setup.getRequest()
@@ -152,8 +157,8 @@ describe("/queries", () => {
 
     it("should remove sensitive info for prod apps", async () => {
       // Mock isProdAppID to pretend we are using a prod app
-      mockIsProdAppID.mockClear()
-      mockIsProdAppID.mockImplementation(() => true)
+      dbCore.isProdAppID.mockClear()
+      dbCore.isProdAppID.mockImplementation(() => true)
 
       const query = await config.createQuery()
       const res = await request
@@ -167,8 +172,8 @@ describe("/queries", () => {
       expect(res.body.schema).toBeDefined()
 
       // Reset isProdAppID mock
-      expect(mockIsProdAppID).toHaveBeenCalledTimes(1)
-      mockIsProdAppID.mockImplementation(isProdAppID)
+      expect(dbCore.isProdAppID).toHaveBeenCalledTimes(1)
+      dbCore.isProdAppID.mockImplementation(() => false)
     })
   })
 
@@ -231,20 +236,6 @@ describe("/queries", () => {
         url: `/api/queries/preview`,
       })
     })
-
-    it("should fail with invalid integration type", async () => {
-      const { datasource } = await createInvalidIntegration()
-      await request
-        .post(`/api/queries/preview`)
-        .send({
-          datasourceId: datasource._id,
-          parameters: {},
-          fields: {},
-          queryVerb: "read",
-        })
-        .set(config.defaultHeaders())
-        .expect(400)
-    })
   })
 
   describe("execute", () => {
@@ -261,17 +252,14 @@ describe("/queries", () => {
     })
 
     it("should fail with invalid integration type", async () => {
-      const { query, datasource } = await createInvalidIntegration()
-      await request
-        .post(`/api/queries/${query._id}`)
-        .send({
-          datasourceId: datasource._id,
-          parameters: {},
-          fields: {},
-          queryVerb: "read",
-        })
-        .set(config.defaultHeaders())
-        .expect(400)
+      let error
+      try {
+        await createInvalidIntegration()
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeDefined()
+      expect(error.message).toBe("No datasource implementation found.")
     })
   })
 
@@ -311,7 +299,7 @@ describe("/queries", () => {
         "url": "string",
         "value": "string"
       })
-      expect(res.body.rows[0].url).toContain("doctype html")
+      expect(res.body.rows[0].url).toContain("doctype%20html")
     })
 
     it("check that it automatically retries on fail with cached dynamics", async () => {
@@ -396,7 +384,7 @@ describe("/queries", () => {
         "queryHdr": userDetails.firstName,
         "secondHdr" : "1234"
       })
-      expect(res.body.rows[0].url).toEqual("http://www.google.com?email=" + userDetails.email)
+      expect(res.body.rows[0].url).toEqual("http://www.google.com?email=" + userDetails.email.replace("@", "%40"))
     })
 
     it("should bind the current user to query parameters", async () => {
@@ -413,7 +401,7 @@ describe("/queries", () => {
         "testParam" : "1234"
       })
   
-      expect(res.body.rows[0].url).toEqual("http://www.google.com?test=" + userDetails.email + 
+      expect(res.body.rows[0].url).toEqual("http://www.google.com?test=" + userDetails.email.replace("@", "%40") +
         "&testName=" + userDetails.firstName + "&testParam=1234")
     })
 

@@ -1,21 +1,20 @@
 import { updateLinks, EventType } from "../../../db/linkedRows"
 import { getRowParams, generateTableID } from "../../../db/utils"
 import { FieldTypes } from "../../../constants"
-import {
-  TableSaveFunctions,
-  hasTypeChanged,
-  getTable,
-  handleDataImport,
-} from "./utils"
-const { getAppDB } = require("@budibase/backend-core/context")
+import { TableSaveFunctions, hasTypeChanged, handleDataImport } from "./utils"
+import { context } from "@budibase/backend-core"
 import { isTest } from "../../../environment"
 import {
   cleanupAttachments,
   fixAutoColumnSubType,
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import { Table } from "../../../definitions/common"
+import { Table } from "@budibase/types"
 import { quotas } from "@budibase/pro"
+import { isEqual } from "lodash"
+import { cloneDeep } from "lodash/fp"
+import env from "../../../environment"
+import sdk from "../../../sdk"
 
 function checkAutoColumns(table: Table, oldTable: Table) {
   if (!table.schema) {
@@ -36,7 +35,7 @@ function checkAutoColumns(table: Table, oldTable: Table) {
 }
 
 export async function save(ctx: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const { dataImport, ...rest } = ctx.request.body
   let tableToSave = {
     type: "table",
@@ -123,29 +122,37 @@ export async function save(ctx: any) {
   if (updatedRows && updatedRows.length !== 0) {
     await db.bulkDocs(updatedRows)
   }
-  const result = await db.put(tableToSave)
+  let result = await db.put(tableToSave)
   tableToSave._rev = result.rev
+  const savedTable = cloneDeep(tableToSave)
 
   tableToSave = await tableSaveFunctions.after(tableToSave)
+  // the table may be updated as part of the table save after functionality - need to write it
+  if (!isEqual(savedTable, tableToSave)) {
+    result = await db.put(tableToSave)
+    tableToSave._rev = result.rev
+  }
   // has to run after, make sure it has _id
-  await runStaticFormulaChecks(tableToSave, { oldTable, deletion: null })
+  await runStaticFormulaChecks(tableToSave, { oldTable, deletion: false })
   return tableToSave
 }
 
 export async function destroy(ctx: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const tableToDelete = await db.get(ctx.params.tableId)
 
   // Delete all rows for that table
-  const rows = await db.allDocs(
+  const rowsData = await db.allDocs(
     getRowParams(ctx.params.tableId, null, {
       include_docs: true,
     })
   )
   await db.bulkDocs(
-    rows.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
+    rowsData.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
   )
-  await quotas.removeRows(rows.rows.length)
+  await quotas.removeRows(rowsData.rows.length, {
+    tableId: ctx.params.tableId,
+  })
 
   // update linked rows
   await updateLinks({
@@ -154,10 +161,10 @@ export async function destroy(ctx: any) {
   })
 
   // don't remove the table itself until very end
-  await db.remove(tableToDelete)
+  await db.remove(tableToDelete._id, tableToDelete._rev)
 
   // remove table search index
-  if (!isTest()) {
+  if (!isTest() || env.COUCH_DB_URL) {
     const currentIndexes = await db.getIndexes()
     const existingIndex = currentIndexes.indexes.find(
       (existing: any) => existing.name === `search:${ctx.params.tableId}`
@@ -169,15 +176,16 @@ export async function destroy(ctx: any) {
 
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(tableToDelete, {
-    oldTable: null,
     deletion: true,
   })
-  await cleanupAttachments(tableToDelete, { rows })
+  await cleanupAttachments(tableToDelete, {
+    rows: rowsData.rows.map((row: any) => row.doc),
+  })
   return tableToDelete
 }
 
 export async function bulkImport(ctx: any) {
-  const table = await getTable(ctx.params.tableId)
+  const table = await sdk.tables.getTable(ctx.params.tableId)
   const { dataImport } = ctx.request.body
   await handleDataImport(ctx.user, table, dataImport)
   return table

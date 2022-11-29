@@ -9,6 +9,7 @@ const read = [],
  * @openapi
  * /users:
  *   post:
+ *     operationId: create
  *     summary: Create a user
  *     tags:
  *       - users
@@ -35,6 +36,7 @@ write.push(new Endpoint("post", "/users", controller.create))
  * @openapi
  * /users/{userId}:
  *   put:
+ *     operationId: update
  *     summary: Update a user
  *     tags:
  *       - users
@@ -63,6 +65,7 @@ write.push(new Endpoint("put", "/users/:userId", controller.update))
  * @openapi
  * /users/{userId}:
  *   delete:
+ *     operationId: destroy
  *     summary: Delete a user
  *     tags:
  *       - users
@@ -85,6 +88,7 @@ write.push(new Endpoint("delete", "/users/:userId", controller.destroy))
  * @openapi
  * /users/{userId}:
  *   get:
+ *     operationId: getById
  *     summary: Retrieve a user
  *     tags:
  *       - users
@@ -107,6 +111,7 @@ read.push(new Endpoint("get", "/users/:userId", controller.read))
  * @openapi
  * /users/search:
  *   post:
+ *     operationId: search
  *     summary: Search for users
  *     description: Based on user properties (currently only name) search for users.
  *     tags:

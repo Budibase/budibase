@@ -19,6 +19,7 @@
   export let placeholderOption = null
   export let options = []
   export let isOptionSelected = () => false
+  export let isOptionEnabled = () => true
   export let onSelectOption = () => {}
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
@@ -84,7 +85,7 @@
     class:is-invalid={!!error}
     class:is-open={open}
     aria-haspopup="listbox"
-    on:mousedown={onClick}
+    on:click={onClick}
   >
     {#if fieldIcon}
       <span class="option-extra">
@@ -164,6 +165,7 @@
               aria-selected="true"
               tabindex="0"
               on:click={() => onSelectOption(getOptionValue(option, idx))}
+              class:is-disabled={!isOptionEnabled(option)}
             >
               {#if getOptionIcon(option, idx)}
                 <span class="option-extra">
@@ -255,5 +257,8 @@
   }
   .spectrum-Popover :global(.spectrum-Search .spectrum-Textfield-icon) {
     top: 9px;
+  }
+  .spectrum-Menu-item.is-disabled {
+    pointer-events: none;
   }
 </style>

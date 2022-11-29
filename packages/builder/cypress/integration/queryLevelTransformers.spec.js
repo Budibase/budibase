@@ -1,5 +1,5 @@
 import filterTests from "../support/filterTests"
-const interact = require('../support/interact')
+const interact = require("../support/interact")
 
 filterTests(["smoke", "all"], () => {
   context("Query Level Transformers", () => {

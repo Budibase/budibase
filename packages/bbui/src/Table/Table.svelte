@@ -71,7 +71,8 @@
     visibleRowCount,
     rowCount,
     totalRowCount,
-    rowHeight
+    rowHeight,
+    loading
   )
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
@@ -120,8 +121,12 @@
     visibleRowCount,
     rowCount,
     totalRowCount,
-    rowHeight
+    rowHeight,
+    loading
   ) => {
+    if (loading) {
+      return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
+    }
     if (!rowCount || !visibleRowCount || totalRowCount <= rowCount) {
       return ""
     }
@@ -277,9 +282,11 @@
   bind:offsetHeight={height}
   style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
 >
-  {#if !loaded}
+  {#if loading}
     <div class="loading" style={heightStyle}>
-      <ProgressCircle />
+      <slot name="loadingIndicator">
+        <ProgressCircle />
+      </slot>
     </div>
   {:else}
     <div class="spectrum-Table" style={`${heightStyle}${gridStyle}`}>
@@ -387,6 +394,7 @@
                   schema={schema[field]}
                   value={deepGet(row, field)}
                   on:clickrelationship
+                  on:buttonclick
                 >
                   <slot />
                 </CellRenderer>
@@ -437,9 +445,10 @@
 
   /* Loading */
   .loading {
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
     min-height: 100px;
+    justify-content: center;
   }
 
   /* Table */

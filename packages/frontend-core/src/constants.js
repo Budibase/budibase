@@ -39,12 +39,16 @@ export const OperatorOptions = {
     label: "Contains",
   },
   NotContains: {
-    value: "notEqual",
-    label: "Does Not Contain",
+    value: "notContains",
+    label: "Does not contain",
   },
   In: {
     value: "oneOf",
     label: "Is in",
+  },
+  ContainsAny: {
+    value: "containsAny",
+    label: "Has any",
   },
 }
 
@@ -53,6 +57,7 @@ export const Cookies = {
   Auth: "budibase:auth",
   CurrentApp: "budibase:currentapp",
   ReturnUrl: "budibase:returnurl",
+  AccountReturnUrl: "budibase:account:returnurl",
 }
 
 // Table names
@@ -93,6 +98,7 @@ export const BuilderRoleDescriptions = [
 export const PlanType = {
   FREE: "free",
   TEAM: "team",
+  PRO: "pro",
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
 }
@@ -107,6 +113,7 @@ export const ApiVersion = "1"
 
 export const Features = {
   USER_GROUPS: "userGroups",
+  BACKUPS: "appBackups",
 }
 
 // Role IDs

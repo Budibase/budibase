@@ -5,12 +5,14 @@ import RelationshipFetch from "./RelationshipFetch.js"
 import NestedProviderFetch from "./NestedProviderFetch.js"
 import FieldFetch from "./FieldFetch.js"
 import JSONArrayFetch from "./JSONArrayFetch.js"
+import UserFetch from "./UserFetch.js"
 
 const DataFetchMap = {
   table: TableFetch,
   view: ViewFetch,
   query: QueryFetch,
   link: RelationshipFetch,
+  user: UserFetch,
 
   // Client specific datasource types
   provider: NestedProviderFetch,

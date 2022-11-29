@@ -8,7 +8,7 @@
     Layout,
     Icon,
   } from "@budibase/bbui"
-  import { groups, auth } from "stores/portal"
+  import { groups, licensing } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
 
@@ -44,11 +44,15 @@
     ]
   }
 
-  function validateInput(email, index) {
+  function validateInput(input, index) {
+    if (input.email) {
+      input.email = input.email.trim()
+    }
+    const email = input.email
     if (email) {
       const res = emailValidator(email)
       if (res === true) {
-        delete userData[index].error
+        userData[index].error = null
       } else {
         userData[index].error = res
       }
@@ -61,7 +65,7 @@
   const onConfirm = () => {
     let valid = true
     userData.forEach((input, index) => {
-      valid = validateInput(input.email, index) && valid
+      valid = validateInput(input, index) && valid
     })
     if (!valid) {
       return false
@@ -95,7 +99,7 @@
             bind:dropdownValue={input.role}
             options={Constants.BudibaseRoleOptions}
             error={input.error}
-            on:blur={() => validateInput(input.email, index)}
+            on:blur={() => validateInput(input, index)}
           />
         </div>
         <div class="icon">
@@ -113,7 +117,7 @@
     </div>
   </Layout>
 
-  {#if $auth.groupsEnabled}
+  {#if $licensing.groupsEnabled}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"

@@ -8,4 +8,5 @@ import { processors } from "./processors"
 
 export const shutdown = () => {
   processors.shutdown()
+  console.log("Events shutdown")
 }

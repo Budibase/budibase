@@ -84,8 +84,8 @@
   }
 
   const handleChange = value => {
-    fieldApi.setValue(value)
-    if (onChange) {
+    const changed = fieldApi.setValue(value)
+    if (onChange && changed) {
       onChange({ value })
     }
   }

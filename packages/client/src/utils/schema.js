@@ -16,7 +16,7 @@ import JSONArrayFetch from "@budibase/frontend-core/src/fetch/JSONArrayFetch.js"
  */
 export const fetchDatasourceSchema = async (
   datasource,
-  options = { enrichRelationships: false }
+  options = { enrichRelationships: false, formSchema: false }
 ) => {
   const handler = {
     table: TableFetch,
@@ -34,7 +34,17 @@ export const fetchDatasourceSchema = async (
 
   // Get the datasource definition and then schema
   const definition = await instance.getDefinition(datasource)
-  let schema = instance.getSchema(datasource, definition)
+
+  // Get the normal schema as long as we aren't wanting a form schema
+  let schema
+  if (datasource?.type !== "query" || !options?.formSchema) {
+    schema = instance.getSchema(datasource, definition)
+  } else if (definition.parameters?.length) {
+    schema = {}
+    definition.parameters.forEach(param => {
+      schema[param.name] = { ...param, type: "string" }
+    })
+  }
   if (!schema) {
     return null
   }

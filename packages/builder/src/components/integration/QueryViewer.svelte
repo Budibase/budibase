@@ -17,7 +17,7 @@
   import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
-  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
+  import BindingBuilder from "components/integration/QueryViewerBindingBuilder.svelte"
   import { datasources, integrations, queries } from "stores/backend"
   import { capitalise } from "../../helpers"
   import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
@@ -132,7 +132,20 @@
           config={integrationInfo.extra}
         />
       {/if}
-      <BindingBuilder bind:queryBindings={query.parameters} bindable={false} />
+      {#key query.parameters}
+        <BindingBuilder
+          queryBindings={query.parameters}
+          bindable={false}
+          on:change={e => {
+            query.parameters = e.detail.map(binding => {
+              return {
+                name: binding.name,
+                default: binding.value,
+              }
+            })
+          }}
+        />
+      {/key}
     {/if}
   </div>
   {#if shouldShowQueryConfig}
