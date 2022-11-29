@@ -1,17 +1,13 @@
-import { App, Screen, ScreenProps } from "@budibase/types"
+import { App, Screen, ScreenProps, Component } from "@budibase/types"
 
 import { db as dbCore } from "@budibase/backend-core"
 import TestConfig from "../../../tests/utilities/TestConfiguration"
 import { run as runMigration } from "../tableSettings"
 
-// Local type for allowing any child components inside screens
-type MigratingScreenProps = ScreenProps & { _children: any[] }
-type MigratingScreen = Screen & { props: MigratingScreenProps }
-
 describe("run", () => {
   const config = new TestConfig(false)
   let app: App
-  let screen: MigratingScreen
+  let screen: Component
 
   beforeAll(async () => {
     await config.init()
