@@ -23,7 +23,7 @@ const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
   try {
-    const body =  ctx.request.body
+    const body = ctx.request.body
     const isCreate = !body._id
     const isAdmin = !!ctx.user.admin?.global
     if (isCreate && !isAdmin) {
