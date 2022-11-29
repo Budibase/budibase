@@ -197,6 +197,7 @@
           </svg>
         {/if}
         <input
+          {disabled}
           data-input
           type="text"
           class="spectrum-Textfield-input spectrum-InputGroup-input"

@@ -2,7 +2,7 @@ import "./mocks"
 import * as dbConfig from "../db"
 dbConfig.init()
 import env from "../environment"
-import controllers from "./controllers"
+import * as controllers from "./controllers"
 const supertest = require("supertest")
 import { Config } from "../constants"
 import {

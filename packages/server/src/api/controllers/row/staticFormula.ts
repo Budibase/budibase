@@ -16,7 +16,7 @@ const { cloneDeep } = require("lodash/fp")
  * updated.
  * NOTE: this will only for affect static formulas.
  */
-exports.updateRelatedFormula = async (table: Table, enrichedRows: Row[]) => {
+export async function updateRelatedFormula(table: Table, enrichedRows: Row[]) {
   const db = context.getAppDB()
   // no formula to update, we're done
   if (!table.relatedFormula) {
@@ -122,9 +122,9 @@ export async function finaliseRow(
   const db = context.getAppDB()
   row.type = "row"
   // process the row before return, to include relationships
-  let enrichedRow = await outputProcessing(table, cloneDeep(row), {
+  let enrichedRow = (await outputProcessing(table, cloneDeep(row), {
     squash: false,
-  })
+  })) as Row
   // use enriched row to generate formulas for saving, specifically only use as context
   row = processFormulas(table, row, {
     dynamic: false,

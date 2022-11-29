@@ -3,7 +3,7 @@ const { runMigrations, getMigrationsDoc } = require("../index")
 const { getDB } = require("../../db")
 const {
   StaticDatabases,
-} = require("../../db/utils")
+} = require("../../constants")
 
 let db
 
