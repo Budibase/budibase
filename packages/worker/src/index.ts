@@ -46,18 +46,18 @@ app.use(auth.passport.session())
 app.use(api.routes())
 
 // sentry
-//if (env.isProd()) {
-Sentry.init()
+if (env.isProd()) {
+  Sentry.init()
 
-app.on("error", (err, ctx) => {
-  Sentry.withScope(function (scope: Scope) {
-    scope.addEventProcessor(function (event: Event) {
-      return Sentry.Handlers.parseRequest(event, ctx.request)
+  app.on("error", (err, ctx) => {
+    Sentry.withScope(function (scope: Scope) {
+      scope.addEventProcessor(function (event: Event) {
+        return Sentry.Handlers.parseRequest(event, ctx.request)
+      })
+      Sentry.captureException(err)
     })
-    Sentry.captureException(err)
   })
-})
-//}
+}
 
 const server = http.createServer(app.callback())
 destroyable(server)
