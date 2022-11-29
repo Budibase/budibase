@@ -87,7 +87,7 @@ class TestConfiguration {
     }
     return tenancy.doInTenant(TENANT_ID, () => {
       // check if already in a context
-      if (context.getAppId() == null && appId !== null) {
+      if (context.getAppId() == null && appId != null) {
         return context.doInAppContext(appId, async () => {
           return task()
         })
@@ -196,7 +196,7 @@ class TestConfiguration {
   }
 
   async createUser(
-    id = null,
+    id,
     firstName = FIRSTNAME,
     lastName = LASTNAME,
     email = EMAIL,
@@ -366,25 +366,25 @@ class TestConfiguration {
 
   // TABLE
 
-  async updateTable(config = null) {
+  async updateTable(config) {
     config = config || basicTable()
     this.table = await this._req(config, null, controllers.table.save)
     return this.table
   }
 
-  async createTable(config = null) {
+  async createTable(config) {
     if (config != null && config._id) {
       delete config._id
     }
     return this.updateTable(config)
   }
 
-  async getTable(tableId = null) {
+  async getTable(tableId) {
     tableId = tableId || this.table._id
     return this._req(null, { tableId }, controllers.table.find)
   }
 
-  async createLinkedTable(relationshipType = null, links = ["link"]) {
+  async createLinkedTable(relationshipType, links = ["link"]) {
     if (!this.table) {
       throw "Must have created a table first."
     }
@@ -416,7 +416,7 @@ class TestConfiguration {
 
   // ROW
 
-  async createRow(config = null) {
+  async createRow(config) {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
@@ -438,7 +438,7 @@ class TestConfiguration {
 
   // ROLE
 
-  async createRole(config = null) {
+  async createRole(config) {
     config = config || basicRole()
     return this._req(config, null, controllers.role.save)
   }
@@ -485,7 +485,7 @@ class TestConfiguration {
     return this._req(null, null, controllers.automation.fetch)
   }
 
-  async deleteAutomation(automation = null) {
+  async deleteAutomation(automation) {
     automation = automation || this.automation
     if (!automation) {
       return
@@ -497,7 +497,7 @@ class TestConfiguration {
     )
   }
 
-  async createWebhook(config = null) {
+  async createWebhook(config) {
     if (!this.automation) {
       throw "Must create an automation before creating webhook."
     }
@@ -507,7 +507,7 @@ class TestConfiguration {
 
   // DATASOURCE
 
-  async createDatasource(config = null) {
+  async createDatasource(config) {
     config = config || basicDatasource()
     const response = await this._req(config, null, controllers.datasource.save)
     this.datasource = response.datasource
@@ -574,7 +574,7 @@ class TestConfiguration {
       .expect(200)
   }
 
-  async createQuery(config = null) {
+  async createQuery(config) {
     if (!this.datasource && !config) {
       throw "No datasource created for query."
     }
@@ -584,14 +584,14 @@ class TestConfiguration {
 
   // SCREEN
 
-  async createScreen(config = null) {
+  async createScreen(config) {
     config = config || basicScreen()
     return this._req(config, null, controllers.screen.save)
   }
 
   // LAYOUT
 
-  async createLayout(config = null) {
+  async createLayout(config) {
     config = config || basicLayout()
     return await this._req(config, null, controllers.layout.save)
   }

@@ -1,8 +1,8 @@
 import { App, Screen, ScreenProps } from "@budibase/types"
 
-const { db: dbCore } = require("@budibase/backend-core")
-const TestConfig = require("../../../tests/utilities/TestConfiguration")
-const migration = require("../tableSettings")
+import { db as dbCore } from "@budibase/backend-core"
+import TestConfig from "../../../tests/utilities/TestConfiguration"
+import { run as runMigration } from "../tableSettings"
 
 // Local type for allowing any child components inside screens
 type MigratingScreenProps = ScreenProps & { _children: any[] }
@@ -35,7 +35,7 @@ describe("run", () => {
 
     // Run migration
     screen = await dbCore.doWithDB(app.appId, async (db: any) => {
-      await migration.run(db)
+      await runMigration(db)
       return await db.get(screen._id)
     })
 
@@ -64,7 +64,7 @@ describe("run", () => {
 
     // Run migration
     screen = await dbCore.doWithDB(app.appId, async (db: any) => {
-      await migration.run(db)
+      await runMigration(db)
       return await db.get(screen._id)
     })
 
@@ -92,7 +92,7 @@ describe("run", () => {
 
     // Run migration
     screen = await dbCore.doWithDB(app.appId, async (db: any) => {
-      await migration.run(db)
+      await runMigration(db)
       return await db.get(screen._id)
     })
 
@@ -121,7 +121,7 @@ describe("run", () => {
 
     // Run migration
     screen = await dbCore.doWithDB(app.appId, async (db: any) => {
-      await migration.run(db)
+      await runMigration(db)
       return await db.get(screen._id)
     })
 
