@@ -28,11 +28,7 @@
   function addNumbering(filters) {
     let count = 1
     for (let value of filters) {
-      if (
-        value.field &&
-        value.field?.match(QUERY_START_REGEX) == null &&
-        value.field !== "_id"
-      ) {
+      if (value.field && value.field?.match(QUERY_START_REGEX) == null) {
         value.field = `${count++}:${value.field}`
       }
     }
@@ -92,6 +88,7 @@
     filters={initialFilters}
     {bindings}
     {schemaFields}
+    tableId={dataSource.tableId}
     bind:allOr
     on:change={event => {
       toSaveFilters = event.detail
