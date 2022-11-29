@@ -72,7 +72,12 @@ class TestConfiguration {
 
   // UTILS
 
-  async _req(config: any, params: any, controlFunc: any, opts: { force?: boolean } = {}) {
+  async _req(
+    config: any,
+    params: any,
+    controlFunc: any,
+    opts: { force?: boolean } = {}
+  ) {
     const request: any = {}
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
@@ -86,8 +91,8 @@ class TestConfiguration {
     } else if (this.defaultUser) {
       request.user = this.defaultUser
     } else {
-      request.user = { 
-        tenantId: this.getTenantId()
+      request.user = {
+        tenantId: this.getTenantId(),
       }
     }
     request.query = {}
@@ -153,7 +158,7 @@ class TestConfiguration {
   }
 
   async createSession(user: User) {
-    const session: any =  {
+    const session: any = {
       sessionId: "sessionid",
       tenantId: user.tenantId,
       csrfToken: CSRF_TOKEN,
