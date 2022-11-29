@@ -137,7 +137,7 @@
     "@types/oracledb": "5.2.2",
     "@types/pouchdb": "6.4.0",
     "@types/redis": "4.0.11",
-    "@typescript-eslint/parser": "5.12.0",
+    "@typescript-eslint/parser": "5.45.0",
     "apidoc": "0.50.4",
     "babel-jest": "27.5.1",
     "copyfiles": "2.4.1",

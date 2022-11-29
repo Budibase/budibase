@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "@rollup/plugin-json": "^4.0.2",
-    "@typescript-eslint/parser": "4.28.0",
+    "@typescript-eslint/parser": "5.45.0",
     "babel-eslint": "^10.0.3",
     "eslint": "^7.28.0",
     "eslint-plugin-cypress": "^2.11.3",
