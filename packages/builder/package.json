@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "2.1.32-alpha.11",
+  "version": "2.1.39",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -71,10 +71,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "2.1.32-alpha.11",
-    "@budibase/client": "2.1.32-alpha.11",
-    "@budibase/frontend-core": "2.1.32-alpha.11",
-    "@budibase/string-templates": "2.1.32-alpha.11",
+    "@budibase/bbui": "^2.1.39",
+    "@budibase/client": "^2.1.39",
+    "@budibase/frontend-core": "^2.1.39",
+    "@budibase/string-templates": "^2.1.39",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
@@ -82,7 +82,7 @@
     "dayjs": "^1.11.2",
     "downloadjs": "1.4.7",
     "lodash": "4.17.21",
-    "posthog-js": "1.4.5",
+    "posthog-js": "^1.36.0",
     "remixicon": "2.5.0",
     "shortid": "2.2.15",
     "svelte-dnd-action": "^0.9.8",

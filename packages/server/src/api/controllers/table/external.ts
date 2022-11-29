@@ -220,6 +220,9 @@ export async function save(ctx: BBContext) {
 
   const db = context.getAppDB()
   const datasource = await db.get(datasourceId)
+  if (!datasource.entities) {
+    datasource.entities = {}
+  }
   const oldTables = cloneDeep(datasource.entities)
   const tables: Record<string, Table> = datasource.entities
 
