@@ -4546,6 +4546,7 @@
           {
             "type": "radio",
             "key": "clickBehaviour",
+            "sendEvents": true,
             "defaultValue": "actions",
             "info": "Details side panel is only compatible with internal or SQL tables",
             "options": [
