@@ -23,6 +23,9 @@ export async function checkAppMetadata(apps: App[]) {
     for (let [key, errors] of Object.entries(metadata.automationErrors)) {
       const updated = []
       for (let error of errors) {
+        if (!error) {
+          continue
+        }
         const startDate = error.split(dbUtils.SEPARATOR)[2]
         if (startDate > maxStartDate) {
           updated.push(error)

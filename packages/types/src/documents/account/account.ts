@@ -1,4 +1,12 @@
-import { Hosting } from "../../sdk"
+import {
+  Feature,
+  Hosting,
+  MonthlyQuotaName,
+  PlanType,
+  Quotas,
+  StaticQuotaName,
+} from "../../sdk"
+import { MonthlyUsage, QuotaUsage, StaticUsage } from "../global"
 
 export interface CreateAccount {
   email: string
@@ -22,9 +30,9 @@ export const isCreatePasswordAccount = (
   account: CreateAccount
 ): account is CreatePassswordAccount => account.authType === AuthType.PASSWORD
 
-export interface UpdateAccount {
-  stripeCustomerId?: string
-  licenseKey?: string
+export interface LicenseOverrides {
+  features?: Feature[]
+  quotas?: Quotas
 }
 
 export interface Account extends CreateAccount {
@@ -36,8 +44,13 @@ export interface Account extends CreateAccount {
   verificationSent: boolean
   // licensing
   tier: string // deprecated
+  planType?: PlanType
+  planTier?: number
   stripeCustomerId?: string
   licenseKey?: string
+  licenseKeyActivatedAt?: number
+  licenseOverrides?: LicenseOverrides
+  quotaUsage?: QuotaUsage
 }
 
 export interface PasswordAccount extends Account {

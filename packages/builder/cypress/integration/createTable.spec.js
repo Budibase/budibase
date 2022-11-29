@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(["smoke", "all"], () => {
-  context("Create a Table", () => {
+  xcontext("Create a Table", () => {
     before(() => {
       cy.login()
       cy.createTestApp()
@@ -48,7 +48,7 @@ filterTests(["smoke", "all"], () => {
 
     it("deletes a row", () => {
       cy.get(interact.SPECTRUM_CHECKBOX_INPUT).check({ force: true })
-      cy.contains("Delete 1 row(s)").click()
+      cy.contains("Delete 1 row").click()
       cy.get(interact.SPECTRUM_MODAL).contains("Delete").click()
       cy.contains("RoverUpdated").should("not.exist")
     })

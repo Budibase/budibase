@@ -110,6 +110,12 @@
       "type": "logic",
       "component": "ContinueIf",
       "dependsOnFeature": "continueIfAction"
+    },
+    {
+      "name": "Show Notification",
+      "type": "application",
+      "component": "ShowNotification",
+      "dependsOnFeature": "showNotificationAction"
     }
   ]
 }

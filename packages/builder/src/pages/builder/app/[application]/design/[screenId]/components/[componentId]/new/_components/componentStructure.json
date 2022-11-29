@@ -5,7 +5,10 @@
     "children": [
       "tableblock",
       "cardsblock",
-      "repeaterblock"
+      "repeaterblock",
+      "formblock",
+      "chartblock",
+      "rowexplorer"
     ]
   },
   {
@@ -13,7 +16,8 @@
     "icon": "ClassicGridView",
     "children": [
       "container",
-      "section"
+      "section",
+      "grid"
     ]
   },
   {
@@ -23,7 +27,8 @@
       "dataprovider",
       "repeater",
       "table",
-      "dynamicfilter"
+      "dynamicfilter",
+      "daterangepicker"
     ]
   },
   {
@@ -60,12 +65,12 @@
       "booleanfield",
       "longformfield",
       "attachmentfield",
-      "daterangepicker",
       "jsonfield",
       "relationshipfield",
       "datetimefield",
       "multifieldselect",
-      "s3upload"
+      "s3upload",
+      "codescanner"
     ]
   },
   {
@@ -81,4 +86,3 @@
     ]
   }
 ]
-

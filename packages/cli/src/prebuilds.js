@@ -1,11 +1,15 @@
 const os = require("os")
 const { join } = require("path")
 const fs = require("fs")
+const { error } = require("./utils")
 const PREBUILDS = "prebuilds"
 const ARCH = `${os.platform()}-${os.arch()}`
 const PREBUILD_DIR = join(process.execPath, "..", PREBUILDS, ARCH)
 
-checkForBinaries()
+// running as built CLI pkg bundle
+if (!process.argv[0].includes("node")) {
+  checkForBinaries()
+}
 
 function checkForBinaries() {
   const readDir = join(__filename, "..", "..", PREBUILDS, ARCH)
@@ -22,7 +26,18 @@ function checkForBinaries() {
   }
 }
 
-function cleanup() {
+function cleanup(evt) {
+  if (!isNaN(evt)) {
+    return
+  }
+  if (evt) {
+    console.error(
+      error(
+        "Failed to run CLI command - please report with the following message:"
+      )
+    )
+    console.error(error(evt))
+  }
   if (fs.existsSync(PREBUILD_DIR)) {
     fs.rmSync(PREBUILD_DIR, { recursive: true })
   }

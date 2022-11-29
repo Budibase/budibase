@@ -107,7 +107,7 @@
         placeholder={keyPlaceholder}
         readonly={readOnly}
         bind:value={field.name}
-        on:change={changed}
+        on:blur={changed}
       />
       {#if options}
         <Select bind:value={field.value} on:change={changed} {options} />
@@ -115,7 +115,10 @@
         <DrawerBindableInput
           {bindings}
           placeholder="Value"
-          on:change={e => (field.value = e.detail)}
+          on:blur={e => {
+            field.value = e.detail
+            changed()
+          }}
           disabled={readOnly}
           value={field.value}
           allowJS={false}
@@ -127,7 +130,7 @@
           placeholder={valuePlaceholder}
           readonly={readOnly}
           bind:value={field.value}
-          on:change={changed}
+          on:blur={changed}
         />
       {/if}
       {#if toggle}

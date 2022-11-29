@@ -60,3 +60,25 @@ export const findChildrenByType = (component, type, children = []) => {
     findChildrenByType(child, type, children)
   })
 }
+
+/**
+ * Recursively searches for the parent component of a specific component ID
+ */
+export const findComponentParent = (rootComponent, id, parentComponent) => {
+  if (!rootComponent || !id) {
+    return null
+  }
+  if (rootComponent._id === id) {
+    return parentComponent
+  }
+  if (!rootComponent._children) {
+    return null
+  }
+  for (const child of rootComponent._children) {
+    const childResult = findComponentParent(child, id, rootComponent)
+    if (childResult) {
+      return childResult
+    }
+  }
+  return null
+}

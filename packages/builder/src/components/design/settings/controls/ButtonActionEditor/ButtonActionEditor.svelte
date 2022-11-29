@@ -12,6 +12,7 @@
   export let value = []
   export let name
   export let bindings
+  export let nested
 
   let drawer
   let tmpValue
@@ -52,7 +53,7 @@
       )
 
       newBlock.inputs = {
-        fields: Object.keys(parameters.fields).reduce((fields, key) => {
+        fields: Object.keys(parameters.fields ?? {}).reduce((fields, key) => {
           fields[key] = "string"
           return fields
         }, {}),
@@ -90,6 +91,7 @@
     eventType={name}
     {bindings}
     {key}
+    {nested}
   />
 </Drawer>
 

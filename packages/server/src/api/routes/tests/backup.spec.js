@@ -1,4 +1,12 @@
-jest.mock("../../../utilities/fileSystem/utilities")
+jest.mock("@budibase/backend-core", () => {
+  const core = jest.requireActual("@budibase/backend-core")
+  return {
+    ...core,
+    objectStore: {
+      budibaseTempDir: core.objectStore.budibaseTempDir,
+    },
+  }
+})
 
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
@@ -21,7 +29,7 @@ describe("/backups", () => {
         .set(config.defaultHeaders())
         .expect(200)
       expect(res.text).toBeDefined()
-      expect(res.text.includes(`"db_name":"${config.getAppId()}"`)).toEqual(true)
+      expect(res.headers["content-type"]).toEqual("application/gzip")
       expect(events.app.exported.mock.calls.length).toBe(1)
     })
 

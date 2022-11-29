@@ -1,36 +1,45 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
-import { auth } from "stores/portal"
-import { Constants } from "@budibase/frontend-core"
+import { licensing } from "stores/portal"
 
 export function createGroupsStore() {
   const store = writable([])
 
+  const updateStore = group => {
+    store.update(state => {
+      const currentIdx = state.findIndex(gr => gr._id === group._id)
+      if (currentIdx >= 0) {
+        state.splice(currentIdx, 1, group)
+      } else {
+        state.push(group)
+      }
+      return state
+    })
+  }
+
+  const getGroup = async groupId => {
+    const group = await API.getGroup(groupId)
+    updateStore(group)
+  }
+
   const actions = {
     init: async () => {
-      // only init if these is a groups license, just to be sure but the feature will be blocked
+      // only init if there is a groups license, just to be sure but the feature will be blocked
       // on the backend anyway
-      if (
-        get(auth).user.license.features.includes(Constants.Features.USER_GROUPS)
-      ) {
-        const users = await API.getGroups()
-        store.set(users)
+      if (get(licensing).groupsEnabled) {
+        const groups = await API.getGroups()
+        store.set(groups)
       }
     },
+
+    get: getGroup,
 
     save: async group => {
       const response = await API.saveGroup(group)
       group._id = response._id
       group._rev = response._rev
-      store.update(state => {
-        const currentIdx = state.findIndex(gr => gr._id === response._id)
-        if (currentIdx >= 0) {
-          state.splice(currentIdx, 1, group)
-        } else {
-          state.push(group)
-        }
-        return state
-      })
+      updateStore(group)
+      return group
     },
 
     delete: async group => {
@@ -42,6 +51,34 @@ export function createGroupsStore() {
         state = state.filter(state => state._id !== group._id)
         return state
       })
+    },
+
+    addUser: async (groupId, userId) => {
+      await API.addUsersToGroup(groupId, userId)
+      // refresh the group enrichment
+      await getGroup(groupId)
+    },
+
+    removeUser: async (groupId, userId) => {
+      await API.removeUsersFromGroup(groupId, userId)
+      // refresh the group enrichment
+      await getGroup(groupId)
+    },
+
+    addApp: async (groupId, appId, roleId) => {
+      await API.addAppsToGroup(groupId, [{ appId, roleId }])
+      // refresh the group roles
+      await getGroup(groupId)
+    },
+
+    removeApp: async (groupId, appId) => {
+      await API.removeAppsFromGroup(groupId, [{ appId }])
+      // refresh the group roles
+      await getGroup(groupId)
+    },
+
+    getGroupAppIds: group => {
+      return Object.keys(group?.roles || {})
     },
   }
 

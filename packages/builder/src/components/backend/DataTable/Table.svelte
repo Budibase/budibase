@@ -8,6 +8,7 @@
   import CreateEditRow from "./modals/CreateEditRow.svelte"
   import CreateEditUser from "./modals/CreateEditUser.svelte"
   import CreateEditColumn from "./modals/CreateEditColumn.svelte"
+  import { cloneDeep } from "lodash/fp"
   import {
     TableNames,
     UNEDITABLE_USER_FIELDS,
@@ -110,7 +111,7 @@
   }
 
   const editColumn = field => {
-    editableColumn = schema?.[field]
+    editableColumn = cloneDeep(schema?.[field])
     if (editableColumn) {
       editColumnModal.show()
     }

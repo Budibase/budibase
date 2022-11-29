@@ -1,4 +1,5 @@
-import { dangerousGetDB, closeDB } from "."
+import { getPouchDB, closePouchDB } from "./couch"
+import { DocumentType } from "../constants"
 
 class Replication {
   source: any
@@ -11,12 +12,12 @@ class Replication {
    * @param {String} target - the DB you want to replicate to, or rollback from
    */
   constructor({ source, target }: any) {
-    this.source = dangerousGetDB(source)
-    this.target = dangerousGetDB(target)
+    this.source = getPouchDB(source)
+    this.target = getPouchDB(target)
   }
 
   close() {
-    return Promise.all([closeDB(this.source), closeDB(this.target)])
+    return Promise.all([closePouchDB(this.source), closePouchDB(this.target)])
   }
 
   promisify(operation: any, opts = {}) {
@@ -53,13 +54,22 @@ class Replication {
     return this.replication
   }
 
+  appReplicateOpts() {
+    return {
+      filter: (doc: any) => {
+        return doc._id !== DocumentType.APP_METADATA
+      },
+    }
+  }
+
   /**
    * Rollback the target DB back to the state of the source DB
    */
   async rollback() {
     await this.target.destroy()
     // Recreate the DB again
-    this.target = dangerousGetDB(this.target.name)
+    this.target = getPouchDB(this.target.name)
+    // take the opportunity to remove deleted tombstones
     await this.replicate()
   }
 

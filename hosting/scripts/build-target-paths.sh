@@ -3,15 +3,22 @@
 echo ${TARGETBUILD} > /buildtarget.txt
 if [[ "${TARGETBUILD}" = "aas" ]]; then
     # Azure AppService uses /home for persisent data & SSH on port 2222
-    mkdir -p /home/{search,minio,couch}
-    mkdir -p /home/couch/{dbs,views}
-    chown -R couchdb:couchdb /home/couch/
+    DATA_DIR=/home
+    WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
+    mkdir -p $DATA_DIR/{search,minio,couch}
+    mkdir -p $DATA_DIR/couch/{dbs,views}
+    chown -R couchdb:couchdb $DATA_DIR/couch/
     apt update
     apt-get install -y openssh-server
-    sed -i 's#dir=/opt/couchdb/data/search#dir=/home/search#' /opt/clouseau/clouseau.ini
-    sed -i 's#/minio/minio server /minio &#/minio/minio server /home/minio &#' /runner.sh
-    sed -i 's#database_dir = ./data#database_dir = /home/couch/dbs#' /opt/couchdb/etc/default.ini
-    sed -i 's#view_index_dir = ./data#view_index_dir = /home/couch/views#' /opt/couchdb/etc/default.ini
-    sed -i "s/#Port 22/Port 2222/" /etc/ssh/sshd_config
+    echo "root:Docker!" | chpasswd
+    mkdir -p /tmp
+    chmod +x /tmp/ssh_setup.sh \
+        && (sleep 1;/tmp/ssh_setup.sh 2>&1 > /dev/null)
+    cp /etc/sshd_config /etc/ssh/sshd_config
     /etc/init.d/ssh restart
+    sed -i "s#DATA_DIR#/home#g" /opt/clouseau/clouseau.ini
+    sed -i "s#DATA_DIR#/home#g" /opt/couchdb/etc/local.ini
+else
+    sed -i "s#DATA_DIR#/data#g" /opt/clouseau/clouseau.ini
+    sed -i "s#DATA_DIR#/data#g" /opt/couchdb/etc/local.ini
 fi

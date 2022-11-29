@@ -47,9 +47,20 @@
     }
   }
 
+  const deleteAttachments = async fileList => {
+    try {
+      return await API.deleteAttachments({
+        keys: fileList,
+        tableId: formContext?.dataSource?.tableId,
+      })
+    } catch (error) {
+      return []
+    }
+  }
+
   const handleChange = e => {
-    fieldApi.setValue(e.detail)
-    if (onChange) {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
       onChange({ value: e.detail })
     }
   }
@@ -65,17 +76,26 @@
   bind:fieldApi
   defaultValue={[]}
 >
-  {#if fieldState}
-    <CoreDropzone
-      value={fieldState.value}
-      disabled={fieldState.disabled}
-      error={fieldState.error}
-      on:change={handleChange}
-      {processFiles}
-      {handleFileTooLarge}
-      {handleTooManyFiles}
-      {maximum}
-      {extensions}
-    />
-  {/if}
+  <div class="minHeightWrapper">
+    {#if fieldState}
+      <CoreDropzone
+        value={fieldState.value}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        on:change={handleChange}
+        {processFiles}
+        {deleteAttachments}
+        {handleFileTooLarge}
+        {handleTooManyFiles}
+        {maximum}
+        {extensions}
+      />
+    {/if}
+  </div>
 </Field>
+
+<style>
+  .minHeightWrapper {
+    min-height: 220px;
+  }
+</style>

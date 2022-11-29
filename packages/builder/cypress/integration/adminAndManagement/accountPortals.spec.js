@@ -23,7 +23,7 @@ filterTests(["smoke", "all"], () => {
         cy.get(interact.SPECTRUM_ICON).click({ force: true })
       })
       cy.get(interact.SPECTRUM_MENU).within(() => {
-        cy.get(interact.SPECTRUM_MENU_ITEM).contains("Force Password Reset").click({ force: true })
+        cy.get(interact.SPECTRUM_MENU_ITEM).contains("Force password reset").click({ force: true })
       })
       
       cy.get(interact.SPECTRUM_DIALOG_GRID)
@@ -41,10 +41,25 @@ filterTests(["smoke", "all"], () => {
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).eq(i).type("test")
       }
       cy.get(interact.SPECTRUM_BUTTON).contains("Reset your password").click({ force: true })
+      //cy.logoutNoAppGrid()
+    })
+
+    it("should verify Standard Portal", () => {
+      // Development access should be disabled (Admin access is already disabled)
+      cy.login()
+      cy.setUserRole("bbuser", "App User")
+      bbUserLogin()
+
+      // Verify Standard Portal
+      cy.get(interact.SPECTRUM_SIDENAV).should('not.exist') // No config sections
+      cy.get(interact.CREATE_APP_BUTTON).should('not.exist') // No create app button
+      cy.get(".app").should('not.exist') // No apps -> no roles assigned to user
+      cy.get(interact.CONTAINER).should('contain', bbUserEmail) // Message containing users email
+
       cy.logoutNoAppGrid()
     })
     
-    xit("should verify Admin Portal", () => {
+    it("should verify Admin Portal", () => {
         cy.login()
         // Configure user role
         cy.setUserRole("bbuser", "Admin")
@@ -84,21 +99,6 @@ filterTests(["smoke", "all"], () => {
         .and('not.contain', 'Upgrade')
 
         cy.logOut()
-    })
-
-    it("should verify Standard Portal", () => {
-      // Development access should be disabled (Admin access is already disabled)
-      cy.login()
-      cy.setUserRole("bbuser", "App User")
-      bbUserLogin()
-
-      // Verify Standard Portal
-      cy.get(interact.SPECTRUM_SIDENAV).should('not.exist') // No config sections
-      cy.get(interact.CREATE_APP_BUTTON).should('not.exist') // No create app button
-      cy.get(".app").should('not.exist') // No apps -> no roles assigned to user
-      cy.get(interact.CONTAINER).should('contain', bbUserEmail) // Message containing users email
-
-      cy.logoutNoAppGrid()
     })
 
     const bbUserLogin = () => {

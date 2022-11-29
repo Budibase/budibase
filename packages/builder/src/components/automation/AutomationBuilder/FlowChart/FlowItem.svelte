@@ -22,6 +22,7 @@
 
   export let block
   export let testDataModal
+  export let idx
   let selected
   let webhookModal
   let actionModal
@@ -162,7 +163,7 @@
             width="28px"
             height="28px"
             class="spectrum-Icon"
-            style="color:grey;"
+            style="color:var(--spectrum-global-color-gray-700);"
             focusable="false"
           >
             <use xlink:href="#spectrum-icon-18-Reuse" />
@@ -208,7 +209,7 @@
     {/if}
   {/if}
 
-  <FlowItemHeader bind:blockComplete {block} {testDataModal} />
+  <FlowItemHeader bind:blockComplete {block} {testDataModal} {idx} />
   {#if !blockComplete}
     <Divider noMargin />
     <div class="blockSection">

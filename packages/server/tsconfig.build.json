@@ -3,7 +3,6 @@
     "target": "es6",
     "module": "commonjs",
     "lib": ["es2020"],
-    "allowJs": true,
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
@@ -19,6 +18,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    "src/tests",
     "**/*.spec.ts",
     "**/*.spec.js"
   ]

@@ -62,8 +62,11 @@ export function createDatasourcesStore() {
     unselect: () => {
       update(state => ({ ...state, selected: null }))
     },
-    updateSchema: async datasource => {
-      const response = await API.buildDatasourceSchema(datasource?._id)
+    updateSchema: async (datasource, tablesFilter) => {
+      const response = await API.buildDatasourceSchema({
+        datasourceId: datasource?._id,
+        tablesFilter,
+      })
       return await updateDatasource(response)
     },
     save: async (body, fetchSchema = false) => {
@@ -90,6 +93,7 @@ export function createDatasourcesStore() {
         return { list: sources, selected: null }
       })
       await queries.fetch()
+      await tables.fetch()
     },
     removeSchemaError: () => {
       update(state => {

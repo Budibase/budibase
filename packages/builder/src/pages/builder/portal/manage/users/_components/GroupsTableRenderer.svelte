@@ -18,11 +18,9 @@
     display: flex;
     overflow: hidden;
   }
-
   .opacity {
     opacity: 0.8;
   }
-
   .spacing {
     margin-right: var(--spacing-m);
   }

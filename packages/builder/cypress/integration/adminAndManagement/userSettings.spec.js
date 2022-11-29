@@ -19,10 +19,10 @@ filterTests(["smoke", "all"], () => {
         cy.contains("Users").click()
         cy.contains("test@test.com").click()
 
-        cy.get(interact.FIELD, { timeout: 1000 }).eq(0).within(() => {
+        cy.get(interact.FIELD, { timeout: 1000 }).eq(1).within(() => {
             cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', fname)
           })
-        cy.get(interact.FIELD).eq(1).within(() => {
+        cy.get(interact.FIELD).eq(2).within(() => {
             cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', lname)
           })
     })
@@ -72,7 +72,7 @@ filterTests(["smoke", "all"], () => {
         })
 
         // Logout & in with new password
-        cy.logOut()
+        //cy.logOut()
         cy.login("test@test.com", "newpwd")
     })
 
@@ -90,7 +90,6 @@ filterTests(["smoke", "all"], () => {
         cy.get(interact.SPECTRUM_MENU_ITEM).contains("Open developer mode").click({ force: true })
         cy.get(interact.SPECTRUM_SIDENAV).should('exist') // config sections available
         cy.get(interact.CREATE_APP_BUTTON).should('exist') // create app button available
-        cy.get(interact.APP_TABLE).should('exist') // App table available
     })
 
     after(() => {

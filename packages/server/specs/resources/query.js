@@ -82,7 +82,7 @@ const querySchema = object(
       type: "string",
     },
     datasourceId: {
-      description: "The ID of the data source the query belongs to.",
+      description: "The ID of the datasource the query belongs to.",
       type: "string",
     },
     parameters: {

@@ -10,6 +10,7 @@
   } from "@budibase/bbui"
   import TemplateCard from "components/common/TemplateCard.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
+  import { licensing } from "stores/portal"
 
   export let templates
 
@@ -96,15 +97,17 @@
               backgroundColour={templateEntry.background}
               icon={templateEntry.icon}
             >
-              <Button
-                cta
-                on:click={() => {
-                  template = templateEntry
-                  creationModal.show()
-                }}
-              >
-                Use template
-              </Button>
+              {#if !($licensing?.usageMetrics?.apps >= 100)}
+                <Button
+                  cta
+                  on:click={() => {
+                    template = templateEntry
+                    creationModal.show()
+                  }}
+                >
+                  Use template
+                </Button>
+              {/if}
               <a
                 href={templateEntry.url}
                 target="_blank"
