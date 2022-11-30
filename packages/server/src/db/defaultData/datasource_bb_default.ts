@@ -18,13 +18,16 @@ export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
 export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
 export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
 export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
-export const DEFAULT_BB_DATASOURCE = {
+
+const defaultDatasource = {
   _id: DEFAULT_BB_DATASOURCE_ID,
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Sample Data",
   source: "BUDIBASE",
   config: {},
 }
+
+export const DEFAULT_BB_DATASOURCE = defaultDatasource
 
 function syncLastIds(table: Table, rowCount: number) {
   Object.keys(table.schema).forEach(key => {
@@ -634,8 +637,14 @@ export function buildDefaultDocs() {
     }
   )
 
+  const dataSource = {
+    ...defaultDatasource,
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  }
+
   return [
-    DEFAULT_BB_DATASOURCE,
+    dataSource,
     inventoryData.table,
     employeeData.table,
     jobData.table,
