@@ -91,11 +91,11 @@ export class UserAPI {
 
   // USER
 
-  saveUser = (user: User, status?: number) => {
+  saveUser = (user: User, status?: number, headers?: any) => {
     return this.request
       .post(`/api/global/users`)
       .send(user)
-      .set(this.config.defaultHeaders())
+      .set(headers ?? this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
   }

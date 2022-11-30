@@ -40,6 +40,14 @@ function buildInviteMultipleValidation() {
   ))
 }
 
+const createUserAdminOnly = (ctx, next) => {
+  if (!ctx.request.body._id) {
+    return adminOnly(ctx, next)
+  } else {
+    return builderOrAdmin(ctx, next)
+  }
+}
+
 function buildInviteAcceptValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
@@ -51,7 +59,7 @@ function buildInviteAcceptValidation() {
 router
   .post(
     "/api/global/users",
-    adminOnly,
+    createUserAdminOnly,
     users.buildUserSaveValidation(),
     controller.save
   )
