@@ -262,6 +262,14 @@ describe("/api/global/users", () => {
 
       expect(events.user.created).toBeCalledTimes(1)
     })
+
+    it("should not allow a non-admin user to create a new user", async () => {
+      const nonAdmin = await config.createUser(structures.users.builderUser())
+      await config.createSession(nonAdmin)
+
+      const newUser = structures.users.user()
+      await api.users.saveUser(newUser, 403, config.authHeaders(nonAdmin))
+    })
   })
 
   describe("update", () => {
@@ -417,6 +425,14 @@ describe("/api/global/users", () => {
       user.email = email
       expect(user).toStrictEqual(dbUser)
       expect(response.body.message).toBe("Email address cannot be changed")
+    })
+
+    it("should allow a non-admin user to update an existing user", async () => {
+      const existingUser = await config.createUser(structures.users.user())
+      const nonAdmin = await config.createUser(structures.users.builderUser())
+      await config.createSession(nonAdmin)
+
+      await api.users.saveUser(existingUser, 200, config.authHeaders(nonAdmin))
     })
   })
 
