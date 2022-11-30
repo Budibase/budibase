@@ -23,12 +23,6 @@ const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
   try {
-    const body = ctx.request.body
-    const isCreate = !body._id
-    const isAdmin = !!ctx.user.admin?.global
-    if (isCreate && !isAdmin) {
-      ctx.throw(403, "Only admin user can create new user.")
-    }
     ctx.body = await sdk.users.save(ctx.request.body)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
