@@ -4,6 +4,8 @@ import tenancy from "../../tenancy"
 import * as cloudfront from "../cloudfront"
 import { Plugin } from "@budibase/types"
 
+// URLS
+
 export const enrichPluginURLs = (plugins: Plugin[]) => {
   if (!plugins || !plugins.length) {
     return []
@@ -16,40 +18,54 @@ export const enrichPluginURLs = (plugins: Plugin[]) => {
 }
 
 const getPluginJSUrl = (plugin: Plugin) => {
-  let file = getPluginJSKey(plugin)
-  if (env.CLOUDFRONT_CDN) {
-    return cloudfront.getPresignedUrl(file)
-  } else {
-    return objectStore.getPresignedUrl(env.PLUGIN_BUCKET_NAME, file)
-  }
+  const s3Key = getPluginJSKey(plugin)
+  return getPluginUrl(s3Key)
 }
 
 const getPluginIconUrl = (plugin: Plugin): string | undefined => {
-  const path = getPluginKey(plugin.name)
+  const s3Key = getPluginIconKey(plugin)
+  if (!s3Key) {
+    return
+  }
+  return getPluginUrl(s3Key)
+}
+
+const getPluginUrl = (s3Key: string) => {
+  if (env.CLOUDFRONT_CDN) {
+    return cloudfront.getPresignedUrl(s3Key)
+  } else {
+    return objectStore.getPresignedUrl(env.PLUGIN_BUCKET_NAME, s3Key)
+  }
+}
+
+// S3 KEYS
+
+export const getPluginJSKey = (plugin: Plugin) => {
+  return getPluginS3Key(plugin, "plugin.min.js")
+}
+
+export const getPluginIconKey = (plugin: Plugin) => {
   // iconUrl is deprecated - hardcode to icon.svg in this case
   const iconFile = plugin.iconUrl ? "icon.svg" : plugin.iconFile
   if (!iconFile) {
     return
   }
-  let file = `${path}/${iconFile}`
-  // don't use cloudfront for icon urls,
-  // client side fetch presents a cors issue.
-  return objectStore.getPresignedUrl(env.PLUGIN_BUCKET_NAME, file)
+  return getPluginS3Key(plugin, iconFile)
 }
 
-export const getPluginJSKey = (plugin: Plugin) => {
-  const path = getPluginKey(plugin.name)
-  return `${path}/plugin.min.js`
+const getPluginS3Key = (plugin: Plugin, file: string) => {
+  const s3Key = getPluginS3Dir(plugin.name)
+  return `${s3Key}/${file}`
 }
 
-export const getPluginKey = (pluginName: string) => {
-  let file = `${pluginName}`
+export const getPluginS3Dir = (pluginName: string) => {
+  let s3Key = `${pluginName}`
   if (env.MULTI_TENANCY) {
     const tenantId = tenancy.getTenantId()
-    file = `${tenantId}/${file}`
+    s3Key = `${tenantId}/${s3Key}`
   }
   if (env.CLOUDFRONT_CDN) {
-    file = `plugins/${file}`
+    s3Key = `plugins/${s3Key}`
   }
-  return file
+  return s3Key
 }

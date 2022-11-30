@@ -312,7 +312,7 @@ export const upload = async function (ctx: UserCtx) {
   const { type, name } = ctx.params
 
   let bucket = coreEnv.GLOBAL_BUCKET_NAME
-  const key = objectStore.getGlobalFileKey(type, name)
+  const key = objectStore.getGlobalFileS3Key(type, name)
 
   const result = await objectStore.upload({
     bucket,

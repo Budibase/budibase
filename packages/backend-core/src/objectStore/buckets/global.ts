@@ -3,8 +3,10 @@ import tenancy from "../../tenancy"
 import * as objectStore from "../objectStore"
 import * as cloudfront from "../cloudfront"
 
+// URLs
+
 export const getGlobalFileUrl = (type: string, name: string, etag?: string) => {
-  let file = getGlobalFileKey(type, name)
+  let file = getGlobalFileS3Key(type, name)
   if (env.CLOUDFRONT_CDN) {
     if (etag) {
       file = `${file}?etag=${etag}`
@@ -15,7 +17,9 @@ export const getGlobalFileUrl = (type: string, name: string, etag?: string) => {
   }
 }
 
-export const getGlobalFileKey = (type: string, name: string) => {
+// KEYS
+
+export const getGlobalFileS3Key = (type: string, name: string) => {
   let file = `${type}/${name}`
   if (env.MULTI_TENANCY) {
     const tenantId = tenancy.getTenantId()

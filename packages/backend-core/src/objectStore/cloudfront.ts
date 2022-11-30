@@ -1,31 +1,41 @@
 import env from "../environment"
 const cfsign = require("aws-cloudfront-sign")
 
-let PRIVATE_KEY_STRING: string
-if (env.CLOUDFRONT_PRIVATE_KEY_64) {
-  PRIVATE_KEY_STRING = Buffer.from(
-    env.CLOUDFRONT_PRIVATE_KEY_64,
-    "base64"
-  ).toString("utf-8")
+let PRIVATE_KEY: string | undefined
+
+function getPrivateKey() {
+  if (!env.CLOUDFRONT_PRIVATE_KEY_64) {
+    throw new Error("CLOUDFRONT_PRIVATE_KEY_64 is not set")
+  }
+
+  if (PRIVATE_KEY) {
+    return PRIVATE_KEY
+  }
+
+  PRIVATE_KEY = Buffer.from(env.CLOUDFRONT_PRIVATE_KEY_64, "base64").toString(
+    "utf-8"
+  )
+
+  return PRIVATE_KEY
 }
 
 const getCloudfrontSignParams = () => {
   return {
     keypairId: env.CLOUDFRONT_PUBLIC_KEY_ID,
-    privateKeyString: PRIVATE_KEY_STRING,
+    privateKeyString: getPrivateKey(),
     expireTime: new Date().getTime() + 1000 * 60 * 60, // 1 hour
   }
 }
 
-export const getPresignedUrl = (file: string) => {
-  const url = getUrl(file)
+export const getPresignedUrl = (s3Key: string) => {
+  const url = getUrl(s3Key)
   return cfsign.getSignedUrl(url, getCloudfrontSignParams())
 }
 
-export const getUrl = (file: string) => {
+export const getUrl = (s3Key: string) => {
   let prefix = "/"
-  if (file.startsWith("/")) {
+  if (s3Key.startsWith("/")) {
     prefix = ""
   }
-  return `${env.CLOUDFRONT_CDN}${prefix}${file}`
+  return `${env.CLOUDFRONT_CDN}${prefix}${s3Key}`
 }
