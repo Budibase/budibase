@@ -150,8 +150,8 @@ export function convertSqlType(type: string) {
   //Set the foundType based the longest match
   if (matchingTypes.length > 0) {
     foundType = matchingTypes.reduce((acc, val) => {
-      return acc.external.length >= val.external.length ? acc : val;
-   }).internal
+      return acc.external.length >= val.external.length ? acc : val
+    }).internal
   }
   const schema: any = { type: foundType }
   if (foundType === FieldTypes.DATETIME) {
