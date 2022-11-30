@@ -5207,7 +5207,8 @@
       "section"
     ],
     "showEmptyState": false,
-    "draggable": false
+    "draggable": false,
+    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
   },
   "rowexplorer": {
     "block": true,
