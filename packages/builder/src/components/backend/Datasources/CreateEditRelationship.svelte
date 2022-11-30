@@ -45,7 +45,6 @@
 
   function hasCompatibleRelationshipTypes(fromRelate) {
     let fromType, toType
-    let externalTypeIsBigInt = false
     if (fromPrimary && fromRelate.fieldName) {
       const primaryField = fromTable?.schema[fromPrimary]
       const relatedField = toTable?.schema[fromRelate.fieldName]
@@ -64,7 +63,7 @@
         )
       }
     }
-    return externalTypeIsBigInt || fromType === toType
+    return fromType === toType
   }
 
   const touched = writable({})
