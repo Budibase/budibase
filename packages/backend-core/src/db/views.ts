@@ -1,8 +1,13 @@
-import { DocumentType, ViewName, DeprecatedViews, SEPARATOR } from "./utils"
+import {
+  DocumentType,
+  ViewName,
+  DeprecatedViews,
+  SEPARATOR,
+  StaticDatabases,
+} from "../constants"
 import { getGlobalDB } from "../context"
-import PouchDB from "pouchdb"
-import { StaticDatabases } from "./constants"
 import { doWithDB } from "./"
+import { Database, DatabaseQueryOpts } from "@budibase/types"
 
 const DESIGN_DB = "_design/database"
 
@@ -19,7 +24,7 @@ interface DesignDocument {
   views: any
 }
 
-async function removeDeprecated(db: PouchDB.Database, viewName: ViewName) {
+async function removeDeprecated(db: Database, viewName: ViewName) {
   // @ts-ignore
   if (!DeprecatedViews[viewName]) {
     return
@@ -70,16 +75,13 @@ export const createAccountEmailView = async () => {
       emit(doc.email.toLowerCase(), doc._id)
     }
   }`
-  await doWithDB(
-    StaticDatabases.PLATFORM_INFO.name,
-    async (db: PouchDB.Database) => {
-      await createView(db, viewJs, ViewName.ACCOUNT_BY_EMAIL)
-    }
-  )
+  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
+    await createView(db, viewJs, ViewName.ACCOUNT_BY_EMAIL)
+  })
 }
 
 export const createUserAppView = async () => {
-  const db = getGlobalDB() as PouchDB.Database
+  const db = getGlobalDB()
   const viewJs = `function(doc) {
     if (doc._id.startsWith("${DocumentType.USER}${SEPARATOR}") && doc.roles) {
       for (let prodAppId of Object.keys(doc.roles)) {
@@ -117,12 +119,9 @@ export const createPlatformUserView = async () => {
       emit(doc._id.toLowerCase(), doc._id)
     }
   }`
-  await doWithDB(
-    StaticDatabases.PLATFORM_INFO.name,
-    async (db: PouchDB.Database) => {
-      await createView(db, viewJs, ViewName.PLATFORM_USERS_LOWERCASE)
-    }
-  )
+  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
+    await createView(db, viewJs, ViewName.PLATFORM_USERS_LOWERCASE)
+  })
 }
 
 export interface QueryViewOptions {
@@ -131,25 +130,29 @@ export interface QueryViewOptions {
 
 export const queryView = async <T>(
   viewName: ViewName,
-  params: PouchDB.Query.Options<T, T>,
-  db: PouchDB.Database,
+  params: DatabaseQueryOpts,
+  db: Database,
   createFunc: any,
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   try {
-    let response = await db.query<T, T>(`database/${viewName}`, params)
+    let response = await db.query<T>(`database/${viewName}`, params)
     const rows = response.rows
-    const docs = rows.map(row => (params.include_docs ? row.doc : row.value))
+    const docs = rows.map((row: any) =>
+      params.include_docs ? row.doc : row.value
+    )
 
     // if arrayResponse has been requested, always return array regardless of length
     if (opts?.arrayResponse) {
-      return docs
+      return docs as T[]
     } else {
       // return the single document if there is only one
-      return docs.length <= 1 ? docs[0] : docs
+      return docs.length <= 1 ? (docs[0] as T) : (docs as T[])
     }
   } catch (err: any) {
-    if (err != null && err.name === "not_found") {
+    const pouchNotFound = err && err.name === "not_found"
+    const couchNotFound = err && err.status === 404
+    if (pouchNotFound || couchNotFound) {
       await removeDeprecated(db, viewName)
       await createFunc()
       return queryView(viewName, params, db, createFunc, opts)
@@ -161,7 +164,7 @@ export const queryView = async <T>(
 
 export const queryPlatformView = async <T>(
   viewName: ViewName,
-  params: PouchDB.Query.Options<T, T>,
+  params: DatabaseQueryOpts,
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   const CreateFuncByName: any = {
@@ -169,19 +172,16 @@ export const queryPlatformView = async <T>(
     [ViewName.PLATFORM_USERS_LOWERCASE]: createPlatformUserView,
   }
 
-  return doWithDB(
-    StaticDatabases.PLATFORM_INFO.name,
-    async (db: PouchDB.Database) => {
-      const createFn = CreateFuncByName[viewName]
-      return queryView(viewName, params, db, createFn, opts)
-    }
-  )
+  return doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
+    const createFn = CreateFuncByName[viewName]
+    return queryView(viewName, params, db, createFn, opts)
+  })
 }
 
 export const queryGlobalView = async <T>(
   viewName: ViewName,
-  params: PouchDB.Query.Options<T, T>,
-  db?: PouchDB.Database,
+  params: DatabaseQueryOpts,
+  db?: Database,
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   const CreateFuncByName: any = {
@@ -192,8 +192,8 @@ export const queryGlobalView = async <T>(
   }
   // can pass DB in if working with something specific
   if (!db) {
-    db = getGlobalDB() as PouchDB.Database
+    db = getGlobalDB()
   }
   const createFn = CreateFuncByName[viewName]
-  return queryView(viewName, params, db, createFn, opts)
+  return queryView(viewName, params, db!, createFn, opts)
 }

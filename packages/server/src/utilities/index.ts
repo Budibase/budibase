@@ -1,16 +1,19 @@
-const env = require("../environment")
-const { generateMetadataID } = require("../db/utils")
-const Readable = require("stream").Readable
-const { getAppDB } = require("@budibase/backend-core/context")
+import env from "../environment"
+import { context } from "@budibase/backend-core"
+import { generateMetadataID } from "../db/utils"
+import { Document } from "@budibase/types"
+import stream from "stream"
+const Readable = stream.Readable
 
-export const wait = (ms: number) =>
-  new Promise(resolve => setTimeout(resolve, ms))
+export function wait(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 export const isDev = env.isDev
 
 export const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
 
-export const removeFromArray = (array: any[], element: number) => {
+export function removeFromArray(array: any[], element: number) {
   const index = array.indexOf(element)
   if (index !== -1) {
     array.splice(index, 1)
@@ -24,20 +27,19 @@ export const removeFromArray = (array: any[], element: number) => {
  * @param {string} url The URL to test and remove any extra double slashes.
  * @return {string} The updated url.
  */
-export const checkSlashesInUrl = (url: string) => {
+export function checkSlashesInUrl(url: string) {
   return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
 }
 
-export const updateEntityMetadata = async (
+export async function updateEntityMetadata(
   type: string,
   entityId: string,
   updateFn: any
-) => {
-  const db = getAppDB()
+) {
+  const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
   // read it to see if it exists, we'll overwrite it no matter what
-  let rev,
-    metadata: any = {}
+  let rev, metadata: Document
   try {
     const oldMetadata = await db.get(id)
     rev = oldMetadata._rev
@@ -58,18 +60,18 @@ export const updateEntityMetadata = async (
   }
 }
 
-export const saveEntityMetadata = async (
+export async function saveEntityMetadata(
   type: string,
   entityId: string,
-  metadata: any
-) => {
+  metadata: Document
+) {
   return updateEntityMetadata(type, entityId, () => {
     return metadata
   })
 }
 
-export const deleteEntityMetadata = async (type: string, entityId: string) => {
-  const db = getAppDB()
+export async function deleteEntityMetadata(type: string, entityId: string) {
+  const db = context.getAppDB()
   const id = generateMetadataID(type, entityId)
   let rev
   try {
@@ -85,7 +87,7 @@ export const deleteEntityMetadata = async (type: string, entityId: string) => {
   }
 }
 
-export const escapeDangerousCharacters = (string: string) => {
+export function escapeDangerousCharacters(string: string) {
   return string
     .replace(/[\\]/g, "\\\\")
     .replace(/[\b]/g, "\\b")
@@ -95,7 +97,7 @@ export const escapeDangerousCharacters = (string: string) => {
     .replace(/[\t]/g, "\\t")
 }
 
-export const stringToReadStream = (string: string) => {
+export function stringToReadStream(string: string) {
   return new Readable({
     read() {
       this.push(string)
@@ -104,7 +106,7 @@ export const stringToReadStream = (string: string) => {
   })
 }
 
-export const formatBytes = (bytes: string) => {
+export function formatBytes(bytes: string) {
   const units = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
   const byteIncrements = 1024
   let unit = 0
@@ -115,7 +117,7 @@ export const formatBytes = (bytes: string) => {
   return `${size.toFixed(size < 10 && unit > 0 ? 1 : 0)}${units[unit]}`
 }
 
-export const convertBookmark = (bookmark: any) => {
+export function convertBookmark(bookmark: string) {
   const IS_NUMBER = /^\d+\.?\d*$/
   if (typeof bookmark === "string" && bookmark.match(IS_NUMBER)) {
     return parseFloat(bookmark)
@@ -123,7 +125,7 @@ export const convertBookmark = (bookmark: any) => {
   return bookmark
 }
 
-export const isQsTrue = (param: any) => {
+export function isQsTrue(param: string) {
   if (typeof param === "string") {
     return param.toLowerCase() === "true"
   } else {

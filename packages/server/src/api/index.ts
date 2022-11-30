@@ -1,20 +1,13 @@
 import Router from "@koa/router"
-const {
-  buildAuthMiddleware,
-  auditLog,
-  buildTenancyMiddleware,
-} = require("@budibase/backend-core/auth")
-const { errors } = require("@budibase/backend-core")
-const currentApp = require("../middleware/currentapp")
-const compress = require("koa-compress")
-const zlib = require("zlib")
-const { mainRoutes, staticRoutes, publicRoutes } = require("./routes")
-const pkg = require("../../package.json")
-const env = require("../environment")
-const { middleware: pro } = require("@budibase/pro")
-import { middleware } from "@budibase/backend-core"
-
+import { errors, auth } from "@budibase/backend-core"
+import currentApp from "../middleware/currentapp"
+import zlib from "zlib"
+import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
+import pkg from "../../package.json"
+import env from "../environment"
+import { middleware as pro } from "@budibase/pro"
 export { shutdown } from "./routes/public"
+const compress = require("koa-compress")
 
 export const router: Router = new Router()
 
@@ -44,7 +37,7 @@ router
   // re-direct before any middlewares occur
   .redirect("/", "/builder")
   .use(
-    buildAuthMiddleware(null, {
+    auth.buildAuthMiddleware([], {
       publicAllowed: true,
     })
   )
@@ -52,13 +45,14 @@ router
   // the server can be public anywhere, so nowhere should throw errors
   // if the tenancy has not been set, it'll have to be discovered at application layer
   .use(
-    buildTenancyMiddleware(null, null, {
+    auth.buildTenancyMiddleware([], [], {
       noTenancyRequired: true,
     })
   )
   .use(pro.licensing())
+  // @ts-ignore
   .use(currentApp)
-  .use(auditLog)
+  .use(auth.auditLog)
 
 // error handling middleware
 router.use(async (ctx, next) => {

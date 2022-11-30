@@ -1,14 +1,14 @@
-import { Row, Table } from "@budibase/types"
-const { getRowParams } = require("../../../db/utils")
-const {
+import { getRowParams } from "../../../db/utils"
+import {
   outputProcessing,
   processAutoColumn,
   processFormulas,
-} = require("../../../utilities/rowProcessor")
-const { FieldTypes, FormulaTypes } = require("../../../constants")
+} from "../../../utilities/rowProcessor"
+import { FieldTypes, FormulaTypes } from "../../../constants"
+import { context } from "@budibase/backend-core"
+import { Table, Row } from "@budibase/types"
 const { isEqual } = require("lodash")
 const { cloneDeep } = require("lodash/fp")
-const { getAppDB } = require("@budibase/backend-core/context")
 
 /**
  * This function runs through a list of enriched rows, looks at the rows which
@@ -16,22 +16,22 @@ const { getAppDB } = require("@budibase/backend-core/context")
  * updated.
  * NOTE: this will only for affect static formulas.
  */
-export const updateRelatedFormula = async (table: any, enrichedRows: any) => {
-  const db = getAppDB()
+export async function updateRelatedFormula(table: Table, enrichedRows: Row[]) {
+  const db = context.getAppDB()
   // no formula to update, we're done
   if (!table.relatedFormula) {
     return
   }
-  let promises: any = []
+  let promises: Promise<any>[] = []
   for (let enrichedRow of Array.isArray(enrichedRows)
     ? enrichedRows
     : [enrichedRows]) {
     // the related rows by tableId
-    let relatedRows: any = {}
+    let relatedRows: Record<string, Row[]> = {}
     for (let [key, field] of Object.entries(enrichedRow)) {
       const columnDefinition = table.schema[key]
       if (columnDefinition && columnDefinition.type === FieldTypes.LINK) {
-        const relatedTableId = columnDefinition.tableId
+        const relatedTableId = columnDefinition.tableId!
         if (!relatedRows[relatedTableId]) {
           relatedRows[relatedTableId] = []
         }
@@ -39,7 +39,7 @@ export const updateRelatedFormula = async (table: any, enrichedRows: any) => {
       }
     }
     for (let tableId of table.relatedFormula) {
-      let relatedTable: Table | undefined
+      let relatedTable: Table
       try {
         // no rows to update, skip
         if (!relatedRows[tableId] || relatedRows[tableId].length === 0) {
@@ -49,22 +49,21 @@ export const updateRelatedFormula = async (table: any, enrichedRows: any) => {
       } catch (err) {
         // no error scenario, table doesn't seem to exist anymore, ignore
       }
-      if (relatedTable) {
-        for (let column of Object.values(relatedTable?.schema)) {
-          // needs updated in related rows
-          if (
-            column.type === FieldTypes.FORMULA &&
-            column.formulaType === FormulaTypes.STATIC
-          ) {
-            // re-enrich rows for all the related, don't update the related formula for them
-            promises = promises.concat(
-              relatedRows[tableId].map((related: any) =>
-                finaliseRow(relatedTable as Table, related, {
-                  updateFormula: false,
-                })
-              )
+      for (let column of Object.values(relatedTable!.schema)) {
+        // needs updated in related rows
+        if (
+          column.type === FieldTypes.FORMULA &&
+          column.formulaType === FormulaTypes.STATIC
+        ) {
+          // re-enrich rows for all the related, don't update the related formula for them
+          promises = promises.concat(
+            relatedRows[tableId].map(related =>
+              finaliseRow(relatedTable, related, {
+                updateFormula: false,
+              })
             )
-          }
+          )
+          break
         }
       }
     }
@@ -72,16 +71,16 @@ export const updateRelatedFormula = async (table: any, enrichedRows: any) => {
   await Promise.all(promises)
 }
 
-export const updateAllFormulasInTable = async (table: Table) => {
-  const db = getAppDB()
+export async function updateAllFormulasInTable(table: Table) {
+  const db = context.getAppDB()
   // start by getting the raw rows (which will be written back to DB after update)
-  let rows: Row[] = (
+  let rows = (
     await db.allDocs(
       getRowParams(table._id, null, {
         include_docs: true,
       })
     )
-  ).rows.map((row: any) => row.doc)
+  ).rows.map(row => row.doc)
   // now enrich the rows, note the clone so that we have the base state of the
   // rows so that we don't write any of the enriched information back
   let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
@@ -91,7 +90,7 @@ export const updateAllFormulasInTable = async (table: Table) => {
   for (let row of rows) {
     // find the enriched row, if found process the formulas
     const enrichedRow = enrichedRows.find(
-      (enriched: Row) => enriched._id === row._id
+      (enriched: any) => enriched._id === row._id
     )
     if (enrichedRow) {
       const processed = processFormulas(table, cloneDeep(row), {
@@ -113,25 +112,24 @@ export const updateAllFormulasInTable = async (table: Table) => {
  * row. The reason we need to return the enriched row is that the automation row created trigger
  * expects the row to be totally enriched/contain all relationships.
  */
-export const finaliseRow = async (
+export async function finaliseRow(
   table: Table,
   row: Row,
   { oldTable, updateFormula }: { oldTable?: Table; updateFormula: boolean } = {
     updateFormula: true,
   }
-) => {
-  const db = getAppDB()
+) {
+  const db = context.getAppDB()
   row.type = "row"
   // process the row before return, to include relationships
-  let enrichedRow = await outputProcessing(table, cloneDeep(row), {
+  let enrichedRow = (await outputProcessing(table, cloneDeep(row), {
     squash: false,
-  })
+  })) as Row
   // use enriched row to generate formulas for saving, specifically only use as context
   row = processFormulas(table, row, {
     dynamic: false,
     contextRows: enrichedRow,
   })
-
   // don't worry about rev, tables handle rev/lastID updates
   // if another row has been written since processing this will
   // handle the auto ID clash

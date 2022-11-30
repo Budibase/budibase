@@ -1,6 +1,6 @@
 import { search as stringSearch, addRev } from "./utils"
-import { default as controller } from "../table"
-import { Table } from "../../../definitions/common"
+import * as controller from "../table"
+import { Table } from "@budibase/types"
 
 function fixTable(table: Table, params: any) {
   if (!params || !table) {

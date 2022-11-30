@@ -1,12 +1,12 @@
 import env from "../../environment"
-import { db, tenancy } from "@budibase/backend-core"
+import { db as dbCore, tenancy } from "@budibase/backend-core"
 import { streamFile } from "../../utilities/fileSystem"
 import { stringToReadStream } from "../../utilities"
 import { getDocParams, DocumentType, isDevAppID } from "../../db/utils"
 import { create } from "./application"
 import { join } from "path"
 import sdk from "../../sdk"
-import { App, Ctx } from "@budibase/types"
+import { App, Ctx, Database } from "@budibase/types"
 
 async function createApp(appName: string, appDirectory: string) {
   const ctx = {
@@ -25,28 +25,28 @@ async function createApp(appName: string, appDirectory: string) {
   return create(ctx)
 }
 
-async function getAllDocType(db: any, docType: any) {
+async function getAllDocType(db: Database, docType: string) {
   const response = await db.allDocs(
     getDocParams(docType, null, {
       include_docs: true,
     })
   )
-  return response.rows.map((row: any) => row.doc)
+  return response.rows.map(row => row.doc)
 }
 
-export const exportApps = async (ctx: Ctx) => {
+export async function exportApps(ctx: Ctx) {
   if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
     ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
   }
-  const apps = (await db.getAllApps({ all: true })) as App[]
-  const globalDBString = await sdk.backups.exportDB(db.getGlobalDBName(), {
+  const apps = (await dbCore.getAllApps({ all: true })) as App[]
+  const globalDBString = await sdk.backups.exportDB(dbCore.getGlobalDBName(), {
     filter: (doc: any) => !doc._id.startsWith(DocumentType.USER),
   })
   // only export the dev apps as they will be the latest, the user can republish the apps
   // in their self-hosted environment
   let appMetadata = apps
-    .filter(app => isDevAppID(app.appId || app._id))
-    .map(app => ({ appId: app.appId || app._id!, name: app.name }))
+    .filter((app: App) => isDevAppID(app.appId || app._id))
+    .map((app: App) => ({ appId: (app.appId || app._id)!, name: app.name }))
   const tmpPath = await sdk.backups.exportMultipleApps(
     appMetadata,
     globalDBString
@@ -56,25 +56,25 @@ export const exportApps = async (ctx: Ctx) => {
   ctx.body = streamFile(tmpPath)
 }
 
-async function _hasBeenImported() {
+async function checkHasBeenImported() {
   if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
     return true
   }
-  const apps = await db.getAllApps({ all: true })
+  const apps = await dbCore.getAllApps({ all: true })
   return apps.length !== 0
 }
 
-export const hasBeenImported = async (ctx: Ctx) => {
+export async function hasBeenImported(ctx: Ctx) {
   ctx.body = {
-    imported: await _hasBeenImported(),
+    imported: await checkHasBeenImported(),
   }
 }
 
-export const importApps = async (ctx: Ctx) => {
+export async function importApps(ctx: BBContext) {
   if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
     ctx.throw(400, "Importing only allowed in self hosted environments.")
   }
-  const beenImported = await _hasBeenImported()
+  const beenImported = await checkHasBeenImported()
   if (beenImported || !ctx.request.files || !ctx.request.files.importFile) {
     ctx.throw(
       400,

@@ -60,8 +60,6 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: jwtSecret
-        - name: LOG_LEVEL
-          value: {{ .Values.services.apps.logLevel | default "info" | quote }}
         {{ if .Values.services.objectStore.region }}
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}

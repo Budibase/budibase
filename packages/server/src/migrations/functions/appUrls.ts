@@ -1,4 +1,4 @@
-const { DocumentType } = require("@budibase/backend-core/db")
+import { db as dbCore } from "@budibase/backend-core"
 import { getAppUrl } from "../../api/controllers/application"
 
 /**
@@ -11,7 +11,7 @@ import { getAppUrl } from "../../api/controllers/application"
 export const run = async (appDb: any) => {
   let metadata
   try {
-    metadata = await appDb.get(DocumentType.APP_METADATA)
+    metadata = await appDb.get(dbCore.DocumentType.APP_METADATA)
   } catch (e) {
     // sometimes the metadata document doesn't exist
     // exit early instead of failing the migration

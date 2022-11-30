@@ -1,24 +1,16 @@
-import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/roles"
-import { UserStatus } from "@budibase/backend-core/constants"
-import { objectStore } from "@budibase/backend-core"
+import { objectStore, roles, constants } from "@budibase/backend-core"
 
-export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
-
-export const JobQueues = {
-  AUTOMATIONS: "automationQueue",
-}
-
-export const FilterTypes = {
-  STRING: "string",
-  FUZZY: "fuzzy",
-  RANGE: "range",
-  EQUAL: "equal",
-  NOT_EQUAL: "notEqual",
-  EMPTY: "empty",
-  NOT_EMPTY: "notEmpty",
-  CONTAINS: "contains",
-  NOT_CONTAINS: "notContains",
-  ONE_OF: "oneOf",
+export enum FilterTypes {
+  STRING = "string",
+  FUZZY = "fuzzy",
+  RANGE = "range",
+  EQUAL = "equal",
+  NOT_EQUAL = "notEqual",
+  EMPTY = "empty",
+  NOT_EMPTY = "notEmpty",
+  CONTAINS = "contains",
+  NOT_CONTAINS = "notContains",
+  ONE_OF = "oneOf",
 }
 
 export const NoEmptyFilterStrings = [
@@ -30,73 +22,73 @@ export const NoEmptyFilterStrings = [
   FilterTypes.NOT_CONTAINS,
 ]
 
-export const FieldTypes = {
-  STRING: "string",
-  BARCODEQR: "barcodeqr",
-  LONGFORM: "longform",
-  OPTIONS: "options",
-  NUMBER: "number",
-  BOOLEAN: "boolean",
-  ARRAY: "array",
-  DATETIME: "datetime",
-  ATTACHMENT: "attachment",
-  LINK: "link",
-  FORMULA: "formula",
-  AUTO: "auto",
-  JSON: "json",
-  INTERNAL: "internal",
+export enum FieldTypes {
+  STRING = "string",
+  BARCODEQR = "barcodeqr",
+  LONGFORM = "longform",
+  OPTIONS = "options",
+  NUMBER = "number",
+  BOOLEAN = "boolean",
+  ARRAY = "array",
+  DATETIME = "datetime",
+  ATTACHMENT = "attachment",
+  LINK = "link",
+  FORMULA = "formula",
+  AUTO = "auto",
+  JSON = "json",
+  INTERNAL = "internal",
 }
 
 export const CanSwitchTypes = [
-  [FieldTypes.JSON, FieldTypes.ARRAY],
+  [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
   [
-    FieldTypes.STRING,
-    FieldTypes.OPTIONS,
-    FieldTypes.LONGFORM,
-    FieldTypes.BARCODEQR,
+    exports.FieldTypes.STRING,
+    exports.FieldTypes.OPTIONS,
+    exports.FieldTypes.LONGFORM,
+    exports.FieldTypes.BARCODEQR,
   ],
-  [FieldTypes.BOOLEAN, FieldTypes.NUMBER],
+  [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
 ]
 
 export const SwitchableTypes = CanSwitchTypes.reduce((prev, current) =>
   prev ? prev.concat(current) : current
 )
 
-export const RelationshipTypes = {
-  ONE_TO_MANY: "one-to-many",
-  MANY_TO_ONE: "many-to-one",
-  MANY_TO_MANY: "many-to-many",
+export enum RelationshipTypes {
+  ONE_TO_MANY = "one-to-many",
+  MANY_TO_ONE = "many-to-one",
+  MANY_TO_MANY = "many-to-many",
 }
 
-export const FormulaTypes = {
-  STATIC: "static",
-  DYNAMIC: "dynamic",
+export enum FormulaTypes {
+  STATIC = "static",
+  DYNAMIC = "dynamic",
 }
 
-export const AuthTypes = {
-  APP: "app",
-  BUILDER: "builder",
-  EXTERNAL: "external",
+export enum AuthTypes {
+  APP = "app",
+  BUILDER = "builder",
+  EXTERNAL = "external",
 }
 
-export const DataSourceOperation = {
-  CREATE: "CREATE",
-  READ: "READ",
-  UPDATE: "UPDATE",
-  DELETE: "DELETE",
-  BULK_CREATE: "BULK_CREATE",
-  CREATE_TABLE: "CREATE_TABLE",
-  UPDATE_TABLE: "UPDATE_TABLE",
-  DELETE_TABLE: "DELETE_TABLE",
+export enum DataSourceOperation {
+  CREATE = "CREATE",
+  READ = "READ",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
+  BULK_CREATE = "BULK_CREATE",
+  CREATE_TABLE = "CREATE_TABLE",
+  UPDATE_TABLE = "UPDATE_TABLE",
+  DELETE_TABLE = "DELETE_TABLE",
 }
 
-export const DatasourceAuthTypes = {
-  GOOGLE: "google",
+export enum DatasourceAuthTypes {
+  GOOGLE = "google",
 }
 
-export const SortDirection = {
-  ASCENDING: "ASCENDING",
-  DESCENDING: "DESCENDING",
+export enum SortDirection {
+  ASCENDING = "ASCENDING",
+  DESCENDING = "DESCENDING",
 }
 
 export const USERS_TABLE_SCHEMA = {
@@ -107,9 +99,9 @@ export const USERS_TABLE_SCHEMA = {
   // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out
   schema: {
     email: {
-      type: FieldTypes.STRING,
+      type: exports.FieldTypes.STRING,
       constraints: {
-        type: FieldTypes.STRING,
+        type: exports.FieldTypes.STRING,
         email: true,
         length: {
           maximum: "",
@@ -122,92 +114,91 @@ export const USERS_TABLE_SCHEMA = {
     firstName: {
       name: "firstName",
       fieldName: "firstName",
-      type: FieldTypes.STRING,
+      type: exports.FieldTypes.STRING,
       constraints: {
-        type: FieldTypes.STRING,
+        type: exports.FieldTypes.STRING,
         presence: false,
       },
     },
     lastName: {
       name: "lastName",
       fieldName: "lastName",
-      type: FieldTypes.STRING,
+      type: exports.FieldTypes.STRING,
       constraints: {
-        type: FieldTypes.STRING,
+        type: exports.FieldTypes.STRING,
         presence: false,
       },
     },
     roleId: {
       fieldName: "roleId",
       name: "roleId",
-      type: FieldTypes.OPTIONS,
+      type: exports.FieldTypes.OPTIONS,
       constraints: {
-        type: FieldTypes.STRING,
+        type: exports.FieldTypes.STRING,
         presence: false,
-        inclusion: Object.values(BUILTIN_ROLE_IDS),
+        inclusion: Object.values(roles.BUILTIN_ROLE_IDS),
       },
     },
     status: {
       fieldName: "status",
       name: "status",
-      type: FieldTypes.OPTIONS,
+      type: exports.FieldTypes.OPTIONS,
       constraints: {
-        type: FieldTypes.STRING,
+        type: exports.FieldTypes.STRING,
         presence: false,
-        inclusion: Object.values(UserStatus),
+        inclusion: Object.values(constants.UserStatus),
       },
     },
   },
   primaryDisplay: "email",
 }
 
-export const AutoFieldSubTypes = {
-  CREATED_BY: "createdBy",
-  CREATED_AT: "createdAt",
-  UPDATED_BY: "updatedBy",
-  UPDATED_AT: "updatedAt",
-  AUTO_ID: "autoID",
+export enum AutoFieldSubTypes {
+  CREATED_BY = "createdBy",
+  CREATED_AT = "createdAt",
+  UPDATED_BY = "updatedBy",
+  UPDATED_AT = "updatedAt",
+  AUTO_ID = "autoID",
 }
 
-export const AutoFieldDefaultNames = {
-  CREATED_BY: "Created By",
-  CREATED_AT: "Created At",
-  UPDATED_BY: "Updated By",
-  UPDATED_AT: "Updated At",
-  AUTO_ID: "Auto ID",
+export enum AutoFieldDefaultNames {
+  CREATED_BY = "Created By",
+  CREATED_AT = "Created At",
+  UPDATED_BY = "Updated By",
+  UPDATED_AT = "Updated At",
+  AUTO_ID = "Auto ID",
 }
 
-export const BaseQueryVerbs = {
-  CREATE: "create",
-  READ: "read",
-  UPDATE: "update",
-  DELETE: "delete",
+export const OBJ_STORE_DIRECTORY = "/prod-budi-app-assets"
+export enum BaseQueryVerbs {
+  CREATE = "create",
+  READ = "read",
+  UPDATE = "update",
+  DELETE = "delete",
 }
 
-export const MetadataTypes = {
-  AUTOMATION_TEST_INPUT: "automationTestInput",
-  AUTOMATION_TEST_HISTORY: "automationTestHistory",
+export enum MetadataTypes {
+  AUTOMATION_TEST_INPUT = "automationTestInput",
+  AUTOMATION_TEST_HISTORY = "automationTestHistory",
 }
 
-export const InvalidColumns = {
-  ID: "_id",
-  REV: "_rev",
-  TABLE_ID: "tableId",
+export enum InvalidColumns {
+  ID = "_id",
+  REV = "_rev",
+  TABLE_ID = "tableId",
 }
 
-export const BuildSchemaErrors = {
-  NO_KEY: "no_key",
-  INVALID_COLUMN: "invalid_column",
+export enum BuildSchemaErrors {
+  NO_KEY = "no_key",
+  INVALID_COLUMN = "invalid_column",
 }
 
-export const WebhookType = {
-  AUTOMATION: "automation",
+export enum AutomationErrors {
+  INCORRECT_TYPE = "INCORRECT_TYPE",
+  MAX_ITERATIONS = "MAX_ITERATIONS_REACHED",
+  FAILURE_CONDITION = "FAILURE_CONDITION_MET",
 }
 
-export const AutomationErrors = {
-  INCORRECT_TYPE: "INCORRECT_TYPE",
-  MAX_ITERATIONS: "MAX_ITERATIONS_REACHED",
-  FAILURE_CONDITION: "FAILURE_CONDITION_MET",
-}
-
+// pass through the list from the auth/core lib
+export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 export const MAX_AUTOMATION_RECURRING_ERRORS = 5

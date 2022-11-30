@@ -1,137 +1,21 @@
-const linkRows = require("../../db/linkedRows")
-const { cloneDeep } = require("lodash/fp")
+import * as linkRows from "../../db/linkedRows"
 import { FieldTypes, AutoFieldSubTypes } from "../../constants"
+import { attachmentsRelativeURL } from "../index"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
-const { ObjectStoreBuckets } = require("../../constants")
-const {
-  isProdAppID,
-  getProdAppID,
-  dbExists,
-} = require("@budibase/backend-core/db")
-const { getAppId } = require("@budibase/backend-core/context")
-const { InternalTables } = require("../../db/utils")
-import { objectStore } from "@budibase/backend-core"
-import { Row, RowAttachment, Table } from "@budibase/types"
-
+import { ObjectStoreBuckets } from "../../constants"
+import { context, db as dbCore, objectStore } from "@budibase/backend-core"
+import { InternalTables } from "../../db/utils"
+import { TYPE_TRANSFORM_MAP } from "./map"
+import { Row, RowAttachment, Table, ContextUser } from "@budibase/types"
+const { cloneDeep } = require("lodash/fp")
 export * from "./utils"
 
-const BASE_AUTO_ID = 1
-
-/**
- * A map of how we convert various properties in rows to each other based on the row type.
- */
-const TYPE_TRANSFORM_MAP = {
-  [FieldTypes.LINK]: {
-    "": [],
-    // @ts-ignore
-    [null]: [],
-    // @ts-ignore
-    [undefined]: undefined,
-    parse: (link: any) => {
-      if (Array.isArray(link) && typeof link[0] === "object") {
-        return link.map(el => (el && el._id ? el._id : el))
-      }
-      if (typeof link === "string") {
-        return [link]
-      }
-      return link
-    },
-  },
-  [FieldTypes.OPTIONS]: {
-    "": null,
-    // @ts-ignore
-    [null]: null,
-    // @ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldTypes.ARRAY]: {
-    "": [],
-    // @ts-ignore
-    [null]: [],
-    // @ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldTypes.STRING]: {
-    "": "",
-    // @ts-ignore
-    [null]: "",
-    // @ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldTypes.BARCODEQR]: {
-    "": "",
-    // @ts-ignore
-    [null]: "",
-    // @ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldTypes.FORMULA]: {
-    "": "",
-    // @ts-ignore
-    [null]: "",
-    // @ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldTypes.LONGFORM]: {
-    "": "",
-    // @ts-ignore
-    [null]: "",
-    // @ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldTypes.NUMBER]: {
-    "": null,
-    // @ts-ignore
-    [null]: null,
-    // @ts-ignore
-    [undefined]: undefined,
-    parse: (n: any) => parseFloat(n),
-  },
-  [FieldTypes.DATETIME]: {
-    "": null,
-    // @ts-ignore
-    [undefined]: undefined,
-    // @ts-ignore
-    [null]: null,
-    parse: (date: string | Date) => {
-      if (date instanceof Date) {
-        return date.toISOString()
-      }
-      return date
-    },
-  },
-  [FieldTypes.ATTACHMENT]: {
-    "": [],
-    // @ts-ignore
-    [null]: [],
-    // @ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldTypes.BOOLEAN]: {
-    "": null,
-    // @ts-ignore
-    [null]: null,
-    // @ts-ignore
-    [undefined]: undefined,
-    true: true,
-    false: false,
-  },
-  [FieldTypes.AUTO]: {
-    parse: () => undefined,
-  },
-  [FieldTypes.JSON]: {
-    parse: (input: any) => {
-      try {
-        if (input === "") {
-          return undefined
-        }
-        return JSON.parse(input)
-      } catch (err) {
-        return input
-      }
-    },
-  },
+type AutoColumnProcessingOpts = {
+  reprocessing?: boolean
+  noAutoRelationships?: boolean
 }
+
+const BASE_AUTO_ID = 1
 
 /**
  * Given the old state of the row and the new one after an update, this will
@@ -164,15 +48,12 @@ function getRemovedAttachmentKeys(
  * @returns {{row: Object, table: Object}} The updated row and table, the table may need to be updated
  * for automatic ID purposes.
  */
-export const processAutoColumn = (
-  user: any,
+export function processAutoColumn(
+  user: ContextUser | null,
   table: Table,
   row: Row,
-  opts: { reprocessing?: boolean; noAutoRelationships?: boolean } = {
-    reprocessing: false,
-    noAutoRelationships: false,
-  }
-) => {
+  opts?: AutoColumnProcessingOpts
+) {
   let noUser = !user || !user.userId
   let isUserTable = table._id === InternalTables.USER_METADATA
   let now = new Date().toISOString()
@@ -180,9 +61,8 @@ export const processAutoColumn = (
   const creating = !row._rev
   // check its not user table, or whether any of the processing options have been disabled
   const shouldUpdateUserFields =
-    !isUserTable && !opts.reprocessing && !opts.noAutoRelationships && !noUser
-  for (let [key, s] of Object.entries(table.schema)) {
-    let schema = s as any
+    !isUserTable && !opts?.reprocessing && !opts?.noAutoRelationships && !noUser
+  for (let [key, schema] of Object.entries(table.schema)) {
     if (!schema.autocolumn) {
       continue
     }
@@ -191,7 +71,7 @@ export const processAutoColumn = (
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (creating && shouldUpdateUserFields) {
+        if (creating && shouldUpdateUserFields && user) {
           row[key] = [user.userId]
         }
         break
@@ -201,7 +81,7 @@ export const processAutoColumn = (
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        if (shouldUpdateUserFields) {
+        if (shouldUpdateUserFields && user) {
           row[key] = [user.userId]
         }
         break
@@ -225,7 +105,7 @@ export const processAutoColumn = (
  * @param {object} type The type fo coerce to
  * @returns {object} The coerced value
  */
-export const coerce = (row: any, type: string) => {
+export function coerce(row: any, type: string) {
   // no coercion specified for type, skip it
   if (!TYPE_TRANSFORM_MAP[type]) {
     return row
@@ -251,12 +131,12 @@ export const coerce = (row: any, type: string) => {
  * @param {object} opts some input processing options (like disabling auto-column relationships).
  * @returns {object} the row which has been prepared to be written to the DB.
  */
-export const inputProcessing = (
-  user = {},
+export function inputProcessing(
+  user: ContextUser,
   table: Table,
   row: Row,
-  opts = { noAutoRelationships: false }
-) => {
+  opts?: AutoColumnProcessingOpts
+) {
   let clonedRow = cloneDeep(row)
   // need to copy the table so it can be differenced on way out
   const copiedTable = cloneDeep(table)
@@ -308,21 +188,21 @@ export const inputProcessing = (
  * @param {object} opts used to set some options for the output, such as disabling relationship squashing.
  * @returns {object[]|object} the enriched rows will be returned.
  */
-export const outputProcessing = async (
+export async function outputProcessing(
   table: Table,
   rows: Row[],
   opts = { squash: true }
-) => {
+) {
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
     wasArray = false
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(table, rows)
+  let enriched = await linkRows.attachFullLinkedDocs(table, rows as Row[])
 
   // process formulas
-  enriched = processFormulas(table, enriched, { dynamic: true })
+  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
 
   // set the attachments URLs
   for (let [property, column] of Object.entries(table.schema)) {
@@ -353,20 +233,20 @@ export const outputProcessing = async (
  * deleted attachment columns.
  * @return {Promise<void>} When all attachments have been removed this will return.
  */
-export const cleanupAttachments = async (
+export async function cleanupAttachments(
   table: Table,
-  opts: { row?: Row; rows?: Row[]; oldRow?: Row; oldTable?: Table }
-) => {
-  const row = opts.row
-  const rows = opts.rows
-  const oldRow = opts.oldRow
-  const oldTable = opts.oldTable
-
-  const appId = getAppId()
-  if (!isProdAppID(appId)) {
-    const prodAppId = getProdAppID(appId)
+  {
+    row,
+    rows,
+    oldRow,
+    oldTable,
+  }: { row?: Row; rows?: Row[]; oldRow?: Row; oldTable?: Table }
+): Promise<any> {
+  const appId = context.getAppId()
+  if (!dbCore.isProdAppID(appId)) {
+    const prodAppId = dbCore.getProdAppID(appId!)
     // if prod exists, then don't allow deleting
-    const exists = await dbExists(prodAppId)
+    const exists = await dbCore.dbExists(prodAppId)
     if (exists) {
       return
     }
@@ -383,8 +263,8 @@ export const cleanupAttachments = async (
       continue
     }
     // old table had this column, new table doesn't - delete it
-    if (oldTable && !table.schema[key]) {
-      rows?.forEach(row => addFiles(row, key))
+    if (rows && oldTable && !table.schema[key]) {
+      rows.forEach(row => addFiles(row, key))
     } else if (oldRow && row) {
       // if updating, need to manage the differences
       files = files.concat(getRemovedAttachmentKeys(oldRow, row, key))

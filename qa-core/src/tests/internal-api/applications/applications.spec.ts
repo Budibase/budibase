@@ -70,7 +70,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     await config.applications.publish(<string>app.url)
 
     // check published app renders
-    config.applications.api.appId = db.getProdAppID(app.appId)
+    config.applications.api.appId = db.getProdAppID(app.appId!)
     await config.applications.canRender()
 
     // unpublish app

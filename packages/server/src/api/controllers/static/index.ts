@@ -12,10 +12,9 @@ const {
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const { DocumentType } = require("../../../db/utils")
-const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
+const { context, objectStore, utils } = require("@budibase/backend-core")
 const AWS = require("aws-sdk")
 const fs = require("fs")
-import { objectStore, context } from "@budibase/backend-core"
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   const response = await objectStore.upload({
@@ -26,6 +25,7 @@ async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
     type: file.type,
   })
 
+  // don't store a URL, work this out on the way out as the URL could change
   return {
     size: file.size,
     name: file.name,
@@ -39,7 +39,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
   const cookieName = `beta:${ctx.params.feature}`
 
   if (ctx.cookies.get(cookieName)) {
-    clearCookie(ctx, cookieName)
+    utils.clearCookie(ctx, cookieName)
     ctx.body = {
       message: `${ctx.params.feature} disabled`,
     }
@@ -56,7 +56,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
     "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
     builderPath
   )
-  setCookie(ctx, {}, cookieName)
+  utils.setCookie(ctx, {}, cookieName)
 
   ctx.body = {
     message: `${ctx.params.feature} enabled`,

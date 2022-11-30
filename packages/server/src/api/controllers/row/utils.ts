@@ -1,34 +1,33 @@
-import { Ctx } from "@budibase/types"
-
+import { InternalTables } from "../../../db/utils"
+import * as userController from "../user"
+import { FieldTypes } from "../../../constants"
+import { context } from "@budibase/backend-core"
+import { makeExternalQuery } from "../../../integrations/base/query"
+import { BBContext, Row, Table } from "@budibase/types"
+export { removeKeyNumbering } from "../../../integrations/base/utils"
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
-const { InternalTables } = require("../../../db/utils")
-const userController = require("../user")
-const { FieldTypes } = require("../../../constants")
-const { getAppDB } = require("@budibase/backend-core/context")
-const { makeExternalQuery } = require("../../../integrations/base/query")
-
-export { removeKeyNumbering } from "../../../integrations/base/utils"
+import { Ctx } from "@budibase/types"
 
 validateJs.extend(validateJs.validators.datetime, {
-  parse: function (value: any) {
+  parse: function (value: string) {
     return new Date(value).getTime()
   },
   // Input is a unix timestamp
-  format: function (value: any) {
+  format: function (value: string) {
     return new Date(value).toISOString()
   },
 })
 
-export const getDatasourceAndQuery = async (json: any) => {
+export async function getDatasourceAndQuery(json: any) {
   const datasourceId = json.endpoint.datasourceId
-  const db = getAppDB()
+  const db = context.getAppDB()
   const datasource = await db.get(datasourceId)
   return makeExternalQuery(datasource, json)
 }
 
-export const findRow = async (ctx: Ctx, tableId: string, rowId: string) => {
-  const db = getAppDB()
+export async function findRow(ctx: Ctx, tableId: string, rowId: string) {
+  const db = context.getAppDB()
   let row
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
@@ -46,26 +45,26 @@ export const findRow = async (ctx: Ctx, tableId: string, rowId: string) => {
   return row
 }
 
-export const validate = async ({
+export async function validate({
   tableId,
   row,
   table,
 }: {
   tableId?: string
-  row: any
-  table?: any
-}) => {
+  row: Row
+  table?: Table
+}) {
+  let fetchedTable: Table
   if (!table) {
-    if (!tableId) {
-      throw new Error("table or tableId must be specified")
-    }
-    const db = getAppDB()
-    table = await db.get(tableId)
+    const db = context.getAppDB()
+    fetchedTable = await db.get(tableId)
+  } else {
+    fetchedTable = table
   }
   const errors: any = {}
-  for (let fieldName of Object.keys(table.schema)) {
-    const constraints = cloneDeep(table.schema[fieldName].constraints)
-    const type = table.schema[fieldName].type
+  for (let fieldName of Object.keys(fetchedTable.schema)) {
+    const constraints = cloneDeep(fetchedTable.schema[fieldName].constraints)
+    const type = fetchedTable.schema[fieldName].type
     // formulas shouldn't validated, data will be deleted anyway
     if (type === FieldTypes.FORMULA) {
       continue

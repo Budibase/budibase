@@ -1,17 +1,17 @@
-import { Row, Table } from "@budibase/types"
-const {
+import {
   FieldTypes,
   FormulaTypes,
   AutoFieldDefaultNames,
   AutoFieldSubTypes,
-} = require("../../constants")
-const { processStringSync } = require("@budibase/string-templates")
+} from "../../constants"
+import { processStringSync } from "@budibase/string-templates"
+import { FieldSchema, Table, Row } from "@budibase/types"
 
 /**
  * If the subtype has been lost for any reason this works out what
  * subtype the auto column should be.
  */
-export const fixAutoColumnSubType = (column: any) => {
+export function fixAutoColumnSubType(column: FieldSchema) {
   if (!column.autocolumn || !column.name || column.subtype) {
     return column
   }
@@ -33,24 +33,19 @@ export const fixAutoColumnSubType = (column: any) => {
 /**
  * Looks through the rows provided and finds formulas - which it then processes.
  */
-export const processFormulas = (
+export function processFormulas(
   table: Table,
-  data: Row[] | Row,
-  opts: { dynamic?: boolean; contextRows?: any } = { dynamic: true }
-) => {
-  let contextRows = opts.contextRows
-  const dynamic = opts.dynamic
-
-  // handle singular row data
-  let rows: Row[]
-  const single = !Array.isArray(data)
+  rows: Row[] | Row,
+  { dynamic, contextRows }: any = { dynamic: true }
+) {
+  const single = !Array.isArray(rows)
+  let rowArray: Row[]
   if (single) {
-    rows = [data]
+    rowArray = [rows]
     contextRows = contextRows ? [contextRows] : contextRows
   } else {
-    rows = data
+    rowArray = rows
   }
-
   for (let [column, schema] of Object.entries(table.schema)) {
     const isStatic = schema.formulaType === FormulaTypes.STATIC
     if (
@@ -61,25 +56,25 @@ export const processFormulas = (
       continue
     }
     // iterate through rows and process formula
-    for (let i = 0; i < rows.length; i++) {
+    for (let i = 0; i < rowArray.length; i++) {
       if (schema.formula) {
-        let row = rows[i]
+        let row = rowArray[i]
         let context = contextRows ? contextRows[i] : row
-        rows[i] = {
+        rowArray[i] = {
           ...row,
           [column]: processStringSync(schema.formula, context),
         }
       }
     }
   }
-  return single ? rows[0] : rows
+  return single ? rowArray[0] : rowArray
 }
 
 /**
  * Processes any date columns and ensures that those without the ignoreTimezones
  * flag set are parsed as UTC rather than local time.
  */
-export const processDates = (table: Table, rows: Row[]) => {
+export function processDates(table: Table, rows: Row[]) {
   let datesWithTZ = []
   for (let [column, schema] of Object.entries(table.schema)) {
     if (schema.type !== FieldTypes.DATETIME) {

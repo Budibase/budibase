@@ -1,35 +1,31 @@
-const {
-  generateConfigID,
-  getConfigParams,
-  getScopedFullConfig,
-  getAllApps,
-} = require("@budibase/backend-core/db")
-const { Configs } = require("../../../constants")
-const email = require("../../../utilities/email")
-const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
-const env = require("../../../environment")
-const { googleCallbackUrl, oidcCallbackUrl } = require("./auth")
-const {
-  withCache,
-  CacheKeys,
-  bustCache,
-  cache,
-} = require("@budibase/backend-core/cache")
-const { checkAnyUserExists } = require("../../../utilities/users")
+import * as email from "../../../utilities/email"
+import env from "../../../environment"
+import { googleCallbackUrl, oidcCallbackUrl } from "./auth"
 import {
-  Config,
+  events,
+  cache,
+  objectStore,
+  tenancy,
+  db as dbCore,
+} from "@budibase/backend-core"
+import { checkAnyUserExists } from "../../../utilities/users"
+import {
+  Database,
+  Config as ConfigDoc,
   ConfigType,
+  SSOType,
+  GoogleConfig,
+  OIDCConfig,
+  SettingsConfig,
   isGoogleConfig,
   isOIDCConfig,
   isSettingsConfig,
   isSMTPConfig,
-  OIDCConfig,
   Ctx,
   UserCtx,
 } from "@budibase/types"
-import { events, objectStore, env as coreEnv } from "@budibase/backend-core"
 
-const getEventFns = async (db: any, config: Config) => {
+const getEventFns = async (db: Database, config: ConfigDoc) => {
   const fns = []
 
   let existing
@@ -128,13 +124,13 @@ const getEventFns = async (db: any, config: Config) => {
   return fns
 }
 
-export const save = async function (ctx: UserCtx) {
-  const db = getGlobalDB()
+export async function save(ctx: UserCtx) {
+  const db = tenancy.getGlobalDB()
   const { type, workspace, user, config } = ctx.request.body
   let eventFns = await getEventFns(db, ctx.request.body)
   // Config does not exist yet
   if (!ctx.request.body._id) {
-    ctx.request.body._id = generateConfigID({
+    ctx.request.body._id = dbCore.generateConfigID({
       type,
       workspace,
       user,
@@ -143,7 +139,7 @@ export const save = async function (ctx: UserCtx) {
   try {
     // verify the configuration
     switch (type) {
-      case Configs.SMTP:
+      case ConfigType.SMTP:
         await email.verifyConfig(config)
         break
     }
@@ -153,8 +149,8 @@ export const save = async function (ctx: UserCtx) {
 
   try {
     const response = await db.put(ctx.request.body)
-    await bustCache(CacheKeys.CHECKLIST)
-    await bustCache(CacheKeys.ANALYTICS_ENABLED)
+    await cache.bustCache(cache.CacheKey.CHECKLIST)
+    await cache.bustCache(cache.CacheKey.ANALYTICS_ENABLED)
 
     for (const fn of eventFns) {
       await fn()
@@ -170,29 +166,29 @@ export const save = async function (ctx: UserCtx) {
   }
 }
 
-export const fetch = async function (ctx: UserCtx) {
-  const db = getGlobalDB()
+export async function fetch(ctx: UserCtx) {
+  const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
-    getConfigParams(
+    dbCore.getConfigParams(
       { type: ctx.params.type },
       {
         include_docs: true,
       }
     )
   )
-  ctx.body = response.rows.map((row: any) => row.doc)
+  ctx.body = response.rows.map(row => row.doc)
 }
 
 /**
  * Gets the most granular config for a particular configuration type.
  * The hierarchy is type -> workspace -> user.
  */
-export const find = async function (ctx: UserCtx) {
-  const db = getGlobalDB()
+export async function find(ctx: UserCtx) {
+  const db = tenancy.getGlobalDB()
 
   const { userId, workspaceId } = ctx.query
   if (workspaceId && userId) {
-    const workspace = await db.get(workspaceId)
+    const workspace = await db.get(workspaceId as string)
     const userInWorkspace = workspace.users.some(
       (workspaceUser: any) => workspaceUser === userId
     )
@@ -203,7 +199,7 @@ export const find = async function (ctx: UserCtx) {
 
   try {
     // Find the config with the most granular scope based on context
-    const scopedConfig = await getScopedFullConfig(db, {
+    const scopedConfig = await dbCore.getScopedFullConfig(db, {
       type: ctx.params.type,
       user: userId,
       workspace: workspaceId,
@@ -216,16 +212,16 @@ export const find = async function (ctx: UserCtx) {
       ctx.body = {}
     }
   } catch (err: any) {
-    ctx.throw(err.status, err)
+    ctx.throw(err?.status || 400, err)
   }
 }
 
-export const publicOidc = async function (ctx: Ctx) {
-  const db = getGlobalDB()
+export async function publicOidc(ctx: Ctx) {
+  const db = tenancy.getGlobalDB()
   try {
     // Find the config with the most granular scope based on context
-    const oidcConfig: OIDCConfig = await getScopedFullConfig(db, {
-      type: Configs.OIDC,
+    const oidcConfig: OIDCConfig = await dbCore.getScopedFullConfig(db, {
+      type: ConfigType.OIDC,
     })
 
     if (!oidcConfig) {
@@ -242,21 +238,21 @@ export const publicOidc = async function (ctx: Ctx) {
   }
 }
 
-export const publicSettings = async function (ctx: Ctx) {
-  const db = getGlobalDB()
+export async function publicSettings(ctx: Ctx) {
+  const db = tenancy.getGlobalDB()
 
   try {
     // Find the config with the most granular scope based on context
-    const publicConfig = await getScopedFullConfig(db, {
-      type: Configs.SETTINGS,
+    const publicConfig = await dbCore.getScopedFullConfig(db, {
+      type: ConfigType.SETTINGS,
     })
 
-    const googleConfig = await getScopedFullConfig(db, {
-      type: Configs.GOOGLE,
+    const googleConfig = await dbCore.getScopedFullConfig(db, {
+      type: ConfigType.GOOGLE,
     })
 
-    const oidcConfig = await getScopedFullConfig(db, {
-      type: Configs.OIDC,
+    const oidcConfig = await dbCore.getScopedFullConfig(db, {
+      type: ConfigType.OIDC,
     })
 
     let config
@@ -304,7 +300,7 @@ export const publicSettings = async function (ctx: Ctx) {
   }
 }
 
-export const upload = async function (ctx: UserCtx) {
+export async function upload(ctx: UserCtx) {
   if (ctx.request.files == null || Array.isArray(ctx.request.files.file)) {
     ctx.throw(400, "One file must be uploaded.")
   }
@@ -323,23 +319,24 @@ export const upload = async function (ctx: UserCtx) {
 
   // add to configuration structure
   // TODO: right now this only does a global level
-  const db = getGlobalDB()
-  let cfgStructure = await getScopedFullConfig(db, { type })
+  const db = tenancy.getGlobalDB()
+  let cfgStructure = await dbCore.getScopedFullConfig(db, { type })
   if (!cfgStructure) {
     cfgStructure = {
-      _id: generateConfigID({ type }),
+      _id: dbCore.generateConfigID({ type }),
       config: {},
     }
   }
-
-  // save the file key
-  cfgStructure.config[`${name}`] = key
 
   // save the Etag for cache bursting
   const etag = result.ETag
   if (etag) {
     cfgStructure.config[`${name}Etag`] = etag.replace(/"/g, "")
   }
+
+  // save the file key
+  cfgStructure.config[`${name}`] = key
+
   // write back to db
   await db.put(cfgStructure)
 
@@ -349,46 +346,46 @@ export const upload = async function (ctx: UserCtx) {
   }
 }
 
-export const destroy = async function (ctx: UserCtx) {
-  const db = getGlobalDB()
+export async function destroy(ctx: UserCtx) {
+  const db = tenancy.getGlobalDB()
   const { id, rev } = ctx.params
   try {
     await db.remove(id, rev)
-    await cache.delete(CacheKeys.CHECKLIST)
+    await cache.destroy(cache.CacheKey.CHECKLIST)
     ctx.body = { message: "Config deleted successfully" }
   } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-export const configChecklist = async function (ctx: Ctx) {
-  const db = getGlobalDB()
-  const tenantId = getTenantId()
+export async function configChecklist(ctx: Ctx) {
+  const db = tenancy.getGlobalDB()
+  const tenantId = tenancy.getTenantId()
 
   try {
-    ctx.body = await withCache(
-      CacheKeys.CHECKLIST,
+    ctx.body = await cache.withCache(
+      cache.CacheKey.CHECKLIST,
       env.CHECKLIST_CACHE_TTL,
       async () => {
         let apps = []
         if (!env.MULTI_TENANCY || tenantId) {
           // Apps exist
-          apps = await getAllApps({ idsOnly: true, efficient: true })
+          apps = await dbCore.getAllApps({ idsOnly: true, efficient: true })
         }
 
         // They have set up SMTP
-        const smtpConfig = await getScopedFullConfig(db, {
-          type: Configs.SMTP,
+        const smtpConfig = await dbCore.getScopedFullConfig(db, {
+          type: ConfigType.SMTP,
         })
 
         // They have set up Google Auth
-        const googleConfig = await getScopedFullConfig(db, {
-          type: Configs.GOOGLE,
+        const googleConfig = await dbCore.getScopedFullConfig(db, {
+          type: ConfigType.GOOGLE,
         })
 
         // They have set up OIDC
-        const oidcConfig = await getScopedFullConfig(db, {
-          type: Configs.OIDC,
+        const oidcConfig = await dbCore.getScopedFullConfig(db, {
+          type: ConfigType.OIDC,
         })
 
         // They have set up a global user

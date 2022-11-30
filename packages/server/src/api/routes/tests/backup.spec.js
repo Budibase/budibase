@@ -1,3 +1,13 @@
+jest.mock("@budibase/backend-core", () => {
+  const core = jest.requireActual("@budibase/backend-core")
+  return {
+    ...core,
+    objectStore: {
+      budibaseTempDir: core.objectStore.budibaseTempDir,
+    },
+  }
+})
+
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { events } = require("@budibase/backend-core")

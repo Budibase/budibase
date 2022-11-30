@@ -10,7 +10,7 @@ import fs from "fs"
 import env from "../environment"
 import { budibaseTempDir, ObjectStoreBuckets } from "./utils"
 import { v4 } from "uuid"
-import { APP_PREFIX, APP_DEV_PREFIX } from "../db/constants"
+import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -18,11 +18,15 @@ const STATE = {
   bucketCreationPromises: {},
 }
 
+type ListParams = {
+  ContinuationToken?: string
+}
+
 type UploadParams = {
   bucket: string
   filename: string
   path: string
-  type?: string | null
+  type?: string
   // can be undefined, we will remove it
   metadata?: {
     [key: string]: string | undefined
@@ -45,21 +49,17 @@ const STRING_CONTENT_TYPES = [
   CONTENT_TYPE_MAP.json,
 ]
 
-type ListParams = {
-  ContinuationToken?: string
-}
-
 // does normal sanitization and then swaps dev apps to apps
-export function sanitizeKey(input: any) {
+export function sanitizeKey(input: string) {
   return sanitize(sanitizeBucket(input)).replace(/\\/g, "/")
 }
 
 // simply handles the dev app to app conversion
-export function sanitizeBucket(input: any) {
+export function sanitizeBucket(input: string) {
   return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
 }
 
-function publicPolicy(bucketName: any) {
+function publicPolicy(bucketName: string) {
   return {
     Version: "2012-10-17",
     Statement: [
@@ -89,7 +89,7 @@ const PUBLIC_BUCKETS = [
  * @constructor
  */
 export const ObjectStore = (
-  bucket: any,
+  bucket: string,
   opts: { presigning: boolean } = { presigning: false }
 ) => {
   const config: any = {
@@ -126,7 +126,7 @@ export const ObjectStore = (
  * Given an object store and a bucket name this will make sure the bucket exists,
  * if it does not exist then it will create it.
  */
-export const makeSureBucketExists = async (client: any, bucketName: any) => {
+export const makeSureBucketExists = async (client: any, bucketName: string) => {
   bucketName = sanitizeBucket(bucketName)
   try {
     await client
@@ -213,8 +213,8 @@ export const upload = async ({
  * through to the object store.
  */
 export const streamUpload = async (
-  bucketName: any,
-  filename: any,
+  bucketName: string,
+  filename: string,
   stream: any,
   extra = {}
 ) => {
@@ -260,54 +260,6 @@ export const retrieve = async (bucketName: string, filepath: string) => {
   } else {
     return response.Body
   }
-}
-
-export const headObject = async (bucketName: string, filepath: string) => {
-  const objectStore = ObjectStore(bucketName)
-  const params = {
-    Bucket: sanitizeBucket(bucketName),
-    Key: sanitizeKey(filepath),
-  }
-  return objectStore.headObject(params).promise()
-}
-
-export const retrieveObject = async (bucketName: string, filepath: string) => {
-  const objectStore = ObjectStore(bucketName)
-  const params = {
-    Bucket: sanitizeBucket(bucketName),
-    Key: sanitizeKey(filepath),
-  }
-  return objectStore.getObject(params).promise()
-}
-
-export const retrieveStream = async (bucketName: string, filepath: string) => {
-  const objectStore = ObjectStore(bucketName)
-  const params = {
-    Bucket: sanitizeBucket(bucketName),
-    Key: sanitizeKey(filepath),
-  }
-  return objectStore.getObject(params).createReadStream()
-}
-
-export const retrieveDirectory = async (bucketName: string, path: string) => {
-  let writePath = join(budibaseTempDir(), v4())
-  fs.mkdirSync(writePath)
-  const objects = await listAllObjects(bucketName, path)
-  let fullObjects = await Promise.all(
-    objects.map(obj => retrieve(bucketName, obj.Key!))
-  )
-  let count = 0
-  for (let obj of objects) {
-    const filename = obj.Key!
-    const data = fullObjects[count++]
-    const possiblePath = filename.split("/")
-    if (possiblePath.length > 1) {
-      const dirs = possiblePath.slice(0, possiblePath.length - 1)
-      fs.mkdirSync(join(writePath, ...dirs), { recursive: true })
-    }
-    fs.writeFileSync(join(writePath, ...possiblePath), data)
-  }
-  return writePath
 }
 
 export const listAllObjects = async (bucketName: string, path: string) => {
@@ -371,7 +323,7 @@ export const getPresignedUrl = (
 /**
  * Same as retrieval function but puts to a temporary file.
  */
-export const retrieveToTmp = async (bucketName: any, filepath: any) => {
+export const retrieveToTmp = async (bucketName: string, filepath: string) => {
   bucketName = sanitizeBucket(bucketName)
   filepath = sanitizeKey(filepath)
   const data = await retrieve(bucketName, filepath)
@@ -380,10 +332,31 @@ export const retrieveToTmp = async (bucketName: any, filepath: any) => {
   return outputPath
 }
 
+export const retrieveDirectory = async (bucketName: string, path: string) => {
+  let writePath = join(budibaseTempDir(), v4())
+  fs.mkdirSync(writePath)
+  const objects = await listAllObjects(bucketName, path)
+  let fullObjects = await Promise.all(
+    objects.map(obj => retrieve(bucketName, obj.Key!))
+  )
+  let count = 0
+  for (let obj of objects) {
+    const filename = obj.Key!
+    const data = fullObjects[count++]
+    const possiblePath = filename.split("/")
+    if (possiblePath.length > 1) {
+      const dirs = possiblePath.slice(0, possiblePath.length - 1)
+      fs.mkdirSync(join(writePath, ...dirs), { recursive: true })
+    }
+    fs.writeFileSync(join(writePath, ...possiblePath), data)
+  }
+  return writePath
+}
+
 /**
  * Delete a single file.
  */
-export const deleteFile = async (bucketName: any, filepath: any) => {
+export const deleteFile = async (bucketName: string, filepath: string) => {
   const objectStore = ObjectStore(bucketName)
   await makeSureBucketExists(objectStore, bucketName)
   const params = {
@@ -393,7 +366,7 @@ export const deleteFile = async (bucketName: any, filepath: any) => {
   return objectStore.deleteObject(params)
 }
 
-export const deleteFiles = async (bucketName: any, filepaths: string[]) => {
+export const deleteFiles = async (bucketName: string, filepaths: string[]) => {
   const objectStore = ObjectStore(bucketName)
   await makeSureBucketExists(objectStore, bucketName)
   const params = {
@@ -409,8 +382,8 @@ export const deleteFiles = async (bucketName: any, filepaths: string[]) => {
  * Delete a path, including everything within.
  */
 export const deleteFolder = async (
-  bucketName: any,
-  folder: any
+  bucketName: string,
+  folder: string
 ): Promise<any> => {
   bucketName = sanitizeBucket(bucketName)
   folder = sanitizeKey(folder)
@@ -443,9 +416,9 @@ export const deleteFolder = async (
 }
 
 export const uploadDirectory = async (
-  bucketName: any,
-  localPath: any,
-  bucketPath: any
+  bucketName: string,
+  localPath: string,
+  bucketPath: string
 ) => {
   bucketName = sanitizeBucket(bucketName)
   let uploads = []
@@ -477,7 +450,11 @@ export const downloadTarballDirect = async (
   await streamPipeline(response.body, zlib.Unzip(), tar.extract(path))
 }
 
-export const downloadTarball = async (url: any, bucketName: any, path: any) => {
+export const downloadTarball = async (
+  url: string,
+  bucketName: string,
+  path: string
+) => {
   bucketName = sanitizeBucket(bucketName)
   path = sanitizeKey(path)
   const response = await fetch(url)

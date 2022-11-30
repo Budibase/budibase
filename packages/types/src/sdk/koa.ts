@@ -1,13 +1,19 @@
 import { Context, Request } from "koa"
-import { User } from "../documents"
-import { License } from "../sdk"
+import { User, Role, UserRoles, Account } from "../documents"
+import { FeatureFlag, License } from "../sdk"
 import { Files } from "formidable"
 
-export interface ContextUser extends User {
+export interface ContextUser extends Omit<User, "roles"> {
   globalId?: string
+  license?: License
   userId?: string
+  roleId?: string | null
+  role?: Role
+  roles?: UserRoles
   csrfToken?: string
-  license: License
+  featureFlags?: FeatureFlag[]
+  accountPortalAccess?: boolean
+  account?: Account
 }
 
 /**

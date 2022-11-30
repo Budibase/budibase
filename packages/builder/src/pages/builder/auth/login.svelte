@@ -62,7 +62,7 @@
     <Layout>
       <Layout noPadding justifyItems="center">
         <img alt="logo" src={$organisation.logoUrl || Logo} />
-        <Heading>Sign in to {company}</Heading>
+        <Heading textAlign="center">Sign in to {company}</Heading>
       </Layout>
       {#if loaded}
         <GoogleButton />

@@ -1,6 +1,6 @@
-const { join } = require("path")
-const { tmpdir } = require("os")
-const fs = require("fs")
+import { join } from "path"
+import { tmpdir } from "os"
+import fs from "fs"
 import env from "../environment"
 
 /****************************************************
@@ -8,6 +8,7 @@ import env from "../environment"
  *     sure that S3 usages (like budibase-infra)    *
  *  have been updated to have a unique bucket name. *
  ****************************************************/
+// can't be an enum - only numbers can be used for computed types
 export const ObjectStoreBuckets = {
   BACKUPS: env.BACKUPS_BUCKET_NAME,
   APPS: env.APPS_BUCKET_NAME,
@@ -21,6 +22,6 @@ if (!fs.existsSync(bbTmp)) {
   fs.mkdirSync(bbTmp)
 }
 
-export const budibaseTempDir = function () {
+export function budibaseTempDir() {
   return bbTmp
 }

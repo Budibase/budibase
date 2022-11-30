@@ -10,6 +10,7 @@ import {
   dataSourceStore,
   uploadStore,
   rowSelectionStore,
+  sidePanelStore,
 } from "stores"
 import { API } from "api"
 import { ActionTypes } from "constants"
@@ -312,6 +313,17 @@ const showNotificationHandler = action => {
   notificationStore.actions[type]?.(message, autoDismiss)
 }
 
+const OpenSidePanelHandler = action => {
+  const { id } = action.parameters
+  if (id) {
+    sidePanelStore.actions.open(id)
+  }
+}
+
+const CloseSidePanelHandler = () => {
+  sidePanelStore.actions.close()
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
@@ -331,6 +343,8 @@ const handlerMap = {
   ["Export Data"]: exportDataHandler,
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
+  ["Open Side Panel"]: OpenSidePanelHandler,
+  ["Close Side Panel"]: CloseSidePanelHandler,
 }
 
 const confirmTextMap = {

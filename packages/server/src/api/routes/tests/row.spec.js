@@ -1,8 +1,7 @@
 const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
-const { doInAppContext } = require("@budibase/backend-core/context")
-const { doInTenant } = require("@budibase/backend-core/tenancy")
+const { context, tenancy } = require("@budibase/backend-core")
 const {
   quotas,
 } = require("@budibase/pro")
@@ -448,7 +447,7 @@ describe("/rows", () => {
 
   describe("fetchEnrichedRows", () => {
     it("should allow enriching some linked rows", async () => {
-      const { table, firstRow, secondRow } = await doInTenant(
+      const { table, firstRow, secondRow } = await tenancy.doInTenant(
         setup.structures.TENANT_ID,
         async () => {
           const table = await config.createLinkedTable()
@@ -509,7 +508,7 @@ describe("/rows", () => {
       })
       // the environment needs configured for this
       await setup.switchToSelfHosted(async () => {
-        doInAppContext(config.getAppId(), async () => {
+        context.doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
           expect(enriched[0].attachment[0].url).toBe(
             `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`

@@ -1,4 +1,4 @@
-import { Checkbox, Select, Stepper } from "@budibase/bbui"
+import { Checkbox, Select, RadioGroup, Stepper } from "@budibase/bbui"
 import DataSourceSelect from "./controls/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
@@ -19,11 +19,13 @@ import FormFieldSelect from "./controls/FormFieldSelect.svelte"
 import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelte"
 import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
+import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 
 const componentMap = {
   text: DrawerBindableCombobox,
   select: Select,
+  radio: RadioGroup,
   dataSource: DataSourceSelect,
   "dataSource/s3": S3DataSourceSelect,
   dataProvider: DataProviderSelect,
@@ -42,6 +44,7 @@ const componentMap = {
   filter: FilterEditor,
   url: URLSelect,
   columns: ColumnEditor,
+  "columns/basic": BasicColumnEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
