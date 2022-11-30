@@ -9,7 +9,8 @@
     "messagePassing": true,
     "rowSelection": true,
     "continueIfAction": true,
-    "showNotificationAction": true
+    "showNotificationAction": true,
+    "sidePanel": true
   },
   "layout": {
     "name": "Layout",
@@ -3669,7 +3670,7 @@
           "Ascending",
           "Descending"
         ],
-        "defaultValue": "Descending"
+        "defaultValue": "Ascending"
       },
       {
         "type": "number",
@@ -3737,12 +3738,6 @@
         "required": true
       },
       {
-        "type": "number",
-        "label": "Row count",
-        "key": "rowCount",
-        "defaultValue": 8
-      },
-      {
         "type": "columns",
         "label": "Columns",
         "key": "columns",
@@ -3766,6 +3761,12 @@
         ]
       },
       {
+        "type": "number",
+        "label": "Row count",
+        "key": "rowCount",
+        "defaultValue": 8
+      },
+      {
         "type": "boolean",
         "label": "Quiet",
         "key": "quiet"
@@ -3777,41 +3778,25 @@
       },
       {
         "type": "boolean",
-        "label": "Show auto columns",
-        "key": "showAutoColumns",
-        "defaultValue": false
-      },
-      {
-        "type": "boolean",
         "label": "Allow row selection",
         "key": "allowSelectRows",
         "defaultValue": false,
         "info": "Row selection is only compatible with internal or SQL tables"
       },
-      {
-        "type": "boolean",
-        "label": "Link table rows",
-        "key": "linkRows"
-      },
-      {
-        "type": "boolean",
-        "label": "Open link screens in modal",
-        "key": "linkPeek"
-      },
-      {
-        "type": "url",
-        "label": "Link screen",
-        "key": "linkURL"
-      },
+
       {
         "section": true,
-        "name": "Advanced",
+        "name": "On Row Click",
         "settings": [
           {
-            "type": "field",
-            "label": "ID column for linking (appended to URL)",
-            "key": "linkColumn",
-            "placeholder": "Default"
+            "type": "event",
+            "key": "onClick",
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
           }
         ]
       }
@@ -4464,69 +4449,14 @@
         "key": "title"
       },
       {
-        "type": "dataSource",
-        "label": "Data",
-        "key": "dataSource",
-        "required": true
-      },
-      {
-        "type": "searchfield",
-        "label": "Search Columns",
-        "key": "searchColumns",
-        "placeholder": "Choose search columns",
-        "info": "Only the first 5 search columns will be used"
-      },
-      {
-        "type": "filter",
-        "label": "Filtering",
-        "key": "filter"
-      },
-      {
-        "type": "field/sortable",
-        "label": "Sort Column",
-        "key": "sortColumn"
-      },
-      {
-        "type": "select",
-        "label": "Sort Order",
-        "key": "sortOrder",
-        "options": [
-          "Ascending",
-          "Descending"
-        ],
-        "defaultValue": "Descending"
-      },
-      {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "defaultValue": "spectrum--medium",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ]
-      },
-      {
-        "type": "boolean",
-        "label": "Paginate",
-        "key": "paginate",
-        "defaultValue": true
-      },
-      {
         "section": true,
         "name": "Table",
         "settings": [
           {
-            "type": "number",
-            "label": "Scroll Limit",
-            "key": "rowCount",
-            "defaultValue": 8
+            "type": "dataSource",
+            "label": "Data",
+            "key": "dataSource",
+            "required": true
           },
           {
             "type": "columns",
@@ -4537,8 +4467,51 @@
             "nested": true
           },
           {
+            "type": "field/sortable",
+            "label": "Sort By",
+            "key": "sortColumn"
+          },
+          {
+            "type": "select",
+            "label": "Sort Order",
+            "key": "sortOrder",
+            "options": [
+              "Ascending",
+              "Descending"
+            ],
+            "defaultValue": "Ascending"
+          },
+          {
+            "type": "select",
+            "label": "Size",
+            "key": "size",
+            "defaultValue": "spectrum--medium",
+            "options": [
+              {
+                "label": "Medium",
+                "value": "spectrum--medium"
+              },
+              {
+                "label": "Large",
+                "value": "spectrum--large"
+              }
+            ]
+          },
+          {
+            "type": "number",
+            "label": "Scroll Limit",
+            "key": "rowCount",
+            "defaultValue": 8
+          },
+          {
             "type": "boolean",
-            "label": "Quiet table variant",
+            "label": "Paginate",
+            "key": "paginate",
+            "defaultValue": true
+          },
+          {
+            "type": "boolean",
+            "label": "Quiet",
             "key": "quiet"
           },
           {
@@ -4548,68 +4521,105 @@
           },
           {
             "type": "boolean",
-            "label": "Show auto columns",
-            "key": "showAutoColumns"
-          },
-          {
-            "type": "boolean",
             "label": "Allow row selection",
             "key": "allowSelectRows",
             "info": "Row selection is only compatible with internal or SQL tables"
           },
           {
-            "type": "boolean",
-            "label": "Link table rows",
-            "key": "linkRows"
+            "type": "filter",
+            "label": "Filtering",
+            "key": "filter"
           },
           {
-            "type": "boolean",
-            "label": "Open link in modal",
-            "key": "linkPeek"
-          },
-          {
-            "type": "url",
-            "label": "Link screen",
-            "key": "linkURL"
+            "type": "searchfield",
+            "label": "Search Fields",
+            "key": "searchColumns",
+            "placeholder": "Choose search fields",
+            "info": "Only the first 5 search fields will be used"
           }
         ]
       },
       {
         "section": true,
-        "name": "Title button",
+        "name": "On row click",
+        "settings": [
+          {
+            "type": "radio",
+            "key": "clickBehaviour",
+            "sendEvents": true,
+            "defaultValue": "actions",
+            "info": "Details side panel is only compatible with internal or SQL tables",
+            "options": [
+              {
+                "label": "Run actions",
+                "value": "actions"
+              },
+              {
+                "label": "Show details side panel",
+                "value": "details"
+              }
+            ]
+          },
+          {
+            "type": "event",
+            "key": "onClick",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "actions"
+            },
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Button",
         "settings": [
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show link button",
+            "label": "Show button above table",
             "defaultValue": false
-          },
-          {
-            "type": "boolean",
-            "label": "Open link in modal",
-            "key": "titleButtonPeek"
           },
           {
             "type": "text",
             "key": "titleButtonText",
-            "label": "Button text"
+            "label": "Text",
+            "defaultValue": "Create row",
+            "dependsOn": "showTitleButton"
           },
           {
-            "type": "url",
-            "label": "Button link",
-            "key": "titleButtonURL"
-          }
-        ]
-      },
-      {
-        "section": true,
-        "name": "Advanced",
-        "settings": [
+            "type": "radio",
+            "key": "titleButtonClickBehaviour",
+            "label": "On Click",
+            "dependsOn": "showTitleButton",
+            "defaultValue": "actions",
+            "info": "New row side panel is only compatible with internal or SQL tables",
+            "options": [
+              {
+                "label": "Run actions",
+                "value": "actions"
+              },
+              {
+                "label": "Show new row side panel",
+                "value": "new"
+              }
+            ]
+          },
           {
-            "type": "field",
-            "label": "ID column for linking (appended to URL)",
-            "key": "linkColumn",
-            "placeholder": "Default"
+            "type": "event",
+            "key": "onClickTitleButton",
+            "nested": true,
+            "dependsOn": {
+              "setting": "titleButtonClickBehaviour",
+              "value": "actions"
+            }
           }
         ]
       }
@@ -5188,6 +5198,17 @@
         "suffix": "repeater"
       }
     ]
+  },
+  "sidepanel": {
+    "name": "Side Panel",
+    "icon": "RailRight",
+    "hasChildren": true,
+    "illegalChildren": [
+      "section"
+    ],
+    "showEmptyState": false,
+    "draggable": false,
+    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
   },
   "rowexplorer": {
     "block": true,
