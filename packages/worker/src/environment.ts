@@ -94,7 +94,7 @@ for (let [key, value] of Object.entries(environment)) {
   // handle the edge case of "false" to disable an environment variable
   if (value === "false") {
     // @ts-ignore
-    env[key] = 0
+    environment[key] = 0
   }
 }
 
