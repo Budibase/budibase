@@ -1,5 +1,5 @@
 import { Response } from "node-fetch"
-import { User, UserDeletedEvent } from "@budibase/types"
+import { Role, User, UserDeletedEvent } from "@budibase/types"
 import InternalAPIClient from "./InternalAPIClient"
 import { responseMessage } from "../fixtures/types/responseMessage"
 
@@ -15,7 +15,6 @@ export default class UserManagementApi {
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
         expect(json.data.length).toBeGreaterThan(0)
-        expect(json.hasNextPage).toBe(false)
         return [response, json]
     }
 
@@ -26,19 +25,20 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async getAllUsers(): Promise<[Response, User]> {
+    async getAllUsers(): Promise<[Response, User[]]> {
         const response = await this.api.get(`/global/users`)
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
+        expect(json.length).toBeGreaterThan(0)
         return [response, json]
     }
 
-    async inviteUsers(body: User[]): Promise<[Response, responseMessage]> {
-        const response = await this.api.post(`/global/users/multi/invite`, { body })
+    async addUsers(body: any): Promise<[Response, responseMessage]> {
+        const response = await this.api.post(`/global/users/bulk`, { body })
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
-        expect(json.successful.length).toEqual(body.length)
-        expect(json.unsuccessful.length).toEqual(0)
+        expect(json.created.unsuccessful.length).toEqual(0)
+        expect(json.created.successful.length).toEqual(body.create.users.length)
         return [response, json]
     }
 
@@ -56,6 +56,23 @@ export default class UserManagementApi {
         expect(json.deleted.successful.length).toEqual(1)
         expect(json.deleted.unsuccessful.length).toEqual(0)
         expect(json.deleted.successful[0].userId).toEqual(userId)
+        return [response, json]
+    }
+
+    async inviteUser(body: any): Promise<[Response, responseMessage]> {
+        const response = await this.api.post(`/global/users/multi/invite`, { body })
+        const json = await response.json()
+        expect(response).toHaveStatusCode(200)
+        expect(json.created.successful.length).toEqual(body.length)
+        expect(json.created.unsuccessful.length).toEqual(0)
+        return [response, json]
+    }
+
+    async getRoles(): Promise<[Response, Role[]]> {
+        const response = await this.api.get(`/roles`)
+        const json = await response.json()
+        expect(response).toHaveStatusCode(200)
+        expect(json.length).toEqual(4)
         return [response, json]
     }
 }
