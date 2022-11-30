@@ -29,7 +29,7 @@
   }
   .info {
     padding: var(--spacing-m) var(--spacing-l) var(--spacing-l) var(--spacing-l);
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--background-alt);
     border-radius: var(--border-radius-s);
     font-size: 13px;
   }
