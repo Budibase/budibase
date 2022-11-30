@@ -45,6 +45,7 @@ const INITIAL_FRONTEND_STATE = {
     messagePassing: false,
     continueIfAction: false,
     showNotificationAction: false,
+    sidePanel: false,
   },
   errors: [],
   hasAppPackage: false,
