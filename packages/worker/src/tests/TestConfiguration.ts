@@ -72,29 +72,12 @@ class TestConfiguration {
 
   // UTILS
 
-  async _req(
-    config: any,
-    params: any,
-    controlFunc: any,
-    opts: { force?: boolean } = {}
-  ) {
+  async _req(config: any, params: any, controlFunc: any) {
     const request: any = {}
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
-    if (opts.force) {
-      request.user = {
-        tenantId: this.getTenantId(),
-        admin: { global: true },
-        builder: { global: true },
-      }
-    } else if (this.defaultUser) {
-      request.user = this.defaultUser
-    } else {
-      request.user = {
-        tenantId: this.getTenantId(),
-      }
-    }
+    request.user = { tenantId: this.getTenantId() }
     request.query = {}
     request.request = {
       body: config,
@@ -146,7 +129,7 @@ class TestConfiguration {
       email: "test@test.com",
       password: "test",
     })
-    this.defaultUser = await this.createUser(user, { force: true })
+    this.defaultUser = await this.createUser(user)
   }
 
   async createTenant1User() {
@@ -154,16 +137,15 @@ class TestConfiguration {
       email: "tenant1@test.com",
       password: "test",
     })
-    this.tenant1User = await this.createUser(user, { force: true })
+    this.tenant1User = await this.createUser(user)
   }
 
   async createSession(user: User) {
-    const session: any = {
+    await sessions.createASession(user._id!, {
       sessionId: "sessionid",
       tenantId: user.tenantId,
       csrfToken: CSRF_TOKEN,
-    }
-    await sessions.createASession(user._id!, session)
+    })
   }
 
   cookieHeader(cookies: any) {
@@ -203,11 +185,11 @@ class TestConfiguration {
     })
   }
 
-  async createUser(user?: User, opts: any = {}) {
+  async createUser(user?: User) {
     if (!user) {
       user = structures.users.user()
     }
-    const response = await this._req(user, null, controllers.users.save, opts)
+    const response = await this._req(user, null, controllers.users.save)
     const body = response as CreateUserResponse
     return this.getUser(body.email)
   }
