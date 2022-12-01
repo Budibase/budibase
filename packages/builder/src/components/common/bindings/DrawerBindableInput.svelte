@@ -17,6 +17,7 @@
   export let disabled = false
   export let fillWidth
   export let allowJS = true
+  export let allowHelpers = true
   export let updateOnChange = true
   export let drawerLeft
 
@@ -77,6 +78,7 @@
     on:change={event => (tempValue = event.detail)}
     {bindings}
     {allowJS}
+    {allowHelpers}
   />
 </Drawer>
 
