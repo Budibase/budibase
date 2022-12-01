@@ -55,7 +55,6 @@
   let popoverAnchor
   let hoverTarget
 
-  $: console.log("HELPERS ", allowHelpers)
   $: usingJS = mode === "JavaScript"
   $: searchRgx = new RegExp(search, "ig")
   $: categories = Object.entries(groupBy("category", bindings))
