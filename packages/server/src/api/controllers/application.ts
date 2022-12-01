@@ -461,7 +461,7 @@ const unpublishApp = async (ctx: any) => {
     return ctx.throw(400, "application has not been published")
   }
 
-  const db = context.getProdAppDB({ skip_setup: true })
+  const db = context.getProdAppDB()
   const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
 
