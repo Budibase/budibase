@@ -72,14 +72,11 @@ for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
 ln -s ${DATA_DIR}/.env /app/.env
 ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
-mkdir -p ${DATA_DIR}/couch/{dbs,views}
 mkdir -p ${DATA_DIR}/minio
-mkdir -p ${DATA_DIR}/search
 chown -R couchdb:couchdb ${DATA_DIR}/couch
 redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
-/opt/clouseau/bin/clouseau > /dev/stdout 2>&1 &
+/bbcouch-runner.sh &
 /minio/minio server ${DATA_DIR}/minio > /dev/stdout 2>&1 &
-/docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
     # Add monthly cron job to renew certbot certificate
@@ -90,15 +87,14 @@ if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
     /etc/init.d/nginx restart
 fi
 
+# wait for backend services to start
+sleep 10
+
 pushd app
 pm2 start -l /dev/stdout --name app "yarn run:docker"
 popd
 pushd worker
 pm2 start -l /dev/stdout --name worker "yarn run:docker"
 popd
-sleep 10
-echo "curl to couchdb endpoints"
-curl -X PUT ${COUCH_DB_URL}/_users
-curl -X PUT ${COUCH_DB_URL}/_replicator
 echo "end of runner.sh, sleeping ..."
 sleep infinity
