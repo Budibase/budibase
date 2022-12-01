@@ -14,7 +14,7 @@ const RoleColours = {
 }
 
 export const getRolePriority = roleId => {
-  return RolePriorities[roleId] ?? 1
+  return RolePriorities[roleId] ?? 0
 }
 
 export const getRoleColour = roleId => {
