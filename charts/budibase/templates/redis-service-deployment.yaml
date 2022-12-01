@@ -60,10 +60,6 @@ spec:
       - name: redis-data
         persistentVolumeClaim:
           claimName: redis-data
-      env:
-      {{ if .Values.services.tlsRejectUnauthorized }}
-        - name: NODE_TLS_REJECT_UNAUTHORIZED
-          value: {{ .Values.services.tlsRejectUnauthorized }}
-      {{ end }}
+
 status: {}
 {{- end }}
