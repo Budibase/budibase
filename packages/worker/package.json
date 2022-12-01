@@ -22,7 +22,7 @@
     "build:docker": "docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
     "dev:builder": "npm run dev:stack:init && nodemon",
-    "test": "jest --coverage --runInBand",
+    "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
     "env:multi:enable": "node scripts/multiTenancy.js enable",
     "env:multi:disable": "node scripts/multiTenancy.js disable",

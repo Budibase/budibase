@@ -16,7 +16,7 @@
     "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "test": "jest --coverage",
+    "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watchAll"
   },
   "dependencies": {

@@ -276,7 +276,7 @@ describe("/api/global/users", () => {
       await config.createSession(nonAdmin)
 
       const newUser = structures.users.user()
-      await api.users.saveUser(newUser, 403, config.authHeaders(nonAdmin))
+      await config.api.users.saveUser(newUser, 403, config.authHeaders(nonAdmin))
     })
   })
 
@@ -440,7 +440,7 @@ describe("/api/global/users", () => {
       const nonAdmin = await config.createUser(structures.users.builderUser())
       await config.createSession(nonAdmin)
 
-      await api.users.saveUser(existingUser, 200, config.authHeaders(nonAdmin))
+      await config.api.users.saveUser(existingUser, 200, config.authHeaders(nonAdmin))
     })
   })
 
