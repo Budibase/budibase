@@ -3486,6 +3486,17 @@
         "key": "defaultValue"
       },
       {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource",
+        "required": true
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
         "type": "event",
         "label": "On Change",
         "key": "onChange",
@@ -3783,7 +3794,6 @@
         "defaultValue": false,
         "info": "Row selection is only compatible with internal or SQL tables"
       },
-
       {
         "section": true,
         "name": "On Row Click",

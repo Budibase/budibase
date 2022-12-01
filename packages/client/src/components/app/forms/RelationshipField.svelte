@@ -3,6 +3,7 @@
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
   import { FieldTypes } from "../../../constants"
+  import { LuceneUtils } from "@budibase/frontend-core"
 
   const { API } = getContext("sdk")
 
@@ -13,6 +14,7 @@
   export let validation
   export let autocomplete = false
   export let defaultValue
+  export let filter
   export let onChange
 
   let fieldState
@@ -24,7 +26,7 @@
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
-  $: fetchRows(linkedTableId)
+  $: fetchRows(linkedTableId, filter)
   $: fetchTable(linkedTableId)
   $: singleValue = flatten(fieldState?.value)?.[0]
   $: multiValue = flatten(fieldState?.value) ?? []
@@ -41,10 +43,14 @@
     }
   }
 
-  const fetchRows = async id => {
+  const fetchRows = async (id, filter) => {
     if (id) {
       try {
-        options = await API.fetchTableData(id)
+        const response = await API.searchTable({
+          tableId: id,
+          query: LuceneUtils.buildLuceneQuery(filter),
+        })
+        options = response?.rows
       } catch (error) {
         options = []
       }
