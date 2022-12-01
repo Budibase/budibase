@@ -5108,7 +5108,8 @@
           {
             "type": "multifield",
             "label": "Fields",
-            "key": "fields"
+            "key": "fields",
+            "selectAllFields": true
           },
           {
             "type": "select",

@@ -1042,15 +1042,19 @@ export const getFrontendStore = () => {
           if (component[name] === value) {
             return false
           }
-          if (name === "dataSource") {
+
+          const settings = getComponentSettings(component._component)
+          const updatedSetting = settings.find(setting => setting.key === name)
+
+          if (
+            updatedSetting.type === "dataSource" ||
+            updatedSetting.type === "table"
+          ) {
             const { list: allTables } = get(tables)
             const { schema } = allTables.find(
               ({ _id }) => _id === value.tableId
             )
             const columnNames = Object.keys(schema)
-
-            const settings = getComponentSettings(component._component)
-
             const multifieldKeysToSelectAll = settings
               .filter(setting => {
                 return setting.type === "multifield" && setting.selectAllFields
