@@ -523,7 +523,9 @@ export const getFrontendStore = () => {
         // Generate default props
         let props = { ...presetProps }
         settings.forEach(setting => {
-          if (setting.defaultValue !== undefined) {
+          if (setting.type === "multifield" && setting.selectAllFields) {
+            props[setting.key] = Object.keys(defaultDatasource.schema)
+          } else if (setting.defaultValue !== undefined) {
             props[setting.key] = setting.defaultValue
           }
         })
@@ -1040,6 +1042,26 @@ export const getFrontendStore = () => {
           if (component[name] === value) {
             return false
           }
+          if (name === "dataSource") {
+            const { list: allTables } = get(tables)
+            const { schema } = allTables.find(
+              ({ _id }) => _id === value.tableId
+            )
+            const columnNames = Object.keys(schema)
+
+            const settings = getComponentSettings(component._component)
+
+            const multifieldKeysToSelectAll = settings
+              .filter(setting => {
+                return setting.type === "multifield" && setting.selectAllFields
+              })
+              .map(setting => setting.key)
+
+            multifieldKeysToSelectAll.forEach(key => {
+              component[key] = columnNames
+            })
+          }
+
           component[name] = value
         })
       },

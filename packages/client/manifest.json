@@ -5262,7 +5262,8 @@
             "type": "multifield",
             "label": "Fields",
             "key": "detailFields",
-            "nested": true
+            "nested": true,
+            "selectAllFields": true
           }
         ]
       }
