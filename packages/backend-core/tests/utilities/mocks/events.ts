@@ -117,3 +117,7 @@ jest.spyOn(events.view, "filterDeleted")
 jest.spyOn(events.view, "calculationCreated")
 jest.spyOn(events.view, "calculationUpdated")
 jest.spyOn(events.view, "calculationDeleted")
+
+jest.spyOn(events.plugin, "init")
+jest.spyOn(events.plugin, "imported")
+jest.spyOn(events.plugin, "deleted")

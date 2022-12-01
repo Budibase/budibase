@@ -1,6 +1,8 @@
-import { TestConfiguration } from "../../../../tests"
+/*
+This needs the account portal to be working in order to test properly 
+*/
 
-// TODO
+import { TestConfiguration } from "../../../../tests"
 
 describe("/api/global/license", () => {
   const config = new TestConfiguration()
@@ -18,7 +20,10 @@ describe("/api/global/license", () => {
   })
 
   describe("POST /api/global/license/activate", () => {
-    it("activates license", () => {})
+    it("activates license", async () => {
+      //let result = await config.api.license.activate("test")
+      //expect(result.status).toEqual(200)
+    })
   })
 
   describe("POST /api/global/license/refresh", () => {})

@@ -32,7 +32,7 @@ export enum TemplateMetadataNames {
   PASSWORD_RECOVERY = "Password recovery",
   WELCOME = "User welcome",
   INVITATION = "User invitation",
-  CUSTOM = "Custom"
+  CUSTOM = "Custom",
 }
 
 export enum InternalTemplateBinding {

@@ -83,7 +83,7 @@ class TestConfiguration {
   async _req(config: any, params: any, controlFunc: any) {
     const request: any = {}
     // fake cookies, we don't need them
-    request.cookies = { set: () => { }, get: () => { } }
+    request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
     request.user = { tenantId: this.getTenantId() }
     request.query = {}
@@ -344,8 +344,6 @@ class TestConfiguration {
     }
   }
   */
-
 }
-
 
 export = TestConfiguration

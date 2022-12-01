@@ -13,6 +13,7 @@ import { TenantAPI } from "./tenants"
 import { GroupsAPI } from "./groups"
 import { RolesAPI } from "./roles"
 import { TemplatesAPI } from "./templates"
+import { LicenseAPI } from "./license"
 export default class API {
   accounts: AccountAPI
   auth: AuthAPI
@@ -28,6 +29,7 @@ export default class API {
   groups: GroupsAPI
   roles: RolesAPI
   templates: TemplatesAPI
+  license: LicenseAPI
 
   constructor(config: TestConfiguration) {
     this.accounts = new AccountAPI(config)
@@ -44,5 +46,6 @@ export default class API {
     this.groups = new GroupsAPI(config)
     this.roles = new RolesAPI(config)
     this.templates = new TemplatesAPI(config)
+    this.license = new LicenseAPI(config)
   }
 }
