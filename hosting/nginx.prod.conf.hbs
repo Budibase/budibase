@@ -210,7 +210,7 @@ http {
       proxy_set_header Connection "";
       chunked_transfer_encoding off;
 
-      proxy_pass      http://minio-service:9000;
+      proxy_pass      http://$minio:9000;
       rewrite ^/files/signed/(.*)$ /$1 break;
     }
 
