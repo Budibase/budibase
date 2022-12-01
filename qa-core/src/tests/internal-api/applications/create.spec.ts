@@ -54,7 +54,9 @@ describe("Internal API - /applications endpoints", () => {
 
     // publish app
     config.applications.api.appId = app.appId
-    const [publishResponse, publish] = await config.applications.publish()
+    const [publishResponse, publish] = await config.applications.publish(
+      app.appId
+    )
     expect(publishResponse).toHaveStatusCode(200)
     expect(publish).toEqual({
       _id: expect.any(String),
@@ -76,7 +78,7 @@ describe("Internal API - /applications endpoints", () => {
     expect(previewRenders).toBe(true)
 
     // publish app
-    await config.applications.publish()
+    await config.applications.publish(app.appId)
 
     // check published app renders
     config.applications.api.appId = db.getProdAppID(app.appId)
@@ -106,7 +108,7 @@ describe("Internal API - /applications endpoints", () => {
     config.applications.api.appId = app.appId
 
     // publish app
-    await config.applications.publish()
+    await config.applications.publish(app.appId)
 
     const [syncResponse, sync] = await config.applications.sync(
       <string>app.appId
@@ -151,7 +153,9 @@ describe("Internal API - /applications endpoints", () => {
     config.applications.api.appId = app.appId
 
     // publish app
-    const [publishResponse, publish] = await config.applications.publish()
+    const [publishResponse, publish] = await config.applications.publish(
+      app.appId
+    )
     expect(publishResponse).toHaveStatusCode(200)
     expect(publish.status).toEqual("SUCCESS")
 

@@ -46,4 +46,17 @@ export default class AppApi {
     const json = await response.json()
     return [response, json.data]
   }
+
+  // Fix type here
+  async publish(id: string): Promise<[Response, any]> {
+    const response = await this.api.post(`/applications/${id}/publish`)
+    const json = await response.json()
+    return [response, json.data]
+  }
+
+  async unpublish(id: string): Promise<[Response, Application]> {
+    const response = await this.api.post(`/applications/${id}/unpublish`)
+    const json = await response.json()
+    return [response, json.data]
+  }
 }

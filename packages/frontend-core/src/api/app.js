@@ -24,9 +24,9 @@ export const buildAppEndpoints = API => ({
   /**
    * Publishes the current app.
    */
-  publishAppChanges: async () => {
+  publishAppChanges: async appId => {
     return await API.post({
-      url: "/api/applications/publish",
+      url: `/api/applications/${appId}/publish`,
     })
   },
 

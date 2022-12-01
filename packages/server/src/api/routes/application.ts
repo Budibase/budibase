@@ -35,7 +35,7 @@ router
     controller.revertClient
   )
   .post(
-    "/api/applications/publish",
+    "/api/applications/:appId/publish",
     authorized(BUILDER),
     deploymentController.publishApp
   )

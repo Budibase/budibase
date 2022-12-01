@@ -14,8 +14,9 @@ describe("/deployments", () => {
 
   describe("deploy", () => {
     it("should publish the application", async () => {
+      const appId = config.getProdAppId()
       await request
-        .post(`/api/applications/publish`)
+        .post(`/api/applications/${appId}/publish`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)

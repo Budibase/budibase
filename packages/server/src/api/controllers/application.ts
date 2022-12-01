@@ -24,6 +24,7 @@ const {
   isDevAppID,
   getProdAppID,
   Replication,
+  dbExists,
 } = require("@budibase/backend-core/db")
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
@@ -47,7 +48,6 @@ import { App, Layout, Screen, MigrationType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { enrichPluginURLs } from "../../utilities/plugins"
 import sdk from "../../sdk"
-import { isProdAppID } from "@budibase/backend-core/db"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -453,14 +453,15 @@ export const revertClient = async (ctx: any) => {
 
 const unpublishApp = async (ctx: any) => {
   let appId = ctx.params.appId
-  // TODO: write test
-  if (isDevAppID(appId)) {
-    ctx.throw(400, "Cannot unpublish dev app.")
-  }
-
   appId = getProdAppID(appId)
 
-  const db = context.getProdAppDB()
+  // TODO: write test on negative case
+  const appDeployed = await dbExists(appId)
+  if (!appDeployed) {
+    return ctx.throw(400, "application has not been published")
+  }
+
+  const db = context.getProdAppDB({ skip_setup: true })
   const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
 
@@ -469,44 +470,66 @@ const unpublishApp = async (ctx: any) => {
   // automations only in production
   await cleanupAutomations(appId)
 
-  // TODO: this gets called in the destroy function as well
   await appCache.invalidateAppMetadata(appId)
   return result
 }
 
 const destroyApp = async (ctx: any) => {
   let appId = ctx.params.appId
-  let isUnpublish = ctx.query && ctx.query.unpublish
+  const prodAppId = getProdAppID(appId)
 
-  if (isUnpublish) {
-    appId = getProdAppID(appId)
+  // check if we need to unpublish first
+  if (await dbExists(prodAppId)) {
+    // app is deployed, run through unpublish flow
+    await unpublishApp(ctx)
   }
 
-  const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
+  const db = context.getAppDB()
+  // standard app deletion flow
   const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
+  await quotas.removeApp()
+  await events.app.deleted(app)
 
-  if (isUnpublish) {
-    await events.app.unpublished(app)
-  } else {
-    await quotas.removeApp()
-    await events.app.deleted(app)
-  }
-
-  /* istanbul ignore next */
-  if (!env.isTest() && !isUnpublish) {
+  if (!env.isTest()) {
     await deleteApp(appId)
   }
-  // automations only in production
-  if (isUnpublish) {
-    await cleanupAutomations(appId)
-  }
-  // remove app role when the dev app is deleted (no trace of app anymore)
-  else {
-    await removeAppFromUserRoles(ctx, appId)
-  }
+
+  await removeAppFromUserRoles(ctx, appId)
   await appCache.invalidateAppMetadata(appId)
   return result
+
+  // let isUnpublish = ctx.query && ctx.query.unpublish
+
+  // if (isUnpublish) {
+  //   appId = getProdAppID(appId)
+  // }
+
+  // const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
+  // const app = await db.get(DocumentType.APP_METADATA)
+  // const result = await db.destroy()
+
+  // if (isUnpublish) {
+  //   await events.app.unpublished(app)
+  // } else {
+  //   await quotas.removeApp()
+  //   await events.app.deleted(app)
+  // }
+
+  /* istanbul ignore next */
+  // if (!env.isTest() && !isUnpublish) {
+  //   await deleteApp(appId)
+  // }
+  // automations only in production
+  // if (isUnpublish) {
+  //   await cleanupAutomations(appId)
+  // }
+  // remove app role when the dev app is deleted (no trace of app anymore)
+  // else {
+  //   await removeAppFromUserRoles(ctx, appId)
+  // }
+  // await appCache.invalidateAppMetadata(appId)
+  // return result
 }
 
 const preDestroyApp = async (ctx: any) => {

@@ -34,8 +34,8 @@ export default class AppApi {
     return [response, json]
   }
 
-  async publish(): Promise<[Response, DeployConfig]> {
-    const response = await this.api.post("/applications/publish")
+  async publish(appId: string): Promise<[Response, DeployConfig]> {
+    const response = await this.api.post(`/applications/${appId}/publish`)
     const json = await response.json()
     return [response, json]
   }

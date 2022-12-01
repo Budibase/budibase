@@ -185,17 +185,6 @@ describe("/applications", () => {
         .expect(200)
       expect(events.app.unpublished).toBeCalledTimes(1)
     })
-
-    it("should throw when delete endpoint is called with production appId and without unpublish flag", async () => {
-      await config.createApp("to-unpublish")
-      const appId = config.getProdAppId()
-      await request
-        .delete(`/api/applications/${appId}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-    })
-    expect(events.app.unpublished).toBeCalledTimes(0)
   })
 
   describe("manage client library version", () => {
