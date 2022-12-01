@@ -484,7 +484,7 @@ const destroyApp = async (ctx: any) => {
     await unpublishApp(ctx)
   }
 
-  const db = context.getAppDB()
+  const db = context.getDevAppDB()
   // standard app deletion flow
   const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
@@ -498,38 +498,6 @@ const destroyApp = async (ctx: any) => {
   await removeAppFromUserRoles(ctx, appId)
   await appCache.invalidateAppMetadata(appId)
   return result
-
-  // let isUnpublish = ctx.query && ctx.query.unpublish
-
-  // if (isUnpublish) {
-  //   appId = getProdAppID(appId)
-  // }
-
-  // const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
-  // const app = await db.get(DocumentType.APP_METADATA)
-  // const result = await db.destroy()
-
-  // if (isUnpublish) {
-  //   await events.app.unpublished(app)
-  // } else {
-  //   await quotas.removeApp()
-  //   await events.app.deleted(app)
-  // }
-
-  /* istanbul ignore next */
-  // if (!env.isTest() && !isUnpublish) {
-  //   await deleteApp(appId)
-  // }
-  // automations only in production
-  // if (isUnpublish) {
-  //   await cleanupAutomations(appId)
-  // }
-  // remove app role when the dev app is deleted (no trace of app anymore)
-  // else {
-  //   await removeAppFromUserRoles(ctx, appId)
-  // }
-  // await appCache.invalidateAppMetadata(appId)
-  // return result
 }
 
 const preDestroyApp = async (ctx: any) => {
