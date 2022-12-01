@@ -26,7 +26,7 @@ type UploadParams = {
   bucket: string
   filename: string
   path: string
-  type?: string
+  type?: string | null
   // can be undefined, we will remove it
   metadata?: {
     [key: string]: string | undefined

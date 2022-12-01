@@ -1,6 +1,5 @@
 import * as linkRows from "../../db/linkedRows"
 import { FieldTypes, AutoFieldSubTypes } from "../../constants"
-import { attachmentsRelativeURL } from "../index"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
 import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
@@ -190,7 +189,7 @@ export function inputProcessing(
  */
 export async function outputProcessing(
   table: Table,
-  rows: Row[],
+  rows: Row[] | Row,
   opts = { squash: true }
 ) {
   let wasArray = true

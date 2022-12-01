@@ -1,6 +1,6 @@
 import env from "../../src/environment"
-import tenancy from "../../src/tenancy"
-import { newid } from "../../src/hashing"
+import * as tenancy from "../../src/tenancy"
+import { newid } from "../../src/utils"
 
 // TENANCY
 

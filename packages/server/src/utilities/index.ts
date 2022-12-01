@@ -13,7 +13,7 @@ export const isDev = env.isDev
 
 export const NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
 
-export function removeFromArray(array: any[], element: number) {
+export function removeFromArray(array: any[], element: any) {
   const index = array.indexOf(element)
   if (index !== -1) {
     array.splice(index, 1)

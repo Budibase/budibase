@@ -7,6 +7,7 @@ import {
   objectStore,
   tenancy,
   db as dbCore,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {

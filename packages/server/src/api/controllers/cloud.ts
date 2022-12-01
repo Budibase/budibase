@@ -70,7 +70,7 @@ export async function hasBeenImported(ctx: Ctx) {
   }
 }
 
-export async function importApps(ctx: BBContext) {
+export async function importApps(ctx: Ctx) {
   if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
     ctx.throw(400, "Importing only allowed in self hosted environments.")
   }

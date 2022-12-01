@@ -8,7 +8,6 @@ import {
 import env from "../environment"
 import {
   BBContext,
-  PlatformUser,
   TenantResolutionStrategy,
   GetTenantIdOptions,
 } from "@budibase/types"

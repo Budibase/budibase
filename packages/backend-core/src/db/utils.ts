@@ -483,7 +483,7 @@ export const getScopedFullConfig = async function (
   }
 
   // Find the config with the most granular scope based on context
-  let scopedConfig: { doc: Config } = response.rows.sort(
+  let scopedConfig = response.rows.sort(
     (a: any, b: any) => determineScore(a) - determineScore(b)
   )[0]
 
