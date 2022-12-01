@@ -110,6 +110,7 @@ globals:
 services:
   budibaseVersion: latest
   dns: cluster.local
+  # tlsRejectUnauthorized: 0
 
   proxy:
     port: 10000
