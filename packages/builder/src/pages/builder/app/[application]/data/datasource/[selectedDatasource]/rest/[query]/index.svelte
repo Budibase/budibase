@@ -371,7 +371,7 @@
       query.fields.disabledHeaders = {}
     }
     // make sure the disabled headers are set (migration)
-    for (let header of Object.keys(query.fields.headers)) {
+    for (let header of Object.keys(query.fields?.headers || {})) {
       if (!query.fields.disabledHeaders[header]) {
         query.fields.disabledHeaders[header] = false
       }
