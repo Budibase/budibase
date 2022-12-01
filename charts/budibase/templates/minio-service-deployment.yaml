@@ -42,6 +42,11 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
+        {{ if .Values.services.tlsRejectUnauthorized }}
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: {{ .Values.services.tlsRejectUnauthorized }}
+        {{ end }}
+
         image: minio/minio
         imagePullPolicy: ""
         livenessProbe:
