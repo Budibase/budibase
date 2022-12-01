@@ -88,7 +88,7 @@
     filters={initialFilters}
     {bindings}
     {schemaFields}
-    tableId={dataSource.tableId}
+    tableId={dataSource?.tableId}
     bind:allOr
     on:change={event => {
       toSaveFilters = event.detail

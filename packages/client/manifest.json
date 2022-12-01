@@ -3486,15 +3486,15 @@
         "key": "defaultValue"
       },
       {
-        "type": "dataSource",
-        "label": "Data",
-        "key": "dataSource",
-        "required": true
+        "type": "dataSource/relationship",
+        "label": "Relationship data",
+        "key": "dataSource"
       },
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "dependsOn": "dataSource"
       },
       {
         "type": "event",

@@ -242,7 +242,12 @@ export const getDatasourceForProvider = (asset, component) => {
   }
 
   // Extract datasource from component instance
-  const validSettingTypes = ["dataSource", "table", "schema"]
+  const validSettingTypes = [
+    "dataSource",
+    "table",
+    "schema",
+    "dataSource/relationship",
+  ]
   const datasourceSetting = settings.find(setting => {
     return validSettingTypes.includes(setting.type)
   })
