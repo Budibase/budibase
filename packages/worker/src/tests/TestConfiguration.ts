@@ -15,7 +15,6 @@ import {
 } from "@budibase/backend-core"
 import structures, { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
 import { CreateUserResponse, User, AuthToken, UserGroup } from "@budibase/types"
-import { groups } from "@budibase/pro"
 import API from "./api"
 
 enum Mode {
@@ -244,22 +243,6 @@ class TestConfiguration {
     return this.getUser(body.email)
   }
 
-  async getGroup(id: string) {
-    return tenancy.doInTenant(this.getTenantId(), () => {
-      return groups.get(id)
-    })
-  }
-
-  async saveGroup(group: UserGroup) {
-    const res = await this.getRequest()
-      .post(`/api/global/groups`)
-      .send(group)
-      .set(this.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return res.body
-  }
-
   // CONFIGS
 
   async deleteConfig(type: any) {
@@ -334,16 +317,6 @@ class TestConfiguration {
       controllers.config.save
     )
   }
-
-  /*
-  async createRole() ={
-    return {
-      name: "NewRole",
-      inherits: BUILTIN_ROLE_IDS.BASIC,
-      permissionId: BuiltinPermissionID.READ_ONLY,
-    }
-  }
-  */
 }
 
 export = TestConfiguration

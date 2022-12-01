@@ -1,4 +1,3 @@
-import { Plugin } from "@budibase/types"
 import { enrichPluginURLs } from "../plugins"
 const env = require("../../environment")
 jest.mock("../../environment")
