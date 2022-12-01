@@ -38,7 +38,7 @@ function buildInviteMultipleValidation() {
   ))
 }
 
-const createUserAdminOnly = (ctx, next) => {
+const createUserAdminOnly = (ctx: any, next: any) => {
   if (!ctx.request.body._id) {
     return auth.adminOnly(ctx, next)
   } else {
