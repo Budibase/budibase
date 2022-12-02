@@ -25,8 +25,12 @@ export default class TestConfiguration<T> {
     this.context = <T>{}
   }
 
-  async beforeAll() {
-    await this.auth.login()
+  async loginAsAdmin() {
+    await this.auth.login(<String>process.env.BB_ADMIN_USER_EMAIL, <String>process.env.BB_ADMIN_USER_PASSWORD)
+  }
+
+  async login(email: String, password: String) {
+    await this.auth.login(email, password)
   }
 
   async afterAll() {

@@ -61,9 +61,9 @@ export const generateAppUser = (): Object => {
 }
 
 export const generateInviteUser = (): Object[] => {
-    const randomId = generator.guid();
+    //const randomId = generator.guid();
     return [{
-        email: `pedro+${randomId}@budibase.com`,
+        email: `pedro+test@budibase.com`,
         userInfo: {
             userGroups: []
         }
