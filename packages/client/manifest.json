@@ -5204,7 +5204,8 @@
     "icon": "RailRight",
     "hasChildren": true,
     "illegalChildren": [
-      "section"
+      "section",
+      "sidepanel"
     ],
     "showEmptyState": false,
     "draggable": false,
