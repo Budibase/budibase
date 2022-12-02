@@ -27,7 +27,7 @@ export interface Plugin extends Document {
     type: PluginType
     [key: string]: any
   }
-  iconFile?: string
+  iconFileName?: string
   // Populated on read
   jsUrl?: string
   // Populated on read

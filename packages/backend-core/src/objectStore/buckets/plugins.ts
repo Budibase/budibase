@@ -45,17 +45,17 @@ export const getPluginJSKey = (plugin: Plugin) => {
 }
 
 export const getPluginIconKey = (plugin: Plugin) => {
-  // iconUrl is deprecated - hardcode to icon.svg in this case
-  const iconFile = plugin.iconUrl ? "icon.svg" : plugin.iconFile
-  if (!iconFile) {
+  // stored iconUrl is deprecated - hardcode to icon.svg in this case
+  const iconFileName = plugin.iconUrl ? "icon.svg" : plugin.iconFileName
+  if (!iconFileName) {
     return
   }
-  return getPluginS3Key(plugin, iconFile)
+  return getPluginS3Key(plugin, iconFileName)
 }
 
-const getPluginS3Key = (plugin: Plugin, file: string) => {
+const getPluginS3Key = (plugin: Plugin, fileName: string) => {
   const s3Key = getPluginS3Dir(plugin.name)
-  return `${s3Key}/${file}`
+  return `${s3Key}/${fileName}`
 }
 
 export const getPluginS3Dir = (pluginName: string) => {

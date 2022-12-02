@@ -14,6 +14,6 @@ export function plugin(): Plugin {
     schema: {
       type: PluginType.DATASOURCE,
     },
-    iconFile: "icon.svg",
+    iconFileName: "icon.svg",
   }
 }
