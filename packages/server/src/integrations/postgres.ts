@@ -15,9 +15,10 @@ import {
   SqlClient,
 } from "./utils"
 import Sql from "./base/sql"
+import { PostgresColumn } from "./base/types"
+import { escapeDangerousCharacters } from "../utilities"
 
 const { Client, types } = require("pg")
-const { escapeDangerousCharacters } = require("../utilities")
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -237,7 +238,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
 
     try {
-      const columnsResponse = await this.client.query(this.COLUMNS_SQL)
+      const columnsResponse: { rows: PostgresColumn[] } =
+        await this.client.query(this.COLUMNS_SQL)
 
       const tables: { [key: string]: Table } = {}
 
