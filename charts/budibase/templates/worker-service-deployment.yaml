@@ -79,6 +79,12 @@ spec:
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: CLOUDFRONT_CDN
+          value: {{ .Values.services.objectStore.cloudfront.cdn | quote }}
+        - name: CLOUDFRONT_PUBLIC_KEY_ID
+          value: {{ .Values.services.objectStore.cloudfront.publicKeyId | quote }}
+        - name: CLOUDFRONT_PRIVATE_KEY_64
+          value: {{ .Values.services.objectStore.cloudfront.privateKey64 | quote }}
         - name: PLUGIN_BUCKET_NAME
           value: {{ .Values.services.objectStore.pluginBucketName | quote }}
         - name: APPS_BUCKET_NAME
