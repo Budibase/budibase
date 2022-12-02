@@ -57,8 +57,3 @@ export interface CreateAdminUserRequest {
   password: string
   tenantId: string
 }
-
-export interface InviteUserRequest {
-  email: string
-  userInfo: any
-}
