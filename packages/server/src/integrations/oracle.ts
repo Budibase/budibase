@@ -334,6 +334,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
             fieldSchema = {
               autocolumn: OracleIntegration.isAutoColumn(oracleColumn),
               name: columnName,
+              // TODO: add required constraint
               ...this.internalConvertType(oracleColumn),
             }
             table.schema[columnName] = fieldSchema

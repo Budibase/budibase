@@ -38,6 +38,34 @@ interface TablesResponse {
   TABLE_TYPE: string
 }
 
+type MSSQLColumn = {
+  IS_COMPUTED: number
+  IS_IDENTITY: number
+  TABLE_CATALOG: string
+  TABLE_SCHEMA: string
+  TABLE_NAME: string
+  COLUMN_NAME: string
+  ORDINAL_POSITION: number
+  COLUMN_DEFAULT: null | any
+  IS_NULLABLE: "NO" | "YES"
+  DATA_TYPE: string
+  CHARACTER_MAXIMUM_LENGTH: null | number
+  CHARACTER_OCTET_LENGTH: null | number
+  NUMERIC_PRECISION: null | string
+  NUMERIC_PRECISION_RADIX: null | string
+  NUMERIC_SCALE: null | string
+  DATETIME_PRECISION: null | string
+  CHARACTER_SET_CATALOG: null | string
+  CHARACTER_SET_SCHEMA: null | string
+  CHARACTER_SET_NAME: null | string
+  COLLATION_CATALOG: null | string
+  COLLATION_SCHEMA: null | string
+  COLLATION_NAME: null | string
+  DOMAIN_CATALOG: null | string
+  DOMAIN_SCHEMA: null | string
+  DOMAIN_NAME: null | string
+}
+
 const SCHEMA: Integration = {
   docs: "https://github.com/tediousjs/node-mssql",
   plus: true,
@@ -228,15 +256,20 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       // find primary key constraints
       const constraints = await this.runSQL(this.getConstraintsSQL(tableName))
       // find the computed and identity columns (auto columns)
-      const columns = await this.runSQL(this.getAutoColumnsSQL(tableName))
+      const columns: MSSQLColumn[] = await this.runSQL(
+        this.getAutoColumnsSQL(tableName)
+      )
       const primaryKeys = constraints
         .filter(
           (constraint: any) => constraint.CONSTRAINT_TYPE === "PRIMARY KEY"
         )
         .map((constraint: any) => constraint.COLUMN_NAME)
       const autoColumns = columns
-        .filter((col: any) => col.IS_COMPUTED || col.IS_IDENTITY)
-        .map((col: any) => col.COLUMN_NAME)
+        .filter(col => col.IS_COMPUTED || col.IS_IDENTITY)
+        .map(col => col.COLUMN_NAME)
+      const requiredColumns = columns
+        .filter(col => col.IS_NULLABLE === "NO")
+        .map(col => col.COLUMN_NAME)
 
       let schema: TableSchema = {}
       for (let def of definition) {
@@ -245,8 +278,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           continue
         }
         schema[name] = {
-          autocolumn: !!autoColumns.find((col: string) => col === name),
+          autocolumn: !!autoColumns.find(col => col === name),
           name: name,
+          constraints: {
+            presence: requiredColumns.find(col => col === name),
+          },
           ...convertSqlType(def.DATA_TYPE),
           externalType: def.DATA_TYPE,
         }
