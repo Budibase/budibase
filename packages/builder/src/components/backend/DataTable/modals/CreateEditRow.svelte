@@ -50,22 +50,34 @@
   }
 </script>
 
-<ModalContent
-  title={creating ? "Create Row" : "Edit Row"}
-  confirmText={creating ? "Create Row" : "Save Row"}
-  onConfirm={saveRow}
->
-  {#each tableSchema as [key, meta]}
-    {#if !meta.autocolumn && meta.type !== FORMULA_TYPE}
-      <div>
-        <RowFieldControl error={errors[key]} {meta} bind:value={row[key]} />
-      </div>
-    {/if}
-  {/each}
-</ModalContent>
+<span class="modal-wrap">
+  <ModalContent
+    title={creating ? "Create Row" : "Edit Row"}
+    confirmText={creating ? "Create Row" : "Save Row"}
+    onConfirm={saveRow}
+    showCancelButton={creating}
+    showSecondaryButton={!creating}
+    secondaryButtonWarning={!creating}
+    secondaryButtonText="Delete"
+    secondaryAction={() => {
+      dispatch("deleteRows", row)
+    }}
+  >
+    {#each tableSchema as [key, meta]}
+      {#if !meta.autocolumn && meta.type !== FORMULA_TYPE}
+        <div>
+          <RowFieldControl error={errors[key]} {meta} bind:value={row[key]} />
+        </div>
+      {/if}
+    {/each}
+  </ModalContent>
+</span>
 
 <style>
   div {
     min-width: 0;
+  }
+  .modal-wrap :global(.secondary-action) {
+    margin-right: unset;
   }
 </style>
