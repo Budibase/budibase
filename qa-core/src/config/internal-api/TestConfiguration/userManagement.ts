@@ -63,8 +63,9 @@ export default class UserManagementApi {
         const response = await this.api.post(`/global/users/multi/invite`, { body })
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
-        expect(json.created.successful.length).toEqual(body.length)
-        expect(json.created.unsuccessful.length).toEqual(0)
+        expect(json.unsuccessful.length).toEqual(0)
+        expect(json.successful.length).toEqual(body.length)
+
         return [response, json]
     }
 

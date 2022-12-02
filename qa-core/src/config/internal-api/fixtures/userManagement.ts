@@ -65,12 +65,6 @@ export const generateInviteUser = (): Object[] => {
     return [{
         email: `pedro+${randomId}@budibase.com`,
         userInfo: {
-            admin: {
-                global: true
-            },
-            builder: {
-                global: true
-            },
             userGroups: []
         }
     }]

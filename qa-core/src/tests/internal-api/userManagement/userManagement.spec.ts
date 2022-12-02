@@ -26,7 +26,7 @@ describe("Internal API - User Management & Permissions", () => {
         const [devResponse, devData] = await config.userManagement.addUsers(generateDeveloper())
         const [userResponse, userData] = await config.userManagement.addUsers(generateAppUser())
 
-        const [invitedUserResponse, invitedUserData] = await config.userManagement.addUsers(generateInviteUser())
+        const [invitedUserResponse, invitedUserData] = await config.userManagement.inviteUser(generateInviteUser())
 
         const [allUsersResponse, allUsersData] = await config.userManagement.getAllUsers()
         expect(allUsersData.length).toEqual(4)
