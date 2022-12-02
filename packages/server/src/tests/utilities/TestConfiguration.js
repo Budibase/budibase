@@ -329,7 +329,7 @@ class TestConfiguration {
 
   // APP
 
-  async createApp(appName) {
+  async createApp(appName, publish = true) {
     // create dev app
     // clear any old app
     this.appId = null
@@ -339,9 +339,11 @@ class TestConfiguration {
     await context.updateAppId(this.appId)
 
     // create production app
-    this.prodApp = await this.publish()
+    if (publish) {
+      this.prodApp = await this.publish()
+      this.allApps.push(this.prodApp)
+    }
 
-    this.allApps.push(this.prodApp)
     this.allApps.push(this.app)
 
     return this.app

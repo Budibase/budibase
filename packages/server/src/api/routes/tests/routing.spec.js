@@ -25,7 +25,7 @@ describe("/routing", () => {
     screen2.routing.roleId = BUILTIN_ROLE_IDS.POWER
     screen2.routing.route = route
     screen2 = await config.createScreen(screen2)
-    await config.deploy()
+    await config.publish()
   })
 
   describe("fetch", () => {

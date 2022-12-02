@@ -455,7 +455,6 @@ const unpublishApp = async (ctx: any) => {
   let appId = ctx.params.appId
   appId = getProdAppID(appId)
 
-  // TODO: write test on negative case
   const appDeployed = await dbExists(appId)
   if (!appDeployed) {
     return ctx.throw(400, "application has not been published")
@@ -479,10 +478,10 @@ const destroyApp = async (ctx: any) => {
   const prodAppId = getProdAppID(appId)
 
   // check if we need to unpublish first
-  if (await dbExists(prodAppId)) {
-    // app is deployed, run through unpublish flow
-    await unpublishApp(ctx)
-  }
+  // if (await dbExists(prodAppId)) {
+  //   // app is deployed, run through unpublish flow
+  //   await unpublishApp(ctx)
+  // }
 
   const db = context.getDevAppDB()
   // standard app deletion flow

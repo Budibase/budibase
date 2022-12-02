@@ -20,6 +20,7 @@ const setup = require("./utilities")
 const { basicScreen, basicLayout } = setup.structures
 const { AppStatus } = require("../../../db/utils")
 const { events } = require("@budibase/backend-core")
+const { dbExists } = require("@budibase/backend-core/db")
 
 describe("/applications", () => {
   let request = setup.getRequest()
@@ -163,27 +164,100 @@ describe("/applications", () => {
     })
   })
 
-  describe("delete", () => {
-    it("should delete app", async () => {
+  xdescribe("delete", () => {
+    it("should delete dev app only dev app ID", async () => {
       await config.createApp("to-delete")
       const appId = config.getAppId()
       await request
-        .post(`/api/applications/${appId}`)
+        .delete(`/api/applications/${appId}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(events.app.deleted).toBeCalledTimes(1)
     })
 
-    it("should unpublish app", async () => {
-      await config.createApp("to-unpublish")
+    it("should delete published app and dev apps with dev app ID", async () => {
+      await config.createApp("to-delete")
+      await config.publish()
+      const appId = config.getAppId()
+      await request
+        .delete(`/api/applications/${appId}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.deleted).toBeCalledTimes(1)
+      expect(events.app.unpublished).toBeCalledTimes(1)
+    })
+
+    it("should delete published app and dev app with prod app ID", async () => {
+      await config.createApp("to-delete")
+      await config.publish()
       const appId = config.getProdAppId()
       await request
-        .delete(`/api/applications/${appId}/unpublish`)
+        .delete(`/api/applications/${appId}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.deleted).toBeCalledTimes(1)
+      expect(events.app.unpublished).toBeCalledTimes(1)
+    })
+  })
+
+  describe("publish", () => {
+    it("should publish app with dev app ID", async () => {
+      await config.createApp("to-publish")
+      const appId = config.getAppId()
+      await request
+        .post(`/api/applications/${appId}/publish`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.published).toBeCalledTimes(2)
+    })
+
+    it("should publish app with prod app ID", async () => {
+      await config.createApp("to-publish")
+      const appId = config.getProdAppId()
+      await request
+        .post(`/api/applications/${appId}/publish`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.published).toBeCalledTimes(2)
+    })
+  })
+
+  describe("unpublish", () => {
+    it("should unpublish app with dev app ID", async () => {
+      await config.createApp("to-unpublish")
+      const appId = config.getAppId()
+      await request
+        .post(`/api/applications/${appId}/unpublish`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(events.app.unpublished).toBeCalledTimes(1)
+    })
+
+    it("should unpublish app with prod app ID", async () => {
+      await config.createApp("to-unpublish")
+      const appId = config.getProdAppId()
+      await request
+        .post(`/api/applications/${appId}/unpublish`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.unpublished).toBeCalledTimes(1)
+    })
+
+    it("should fail when app is not published", async () => {
+      await config.createApp("to-unpublish", false)
+      const appId = config.getAppId()
+      await request
+        .post(`/api/applications/${appId}/unpublish`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
     })
   })
 
