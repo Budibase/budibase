@@ -11,7 +11,7 @@
   let modal
 
   async function confirmDeletion() {
-    await deleteRows()
+    await deleteRows(selectedRows)
     modal?.hide()
     dispatch("updaterows")
   }
