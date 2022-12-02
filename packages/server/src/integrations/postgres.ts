@@ -260,6 +260,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           column.identity_start ||
           column.identity_increment
         )
+        const constraints = {
+          presence: column.is_nullable === "NO",
+        }
         const hasDefault =
           typeof column.column_default === "string" &&
           column.column_default.startsWith("nextval")
@@ -269,6 +272,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         tables[tableName].schema[columnName] = {
           autocolumn: isAuto,
           name: columnName,
+          constraints,
           ...convertSqlType(column.data_type),
           externalType: column.data_type,
         }
