@@ -5,6 +5,7 @@ import InternalAPIClient from "../../../config/internal-api/TestConfiguration/In
 import generateApp from "../../../config/internal-api/fixtures/applications"
 import generator from "../../../config/generator"
 import { generateAdmin, generateAppUser, generateDeveloper, generateInviteUser } from "../../../config/internal-api/fixtures/userManagement"
+import generate from "../../../config/internal-api/fixtures/applications"
 
 describe("Internal API - User Management & Permissions", () => {
     const api = new InternalAPIClient()
@@ -22,9 +23,14 @@ describe("Internal API - User Management & Permissions", () => {
         await config.userManagement.searchUsers()
         await config.userManagement.getRoles()
 
-        const [adminResponse, adminData] = await config.userManagement.addUsers(generateAdmin())
-        const [devResponse, devData] = await config.userManagement.addUsers(generateDeveloper())
-        const [userResponse, userData] = await config.userManagement.addUsers(generateAppUser())
+        // These need to be saved to the context so the passwords can be used to login
+        const admin = generateAdmin()
+        const developer = generateDeveloper()
+        const appUser = generateAppUser()
+
+        const [adminResponse, adminData] = await config.userManagement.addUsers(admin)
+        const [devResponse, devData] = await config.userManagement.addUsers(developer)
+        const [userResponse, userData] = await config.userManagement.addUsers(appUser)
 
         const [allUsersResponse, allUsersData] = await config.userManagement.getAllUsers()
         expect(allUsersData.length).toBeGreaterThan(0)
