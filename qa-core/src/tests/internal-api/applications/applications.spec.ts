@@ -11,7 +11,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
   const config = new TestConfiguration<Application>(api)
 
   beforeAll(async () => {
-    await config.beforeAll()
+    await config.loginAsAdmin()
   })
 
   afterAll(async () => {

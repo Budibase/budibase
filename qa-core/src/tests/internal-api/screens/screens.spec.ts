@@ -11,7 +11,7 @@ describe("Internal API - /screens endpoints", () => {
   const appConfig = new TestConfiguration<App>(api)
 
   beforeAll(async () => {
-    await config.beforeAll()
+    await config.loginAsAdmin()
   })
 
   afterAll(async () => {
