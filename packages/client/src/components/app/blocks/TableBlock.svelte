@@ -66,7 +66,7 @@
           },
         ]
   $: buttonClickActions =
-    clickBehaviour === "actions" || dataSource?.type !== "table"
+    titleButtonClickBehaviour === "actions" || dataSource?.type !== "table"
       ? onClickTitleButton
       : [
           {
