@@ -17,6 +17,7 @@ import {
   SqlClient,
 } from "./utils"
 import Sql from "./base/sql"
+import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
 
 const sqlServer = require("mssql")
 const DEFAULT_SCHEMA = "dbo"
@@ -29,41 +30,6 @@ interface MSSQLConfig {
   database: string
   schema: string
   encrypt?: boolean
-}
-
-interface TablesResponse {
-  TABLE_CATALOG: string
-  TABLE_SCHEMA: string
-  TABLE_NAME: string
-  TABLE_TYPE: string
-}
-
-type MSSQLColumn = {
-  IS_COMPUTED: number
-  IS_IDENTITY: number
-  TABLE_CATALOG: string
-  TABLE_SCHEMA: string
-  TABLE_NAME: string
-  COLUMN_NAME: string
-  ORDINAL_POSITION: number
-  COLUMN_DEFAULT: null | any
-  IS_NULLABLE: "NO" | "YES"
-  DATA_TYPE: string
-  CHARACTER_MAXIMUM_LENGTH: null | number
-  CHARACTER_OCTET_LENGTH: null | number
-  NUMERIC_PRECISION: null | string
-  NUMERIC_PRECISION_RADIX: null | string
-  NUMERIC_SCALE: null | string
-  DATETIME_PRECISION: null | string
-  CHARACTER_SET_CATALOG: null | string
-  CHARACTER_SET_SCHEMA: null | string
-  CHARACTER_SET_NAME: null | string
-  COLLATION_CATALOG: null | string
-  COLLATION_SCHEMA: null | string
-  COLLATION_NAME: null | string
-  DOMAIN_CATALOG: null | string
-  DOMAIN_SCHEMA: null | string
-  DOMAIN_NAME: null | string
 }
 
 const SCHEMA: Integration = {
@@ -238,7 +204,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
    */
   async buildSchema(datasourceId: string, entities: Record<string, Table>) {
     await this.connect()
-    let tableInfo: TablesResponse[] = await this.runSQL(this.TABLES_SQL)
+    let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     if (tableInfo == null || !Array.isArray(tableInfo)) {
       throw "Unable to get list of tables in database"
     }
