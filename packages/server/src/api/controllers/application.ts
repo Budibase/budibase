@@ -455,11 +455,6 @@ const unpublishApp = async (ctx: any) => {
   let appId = ctx.params.appId
   appId = getProdAppID(appId)
 
-  const appDeployed = await dbExists(appId)
-  if (!appDeployed) {
-    return ctx.throw(400, "application has not been published")
-  }
-
   const db = context.getProdAppDB()
   const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
@@ -477,6 +472,7 @@ const destroyApp = async (ctx: any) => {
   let appId = ctx.params.appId
   const prodAppId = getProdAppID(appId)
 
+  // TODO: get working with unit test
   // check if we need to unpublish first
   // if (await dbExists(prodAppId)) {
   //   // app is deployed, run through unpublish flow

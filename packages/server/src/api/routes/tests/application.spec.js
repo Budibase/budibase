@@ -164,9 +164,9 @@ describe("/applications", () => {
     })
   })
 
-  xdescribe("delete", () => {
+  describe("delete", () => {
     it("should delete dev app only dev app ID", async () => {
-      await config.createApp("to-delete")
+      await config.createApp("to-delete", false)
       const appId = config.getAppId()
       await request
         .delete(`/api/applications/${appId}`)
@@ -176,9 +176,8 @@ describe("/applications", () => {
       expect(events.app.deleted).toBeCalledTimes(1)
     })
 
-    it("should delete published app and dev apps with dev app ID", async () => {
+    xit("should delete published app and dev apps with dev app ID", async () => {
       await config.createApp("to-delete")
-      await config.publish()
       const appId = config.getAppId()
       await request
         .delete(`/api/applications/${appId}`)
@@ -189,9 +188,8 @@ describe("/applications", () => {
       expect(events.app.unpublished).toBeCalledTimes(1)
     })
 
-    it("should delete published app and dev app with prod app ID", async () => {
+    xit("should delete published app and dev app with prod app ID", async () => {
       await config.createApp("to-delete")
-      await config.publish()
       const appId = config.getProdAppId()
       await request
         .delete(`/api/applications/${appId}`)
@@ -257,7 +255,7 @@ describe("/applications", () => {
         .post(`/api/applications/${appId}/unpublish`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(400)
+        .expect(404)
     })
   })
 
