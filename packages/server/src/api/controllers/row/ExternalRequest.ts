@@ -588,7 +588,10 @@ export class ExternalRequest {
     for (let [colName, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if its not the foreign key skip it, nothing to do
-      if (!table || (table.primary && table.primary.indexOf(colName) !== -1)) {
+      if (
+        !table ||
+        (!isMany && table.primary && table.primary.indexOf(colName) !== -1)
+      ) {
         continue
       }
       for (let row of rows) {
