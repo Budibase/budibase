@@ -2,13 +2,11 @@ import Router from "@koa/router"
 import * as rowController from "../controllers/row"
 import authorized from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
-const {
-  PermissionLevels,
-  PermissionTypes,
-} = require("@budibase/backend-core/permissions")
+import { permissions } from "@budibase/backend-core"
 const { internalSearchValidator } = require("./utils/validators")
+const { PermissionType, PermissionLevel } = permissions
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   /**
@@ -28,7 +26,7 @@ router
   .get(
     "/api/:tableId/:rowId/enrich",
     paramSubResource("tableId", "rowId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.fetchEnrichedRow
   )
   /**
@@ -48,7 +46,7 @@ router
   .get(
     "/api/:tableId/rows",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.fetch
   )
   /**
@@ -67,7 +65,7 @@ router
   .get(
     "/api/:tableId/rows/:rowId",
     paramSubResource("tableId", "rowId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.find
   )
   /**
@@ -137,7 +135,7 @@ router
     "/api/:tableId/search",
     internalSearchValidator(),
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
   // DEPRECATED - this is an old API, but for backwards compat it needs to be
@@ -145,7 +143,7 @@ router
   .post(
     "/api/search/:tableId/rows",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
   /**
@@ -175,7 +173,7 @@ router
   .post(
     "/api/:tableId/rows",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.save
   )
   /**
@@ -189,7 +187,7 @@ router
   .patch(
     "/api/:tableId/rows",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.patch
   )
   /**
@@ -215,7 +213,7 @@ router
   .post(
     "/api/:tableId/rows/validate",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.validate
   )
   /**
@@ -241,7 +239,7 @@ router
   .delete(
     "/api/:tableId/rows",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.destroy
   )
 
@@ -261,7 +259,7 @@ router
   .post(
     "/api/:tableId/rows/exportRows",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.exportRows
   )
 

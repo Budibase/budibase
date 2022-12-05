@@ -17,10 +17,8 @@ const {
   checkBuilderEndpoint,
 } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
-const { basicScreen, basicLayout } = setup.structures
 const { AppStatus } = require("../../../db/utils")
 const { events } = require("@budibase/backend-core")
-const { dbExists } = require("@budibase/backend-core/db")
 
 describe("/applications", () => {
   let request = setup.getRequest()
@@ -164,19 +162,8 @@ describe("/applications", () => {
     })
   })
 
-  describe("delete", () => {
-    it("should delete dev app only dev app ID", async () => {
-      await config.createApp("to-delete", false)
-      const appId = config.getAppId()
-      await request
-        .delete(`/api/applications/${appId}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(events.app.deleted).toBeCalledTimes(1)
-    })
-
-    xit("should delete published app and dev apps with dev app ID", async () => {
+  xdescribe("delete", () => {
+    it("should delete published app and dev apps with dev app ID", async () => {
       await config.createApp("to-delete")
       const appId = config.getAppId()
       await request
@@ -188,7 +175,7 @@ describe("/applications", () => {
       expect(events.app.unpublished).toBeCalledTimes(1)
     })
 
-    xit("should delete published app and dev app with prod app ID", async () => {
+    it("should delete published app and dev app with prod app ID", async () => {
       await config.createApp("to-delete")
       const appId = config.getProdAppId()
       await request

@@ -14,36 +14,36 @@ import {
   DocumentType,
   AppStatus,
 } from "../../db/utils"
-const {
-  BUILTIN_ROLE_IDS,
-  AccessController,
-} = require("@budibase/backend-core/roles")
-const { CacheKeys, bustCache } = require("@budibase/backend-core/cache")
-const {
-  getAllApps,
-  isDevAppID,
-  getProdAppID,
-  Replication,
-  dbExists,
-} = require("@budibase/backend-core/db")
+import {
+  db as dbCore,
+  roles,
+  cache,
+  tenancy,
+  context,
+  errors,
+  events,
+  migrations,
+} from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
+import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
+
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { clientLibraryPath, stringToReadStream } from "../../utilities"
+import {
+  clientLibraryPath,
+  stringToReadStream,
+  isQsTrue,
+} from "../../utilities"
 import { getLocksById } from "../../utilities/redis"
 import {
   updateClientLibrary,
   backupClientLibrary,
   revertClientLibrary,
 } from "../../utilities/fileSystem/clientLibrary"
-const { getTenantId, isMultiTenant } = require("@budibase/backend-core/tenancy")
 import { syncGlobalUsers } from "./user"
-const { app: appCache } = require("@budibase/backend-core/cache")
 import { cleanupAutomations } from "../../automations/utils"
-import { context } from "@budibase/backend-core"
 import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas, groups } from "@budibase/pro"
-import { errors, events, migrations } from "@budibase/backend-core"
 import { App, Layout, Screen, MigrationType } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { enrichPluginURLs } from "../../utilities/plugins"
@@ -76,7 +76,7 @@ async function getScreens() {
 
 function getUserRoleId(ctx: any) {
   return !ctx.user.role || !ctx.user.role._id
-    ? BUILTIN_ROLE_IDS.PUBLIC
+    ? roles.BUILTIN_ROLE_IDS.PUBLIC
     : ctx.user.role._id
 }
 
@@ -123,8 +123,8 @@ const checkAppName = (
   }
 }
 
-async function createInstance(template: any) {
-  const tenantId = isMultiTenant() ? getTenantId() : null
+async function createInstance(template: any, includeSampleData: boolean) {
+  const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
   await context.updateAppId(appId)
@@ -155,15 +155,27 @@ async function createInstance(template: any) {
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
+
+    if (includeSampleData) {
+      // create ootb stock db
+      await addDefaultTables(db)
+    }
   }
 
   return { _id: appId }
 }
 
+const addDefaultTables = async (db: any) => {
+  const defaultDbDocs = buildDefaultDocs()
+
+  // add in the default db data docs - tables, datasource, rows and links
+  await db.bulkDocs([...defaultDbDocs])
+}
+
 export const fetch = async (ctx: any) => {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = await getAllApps({ dev, all })
+  const apps = (await dbCore.getAllApps({ dev, all })) as App[]
 
   const appIds = apps
     .filter((app: any) => app.status === "development")
@@ -188,7 +200,7 @@ export const fetch = async (ctx: any) => {
 export const fetchAppDefinition = async (ctx: any) => {
   const layouts = await getLayouts()
   const userRoleId = getUserRoleId(ctx)
-  const accessController = new AccessController()
+  const accessController = new roles.AccessController()
   const screens = await accessController.checkScreensAccess(
     await getScreens(),
     userRoleId
@@ -212,7 +224,7 @@ export const fetchAppPackage = async (ctx: any) => {
   // Only filter screens if the user is not a builder
   if (!(ctx.user.builder && ctx.user.builder.global)) {
     const userRoleId = getUserRoleId(ctx)
-    const accessController = new AccessController()
+    const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
@@ -225,7 +237,7 @@ export const fetchAppPackage = async (ctx: any) => {
 }
 
 const performAppCreate = async (ctx: any) => {
-  const apps = await getAllApps({ dev: true })
+  const apps = await dbCore.getAllApps({ dev: true })
   const name = ctx.request.body.name
   checkAppName(ctx, apps, name)
   const url = getAppUrl(ctx)
@@ -240,7 +252,8 @@ const performAppCreate = async (ctx: any) => {
   if (ctx.request.files && ctx.request.files.templateFile) {
     instanceConfig.file = ctx.request.files.templateFile
   }
-  const instance = await createInstance(instanceConfig)
+  const includeSampleData = isQsTrue(ctx.request.body.sampleData)
+  const instance = await createInstance(instanceConfig, includeSampleData)
   const appId = instance._id
   const db = context.getAppDB()
 
@@ -255,7 +268,7 @@ const performAppCreate = async (ctx: any) => {
     url: url,
     template: templateKey,
     instance,
-    tenantId: getTenantId(),
+    tenantId: tenancy.getTenantId(),
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     status: AppStatus.DEV,
@@ -314,7 +327,7 @@ const performAppCreate = async (ctx: any) => {
     await createApp(appId)
   }
 
-  await appCache.invalidateAppMetadata(appId, newApplication)
+  await cache.app.invalidateAppMetadata(appId, newApplication)
   return newApplication
 }
 
@@ -344,7 +357,7 @@ const creationEvents = async (request: any, app: App) => {
 }
 
 const appPostCreate = async (ctx: any, app: App) => {
-  const tenantId = getTenantId()
+  const tenantId = tenancy.getTenantId()
   await migrations.backPopulateMigrations({
     type: MigrationType.APP,
     tenantId,
@@ -357,7 +370,9 @@ const appPostCreate = async (ctx: any, app: App) => {
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
-        await quotas.addRows(rowCount)
+        await context.doInAppContext(app.appId, () => {
+          return quotas.addRows(rowCount)
+        })
       } catch (err: any) {
         if (err.code && err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
           // this import resulted in row usage exceeding the quota
@@ -375,7 +390,7 @@ const appPostCreate = async (ctx: any, app: App) => {
 export const create = async (ctx: any) => {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication)
-  await bustCache(CacheKeys.CHECKLIST)
+  await cache.bustCache(cache.CacheKey.CHECKLIST)
   ctx.body = newApplication
   ctx.status = 200
 }
@@ -383,7 +398,7 @@ export const create = async (ctx: any) => {
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
 export const update = async (ctx: any) => {
-  const apps = await getAllApps({ dev: true })
+  const apps = await dbCore.getAllApps({ dev: true })
   // validation
   const name = ctx.request.body.name
   if (name) {
@@ -453,7 +468,7 @@ export const revertClient = async (ctx: any) => {
 
 const unpublishApp = async (ctx: any) => {
   let appId = ctx.params.appId
-  appId = getProdAppID(appId)
+  appId = dbCore.getProdAppID(appId)
 
   const db = context.getProdAppDB()
   const app = await db.get(DocumentType.APP_METADATA)
@@ -464,17 +479,16 @@ const unpublishApp = async (ctx: any) => {
   // automations only in production
   await cleanupAutomations(appId)
 
-  await appCache.invalidateAppMetadata(appId)
+  await cache.app.invalidateAppMetadata(appId)
   return result
 }
 
 const destroyApp = async (ctx: any) => {
   let appId = ctx.params.appId
-  const prodAppId = getProdAppID(appId)
+  const prodAppId = dbCore.getProdAppID(appId)
 
-  // TODO: get working with unit test
-  // check if we need to unpublish first
-  // if (await dbExists(prodAppId)) {
+  // // check if we need to unpublish first
+  // if (await dbCore.dbExists(prodAppId)) {
   //   // app is deployed, run through unpublish flow
   //   await unpublishApp(ctx)
   // }
@@ -491,7 +505,7 @@ const destroyApp = async (ctx: any) => {
   }
 
   await removeAppFromUserRoles(ctx, appId)
-  await appCache.invalidateAppMetadata(appId)
+  await cache.app.invalidateAppMetadata(appId)
   return result
 }
 
@@ -535,19 +549,17 @@ export const sync = async (ctx: any, next: any) => {
   }
 
   const appId = ctx.params.appId
-  if (!isDevAppID(appId)) {
+  if (!dbCore.isDevAppID(appId)) {
     ctx.throw(400, "This action cannot be performed for production apps")
   }
 
   // replicate prod to dev
-  const prodAppId = getProdAppID(appId)
+  const prodAppId = dbCore.getProdAppID(appId)
 
-  try {
-    // specific case, want to make sure setup is skipped
-    const prodDb = context.getProdAppDB({ skip_setup: true })
-    const info = await prodDb.info()
-    if (info.error) throw info.error
-  } catch (err) {
+  // specific case, want to make sure setup is skipped
+  const prodDb = context.getProdAppDB({ skip_setup: true })
+  const exists = await prodDb.exists()
+  if (!exists) {
     // the database doesn't exist. Don't replicate
     ctx.status = 200
     ctx.body = {
@@ -556,7 +568,7 @@ export const sync = async (ctx: any, next: any) => {
     return next()
   }
 
-  const replication = new Replication({
+  const replication = new dbCore.Replication({
     source: prodAppId,
     target: appId,
   })
@@ -597,7 +609,7 @@ export const updateAppPackage = async (appPackage: any, appId: any) => {
 
     await db.put(newAppPackage)
     // remove any cached metadata, so that it will be updated
-    await appCache.invalidateAppMetadata(appId)
+    await cache.app.invalidateAppMetadata(appId)
     return newAppPackage
   })
 }

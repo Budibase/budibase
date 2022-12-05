@@ -58,7 +58,7 @@ jobs:
     - uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        files: ./packages/server/coverage/clover.xml
+        files: ./packages/server/coverage/clover.xml,./packages/worker/coverage/clover.xml,./packages/backend-core/coverage/clover.xml
         name: codecov-umbrella
         verbose: true 
 

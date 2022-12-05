@@ -50,51 +50,34 @@ describe("Public API - /applications endpoints", () => {
 
   it("POST - publish an application", async () => {
     config.context.name = "UpdatedName"
-    const [response, app] = await config.applications.publish(
-      config.context._id,
-      config.context
+    const [response, deployment] = await config.applications.publish(
+      config.context._id
     )
     expect(response).toHaveStatusCode(200)
-    expect(app.updatedAt).not.toEqual(config.context.updatedAt)
-    expect(app.name).toEqual(config.context.name)
+    expect(deployment).toEqual({
+      status: "SUCCESS",
+    })
   })
 
-  // it("POST - unpublish a published application", async () => {
-  //   config.context.name = "UpdatedName"
-  //   await config.applications.publish(
-  //     config.context._id,
-  //     config.context
-  //   )
-  //   const [response, app] = await config.applications.unpublish(
-  //     config.context._id,
-  //     config.context
-  //   )
-  //   expect(response).toHaveStatusCode(200)
-  //   expect(app.updatedAt).not.toEqual(config.context.updatedAt)
-  //   expect(app.name).toEqual(config.context.name)
-  // })
+  it("POST - unpublish a published application", async () => {
+    await config.applications.publish(config.context._id)
+    const [response, app] = await config.applications.unpublish(
+      config.context._id
+    )
+    expect(response).toHaveStatusCode(200)
+  })
 
-  // it("POST - unpublish an unpublished application", async () => {
-  //   config.context.name = "UpdatedName"
-  //   const [response, app] = await config.applications.unpublish(config.context._id)
-  //   expect(response).toHaveStatusCode(200)
-  //   expect(app.updatedAt).not.toEqual(config.context.updatedAt)
-  //   expect(app.name).toEqual(config.context.name)
-  // })
+  it("POST - unpublish an unpublished application", async () => {
+    const [response, app] = await config.applications.unpublish(
+      config.context._id
+    )
+    expect(response).toHaveStatusCode(404)
+  })
 
-  // it("DELETE - delete an application", async () => {
-  //   config.context.name = "UpdatedName"
-  //   const [response, app] = await config.applications.unpublish(config.context._id)
-  //   expect(response).toHaveStatusCode(200)
-  //   expect(app.updatedAt).not.toEqual(config.context.updatedAt)
-  //   expect(app.name).toEqual(config.context.name)
-  // })
-
-  // it("DELETE - delete a published application", async () => {
-  //   config.context.name = "UpdatedName"
-  //   const [response, app] = await config.applications.publish(config.context._id)
-  //   expect(response).toHaveStatusCode(200)
-  //   expect(app.updatedAt).not.toEqual(config.context.updatedAt)
-  //   expect(app.name).toEqual(config.context.name)
-  // })
+  it("DELETE - delete a published application and the dev application", async () => {
+    config.context.name = "UpdatedName"
+    await config.applications.publish(config.context._id)
+    const [response, app] = await config.applications.delete(config.context._id)
+    expect(response).toHaveStatusCode(200)
+  })
 })

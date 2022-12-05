@@ -2,16 +2,20 @@ import Router from "@koa/router"
 import * as controller from "../controllers/application"
 import * as deploymentController from "../controllers/deploy"
 import authorized from "../../middleware/authorized"
-import { BUILDER } from "@budibase/backend-core/permissions"
+import { permissions } from "@budibase/backend-core"
 import { applicationValidator } from "./utils/validators"
 
-const router = new Router()
+const router: Router = new Router()
 
 router
-  .post("/api/applications/:appId/sync", authorized(BUILDER), controller.sync)
+  .post(
+    "/api/applications/:appId/sync",
+    authorized(permissions.BUILDER),
+    controller.sync
+  )
   .post(
     "/api/applications",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     applicationValidator(),
     controller.create
   )
@@ -20,30 +24,34 @@ router
   .get("/api/applications/:appId/appPackage", controller.fetchAppPackage)
   .put(
     "/api/applications/:appId",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     applicationValidator({ isCreate: false }),
     controller.update
   )
   .post(
     "/api/applications/:appId/client/update",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     controller.updateClient
   )
   .post(
     "/api/applications/:appId/client/revert",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     controller.revertClient
   )
   .post(
     "/api/applications/:appId/publish",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     deploymentController.publishApp
   )
   .post(
     "/api/applications/:appId/unpublish",
-    authorized(BUILDER),
+    authorized(permissions.BUILDER),
     controller.unpublish
   )
-  .delete("/api/applications/:appId", authorized(BUILDER), controller.destroy)
+  .delete(
+    "/api/applications/:appId",
+    authorized(permissions.BUILDER),
+    controller.destroy
+  )
 
-export default router
+export = router

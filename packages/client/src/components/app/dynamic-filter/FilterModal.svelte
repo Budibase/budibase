@@ -25,7 +25,10 @@
         !BannedTypes.includes(field.type) ||
         (field.type === "formula" && field.formulaType === "static")
     )
-    .map(field => field.name)
+    .map(field => ({
+      label: field.displayName || field.name,
+      value: field.name,
+    }))
 
   const addFilter = () => {
     filters = [

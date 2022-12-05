@@ -12,10 +12,7 @@ import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 import env from "../environment"
-
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-const { getScopedConfig } = require("@budibase/backend-core/db")
-const { Configs } = require("@budibase/backend-core/constants")
+import { tenancy, db as dbCore, constants } from "@budibase/backend-core"
 const fetch = require("node-fetch")
 
 interface GoogleSheetsConfig {
@@ -176,9 +173,9 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async connect() {
     try {
       // Initialise oAuth client
-      const db = getGlobalDB()
-      let googleConfig = await getScopedConfig(db, {
-        type: Configs.GOOGLE,
+      const db = tenancy.getGlobalDB()
+      let googleConfig = await dbCore.getScopedConfig(db, {
+        type: constants.Config.GOOGLE,
       })
 
       if (!googleConfig) {
@@ -269,6 +266,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         this.deleteTable(json?.table?.name),
     }
 
+    // @ts-ignore
     const internalQueryMethod = handlers[json.endpoint.operation]
 
     return await internalQueryMethod()

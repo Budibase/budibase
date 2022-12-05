@@ -1,5 +1,6 @@
 import { Document } from "../document"
 import { View } from "./view"
+import { RenameColumn } from "../../sdk"
 
 export interface FieldSchema {
   // TODO: replace with field types enum when done
@@ -7,10 +8,12 @@ export interface FieldSchema {
   externalType?: string
   fieldName?: string
   name: string
+  sortable?: boolean
   tableId?: string
   relationshipType?: string
   through?: string
   foreignKey?: string
+  icon?: string
   autocolumn?: boolean
   subtype?: string
   throughFrom?: string
@@ -19,6 +22,9 @@ export interface FieldSchema {
   formulaType?: string
   main?: boolean
   ignoreTimezones?: boolean
+  timeOnly?: boolean
+  lastID?: number
+  useRichText?: boolean | null
   meta?: {
     toTable: string
     toKey: string
@@ -28,10 +34,22 @@ export interface FieldSchema {
     email?: boolean
     inclusion?: string[]
     length?: {
-      minimum?: string | number
-      maximum?: string | number
+      minimum?: string | number | null
+      maximum?: string | number | null
     }
-    presence?: boolean
+    numericality?: {
+      greaterThanOrEqualTo: string | null
+      lessThanOrEqualTo: string | null
+    }
+    presence?:
+      | boolean
+      | {
+          allowEmpty?: boolean
+        }
+    datetime?: {
+      latest: string
+      earliest: string
+    }
   }
 }
 
@@ -52,4 +70,9 @@ export interface Table extends Document {
   sql?: boolean
   indexes?: { [key: string]: any }
   dataImport?: { [key: string]: any }
+}
+
+export interface TableRequest extends Table {
+  _rename?: RenameColumn
+  created?: boolean
 }

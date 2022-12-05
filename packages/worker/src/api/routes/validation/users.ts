@@ -1,4 +1,4 @@
-const { joiValidator } = require("@budibase/backend-core/auth")
+import { auth } from "@budibase/backend-core"
 import Joi from "joi"
 
 let schema: any = {
@@ -25,7 +25,7 @@ export const buildUserSaveValidation = (isSelf = false) => {
       _rev: Joi.string(),
     }
   }
-  return joiValidator.body(Joi.object(schema).required().unknown(true))
+  return auth.joiValidator.body(Joi.object(schema).required().unknown(true))
 }
 
 export const buildUserBulkUserValidation = (isSelf = false) => {
@@ -46,5 +46,5 @@ export const buildUserBulkUserValidation = (isSelf = false) => {
     }),
   }
 
-  return joiValidator.body(Joi.object(bulkSchema).required().unknown(true))
+  return auth.joiValidator.body(Joi.object(bulkSchema).required().unknown(true))
 }

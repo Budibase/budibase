@@ -1,4 +1,4 @@
-import { Document } from "../document"
+import { User, Document } from "../"
 
 export type AppMetadataErrors = { [key: string]: string[] }
 
@@ -16,6 +16,7 @@ export interface App extends Document {
   theme?: string
   customTheme?: AppCustomTheme
   revertableVersion?: string
+  lockedBy?: User
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
   icon?: AppIcon

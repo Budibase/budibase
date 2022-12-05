@@ -42,6 +42,7 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
+
         image: minio/minio
         imagePullPolicy: ""
         livenessProbe:

@@ -47,7 +47,12 @@ export default class AppApi {
     return [response, json.data]
   }
 
-  // Fix type here
+  async delete(id: string): Promise<[Response, Application]> {
+    const response = await this.api.del(`/applications/${id}`)
+    const json = await response.json()
+    return [response, json.data]
+  }
+
   async publish(id: string): Promise<[Response, any]> {
     const response = await this.api.post(`/applications/${id}/publish`)
     const json = await response.json()

@@ -5,6 +5,7 @@ import {
   BulkUserRequest,
   BulkUserResponse,
   CloudAccount,
+  CreateAdminUserRequest,
   InviteUserRequest,
   InviteUsersRequest,
   SearchUsersRequest,
@@ -67,7 +68,8 @@ const parseBooleanParam = (param: any) => {
 }
 
 export const adminUser = async (ctx: any) => {
-  const { email, password, tenantId } = ctx.request.body
+  const { email, password, tenantId } = ctx.request
+    .body as CreateAdminUserRequest
   await tenancy.doInTenant(tenantId, async () => {
     // account portal sends a pre-hashed password - honour param to prevent double hashing
     const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
@@ -102,7 +104,7 @@ export const adminUser = async (ctx: any) => {
     try {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
       // stuck in a cycle
-      await cache.bustCache(cache.CacheKeys.CHECKLIST)
+      await cache.bustCache(cache.CacheKey.CHECKLIST)
       const finalUser = await sdk.users.save(user, {
         hashPassword,
         requirePassword,
