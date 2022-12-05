@@ -6,6 +6,7 @@
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
   import EjectBlockButton from "components/design/settings/controls/EjectBlockButton.svelte"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
+  import analytics, { Events } from "analytics"
 
   export let componentDefinition
   export let componentInstance
@@ -36,15 +37,26 @@
       section.settings.forEach(setting => {
         setting.visible = canRenderControl(instance, setting, isScreen)
       })
-      section.visible = section.settings.some(setting => setting.visible)
+      section.visible =
+        section.name === "General" ||
+        section.settings.some(setting => setting.visible)
     })
 
     return sections
   }
 
-  const updateSetting = async (key, value) => {
+  const updateSetting = async (setting, value) => {
     try {
-      await store.actions.components.updateSetting(key, value)
+      await store.actions.components.updateSetting(setting.key, value)
+
+      // Send event if required
+      if (setting.sendEvents) {
+        analytics.captureEvent(Events.COMPONENT_UPDATED, {
+          name: componentInstance._component,
+          setting: setting.key,
+          value,
+        })
+      }
     } catch (error) {
       notifications.error("Error updating component prop")
     }
@@ -111,7 +123,7 @@
           label="Name"
           key="_instanceName"
           value={componentInstance._instanceName}
-          onChange={val => updateSetting("_instanceName", val)}
+          onChange={val => updateSetting({ key: "_instanceName" }, val)}
         />
       {/if}
       {#each section.settings as setting (setting.key)}
@@ -124,7 +136,7 @@
             value={componentInstance[setting.key]}
             defaultValue={setting.defaultValue}
             nested={setting.nested}
-            onChange={val => updateSetting(setting.key, val)}
+            onChange={val => updateSetting(setting, val)}
             highlighted={$store.highlightedSettingKey === setting.key}
             info={setting.info}
             props={{
@@ -148,9 +160,11 @@
       {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
         <ResetFieldsButton {componentInstance} />
       {/if}
-      {#if idx === 0 && componentDefinition?.block}
-        <EjectBlockButton />
-      {/if}
     </DetailSummary>
   {/if}
 {/each}
+{#if componentDefinition?.block}
+  <DetailSummary name="Eject" collapsible={false}>
+    <EjectBlockButton />
+  </DetailSummary>
+{/if}

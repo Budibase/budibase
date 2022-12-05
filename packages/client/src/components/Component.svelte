@@ -190,6 +190,7 @@
     },
     empty: emptyState,
     selected,
+    inSelectedPath,
     name,
     editing,
     type: instance._component,
@@ -478,6 +479,7 @@
     definition.name !== "Screenslot" &&
     children.length === 0 &&
     !instance._blockElementHasChildren &&
+    !definition.block &&
     definition.skeleton !== false
 </script>
 

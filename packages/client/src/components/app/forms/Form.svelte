@@ -20,7 +20,6 @@
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
-  let loaded = false
   let schema
   let table
 
@@ -49,9 +48,6 @@
   // Fetches the form schema from this form's dataSource
   const fetchSchema = async dataSource => {
     schema = (await fetchDatasourceSchema(dataSource)) || {}
-    if (!loaded) {
-      loaded = true
-    }
   }
 
   const fetchTable = async dataSource => {
@@ -66,25 +62,23 @@
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
   $: resetKey = Helpers.hashString(
-    JSON.stringify(initialValues) + JSON.stringify(schema) + disabled
+    JSON.stringify(initialValues) + JSON.stringify(dataSource) + disabled
   )
 </script>
 
-{#if loaded}
-  {#key resetKey}
-    <InnerForm
-      {dataSource}
-      {theme}
-      {size}
-      {disabled}
-      {actionType}
-      {schema}
-      {table}
-      {initialValues}
-      {disableValidation}
-      {editAutoColumns}
-    >
-      <slot />
-    </InnerForm>
-  {/key}
-{/if}
+{#key resetKey}
+  <InnerForm
+    {dataSource}
+    {theme}
+    {size}
+    {disabled}
+    {actionType}
+    {schema}
+    {table}
+    {initialValues}
+    {disableValidation}
+    {editAutoColumns}
+  >
+    <slot />
+  </InnerForm>
+{/key}

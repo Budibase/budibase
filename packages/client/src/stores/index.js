@@ -24,6 +24,7 @@ export {
   dndIsNewComponent,
   dndIsDragging,
 } from "./dnd"
+export { sidePanelStore } from "./sidePanel.js"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"

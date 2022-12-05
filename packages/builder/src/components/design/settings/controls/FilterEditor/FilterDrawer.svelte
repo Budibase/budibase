@@ -30,9 +30,14 @@
   export let allowBindings = true
   export let allOr = false
   export let fillWidth = false
+  export let tableId
 
   $: dispatch("change", filters)
-  $: enrichedSchemaFields = getFields(schemaFields || [])
+  $: enrichedSchemaFields = getFields(
+    schemaFields || [],
+    { allowLinks: true },
+    tableId
+  )
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 

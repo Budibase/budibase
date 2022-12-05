@@ -174,6 +174,7 @@ export const SWITCHABLE_TYPES = [
 ]
 
 export const BUDIBASE_INTERNAL_DB_ID = "bb_internal"
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
 export const BUDIBASE_DATASOURCE_TYPE = "budibase"
 export const DB_TYPE_INTERNAL = "internal"
 export const DB_TYPE_EXTERNAL = "external"
