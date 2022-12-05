@@ -81,20 +81,18 @@ const applicationOutputSchema = object(
 )
 
 const deploymentOutputSchema = object({
-  data: {
-    _id: {
-      description: "The ID of the app.",
-      type: "string",
-    },
-    status: {
-      description: "Status of the deployment, whether it succeeded or failed",
-      type: "string",
-      enum: ["SUCCESS", "FAILURE"],
-    },
-    appUrl: {
-      description: "The URL of the published app",
-      type: "string",
-    },
+  _id: {
+    description: "The ID of the app.",
+    type: "string",
+  },
+  status: {
+    description: "Status of the deployment, whether it succeeded or failed",
+    type: "string",
+    enum: ["SUCCESS", "FAILURE"],
+  },
+  appUrl: {
+    description: "The URL of the published app",
+    type: "string",
   },
 })
 
