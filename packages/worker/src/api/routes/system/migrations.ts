@@ -2,7 +2,7 @@ import Router from "@koa/router"
 import * as migrationsController from "../../controllers/system/migrations"
 import { auth } from "@budibase/backend-core"
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   .post(

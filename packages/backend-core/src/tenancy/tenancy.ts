@@ -1,10 +1,4 @@
-import {
-  doWithDB,
-  queryPlatformView,
-  StaticDatabases,
-  getGlobalDBName,
-  ViewName,
-} from "../db"
+import { doWithDB, queryPlatformView, getGlobalDBName } from "../db"
 import {
   DEFAULT_TENANT_ID,
   getTenantId,
@@ -18,7 +12,7 @@ import {
   TenantResolutionStrategy,
   GetTenantIdOptions,
 } from "@budibase/types"
-import { Header } from "../constants"
+import { Header, StaticDatabases, ViewName } from "../constants"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name

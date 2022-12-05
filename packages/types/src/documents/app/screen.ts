@@ -1,10 +1,7 @@
 import { Document } from "../document"
+import { Component } from "./component"
 
-export interface ScreenProps extends Document {
-  _instanceName: string
-  _styles: { [key: string]: any }
-  _component: string
-  _children: ScreenProps[]
+export interface ScreenProps extends Component {
   size?: string
   gap?: string
   direction?: string

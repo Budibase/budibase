@@ -158,6 +158,10 @@ spec:
         {{ end }}
         - name: CDN_URL
           value: {{ .Values.globals.cdnUrl }}
+        {{ if .Values.services.tlsRejectUnauthorized }}
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: {{ .Values.services.tlsRejectUnauthorized }}
+        {{ end }}
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always

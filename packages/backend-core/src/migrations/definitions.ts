@@ -22,6 +22,10 @@ export const DEFINITIONS: MigrationDefinition[] = [
     name: MigrationName.EVENT_APP_BACKFILL,
   },
   {
+    type: MigrationType.APP,
+    name: MigrationName.TABLE_SETTINGS_LINKS_TO_ACTIONS,
+  },
+  {
     type: MigrationType.GLOBAL,
     name: MigrationName.EVENT_GLOBAL_BACKFILL,
   },

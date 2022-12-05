@@ -57,6 +57,7 @@ export type DatabaseQueryOpts = {
   descending?: boolean
   key?: string
   keys?: string[]
+  group?: boolean
 }
 
 export const isDocument = (doc: any): doc is Document => {

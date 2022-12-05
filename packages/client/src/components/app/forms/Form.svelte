@@ -25,7 +25,6 @@
   let table
 
   $: fetchSchema(dataSource)
-  $: fetchTable(dataSource)
 
   // Returns the closes data context which isn't a built in context
   const getInitialValues = (type, dataSource, context) => {
@@ -48,13 +47,6 @@
 
   // Fetches the form schema from this form's dataSource
   const fetchSchema = async dataSource => {
-    schema = (await fetchDatasourceSchema(dataSource)) || {}
-    if (!loaded) {
-      loaded = true
-    }
-  }
-
-  const fetchTable = async dataSource => {
     if (dataSource?.tableId && dataSource?.type !== "query") {
       try {
         table = await API.fetchTableDefinition(dataSource.tableId)
@@ -62,11 +54,16 @@
         table = null
       }
     }
+    const res = await fetchDatasourceSchema(dataSource)
+    schema = res || {}
+    if (!loaded) {
+      loaded = true
+    }
   }
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
   $: resetKey = Helpers.hashString(
-    JSON.stringify(initialValues) + JSON.stringify(schema) + disabled
+    JSON.stringify(initialValues) + JSON.stringify(dataSource) + disabled
   )
 </script>
 

@@ -1,6 +1,6 @@
 import * as rowController from "../row"
 import { addRev } from "./utils"
-import { Row } from "../../../definitions/common"
+import { Row } from "@budibase/types"
 import { convertBookmark } from "../../../utilities"
 
 // makes sure that the user doesn't need to pass in the type, tableId or _id params for

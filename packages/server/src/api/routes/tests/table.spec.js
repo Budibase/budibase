@@ -271,7 +271,7 @@ describe("/tables", () => {
         .expect(200)
       expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
       expect(events.table.deleted).toBeCalledTimes(1)
-      expect(events.table.deleted).toBeCalledWith(testTable)
+      expect(events.table.deleted).toBeCalledWith({ ...testTable, tableId: testTable._id })
     })
 
     it("deletes linked references to the table after deletion", async () => {
@@ -288,6 +288,7 @@ describe("/tables", () => {
           },
           TestTable: {
             type: "link",
+            fieldName: "TestTable",
             tableId: testTable._id,
             constraints: {
               type: "array"

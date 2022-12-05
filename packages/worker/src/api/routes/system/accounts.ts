@@ -2,7 +2,7 @@ import Router from "@koa/router"
 import * as controller from "../../controllers/system/accounts"
 import { middleware } from "@budibase/backend-core"
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   .put(

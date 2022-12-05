@@ -1,6 +1,6 @@
 import { QueryVariable } from "./definitions"
 import env from "../environment"
-import db from "../db"
+import * as db from "../db"
 import { redis, db as dbCore } from "@budibase/backend-core"
 
 const VARIABLE_TTL_SECONDS = 3600

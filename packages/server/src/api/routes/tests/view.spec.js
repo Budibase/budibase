@@ -347,7 +347,7 @@ describe("/views", () => {
 
     const setupExport = async () => {
       const table = await config.createTable()
-      await config.createRow({ name: "test-name", description: "test-desc" })
+      await config.createRow({ name: "test-name", description: "ùúûü" })
       return table
     }
 
@@ -362,11 +362,11 @@ describe("/views", () => {
       const rows = JSON.parse(res.text)
       expect(rows.length).toBe(1)
       expect(rows[0].name).toBe("test-name")
-      expect(rows[0].description).toBe("test-desc")
+      expect(rows[0].description).toBe("ùúûü")
     }
 
     const assertCSVExport = (res) => {
-      expect(res.text).toBe("\"name\",\"description\"\n\"test-name\",\"test-desc\"")
+      expect(res.text).toBe(`"name","description"\n"test-name","ùúûü"`)
     }
 
     it("should be able to export a table as JSON", async () => {
