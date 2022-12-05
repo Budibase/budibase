@@ -35,7 +35,7 @@ export function getFields(
     field => field.type === "formula" && field.formulaType === "static"
   )
   const table = get(tables).list.find(table => table._id === tableId)
-  if (table?.type === "external") {
+  if (table?.type === "external" && table?.sql) {
     filteredFields = filteredFields.filter(field => field.name !== "_id")
   }
   return filteredFields.concat(staticFormulaFields)
