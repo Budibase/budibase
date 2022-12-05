@@ -1,11 +1,7 @@
 import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
-import { db } from "@budibase/backend-core"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
-import generateApp from "../../../config/internal-api/fixtures/applications"
-import generator from "../../../config/generator"
 import { generateAdmin, generateAppUser, generateDeveloper, generateInviteUser } from "../../../config/internal-api/fixtures/userManagement"
-import generate from "../../../config/internal-api/fixtures/applications"
 
 describe("Internal API - User Management & Permissions", () => {
     const api = new InternalAPIClient()
@@ -28,13 +24,49 @@ describe("Internal API - User Management & Permissions", () => {
         const developer = generateDeveloper()
         const appUser = generateAppUser()
 
-        const [adminResponse, adminData] = await config.userManagement.addUsers(admin)
-        const [devResponse, devData] = await config.userManagement.addUsers(developer)
-        const [userResponse, userData] = await config.userManagement.addUsers(appUser)
+        await config.userManagement.addUsers(admin)
+        await config.userManagement.addUsers(developer)
+        await config.userManagement.addUsers(appUser)
 
         const [allUsersResponse, allUsersData] = await config.userManagement.getAllUsers()
         expect(allUsersData.length).toBeGreaterThan(0)
 
+
+
+    })
+
+    it("Delete User", async () => {
+        const appUser = generateAppUser()
+        const [userResponse, userData] = await config.userManagement.addUsers(appUser)
+        const userId = userData.created.successful[0]._id
+        await config.userManagement.deleteUser(<string>userId)
+    })
+
+    it("Reset Password", async () => {
+        const appUser = generateAppUser()
+        const [userResponse, userData] = await config.userManagement.addUsers(appUser)
+        const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(userData.created.successful[0]._id)
+        const body = {
+            ...userInfoJson,
+            password: "newPassword"
+
+        }
+        await config.userManagement.forcePasswordReset(body)
+    })
+
+    it("Change User information", async () => {
+        const appUser = generateAppUser()
+        const [userResponse, userData] = await config.userManagement.addUsers(appUser)
+        const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(userData.created.successful[0]._id)
+        const body = {
+            ...userInfoJson,
+            builder: {
+                global: true
+            }
+        }
+        const [changedUserResponse, changedUserJson] = await config.userManagement.changeUserInformation(body)
+        expect(changedUserJson.builder?.global).toBeDefined()
+        expect(changedUserJson.builder?.global).toEqual(true)
     })
 
 
