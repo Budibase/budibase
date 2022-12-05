@@ -44,6 +44,7 @@ export enum MigrationName {
   EVENT_GLOBAL_BACKFILL = "event_global_backfill",
   EVENT_INSTALLATION_BACKFILL = "event_installation_backfill",
   GLOBAL_INFO_SYNC_USERS = "global_info_sync_users",
+  TABLE_SETTINGS_LINKS_TO_ACTIONS = "table_settings_links_to_actions",
   // increment this number to re-activate this migration
   SYNC_QUOTAS = "sync_quotas_1",
 }

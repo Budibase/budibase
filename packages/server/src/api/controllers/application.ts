@@ -390,7 +390,7 @@ const appPostCreate = async (ctx: any, app: App) => {
 export const create = async (ctx: any) => {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication)
-  await cache.bustCache(cache.CacheKeys.CHECKLIST)
+  await cache.bustCache(cache.CacheKey.CHECKLIST)
   ctx.body = newApplication
   ctx.status = 200
 }

@@ -62,7 +62,7 @@ export async function sendSmtpEmail(
   contents: string,
   cc: string,
   bcc: string,
-  automation: Automation
+  automation: boolean
 ) {
   // tenant ID will be set in header
   const response = await fetch(
