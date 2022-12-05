@@ -33,7 +33,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async addUsers(body: any): Promise<[Response, responseMessage]> {
+    async addUsers(body: any): Promise<[Response, any]> {
         const response = await this.api.post(`/global/users/bulk`, { body })
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
@@ -42,7 +42,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async deleteUser(userId: string): Promise<[Response, responseMessage]> {
+    async deleteMultipleUsers(userId: string[]): Promise<[Response, responseMessage]> {
         const body = {
             delete: {
                 userIds: [
@@ -56,6 +56,13 @@ export default class UserManagementApi {
         expect(json.deleted.successful.length).toEqual(1)
         expect(json.deleted.unsuccessful.length).toEqual(0)
         expect(json.deleted.successful[0].userId).toEqual(userId)
+        return [response, json]
+    }
+    async deleteUser(userId: string): Promise<[Response, UserDeletedEvent]> {
+        const response = await this.api.del(`/global/users/${userId}`)
+        const json = await response.json()
+        expect(response).toHaveStatusCode(200)
+        expect(json.message).toEqual(`User ${userId} deleted.`)
         return [response, json]
     }
 
@@ -76,4 +83,27 @@ export default class UserManagementApi {
         expect(json.length).toEqual(4)
         return [response, json]
     }
-}
+
+    async changeUserInformation(body: any): Promise<[Response, User]> {
+        const response = await this.api.post(`/global/users/`, { body })
+        const json = await response.json()
+        expect(response).toHaveStatusCode(200)
+        return [response, json]
+    }
+
+    async forcePasswordReset(body: any): Promise<[Response, User]> {
+        const response = await this.api.post(`/global/users/`, { body })
+        const json = await response.json()
+        expect(response).toHaveStatusCode(200)
+        expect(json._id).toEqual(body._id)
+        expect(json._rev).not.toEqual(body._rev)
+        return [response, json]
+    }
+
+    async getUserInformation(userId: string): Promise<[Response, User]> {
+        const response = await this.api.get(`/global/users/${userId}`)
+        const json = await response.json()
+        expect(response).toHaveStatusCode(200)
+        return [response, json]
+    }
+} 
