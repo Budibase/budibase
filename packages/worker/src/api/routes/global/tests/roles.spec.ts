@@ -1,8 +1,6 @@
-import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 import { structures, TestConfiguration } from "../../../../tests"
 import { context, db, permissions, roles } from "@budibase/backend-core"
 import { Mock } from "jest-mock"
-import { generateRoleID } from "@budibase/backend-core/src/db"
 
 jest.mock("@budibase/backend-core", () => {
   const core = jest.requireActual("@budibase/backend-core")
@@ -35,7 +33,7 @@ async function addAppMetadata() {
 describe("/api/global/roles", () => {
   const config = new TestConfiguration()
   const role = new roles.Role(
-    generateRoleID("newRole"),
+    db.generateRoleID("newRole"),
     roles.BUILTIN_ROLE_IDS.BASIC,
     permissions.BuiltinPermissionID.READ_ONLY
   )
