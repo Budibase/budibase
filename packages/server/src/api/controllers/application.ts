@@ -26,7 +26,6 @@ import {
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
-
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import {
   clientLibraryPath,
@@ -39,17 +38,21 @@ import {
   backupClientLibrary,
   revertClientLibrary,
 } from "../../utilities/fileSystem/clientLibrary"
-import { syncGlobalUsers } from "./user"
 import { cleanupAutomations } from "../../automations/utils"
 import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas, groups } from "@budibase/pro"
-import { App, Layout, Screen, MigrationType } from "@budibase/types"
+import {
+  App,
+  Layout,
+  Screen,
+  MigrationType,
+  BBContext,
+  Database,
+} from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import { enrichPluginURLs } from "../../utilities/plugins"
 import sdk from "../../sdk"
-
-const URL_REGEX_SLASH = /\/|\\/g
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -74,29 +77,18 @@ async function getScreens() {
   ).rows.map((row: any) => row.doc)
 }
 
-function getUserRoleId(ctx: any) {
-  return !ctx.user.role || !ctx.user.role._id
+function getUserRoleId(ctx: BBContext) {
+  return !ctx.user?.role || !ctx.user.role._id
     ? roles.BUILTIN_ROLE_IDS.PUBLIC
     : ctx.user.role._id
 }
 
-export const getAppUrl = (ctx: any) => {
-  // construct the url
-  let url
-  if (ctx.request.body.url) {
-    // if the url is provided, use that
-    url = encodeURI(ctx.request.body.url)
-  } else if (ctx.request.body.name) {
-    // otherwise use the name
-    url = encodeURI(`${ctx.request.body.name}`)
-  }
-  if (url) {
-    url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
-  }
-  return url
-}
-
-const checkAppUrl = (ctx: any, apps: any, url: any, currentAppId?: string) => {
+function checkAppUrl(
+  ctx: BBContext,
+  apps: App[],
+  url: string,
+  currentAppId?: string
+) {
   if (currentAppId) {
     apps = apps.filter((app: any) => app.appId !== currentAppId)
   }
@@ -105,12 +97,12 @@ const checkAppUrl = (ctx: any, apps: any, url: any, currentAppId?: string) => {
   }
 }
 
-const checkAppName = (
-  ctx: any,
-  apps: any,
-  name: any,
+function checkAppName(
+  ctx: BBContext,
+  apps: App[],
+  name: string,
   currentAppId?: string
-) => {
+) {
   // TODO: Replace with Joi
   if (!name) {
     ctx.throw(400, "Name is required")
@@ -165,14 +157,14 @@ async function createInstance(template: any, includeSampleData: boolean) {
   return { _id: appId }
 }
 
-const addDefaultTables = async (db: any) => {
+async function addDefaultTables(db: Database) {
   const defaultDbDocs = buildDefaultDocs()
 
   // add in the default db data docs - tables, datasource, rows and links
   await db.bulkDocs([...defaultDbDocs])
 }
 
-export const fetch = async (ctx: any) => {
+export async function fetch(ctx: BBContext) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
   const apps = (await dbCore.getAllApps({ dev, all })) as App[]
@@ -197,7 +189,7 @@ export const fetch = async (ctx: any) => {
   ctx.body = await checkAppMetadata(apps)
 }
 
-export const fetchAppDefinition = async (ctx: any) => {
+export async function fetchAppDefinition(ctx: BBContext) {
   const layouts = await getLayouts()
   const userRoleId = getUserRoleId(ctx)
   const accessController = new roles.AccessController()
@@ -212,7 +204,7 @@ export const fetchAppDefinition = async (ctx: any) => {
   }
 }
 
-export const fetchAppPackage = async (ctx: any) => {
+export async function fetchAppPackage(ctx: BBContext) {
   const db = context.getAppDB()
   let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
@@ -222,7 +214,7 @@ export const fetchAppPackage = async (ctx: any) => {
   application.usedPlugins = enrichPluginURLs(application.usedPlugins)
 
   // Only filter screens if the user is not a builder
-  if (!(ctx.user.builder && ctx.user.builder.global)) {
+  if (!(ctx.user?.builder && ctx.user.builder.global)) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
@@ -236,11 +228,11 @@ export const fetchAppPackage = async (ctx: any) => {
   }
 }
 
-const performAppCreate = async (ctx: any) => {
-  const apps = await dbCore.getAllApps({ dev: true })
+async function performAppCreate(ctx: BBContext) {
+  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   const name = ctx.request.body.name
   checkAppName(ctx, apps, name)
-  const url = getAppUrl(ctx)
+  const url = sdk.applications.getAppUrl(ctx)
   checkAppUrl(ctx, apps, url)
 
   const { useTemplate, templateKey, templateString } = ctx.request.body
@@ -331,7 +323,7 @@ const performAppCreate = async (ctx: any) => {
   return newApplication
 }
 
-const creationEvents = async (request: any, app: App) => {
+async function creationEvents(request: any, app: App) {
   let creationFns: ((app: App) => Promise<void>)[] = []
 
   const body = request.body
@@ -356,7 +348,7 @@ const creationEvents = async (request: any, app: App) => {
   }
 }
 
-const appPostCreate = async (ctx: any, app: App) => {
+async function appPostCreate(ctx: BBContext, app: App) {
   const tenantId = tenancy.getTenantId()
   await migrations.backPopulateMigrations({
     type: MigrationType.APP,
@@ -377,7 +369,7 @@ const appPostCreate = async (ctx: any, app: App) => {
         if (err.code && err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
           // this import resulted in row usage exceeding the quota
           // delete the app
-          // skip pre and post steps as no rows have been added to quotas yet
+          // skip pre- and post-steps as no rows have been added to quotas yet
           ctx.params.appId = app.appId
           await destroyApp(ctx)
         }
@@ -387,7 +379,7 @@ const appPostCreate = async (ctx: any, app: App) => {
   }
 }
 
-export const create = async (ctx: any) => {
+export async function create(ctx: BBContext) {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
@@ -397,14 +389,14 @@ export const create = async (ctx: any) => {
 
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
-export const update = async (ctx: any) => {
-  const apps = await dbCore.getAllApps({ dev: true })
+export async function update(ctx: BBContext) {
+  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   // validation
   const name = ctx.request.body.name
   if (name) {
     checkAppName(ctx, apps, name, ctx.params.appId)
   }
-  const url = getAppUrl(ctx)
+  const url = sdk.applications.getAppUrl(ctx)
   if (url) {
     checkAppUrl(ctx, apps, url, ctx.params.appId)
     ctx.request.body.url = url
@@ -416,7 +408,7 @@ export const update = async (ctx: any) => {
   ctx.body = app
 }
 
-export const updateClient = async (ctx: any) => {
+export async function updateClient(ctx: BBContext) {
   // Get current app version
   const db = context.getAppDB()
   const application = await db.get(DocumentType.APP_METADATA)
@@ -440,7 +432,7 @@ export const updateClient = async (ctx: any) => {
   ctx.body = app
 }
 
-export const revertClient = async (ctx: any) => {
+export async function revertClient(ctx: BBContext) {
   // Check app can be reverted
   const db = context.getAppDB()
   const application = await db.get(DocumentType.APP_METADATA)
@@ -466,12 +458,14 @@ export const revertClient = async (ctx: any) => {
   ctx.body = app
 }
 
-const destroyApp = async (ctx: any) => {
+async function destroyApp(ctx: BBContext) {
   let appId = ctx.params.appId
   let isUnpublish = ctx.query && ctx.query.unpublish
 
   if (isUnpublish) {
     appId = dbCore.getProdAppID(appId)
+    // sync before removing the published app
+    await sdk.applications.syncApp(appId)
   }
 
   const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
@@ -501,12 +495,12 @@ const destroyApp = async (ctx: any) => {
   return result
 }
 
-const preDestroyApp = async (ctx: any) => {
+async function preDestroyApp(ctx: BBContext) {
   const { rows } = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }
 
-const postDestroyApp = async (ctx: any) => {
+async function postDestroyApp(ctx: BBContext) {
   const rowCount = ctx.rowCount
   await groups.cleanupApp(ctx.params.appId)
   if (rowCount) {
@@ -514,7 +508,7 @@ const postDestroyApp = async (ctx: any) => {
   }
 }
 
-export const destroy = async (ctx: any) => {
+export async function destroy(ctx: BBContext) {
   await preDestroyApp(ctx)
   const result = await destroyApp(ctx)
   await postDestroyApp(ctx)
@@ -522,62 +516,16 @@ export const destroy = async (ctx: any) => {
   ctx.body = result
 }
 
-export const sync = async (ctx: any, next: any) => {
-  if (env.DISABLE_AUTO_PROD_APP_SYNC) {
-    ctx.status = 200
-    ctx.body = {
-      message:
-        "App sync disabled. You can reenable with the DISABLE_AUTO_PROD_APP_SYNC environment variable.",
-    }
-    return next()
-  }
-
+export async function sync(ctx: BBContext) {
   const appId = ctx.params.appId
-  if (!dbCore.isDevAppID(appId)) {
-    ctx.throw(400, "This action cannot be performed for production apps")
-  }
-
-  // replicate prod to dev
-  const prodAppId = dbCore.getProdAppID(appId)
-
-  // specific case, want to make sure setup is skipped
-  const prodDb = context.getProdAppDB({ skip_setup: true })
-  const exists = await prodDb.exists()
-  if (!exists) {
-    // the database doesn't exist. Don't replicate
-    ctx.status = 200
-    ctx.body = {
-      message: "App sync not required, app not deployed.",
-    }
-    return next()
-  }
-
-  const replication = new dbCore.Replication({
-    source: prodAppId,
-    target: appId,
-  })
-  let error
   try {
-    await replication.replicate(replication.appReplicateOpts())
-  } catch (err) {
-    error = err
-  } finally {
-    await replication.close()
-  }
-
-  // sync the users
-  await syncGlobalUsers()
-
-  if (error) {
-    ctx.throw(400, error)
-  } else {
-    ctx.body = {
-      message: "App sync completed successfully.",
-    }
+    ctx.body = await sdk.applications.syncApp(appId)
+  } catch (err: any) {
+    ctx.throw(err.status || 400, err.message)
   }
 }
 
-export const updateAppPackage = async (appPackage: any, appId: any) => {
+export async function updateAppPackage(appPackage: any, appId: any) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await db.get(DocumentType.APP_METADATA)
@@ -598,7 +546,7 @@ export const updateAppPackage = async (appPackage: any, appId: any) => {
   })
 }
 
-const migrateAppNavigation = async () => {
+async function migrateAppNavigation() {
   const db = context.getAppDB()
   const existing: App = await db.get(DocumentType.APP_METADATA)
   const layouts: Layout[] = await getLayouts()
