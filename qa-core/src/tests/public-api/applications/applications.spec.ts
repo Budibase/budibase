@@ -75,7 +75,6 @@ describe("Public API - /applications endpoints", () => {
   })
 
   it("DELETE - delete a published application and the dev application", async () => {
-    config.context.name = "UpdatedName"
     await config.applications.publish(config.context._id)
     const [response, app] = await config.applications.delete(config.context._id)
     expect(response).toHaveStatusCode(200)
