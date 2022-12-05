@@ -20,11 +20,11 @@
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
+  let loaded = false
   let schema
   let table
 
   $: fetchSchema(dataSource)
-  $: fetchTable(dataSource)
 
   // Returns the closes data context which isn't a built in context
   const getInitialValues = (type, dataSource, context) => {
@@ -47,16 +47,17 @@
 
   // Fetches the form schema from this form's dataSource
   const fetchSchema = async dataSource => {
-    schema = (await fetchDatasourceSchema(dataSource)) || {}
-  }
-
-  const fetchTable = async dataSource => {
     if (dataSource?.tableId && dataSource?.type !== "query") {
       try {
         table = await API.fetchTableDefinition(dataSource.tableId)
       } catch (error) {
         table = null
       }
+    }
+    const res = await fetchDatasourceSchema(dataSource)
+    schema = res || {}
+    if (!loaded) {
+      loaded = true
     }
   }
 
@@ -66,19 +67,21 @@
   )
 </script>
 
-{#key resetKey}
-  <InnerForm
-    {dataSource}
-    {theme}
-    {size}
-    {disabled}
-    {actionType}
-    {schema}
-    {table}
-    {initialValues}
-    {disableValidation}
-    {editAutoColumns}
-  >
-    <slot />
-  </InnerForm>
-{/key}
+{#if loaded}
+  {#key resetKey}
+    <InnerForm
+      {dataSource}
+      {theme}
+      {size}
+      {disabled}
+      {actionType}
+      {schema}
+      {table}
+      {initialValues}
+      {disableValidation}
+      {editAutoColumns}
+    >
+      <slot />
+    </InnerForm>
+  {/key}
+{/if}
