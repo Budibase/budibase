@@ -24,6 +24,12 @@ import {
   ExecuteOptions,
   Result,
 } from "oracledb"
+import {
+  OracleTable,
+  OracleColumn,
+  OracleColumnsResponse,
+  OracleConstraint,
+} from "./base/types"
 let oracledb: any
 try {
   oracledb = require("oracledb")
@@ -89,50 +95,6 @@ const SCHEMA: Integration = {
 
 const UNSUPPORTED_TYPES = ["BLOB", "CLOB", "NCLOB"]
 
-/**
- * Raw query response
- */
-interface ColumnsResponse {
-  TABLE_NAME: string
-  COLUMN_NAME: string
-  DATA_TYPE: string
-  DATA_DEFAULT: string | null
-  COLUMN_ID: number
-  CONSTRAINT_NAME: string | null
-  CONSTRAINT_TYPE: string | null
-  R_CONSTRAINT_NAME: string | null
-  SEARCH_CONDITION: string | null
-}
-
-/**
- * An oracle constraint
- */
-interface OracleConstraint {
-  name: string
-  type: string
-  relatedConstraintName: string | null
-  searchCondition: string | null
-}
-
-/**
- * An oracle column and it's related constraints
- */
-interface OracleColumn {
-  name: string
-  type: string
-  default: string | null
-  id: number
-  constraints: { [key: string]: OracleConstraint }
-}
-
-/**
- * An oracle table and it's related columns
- */
-interface OracleTable {
-  name: string
-  columns: { [key: string]: OracleColumn }
-}
-
 const OracleContraintTypes = {
   PRIMARY: "P",
   NOT_NULL_OR_CHECK: "C",
@@ -195,7 +157,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   /**
    * Map the flat tabular columns and constraints data into a nested object
    */
-  private mapColumns(result: Result<ColumnsResponse>): {
+  private mapColumns(result: Result<OracleColumnsResponse>): {
     [key: string]: OracleTable
   } {
     const oracleTables: { [key: string]: OracleTable } = {}
@@ -299,7 +261,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
    * @param entities - the tables that are to be built
    */
   async buildSchema(datasourceId: string, entities: Record<string, Table>) {
-    const columnsResponse = await this.internalQuery<ColumnsResponse>({
+    const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: this.COLUMNS_SQL,
     })
     const oracleTables = this.mapColumns(columnsResponse)
@@ -334,6 +296,9 @@ class OracleIntegration extends Sql implements DatasourcePlus {
             fieldSchema = {
               autocolumn: OracleIntegration.isAutoColumn(oracleColumn),
               name: columnName,
+              constraints: {
+                presence: false,
+              },
               ...this.internalConvertType(oracleColumn),
             }
             table.schema[columnName] = fieldSchema
@@ -343,6 +308,12 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           Object.values(oracleColumn.constraints).forEach(oracleConstraint => {
             if (oracleConstraint.type === OracleContraintTypes.PRIMARY) {
               table.primary!.push(columnName)
+            } else if (
+              oracleConstraint.type === OracleContraintTypes.NOT_NULL_OR_CHECK
+            ) {
+              table.schema[columnName].constraints = {
+                presence: true,
+              }
             }
           })
         })
