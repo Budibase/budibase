@@ -5118,7 +5118,8 @@
           {
             "type": "multifield",
             "label": "Fields",
-            "key": "fields"
+            "key": "fields",
+            "selectAllFields": true
           },
           {
             "type": "select",
@@ -5284,7 +5285,8 @@
             "type": "multifield",
             "label": "Fields",
             "key": "detailFields",
-            "nested": true
+            "nested": true,
+            "selectAllFields": true
           }
         ]
       }
