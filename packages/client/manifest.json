@@ -2598,6 +2598,7 @@
     ]
   },
   "passwordfield": {
+    "skeleton": false,
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": [
@@ -3066,6 +3067,7 @@
     ]
   },
   "longformfield": {
+    "skeleton": false,
     "name": "Long Form Field",
     "icon": "TextAlignLeft",
     "styles": [
