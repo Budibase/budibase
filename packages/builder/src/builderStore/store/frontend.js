@@ -25,7 +25,7 @@ import {
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
-import { getSchemaForDatasource } from 'builderStore/dataBinding'
+import { getSchemaForDatasource } from "builderStore/dataBinding"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
