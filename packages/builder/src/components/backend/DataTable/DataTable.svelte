@@ -117,6 +117,12 @@
   const onUpdateRows = () => {
     fetch.refresh()
   }
+
+  // When importing new rows it is better to reinitialise request/paging data.
+  // Not doing so causes inconsistency in paging behaviour and content.
+  const onImportData = () => {
+    fetch.getInitialData()
+  }
 </script>
 
 <div>
@@ -169,7 +175,7 @@
         <ImportButton
           disabled={$tables.selected?._id === "ta_users"}
           tableId={$tables.selected?._id}
-          on:updaterows={onUpdateRows}
+          on:importrows={onImportData}
         />
         <ExportButton
           disabled={!hasRows || !hasCols}
