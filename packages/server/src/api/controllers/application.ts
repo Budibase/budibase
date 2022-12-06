@@ -230,9 +230,10 @@ export async function fetchAppPackage(ctx: BBContext) {
 
 async function performAppCreate(ctx: BBContext) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
-  const name = ctx.request.body.name
+  const name = ctx.request.body.name,
+    possibleUrl = ctx.request.body.url
   checkAppName(ctx, apps, name)
-  const url = sdk.applications.getAppUrl(ctx)
+  const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
   checkAppUrl(ctx, apps, url)
 
   const { useTemplate, templateKey, templateString } = ctx.request.body
@@ -392,11 +393,12 @@ export async function create(ctx: BBContext) {
 export async function update(ctx: BBContext) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   // validation
-  const name = ctx.request.body.name
+  const name = ctx.request.body.name,
+    possibleUrl = ctx.request.body.url
   if (name) {
     checkAppName(ctx, apps, name, ctx.params.appId)
   }
-  const url = sdk.applications.getAppUrl(ctx)
+  const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
   if (url) {
     checkAppUrl(ctx, apps, url, ctx.params.appId)
     ctx.request.body.url = url

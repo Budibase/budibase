@@ -20,14 +20,7 @@ export const run = async (appDb: any) => {
   }
 
   if (!metadata.url) {
-    const context = {
-      request: {
-        body: {
-          name: metadata.name,
-        },
-      },
-    }
-    metadata.url = sdk.applications.getAppUrl(context)
+    metadata.url = sdk.applications.getAppUrl({ name: metadata.name })
     console.log(`Adding url to app: ${metadata.url}`)
     await appDb.put(metadata)
   }
