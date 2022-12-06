@@ -88,6 +88,8 @@ export default class UserManagementApi {
         const response = await this.api.post(`/global/users/`, { body })
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
+        expect(json._id).toEqual(body._id)
+        expect(json._rev).not.toEqual(body._rev)
         return [response, json]
     }
 
