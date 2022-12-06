@@ -10,7 +10,7 @@ export async function syncApp(appId: string) {
     }
   }
 
-  if (!dbCore.isDevAppID(appId)) {
+  if (dbCore.isProdAppID(appId)) {
     throw new Error("This action cannot be performed for production apps")
   }
 
