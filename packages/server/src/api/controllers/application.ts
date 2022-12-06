@@ -466,8 +466,9 @@ async function destroyApp(ctx: BBContext) {
 
   if (isUnpublish) {
     appId = dbCore.getProdAppID(appId)
+    const devAppId = dbCore.getDevAppID(appId)
     // sync before removing the published app
-    await sdk.applications.syncApp(appId)
+    await sdk.applications.syncApp(devAppId)
   }
 
   const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
