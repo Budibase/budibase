@@ -5297,5 +5297,28 @@
       "type": "schema",
       "suffix": "repeater"
     }
+  },
+  "pdfreport": {
+    "name": "Report",
+    "icon": "Document",
+    "hasChildren": true,
+    "showEmptyState": false,
+    "settings": [
+      {
+        "type": "text",
+        "label": "File name",
+        "key": "fileName"
+      },
+      {
+        "type": "number",
+        "label": "Pages",
+        "key": "pageCount"
+      },
+      {
+        "type": "boolean",
+        "label": "Footer",
+        "key": "footer"
+      }
+    ]
   }
 }
