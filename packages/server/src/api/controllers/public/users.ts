@@ -11,7 +11,7 @@ import { BBContext, User } from "@budibase/types"
 
 function isLoggedInUser(ctx: BBContext, user: User) {
   const loggedInId = ctx.user?._id
-  const globalUserId = dbCore.getGlobalIDFromUserMetadataID(loggedInId)
+  const globalUserId = dbCore.getGlobalIDFromUserMetadataID(loggedInId!)
   // check both just incase
   return globalUserId === user._id || loggedInId === user._id
 }
