@@ -47,7 +47,10 @@
     // Apply initial visibility
     update(visible)
 
-    return { update }
+    return {
+      update,
+      destroy: () => update(false),
+    }
   }
 </script>
 
@@ -57,7 +60,7 @@
   class="side-panel"
   class:open
 >
-  {#if $sidePanelStore.open}
+  {#if open}
     <slot />
   {/if}
 </div>
