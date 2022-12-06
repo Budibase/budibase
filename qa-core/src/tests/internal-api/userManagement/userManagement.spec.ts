@@ -1,7 +1,9 @@
 import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
+import generateApp from "../../../config/internal-api/fixtures/applications"
 import { generateAdmin, generateAppUser, generateDeveloper, generateInviteUser } from "../../../config/internal-api/fixtures/userManagement"
+import { User } from "@budibase/types"
 
 describe("Internal API - User Management & Permissions", () => {
     const api = new InternalAPIClient()
@@ -46,7 +48,7 @@ describe("Internal API - User Management & Permissions", () => {
         const appUser = generateAppUser()
         const [userResponse, userData] = await config.userManagement.addUsers(appUser)
         const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(userData.created.successful[0]._id)
-        const body = {
+        const body: User = {
             ...userInfoJson,
             password: "newPassword"
 
@@ -56,18 +58,98 @@ describe("Internal API - User Management & Permissions", () => {
 
     it("Change User information", async () => {
         const appUser = generateAppUser()
-        const [userResponse, userData] = await config.userManagement.addUsers(appUser)
-        const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(userData.created.successful[0]._id)
-        const body = {
+        const [userResponse, userJson] = await config.userManagement.addUsers(appUser)
+        const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(userJson.created.successful[0]._id)
+        const body: User = {
             ...userInfoJson,
+            firstName: "newFirstName",
+            lastName: "newLastName",
             builder: {
                 global: true
             }
         }
         const [changedUserResponse, changedUserJson] = await config.userManagement.changeUserInformation(body)
-        expect(changedUserJson.builder?.global).toBeDefined()
-        expect(changedUserJson.builder?.global).toEqual(true)
+        expect(changedUserJson._id).toEqual(userJson.created.successful[0]._id)
+        expect(changedUserJson._rev).not.toEqual(userJson.created.successful[0]._rev)
+
+        const [changedUserInfoResponse, changedUserInfoJson] = await config.userManagement.getUserInformation(userJson.created.successful[0]._id)
+        expect(changedUserInfoJson.builder?.global).toBeDefined()
+        expect(changedUserInfoJson.builder?.global).toEqual(true)
     })
 
+    it("Add BASIC user to app", async () => {
+        const basicUser = generateAppUser()
+
+        const [createUserResponse, createUserJson] = await config.userManagement.addUsers(basicUser)
+
+        const app = await config.applications.create(generateApp())
+        config.applications.api.appId = app.appId
+
+        const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(createUserJson.created.successful[0]._id)
+        const body: User = {
+            ...userInfoJson,
+            roles: {
+                [app.appId?.toString() || ""]: "BASIC",
+            }
+        }
+        const [changedUserResponse, changedUserJson] = await config.userManagement.changeUserInformation(body)
+        expect(changedUserJson._id).toEqual(createUserJson.created.successful[0]._id)
+        expect(changedUserJson._rev).not.toEqual(createUserJson.created.successful[0]._rev)
+
+        const [changedUserInfoResponse, changedUserInfoJson] = await config.userManagement.getUserInformation(createUserJson.created.successful[0]._id)
+        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toBeDefined()
+        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toEqual("BASIC")
+
+    })
+
+    it("Add ADMIN user to app", async () => {
+        const adminUser = generateAdmin()
+
+        const [createUserResponse, createUserJson] = await config.userManagement.addUsers(adminUser)
+
+        const app = await config.applications.create(generateApp())
+        config.applications.api.appId = app.appId
+
+        const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(createUserJson.created.successful[0]._id)
+        const body: User = {
+            ...userInfoJson,
+            roles: {
+                [app.appId?.toString() || ""]: "ADMIN",
+            }
+        }
+        const [changedUserResponse, changedUserJson] = await config.userManagement.changeUserInformation(body)
+        expect(changedUserJson._id).toEqual(createUserJson.created.successful[0]._id)
+        expect(changedUserJson._rev).not.toEqual(createUserJson.created.successful[0]._rev)
+
+        const [changedUserInfoResponse, changedUserInfoJson] = await config.userManagement.getUserInformation(createUserJson.created.successful[0]._id)
+        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toBeDefined()
+        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toEqual("ADMIN")
+
+    })
+
+    it("Add POWER user to app", async () => {
+        const powerUser = generateDeveloper()
+
+        const [createUserResponse, createUserJson] = await config.userManagement.addUsers(powerUser)
+
+        const app = await config.applications.create(generateApp())
+        config.applications.api.appId = app.appId
+
+        const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(createUserJson.created.successful[0]._id)
+        const body: User = {
+            ...userInfoJson,
+            roles: {
+                [app.appId?.toString() || ""]: "POWER",
+            }
+        }
+        const [changedUserResponse, changedUserJson] = await config.userManagement.changeUserInformation(body)
+        expect(changedUserJson._id).toEqual(createUserJson.created.successful[0]._id)
+        expect(changedUserJson._rev).not.toEqual(createUserJson.created.successful[0]._rev)
+
+        const [changedUserInfoResponse, changedUserInfoJson] = await config.userManagement.getUserInformation(createUserJson.created.successful[0]._id)
+        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toBeDefined()
+        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toEqual("POWER")
+
+    })
 
 })
