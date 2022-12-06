@@ -2,20 +2,20 @@ import filterTests from "../../support/filterTests"
 const interact = require('../../support/interact')
 
 filterTests(["smoke", "all"], () => {
-  context("User Management", () => {
+  xcontext("User Management", () => {
     before(() => {
       cy.login()
       cy.deleteApp("Cypress Tests")
       cy.createApp("Cypress Tests", false)
     })
 
-    it("should create a user via basic onboarding", () => {
+    xit("should create a user via basic onboarding", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
       cy.createUser("bbuser@test.com")
       cy.get(interact.SPECTRUM_TABLE).should("contain", "bbuser")
     })
 
-    it("should confirm App User role for a New User", () => {
+    xit("should confirm App User role for a New User", () => {
       cy.contains("bbuser").click()
       cy.get(".spectrum-Form-itemField").eq(3).should('contain', 'App User')
 
@@ -166,7 +166,7 @@ filterTests(["smoke", "all"], () => {
         })
     })
 
-    it("Should edit user details within user details page", () => {
+    xit("Should edit user details within user details page", () => {
       // Add First name
       cy.get(interact.FIELD, { timeout: 1000 }).eq(1).within(() => {
         cy.wait(500)
@@ -190,7 +190,7 @@ filterTests(["smoke", "all"], () => {
       })
     })
 
-    it("should reset the users password", () => {
+    xit("should reset the users password", () => {
       cy.get(".title").within(() => {
         cy.get(interact.SPECTRUM_ICON).click({ force: true })
       })
@@ -230,7 +230,7 @@ filterTests(["smoke", "all"], () => {
       cy.login()
       })
 
-    it("should delete a user", () => {
+    xit("should delete a user", () => {
       cy.deleteUser("bbuser@test.com")
       cy.get(interact.SPECTRUM_TABLE, { timeout: 4000 }).should("not.have.text", "bbuser")
     })
