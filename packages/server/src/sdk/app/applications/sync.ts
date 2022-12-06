@@ -1,6 +1,6 @@
 import env from "../../../environment"
-import { syncGlobalUsers } from "../../../api/controllers/user"
 import { db as dbCore, context } from "@budibase/backend-core"
+import sdk from "../../"
 
 export async function syncApp(appId: string) {
   if (env.DISABLE_AUTO_PROD_APP_SYNC) {
@@ -41,7 +41,7 @@ export async function syncApp(appId: string) {
   }
 
   // sync the users
-  await syncGlobalUsers()
+  await sdk.users.syncGlobalUsers()
 
   if (error) {
     throw error
