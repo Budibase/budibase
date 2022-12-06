@@ -30,8 +30,8 @@ describe("Internal API - User Management & Permissions", () => {
         await config.userManagement.addUsers(developer)
         await config.userManagement.addUsers(appUser)
 
-        const [allUsersResponse, allUsersData] = await config.userManagement.getAllUsers()
-        expect(allUsersData.length).toBeGreaterThan(0)
+        const [allUsersResponse, allUsersJson] = await config.userManagement.getAllUsers()
+        expect(allUsersJson.length).toBeGreaterThan(0)
 
 
 
@@ -39,15 +39,15 @@ describe("Internal API - User Management & Permissions", () => {
 
     it("Delete User", async () => {
         const appUser = generateAppUser()
-        const [userResponse, userData] = await config.userManagement.addUsers(appUser)
-        const userId = userData.created.successful[0]._id
+        const [userResponse, userJson] = await config.userManagement.addUsers(appUser)
+        const userId = userJson.created.successful[0]._id
         await config.userManagement.deleteUser(<string>userId)
     })
 
     it("Reset Password", async () => {
         const appUser = generateAppUser()
-        const [userResponse, userData] = await config.userManagement.addUsers(appUser)
-        const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(userData.created.successful[0]._id)
+        const [userResponse, userJson] = await config.userManagement.addUsers(appUser)
+        const [userInfoResponse, userInfoJson] = await config.userManagement.getUserInformation(userJson.created.successful[0]._id)
         const body: User = {
             ...userInfoJson,
             password: "newPassword"
