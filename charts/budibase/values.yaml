@@ -22,6 +22,12 @@ serviceAccount:
 
 podAnnotations: {}
 
+# logAnnotations:
+#   co.elastic.logs/multiline.type: pattern
+#   co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#   co.elastic.logs/multiline.negate: false
+#   co.elastic.logs/multiline.match: after
+
 podSecurityContext:
   {}
   # fsGroup: 2000
