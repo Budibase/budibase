@@ -14,17 +14,19 @@
   export let permissions
 
   async function changePermission(level, role) {
-    await permissionsStore.save({
-      level,
-      role,
-      resource: resourceId,
-    })
+    try {
+      await permissionsStore.save({
+        level,
+        role,
+        resource: resourceId,
+      })
 
-    // Show updated permissions in UI: REMOVE
-    permissions = await permissionsStore.forResource(resourceId)
-    notifications.success("Updated permissions.")
-    // TODO: update permissions
-    // permissions[]
+      // Show updated permissions in UI: REMOVE
+      permissions = await permissionsStore.forResource(resourceId)
+      notifications.success("Updated permissions")
+    } catch (error) {
+      notifications.error("Error updating permissions")
+    }
   }
 </script>
 

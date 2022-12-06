@@ -1,113 +1,76 @@
 <script>
-  import { onMount, onDestroy } from "svelte"
-  import { Button, Modal, notifications, ModalContent } from "@budibase/bbui"
-  import FeedbackIframe from "../feedback/FeedbackIframe.svelte"
+  import {
+    Button,
+    Modal,
+    notifications,
+    ModalContent,
+    Layout,
+  } from "@budibase/bbui"
+  import { API } from "api"
+  import analytics, { Events, EventSource } from "analytics"
   import { store } from "builderStore"
-  import api from "builderStore/api"
-  import analytics from "analytics"
-
-  const DeploymentStatus = {
-    SUCCESS: "SUCCESS",
-    PENDING: "PENDING",
-    FAILURE: "FAILURE",
-  }
-
-  const POLL_INTERVAL = 10000
+  import { ProgressCircle } from "@budibase/bbui"
+  import CopyInput from "components/common/inputs/CopyInput.svelte"
 
   let feedbackModal
-  let deployments = []
-  let poll
   let publishModal
+  let asyncModal
+  let publishCompleteModal
 
-  $: appId = $store.appId
+  let published
+
+  $: publishedUrl = published ? `${window.origin}/app${published.appUrl}` : ""
+
+  export let onOk
 
   async function deployApp() {
     try {
-      const response = await api.post("/api/deploy")
-      if (response.status !== 200) {
-        throw new Error(`status ${response.status}`)
-      } else {
-        notifications.success(`Application published successfully`)
+      //In Progress
+      asyncModal.show()
+      publishModal.hide()
+
+      published = await API.deployAppChanges()
+
+      if (typeof onOk === "function") {
+        await onOk()
       }
-    } catch (err) {
-      analytics.captureException(err)
-      notifications.error(`Error publishing app: ${err}`)
+
+      //Request completed
+      asyncModal.hide()
+      publishCompleteModal.show()
+    } catch (error) {
+      analytics.captureException(error)
+      notifications.error("Error publishing app")
     }
   }
 
-  async function fetchDeployments() {
-    try {
-      const response = await api.get(`/api/deployments`)
-      const json = await response.json()
-
-      if (deployments.length > 0) {
-        checkIncomingDeploymentStatus(deployments, json)
-      }
-
-      deployments = json
-    } catch (err) {
-      console.error(err)
-      clearInterval(poll)
-      notifications.error(
-        "Error fetching deployment history. Please try again."
-      )
+  const viewApp = () => {
+    if (published) {
+      analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
+        appId: $store.appId,
+        eventSource: EventSource.PORTAL,
+      })
+      window.open(publishedUrl, "_blank")
     }
   }
-
-  // Required to check any updated deployment statuses between polls
-  function checkIncomingDeploymentStatus(current, incoming) {
-    for (let incomingDeployment of incoming) {
-      if (
-        incomingDeployment.status === DeploymentStatus.FAILURE ||
-        incomingDeployment.status === DeploymentStatus.SUCCESS
-      ) {
-        const currentDeployment = current.find(
-          deployment => deployment._id === incomingDeployment._id
-        )
-
-        // We have just been notified of an ongoing deployments status change
-        if (
-          !currentDeployment ||
-          currentDeployment.status === DeploymentStatus.PENDING
-        ) {
-          if (incomingDeployment.status === DeploymentStatus.FAILURE) {
-            notifications.error(incomingDeployment.err)
-          } else {
-            notifications.send(
-              "Published to Production.",
-              "success",
-              "CheckmarkCircle"
-            )
-          }
-        }
-      }
-    }
-  }
-
-  onMount(() => {
-    fetchDeployments()
-    poll = setInterval(fetchDeployments, POLL_INTERVAL)
-  })
-
-  onDestroy(() => clearInterval(poll))
 </script>
 
-<Button secondary on:click={publishModal.show}>Publish</Button>
+<Button cta on:click={publishModal.show}>Publish</Button>
 <Modal bind:this={feedbackModal}>
   <ModalContent
     title="Enjoying Budibase?"
     size="L"
     showConfirmButton={false}
     showCancelButton={false}
-  >
-    <FeedbackIframe on:finished={feedbackModal.hide} />
-  </ModalContent>
+  />
 </Modal>
+
 <Modal bind:this={publishModal}>
   <ModalContent
     title="Publish to Production"
     confirmText="Publish"
     onConfirm={deployApp}
+    dataCy={"deploy-app-modal"}
   >
     <span
       >The changes you have made will be published to the production version of
@@ -115,3 +78,57 @@
     >
   </ModalContent>
 </Modal>
+
+<!-- Publish in progress -->
+<Modal bind:this={asyncModal}>
+  <ModalContent
+    showCancelButton={false}
+    showConfirmButton={false}
+    showCloseIcon={false}
+  >
+    <Layout justifyItems="center">
+      <ProgressCircle size="XL" />
+    </Layout>
+  </ModalContent>
+</Modal>
+
+<!-- Publish complete -->
+<Modal bind:this={publishCompleteModal}>
+  <ModalContent
+    confirmText="Done"
+    cancelText="View App"
+    onCancel={viewApp}
+    dataCy="deploy-app-success-modal"
+  >
+    <div slot="header" class="app-published-header">
+      <svg
+        width="26px"
+        height="26px"
+        class="spectrum-Icon success-icon"
+        focusable="false"
+      >
+        <use xlink:href="#spectrum-icon-18-GlobeCheck" />
+      </svg>
+      <span class="app-published-header-text">App Published!</span>
+    </div>
+    <CopyInput
+      value={publishedUrl}
+      label="You can view your app at:"
+      dataCy="deployed-app-url"
+    />
+  </ModalContent>
+</Modal>
+
+<style>
+  .app-published-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  .success-icon {
+    color: var(--spectrum-global-color-green-600);
+  }
+  .app-published-header .app-published-header-text {
+    padding-left: var(--spacing-l);
+  }
+</style>

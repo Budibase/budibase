@@ -1,4 +1,4 @@
-import { uuid } from "builderStore/uuid"
+import { Helpers } from "@budibase/bbui"
 import { BaseStructure } from "./BaseStructure"
 
 export class Component extends BaseStructure {
@@ -6,7 +6,7 @@ export class Component extends BaseStructure {
     super(false)
     this._children = []
     this._json = {
-      _id: uuid(),
+      _id: Helpers.uuid(),
       _component: name,
       _styles: {
         normal: {},

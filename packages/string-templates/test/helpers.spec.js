@@ -11,6 +11,19 @@ describe("test the custom helpers we have applied", () => {
   })
 })
 
+describe("test that it can run without helpers", () => {
+  it("should be able to run without helpers", async () => {
+    const output = await processString(
+      "{{ avg 1 1 1 }}",
+      {},
+      { noHelpers: true }
+    )
+    const valid = await processString("{{ avg 1 1 1 }}", {})
+    expect(valid).toBe("1")
+    expect(output).toBe("")
+  })
+})
+
 describe("test the math helpers", () => {
   it("should be able to produce an absolute", async () => {
     const output = await processString("{{abs a}}", {
@@ -176,17 +189,22 @@ describe("test the date helpers", () => {
 
   it("should test the timezone capabilities", async () => {
     const date = new Date(1611577535000)
-    const output = await processString("{{ date time 'HH-mm-ss Z' 'America/New_York' }}", {
-      time: date.toUTCString(),
-    })
-    const formatted = new dayjs(date).tz("America/New_York").format("HH-mm-ss Z")
+    const output = await processString(
+      "{{ date time 'HH-mm-ss Z' 'America/New_York' }}",
+      {
+        time: date.toUTCString(),
+      }
+    )
+    const formatted = new dayjs(date)
+      .tz("America/New_York")
+      .format("HH-mm-ss Z")
     expect(output).toBe(formatted)
   })
 
   it("should guess the users timezone when not specified", async () => {
     const date = new Date()
     const output = await processString("{{ date time 'Z' }}", {
-      time: date.toUTCString()
+      time: date.toUTCString(),
     })
     const timezone = dayjs.tz.guess()
     const offset = new dayjs(date).tz(timezone).format("Z")
@@ -254,6 +272,14 @@ describe("test the string helpers", () => {
     )
     expect(output).toBe("Hi!")
   })
+
+  it("should allow use of the ellipsis helper", async () => {
+    const output = await processString(
+      "{{ ellipsis \"adfasdfasdfasf\" 7 }}",
+      {},
+    )
+    expect(output).toBe("adfasdf…")
+  })
 })
 
 describe("test the comparison helpers", () => {
@@ -267,6 +293,7 @@ describe("test the comparison helpers", () => {
     )
     expect(output).toBe("Success")
   }
+
   it("should allow use of the lt helper", async () => {
     await compare("lt", 10, 15)
   })
@@ -297,12 +324,12 @@ describe("test the comparison helpers", () => {
 describe("Test the object/array helper", () => {
   it("should allow plucking from an array of objects", async () => {
     const context = {
-      items: [
-        { price: 20 },
-        { price: 30 },
-      ]
+      items: [{ price: 20 }, { price: 30 }],
     }
-    const output = await processString("{{ literal ( sum ( pluck items 'price' ) ) }}", context)
+    const output = await processString(
+      "{{ literal ( sum ( pluck items 'price' ) ) }}",
+      context
+    )
     expect(output).toBe(50)
   })
 
@@ -338,6 +365,13 @@ describe("Test the literal helper", () => {
       a: { b: "i-have-dashes" },
     })
     expect(output.b).toBe("i-have-dashes")
+  })
+})
+
+describe("Test that JSONpase helper", () => {
+  it("should state that the JSONparse helper is valid", async () => {
+    const output = isValid(`{{ JSONparse input }}`)
+    expect(output).toBe(true)
   })
 })
 
@@ -432,14 +466,25 @@ describe("Cover a few complex use cases", () => {
 
   it("should only invalidate a single string in an object", async () => {
     const input = {
-      dataProvider:"{{ literal [c670254c9e74e40518ee5becff53aa5be] }}",
-      theme:"spectrum--lightest",
-      showAutoColumns:false,
-      quiet:true,
-      size:"spectrum--medium",
-      rowCount:8,
+      dataProvider: "{{ literal [c670254c9e74e40518ee5becff53aa5be] }}",
+      theme: "spectrum--lightest",
+      showAutoColumns: false,
+      quiet: true,
+      size: "spectrum--medium",
+      rowCount: 8,
     }
     const output = await processObject(input, tableJson)
-    expect(output.dataProvider).not.toBe("Invalid Binding")
+    expect(output.dataProvider).not.toBe("Invalid binding")
+  })
+
+  it("should be able to handle external ids", async () => {
+    const input = {
+      dataProvider: "{{ literal [_id] }}",
+    }
+    const context = {
+      _id: "%5B%221%22%2C%221%22%5D",
+    }
+    const output = await processObject(input, context)
+    expect(output.dataProvider).toBe("%5B%221%22%2C%221%22%5D")
   })
 })

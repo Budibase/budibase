@@ -4,10 +4,15 @@ import { get as svelteGet } from "svelte/store"
 
 // currently supported level of relationship depth (server side)
 const MAX_DEPTH = 1
+
+//https://github.com/Budibase/budibase/issues/3030
+const internalType = "internal"
+
 const TYPES_TO_SKIP = [
   FIELDS.FORMULA.type,
   FIELDS.LONGFORM.type,
   FIELDS.ATTACHMENT.type,
+  internalType,
 ]
 
 export function getBindings({
@@ -53,7 +58,9 @@ export function getBindings({
     const field = Object.values(FIELDS).find(
       field => field.type === schema.type
     )
+
     const label = path == null ? column : `${path}.0.${column}`
+    const binding = path == null ? `[${column}]` : `[${path}].0.[${column}]`
     // only supply a description for relationship paths
     const description =
       path == null
@@ -67,8 +74,8 @@ export function getBindings({
       description,
       // don't include path, it messes things up, relationship path
       // will be replaced by the main array binding
-      readableBinding: column,
-      runtimeBinding: `[${column}]`,
+      readableBinding: label,
+      runtimeBinding: binding,
     })
   }
   return bindings

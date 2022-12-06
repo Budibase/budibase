@@ -1,7 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { allScreens, store } from "builderStore"
-  import { tables } from "stores/backend"
+  import { store } from "builderStore"
+  import { tables, datasources } from "stores/backend"
   import {
     ActionMenu,
     Icon,
@@ -21,11 +21,13 @@
   let originalName = table.name
   let templateScreens
   let willBeDeleted
+  let deleteTableName
 
   $: external = table?.type === "external"
+  $: allowDeletion = !external || table?.created
 
   function showDeleteModal() {
-    templateScreens = $allScreens.filter(
+    templateScreens = $store.screens.filter(
       screen => screen.autoTableId === table._id
     )
     willBeDeleted = ["All table data"].concat(
@@ -36,13 +38,24 @@
 
   async function deleteTable() {
     const wasSelectedTable = $tables.selected
-    await tables.delete(table)
-    store.actions.screens.delete(templateScreens)
-    await tables.fetch()
-    notifications.success("Table deleted")
-    if (wasSelectedTable._id === table._id) {
-      $goto("./table")
+    try {
+      await tables.delete(table)
+      await store.actions.screens.delete(templateScreens)
+      await tables.fetch()
+      if (table.type === "external") {
+        await datasources.fetch()
+      }
+      notifications.success("Table deleted")
+      if (wasSelectedTable && wasSelectedTable._id === table._id) {
+        $goto("./table")
+      }
+    } catch (error) {
+      notifications.error("Error deleting table")
     }
+  }
+
+  function hideDeleteDialog() {
+    deleteTableName = ""
   }
 
   async function save() {
@@ -59,15 +72,17 @@
   }
 </script>
 
-<ActionMenu>
-  <div slot="control" class="icon">
-    <Icon s hoverable name="MoreSmallList" />
-  </div>
-  <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
-  {#if !external}
+{#if allowDeletion}
+  <ActionMenu>
+    <div slot="control" class="icon">
+      <Icon s hoverable name="MoreSmallList" />
+    </div>
+    {#if !external}
+      <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
+    {/if}
     <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
-  {/if}
-</ActionMenu>
+  </ActionMenu>
+{/if}
 
 <Modal bind:this={editorModal}>
   <ModalContent
@@ -89,11 +104,15 @@
   bind:this={confirmDeleteDialog}
   okText="Delete Table"
   onOk={deleteTable}
+  onCancel={hideDeleteDialog}
   title="Confirm Deletion"
+  disabled={deleteTableName !== table.name}
 >
-  Are you sure you wish to delete the table
-  <i>{table.name}?</i>
-  The following will also be deleted:
+  <p>
+    Are you sure you wish to delete the table
+    <b>{table.name}?</b>
+    The following will also be deleted:
+  </p>
   <b>
     <div class="delete-items">
       {#each willBeDeleted as item}
@@ -101,7 +120,15 @@
       {/each}
     </div>
   </b>
-  This action cannot be undone.
+  <p>
+    This action cannot be undone - to continue please enter the table name below
+    to confirm.
+  </p>
+  <Input
+    bind:value={deleteTableName}
+    placeholder={table.name}
+    dataCy="delete-table-confirm"
+  />
 </ConfirmDialog>
 
 <style>

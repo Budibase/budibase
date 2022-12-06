@@ -4,11 +4,9 @@ version: "3"
 
 services:
   app-service:
-    restart: always
-    image: budibase/apps
+    restart: unless-stopped
+    image: budibase.docker.scarf.sh/budibase/apps
     container_name: bbapps
-    ports:
-      - "${APP_PORT}:4002"
     environment:
       SELF_HOSTED: 1
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
@@ -25,18 +23,19 @@ services:
       ENABLE_ANALYTICS: "true"
       REDIS_URL: redis-service:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-    volumes:
-      - ./logs:/logs
+      BB_ADMIN_USER_EMAIL: ${BB_ADMIN_USER_EMAIL}
+      BB_ADMIN_USER_PASSWORD: ${BB_ADMIN_USER_PASSWORD}
+      PLUGINS_DIR: ${PLUGINS_DIR}
     depends_on:
       - worker-service
       - redis-service
+#    volumes:
+#      - /some/path/to/plugins:/plugins
 
   worker-service:
-    restart: always
-    image: budibase/worker
+    restart: unless-stopped
+    image: budibase.docker.scarf.sh/budibase/worker
     container_name: bbworker
-    ports:
-      - "${WORKER_PORT}:4003"
     environment:
       SELF_HOSTED: 1
       PORT: 4003
@@ -45,31 +44,29 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_URL: http://minio-service:9000
+      APPS_URL: http://app-service:4002
       COUCH_DB_USERNAME: ${COUCH_DB_USER}
       COUCH_DB_PASSWORD: ${COUCH_DB_PASSWORD}
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
+      SENTRY_DSN: https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       REDIS_URL: redis-service:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-    volumes:
-      - ./logs:/logs
     depends_on:
       - redis-service
       - minio-service
       - couch-init
 
   minio-service:
-    restart: always
+    restart: unless-stopped
     image: minio/minio
     volumes:
       - minio_data:/data
-    ports:
-      - "${MINIO_PORT}:9000"
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BROWSER: "off"
-    command: server /data
+    command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -77,12 +74,14 @@ services:
       retries: 3
 
   proxy-service:
-    restart: always
-    image: envoyproxy/envoy:v1.16-latest
-    volumes:
-      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    restart: unless-stopped
     ports:
       - "${MAIN_PORT}:10000"
+    container_name: bbproxy
+    image: budibase/proxy
+    environment:
+      - PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
+      - PROXY_RATE_LIMIT_API_PER_SECOND=20
     depends_on:
       - minio-service
       - worker-service
@@ -90,13 +89,11 @@ services:
       - couchdb-service
 
   couchdb-service:
-    restart: always
+    restart: unless-stopped
     image: ibmcom/couchdb3
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
-    ports:
-      - "${COUCH_DB_PORT}:5984"
     volumes:
       - couchdb3_data:/opt/couchdb/data
 
@@ -107,30 +104,26 @@ services:
     depends_on:
       - couchdb-service
     command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
-  
+
   redis-service:
-    restart: always
+    restart: unless-stopped
     image: redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
-    ports:
-      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
-  
+
   watchtower-service:
+    restart: always
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --debug --http-api-update bbapps bbworker
+    command: --debug --http-api-update bbapps bbworker bbproxy
     environment:
       - WATCHTOWER_HTTP_API=true
       - WATCHTOWER_HTTP_API_TOKEN=budibase
       - WATCHTOWER_CLEANUP=true
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
-    ports:
-      - 6161:8080
-
 
 volumes:
   couchdb3_data:

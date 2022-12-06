@@ -1,0 +1,332 @@
+# Default values for budibase.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+# fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+# logAnnotations:
+#   co.elastic.logs/multiline.type: pattern
+#   co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#   co.elastic.logs/multiline.negate: false
+#   co.elastic.logs/multiline.match: after
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 10000
+
+ingress:
+  enabled: true
+  aws: false
+  nginx: true
+  certificateArn: ""
+  className: ""
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/client-max-body-size: 150M
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+  hosts:
+    - host: # change if using custom domain
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: proxy-service
+              port:
+                number: 10000
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+globals:
+  appVersion: "latest"
+  budibaseEnv: PRODUCTION
+  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS"
+  enableAnalytics: "1"
+  sentryDSN: ""
+  posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
+  logLevel: info
+  selfHosted: "1" # set to 0 for budibase cloud environment, set to 1 for self-hosted setup
+  multiTenancy: "0" # set to 0 to disable multiple orgs, set to 1 to enable multiple orgs
+  accountPortalUrl: ""
+  accountPortalApiKey: ""
+  cookieDomain: ""
+  platformUrl: ""
+  httpMigrations: "0"
+  google:
+    clientId: ""
+    secret: ""
+  automationMaxIterations: "200"
+
+  createSecrets: true # creates an internal API key, JWT secrets and redis password for you
+
+  # if createSecrets is set to false, you can hard-code your secrets here
+  internalApiKey: ""
+  jwtSecret: ""
+  cdnUrl: ""
+
+  smtp:
+    enabled: false
+
+#  elasticApmEnabled:
+#  elasticApmSecretToken:
+#  elasticApmServerUrl:
+
+services:
+  budibaseVersion: latest
+  dns: cluster.local
+  # tlsRejectUnauthorized: 0
+
+  proxy:
+    port: 10000
+    replicaCount: 1
+    resources: {}
+
+  apps:
+    port: 4002
+    replicaCount: 1
+    logLevel: info
+    resources: {}
+#    nodeDebug: "" # set the value of NODE_DEBUG
+
+  worker:
+    port: 4003
+    replicaCount: 1
+    resources: {}
+
+  couchdb:
+    enabled: true
+    # url: "" # only change if pointing to existing couch server
+    # user: "" # only change if pointing to existing couch server
+    # password: "" # only change if pointing to existing couch server
+    port: 5984
+    backup:
+      enabled: false
+      # target couchDB instance to back up to
+      target: ""
+      # backup interval in seconds
+      interval: ""
+      resources: {}
+
+  redis:
+    enabled: true # disable if using external redis
+    port: 6379
+    replicaCount: 1
+    url: "" # only change if pointing to existing redis cluster and enabled: false
+    password: "budibase" # recommended to override if using built-in redis
+    storage: 100Mi
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.
+    storageClass: ""
+    resources: {}
+
+  objectStore:
+    minio: true
+    browser: true
+    port: 9000
+    replicaCount: 1
+    accessKey: "" # AWS_ACCESS_KEY if using S3 or existing minio access key
+    secretKey: "" # AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret
+    region: "" # AWS_REGION if using S3 or existing minio secret
+    url: "http://minio-service:9000" # only change if pointing to existing minio cluster or S3 and minio: false
+    storage: 100Mi
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.
+    storageClass: ""
+    resources: {}
+
+# Override values in couchDB subchart
+couchdb:
+  ## clusterSize is the initial size of the CouchDB cluster.
+  clusterSize: 3
+  allowAdminParty: false
+
+  # Secret Management
+  createAdminSecret: true
+
+  # adminUsername: budibase
+  # adminPassword: budibase
+  # adminHash: -pbkdf2-this_is_not_necessarily_secure_either
+  # cookieAuthSecret: admin
+
+  ## When enabled, will deploy a networkpolicy that allows CouchDB pods to
+  ## communicate with each other for clustering and ingress on port 5984
+  networkPolicy:
+    enabled: true
+
+  # Use a service account
+  serviceAccount:
+    enabled: true
+    create: true
+  # name:
+  # imagePullSecrets:
+  # - name: myimagepullsecret
+
+  ## The storage volume used by each Pod in the StatefulSet. If a
+  ## persistentVolume is not enabled, the Pods will use `emptyDir` ephemeral
+  ## local storage. Setting the storageClass attribute to "-" disables dynamic
+  ## provisioning of Persistent Volumes; leaving it unset will invoke the default
+  ## provisioner.
+  persistentVolume:
+    enabled: false
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    storageClass: ""
+
+  ## The CouchDB image
+  image:
+    repository: couchdb
+    tag: 3.2.1
+    pullPolicy: IfNotPresent
+
+  ## Experimental integration with Lucene-powered fulltext search
+  enableSearch: true
+  searchImage:
+    repository: kocolosk/couchdb-search
+    tag: 0.2.0
+    pullPolicy: IfNotPresent
+
+  initImage:
+    repository: busybox
+    tag: latest
+    pullPolicy: Always
+
+  ## CouchDB is happy to spin up cluster nodes in parallel, but if you encounter
+  ## problems you can try setting podManagementPolicy to the StatefulSet default
+  ## `OrderedReady`
+  podManagementPolicy: Parallel
+
+  ## Optional pod annotations
+  annotations: {}
+
+  ## Optional tolerations
+  tolerations: []
+
+  affinity: {}
+
+  service:
+    # annotations:
+    enabled: true
+    type: ClusterIP
+    externalPort: 5984
+
+  ## An Ingress resource can provide name-based virtual hosting and TLS
+  ## termination among other things for CouchDB deployments which are accessed
+  ## from outside the Kubernetes cluster.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+  ingress:
+    enabled: false
+    hosts:
+      - chart-example.local
+    path: /
+    annotations:
+      []
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    tls:
+      # Secrets must be manually created in the namespace.
+      # - secretName: chart-example-tls
+      #   hosts:
+      #     - chart-example.local
+
+  ## Optional resource requests and limits for the CouchDB container
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  resources:
+    {}
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # limits:
+    #  cpu: 56
+    #  memory: 256Gi
+
+  ## erlangFlags is a map that is passed to the Erlang VM as flags using the
+  ## ERL_FLAGS env. `name` and `setcookie` flags are minimally required to
+  ## establish connectivity between cluster nodes.
+  ## ref: http://erlang.org/doc/man/erl.html#init_flags
+  erlangFlags:
+    name: couchdb
+    setcookie: monster
+
+  ## couchdbConfig will override default CouchDB configuration settings.
+  ## The contents of this map are reformatted into a .ini file laid down
+  ## by a ConfigMap object.
+  ## ref: http://docs.couchdb.org/en/latest/config/index.html
+  couchdbConfig:
+    couchdb:
+      uuid: budibase-couchdb # REQUIRED: Unique identifier for this CouchDB server instance
+    # cluster:
+    #   q: 8 # Create 8 shards for each database
+    chttpd:
+      bind_address: any
+      # chttpd.require_valid_user disables all the anonymous requests to the port
+      # 5984 when is set to true.
+      require_valid_user: false
+
+  # Kubernetes local cluster domain.
+  # This is used to generate FQDNs for peers when joining the CouchDB cluster.
+  dns:
+    clusterDomainSuffix: cluster.local
+
+  ## Configure liveness and readiness probe values
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  livenessProbe:
+    enabled: true
+    failureThreshold: 3
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+  readinessProbe:
+    enabled: true
+    failureThreshold: 3
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1

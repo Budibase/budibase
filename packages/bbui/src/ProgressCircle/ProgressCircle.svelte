@@ -13,7 +13,7 @@
     }
   }
 
-  export let value = false
+  export let value = null
   export let minValue = 0
   export let maxValue = 100
 
@@ -42,7 +42,7 @@
 
 <div
   on:click
-  class:spectrum-ProgressCircle--indeterminate={!value}
+  class:spectrum-ProgressCircle--indeterminate={value == null}
   class:spectrum-ProgressCircle--overBackground={overBackground}
   class="spectrum-ProgressCircle spectrum-ProgressCircle--{convertSize(size)}"
 >

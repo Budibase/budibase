@@ -1,6 +1,6 @@
 <script>
   import "@spectrum-css/textfield/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
   export let value = null
   export let placeholder = null
@@ -11,19 +11,24 @@
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
+  export let dataCy
+  export let align
+  export let autofocus = false
 
   const dispatch = createEventDispatcher()
+
+  let field
   let focus = false
 
-  const updateValue = value => {
+  const updateValue = newValue => {
     if (readonly) {
       return
     }
     if (type === "number") {
-      const float = parseFloat(value)
-      value = isNaN(float) ? null : float
+      const float = parseFloat(newValue)
+      newValue = isNaN(float) ? null : float
     }
-    dispatch("change", value)
+    dispatch("change", newValue)
   }
 
   const onFocus = () => {
@@ -56,6 +61,11 @@
       updateValue(event.target.value)
     }
   }
+
+  onMount(() => {
+    focus = autofocus
+    if (focus) field.focus()
+  })
 </script>
 
 <div
@@ -75,9 +85,11 @@
     </svg>
   {/if}
   <input
+    bind:this={field}
     {disabled}
     {readonly}
     {id}
+    data-cy={dataCy}
     value={value || ""}
     placeholder={placeholder || ""}
     on:click
@@ -91,11 +103,17 @@
     on:keyup={updateValueOnEnter}
     {type}
     class="spectrum-Textfield-input"
+    style={align ? `text-align: ${align};` : ""}
+    inputmode={type === "number" ? "decimal" : "text"}
   />
 </div>
 
 <style>
   .spectrum-Textfield {
     width: 100%;
+  }
+  input:disabled {
+    color: var(--spectrum-global-color-gray-600) !important;
+    -webkit-text-fill-color: var(--spectrum-global-color-gray-600) !important;
   }
 </style>

@@ -1,9 +1,11 @@
+jest.mock("pg")
+
 let setup = require("./utilities")
 let { basicDatasource } = setup.structures
 let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-
-jest.mock("pg")
 const pg = require("pg")
+const { checkCacheForDynamicVariable } = require("../../../threads/utils")
+const { events } = require("@budibase/backend-core") 
 
 describe("/datasources", () => {
   let request = setup.getRequest()
@@ -15,6 +17,7 @@ describe("/datasources", () => {
   beforeEach(async () => {
     await config.init()
     datasource = await config.createDatasource()
+    jest.clearAllMocks()
   })
 
   describe("create", () => {
@@ -26,8 +29,54 @@ describe("/datasources", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-      expect(res.res.statusMessage).toEqual("Datasource saved successfully.")
-      expect(res.body.name).toEqual("Test")
+      expect(res.body.datasource.name).toEqual("Test")
+      expect(res.body.errors).toBeUndefined()
+      expect(events.datasource.created).toBeCalledTimes(1)
+    })
+  })
+
+  describe("update", () => {
+    it("should update an existing datasource", async () => {
+      datasource.name = "Updated Test"
+      const res = await request
+        .put(`/api/datasources/${datasource._id}`)
+        .send(datasource)
+        .set(config.defaultHeaders())
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      expect(res.body.datasource.name).toEqual("Updated Test")
+      expect(res.body.errors).toBeUndefined()
+      expect(events.datasource.updated).toBeCalledTimes(1)
+    })
+
+    describe("dynamic variables", () => {
+      async function preview(datasource, fields) {
+        return config.previewQuery(request, config, datasource, fields)
+      }
+
+      it("should invalidate changed or removed variables", async () => {
+        const { datasource, query } = await config.dynamicVariableDatasource()
+        // preview once to cache variables
+        await preview(datasource, { path: "www.test.com", queryString: "test={{ variable3 }}" })
+        // check variables in cache
+        let contents = await checkCacheForDynamicVariable(query._id, "variable3")
+        expect(contents.rows.length).toEqual(1)
+        
+        // update the datasource to remove the variables
+        datasource.config.dynamicVariables = []
+        const res = await request
+          .put(`/api/datasources/${datasource._id}`)
+          .send(datasource)
+          .set(config.defaultHeaders())
+          .expect('Content-Type', /json/)
+          .expect(200)
+        expect(res.body.errors).toBeUndefined()
+
+        // check variables no longer in cache
+        contents = await checkCacheForDynamicVariable(query._id, "variable3")
+        expect(contents).toBe(null)
+      })
     })
   })
 
@@ -82,7 +131,7 @@ describe("/datasources", () => {
             entityId: "users",
           },
           resource: {
-            fields: ["name", "age"],
+            fields: ["users.name", "users.age"],
           },
           filters: {
             string: {
@@ -94,7 +143,8 @@ describe("/datasources", () => {
         .expect(200)
       // this is mock data, can't test it
       expect(res.body).toBeDefined()
-      expect(pg.queryMock).toHaveBeenCalledWith(`select "name", "age" from "users" where "name" like $1 limit $2`, ["John%", 5000])
+      const expSql = `select "users"."name" as "users.name", "users"."age" as "users.age" from (select * from "users" where "users"."name" ilike $1 limit $2) as "users"`
+      expect(pg.queryMock).toHaveBeenCalledWith(expSql, ["John%", 5000])
     })
   })
 
@@ -114,6 +164,7 @@ describe("/datasources", () => {
         .expect(200)
 
       expect(res.body.length).toEqual(1)
+      expect(events.datasource.deleted).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

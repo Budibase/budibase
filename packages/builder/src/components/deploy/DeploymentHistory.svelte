@@ -3,16 +3,14 @@
   import Spinner from "components/common/Spinner.svelte"
   import { slide } from "svelte/transition"
   import { Heading, Button, Modal, ModalContent } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { notifications } from "@budibase/bbui"
   import CreateWebhookDeploymentModal from "./CreateWebhookDeploymentModal.svelte"
-  import { store, hostingStore } from "builderStore"
-
-  const DeploymentStatus = {
-    SUCCESS: "SUCCESS",
-    PENDING: "PENDING",
-    FAILURE: "FAILURE",
-  }
+  import { store } from "builderStore"
+  import {
+    checkIncomingDeploymentStatus,
+    DeploymentStatus,
+  } from "components/deploy/utils"
 
   const DATE_OPTIONS = {
     fullDate: {
@@ -37,46 +35,27 @@
   let poll
   let deployments = []
   let urlComponent = $store.url || `/${appId}`
-  let deploymentUrl = `${$hostingStore.appUrl}${urlComponent}`
+  let deploymentUrl = `${urlComponent}`
 
   const formatDate = (date, format) =>
     Intl.DateTimeFormat("en-GB", DATE_OPTIONS[format]).format(date)
 
-  // Required to check any updated deployment statuses between polls
-  function checkIncomingDeploymentStatus(current, incoming) {
-    for (let incomingDeployment of incoming) {
-      if (incomingDeployment.status === DeploymentStatus.FAILURE) {
-        const currentDeployment = current.find(
-          deployment => deployment._id === incomingDeployment._id
-        )
-
-        // We have just been notified of an ongoing deployments failure
-        if (
-          !currentDeployment ||
-          currentDeployment.status === DeploymentStatus.PENDING
-        ) {
-          showErrorReasonModal(incomingDeployment.err)
-        }
-      }
-    }
-  }
-
   async function fetchDeployments() {
     try {
-      const response = await api.get(`/api/deployments`)
-      const json = await response.json()
-
+      const newDeployments = await API.getAppDeployments()
       if (deployments.length > 0) {
-        checkIncomingDeploymentStatus(deployments, json)
+        const pendingDeployments = checkIncomingDeploymentStatus(
+          deployments,
+          newDeployments
+        )
+        if (pendingDeployments.length) {
+          showErrorReasonModal(pendingDeployments[0].err)
+        }
       }
-
-      deployments = json
+      deployments = newDeployments
     } catch (err) {
-      console.error(err)
       clearInterval(poll)
-      notifications.error(
-        "Error fetching deployment history. Please try again."
-      )
+      notifications.error("Error fetching deployment overview")
     }
   }
 

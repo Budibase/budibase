@@ -1,28 +1,50 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
-  import { domDebounce } from "../../utils/domDebounce"
+  import { domDebounce } from "utils/domDebounce"
+  import { builderStore } from "stores"
 
   export let componentId
   export let color
   export let transition
   export let zIndex
+  export let prefix = null
+  export let allowResizeAnchors = false
 
   let indicators = []
   let interval
   let text
+  let icon
+  let insideGrid = false
+
   $: visibleIndicators = indicators.filter(x => x.visible)
+  $: offset = $builderStore.inBuilder ? 0 : 2
 
   let updating = false
   let observers = []
   let callbackCount = 0
   let nextIndicators = []
 
+  const checkInsideGrid = id => {
+    const component = document.getElementsByClassName(id)[0]
+    const domNode = component?.children[0]
+
+    // Ignore grid itself
+    if (domNode?.classList.contains("grid")) {
+      return false
+    }
+
+    return component?.parentNode
+      ?.closest?.(".component")
+      ?.childNodes[0]?.classList.contains("grid")
+  }
+
   const createIntersectionCallback = idx => entries => {
     if (callbackCount >= observers.length) {
       return
     }
-    nextIndicators[idx].visible = entries[0].isIntersecting
+    nextIndicators[idx].visible =
+      nextIndicators[idx].isSidePanel || entries[0].isIntersecting
     if (++callbackCount === observers.length) {
       indicators = nextIndicators
       updating = false
@@ -47,10 +69,21 @@
     observers = []
     nextIndicators = []
 
+    // Check if we're inside a grid
+    if (allowResizeAnchors) {
+      insideGrid = checkInsideGrid(componentId)
+    }
+
     // Determine next set of indicators
     const parents = document.getElementsByClassName(componentId)
     if (parents.length) {
       text = parents[0].dataset.name
+      if (prefix) {
+        text = `${prefix} ${text}`
+      }
+      if (parents[0].dataset.icon) {
+        icon = parents[0].dataset.icon
+      }
     }
 
     // Batch reads to minimize reflow
@@ -59,9 +92,10 @@
 
     // Extract valid children
     // Sanity limit of 100 active indicators
-    const children = Array.from(parents)
-      .map(parent => parent?.childNodes?.[0])
-      .filter(child => child != null)
+    const children = Array.from(
+      document.getElementsByClassName(`${componentId}-dom`)
+    )
+      .filter(x => x != null)
       .slice(0, 100)
 
     // If there aren't any nodes then reset
@@ -70,20 +104,26 @@
       updating = false
     }
 
+    const device = document.getElementById("app-root")
+    const deviceBounds = device.getBoundingClientRect()
     children.forEach((child, idx) => {
       const callback = createIntersectionCallback(idx)
       const threshold = children.length > 1 ? 1 : 0
-      const observer = new IntersectionObserver(callback, { threshold })
+      const observer = new IntersectionObserver(callback, {
+        threshold,
+        root: device,
+      })
       observer.observe(child)
       observers.push(observer)
 
       const elBounds = child.getBoundingClientRect()
       nextIndicators.push({
-        top: elBounds.top + scrollY - 2,
-        left: elBounds.left + scrollX - 2,
+        top: elBounds.top + scrollY - deviceBounds.top - offset,
+        left: elBounds.left + scrollX - deviceBounds.left - offset,
         width: elBounds.width + 4,
         height: elBounds.height + 4,
         visible: false,
+        isSidePanel: child.classList.contains("side-panel"),
       })
     })
   }
@@ -110,6 +150,9 @@
       width={indicator.width}
       height={indicator.height}
       text={idx === 0 ? text : null}
+      icon={idx === 0 ? icon : null}
+      showResizeAnchors={allowResizeAnchors && insideGrid}
+      {componentId}
       {transition}
       {zIndex}
       {color}

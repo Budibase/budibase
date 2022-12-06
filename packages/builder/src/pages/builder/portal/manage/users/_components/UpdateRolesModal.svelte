@@ -6,25 +6,46 @@
   export let app
   export let user
 
+  const NO_ACCESS = "NO_ACCESS"
+
   const dispatch = createEventDispatcher()
 
   const roles = app.roles
-  let options = roles.map(role => role._id)
+  let options = roles
+    .filter(role => role._id !== "PUBLIC")
+    .map(role => ({ value: role._id, label: role.name }))
+
+  if (!user?.builder?.global) {
+    options.push({ value: NO_ACCESS, label: "No Access" })
+  }
   let selectedRole = user?.roles?.[app?._id]
 
   async function updateUserRoles() {
-    const res = await users.save({
-      ...user,
-      roles: {
-        ...user.roles,
-        [app._id]: selectedRole,
-      },
-    })
-    if (res.status === 400) {
-      notifications.error("Failed to update role")
-    } else {
+    try {
+      if (selectedRole === NO_ACCESS) {
+        // Remove the user role
+        const filteredRoles = { ...user.roles }
+        delete filteredRoles[app?._id]
+        await users.save({
+          ...user,
+          roles: {
+            ...filteredRoles,
+          },
+        })
+      } else {
+        // Add the user role
+        await users.save({
+          ...user,
+          roles: {
+            ...user.roles,
+            [app._id]: selectedRole,
+          },
+        })
+      }
       notifications.success("Role updated")
       dispatch("update")
+    } catch (error) {
+      notifications.error("Failed to update role")
     }
   }
 </script>
@@ -46,5 +67,7 @@
     on:change
     {options}
     label="Role"
+    getOptionLabel={role => role.label}
+    getOptionValue={role => role.value}
   />
 </ModalContent>

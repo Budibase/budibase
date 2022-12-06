@@ -1,7 +1,7 @@
 <script>
   import { Select, Label, notifications, ModalContent } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
-  import analytics from "analytics"
+  import { FIELDS } from "constants/backend"
 
   const CALCULATIONS = [
     {
@@ -25,18 +25,24 @@
   )
   $: fields =
     viewTable &&
-    Object.keys(viewTable.schema).filter(
-      field =>
-        view.calculation === "count" ||
-        // don't want to perform calculations based on auto ID
-        (viewTable.schema[field].type === "number" &&
-          !viewTable.schema[field].autocolumn)
-    )
+    Object.keys(viewTable.schema).filter(fieldName => {
+      const field = viewTable.schema[fieldName]
+      return (
+        field.type !== FIELDS.FORMULA.type &&
+        field.type !== FIELDS.LINK.type &&
+        (view.calculation === "count" ||
+          // don't want to perform calculations based on auto ID
+          (field.type === "number" && !field.autocolumn))
+      )
+    })
 
   function saveView() {
-    views.save(view)
-    notifications.success(`View ${view.name} saved.`)
-    analytics.captureEvent("Added View Calculate", { field: view.field })
+    try {
+      views.save(view)
+      notifications.success(`View ${view.name} saved`)
+    } catch (error) {
+      notifications.error("Error saving view")
+    }
   }
 </script>
 

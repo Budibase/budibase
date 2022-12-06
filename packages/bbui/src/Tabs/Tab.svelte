@@ -5,31 +5,56 @@
   export let icon = ""
 
   const dispatch = createEventDispatcher()
-  const selected = getContext("tab")
-  let tab
+  let selected = getContext("tab")
+  let tab_internal
   let tabInfo
+
   const setTabInfo = () => {
-    tabInfo = tab.getBoundingClientRect()
-    if ($selected.title === title) {
-      $selected.info = tabInfo
-    }
+    // If the tabs are being rendered inside a component which uses
+    // a svelte transition to enter, then this initial getBoundingClientRect
+    // will return an incorrect position.
+    // We just need to get this off the main thread to fix this, by using
+    // a 0ms timeout.
+    setTimeout(() => {
+      tabInfo = tab_internal?.getBoundingClientRect()
+      if (tabInfo && $selected.title === title) {
+        $selected.info = tabInfo
+      }
+    }, 0)
   }
 
   onMount(() => {
     setTabInfo()
   })
 
+  //Ensure that the underline is in the correct location
+  $: {
+    if ($selected.title === title && tab_internal) {
+      if ($selected.info?.left !== tab_internal.getBoundingClientRect().left) {
+        $selected = {
+          ...$selected,
+          info: tab_internal.getBoundingClientRect(),
+        }
+      }
+    }
+  }
+
   const onClick = () => {
-    $selected = { ...$selected, title, info: tab.getBoundingClientRect() }
+    $selected = {
+      ...$selected,
+      title,
+      info: tab_internal.getBoundingClientRect(),
+    }
     dispatch("click")
   }
 </script>
 
 <div
-  bind:this={tab}
+  bind:this={tab_internal}
   on:click={onClick}
   class:is-selected={$selected.title === title}
   class="spectrum-Tabs-item"
+  class:emphasized={$selected.title === title && $selected.emphasized}
   tabindex="0"
 >
   {#if icon}
@@ -49,3 +74,15 @@
     <slot />
   </Portal>
 {/if}
+
+<style>
+  .emphasized {
+    color: var(--spectrum-global-color-blue-600);
+  }
+  .spectrum-Tabs-item {
+    color: var(--spectrum-global-color-gray-600);
+  }
+  .spectrum-Tabs-item.is-selected {
+    color: var(--spectrum-global-color-gray-900);
+  }
+</style>

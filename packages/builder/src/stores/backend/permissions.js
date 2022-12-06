@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
 
 export function createPermissionStore() {
   const { subscribe } = writable([])
@@ -7,16 +7,14 @@ export function createPermissionStore() {
   return {
     subscribe,
     save: async ({ level, role, resource }) => {
-      const response = await api.post(
-        `/api/permission/${role}/${resource}/${level}`
-      )
-      const json = await response.json()
-      return json
+      return await API.updatePermissionForResource({
+        resourceId: resource,
+        roleId: role,
+        level,
+      })
     },
     forResource: async resourceId => {
-      const response = await api.get(`/api/permission/${resourceId}`)
-      const json = await response.json()
-      return json
+      return await API.getPermissionForResource(resourceId)
     },
   }
 }

@@ -5,22 +5,38 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Budibase Server",
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
-            "program": "${workspaceFolder}/app.js",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
+            "runtimeArgs": [
+                "--nolazy",
+                "-r",
+                "ts-node/register/transpile-only"
+            ],
+            "args": [
+                "${workspaceFolder}/packages/server/src/index.ts"
+            ],
+            "cwd": "${workspaceFolder}/packages/server"
         },
         {
+            "name": "Budibase Worker",
             "type": "node",
             "request": "launch",
-            "name": "Debug External",
-            "program": "${workspaceFolder}/packages/cli/bin/budi",
-            "args": [],
-            "cwd":"C:/code/my-apps",
-            "console": "externalTerminal" 
+            "runtimeArgs": [
+                "--nolazy",
+                "-r",
+                "ts-node/register/transpile-only"
+            ],
+            "args": [
+                "${workspaceFolder}/packages/worker/src/index.ts"
+            ],
+            "cwd": "${workspaceFolder}/packages/worker"
+        },
+    ],
+    "compounds": [
+        {
+          "name": "Start Budibase",
+          "configurations": ["Budibase Server", "Budibase Worker"]
         }
     ]
 }

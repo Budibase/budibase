@@ -7,6 +7,7 @@
   export let orange = false
   export let yellow = false
   export let seafoam = false
+  export let green = false
   export let active = false
   export let inactive = false
 </script>
@@ -17,6 +18,7 @@
   class:spectrum-Label--large={size === "L"}
   class:spectrum-Label--grey={grey}
   class:spectrum-Label--red={red}
+  class:spectrum-Label--green={green}
   class:spectrum-Label--orange={orange}
   class:spectrum-Label--yellow={yellow}
   class:spectrum-Label--seafoam={seafoam}

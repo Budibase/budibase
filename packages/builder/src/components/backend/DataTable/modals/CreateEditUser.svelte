@@ -1,14 +1,17 @@
 <script>
+  import { createEventDispatcher } from "svelte"
   import { tables, rows } from "stores/backend"
   import { roles } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
-  import * as backendApi from "../api"
-  import { ModalContent, Select } from "@budibase/bbui"
+  import { API } from "api"
+  import { ModalContent, Select, Link } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import { goto } from "@roxi/routify"
 
   export let row = {}
 
+  const dispatch = createEventDispatcher()
   let errors = []
 
   $: creating = row?._id == null
@@ -51,26 +54,35 @@
       return false
     }
 
-    const rowResponse = await backendApi.saveRow(
-      { ...row, tableId: table._id },
-      table._id
-    )
-    if (rowResponse.errors) {
-      if (Array.isArray(rowResponse.errors)) {
-        errors = rowResponse.errors.map(error => ({ message: error }))
+    try {
+      await API.saveRow({ ...row, tableId: table._id })
+      notifications.success("User saved successfully")
+      rows.save()
+      dispatch("updaterows")
+    } catch (error) {
+      if (error.handled) {
+        const response = error.json
+        if (response?.errors) {
+          if (Array.isArray(response.errors)) {
+            errors = response.errors.map(error => ({ message: error }))
+          } else {
+            errors = Object.entries(response.errors)
+              .map(([key, error]) => ({ dataPath: key, message: error }))
+              .flat()
+          }
+        } else if (error.status === 400 && response?.validationErrors) {
+          errors = Object.keys(response.validationErrors).map(field => ({
+            message: `${field} ${response.validationErrors[field][0]}`,
+          }))
+        } else {
+          errors = [{ message: response?.message || "Unknown error" }]
+        }
       } else {
-        errors = Object.entries(rowResponse.errors)
-          .map(([key, error]) => ({ dataPath: key, message: error }))
-          .flat()
+        notifications.error("Error saving user")
       }
-      return false
-    } else if (rowResponse.status === 400 || rowResponse.status === 500) {
-      errors = [{ message: rowResponse.message }]
+      // Prevent closing the modal on errors
       return false
     }
-
-    notifications.success("User saved successfully")
-    rows.save(rowResponse)
   }
 </script>
 
@@ -80,6 +92,15 @@
   onConfirm={saveRow}
 >
   <ErrorsBox {errors} />
+  <!-- need to explain to the user the readonly fields -->
+  {#if !creating}
+    <div>
+      A user's email, role, first and last names cannot be changed from within
+      the app builder. Please go to the <Link
+        on:click={$goto("/builder/portal/manage/users")}>user portal</Link
+      > to do this.
+    </div>
+  {/if}
   <RowFieldControl
     meta={{ ...tableSchema.email, name: "Email" }}
     bind:value={row.email}

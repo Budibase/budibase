@@ -8,16 +8,20 @@
   export let id = null
   export let text = null
   export let disabled = false
+  export let size
 
   const dispatch = createEventDispatcher()
   const onChange = event => {
     dispatch("change", event.target.checked)
   }
+
+  $: sizeClass = `spectrum-Checkbox--size${size || "M"}`
 </script>
 
 <label
-  class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-Checkbox--emphasized"
+  class="spectrum-Checkbox spectrum-Checkbox--emphasized {sizeClass}"
   class:is-invalid={!!error}
+  class:checked={value}
 >
   <input
     checked={value}
@@ -43,10 +47,22 @@
       <use xlink:href="#spectrum-css-icon-Dash100" />
     </svg>
   </span>
-  <span class="spectrum-Checkbox-label">{text || ""}</span>
+  {#if text}
+    <span class="spectrum-Checkbox-label">{text}</span>
+  {/if}
 </label>
 
 <style>
+  .spectrum-Checkbox--sizeL .spectrum-Checkbox-checkmark {
+    transform: scale(1.1);
+    left: 55%;
+    top: 55%;
+  }
+  .spectrum-Checkbox--sizeXL .spectrum-Checkbox-checkmark {
+    transform: scale(1.2);
+    left: 60%;
+    top: 60%;
+  }
   .spectrum-Checkbox-input {
     opacity: 0;
   }

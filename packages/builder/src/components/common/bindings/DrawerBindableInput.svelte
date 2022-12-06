@@ -4,39 +4,57 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
+  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
+  import { isJSBinding } from "@budibase/string-templates"
 
-  export let panel = BindingPanel
+  export let panel = ClientBindingPanel
   export let value = ""
   export let bindings = []
   export let title = "Bindings"
   export let placeholder
   export let label
   export let disabled = false
+  export let fillWidth
+  export let allowJS = true
+  export let updateOnChange = true
+  export let drawerLeft
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
-  $: tempValue = Array.isArray(value) ? value : []
-  $: readableValue = runtimeToReadableBinding(bindings, value)
+  let valid = true
+  let currentVal = value
 
-  const handleClose = () => {
+  $: readableValue = runtimeToReadableBinding(bindings, value)
+  $: tempValue = readableValue
+  $: isJS = isJSBinding(value)
+
+  const saveBinding = () => {
     onChange(tempValue)
+    onBlur()
     bindingDrawer.hide()
   }
 
   const onChange = value => {
-    dispatch("change", readableToRuntimeBinding(bindings, value))
+    currentVal = readableToRuntimeBinding(bindings, value)
+    dispatch("change", currentVal)
+  }
+
+  const onBlur = () => {
+    dispatch("blur", currentVal)
   }
 </script>
 
-<div class="control">
+<div class="control" class:disabled>
   <Input
     {label}
     {disabled}
-    value={readableValue}
+    readonly={isJS}
+    value={isJS ? "(JavaScript function)" : readableValue}
     on:change={event => onChange(event.detail)}
+    on:blur={onBlur}
     {placeholder}
+    {updateOnChange}
   />
   {#if !disabled}
     <div class="icon" on:click={bindingDrawer.show}>
@@ -44,18 +62,21 @@
     </div>
   {/if}
 </div>
-<Drawer bind:this={bindingDrawer} {title}>
+<Drawer {fillWidth} bind:this={bindingDrawer} {title} left={drawerLeft}>
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
+  <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
+    Save
+  </Button>
   <svelte:component
     this={panel}
     slot="body"
+    bind:valid
     value={readableValue}
-    close={handleClose}
-    on:update={event => (tempValue = event.detail)}
-    bindableProperties={bindings}
+    on:change={event => (tempValue = event.detail)}
+    {bindings}
+    {allowJS}
   />
 </Drawer>
 
@@ -92,5 +113,9 @@
     color: var(--spectrum-alias-text-color-hover);
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-alias-border-color-hover);
+  }
+
+  .control:not(.disabled) :global(.spectrum-Textfield-input) {
+    padding-right: 40px;
   }
 </style>

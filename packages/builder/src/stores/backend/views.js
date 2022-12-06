@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { tables, datasources, queries } from "./"
-import api from "builderStore/api"
+import { API } from "api"
 
 export function createViewsStore() {
   const { subscribe, update } = writable({
@@ -11,11 +11,12 @@ export function createViewsStore() {
   return {
     subscribe,
     update,
-    select: async view => {
+    select: view => {
       update(state => ({
         ...state,
         selected: view,
       }))
+      tables.unselect()
       queries.unselect()
       datasources.unselect()
     },
@@ -26,16 +27,14 @@ export function createViewsStore() {
       }))
     },
     delete: async view => {
-      await api.delete(`/api/views/${view}`)
+      await API.deleteView(view)
       await tables.fetch()
     },
     save: async view => {
-      const response = await api.post(`/api/views`, view)
-      const json = await response.json()
-
+      const savedView = await API.saveView(view)
       const viewMeta = {
         name: view.name,
-        ...json,
+        ...savedView,
       }
 
       const viewTable = get(tables).list.find(

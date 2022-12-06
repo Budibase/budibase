@@ -1,31 +1,40 @@
 import { writable, get } from "svelte/store"
-import { datasources, integrations, tables } from "./"
-import api from "builderStore/api"
+import { datasources, integrations, tables, views } from "./"
+import { API } from "api"
+import { duplicateName } from "helpers/duplicate"
+
+const sortQueries = queryList => {
+  queryList.sort((q1, q2) => {
+    return q1.name.localeCompare(q2.name)
+  })
+}
 
 export function createQueriesStore() {
-  const { subscribe, set, update } = writable({ list: [], selected: null })
+  const store = writable({ list: [], selected: null })
+  const { subscribe, set, update } = store
 
-  return {
-    subscribe,
-    set,
-    update,
+  const actions = {
     init: async () => {
-      const response = await api.get(`/api/queries`)
-      const json = await response.json()
-      set({ list: json, selected: null })
+      const queries = await API.getQueries()
+      set({
+        list: queries,
+        selected: null,
+      })
     },
     fetch: async () => {
-      const response = await api.get(`/api/queries`)
-      const json = await response.json()
-      update(state => ({ ...state, list: json }))
-      return json
+      const queries = await API.getQueries()
+      sortQueries(queries)
+      update(state => ({
+        ...state,
+        list: queries,
+      }))
     },
     save: async (datasourceId, query) => {
       const _integrations = get(integrations)
       const dataSource = get(datasources).list.filter(
         ds => ds._id === datasourceId
       )
-      // check if readable attribute is found
+      // Check if readable attribute is found
       if (dataSource.length !== 0) {
         const integration = _integrations[dataSource[0].source]
         const readable = integration.query[query.queryVerb].readable
@@ -34,49 +43,92 @@ export function createQueriesStore() {
         }
       }
       query.datasourceId = datasourceId
-      const response = await api.post(`/api/queries`, query)
-      if (response.status !== 200) {
-        throw new Error("Failed saving query.")
-      }
-      const json = await response.json()
+      const savedQuery = await API.saveQuery(query)
       update(state => {
-        const currentIdx = state.list.findIndex(query => query._id === json._id)
-
+        const idx = state.list.findIndex(query => query._id === savedQuery._id)
         const queries = state.list
-
-        if (currentIdx >= 0) {
-          queries.splice(currentIdx, 1, json)
+        if (idx >= 0) {
+          queries.splice(idx, 1, savedQuery)
         } else {
-          queries.push(json)
+          queries.push(savedQuery)
         }
-        return { list: queries, selected: json._id }
+        sortQueries(queries)
+        return {
+          list: queries,
+          selected: savedQuery._id,
+        }
       })
-      return json
+      return savedQuery
+    },
+    import: async ({ data, datasourceId }) => {
+      return await API.importQueries({
+        datasourceId,
+        data,
+      })
     },
     select: query => {
       update(state => ({ ...state, selected: query._id }))
-      tables.update(state => ({
-        ...state,
-        selected: null,
-      }))
+      views.unselect()
+      tables.unselect()
+      datasources.unselect()
     },
     unselect: () => {
       update(state => ({ ...state, selected: null }))
     },
-    delete: async query => {
-      const response = await api.delete(
-        `/api/queries/${query._id}/${query._rev}`
+    preview: async query => {
+      const parameters = query.parameters.reduce(
+        (acc, next) => ({
+          ...acc,
+          [next.name]: next.default,
+        }),
+        {}
       )
+      const result = await API.previewQuery({
+        ...query,
+        parameters,
+      })
+      // Assume all the fields are strings and create a basic schema from the
+      // unique fields returned by the server
+      const schema = {}
+      for (let [field, type] of Object.entries(result.schemaFields)) {
+        schema[field] = type || "string"
+      }
+      return { ...result, schema, rows: result.rows || [] }
+    },
+    delete: async query => {
+      await API.deleteQuery({
+        queryId: query?._id,
+        queryRev: query?._rev,
+      })
       update(state => {
         state.list = state.list.filter(existing => existing._id !== query._id)
         if (state.selected === query._id) {
           state.selected = null
         }
-
         return state
       })
-      return response
     },
+    duplicate: async query => {
+      let list = get(store).list
+      const newQuery = { ...query }
+      const datasourceId = query.datasourceId
+
+      delete newQuery._id
+      delete newQuery._rev
+      newQuery.name = duplicateName(
+        query.name,
+        list.map(q => q.name)
+      )
+
+      return actions.save(datasourceId, newQuery)
+    },
+  }
+
+  return {
+    subscribe,
+    set,
+    update,
+    ...actions,
   }
 }
 

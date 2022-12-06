@@ -1,0 +1,37 @@
+{{- if .Values.ingress.aws }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-budibase
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/success-codes: 200,301
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    {{- if .Values.ingress.certificateArn }}
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }} 
+    {{- end }}
+spec:
+  rules:
+    - http:
+        paths:
+        {{- if .Values.ingress.certificateArn }}
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: ssl-redirect
+              port:
+                name: use-annotation
+        {{- end }}
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: proxy-service
+              port:
+                number: {{ .Values.services.proxy.port }}
+{{- end }}

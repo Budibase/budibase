@@ -1,8 +1,16 @@
 <script>
-  import { Button, Select, Input } from "@budibase/bbui"
+  import { Button, Select, Input, Label } from "@budibase/bbui"
+  import { onMount, createEventDispatcher } from "svelte"
+  import { flags } from "stores/backend"
+  const dispatch = createEventDispatcher()
 
   export let value
+  const onChange = e => {
+    value = e.detail
+    dispatch("change", e.detail)
+  }
 
+  let touched = false
   let presets = false
 
   const CRON_EXPRESSIONS = [
@@ -22,23 +30,31 @@
       label: "Every Night at Midnight",
       value: "0 0 * * *",
     },
-    {
-      label: "Every Budibase Reboot",
-      value: "@reboot",
-    },
   ]
+
+  onMount(() => {
+    if (!$flags.cloud) {
+      CRON_EXPRESSIONS.push({
+        label: "Every Budibase Reboot",
+        value: "@reboot",
+      })
+    }
+  })
 </script>
 
 <div class="block-field">
-  <Input bind:value />
-
+  <Input on:change={onChange} {value} on:blur={() => (touched = true)} />
+  {#if touched && !value}
+    <Label><div class="error">Please specify a CRON expression</div></Label>
+  {/if}
   <div class="presets">
     <Button on:click={() => (presets = !presets)}
       >{presets ? "Hide" : "Show"} Presets</Button
     >
     {#if presets}
       <Select
-        bind:value
+        on:change={onChange}
+        {value}
         secondary
         extraThin
         label="Presets"
@@ -54,5 +70,9 @@
   }
   .block-field {
     padding-top: var(--spacing-s);
+  }
+  .error {
+    padding-top: var(--spacing-xs);
+    color: var(--spectrum-global-color-red-500);
   }
 </style>

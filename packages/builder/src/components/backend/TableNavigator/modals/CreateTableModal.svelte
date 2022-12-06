@@ -1,6 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { store } from "builderStore"
+  import { goto, url } from "@roxi/routify"
   import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import {
@@ -11,26 +10,27 @@
     Divider,
     Layout,
   } from "@budibase/bbui"
+  import { datasources } from "stores/backend"
   import TableDataImport from "../TableDataImport.svelte"
-  import analytics from "analytics"
-  import screenTemplates from "builderStore/store/screenTemplates"
+  import {
+    BUDIBASE_INTERNAL_DB_ID,
+    BUDIBASE_DATASOURCE_TYPE,
+  } from "constants/backend"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
-  import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
-  import { ROW_DETAIL_TEMPLATE } from "builderStore/store/screenTemplates/rowDetailScreen"
-  import { ROW_LIST_TEMPLATE } from "builderStore/store/screenTemplates/rowListScreen"
-
-  const defaultScreens = [
-    NEW_ROW_TEMPLATE,
-    ROW_DETAIL_TEMPLATE,
-    ROW_LIST_TEMPLATE,
-  ]
 
   $: tableNames = $tables.list.map(table => table.name)
+  $: selectedSource = $datasources.list.find(
+    source => source._id === $datasources.selected
+  )
 
-  let name
+  $: isSelectedInternal = selectedSource?.type === BUDIBASE_DATASOURCE_TYPE
+  $: targetDatasourceId = isSelectedInternal
+    ? selectedSource._id
+    : BUDIBASE_INTERNAL_DB_ID
+
+  export let name
   let dataImport
   let error = ""
-  let createAutoscreens = true
   let autoColumns = getAutoColumnInformation()
 
   function addAutoColumns(tableName, schema) {
@@ -57,6 +57,8 @@
       name,
       schema: addAutoColumns(name, dataImport.schema || {}),
       dataImport,
+      type: "internal",
+      sourceId: targetDatasourceId,
     }
 
     // Only set primary display if defined
@@ -65,33 +67,22 @@
     }
 
     // Create table
-    const table = await tables.save(newTable)
-    notifications.success(`Table ${name} created successfully.`)
-    analytics.captureEvent("Table Created", { name })
+    let table
+    try {
+      table = await tables.save(newTable)
+      notifications.success(`Table ${name} created successfully.`)
 
-    // Create auto screens
-    if (createAutoscreens) {
-      const screens = screenTemplates($store, [table])
-        .filter(template => defaultScreens.includes(template.id))
-        .map(template => template.create())
-      for (let screen of screens) {
-        // Record the table that created this screen so we can link it later
-        screen.autoTableId = table._id
-        await store.actions.screens.create(screen)
-      }
-
-      // Create autolink to newly created list screen
-      const listScreen = screens.find(screen =>
-        screen.props._instanceName.endsWith("List")
-      )
-      await store.actions.components.links.save(
-        listScreen.routing.route,
-        table.name
-      )
+      // Navigate to new table
+      const currentUrl = $url()
+      const path = currentUrl.endsWith("data")
+        ? `./table/${table._id}`
+        : `../../table/${table._id}`
+      $goto(path)
+    } catch (e) {
+      notifications.error(e)
+      // reload in case the table was created
+      await tables.fetch()
     }
-
-    // Navigate to new table
-    $goto(`../../table/${table._id}`)
   }
 </script>
 
@@ -124,10 +115,6 @@
     </div>
     <Divider />
   </div>
-  <Toggle
-    text="Generate screens in Design section"
-    bind:value={createAutoscreens}
-  />
   <div>
     <Layout gap="XS" noPadding>
       <Label grey extraSmall>Create Table from CSV (Optional)</Label>

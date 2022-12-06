@@ -1,6 +1,7 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { roles } = require("@budibase/backend-core")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
+const { BUILTIN_ROLE_IDS } = roles
 
 const HIGHER_ROLE_ID = BUILTIN_ROLE_IDS.BASIC
 const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC
@@ -37,9 +38,10 @@ describe("/permission", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body).toBeDefined()
-      expect(res.body.length).toEqual(2)
+      expect(res.body.length).toEqual(3)
       expect(res.body).toContain("read")
       expect(res.body).toContain("write")
+      expect(res.body).toContain("execute")
     })
   })
 
@@ -89,6 +91,9 @@ describe("/permission", () => {
 
   describe("check public user allowed", () => {
     it("should be able to read the row", async () => {
+      // replicate changes before checking permissions
+      await config.deploy()
+
       const res = await request
         .get(`/api/${table._id}/rows`)
         .set(config.publicHeaders())

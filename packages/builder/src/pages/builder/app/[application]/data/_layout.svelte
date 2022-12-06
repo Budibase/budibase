@@ -1,41 +1,32 @@
 <script>
-  import { goto, params } from "@roxi/routify"
-  import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
-  import { BUDIBASE_INTERNAL_DB } from "constants"
+  import { redirect } from "@roxi/routify"
+  import { Button, Tabs, Tab, Layout } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
 
   let selected = "Sources"
+
   let modal
 
-  $: isExternal =
-    $params.selectedDatasource &&
-    $params.selectedDatasource !== BUDIBASE_INTERNAL_DB
-
   function selectFirstDatasource() {
-    $goto("./table")
+    $redirect("./table")
   }
 </script>
 
-<!-- routify:options index=0 -->
+<!-- routify:options index=1 -->
 <div class="root">
   <div class="nav">
     <Tabs {selected} on:select={selectFirstDatasource}>
       <Tab title="Sources">
-        <div class="tab-content-padding">
-          <DatasourceNavigator />
-          <Modal bind:this={modal}>
-            <CreateDatasourceModal />
-          </Modal>
-        </div>
+        <Layout paddingX="L" paddingY="L" gap="S">
+          <Button dataCy={`new-datasource`} cta wide on:click={modal.show}
+            >Add source</Button
+          >
+        </Layout>
+        <CreateDatasourceModal bind:modal />
+        <DatasourceNavigator />
       </Tab>
     </Tabs>
-    <div
-      class="add-button"
-      data-cy={`new-${isExternal ? "datasource" : "table"}`}
-    >
-      <Icon hoverable name="AddCircle" on:click={modal.show} />
-    </div>
   </div>
   <div class="content">
     <slot />
@@ -62,10 +53,6 @@
   }
   .content :global(> span) {
     display: contents;
-  }
-
-  .tab-content-padding {
-    padding: 0 var(--spacing-xl);
   }
 
   .nav {

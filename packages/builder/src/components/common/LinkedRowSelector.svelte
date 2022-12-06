@@ -1,6 +1,6 @@
 <script>
   import { tables } from "stores/backend"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
   import { capitalise } from "../../helpers"
 
@@ -8,7 +8,9 @@
   export let linkedRows = []
 
   let rows = []
-  let linkedIds = (linkedRows || [])?.map(row => row?._id || row)
+  let linkedIds = (Array.isArray(linkedRows) ? linkedRows : [])?.map(
+    row => row?._id || row
+  )
 
   $: linkedRows = linkedIds
   $: label = capitalise(schema.name)
@@ -17,12 +19,9 @@
   $: fetchRows(linkedTableId)
 
   async function fetchRows(linkedTableId) {
-    const FETCH_ROWS_URL = `/api/${linkedTableId}/rows`
     try {
-      const response = await api.get(FETCH_ROWS_URL)
-      rows = await response.json()
+      rows = await API.fetchTableData(linkedTableId)
     } catch (error) {
-      console.log(error)
       rows = []
     }
   }
@@ -47,6 +46,7 @@
     getOptionValue={row => row._id}
     on:change={e => (linkedIds = e.detail ? [e.detail] : [])}
     {label}
+    sort
   />
 {:else}
   <Multiselect
@@ -55,5 +55,6 @@
     options={rows}
     getOptionLabel={getPrettyName}
     getOptionValue={row => row._id}
+    sort
   />
 {/if}

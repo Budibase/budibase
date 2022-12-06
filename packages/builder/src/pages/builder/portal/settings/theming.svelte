@@ -1,23 +1,24 @@
 <script>
   import { Layout, Heading, Body, Divider, Label, Select } from "@budibase/bbui"
   import { themeStore } from "builderStore"
-  import { capitalise } from "helpers"
+  import { Constants } from "@budibase/frontend-core"
 </script>
 
-<Layout>
+<Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">Theming</Heading>
     <Body>Customize how Budibase looks and feels.</Body>
   </Layout>
-  <Divider size="S" />
+  <Divider />
   <div class="fields">
     <div class="field">
       <Label size="L">Builder theme</Label>
       <Select
-        options={$themeStore.options}
+        options={Constants.Themes}
         bind:value={$themeStore.theme}
         placeholder={null}
-        getOptionLabel={capitalise}
+        getOptionLabel={x => x.name}
+        getOptionValue={x => x.class}
       />
     </div>
   </div>
@@ -30,7 +31,7 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 33% 1fr;
+    grid-template-columns: 120px 1fr;
     align-items: center;
   }
 </style>

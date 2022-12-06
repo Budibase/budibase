@@ -1,0 +1,54 @@
+{{- if .Values.services.couchdb.backup.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/name: couchdb-backup
+  name: couchdb-backup
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: couchdb-backup
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.21.0 (992df58d8)
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: couchdb-backup
+    spec:
+      containers:
+      - env:
+        - name: SOURCE
+          value: {{ .Values.services.couchdb.url }}
+        - name: TARGET
+          value: {{ .Values.services.couchdb.backup.target | quote }}
+        - name: RUN_EVERY_SECS
+          value: {{ .Values.services.couchdb.backup.interval | quote }}
+        - name: VERBOSE
+          value: "true"
+        image: redgeoff/replicate-couchdb-cluster
+        imagePullPolicy: Always
+        name: couchdb-backup
+        {{ with .Values.services.couchdb.backup.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+status: {}
+{{- end }}

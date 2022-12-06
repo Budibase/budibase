@@ -2,10 +2,15 @@
   import { Button, Heading, Body, Layout, Modal, Divider } from "@budibase/bbui"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { tables } from "stores/backend"
+  import { tables, datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
 
   let modal
+
+  $: internalTablesBySourceId = $tables.list.filter(
+    table =>
+      table.type !== "external" && $datasources.selected === table.sourceId
+  )
 </script>
 
 <Modal bind:this={modal}>
@@ -14,25 +19,27 @@
 
 <section>
   <Layout>
-    <header>
-      <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
-      <Heading size="M">Budibase Internal</Heading>
-    </header>
-    <Body size="S" grey lh
-      >Budibase internal tables are part of your app, the data will be stored in
-      your apps context.</Body
-    >
+    <Layout gap="XS" noPadding>
+      <header>
+        <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
+        <Heading size="M">Budibase Internal</Heading>
+      </header>
+      <Body size="M">
+        Budibase internal tables are part of your app, so the data will be
+        stored in your apps context.
+      </Body>
+    </Layout>
     <Divider />
     <Heading size="S">Tables</Heading>
     <div class="table-list">
-      {#each $tables.list.filter(table => table.type !== "external") as table}
+      {#each internalTablesBySourceId as table}
         <div
           class="table-list-item"
           on:click={$goto(`../../table/${table._id}`)}
         >
           <Body size="S">{table.name}</Body>
           {#if table.primaryDisplay}
-            <Body size="S">display column: {table.primaryDisplay}</Body>
+            <Body size="S">Display column: {table.primaryDisplay}</Body>
           {/if}
         </div>
       {/each}
@@ -50,7 +57,6 @@
   }
 
   header {
-    margin: 0 0 var(--spacing-xs) 0;
     display: flex;
     gap: var(--spacing-l);
     align-items: center;

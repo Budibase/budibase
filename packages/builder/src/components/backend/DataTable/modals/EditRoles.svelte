@@ -1,22 +1,44 @@
 <script>
   import { ModalContent, Select, Input, Button } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { notifications } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { roles } from "stores/backend"
 
+  const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "write" }
+
   let basePermissions = []
-  let selectedRole = {}
+  let selectedRole = BASE_ROLE
   let errors = []
   let builtInRoles = ["Admin", "Power", "Basic", "Public"]
+  // Don't allow editing of public role
+  $: editableRoles = $roles.filter(role => role._id !== "PUBLIC")
   $: selectedRoleId = selectedRole._id
-  $: otherRoles = $roles.filter(role => role._id !== selectedRoleId)
+  $: otherRoles = editableRoles.filter(role => role._id !== selectedRoleId)
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
 
+  $: hasUniqueRoleName = !otherRoles
+    ?.map(role => role.name)
+    ?.includes(selectedRole.name)
+
+  $: valid =
+    selectedRole.name &&
+    selectedRole.inherits &&
+    selectedRole.permissionId &&
+    !builtInRoles.includes(selectedRole.name)
+
+  $: shouldDisableRoleInput =
+    builtInRoles.includes(selectedRole.name) &&
+    selectedRole.name?.toLowerCase() === selectedRoleId?.toLowerCase()
+
   const fetchBasePermissions = async () => {
-    const permissionsResponse = await api.get("/api/permission/builtin")
-    basePermissions = await permissionsResponse.json()
+    try {
+      basePermissions = await API.getBasePermissions()
+    } catch (error) {
+      notifications.error("Error fetching base permission options")
+      basePermissions = []
+    }
   }
 
   // Changes the selected role
@@ -30,7 +52,7 @@
         permissionId: role.permissionId ?? "",
       }
     } else {
-      selectedRole = { _id: "", inherits: "", permissionId: "" }
+      selectedRole = BASE_ROLE
     }
     errors = []
   }
@@ -59,23 +81,23 @@
     }
 
     // Save/create the role
-    const response = await roles.save(selectedRole)
-    if (response.status === 200) {
-      notifications.success("Role saved successfully.")
-    } else {
-      notifications.error("Error saving role.")
+    try {
+      await roles.save(selectedRole)
+      notifications.success("Role saved successfully")
+    } catch (error) {
+      notifications.error("Error saving role")
       return false
     }
   }
 
   // Deletes the selected role
   const deleteRole = async () => {
-    const response = await roles.delete(selectedRole)
-    if (response.status === 200) {
+    try {
+      await roles.delete(selectedRole)
       changeRole()
-      notifications.success("Role deleted successfully.")
-    } else {
-      notifications.error("Error deleting role.")
+      notifications.success("Role deleted successfully")
+    } catch (error) {
+      notifications.error("Error deleting role")
     }
   }
 
@@ -86,6 +108,7 @@
   title="Edit Roles"
   confirmText={isCreating ? "Create" : "Save"}
   onConfirm={saveRole}
+  disabled={!valid || !hasUniqueRoleName}
 >
   {#if errors.length}
     <ErrorsBox {errors} />
@@ -96,7 +119,7 @@
     label="Role"
     value={selectedRoleId}
     on:change={changeRole}
-    options={$roles}
+    options={editableRoles}
     placeholder="Create new role"
     getOptionValue={role => role._id}
     getOptionLabel={role => role.name}
@@ -105,15 +128,16 @@
     <Input
       label="Name"
       bind:value={selectedRole.name}
-      disabled={builtInRoles.includes(selectedRole.name)}
+      disabled={shouldDisableRoleInput}
+      error={!hasUniqueRoleName ? "Select a unique role name." : null}
     />
     <Select
       label="Inherits Role"
       bind:value={selectedRole.inherits}
-      options={otherRoles}
+      options={selectedRole._id === "BASIC" ? $roles : otherRoles}
       getOptionValue={role => role._id}
       getOptionLabel={role => role.name}
-      placeholder="None"
+      disabled={shouldDisableRoleInput}
     />
     <Select
       label="Base Permissions"
@@ -121,11 +145,11 @@
       options={basePermissions}
       getOptionValue={x => x._id}
       getOptionLabel={x => x.name}
-      placeholder="Choose permissions"
+      disabled={shouldDisableRoleInput}
     />
   {/if}
   <div slot="footer">
-    {#if !isCreating}
+    {#if !isCreating && !builtInRoles.includes(selectedRole.name)}
       <Button warning on:click={deleteRole}>Delete</Button>
     {/if}
   </div>

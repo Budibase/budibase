@@ -1,16 +1,18 @@
 <script>
   import { ActionButton } from "@budibase/bbui"
   import GoogleLogo from "assets/google-logo.png"
-  import { admin } from "stores/portal"
+  import { auth, organisation } from "stores/portal"
 
-  let show = false
+  let show
 
-  $: show = $admin.checklist?.oauth
+  $: tenantId = $auth.tenantId
+  $: show = $organisation.google
 </script>
 
 {#if show}
   <ActionButton
-    on:click={() => window.open("/api/admin/auth/google", "_blank")}
+    on:click={() =>
+      window.open(`/api/global/auth/${tenantId}/google`, "_blank")}
   >
     <div class="inner">
       <img src={GoogleLogo} alt="google icon" />

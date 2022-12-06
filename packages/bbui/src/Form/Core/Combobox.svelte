@@ -9,6 +9,7 @@
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
+  export let readonly = false
   export let error = null
   export let options = []
   export let getOptionLabel = option => option
@@ -17,31 +18,21 @@
   const dispatch = createEventDispatcher()
   let open = false
   let focus = false
-  $: fieldText = getFieldText(value, options, placeholder)
-
-  const getFieldText = (value, options, placeholder) => {
-    // Always use placeholder if no value
-    if (value == null || value === "") {
-      return placeholder || "Choose an option or type"
-    }
-
-    // Wait for options to load if there is a value but no options
-    if (!options?.length) {
-      return ""
-    }
-
-    // Render the label if the selected option is found, otherwise raw value
-    const selected = options.find(option => getOptionValue(option) === value)
-    return selected ? getOptionLabel(selected) : value
-  }
 
   const selectOption = value => {
     dispatch("change", value)
     open = false
   }
 
-  const onChange = e => {
-    selectOption(e.target.value)
+  const onType = e => {
+    const value = e.target.value
+    dispatch("type", value)
+    selectOption(value)
+  }
+
+  const onPick = value => {
+    dispatch("pick", value)
+    selectOption(value)
   }
 </script>
 
@@ -61,11 +52,15 @@
       {id}
       type="text"
       on:focus={() => (focus = true)}
-      on:blur={() => (focus = false)}
-      on:change={onChange}
+      on:blur={() => {
+        focus = false
+        dispatch("blur")
+      }}
+      on:change={onType}
       value={value || ""}
       placeholder={placeholder || ""}
       {disabled}
+      {readonly}
       class="spectrum-Textfield-input spectrum-InputGroup-input"
     />
   </div>
@@ -99,7 +94,7 @@
               role="option"
               aria-selected="true"
               tabindex="0"
-              on:click={() => selectOption(getOptionValue(option))}
+              on:click={() => onPick(getOptionValue(option))}
             >
               <span class="spectrum-Menu-itemLabel"
                 >{getOptionLabel(option)}</span

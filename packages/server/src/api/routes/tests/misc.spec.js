@@ -11,10 +11,10 @@ describe("run misc tests", () => {
     await config.init()
   })
 
-  describe("/analytics", () => {
+  describe("/bbtel", () => {
       it("check if analytics enabled", async () => {
         const res = await request
-          .get(`/api/analytics`)
+          .get(`/api/bbtel`)
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
           .expect(200)
@@ -31,56 +31,67 @@ describe("run misc tests", () => {
   describe("/version", () => {
     it("should confirm version", async () => {
       const res = await request.get("/version").expect(200)
-      expect(res.text.split(".").length).toEqual(3)
+      const text = res.text
+      if (text.includes("alpha")) {
+        expect(text.split(".").length).toEqual(4)
+      } else {
+        expect(text.split(".").length).toEqual(3)
+      }
+      
     })
   })
 
   describe("test table utilities", () => {
     it("should be able to import a CSV", async () => {
-      const table = await config.createTable({
-        name: "table",
-        type: "table",
-        key: "name",
-        schema: {
-          a: {
-            type: "string",
-            constraints: {
+      return config.doInContext(null, async () => {
+        const table = await config.createTable({
+          name: "table",
+          type: "table",
+          key: "name",
+          schema: {
+            a: {
               type: "string",
+              constraints: {
+                type: "string",
+              },
+            },
+            b: {
+              type: "string",
+              constraints: {
+                type: "string",
+              },
+            },
+            c: {
+              type: "string",
+              constraints: {
+                type: "string",
+              },
+            },
+            d: {
+              type: "string",
+              constraints: {
+                type: "string",
+              },
             },
           },
-          b: {
-            type: "string",
-            constraints: {
-              type: "string",
-            },
-          },
-          c: {
-            type: "string",
-            constraints: {
-              type: "string",
-            },
-          },
-          d: {
-            type: "string",
-            constraints: {
-              type: "string",
-            },
-          },
-        },
+        })
+        const dataImport = {
+          csvString: "a,b,c,d\n1,2,3,4",
+          schema: {},
+        }
+        for (let col of ["a", "b", "c", "d"]) {
+          dataImport.schema[col] = { type: "string" }
+        }
+        await tableUtils.handleDataImport(
+          { userId: "test" },
+          table,
+          dataImport
+        )
+        const rows = await config.getRows()
+        expect(rows[0].a).toEqual("1")
+        expect(rows[0].b).toEqual("2")
+        expect(rows[0].c).toEqual("3")
       })
-      const dataImport = {
-        csvString: "a,b,c,d\n1,2,3,4"
-      }
-      await tableUtils.handleDataImport(
-        config.getAppId(),
-        { userId: "test" },
-        table,
-        dataImport
-      )
-      const rows = await config.getRows()
-      expect(rows[0].a).toEqual("1")
-      expect(rows[0].b).toEqual("2")
-      expect(rows[0].c).toEqual("3")
     })
   })
 })

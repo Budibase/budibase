@@ -11,14 +11,30 @@ on:
     branches:
       - master
       - develop 
+      - release 
+ workflow_dispatch:
+
+env:
+  BRANCH: ${{ github.event.pull_request.head.ref }}
+  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
+  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      couchdb:
+        image: ibmcom/couchdb3
+        env:
+          COUCHDB_PASSWORD: budibase
+          COUCHDB_USER: budibase
+        ports:
+          - 4567:5984
+
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
 
     steps:
     - uses: actions/checkout@v2
@@ -27,9 +43,13 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+
+    - name: Install Pro
+      run: yarn install:pro $BRANCH $BASE_BRANCH
+
     - run: yarn
-    - run: yarn lint
     - run: yarn bootstrap
+    - run: yarn lint
     - run: yarn build
     - run: yarn test
       env:
@@ -38,19 +58,12 @@ jobs:
     - uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        files: ./packages/server/coverage/clover.xml
+        files: ./packages/server/coverage/clover.xml,./packages/worker/coverage/clover.xml,./packages/backend-core/coverage/clover.xml
         name: codecov-umbrella
         verbose: true 
-    - run: yarn test:e2e:ci
 
-    - name: Build and Push Development Docker Image
-      # Only run on push
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
-      run: |
-        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-        yarn build
-        yarn build:docker:develop
-      env:
-        DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-
+    - name: QA Core Integration Tests
+      run: | 
+        cd qa-core
+        yarn
+        yarn api:test:ci

@@ -4,6 +4,10 @@ const {
   isValid,
   makePropSafe,
   getManifest,
+  encodeJSBinding,
+  doesContainString,
+  disableEscaping,
+  findHBSBlocks,
 } = require("../src/index.cjs")
 
 describe("Test that the string processing works correctly", () => {
@@ -81,6 +85,16 @@ describe("Test that the object processing works correctly", () => {
     expect(error).not.toBeNull()
   })
 
+  it("check objects get converted to string JSON automatically", async () => {
+    const row = {a: 1}
+    const output = await processString("{{ trigger.row }}", {
+      trigger: {
+        row,
+      }
+    })
+    expect(JSON.parse(output)).toEqual(row)
+  })
+
   it("should be able to handle null objects", async () => {
     let error = null
     try {
@@ -89,6 +103,16 @@ describe("Test that the object processing works correctly", () => {
       error = err
     }
     expect(error).toBeNull()
+  })
+})
+
+describe("check returning objects", () => {
+  it("should handle an array of objects", async () => {
+    const json = [{a: 1},{a: 2}]
+    const output = await processString("{{ testing }}", {
+      testing: json
+    })
+    expect(output).toEqual(JSON.stringify(json))
   })
 })
 
@@ -111,7 +135,19 @@ describe("check the utility functions", () => {
   it("should be able to handle an input date object", async () => {
     const date = new Date()
     const output = await processString("{{ dateObj }}", { dateObj: date })
-    expect(date.toISOString()).toEqual(output)
+    expect(date.toString()).toEqual(output)
+  })
+})
+
+describe("check falsy values", () => {
+  it("should get a zero out when context contains it", async () => {
+    const output = await processString("{{ number }}", { number: 0 })
+    expect(output).toEqual("0")
+  })
+
+  it("should get false out when context contains it", async () => {
+    const output = await processString("{{ bool }}", { bool: false })
+    expect(output).toEqual("false")
   })
 })
 
@@ -124,3 +160,64 @@ describe("check manifest", () => {
     )
   })
 })
+
+describe("check full stops that are safe", () => {
+  it("should allow using an escaped full stop", async () => {
+    const data = {
+      "c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI": { "persons.firstname": "1" }
+    }
+    const template = "{{ [c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI].[persons.firstname] }}"
+    const output = await processString(template, data)
+    expect(output).toEqual("1")
+  })
+})
+
+describe("check does contain string function", () => {
+  it("should work for a simple case", () => {
+    const hbs = "hello {{ name }}"
+    expect(doesContainString(hbs, "name")).toEqual(true)
+  })
+
+  it("should reject a case where its in the string, but not the handlebars", () => {
+    const hbs = "hello {{ name }}"
+    expect(doesContainString(hbs, "hello")).toEqual(false)
+  })
+
+  it("should handle if its in javascript", () => {
+    const js = encodeJSBinding(`return $("foo")`)
+    expect(doesContainString(js, "foo")).toEqual(true)
+  })
+})
+
+describe("check that disabling escaping function works", () => {
+  it("should work for a single statement", () => {
+    expect(disableEscaping("{{ name }}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work for two statements", () => {
+    expect(disableEscaping("{{ name }} welcome to {{ platform }}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+
+  it("shouldn't convert triple braces", () => {
+    expect(disableEscaping("{{{ name }}}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work with a combination", () => {
+    expect(disableEscaping("{{ name }} welcome to {{{ platform }}}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+
+  it("should work with multiple escaped", () => {
+    expect(disableEscaping("{{ name }} welcome to {{ name }}")).toEqual("{{{ name }}} welcome to {{{ name }}}")
+  })
+})
+
+describe("check find hbs blocks function", () => {
+  it("should find none", () => {
+    expect(findHBSBlocks("hello there")).toEqual([])
+  })
+
+  it("should find two", () => {
+    expect(findHBSBlocks("{{ hello }} there {{{ name }}}")).toEqual(["{{ hello }}", "{{{ name }}}"])
+  })
+})
+

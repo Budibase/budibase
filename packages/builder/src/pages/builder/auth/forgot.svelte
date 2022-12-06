@@ -6,10 +6,12 @@
     Layout,
     Body,
     Heading,
+    ActionButton,
   } from "@budibase/bbui"
   import { organisation, auth } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
+  import { goto } from "@roxi/routify"
 
   let email = ""
 
@@ -23,7 +25,11 @@
   }
 
   onMount(async () => {
-    await organisation.init()
+    try {
+      await organisation.init()
+    } catch (error) {
+      notifications.error("Error getting org config")
+    }
   })
 </script>
 
@@ -41,9 +47,12 @@
         </Body>
         <Input label="Email" bind:value={email} />
       </Layout>
-      <Button cta on:click={forgot} disabled={!email}>
-        Reset your password
-      </Button>
+      <Layout gap="XS" nopadding>
+        <Button cta on:click={forgot} disabled={!email}>
+          Reset your password
+        </Button>
+        <ActionButton quiet on:click={() => $goto("../")}>Back</ActionButton>
+      </Layout>
     </Layout>
   </div>
 </div>

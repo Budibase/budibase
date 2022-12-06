@@ -9,6 +9,7 @@
   export let text = null
   export let disabled = false
   export let error = null
+  export let size = "M"
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -18,5 +19,5 @@
 </script>
 
 <Field {label} {labelPosition} {error}>
-  <Checkbox {error} {disabled} {text} {value} on:change={onChange} />
+  <Checkbox {error} {disabled} {text} {value} {size} on:change={onChange} />
 </Field>

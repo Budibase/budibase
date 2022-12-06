@@ -1,10 +1,14 @@
 const setup = require("./utilities")
 const { basicScreen } = setup.structures
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const workerRequests = require("../../../utilities/workerRequests")
+const { checkBuilderEndpoint, runInProd } = require("./utilities/TestFunctions")
+const { roles } = require("@budibase/backend-core")
+const { BUILTIN_ROLE_IDS } = roles
 
 const route = "/test"
+
+// there are checks which are disabled in test env,
+// these checks need to be enabled for this test
+
 
 describe("/routing", () => {
   let request = setup.getRequest()
@@ -22,16 +26,35 @@ describe("/routing", () => {
     screen2.routing.roleId = BUILTIN_ROLE_IDS.POWER
     screen2.routing.route = route
     screen2 = await config.createScreen(screen2)
+    await config.deploy()
   })
 
   describe("fetch", () => {
+    it("prevents a public user from accessing development app", async () => {
+      await runInProd(() => {
+        return request
+          .get(`/api/routing/client`)
+          .set(config.publicHeaders({ prodApp: false }))
+          .expect(302)
+      })
+    })
+
+    it("prevents a non builder from accessing development app", async () => {
+      await runInProd(async () => {
+        return request
+          .get(`/api/routing/client`)
+          .set(await config.roleHeaders({
+            roleId: BUILTIN_ROLE_IDS.BASIC,
+            prodApp: false
+          }))
+          .expect(302)
+      })
+    })
     it("returns the correct routing for basic user", async () => {
       const res = await request
         .get(`/api/routing/client`)
         .set(await config.roleHeaders({
-          email: "basic@test.com",
-          roleId: BUILTIN_ROLE_IDS.BASIC,
-          builder: false
+          roleId: BUILTIN_ROLE_IDS.BASIC
         }))
         .expect("Content-Type", /json/)
         .expect(200)
@@ -50,9 +73,7 @@ describe("/routing", () => {
       const res = await request
         .get(`/api/routing/client`)
         .set(await config.roleHeaders({
-          email: "basic@test.com",
-          roleId: BUILTIN_ROLE_IDS.POWER,
-          builder: false,
+          roleId: BUILTIN_ROLE_IDS.POWER
         }))
         .expect("Content-Type", /json/)
         .expect(200)
@@ -72,9 +93,12 @@ describe("/routing", () => {
     it("should fetch all routes for builder", async () => {
       const res = await request
         .get(`/api/routing`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
+        .set(await config.roleHeaders({
+          roleId: BUILTIN_ROLE_IDS.POWER,
+          builder: true,
+        }))
         .expect(200)
+        .expect("Content-Type", /json/)
       expect(res.body.routes).toBeDefined()
       expect(res.body.routes[route].subpaths[route]).toBeDefined()
       const subpath = res.body.routes[route].subpaths[route]

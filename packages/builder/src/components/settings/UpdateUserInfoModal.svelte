@@ -26,6 +26,15 @@
   <Body size="S">
     Personalise the platform by adding your first name and last name.
   </Body>
-  <Input bind:value={$values.firstName} label="First name" />
-  <Input bind:value={$values.lastName} label="Last name" />
+  <Input disabled bind:value={$auth.user.email} label="Email" />
+  <Input
+    bind:value={$values.firstName}
+    label="First name"
+    dataCy="user-first-name"
+  />
+  <Input
+    bind:value={$values.lastName}
+    label="Last name"
+    dataCy="user-last-name"
+  />
 </ModalContent>

@@ -13,9 +13,8 @@
     Table,
     Checkbox,
   } from "@budibase/bbui"
-  import { email } from "stores/portal"
-  import TemplateLink from "./_components/TemplateLink.svelte"
-  import api from "builderStore/api"
+  import { email, admin } from "stores/portal"
+  import { API } from "api"
   import { cloneDeep } from "lodash/fp"
 
   const ConfigTypes = {
@@ -23,22 +22,29 @@
   }
 
   const templateSchema = {
-    purpose: {
-      displayName: "Email",
+    name: {
+      displayName: "Name",
+      editable: false,
+    },
+    category: {
+      displayName: "Category",
       editable: false,
     },
   }
 
-  const customRenderers = [
-    {
-      column: "purpose",
-      component: TemplateLink,
-    },
-  ]
+  $: emailInfo = getEmailInfo($email.definitions)
 
   let smtpConfig
   let loading
   let requireAuth = false
+
+  function getEmailInfo(definitions) {
+    if (!definitions) {
+      return []
+    }
+    const entries = Object.entries(definitions.info)
+    return entries.map(([key, value]) => ({ purpose: key, ...value }))
+  }
 
   async function saveSmtp() {
     // clone it so we can remove stuff if required
@@ -47,54 +53,77 @@
       delete smtp.config.auth
     }
     // Save your SMTP config
-    const response = await api.post(`/api/admin/configs`, smtp)
-
-    if (response.status !== 200) {
-      const error = await response.text()
-      let message
-      try {
-        message = JSON.parse(error).message
-      } catch (err) {
-        message = error
-      }
-      notifications.error(`Failed to save email settings, reason: ${message}`)
-    } else {
-      const json = await response.json()
-      smtpConfig._rev = json._rev
-      smtpConfig._id = json._id
-      notifications.success(`Settings saved.`)
+    try {
+      const savedConfig = await API.saveConfig(smtp)
+      smtpConfig._rev = savedConfig._rev
+      smtpConfig._id = savedConfig._id
+      await admin.getChecklist()
+      notifications.success(`Settings saved`)
+    } catch (error) {
+      notifications.error(
+        `Failed to save email settings, reason: ${error?.message || "Unknown"}`
+      )
     }
   }
 
-  async function fetchSmtp() {
-    loading = true
-    // fetch the configs for smtp
-    const smtpResponse = await api.get(`/api/admin/configs/${ConfigTypes.SMTP}`)
-    const smtpDoc = await smtpResponse.json()
-
-    if (!smtpDoc._id) {
+  async function deleteSmtp() {
+    // Delete the SMTP config
+    try {
+      await API.deleteConfig({
+        id: smtpConfig._id,
+        rev: smtpConfig._rev,
+      })
       smtpConfig = {
         type: ConfigTypes.SMTP,
         config: {
           secure: true,
         },
       }
-    } else {
-      smtpConfig = smtpDoc
+      await admin.getChecklist()
+      notifications.success(`Settings cleared`)
+    } catch (error) {
+      notifications.error(
+        `Failed to clear email settings, reason: ${error?.message || "Unknown"}`
+      )
     }
-    loading = false
-    requireAuth = smtpConfig.config.auth != null
-    // always attach the auth for the forms purpose -
-    // this will be removed later if required
-    smtpConfig.config.auth = {
-      type: "login",
+  }
+
+  async function fetchSmtp() {
+    loading = true
+    try {
+      // Fetch the configs for smtp
+      const smtpDoc = await API.getConfig(ConfigTypes.SMTP)
+      if (!smtpDoc._id) {
+        smtpConfig = {
+          type: ConfigTypes.SMTP,
+          config: {
+            secure: true,
+          },
+        }
+      } else {
+        smtpConfig = smtpDoc
+      }
+      loading = false
+      requireAuth = smtpConfig.config.auth != null
+      // Always attach the auth for the forms purpose -
+      // this will be removed later if required
+      if (!smtpDoc.config) {
+        smtpDoc.config = {}
+      }
+      if (!smtpDoc.config.auth) {
+        smtpConfig.config.auth = {
+          type: "login",
+        }
+      }
+    } catch (error) {
+      notifications.error("Error fetching SMTP config")
     }
   }
 
   fetchSmtp()
 </script>
 
-<Layout>
+<Layout noPadding>
   <Layout noPadding gap="XS">
     <Heading size="M">Email</Heading>
     <Body>
@@ -147,8 +176,15 @@
         </div>
       {/if}
     </Layout>
-    <div>
+    <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
       <Button cta on:click={saveSmtp}>Save</Button>
+      <Button
+        secondary
+        on:click={deleteSmtp}
+        disabled={!$admin.checklist.smtp.checked}
+      >
+        Reset
+      </Button>
     </div>
     <Divider />
     <Layout gap="XS" noPadding>
@@ -159,8 +195,7 @@
       </Body>
     </Layout>
     <Table
-      {customRenderers}
-      data={$email.templates}
+      data={emailInfo}
       schema={templateSchema}
       {loading}
       on:click={({ detail }) => $goto(`./${detail.purpose}`)}
@@ -174,8 +209,12 @@
 <style>
   .form-row {
     display: grid;
-    grid-template-columns: 25% 1fr;
+    grid-template-columns: 120px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+  .spectrum-Settings-buttonGroup {
+    gap: var(--spectrum-global-dimension-static-size-200);
+    align-items: flex-end;
   }
 </style>

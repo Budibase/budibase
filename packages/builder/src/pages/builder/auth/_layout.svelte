@@ -1,16 +1,23 @@
 <script>
-  import { auth } from "stores/portal"
-  import { onMount } from "svelte"
+  import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
 
   // If already authenticated, redirect away from the auth section.
   // Check this onMount rather than a reactive statement to avoid trumping
   // the login return URL functionality.
-  onMount(() => {
-    if ($auth.user && !$auth.user.forceResetPassword) {
-      $redirect("../")
-    }
-  })
+  if ($auth.user && !$auth.user.forceResetPassword) {
+    $redirect("../")
+  }
+
+  if (
+    !$auth.user &&
+    $admin.cloud &&
+    !$admin.disableAccountPortal &&
+    $admin.accountPortalUrl &&
+    !$admin?.checklist?.sso?.checked
+  ) {
+    window.location.href = $admin.accountPortalUrl
+  }
 </script>
 
 {#if !$auth.user || $auth.user.forceResetPassword}

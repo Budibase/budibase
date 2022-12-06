@@ -1,6 +1,7 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { roles } = require("@budibase/backend-core")
 const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
+const { BUILTIN_ROLE_IDS } = roles
 
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
@@ -9,7 +10,6 @@ jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalSelf: jest.fn(() => {
     return {}
   }),
-  addAppRoleToUser: jest.fn(),
   deleteGlobalUser: jest.fn(),
 }))
 
@@ -39,7 +39,7 @@ describe("/users", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      await config.createUser("brenda@brenda.com", "brendas_password")
+      await config.createUser()
       await checkPermissionsEndpoint({
         config,
         request,

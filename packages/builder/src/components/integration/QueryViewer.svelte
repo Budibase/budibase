@@ -14,101 +14,90 @@
     Tab,
   } from "@budibase/bbui"
   import { notifications, Divider } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
-  import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
+  import BindingBuilder from "components/integration/QueryViewerBindingBuilder.svelte"
   import { datasources, integrations, queries } from "stores/backend"
   import { capitalise } from "../../helpers"
+  import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
+  import JSONPreview from "./JSONPreview.svelte"
+  import { SchemaTypeOptions } from "constants/backend"
+  import KeyValueBuilder from "./KeyValueBuilder.svelte"
+  import { fieldsToSchema, schemaToFields } from "helpers/data/utils"
+  import AccessLevelSelect from "./AccessLevelSelect.svelte"
 
   export let query
-  export let fields = []
 
+  let fields = query?.schema ? schemaToFields(query.schema) : []
   let parameters
   let data = []
-  const typeOptions = [
-    { label: "Text", value: "STRING" },
-    { label: "Number", value: "NUMBER" },
-    { label: "Boolean", value: "BOOLEAN" },
-    { label: "Datetime", value: "DATETIME" },
-  ]
+  let saveId
+  const transformerDocs = "https://docs.budibase.com/docs/transformers"
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
-  $: query.schema = fields.reduce(
-    (acc, next) => ({
-      ...acc,
-      [next.name]: {
-        name: next.name,
-        type: "string",
-      },
-    }),
-    {}
-  )
+  $: query.schema = fieldsToSchema(fields)
   $: datasourceType = datasource?.source
-  $: integrationInfo = $integrations[datasourceType]
+  $: integrationInfo = datasourceType ? $integrations[datasourceType] : null
   $: queryConfig = integrationInfo?.query
   $: shouldShowQueryConfig = queryConfig && query.queryVerb
   $: readQuery = query.queryVerb === "read" || query.readable
   $: queryInvalid = !query.name || (readQuery && data.length === 0)
 
-  function newField() {
-    fields = [...fields, {}]
+  //Cast field in query preview response to number if specified by schema
+  $: {
+    for (let i = 0; i < data.length; i++) {
+      let row = data[i]
+      for (let fieldName of Object.keys(fields)) {
+        if (fields[fieldName] === "number" && !isNaN(Number(row[fieldName]))) {
+          row[fieldName] = Number(row[fieldName])
+        } else {
+          row[fieldName] = row[fieldName]?.toString()
+        }
+      }
+    }
   }
 
-  function deleteField(idx) {
-    fields.splice(idx, 1)
-    fields = fields
+  // seed the transformer
+  if (query && !query.transformer) {
+    query.transformer = "return data"
+  }
+
+  function resetDependentFields() {
+    if (query.fields.extra) {
+      query.fields.extra = {}
+    }
+  }
+
+  function populateExtraQuery(extraQueryFields) {
+    query.fields.extra = extraQueryFields
   }
 
   async function previewQuery() {
     try {
-      const response = await api.post(`/api/queries/preview`, {
-        fields: query.fields,
-        queryVerb: query.queryVerb,
-        parameters: query.parameters.reduce(
-          (acc, next) => ({
-            ...acc,
-            [next.name]: next.default,
-          }),
-          {}
-        ),
-        datasourceId: datasource._id,
-      })
-      const json = await response.json()
-
-      if (response.status !== 200) throw new Error(json.message)
-
-      data = json.rows || []
-
-      if (data.length === 0) {
+      const response = await queries.preview(query)
+      if (response.rows.length === 0) {
         notifications.info(
           "Query results empty. Please execute a query with results to create your schema."
         )
         return
       }
-
-      notifications.success("Query executed successfully.")
-
-      // Assume all the fields are strings and create a basic schema from the
-      // unique fields returned by the server
-      fields = json.schemaFields.map(field => ({
-        name: field,
-        type: "STRING",
-      }))
-    } catch (err) {
-      notifications.error(`Query Error: ${err.message}`)
-      console.error(err)
+      data = response.rows
+      fields = response.schema
+      notifications.success("Query executed successfully")
+    } catch (error) {
+      notifications.error(`Query Error: ${error.message}`)
     }
   }
 
   async function saveQuery() {
     try {
       const { _id } = await queries.save(query.datasourceId, query)
+      saveId = _id
       notifications.success(`Query saved successfully.`)
       $goto(`../${_id}`)
-    } catch (err) {
-      console.error(err)
-      notifications.error(`Error creating query. ${err.message}`)
+    } catch (error) {
+      notifications.error("Error creating query")
     }
   }
 </script>
@@ -127,12 +116,36 @@
         <Label>Function</Label>
         <Select
           bind:value={query.queryVerb}
+          on:change={resetDependentFields}
           options={Object.keys(queryConfig)}
           getOptionLabel={verb =>
             queryConfig[verb]?.displayName || capitalise(verb)}
         />
       </div>
-      <ParameterBuilder bind:parameters={query.parameters} bindable={false} />
+      <div class="config-field">
+        <AccessLevelSelect {saveId} {query} label="Access Level" />
+      </div>
+      {#if integrationInfo?.extra && query.queryVerb}
+        <ExtraQueryConfig
+          {query}
+          {populateExtraQuery}
+          config={integrationInfo.extra}
+        />
+      {/if}
+      {#key query.parameters}
+        <BindingBuilder
+          queryBindings={query.parameters}
+          bindable={false}
+          on:change={e => {
+            query.parameters = e.detail.map(binding => {
+              return {
+                name: binding.name,
+                default: binding.value,
+              }
+            })
+          }}
+        />
+      {/key}
     {/if}
   </div>
   {#if shouldShowQueryConfig}
@@ -143,15 +156,37 @@
       <IntegrationQueryEditor
         {datasource}
         {query}
-        height={300}
+        height={200}
         schema={queryConfig[query.queryVerb]}
         bind:parameters
       />
       <Divider />
     </div>
+    <div class="config">
+      <div class="help-heading">
+        <Heading size="S">Transformer</Heading>
+        <Icon
+          on:click={() => window.open(transformerDocs)}
+          hoverable
+          name="Help"
+          size="L"
+        />
+      </div>
+      <Body size="S"
+        >Add a JavaScript function to transform the query result.</Body
+      >
+      <CodeMirrorEditor
+        height={200}
+        label="Transformer"
+        value={query.transformer}
+        resize="vertical"
+        on:change={e => (query.transformer = e.detail)}
+      />
+      <Divider />
+    </div>
     <div class="viewer-controls">
       <Heading size="S">Results</Heading>
-      <ButtonGroup>
+      <ButtonGroup gap="M">
         <Button cta disabled={queryInvalid} on:click={saveQuery}>
           Save Query
         </Button>
@@ -165,29 +200,15 @@
       {#if data}
         <Tabs selected="JSON">
           <Tab title="JSON">
-            <pre
-              class="preview">
-                <!-- prettier-ignore -->
-                {#if !data[0]}
-                  Please run your query to fetch some data.
-                {:else}
-                  {JSON.stringify(data[0], undefined, 2)}
-                {/if}
-              </pre>
+            <JSONPreview data={data[0]} minHeight="120" />
           </Tab>
           <Tab title="Schema">
-            <Layout gap="S">
-              {#each fields as field, idx}
-                <div class="field">
-                  <Input placeholder="Field Name" bind:value={field.name} />
-                  <Select bind:value={field.type} options={typeOptions} />
-                  <Icon name="bleClose" on:click={() => deleteField(idx)} />
-                </div>
-              {/each}
-              <div>
-                <Button secondary on:click={newField}>Add Field</Button>
-              </div>
-            </Layout>
+            <KeyValueBuilder
+              bind:object={fields}
+              name="field"
+              headings
+              options={SchemaTypeOptions}
+            />
           </Tab>
           <Tab title="Preview">
             <ExternalDataSourceTable {query} {data} />
@@ -203,6 +224,7 @@
     display: grid;
     grid-gap: var(--spacing-s);
   }
+
   .config-field {
     display: grid;
     grid-template-columns: 20% 1fr;
@@ -210,26 +232,14 @@
     align-items: center;
   }
 
-  .field {
-    display: grid;
-    grid-template-columns: 1fr 1fr 5%;
-    gap: var(--spacing-l);
+  .help-heading {
+    display: flex;
+    justify-content: space-between;
   }
 
   .viewer {
     min-height: 200px;
-  }
-
-  .preview {
-    height: 100%;
-    min-height: 120px;
-    overflow-y: auto;
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
-    background-color: var(--grey-2);
-    padding: var(--spacing-m);
-    border-radius: 8px;
-    color: var(--ink);
+    width: 640px;
   }
 
   .viewer-controls {

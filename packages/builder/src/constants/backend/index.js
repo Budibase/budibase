@@ -1,8 +1,16 @@
 export const FIELDS = {
   STRING: {
     name: "Text",
-    icon: "ri-text",
     type: "string",
+    constraints: {
+      type: "string",
+      length: {},
+      presence: false,
+    },
+  },
+  BARCODEQR: {
+    name: "Barcode/QR",
+    type: "barcodeqr",
     constraints: {
       type: "string",
       length: {},
@@ -11,7 +19,6 @@ export const FIELDS = {
   },
   LONGFORM: {
     name: "Long Form Text",
-    icon: "ri-file-text-line",
     type: "longform",
     constraints: {
       type: "string",
@@ -21,7 +28,6 @@ export const FIELDS = {
   },
   OPTIONS: {
     name: "Options",
-    icon: "ri-list-check-2",
     type: "options",
     constraints: {
       type: "string",
@@ -29,9 +35,17 @@ export const FIELDS = {
       inclusion: [],
     },
   },
+  ARRAY: {
+    name: "Multi-select",
+    type: "array",
+    constraints: {
+      type: "array",
+      presence: false,
+      inclusion: [],
+    },
+  },
   NUMBER: {
     name: "Number",
-    icon: "ri-number-1",
     type: "number",
     constraints: {
       type: "number",
@@ -41,7 +55,6 @@ export const FIELDS = {
   },
   BOOLEAN: {
     name: "Boolean",
-    icon: "ri-toggle-line",
     type: "boolean",
     constraints: {
       type: "boolean",
@@ -50,7 +63,6 @@ export const FIELDS = {
   },
   DATETIME: {
     name: "Date/Time",
-    icon: "ri-calendar-event-fill",
     type: "datetime",
     constraints: {
       type: "string",
@@ -64,7 +76,6 @@ export const FIELDS = {
   },
   ATTACHMENT: {
     name: "Attachment",
-    icon: "ri-file-line",
     type: "attachment",
     constraints: {
       type: "array",
@@ -73,7 +84,6 @@ export const FIELDS = {
   },
   LINK: {
     name: "Relationship",
-    icon: "ri-link",
     type: "link",
     constraints: {
       type: "array",
@@ -82,10 +92,14 @@ export const FIELDS = {
   },
   FORMULA: {
     name: "Formula",
-    icon: "ri-braces-line",
     type: "formula",
+    constraints: {},
+  },
+  JSON: {
+    name: "JSON",
+    type: "json",
     constraints: {
-      type: "string",
+      type: "object",
       presence: false,
     },
   },
@@ -138,3 +152,112 @@ export const RelationshipTypes = {
   ONE_TO_MANY: "one-to-many",
   MANY_TO_ONE: "many-to-one",
 }
+
+export const ALLOWABLE_STRING_OPTIONS = [
+  FIELDS.STRING,
+  FIELDS.OPTIONS,
+  FIELDS.LONGFORM,
+  FIELDS.BARCODEQR,
+]
+export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
+  opt => opt.type
+)
+
+export const ALLOWABLE_NUMBER_OPTIONS = [FIELDS.NUMBER, FIELDS.BOOLEAN]
+export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
+  opt => opt.type
+)
+
+export const SWITCHABLE_TYPES = [
+  ...ALLOWABLE_STRING_TYPES,
+  ...ALLOWABLE_NUMBER_TYPES,
+]
+
+export const BUDIBASE_INTERNAL_DB_ID = "bb_internal"
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
+export const BUDIBASE_DATASOURCE_TYPE = "budibase"
+export const DB_TYPE_INTERNAL = "internal"
+export const DB_TYPE_EXTERNAL = "external"
+
+export const IntegrationTypes = {
+  POSTGRES: "POSTGRES",
+  MONGODB: "MONGODB",
+  COUCHDB: "COUCHDB",
+  S3: "S3",
+  MYSQL: "MYSQL",
+  REST: "REST",
+  DYNAMODB: "DYNAMODB",
+  ELASTICSEARCH: "ELASTICSEARCH",
+  SQL_SERVER: "SQL_SERVER",
+  AIRTABLE: "AIRTABLE",
+  ARANGODB: "ARANGODB",
+  ORACLE: "ORACLE",
+  INTERNAL: "INTERNAL",
+  GOOGLE_SHEETS: "GOOGLE_SHEETS",
+  FIRESTORE: "FIRESTORE",
+  REDIS: "REDIS",
+  SNOWFLAKE: "SNOWFLAKE",
+}
+
+export const IntegrationNames = {
+  [IntegrationTypes.POSTGRES]: "PostgreSQL",
+  [IntegrationTypes.MONGODB]: "MongoDB",
+  [IntegrationTypes.COUCHDB]: "CouchDB",
+  [IntegrationTypes.S3]: "S3",
+  [IntegrationTypes.MYSQL]: "MySQL",
+  [IntegrationTypes.REST]: "REST",
+  [IntegrationTypes.DYNAMODB]: "DynamoDB",
+  [IntegrationTypes.ELASTICSEARCH]: "ElasticSearch",
+  [IntegrationTypes.SQL_SERVER]: "SQL Server",
+  [IntegrationTypes.AIRTABLE]: "Airtable",
+  [IntegrationTypes.ARANGODB]: "ArangoDB",
+  [IntegrationTypes.ORACLE]: "Oracle",
+  [IntegrationTypes.INTERNAL]: "Internal",
+  [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
+  [IntegrationTypes.FIRESTORE]: "Firestore",
+  [IntegrationTypes.REDIS]: "Redis",
+  [IntegrationTypes.SNOWFLAKE]: "Snowflake",
+}
+
+export const SchemaTypeOptions = [
+  { label: "Text", value: "string" },
+  { label: "Number", value: "number" },
+  { label: "Boolean", value: "boolean" },
+  { label: "Datetime", value: "datetime" },
+]
+
+export const RawRestBodyTypes = {
+  NONE: "none",
+  FORM: "form",
+  ENCODED: "encoded",
+  JSON: "json",
+  TEXT: "text",
+  XML: "xml",
+}
+
+export const RestBodyTypes = [
+  { name: "none", value: "none" },
+  { name: "form-data", value: "form" },
+  { name: "x-www-form-encoded", value: "encoded" },
+  { name: "raw (JSON)", value: "json" },
+  { name: "raw (XML)", value: "xml" },
+  { name: "raw (Text)", value: "text" },
+]
+
+export const PaginationTypes = [
+  { label: "Page number based", value: "page" },
+  { label: "Cursor based", value: "cursor" },
+]
+
+export const PaginationLocations = [
+  { label: "Query parameters", value: "query" },
+  { label: "Request body", value: "body" },
+]
+
+export const BannedSearchTypes = [
+  "link",
+  "attachment",
+  "formula",
+  "json",
+  "jsonarray",
+]

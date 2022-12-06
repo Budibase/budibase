@@ -1,0 +1,153 @@
+---
+openapi: 3.0.2
+info:
+  description: A basic swagger file
+  version: 1.0.0
+  title: CRUD
+servers:
+  - url: http://example.com
+tags:
+  - name: entity
+paths:
+  "/entities":
+    post:
+      tags:
+        - entity
+      operationId: createEntity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CreateEntity"
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entity"
+    get:
+      tags:
+        - entity
+      operationId: getEntities
+      parameters:
+        - "$ref": "#/components/parameters/PageParameter"
+        - "$ref": "#/components/parameters/SizeParameter"
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entities"
+  "/entities/{entityId}":
+    parameters:
+      - "$ref": "#/components/parameters/EntityIdParameter"
+    get:
+      tags:
+        - entity
+      operationId: getEntity
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entity"
+    put:
+      tags:
+        - entity
+      operationId: updateEntity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Entity"
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entity"
+    patch:
+      tags:
+        - entity
+      operationId: patchEntity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Entity"
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entity"
+    delete:
+      tags:
+        - entity
+      parameters:
+        - "$ref": "#/components/parameters/APIKeyParameter"
+      operationId: deleteEntity
+      responses:
+        '204':
+          description: successful operation
+components:
+  parameters:
+    EntityIdParameter:
+      schema:
+        type: integer
+        format: int64
+      name: entityId
+      in: path
+      required: true
+    PageParameter:
+      schema:
+        type: integer
+        format: int32
+      name: page
+      in: query
+      required: false
+    SizeParameter:
+      schema:
+        type: integer
+        format: int32
+      name: size
+      in: query
+      required: false
+    APIKeyParameter:
+      schema:
+        type: string
+      name: x-api-key
+      in: header
+      required: false
+  schemas:
+    CreateEntity:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+      example:
+        name: name
+        type: type
+    Entity:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+        - "$ref": "#/components/schemas/CreateEntity"
+      example:
+        id: 1
+        name: name
+        type: type
+    Entities:
+      type: array
+      items:
+        "$ref": "#/components/schemas/Entity"

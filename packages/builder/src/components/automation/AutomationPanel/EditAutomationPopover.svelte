@@ -1,22 +1,33 @@
 <script>
   import { goto } from "@roxi/routify"
   import { automationStore } from "builderStore"
-  import { database } from "stores/backend"
   import { ActionMenu, MenuItem, notifications, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
 
   export let automation
 
   let confirmDeleteDialog
-  $: instanceId = $database._id
+  let updateAutomationDialog
 
   async function deleteAutomation() {
-    await automationStore.actions.delete({
-      instanceId,
-      automation,
-    })
-    notifications.success("Automation deleted.")
-    $goto("../automate")
+    try {
+      await automationStore.actions.delete(automation)
+      notifications.success("Automation deleted successfully")
+      $goto("../automate")
+    } catch (error) {
+      notifications.error("Error deleting automation")
+    }
+  }
+
+  async function duplicateAutomation() {
+    try {
+      await automationStore.actions.duplicate(automation)
+      notifications.success("Automation has been duplicated successfully")
+      $goto(`./${$automationStore.selectedAutomation.automation._id}`)
+    } catch (error) {
+      notifications.error("Error duplicating automation")
+    }
   }
 </script>
 
@@ -24,9 +35,9 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem noClose icon="Delete" on:click={confirmDeleteDialog.show}>
-    Delete
-  </MenuItem>
+  <MenuItem icon="Duplicate" on:click={duplicateAutomation}>Duplicate</MenuItem>
+  <MenuItem icon="Edit" on:click={updateAutomationDialog.show}>Edit</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog
@@ -39,6 +50,7 @@
   <i>{automation.name}?</i>
   This action cannot be undone.
 </ConfirmDialog>
+<UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
 
 <style>
   div.icon {

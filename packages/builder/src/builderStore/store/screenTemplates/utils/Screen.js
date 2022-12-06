@@ -1,13 +1,14 @@
 import { BaseStructure } from "./BaseStructure"
-import { uuid } from "builderStore/uuid"
+import { Helpers } from "@budibase/bbui"
 
 export class Screen extends BaseStructure {
   constructor() {
     super(true)
     this._json = {
-      layoutId: "layout_private_master",
+      showNavigation: true,
+      width: "Large",
       props: {
-        _id: uuid(),
+        _id: Helpers.uuid(),
         _component: "@budibase/standard-components/container",
         _styles: {
           normal: {},
@@ -21,10 +22,12 @@ export class Screen extends BaseStructure {
         hAlign: "stretch",
         vAlign: "top",
         size: "grow",
+        gap: "M",
       },
       routing: {
         route: "",
         roleId: "BASIC",
+        homeScreen: false,
       },
       name: "screen-id",
     }

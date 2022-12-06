@@ -1,0 +1,24 @@
+import { API } from "api"
+
+jest.mock("api")
+
+const PERMISSIONS_FOR_RESOURCE = {
+    "write": "BASIC",
+    "read": "BASIC"
+}
+
+import { createPermissionStore } from "../permissions"
+
+describe("Permissions Store", () => {
+  const store = createPermissionStore()
+
+  it("fetches permissions for specific resource", async () => {
+    API.getPermissionForResource.mockReturnValueOnce({ json: () => PERMISSIONS_FOR_RESOURCE})
+
+    const resourceId = "ta_013657543b4043b89dbb17e9d3a4723a"
+
+    const permissions = await store.forResource(resourceId)
+
+    expect(permissions).toEqual(PERMISSIONS_FOR_RESOURCE)
+  })
+})

@@ -1,8 +1,8 @@
 {
   "name": "@budibase/bbui",
   "description": "A UI solution used in the different Budibase projects.",
-  "version": "0.9.58",
-  "license": "AGPL-3.0",
+  "version": "2.1.43-alpha.7",
+  "license": "MPL-2.0",
   "svelte": "src/index.js",
   "module": "dist/bbui.es.js",
   "exports": {
@@ -38,6 +38,7 @@
   ],
   "dependencies": {
     "@adobe/spectrum-css-workflow-icons": "^1.2.1",
+    "@budibase/string-templates": "2.1.43-alpha.7",
     "@spectrum-css/actionbutton": "^1.0.1",
     "@spectrum-css/actiongroup": "^1.0.1",
     "@spectrum-css/avatar": "^3.0.2",
@@ -45,12 +46,13 @@
     "@spectrum-css/buttongroup": "^3.0.2",
     "@spectrum-css/checkbox": "^3.0.2",
     "@spectrum-css/dialog": "^3.0.1",
-    "@spectrum-css/divider": "^1.0.1",
+    "@spectrum-css/divider": "^1.0.3",
     "@spectrum-css/dropzone": "^3.0.2",
     "@spectrum-css/fieldgroup": "^3.0.2",
     "@spectrum-css/fieldlabel": "^3.0.1",
     "@spectrum-css/icon": "^3.0.1",
     "@spectrum-css/illustratedmessage": "^3.0.2",
+    "@spectrum-css/inlinealert": "^2.0.1",
     "@spectrum-css/inputgroup": "^3.0.2",
     "@spectrum-css/label": "^2.0.10",
     "@spectrum-css/link": "^3.1.1",
@@ -64,10 +66,12 @@
     "@spectrum-css/radio": "^3.0.2",
     "@spectrum-css/search": "^3.0.2",
     "@spectrum-css/sidenav": "^3.0.2",
+    "@spectrum-css/slider": "3.0.1",
     "@spectrum-css/statuslight": "^3.0.2",
+    "@spectrum-css/stepper": "^3.0.3",
     "@spectrum-css/switch": "^1.0.2",
     "@spectrum-css/table": "^3.0.1",
-    "@spectrum-css/tabs": "^3.0.1",
+    "@spectrum-css/tabs": "^3.2.12",
     "@spectrum-css/tags": "^3.0.2",
     "@spectrum-css/textfield": "^3.0.1",
     "@spectrum-css/toast": "^3.0.1",
@@ -77,8 +81,12 @@
     "@spectrum-css/underlay": "^2.0.9",
     "@spectrum-css/vars": "^3.0.1",
     "dayjs": "^1.10.4",
-    "svelte-flatpickr": "^3.1.0",
+    "easymde": "^2.16.1",
+    "svelte-flatpickr": "^3.2.3",
     "svelte-portal": "^1.0.0"
+  },
+  "resolutions": {
+    "loader-utils": "1.4.1"
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }

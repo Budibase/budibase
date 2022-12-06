@@ -6,22 +6,24 @@
   } from "builderStore/dataBinding"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
-  const dispatch = createEventDispatcher()
+  import { isJSBinding } from "@budibase/string-templates"
 
   export let panel = ServerBindingPanel
   export let value = ""
   export let bindings = []
-  export let thin = true
   export let title = "Bindings"
   export let placeholder
   export let label
+  export let allowJS = false
+  export let updateOnChange = true
 
+  const dispatch = createEventDispatcher()
   let bindingModal
-  let validity = true
+  let valid = true
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
-  $: invalid = !validity
+  $: isJS = isJSBinding(value)
 
   const saveBinding = () => {
     onChange(tempValue)
@@ -36,33 +38,32 @@
 <div class="control">
   <Input
     {label}
-    {thin}
-    value={readableValue}
-    on:change={event => onChange(event.target.value)}
+    readonly={isJS}
+    value={isJS ? "(JavaScript function)" : readableValue}
+    on:change={event => onChange(event.detail)}
     {placeholder}
+    {updateOnChange}
   />
   <div class="icon" on:click={bindingModal.show}>
     <Icon size="S" name="FlashOn" />
   </div>
 </div>
 <Modal bind:this={bindingModal}>
-  <ModalContent
-    {title}
-    onConfirm={saveBinding}
-    bind:disabled={invalid}
-    size="XL"
-  >
+  <ModalContent {title} onConfirm={saveBinding} disabled={!valid} size="XL">
     <Body extraSmall grey>
       Add the objects on the left to enrich your text.
     </Body>
-    <svelte:component
-      this={panel}
-      serverSide
-      value={readableValue}
-      bind:validity
-      on:update={event => (tempValue = event.detail)}
-      bindableProperties={bindings}
-    />
+    <div class="panel-wrapper">
+      <svelte:component
+        this={panel}
+        serverSide
+        value={readableValue}
+        bind:valid
+        on:change={e => (tempValue = e.detail)}
+        {bindings}
+        {allowJS}
+      />
+    </div>
   </ModalContent>
 </Modal>
 
@@ -99,5 +100,10 @@
     color: var(--spectrum-alias-text-color-hover);
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-alias-border-color-hover);
+  }
+
+  .panel-wrapper {
+    border: var(--border-light);
+    border-radius: 4px;
   }
 </style>

@@ -1,0 +1,6 @@
+{
+  "watch": ["src", "../backend-core", "../../../budibase-pro/packages/pro"],
+  "ext": "js,ts,json",
+  "ignore": ["src/**/*.spec.ts", "src/**/*.spec.js", "../backend-core/dist/**/*"],
+  "exec": "ts-node src/index.ts"
+}

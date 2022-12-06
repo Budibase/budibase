@@ -12,6 +12,8 @@
   export let dataCy = null
   export let size = "M"
   export let active = false
+  export let fullWidth = false
+  export let noPadding = false
 
   function longPress(element) {
     if (!longPressable) return
@@ -40,6 +42,8 @@
   class:spectrum-ActionButton--quiet={quiet}
   class:spectrum-ActionButton--emphasized={emphasized}
   class:is-selected={selected}
+  class:noPadding
+  class:fullWidth
   class="spectrum-ActionButton spectrum-ActionButton--size{size}"
   class:active
   {disabled}
@@ -71,8 +75,28 @@
 </button>
 
 <style>
+  .fullWidth {
+    width: 100%;
+  }
   .active,
   .active svg {
     color: var(--spectrum-global-color-blue-600);
+  }
+  :global([dir="ltr"] .spectrum-ActionButton .spectrum-Icon) {
+    margin-left: 0;
+    transition: color ease-out 130ms;
+  }
+  .is-selected:not(.spectrum-ActionButton--emphasized) {
+    background: var(--spectrum-global-color-gray-300);
+  }
+  .noPadding {
+    padding: 0;
+    min-width: 0;
+  }
+  .spectrum-ActionButton--quiet {
+    padding: 0 8px;
+  }
+  .is-selected:not(.emphasized) .spectrum-Icon {
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

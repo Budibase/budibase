@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
 
 export function createEmailStore() {
   const store = writable({})
@@ -8,14 +8,9 @@ export function createEmailStore() {
     subscribe: store.subscribe,
     templates: {
       fetch: async () => {
-        // fetch the email template definitions
-        const response = await api.get(`/api/admin/template/definitions`)
-        const definitions = await response.json()
-
-        // fetch the email templates themselves
-        const templatesResponse = await api.get(`/api/admin/template/email`)
-        const templates = await templatesResponse.json()
-
+        // Fetch the email template definitions and templates
+        const definitions = await API.getEmailTemplateDefinitions()
+        const templates = await API.getEmailTemplates()
         store.set({
           definitions,
           templates,
@@ -23,15 +18,12 @@ export function createEmailStore() {
       },
       save: async template => {
         // Save your template config
-        const response = await api.post(`/api/admin/template`, template)
-        const json = await response.json()
-        if (response.status !== 200) throw new Error(json.message)
-        template._rev = json._rev
-        template._id = json._id
-
+        const savedTemplate = await API.saveEmailTemplate(template)
+        template._rev = savedTemplate._rev
+        template._id = savedTemplate._id
         store.update(state => {
           const currentIdx = state.templates.findIndex(
-            template => template.purpose === json.purpose
+            template => template.purpose === savedTemplate.purpose
           )
           state.templates.splice(currentIdx, 1, template)
           return state

@@ -1,5 +1,7 @@
 import { writable, derived } from "svelte/store"
 
+// DEPRECATED - Use the yup based validators for future validation
+
 export function createValidationStore(initialValue, ...validators) {
   let touched = false
 

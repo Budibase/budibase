@@ -6,9 +6,14 @@
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
 
+  const alphabetical = (a, b) => a.name?.toLowerCase() > b.name?.toLowerCase()
+
   export let sourceId
 
   $: selectedView = $views.selected && $views.selected.name
+  $: sortedTables = $tables.list
+    .filter(table => table.sourceId === sourceId)
+    .sort(alphabetical)
 
   function selectTable(table) {
     tables.select(table)
@@ -33,7 +38,7 @@
 
 {#if $database?._id}
   <div class="hierarchy-items-container">
-    {#each $tables.list.filter(table => table.sourceId === sourceId) as table, idx}
+    {#each sortedTables as table, idx}
       <NavItem
         indentLevel={1}
         border={idx > 0}
@@ -46,7 +51,7 @@
           <EditTablePopover {table} />
         {/if}
       </NavItem>
-      {#each Object.keys(table.views || {}) as viewName, idx (idx)}
+      {#each [...Object.keys(table.views || {})].sort() as viewName, idx (idx)}
         <NavItem
           indentLevel={2}
           icon="Remove"

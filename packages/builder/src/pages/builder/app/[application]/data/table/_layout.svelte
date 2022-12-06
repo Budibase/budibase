@@ -1,6 +1,6 @@
 <script>
   import { tables } from "stores/backend"
-  import { goto, leftover } from "@roxi/routify"
+  import { redirect, leftover } from "@roxi/routify"
   import { onMount } from "svelte"
 
   onMount(async () => {
@@ -11,7 +11,7 @@
       $tables.list.length > 0 &&
       (!$tables.selected || !$tables.selected._id)
     ) {
-      $goto(`./${$tables.list[0]._id}`)
+      $redirect(`./${$tables.list[0]._id}`)
     }
   })
 </script>

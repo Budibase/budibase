@@ -1,11 +1,18 @@
 <script>
-  import { Input, Select } from "@budibase/bbui"
+  import { Input, Select, Button } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   export let value = {}
-  $: fieldsArray = Object.entries(value).map(([name, type]) => ({
-    name,
-    type,
-  }))
+
+  $: fieldsArray = value
+    ? Object.entries(value).map(([name, type]) => ({
+        name,
+        type,
+      }))
+    : []
+
   const typeOptions = [
     {
       label: "Text",
@@ -23,18 +30,22 @@
       label: "DateTime",
       value: "datetime",
     },
+    {
+      label: "Array",
+      value: "array",
+    },
   ]
 
   function addField() {
     const newValue = { ...value }
     newValue[""] = "string"
-    value = newValue
+    dispatch("change", newValue)
   }
 
   function removeField(name) {
     const newValues = { ...value }
     delete newValues[name]
-    value = newValues
+    dispatch("change", newValues)
   }
 
   const fieldNameChanged = originalName => e => {
@@ -50,13 +61,11 @@
       newVals[current.name] = current.type
       return newVals
     }, {})
+    dispatch("change", value)
   }
 </script>
 
 <div class="root">
-  <div class="add-field">
-    <i class="ri-add-line" on:click={addField} />
-  </div>
   <div class="spacer" />
   {#each fieldsArray as field}
     <div class="field">
@@ -65,10 +74,14 @@
         secondary
         placeholder="Enter field name"
         on:change={fieldNameChanged(field.name)}
+        updateOnChange={false}
       />
       <Select
         value={field.type}
-        on:change={e => (value[field.name] = e.target.value)}
+        on:change={e => {
+          value[field.name] = e.detail
+          dispatch("change", value)
+        }}
         options={typeOptions}
       />
       <i
@@ -77,13 +90,12 @@
       />
     </div>
   {/each}
+  <Button quiet secondary icon="Add" on:click={addField}>Add field</Button>
 </div>
 
 <style>
   .root {
-    position: relative;
     max-width: 100%;
-    overflow-x: auto;
     /* so we can show the "+" button beside the "fields" label*/
     top: -26px;
   }
@@ -94,53 +106,11 @@
 
   .field {
     max-width: 100%;
-    background-color: var(--grey-2);
     margin-bottom: var(--spacing-m);
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--grey-4);
     display: grid;
-    /*grid-template-rows: auto auto;
-    grid-template-columns: auto;*/
+    grid-template-columns: 1fr 1fr auto;
     position: relative;
-    overflow: hidden;
-  }
-
-  .field :global(select) {
-    padding: var(--spacing-xs) 2rem var(--spacing-m) var(--spacing-s) !important;
-    font-size: var(--font-size-xs);
-    color: var(--grey-7);
-  }
-
-  .field :global(.pointer) {
-    padding-bottom: var(--spacing-m) !important;
-    color: var(--grey-2);
-  }
-
-  .field :global(input) {
-    padding: var(--spacing-m) var(--spacing-xl) var(--spacing-xs)
-      var(--spacing-m);
-    font-size: var(--font-size-s);
-    font-weight: bold;
-  }
-
-  .remove-field {
-    cursor: pointer;
-    color: var(--grey-6);
-    position: absolute;
-    top: var(--spacing-m);
-    right: 3px;
-  }
-
-  .remove-field:hover {
-    color: var(--black);
-  }
-
-  .add-field {
-    text-align: right;
-  }
-
-  .add-field > i {
-    cursor: pointer;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

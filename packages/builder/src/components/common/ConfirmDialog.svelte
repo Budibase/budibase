@@ -8,6 +8,8 @@
   export let onOk = undefined
   export let onCancel = undefined
   export let warning = true
+  export let disabled
+  export let dataCy = null
 
   let modal
 
@@ -26,6 +28,8 @@
     confirmText={okText}
     {cancelText}
     {warning}
+    {disabled}
+    {dataCy}
   >
     <Body size="S">
       {body}

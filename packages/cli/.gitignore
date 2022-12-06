@@ -1,6 +1,8 @@
 node_modules/
 docker-compose.yaml
-envoy.yaml
-hosting.properties
+nginx.conf
 build/
 docker-error.log
+envoy.yaml
+*.tar.gz
+prebuilds/

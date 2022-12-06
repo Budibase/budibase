@@ -22,7 +22,7 @@
         "array"
       ],
       "numArgs": 1,
-      "example": "{{ avg [1,2,3,4,5] }} -> 3",
+      "example": "{{ avg 1 2 3 4 5 }} -> 3",
       "description": "<p>Returns the average of all numbers in the given array.</p>\n"
     },
     "ceil": {
@@ -74,7 +74,7 @@
         "b"
       ],
       "numArgs": 2,
-      "example": "{{ product 10 5 }} -> 50",
+      "example": "{{ multiply 10 5 }} -> 50",
       "description": "<p>Return the product of <code>a</code> times <code>b</code>.</p>\n"
     },
     "plus": {
@@ -154,7 +154,7 @@
         "value"
       ],
       "numArgs": 1,
-      "example": "{{ arrayify \"foo\" }} -> [\"foo\"]",
+      "example": "{{ arrayify 'foo' }} -> ['foo']",
       "description": "<p>Cast the given <code>value</code> to an array.</p>\n"
     },
     "before": {
@@ -290,7 +290,7 @@
         "prop"
       ],
       "numArgs": 2,
-      "example": "{{pluck [{ 'name': 'Bob' }] \"name\" }} -> ['Bob']",
+      "example": "{{pluck [{ 'name': 'Bob' }] 'name' }} -> ['Bob']",
       "description": "<p>Map over the given object or array or objects and create an array of values from the given <code>prop</code>. Dot-notation may be used (as a string) to get nested properties.</p>\n"
     },
     "reverse": {
@@ -326,7 +326,7 @@
         "props"
       ],
       "numArgs": 2,
-      "example": "{{ sortBy [{a: 'zzz'}, {a: 'aaa'}] \"a\" }} -> [{\"a\":\"aaa\"}, {\"a\":\"zzz\"}]",
+      "example": "{{ sortBy [{a: 'zzz'}, {a: 'aaa'}] 'a' }} -> [{'a':'aaa'}, {'a':'zzz'}]",
       "description": "<p>Sort an <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n"
     },
     "withAfter": {
@@ -471,7 +471,7 @@
         "precision"
       ],
       "numArgs": 2,
-      "example": "{{toPrecision \"1.1234\" 2}}",
+      "example": "{{toPrecision '1.1234' 2}}",
       "description": "<p>Returns a string representing the <code>Number</code> object to the specified precision.</p>\n"
     }
   },
@@ -481,7 +481,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ encodeURI \"https://myurl?Hello There\" }} -> https://myurl?Hello%20There",
+      "example": "{{ encodeURI 'https://myurl?Hello There' }} -> https://myurl?Hello%20There",
       "description": "<p>Encodes a Uniform Resource Identifier (URI) component by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character.</p>\n"
     },
     "escape": {
@@ -489,7 +489,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ escape \"https://myurl?Hello+There\" }} -> https://myurl?Hello%20There",
+      "example": "{{ escape 'https://myurl?Hello+There' }} -> https://myurl?Hello%20There",
       "description": "<p>Escape the given string by replacing characters with escape sequences. Useful for allowing the string to be used in a URL, etc.</p>\n"
     },
     "decodeURI": {
@@ -497,7 +497,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ escape \"https://myurl?Hello%20There\" }} -> https://myurl?Hello+There",
+      "example": "{{ escape 'https://myurl?Hello%20There' }} -> https://myurl?Hello+There",
       "description": "<p>Decode a Uniform Resource Identifier (URI) component.</p>\n"
     },
     "url_encode": {
@@ -516,7 +516,7 @@
         "href"
       ],
       "numArgs": 2,
-      "example": "{{ urlResolve \"https://myurl\" \"/api/test\" }} -> https://myurl/api/test",
+      "example": "{{ urlResolve 'https://myurl' '/api/test' }} -> https://myurl/api/test",
       "description": "<p>Take a base URL, and a href URL, and resolve them as a browser would for an anchor tag.</p>\n"
     },
     "urlParse": {
@@ -524,7 +524,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ urlParse \"https://myurl/api/test\" }}",
+      "example": "{{ urlParse 'https://myurl/api/test' }}",
       "description": "<p>Parses a <code>url</code> string into an object.</p>\n"
     },
     "stripQuerystring": {
@@ -532,7 +532,7 @@
         "url"
       ],
       "numArgs": 1,
-      "example": "{{ stripQueryString \"https://myurl/api/test?foo=bar\" }} -> \"https://myurl/api/test\"",
+      "example": "{{ stripQueryString 'https://myurl/api/test?foo=bar' }} -> 'https://myurl/api/test'",
       "description": "<p>Strip the query string from the given <code>url</code>.</p>\n"
     },
     "stripProtocol": {
@@ -540,7 +540,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ stripProtocol \"https://myurl/api/test\" }} -> \"myurl/api/test\"",
+      "example": "{{ stripProtocol 'https://myurl/api/test' }} -> 'myurl/api/test'",
       "description": "<p>Strip protocol from a <code>url</code>. Useful for displaying media that may have an &#39;http&#39; protocol on secure connections.</p>\n"
     }
   },
@@ -551,7 +551,7 @@
         "suffix"
       ],
       "numArgs": 2,
-      "example": "{{append \"index\" \".html\"}} -> index.html",
+      "example": "{{append 'index' '.html'}} -> index.html",
       "description": "<p>Append the specified <code>suffix</code> to the given string.</p>\n"
     },
     "camelcase": {
@@ -559,7 +559,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{camelcase \"foo bar baz\"}} ->  fooBarBaz",
+      "example": "{{camelcase 'foo bar baz'}} ->  fooBarBaz",
       "description": "<p>camelCase the characters in the given <code>string</code>.</p>\n"
     },
     "capitalize": {
@@ -567,7 +567,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{capitalize \"foo bar baz\"}} ->  Foo bar baz",
+      "example": "{{capitalize 'foo bar baz'}} ->  Foo bar baz",
       "description": "<p>Capitalize the first word in a sentence.</p>\n"
     },
     "capitalizeAll": {
@@ -575,7 +575,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ capitalizeAll \"foo bar baz\"}} ->  Foo Bar Baz",
+      "example": "{{ capitalizeAll 'foo bar baz'}} ->  Foo Bar Baz",
       "description": "<p>Capitalize all words in a string.</p>\n"
     },
     "center": {
@@ -584,7 +584,7 @@
         "spaces"
       ],
       "numArgs": 2,
-      "example": "{{ center \"test\" 1}} -> \" test \"",
+      "example": "{{ center 'test' 1}} -> ' test '",
       "description": "<p>Center a string using non-breaking spaces</p>\n"
     },
     "chop": {
@@ -592,7 +592,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{ chop \" ABC \"}} -> \"ABC\"",
+      "example": "{{ chop ' ABC '}} -> 'ABC'",
       "description": "<p>Like trim, but removes both extraneous whitespace <strong>and non-word characters</strong> from the beginning and end of a string.</p>\n"
     },
     "dashcase": {
@@ -600,7 +600,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{dashcase \"a-b-c d_e\"}} -> a-b-c-d-e",
+      "example": "{{dashcase 'a-b-c d_e'}} -> a-b-c-d-e",
       "description": "<p>dash-case the characters in <code>string</code>. Replaces non-word characters and periods with hyphens.</p>\n"
     },
     "dotcase": {
@@ -608,7 +608,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{dotcase \"a-b-c d_e\"}} -> a.b.c.d.e",
+      "example": "{{dotcase 'a-b-c d_e'}} -> a.b.c.d.e",
       "description": "<p>dot.case the characters in <code>string</code>.</p>\n"
     },
     "downcase": {
@@ -616,7 +616,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{downcase \"aBcDeF\"}} -> abcdef",
+      "example": "{{downcase 'aBcDeF'}} -> abcdef",
       "description": "<p>Lowercase all of the characters in the given string. Alias for <a href=\"#lowercase\">lowercase</a>.</p>\n"
     },
     "ellipsis": {
@@ -625,7 +625,7 @@
         "length"
       ],
       "numArgs": 2,
-      "example": "{{ellipsis \"foo bar baz\", 7}} -> foo bar…",
+      "example": "{{ellipsis 'foo bar baz' 7}} -> foo bar…",
       "description": "<p>Truncates a string to the specified <code>length</code>, and appends it with an elipsis, <code>…</code>.</p>\n"
     },
     "hyphenate": {
@@ -633,7 +633,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{hyphenate \"foo bar baz qux\"}} -> foo-bar-baz-qux",
+      "example": "{{hyphenate 'foo bar baz qux'}} -> foo-bar-baz-qux",
       "description": "<p>Replace spaces in a string with hyphens.</p>\n"
     },
     "isString": {
@@ -641,7 +641,7 @@
         "value"
       ],
       "numArgs": 1,
-      "example": "{{isString \"foo\"}} -> true",
+      "example": "{{isString 'foo'}} -> true",
       "description": "<p>Return true if <code>value</code> is a string.</p>\n"
     },
     "lowercase": {
@@ -649,7 +649,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{lowercase \"Foo BAR baZ\"}} -> foo bar baz",
+      "example": "{{lowercase 'Foo BAR baZ'}} -> foo bar baz",
       "description": "<p>Lowercase all characters in the given string.</p>\n"
     },
     "occurrences": {
@@ -658,7 +658,7 @@
         "substring"
       ],
       "numArgs": 2,
-      "example": "{{occurrences \"foo bar foo bar baz\" \"foo\"}} -> 2",
+      "example": "{{occurrences 'foo bar foo bar baz' 'foo'}} -> 2",
       "description": "<p>Return the number of occurrences of <code>substring</code> within the given <code>string</code>.</p>\n"
     },
     "pascalcase": {
@@ -666,7 +666,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{pascalcase \"foo bar baz\"}} -> FooBarBaz",
+      "example": "{{pascalcase 'foo bar baz'}} -> FooBarBaz",
       "description": "<p>PascalCase the characters in <code>string</code>.</p>\n"
     },
     "pathcase": {
@@ -674,7 +674,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{pathcase \"a-b-c d_e\"}} -> a/b/c/d/e",
+      "example": "{{pathcase 'a-b-c d_e'}} -> a/b/c/d/e",
       "description": "<p>path/case the characters in <code>string</code>.</p>\n"
     },
     "plusify": {
@@ -682,7 +682,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{plusify \"foo bar baz\"}} -> foo+bar+baz",
+      "example": "{{plusify 'foo bar baz'}} -> foo+bar+baz",
       "description": "<p>Replace spaces in the given string with pluses.</p>\n"
     },
     "prepend": {
@@ -691,7 +691,7 @@
         "prefix"
       ],
       "numArgs": 2,
-      "example": "{{prepend \"bar\" \"foo-\"}} -> foo-bar",
+      "example": "{{prepend 'bar' 'foo-'}} -> foo-bar",
       "description": "<p>Prepends the given <code>string</code> with the specified <code>prefix</code>.</p>\n"
     },
     "raw": {
@@ -708,7 +708,7 @@
         "substring"
       ],
       "numArgs": 2,
-      "example": "{{remove \"a b a b a b\" \"a \"}} -> b b b",
+      "example": "{{remove 'a b a b a b' 'a '}} -> b b b",
       "description": "<p>Remove all occurrences of <code>substring</code> from the given <code>str</code>.</p>\n"
     },
     "removeFirst": {
@@ -717,7 +717,7 @@
         "substring"
       ],
       "numArgs": 2,
-      "example": "{{remove \"a b a b a b\" \"a\"}} ->  b a b a b",
+      "example": "{{remove 'a b a b a b' 'a'}} ->  b a b a b",
       "description": "<p>Remove the first occurrence of <code>substring</code> from the given <code>str</code>.</p>\n"
     },
     "replace": {
@@ -727,7 +727,7 @@
         "b"
       ],
       "numArgs": 3,
-      "example": "{{replace \"a b a b a b\" \"a\" \"z\"}} -> z b z b z b",
+      "example": "{{replace 'a b a b a b' 'a' 'z'}} -> z b z b z b",
       "description": "<p>Replace all occurrences of substring <code>a</code> with substring <code>b</code>.</p>\n"
     },
     "replaceFirst": {
@@ -737,7 +737,7 @@
         "b"
       ],
       "numArgs": 3,
-      "example": "{{replace \"a b a b a b\" \"a\" \"z\"}} -> z b a b a b",
+      "example": "{{replace 'a b a b a b' 'a' 'z'}} -> z b a b a b",
       "description": "<p>Replace the first occurrence of substring <code>a</code> with substring <code>b</code>.</p>\n"
     },
     "sentence": {
@@ -745,7 +745,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{sentence \"hello world. goodbye world.\"}} -> Hello world. Goodbye world.",
+      "example": "{{sentence 'hello world. goodbye world.'}} -> Hello world. Goodbye world.",
       "description": "<p>Sentence case the given string</p>\n"
     },
     "snakecase": {
@@ -753,7 +753,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{snakecase \"a-b-c d_e\"}} -> a_b_c_d_e",
+      "example": "{{snakecase 'a-b-c d_e'}} -> a_b_c_d_e",
       "description": "<p>snake_case the characters in the given <code>string</code>.</p>\n"
     },
     "split": {
@@ -761,7 +761,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{split \"a,b,c\"}} -> ['a', 'b', 'c']",
+      "example": "{{split 'a,b,c'}} -> ['a', 'b', 'c']",
       "description": "<p>Split <code>string</code> by the given <code>character</code>.</p>\n"
     },
     "startsWith": {
@@ -771,7 +771,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#startsWith \"Goodbye\" \"Hello, world!\"}} Yep {{else}} Nope {{/startsWith}} -> Nope",
+      "example": "{{#startsWith 'Goodbye' 'Hello, world!'}} Yep {{else}} Nope {{/startsWith}} -> Nope",
       "description": "<p>Tests whether a string begins with the given prefix.</p>\n"
     },
     "titleize": {
@@ -779,7 +779,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{#titleize \"this is title case\" }} -> This Is Title Case",
+      "example": "{{#titleize 'this is title case' }} -> This Is Title Case",
       "description": "<p>Title case the given string.</p>\n"
     },
     "trim": {
@@ -787,7 +787,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{trim \"  ABC  \" }} -> ABC",
+      "example": "{{trim '  ABC  ' }} -> ABC",
       "description": "<p>Removes extraneous whitespace from the beginning and end of a string.</p>\n"
     },
     "trimLeft": {
@@ -795,7 +795,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{trimLeft \"  ABC \" }} -> \"ABC \"",
+      "example": "{{trimLeft '  ABC ' }} -> 'ABC '",
       "description": "<p>Removes extraneous whitespace from the beginning of a string.</p>\n"
     },
     "trimRight": {
@@ -803,7 +803,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{trimRight \"  ABC \" }} ->  \"  ABC \"",
+      "example": "{{trimRight '  ABC ' }} ->  '  ABC '",
       "description": "<p>Removes extraneous whitespace from the end of a string.</p>\n"
     },
     "truncate": {
@@ -813,7 +813,7 @@
         "suffix"
       ],
       "numArgs": 3,
-      "example": "{{truncate \"foo bar baz\" 7 }} -> foo bar",
+      "example": "{{truncate 'foo bar baz' 7 }} -> foo bar",
       "description": "<p>Truncate a string to the specified <code>length</code>. Also see <a href=\"#ellipsis\">ellipsis</a>.</p>\n"
     },
     "truncateWords": {
@@ -823,7 +823,7 @@
         "suffix"
       ],
       "numArgs": 3,
-      "example": "{{truncateWords \"foo bar baz\" 1 }} -> foo",
+      "example": "{{truncateWords 'foo bar baz' 1 }} -> foo",
       "description": "<p>Truncate a string to have the specified number of words. Also see <a href=\"#truncate\">truncate</a>.</p>\n"
     },
     "upcase": {
@@ -831,7 +831,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{upcase \"aBcDef\"}} -> ABCDEF",
+      "example": "{{upcase 'aBcDef'}} -> ABCDEF",
       "description": "<p>Uppercase all of the characters in the given string. Alias for <a href=\"#uppercase\">uppercase</a>.</p>\n"
     },
     "uppercase": {
@@ -840,7 +840,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{uppercase \"aBcDef\"}} -> ABCDEF",
+      "example": "{{uppercase 'aBcDef'}} -> ABCDEF",
       "description": "<p>Uppercase all of the characters in the given string. If used as a block helper it will uppercase the entire block. This helper does not support inverse blocks.</p>\n"
     }
   },
@@ -863,7 +863,7 @@
         "options"
       ],
       "numArgs": 4,
-      "example": "{{compare 10 \"<\" 5 }} -> true",
+      "example": "{{compare 10 '<' 5 }} -> true",
       "description": "<p>Render a block when a comparison of the first and third arguments returns true. The second argument is the [arithemetic operator][operators] to use. You may also optionally specify an inverse block to render when falsy.</p>\n"
     },
     "contains": {
@@ -874,7 +874,7 @@
         "options"
       ],
       "numArgs": 4,
-      "example": "{{#contains ['a', 'b', 'c'] \"d\"}} This will not be rendered. {{else}} This will be rendered. {{/contains}}",
+      "example": "{{#contains ['a', 'b', 'c'] 'd'}} This will not be rendered. {{else}} This will be rendered. {{/contains}}",
       "description": "<p>Block helper that renders the block if <code>collection</code> has the given <code>value</code>, using strict equality (<code>===</code>) for comparison, otherwise the inverse block is rendered (if specified). If a <code>startIndex</code> is specified and is negative, it is used as the offset from the end of the collection.</p>\n"
     },
     "default": {
@@ -883,8 +883,8 @@
         "defaultValue"
       ],
       "numArgs": 2,
-      "example": "{{default null null \"default\"}} -> default",
-      "description": "<p>Returns the first value that is not undefined, otherwise the &quot;default&quot; value is returned.</p>\n"
+      "example": "{{default null null 'default'}} -> default",
+      "description": "<p>Returns the first value that is not undefined, otherwise the &#39;default&#39; value is returned.</p>\n"
     },
     "eq": {
       "args": [
@@ -894,7 +894,7 @@
       ],
       "numArgs": 3,
       "example": "{{#eq 3 3}} equal{{else}} not equal{{/eq}} -> equal",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "gt": {
       "args": [
@@ -904,7 +904,7 @@
       ],
       "numArgs": 3,
       "example": "{{#gt 4 3}} greater than{{else}} not greater than{{/gt}} -> greater than",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "gte": {
       "args": [
@@ -914,7 +914,7 @@
       ],
       "numArgs": 3,
       "example": "{{#gte 4 3}} greater than or equal{{else}} not greater than{{/gte}} -> greater than or equal",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "has": {
       "args": [
@@ -923,7 +923,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#has \"foobar\" \"foo\"}} has it{{else}} doesn't{{/has}} -> has it",
+      "example": "{{#has 'foobar' 'foo'}} has it{{else}} doesn't{{/has}} -> has it",
       "description": "<p>Block helper that renders a block if <code>value</code> has <code>pattern</code>. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "isFalsey": {
@@ -932,7 +932,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{isFalsey \"\" }} -> true",
+      "example": "{{isFalsey '' }} -> true",
       "description": "<p>Returns true if the given <code>value</code> is falsey. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper.</p>\n"
     },
     "isTruthy": {
@@ -941,7 +941,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{isTruthy \"12\" }} -> true",
+      "example": "{{isTruthy '12' }} -> true",
       "description": "<p>Returns true if the given <code>value</code> is truthy. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper.</p>\n"
     },
     "ifEven": {
@@ -999,7 +999,7 @@
       ],
       "numArgs": 2,
       "example": "{{#lt 2 3}} less than {{else}} more than or equal {{/lt}} -> less than",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "lte": {
       "args": [
@@ -1009,7 +1009,7 @@
       ],
       "numArgs": 3,
       "example": "{{#lte 2 3}} less than or equal {{else}} more than {{/lte}} -> less than or equal",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&quot;&quot;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "neither": {
       "args": [
@@ -1088,6 +1088,115 @@
       "numArgs": 3,
       "example": "{{#unlessLteq 20 1 }} greater than {{else}} less than or equal to {{/unlessLteq}} -> greater than",
       "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than or equal to <code>b</code></strong>.</p>\n"
+    }
+  },
+  "object": {
+    "extend": {
+      "args": [
+        "objects"
+      ],
+      "numArgs": 1,
+      "description": "<p>Extend the context with the properties of other objects. A shallow merge is performed to avoid mutating the context.</p>\n"
+    },
+    "forIn": {
+      "args": [
+        "context",
+        "options"
+      ],
+      "numArgs": 2,
+      "description": "<p>Block helper that iterates over the properties of an object, exposing each key and value on the context.</p>\n"
+    },
+    "forOwn": {
+      "args": [
+        "obj",
+        "options"
+      ],
+      "numArgs": 2,
+      "description": "<p>Block helper that iterates over the <strong>own</strong> properties of an object, exposing each key and value on the context.</p>\n"
+    },
+    "toPath": {
+      "args": [
+        "prop"
+      ],
+      "numArgs": 1,
+      "description": "<p>Take arguments and, if they are string or number, convert them to a dot-delineated object property path.</p>\n"
+    },
+    "get": {
+      "args": [
+        "prop",
+        "context",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "<p>Use property paths (<code>a.b.c</code>) to get a value or nested value from the context. Works as a regular helper or block helper.</p>\n"
+    },
+    "getObject": {
+      "args": [
+        "prop",
+        "context"
+      ],
+      "numArgs": 2,
+      "description": "<p>Use property paths (<code>a.b.c</code>) to get an object from the context. Differs from the <code>get</code> helper in that this helper will return the actual object, including the given property key. Also, this helper does not work as a block helper.</p>\n"
+    },
+    "hasOwn": {
+      "args": [
+        "key",
+        "context"
+      ],
+      "numArgs": 2,
+      "description": "<p>Return true if <code>key</code> is an own, enumerable property of the given <code>context</code> object.</p>\n"
+    },
+    "isObject": {
+      "args": [
+        "value"
+      ],
+      "numArgs": 1,
+      "description": "<p>Return true if <code>value</code> is an object.</p>\n"
+    },
+    "JSONparse": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "description": "<p>Parses the given string using <code>JSON.parse</code>.</p>\n"
+    },
+    "JSONstringify": {
+      "args": [
+        "obj"
+      ],
+      "numArgs": 1,
+      "description": "<p>Stringify an object using <code>JSON.stringify</code>.</p>\n"
+    },
+    "merge": {
+      "args": [
+        "object",
+        "objects"
+      ],
+      "numArgs": 2,
+      "description": "<p>Deeply merge the properties of the given <code>objects</code> with the context object.</p>\n"
+    },
+    "parseJSON": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "description": "<p>Parses the given string using <code>JSON.parse</code>.</p>\n"
+    },
+    "pick": {
+      "args": [
+        "properties",
+        "context",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "<p>Pick properties from the context object.</p>\n"
+    },
+    "stringify": {
+      "args": [
+        "obj"
+      ],
+      "numArgs": 1,
+      "description": "<p>Stringify an object using <code>JSON.stringify</code>.</p>\n"
     }
   },
   "date": {

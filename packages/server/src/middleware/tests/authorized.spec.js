@@ -1,6 +1,3 @@
-const authorizedMiddleware = require("../authorized")
-const env = require("../../environment")
-const { PermissionTypes, PermissionLevels } = require("@budibase/auth/permissions")
 jest.mock("../../environment", () => ({
     prod: false,
     isTest: () => true,
@@ -10,20 +7,28 @@ jest.mock("../../environment", () => ({
     }
   })
 )
+const authorizedMiddleware = require("../authorized")
+const env = require("../../environment")
+const { permissions } = require("@budibase/backend-core")
+
+const APP_ID = ""
 
 class TestConfiguration {
   constructor(role) {
     this.middleware = authorizedMiddleware(role)
     this.next = jest.fn()
     this.throw = jest.fn()
+    this.headers = {}
     this.ctx = {
       headers: {},
       request: {
         url: ""
       },
+      appId: APP_ID,
       auth: {},
       next: this.next,
-      throw: this.throw
+      throw: this.throw,
+      get: (name) => this.headers[name],
     }
   }
 
@@ -44,7 +49,7 @@ class TestConfiguration {
   }
 
   setAuthenticated(isAuthed) {
-    this.ctx.auth = { authenticated: isAuthed }
+    this.ctx.isAuthenticated = isAuthed
   }
 
   setRequestUrl(url) {
@@ -77,17 +82,6 @@ describe("Authorization middleware", () => {
     config = new TestConfiguration()
   })
 
-  describe("external web hook call", () => {
-    beforeEach(() => {
-      config = new TestConfiguration()
-      config.setEnvironment(true)
-      config.setRequestHeaders({
-        "x-api-key": "abc123",
-        "x-instanceid": "instance123",
-      })
-    })
-  })
-
   describe("non-webhook call", () => {
     let config
 
@@ -116,9 +110,9 @@ describe("Authorization middleware", () => {
       expect(config.next).toHaveBeenCalled()
     })
     
-    it("throws if the user has only builder permissions", async () => {
+    it("throws if the user does not have builder permissions", async () => {
       config.setEnvironment(false)
-      config.setMiddlewareRequiredPermission(PermissionTypes.BUILDER)
+      config.setMiddlewareRequiredPermission(permissions.PermissionType.BUILDER)
       config.setUser({
         role: {
           _id: ""
@@ -130,19 +124,19 @@ describe("Authorization middleware", () => {
     })
 
     it("passes on to next() middleware if the user has resource permission", async () => {
-      config.setResourceId(PermissionTypes.QUERY)
+      config.setResourceId(permissions.PermissionType.QUERY)
       config.setUser({
         role: {
           _id: ""
         }
       })
-      config.setMiddlewareRequiredPermission(PermissionTypes.QUERY)
+      config.setMiddlewareRequiredPermission(permissions.PermissionType.QUERY)
 
       await config.executeMiddleware()
       expect(config.next).toHaveBeenCalled()
     })
 
-    it("throws if the user session is not authenticated after permission checks", async () => {
+    it("throws if the user session is not authenticated", async () => {
       config.setUser({
         role: {
           _id: ""
@@ -160,7 +154,7 @@ describe("Authorization middleware", () => {
           _id: ""
         },
       })
-      config.setMiddlewareRequiredPermission(PermissionTypes.ADMIN, PermissionLevels.BASIC)
+      config.setMiddlewareRequiredPermission(permissions.PermissionType.ADMIN, permissions.PermissionLevel.BASIC)
       
       await config.executeMiddleware()
       expect(config.throw).toHaveBeenCalledWith(403, "User does not have permission")

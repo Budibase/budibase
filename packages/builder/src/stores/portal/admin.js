@@ -1,35 +1,105 @@
-import { writable } from "svelte/store"
-import api from "builderStore/api"
+import { writable, get } from "svelte/store"
+import { API } from "api"
+import { auth } from "stores/portal"
+import { banner } from "@budibase/bbui"
 
 export function createAdminStore() {
-  const { subscribe, set } = writable({})
+  const DEFAULT_CONFIG = {
+    loaded: false,
+    multiTenancy: false,
+    cloud: false,
+    isDev: false,
+    disableAccountPortal: false,
+    accountPortalUrl: "",
+    importComplete: false,
+    onboardingProgress: 0,
+    checklist: {
+      apps: { checked: false },
+      smtp: { checked: false },
+      adminUser: { checked: false },
+      sso: { checked: false },
+    },
+  }
+
+  const admin = writable(DEFAULT_CONFIG)
 
   async function init() {
-    try {
-      const response = await api.get("/api/admin/configs/checklist")
-      const json = await response.json()
+    await getChecklist()
+    await getEnvironment()
+    // enable system status checks in the cloud
+    if (get(admin).cloud) {
+      await getSystemStatus()
+      checkStatus()
+    }
 
-      const onboardingSteps = Object.keys(json)
+    admin.update(store => {
+      store.loaded = true
+      return store
+    })
+  }
 
-      const stepsComplete = onboardingSteps.reduce(
-        (score, step) => score + Number(!!json[step]),
-        0
-      )
+  async function checkImportComplete() {
+    const result = await API.checkImportComplete()
+    admin.update(store => {
+      store.importComplete = result ? result.imported : false
+      return store
+    })
+  }
 
-      set({
-        checklist: json,
-        onboardingProgress: (stepsComplete / onboardingSteps.length) * 100,
-      })
-    } catch (err) {
-      set({
-        checklist: null,
-      })
+  async function getEnvironment() {
+    const environment = await API.getEnvironment()
+    admin.update(store => {
+      store.multiTenancy = environment.multiTenancy
+      store.cloud = environment.cloud
+      store.disableAccountPortal = environment.disableAccountPortal
+      store.accountPortalUrl = environment.accountPortalUrl
+      store.isDev = environment.isDev
+      return store
+    })
+  }
+
+  const checkStatus = async () => {
+    const health = get(admin)?.status?.health
+    if (!health?.passing) {
+      await banner.showStatus()
     }
   }
 
+  async function getSystemStatus() {
+    const status = await API.getSystemStatus()
+    admin.update(store => {
+      store.status = status
+      return store
+    })
+  }
+
+  async function getChecklist() {
+    const tenantId = get(auth).tenantId
+    const checklist = await API.getChecklist(tenantId)
+    const totalSteps = Object.keys(checklist).length
+    const completedSteps = Object.values(checklist).filter(
+      x => x?.checked
+    ).length
+    admin.update(store => {
+      store.checklist = checklist
+      store.onboardingProgress = (completedSteps / totalSteps) * 100
+      return store
+    })
+  }
+
+  function unload() {
+    admin.update(store => {
+      store.loaded = false
+      return store
+    })
+  }
+
   return {
-    subscribe,
+    subscribe: admin.subscribe,
     init,
+    checkImportComplete,
+    unload,
+    getChecklist,
   }
 }
 

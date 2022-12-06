@@ -1,0 +1,21 @@
+{{- if .Values.services.redis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: redis-service
+  name: redis-service
+spec:
+  ports:
+  - name: {{ .Values.services.redis.port | quote }}
+    port: {{ .Values.services.redis.port }}
+    targetPort: {{ .Values.services.redis.port }}
+  selector:
+    io.kompose.service: redis-service
+status:
+  loadBalancer: {}
+{{- end }}

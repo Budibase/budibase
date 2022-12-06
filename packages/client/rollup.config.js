@@ -1,12 +1,14 @@
 import commonjs from "@rollup/plugin-commonjs"
 import resolve from "@rollup/plugin-node-resolve"
+import alias from "@rollup/plugin-alias"
 import svelte from "rollup-plugin-svelte"
 import { terser } from "rollup-plugin-terser"
 import postcss from "rollup-plugin-postcss"
 import svg from "rollup-plugin-svg"
 import json from "rollup-plugin-json"
-import builtins from "rollup-plugin-node-builtins"
-import globals from "rollup-plugin-node-globals"
+import nodePolyfills from "rollup-plugin-polyfill-node"
+import path from "path"
+import { visualizer } from "rollup-plugin-visualizer"
 
 const production = !process.env.ROLLUP_WATCH
 const ignoredWarnings = [
@@ -25,7 +27,48 @@ export default {
       file: `./dist/budibase-client.js`,
     },
   ],
+  onwarn(warning, warn) {
+    if (
+      warning.code === "THIS_IS_UNDEFINED" ||
+      warning.code === "CIRCULAR_DEPENDENCY"
+    ) {
+      return
+    }
+    warn(warning)
+  },
   plugins: [
+    alias({
+      entries: [
+        {
+          find: "manifest.json",
+          replacement: path.resolve("./manifest.json"),
+        },
+        {
+          find: "api",
+          replacement: path.resolve("./src/api"),
+        },
+        {
+          find: "components",
+          replacement: path.resolve("./src/components"),
+        },
+        {
+          find: "stores",
+          replacement: path.resolve("./src/stores"),
+        },
+        {
+          find: "utils",
+          replacement: path.resolve("./src/utils"),
+        },
+        {
+          find: "constants",
+          replacement: path.resolve("./src/constants"),
+        },
+        {
+          find: "sdk",
+          replacement: path.resolve("./src/sdk"),
+        },
+      ],
+    }),
     svelte({
       emitCss: true,
       onwarn: (warning, handler) => {
@@ -37,8 +80,7 @@ export default {
     }),
     postcss(),
     commonjs(),
-    globals(),
-    builtins(),
+    nodePolyfills(),
     resolve({
       preferBuiltins: true,
       browser: true,
@@ -47,6 +89,7 @@ export default {
     svg(),
     json(),
     production && terser(),
+    !production && visualizer(),
   ],
   watch: {
     clearScreen: false,

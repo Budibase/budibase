@@ -76,6 +76,28 @@
       ]
     },
     {
+      "login": "Rory-Powell",
+      "name": "Rory Powell",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8755148?v=4",
+      "profile": "https://github.com/Rory-Powell",
+      "contributions": [
+        "code",
+        "doc",
+        "test"
+      ]
+    },
+    {
+      "login": "PClmnt",
+      "name": "Peter Clement",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5665926?v=4",
+      "profile": "https://github.com/PClmnt",
+      "contributions": [
+        "code",
+        "doc",
+        "test"
+      ]
+    },
+    {
       "login": "Conor-Mack",
       "name": "Conor_Mack",
       "avatar_url": "https://avatars1.githubusercontent.com/u/36074859?v=4",
@@ -128,6 +150,36 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/53158137?v=4",
       "profile": "https://github.com/SOVLOOKUP",
       "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "seoulaja",
+      "name": "seoulaja",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15101654?v=4",
+      "profile": "https://github.com/seoulaja",
+      "contributions": [
+        "translation"
+      ]
+    },
+    {
+      "login": "mslourens",
+      "name": "Maurits Lourens",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1907152?v=4",
+      "profile": "https://github.com/mslourens",
+      "contributions": [
+        "test",
+        "code"
+      ]
+    },
+    {
+      "login": "Rory-Powell",
+      "name": "Rory Powell",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8755148?v=4",
+      "profile": "https://github.com/Rory-Powell",
+      "contributions": [
+        "infra",
+        "test",
         "code"
       ]
     }

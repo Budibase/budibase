@@ -8,38 +8,37 @@
     Input,
     Layout,
     notifications,
+    Link,
   } from "@budibase/bbui"
-  import { goto, params } from "@roxi/routify"
-  import { auth, organisation } from "stores/portal"
+  import { goto } from "@roxi/routify"
+  import { auth, organisation, oidc, admin } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
+  import OIDCButton from "./_components/OIDCButton.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
 
   let username = ""
   let password = ""
+  let loaded = false
 
   $: company = $organisation.company || "Budibase"
+  $: multiTenancyEnabled = $admin.multiTenancy
+  $: cloud = $admin.cloud
 
   async function login() {
     try {
       await auth.login({
-        username,
+        username: username.trim(),
         password,
       })
-      notifications.success("Logged in successfully")
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
-        if ($params["?returnUrl"]) {
-          window.location = decodeURIComponent($params["?returnUrl"])
-        } else {
-          notifications.success("Logged in successfully")
-          $goto("../portal")
-        }
+        notifications.success("Logged in successfully")
+        $goto("../portal")
       }
     } catch (err) {
-      console.error(err)
-      notifications.error("Invalid credentials")
+      notifications.error(err.message ? err.message : "Invalid credentials")
     }
   }
 
@@ -48,7 +47,12 @@
   }
 
   onMount(async () => {
-    await organisation.init()
+    try {
+      await organisation.init()
+    } catch (error) {
+      notifications.error("Error getting org config")
+    }
+    loaded = true
   })
 </script>
 
@@ -58,9 +62,12 @@
     <Layout>
       <Layout noPadding justifyItems="center">
         <img alt="logo" src={$organisation.logoUrl || Logo} />
-        <Heading>Sign in to {company}</Heading>
+        <Heading textAlign="center">Sign in to {company}</Heading>
       </Layout>
-      <GoogleButton />
+      {#if loaded}
+        <GoogleButton />
+        <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
+      {/if}
       <Divider noGrid />
       <Layout gap="XS" noPadding>
         <Body size="S" textAlign="center">Sign in with email</Body>
@@ -73,11 +80,34 @@
         />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Button cta on:click={login}>Sign in to {company}</Button>
+        <Button cta disabled={!username && !password} on:click={login}
+          >Sign in to {company}</Button
+        >
         <ActionButton quiet on:click={() => $goto("./forgot")}>
           Forgot password?
         </ActionButton>
+        {#if multiTenancyEnabled && !cloud}
+          <ActionButton
+            quiet
+            on:click={() => {
+              admin.unload()
+              $goto("./org")
+            }}
+          >
+            Change organisation
+          </ActionButton>
+        {/if}
       </Layout>
+      {#if cloud}
+        <Body size="xs" textAlign="center">
+          By using Budibase Cloud
+          <br />
+          you are agreeing to our
+          <Link href="https://budibase.com/eula" target="_blank"
+            >License Agreement</Link
+          >
+        </Body>
+      {/if}
     </Layout>
   </div>
 </div>

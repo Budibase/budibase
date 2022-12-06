@@ -1,0 +1,86 @@
+{{- if .Values.services.objectStore.minio }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: minio-service
+  name: minio-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: minio-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.21.0 (992df58d8)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: minio-service
+    spec:
+      containers:
+      - args:
+        - server
+        - /data
+        env:
+        - name: MINIO_BROWSER
+          value: {{ .Values.services.objectStore.browser | quote }}
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: objectStoreAccess
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: objectStoreSecret
+
+        image: minio/minio
+        imagePullPolicy: ""
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - -f
+            - http://localhost:9000/minio/health/live
+          failureThreshold: 3
+          periodSeconds: 30
+          timeoutSeconds: 20
+        name: minio-service
+        ports:
+        - containerPort: {{ .Values.services.objectStore.port }}
+        {{ with .Values.services.objectStore.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
+        volumeMounts:
+        - mountPath: /data
+          name: minio-data
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      {{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{ end }}
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes:
+      - name: minio-data
+        persistentVolumeClaim:
+          claimName: minio-data
+status: {}
+{{- end }}

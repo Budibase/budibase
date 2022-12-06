@@ -4,12 +4,16 @@
   import DateTimeRenderer from "./DateTimeRenderer.svelte"
   import RelationshipRenderer from "./RelationshipRenderer.svelte"
   import AttachmentRenderer from "./AttachmentRenderer.svelte"
+  import ArrayRenderer from "./ArrayRenderer.svelte"
+  import InternalRenderer from "./InternalRenderer.svelte"
+  import { processStringSync } from "@budibase/string-templates"
 
   export let row
   export let schema
   export let value
   export let customRenderers = []
 
+  let renderer
   const typeMap = {
     boolean: BooleanRenderer,
     datetime: DateTimeRenderer,
@@ -19,14 +23,48 @@
     options: StringRenderer,
     number: StringRenderer,
     longform: StringRenderer,
+    array: ArrayRenderer,
+    internal: InternalRenderer,
   }
-  $: type = schema?.type ?? "string"
+  $: type = getType(schema)
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
+  $: width = schema?.width || "150px"
+  $: cellValue = getCellValue(value, schema.template)
+
+  const getType = schema => {
+    // Use a string renderer for dates if we use a custom template
+    if (schema?.type === "datetime" && schema?.template) {
+      return "string"
+    }
+    return schema?.type || "string"
+  }
+
+  const getCellValue = (value, template) => {
+    if (!template) {
+      return value
+    }
+    return processStringSync(template, { value })
+  }
 </script>
 
-{#if renderer && (customRenderer || (value != null && value !== ""))}
-  <svelte:component this={renderer} {row} {schema} {value} on:clickrelationship>
-    <slot />
-  </svelte:component>
+{#if renderer && (customRenderer || (cellValue != null && cellValue !== ""))}
+  <div style="--max-cell-width: {schema.width ? 'none' : '200px'};">
+    <svelte:component
+      this={renderer}
+      {row}
+      {schema}
+      value={cellValue}
+      on:clickrelationship
+      on:buttonclick
+    >
+      <slot />
+    </svelte:component>
+  </div>
 {/if}
+
+<style>
+  div {
+    display: contents;
+  }
+</style>

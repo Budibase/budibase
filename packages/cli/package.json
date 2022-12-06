@@ -1,34 +1,57 @@
 {
   "name": "@budibase/cli",
-  "version": "0.9.58",
+  "version": "2.1.43-alpha.7",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "src/index.js",
   "bin": {
     "budi": "src/index.js"
   },
   "author": "Budibase",
-  "license": "AGPL-3.0-or-later",
+  "license": "GPL-3.0",
   "scripts": {
-    "build": "pkg . --out-path build"
+    "prebuild": "rm -rf prebuilds 2> /dev/null && cp -r node_modules/leveldown/prebuilds prebuilds",
+    "build": "yarn prebuild && renamer --find .node --replace .fake 'prebuilds/**' && pkg . --out-path build && yarn postbuild",
+    "postbuild": "rm -rf prebuilds 2> /dev/null"
   },
   "pkg": {
     "targets": [
-      "node14"
+      "node16-linux",
+      "node16-win",
+      "node16-macos"
+    ],
+    "assets": [
+      "node_modules/@budibase/backend-core/dist/**/*",
+      "prebuilds/**/*"
     ],
     "outputPath": "build"
   },
   "dependencies": {
-    "axios": "^0.21.1",
-    "chalk": "^4.1.0",
-    "commander": "^7.1.0",
-    "docker-compose": "^0.23.6",
-    "inquirer": "^8.0.0",
-    "lookpath": "^1.1.0",
-    "pkg": "^4.4.9",
+    "@budibase/backend-core": "2.1.43-alpha.7",
+    "@budibase/string-templates": "2.1.43-alpha.7",
+    "@budibase/types": "2.1.43-alpha.7",
+    "axios": "0.21.2",
+    "chalk": "4.1.0",
+    "cli-progress": "3.11.2",
+    "commander": "7.1.0",
+    "docker-compose": "0.23.6",
+    "dotenv": "16.0.1",
+    "download": "8.0.0",
+    "find-free-port": "^2.0.0",
+    "inquirer": "8.0.0",
+    "joi": "17.6.0",
+    "lookpath": "1.1.0",
+    "node-fetch": "2",
+    "pkg": "5.8.0",
     "posthog-node": "1.0.7",
-    "randomstring": "^1.1.5"
+    "pouchdb": "7.3.0",
+    "pouchdb-replication-stream": "1.2.9",
+    "randomstring": "1.1.5",
+    "tar": "6.1.11",
+    "yaml": "^2.1.1"
   },
   "devDependencies": {
-    "eslint": "^7.20.0"
+    "copyfiles": "^2.4.1",
+    "eslint": "^7.20.0",
+    "renamer": "^4.0.0"
   }
 }

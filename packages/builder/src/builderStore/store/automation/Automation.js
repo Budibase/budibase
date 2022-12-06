@@ -13,7 +13,11 @@ export default class Automation {
     return this.automation.definition.trigger
   }
 
-  addBlock(block) {
+  addTestData(data) {
+    this.automation.testData = { ...this.automation.testData, ...data }
+  }
+
+  addBlock(block, idx) {
     // Make sure to add trigger if doesn't exist
     if (!this.hasTrigger() && block.type === "TRIGGER") {
       const trigger = { id: generate(), ...block }
@@ -22,10 +26,7 @@ export default class Automation {
     }
 
     const newBlock = { id: generate(), ...block }
-    this.automation.definition.steps = [
-      ...this.automation.definition.steps,
-      newBlock,
-    ]
+    this.automation.definition.steps.splice(idx, 0, newBlock)
     return newBlock
   }
 

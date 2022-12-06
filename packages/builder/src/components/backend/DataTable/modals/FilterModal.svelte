@@ -11,7 +11,6 @@
     Icon,
   } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
-  import analytics from "analytics"
 
   const CONDITIONS = [
     {
@@ -42,6 +41,14 @@
       name: "Contains",
       key: "CONTAINS",
     },
+    {
+      name: "Is Not Empty",
+      key: "NOT_EMPTY",
+    },
+    {
+      name: "Is Empty",
+      key: "EMPTY",
+    },
   ]
 
   const CONJUNCTIONS = [
@@ -61,13 +68,15 @@
     ({ _id }) => _id === $views.selected?.tableId
   )
   $: fields = viewTable && Object.keys(viewTable.schema)
+  $: schema = viewTable && viewTable.schema ? viewTable.schema : {}
 
   function saveView() {
-    views.save(view)
-    notifications.success(`View ${view.name} saved.`)
-    analytics.captureEvent("Added View Filter", {
-      filters: JSON.stringify(view.filters),
-    })
+    try {
+      views.save(view)
+      notifications.success(`View ${view.name} saved`)
+    } catch (error) {
+      notifications.error("Error saving view")
+    }
   }
 
   function removeFilter(idx) {
@@ -82,40 +91,40 @@
 
   function isMultipleChoice(field) {
     return (
-      (viewTable.schema[field].constraints &&
-        viewTable.schema[field].constraints.inclusion &&
-        viewTable.schema[field].constraints.inclusion.length) ||
-      viewTable.schema[field].type === "boolean"
+      schema[field]?.constraints?.inclusion?.length ||
+      schema[field]?.type === "boolean"
     )
   }
 
   function fieldOptions(field) {
-    return viewTable.schema[field].type === "options"
-      ? viewTable.schema[field].constraints.inclusion
+    return schema[field]?.type === "options" || schema[field]?.type === "array"
+      ? schema[field]?.constraints.inclusion
       : [true, false]
   }
 
   function isDate(field) {
-    return viewTable.schema[field].type === "datetime"
+    return schema[field]?.type === "datetime"
   }
 
   function isNumber(field) {
-    return viewTable.schema[field].type === "number"
+    return schema[field]?.type === "number"
   }
 
   const fieldChanged = filter => ev => {
-    // reset if type changed
-    if (
-      filter.key &&
-      ev.detail &&
-      viewTable.schema[filter.key].type !== viewTable.schema[ev.detail].type
-    ) {
+    // Reset if type changed
+    const oldType = schema[filter.key]?.type
+    const newType = schema[ev.detail]?.type
+    if (filter.key && ev.detail && oldType !== newType) {
       filter.value = ""
     }
   }
 
   const getOptionLabel = x => x.name
   const getOptionValue = x => x.key
+
+  const showValue = filter => {
+    return !(filter.condition === "EMPTY" || filter.condition === "NOT_EMPTY")
+  }
 </script>
 
 <ModalContent title="Filter" confirmText="Save" onConfirm={saveView} size="L">
@@ -144,30 +153,36 @@
           {getOptionLabel}
           {getOptionValue}
         />
-        {#if filter.key && isMultipleChoice(filter.key)}
-          <Select
-            bind:value={filter.value}
-            options={fieldOptions(filter.key)}
-            getOptionLabel={x => x.toString()}
-          />
-        {:else if filter.key && isDate(filter.key)}
-          <DatePicker
-            bind:value={filter.value}
-            placeholder={filter.key || fields[0]}
-          />
-        {:else if filter.key && isNumber(filter.key)}
-          <Input
-            bind:value={filter.value}
-            placeholder={filter.key || fields[0]}
-            type="number"
-          />
+        {#if showValue(filter)}
+          {#if filter.key && isMultipleChoice(filter.key)}
+            <Select
+              bind:value={filter.value}
+              options={fieldOptions(filter.key)}
+              getOptionLabel={x => x?.toString() || ""}
+            />
+          {:else if filter.key && isDate(filter.key)}
+            <DatePicker
+              bind:value={filter.value}
+              placeholder={filter.key || fields[0]}
+            />
+          {:else if filter.key && isNumber(filter.key)}
+            <Input
+              bind:value={filter.value}
+              placeholder={filter.key || fields[0]}
+              type="number"
+            />
+          {:else}
+            <Input
+              placeholder={filter.key || fields[0]}
+              bind:value={filter.value}
+            />
+          {/if}
+          <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
         {:else}
-          <Input
-            placeholder={filter.key || fields[0]}
-            bind:value={filter.value}
-          />
+          <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
+          <!-- empty div to preserve spacing -->
+          <div />
         {/if}
-        <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
       {/each}
     </div>
   {:else}

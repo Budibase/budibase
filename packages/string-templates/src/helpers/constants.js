@@ -19,6 +19,7 @@ module.exports.HelperFunctionNames = {
   OBJECT: "object",
   ALL: "all",
   LITERAL: "literal",
+  JS: "js",
 }
 
 module.exports.LITERAL_MARKER = "%LITERAL%"

@@ -7,6 +7,8 @@
   export let disabled = false
   export let id = null
   export let updateOnChange = true
+  export let quiet = false
+  export let inputRef
 
   const dispatch = createEventDispatcher()
   let focus = false
@@ -41,6 +43,7 @@
 <div class="spectrum-Search" class:is-disabled={disabled}>
   <div
     class="spectrum-Textfield"
+    class:spectrum-Textfield--quiet={quiet}
     class:is-focused={focus}
     class:is-disabled={disabled}
   >
@@ -67,6 +70,7 @@
       type="search"
       class="spectrum-Textfield-input spectrum-Search-input"
       autocomplete="off"
+      bind:this={inputRef}
     />
   </div>
   <button
@@ -94,5 +98,8 @@
   }
   .is-disabled {
     pointer-events: none;
+  }
+  .spectrum-Search-clearButton {
+    position: absolute;
   }
 </style>

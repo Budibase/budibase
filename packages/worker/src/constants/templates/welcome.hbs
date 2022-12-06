@@ -6,7 +6,7 @@
       <tr>
         <td class="content-cell">
           <div class="f-fallback">
-            <h1>Welcome, {{ email }}!</h1>
+            <h1>Welcome, {{#if name}}{{ name }}{{else}}{{ email }}{{/if}}!</h1>
             <p>Thanks for getting started with {{ company }}'s Budibase platform.</p>
             <p>For reference, here's how to login:</p>
             <table class="attributes" width="100%" cellpadding="0" cellspacing="0" role="presentation">

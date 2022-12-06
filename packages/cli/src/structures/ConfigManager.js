@@ -33,11 +33,10 @@ class ConfigManager {
   }
 
   setValue(key, value) {
-    const updated = {
+    this.config = {
       ...this.config,
       [key]: value,
     }
-    this.config = updated
   }
 
   removeKey(key) {

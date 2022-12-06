@@ -1,0 +1,65 @@
+{{- if .Values.services.redis.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: redis-service
+  name: redis-service
+spec:
+  replicas: {{ .Values.services.redis.replicaCount }}
+  selector:
+    matchLabels:
+      io.kompose.service: redis-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.21.0 (992df58d8)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: redis-service
+    spec:
+      containers:
+      - args:
+        - redis-server 
+        - --requirepass 
+        - {{ .Values.services.redis.password }}
+        image: redis
+        imagePullPolicy: ""
+        name: redis-service
+        ports:
+        - containerPort: {{ .Values.services.redis.port }}
+        {{ with .Values.services.redis.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
+        volumeMounts:
+        - mountPath: /data
+          name: redis-data
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      {{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{ end }}
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-data
+
+status: {}
+{{- end }}

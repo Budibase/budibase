@@ -1,0 +1,19 @@
+{{- if .Values.services.objectStore.minio }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    io.kompose.service: minio-data
+  name: minio-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.services.objectStore.storage }}
+  {{ if .Values.services.objectStore.storageClass }}
+  storageClassName: {{ .Values.services.objectStore.storageClass }}
+  {{- end }}
+status: {}
+{{- end }}

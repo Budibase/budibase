@@ -7,13 +7,12 @@
     Divider,
     Label,
     Input,
-    Toggle,
     Dropzone,
     notifications,
+    Toggle,
   } from "@budibase/bbui"
-  import { auth, organisation } from "stores/portal"
-  import { post } from "builderStore/api"
-  import analytics from "analytics"
+  import { auth, organisation, admin } from "stores/portal"
+  import { API } from "api"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
 
@@ -25,9 +24,9 @@
   }
 
   const values = writable({
-    analytics: !analytics.disabled(),
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
+    analyticsEnabled: $organisation.analyticsEnabled,
     logo: $organisation.logoUrl
       ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
       : null,
@@ -35,51 +34,47 @@
   let loading = false
 
   async function uploadLogo(file) {
-    let data = new FormData()
-    data.append("file", file)
-    const res = await post("/api/admin/configs/upload/settings/logo", data, {})
-    return await res.json()
+    try {
+      let data = new FormData()
+      data.append("file", file)
+      await API.uploadLogo(data)
+    } catch (error) {
+      notifications.error("Error uploading logo")
+    }
   }
 
   async function saveConfig() {
     loading = true
 
-    // Set analytics preference
-    if ($values.analytics) {
-      analytics.optIn()
-    } else {
-      analytics.optOut()
-    }
+    try {
+      // Upload logo if required
+      if ($values.logo && !$values.logo.url) {
+        await uploadLogo($values.logo)
+        await organisation.init()
+      }
 
-    // Upload logo if required
-    if ($values.logo && !$values.logo.url) {
-      await uploadLogo($values.logo)
-      await organisation.init()
-    }
+      const config = {
+        company: $values.company ?? "",
+        platformUrl: $values.platformUrl ?? "",
+        analyticsEnabled: $values.analyticsEnabled,
+      }
 
-    const config = {
-      company: $values.company ?? "",
-      platformUrl: $values.platformUrl ?? "",
-    }
-    // remove logo if required
-    if (!$values.logo) {
-      config.logoUrl = ""
-    }
+      // Remove logo if required
+      if (!$values.logo) {
+        config.logoUrl = ""
+      }
 
-    // Update settings
-    const res = await organisation.save(config)
-    if (res.status === 200) {
-      notifications.success("Settings saved successfully")
-    } else {
-      notifications.error(res.message)
+      // Update settings
+      await organisation.save(config)
+    } catch (error) {
+      notifications.error("Error saving org config")
     }
-
     loading = false
   }
 </script>
 
 {#if $auth.isAdmin}
-  <Layout>
+  <Layout noPadding>
     <Layout gap="XS" noPadding>
       <Heading size="M">Organisation</Heading>
       <Body>
@@ -88,14 +83,14 @@
         analytics.
       </Body>
     </Layout>
-    <Divider size="S" />
+    <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">Information</Heading>
       <Body size="S">Here you can update your logo and organization name.</Body>
     </Layout>
     <div class="fields">
       <div class="field">
-        <Label size="L">Organization name</Label>
+        <Label size="L">Org. name</Label>
         <Input thin bind:value={$values.company} />
       </div>
       <div class="field logo">
@@ -114,36 +109,40 @@
         </div>
       </div>
     </div>
-    <Divider size="S" />
-    <Layout gap="XS" noPadding>
-      <Heading size="S">Platform</Heading>
-      <Body size="S">Here you can set up general platform settings.</Body>
-    </Layout>
-    <div class="fields">
-      <div class="field">
-        <Label size="L">Platform URL</Label>
-        <Input thin bind:value={$values.platformUrl} />
-      </div>
-    </div>
-    <Divider size="S" />
-    <Layout gap="S" noPadding>
+    {#if !$admin.cloud}
+      <Divider />
       <Layout gap="XS" noPadding>
-        <Heading size="S">Analytics</Heading>
-        <Body size="S">
-          If you would like to send analytics that help us make Budibase better,
-          please let us know below.
-        </Body>
+        <Heading size="S">Platform</Heading>
+        <Body size="S">Here you can set up general platform settings.</Body>
       </Layout>
       <div class="fields">
         <div class="field">
-          <Label size="L">Send Analytics to Budibase</Label>
-          <Toggle text="" bind:value={$values.analytics} />
+          <Label
+            size="L"
+            tooltip={"Update the Platform URL to match your Budibase web URL. This keeps email templates and authentication configs up to date."}
+          >
+            Platform URL
+          </Label>
+          <Input thin bind:value={$values.platformUrl} />
         </div>
       </div>
-      <div>
-        <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
+    {/if}
+    {#if !$admin.cloud}
+      <Divider />
+      <Layout gap="XS" noPadding>
+        <Heading size="S">Analytics</Heading>
+        <Body size="S">Choose whether to opt-in or opt-out of analytics.</Body>
+      </Layout>
+      <div class="fields">
+        <div class="field">
+          <Label size="L">Analytics</Label>
+          <Toggle text="" bind:value={$values.analyticsEnabled} />
+        </div>
       </div>
-    </Layout>
+    {/if}
+    <div>
+      <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
+    </div>
   </Layout>
 {/if}
 
@@ -152,14 +151,18 @@
     display: grid;
     grid-gap: var(--spacing-m);
   }
+
   .field {
     display: grid;
-    grid-template-columns: 33% 1fr;
+    grid-template-columns: 100px 1fr;
+    grid-gap: var(--spacing-l);
     align-items: center;
   }
+
   .file {
     max-width: 30ch;
   }
+
   .logo {
     align-items: start;
   }

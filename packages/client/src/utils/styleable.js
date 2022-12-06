@@ -1,5 +1,4 @@
-import { get } from "svelte/store"
-import { builderStore } from "../store"
+import { builderStore } from "stores"
 
 /**
  * Helper to build a CSS string from a style object.
@@ -22,14 +21,15 @@ export const styleable = (node, styles = {}) => {
   let applyNormalStyles
   let applyHoverStyles
   let selectComponent
+  let editComponent
 
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
-    // Use empty state styles as base styles if required, but let them, get
-    // overridden by any user specified styles
+    node.classList.add(`${newStyles.id}-dom`)
+
     let baseStyles = {}
     if (newStyles.empty) {
-      baseStyles.border = "2px dashed var(--grey-5)"
+      baseStyles.border = "2px dashed var(--spectrum-global-color-gray-400)"
       baseStyles.padding = "var(--spacing-l)"
       baseStyles.overflow = "hidden"
     }
@@ -42,10 +42,12 @@ export const styleable = (node, styles = {}) => {
       ...(newStyles.hover || {}),
     }
 
+    // Allow dragging if required
+    node.setAttribute("draggable", !!newStyles.draggable)
+
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
       node.style = styleString
-      node.dataset.componentId = componentId
     }
 
     // Applies the "normal" style definition
@@ -61,8 +63,17 @@ export const styleable = (node, styles = {}) => {
     // Handler to select a component in the builder when clicking it in the
     // builder preview
     selectComponent = event => {
-      if (newStyles.interactive) {
-        builderStore.actions.selectComponent(componentId)
+      builderStore.actions.selectComponent(componentId)
+      event.preventDefault()
+      event.stopPropagation()
+      return false
+    }
+
+    // Handler to start editing a component (if applicable) when double
+    // clicking in the builder preview
+    editComponent = event => {
+      if (newStyles.interactive && newStyles.editable) {
+        builderStore.actions.setEditMode(true)
       }
       event.preventDefault()
       event.stopPropagation()
@@ -74,8 +85,9 @@ export const styleable = (node, styles = {}) => {
     node.addEventListener("mouseout", applyNormalStyles)
 
     // Add builder preview click listener
-    if (get(builderStore).inBuilder) {
+    if (newStyles.interactive) {
       node.addEventListener("click", selectComponent, false)
+      node.addEventListener("dblclick", editComponent, false)
     }
 
     // Apply initial normal styles
@@ -86,11 +98,8 @@ export const styleable = (node, styles = {}) => {
   const removeListeners = () => {
     node.removeEventListener("mouseover", applyHoverStyles)
     node.removeEventListener("mouseout", applyNormalStyles)
-
-    // Remove builder preview click listener
-    if (get(builderStore).inBuilder) {
-      node.removeEventListener("click", selectComponent)
-    }
+    node.removeEventListener("click", selectComponent)
+    node.removeEventListener("dblclick", editComponent)
   }
 
   // Apply initial styles

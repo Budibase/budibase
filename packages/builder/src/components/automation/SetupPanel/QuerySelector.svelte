@@ -6,7 +6,7 @@
 </script>
 
 <div class="block-field">
-  <Select bind:value secondary extraThin>
+  <Select on:change bind:value secondary extraThin>
     <option value="">Choose an option</option>
     {#each $queries.list as query}
       <option value={query._id}>{query.name}</option>
