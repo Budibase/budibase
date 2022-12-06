@@ -158,6 +158,18 @@ spec:
         - name: ELASTIC_APM_SERVER_URL
           value: {{ .Values.globals.elasticApmServerUrl | quote }}
         {{ end }}
+        {{ if .Values.globals.globalAgentHttpProxy }}
+        - name: GLOBAL_AGENT_HTTP_PROXY
+          value: {{ .Values.globals.globalAgentHttpProxy | quote }}
+        {{ end }}
+        {{ if .Values.globals.globalAgentHttpsProxy }}
+        - name: GLOBAL_AGENT_HTTPS_PROXY
+          value: {{ .Values.globals.globalAgentHttpsProxy | quote }}
+        {{ end }}
+        {{ if .Values.globals.globalAgentNoProxy }}
+        - name: GLOBAL_AGENT_NO_PROXY
+          value: {{ .Values.globals.globalAgentNoProxy | quote }}
+        {{ end }}
         - name: CDN_URL
           value: {{ .Values.globals.cdnUrl }}
 
