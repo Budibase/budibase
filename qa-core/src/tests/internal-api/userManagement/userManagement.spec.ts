@@ -68,9 +68,7 @@ describe("Internal API - User Management & Permissions", () => {
                 global: true
             }
         }
-        const [changedUserResponse, changedUserJson] = await config.userManagement.changeUserInformation(body)
-        expect(changedUserJson._id).toEqual(userJson.created.successful[0]._id)
-        expect(changedUserJson._rev).not.toEqual(userJson.created.successful[0]._rev)
+        await config.userManagement.changeUserInformation(body)
 
         const [changedUserInfoResponse, changedUserInfoJson] = await config.userManagement.getUserInformation(userJson.created.successful[0]._id)
         expect(changedUserInfoJson.builder?.global).toBeDefined()
@@ -92,9 +90,7 @@ describe("Internal API - User Management & Permissions", () => {
                 [app.appId?.toString() || ""]: "BASIC",
             }
         }
-        const [changedUserResponse, changedUserJson] = await config.userManagement.changeUserInformation(body)
-        expect(changedUserJson._id).toEqual(createUserJson.created.successful[0]._id)
-        expect(changedUserJson._rev).not.toEqual(createUserJson.created.successful[0]._rev)
+        await config.userManagement.changeUserInformation(body)
 
         const [changedUserInfoResponse, changedUserInfoJson] = await config.userManagement.getUserInformation(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toBeDefined()
@@ -117,9 +113,7 @@ describe("Internal API - User Management & Permissions", () => {
                 [app.appId?.toString() || ""]: "ADMIN",
             }
         }
-        const [changedUserResponse, changedUserJson] = await config.userManagement.changeUserInformation(body)
-        expect(changedUserJson._id).toEqual(createUserJson.created.successful[0]._id)
-        expect(changedUserJson._rev).not.toEqual(createUserJson.created.successful[0]._rev)
+        await config.userManagement.changeUserInformation(body)
 
         const [changedUserInfoResponse, changedUserInfoJson] = await config.userManagement.getUserInformation(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toBeDefined()
@@ -142,9 +136,7 @@ describe("Internal API - User Management & Permissions", () => {
                 [app.appId?.toString() || ""]: "POWER",
             }
         }
-        const [changedUserResponse, changedUserJson] = await config.userManagement.changeUserInformation(body)
-        expect(changedUserJson._id).toEqual(createUserJson.created.successful[0]._id)
-        expect(changedUserJson._rev).not.toEqual(createUserJson.created.successful[0]._rev)
+        await config.userManagement.changeUserInformation(body)
 
         const [changedUserInfoResponse, changedUserInfoJson] = await config.userManagement.getUserInformation(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toBeDefined()
