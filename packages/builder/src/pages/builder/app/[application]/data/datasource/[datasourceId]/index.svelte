@@ -79,7 +79,7 @@
 
 {#if datasource && integration}
   <section>
-    <Layout>
+    <Layout noPadding>
       <Layout gap="XS" noPadding>
         <header>
           <svelte:component
@@ -116,7 +116,11 @@
               Import
             </Button>
           {/if}
-          <Button cta icon="Add" on:click={() => $goto("./new")}>
+          <Button
+            cta
+            icon="Add"
+            on:click={() => $goto(`../../query/new/${datasource._id}`)}
+          >
             Add query
           </Button>
         </div>

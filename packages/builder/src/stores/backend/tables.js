@@ -27,9 +27,6 @@ export function createTablesStore() {
       ...state,
       selectedTableId: tableId,
     }))
-    views.unselect()
-    queries.unselect()
-    datasources.unselect()
   }
 
   const unselect = () => {

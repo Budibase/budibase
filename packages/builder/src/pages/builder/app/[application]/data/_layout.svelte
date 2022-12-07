@@ -34,7 +34,7 @@
     height: 0;
   }
   .content {
-    padding: var(--spacing-l) 40px 40px 40px;
+    padding: 28px 40px 40px 40px;
     overflow-y: auto;
     gap: var(--spacing-l);
     display: flex;

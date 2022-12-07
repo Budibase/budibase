@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto, isActive } from "@roxi/routify"
   import {
     Icon,
     Select,
@@ -29,11 +29,12 @@
 
   export let query
 
+  const transformerDocs = "https://docs.budibase.com/docs/transformers"
+
   let fields = query?.schema ? schemaToFields(query.schema) : []
   let parameters
   let data = []
   let saveId
-  const transformerDocs = "https://docs.budibase.com/docs/transformers"
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fieldsToSchema(fields)
@@ -94,10 +95,14 @@
     try {
       const { _id } = await queries.save(query.datasourceId, query)
       saveId = _id
-      notifications.success(`Query saved successfully.`)
-      $goto(`../${_id}`)
+      notifications.success(`Query saved successfully`)
+
+      // Go to the correct URL if we just created a new query
+      if (!query._rev) {
+        $goto(`../../${_id}`)
+      }
     } catch (error) {
-      notifications.error("Error creating query")
+      notifications.error("Error saving query")
     }
   }
 </script>
@@ -186,7 +191,7 @@
     </div>
     <div class="viewer-controls">
       <Heading size="S">Results</Heading>
-      <ButtonGroup gap="M">
+      <ButtonGroup gap="XS">
         <Button cta disabled={queryInvalid} on:click={saveQuery}>
           Save Query
         </Button>

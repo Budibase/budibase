@@ -44,11 +44,6 @@
     $goto(`./datasource/${datasource._id}`)
   }
 
-  function onClickQuery(query) {
-    queries.select(query)
-    $goto(`./datasource/${query.datasourceId}/${query._id}`)
-  }
-
   function closeNode(datasource) {
     openDataSources = openDataSources.filter(id => datasource._id !== id)
   }
@@ -78,12 +73,17 @@
   })
 
   const containsActiveEntity = datasource => {
-    // If we're view a query then the datasource ID is in the URL
+    // Check for being on a datasource page
     if ($params.datasourceId === datasource._id) {
       return true
     }
 
-    // Check for hardcoded edge cases
+    // If there are no entities it can't contain anything
+    if (!datasource.entities) {
+      return false
+    }
+
+    // Check for hardcoded datasource edge cases
     if (
       $isActive("./datasource/bb_internal") &&
       datasource._id === "bb_internal"
@@ -97,11 +97,6 @@
       return true
     }
 
-    // If there are no entities it can't contain anything
-    if (!datasource.entities) {
-      return false
-    }
-
     // Get a list of table options
     let options = datasource.entities
     if (!Array.isArray(options)) {
@@ -112,6 +107,12 @@
     if ($params.tableId) {
       const selectedTable = get(tables).selected?._id
       return options.find(x => x._id === selectedTable) != null
+    }
+
+    // Check for a matching query
+    if ($params.queryId) {
+      const query = get(queries).list?.find(q => q._id === $params.queryId)
+      return datasource._id === query?.datasourceId
     }
 
     // Check for a matching view
@@ -130,7 +131,7 @@
         border={idx > 0}
         text={datasource.name}
         opened={datasource.open}
-        selected={datasource.selected}
+        selected={$isActive("./datasource") && datasource.selected}
         withArrow={true}
         on:click={() => selectDatasource(datasource)}
         on:iconClick={() => toggleNode(datasource)}
@@ -156,11 +157,11 @@
             iconText={customQueryIconText(datasource, query)}
             iconColor={customQueryIconColor(datasource, query)}
             text={customQueryText(datasource, query)}
-            opened={$queries.selected === query._id}
-            selected={$queries.selected === query._id}
-            on:click={() => onClickQuery(query)}
+            selected={$isActive("./query") &&
+              $queries.selectedQueryId === query._id}
+            on:click={() => $goto(`./query/${query._id}`)}
           >
-            <EditQueryPopover {query} {onClickQuery} />
+            <EditQueryPopover {query} />
           </NavItem>
         {/each}
       {/if}

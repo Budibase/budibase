@@ -104,7 +104,7 @@ export const syncURLToState = options => {
     let needsUpdate = false
     const urlValue = cachedParams?.[urlParam]
     const stateValue = state?.[stateKey]
-    if (stateValue && stateValue !== urlValue) {
+    if (stateValue !== urlValue) {
       needsUpdate = true
       log(`url.${urlParam} (${urlValue}) <= state.${stateKey} (${stateValue})`)
       if (validate && fallbackUrl) {
