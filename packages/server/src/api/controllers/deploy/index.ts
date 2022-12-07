@@ -89,7 +89,9 @@ async function initDeployedApp(prodAppId: any) {
   console.log("Enabled cron triggers for deployed app..")
   // sync the automations back to the dev DB - since there is now cron
   // information attached
-  await sdk.applications.syncApp(dbCore.getDevAppID(prodAppId), { automationOnly: true })
+  await sdk.applications.syncApp(dbCore.getDevAppID(prodAppId), {
+    automationOnly: true,
+  })
 }
 
 async function deployApp(deployment: any, userId: string) {
