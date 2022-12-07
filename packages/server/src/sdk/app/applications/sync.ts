@@ -41,7 +41,7 @@ export async function syncApp(
       replOpts.filter = (doc: any) =>
         doc._id.startsWith(dbCore.DocumentType.AUTOMATION)
     }
-    await replication.replicate()
+    await replication.replicate(replOpts)
   } catch (err) {
     error = err
   } finally {
