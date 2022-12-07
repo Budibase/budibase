@@ -32,8 +32,8 @@
   const { getValidOperatorsForType } = LuceneUtils
   const KeyedFieldRegex = /\d[0-9]*:/g
   const behaviourOptions = [
-    { value: "and", label: "Match all of the following filters" },
-    { value: "or", label: "Match any of the following filters" },
+    { value: "and", label: "Match all filters" },
+    { value: "or", label: "Match any filter" },
   ]
 
   let rawFilters
@@ -173,15 +173,9 @@
 <DrawerContent>
   <div class="container">
     <Layout noPadding>
-      <Body size="S">
-        {#if !rawFilters?.length}
-          Add your first filter expression.
-        {:else}
-          Results are filtered to only those which match all of the following
-          constraints.
-        {/if}
-      </Body>
-      {#if rawFilters?.length}
+      {#if !rawFilters?.length}
+        <Body size="S">Add your first filter expression.</Body>
+      {:else}
         <div class="fields">
           <Select
             label="Behaviour"
@@ -300,7 +294,7 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     align-items: center;
-    grid-template-columns: 1fr 170px 120px 1fr 16px 16px;
+    grid-template-columns: minmax(150px, 1fr) 170px 120px minmax(150px, 1fr) 16px 16px;
   }
 
   .filter-label {
