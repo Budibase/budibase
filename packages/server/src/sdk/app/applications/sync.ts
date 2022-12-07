@@ -2,7 +2,7 @@ import env from "../../../environment"
 import { db as dbCore, context } from "@budibase/backend-core"
 import sdk from "../../"
 
-export async function syncApp(appId: string) {
+export async function syncApp(appId: string, opts?: { automationOnly?: boolean }) {
   if (env.DISABLE_AUTO_PROD_APP_SYNC) {
     return {
       message:
@@ -33,7 +33,11 @@ export async function syncApp(appId: string) {
   })
   let error
   try {
-    await replication.replicate(replication.appReplicateOpts())
+    const replOpts = replication.appReplicateOpts()
+    if (opts?.automationOnly) {
+      replOpts.filter = (doc: any) => doc._id.startsWith(dbCore.DocumentType.AUTOMATION)
+    }
+    await replication.replicate()
   } catch (err) {
     error = err
   } finally {

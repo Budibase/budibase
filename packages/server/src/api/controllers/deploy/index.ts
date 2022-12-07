@@ -8,6 +8,7 @@ import {
 } from "../../../automations/utils"
 import { backups } from "@budibase/pro"
 import { AppBackupTrigger } from "@budibase/types"
+import sdk from "../../../sdk"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -86,6 +87,9 @@ async function initDeployedApp(prodAppId: any) {
   }
   await Promise.all(promises)
   console.log("Enabled cron triggers for deployed app..")
+  // sync the automations back to the dev DB - since there is now cron
+  // information attached
+  await sdk.applications.syncApp(dbCore.getDevAppID(prodAppId), { automationOnly: true })
 }
 
 async function deployApp(deployment: any, userId: string) {
@@ -112,8 +116,6 @@ async function deployApp(deployment: any, userId: string) {
     }
     replication = new dbCore.Replication(config)
     const devDb = context.getDevAppDB()
-    console.log("Compacting development DB")
-    await devDb.compact()
     console.log("Replication object created")
     await replication.replicate(replication.appReplicateOpts())
     console.log("replication complete.. replacing app meta doc")
