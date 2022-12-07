@@ -1049,8 +1049,8 @@ export const getFrontendStore = () => {
           const updatedSetting = settings.find(setting => setting.key === name)
 
           if (
-            updatedSetting.type === "dataSource" ||
-            updatedSetting.type === "table"
+            updatedSetting?.type === "dataSource" ||
+            updatedSetting?.type === "table"
           ) {
             const { schema } = getSchemaForDatasource(null, value)
             const columnNames = Object.keys(schema || {})
