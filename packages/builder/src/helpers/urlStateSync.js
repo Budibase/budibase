@@ -38,8 +38,8 @@ export const syncURLToState = options => {
   let cachedRedirect = get(routify.redirect)
   let cachedPage = get(routify.page)
   let previousParamsHash = null
-  let debug = false
-  const log = (...params) => debug && console.log(...params)
+  let debug = true
+  const log = (...params) => debug && console.log(`[${urlParam}]`, ...params)
 
   // Navigate to a certain URL
   const gotoUrl = (url, params) => {
@@ -104,7 +104,7 @@ export const syncURLToState = options => {
     let needsUpdate = false
     const urlValue = cachedParams?.[urlParam]
     const stateValue = state?.[stateKey]
-    if (stateValue !== urlValue) {
+    if (stateValue && stateValue !== urlValue) {
       needsUpdate = true
       log(`url.${urlParam} (${urlValue}) <= state.${stateKey} (${stateValue})`)
       if (validate && fallbackUrl) {

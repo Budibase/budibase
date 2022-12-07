@@ -8,12 +8,7 @@
   const stopSyncing = syncURLToState({
     urlParam: "datasourceId",
     stateKey: "selectedDatasourceId",
-    validate: id => {
-      console.log("test", id)
-      const valid = $datasources.list?.some(ds => ds._id === id)
-      console.log(valid)
-      return valid
-    },
+    validate: id => $datasources.list?.some(ds => ds._id === id),
     update: datasources.select,
     fallbackUrl: "../",
     store: datasources,

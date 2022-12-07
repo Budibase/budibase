@@ -80,7 +80,7 @@
     background: var(--background);
     border: var(--border-dark);
     display: grid;
-    grid-template-columns: 2fr auto;
+    grid-template-columns: 1fr auto;
     align-items: center;
     padding: var(--spacing-m);
     gap: var(--layout-xs);
