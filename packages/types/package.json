@@ -13,6 +13,7 @@
   },
   "jest": {},
   "devDependencies": {
+    "@types/json5": "^2.2.0",
     "@types/koa": "2.13.4",
     "@types/node": "14.18.20",
     "@types/pouchdb": "6.4.0",
