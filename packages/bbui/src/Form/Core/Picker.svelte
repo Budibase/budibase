@@ -205,7 +205,10 @@
     width: 100%;
   }
   .spectrum-Popover.auto-width :global(.spectrum-Menu-itemLabel) {
+    max-width: 400px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .spectrum-Picker {
     width: 100%;
