@@ -45,7 +45,7 @@
     "@apidevtools/swagger-parser": "10.0.3",
     "@budibase/backend-core": "2.1.43-alpha.12",
     "@budibase/client": "2.1.43-alpha.12",
-    "@budibase/pro": "2.1.43-alpha.11",
+    "@budibase/pro": "2.1.43-alpha.12",
     "@budibase/string-templates": "2.1.43-alpha.12",
     "@budibase/types": "2.1.43-alpha.12",
     "@bull-board/api": "3.7.0",
