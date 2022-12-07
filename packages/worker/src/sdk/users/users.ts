@@ -103,7 +103,7 @@ export const getUser = async (userId: string) => {
   return user
 }
 
-interface SaveUserOpts {
+export interface SaveUserOpts {
   hashPassword?: boolean
   requirePassword?: boolean
   currentUserId?: string
