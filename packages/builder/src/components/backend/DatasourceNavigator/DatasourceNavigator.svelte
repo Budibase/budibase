@@ -156,6 +156,9 @@
 {/if}
 
 <style>
+  .hierarchy-items-container {
+    margin: 0 calc(-1 * var(--spacing-xl));
+  }
   .datasource-icon {
     display: grid;
     place-items: center;
