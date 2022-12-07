@@ -3,7 +3,7 @@ import env from "../environment"
 import { checkSlashesInUrl } from "./index"
 import { db as dbCore, constants, tenancy } from "@budibase/backend-core"
 import { updateAppRole } from "./global"
-import { BBContext, Automation } from "@budibase/types"
+import { BBContext, User } from "@budibase/types"
 
 export function request(ctx?: BBContext, request?: any) {
   if (!request.headers) {
@@ -138,7 +138,7 @@ export async function deleteGlobalUser(ctx: BBContext) {
   return checkResponse(response, "delete user", { ctx })
 }
 
-export async function readGlobalUser(ctx: BBContext) {
+export async function readGlobalUser(ctx: BBContext): Promise<User> {
   const response = await fetch(
     checkSlashesInUrl(
       env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
