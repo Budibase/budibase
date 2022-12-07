@@ -80,7 +80,7 @@
 
   const containsActiveEntity = datasource => {
     // If we're view a query then the datasource ID is in the URL
-    if ($params.selectedDatasource === datasource._id) {
+    if ($params.datasourceId === datasource._id) {
       return true
     }
 
@@ -96,7 +96,7 @@
     }
 
     // Check for a matching table
-    if ($params.selectedTable) {
+    if ($params.tableId) {
       const selectedTable = get(tables).selected?._id
       return options.find(x => x._id === selectedTable) != null
     }

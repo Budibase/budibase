@@ -6,6 +6,7 @@ export const syncURLToState = options => {
     urlParam,
     stateKey,
     validate,
+    update,
     baseUrl = "..",
     fallbackUrl,
     store,
@@ -85,10 +86,16 @@ export const syncURLToState = options => {
     // Only update state if we have a new value
     if (urlValue !== stateValue) {
       log(`state.${stateKey} (${stateValue}) <= url.${urlParam} (${urlValue})`)
-      store.update(state => {
-        state[stateKey] = urlValue
-        return state
-      })
+      if (update) {
+        // Use custom update function if provided
+        update(urlValue)
+      } else {
+        // Otherwise manually update the store
+        store.update(state => ({
+          ...state,
+          [stateKey]: urlValue,
+        }))
+      }
     }
   }
 
