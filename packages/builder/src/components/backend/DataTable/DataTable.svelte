@@ -25,6 +25,7 @@
   import { API } from "api"
 
   let hideAutocolumns = true
+  let filters
 
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
   $: type = $tables.selected?.type
@@ -102,8 +103,9 @@
 
   // Fetch data whenever filters change
   const onFilter = e => {
+    filters = e.detail
     fetch.update({
-      filter: e.detail,
+      filter: filters,
     })
   }
 
@@ -178,6 +180,7 @@
         {#key id}
           <TableFilterButton
             {schema}
+            {filters}
             on:change={onFilter}
             disabled={!hasCols}
           />
