@@ -1,12 +1,7 @@
-import {
-  generateUserMetadataID,
-  getUserMetadataParams,
-  generateUserFlagID,
-} from "../../db/utils"
+import { generateUserMetadataID, generateUserFlagID } from "../../db/utils"
 import { InternalTables } from "../../db/utils"
 import { getGlobalUsers, getRawGlobalUser } from "../../utilities/global"
 import { getFullUser } from "../../utilities/users"
-import { isEqual } from "lodash"
 import {
   context,
   constants,
@@ -14,59 +9,7 @@ import {
   db as dbCore,
 } from "@budibase/backend-core"
 import { BBContext, User } from "@budibase/types"
-
-async function rawMetadata() {
-  const db = context.getAppDB()
-  return (
-    await db.allDocs(
-      getUserMetadataParams(null, {
-        include_docs: true,
-      })
-    )
-  ).rows.map(row => row.doc)
-}
-
-function combineMetadataAndUser(user: any, metadata: any) {
-  // skip users with no access
-  if (user.roleId === rolesCore.BUILTIN_ROLE_IDS.PUBLIC) {
-    return null
-  }
-  delete user._rev
-  const metadataId = generateUserMetadataID(user._id)
-  const newDoc = {
-    ...user,
-    _id: metadataId,
-    tableId: InternalTables.USER_METADATA,
-  }
-  const found = Array.isArray(metadata)
-    ? metadata.find(doc => doc._id === metadataId)
-    : metadata
-  // copy rev over for the purposes of equality check
-  if (found) {
-    newDoc._rev = found._rev
-  }
-  if (found == null || !isEqual(newDoc, found)) {
-    return {
-      ...found,
-      ...newDoc,
-    }
-  }
-  return null
-}
-
-export async function syncGlobalUsers() {
-  // sync user metadata
-  const db = context.getAppDB()
-  const [users, metadata] = await Promise.all([getGlobalUsers(), rawMetadata()])
-  const toWrite = []
-  for (let user of users) {
-    const combined = await combineMetadataAndUser(user, metadata)
-    if (combined) {
-      toWrite.push(combined)
-    }
-  }
-  await db.bulkDocs(toWrite)
-}
+import sdk from "../../sdk"
 
 export async function syncUser(ctx: BBContext) {
   let deleting = false,
@@ -123,7 +66,7 @@ export async function syncUser(ctx: BBContext) {
           metadata.roleId = roleId
         }
         let combined = !deleting
-          ? combineMetadataAndUser(user, metadata)
+          ? sdk.users.combineMetadataAndUser(user, metadata)
           : {
               ...metadata,
               status: constants.UserStatus.INACTIVE,
@@ -143,7 +86,7 @@ export async function syncUser(ctx: BBContext) {
 
 export async function fetchMetadata(ctx: BBContext) {
   const global = await getGlobalUsers()
-  const metadata = await rawMetadata()
+  const metadata = await sdk.users.rawUserMetadata()
   const users = []
   for (let user of global) {
     // find the metadata that matches up to the global ID

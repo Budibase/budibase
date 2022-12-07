@@ -22,6 +22,7 @@ async function createApp(appName: string, appDirectory: string) {
       },
     },
   }
+  // @ts-ignore
   return create(ctx)
 }
 

@@ -57,7 +57,9 @@
   class="side-panel"
   class:open
 >
-  <slot />
+  {#if $sidePanelStore.open}
+    <slot />
+  {/if}
 </div>
 
 <style>
