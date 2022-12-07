@@ -37,6 +37,7 @@
   $: hasCols = checkHasCols(schema)
   $: hasRows = !!$fetch.rows?.length
   $: showError($fetch.error)
+  $: id, (filters = null)
 
   const showError = error => {
     if (error) {
