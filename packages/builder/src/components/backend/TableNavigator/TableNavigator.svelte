@@ -1,5 +1,4 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { tables, views, database } from "stores/backend"
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
@@ -15,14 +14,8 @@
     .filter(table => table.sourceId === sourceId)
     .sort(alphabetical)
 
-  function selectTable(table) {
-    tables.select(table)
-    $goto(`./table/${table._id}`)
-  }
-
   function selectView(view) {
     views.select(view)
-    $goto(`./view/${view.name}`)
   }
 
   function onClickView(table, viewName) {
@@ -45,7 +38,7 @@
         icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
         text={table.name}
         selected={$tables.selected?._id === table._id}
-        on:click={() => selectTable(table)}
+        on:click={() => tables.select(table._id)}
       >
         {#if table._id !== TableNames.USERS}
           <EditTablePopover {table} />
