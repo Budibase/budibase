@@ -1,5 +1,5 @@
 import fetch from "node-fetch"
-import { authenticateThirdParty } from "./third-party-common"
+import { authenticateThirdParty, SaveUserFunction } from "./third-party-common"
 import { ssoCallbackUrl } from "./utils"
 import {
   Config,
@@ -17,7 +17,7 @@ type JwtClaims = {
   email: string
 }
 
-export function buildVerifyFn(saveUserFn?: Function) {
+export function buildVerifyFn(saveUserFn?: SaveUserFunction) {
   /**
    * @param {*} issuer The identity provider base URL
    * @param {*} sub The user ID
@@ -106,7 +106,7 @@ function validEmail(value: string) {
  */
 export async function strategyFactory(
   config: OIDCConfiguration,
-  saveUserFn?: Function
+  saveUserFn?: SaveUserFunction
 ) {
   try {
     const verify = buildVerifyFn(saveUserFn)
