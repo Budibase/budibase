@@ -17,22 +17,30 @@
   import { generate } from "shortid"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { getFields } from "helpers/searchFields"
-  import { createEventDispatcher, onMount } from "svelte"
-
-  const dispatch = createEventDispatcher()
-  const { OperatorOptions } = Constants
-  const { getValidOperatorsForType } = LuceneUtils
+  import { createEventDispatcher } from "svelte"
 
   export let schemaFields
   export let filters = []
   export let bindings = []
   export let panel = ClientBindingPanel
   export let allowBindings = true
-  export let allOr = false
   export let fillWidth = false
   export let tableId
 
-  $: dispatch("change", filters)
+  const dispatch = createEventDispatcher()
+  const { OperatorOptions } = Constants
+  const { getValidOperatorsForType } = LuceneUtils
+  const KeyedFieldRegex = /\d[0-9]*:/g
+  const behaviourOptions = [
+    { value: "and", label: "Match all of the following filters" },
+    { value: "or", label: "Match any of the following filters" },
+  ]
+
+  let rawFilters
+  let matchAny = false
+
+  $: parseFilters(filters)
+  $: dispatch("change", enrichFilters(rawFilters, matchAny))
   $: enrichedSchemaFields = getFields(
     schemaFields || [],
     { allowLinks: true },
@@ -41,14 +49,41 @@
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
-  let behaviourValue
-  const behaviourOptions = [
-    { value: "and", label: "Match all of the following filters" },
-    { value: "or", label: "Match any of the following filters" },
-  ]
+  // Remove field key prefixes and determine whether to use the "match all"
+  // or "match any" behaviour
+  const parseFilters = filters => {
+    matchAny = filters?.find(filter => filter.operator === "allOr") != null
+    rawFilters = (filters || [])
+      .filter(filter => filter.operator !== "allOr")
+      .map(filter => {
+        const { field } = filter
+        let newFilter = { ...filter }
+        delete newFilter.allOr
+        if (typeof field === "string" && field.match(KeyedFieldRegex) != null) {
+          const parts = field.split(":")
+          parts.shift()
+          newFilter.field = parts.join(":")
+        }
+        return newFilter
+      })
+  }
+
+  // Add field key prefixes and a special metadata filter object to indicate
+  // whether to use the "match all" or "match any" behaviour
+  const enrichFilters = (rawFilters, matchAny) => {
+    let count = 1
+    return rawFilters
+      .filter(filter => filter.field)
+      .map(filter => ({
+        ...filter,
+        field: `${count++}:${filter.field}`,
+      }))
+      .concat(matchAny ? [{ operator: "allOr" }] : [])
+  }
+
   const addFilter = () => {
-    filters = [
-      ...filters,
+    rawFilters = [
+      ...rawFilters,
       {
         id: generate(),
         field: null,
@@ -60,13 +95,13 @@
   }
 
   const removeFilter = id => {
-    filters = filters.filter(field => field.id !== id)
+    rawFilters = rawFilters.filter(field => field.id !== id)
   }
 
   const duplicateFilter = id => {
-    const existingFilter = filters.find(filter => filter.id === id)
+    const existingFilter = rawFilters.find(filter => filter.id === id)
     const duplicate = { ...existingFilter, id: generate() }
-    filters = [...filters, duplicate]
+    rawFilters = [...rawFilters, duplicate]
   }
 
   const getSchema = filter => {
@@ -133,32 +168,28 @@
     const schema = enrichedSchemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
   }
-
-  onMount(() => {
-    behaviourValue = allOr ? "or" : "and"
-  })
 </script>
 
 <DrawerContent>
   <div class="container">
     <Layout noPadding>
       <Body size="S">
-        {#if !filters?.length}
+        {#if !rawFilters?.length}
           Add your first filter expression.
         {:else}
           Results are filtered to only those which match all of the following
           constraints.
         {/if}
       </Body>
-      {#if filters?.length}
+      {#if rawFilters?.length}
         <div class="fields">
           <Select
             label="Behaviour"
-            value={behaviourValue}
+            value={matchAny ? "or" : "and"}
             options={behaviourOptions}
             getOptionLabel={opt => opt.label}
             getOptionValue={opt => opt.value}
-            on:change={e => (allOr = e.detail === "or")}
+            on:change={e => (matchAny = e.detail === "or")}
             placeholder={null}
           />
         </div>
@@ -167,7 +198,7 @@
             <Label>Filters</Label>
           </div>
           <div class="fields">
-            {#each filters as filter, idx}
+            {#each rawFilters as filter, idx}
               <Select
                 bind:value={filter.field}
                 options={fieldOptions}
