@@ -29,6 +29,7 @@ import {
   RowResponse,
   SearchUsersRequest,
   User,
+  ThirdPartyUser,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
@@ -110,7 +111,7 @@ export interface SaveUserOpts {
 }
 
 const buildUser = async (
-  user: User,
+  user: User | ThirdPartyUser,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
@@ -118,7 +119,8 @@ const buildUser = async (
   tenantId: string,
   dbUser?: any
 ): Promise<User> => {
-  let { password, _id } = user
+  let fullUser = user as User
+  let { password, _id } = fullUser
 
   let hashedPassword
   if (password) {
@@ -131,24 +133,24 @@ const buildUser = async (
 
   _id = _id || dbUtils.generateGlobalUserID()
 
-  user = {
+  fullUser = {
     createdAt: Date.now(),
     ...dbUser,
-    ...user,
+    ...fullUser,
     _id,
     password: hashedPassword,
     tenantId,
   }
   // make sure the roles object is always present
-  if (!user.roles) {
-    user.roles = {}
+  if (!fullUser.roles) {
+    fullUser.roles = {}
   }
   // add the active status to a user if its not provided
-  if (user.status == null) {
-    user.status = constants.UserStatus.ACTIVE
+  if (fullUser.status == null) {
+    fullUser.status = constants.UserStatus.ACTIVE
   }
 
-  return user
+  return fullUser
 }
 
 const validateUniqueUser = async (email: string, tenantId: string) => {
@@ -170,7 +172,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
 }
 
 export const save = async (
-  user: User,
+  user: User | ThirdPartyUser,
   opts: SaveUserOpts = {}
 ): Promise<CreateUserResponse> => {
   // default booleans to true
