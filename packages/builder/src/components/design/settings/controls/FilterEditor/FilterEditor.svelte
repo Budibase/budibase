@@ -22,10 +22,7 @@
   $: schemaFields = Object.values(schema || {})
 
   async function saveFilter() {
-    if (tempValue !== value) {
-      console.log("saving", tempValue)
-      dispatch("change", tempValue)
-    }
+    dispatch("change", tempValue)
     notifications.success("Filters saved")
     drawer.hide()
   }
