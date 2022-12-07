@@ -38,7 +38,7 @@
     overflow-y: auto;
     gap: var(--spacing-l);
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
