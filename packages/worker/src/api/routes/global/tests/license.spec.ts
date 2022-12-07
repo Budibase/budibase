@@ -1,7 +1,3 @@
-/*
-This needs the account portal to be working in order to test properly 
-*/
-
 import { TestConfiguration } from "../../../../tests"
 
 describe("/api/global/license", () => {
@@ -19,12 +15,7 @@ describe("/api/global/license", () => {
     jest.clearAllMocks()
   })
 
-  describe("POST /api/global/license/activate", () => {
-    it("activates license", async () => {
-      //let result = await config.api.license.activate("test")
-      //expect(result.status).toEqual(200)
-    })
-  })
+  describe("POST /api/global/license/activate", () => {})
 
   describe("POST /api/global/license/refresh", () => {})
 
