@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { get } from "svelte/store"
-  import { goto, params } from "@roxi/routify"
+  import { goto, isActive, params } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import { database, datasources, queries, tables, views } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
@@ -19,7 +19,7 @@
   let openDataSources = []
   $: enrichedDataSources = Array.isArray($datasources.list)
     ? $datasources.list.map(datasource => {
-        const selected = $datasources.selected === datasource._id
+        const selected = $datasources.selectedDatasourceId === datasource._id
         const open = openDataSources.includes(datasource._id)
         const containsSelected = containsActiveEntity(datasource)
         const onlySource = $datasources.list.length === 1
@@ -41,7 +41,6 @@
 
   function selectDatasource(datasource) {
     openNode(datasource)
-    datasources.select(datasource._id)
     $goto(`./datasource/${datasource._id}`)
   }
 
@@ -81,6 +80,20 @@
   const containsActiveEntity = datasource => {
     // If we're view a query then the datasource ID is in the URL
     if ($params.datasourceId === datasource._id) {
+      return true
+    }
+
+    // Check for hardcoded edge cases
+    if (
+      $isActive("./datasource/bb_internal") &&
+      datasource._id === "bb_internal"
+    ) {
+      return true
+    }
+    if (
+      $isActive("./datasource/datasource_internal_bb_default") &&
+      datasource._id === "datasource_internal_bb_default"
+    ) {
       return true
     }
 

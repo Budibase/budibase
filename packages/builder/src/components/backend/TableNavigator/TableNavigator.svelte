@@ -4,6 +4,7 @@
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
+  import { goto, url } from "@roxi/routify"
 
   const alphabetical = (a, b) => a.name?.toLowerCase() > b.name?.toLowerCase()
 
@@ -38,7 +39,7 @@
         icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
         text={table.name}
         selected={$tables.selected?._id === table._id}
-        on:click={() => tables.select(table._id)}
+        on:click={() => $goto(`./table/${table._id}`)}
       >
         {#if table._id !== TableNames.USERS}
           <EditTablePopover {table} />
