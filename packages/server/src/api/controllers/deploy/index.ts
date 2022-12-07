@@ -118,6 +118,8 @@ async function deployApp(deployment: any, userId: string) {
     }
     replication = new dbCore.Replication(config)
     const devDb = context.getDevAppDB()
+    console.log("Compacting development DB")
+    await devDb.compact()
     console.log("Replication object created")
     await replication.replicate(replication.appReplicateOpts())
     console.log("replication complete.. replacing app meta doc")
