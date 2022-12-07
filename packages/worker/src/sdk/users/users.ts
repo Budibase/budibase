@@ -106,6 +106,7 @@ export const getUser = async (userId: string) => {
 interface SaveUserOpts {
   hashPassword?: boolean
   requirePassword?: boolean
+  currentUserId?: string
 }
 
 const buildUser = async (
@@ -170,11 +171,15 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
 
 export const save = async (
   user: User,
-  opts: SaveUserOpts = {
-    hashPassword: true,
-    requirePassword: true,
-  }
+  opts: SaveUserOpts = {}
 ): Promise<CreateUserResponse> => {
+  // default booleans to true
+  if (opts.hashPassword == null) {
+    opts.hashPassword = true
+  }
+  if (opts.requirePassword == null) {
+    opts.requirePassword = true
+  }
   const tenantId = tenancy.getTenantId()
   const db = tenancy.getGlobalDB()
 
@@ -213,6 +218,12 @@ export const save = async (
   await validateUniqueUser(email, tenantId)
 
   let builtUser = await buildUser(user, opts, tenantId, dbUser)
+  // don't allow a user to update its own roles/perms
+  if (opts.currentUserId && opts.currentUserId === dbUser?._id) {
+    builtUser.builder = dbUser.builder
+    builtUser.admin = dbUser.admin
+    builtUser.roles = dbUser.roles
+  }
 
   // make sure we set the _id field for a new user
   // Also if this is a new user, associate groups with them
