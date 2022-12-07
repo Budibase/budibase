@@ -29,6 +29,17 @@
   // Derive visibility
   $: open = $sidePanelStore.contentId === $component.id
 
+  // Derive a render key which is only changed whenever this panel is made
+  // visible after being hidden. We need to key the content to avoid showing
+  // stale data when re-revealing a side panel that was closed, but we cannot
+  // hide the content altogether when hidden as this breaks ejection.
+  let renderKey = null
+  $: {
+    if (open) {
+      renderKey = Math.random()
+    }
+  }
+
   const showInSidePanel = (el, visible) => {
     const update = visible => {
       const target = document.getElementById("side-panel-container")
@@ -60,9 +71,9 @@
   class="side-panel"
   class:open
 >
-  {#if open}
+  {#key renderKey}
     <slot />
-  {/if}
+  {/key}
 </div>
 
 <style>
