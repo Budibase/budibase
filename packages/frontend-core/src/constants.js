@@ -28,11 +28,11 @@ export const OperatorOptions = {
   },
   MoreThan: {
     value: "rangeLow",
-    label: "More than",
+    label: "More than or equal to",
   },
   LessThan: {
     value: "rangeHigh",
-    label: "Less than",
+    label: "Less than or equal to",
   },
   Contains: {
     value: "contains",

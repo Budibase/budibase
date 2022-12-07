@@ -300,7 +300,7 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     align-items: center;
-    grid-template-columns: 1fr 150px 120px 1fr 16px 16px;
+    grid-template-columns: 1fr 170px 120px 1fr 16px 16px;
   }
 
   .filter-label {
