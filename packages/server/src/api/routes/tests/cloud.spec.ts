@@ -1,16 +1,7 @@
-import { env, constants, tenancy } from "@budibase/backend-core"
-import * as setup from "./utilities"
+import { getProdAppID } from "@budibase/backend-core/src/db"
+import { AppStatus } from "../../../db/utils"
 
-jest.mock("@budibase/backend-core", () => {
-  const core = jest.requireActual("@budibase/backend-core")
-  return {
-    ...core,
-    db: {
-      ...core.db,
-      getAllApps: () => [],
-    },
-  }
-})
+import * as setup from "./utilities"
 
 describe("/cloud", () => {
   let request = setup.getRequest()
@@ -29,12 +20,45 @@ describe("/cloud", () => {
 
   describe("import", () => {
     it("should be able to import apps", async () => {
+      // first we need to delete any existing apps on the system so it looks clean otherwise the
+      // import will not run
+      await request
+        .delete(
+          `/api/applications/${getProdAppID(config.getAppId())}?unpublish=true`
+        )
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      await request
+        .delete(`/api/applications/${config.getAppId()}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      // get a count of apps before the import
+      const preImportApps = await request
+        .get(`/api/applications?status=${AppStatus.ALL}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      // Perform the import
       const res = await request
         .post(`/api/cloud/import`)
         .attach("importFile", "src/api/routes/tests/data/export-test.tar.gz")
         .set(config.defaultHeaders())
         .expect(200)
       expect(res.body.message).toEqual("Apps successfully imported.")
+
+      // get a count of apps after the import
+      const postImportApps = await request
+        .get(`/api/applications?status=${AppStatus.ALL}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      // There are two apps in the file that was imported so check for this
+      expect(postImportApps.body.length).toEqual(2)
     })
   })
 })
