@@ -25,6 +25,7 @@ export interface ThirdPartyUser extends Document {
   email: string
   userId?: string
   forceResetPassword?: boolean
+  userGroups?: string[]
 }
 
 export interface User extends ThirdPartyUser {
@@ -42,7 +43,6 @@ export interface User extends ThirdPartyUser {
   password?: string
   status?: string
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
-  userGroups?: string[]
   dayPassRecordedAt?: string
   account?: {
     authType: string
