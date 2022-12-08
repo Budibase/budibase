@@ -1,6 +1,4 @@
 <script>
-  import { onMount } from "svelte"
-  import { get } from "svelte/store"
   import { goto, isActive, params } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import { database, datasources, queries, tables, views } from "stores/backend"
@@ -14,29 +12,53 @@
     customQueryText,
   } from "helpers/data/utils"
   import IntegrationIcon from "./IntegrationIcon.svelte"
-  import { notifications } from "@budibase/bbui"
 
   let openDataSources = []
-  $: enrichedDataSources = Array.isArray($datasources.list)
-    ? $datasources.list.map(datasource => {
-        const selected = $datasources.selectedDatasourceId === datasource._id
-        const open = openDataSources.includes(datasource._id)
-        const containsSelected = containsActiveEntity(datasource)
-        const onlySource = $datasources.list.length === 1
-        return {
-          ...datasource,
-          selected,
-          open: selected || open || containsSelected || onlySource,
-        }
-      })
-    : []
+  $: enrichedDataSources = enrichDatasources(
+    $datasources,
+    $params,
+    $isActive,
+    $tables,
+    $queries,
+    $views
+  )
   $: openDataSource = enrichedDataSources.find(x => x.open)
   $: {
-    // Ensure the open datasource is always included in the list of open
-    // datasources
+    // Ensure the open datasource is always actually open
     if (openDataSource) {
       openNode(openDataSource)
     }
+  }
+
+  const enrichDatasources = (
+    datasources,
+    params,
+    isActive,
+    tables,
+    queries,
+    views
+  ) => {
+    if (!datasources?.list?.length) {
+      return []
+    }
+    return datasources.list.map(datasource => {
+      const selected = datasources.selectedDatasourceId === datasource._id
+      const open = openDataSources.includes(datasource._id)
+      const containsSelected = containsActiveEntity(
+        datasource,
+        params,
+        isActive,
+        tables,
+        queries,
+        views
+      )
+      const onlySource = datasources.list.length === 1
+      return {
+        ...datasource,
+        selected,
+        open: selected || open || containsSelected || onlySource,
+      }
+    })
   }
 
   function selectDatasource(datasource) {
@@ -63,18 +85,16 @@
     }
   }
 
-  onMount(async () => {
-    try {
-      await datasources.fetch()
-      await queries.fetch()
-    } catch (error) {
-      notifications.error("Error fetching datasources and queries")
-    }
-  })
-
-  const containsActiveEntity = datasource => {
+  const containsActiveEntity = (
+    datasource,
+    params,
+    isActive,
+    tables,
+    queries,
+    views
+  ) => {
     // Check for being on a datasource page
-    if ($params.datasourceId === datasource._id) {
+    if (params.datasourceId === datasource._id) {
       return true
     }
 
@@ -85,13 +105,13 @@
 
     // Check for hardcoded datasource edge cases
     if (
-      $isActive("./datasource/bb_internal") &&
+      isActive("./datasource/bb_internal") &&
       datasource._id === "bb_internal"
     ) {
       return true
     }
     if (
-      $isActive("./datasource/datasource_internal_bb_default") &&
+      isActive("./datasource/datasource_internal_bb_default") &&
       datasource._id === "datasource_internal_bb_default"
     ) {
       return true
@@ -104,19 +124,19 @@
     }
 
     // Check for a matching table
-    if ($params.tableId) {
-      const selectedTable = get(tables).selected?._id
+    if (params.tableId) {
+      const selectedTable = tables.selected?._id
       return options.find(x => x._id === selectedTable) != null
     }
 
     // Check for a matching query
-    if ($params.queryId) {
-      const query = get(queries).list?.find(q => q._id === $params.queryId)
+    if (params.queryId) {
+      const query = queries.list?.find(q => q._id === params.queryId)
       return datasource._id === query?.datasourceId
     }
 
     // Check for a matching view
-    const selectedView = get(views).selected?.name
+    const selectedView = views.selected?.name
     const table = options.find(table => {
       return table.views?.[selectedView] != null
     })
