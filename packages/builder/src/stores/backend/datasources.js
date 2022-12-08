@@ -28,13 +28,6 @@ export function createDatasourcesStore() {
     }))
   }
 
-  const unselect = () => {
-    store.update(state => ({
-      ...state,
-      selectedDatasourceId: null,
-    }))
-  }
-
   const updateDatasource = async response => {
     const { datasource, error } = response
     store.update(state => {
@@ -101,7 +94,6 @@ export function createDatasourcesStore() {
     fetch,
     init: fetch,
     select,
-    unselect,
     updateSchema,
     save,
     delete: deleteDatasource,

@@ -10,24 +10,9 @@
 
   export let sourceId
 
-  $: selectedView = $views.selected && $views.selected.name
   $: sortedTables = $tables.list
     .filter(table => table.sourceId === sourceId)
     .sort(alphabetical)
-
-  function selectView(view) {
-    views.select(view)
-  }
-
-  function onClickView(table, viewName) {
-    if (selectedView === viewName) {
-      return
-    }
-    selectView({
-      name: viewName,
-      ...table.views[viewName],
-    })
-  }
 </script>
 
 {#if $database?._id}
@@ -50,8 +35,8 @@
           indentLevel={2}
           icon="Remove"
           text={viewName}
-          selected={selectedView === viewName}
-          on:click={() => onClickView(table, viewName)}
+          selected={$isActive("./view") && $views.selected?.name === viewName}
+          on:click={() => $goto(`./view/${viewName}`)}
         >
           <EditViewPopover
             view={{ name: viewName, ...table.views[viewName] }}

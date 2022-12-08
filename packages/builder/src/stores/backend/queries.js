@@ -74,13 +74,6 @@ export function createQueriesStore() {
     }))
   }
 
-  const unselect = () => {
-    store.update(state => ({
-      ...state,
-      selectedQueryId: null,
-    }))
-  }
-
   const preview = async query => {
     const parameters = query.parameters.reduce(
       (acc, next) => ({
@@ -136,7 +129,6 @@ export function createQueriesStore() {
     fetch,
     init: fetch,
     select,
-    unselect,
     save,
     import: importQueries,
     delete: deleteQuery,

@@ -29,13 +29,6 @@ export function createTablesStore() {
     }))
   }
 
-  const unselect = () => {
-    store.update(state => ({
-      ...state,
-      selectedTableId: null,
-    }))
-  }
-
   const save = async table => {
     const updatedTable = cloneDeep(table)
     const oldTable = get(store).list.filter(t => t._id === table._id)[0]
@@ -151,7 +144,6 @@ export function createTablesStore() {
     fetch,
     init: fetch,
     select,
-    unselect,
     save,
     delete: deleteTable,
     saveField,
