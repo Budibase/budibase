@@ -87,7 +87,7 @@
             height="26"
             width="26"
           />
-          <Heading size="M">{$datasources.selected.name}</Heading>
+          <Heading size="M">{$datasources.selected?.name}</Heading>
         </header>
         <Body size="M">{integration.description}</Body>
       </Layout>
