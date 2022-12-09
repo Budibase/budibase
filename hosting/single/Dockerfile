@@ -18,7 +18,7 @@ WORKDIR /worker
 ADD packages/worker .
 RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
 
-FROM budibase-couchdb
+FROM budibase/couchdb
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)

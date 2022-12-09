@@ -69,7 +69,7 @@
     "build:docker:single:multiarch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/single/Dockerfile -t budibase:latest .",
     "build:docker:single:image": "docker build -f hosting/single/Dockerfile -t budibase:latest .",
     "build:docker:single": "npm run build:docker:pre && npm run build:docker:single:image",
-    "build:docker:couch": "docker build -f hosting/couchdb/Dockerfile -t budibase-couchdb:latest ./hosting/couchdb",
+    "build:docker:couch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/couchdb/Dockerfile -t budibase/couchdb:latest -t budibase/couchdb:v3.2.1 --push ./hosting/couchdb",
     "build:docs": "lerna run build:docs",
     "release:helm": "node scripts/releaseHelmChart",
     "env:multi:enable": "lerna run env:multi:enable",
