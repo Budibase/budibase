@@ -154,8 +154,7 @@
         border={idx > 0}
         text={datasource.name}
         opened={datasource.open}
-        selected={$isActive("./datasource/:datasourceId") &&
-          datasource.selected}
+        selected={$isActive("./datasource") && datasource.selected}
         withArrow={true}
         on:click={() => selectDatasource(datasource)}
         on:iconClick={() => toggleNode(datasource)}
