@@ -133,7 +133,7 @@
       {#if queryList && queryList.length > 0}
         <div class="query-list">
           <Table
-            on:click={({ detail }) => $goto(`./${detail._id}`)}
+            on:click={({ detail }) => $goto(`../../query/${detail._id}`)}
             schema={querySchema}
             data={queryList}
             allowEditColumns={false}
