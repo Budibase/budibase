@@ -16,7 +16,11 @@ export function getTableFields(linkField) {
   }))
 }
 
-export function getFields(fields, { allowLinks } = { allowLinks: true }) {
+export function getFields(
+  fields,
+  { allowLinks } = { allowLinks: true },
+  tableId
+) {
   let filteredFields = fields.filter(
     field => !BannedSearchTypes.includes(field.type)
   )
@@ -30,5 +34,9 @@ export function getFields(fields, { allowLinks } = { allowLinks: true }) {
   const staticFormulaFields = fields.filter(
     field => field.type === "formula" && field.formulaType === "static"
   )
+  const table = get(tables).list.find(table => table._id === tableId)
+  if (table?.type === "external" && table?.sql) {
+    filteredFields = filteredFields.filter(field => field.name !== "_id")
+  }
   return filteredFields.concat(staticFormulaFields)
 }

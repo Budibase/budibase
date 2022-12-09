@@ -17,6 +17,7 @@ import {
   SqlClient,
 } from "./utils"
 import Sql from "./base/sql"
+import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
 
 const sqlServer = require("mssql")
 const DEFAULT_SCHEMA = "dbo"
@@ -29,13 +30,6 @@ interface MSSQLConfig {
   database: string
   schema: string
   encrypt?: boolean
-}
-
-interface TablesResponse {
-  TABLE_CATALOG: string
-  TABLE_SCHEMA: string
-  TABLE_NAME: string
-  TABLE_TYPE: string
 }
 
 const SCHEMA: Integration = {
@@ -210,7 +204,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
    */
   async buildSchema(datasourceId: string, entities: Record<string, Table>) {
     await this.connect()
-    let tableInfo: TablesResponse[] = await this.runSQL(this.TABLES_SQL)
+    let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     if (tableInfo == null || !Array.isArray(tableInfo)) {
       throw "Unable to get list of tables in database"
     }
@@ -228,15 +222,20 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       // find primary key constraints
       const constraints = await this.runSQL(this.getConstraintsSQL(tableName))
       // find the computed and identity columns (auto columns)
-      const columns = await this.runSQL(this.getAutoColumnsSQL(tableName))
+      const columns: MSSQLColumn[] = await this.runSQL(
+        this.getAutoColumnsSQL(tableName)
+      )
       const primaryKeys = constraints
         .filter(
           (constraint: any) => constraint.CONSTRAINT_TYPE === "PRIMARY KEY"
         )
         .map((constraint: any) => constraint.COLUMN_NAME)
       const autoColumns = columns
-        .filter((col: any) => col.IS_COMPUTED || col.IS_IDENTITY)
-        .map((col: any) => col.COLUMN_NAME)
+        .filter(col => col.IS_COMPUTED || col.IS_IDENTITY)
+        .map(col => col.COLUMN_NAME)
+      const requiredColumns = columns
+        .filter(col => col.IS_NULLABLE === "NO")
+        .map(col => col.COLUMN_NAME)
 
       let schema: TableSchema = {}
       for (let def of definition) {
@@ -245,8 +244,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           continue
         }
         schema[name] = {
-          autocolumn: !!autoColumns.find((col: string) => col === name),
+          autocolumn: !!autoColumns.find(col => col === name),
           name: name,
+          constraints: {
+            presence: requiredColumns.find(col => col === name),
+          },
           ...convertSqlType(def.DATA_TYPE),
           externalType: def.DATA_TYPE,
         }

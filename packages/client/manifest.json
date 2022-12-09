@@ -2598,6 +2598,7 @@
     ]
   },
   "passwordfield": {
+    "skeleton": false,
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": [
@@ -3066,6 +3067,7 @@
     ]
   },
   "longformfield": {
+    "skeleton": false,
     "name": "Long Form Field",
     "icon": "TextAlignLeft",
     "styles": [
@@ -5118,7 +5120,8 @@
           {
             "type": "multifield",
             "label": "Fields",
-            "key": "fields"
+            "key": "fields",
+            "selectAllFields": true
           },
           {
             "type": "select",
@@ -5204,7 +5207,8 @@
     "icon": "RailRight",
     "hasChildren": true,
     "illegalChildren": [
-      "section"
+      "section",
+      "sidepanel"
     ],
     "showEmptyState": false,
     "draggable": false,
@@ -5283,7 +5287,8 @@
             "type": "multifield",
             "label": "Fields",
             "key": "detailFields",
-            "nested": true
+            "nested": true,
+            "selectAllFields": true
           }
         ]
       }

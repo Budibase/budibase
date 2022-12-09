@@ -1,6 +1,6 @@
 {
   "name": "@budibase/types",
-  "version": "2.1.40-alpha.7",
+  "version": "2.1.46-alpha.1",
   "description": "Budibase types",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,6 +13,7 @@
   },
   "jest": {},
   "devDependencies": {
+    "@types/json5": "^2.2.0",
     "@types/koa": "2.13.4",
     "@types/node": "14.18.20",
     "@types/pouchdb": "6.4.0",
