@@ -33,6 +33,7 @@
   export let showMenu = false
   export let bindings = []
   export let bindingDrawerLeft
+  export let allowHelpers = true
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -122,6 +123,7 @@
           disabled={readOnly}
           value={field.value}
           allowJS={false}
+          {allowHelpers}
           fillWidth={true}
           drawerLeft={bindingDrawerLeft}
         />
