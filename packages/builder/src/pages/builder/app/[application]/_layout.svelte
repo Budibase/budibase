@@ -22,20 +22,17 @@
 
   export let application
 
-  // Get Package and set store
-  let promise = getPackage()
   // let betaAccess = false
-
-  // Sync once when you load the app
-  let hasSynced = false
+  let loaded = false
+  let commandPaletteModal
+  let commandPaletteVisible = false
+  let canShowCommandPalette = false
 
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
-  let commandPaletteModal
-  let commandPaletteVisible = false
 
-  async function getPackage() {
+  const loadPackage = async () => {
     try {
       store.actions.reset()
       const pkg = await API.fetchAppPackage(application)
@@ -43,7 +40,7 @@
       await automationStore.actions.fetch()
       await roles.fetch()
       await flags.fetch()
-      return pkg
+      loaded = true
     } catch (error) {
       notifications.error(`Error initialising app: ${error?.message}`)
       $redirect("../../")
@@ -66,28 +63,34 @@
     })
   }
 
-  onMount(async () => {
-    if (!hasSynced && application) {
-      try {
-        await API.syncApp(application)
-        // check if user has beta access
-        // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
-        // betaAccess = betaResponse.access
-      } catch (error) {
-        notifications.error("Failed to sync with production database")
-      }
-      hasSynced = true
-    }
-  })
-
-  function handleKeyDown(e) {
+  // Event handlers for the command palette
+  const handleKeyDown = e => {
     if (e.key === "Control") {
+      canShowCommandPalette = true
+    } else if (canShowCommandPalette) {
+      canShowCommandPalette = false
+    }
+  }
+  const handleKeyUp = e => {
+    if (e.key === "Control" && canShowCommandPalette) {
       commandPaletteVisible
         ? commandPaletteModal.hide()
         : commandPaletteModal.show()
-      commandPaletteVisible = !commandPaletteVisible
     }
   }
+
+  onMount(async () => {
+    try {
+      await loadPackage()
+      await API.syncApp(application)
+      // check if user has beta access
+      // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
+      // betaAccess = betaResponse.access
+    } catch (error) {
+      notifications.error("Failed to sync with production database")
+    }
+    loaded = true
+  })
 
   onDestroy(() => {
     store.update(state => {
@@ -97,11 +100,7 @@
   })
 </script>
 
-<svelte:window on:keydown={handleKeyDown} />
-{#await promise}
-  <!-- This should probably be some kind of loading state? -->
-  <div class="loading" />
-{:then _}
+{#if loaded}
   <div class="root">
     <div class="top-nav">
       <div class="topleftnav">
@@ -171,26 +170,18 @@
     </div>
     <slot />
   </div>
-{:catch error}
-  <p>Something went wrong: {error.message}</p>
-{/await}
+{/if}
 
-<Modal bind:this={commandPaletteModal}>
-  <CommandPalette
-    close={() => {
-      commandPaletteVisible = false
-      commandPaletteModal.hide()
-    }}
-  />
+<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
+<Modal
+  bind:this={commandPaletteModal}
+  on:hide={() => (commandPaletteVisible = false)}
+  on:show={() => (commandPaletteVisible = true)}
+>
+  <CommandPalette />
 </Modal>
 
 <style>
-  .loading {
-    min-height: 100%;
-    height: 100%;
-    width: 100%;
-    background: var(--background);
-  }
   .root {
     min-height: 100%;
     height: 100%;

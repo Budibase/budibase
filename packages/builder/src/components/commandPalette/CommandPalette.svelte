@@ -2,7 +2,7 @@
   import {
     ActionGroup,
     ActionButton,
-    Body,
+    Context,
     Icon,
     Input,
     ModalContent,
@@ -18,8 +18,9 @@
     themeStore,
   } from "builderStore"
   import { datasources, queries, tables, views } from "stores/backend"
+  import { getContext } from "svelte"
 
-  export let close
+  const modalContext = getContext(Context.Modal)
 
   const commands = [
     {
@@ -58,17 +59,17 @@
       action: () => window.open(`/${$store.appId}`),
     },
     {
+      type: "Preview",
+      name: "Published App",
+      icon: "Play",
+      action: () => window.open(`/${$store.appId.replace("_dev", "")}`),
+    },
+    {
       type: "Publish",
       name: "App",
       description: "Deploy your application",
       icon: "Box",
       action: deployApp,
-    },
-    {
-      type: "Preview",
-      name: "Published App",
-      icon: "Play",
-      action: () => window.open(`/${$store.appId.replace("_dev", "")}`),
     },
     {
       type: "Support",
@@ -113,8 +114,8 @@
     ...$sortedScreens.map(screen => ({
       type: "Screen",
       name: screen.routing.route,
-      icon: "FullScreen",
-      action: () => $goto(`./design/screen/${screen._id}`),
+      icon: "WebPage",
+      action: () => $goto(`./design/${screen._id}/components`),
     })),
     ...$automationStore?.automations.map(automation => ({
       type: "Automation",
@@ -168,10 +169,8 @@
         selected -= 1
       }
     }
-
     if (e.key === "Enter") {
-      results[selected || 0].action()
-      close()
+      runAction(results[selected || 0])
     }
   }
 
@@ -187,6 +186,14 @@
       notifications.error("Error publishing app")
     }
   }
+
+  const runAction = command => {
+    if (!command) {
+      return
+    }
+    command.action()
+    modalContext.hide()
+  }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -201,14 +208,17 @@
   <Input bind:value={search} placeholder={"Search for command..."} />
   <div class="options">
     {#each results as command, idx}
-      <span
+      <div
         class="command"
-        on:click={command.action}
+        on:click={() => runAction(command)}
         class:selected={idx === selected || results.length === 1}
       >
         <Icon size="M" name={command.icon} />
-        <Body size="S"><strong>{command.type}:</strong> {command.name}</Body>
-      </span>
+        <strong>{command.type}:&nbsp;</strong>
+        <div class="name">
+          {command.name}
+        </div>
+      </div>
     {/each}
   </div>
   <footer>
@@ -222,34 +232,35 @@
 
 <style>
   .command {
-    display: grid;
-    grid-template-columns: 5% 40% 1fr;
-    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: var(--spacing-m);
     cursor: pointer;
+    overflow: hidden;
+    border-radius: var(--border-radius-s);
+    transition: color 130ms ease-out, background-color 130ms ease-out;
   }
-
+  .command:hover,
+  .selected {
+    color: var(--spectrum-global-color-gray-900);
+    background-color: var(--spectrum-global-color-gray-300);
+  }
+  .command strong {
+    margin-left: var(--spacing-m);
+  }
+  .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .options {
     height: 500px;
     overflow: scroll;
   }
-
   footer {
     display: flex;
     justify-content: center;
-  }
-
-  .command:hover {
-    display: grid;
-    grid-template-columns: 5% 1fr;
-    color: var(--spectrum-global-color-gray-900);
-    background-color: var(--spectrum-global-color-gray-50);
-    border-color: var(--spectrum-global-color-gray-500);
-  }
-
-  .selected {
-    color: var(--spectrum-global-color-gray-900);
-    background-color: var(--spectrum-global-color-gray-50);
-    border-color: var(--spectrum-global-color-gray-500);
-    cursor: pointer;
   }
 </style>
