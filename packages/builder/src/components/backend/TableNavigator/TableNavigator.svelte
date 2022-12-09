@@ -23,7 +23,8 @@
         border={idx > 0}
         icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
         text={table.name}
-        selected={$isActive("./table") && $tables.selected?._id === table._id}
+        selected={$isActive("./table/:tableId") &&
+          $tables.selected?._id === table._id}
         on:click={() => $goto(`./table/${table._id}`)}
       >
         {#if table._id !== TableNames.USERS}
@@ -35,7 +36,8 @@
           indentLevel={2}
           icon="Remove"
           text={viewName}
-          selected={$isActive("./view") && $views.selected?.name === viewName}
+          selected={$isActive("./view/:viewName") &&
+            $views.selected?.name === viewName}
           on:click={() => $goto(`./view/${viewName}`)}
         >
           <EditViewPopover

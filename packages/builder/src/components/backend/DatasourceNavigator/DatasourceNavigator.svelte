@@ -154,7 +154,8 @@
         border={idx > 0}
         text={datasource.name}
         opened={datasource.open}
-        selected={$isActive("./datasource") && datasource.selected}
+        selected={$isActive("./datasource/:datasourceId") &&
+          datasource.selected}
         withArrow={true}
         on:click={() => selectDatasource(datasource)}
         on:iconClick={() => toggleNode(datasource)}
@@ -180,7 +181,7 @@
             iconText={customQueryIconText(datasource, query)}
             iconColor={customQueryIconColor(datasource, query)}
             text={customQueryText(datasource, query)}
-            selected={$isActive("./query") &&
+            selected={$isActive("./query/:queryId") &&
               $queries.selectedQueryId === query._id}
             on:click={() => $goto(`./query/${query._id}`)}
           >
