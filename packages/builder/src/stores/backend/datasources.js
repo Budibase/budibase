@@ -1,5 +1,5 @@
 import { writable, derived } from "svelte/store"
-import { queries, tables, views } from "./"
+import { queries, tables } from "./"
 import { API } from "api"
 
 export function createDatasourcesStore() {

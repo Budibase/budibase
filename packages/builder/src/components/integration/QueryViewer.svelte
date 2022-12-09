@@ -1,5 +1,5 @@
 <script>
-  import { goto, isActive } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import {
     Icon,
     Select,

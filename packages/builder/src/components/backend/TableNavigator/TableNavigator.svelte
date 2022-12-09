@@ -4,7 +4,7 @@
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
-  import { goto, isActive, url } from "@roxi/routify"
+  import { goto, isActive } from "@roxi/routify"
 
   const alphabetical = (a, b) => a.name?.toLowerCase() > b.name?.toLowerCase()
 

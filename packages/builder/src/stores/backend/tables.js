@@ -1,5 +1,5 @@
 import { get, writable, derived } from "svelte/store"
-import { datasources, queries, views } from "./"
+import { datasources } from "./"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
 import { SWITCHABLE_TYPES } from "constants/backend"
