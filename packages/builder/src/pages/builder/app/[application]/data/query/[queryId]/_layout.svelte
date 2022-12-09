@@ -17,4 +17,6 @@
   onDestroy(stopSyncing)
 </script>
 
-<slot />
+{#key $queries.selectedQueryId}
+  <slot />
+{/key}

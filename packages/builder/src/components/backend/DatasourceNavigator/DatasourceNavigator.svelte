@@ -42,7 +42,9 @@
       return []
     }
     return datasources.list.map(datasource => {
-      const selected = datasources.selectedDatasourceId === datasource._id
+      const selected =
+        isActive("./datasource") &&
+        datasources.selectedDatasourceId === datasource._id
       const open = openDataSources.includes(datasource._id)
       const containsSelected = containsActiveEntity(
         datasource,
@@ -56,6 +58,7 @@
       return {
         ...datasource,
         selected,
+        containsSelected,
         open: selected || open || containsSelected || onlySource,
       }
     })

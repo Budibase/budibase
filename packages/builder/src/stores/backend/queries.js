@@ -102,9 +102,6 @@ export function createQueriesStore() {
     })
     store.update(state => {
       state.list = state.list.filter(existing => existing._id !== query._id)
-      if (state.selectedQueryId === query._id) {
-        state.selectedQueryId = null
-      }
       return state
     })
   }

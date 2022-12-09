@@ -49,6 +49,8 @@
     toBindingsArray,
   } from "builderStore/dataBinding"
 
+  export let queryId
+
   let query, datasource
   let breakQs = {},
     requestBindings = {}
@@ -102,7 +104,7 @@
 
   function getSelectedQuery() {
     return cloneDeep(
-      $queries.list.find(q => q._id === $queries.selectedQueryId) || {
+      $queries.list.find(q => q._id === queryId) || {
         datasourceId: $params.datasourceId,
         parameters: [],
         fields: {

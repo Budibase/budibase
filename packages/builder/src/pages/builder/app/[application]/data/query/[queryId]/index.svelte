@@ -11,7 +11,7 @@
 
 {#if $database._id && query}
   {#if isRestQuery}
-    <RestQueryViewer />
+    <RestQueryViewer queryId={$queries.selectedQueryId} />
   {:else}
     <QueryViewer {query} />
   {/if}
