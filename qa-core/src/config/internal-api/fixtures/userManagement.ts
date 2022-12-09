@@ -49,9 +49,9 @@ const generateAppUser = (): Partial<User> => {
 }
 
 export const generateInviteUser = (): Object[] => {
-    //const randomId = generator.guid();
+    const randomId = generator.guid();
     return [{
-        email: `pedro+test@budibase.com`,
+        email: `pedro+${randomId}@budibase.com`,
         userInfo: {
             userGroups: []
         }
