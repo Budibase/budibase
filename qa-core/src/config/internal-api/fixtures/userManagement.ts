@@ -3,7 +3,7 @@ import { User } from "@budibase/types";
 import { generateUserMetadataID } from "@budibase/backend-core/src/db";
 
 
-const generateDeveloper = (): User => {
+const generateDeveloper = (): Partial<User> => {
     const randomId = generator.guid();
     return ({
         email: `pedro+${randomId}@budibase.com`,
@@ -16,7 +16,7 @@ const generateDeveloper = (): User => {
     })
 }
 
-const generateAdmin = (): User => {
+const generateAdmin = (): Partial<User> => {
     const randomId = generator.guid();
     return ({
         email: `pedro+${randomId}@budibase.com`,
@@ -31,7 +31,7 @@ const generateAdmin = (): User => {
         }
     })
 }
-const generateAppUser = (): User => {
+const generateAppUser = (): Partial<User> => {
     const randomId = generator.guid();
     return ({
         email: `pedro+${randomId}@budibase.com`,
@@ -59,8 +59,8 @@ export const generateInviteUser = (): Object[] => {
 
 }
 
-export const generateUser = (amount: number = 1, role?: string): User[] => {
-    const userList: User[] = [];
+export const generateUser = (amount: number = 1, role?: string): Partial<User>[] => {
+    const userList: Partial<User>[] = [];
     for (let i = 0; i < amount; i++) {
         switch (role) {
             case "admin":

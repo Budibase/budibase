@@ -135,7 +135,7 @@ describe("Internal API - User Management & Permissions", () => {
     })
 
     it("Add POWER user to app", async () => {
-        const powerUser = generateUser(1, 'Developer')
+        const powerUser = generateUser(1, 'developer')
         expect(powerUser[0].builder?.global).toEqual(true)
 
         const [createUserResponse, createUserJson] = await config.users.addMultipleUsers(powerUser)
@@ -153,8 +153,8 @@ describe("Internal API - User Management & Permissions", () => {
         await config.users.changeUserInformation(body)
 
         const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getUserInformation(createUserJson.created.successful[0]._id)
-        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toBeDefined()
-        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toEqual("POWER")
+        expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
+        expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("POWER")
 
     })
 

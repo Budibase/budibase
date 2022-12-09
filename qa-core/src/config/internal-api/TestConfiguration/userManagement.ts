@@ -10,7 +10,7 @@ export default class UserManagementApi {
         this.api = apiClient
     }
 
-    async searchUsers(): Promise<[Response, User[]]> {
+    async searchUsers(): Promise<[Response, Partial<User>[]]> {
         const response = await this.api.post(`/global/users/search`, {})
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
@@ -18,14 +18,14 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async getSelf(): Promise<[Response, User]> {
+    async getSelf(): Promise<[Response, Partial<User>]> {
         const response = await this.api.get(`/global/self`)
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
         return [response, json]
     }
 
-    async getAllUsers(): Promise<[Response, User[]]> {
+    async getAllUsers(): Promise<[Response, Partial<User>[]]> {
         const response = await this.api.get(`/global/users`)
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
@@ -33,7 +33,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async addMultipleUsers(userList: User[]): Promise<[Response, any]> {
+    async addMultipleUsers(userList: Partial<User>[]): Promise<[Response, any]> {
         const body = {
             create: {
                 users: userList,
