@@ -33,7 +33,13 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async addUsers(body: any): Promise<[Response, any]> {
+    async addMultipleUsers(userList: User[]): Promise<[Response, any]> {
+        const body = {
+            create: {
+                users: userList,
+                groups: []
+            }
+        }
         const response = await this.api.post(`/global/users/bulk`, { body })
         const json = await response.json()
         expect(response).toHaveStatusCode(200)

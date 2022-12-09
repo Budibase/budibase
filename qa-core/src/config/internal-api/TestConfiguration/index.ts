@@ -13,7 +13,7 @@ export default class TestConfiguration<T> {
   context: T
   tables: TablesApi
   rows: RowApi
-  userManagement: UserManagementApi
+  users: UserManagementApi
 
   constructor(apiClient: InternalAPIClient) {
     this.applications = new ApplicationApi(apiClient)
@@ -21,15 +21,15 @@ export default class TestConfiguration<T> {
     this.rows = new RowApi(apiClient)
     this.auth = new AuthApi(apiClient)
     this.screen = new ScreenApi(apiClient)
-    this.userManagement = new UserManagementApi(apiClient)
+    this.users = new UserManagementApi(apiClient)
     this.context = <T>{}
   }
 
   async loginAsAdmin() {
-    await this.auth.login(<String>process.env.BB_ADMIN_USER_EMAIL, <String>process.env.BB_ADMIN_USER_PASSWORD)
+    await this.auth.login(<string>process.env.BB_ADMIN_USER_EMAIL, <string>process.env.BB_ADMIN_USER_PASSWORD)
   }
 
-  async login(email: String, password: String) {
+  async login(email: string, password: string) {
     await this.auth.login(email, password)
   }
 
