@@ -76,10 +76,6 @@ export function createTablesStore() {
       tableRev: table?._rev,
     })
     await fetch()
-    const { selectedTableId, list } = get(store)
-    if (selectedTableId === table._id) {
-      select(list?.[0]?._id)
-    }
   }
 
   const saveField = async ({
