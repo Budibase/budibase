@@ -24,7 +24,8 @@ const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
   try {
-    ctx.body = await sdk.users.save(ctx.request.body)
+    const currentUserId = ctx.user._id
+    ctx.body = await sdk.users.save(ctx.request.body, { currentUserId })
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
