@@ -1,7 +1,7 @@
 <script>
   import "@spectrum-css/label/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { Badge } from "@budibase/bbui"
+  import Badge from "../Badge/Badge.svelte"
 
   export let row
   export let value
