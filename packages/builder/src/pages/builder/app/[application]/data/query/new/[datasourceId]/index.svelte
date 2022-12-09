@@ -1,27 +1,38 @@
 <script>
-  import { params } from "@roxi/routify"
-  import { database } from "stores/backend"
-  import QueryInterface from "components/integration/QueryViewer.svelte"
+  import { params, redirect } from "@roxi/routify"
+  import { database, datasources } from "stores/backend"
+  import QueryViewer from "components/integration/QueryViewer.svelte"
+  import RestQueryViewer from "components/integration/RestQueryViewer.svelte"
+  import { IntegrationTypes } from "constants/backend"
 
-  $: query = {
-    datasourceId: $params.datasourceId,
-    parameters: [],
-    fields: {},
-    queryVerb: "read",
+  $: datasource = $datasources.list.find(ds => ds._id === $params.datasourceId)
+  $: {
+    if (!datasource) {
+      $redirect("../../../")
+    }
+  }
+  $: isRestQuery = datasource?.source === IntegrationTypes.REST
+  $: query = buildNewQuery(isRestQuery)
+
+  const buildNewQuery = isRestQuery => {
+    let query = {
+      datasourceId: $params.datasourceId,
+      parameters: [],
+      fields: {},
+      queryVerb: "read",
+    }
+    if (isRestQuery) {
+      query.flags = {}
+      query.fields = { disabledHeaders: {}, headers: {} }
+    }
+    return query
   }
 </script>
 
-<section>
-  <div class="inner">
-    {#if $database._id && query}
-      <QueryInterface {query} />
-    {/if}
-  </div>
-</section>
-
-<style>
-  .inner {
-    width: 640px;
-    margin: 0 auto;
-  }
-</style>
+{#if $database._id && datasource && query}
+  {#if isRestQuery}
+    <RestQueryViewer />
+  {:else}
+    <QueryViewer {query} />
+  {/if}
+{/if}

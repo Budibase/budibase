@@ -1,19 +1,18 @@
 <script>
-  import { database, queries } from "stores/backend"
-  import QueryInterface from "components/integration/QueryViewer.svelte"
+  import { database, queries, datasources } from "stores/backend"
+  import QueryViewer from "components/integration/QueryViewer.svelte"
+  import RestQueryViewer from "components/integration/RestQueryViewer.svelte"
+  import { IntegrationTypes } from "constants/backend"
+
+  $: query = $queries.selected
+  $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
+  $: isRestQuery = datasource?.source === IntegrationTypes.REST
 </script>
 
-<section>
-  <div class="inner">
-    {#if $database._id}
-      <QueryInterface query={$queries.selected} />
-    {/if}
-  </div>
-</section>
-
-<style>
-  .inner {
-    width: 640px;
-    margin: 0 auto;
-  }
-</style>
+{#if $database._id && query}
+  {#if isRestQuery}
+    <RestQueryViewer />
+  {:else}
+    <QueryViewer {query} />
+  {/if}
+{/if}

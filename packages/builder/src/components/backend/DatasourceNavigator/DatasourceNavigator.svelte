@@ -98,11 +98,6 @@
       return true
     }
 
-    // If there are no entities it can't contain anything
-    if (!datasource.entities) {
-      return false
-    }
-
     // Check for hardcoded datasource edge cases
     if (
       isActive("./datasource/bb_internal") &&
@@ -117,6 +112,17 @@
       return true
     }
 
+    // Check for a matching query
+    if (params.queryId) {
+      const query = queries.list?.find(q => q._id === params.queryId)
+      return datasource._id === query?.datasourceId
+    }
+
+    // If there are no entities it can't contain anything
+    if (!datasource.entities) {
+      return false
+    }
+
     // Get a list of table options
     let options = datasource.entities
     if (!Array.isArray(options)) {
@@ -127,12 +133,6 @@
     if (params.tableId) {
       const selectedTable = tables.selected?._id
       return options.find(x => x._id === selectedTable) != null
-    }
-
-    // Check for a matching query
-    if (params.queryId) {
-      const query = queries.list?.find(q => q._id === params.queryId)
-      return datasource._id === query?.datasourceId
     }
 
     // Check for a matching view
