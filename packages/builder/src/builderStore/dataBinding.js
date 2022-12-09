@@ -7,7 +7,11 @@ import {
   getComponentSettings,
 } from "./componentUtils"
 import { store } from "builderStore"
-import { queries as queriesStores, tables as tablesStore } from "stores/backend"
+import {
+  queries as queriesStores,
+  tables as tablesStore,
+  roles as rolesStore,
+} from "stores/backend"
 import {
   makePropSafe,
   isJSBinding,
@@ -16,7 +20,7 @@ import {
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
-import ActionDefinitions from "components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/manifest.json"
+import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -32,13 +36,115 @@ export const getBindableProperties = (asset, componentId) => {
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
+  const selectedRowsBindings = getSelectedRowsBindings(asset)
+  const roleBindings = getRoleBindings()
   return [
     ...contextBindings,
     ...urlBindings,
     ...stateBindings,
     ...userBindings,
     ...deviceBindings,
+    ...selectedRowsBindings,
+    ...roleBindings,
   ]
+}
+
+/**
+ * Gets all rest bindable data fields
+ */
+export const getRestBindings = () => {
+  const userBindings = getUserBindings()
+  return [...userBindings, ...getAuthBindings()]
+}
+
+/**
+ * Gets all rest bindable auth fields
+ */
+export const getAuthBindings = () => {
+  let bindings = []
+  const safeUser = makePropSafe("user")
+  const safeOAuth2 = makePropSafe("oauth2")
+  const safeAccessToken = makePropSafe("accessToken")
+
+  const authBindings = [
+    {
+      runtime: `${safeUser}.${safeOAuth2}.${safeAccessToken}`,
+      readable: `Current User.OAuthToken`,
+      key: "accessToken",
+      display: { name: "OAuthToken" },
+    },
+  ]
+
+  bindings = authBindings.map(fieldBinding => {
+    return {
+      type: "context",
+      runtimeBinding: fieldBinding.runtime,
+      readableBinding: fieldBinding.readable,
+      fieldSchema: { type: "string", name: fieldBinding.key },
+      providerId: "user",
+      category: "Current User",
+      display: fieldBinding.display,
+    }
+  })
+  return bindings
+}
+
+/**
+ * Utility - convert a key/value map to an array of custom 'context' bindings
+ * @param {object} valueMap Key/value pairings
+ * @param {string} prefix A contextual string prefix/path for a user readable binding
+ * @return {object[]} An array containing readable/runtime binding objects
+ */
+export const toBindingsArray = (valueMap, prefix, category) => {
+  if (!valueMap) {
+    return []
+  }
+  return Object.keys(valueMap).reduce((acc, binding) => {
+    if (!binding || !valueMap[binding]) {
+      return acc
+    }
+
+    let config = {
+      type: "context",
+      runtimeBinding: binding,
+      readableBinding: `${prefix}.${binding}`,
+      icon: "Brackets",
+    }
+
+    if (category) {
+      config.category = category
+    }
+
+    acc.push(config)
+
+    return acc
+  }, [])
+}
+
+/**
+ * Utility - coverting a map of readable bindings to runtime
+ */
+export const readableToRuntimeMap = (bindings, ctx) => {
+  if (!bindings || !ctx) {
+    return {}
+  }
+  return Object.keys(ctx).reduce((acc, key) => {
+    acc[key] = readableToRuntimeBinding(bindings, ctx[key])
+    return acc
+  }, {})
+}
+
+/**
+ * Utility - coverting a map of runtime bindings to readable
+ */
+export const runtimeToReadableMap = (bindings, ctx) => {
+  if (!bindings || !ctx) {
+    return {}
+  }
+  return Object.keys(ctx).reduce((acc, key) => {
+    acc[key] = runtimeToReadableBinding(bindings, ctx[key])
+    return acc
+  }, {})
 }
 
 /**
@@ -63,7 +169,12 @@ export const getComponentBindableProperties = (asset, componentId) => {
 /**
  * Gets all data provider components above a component.
  */
-export const getContextProviderComponents = (asset, componentId, type) => {
+export const getContextProviderComponents = (
+  asset,
+  componentId,
+  type,
+  options = { includeSelf: false }
+) => {
   if (!asset || !componentId) {
     return []
   }
@@ -71,7 +182,9 @@ export const getContextProviderComponents = (asset, componentId, type) => {
   // Get the component tree leading up to this component, ignoring the component
   // itself
   const path = findComponentPath(asset.props, componentId)
-  path.pop()
+  if (!options?.includeSelf) {
+    path.pop()
+  }
 
   // Filter by only data provider components
   return path.filter(component => {
@@ -124,7 +237,7 @@ export const getDatasourceForProvider = (asset, component) => {
   if (dataProviderSetting) {
     const settingValue = component[dataProviderSetting.key]
     const providerId = extractLiteralHandlebarsID(settingValue)
-    const provider = findComponent(asset.props, providerId)
+    const provider = findComponent(asset?.props, providerId)
     return getDatasourceForProvider(asset, provider)
   }
 
@@ -137,18 +250,18 @@ export const getDatasourceForProvider = (asset, component) => {
     return null
   }
 
-  // There are different types of setting which can be a datasource, for
-  // example an actual datasource object, or a table ID string.
-  // Convert the datasource setting into a proper datasource object so that
-  // we can use it properly
-  if (datasourceSetting.type === "table") {
+  // For legacy compatibility, we need to be able to handle datasources that are
+  // just strings. These are not generated any more, so could be removed in
+  // future.
+  // TODO: remove at some point
+  const datasource = component[datasourceSetting?.key]
+  if (typeof datasource === "string") {
     return {
-      tableId: component[datasourceSetting?.key],
+      tableId: datasource,
       type: "table",
     }
-  } else {
-    return component[datasourceSetting?.key]
   }
+  return datasource
 }
 
 /**
@@ -202,7 +315,10 @@ const getProviderContextBindings = (asset, dataProviders) => {
         schema = {}
         const values = context.values || []
         values.forEach(value => {
-          schema[value.key] = { name: value.label, type: "string" }
+          schema[value.key] = {
+            name: value.label,
+            type: value.type || "string",
+          }
         })
       } else if (context.type === "schema") {
         // Schema contexts are generated dynamically depending on their data
@@ -262,6 +378,12 @@ const getProviderContextBindings = (asset, dataProviders) => {
           providerId,
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
+          category: component._instanceName,
+          icon: def.icon,
+          display: {
+            name: fieldSchema.name || key,
+            type: fieldSchema.type,
+          },
         })
       })
     })
@@ -273,14 +395,15 @@ const getProviderContextBindings = (asset, dataProviders) => {
 /**
  * Gets all bindable properties from the logged in user.
  */
-const getUserBindings = () => {
+export const getUserBindings = () => {
   let bindings = []
   const { schema } = getSchemaForTable(TableNames.USERS)
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
-  keys.forEach(key => {
+
+  bindings = keys.reduce((acc, key) => {
     const fieldSchema = schema[key]
-    bindings.push({
+    acc.push({
       type: "context",
       runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
       readableBinding: `Current User.${key}`,
@@ -288,8 +411,11 @@ const getUserBindings = () => {
       // datasource options, based on bindable properties
       fieldSchema,
       providerId: "user",
+      category: "Current User",
+      icon: "User",
     })
-  })
+    return acc
+  }, [])
 
   return bindings
 }
@@ -305,12 +431,59 @@ const getDeviceBindings = () => {
       type: "context",
       runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
       readableBinding: `Device.Mobile`,
+      category: "Device",
+      icon: "DevicePhone",
+      display: { type: "boolean", name: "mobile" },
     })
     bindings.push({
       type: "context",
       runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
       readableBinding: `Device.Tablet`,
+      category: "Device",
+      icon: "DevicePhone",
+      display: { type: "boolean", name: "tablet" },
     })
+  }
+  return bindings
+}
+
+/**
+ * Gets all selected rows bindings for tables in the current asset.
+ */
+const getSelectedRowsBindings = asset => {
+  let bindings = []
+  if (get(store).clientFeatures?.rowSelection) {
+    // Add bindings for table components
+    let tables = findAllMatchingComponents(asset?.props, component =>
+      component._component.endsWith("table")
+    )
+    const safeState = makePropSafe("rowSelection")
+    bindings = bindings.concat(
+      tables.map(table => ({
+        type: "context",
+        runtimeBinding: `${safeState}.${makePropSafe(table._id)}.${makePropSafe(
+          "selectedRows"
+        )}`,
+        readableBinding: `${table._instanceName}.Selected rows`,
+        category: "Selected rows",
+        icon: "ViewRow",
+      }))
+    )
+
+    // Add bindings for table blocks
+    let tableBlocks = findAllMatchingComponents(asset?.props, component =>
+      component._component.endsWith("tableblock")
+    )
+    bindings = bindings.concat(
+      tableBlocks.map(block => ({
+        type: "context",
+        runtimeBinding: `${safeState}.${makePropSafe(
+          block._id + "-table"
+        )}.${makePropSafe("selectedRows")}`,
+        readableBinding: `${block._instanceName}.Selected rows`,
+        category: "Selected rows",
+      }))
+    )
   }
   return bindings
 }
@@ -326,6 +499,9 @@ const getStateBindings = () => {
       type: "context",
       runtimeBinding: `${safeState}.${makePropSafe(key)}`,
       readableBinding: `State.${key}`,
+      category: "State",
+      icon: "AutomatedSegment",
+      display: { name: key },
     }))
   }
   return bindings
@@ -344,27 +520,79 @@ const getUrlBindings = asset => {
     }
   })
   const safeURL = makePropSafe("url")
-  return params.map(param => ({
+  const urlParamBindings = params.map(param => ({
     type: "context",
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
+    category: "URL",
+    icon: "RailTop",
+    display: { type: "string" },
   }))
+  const queryParamsBinding = {
+    type: "context",
+    runtimeBinding: makePropSafe("query"),
+    readableBinding: "Query params",
+    category: "URL",
+    icon: "RailTop",
+    display: { type: "object" },
+  }
+  return urlParamBindings.concat([queryParamsBinding])
+}
+
+const getRoleBindings = () => {
+  return (get(rolesStore) || []).map(role => {
+    return {
+      type: "context",
+      runtimeBinding: `trim "${role._id}"`,
+      readableBinding: `Role.${role.name}`,
+      category: "Role",
+      icon: "UserGroup",
+      display: { type: "string", name: role.name },
+    }
+  })
 }
 
 /**
- * Gets all bindable properties exposed in a button actions flow up until
- * the specified action ID.
+ * Gets all bindable properties exposed in an event action flow up until
+ * the specified action ID, as well as context provided for the action
+ * setting as a whole by the component.
  */
-export const getButtonContextBindings = (actions, actionId) => {
+export const getEventContextBindings = (
+  asset,
+  componentId,
+  settingKey,
+  actions,
+  actionId
+) => {
+  let bindings = []
+
+  // Check if any context bindings are provided by the component for this
+  // setting
+  const component = findComponent(asset.props, componentId)
+  const def = store.actions.components.getDefinition(component?._component)
+  const settings = getComponentSettings(component?._component)
+  const eventSetting = settings.find(setting => setting.key === settingKey)
+  if (eventSetting?.context?.length) {
+    eventSetting.context.forEach(contextEntry => {
+      bindings.push({
+        readableBinding: contextEntry.label,
+        runtimeBinding: `${makePropSafe("eventContext")}.${makePropSafe(
+          contextEntry.key
+        )}`,
+        category: component._instanceName,
+        icon: def.icon,
+      })
+    })
+  }
+
   // Get the steps leading up to this value
   const index = actions?.findIndex(action => action.id === actionId)
   if (index == null || index === -1) {
-    return []
+    return bindings
   }
   const prevActions = actions.slice(0, index)
 
   // Generate bindings for any steps which provide context
-  let bindings = []
   prevActions.forEach((action, idx) => {
     const def = ActionDefinitions.actions.find(
       x => x.name === action["##eventHandlerType"]
@@ -374,10 +602,13 @@ export const getButtonContextBindings = (actions, actionId) => {
         bindings.push({
           readableBinding: `Action ${idx + 1}.${contextValue.label}`,
           runtimeBinding: `actions.${idx}.${contextValue.value}`,
+          category: "Actions",
+          icon: "JourneyAction",
         })
       })
     }
   })
+
   return bindings
 }
 
@@ -418,7 +649,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     // Determine the entity which backs this datasource.
     // "provider" datasources are those targeting another data provider
     if (type === "provider") {
-      const component = findComponent(asset.props, datasource.providerId)
+      const component = findComponent(asset?.props, datasource.providerId)
       const source = getDatasourceForProvider(asset, component)
       return getSchemaForDatasource(asset, source, options)
     }
@@ -570,11 +801,22 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
  * Builds a form schema given a form component.
  * A form schema is a schema of all the fields nested anywhere within a form.
  */
-const buildFormSchema = component => {
+export const buildFormSchema = component => {
   let schema = {}
   if (!component) {
     return schema
   }
+
+  // If this is a form block, simply use the fields setting
+  if (component._component.endsWith("formblock")) {
+    let schema = {}
+    component.fields?.forEach(field => {
+      schema[field] = { type: "string" }
+    })
+    return schema
+  }
+
+  // Otherwise find all field component children
   const settings = getComponentSettings(component._component)
   const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")
@@ -597,14 +839,9 @@ const buildFormSchema = component => {
  * in the app.
  */
 export const getAllStateVariables = () => {
-  // Get all component containing assets
-  let allAssets = []
-  allAssets = allAssets.concat(get(store).layouts || [])
-  allAssets = allAssets.concat(get(store).screens || [])
-
   // Find all button action settings in all components
   let eventSettings = []
-  allAssets.forEach(asset => {
+  getAllAssets().forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
       const settings = getComponentSettings(component._component)
       settings
@@ -613,6 +850,13 @@ export const getAllStateVariables = () => {
           eventSettings.push(component[setting.key])
         })
     })
+  })
+
+  // Add on load settings from screens
+  get(store).screens.forEach(screen => {
+    if (screen.onLoad) {
+      eventSettings.push(screen.onLoad)
+    }
   })
 
   // Extract all state keys from any "update state" actions in each setting
@@ -633,6 +877,15 @@ export const getAllStateVariables = () => {
     })
   })
   return Array.from(bindingSet)
+}
+
+export const getAllAssets = () => {
+  // Get all component containing assets
+  let allAssets = []
+  allAssets = allAssets.concat(get(store).layouts || [])
+  allAssets = allAssets.concat(get(store).screens || [])
+
+  return allAssets
 }
 
 /**
@@ -752,7 +1005,10 @@ const bindingReplacement = (
  * {{ literal [componentId] }}
  */
 const extractLiteralHandlebarsID = value => {
-  return value?.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
+  if (!value || typeof value !== "string") {
+    return null
+  }
+  return value.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
 }
 
 /**

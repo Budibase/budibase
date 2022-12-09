@@ -18,6 +18,15 @@ export const buildOtherEndpoints = API => ({
   },
 
   /**
+   * Gets the current system status.
+   */
+  getSystemStatus: async () => {
+    return await API.get({
+      url: "/api/system/status",
+    })
+  },
+
+  /**
    * Gets the list of available integrations.
    */
   getIntegrations: async () => {
@@ -30,9 +39,11 @@ export const buildOtherEndpoints = API => ({
    * Gets the version of the installed Budibase environment.
    */
   getBudibaseVersion: async () => {
-    return await API.get({
-      url: "/api/dev/version",
-    }).version
+    return (
+      await API.get({
+        url: "/api/dev/version",
+      })
+    ).version
   },
 
   /**
@@ -41,6 +52,16 @@ export const buildOtherEndpoints = API => ({
   getBasePermissions: async () => {
     return await API.get({
       url: "/api/permission/builtin",
+    })
+  },
+
+  /**
+   * Check if they are part of the budibase beta program.
+   */
+  checkBetaAccess: async email => {
+    return await API.get({
+      url: `/api/beta/access?email=${email}`,
+      external: true,
     })
   },
 })

@@ -5,8 +5,9 @@
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "api"
-  import { ModalContent, Select } from "@budibase/bbui"
+  import { ModalContent, Select, Link } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import { goto } from "@roxi/routify"
 
   export let row = {}
 
@@ -69,7 +70,11 @@
               .map(([key, error]) => ({ dataPath: key, message: error }))
               .flat()
           }
-        } else if (error.status === 400) {
+        } else if (error.status === 400 && response?.validationErrors) {
+          errors = Object.keys(response.validationErrors).map(field => ({
+            message: `${field} ${response.validationErrors[field][0]}`,
+          }))
+        } else {
           errors = [{ message: response?.message || "Unknown error" }]
         }
       } else {
@@ -87,6 +92,15 @@
   onConfirm={saveRow}
 >
   <ErrorsBox {errors} />
+  <!-- need to explain to the user the readonly fields -->
+  {#if !creating}
+    <div>
+      A user's email, role, first and last names cannot be changed from within
+      the app builder. Please go to the <Link
+        on:click={$goto("/builder/portal/manage/users")}>user portal</Link
+      > to do this.
+    </div>
+  {/if}
   <RowFieldControl
     meta={{ ...tableSchema.email, name: "Email" }}
     bind:value={row.email}

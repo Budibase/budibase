@@ -1,11 +1,14 @@
 SELECT 'CREATE DATABASE main'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'main')\gexec
+CREATE SCHEMA test;
+CREATE TYPE person_job AS ENUM ('qa', 'programmer', 'designer');
 CREATE TABLE Persons (
     PersonID SERIAL PRIMARY KEY,
     LastName varchar(255),
     FirstName varchar(255),
     Address varchar(255),
-    City varchar(255) DEFAULT 'Belfast'
+    City varchar(255) DEFAULT 'Belfast',
+    Type person_job
 );
 CREATE TABLE Tasks (
     TaskID SERIAL PRIMARY KEY,
@@ -35,8 +38,12 @@ CREATE TABLE Products_Tasks (
             REFERENCES Tasks(TaskID),
     PRIMARY KEY (ProductID, TaskID)
 );
-INSERT INTO Persons (FirstName, LastName, Address, City) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast');
-INSERT INTO Persons (FirstName, LastName, Address, City) Values ('John', 'Smith', '64 Updown Road', 'Dublin');
+CREATE TABLE test.table1 (
+  id SERIAL PRIMARY KEY,
+  Name varchar(255)
+);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast', 'qa');
+INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('John', 'Smith', '64 Updown Road', 'Dublin', 'programmer');
 INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (1, 2, 'assembling', TRUE);
 INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (2, 1, 'processing', FALSE);
 INSERT INTO Products (ProductName) VALUES ('Computers');
@@ -46,3 +53,4 @@ INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (1, 1);
 INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (2, 1);
 INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (3, 1);
 INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (1, 2);
+INSERT INTO test.table1 (Name) VALUES ('Test');

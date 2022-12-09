@@ -14,21 +14,15 @@ module PgMock {
   function Client() {}
 
   Client.prototype.query = query
+  Client.prototype.end = jest.fn(cb => {
+    if (cb) cb()
+  })
   Client.prototype.connect = jest.fn()
   Client.prototype.release = jest.fn()
 
-  function Pool() {}
-
   const on = jest.fn()
-  Pool.prototype.query = query
-  Pool.prototype.connect = jest.fn(() => {
-    // @ts-ignore
-    return new Client()
-  })
-  Pool.prototype.on = on
 
   pg.Client = Client
-  pg.Pool = Pool
   pg.queryMock = query
   pg.on = on
 

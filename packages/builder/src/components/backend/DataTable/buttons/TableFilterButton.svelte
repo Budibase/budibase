@@ -1,15 +1,17 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { ActionButton, Modal, ModalContent } from "@budibase/bbui"
-  import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
+  import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
 
   export let schema
   export let filters
+  export let disabled = false
 
   const dispatch = createEventDispatcher()
-  let modal
-  let tempValue = filters || []
 
+  let modal
+
+  $: tempValue = filters || []
   $: schemaFields = Object.values(schema || {})
 </script>
 
@@ -17,6 +19,7 @@
   icon="Filter"
   size="S"
   quiet
+  {disabled}
   on:click={modal.show}
   active={tempValue?.length > 0}
 >
@@ -32,8 +35,9 @@
     <div class="wrapper">
       <FilterDrawer
         allowBindings={false}
-        bind:filters={tempValue}
+        {filters}
         {schemaFields}
+        on:change={e => (tempValue = e.detail)}
       />
     </div>
   </ModalContent>

@@ -1,12 +1,10 @@
-require("../../tests/utilities/dbConfig")
-
+require("../../../tests")
 const { runMigrations, getMigrationsDoc } = require("../index")
-const CouchDB = require("../../db").getCouch()
+const { getDB } = require("../../db")
 const {
   StaticDatabases,
-} = require("../../db/utils")
+} = require("../../constants")
 
-Date.now = jest.fn(() => 1487076708000)
 let db
 
 describe("migrations", () => {
@@ -20,7 +18,7 @@ describe("migrations", () => {
   }]
 
   beforeEach(() => {
-    db = new CouchDB(StaticDatabases.GLOBAL.name)
+    db = getDB(StaticDatabases.GLOBAL.name)
   })
 
   afterEach(async () => {
@@ -29,7 +27,7 @@ describe("migrations", () => {
   })
 
   const migrate = () => {
-    return runMigrations(CouchDB, MIGRATIONS)
+    return runMigrations(MIGRATIONS)
   }
 
   it("should run a new migration", async () => {

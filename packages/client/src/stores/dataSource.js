@@ -54,9 +54,15 @@ export const createDataSourceStore = () => {
 
   // Invalidates a specific dataSource ID by refreshing all instances
   // which depend on data from that dataSource
-  const invalidateDataSource = async dataSourceId => {
+  const invalidateDataSource = async (dataSourceId, options) => {
     if (!dataSourceId) {
       return
+    }
+
+    // Merge default options
+    options = {
+      invalidateRelationships: false,
+      ...options,
     }
 
     // Emit this as a window event, so parent screens which are iframing us in
@@ -65,7 +71,7 @@ export const createDataSourceStore = () => {
     if (inModal) {
       window.parent.postMessage({
         type: "invalidate-datasource",
-        detail: { dataSourceId },
+        detail: { dataSourceId, options },
       })
     }
 
@@ -73,13 +79,14 @@ export const createDataSourceStore = () => {
 
     // Fetch related table IDs from table schema
     let schema
-    try {
-      const definition = await API.fetchTableDefinition(dataSourceId)
-      schema = definition?.schema
-    } catch (error) {
-      schema = null
+    if (options.invalidateRelationships) {
+      try {
+        const definition = await API.fetchTableDefinition(dataSourceId)
+        schema = definition?.schema
+      } catch (error) {
+        schema = null
+      }
     }
-
     if (schema) {
       Object.values(schema).forEach(fieldSchema => {
         if (

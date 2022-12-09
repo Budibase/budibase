@@ -10,14 +10,34 @@
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import RestAuthenticationBuilder from "./auth/RestAuthenticationBuilder.svelte"
   import ViewDynamicVariables from "./variables/ViewDynamicVariables.svelte"
+  import {
+    getRestBindings,
+    readableToRuntimeBinding,
+    runtimeToReadableMap,
+  } from "builderStore/dataBinding"
+  import { cloneDeep } from "lodash/fp"
 
   export let datasource
   export let queries
 
   let addHeader
+
+  let parsedHeaders = runtimeToReadableMap(
+    getRestBindings(),
+    cloneDeep(datasource?.config?.defaultHeaders)
+  )
+
+  const onDefaultHeaderUpdate = headers => {
+    const flatHeaders = cloneDeep(headers).reduce((acc, entry) => {
+      acc[entry.name] = readableToRuntimeBinding(getRestBindings(), entry.value)
+      return acc
+    }, {})
+
+    datasource.config.defaultHeaders = flatHeaders
+  }
 </script>
 
-<Divider size="S" />
+<Divider />
 <div class="section-header">
   <div class="badge">
     <Heading size="S">Headers</Heading>
@@ -30,9 +50,10 @@
 </Body>
 <KeyValueBuilder
   bind:this={addHeader}
-  bind:object={datasource.config.defaultHeaders}
-  on:change
+  bind:object={parsedHeaders}
+  on:change={evt => onDefaultHeaderUpdate(evt.detail)}
   noAddButton
+  bindings={getRestBindings()}
 />
 <div>
   <ActionButton icon="Add" on:click={() => addHeader.addEntry()}>
@@ -40,7 +61,7 @@
   </ActionButton>
 </div>
 
-<Divider size="S" />
+<Divider />
 <div class="section-header">
   <div class="badge">
     <Heading size="S">Authentication</Heading>
@@ -52,7 +73,7 @@
 </Body>
 <RestAuthenticationBuilder bind:configs={datasource.config.authConfigs} />
 
-<Divider size="S" />
+<Divider />
 <div class="section-header">
   <div class="badge">
     <Heading size="S">Variables</Heading>

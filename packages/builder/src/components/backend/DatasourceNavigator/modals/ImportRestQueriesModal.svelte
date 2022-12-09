@@ -7,12 +7,10 @@
     Layout,
     Tabs,
     Tab,
-    Input,
     Heading,
     TextArea,
     Dropzone,
   } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
   import { datasources, queries } from "stores/backend"
   import { writable } from "svelte/store"
 
@@ -73,11 +71,6 @@
       }
 
       notifications.success(`Imported successfully.`)
-      analytics.captureEvent(Events.QUERIES.REST.IMPORTED, {
-        importType: lastTouched,
-        newDatasource: createDatasource,
-      })
-
       return true
     } catch (error) {
       notifications.error("Error importing queries")
@@ -98,15 +91,16 @@
     <Body size="XS"
       >Import your rest collection using one of the options below</Body
     >
-    <Tabs selected="Link">
-      <Tab title="Link">
+    <Tabs selected="File">
+      <!-- Commenting until nginx csp issue resolved -->
+      <!-- <Tab title="Link">
         <Input
           bind:value={$data.url}
           on:change={() => (lastTouched = "url")}
           label="Enter a URL"
           placeholder="e.g. https://petstore.swagger.io/v2/swagger.json"
         />
-      </Tab>
+      </Tab> -->
       <Tab title="File">
         <Dropzone
           gallery={false}
@@ -115,7 +109,14 @@
             $data.file = e.detail?.[0]
             lastTouched = "file"
           }}
-          fileTags={["OpenAPI 2.0", "Swagger 2.0", "cURL", "YAML", "JSON"]}
+          fileTags={[
+            "OpenAPI 3.0",
+            "OpenAPI 2.0",
+            "Swagger 2.0",
+            "cURL",
+            "YAML",
+            "JSON",
+          ]}
           maximum={1}
         />
       </Tab>

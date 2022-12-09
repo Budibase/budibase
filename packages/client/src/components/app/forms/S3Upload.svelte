@@ -10,6 +10,7 @@
   export let label
   export let disabled = false
   export let validation
+  export let onChange
 
   let fieldState
   let fieldApi
@@ -81,7 +82,17 @@
       loading = false
       return res
     } catch (error) {
-      notificationStore.actions.error(`Error uploading file: ${error}`)
+      notificationStore.actions.error(
+        `Error uploading file: ${error?.message || error}`
+      )
+      loading = false
+    }
+  }
+
+  const handleChange = e => {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
+      onChange({ value: e.detail })
     }
   }
 
@@ -110,9 +121,7 @@
         value={fieldState.value}
         disabled={loading || fieldState.disabled}
         error={fieldState.error}
-        on:change={e => {
-          fieldApi.setValue(e.detail)
-        }}
+        on:change={handleChange}
         {processFiles}
         {handleFileTooLarge}
         maximum={1}

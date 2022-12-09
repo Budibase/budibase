@@ -7,6 +7,7 @@ const {
   encodeJSBinding,
   doesContainString,
   disableEscaping,
+  findHBSBlocks,
 } = require("../src/index.cjs")
 
 describe("Test that the string processing works correctly", () => {
@@ -105,6 +106,16 @@ describe("Test that the object processing works correctly", () => {
   })
 })
 
+describe("check returning objects", () => {
+  it("should handle an array of objects", async () => {
+    const json = [{a: 1},{a: 2}]
+    const output = await processString("{{ testing }}", {
+      testing: json
+    })
+    expect(output).toEqual(JSON.stringify(json))
+  })
+})
+
 describe("check the utility functions", () => {
   it("should return false for an invalid template string", () => {
     const valid = isValid("{{ table1.thing prop }}")
@@ -197,6 +208,16 @@ describe("check that disabling escaping function works", () => {
 
   it("should work with multiple escaped", () => {
     expect(disableEscaping("{{ name }} welcome to {{ name }}")).toEqual("{{{ name }}} welcome to {{{ name }}}")
+  })
+})
+
+describe("check find hbs blocks function", () => {
+  it("should find none", () => {
+    expect(findHBSBlocks("hello there")).toEqual([])
+  })
+
+  it("should find two", () => {
+    expect(findHBSBlocks("{{ hello }} there {{{ name }}}")).toEqual(["{{ hello }}", "{{{ name }}}"])
   })
 })
 

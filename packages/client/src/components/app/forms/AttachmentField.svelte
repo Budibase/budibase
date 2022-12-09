@@ -8,6 +8,8 @@
   export let disabled = false
   export let validation
   export let extensions
+  export let onChange
+  export let maximum = undefined
 
   let fieldState
   let fieldApi
@@ -21,6 +23,12 @@
       `Files cannot exceed ${
         fileSizeLimit / BYTES_IN_MB
       } MB. Please try again with smaller files.`
+    )
+  }
+
+  const handleTooManyFiles = fileLimit => {
+    notificationStore.actions.warning(
+      `Please select a maximum of ${fileLimit} files.`
     )
   }
 
@@ -38,6 +46,24 @@
       return []
     }
   }
+
+  const deleteAttachments = async fileList => {
+    try {
+      return await API.deleteAttachments({
+        keys: fileList,
+        tableId: formContext?.dataSource?.tableId,
+      })
+    } catch (error) {
+      return []
+    }
+  }
+
+  const handleChange = e => {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
+      onChange({ value: e.detail })
+    }
+  }
 </script>
 
 <Field
@@ -50,17 +76,26 @@
   bind:fieldApi
   defaultValue={[]}
 >
-  {#if fieldState}
-    <CoreDropzone
-      value={fieldState.value}
-      disabled={fieldState.disabled}
-      error={fieldState.error}
-      on:change={e => {
-        fieldApi.setValue(e.detail)
-      }}
-      {processFiles}
-      {handleFileTooLarge}
-      {extensions}
-    />
-  {/if}
+  <div class="minHeightWrapper">
+    {#if fieldState}
+      <CoreDropzone
+        value={fieldState.value}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        on:change={handleChange}
+        {processFiles}
+        {deleteAttachments}
+        {handleFileTooLarge}
+        {handleTooManyFiles}
+        {maximum}
+        {extensions}
+      />
+    {/if}
+  </div>
 </Field>
+
+<style>
+  .minHeightWrapper {
+    min-height: 220px;
+  }
+</style>

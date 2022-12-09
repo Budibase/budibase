@@ -18,14 +18,30 @@
   export let meta
   export let value = defaultValue || (meta.type === "boolean" ? false : "")
   export let readonly
+  export let error
+
+  const resolveTimeStamp = timestamp => {
+    if (!timestamp) {
+      return null
+    }
+    let maskedDate = new Date(`0-${timestamp}`)
+    if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
+      return maskedDate
+    } else {
+      return null
+    }
+  }
 
   $: stringVal =
     typeof value === "object" ? JSON.stringify(value, null, 2) : value
   $: type = meta?.type
   $: label = meta.name ? capitalise(meta.name) : ""
+
+  const timeStamp = resolveTimeStamp(value)
+  const isTimeStamp = !!timeStamp || meta?.timeOnly
 </script>
 
-{#if type === "options"}
+{#if type === "options" && meta.constraints.inclusion.length !== 0}
   <Select
     {label}
     data-cy="{meta.name}-select"
@@ -34,20 +50,32 @@
     sort
   />
 {:else if type === "datetime"}
-  <DatePicker {label} bind:value />
+  <DatePicker
+    {error}
+    {label}
+    timeOnly={isTimeStamp}
+    enableTime={!meta?.dateOnly}
+    ignoreTimezones={meta?.ignoreTimezones}
+    bind:value
+  />
 {:else if type === "attachment"}
-  <Dropzone {label} bind:value />
+  <Dropzone {label} {error} bind:value />
 {:else if type === "boolean"}
-  <Toggle text={label} bind:value data-cy="{meta.name}-input" />
-{:else if type === "array"}
-  <Multiselect bind:value {label} options={meta.constraints.inclusion} />
+  <Toggle text={label} {error} bind:value data-cy="{meta.name}-input" />
+{:else if type === "array" && meta.constraints.inclusion.length !== 0}
+  <Multiselect
+    bind:value
+    {error}
+    {label}
+    options={meta.constraints.inclusion}
+  />
 {:else if type === "link"}
-  <LinkedRowSelector bind:linkedRows={value} schema={meta} />
+  <LinkedRowSelector {error} bind:linkedRows={value} schema={meta} />
 {:else if type === "longform"}
   {#if meta.useRichText}
-    <RichTextField {label} height="150px" bind:value />
+    <RichTextField {error} {label} height="150px" bind:value />
   {:else}
-    <TextArea {label} height="150px" bind:value />
+    <TextArea {error} {label} height="150px" bind:value />
   {/if}
 {:else if type === "json"}
   <Label>{label}</Label>
@@ -56,12 +84,14 @@
     mode="json"
     on:change={({ detail }) => (value = detail.value)}
     value={stringVal}
+    {error}
   />
 {:else}
   <Input
     {label}
     data-cy="{meta.name}-input"
     {type}
+    {error}
     bind:value
     disabled={readonly}
   />

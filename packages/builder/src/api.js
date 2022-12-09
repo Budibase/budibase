@@ -22,9 +22,6 @@ export const API = createAPIClient({
   onError: error => {
     const { url, message, status, method, handled } = error || {}
 
-    // Log all API errors to Sentry
-    // analytics.captureException(error)
-
     // Log any errors that we haven't manually handled
     if (!handled) {
       console.error("Unhandled error from API client", error)

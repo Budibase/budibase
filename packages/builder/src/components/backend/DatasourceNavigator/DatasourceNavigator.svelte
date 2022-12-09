@@ -1,48 +1,72 @@
 <script>
-  import { onMount } from "svelte"
-  import { get } from "svelte/store"
-  import { goto, params } from "@roxi/routify"
-  import { BUDIBASE_INTERNAL_DB } from "constants"
+  import { goto, isActive, params } from "@roxi/routify"
+  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import { database, datasources, queries, tables, views } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
-  import { customQueryIconText, customQueryIconColor } from "helpers/data/utils"
-  import ICONS from "./icons"
-  import { notifications } from "@budibase/bbui"
+  import {
+    customQueryIconText,
+    customQueryIconColor,
+    customQueryText,
+  } from "helpers/data/utils"
+  import IntegrationIcon from "./IntegrationIcon.svelte"
 
   let openDataSources = []
-  $: enrichedDataSources = Array.isArray($datasources.list)
-    ? $datasources.list.map(datasource => {
-        const selected = $datasources.selected === datasource._id
-        const open = openDataSources.includes(datasource._id)
-        const containsSelected = containsActiveEntity(datasource)
-        return {
-          ...datasource,
-          selected,
-          open: selected || open || containsSelected,
-        }
-      })
-    : []
+  $: enrichedDataSources = enrichDatasources(
+    $datasources,
+    $params,
+    $isActive,
+    $tables,
+    $queries,
+    $views
+  )
   $: openDataSource = enrichedDataSources.find(x => x.open)
   $: {
-    // Ensure the open data source is always included in the list of open
-    // data sources
+    // Ensure the open datasource is always actually open
     if (openDataSource) {
       openNode(openDataSource)
     }
   }
 
-  function selectDatasource(datasource) {
-    openNode(datasource)
-    datasources.select(datasource._id)
-    $goto(`./datasource/${datasource._id}`)
+  const enrichDatasources = (
+    datasources,
+    params,
+    isActive,
+    tables,
+    queries,
+    views
+  ) => {
+    if (!datasources?.list?.length) {
+      return []
+    }
+    return datasources.list.map(datasource => {
+      const selected =
+        isActive("./datasource") &&
+        datasources.selectedDatasourceId === datasource._id
+      const open = openDataSources.includes(datasource._id)
+      const containsSelected = containsActiveEntity(
+        datasource,
+        params,
+        isActive,
+        tables,
+        queries,
+        views
+      )
+      const onlySource = datasources.list.length === 1
+      return {
+        ...datasource,
+        selected,
+        containsSelected,
+        open: selected || open || containsSelected || onlySource,
+      }
+    })
   }
 
-  function onClickQuery(query) {
-    queries.select(query)
-    $goto(`./datasource/${query.datasourceId}/${query._id}`)
+  function selectDatasource(datasource) {
+    openNode(datasource)
+    $goto(`./datasource/${datasource._id}`)
   }
 
   function closeNode(datasource) {
@@ -64,19 +88,37 @@
     }
   }
 
-  onMount(async () => {
-    try {
-      await datasources.fetch()
-      await queries.fetch()
-    } catch (error) {
-      notifications.error("Error fetching datasources and queries")
-    }
-  })
-
-  const containsActiveEntity = datasource => {
-    // If we're view a query then the data source ID is in the URL
-    if ($params.selectedDatasource === datasource._id) {
+  const containsActiveEntity = (
+    datasource,
+    params,
+    isActive,
+    tables,
+    queries,
+    views
+  ) => {
+    // Check for being on a datasource page
+    if (params.datasourceId === datasource._id) {
       return true
+    }
+
+    // Check for hardcoded datasource edge cases
+    if (
+      isActive("./datasource/bb_internal") &&
+      datasource._id === "bb_internal"
+    ) {
+      return true
+    }
+    if (
+      isActive("./datasource/datasource_internal_bb_default") &&
+      datasource._id === "datasource_internal_bb_default"
+    ) {
+      return true
+    }
+
+    // Check for a matching query
+    if (params.queryId) {
+      const query = queries.list?.find(q => q._id === params.queryId)
+      return datasource._id === query?.datasourceId
     }
 
     // If there are no entities it can't contain anything
@@ -91,13 +133,13 @@
     }
 
     // Check for a matching table
-    if ($params.selectedTable) {
-      const selectedTable = get(tables).selected?._id
+    if (params.tableId) {
+      const selectedTable = tables.selected?._id
       return options.find(x => x._id === selectedTable) != null
     }
 
     // Check for a matching view
-    const selectedView = get(views).selected?.name
+    const selectedView = views.selected?.name
     const table = options.find(table => {
       return table.views?.[selectedView] != null
     })
@@ -112,19 +154,20 @@
         border={idx > 0}
         text={datasource.name}
         opened={datasource.open}
-        selected={datasource.selected}
+        selected={$isActive("./datasource/:datasourceId") &&
+          datasource.selected}
         withArrow={true}
         on:click={() => selectDatasource(datasource)}
         on:iconClick={() => toggleNode(datasource)}
       >
         <div class="datasource-icon" slot="icon">
-          <svelte:component
-            this={ICONS[datasource.source]}
-            height="18"
-            width="18"
+          <IntegrationIcon
+            integrationType={datasource.source}
+            schema={datasource.schema}
+            size="18"
           />
         </div>
-        {#if datasource._id !== BUDIBASE_INTERNAL_DB}
+        {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
           <EditDatasourcePopover {datasource} />
         {/if}
       </NavItem>
@@ -137,12 +180,12 @@
             icon="SQLQuery"
             iconText={customQueryIconText(datasource, query)}
             iconColor={customQueryIconColor(datasource, query)}
-            text={query.name}
-            opened={$queries.selected === query._id}
-            selected={$queries.selected === query._id}
-            on:click={() => onClickQuery(query)}
+            text={customQueryText(datasource, query)}
+            selected={$isActive("./query/:queryId") &&
+              $queries.selectedQueryId === query._id}
+            on:click={() => $goto(`./query/${query._id}`)}
           >
-            <EditQueryPopover {query} {onClickQuery} />
+            <EditQueryPopover {query} />
           </NavItem>
         {/each}
       {/if}
@@ -151,8 +194,12 @@
 {/if}
 
 <style>
+  .hierarchy-items-container {
+    margin: 0 calc(-1 * var(--spacing-xl));
+  }
   .datasource-icon {
-    margin-right: 3px;
-    padding-top: 3px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 24px;
   }
 </style>

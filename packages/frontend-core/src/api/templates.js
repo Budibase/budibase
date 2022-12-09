@@ -29,7 +29,7 @@ export const buildTemplateEndpoints = API => ({
    */
   getAppTemplates: async () => {
     return await API.get({
-      url: "/api/templates?type=app",
+      url: "/api/templates",
     })
   },
 })

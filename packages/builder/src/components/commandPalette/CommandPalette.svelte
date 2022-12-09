@@ -11,12 +11,10 @@
   import { API } from "api"
   import analytics, { Events } from "analytics"
   import { goto } from "@roxi/routify"
-  import { store, allScreens, automationStore } from "builderStore"
+  import { store, allScreens, automationStore, themeStore } from "builderStore"
   import { datasources, queries } from "stores/backend"
-  import { themeStore } from "../../builderStore"
 
   export let close
-  export let previewApp
 
   const commands = [
     {
@@ -52,7 +50,7 @@
       name: "App",
       description: "",
       icon: "Play",
-      action: previewApp,
+      action: () => window.open(`/${store.appId}`),
     },
     {
       type: "Publish",

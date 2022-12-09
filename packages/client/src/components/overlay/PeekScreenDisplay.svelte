@@ -20,8 +20,8 @@
   let listenersAttached = false
 
   const proxyInvalidation = event => {
-    const { dataSourceId } = event.detail
-    dataSourceStore.actions.invalidateDataSource(dataSourceId)
+    const { dataSourceId, options } = event.detail
+    dataSourceStore.actions.invalidateDataSource(dataSourceId, options)
   }
 
   const proxyNotification = event => {
@@ -45,6 +45,9 @@
       },
       [MessageTypes.CLOSE_SCREEN_MODAL]: () => {
         peekStore.actions.hidePeek()
+        if (message.data?.url) {
+          routeStore.actions.navigate(message.data.url)
+        }
       },
       [MessageTypes.INVALIDATE_DATASOURCE]: () => {
         proxyInvalidation(message.data)

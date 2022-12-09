@@ -1,5 +1,4 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
   import GoogleLogo from "assets/google-logo.png"
   import { store } from "builderStore"
   import { auth } from "stores/portal"
@@ -10,7 +9,7 @@
   $: tenantId = $auth.tenantId
 </script>
 
-<ActionButton
+<button
   on:click={async () => {
     let ds = datasource
     if (!ds) {
@@ -22,26 +21,32 @@
     )
   }}
 >
-  <div class="inner">
-    <img src={GoogleLogo} alt="google icon" />
-    <p>Sign in with Google</p>
-  </div>
-</ActionButton>
+  <img src={GoogleLogo} alt="google icon" />
+  <p>Sign in with Google</p>
+</button>
 
 <style>
-  .inner {
+  button {
+    width: 195px;
+    height: 40px;
+    font-size: 14px;
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
-    padding-top: var(--spacing-xs);
-    padding-bottom: var(--spacing-xs);
+    font-weight: 500;
+    background: #4285f4;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 2px;
   }
-  .inner img {
+
+  img {
+    border-radius: 2px;
     width: 18px;
-    margin: 3px 10px 3px 3px;
-  }
-  .inner p {
-    margin: 0;
+    margin-right: 11px;
+    background: #ffffff;
+    padding: 10px;
   }
 </style>

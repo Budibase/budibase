@@ -1,5 +1,6 @@
 export const FieldTypes = {
   STRING: "string",
+  BARCODEQR: "barcodeqr",
   LONGFORM: "longform",
   OPTIONS: "options",
   NUMBER: "number",
@@ -21,6 +22,7 @@ export const UnsortableTypes = [
 
 export const ActionTypes = {
   ValidateForm: "ValidateForm",
+  UpdateFieldValue: "UpdateFieldValue",
   RefreshDatasource: "RefreshDatasource",
   AddDataProviderQueryExtension: "AddDataProviderQueryExtension",
   RemoveDataProviderQueryExtension: "RemoveDataProviderQueryExtension",
@@ -28,3 +30,6 @@ export const ActionTypes = {
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
 }
+
+export const DNDPlaceholderID = "dnd-placeholder"
+export const ScreenslotType = "screenslot"

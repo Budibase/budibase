@@ -2,6 +2,8 @@
   import { onMount } from "svelte"
   import { ModalContent, Layout, Select, Body, Input } from "@budibase/bbui"
   import { AUTH_TYPE_LABELS, AUTH_TYPES } from "./authTypes"
+  import BindableCombobox from "components/common/bindings/BindableCombobox.svelte"
+  import { getAuthBindings } from "builderStore/dataBinding"
 
   export let configs
   export let currentConfig
@@ -203,11 +205,22 @@
       />
     {/if}
     {#if form.type === AUTH_TYPES.BEARER}
-      <Input
+      <BindableCombobox
         label="Token"
-        bind:value={form.bearer.token}
-        on:change={onFieldChange}
-        on:blur={() => (blurred.bearer.token = true)}
+        value={form.bearer.token}
+        bindings={getAuthBindings()}
+        on:change={e => {
+          form.bearer.token = e.detail
+          onFieldChange()
+        }}
+        on:blur={() => {
+          blurred.bearer.token = true
+          onFieldChange()
+        }}
+        allowJS={false}
+        placeholder="Token"
+        appendBindingsAsOptions={true}
+        drawerEnabled={false}
         error={blurred.bearer.token ? errors.bearer.token : null}
       />
     {/if}

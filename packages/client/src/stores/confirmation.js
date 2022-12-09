@@ -4,30 +4,36 @@ const initialState = {
   showConfirmation: false,
   title: null,
   text: null,
-  callback: null,
+  onConfirm: null,
+  onCancel: null,
 }
 
 const createConfirmationStore = () => {
   const store = writable(initialState)
 
-  const showConfirmation = (title, text, callback) => {
+  const showConfirmation = (title, text, onConfirm, onCancel) => {
     store.set({
       showConfirmation: true,
       title,
       text,
-      callback,
+      onConfirm,
+      onCancel,
     })
   }
   const confirm = async () => {
     const state = get(store)
-    if (!state.showConfirmation || !state.callback) {
+    if (!state.showConfirmation || !state.onConfirm) {
       return
     }
     store.set(initialState)
-    await state.callback()
+    await state.onConfirm()
   }
   const cancel = () => {
+    const state = get(store)
     store.set(initialState)
+    if (state.onCancel) {
+      state.onCancel()
+    }
   }
 
   return {

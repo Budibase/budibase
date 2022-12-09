@@ -6,12 +6,26 @@ const createAuthStore = () => {
 
   // Fetches the user object if someone is logged in and has reloaded the page
   const fetchUser = async () => {
+    let globalSelf = null
+    let appSelf = null
+
+    // First try and get the global user, to see if we are logged in at all
     try {
-      const user = await API.fetchSelf()
-      store.set(user)
+      globalSelf = await API.fetchBuilderSelf()
     } catch (error) {
       store.set(null)
+      return
     }
+
+    // Then try and get the user for this app to provide via context
+    try {
+      appSelf = await API.fetchSelf()
+    } catch (error) {
+      // Swallow
+    }
+
+    // Use the app self if present, otherwise fallback to the global self
+    store.set(appSelf || globalSelf || null)
   }
 
   const logOut = async () => {

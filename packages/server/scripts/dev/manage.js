@@ -2,10 +2,11 @@
 const compose = require("docker-compose")
 const path = require("path")
 const fs = require("fs")
+const isWsl = require("is-wsl")
 const { processStringSync } = require("@budibase/string-templates")
 
 function isLinux() {
-  return process.platform !== "darwin" && process.platform !== "win32"
+  return !isWsl && process.platform !== "darwin" && process.platform !== "win32"
 }
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
@@ -41,6 +42,8 @@ async function init() {
       REDIS_URL: "localhost:6379",
       WORKER_URL: "http://localhost:4002",
       INTERNAL_API_KEY: "budibase",
+      ACCOUNT_PORTAL_URL: "http://localhost:10001",
+      ACCOUNT_PORTAL_API_KEY: "budibase",
       JWT_SECRET: "testsecret",
       REDIS_PASSWORD: "budibase",
       MINIO_ACCESS_KEY: "budibase",
@@ -51,6 +54,12 @@ async function init() {
       DISABLE_ACCOUNT_PORTAL: "",
       MULTI_TENANCY: "",
       DISABLE_THREADING: 1,
+      SERVICE: "app-service",
+      DEPLOYMENT_ENVIRONMENT: "development",
+      BB_ADMIN_USER_EMAIL: "",
+      BB_ADMIN_USER_PASSWORD: "",
+      PLUGINS_DIR: "",
+      TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {
@@ -64,6 +73,9 @@ async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
   await init()
   await compose.upAll(CONFIG)
+
+  // We always ensure to restart the proxy service in case of nginx conf changes
+  await compose.restartOne("proxy-service", CONFIG)
 }
 
 async function down() {

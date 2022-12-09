@@ -1,4 +1,4 @@
-const { createUserEmailView } = require("@budibase/backend-core/db")
+import { db as dbCore } from "@budibase/backend-core"
 
 /**
  * Date:
@@ -8,6 +8,6 @@ const { createUserEmailView } = require("@budibase/backend-core/db")
  * Recreate the user email view to include latest changes i.e. lower casing the email address
  */
 
-export const run = async (db: any) => {
-  await createUserEmailView(db)
+export const run = async () => {
+  await dbCore.createNewUserEmailView()
 }

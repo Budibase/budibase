@@ -8,6 +8,8 @@
   export let id = null
   export let updateOnChange = true
   export let quiet = false
+  export let inputRef
+
   const dispatch = createEventDispatcher()
   let focus = false
 
@@ -68,6 +70,7 @@
       type="search"
       class="spectrum-Textfield-input spectrum-Search-input"
       autocomplete="off"
+      bind:this={inputRef}
     />
   </div>
   <button

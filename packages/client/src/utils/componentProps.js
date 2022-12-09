@@ -22,7 +22,7 @@ export const propsAreSame = (a, b) => {
  * Enriches component props.
  * Data bindings are enriched, and button actions are enriched.
  */
-export const enrichProps = (props, context) => {
+export const enrichProps = (props, context, settingsDefinitionMap) => {
   // Create context of all bindings and data contexts
   // Duplicate the closest context as "data" which the builder requires
   const totalContext = {
@@ -38,7 +38,7 @@ export const enrichProps = (props, context) => {
   let normalProps = { ...props }
   let actionProps = {}
   Object.keys(normalProps).forEach(prop => {
-    if (prop?.toLowerCase().includes("onclick")) {
+    if (settingsDefinitionMap?.[prop]?.type === "event") {
       actionProps[prop] = normalProps[prop]
       delete normalProps[prop]
     }
@@ -61,7 +61,7 @@ export const enrichProps = (props, context) => {
   // Conditions
   if (enrichedProps._conditions?.length) {
     enrichedProps._conditions.forEach((condition, idx) => {
-      if (condition.setting?.toLowerCase().includes("onclick")) {
+      if (settingsDefinitionMap?.[condition.setting]?.type === "event") {
         // Use the original condition action value to enrich it to a button
         // action
         condition.settingValue = enrichButtonActions(
@@ -106,4 +106,22 @@ export const propsUseBinding = (props, bindingKey) => {
     }
   }
   return false
+}
+
+/**
+ * Gets the definition of this component's settings from the manifest
+ */
+export const getSettingsDefinition = definition => {
+  if (!definition) {
+    return []
+  }
+  let settings = []
+  definition.settings?.forEach(setting => {
+    if (setting.section) {
+      settings = settings.concat(setting.settings || [])
+    } else {
+      settings.push(setting)
+    }
+  })
+  return settings
 }

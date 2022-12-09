@@ -13,6 +13,8 @@
   export let icon = undefined
   export let active = false
   export let tooltip = undefined
+  export let dataCy
+  export let newStyles = false
 
   let showTooltip = false
 </script>
@@ -24,9 +26,11 @@
   class:spectrum-Button--warning={warning}
   class:spectrum-Button--overBackground={overBackground}
   class:spectrum-Button--quiet={quiet}
+  class:new-styles={newStyles}
   class:active
   class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
   {disabled}
+  data-cy={dataCy}
   on:click|preventDefault
   on:mouseover={() => (showTooltip = true)}
   on:focus={() => (showTooltip = true)}
@@ -90,5 +94,21 @@
   .tooltip-icon {
     padding-left: var(--spacing-m);
     line-height: 0;
+  }
+  .spectrum-Button--primary.new-styles {
+    background: var(--spectrum-global-color-gray-800);
+    border-color: transparent;
+    color: var(--spectrum-global-color-gray-50);
+  }
+  .spectrum-Button--primary.new-styles:hover {
+    background: var(--spectrum-global-color-gray-900);
+  }
+  .spectrum-Button--secondary.new-styles {
+    background: var(--spectrum-global-color-gray-200);
+    border-color: transparent;
+    color: var(--spectrum-global-color-gray-900);
+  }
+  .spectrum-Button--secondary.new-styles:hover {
+    background: var(--spectrum-global-color-gray-300);
   }
 </style>

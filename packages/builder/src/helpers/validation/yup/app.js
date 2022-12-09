@@ -35,13 +35,14 @@ export const url = (validation, { apps, currentApp } = { apps: [] }) => {
   validation.addValidator(
     "url",
     string()
+      .trim()
       .nullable()
-      .matches(APP_URL_REGEX, "App URL must not contain spaces")
+      .required("Your application must have a url")
+      .matches(APP_URL_REGEX, "Please enter a valid url")
       .test(
         "non-existing-app-url",
         "Another app with the same URL already exists",
         value => {
-          // url is nullable
           if (!value) {
             return true
           }

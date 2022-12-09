@@ -3,3 +3,6 @@ docker-compose.yaml
 nginx.conf
 build/
 docker-error.log
+envoy.yaml
+*.tar.gz
+prebuilds/

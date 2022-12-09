@@ -1,24 +1,39 @@
 <script>
   import { fade } from "svelte/transition"
+  import { Icon } from "@budibase/bbui"
 
   export let top
   export let left
   export let width
   export let height
   export let text
+  export let icon
   export let color
   export let zIndex
+  export let componentId
   export let transition = false
   export let line = false
   export let alignRight = false
+  export let showResizeAnchors = false
 
-  $: flipped = top < 20
+  const AnchorSides = [
+    "right",
+    "left",
+    "top",
+    "bottom",
+    "bottom-right",
+    "bottom-left",
+    "top-right",
+    "top-left",
+  ]
+
+  $: flipped = top < 24
 </script>
 
 <div
   in:fade={{
-    delay: transition ? 130 : 0,
-    duration: transition ? 130 : 0,
+    delay: transition ? 100 : 0,
+    duration: transition ? 100 : 0,
   }}
   class="indicator"
   class:flipped
@@ -26,14 +41,34 @@
   style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
   class:withText={!!text}
 >
-  {#if text}
-    <div class="text" class:flipped class:line class:right={alignRight}>
-      {text}
+  {#if text || icon}
+    <div class="label" class:flipped class:line class:right={alignRight}>
+      {#if icon}
+        <Icon name={icon} size="S" color="white" />
+      {/if}
+      {#if text}
+        <div class="text">
+          {text}
+        </div>
+      {/if}
     </div>
+  {/if}
+  {#if showResizeAnchors}
+    {#each AnchorSides as side}
+      <div
+        draggable="true"
+        class="anchor {side}"
+        data-side={side}
+        data-id={componentId}
+      >
+        <div class="anchor-inner" />
+      </div>
+    {/each}
   {/if}
 </div>
 
 <style>
+  /* Indicator styles */
   .indicator {
     right: 0;
     position: absolute;
@@ -51,16 +86,16 @@
   .indicator.line {
     border-radius: 4px !important;
   }
-  .text {
+
+  /* Label styles */
+  .label {
     background-color: var(--color);
-    color: white;
     position: absolute;
     top: 0;
     left: -2px;
-    height: 20px;
-    padding: 0 8px 2px 8px;
+    height: 24px;
+    padding: 0 6px 0 6px;
     transform: translateY(-100%);
-    font-size: 11px;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
@@ -69,18 +104,90 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+    gap: 6px;
   }
-  .text.line {
+  .label.line {
     transform: translateY(-50%);
     border-radius: 4px;
   }
-  .text.flipped {
+  .label.flipped {
     border-radius: 4px;
     transform: translateY(0%);
-    top: -2px;
+    top: -1px;
   }
-  .text.right {
+  .label.right {
     right: -2px;
     left: auto;
+  }
+
+  /* Text styles */
+  .text {
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Icon styles */
+  .label :global(.spectrum-Icon + .text) {
+  }
+
+  /* Anchor */
+  .anchor {
+    --size: 24px;
+    position: absolute;
+    width: var(--size);
+    height: var(--size);
+    pointer-events: all;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+  }
+  .anchor-inner {
+    width: 12px;
+    height: 12px;
+    background: white;
+    border: 2px solid var(--color);
+    pointer-events: none;
+  }
+  .anchor.right {
+    right: calc(var(--size) / -2 - 1px);
+    top: calc(50% - var(--size) / 2);
+    cursor: e-resize;
+  }
+  .anchor.left {
+    left: calc(var(--size) / -2 - 1px);
+    top: calc(50% - var(--size) / 2);
+    cursor: w-resize;
+  }
+  .anchor.bottom {
+    left: calc(50% - var(--size) / 2 + 1px);
+    bottom: calc(var(--size) / -2 - 1px);
+    cursor: s-resize;
+  }
+  .anchor.top {
+    left: calc(50% - var(--size) / 2 + 1px);
+    top: calc(var(--size) / -2 - 1px);
+    cursor: n-resize;
+  }
+
+  .anchor.bottom-right {
+    right: calc(var(--size) / -2 - 1px);
+    bottom: calc(var(--size) / -2 - 1px);
+    cursor: se-resize;
+  }
+  .anchor.bottom-left {
+    left: calc(var(--size) / -2 - 1px);
+    bottom: calc(var(--size) / -2 - 1px);
+    cursor: sw-resize;
+  }
+  .anchor.top-right {
+    right: calc(var(--size) / -2 - 1px);
+    top: calc(var(--size) / -2 - 1px);
+    cursor: ne-resize;
+  }
+  .anchor.top-left {
+    left: calc(var(--size) / -2 - 1px);
+    top: calc(var(--size) / -2 - 1px);
+    cursor: nw-resize;
   }
 </style>

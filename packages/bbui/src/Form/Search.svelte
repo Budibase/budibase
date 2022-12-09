@@ -10,6 +10,7 @@
   export let disabled = false
   export let updateOnChange = true
   export let quiet = false
+  export let inputRef
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -25,6 +26,7 @@
     {value}
     {placeholder}
     {quiet}
+    bind:inputRef
     on:change={onChange}
     on:click
     on:input

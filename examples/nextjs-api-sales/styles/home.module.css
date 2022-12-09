@@ -1,0 +1,30 @@
+.container {
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  padding: 5rem 2rem 0;
+  align-items: center;
+  flex: 1 1 auto;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.tableSection {
+  padding: 2rem;
+  background: var(--bg-color);
+  width: 800px;
+  border-radius: 10px;
+}
+
+.table table {
+  width: 100%;
+}
+
+.tableSection h1 {
+  text-align: center;
+  color: black;
+}

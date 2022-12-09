@@ -1,4 +1,10 @@
 import { store } from "./index"
+import { Helpers } from "@budibase/bbui"
+import {
+  decodeJSBinding,
+  encodeJSBinding,
+  findHBSBlocks,
+} from "@budibase/string-templates"
 
 /**
  * Recursively searches for a specific component ID
@@ -137,7 +143,10 @@ export const getComponentSettings = componentType => {
   }
 
   // Ensure whole component name is used
-  if (!componentType.startsWith("@budibase")) {
+  if (
+    !componentType.startsWith("plugin/") &&
+    !componentType.startsWith("@budibase")
+  ) {
     componentType = `@budibase/standard-components/${componentType}`
   }
 
@@ -160,4 +169,64 @@ export const getComponentSettings = componentType => {
   componentSettingCache[componentType] = settings
 
   return settings
+}
+
+/**
+ * Randomises a components ID's, including all child component IDs, and also
+ * updates all data bindings to still be valid.
+ * This mutates the object in place.
+ * @param component the component to randomise
+ */
+export const makeComponentUnique = component => {
+  if (!component) {
+    return
+  }
+
+  // Generate a full set of component ID replacements in this tree
+  const idReplacements = []
+  const generateIdReplacements = (component, replacements) => {
+    const oldId = component._id
+    const newId = Helpers.uuid()
+    replacements.push([oldId, newId])
+    component._children?.forEach(x => generateIdReplacements(x, replacements))
+  }
+  generateIdReplacements(component, idReplacements)
+
+  // Replace all instances of this ID in HBS bindings
+  let definition = JSON.stringify(component)
+  idReplacements.forEach(([oldId, newId]) => {
+    definition = definition.replace(new RegExp(oldId, "g"), newId)
+  })
+
+  // Replace all instances of this ID in JS bindings
+  const bindings = findHBSBlocks(definition)
+  bindings.forEach(binding => {
+    // JSON.stringify will have escaped double quotes, so we need
+    // to account for that
+    let sanitizedBinding = binding.replace(/\\"/g, '"')
+
+    // Check if this is a valid JS binding
+    let js = decodeJSBinding(sanitizedBinding)
+    if (js != null) {
+      // Replace ID inside JS binding
+      idReplacements.forEach(([oldId, newId]) => {
+        js = js.replace(new RegExp(oldId, "g"), newId)
+      })
+
+      // Create new valid JS binding
+      let newBinding = encodeJSBinding(js)
+
+      // Replace escaped double quotes
+      newBinding = newBinding.replace(/"/g, '\\"')
+
+      // Insert new JS back into binding.
+      // A single string replace here is better than a regex as
+      // the binding contains special characters, and we only need
+      // to replace a single instance.
+      definition = definition.replace(binding, newBinding)
+    }
+  })
+
+  // Recurse on all children
+  return JSON.parse(definition)
 }

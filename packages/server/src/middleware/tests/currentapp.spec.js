@@ -1,10 +1,7 @@
+require("../../db").init()
 mockAuthWithNoCookie()
 mockWorker()
-
-jest.mock("@budibase/backend-core/db", () => ({
-  ...jest.requireActual("@budibase/backend-core/db"),
-  dbExists: () => true,
-}))
+mockUserGroups()
 
 function mockWorker() {
   jest.mock("../../utilities/workerRequests", () => ({
@@ -25,45 +22,75 @@ function mockReset() {
   mockWorker()
 }
 
-function mockAuthWithNoCookie() {
-  jest.resetModules()
-  mockWorker()
-  jest.mock("@budibase/backend-core/cache", () => ({
-    user: {
-      getUser: () => {
-        return {
-          _id: "us_uuid1",
-        }
+function mockUserGroups() {
+  jest.mock("@budibase/pro", () => ({
+    groups: {
+      getGroupRoleId: () => {
+        return "BASIC"
       },
     },
   }))
-  jest.mock("@budibase/backend-core/utils", () => ({
-    getAppId: jest.fn(),
-    setCookie: jest.fn(),
-    getCookie: jest.fn(),
-  }))
-  jest.mock("@budibase/backend-core/constants", () => ({
-    Cookies: {},
-  }))
+}
+
+function mockAuthWithNoCookie() {
+  jest.resetModules()
+  mockWorker()
+  jest.mock("@budibase/backend-core", () => {
+    const core = jest.requireActual("@budibase/backend-core")
+    return {
+      ...core,
+      db: {
+        ...core.db,
+        dbExists: () => true,
+      },
+      cache: {
+        user: {
+          getUser: async id => {
+            return {
+              _id: "us_uuid1",
+            }
+          },
+        },
+      },
+      utils: {
+        getAppIdFromCtx: jest.fn(),
+        setCookie: jest.fn(),
+        getCookie: jest.fn(),
+      },
+    }
+  })
 }
 
 function mockAuthWithCookie() {
   jest.resetModules()
   mockWorker()
-  jest.mock("@budibase/backend-core/utils", () => ({
-    getAppId: () => {
-      return "app_test"
-    },
-    setCookie: jest.fn(),
-    clearCookie: jest.fn(),
-    getCookie: () => ({appId: "app_different", roleId: "PUBLIC"}),
-  }))
-  jest.mock("@budibase/backend-core/constants", () => ({
-    Cookies: {
-      Auth: "auth",
-      CurrentApp: "currentapp",
-    },
-  }))
+  jest.mock("@budibase/backend-core", () => {
+    const core = jest.requireActual("@budibase/backend-core")
+    return {
+      ...core,
+      db: {
+        ...core.db,
+        dbExists: () => true,
+      },
+      utils: {
+        getAppIdFromCtx: () => {
+          return "app_test"
+        },
+        setCookie: jest.fn(),
+        clearCookie: jest.fn(),
+        getCookie: () => ({ appId: "app_different", roleId: "PUBLIC" }),
+      },
+      cache: {
+        user: {
+          getUser: async id => {
+            return {
+              _id: "us_uuid1",
+            }
+          },
+        },
+      },
+    }
+  })
 }
 
 class TestConfiguration {
@@ -73,7 +100,16 @@ class TestConfiguration {
 
     this.ctx = {
       next: this.next,
-      throw: this.throw
+      throw: this.throw,
+      request: {
+        body: {},
+        headers: {},
+      },
+      headers: {},
+      path: "",
+      cookies: {
+        set: jest.fn(),
+      }
     }
   }
 
@@ -86,6 +122,8 @@ class TestConfiguration {
 
   executeMiddleware() {
     // import as late as possible for mocks
+    jest.resetModules()
+    require("../../db").init()
     const currentAppMiddleware = require("../currentapp")
     return currentAppMiddleware(this.ctx, this.next)
   }
@@ -123,11 +161,11 @@ describe("Current app middleware", () => {
     async function checkExpected(setCookie) {
       config.setUser()
       await config.executeMiddleware()
-      let { setCookie: cookieFn } = require("@budibase/backend-core/utils")
+      let { utils } = require("@budibase/backend-core")
       if (setCookie) {
-        expect(cookieFn).toHaveBeenCalled()
+        expect(utils.setCookie).toHaveBeenCalled()
       } else {
-        expect(cookieFn).not.toHaveBeenCalled()
+        expect(utils.setCookie).not.toHaveBeenCalled()
       }
       expect(config.ctx.roleId).toEqual("PUBLIC")
       expect(config.ctx.user.role._id).toEqual("PUBLIC")
@@ -142,31 +180,63 @@ describe("Current app middleware", () => {
 
     it("should perform correct when no cookie exists", async () => {
       mockReset()
-      jest.mock("@budibase/backend-core/utils", () => ({
-        getAppId: () => {
-          return "app_test"
-        },
-        setCookie: jest.fn(),
-        getCookie: jest.fn(),
-      }))
-      jest.mock("@budibase/backend-core/constants", () => ({
-        Cookies: {},
-      }))
+      jest.mock("@budibase/backend-core", () => {
+        const core = jest.requireActual("@budibase/backend-core")
+        return {
+          ...core,
+          db: {
+            ...core.db,
+            dbExists: () => true,
+          },
+          utils: {
+            getAppIdFromCtx: () => {
+              return "app_test"
+            },
+            setCookie: jest.fn(),
+            getCookie: jest.fn(),
+          },
+          cache: {
+            user: {
+              getUser: async id => {
+                return {
+                  _id: "us_uuid1",
+                }
+              },
+            },
+          },
+        }
+      })
       await checkExpected(true)
     })
 
     it("lastly check what occurs when cookie doesn't need updated", async () => {
       mockReset()
-      jest.mock("@budibase/backend-core/utils", () => ({
-        getAppId: () => {
-          return "app_test"
-        },
-        setCookie: jest.fn(),
-        getCookie: () => ({appId: "app_test", roleId: "PUBLIC"}),
-      }))
-      jest.mock("@budibase/backend-core/constants", () => ({
-        Cookies: {},
-      }))
+      jest.mock("@budibase/backend-core", () => {
+        const core = jest.requireActual("@budibase/backend-core")
+        return {
+          ...core,
+          db: {
+            ...core.db,
+            dbExists: () => true,
+          },
+          utils: {
+            getAppIdFromCtx: () => {
+              return "app_test"
+            },
+            setCookie: jest.fn(),
+            getCookie: () => ({ appId: "app_test", roleId: "PUBLIC" }),
+          },
+          cache: {
+            user: {
+              getUser: async id => {
+                return {
+                  _id: "us_uuid1",
+                }
+              },
+            },
+          },
+        }
+      })
       await checkExpected(false)
     })
   })

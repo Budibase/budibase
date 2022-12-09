@@ -16,17 +16,48 @@
   export let animate
   export let yAxisUnits
 
-  $: options = setUpChart(dataProvider)
+  $: options = setUpChart(
+    title,
+    dataProvider,
+    dateColumn,
+    openColumn,
+    highColumn,
+    lowColumn,
+    closeColumn,
+    xAxisLabel,
+    yAxisLabel,
+    height,
+    width,
+    animate,
+    yAxisUnits
+  )
 
-  // Fetch data on mount
-  const setUpChart = provider => {
+  const setUpChart = (
+    title,
+    dataProvider,
+    dateColumn,
+    openColumn,
+    highColumn,
+    lowColumn,
+    closeColumn,
+    xAxisLabel,
+    yAxisLabel,
+    height,
+    width,
+    animate,
+    yAxisUnits
+  ) => {
     const allCols = [dateColumn, openColumn, highColumn, lowColumn, closeColumn]
-    if (!provider || !provider.rows?.length || allCols.find(x => x == null)) {
+    if (
+      !dataProvider ||
+      !dataProvider.rows?.length ||
+      allCols.find(x => x == null)
+    ) {
       return null
     }
 
     // Fetch data
-    const { schema, rows } = provider
+    const { schema, rows } = dataProvider
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
     const data = rows.filter(row => hasAllColumns(row))

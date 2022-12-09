@@ -57,7 +57,8 @@
   {data}
   {loading}
   {type}
-  allowEditing={!view?.calculation}
+  allowEditing={false}
+  rowCount={10}
   bind:hideAutocolumns
 >
   <ViewFilterButton {view} />

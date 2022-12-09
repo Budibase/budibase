@@ -11,6 +11,7 @@
   export let validation
   export let defaultValue = ""
   export let format = "auto"
+  export let onChange
 
   let fieldState
   let fieldApi
@@ -44,6 +45,13 @@
       },
     })
   }
+
+  const handleChange = e => {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
+      onChange({ value: e.detail })
+    }
+  }
 </script>
 
 <Field
@@ -61,7 +69,7 @@
     {#if useRichText}
       <CoreRichTextField
         value={fieldState.value}
-        on:change={e => fieldApi.setValue(e.detail)}
+        on:change={handleChange}
         disabled={fieldState.disabled}
         error={fieldState.error}
         id={fieldState.fieldId}
@@ -78,7 +86,7 @@
     {:else}
       <CoreTextArea
         value={fieldState.value}
-        on:change={e => fieldApi.setValue(e.detail)}
+        on:change={handleChange}
         disabled={fieldState.disabled}
         error={fieldState.error}
         id={fieldState.fieldId}

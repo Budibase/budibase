@@ -1,4 +1,4 @@
-import { Query, QueryParameter } from "../../../../../../definitions/datasource"
+import { Query, QueryParameter } from "@budibase/types"
 import { URL } from "url"
 
 export interface ImportInfo {
@@ -17,13 +17,14 @@ export abstract class ImportSource {
   abstract isSupported(data: string): Promise<boolean>
   abstract getInfo(): Promise<ImportInfo>
   abstract getQueries(datasourceId: string): Promise<Query[]>
+  abstract getImportSource(): string
 
   constructQuery = (
     datasourceId: string,
     name: string,
     method: string,
     path: string,
-    url: URL,
+    url: URL | string | undefined,
     queryString: string,
     headers: object = {},
     parameters: QueryParameter[] = [],
@@ -34,7 +35,17 @@ export abstract class ImportSource {
     const transformer = "return data"
     const schema = {}
     path = this.processPath(path)
-    path = `${url.origin}/${path}`
+    if (url) {
+      if (typeof url === "string") {
+        path = `${url}/${path}`
+      } else {
+        let href = url.href
+        if (href.endsWith("/")) {
+          href = href.slice(0, -1)
+        }
+        path = `${href}/${path}`
+      }
+    }
     queryString = this.processQuery(queryString)
     const requestBody = JSON.stringify(body, null, 2)
 

@@ -20,7 +20,12 @@ import { buildScreenEndpoints } from "./screens"
 import { buildTableEndpoints } from "./tables"
 import { buildTemplateEndpoints } from "./templates"
 import { buildUserEndpoints } from "./user"
+import { buildSelfEndpoints } from "./self"
 import { buildViewEndpoints } from "./views"
+import { buildLicensingEndpoints } from "./licensing"
+import { buildGroupsEndpoints } from "./groups"
+import { buildPluginEndpoints } from "./plugins"
+import { buildBackupsEndpoints } from "./backups"
 
 const defaultAPIClientConfig = {
   /**
@@ -55,6 +60,7 @@ export const createAPIClient = config => {
     ...defaultAPIClientConfig,
     ...config,
   }
+  let cache = {}
 
   // Generates an error object from an API response
   const makeErrorFromResponse = async (response, method) => {
@@ -137,6 +143,7 @@ export const createAPIClient = config => {
         credentials: "same-origin",
       })
     } catch (error) {
+      delete cache[url]
       throw makeError("Failed to send request", { url, method })
     }
 
@@ -149,9 +156,11 @@ export const createAPIClient = config => {
           return await response.json()
         }
       } catch (error) {
+        delete cache[url]
         return null
       }
     } else {
+      delete cache[url]
       throw await makeErrorFromResponse(response, method)
     }
   }
@@ -159,7 +168,6 @@ export const createAPIClient = config => {
   // Performs an API call to the server and caches the response.
   // Future invocation for this URL will return the cached result instead of
   // hitting the server again.
-  let cache = {}
   const makeCachedApiCall = async params => {
     const identifier = params.url
     if (!identifier) {
@@ -204,6 +212,9 @@ export const createAPIClient = config => {
     error: message => {
       throw makeError(message)
     },
+    invalidateCache: () => {
+      cache = {}
+    },
   }
 
   // Attach all endpoints
@@ -231,5 +242,10 @@ export const createAPIClient = config => {
     ...buildTemplateEndpoints(API),
     ...buildUserEndpoints(API),
     ...buildViewEndpoints(API),
+    ...buildSelfEndpoints(API),
+    ...buildLicensingEndpoints(API),
+    ...buildGroupsEndpoints(API),
+    ...buildPluginEndpoints(API),
+    ...buildBackupsEndpoints(API),
   }
 }

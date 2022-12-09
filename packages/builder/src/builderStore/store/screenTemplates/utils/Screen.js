@@ -5,7 +5,8 @@ export class Screen extends BaseStructure {
   constructor() {
     super(true)
     this._json = {
-      layoutId: "layout_private_master",
+      showNavigation: true,
+      width: "Large",
       props: {
         _id: Helpers.uuid(),
         _component: "@budibase/standard-components/container",
@@ -26,6 +27,7 @@ export class Screen extends BaseStructure {
       routing: {
         route: "",
         roleId: "BASIC",
+        homeScreen: false,
       },
       name: "screen-id",
     }

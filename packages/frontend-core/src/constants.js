@@ -28,19 +28,27 @@ export const OperatorOptions = {
   },
   MoreThan: {
     value: "rangeLow",
-    label: "More than",
+    label: "More than or equal to",
   },
   LessThan: {
     value: "rangeHigh",
-    label: "Less than",
+    label: "Less than or equal to",
   },
   Contains: {
-    value: "equal",
+    value: "contains",
     label: "Contains",
   },
   NotContains: {
-    value: "notEqual",
-    label: "Does Not Contain",
+    value: "notContains",
+    label: "Does not contain",
+  },
+  In: {
+    value: "oneOf",
+    label: "Is in",
+  },
+  ContainsAny: {
+    value: "containsAny",
+    label: "Has any",
   },
 }
 
@@ -49,11 +57,50 @@ export const Cookies = {
   Auth: "budibase:auth",
   CurrentApp: "budibase:currentapp",
   ReturnUrl: "budibase:returnurl",
+  AccountReturnUrl: "budibase:account:returnurl",
 }
 
 // Table names
 export const TableNames = {
   USERS: "ta_users",
+}
+
+export const BudibaseRoles = {
+  AppUser: "appUser",
+  Developer: "developer",
+  Admin: "admin",
+}
+
+export const BudibaseRoleOptions = [
+  { label: "App User", value: BudibaseRoles.AppUser },
+  { label: "Developer", value: BudibaseRoles.Developer },
+  { label: "Admin", value: BudibaseRoles.Admin },
+]
+
+export const BuilderRoleDescriptions = [
+  {
+    value: BudibaseRoles.AppUser,
+    icon: "User",
+    label: "App user - Only has access to published apps",
+  },
+  {
+    value: BudibaseRoles.Developer,
+    icon: "Hammer",
+    label: "Developer - Access to the app builder",
+  },
+  {
+    value: BudibaseRoles.Admin,
+    icon: "Draw",
+    label: "Admin - Full access",
+  },
+]
+
+export const PlanType = {
+  FREE: "free",
+  TEAM: "team",
+  PRO: "pro",
+  BUSINESS: "business",
+  ENTERPRISE: "enterprise",
 }
 
 /**
@@ -63,3 +110,67 @@ export const TableNames = {
  *   - Coerce types for search endpoint
  */
 export const ApiVersion = "1"
+
+export const Features = {
+  USER_GROUPS: "userGroups",
+  BACKUPS: "appBackups",
+}
+
+// Role IDs
+export const Roles = {
+  ADMIN: "ADMIN",
+  POWER: "POWER",
+  BASIC: "BASIC",
+  PUBLIC: "PUBLIC",
+  BUILDER: "BUILDER",
+}
+/**
+ * Maximum minimum range for SQL number values
+ */
+export const SqlNumberTypeRangeMap = {
+  integer: {
+    max: 2147483647,
+    min: -2147483648,
+  },
+  int: {
+    max: 2147483647,
+    min: -2147483648,
+  },
+  smallint: {
+    max: 32767,
+    min: -32768,
+  },
+  mediumint: {
+    max: 8388607,
+    min: -8388608,
+  },
+}
+
+export const Themes = [
+  {
+    class: "lightest",
+    name: "Lightest",
+  },
+  {
+    class: "light",
+    name: "Light",
+  },
+  {
+    class: "dark",
+    name: "Dark",
+  },
+  {
+    class: "darkest",
+    name: "Darkest",
+  },
+  {
+    class: "nord",
+    name: "Nord",
+    base: "darkest",
+  },
+  {
+    class: "midnight",
+    name: "Midnight",
+    base: "darkest",
+  },
+]

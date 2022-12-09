@@ -30,6 +30,11 @@ describe("Handling context properties with spaces in their name", () => {
     })
     expect(output).toBe("testcase 1")
   })
+
+  it("should allow the use of a", async () => {
+    const output = await processString("{{ a }}", { a: 1 })
+    expect(output).toEqual("1")
+  })
 })
 
 describe("attempt some complex problems", () => {

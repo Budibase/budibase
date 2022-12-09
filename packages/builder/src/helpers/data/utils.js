@@ -1,4 +1,5 @@
 import { IntegrationTypes } from "constants/backend"
+import { findHBSBlocks } from "@budibase/string-templates"
 
 export function schemaToFields(schema) {
   const response = {}
@@ -30,8 +31,8 @@ export function breakQueryString(qs) {
   const params = qs.split("&")
   let paramObj = {}
   for (let param of params) {
-    const [key, value] = param.split("=")
-    paramObj[key] = value
+    const split = param.split("=")
+    paramObj[split[0]] = decodeURIComponent(split.slice(1).join("="))
   }
   return paramObj
 }
@@ -46,7 +47,19 @@ export function buildQueryString(obj) {
       if (str !== "") {
         str += "&"
       }
-      str += `${key}=${value || ""}`
+      const bindings = findHBSBlocks(value)
+      let count = 0
+      const bindingMarkers = {}
+      bindings.forEach(binding => {
+        const marker = `BINDING...${count++}`
+        value = value.replace(binding, marker)
+        bindingMarkers[marker] = binding
+      })
+      let encoded = encodeURIComponent(value || "")
+      Object.entries(bindingMarkers).forEach(([marker, binding]) => {
+        encoded = encoded.replace(marker, binding)
+      })
+      str += `${key}=${encoded}`
     }
   }
   return str
@@ -109,6 +122,36 @@ export function customQueryIconColor(datasource, query) {
   }
 }
 
+export function customQueryText(datasource, query) {
+  if (!query.name || datasource.source !== IntegrationTypes.REST) {
+    return query.name
+  }
+
+  // Remove protocol
+  let name = query.name
+  if (name.includes("//")) {
+    name = name.split("//")[1]
+  }
+
+  // If no path, return the full name
+  if (!name.includes("/")) {
+    return name
+  }
+
+  // Remove trailing slash
+  if (name.endsWith("/")) {
+    name = name.slice(0, -1)
+  }
+
+  // Only use path
+  const split = name.split("/")
+  if (split[1]) {
+    return `/${split.slice(1).join("/")}`
+  } else {
+    return split[0]
+  }
+}
+
 export function flipHeaderState(headersActivity) {
   if (!headersActivity) {
     return {}
@@ -120,12 +163,31 @@ export function flipHeaderState(headersActivity) {
   return enabled
 }
 
+export const parseToCsv = (headers, rows) => {
+  let csv = headers?.map(key => `"${key}"`)?.join(",") || ""
+
+  for (let row of rows) {
+    csv = `${csv}\n${headers
+      .map(header => {
+        let val = row[header]
+        val =
+          typeof val === "object" && !(val instanceof Date)
+            ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
+            : `"${val}"`
+        return val.trim()
+      })
+      .join(",")}`
+  }
+  return csv
+}
+
 export default {
   breakQueryString,
   buildQueryString,
   fieldsToSchema,
   flipHeaderState,
   keyValueToQueryParameters,
+  parseToCsv,
   queryParametersToKeyValue,
   schemaToFields,
 }

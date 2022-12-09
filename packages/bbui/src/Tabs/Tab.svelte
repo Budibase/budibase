@@ -6,7 +6,7 @@
 
   const dispatch = createEventDispatcher()
   let selected = getContext("tab")
-  let tab
+  let tab_internal
   let tabInfo
 
   const setTabInfo = () => {
@@ -16,7 +16,7 @@
     // We just need to get this off the main thread to fix this, by using
     // a 0ms timeout.
     setTimeout(() => {
-      tabInfo = tab?.getBoundingClientRect()
+      tabInfo = tab_internal?.getBoundingClientRect()
       if (tabInfo && $selected.title === title) {
         $selected.info = tabInfo
       }
@@ -27,14 +27,30 @@
     setTabInfo()
   })
 
+  //Ensure that the underline is in the correct location
+  $: {
+    if ($selected.title === title && tab_internal) {
+      if ($selected.info?.left !== tab_internal.getBoundingClientRect().left) {
+        $selected = {
+          ...$selected,
+          info: tab_internal.getBoundingClientRect(),
+        }
+      }
+    }
+  }
+
   const onClick = () => {
-    $selected = { ...$selected, title, info: tab.getBoundingClientRect() }
+    $selected = {
+      ...$selected,
+      title,
+      info: tab_internal.getBoundingClientRect(),
+    }
     dispatch("click")
   }
 </script>
 
 <div
-  bind:this={tab}
+  bind:this={tab_internal}
   on:click={onClick}
   class:is-selected={$selected.title === title}
   class="spectrum-Tabs-item"
@@ -62,5 +78,11 @@
 <style>
   .emphasized {
     color: var(--spectrum-global-color-blue-600);
+  }
+  .spectrum-Tabs-item {
+    color: var(--spectrum-global-color-gray-600);
+  }
+  .spectrum-Tabs-item.is-selected {
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

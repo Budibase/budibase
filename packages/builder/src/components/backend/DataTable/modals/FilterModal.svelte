@@ -11,7 +11,6 @@
     Icon,
   } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
-  import analytics, { Events } from "analytics"
 
   const CONDITIONS = [
     {
@@ -75,9 +74,6 @@
     try {
       views.save(view)
       notifications.success(`View ${view.name} saved`)
-      analytics.captureEvent(Events.VIEW.ADDED_FILTER, {
-        filters: JSON.stringify(view.filters),
-      })
     } catch (error) {
       notifications.error("Error saving view")
     }
@@ -101,7 +97,7 @@
   }
 
   function fieldOptions(field) {
-    return schema[field]?.type === "options"
+    return schema[field]?.type === "options" || schema[field]?.type === "array"
       ? schema[field]?.constraints.inclusion
       : [true, false]
   }

@@ -3,26 +3,24 @@
   import { goto } from "@roxi/routify"
   import { views as viewsStore } from "stores/backend"
   import { tables } from "stores/backend"
-  import analytics, { Events } from "analytics"
 
   let name
   let field
 
   $: views = $tables.list.flatMap(table => Object.keys(table.views || {}))
 
-  function saveView() {
+  const saveView = async () => {
     if (views.includes(name)) {
       notifications.error(`View exists with name ${name}`)
       return
     }
     try {
-      viewsStore.save({
+      await viewsStore.save({
         name,
         tableId: $tables.selected._id,
         field,
       })
       notifications.success(`View ${name} created`)
-      analytics.captureEvent(Events.VIEW.CREATED, { name })
       $goto(`../../view/${name}`)
     } catch (error) {
       notifications.error("Error creating view")

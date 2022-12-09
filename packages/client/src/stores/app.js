@@ -1,8 +1,20 @@
 import { API } from "api"
-import { get, writable } from "svelte/store"
+import { get, writable, derived } from "svelte/store"
+
+const initialState = {
+  appId: null,
+  isDevApp: false,
+  clientLoadTime: window.INIT_TIME ? Date.now() - window.INIT_TIME : null,
+}
 
 const createAppStore = () => {
-  const store = writable(null)
+  const store = writable(initialState)
+  const derivedStore = derived(store, $store => {
+    return {
+      ...$store,
+      isDevApp: $store.appId?.startsWith("app_dev"),
+    }
+  })
 
   // Fetches the app definition including screens, layouts and theme
   const fetchAppDefinition = async () => {
@@ -13,16 +25,17 @@ const createAppStore = () => {
     try {
       const appDefinition = await API.fetchAppPackage(appId)
       store.set({
+        ...initialState,
         ...appDefinition,
         appId: appDefinition?.application?.appId,
       })
     } catch (error) {
-      store.set(null)
+      store.set(initialState)
     }
   }
 
   // Sets the initial app ID
-  const setAppID = id => {
+  const setAppId = id => {
     store.update(state => {
       if (state) {
         state.appId = id
@@ -34,8 +47,8 @@ const createAppStore = () => {
   }
 
   return {
-    subscribe: store.subscribe,
-    actions: { setAppID, fetchAppDefinition },
+    subscribe: derivedStore.subscribe,
+    actions: { setAppId, fetchAppDefinition },
   }
 }
 

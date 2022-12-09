@@ -64,9 +64,10 @@ module.exports.processors = [
         return statement
       }
     }
+    const testHelper = possibleHelper.trim().toLowerCase()
     if (
       !noHelpers &&
-      HelperNames().some(option => option.includes(possibleHelper))
+      HelperNames().some(option => testHelper === option.toLowerCase())
     ) {
       insideStatement = `(${insideStatement})`
     }

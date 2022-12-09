@@ -8,6 +8,15 @@ export const FIELDS = {
       presence: false,
     },
   },
+  BARCODEQR: {
+    name: "Barcode/QR",
+    type: "barcodeqr",
+    constraints: {
+      type: "string",
+      length: {},
+      presence: false,
+    },
+  },
   LONGFORM: {
     name: "Long Form Text",
     type: "longform",
@@ -144,7 +153,12 @@ export const RelationshipTypes = {
   MANY_TO_ONE: "many-to-one",
 }
 
-export const ALLOWABLE_STRING_OPTIONS = [FIELDS.STRING, FIELDS.OPTIONS]
+export const ALLOWABLE_STRING_OPTIONS = [
+  FIELDS.STRING,
+  FIELDS.OPTIONS,
+  FIELDS.LONGFORM,
+  FIELDS.BARCODEQR,
+]
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type
 )
@@ -154,14 +168,16 @@ export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
   opt => opt.type
 )
 
-export const ALLOWABLE_JSON_OPTIONS = [FIELDS.JSON, FIELDS.ARRAY]
-export const ALLOWABLE_JSON_TYPES = ALLOWABLE_JSON_OPTIONS.map(opt => opt.type)
-
 export const SWITCHABLE_TYPES = [
   ...ALLOWABLE_STRING_TYPES,
   ...ALLOWABLE_NUMBER_TYPES,
-  ...ALLOWABLE_JSON_TYPES,
 ]
+
+export const BUDIBASE_INTERNAL_DB_ID = "bb_internal"
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
+export const BUDIBASE_DATASOURCE_TYPE = "budibase"
+export const DB_TYPE_INTERNAL = "internal"
+export const DB_TYPE_EXTERNAL = "external"
 
 export const IntegrationTypes = {
   POSTGRES: "POSTGRES",
@@ -178,6 +194,9 @@ export const IntegrationTypes = {
   ORACLE: "ORACLE",
   INTERNAL: "INTERNAL",
   GOOGLE_SHEETS: "GOOGLE_SHEETS",
+  FIRESTORE: "FIRESTORE",
+  REDIS: "REDIS",
+  SNOWFLAKE: "SNOWFLAKE",
 }
 
 export const IntegrationNames = {
@@ -195,6 +214,9 @@ export const IntegrationNames = {
   [IntegrationTypes.ORACLE]: "Oracle",
   [IntegrationTypes.INTERNAL]: "Internal",
   [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
+  [IntegrationTypes.FIRESTORE]: "Firestore",
+  [IntegrationTypes.REDIS]: "Redis",
+  [IntegrationTypes.SNOWFLAKE]: "Snowflake",
 }
 
 export const SchemaTypeOptions = [

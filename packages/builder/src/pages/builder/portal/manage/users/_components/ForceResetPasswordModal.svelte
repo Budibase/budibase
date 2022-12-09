@@ -7,7 +7,7 @@
 
   export let user
 
-  const password = Math.random().toString(36).substr(2, 20)
+  const password = Math.random().toString(36).slice(2, 20)
 
   async function resetPassword() {
     try {
