@@ -118,7 +118,12 @@
   function checkQueryName(inputUrl = null) {
     if (query && (!query.name || query.flags.urlName)) {
       query.flags.urlName = true
-      query.name = url || inputUrl
+      query.name =
+        url
+          ?.replaceAll(/(http)|(https)/g, "")
+          ?.replaceAll(".", "_")
+          ?.replace(/[:/{}]/g, " ")
+          ?.trim() || inputUrl
     }
   }
 
