@@ -99,7 +99,7 @@ describe("Internal API - User Management & Permissions", () => {
         const body: User = {
             ...userInfoJson,
             roles: {
-                [app.appId?.toString() || ""]: "BASIC",
+                [<string>app.appId]: "BASIC",
             }
         }
         await config.users.updateInfo(body)
@@ -123,7 +123,7 @@ describe("Internal API - User Management & Permissions", () => {
         const body: User = {
             ...userInfoJson,
             roles: {
-                [app.appId?.toString() || ""]: "ADMIN",
+                [<string>app.appId]: "ADMIN",
             }
         }
         await config.users.updateInfo(body)
@@ -147,7 +147,7 @@ describe("Internal API - User Management & Permissions", () => {
         const body: User = {
             ...userInfoJson,
             roles: {
-                [app.appId?.toString() || ""]: "POWER",
+                [<string>app.appId]: "POWER",
             }
         }
         await config.users.updateInfo(body)
