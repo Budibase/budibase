@@ -52,6 +52,13 @@
       action: () => $goto("./automate"),
     },
     {
+      type: "Publish",
+      name: "App",
+      description: "Deploy your application",
+      icon: "Box",
+      action: deployApp,
+    },
+    {
       type: "Preview",
       name: "App",
       description: "",
@@ -62,14 +69,7 @@
       type: "Preview",
       name: "Published App",
       icon: "Play",
-      action: () => window.open(`/${$store.appId.replace("_dev", "")}`),
-    },
-    {
-      type: "Publish",
-      name: "App",
-      description: "Deploy your application",
-      icon: "Box",
-      action: deployApp,
+      action: () => window.open(`/app${$store.url}`),
     },
     {
       type: "Support",
@@ -177,11 +177,9 @@
   async function deployApp() {
     try {
       await API.deployAppChanges()
-      analytics.captureEvent(Events.APP.PUBLISHED, {
-        appId: $store.appId,
-      })
       notifications.success("Application published successfully")
     } catch (error) {
+      console.log(error)
       analytics.captureException(error)
       notifications.error("Error publishing app")
     }
