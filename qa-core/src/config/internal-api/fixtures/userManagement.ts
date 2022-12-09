@@ -1,63 +1,51 @@
 import generator from "../../generator";
+import { User } from "@budibase/types";
+import { generateUserMetadataID } from "@budibase/backend-core/src/db";
 
-export const generateDeveloper = (): Object => {
+
+const generateDeveloper = (): User => {
     const randomId = generator.guid();
     return ({
-        create: {
-            users: [{
-                email: `pedro+${randomId}@budibase.com`,
-                password: randomId,
-                roles: {},
-                forceResetPassword: true,
-                builder: {
-                    global: true
-                }
-            }],
-            groups: []
+        email: `pedro+${randomId}@budibase.com`,
+        password: randomId,
+        roles: {},
+        forceResetPassword: true,
+        builder: {
+            global: true
         }
     })
 }
 
-export const generateAdmin = (): Object => {
+const generateAdmin = (): User => {
     const randomId = generator.guid();
     return ({
-        create: {
-            users: [{
-                email: `pedro+${randomId}@budibase.com`,
-                password: randomId,
-                roles: {},
-                forceResetPassword: true,
-                admin: {
-                    global: true
-                },
-                builder: {
-                    global: true
-                }
-            }],
-            groups: []
+        email: `pedro+${randomId}@budibase.com`,
+        password: randomId,
+        roles: {},
+        forceResetPassword: true,
+        admin: {
+            global: true
+        },
+        builder: {
+            global: true
         }
     })
 }
-export const generateAppUser = (): Object => {
+const generateAppUser = (): User => {
     const randomId = generator.guid();
-    const user = {
-        create: {
-            users: [{
-                email: `pedro+${randomId}@budibase.com`,
-                password: randomId,
-                roles: {},
-                forceResetPassword: true,
-                admin: {
-                    global: false
-                },
-                builder: {
-                    global: false
-                }
-            }],
-            groups: []
+    return ({
+        email: `pedro+${randomId}@budibase.com`,
+        password: randomId,
+        roles: {},
+        forceResetPassword: true,
+        admin: {
+            global: false
+        },
+        builder: {
+            global: false
         }
-    }
-    return user
+    })
+
 }
 
 export const generateInviteUser = (): Object[] => {
@@ -69,4 +57,25 @@ export const generateInviteUser = (): Object[] => {
         }
     }]
 
+}
+
+export const generateUser = (amount: number = 1, role?: string): User[] => {
+    const userList: User[] = [];
+    for (let i = 0; i < amount; i++) {
+        switch (role) {
+            case "admin":
+                userList.push(generateAdmin());
+                break;
+            case "developer":
+                userList.push(generateDeveloper());
+                break;
+            case "appUser":
+                userList.push(generateAppUser());
+                break;
+            default:
+                userList.push(generateAppUser());
+                break;
+        }
+    }
+    return userList
 }
