@@ -11,8 +11,13 @@
   import { API } from "api"
   import analytics, { Events } from "analytics"
   import { goto } from "@roxi/routify"
-  import { store, allScreens, automationStore, themeStore } from "builderStore"
-  import { datasources, queries } from "stores/backend"
+  import {
+    store,
+    sortedScreens,
+    automationStore,
+    themeStore,
+  } from "builderStore"
+  import { datasources, queries, tables, views } from "stores/backend"
 
   export let close
 
@@ -50,7 +55,7 @@
       name: "App",
       description: "",
       icon: "Play",
-      action: () => window.open(`/${store.appId}`),
+      action: () => window.open(`/${$store.appId}`),
     },
     {
       type: "Publish",
@@ -82,12 +87,30 @@
         ),
     },
     ...$datasources?.list.map(datasource => ({
-      type: "Data",
+      type: "Datasource",
       name: `${datasource.name}`,
       icon: "Data",
       action: () => $goto(`./data/datasource/${datasource._id}`),
     })),
-    ...$allScreens.map(screen => ({
+    ...$tables?.list.map(table => ({
+      type: "Table",
+      name: table.name,
+      icon: "Table",
+      action: () => $goto(`./data/table/${table._id}`),
+    })),
+    ...$views?.list.map(view => ({
+      type: "View",
+      name: view.name,
+      icon: "Remove",
+      action: () => $goto(`./data/view/${view.name}`),
+    })),
+    ...$queries?.list.map(query => ({
+      type: "Query",
+      name: query.name,
+      icon: "SQLQuery",
+      action: () => $goto(`./data/query/${query._id}`),
+    })),
+    ...$sortedScreens.map(screen => ({
       type: "Screen",
       name: screen.routing.route,
       icon: "FullScreen",
@@ -99,23 +122,18 @@
       icon: "ShareAndroid",
       action: () => $goto(`./automate/${automation._id}`),
     })),
-    ...["lightest", "light", "dark", "darkest"].map(theme => ({
-      type: "Change Builder Theme",
-      name: theme,
-      icon: "ColorPalette",
-      action: () =>
-        themeStore.update(state => {
-          state.theme = theme
-          return state
-        }),
-    })),
-    ...$queries?.list.map(query => ({
-      type: "Query",
-      name: query.name,
-      icon: "SQLQuery",
-      action: () =>
-        $goto(`./data/datasource/${query.datasourceId}/${query._id}`),
-    })),
+    ...["lightest", "light", "dark", "darkest", "nord", "midnight"].map(
+      theme => ({
+        type: "Change Builder Theme",
+        name: theme,
+        icon: "ColorPalette",
+        action: () =>
+          themeStore.update(state => {
+            state.theme = theme
+            return state
+          }),
+      })
+    ),
   ]
 
   let search
