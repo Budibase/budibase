@@ -120,9 +120,9 @@
       query.flags.urlName = true
       query.name =
         url
-          ?.replaceAll(/(http)|(https)/g, "")
+          ?.replace(/(http)|(https)|[{}:]/g, "")
           ?.replaceAll(".", "_")
-          ?.replace(/[:/{}]/g, " ")
+          ?.replaceAll("/", " ")
           ?.trim() || inputUrl
     }
   }
