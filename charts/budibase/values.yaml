@@ -112,6 +112,9 @@ globals:
 #  elasticApmEnabled:
 #  elasticApmSecretToken:
 #  elasticApmServerUrl:
+#  globalAgentHttpProxy:
+#  globalAgentHttpsProxy:
+#  globalAgentNoProxy:
 
 services:
   budibaseVersion: latest
