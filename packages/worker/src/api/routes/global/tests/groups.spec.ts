@@ -1,5 +1,6 @@
 import { events } from "@budibase/backend-core"
-import { mocks } from "@budibase/pro/tests"
+import { mocks } from "@budibase/pro/dist/tests"
+import { Feature, License, Quotas } from "@budibase/types"
 import { structures, TestConfiguration } from "../../../../tests"
 
 describe("/api/global/groups", () => {
