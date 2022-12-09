@@ -9,7 +9,6 @@
     notifications,
   } from "@budibase/bbui"
   import { API } from "api"
-  import analytics, { Events } from "analytics"
   import { goto } from "@roxi/routify"
   import {
     store,
@@ -179,8 +178,6 @@
       await API.deployAppChanges()
       notifications.success("Application published successfully")
     } catch (error) {
-      console.log(error)
-      analytics.captureException(error)
       notifications.error("Error publishing app")
     }
   }
