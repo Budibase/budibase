@@ -1,5 +1,5 @@
 import { db as dbCore } from "@budibase/backend-core"
-import { getAppUrl } from "../../api/controllers/application"
+import sdk from "../../sdk"
 
 /**
  * Date:
@@ -20,14 +20,7 @@ export const run = async (appDb: any) => {
   }
 
   if (!metadata.url) {
-    const context = {
-      request: {
-        body: {
-          name: metadata.name,
-        },
-      },
-    }
-    metadata.url = getAppUrl(context)
+    metadata.url = sdk.applications.getAppUrl({ name: metadata.name })
     console.log(`Adding url to app: ${metadata.url}`)
     await appDb.put(metadata)
   }

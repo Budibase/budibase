@@ -11,18 +11,25 @@ export const createSidePanelStore = () => {
       open: $store.contentId != null,
     }
   })
+  let timeout
 
   const open = id => {
+    clearTimeout(timeout)
     store.update(state => {
       state.contentId = id
       return state
     })
   }
+
+  // Delay closing by 50ms to avoid toggling visibility when cycling though
+  // records
   const close = () => {
-    store.update(state => {
-      state.contentId = null
-      return state
-    })
+    timeout = setTimeout(() => {
+      store.update(state => {
+        state.contentId = null
+        return state
+      })
+    }, 50)
   }
 
   return {
