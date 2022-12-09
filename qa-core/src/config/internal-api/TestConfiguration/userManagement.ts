@@ -10,7 +10,7 @@ export default class UserManagementApi {
         this.api = apiClient
     }
 
-    async searchUsers(): Promise<[Response, Partial<User>[]]> {
+    async search(): Promise<[Response, Partial<User>[]]> {
         const response = await this.api.post(`/global/users/search`, {})
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
@@ -25,7 +25,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async getAllUsers(): Promise<[Response, Partial<User>[]]> {
+    async getAll(): Promise<[Response, Partial<User>[]]> {
         const response = await this.api.get(`/global/users`)
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
@@ -33,7 +33,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async addMultipleUsers(userList: Partial<User>[]): Promise<[Response, any]> {
+    async addMultiple(userList: Partial<User>[]): Promise<[Response, any]> {
         const body = {
             create: {
                 users: userList,
@@ -48,7 +48,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async deleteMultipleUsers(userId: string[]): Promise<[Response, responseMessage]> {
+    async deleteMultiple(userId: string[]): Promise<[Response, responseMessage]> {
         const body = {
             delete: {
                 userIds: [
@@ -64,7 +64,7 @@ export default class UserManagementApi {
         expect(json.deleted.successful[0].userId).toEqual(userId)
         return [response, json]
     }
-    async deleteUser(userId: string): Promise<[Response, UserDeletedEvent]> {
+    async delete(userId: string): Promise<[Response, UserDeletedEvent]> {
         const response = await this.api.del(`/global/users/${userId}`)
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
@@ -72,7 +72,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async inviteUser(body: any): Promise<[Response, responseMessage]> {
+    async invite(body: any): Promise<[Response, responseMessage]> {
         const response = await this.api.post(`/global/users/multi/invite`, { body })
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
@@ -90,7 +90,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async changeUserInformation(body: any): Promise<[Response, User]> {
+    async updateInfo(body: any): Promise<[Response, User]> {
         const response = await this.api.post(`/global/users/`, { body })
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
@@ -108,7 +108,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
-    async getUserInformation(userId: string): Promise<[Response, User]> {
+    async getInfo(userId: string): Promise<[Response, User]> {
         const response = await this.api.get(`/global/users/${userId}`)
         const json = await response.json()
         expect(response).toHaveStatusCode(200)

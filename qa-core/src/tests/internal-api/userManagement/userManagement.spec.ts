@@ -18,7 +18,7 @@ describe("Internal API - User Management & Permissions", () => {
     })
 
     it("Add Users with different roles", async () => {
-        await config.users.searchUsers()
+        await config.users.search()
         await config.users.getRoles()
 
         // These need to be saved to the context so the passwords can be used to login
@@ -31,11 +31,11 @@ describe("Internal API - User Management & Permissions", () => {
         expect(appUser[0].builder?.global).toEqual(false)
         expect(appUser[0].admin?.global).toEqual(false)
 
-        await config.users.addMultipleUsers(admin)
-        await config.users.addMultipleUsers(developer)
-        await config.users.addMultipleUsers(appUser)
+        await config.users.addMultiple(admin)
+        await config.users.addMultiple(developer)
+        await config.users.addMultiple(appUser)
 
-        const [allUsersResponse, allUsersJson] = await config.users.getAllUsers()
+        const [allUsersResponse, allUsersJson] = await config.users.getAll()
         expect(allUsersJson.length).toBeGreaterThan(0)
 
 
@@ -46,17 +46,17 @@ describe("Internal API - User Management & Permissions", () => {
         const appUser = generateUser()
         expect(appUser[0].builder?.global).toEqual(false)
         expect(appUser[0].admin?.global).toEqual(false)
-        const [userResponse, userJson] = await config.users.addMultipleUsers(appUser)
+        const [userResponse, userJson] = await config.users.addMultiple(appUser)
         const userId = userJson.created.successful[0]._id
-        await config.users.deleteUser(<string>userId)
+        await config.users.delete(<string>userId)
     })
 
     it("Reset Password", async () => {
         const appUser = generateUser()
         expect(appUser[0].builder?.global).toEqual(false)
         expect(appUser[0].admin?.global).toEqual(false)
-        const [userResponse, userJson] = await config.users.addMultipleUsers(appUser)
-        const [userInfoResponse, userInfoJson] = await config.users.getUserInformation(userJson.created.successful[0]._id)
+        const [userResponse, userJson] = await config.users.addMultiple(appUser)
+        const [userInfoResponse, userInfoJson] = await config.users.getInfo(userJson.created.successful[0]._id)
         const body: User = {
             ...userInfoJson,
             password: "newPassword"
@@ -69,8 +69,8 @@ describe("Internal API - User Management & Permissions", () => {
         const appUser = generateUser()
         expect(appUser[0].builder?.global).toEqual(false)
         expect(appUser[0].admin?.global).toEqual(false)
-        const [userResponse, userJson] = await config.users.addMultipleUsers(appUser)
-        const [userInfoResponse, userInfoJson] = await config.users.getUserInformation(userJson.created.successful[0]._id)
+        const [userResponse, userJson] = await config.users.addMultiple(appUser)
+        const [userInfoResponse, userInfoJson] = await config.users.getInfo(userJson.created.successful[0]._id)
         const body: User = {
             ...userInfoJson,
             firstName: "newFirstName",
@@ -79,9 +79,9 @@ describe("Internal API - User Management & Permissions", () => {
                 global: true
             }
         }
-        await config.users.changeUserInformation(body)
+        await config.users.updateInfo(body)
 
-        const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getUserInformation(userJson.created.successful[0]._id)
+        const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(userJson.created.successful[0]._id)
         expect(changedUserInfoJson.builder?.global).toBeDefined()
         expect(changedUserInfoJson.builder?.global).toEqual(true)
     })
@@ -90,21 +90,21 @@ describe("Internal API - User Management & Permissions", () => {
         const appUser = generateUser()
         expect(appUser[0].builder?.global).toEqual(false)
         expect(appUser[0].admin?.global).toEqual(false)
-        const [createUserResponse, createUserJson] = await config.users.addMultipleUsers(appUser)
+        const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
 
         const app = await config.applications.create(generateApp())
         config.applications.api.appId = app.appId
 
-        const [userInfoResponse, userInfoJson] = await config.users.getUserInformation(createUserJson.created.successful[0]._id)
+        const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         const body: User = {
             ...userInfoJson,
             roles: {
                 [app.appId?.toString() || ""]: "BASIC",
             }
         }
-        await config.users.changeUserInformation(body)
+        await config.users.updateInfo(body)
 
-        const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getUserInformation(createUserJson.created.successful[0]._id)
+        const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
         expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("BASIC")
 
@@ -114,21 +114,21 @@ describe("Internal API - User Management & Permissions", () => {
         const adminUser = generateUser(1, "admin")
         expect(adminUser[0].builder?.global).toEqual(true)
         expect(adminUser[0].admin?.global).toEqual(true)
-        const [createUserResponse, createUserJson] = await config.users.addMultipleUsers(adminUser)
+        const [createUserResponse, createUserJson] = await config.users.addMultiple(adminUser)
 
         const app = await config.applications.create(generateApp())
         config.applications.api.appId = app.appId
 
-        const [userInfoResponse, userInfoJson] = await config.users.getUserInformation(createUserJson.created.successful[0]._id)
+        const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         const body: User = {
             ...userInfoJson,
             roles: {
                 [app.appId?.toString() || ""]: "ADMIN",
             }
         }
-        await config.users.changeUserInformation(body)
+        await config.users.updateInfo(body)
 
-        const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getUserInformation(createUserJson.created.successful[0]._id)
+        const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
         expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("ADMIN")
 
@@ -138,21 +138,21 @@ describe("Internal API - User Management & Permissions", () => {
         const powerUser = generateUser(1, 'developer')
         expect(powerUser[0].builder?.global).toEqual(true)
 
-        const [createUserResponse, createUserJson] = await config.users.addMultipleUsers(powerUser)
+        const [createUserResponse, createUserJson] = await config.users.addMultiple(powerUser)
 
         const app = await config.applications.create(generateApp())
         config.applications.api.appId = app.appId
 
-        const [userInfoResponse, userInfoJson] = await config.users.getUserInformation(createUserJson.created.successful[0]._id)
+        const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         const body: User = {
             ...userInfoJson,
             roles: {
                 [app.appId?.toString() || ""]: "POWER",
             }
         }
-        await config.users.changeUserInformation(body)
+        await config.users.updateInfo(body)
 
-        const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getUserInformation(createUserJson.created.successful[0]._id)
+        const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
         expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("POWER")
 
