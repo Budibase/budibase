@@ -105,8 +105,8 @@ describe("Internal API - User Management & Permissions", () => {
         await config.users.changeUserInformation(body)
 
         const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getUserInformation(createUserJson.created.successful[0]._id)
-        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toBeDefined()
-        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toEqual("BASIC")
+        expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
+        expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("BASIC")
 
     })
 
@@ -129,8 +129,8 @@ describe("Internal API - User Management & Permissions", () => {
         await config.users.changeUserInformation(body)
 
         const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getUserInformation(createUserJson.created.successful[0]._id)
-        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toBeDefined()
-        expect(changedUserInfoJson.roles[app.appId?.toString() || ""]).toEqual("ADMIN")
+        expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
+        expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("ADMIN")
 
     })
 
