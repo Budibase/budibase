@@ -1,6 +1,5 @@
 import generator from "../../generator";
 import { User } from "@budibase/types";
-import { generateUserMetadataID } from "@budibase/backend-core/src/db";
 
 
 const generateDeveloper = (): Partial<User> => {

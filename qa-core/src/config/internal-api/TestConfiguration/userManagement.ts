@@ -33,6 +33,7 @@ export default class UserManagementApi {
         return [response, json]
     }
 
+    // This endpoint is used for one or more users when we want add users with passwords set.
     async addMultiple(userList: Partial<User>[]): Promise<[Response, any]> {
         const body = {
             create: {
