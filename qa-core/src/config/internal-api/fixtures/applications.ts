@@ -4,8 +4,8 @@ import { Application } from "@budibase/server/api/controllers/public/mapping/typ
 const generate = (
   overrides: Partial<Application> = {}
 ): Partial<Application> => ({
-  name: generator.word(),
-  url: `/${generator.word()}`,
+  name: generator.word() + generator.hash(),
+  url: `/${generator.word() + generator.hash()}`,
   ...overrides,
 })
 

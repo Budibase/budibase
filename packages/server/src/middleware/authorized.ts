@@ -1,23 +1,13 @@
-import {
-  getUserRoleHierarchy,
-  getRequiredResourceRole,
-  BUILTIN_ROLE_IDS,
-} from "@budibase/backend-core/roles"
-const {
-  PermissionTypes,
-  PermissionLevels,
-  doesHaveBasePermission,
-} = require("@budibase/backend-core/permissions")
-const builderMiddleware = require("./builder")
-const { isWebhookEndpoint } = require("./utils")
-const { buildCsrfMiddleware } = require("@budibase/backend-core/auth")
-const { getAppId } = require("@budibase/backend-core/context")
+import { roles, permissions, auth, context } from "@budibase/backend-core"
+import { Role } from "@budibase/types"
+import builderMiddleware from "./builder"
+import { isWebhookEndpoint } from "./utils"
 
 function hasResource(ctx: any) {
   return ctx.resourceId != null
 }
 
-const csrf = buildCsrfMiddleware()
+const csrf = auth.buildCsrfMiddleware()
 
 /**
  * Apply authorization to the requested resource:
@@ -33,7 +23,7 @@ const checkAuthorized = async (
 ) => {
   // check if this is a builder api and the user is not a builder
   const isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
-  const isBuilderApi = permType === PermissionTypes.BUILDER
+  const isBuilderApi = permType === permissions.PermissionType.BUILDER
   if (isBuilderApi && !isBuilder) {
     return ctx.throw(403, "Not Authorized")
   }
@@ -51,10 +41,10 @@ const checkAuthorizedResource = async (
   permLevel: any
 ) => {
   // get the user's roles
-  const roleId = ctx.roleId || BUILTIN_ROLE_IDS.PUBLIC
-  const userRoles = (await getUserRoleHierarchy(roleId, {
+  const roleId = ctx.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
+  const userRoles = (await roles.getUserRoleHierarchy(roleId, {
     idOnly: false,
-  })) as { _id: string }[]
+  })) as Role[]
   const permError = "User does not have permission"
   // check if the user has the required role
   if (resourceRoles.length > 0) {
@@ -66,7 +56,9 @@ const checkAuthorizedResource = async (
       ctx.throw(403, permError)
     }
     // fallback to the base permissions when no resource roles are found
-  } else if (!doesHaveBasePermission(permType, permLevel, userRoles)) {
+  } else if (
+    !permissions.doesHaveBasePermission(permType, permLevel, userRoles)
+  ) {
     ctx.throw(403, permError)
   }
 }
@@ -91,21 +83,22 @@ export = (permType: any, permLevel: any = null, opts = { schema: false }) =>
     let resourceRoles: any = []
     let otherLevelRoles: any = []
     const otherLevel =
-      permLevel === PermissionLevels.READ
-        ? PermissionLevels.WRITE
-        : PermissionLevels.READ
-    const appId = getAppId()
+      permLevel === permissions.PermissionLevel.READ
+        ? permissions.PermissionLevel.WRITE
+        : permissions.PermissionLevel.READ
+    const appId = context.getAppId()
     if (appId && hasResource(ctx)) {
-      resourceRoles = await getRequiredResourceRole(permLevel, ctx)
+      resourceRoles = await roles.getRequiredResourceRole(permLevel, ctx)
       if (opts && opts.schema) {
-        otherLevelRoles = await getRequiredResourceRole(otherLevel, ctx)
+        otherLevelRoles = await roles.getRequiredResourceRole(otherLevel, ctx)
       }
     }
 
     // if the resource is public, proceed
     if (
-      resourceRoles.includes(BUILTIN_ROLE_IDS.PUBLIC) ||
-      (otherLevelRoles && otherLevelRoles.includes(BUILTIN_ROLE_IDS.PUBLIC))
+      resourceRoles.includes(roles.BUILTIN_ROLE_IDS.PUBLIC) ||
+      (otherLevelRoles &&
+        otherLevelRoles.includes(roles.BUILTIN_ROLE_IDS.PUBLIC))
     ) {
       return next()
     }

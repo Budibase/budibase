@@ -1,15 +1,20 @@
 import { save } from "../../api/controllers/row"
 import { cleanUpRow, getError } from "../automationUtils"
 import { buildCtx } from "./utils"
+import {
+  AutomationActionStepId,
+  AutomationStepSchema,
+  AutomationStepInput,
+} from "@budibase/types"
 
-export const definition = {
+export const definition: AutomationStepSchema = {
   name: "Create Row",
   tagline: "Create a {{inputs.enriched.table.name}} row",
   icon: "TableRowAddBottom",
   description: "Add a row to your database",
   type: "ACTION",
   internal: true,
-  stepId: "CREATE_ROW",
+  stepId: AutomationActionStepId.CREATE_ROW,
   inputs: {},
   schema: {
     inputs: {
@@ -58,7 +63,7 @@ export const definition = {
   },
 }
 
-export async function run({ inputs, appId, emitter }: any) {
+export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {
       success: false,

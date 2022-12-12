@@ -7,11 +7,12 @@ import { errors, auth, middleware } from "@budibase/backend-core"
 import { APIError } from "@budibase/types"
 
 const PUBLIC_ENDPOINTS = [
-  // old deprecated endpoints kept for backwards compat
+  // deprecated single tenant sso callback
   {
     route: "/api/admin/auth/google/callback",
     method: "GET",
   },
+  // deprecated single tenant sso callback
   {
     route: "/api/admin/auth/oidc/callback",
     method: "GET",
@@ -44,17 +45,19 @@ const PUBLIC_ENDPOINTS = [
     method: "POST",
   },
   {
-    route: "api/system/environment",
+    route: "/api/system/environment",
     method: "GET",
   },
   {
-    route: "api/system/status",
+    route: "/api/system/status",
     method: "GET",
   },
+  // TODO: This should be an internal api
   {
     route: "/api/global/users/tenant/:id",
     method: "GET",
   },
+  // TODO: This should be an internal api
   {
     route: "/api/system/restored",
     method: "POST",
@@ -62,17 +65,37 @@ const PUBLIC_ENDPOINTS = [
 ]
 
 const NO_TENANCY_ENDPOINTS = [
-  ...PUBLIC_ENDPOINTS,
+  // system endpoints are not specific to any tenant
   {
     route: "/api/system",
     method: "ALL",
   },
+  // tenant is determined in request body
+  // used for creating the tenant
   {
-    route: "/api/global/users/self",
+    route: "/api/global/users/init",
+    method: "POST",
+  },
+  // deprecated single tenant sso callback
+  {
+    route: "/api/admin/auth/google/callback",
     method: "GET",
   },
+  // deprecated single tenant sso callback
   {
-    route: "/api/global/self",
+    route: "/api/admin/auth/oidc/callback",
+    method: "GET",
+  },
+  // tenant is determined from code in redis
+  {
+    route: "/api/global/users/invite/accept",
+    method: "POST",
+  },
+  // global user search - no tenancy
+  // :id is user id
+  // TODO: this should really be `/api/system/users/:id`
+  {
+    route: "/api/global/users/tenant/:id",
     method: "GET",
   },
 ]
@@ -81,7 +104,7 @@ const NO_TENANCY_ENDPOINTS = [
 // add them all to be safe
 const NO_CSRF_ENDPOINTS = [...PUBLIC_ENDPOINTS]
 
-const router = new Router()
+const router: Router = new Router()
 router
   .use(
     compress({
@@ -140,4 +163,4 @@ for (let route of routes) {
   router.use(route.allowedMethods())
 }
 
-module.exports = router
+export default router

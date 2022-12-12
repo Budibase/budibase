@@ -8,27 +8,24 @@ import * as permissions from "./security/permissions"
 import * as accounts from "./cloud/accounts"
 import * as installation from "./installation"
 import env from "./environment"
-import tenancy from "./tenancy"
-import featureFlags from "./featureFlags"
+import * as tenancy from "./tenancy"
+import * as featureFlags from "./featureFlags"
 import * as sessions from "./security/sessions"
-import deprovisioning from "./context/deprovision"
-import auth from "./auth"
-import constants from "./constants"
-import * as dbConstants from "./db/constants"
+import * as deprovisioning from "./context/deprovision"
+import * as auth from "./auth"
+import * as constants from "./constants"
 import * as logging from "./logging"
-import pino from "./pino"
+import * as pino from "./pino"
 import * as middleware from "./middleware"
-import plugins from "./plugin"
-import encryption from "./security/encryption"
+import * as plugins from "./plugin"
+import * as encryption from "./security/encryption"
 import * as queue from "./queue"
-
-// mimic the outer package exports
-import * as db from "./pkg/db"
-import * as objectStore from "./pkg/objectStore"
-import * as utils from "./pkg/utils"
-import redis from "./pkg/redis"
-import cache from "./pkg/cache"
-import context from "./pkg/context"
+import * as db from "./db"
+import * as context from "./context"
+import * as cache from "./cache"
+import * as objectStore from "./objectStore"
+import * as redis from "./redis"
+import * as utils from "./utils"
 
 const init = (opts: any = {}) => {
   db.init(opts.db)
@@ -37,7 +34,7 @@ const init = (opts: any = {}) => {
 const core = {
   init,
   db,
-  ...dbConstants,
+  ...constants,
   redis,
   locks: redis.redlock,
   objectStore,
@@ -46,7 +43,6 @@ const core = {
   cache,
   auth,
   constants,
-  ...constants,
   migrations,
   env,
   accounts,

@@ -4,6 +4,8 @@ dist
 packages/builder/src/components/design/AppPreview/CurrentItemPreview.svelte
 packages/server/builder
 packages/server/coverage
+packages/worker/coverage
+packages/backend-core/coverage
 packages/server/client
 packages/server/src/definitions/openapi.ts
 packages/builder/.routify

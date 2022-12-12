@@ -60,5 +60,6 @@ spec:
       - name: redis-data
         persistentVolumeClaim:
           claimName: redis-data
+
 status: {}
 {{- end }}

@@ -1,10 +1,5 @@
-import { BUILTIN_PERMISSION_IDS, PermissionLevels } from "./permissions"
-import {
-  generateRoleID,
-  getRoleParams,
-  DocumentType,
-  SEPARATOR,
-} from "../db/utils"
+import { BuiltinPermissionID, PermissionLevel } from "./permissions"
+import { generateRoleID, getRoleParams, DocumentType, SEPARATOR } from "../db"
 import { getAppDB } from "../context"
 import { doWithDB } from "../db"
 import { Screen, Role as RoleDoc } from "@budibase/types"
@@ -30,20 +25,18 @@ const EXTERNAL_BUILTIN_ROLE_IDS = [
   BUILTIN_IDS.PUBLIC,
 ]
 
-export class Role {
+export class Role implements RoleDoc {
   _id: string
+  _rev?: string
   name: string
-  permissionId?: string
+  permissionId: string
   inherits?: string
+  permissions = {}
 
-  constructor(id: string, name: string) {
+  constructor(id: string, name: string, permissionId: string) {
     this._id = id
     this.name = name
-  }
-
-  addPermission(permissionId: string) {
     this.permissionId = permissionId
-    return this
   }
 
   addInheritance(inherits: string) {
@@ -53,24 +46,26 @@ export class Role {
 }
 
 const BUILTIN_ROLES = {
-  ADMIN: new Role(BUILTIN_IDS.ADMIN, "Admin")
-    .addPermission(BUILTIN_PERMISSION_IDS.ADMIN)
-    .addInheritance(BUILTIN_IDS.POWER),
-  POWER: new Role(BUILTIN_IDS.POWER, "Power")
-    .addPermission(BUILTIN_PERMISSION_IDS.POWER)
-    .addInheritance(BUILTIN_IDS.BASIC),
-  BASIC: new Role(BUILTIN_IDS.BASIC, "Basic")
-    .addPermission(BUILTIN_PERMISSION_IDS.WRITE)
-    .addInheritance(BUILTIN_IDS.PUBLIC),
-  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public").addPermission(
-    BUILTIN_PERMISSION_IDS.PUBLIC
-  ),
-  BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder").addPermission(
-    BUILTIN_PERMISSION_IDS.ADMIN
-  ),
+  ADMIN: new Role(
+    BUILTIN_IDS.ADMIN,
+    "Admin",
+    BuiltinPermissionID.ADMIN
+  ).addInheritance(BUILTIN_IDS.POWER),
+  POWER: new Role(
+    BUILTIN_IDS.POWER,
+    "Power",
+    BuiltinPermissionID.POWER
+  ).addInheritance(BUILTIN_IDS.BASIC),
+  BASIC: new Role(
+    BUILTIN_IDS.BASIC,
+    "Basic",
+    BuiltinPermissionID.WRITE
+  ).addInheritance(BUILTIN_IDS.PUBLIC),
+  PUBLIC: new Role(BUILTIN_IDS.PUBLIC, "Public", BuiltinPermissionID.PUBLIC),
+  BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder", BuiltinPermissionID.ADMIN),
 }
 
-export function getBuiltinRoles() {
+export function getBuiltinRoles(): { [key: string]: RoleDoc } {
   return cloneDeep(BUILTIN_ROLES)
 }
 
@@ -104,7 +99,7 @@ export function builtinRoleToNumber(id?: string) {
     if (!role) {
       break
     }
-    role = builtins[role.inherits]
+    role = builtins[role.inherits!]
     count++
   } while (role !== null)
   return count
@@ -129,12 +124,12 @@ export async function roleToNumber(id?: string) {
 /**
  * Returns whichever builtin roleID is lower.
  */
-export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string) {
+export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
   if (!roleId1) {
-    return roleId2
+    return roleId2 as string
   }
   if (!roleId2) {
-    return roleId1
+    return roleId1 as string
   }
   return builtinRoleToNumber(roleId1) > builtinRoleToNumber(roleId2)
     ? roleId2
@@ -147,9 +142,9 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string) {
  * @param {string|null} roleId The level ID to lookup.
  * @returns {Promise<Role|object|null>} The role object, which may contain an "inherits" property.
  */
-export async function getRole(roleId?: string) {
+export async function getRole(roleId?: string): Promise<RoleDoc | undefined> {
   if (!roleId) {
-    return null
+    return undefined
   }
   let role: any = {}
   // built in roles mostly come from the in-code implementation,
@@ -193,7 +188,9 @@ async function getAllUserRoles(userRoleId?: string): Promise<RoleDoc[]> {
   ) {
     roleIds.push(currentRole.inherits)
     currentRole = await getRole(currentRole.inherits)
-    roles.push(currentRole)
+    if (currentRole) {
+      roles.push(currentRole)
+    }
   }
   return roles
 }
@@ -225,8 +222,8 @@ export function checkForRoleResourceArray(
   if (rolePerms && !Array.isArray(rolePerms[resourceId])) {
     const permLevel = rolePerms[resourceId] as any
     rolePerms[resourceId] = [permLevel]
-    if (permLevel === PermissionLevels.WRITE) {
-      rolePerms[resourceId].push(PermissionLevels.READ)
+    if (permLevel === PermissionLevel.WRITE) {
+      rolePerms[resourceId].push(PermissionLevel.READ)
     }
   }
   return rolePerms

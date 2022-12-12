@@ -1,10 +1,13 @@
 import { DEFAULT_TENANT_ID } from "../constants"
-import { doWithDB } from "../db"
-import { DocumentType, StaticDatabases } from "../db/constants"
-import { getAllApps } from "../db/utils"
+import {
+  DocumentType,
+  StaticDatabases,
+  getAllApps,
+  getGlobalDBName,
+  doWithDB,
+} from "../db"
 import environment from "../environment"
 import { doInTenant, getTenantIds, getTenantId } from "../tenancy"
-import { getGlobalDBName } from "../db/tenancy"
 import * as context from "../context"
 import { DEFINITIONS } from "."
 import {
@@ -12,6 +15,7 @@ import {
   MigrationOptions,
   MigrationType,
   MigrationNoOpOptions,
+  App,
 } from "@budibase/types"
 
 export const getMigrationsDoc = async (db: any) => {
@@ -41,7 +45,7 @@ export const runMigration = async (
   options: MigrationOptions = {}
 ) => {
   const migrationType = migration.type
-  let tenantId: string
+  let tenantId: string | undefined
   if (migrationType !== MigrationType.INSTALLATION) {
     tenantId = getTenantId()
   }
@@ -55,14 +59,17 @@ export const runMigration = async (
   }
 
   // get the db to store the migration in
-  let dbNames
+  let dbNames: string[]
   if (migrationType === MigrationType.GLOBAL) {
     dbNames = [getGlobalDBName()]
   } else if (migrationType === MigrationType.APP) {
     if (options.noOp) {
+      if (!options.noOp.appId) {
+        throw new Error("appId is required for noOp app migration")
+      }
       dbNames = [options.noOp.appId]
     } else {
-      const apps = await getAllApps(migration.appOpts)
+      const apps = (await getAllApps(migration.appOpts)) as App[]
       dbNames = apps.map(app => app.appId)
     }
   } else if (migrationType === MigrationType.INSTALLATION) {

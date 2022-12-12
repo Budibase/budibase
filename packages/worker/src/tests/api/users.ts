@@ -3,16 +3,16 @@ import {
   BulkUserRequest,
   InviteUsersRequest,
   User,
+  CreateAdminUserRequest,
 } from "@budibase/types"
+import * as structures from "../structures"
+import { generator } from "@budibase/backend-core/tests"
 import TestConfiguration from "../TestConfiguration"
+import { TestAPI, TestAPIOpts } from "./base"
 
-export class UserAPI {
-  config: TestConfiguration
-  request: any
-
+export class UserAPI extends TestAPI {
   constructor(config: TestConfiguration) {
-    this.config = config
-    this.request = config.request
+    super(config)
   }
 
   // INVITE
@@ -91,6 +91,30 @@ export class UserAPI {
 
   // USER
 
+  createAdminUser = async (
+    request?: CreateAdminUserRequest,
+    opts?: TestAPIOpts
+  ) => {
+    if (!request) {
+      request = {
+        email: structures.email(),
+        password: generator.string(),
+        tenantId: structures.uuid(),
+      }
+    }
+    const res = await this.request
+      .post(`/api/global/users/init`)
+      .send(request)
+      .set(this.config.internalAPIHeaders())
+      .expect("Content-Type", /json/)
+      .expect(opts?.status ? opts.status : 200)
+
+    return {
+      ...request,
+      userId: res.body._id,
+    }
+  }
+
   saveUser = (user: User, status?: number, headers?: any) => {
     return this.request
       .post(`/api/global/users`)
@@ -106,5 +130,13 @@ export class UserAPI {
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
+  }
+
+  getUser = (userId: string, opts?: TestAPIOpts) => {
+    return this.request
+      .get(`/api/global/users/${userId}`)
+      .set(opts?.headers ? opts.headers : this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(opts?.status ? opts.status : 200)
   }
 }

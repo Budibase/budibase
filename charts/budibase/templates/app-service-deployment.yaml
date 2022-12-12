@@ -4,6 +4,9 @@ metadata:
   annotations:
     kompose.cmd: kompose convert
     kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.globals.logAnnotations }}
+{{ toYaml .Values.globals.logAnnotations | indent 4 }}
+{{ end }}
   creationTimestamp: null
   labels:
     io.kompose.service: app-service
@@ -60,8 +63,6 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: jwtSecret
-        - name: LOG_LEVEL
-          value: {{ .Values.services.apps.logLevel | default "info" | quote }}
         {{ if .Values.services.objectStore.region }}
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}
@@ -172,6 +173,10 @@ spec:
         {{ end }}
         - name: CDN_URL
           value: {{ .Values.globals.cdnUrl }}
+        {{ if .Values.services.tlsRejectUnauthorized }}
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: {{ .Values.services.tlsRejectUnauthorized }}
+        {{ end }}
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always

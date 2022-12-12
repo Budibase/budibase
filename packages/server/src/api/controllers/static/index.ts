@@ -14,19 +14,14 @@ const {
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
 const { clientLibraryPath } = require("../../../utilities")
-const { upload, deleteFiles } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentType } = require("../../../db/utils")
-const { getAppDB, getAppId } = require("@budibase/backend-core/context")
-const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
+const { context, objectStore, utils } = require("@budibase/backend-core")
 const AWS = require("aws-sdk")
 const fs = require("fs")
-const {
-  downloadTarballDirect,
-} = require("../../../utilities/fileSystem/utilities")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
-  const response = await upload({
+  const response = await objectStore.upload({
     bucket,
     metadata,
     filename: s3Key,
@@ -48,7 +43,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
   const cookieName = `beta:${ctx.params.feature}`
 
   if (ctx.cookies.get(cookieName)) {
-    clearCookie(ctx, cookieName)
+    utils.clearCookie(ctx, cookieName)
     ctx.body = {
       message: `${ctx.params.feature} disabled`,
     }
@@ -61,11 +56,11 @@ export const toggleBetaUiFeature = async function (ctx: any) {
   if (!fs.existsSync(builderPath)) {
     fs.mkdirSync(builderPath)
   }
-  await downloadTarballDirect(
+  await objectStore.downloadTarballDirect(
     "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
     builderPath
   )
-  setCookie(ctx, {}, cookieName)
+  utils.setCookie(ctx, {}, cookieName)
 
   ctx.body = {
     message: `${ctx.params.feature} enabled`,
@@ -99,13 +94,16 @@ export const uploadFile = async function (ctx: any) {
 }
 
 export const deleteObjects = async function (ctx: any) {
-  ctx.body = await deleteFiles(ObjectStoreBuckets.APPS, ctx.request.body.keys)
+  ctx.body = await objectStore.deleteFiles(
+    ObjectStoreBuckets.APPS,
+    ctx.request.body.keys
+  )
 }
 
 export const serveApp = async function (ctx: any) {
-  const db = getAppDB({ skip_setup: true })
+  const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
-  let appId = getAppId()
+  let appId = context.getAppId()
 
   if (!env.isJest()) {
     const App = require("./templates/BudibaseApp.svelte").default
@@ -134,11 +132,11 @@ export const serveApp = async function (ctx: any) {
 }
 
 export const serveBuilderPreview = async function (ctx: any) {
-  const db = getAppDB({ skip_setup: true })
+  const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
-    let appId = getAppId()
+    let appId = context.getAppId()
     const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
     ctx.body = await processString(previewHbs, {
       clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
@@ -156,7 +154,7 @@ export const serveClientLibrary = async function (ctx: any) {
 }
 
 export const getSignedUploadURL = async function (ctx: any) {
-  const database = getAppDB()
+  const database = context.getAppDB()
 
   // Ensure datasource is valid
   let datasource
