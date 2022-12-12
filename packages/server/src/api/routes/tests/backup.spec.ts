@@ -30,8 +30,7 @@ describe("/backups", () => {
         .expect(200)
       expect(res.text).toBeDefined()
       expect(res.headers["content-type"]).toEqual("application/gzip")
-      // @ts-ignore
-      expect(events.app.exported.mock.calls.length).toBe(1)
+      expect(events.app.exported).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
