@@ -1,0 +1,31 @@
+/// <reference types="jest" />
+declare const _default: {
+    enable: () => void;
+    apply(this: Function, thisArg: any, argArray?: any): any;
+    call(this: Function, thisArg: any, ...argArray: any[]): any;
+    bind(this: Function, thisArg: any, ...argArray: any[]): any;
+    toString(): string;
+    prototype: any;
+    length: number;
+    arguments: any;
+    caller: Function;
+    name: string;
+    [Symbol.hasInstance](value: any): boolean;
+    getMockName(): string;
+    mock: jest.MockContext<any, any>;
+    mockClear(): jest.Mock<any, any>;
+    mockReset(): jest.Mock<any, any>;
+    mockRestore(): void;
+    getMockImplementation(): ((...args: any) => any) | undefined;
+    mockImplementation(fn?: ((...args: any) => any) | undefined): jest.Mock<any, any>;
+    mockImplementationOnce(fn: (...args: any) => any): jest.Mock<any, any>;
+    mockName(name: string): jest.Mock<any, any>;
+    mockReturnThis(): jest.Mock<any, any>;
+    mockReturnValue(value: any): jest.Mock<any, any>;
+    mockReturnValueOnce(value: any): jest.Mock<any, any>;
+    mockResolvedValue(value: any): jest.Mock<any, any>;
+    mockResolvedValueOnce(value: any): jest.Mock<any, any>;
+    mockRejectedValue(value: any): jest.Mock<any, any>;
+    mockRejectedValueOnce(value: any): jest.Mock<any, any>;
+};
+export default _default;

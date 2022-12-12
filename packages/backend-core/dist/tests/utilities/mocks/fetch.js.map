@@ -1,0 +1,1 @@
+{"version":3,"file":"fetch.js","sourceRoot":"","sources":["../../../../tests/utilities/mocks/fetch.ts"],"names":[],"mappings":";;AAAA,MAAM,SAAS,GAAG,IAAI,CAAC,EAAE,EAAE,CAAA;AAE3B,MAAM,MAAM,GAAG,GAAG,EAAE;IAClB,IAAI,CAAC,IAAI,CAAC,YAAY,EAAE,GAAG,EAAE,CAAC,SAAS,CAAC,CAAA;AAC1C,CAAC,CAAA;AAED,kDACK,SAAS,KACZ,MAAM,IACP"}
