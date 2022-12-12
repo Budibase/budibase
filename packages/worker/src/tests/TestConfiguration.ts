@@ -1,4 +1,12 @@
-import "./mocks"
+import mocks from "./mocks"
+
+// init the licensing mock
+import * as pro from "@budibase/pro"
+mocks.licenses.init(pro)
+
+// use unlimited license by default
+mocks.licenses.useUnlimited()
+
 import * as dbConfig from "../db"
 dbConfig.init()
 import env from "../environment"
@@ -14,7 +22,7 @@ import {
   env as coreEnv,
 } from "@budibase/backend-core"
 import structures, { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
-import { CreateUserResponse, User, AuthToken, UserGroup } from "@budibase/types"
+import { CreateUserResponse, User, AuthToken } from "@budibase/types"
 import API from "./api"
 
 enum Mode {

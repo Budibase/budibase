@@ -1,9 +1,17 @@
 function isTest() {
+  return isCypress() || isJest()
+}
+
+function isJest() {
   return (
     process.env.NODE_ENV === "jest" ||
-    process.env.NODE_ENV === "cypress" ||
-    process.env.JEST_WORKER_ID != null
+    (process.env.JEST_WORKER_ID != null &&
+      process.env.JEST_WORKER_ID !== "null")
   )
+}
+
+function isCypress() {
+  return process.env.NODE_ENV === "cypress"
 }
 
 function isDev() {
@@ -27,6 +35,7 @@ const DefaultBucketName = {
 
 const environment = {
   isTest,
+  isJest,
   isDev,
   JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET,
