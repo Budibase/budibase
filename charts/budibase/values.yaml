@@ -22,6 +22,12 @@ serviceAccount:
 
 podAnnotations: {}
 
+# logAnnotations:
+#   co.elastic.logs/multiline.type: pattern
+#   co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#   co.elastic.logs/multiline.negate: false
+#   co.elastic.logs/multiline.match: after
+
 podSecurityContext:
   {}
   # fsGroup: 2000
@@ -113,6 +119,7 @@ globals:
 services:
   budibaseVersion: latest
   dns: cluster.local
+  # tlsRejectUnauthorized: 0
 
   proxy:
     port: 10000

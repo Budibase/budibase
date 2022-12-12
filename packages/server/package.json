@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "2.1.45",
+  "version": "2.1.46-alpha.3",
   "description": "Budibase Web Server",
   "main": "src/index.ts",
   "repository": {
@@ -36,40 +36,6 @@
     "env:account:enable": "node scripts/account.js enable",
     "env:account:disable": "node scripts/account.js disable"
   },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
-      "@budibase/backend-core": "<rootDir>/../backend-core/src",
-      "@budibase/types": "<rootDir>/../types/src"
-    },
-    "setupFiles": [
-      "./scripts/jestSetup.js"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.js",
-      "!**/node_modules/**",
-      "!src/db/views/*.js",
-      "!src/api/controllers/deploy/**/*.js",
-      "!src/*.js",
-      "!src/api/controllers/static/**/*",
-      "!src/db/dynamoClient.js",
-      "!src/utilities/usageQuota.js",
-      "!src/api/routes/tests/**/*",
-      "!src/db/tests/**/*",
-      "!src/tests/**/*",
-      "!src/automations/tests/**/*",
-      "!src/utilities/fileProcessor.js",
-      "!src/utilities/fileSystem/**/*",
-      "!src/utilities/redis.js"
-    ],
-    "coverageReporters": [
-      "lcov",
-      "json",
-      "clover"
-    ]
-  },
   "keywords": [
     "budibase"
   ],
@@ -77,11 +43,11 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@apidevtools/swagger-parser": "10.0.3",
-    "@budibase/backend-core": "^2.1.45",
-    "@budibase/client": "^2.1.45",
-    "@budibase/pro": "2.1.45",
-    "@budibase/string-templates": "^2.1.45",
-    "@budibase/types": "^2.1.45",
+    "@budibase/backend-core": "2.1.46-alpha.3",
+    "@budibase/client": "2.1.46-alpha.3",
+    "@budibase/pro": "2.1.46-alpha.3",
+    "@budibase/string-templates": "2.1.46-alpha.3",
+    "@budibase/types": "2.1.46-alpha.3",
     "@bull-board/api": "3.7.0",
     "@bull-board/koa": "3.9.4",
     "@elastic/elasticsearch": "7.10.0",
@@ -171,7 +137,7 @@
     "@types/oracledb": "5.2.2",
     "@types/pouchdb": "6.4.0",
     "@types/redis": "4.0.11",
-    "@typescript-eslint/parser": "5.12.0",
+    "@typescript-eslint/parser": "5.45.0",
     "apidoc": "0.50.4",
     "babel-jest": "27.5.1",
     "copyfiles": "2.4.1",
@@ -179,7 +145,7 @@
     "eslint": "6.8.0",
     "ioredis-mock": "7.2.0",
     "is-wsl": "2.2.0",
-    "jest": "27.5.1",
+    "jest": "28.1.1",
     "jest-openapi": "0.14.2",
     "nodemon": "2.0.15",
     "openapi-types": "9.3.1",
@@ -190,10 +156,10 @@
     "supertest": "4.0.2",
     "swagger-jsdoc": "6.1.0",
     "timekeeper": "2.2.0",
-    "ts-jest": "27.1.3",
-    "ts-node": "10.5.0",
+    "ts-jest": "28.0.4",
+    "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
-    "typescript": "4.6.2",
+    "typescript": "4.7.3",
     "update-dotenv": "1.1.1"
   },
   "optionalDependencies": {

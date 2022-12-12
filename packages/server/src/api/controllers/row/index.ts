@@ -1,6 +1,6 @@
 import { quotas } from "@budibase/pro"
-import internal from "./internal"
-import external from "./external"
+import * as internal from "./internal"
+import * as external from "./external"
 import { isExternalTable } from "../../../integrations/utils"
 
 function pickApi(tableId: any) {
@@ -30,16 +30,24 @@ export async function patch(ctx: any): Promise<any> {
   if (body && !body._id) {
     return save(ctx)
   }
-  const { row, table } = await quotas.addQuery(
-    () => pickApi(tableId).patch(ctx),
-    {
-      datasourceId: tableId,
+  try {
+    const { row, table } = await quotas.addQuery(
+      () => pickApi(tableId).patch(ctx),
+      {
+        datasourceId: tableId,
+      }
+    )
+    if (!row) {
+      ctx.throw(404, "Row not found")
     }
-  )
-  ctx.status = 200
-  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
-  ctx.message = `${table.name} updated successfully.`
-  ctx.body = row
+    ctx.status = 200
+    ctx.eventEmitter &&
+      ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
+    ctx.message = `${table.name} updated successfully.`
+    ctx.body = row
+  } catch (err) {
+    ctx.throw(400, err)
+  }
 }
 
 export const save = async (ctx: any) => {

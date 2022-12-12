@@ -29,6 +29,7 @@ import {
   RowResponse,
   SearchUsersRequest,
   User,
+  ThirdPartyUser,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
@@ -103,13 +104,14 @@ export const getUser = async (userId: string) => {
   return user
 }
 
-interface SaveUserOpts {
+export interface SaveUserOpts {
   hashPassword?: boolean
   requirePassword?: boolean
+  currentUserId?: string
 }
 
 const buildUser = async (
-  user: User,
+  user: User | ThirdPartyUser,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
@@ -117,7 +119,8 @@ const buildUser = async (
   tenantId: string,
   dbUser?: any
 ): Promise<User> => {
-  let { password, _id } = user
+  let fullUser = user as User
+  let { password, _id } = fullUser
 
   let hashedPassword
   if (password) {
@@ -130,24 +133,24 @@ const buildUser = async (
 
   _id = _id || dbUtils.generateGlobalUserID()
 
-  user = {
+  fullUser = {
     createdAt: Date.now(),
     ...dbUser,
-    ...user,
+    ...fullUser,
     _id,
     password: hashedPassword,
     tenantId,
   }
   // make sure the roles object is always present
-  if (!user.roles) {
-    user.roles = {}
+  if (!fullUser.roles) {
+    fullUser.roles = {}
   }
   // add the active status to a user if its not provided
-  if (user.status == null) {
-    user.status = constants.UserStatus.ACTIVE
+  if (fullUser.status == null) {
+    fullUser.status = constants.UserStatus.ACTIVE
   }
 
-  return user
+  return fullUser
 }
 
 const validateUniqueUser = async (email: string, tenantId: string) => {
@@ -169,12 +172,16 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
 }
 
 export const save = async (
-  user: User,
-  opts: SaveUserOpts = {
-    hashPassword: true,
-    requirePassword: true,
-  }
+  user: User | ThirdPartyUser,
+  opts: SaveUserOpts = {}
 ): Promise<CreateUserResponse> => {
+  // default booleans to true
+  if (opts.hashPassword == null) {
+    opts.hashPassword = true
+  }
+  if (opts.requirePassword == null) {
+    opts.requirePassword = true
+  }
   const tenantId = tenancy.getTenantId()
   const db = tenancy.getGlobalDB()
 
@@ -213,6 +220,12 @@ export const save = async (
   await validateUniqueUser(email, tenantId)
 
   let builtUser = await buildUser(user, opts, tenantId, dbUser)
+  // don't allow a user to update its own roles/perms
+  if (opts.currentUserId && opts.currentUserId === dbUser?._id) {
+    builtUser.builder = dbUser.builder
+    builtUser.admin = dbUser.admin
+    builtUser.roles = dbUser.roles
+  }
 
   // make sure we set the _id field for a new user
   // Also if this is a new user, associate groups with them

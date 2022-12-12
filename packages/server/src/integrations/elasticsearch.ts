@@ -5,10 +5,13 @@ import {
   IntegrationBase,
 } from "@budibase/types"
 
-const { Client } = require("@elastic/elasticsearch")
+import { Client, ClientOptions } from "@elastic/elasticsearch"
 
 interface ElasticsearchConfig {
   url: string
+  ssl?: boolean
+  ca?: string
+  rejectUnauthorized?: boolean
 }
 
 const SCHEMA: Integration = {
@@ -22,6 +25,21 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.STRING,
       required: true,
       default: "http://localhost:9200",
+    },
+    ssl: {
+      type: DatasourceFieldType.BOOLEAN,
+      default: false,
+      required: false,
+    },
+    rejectUnauthorized: {
+      type: DatasourceFieldType.BOOLEAN,
+      default: true,
+      required: false,
+    },
+    ca: {
+      type: DatasourceFieldType.LONGFORM,
+      default: false,
+      required: false,
     },
   },
   query: {
@@ -81,7 +99,19 @@ class ElasticSearchIntegration implements IntegrationBase {
 
   constructor(config: ElasticsearchConfig) {
     this.config = config
-    this.client = new Client({ node: config.url })
+
+    const clientConfig: ClientOptions = {
+      node: this.config.url,
+    }
+
+    if (this.config.ssl) {
+      clientConfig.ssl = {
+        rejectUnauthorized: this.config.rejectUnauthorized,
+        ca: this.config.ca || undefined,
+      }
+    }
+
+    this.client = new Client(clientConfig)
   }
 
   async create(query: { index: string; json: object }) {

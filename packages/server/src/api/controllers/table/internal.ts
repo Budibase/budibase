@@ -2,7 +2,7 @@ import { updateLinks, EventType } from "../../../db/linkedRows"
 import { getRowParams, generateTableID } from "../../../db/utils"
 import { FieldTypes } from "../../../constants"
 import { TableSaveFunctions, hasTypeChanged, handleDataImport } from "./utils"
-const { getAppDB } = require("@budibase/backend-core/context")
+import { context } from "@budibase/backend-core"
 import { isTest } from "../../../environment"
 import {
   cleanupAttachments,
@@ -35,7 +35,7 @@ function checkAutoColumns(table: Table, oldTable: Table) {
 }
 
 export async function save(ctx: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const { dataImport, ...rest } = ctx.request.body
   let tableToSave = {
     type: "table",
@@ -133,12 +133,12 @@ export async function save(ctx: any) {
     tableToSave._rev = result.rev
   }
   // has to run after, make sure it has _id
-  await runStaticFormulaChecks(tableToSave, { oldTable, deletion: null })
+  await runStaticFormulaChecks(tableToSave, { oldTable, deletion: false })
   return tableToSave
 }
 
 export async function destroy(ctx: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const tableToDelete = await db.get(ctx.params.tableId)
 
   // Delete all rows for that table
@@ -161,7 +161,7 @@ export async function destroy(ctx: any) {
   })
 
   // don't remove the table itself until very end
-  await db.remove(tableToDelete)
+  await db.remove(tableToDelete._id, tableToDelete._rev)
 
   // remove table search index
   if (!isTest() || env.COUCH_DB_URL) {
@@ -176,7 +176,6 @@ export async function destroy(ctx: any) {
 
   // has to run after, make sure it has _id
   await runStaticFormulaChecks(tableToDelete, {
-    oldTable: null,
     deletion: true,
   })
   await cleanupAttachments(tableToDelete, {

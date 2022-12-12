@@ -5,8 +5,7 @@ import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
 import { Curl } from "./sources/curl"
 // @ts-ignore
-import { getAppDB } from "@budibase/backend-core/context"
-import { events } from "@budibase/backend-core"
+import { events, context } from "@budibase/backend-core"
 import { Datasource, Query } from "@budibase/types"
 
 interface ImportResult {
@@ -59,7 +58,7 @@ export class RestImporter {
       })
 
     // persist queries
-    const db = getAppDB()
+    const db = context.getAppDB()
     const response = await db.bulkDocs(queries)
 
     // create index to seperate queries and errors

@@ -7,7 +7,8 @@
       "cardsblock",
       "repeaterblock",
       "formblock",
-      "chartblock"
+      "chartblock",
+      "rowexplorer"
     ]
   },
   {
@@ -16,7 +17,8 @@
     "children": [
       "container",
       "section",
-      "grid"
+      "grid",
+      "sidepanel"
     ]
   },
   {

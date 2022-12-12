@@ -2,7 +2,7 @@
   import { onMount } from "svelte"
   import { get } from "svelte/store"
   import { goto, params } from "@roxi/routify"
-  import { BUDIBASE_INTERNAL_DB } from "constants"
+  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import { database, datasources, queries, tables, views } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
@@ -129,7 +129,7 @@
             size="18"
           />
         </div>
-        {#if datasource._id !== BUDIBASE_INTERNAL_DB}
+        {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
           <EditDatasourcePopover {datasource} />
         {/if}
       </NavItem>

@@ -25,7 +25,7 @@ const DefaultBucketName = {
   PLUGINS: "plugins",
 }
 
-const env = {
+const environment = {
   isTest,
   isDev,
   JS_BCRYPT: process.env.JS_BCRYPT,
@@ -69,24 +69,24 @@ const env = {
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
   SERVICE: process.env.SERVICE || "budibase",
-  MEMORY_LEAK_CHECK: process.env.MEMORY_LEAK_CHECK || false,
   LOG_LEVEL: process.env.LOG_LEVEL,
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
   _set(key: any, value: any) {
     process.env[key] = value
-    module.exports[key] = value
+    // @ts-ignore
+    environment[key] = value
   },
 }
 
 // clean up any environment variable edge cases
-for (let [key, value] of Object.entries(env)) {
+for (let [key, value] of Object.entries(environment)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
     // @ts-ignore
-    env[key] = 0
+    environment[key] = 0
   }
 }
 
-export = env
+export = environment

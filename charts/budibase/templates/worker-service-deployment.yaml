@@ -4,6 +4,9 @@ metadata:
   annotations:
     kompose.cmd: kompose convert
     kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.globals.logAnnotations }}
+{{ toYaml .Values.globals.logAnnotations | indent 4 }}
+{{ end }}
   creationTimestamp: null
   labels:
     io.kompose.service: worker-service
@@ -161,6 +164,10 @@ spec:
         {{ end }}
         - name: CDN_URL
           value: {{ .Values.globals.cdnUrl }}
+        {{ if .Values.services.tlsRejectUnauthorized }}
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: {{ .Values.services.tlsRejectUnauthorized }}
+        {{ end }}
 
         image: budibase/worker:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always

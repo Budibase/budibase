@@ -1,4 +1,5 @@
 import { derived } from "svelte/store"
+import { Constants } from "@budibase/frontend-core"
 import { devToolsStore } from "../devTools.js"
 import { authStore } from "../auth.js"
 
@@ -6,6 +7,10 @@ import { authStore } from "../auth.js"
 export const currentRole = derived(
   [devToolsStore, authStore],
   ([$devToolsStore, $authStore]) => {
-    return ($devToolsStore.enabled && $devToolsStore.role) || $authStore?.roleId
+    return (
+      ($devToolsStore.enabled && $devToolsStore.role) ||
+      $authStore?.roleId ||
+      Constants.Roles.PUBLIC
+    )
   }
 )

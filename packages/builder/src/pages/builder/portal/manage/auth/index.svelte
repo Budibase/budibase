@@ -20,11 +20,12 @@
     Toggle,
     Tag,
     Tags,
+    Icon,
+    Helpers,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
   import { organisation, admin } from "stores/portal"
-  import { Helpers } from "@budibase/bbui"
 
   const ConfigTypes = {
     Google: "google",
@@ -40,7 +41,9 @@
 
   // Indicate to user that callback is based on platform url
   // If there is an existing value, indicate that it may be removed to return to default behaviour
-  $: googleCallbackTooltip = googleCallbackReadonly
+  $: googleCallbackTooltip = $admin.cloud
+    ? null
+    : googleCallbackReadonly
     ? "Vist the organisation page to update the platform URL"
     : "Leave blank to use the default callback URL"
 
@@ -54,6 +57,7 @@
         readonly: googleCallbackReadonly,
         tooltip: googleCallbackTooltip,
         placeholder: $organisation.googleCallbackUrl,
+        copyButton: true,
       },
     ],
   }
@@ -66,9 +70,12 @@
       {
         name: "callbackURL",
         readonly: true,
-        tooltip: "Vist the organisation page to update the platform URL",
+        tooltip: $admin.cloud
+          ? null
+          : "Vist the organisation page to update the platform URL",
         label: "Callback URL",
         placeholder: $organisation.oidcCallbackUrl,
+        copyButton: true,
       },
     ],
   }
@@ -231,6 +238,11 @@
     },
   ]
 
+  const copyToClipboard = async value => {
+    await Helpers.copyToClipboard(value)
+    notifications.success("Copied")
+  }
+
   onMount(async () => {
     try {
       await organisation.init()
@@ -336,11 +348,23 @@
       {#each GoogleConfigFields.Google as field}
         <div class="form-row">
           <Label size="L" tooltip={field.tooltip}>{field.label}</Label>
-          <Input
-            bind:value={providers.google.config[field.name]}
-            readonly={field.readonly}
-            placeholder={field.placeholder}
-          />
+          <div class="inputContainer">
+            <div class="input">
+              <Input
+                bind:value={providers.google.config[field.name]}
+                readonly={field.readonly}
+                placeholder={field.placeholder}
+              />
+            </div>
+            {#if field.copyButton}
+              <div
+                class="copy"
+                on:click={() => copyToClipboard(field.placeholder)}
+              >
+                <Icon size="S" name="Copy" />
+              </div>
+            {/if}
+          </div>
         </div>
       {/each}
       <div class="form-row">
@@ -375,12 +399,24 @@
       {#each OIDCConfigFields.Oidc as field}
         <div class="form-row">
           <Label size="L" tooltip={field.tooltip}>{field.label}</Label>
-          <Input
-            bind:value={providers.oidc.config.configs[0][field.name]}
-            readonly={field.readonly}
-            placeholder={field.placeholder}
-            dataCy={field.name}
-          />
+          <div class="inputContainer">
+            <div class="input">
+              <Input
+                bind:value={providers.oidc.config.configs[0][field.name]}
+                readonly={field.readonly}
+                placeholder={field.placeholder}
+                dataCy={field.name}
+              />
+            </div>
+            {#if field.copyButton}
+              <div
+                class="copy"
+                on:click={() => copyToClipboard(field.placeholder)}
+              >
+                <Icon size="S" name="Copy" />
+              </div>
+            {/if}
+          </div>
         </div>
       {/each}
     </Layout>
@@ -556,5 +592,17 @@
   }
   .provider-title span {
     flex: 1 1 auto;
+  }
+  .inputContainer {
+    display: flex;
+    flex-direction: row;
+  }
+  .input {
+    flex: 1;
+  }
+  .copy {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
   }
 </style>

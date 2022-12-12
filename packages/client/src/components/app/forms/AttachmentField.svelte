@@ -76,18 +76,26 @@
   bind:fieldApi
   defaultValue={[]}
 >
-  {#if fieldState}
-    <CoreDropzone
-      value={fieldState.value}
-      disabled={fieldState.disabled}
-      error={fieldState.error}
-      on:change={handleChange}
-      {processFiles}
-      {deleteAttachments}
-      {handleFileTooLarge}
-      {handleTooManyFiles}
-      {maximum}
-      {extensions}
-    />
-  {/if}
+  <div class="minHeightWrapper">
+    {#if fieldState}
+      <CoreDropzone
+        value={fieldState.value}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        on:change={handleChange}
+        {processFiles}
+        {deleteAttachments}
+        {handleFileTooLarge}
+        {handleTooManyFiles}
+        {maximum}
+        {extensions}
+      />
+    {/if}
+  </div>
 </Field>
+
+<style>
+  .minHeightWrapper {
+    min-height: 220px;
+  }
+</style>

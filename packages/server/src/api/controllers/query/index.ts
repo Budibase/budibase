@@ -5,11 +5,8 @@ import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
 import { invalidateDynamicVariables } from "../../../threads/utils"
 import { QUERY_THREAD_TIMEOUT } from "../../../environment"
-import { getAppDB } from "@budibase/backend-core/context"
 import { quotas } from "@budibase/pro"
-import { events } from "@budibase/backend-core"
-import { getCookie } from "@budibase/backend-core/utils"
-import { Cookies, Configs } from "@budibase/backend-core/constants"
+import { events, context, utils, constants } from "@budibase/backend-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
@@ -28,7 +25,7 @@ function enrichQueries(input: any) {
 }
 
 export async function fetch(ctx: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
 
   const body = await db.allDocs(
     getQueryParams(null, {
@@ -81,7 +78,7 @@ const _import = async (ctx: any) => {
 export { _import as import }
 
 export async function save(ctx: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const query = ctx.request.body
 
   const datasource = await db.get(query.datasourceId)
@@ -103,7 +100,7 @@ export async function save(ctx: any) {
 }
 
 export async function find(ctx: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const query = enrichQueries(await db.get(ctx.params.queryId))
   // remove properties that could be dangerous in real app
   if (isProdAppID(ctx.appId)) {
@@ -115,13 +112,13 @@ export async function find(ctx: any) {
 
 //Required to discern between OIDC OAuth config entries
 function getOAuthConfigCookieId(ctx: any) {
-  if (ctx.user.providerType === Configs.OIDC) {
-    return getCookie(ctx, Cookies.OIDC_CONFIG)
+  if (ctx.user.providerType === constants.Config.OIDC) {
+    return utils.getCookie(ctx, constants.Cookie.OIDC_CONFIG)
   }
 }
 
 function getAuthConfig(ctx: any) {
-  const authCookie = getCookie(ctx, Cookies.Auth)
+  const authCookie = utils.getCookie(ctx, constants.Cookie.Auth)
   let authConfigCtx: any = {}
   authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
   authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null
@@ -129,7 +126,7 @@ function getAuthConfig(ctx: any) {
 }
 
 export async function preview(ctx: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
 
   const datasource = await db.get(ctx.request.body.datasourceId)
   const query = ctx.request.body
@@ -201,7 +198,7 @@ async function execute(
   ctx: any,
   opts: any = { rowsOnly: false, isAutomation: false }
 ) {
-  const db = getAppDB()
+  const db = context.getAppDB()
 
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
@@ -267,7 +264,7 @@ export async function executeV2(
 }
 
 const removeDynamicVariables = async (queryId: any) => {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const query = await db.get(queryId)
   const datasource = await db.get(query.datasourceId)
   const dynamicVariables = datasource.config.dynamicVariables
@@ -288,7 +285,7 @@ const removeDynamicVariables = async (queryId: any) => {
 }
 
 export async function destroy(ctx: any) {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const queryId = ctx.params.queryId
   await removeDynamicVariables(queryId)
   const query = await db.get(queryId)
