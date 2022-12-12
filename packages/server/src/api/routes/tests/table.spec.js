@@ -51,7 +51,7 @@ describe("/tables", () => {
       table.dataImport.schema = table.schema
 
       const res = await createTable(table)
- 
+
       expect(events.table.created).toBeCalledTimes(1)
       expect(events.table.created).toBeCalledWith(res.body)
       expect(events.table.imported).toBeCalledTimes(1)
@@ -87,6 +87,12 @@ describe("/tables", () => {
 
     it("updates all the row fields for a table when a schema key is renamed", async () => {
       const testTable = await config.createTable()
+      await config.createView({
+        name: "TestView",
+        field: "Price",
+        calculation: "stats",
+        tableId: testTable._id,
+      })
 
       const testRow = await request
         .post(`/api/${testTable._id}/rows`)
@@ -109,7 +115,7 @@ describe("/tables", () => {
             updated: "updatedName"
           },
           schema: {
-            updatedName: {type: "string"}
+            updatedName: { type: "string" }
           }
         })
         .set(config.defaultHeaders())

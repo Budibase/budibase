@@ -1,7 +1,5 @@
 import { TestConfiguration } from "../../../../tests"
 
-// TODO
-
 describe("/api/global/license", () => {
   const config = new TestConfiguration()
 
