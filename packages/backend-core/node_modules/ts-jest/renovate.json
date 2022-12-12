@@ -1,0 +1,68 @@
+{
+  "extends": [
+    ":dependencyDashboard",
+    "group:babelMonorepo",
+    "group:commitlintMonorepo",
+    "group:docusaurusMonorepo",
+    ":prHourlyLimit2",
+    "workarounds:all"
+  ],
+  "timezone": "UTC",
+  "rangeStrategy": "bump",
+  "separateMajorMinor": true,
+  "prConcurrentLimit": 2,
+  "semanticCommits": "enabled",
+  "commitMessagePrefix": "build(deps):",
+  "ignorePaths": ["examples/react-app"],
+  "ignoreDeps": [
+    "@mdx-js/react",
+    "@types/react",
+    "execa",
+    "chalk",
+    "husky"
+  ],
+  "packageRules": [
+    {
+      "matchPaths": ["examples/**"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "matchPaths": ["examples/react-app"],
+      "enabled": false
+    },
+    {
+      "matchPaths": ["package.json"],
+      "matchPackagePatterns": ["jest"],
+      "excludePackageNames": ["eslint-plugin-jest"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "Jest packages"
+    },
+    {
+      "extends": ["packages:eslint"],
+      "groupName": "ESLint packages"
+    },
+    {
+      "matchPackagePrefixes": ["esbuild"],
+      "groupName": "Esbuild packages"
+    },
+    {
+      "matchFiles": ["package.json"],
+      "matchDepTypes": ["dependencies", "optionalDependencies"],
+      "rangeStrategy": "in-range-only"
+    },
+    {
+      "matchPaths": ["e2e/**"],
+      "matchPackageNames": [
+        "react",
+        "react-intl"
+      ],
+      "groupName": "React e2e packages",
+      "enabled": true
+    },
+    {
+      "matchDepTypes": ["peerDependencies"],
+      "enabled": false
+    }
+  ]
+}
