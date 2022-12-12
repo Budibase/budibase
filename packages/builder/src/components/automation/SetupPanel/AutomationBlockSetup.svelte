@@ -38,13 +38,15 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
+
   let webhookModal
   let drawer
-  let tempFilters = lookForFilters(schemaProperties) || []
   let fillWidth = true
   let codeBindingOpen = false
   let inputData
 
+  $: filters = lookForFilters(schemaProperties) || []
+  $: tempFilters = filters
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block || $automationStore.selectedBlock,
@@ -222,16 +224,17 @@
       {:else if value.customType === "filters"}
         <ActionButton on:click={drawer.show}>Define filters</ActionButton>
         <Drawer bind:this={drawer} {fillWidth} title="Filtering">
-          <Button cta slot="buttons" on:click={() => saveFilters(key)}
-            >Save</Button
-          >
+          <Button cta slot="buttons" on:click={() => saveFilters(key)}>
+            Save
+          </Button>
           <FilterDrawer
             slot="body"
-            bind:filters={tempFilters}
+            {filters}
             {bindings}
             {schemaFields}
             panel={AutomationBindingPanel}
             fillWidth
+            on:change={e => (tempFilters = e.detail)}
           />
         </Drawer>
       {:else if value.customType === "password"}
