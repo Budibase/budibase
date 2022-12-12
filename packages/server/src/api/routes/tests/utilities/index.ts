@@ -63,14 +63,14 @@ export function afterAll() {
 
 export function getRequest() {
   if (!request) {
-    exports.beforeAll()
+    beforeAll()
   }
   return request
 }
 
 export function getConfig() {
   if (!config) {
-    exports.beforeAll()
+    beforeAll()
   }
   return config
 }

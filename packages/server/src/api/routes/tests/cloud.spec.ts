@@ -1,4 +1,4 @@
-import { getProdAppID } from "@budibase/backend-core/src/db"
+import { db as dbCore } from "@budibase/backend-core"
 import { AppStatus } from "../../../db/utils"
 
 import * as setup from "./utilities"
@@ -24,7 +24,9 @@ describe("/cloud", () => {
       // import will not run
       await request
         .delete(
-          `/api/applications/${getProdAppID(config.getAppId())}?unpublish=true`
+          `/api/applications/${dbCore.getProdAppID(
+            config.getAppId()
+          )}?unpublish=true`
         )
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
