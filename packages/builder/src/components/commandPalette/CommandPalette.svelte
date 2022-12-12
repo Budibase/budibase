@@ -6,6 +6,7 @@
     Icon,
     Input,
     ModalContent,
+    Detail,
     notifications,
   } from "@budibase/bbui"
   import { API } from "api"
@@ -20,7 +21,6 @@
   import { getContext } from "svelte"
 
   const modalContext = getContext(Context.Modal)
-
   const commands = [
     {
       type: "Navigate",
@@ -139,27 +139,51 @@
   let search
   let selected = null
 
-  $: if (search) {
+  $: enrichedCommands = commands.map(cmd => ({
+    ...cmd,
+    searchValue: `${cmd.type} ${cmd.name}`.toLowerCase(),
+  }))
+  $: results = filterResults(enrichedCommands, search)
+  $: categories = groupResults(results)
+
+  const filterResults = (commands, search) => {
+    if (!search) {
+      selected = null
+      return commands
+    }
     selected = 0
+    search = search.toLowerCase()
+    return commands
+      .filter(cmd => cmd.searchValue.includes(search))
+      .map((cmd, idx) => ({
+        ...cmd,
+        idx,
+      }))
   }
 
-  $: results = commands.filter(
-    command =>
-      !search || new RegExp(search, "gi").test(command.type + command.name)
-  )
+  const groupResults = results => {
+    let categories = {}
+    results?.forEach(result => {
+      if (!categories[result.type]) {
+        categories[result.type] = []
+      }
+      categories[result.type].push(result)
+    })
+    return Object.entries(categories)
+  }
 
-  function onKeyDown(e) {
+  const onKeyDown = e => {
     if (e.key === "ArrowDown") {
+      e.preventDefault()
       if (selected === null) {
         selected = 0
         return
       }
-
       if (selected < results.length - 1) {
         selected += 1
       }
-    }
-    if (e.key === "ArrowUp") {
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
       if (selected === null) {
         selected = results.length - 1
         return
@@ -167,9 +191,13 @@
       if (selected > 0) {
         selected -= 1
       }
-    }
-    if (e.key === "Enter") {
-      runAction(results[selected || 0])
+    } else if (e.key === "Enter") {
+      if (selected == null) {
+        return
+      }
+      runAction(results[selected])
+    } else if (e.key === "Escape") {
+      modalContext.hide()
     }
   }
 
@@ -192,49 +220,91 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-
 <ModalContent
-  title="Command Palette"
   size="L"
   showCancelButton={false}
   showConfirmButton={false}
   showCloseIcon={false}
 >
-  <Input bind:value={search} placeholder={"Search for command..."} />
-  <div class="options">
-    {#each results as command, idx}
-      <div
-        class="command"
-        on:click={() => runAction(command)}
-        class:selected={idx === selected || results.length === 1}
-      >
-        <Icon size="M" name={command.icon} />
-        <strong>{command.type}:&nbsp;</strong>
-        <div class="name">
-          {command.name}
+  <div class="content">
+    <div class="title">
+      <Icon size="XL" name="Search" />
+      <Input bind:value={search} quiet placeholder="Search for command" />
+    </div>
+    <div class="commands">
+      {#each categories as [name, results], catIdx}
+        <div class="category">
+          <Detail>{name}</Detail>
+          <div class="options">
+            {#each results as command, cmdIdx}
+              <div
+                class="command"
+                on:click={() => runAction(command)}
+                class:selected={command.idx === selected}
+              >
+                <Icon size="M" name={command.icon} />
+                <strong>{command.type}:&nbsp;</strong>
+                <div class="name">
+                  {command.name}
+                </div>
+              </div>
+            {/each}
+          </div>
         </div>
-      </div>
-    {/each}
+      {/each}
+    </div>
   </div>
-  <footer>
-    <ActionGroup compact>
-      <ActionButton icon="ChevronUpDown">Navigate</ActionButton>
-      <ActionButton icon="Pivot">Select</ActionButton>
-      <ActionButton icon="ChevronUp">Dismiss</ActionButton>
-    </ActionGroup>
-  </footer>
 </ModalContent>
 
 <style>
+  .content {
+    margin: -40px;
+    overflow: hidden;
+  }
+  .title {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-l)
+      var(--spacing-xl);
+    border-bottom: var(--border-dark);
+    gap: var(--spacing-m);
+    border-bottom-width: 2px;
+  }
+  .title :global(.spectrum-Textfield-input) {
+    border-bottom: none;
+    font-size: 20px;
+  }
+
+  .commands {
+    height: 378px;
+    overflow: scroll;
+  }
+
+  .category {
+    padding: var(--spacing-m) var(--spacing-xl);
+    border-bottom: var(--border-light);
+  }
+  .category:last-of-type {
+    border-bottom: none;
+  }
+  .category :global(.spectrum-Detail) {
+    color: var(--spectrum-global-color-gray-600);
+  }
+  .options {
+    padding-top: var(--spacing-m);
+    margin: 0 calc(-1 * var(--spacing-xl));
+  }
+
   .command {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    padding: var(--spacing-m);
+    padding: var(--spacing-s) var(--spacing-xl);
     cursor: pointer;
     overflow: hidden;
-    border-radius: var(--border-radius-s);
     transition: color 130ms ease-out, background-color 130ms ease-out;
   }
   .command:hover,
@@ -250,10 +320,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .options {
-    height: 500px;
-    overflow: scroll;
-  }
+
   footer {
     display: flex;
     justify-content: center;
