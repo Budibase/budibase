@@ -9,7 +9,8 @@
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],
       "@budibase/backend-core/*": ["../backend-core/*"],
-      "@budibase/pro": ["../../../budibase-pro/packages/pro/src"]
+      "@budibase/pro": ["../../../budibase-pro/packages/pro/src"],
+      "@budibase/pro/*": ["../../../budibase-pro/packages/pro/*"]
     }
   },
   "ts-node": {
@@ -25,7 +26,6 @@
     "package.json"
   ],
   "exclude": [
-    "node_modules",
     "dist"
   ]
 }

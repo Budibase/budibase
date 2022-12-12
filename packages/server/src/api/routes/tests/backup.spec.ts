@@ -8,10 +8,10 @@ jest.mock("@budibase/backend-core", () => {
   }
 })
 
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
-const { events } = require("@budibase/backend-core")
-
+import * as setup from "./utilities"
+import { events } from "@budibase/backend-core"
+import sdk from "../../../sdk"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 describe("/backups", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -30,7 +30,7 @@ describe("/backups", () => {
         .expect(200)
       expect(res.text).toBeDefined()
       expect(res.headers["content-type"]).toEqual("application/gzip")
-      expect(events.app.exported.mock.calls.length).toBe(1)
+      expect(events.app.exported).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -39,6 +39,17 @@ describe("/backups", () => {
         method: "GET",
         url: `/api/backups/export?appId=${config.getAppId()}`,
       })
+    })
+  })
+
+  describe("calculateBackupStats", () => {
+    it("should be able to calculate the backup statistics", async () => {
+      config.createAutomation()
+      config.createScreen()
+      let res = await sdk.backups.calculateBackupStats(config.getAppId())
+      expect(res.automations).toEqual(1)
+      expect(res.datasources).toEqual(1)
+      expect(res.screens).toEqual(1)
     })
   })
 })

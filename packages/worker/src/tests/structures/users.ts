@@ -10,7 +10,7 @@ export const user = (userProps?: any): User => {
   return {
     email: newEmail(),
     password: "test",
-    roles: {},
+    roles: { app_test: "admin" },
     ...userProps,
   }
 }
