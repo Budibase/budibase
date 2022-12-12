@@ -25,8 +25,6 @@
   // let betaAccess = false
   let loaded = false
   let commandPaletteModal
-  let commandPaletteVisible = false
-  let canShowCommandPalette = false
 
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
@@ -63,19 +61,11 @@
     })
   }
 
-  // Event handlers for the command palette
+  // Event handler for the command palette
   const handleKeyDown = e => {
-    if (e.key === "Control") {
-      canShowCommandPalette = true
-    } else if (canShowCommandPalette) {
-      canShowCommandPalette = false
-    }
-  }
-  const handleKeyUp = e => {
-    if (e.key === "Control" && canShowCommandPalette) {
-      commandPaletteVisible
-        ? commandPaletteModal.hide()
-        : commandPaletteModal.show()
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      commandPaletteModal.toggle()
     }
   }
 
@@ -172,12 +162,8 @@
   </div>
 {/if}
 
-<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
-<Modal
-  bind:this={commandPaletteModal}
-  on:hide={() => (commandPaletteVisible = false)}
-  on:show={() => (commandPaletteVisible = true)}
->
+<svelte:window on:keydown={handleKeyDown} />
+<Modal bind:this={commandPaletteModal}>
   <CommandPalette />
 </Modal>
 
