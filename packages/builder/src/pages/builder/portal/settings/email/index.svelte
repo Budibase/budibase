@@ -126,11 +126,7 @@
 <Layout noPadding>
   <Layout noPadding gap="XS">
     <Heading size="M">Email</Heading>
-    <Body>
-      Sending email is not required, but highly recommended for processes such
-      as password recovery. To setup automated auth emails, simply add the
-      values below and click activate.
-    </Body>
+    <Body>Add your SMTP details to send automated emails from Budibase</Body>
   </Layout>
   <Divider />
   {#if smtpConfig}
@@ -164,7 +160,10 @@
         <Label size="L">From email address</Label>
         <Input type="email" bind:value={smtpConfig.config.from} />
       </div>
-      <Checkbox bind:value={requireAuth} text="Require sign-in" />
+      <div class="form-row">
+        <Label size="L">Require sign in</Label>
+        <Checkbox bind:value={requireAuth} />
+      </div>
       {#if requireAuth}
         <div class="form-row">
           <Label size="L">User</Label>
@@ -191,7 +190,7 @@
       <Heading size="S">Templates</Heading>
       <Body size="S">
         Budibase comes out of the box with ready-made email templates to help
-        with user onboarding. Please refrain from changing the links.
+        with user onboarding.
       </Body>
     </Layout>
     <Table

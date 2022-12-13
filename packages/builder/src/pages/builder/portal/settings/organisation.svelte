@@ -77,11 +77,7 @@
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <Heading size="M">Organisation</Heading>
-      <Body>
-        Organisation settings is where you can edit your organisation name and
-        logo. You can also configure your platform URL and enable or disable
-        analytics.
-      </Body>
+      <Body>Edit and manage all of your organisation settings</Body>
     </Layout>
     <Divider />
     <Layout gap="XS" noPadding>

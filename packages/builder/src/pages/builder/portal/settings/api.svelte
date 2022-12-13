@@ -37,7 +37,7 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">API Key</Heading>
-    <Body>You API key to access the Budibase public API</Body>
+    <Body>Your API key to access the Budibase public API</Body>
   </Layout>
   <Divider />
   <div class="fields">

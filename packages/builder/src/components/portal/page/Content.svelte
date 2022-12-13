@@ -1,11 +1,12 @@
 <script>
+  export let narrow = false
 </script>
 
 <div class="content">
   <div class="side-nav">
     <slot name="side-nav" />
   </div>
-  <div class="main">
+  <div class="main" class:narrow>
     <slot />
   </div>
 </div>
@@ -23,5 +24,8 @@
   }
   .main {
     flex: 1 1 auto;
+  }
+  .main.narrow {
+    max-width: 600px;
   }
 </style>

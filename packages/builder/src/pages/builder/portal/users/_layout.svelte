@@ -7,8 +7,8 @@
   $: narrow = !$isActive("./users/index") && !$isActive("./groups/index")
 </script>
 
-<Page {narrow}>
-  <Content>
+<Page>
+  <Content {narrow}>
     <div slot="side-nav">
       <SideNav title="Users">
         <SideNavItem

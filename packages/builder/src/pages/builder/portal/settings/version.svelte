@@ -54,10 +54,10 @@
 {#if $auth.isAdmin}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
-      <Heading size="M">Updates</Heading>
+      <Heading size="M">Version</Heading>
       <Body>
         Keep your budibase installation up to date to take advantage of the
-        latest features, security updates and much more.
+        latest features, security updates and much more
       </Body>
     </Layout>
     <Divider />
