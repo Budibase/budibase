@@ -32,31 +32,8 @@ const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
-function typecastForLooping(loopStep: LoopStep, input: LoopInput) {
-  if (!input || !input.binding) {
-    return null
-  }
-  try {
-    switch (loopStep.inputs.option) {
-      case LoopStepType.ARRAY:
-        if (typeof input.binding === "string") {
-          return JSON.parse(input.binding)
-        }
-        break
-      case LoopStepType.STRING:
-        if (Array.isArray(input.binding)) {
-          return input.binding.join(",")
-        }
-        break
-    }
-  } catch (err) {
-    throw new Error("Unable to cast to correct type")
-  }
-  return input.binding
-}
-
 function getLoopIterations(loopStep: LoopStep, input: LoopInput) {
-  const binding = typecastForLooping(loopStep, input)
+  const binding = automationUtils.typecastForLooping(loopStep, input)
   if (!loopStep || !binding) {
     return 1
   }
@@ -289,7 +266,7 @@ class Orchestrator {
 
           let tempOutput = { items: loopSteps, iterations: iterationCount }
           try {
-            newInput.binding = typecastForLooping(
+            newInput.binding = automationUtils.typecastForLooping(
               loopStep as LoopStep,
               newInput
             )

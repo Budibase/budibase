@@ -116,7 +116,7 @@ describe("/api/global/users", () => {
 
     it("should ignore users existing in other tenants", async () => {
       const user = await config.createUser()
-      jest.resetAllMocks()
+      jest.clearAllMocks()
 
       await tenancy.doInTenant(TENANT_1, async () => {
         const response = await config.api.users.bulkCreateUsers([user])
@@ -229,7 +229,7 @@ describe("/api/global/users", () => {
 
     it("should not be able to create user that exists in other tenant", async () => {
       const user = await config.createUser()
-      jest.resetAllMocks()
+      jest.clearAllMocks()
 
       await tenancy.doInTenant(TENANT_1, async () => {
         delete user._id
