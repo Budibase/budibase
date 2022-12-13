@@ -1,10 +1,14 @@
 import Router from "@koa/router"
 import * as controller from "../controllers/backup"
 import authorized from "../../middleware/authorized"
-import { BUILDER } from "@budibase/backend-core/permissions"
+import { permissions } from "@budibase/backend-core"
 
-const router = new Router()
+const router: Router = new Router()
 
-router.get("/api/backups/export", authorized(BUILDER), controller.exportAppDump)
+router.get(
+  "/api/backups/export",
+  authorized(permissions.BUILDER),
+  controller.exportAppDump
+)
 
-export default router
+export = router

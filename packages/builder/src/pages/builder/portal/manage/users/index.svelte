@@ -7,7 +7,6 @@
     Table,
     Layout,
     Modal,
-    ModalContent,
     Search,
     notifications,
     Pagination,
@@ -23,6 +22,7 @@
   import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
+  import InvitedModal from "./_components/InvitedModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { get } from "svelte/store"
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
@@ -67,6 +67,8 @@
       sortable: false,
     },
   }
+  $: userData = []
+  $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: {
     enrichedUsers = $fetch.rows?.map(user => {
       let userGroups = []
@@ -112,8 +114,7 @@
       groups: userData.groups,
     }))
     try {
-      const res = await users.invite(payload)
-      notifications.success(res.message)
+      inviteUsersResponse = await users.invite(payload)
       inviteConfirmationModal.show()
     } catch (error) {
       notifications.error("Error inviting user")
@@ -273,16 +274,7 @@
 </Modal>
 
 <Modal bind:this={inviteConfirmationModal}>
-  <ModalContent
-    showCancelButton={false}
-    title="Invites sent!"
-    confirmText="Done"
-  >
-    <Body size="S">
-      Your users should now recieve an email invite to get access to their
-      Budibase account
-    </Body>
-  </ModalContent>
+  <InvitedModal {inviteUsersResponse} />
 </Modal>
 
 <Modal bind:this={onboardingTypeModal}>

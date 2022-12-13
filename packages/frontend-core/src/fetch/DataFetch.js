@@ -117,7 +117,7 @@ export default class DataFetch {
    * Fetches a fresh set of data from the server, resetting pagination
    */
   async getInitialData() {
-    const { datasource, filter, sortColumn, paginate } = this.options
+    const { datasource, filter, paginate } = this.options
 
     // Fetch datasource definition and determine feature flags
     const definition = await this.getDefinition(datasource)
@@ -134,6 +134,17 @@ export default class DataFetch {
     if (!schema) {
       return
     }
+
+    // If no sort order, default to descending
+    if (!this.options.sortOrder) {
+      this.options.sortOrder = "ascending"
+    }
+
+    // If no sort column, use the first field in the schema
+    if (!this.options.sortColumn) {
+      this.options.sortColumn = Object.keys(schema)[0]
+    }
+    const { sortColumn } = this.options
 
     // Determine what sort type to use
     let sortType = "string"

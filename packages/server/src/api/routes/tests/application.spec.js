@@ -17,7 +17,6 @@ const {
   checkBuilderEndpoint,
 } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
-const { basicScreen, basicLayout } = setup.structures
 const { AppStatus } = require("../../../db/utils")
 const { events } = require("@budibase/backend-core")
 

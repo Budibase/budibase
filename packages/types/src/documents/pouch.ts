@@ -7,8 +7,8 @@ export interface RowResponse<T> {
   id: string
   key: string
   error: string
-  value: RowValue
-  doc: T
+  value: T | RowValue
+  doc?: T | any
 }
 
 export interface AllDocsResponse<T> {
@@ -20,6 +20,12 @@ export interface AllDocsResponse<T> {
 export type BulkDocsResponse = BulkDocResponse[]
 
 interface BulkDocResponse {
+  ok: boolean
+  id: string
+  rev: string
+}
+
+export interface PutResponse {
   ok: boolean
   id: string
   rev: string

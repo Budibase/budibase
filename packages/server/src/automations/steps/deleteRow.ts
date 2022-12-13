@@ -1,14 +1,19 @@
 import { destroy } from "../../api/controllers/row"
 import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
+import {
+  AutomationActionStepId,
+  AutomationStepSchema,
+  AutomationStepInput,
+} from "@budibase/types"
 
-export const definition = {
+export const definition: AutomationStepSchema = {
   description: "Delete a row from your database",
   icon: "TableRowRemoveCenter",
   name: "Delete Row",
   tagline: "Delete a {{inputs.enriched.table.name}} row",
   type: "ACTION",
-  stepId: "DELETE_ROW",
+  stepId: AutomationActionStepId.DELETE_ROW,
   internal: true,
   inputs: {},
   schema: {
@@ -47,7 +52,7 @@ export const definition = {
   },
 }
 
-export async function run({ inputs, appId, emitter }: any) {
+export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   if (inputs.id == null) {
     return {
       success: false,

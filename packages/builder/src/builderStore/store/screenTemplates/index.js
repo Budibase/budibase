@@ -1,13 +1,7 @@
-import newRowScreen from "./newRowScreen"
-import rowDetailScreen from "./rowDetailScreen"
 import rowListScreen from "./rowListScreen"
 import createFromScratchScreen from "./createFromScratchScreen"
 
-const allTemplates = tables => [
-  ...newRowScreen(tables),
-  ...rowDetailScreen(tables),
-  ...rowListScreen(tables),
-]
+const allTemplates = tables => [...rowListScreen(tables)]
 
 // Allows us to apply common behaviour to all create() functions
 const createTemplateOverride = (frontendState, template) => () => {

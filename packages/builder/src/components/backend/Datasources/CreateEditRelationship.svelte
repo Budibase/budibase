@@ -45,6 +45,23 @@
 
   const touched = writable({})
 
+  function invalidThroughTable({ through, throughTo, throughFrom }) {
+    // need to know the foreign key columns to check error
+    if (!through || !throughTo || !throughFrom) {
+      return false
+    }
+    const throughTable = plusTables.find(tbl => tbl._id === through)
+    const otherColumns = Object.values(throughTable.schema).filter(
+      col => col.name !== throughFrom && col.name !== throughTo
+    )
+    for (let col of otherColumns) {
+      if (col.constraints?.presence && !col.autocolumn) {
+        return true
+      }
+    }
+    return false
+  }
+
   function checkForErrors(fromRelate, toRelate) {
     const isMany =
       fromRelate.relationshipType === RelationshipTypes.MANY_TO_MANY
@@ -58,6 +75,10 @@
     }
     if ($touched.through && isMany && !fromRelate.through) {
       errObj.through = tableNotSet
+    }
+    if ($touched.through && invalidThroughTable(fromRelate)) {
+      errObj.through =
+        "Ensure all columns in table are nullable or auto generated"
     }
     if ($touched.foreign && !isMany && !fromRelate.fieldName) {
       errObj.foreign = "Please pick the foreign key"

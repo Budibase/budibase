@@ -61,6 +61,13 @@
     align-items: center;
     gap: var(--spacing-l);
   }
+  .header-left {
+    flex: 1 1 auto;
+    width: 0;
+  }
+  .header-left :global(> *) {
+    max-width: 100%;
+  }
   .header-left :global(.spectrum-Picker) {
     font-weight: 600;
     color: var(--spectrum-global-color-gray-900);

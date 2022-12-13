@@ -255,6 +255,7 @@
   .config {
     display: grid;
     grid-gap: var(--spacing-s);
+    z-index: 1;
   }
 
   .config-field {

@@ -1,4 +1,4 @@
-const { getAppDB } = require("@budibase/backend-core/context")
+import { context } from "@budibase/backend-core"
 import { isExternalTable } from "../../../integrations/utils"
 import { APP_PREFIX, DocumentType } from "../../../db/utils"
 
@@ -13,7 +13,7 @@ export async function addRev(
   if (body._id.startsWith(APP_PREFIX)) {
     id = DocumentType.APP_METADATA
   }
-  const db = getAppDB()
+  const db = context.getAppDB()
   const dbDoc = await db.get(id)
   body._rev = dbDoc._rev
   // update ID in case it is an app ID

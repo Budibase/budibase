@@ -67,50 +67,54 @@ if (
   INTEGRATIONS[SourceName.ORACLE] = oracle.integration
 }
 
-module.exports = {
-  getDefinitions: async () => {
-    const pluginSchemas: { [key: string]: Integration } = {}
-    if (environment.SELF_HOSTED) {
-      const plugins = await getPlugins(PluginType.DATASOURCE)
-      // extract the actual schema from each custom
-      for (let plugin of plugins) {
-        const sourceId = plugin.name
-        pluginSchemas[sourceId] = {
-          ...plugin.schema["schema"],
-          custom: true,
-        }
-        if (plugin.iconUrl) {
-          pluginSchemas[sourceId].iconUrl = plugin.iconUrl
+export async function getDefinitions() {
+  const pluginSchemas: { [key: string]: Integration } = {}
+  if (environment.SELF_HOSTED) {
+    const plugins = await getPlugins(PluginType.DATASOURCE)
+    // extract the actual schema from each custom
+    for (let plugin of plugins) {
+      const sourceId = plugin.name
+      pluginSchemas[sourceId] = {
+        ...plugin.schema["schema"],
+        custom: true,
+      }
+      if (plugin.iconUrl) {
+        pluginSchemas[sourceId].iconUrl = plugin.iconUrl
+      }
+    }
+  }
+  return {
+    ...cloneDeep(DEFINITIONS),
+    ...pluginSchemas,
+  }
+}
+
+export async function getIntegration(integration: string) {
+  if (INTEGRATIONS[integration]) {
+    return INTEGRATIONS[integration]
+  }
+  if (environment.SELF_HOSTED) {
+    const plugins = await getPlugins(PluginType.DATASOURCE)
+    for (let plugin of plugins) {
+      if (plugin.name === integration) {
+        // need to use commonJS require due to its dynamic runtime nature
+        const retrieved: any = await getDatasourcePlugin(
+          plugin.name,
+          plugin.jsUrl,
+          plugin.schema?.hash
+        )
+        if (retrieved.integration) {
+          return retrieved.integration
+        } else {
+          return retrieved
         }
       }
     }
-    return {
-      ...cloneDeep(DEFINITIONS),
-      ...pluginSchemas,
-    }
-  },
-  getIntegration: async (integration: string) => {
-    if (INTEGRATIONS[integration]) {
-      return INTEGRATIONS[integration]
-    }
-    if (environment.SELF_HOSTED) {
-      const plugins = await getPlugins(PluginType.DATASOURCE)
-      for (let plugin of plugins) {
-        if (plugin.name === integration) {
-          // need to use commonJS require due to its dynamic runtime nature
-          const retrieved: any = await getDatasourcePlugin(
-            plugin.name,
-            plugin.jsUrl,
-            plugin.schema?.hash
-          )
-          if (retrieved.integration) {
-            return retrieved.integration
-          } else {
-            return retrieved
-          }
-        }
-      }
-    }
-    throw new Error("No datasource implementation found.")
-  },
+  }
+  throw new Error("No datasource implementation found.")
+}
+
+export default {
+  getDefinitions,
+  getIntegration,
 }

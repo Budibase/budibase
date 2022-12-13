@@ -10,21 +10,20 @@ if (process.env.ELASTIC_APM_ENABLED) {
 }
 
 import { ExtendableContext } from "koa"
-import db from "./db"
+import * as db from "./db"
 db.init()
-const Koa = require("koa")
-const destroyable = require("server-destroy")
-const koaBody = require("koa-body")
-const http = require("http")
-const api = require("./api")
-const automations = require("./automations/index")
-const Sentry = require("@sentry/node")
-const { logAlert } = require("@budibase/backend-core/logging")
-const { Thread } = require("./threads")
-import redis from "./utilities/redis"
-import { events } from "@budibase/backend-core"
+import Koa from "koa"
+import koaBody from "koa-body"
+import http from "http"
+import * as api from "./api"
+import * as automations from "./automations"
+import { Thread } from "./threads"
+import * as redis from "./utilities/redis"
+import { events, logging } from "@budibase/backend-core"
 import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
+const Sentry = require("@sentry/node")
+const destroyable = require("server-destroy")
 
 const app = new Koa()
 
@@ -35,6 +34,7 @@ app.use(
     formLimit: "10mb",
     jsonLimit: "10mb",
     textLimit: "10mb",
+    // @ts-ignore
     enableTypes: ["json", "form", "text"],
     parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
   })
@@ -77,12 +77,13 @@ server.on("close", async () => {
   }
 })
 
-module.exports = server.listen(env.PORT || 0, async () => {
+export = server.listen(env.PORT || 0, async () => {
   await startup(app, server)
 })
 
 const shutdown = () => {
   server.close()
+  // @ts-ignore
   server.destroy()
 }
 
@@ -93,7 +94,7 @@ process.on("uncaughtException", err => {
     return
   }
   errCode = -1
-  logAlert("Uncaught exception.", err)
+  logging.logAlert("Uncaught exception.", err)
   shutdown()
 })
 

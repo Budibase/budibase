@@ -8,6 +8,7 @@
   export let props
   export let styles
   export let context
+  export let name
   export let order = 0
   export let containsSlot = false
 
@@ -23,9 +24,10 @@
   // to render this part of the block, taking advantage of binding enrichment
   $: id = `${block.id}-${context ?? rand}`
   $: instance = {
+    _blockElementHasChildren: $$slots?.default ?? false,
     _component: `@budibase/standard-components/${type}`,
     _id: id,
-    _instanceName: type[0].toUpperCase() + type.slice(1),
+    _instanceName: name || type[0].toUpperCase() + type.slice(1),
     _styles: {
       ...styles,
       normal: styles?.normal || {},
