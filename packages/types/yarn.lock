@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@budibase/nano@10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.0.tgz#fb571c245bf8424697937622fe0fc3c5d553c063"
-  integrity sha512-mQCAlWA76vNqa5KM4j+wwF9RVyM9vuHwccQu/w/Un13jXiPL83Tmwo0eAXtlm+AtLthtQl5NfojqF+zCofepeA==
+"@budibase/nano@10.1.1":
+  version "10.1.1"
+  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.1.tgz#36ccda4d9bb64b5ee14dd2b27a295b40739b1038"
+  integrity sha512-kbMIzMkjVtl+xI0UPwVU0/pn8/ccxTyfzwBz6Z+ZiN2oUSb0fJCe0qwA6o8dxwSa8nZu4MbGAeMJl3CJndmWtA==
   dependencies:
     "@types/tough-cookie" "^4.0.2"
     axios "^1.1.3"
@@ -87,7 +87,7 @@
   resolved "https://registry.yarnpkg.com/@types/http-errors/-/http-errors-1.8.2.tgz#7315b4c4c54f82d13fa61c228ec5c2ea5cc9e0e1"
   integrity sha512-EqX+YQxINb+MeXaIqYDASb6U6FCHbWjkj4a1CKDBks3d/QiB2+PqBLyO72vLDgAO1wUI4O+9gweRcQK11bTL/w==
 
-"@types/json5@^2.2.0":
+"@types/json5@2.2.0":
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/@types/json5/-/json5-2.2.0.tgz#afff29abf9182a7d4a7e39105ca051f11c603d13"
   integrity sha512-NrVug5woqbvNZ0WX+Gv4R+L4TGddtmFek2u8RtccAgFZWtS9QXF2xCXY22/M4nzkaKF0q9Fc6M/5rxLDhfwc/A==

@@ -470,10 +470,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/nano@^10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.0.tgz#fb571c245bf8424697937622fe0fc3c5d553c063"
-  integrity sha512-mQCAlWA76vNqa5KM4j+wwF9RVyM9vuHwccQu/w/Un13jXiPL83Tmwo0eAXtlm+AtLthtQl5NfojqF+zCofepeA==
+"@budibase/nano@10.1.1":
+  version "10.1.1"
+  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.1.tgz#36ccda4d9bb64b5ee14dd2b27a295b40739b1038"
+  integrity sha512-kbMIzMkjVtl+xI0UPwVU0/pn8/ccxTyfzwBz6Z+ZiN2oUSb0fJCe0qwA6o8dxwSa8nZu4MbGAeMJl3CJndmWtA==
   dependencies:
     "@types/tough-cookie" "^4.0.2"
     axios "^1.1.3"
