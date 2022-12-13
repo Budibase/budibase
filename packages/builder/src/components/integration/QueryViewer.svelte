@@ -123,7 +123,6 @@
 
 {#key queryId}
   <Layout gap="S" noPadding>
-    {data.length === 0}
     <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
     <Divider />
     <Heading size="S">Config</Heading>
