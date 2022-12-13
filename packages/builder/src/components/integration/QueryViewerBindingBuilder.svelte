@@ -37,6 +37,7 @@
       valuePlaceholder="Default"
       bindings={[...userBindings]}
       bindingDrawerLeft="260px"
+      allowHelpers={false}
       on:change
     />
   </div>

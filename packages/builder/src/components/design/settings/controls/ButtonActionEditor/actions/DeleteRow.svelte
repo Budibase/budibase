@@ -27,6 +27,11 @@
   />
 
   <Label small />
+  <Checkbox
+    text="Do not display default notification"
+    bind:value={parameters.notificationOverride}
+  />
+  <br />
   <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
   {#if parameters.confirm}

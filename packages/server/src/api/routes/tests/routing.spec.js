@@ -9,7 +9,6 @@ const route = "/test"
 // there are checks which are disabled in test env,
 // these checks need to be enabled for this test
 
-
 describe("/routing", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()

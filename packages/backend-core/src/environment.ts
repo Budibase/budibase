@@ -1,9 +1,13 @@
 function isTest() {
-  return (
-    process.env.NODE_ENV === "jest" ||
-    process.env.NODE_ENV === "cypress" ||
-    process.env.JEST_WORKER_ID != null
-  )
+  return isCypress() || isJest()
+}
+
+function isJest() {
+  return !!(process.env.NODE_ENV === "jest" || process.env.JEST_WORKER_ID)
+}
+
+function isCypress() {
+  return process.env.NODE_ENV === "cypress"
 }
 
 function isDev() {
@@ -26,6 +30,7 @@ const DefaultBucketName = {
 
 const environment = {
   isTest,
+  isJest,
   isDev,
   isProd: () => {
     return !isDev()
