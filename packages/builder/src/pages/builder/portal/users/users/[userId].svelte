@@ -68,7 +68,6 @@
     }
     return availableApps.map(app => {
       const prodAppId = apps.getProdAppID(app.appId)
-      console.log(prodAppId)
       return {
         name: app.name,
         devId: app.devId,
