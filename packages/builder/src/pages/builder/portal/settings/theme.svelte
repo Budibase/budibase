@@ -7,7 +7,7 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">Theme</Heading>
-    <Body>Customize how Budibase looks and feels.</Body>
+    <Body>Customize how Budibase looks and feels</Body>
   </Layout>
   <Divider />
   <div class="fields">
