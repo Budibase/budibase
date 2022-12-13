@@ -17,8 +17,8 @@
   let drawer
 
   $: tempValue = value
-  $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource($currentAsset, dataSource)?.schema
+  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: schema = getSchemaForDatasource($currentAsset, datasource)?.schema
   $: schemaFields = Object.values(schema || {})
 
   async function saveFilter() {
@@ -36,6 +36,7 @@
     filters={value}
     {bindings}
     {schemaFields}
+    {datasource}
     on:change={e => (tempValue = e.detail)}
   />
 </Drawer>
