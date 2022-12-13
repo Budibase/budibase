@@ -36,7 +36,6 @@
     filters={value}
     {bindings}
     {schemaFields}
-    tableId={dataSource.tableId}
     on:change={e => (tempValue = e.detail)}
   />
 </Drawer>

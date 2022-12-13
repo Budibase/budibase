@@ -41,11 +41,7 @@
 
   $: parseFilters(filters)
   $: dispatch("change", enrichFilters(rawFilters, matchAny))
-  $: enrichedSchemaFields = getFields(
-    schemaFields || [],
-    { allowLinks: true },
-    tableId
-  )
+  $: enrichedSchemaFields = getFields(schemaFields || [], { allowLinks: true })
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
