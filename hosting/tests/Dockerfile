@@ -17,6 +17,7 @@ RUN chmod +x ./runner.sh
 
 EXPOSE 5984
 EXPOSE 9000
+EXPOSE 9001
 EXPOSE 6379
 
 CMD ["./runner.sh"]
