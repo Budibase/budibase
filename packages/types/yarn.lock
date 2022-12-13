@@ -2,6 +2,18 @@
 # yarn lockfile v1
 
 
+"@budibase/nano@10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.0.tgz#fb571c245bf8424697937622fe0fc3c5d553c063"
+  integrity sha512-mQCAlWA76vNqa5KM4j+wwF9RVyM9vuHwccQu/w/Un13jXiPL83Tmwo0eAXtlm+AtLthtQl5NfojqF+zCofepeA==
+  dependencies:
+    "@types/tough-cookie" "^4.0.2"
+    axios "^1.1.3"
+    http-cookie-agent "^4.0.2"
+    node-abort-controller "^3.0.1"
+    qs "^6.11.0"
+    tough-cookie "^4.1.2"
+
 "@types/accepts@*":
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/@types/accepts/-/accepts-1.3.5.tgz#c34bec115cfc746e04fe5a059df4ce7e7b391575"
@@ -482,18 +494,6 @@ ms@2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
-
-nano@10.1.0:
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/nano/-/nano-10.1.0.tgz#afdd5a7440e62f09a8e23f41fcea328d27383922"
-  integrity sha512-COeN2TpLcHuSN44QLnPmfZCoCsKAg8/aelPOVqqm/2/MvRHDEA11/Kld5C4sLzDlWlhFZ3SO2WGJGevCsvcEzQ==
-  dependencies:
-    "@types/tough-cookie" "^4.0.2"
-    axios "^1.1.3"
-    http-cookie-agent "^4.0.2"
-    node-abort-controller "^3.0.1"
-    qs "^6.11.0"
-    tough-cookie "^4.1.2"
 
 node-abort-controller@^3.0.1:
   version "3.0.1"
