@@ -5,6 +5,7 @@ import {
   BulkUserRequest,
   BulkUserResponse,
   CloudAccount,
+  CreateAdminUserRequest,
   InviteUserRequest,
   InviteUsersRequest,
   SearchUsersRequest,
@@ -23,7 +24,8 @@ const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
   try {
-    ctx.body = await sdk.users.save(ctx.request.body)
+    const currentUserId = ctx.user._id
+    ctx.body = await sdk.users.save(ctx.request.body, { currentUserId })
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -67,7 +69,8 @@ const parseBooleanParam = (param: any) => {
 }
 
 export const adminUser = async (ctx: any) => {
-  const { email, password, tenantId } = ctx.request.body
+  const { email, password, tenantId } = ctx.request
+    .body as CreateAdminUserRequest
   await tenancy.doInTenant(tenantId, async () => {
     // account portal sends a pre-hashed password - honour param to prevent double hashing
     const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
@@ -102,7 +105,7 @@ export const adminUser = async (ctx: any) => {
     try {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
       // stuck in a cycle
-      await cache.bustCache(cache.CacheKeys.CHECKLIST)
+      await cache.bustCache(cache.CacheKey.CHECKLIST)
       const finalUser = await sdk.users.save(user, {
         hashPassword,
         requirePassword,

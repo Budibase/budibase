@@ -72,7 +72,7 @@ export interface QueryJson {
     operation: Operation
     schema?: string
   }
-  resource: {
+  resource?: {
     fields: string[]
   }
   filters?: SearchFilters
@@ -83,7 +83,7 @@ export interface QueryJson {
   meta?: {
     table?: Table
     tables?: Record<string, Table>
-    renamed: RenameColumn
+    renamed?: RenameColumn
   }
   extra?: {
     idFilter?: SearchFilters

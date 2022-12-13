@@ -10,35 +10,20 @@ if (process.env.ELASTIC_APM_ENABLED) {
 }
 
 import { ExtendableContext } from "koa"
-import db from "./db"
+import * as db from "./db"
 db.init()
-const Koa = require("koa")
-const destroyable = require("server-destroy")
-const koaBody = require("koa-body")
-const pino = require("koa-pino-logger")
-const http = require("http")
-const api = require("./api")
-const eventEmitter = require("./events")
-const automations = require("./automations/index")
-const Sentry = require("@sentry/node")
-const fileSystem = require("./utilities/fileSystem")
-const bullboard = require("./automations/bullboard")
-const { logAlert } = require("@budibase/backend-core/logging")
-const { pinoSettings } = require("@budibase/backend-core")
-const { Thread } = require("./threads")
-const fs = require("fs")
-import redis from "./utilities/redis"
-import * as migrations from "./migrations"
-import { events, installation, tenancy } from "@budibase/backend-core"
-import {
-  createAdminUser,
-  generateApiKey,
-  getChecklist,
-} from "./utilities/workerRequests"
-import { watch } from "./watch"
+import Koa from "koa"
+import koaBody from "koa-body"
+import http from "http"
+import * as api from "./api"
+import * as automations from "./automations"
+import { Thread } from "./threads"
+import * as redis from "./utilities/redis"
+import { events, logging } from "@budibase/backend-core"
 import { initialise as initialiseWebsockets } from "./websocket"
-import sdk from "./sdk"
-import * as pro from "@budibase/pro"
+import { startup } from "./startup"
+const Sentry = require("@sentry/node")
+const destroyable = require("server-destroy")
 
 const app = new Koa()
 
@@ -49,23 +34,11 @@ app.use(
     formLimit: "10mb",
     jsonLimit: "10mb",
     textLimit: "10mb",
+    // @ts-ignore
     enableTypes: ["json", "form", "text"],
     parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
   })
 )
-
-app.use(pino(pinoSettings()))
-
-if (!env.isTest()) {
-  const plugin = bullboard.init()
-  app.use(plugin)
-}
-
-app.context.eventEmitter = eventEmitter
-app.context.auth = {}
-
-// api routes
-app.use(api.router.routes())
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")
@@ -104,90 +77,13 @@ server.on("close", async () => {
   }
 })
 
-const initPro = async () => {
-  await pro.init({
-    backups: {
-      processing: {
-        exportAppFn: sdk.backups.exportApp,
-        importAppFn: sdk.backups.importApp,
-        statsFn: sdk.backups.calculateBackupStats,
-      },
-    },
-  })
-}
-
-module.exports = server.listen(env.PORT || 0, async () => {
-  console.log(`Budibase running on ${JSON.stringify(server.address())}`)
-  env._set("PORT", server.address().port)
-  eventEmitter.emitPort(env.PORT)
-  fileSystem.init()
-  await redis.init()
-
-  // run migrations on startup if not done via http
-  // not recommended in a clustered environment
-  if (!env.HTTP_MIGRATIONS && !env.isTest()) {
-    try {
-      await migrations.migrate()
-    } catch (e) {
-      logAlert("Error performing migrations. Exiting.", e)
-      shutdown()
-    }
-  }
-
-  // check and create admin user if required
-  if (
-    env.SELF_HOSTED &&
-    !env.MULTI_TENANCY &&
-    env.BB_ADMIN_USER_EMAIL &&
-    env.BB_ADMIN_USER_PASSWORD
-  ) {
-    const checklist = await getChecklist()
-    if (!checklist?.adminUser?.checked) {
-      try {
-        const tenantId = tenancy.getTenantId()
-        const user = await createAdminUser(
-          env.BB_ADMIN_USER_EMAIL,
-          env.BB_ADMIN_USER_PASSWORD,
-          tenantId
-        )
-        // Need to set up an API key for automated integration tests
-        if (env.isTest()) {
-          await generateApiKey(user._id)
-        }
-
-        console.log(
-          "Admin account automatically created for",
-          env.BB_ADMIN_USER_EMAIL
-        )
-      } catch (e) {
-        logAlert("Error creating initial admin user. Exiting.", e)
-        shutdown()
-      }
-    }
-  }
-
-  // monitor plugin directory if required
-  if (
-    env.SELF_HOSTED &&
-    !env.MULTI_TENANCY &&
-    env.PLUGINS_DIR &&
-    fs.existsSync(env.PLUGINS_DIR)
-  ) {
-    watch()
-  }
-
-  // check for version updates
-  await installation.checkInstallVersion()
-
-  // done last - these will never complete
-  let promises = []
-  promises.push(automations.init())
-  promises.push(initPro())
-  await Promise.all(promises)
+export = server.listen(env.PORT || 0, async () => {
+  await startup(app, server)
 })
 
 const shutdown = () => {
   server.close()
+  // @ts-ignore
   server.destroy()
 }
 
@@ -198,7 +94,7 @@ process.on("uncaughtException", err => {
     return
   }
   errCode = -1
-  logAlert("Uncaught exception.", err)
+  logging.logAlert("Uncaught exception.", err)
   shutdown()
 })
 

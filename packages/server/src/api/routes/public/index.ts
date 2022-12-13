@@ -12,11 +12,8 @@ import env from "../../../environment"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
-const {
-  PermissionLevels,
-  PermissionTypes,
-} = require("@budibase/backend-core/permissions")
-const { getRedisOptions } = require("@budibase/backend-core/redis").utils
+import { redis, permissions } from "@budibase/backend-core"
+const { PermissionType, PermissionLevel } = permissions
 
 const PREFIX = "/api/public/v1"
 // allow a lot more requests when in test
@@ -31,7 +28,7 @@ function getApiLimitPerSecond(): number {
 
 let rateLimitStore: any = null
 if (!env.isTest()) {
-  const REDIS_OPTS = getRedisOptions()
+  const REDIS_OPTS = redis.utils.getRedisOptions()
   let options
   if (REDIS_OPTS.redisProtocolUrl) {
     // fully qualified redis URL
@@ -105,7 +102,7 @@ function applyRoutes(
     : paramResource(resource)
   const publicApiMiddleware = publicApi({
     requiresAppId:
-      permType !== PermissionTypes.APP && permType !== PermissionTypes.USER,
+      permType !== PermissionType.APP && permType !== PermissionType.USER,
   })
   addMiddleware(endpoints.read, publicApiMiddleware)
   addMiddleware(endpoints.write, publicApiMiddleware)
@@ -113,8 +110,8 @@ function applyRoutes(
   addMiddleware(endpoints.read, paramMiddleware)
   addMiddleware(endpoints.write, paramMiddleware)
   // add the authorization middleware, using the correct perm type
-  addMiddleware(endpoints.read, authorized(permType, PermissionLevels.READ))
-  addMiddleware(endpoints.write, authorized(permType, PermissionLevels.WRITE))
+  addMiddleware(endpoints.read, authorized(permType, PermissionLevel.READ))
+  addMiddleware(endpoints.write, authorized(permType, PermissionLevel.WRITE))
   // add the output mapper middleware
   addMiddleware(endpoints.read, mapperMiddleware, { output: true })
   addMiddleware(endpoints.write, mapperMiddleware, { output: true })
@@ -122,12 +119,12 @@ function applyRoutes(
   addToRouter(endpoints.write)
 }
 
-applyRoutes(appEndpoints, PermissionTypes.APP, "appId")
-applyRoutes(tableEndpoints, PermissionTypes.TABLE, "tableId")
-applyRoutes(userEndpoints, PermissionTypes.USER, "userId")
-applyRoutes(queryEndpoints, PermissionTypes.QUERY, "queryId")
+applyRoutes(appEndpoints, PermissionType.APP, "appId")
+applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
+applyRoutes(userEndpoints, PermissionType.USER, "userId")
+applyRoutes(queryEndpoints, PermissionType.QUERY, "queryId")
 // needs to be applied last for routing purposes, don't override other endpoints
-applyRoutes(rowEndpoints, PermissionTypes.TABLE, "tableId", "rowId")
+applyRoutes(rowEndpoints, PermissionType.TABLE, "tableId", "rowId")
 
 export default publicRouter
 

@@ -128,5 +128,6 @@
     on:blur
     on:focus
     on:keyup
+    on:closed
   />
 </Field>

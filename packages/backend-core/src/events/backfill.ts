@@ -21,7 +21,7 @@ import {
   AppCreatedEvent,
 } from "@budibase/types"
 import * as context from "../context"
-import { CacheKeys } from "../cache/generic"
+import { CacheKey } from "../cache/generic"
 import * as cache from "../cache/generic"
 
 // LIFECYCLE
@@ -48,18 +48,18 @@ export const end = async () => {
 // CRUD
 
 const getBackfillMetadata = async (): Promise<BackfillMetadata | null> => {
-  return cache.get(CacheKeys.BACKFILL_METADATA)
+  return cache.get(CacheKey.BACKFILL_METADATA)
 }
 
 const saveBackfillMetadata = async (
   backfill: BackfillMetadata
 ): Promise<void> => {
   // no TTL - deleted by backfill
-  return cache.store(CacheKeys.BACKFILL_METADATA, backfill)
+  return cache.store(CacheKey.BACKFILL_METADATA, backfill)
 }
 
 const deleteBackfillMetadata = async (): Promise<void> => {
-  await cache.delete(CacheKeys.BACKFILL_METADATA)
+  await cache.destroy(CacheKey.BACKFILL_METADATA)
 }
 
 const clearEvents = async () => {
@@ -70,7 +70,7 @@ const clearEvents = async () => {
   for (const key of keys) {
     // delete each key
     // don't  use tenancy, already in the key
-    await cache.delete(key, { useTenancy: false })
+    await cache.destroy(key, { useTenancy: false })
   }
 }
 
@@ -167,7 +167,7 @@ const getEventKey = (event?: Event, properties?: any) => {
 
   const tenantId = context.getTenantId()
   if (event) {
-    eventKey = `${CacheKeys.EVENTS}:${tenantId}:${event}`
+    eventKey = `${CacheKey.EVENTS}:${tenantId}:${event}`
 
     // use some properties to make the key more unique
     const custom = CUSTOM_PROPERTY_SUFFIX[event]
@@ -176,7 +176,7 @@ const getEventKey = (event?: Event, properties?: any) => {
       eventKey = `${eventKey}:${suffix}`
     }
   } else {
-    eventKey = `${CacheKeys.EVENTS}:${tenantId}:*`
+    eventKey = `${CacheKey.EVENTS}:${tenantId}:*`
   }
 
   return eventKey

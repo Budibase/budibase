@@ -5,6 +5,8 @@ import { isQsTrue } from "../../utilities"
 
 export async function exportAppDump(ctx: any) {
   let { appId, excludeRows } = ctx.query
+  // remove the 120 second limit for the request
+  ctx.req.setTimeout(0)
   const appName = decodeURI(ctx.query.appname)
   excludeRows = isQsTrue(excludeRows)
   const backupIdentifier = `${appName}-export-${new Date().getTime()}.tar.gz`

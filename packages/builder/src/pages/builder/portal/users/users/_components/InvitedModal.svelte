@@ -50,7 +50,7 @@
   }
 </script>
 
-<ModalContent showCancelButton={false} {title} confirmText="Done">
+<ModalContent size="M" showCancelButton={false} {title} confirmText="Done">
   {#if hasSuccess}
     <Body size="XS">
       Your users should now receive an email invite to get access to their
@@ -70,6 +70,3 @@
     />
   {/if}
 </ModalContent>
-
-<style>
-</style>

@@ -7,9 +7,9 @@ import {
   roles,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
-import { Plugin, ScreenProps } from "@budibase/types"
+import { Plugin, ScreenProps, BBContext } from "@budibase/types"
 
-exports.fetch = async (ctx: any) => {
+export async function fetch(ctx: BBContext) {
   const db = context.getAppDB()
 
   const screens = (
@@ -20,13 +20,17 @@ exports.fetch = async (ctx: any) => {
     )
   ).rows.map((el: any) => el.doc)
 
+  const roleId = ctx.user?.role?._id as string
+  if (!roleId) {
+    ctx.throw("Unable to retrieve users role ID.")
+  }
   ctx.body = await new roles.AccessController().checkScreensAccess(
     screens,
-    ctx.user.role._id
+    roleId
   )
 }
 
-exports.save = async (ctx: any) => {
+export async function save(ctx: BBContext) {
   const db = context.getAppDB()
   let screen = ctx.request.body
 
@@ -92,7 +96,7 @@ exports.save = async (ctx: any) => {
   }
 }
 
-exports.destroy = async (ctx: any) => {
+export async function destroy(ctx: BBContext) {
   const db = context.getAppDB()
   const id = ctx.params.screenId
   const screen = await db.get(id)
@@ -106,7 +110,7 @@ exports.destroy = async (ctx: any) => {
   ctx.status = 200
 }
 
-const findPlugins = (component: ScreenProps, foundPlugins: string[]) => {
+function findPlugins(component: ScreenProps, foundPlugins: string[]) {
   if (!component) {
     return
   }

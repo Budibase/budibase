@@ -1,6 +1,7 @@
 <script>
   import Placeholder from "../Placeholder.svelte"
   import FieldGroupFallback from "./FieldGroupFallback.svelte"
+  import Skeleton from "../Skeleton.svelte"
   import { getContext, onDestroy } from "svelte"
 
   export let label
@@ -32,6 +33,7 @@
     validation,
     formStep
   )
+
   $: schemaType = fieldSchema?.type !== "formula" ? fieldSchema?.type : "string"
 
   // Focus label when editing
@@ -51,6 +53,8 @@
   const updateLabel = e => {
     builderStore.actions.updateProp("label", e.target.textContent)
   }
+
+  const loading = getContext("loading")
 
   onDestroy(() => {
     fieldApi?.deregister()
@@ -75,6 +79,10 @@
     <div class="spectrum-Form-itemField">
       {#if !formContext}
         <Placeholder text="Form components need to be wrapped in a form" />
+      {:else if $loading}
+        <Skeleton>
+          <slot />
+        </Skeleton>
       {:else if !fieldState}
         <Placeholder />
       {:else if schemaType && schemaType !== type && type !== "options"}

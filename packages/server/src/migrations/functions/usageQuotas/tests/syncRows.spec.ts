@@ -2,7 +2,7 @@ import TestConfig from "../../../../tests/utilities/TestConfiguration"
 import * as syncRows from "../syncRows"
 import { quotas } from "@budibase/pro"
 import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
-const { getProdAppID } = require("@budibase/backend-core/db")
+const { db: dbCore } = require("@budibase/backend-core")
 
 describe("syncRows", () => {
   let config = new TestConfig(false)
@@ -38,12 +38,12 @@ describe("syncRows", () => {
       // assert the migration worked
       usageDoc = await quotas.getQuotaUsage()
       expect(usageDoc.usageQuota.rows).toEqual(3)
-      expect(usageDoc.apps?.[getProdAppID(app1.appId)].usageQuota.rows).toEqual(
-        1
-      )
-      expect(usageDoc.apps?.[getProdAppID(app2.appId)].usageQuota.rows).toEqual(
-        2
-      )
+      expect(
+        usageDoc.apps?.[dbCore.getProdAppID(app1.appId)].usageQuota.rows
+      ).toEqual(1)
+      expect(
+        usageDoc.apps?.[dbCore.getProdAppID(app2.appId)].usageQuota.rows
+      ).toEqual(2)
     })
   })
 })

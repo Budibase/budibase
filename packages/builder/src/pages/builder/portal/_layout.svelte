@@ -43,7 +43,6 @@
         {
           title: "Plugins",
           href: "/builder/portal/plugins",
-          badge: "New",
         },
         {
           title: "Usage",
@@ -95,9 +94,13 @@
     //       {
     //         title: "Upgrade",
     //         href: $adminStore.accountPortalUrl + "/portal/upgrade",
-    //         badge: "New",
     //       },
     //     ])
+    //   } else if (!$adminStore.cloud && admin) {
+    //     menu = menu.concat({
+    //       title: "Upgrade",
+    //       href: "/builder/portal/settings/upgrade",
+    //     })
     //   }
     //
     //   // show the billing page to licensed account holders in cloud
@@ -334,11 +337,6 @@
     .mobile-toggle,
     .user-dropdown {
       flex: 0 1 0;
-    }
-
-    /* Reduce BBUI page padding */
-    .content :global(> *) {
-      padding: calc(var(--spacing-xl) * 1.5) !important;
     }
   }
 </style>

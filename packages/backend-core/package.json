@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "2.0.34-alpha.5",
+  "version": "2.1.46-alpha.6",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -16,11 +16,11 @@
     "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "test": "jest",
+    "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
-    "@budibase/types": "2.0.34-alpha.5",
+    "@budibase/types": "2.1.46-alpha.6",
     "@shopify/jest-koa-mocks": "5.0.1",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-sdk": "2.1030.0",
@@ -35,8 +35,8 @@
     "koa-passport": "4.1.4",
     "lodash": "4.17.21",
     "lodash.isarguments": "3.1.0",
+    "nano": "^10.1.0",
     "node-fetch": "2.6.7",
-    "passport-google-auth": "1.0.2",
     "passport-google-oauth": "2.0.0",
     "passport-jwt": "4.0.0",
     "passport-local": "1.0.0",
@@ -52,21 +52,11 @@
     "uuid": "8.3.2",
     "zlib": "1.0.5"
   },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "@budibase/types": "<rootDir>/../types/src"
-    },
-    "setupFiles": [
-      "./scripts/jestSetup.ts"
-    ]
-  },
   "devDependencies": {
     "@types/chance": "1.1.3",
     "@types/ioredis": "4.28.0",
     "@types/jest": "27.5.1",
-    "@types/koa": "2.0.52",
+    "@types/koa": "2.13.4",
     "@types/lodash": "4.14.180",
     "@types/node": "14.18.20",
     "@types/node-fetch": "2.6.1",
@@ -77,12 +67,14 @@
     "@types/uuid": "8.3.4",
     "chance": "1.1.3",
     "ioredis-mock": "5.8.0",
-    "jest": "27.5.1",
-    "koa": "2.7.0",
+    "jest": "28.1.1",
+    "koa": "2.13.4",
     "nodemon": "2.0.16",
     "pouchdb-adapter-memory": "7.2.2",
     "timekeeper": "2.2.0",
-    "ts-jest": "27.1.5",
+    "ts-jest": "28.0.4",
+    "ts-node": "10.8.1",
+    "tsconfig-paths": "4.0.0",
     "typescript": "4.7.3"
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"

@@ -391,11 +391,7 @@
       gap: var(--spacing-l);
     }
   }
-  @media (max-width: 640px) {
-    .overview-wrap :global(.content > *) {
-      padding: calc(var(--spacing-xl) * 1.5) !important;
-    }
-  }
+
   .app-title {
     display: flex;
     gap: var(--spacing-m);

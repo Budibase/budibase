@@ -323,6 +323,9 @@ module.exports.doesContainStrings = (template, strings) => {
  * @return {string[]} The found HBS blocks.
  */
 module.exports.findHBSBlocks = string => {
+  if (!string || typeof string !== "string") {
+    return []
+  }
   let regexp = new RegExp(FIND_ANY_HBS_REGEX)
   let matches = string.match(regexp)
   if (matches == null) {

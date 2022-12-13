@@ -30,7 +30,6 @@ filterTests(['all'], () => {
 
     it("Should publish an application and correctly reflect that", () => {
       //Assuming the previous test was run and the unpublished app is open in edit mode.
-      cy.closeModal()
       cy.get(interact.TOPRIGHTNAV_BUTTON_SPECTRUM).contains("Publish").click({ force : true })
 
       cy.get(interact.DEPLOY_APP_MODAL).should("be.visible")
@@ -86,8 +85,7 @@ filterTests(['all'], () => {
       .within(() => {
         cy.get(interact.APP_TABLE_APP_NAME).click({ force: true })
       })
-
-      cy.closeModal()
+      
       cy.get(interact.DEPLOYMENT_TOP_GLOBE).should("exist").click({ force: true })
       
       cy.get("[data-cy='publish-popover-menu']")
