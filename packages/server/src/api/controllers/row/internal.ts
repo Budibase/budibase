@@ -13,7 +13,7 @@ import {
   cleanupAttachments,
 } from "../../../utilities/rowProcessor"
 import { FieldTypes } from "../../../constants"
-import { validate as rowValidate, findRow } from "./utils"
+import { validate as rowValidate, findRow, cleanExportRows } from "./utils"
 import { fullSearch, paginatedSearch } from "./internalSearch"
 import { getGlobalUsersFromMetadata } from "../../../utilities/global"
 import * as inMemoryViews from "../../../db/inMemoryView"
@@ -356,6 +356,14 @@ export async function search(ctx: BBContext) {
   params.version = ctx.version
   params.tableId = tableId
 
+  let table
+  if (params.sort && !params.sortType) {
+    table = await db.get(tableId)
+    const schema = table.schema
+    const sortField = schema[params.sort]
+    params.sortType = sortField.type == "number" ? "number" : "string"
+  }
+
   let response
   if (paginate) {
     response = await paginatedSearch(query, params)
@@ -369,7 +377,7 @@ export async function search(ctx: BBContext) {
     if (tableId === InternalTables.USER_METADATA) {
       response.rows = await getGlobalUsersFromMetadata(response.rows)
     }
-    const table = await db.get(tableId)
+    table = table || (await db.get(tableId))
     response.rows = await outputProcessing(table, response.rows)
   }
 
@@ -388,18 +396,27 @@ export async function exportRows(ctx: BBContext) {
   const table = await db.get(ctx.params.tableId)
   const rowIds = ctx.request.body.rows
   let format = ctx.query.format
-  const { columns } = ctx.request.body
-  let response = (
-    await db.allDocs({
-      include_docs: true,
-      keys: rowIds,
-    })
-  ).rows.map(row => row.doc)
+  const { columns, query } = ctx.request.body
 
-  let result = (await outputProcessing(table, response)) as Row[]
+  let result
+  if (rowIds) {
+    let response = (
+      await db.allDocs({
+        include_docs: true,
+        keys: rowIds,
+      })
+    ).rows.map(row => row.doc)
+
+    result = await outputProcessing(table, response)
+  } else if (query) {
+    let searchResponse = await exports.search(ctx)
+    result = searchResponse.rows
+  }
+
   let rows: Row[] = []
+  let schema = table.schema
 
-  // Filter data to only specified columns if required
+  // // Filter data to only specified columns if required
   if (columns && columns.length) {
     for (let i = 0; i < result.length; i++) {
       rows[i] = {}
@@ -411,14 +428,17 @@ export async function exportRows(ctx: BBContext) {
     rows = result
   }
 
-  let headers = Object.keys(rows[0])
+  // @ts-ignore
+  let exportRows = cleanExportRows(rows, schema, format, columns) //this isnt correct
+  let headers = Object.keys(schema)
+
   // @ts-ignore
   const exporter = exporters[format]
   const filename = `export.${format}`
 
   // send down the file
   ctx.attachment(filename)
-  return apiFileReturn(exporter(headers, rows))
+  return apiFileReturn(exporter(headers, exportRows))
 }
 
 export async function fetchEnrichedRow(ctx: BBContext) {

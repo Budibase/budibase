@@ -15,6 +15,7 @@ import {
   TableSchema,
   View,
 } from "@budibase/types"
+import { cleanExportRows } from "../row/utils"
 
 const { cloneDeep, isEqual } = require("lodash")
 
@@ -158,29 +159,7 @@ export async function exportView(ctx: BBContext) {
     schema = table.schema
   }
 
-  // remove any relationships
-  const relationships = Object.entries(schema)
-    .filter(entry => entry[1].type === FieldTypes.LINK)
-    .map(entry => entry[0])
-  // iterate relationship columns and remove from and row and schema
-  relationships.forEach(column => {
-    rows.forEach(row => {
-      delete row[column]
-    })
-    delete schema[column]
-  })
-
-  // make sure no "undefined" entries appear in the CSV
-  if (format === exporters.ExportFormats.CSV) {
-    const schemaKeys = Object.keys(schema)
-    for (let key of schemaKeys) {
-      for (let row of rows) {
-        if (row[key] == null) {
-          row[key] = ""
-        }
-      }
-    }
-  }
+  let exportRows = cleanExportRows(rows, schema, format, [])
 
   // Export part
   let headers = Object.keys(schema)
@@ -188,7 +167,7 @@ export async function exportView(ctx: BBContext) {
   const filename = `${viewName}.${format}`
   // send down the file
   ctx.attachment(filename)
-  ctx.body = apiFileReturn(exporter(headers, rows))
+  ctx.body = apiFileReturn(exporter(headers, exportRows))
 
   if (viewName.startsWith(DocumentType.TABLE)) {
     await events.table.exported(table, format as TableExportFormat)
