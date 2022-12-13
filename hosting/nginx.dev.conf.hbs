@@ -53,7 +53,7 @@ http {
     }
 
     location /db/ {
-      proxy_pass      http://couchdb-service:5984;
+      proxy_pass      http://dev-service:5984;
       rewrite ^/db/(.*)$ /$1 break;
     }
 
@@ -183,7 +183,7 @@ http {
       proxy_set_header Connection "";
       chunked_transfer_encoding off;
 
-      proxy_pass      http://minio-service:9000;
+      proxy_pass      http://dev-service:9000;
     }
 
     client_header_timeout 60;

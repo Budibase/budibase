@@ -3,24 +3,23 @@ version: "3"
 # optional ports are specified throughout for more advanced use cases.
 
 services:
-  minio-service:
-    container_name: budi-minio-dev
+  dev-service:
+    container_name: budi-dev
     restart: on-failure
-    image: minio/minio
-    volumes:
-      - minio_data:/data
+    image: budibase/tests
     ports:
       - "${MINIO_PORT}:9000"
       - "9001:9001"
+      - "${COUCH_DB_PORT}:5984"
+      - "${REDIS_PORT}:6379"
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+      COUCHDB_PASSWORD: ${COUCH_DB_PASSWORD}
+      COUCHDB_USER: ${COUCH_DB_USER}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - dev_data:/data
 
   proxy-service:
     container_name: budi-nginx-dev
@@ -32,47 +31,10 @@ services:
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:
-      - minio-service
-      - couchdb-service
+      - dev-service
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  couchdb-service:
-    # platform: linux/amd64
-    container_name: budi-couchdb-dev
-    restart: on-failure
-    image: ibmcom/couchdb3
-    environment:
-      - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
-      - COUCHDB_USER=${COUCH_DB_USER}
-    ports:
-      - "${COUCH_DB_PORT}:5984"
-    volumes:
-      - couchdb3_data:/opt/couchdb/data
-  
-  couch-init:
-    container_name: budi-couchdb-init-dev
-    image: curlimages/curl
-    environment:
-      PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
-    depends_on:
-      - couchdb-service
-    command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
-
-  redis-service:
-    container_name: budi-redis-dev
-    restart: on-failure
-    image: redis
-    command: redis-server --requirepass ${REDIS_PASSWORD}
-    ports:
-      - "${REDIS_PORT}:6379"
-    volumes:
-      - redis_data:/data
-
 volumes:
-  couchdb3_data:
-    driver: local
-  minio_data:
-    driver: local
-  redis_data:
+  dev_data:
     driver: local
