@@ -8,7 +8,7 @@ import { promisify } from "util"
 import { join } from "path"
 import fs from "fs"
 import env from "../environment"
-import { budibaseTempDir, ObjectStoreBuckets } from "./utils"
+import { budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 
@@ -58,28 +58,6 @@ export function sanitizeKey(input: string) {
 export function sanitizeBucket(input: string) {
   return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
 }
-
-function publicPolicy(bucketName: string) {
-  return {
-    Version: "2012-10-17",
-    Statement: [
-      {
-        Effect: "Allow",
-        Principal: {
-          AWS: ["*"],
-        },
-        Action: "s3:GetObject",
-        Resource: [`arn:aws:s3:::${bucketName}/*`],
-      },
-    ],
-  }
-}
-
-const PUBLIC_BUCKETS = [
-  ObjectStoreBuckets.APPS,
-  ObjectStoreBuckets.GLOBAL,
-  ObjectStoreBuckets.PLUGINS,
-]
 
 /**
  * Gets a connection to the object store using the S3 SDK.
@@ -150,16 +128,6 @@ export const makeSureBucketExists = async (client: any, bucketName: string) => {
           .promise()
         await promises[bucketName]
         delete promises[bucketName]
-      }
-      // public buckets are quite hidden in the system, make sure
-      // no bucket is set accidentally
-      if (PUBLIC_BUCKETS.includes(bucketName)) {
-        await client
-          .putBucketPolicy({
-            Bucket: bucketName,
-            Policy: JSON.stringify(publicPolicy(bucketName)),
-          })
-          .promise()
       }
     } else {
       throw new Error("Unable to write to object store bucket.")
