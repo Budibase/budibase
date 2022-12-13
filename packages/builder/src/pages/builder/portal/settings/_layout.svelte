@@ -43,16 +43,6 @@
           url={$url("./upgrade")}
           active={$isActive("./upgrade")}
         />
-        <SideNavItem
-          text="Secrets"
-          url={$url("./secrets")}
-          active={$isActive("./secrets")}
-        />
-        <SideNavItem
-          text="Scheduled Backups"
-          url={$url("./backups")}
-          active={$isActive("./backups")}
-        />
       </SideNav>
     </div>
     <slot />
