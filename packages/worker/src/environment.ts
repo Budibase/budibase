@@ -26,7 +26,7 @@ function parseIntSafe(number: any) {
   }
 }
 
-const env = {
+const environment = {
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
@@ -42,6 +42,7 @@ const env = {
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
   PLATFORM_URL: process.env.PLATFORM_URL,
   APPS_URL: process.env.APPS_URL,
+  CDN_URL: process.env.CDN_URL || "https://tenants.cdn.budi.live",
   // ports
   // prefer worker port to generic port
   PORT: process.env.WORKER_PORT || process.env.PORT,
@@ -66,7 +67,8 @@ const env = {
   ENCRYPTED_TEST_PUBLIC_API_KEY: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY,
   _set(key: any, value: any) {
     process.env[key] = value
-    module.exports[key] = value
+    // @ts-ignore
+    environment[key] = value
   },
   isDev,
   isTest,
@@ -76,17 +78,19 @@ const env = {
 }
 
 // if some var haven't been set, define them
-if (!env.APPS_URL) {
-  env.APPS_URL = isDev() ? "http://localhost:4001" : "http://app-service:4002"
+if (!environment.APPS_URL) {
+  environment.APPS_URL = isDev()
+    ? "http://localhost:4001"
+    : "http://app-service:4002"
 }
 
 // clean up any environment variable edge cases
-for (let [key, value] of Object.entries(module.exports)) {
+for (let [key, value] of Object.entries(environment)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
     // @ts-ignore
-    env[key] = 0
+    environment[key] = 0
   }
 }
 
-export = env
+export = environment

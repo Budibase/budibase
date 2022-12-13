@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "@rollup/plugin-json": "^4.0.2",
-    "@typescript-eslint/parser": "4.28.0",
+    "@typescript-eslint/parser": "5.45.0",
     "babel-eslint": "^10.0.3",
     "eslint": "^7.28.0",
     "eslint-plugin-cypress": "^2.11.3",
@@ -18,7 +18,7 @@
     "rimraf": "^3.0.2",
     "rollup-plugin-replace": "^2.2.0",
     "svelte": "^3.38.2",
-    "typescript": "4.5.5"
+    "typescript": "4.7.3"
   },
   "scripts": {
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
@@ -75,8 +75,8 @@
     "env:multi:disable": "lerna run env:multi:disable",
     "env:selfhost:enable": "lerna run env:selfhost:enable",
     "env:selfhost:disable": "lerna run env:selfhost:disable",
-    "env:localdomain:enable": "lerna run env:localdomain:enable",
-    "env:localdomain:disable": "lerna run env:localdomain:disable",
+    "env:localdomain:enable": "./scripts/localdomain.sh enable",
+    "env:localdomain:disable": "./scripts/localdomain.sh disable",
     "env:account:enable": "lerna run env:account:enable",
     "env:account:disable": "lerna run env:account:disable",
     "mode:self": "yarn env:selfhost:enable && yarn env:multi:disable && yarn env:account:disable",

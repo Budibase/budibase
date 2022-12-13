@@ -34,10 +34,13 @@ export interface AppBackupMetadata {
   name?: string
   createdBy?: string | User
   timestamp: string
+  finishedAt?: string
+  startedAt?: string
   contents?: AppBackupContents
 }
 
 export interface AppBackup extends Document, AppBackupMetadata {
+  _id: string
   filename?: string
 }
 

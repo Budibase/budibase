@@ -25,6 +25,7 @@
   import { API } from "api"
 
   let hideAutocolumns = true
+  let filters
 
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
   $: type = $tables.selected?.type
@@ -36,6 +37,7 @@
   $: hasCols = checkHasCols(schema)
   $: hasRows = !!$fetch.rows?.length
   $: showError($fetch.error)
+  $: id, (filters = null)
 
   const showError = error => {
     if (error) {
@@ -102,8 +104,9 @@
 
   // Fetch data whenever filters change
   const onFilter = e => {
+    filters = e.detail
     fetch.update({
-      filter: e.detail,
+      filter: filters,
     })
   }
 
@@ -116,6 +119,12 @@
   // our pagination place, as our bookmarks will have shifted.
   const onUpdateRows = () => {
     fetch.refresh()
+  }
+
+  // When importing new rows it is better to reinitialise request/paging data.
+  // Not doing so causes inconsistency in paging behaviour and content.
+  const onImportData = () => {
+    fetch.getInitialData()
   }
 </script>
 
@@ -169,7 +178,7 @@
         <ImportButton
           disabled={$tables.selected?._id === "ta_users"}
           tableId={$tables.selected?._id}
-          on:updaterows={onUpdateRows}
+          on:importrows={onImportData}
         />
         <ExportButton
           disabled={!hasRows || !hasCols}
@@ -178,6 +187,7 @@
         {#key id}
           <TableFilterButton
             {schema}
+            {filters}
             on:change={onFilter}
             disabled={!hasCols}
           />

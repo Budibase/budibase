@@ -12,6 +12,7 @@ import env from "../environment"
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
 import * as syncQuotas from "./functions/syncQuotas"
 import * as appUrls from "./functions/appUrls"
+import * as tableSettings from "./functions/tableSettings"
 import * as backfill from "./functions/backfill"
 /**
  * Populate the migration function and additional configuration from
@@ -70,6 +71,14 @@ export const buildMigrations = () => {
           fn: backfill.installation.run,
           silent: !!env.SELF_HOSTED, // reduce noisy logging
           preventRetry: !!env.SELF_HOSTED, // only ever run once
+        })
+        break
+      }
+      case MigrationName.TABLE_SETTINGS_LINKS_TO_ACTIONS: {
+        serverMigrations.push({
+          ...definition,
+          appOpts: { dev: true },
+          fn: tableSettings.run,
         })
         break
       }

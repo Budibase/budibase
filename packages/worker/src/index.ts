@@ -1,5 +1,5 @@
 // need to load environment first
-const env = require("./environment")
+import env from "./environment"
 
 // enable APM if configured
 if (process.env.ELASTIC_APM_ENABLED) {
@@ -13,20 +13,18 @@ import { Scope } from "@sentry/node"
 import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
-import db from "./db"
+import * as db from "./db"
+import { auth, logging, events, pinoSettings } from "@budibase/backend-core"
 db.init()
-const Koa = require("koa")
-const destroyable = require("server-destroy")
-const koaBody = require("koa-body")
-const koaSession = require("koa-session")
-const { passport } = require("@budibase/backend-core/auth")
-const { logAlert } = require("@budibase/backend-core/logging")
-const logger = require("koa-pino-logger")
-const http = require("http")
-const api = require("./api")
-const redis = require("./utilities/redis")
+import Koa from "koa"
+import koaBody from "koa-body"
+import http from "http"
+import api from "./api"
+import * as redis from "./utilities/redis"
 const Sentry = require("@sentry/node")
-import { events, pinoSettings } from "@budibase/backend-core"
+const koaSession = require("koa-session")
+const logger = require("koa-pino-logger")
+const destroyable = require("server-destroy")
 
 // this will setup http and https proxies form env variables
 bootstrap()
@@ -41,8 +39,8 @@ app.use(koaSession(app))
 app.use(logger(pinoSettings()))
 
 // authentication
-app.use(passport.initialize())
-app.use(passport.session())
+app.use(auth.passport.initialize())
+app.use(auth.passport.session())
 
 // api routes
 app.use(api.routes())
@@ -81,17 +79,18 @@ server.on("close", async () => {
 
 const shutdown = () => {
   server.close()
+  // @ts-ignore
   server.destroy()
 }
 
-export = server.listen(parseInt(env.PORT || 4002), async () => {
+export = server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await redis.init()
 })
 
 process.on("uncaughtException", err => {
   errCode = -1
-  logAlert("Uncaught exception.", err)
+  logging.logAlert("Uncaught exception.", err)
   shutdown()
 })
 

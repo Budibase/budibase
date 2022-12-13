@@ -9,7 +9,7 @@ filterTests(["smoke", "all"], () => {
       cy.navigateToFrontend()
     })
 
-    it("Should successfully create a screen", () => {
+    it.skip("Should successfully create a screen", () => {
       cy.createScreen("test")
       cy.get(interact.BODY).within(() => {
         cy.contains("/test").should("exist")
@@ -23,7 +23,7 @@ filterTests(["smoke", "all"], () => {
       })
     })
 
-    it("should delete all screens then create first screen via button", () => {
+    it.skip("should delete all screens then create first screen via button", () => {
       cy.deleteAllScreens()
       
       cy.contains("Create first screen").click()

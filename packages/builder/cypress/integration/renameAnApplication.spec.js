@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require("../support/interact")
 
 filterTests(["all"], () => {
-  context("Rename an App", () => {
+  xcontext("Rename an App", () => {
     beforeEach(() => {
       cy.login()
       cy.createTestApp()

@@ -28,9 +28,9 @@
   let loading = false
   $: confirmDisabled = disabled || loading
 
-  async function secondary() {
+  async function secondary(e) {
     loading = true
-    if (!secondaryAction || (await secondaryAction()) !== false) {
+    if (!secondaryAction || (await secondaryAction(e)) !== false) {
       hide()
     }
     loading = false

@@ -1,6 +1,6 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { apps, templates, licensing } from "stores/portal"
+  import { apps, templates, licensing, groups } from "stores/portal"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
 
@@ -12,6 +12,10 @@
       await apps.load()
       await licensing.init()
       await templates.load()
+
+      if ($licensing.groupsEnabled) {
+        await groups.actions.init()
+      }
 
       if ($templates?.length === 0) {
         notifications.error("There was a problem loading quick start templates")

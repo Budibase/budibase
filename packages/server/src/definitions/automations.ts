@@ -1,9 +1,4 @@
-import {
-  Automation,
-  AutomationResults,
-  AutomationStep,
-  Document,
-} from "@budibase/types"
+import { AutomationResults, AutomationStep, Document } from "@budibase/types"
 
 export enum LoopStepType {
   ARRAY = "Array",

@@ -1,5 +1,5 @@
 <script>
-  import { Body, Button, Heading, Layout } from "@budibase/bbui"
+  import { Body, Heading, Layout } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { getUserBindings } from "builderStore/dataBinding"
   export let bindable = true
@@ -11,18 +11,11 @@
     acc[binding.name] = binding.default
     return acc
   }, {})
-
-  function newQueryBinding() {
-    queryBindings = [...queryBindings, {}]
-  }
 </script>
 
 <Layout noPadding={bindable} gap="S">
   <div class="controls" class:height={!bindable}>
     <Heading size="XS">Bindings</Heading>
-    {#if !bindable}
-      <Button secondary on:click={newQueryBinding}>Add Binding</Button>
-    {/if}
   </div>
   <Body size="S">
     {#if !bindable}
@@ -44,14 +37,8 @@
       valuePlaceholder="Default"
       bindings={[...userBindings]}
       bindingDrawerLeft="260px"
-      on:change={e => {
-        queryBindings = e.detail.map(binding => {
-          return {
-            name: binding.name,
-            default: binding.value,
-          }
-        })
-      }}
+      allowHelpers={false}
+      on:change
     />
   </div>
 </Layout>

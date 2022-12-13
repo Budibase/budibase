@@ -93,6 +93,7 @@ export function createDatasourcesStore() {
         return { list: sources, selected: null }
       })
       await queries.fetch()
+      await tables.fetch()
     },
     removeSchemaError: () => {
       update(state => {
