@@ -106,3 +106,5 @@ stats.html
 *.tsbuildinfo
 budibase-component
 budibase-datasource
+
+*.iml
