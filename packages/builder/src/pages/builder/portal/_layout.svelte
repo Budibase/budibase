@@ -1,5 +1,5 @@
 <script>
-  import { isActive, redirect, goto } from "@roxi/routify"
+  import { isActive, redirect, goto, url } from "@roxi/routify"
   import {
     Icon,
     Avatar,
@@ -16,7 +16,7 @@
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import Logo from "assets/bb-emblem.svg"
-  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
+  // import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   let loaded = false
   let userInfoModal
@@ -25,6 +25,18 @@
   let activeTab = "Apps"
 
   $: menu = buildMenu($auth.isAdmin)
+  $: $url(), updateActiveTab()
+
+  const updateActiveTab = () => {
+    for (let entry of menu) {
+      if ($isActive(entry.href)) {
+        if (activeTab !== entry.title) {
+          activeTab = entry.title
+        }
+        break
+      }
+    }
+  }
 
   const buildMenu = admin => {
     let menu = [
@@ -64,7 +76,7 @@
     }
 
     // add link to account portal if the user has access
-    let accountSectionAdded = false
+    // let accountSectionAdded = false
 
     // link out to account-portal if account holder in cloud or always in self-host
     // if ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin)) {
@@ -144,14 +156,6 @@
           notifications.error("Error getting org config")
         }
         loaded = true
-      }
-    }
-
-    // Find selected tab
-    for (let entry of menu) {
-      if ($isActive(entry.href)) {
-        activeTab = entry.title
-        break
       }
     }
   })
@@ -255,10 +259,7 @@
     padding: 7px 0;
   }
   .nav :global(.spectrum-Tabs-itemLabel) {
-    color: #d0d0d0;
-  }
-  .nav :global(.spectrum-Tabs-item.is-selected .spectrum-Tabs-itemLabel) {
-    color: #ffffff;
+    font-weight: 600;
   }
   .branding {
     display: grid;
