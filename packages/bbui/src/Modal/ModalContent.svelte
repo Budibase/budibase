@@ -104,7 +104,7 @@
         {/if}
 
         {#if showCancelButton}
-          <Button group secondary newStyles on:click={close}>
+          <Button group secondary on:click={close}>
             {cancelText}
           </Button>
         {/if}

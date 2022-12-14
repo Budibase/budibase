@@ -108,10 +108,9 @@
     <ButtonGroup>
       {#if $licensing.groupsEnabled}
         <!--Show the group create button-->
-        <Button newStyles cta on:click={showCreateGroupModal}>Add group</Button>
+        <Button cta on:click={showCreateGroupModal}>Add group</Button>
       {:else}
         <Button
-          newStyles
           primary
           disabled={!$auth.accountPortalAccess && $admin.cloud}
           on:click={$licensing.goToUpgradePage()}
@@ -120,7 +119,6 @@
         </Button>
         <!--Show the view plans button-->
         <Button
-          newStyles
           secondary
           on:click={() => {
             window.open("https://budibase.com/pricing/", "_blank")

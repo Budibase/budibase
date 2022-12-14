@@ -49,7 +49,6 @@
         <Button
           dataCy="import-app-btn"
           size="M"
-          newStyles
           secondary
           on:click={initiateAppImport}
         >

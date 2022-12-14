@@ -178,9 +178,7 @@
       <div class="header">
         <Heading size="S">Apps</Heading>
         <div>
-          <Button on:click={appAddModal.show()} newStyles secondary>
-            Add app
-          </Button>
+          <Button on:click={appAddModal.show()} secondary>Add app</Button>
         </div>
       </div>
       <List>

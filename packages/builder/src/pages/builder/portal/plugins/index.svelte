@@ -53,7 +53,7 @@
     <Layout noPadding>
       <div class="controls">
         <div>
-          <Button on:click={modal.show} newStyles cta>Add plugin</Button>
+          <Button on:click={modal.show} cta>Add plugin</Button>
         </div>
         {#if $plugins?.length}
           <div class="filters">

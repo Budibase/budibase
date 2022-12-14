@@ -164,7 +164,7 @@
       {#if (licensePlan?.type !== Constants.PlanType.ENTERPRISE && $auth.user.accountPortalAccess) || !$admin.cloud}
         <div class="pro-upgrade">
           <div class="pro-copy">Expand your automation log history</div>
-          <Button primary newStyles on:click={$licensing.goToUpgradePage()}>
+          <Button primary on:click={$licensing.goToUpgradePage()}>
             Upgrade
           </Button>
         </div>

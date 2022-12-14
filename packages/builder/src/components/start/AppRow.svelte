@@ -46,13 +46,12 @@
       <Button
         size="S"
         primary
-        newStyles
         disabled={app.lockedOther}
         on:click={() => editApp(app)}
       >
         Edit
       </Button>
-      <Button size="S" secondary newStyles on:click={() => appOverview(app)}>
+      <Button size="S" secondary on:click={() => appOverview(app)}>
         Manage
       </Button>
       <AppLockModal {app} buttonSize="M" />

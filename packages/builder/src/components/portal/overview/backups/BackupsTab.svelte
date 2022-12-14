@@ -193,7 +193,6 @@
         <div class="pro-buttons">
           {#if $auth.accountPortalAccess}
             <Button
-              newStyles
               primary
               disabled={!$auth.accountPortalAccess && $admin.cloud}
               on:click={$licensing.goToUpgradePage()}
@@ -203,7 +202,6 @@
           {/if}
           <!--Show the view plans button-->
           <Button
-            newStyles
             secondary
             on:click={() => {
               window.open("https://budibase.com/pricing/", "_blank")

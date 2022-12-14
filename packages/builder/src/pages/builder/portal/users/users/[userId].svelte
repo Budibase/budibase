@@ -257,9 +257,7 @@
         <div class="tableTitle">
           <Heading size="S">Groups</Heading>
           <div bind:this={popoverAnchor}>
-            <Button on:click={popover.show()} secondary newStyles>
-              Add to group
-            </Button>
+            <Button on:click={popover.show()} secondary>Add to group</Button>
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
             <UserGroupPicker

@@ -47,8 +47,7 @@
     </div>
   </div>
   <div>
-    <Button newStyles secondary on:click={generateAPIKey}>Regenerate key</Button
-    >
+    <Button secondary on:click={generateAPIKey}>Regenerate key</Button>
   </div>
 </Layout>
 

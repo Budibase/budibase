@@ -101,7 +101,7 @@
     </div>
 
     <div class="footer" slot="footer">
-      <Button newStyles on:click={deleteModal.show()} warning>Delete</Button>
+      <Button on:click={deleteModal.show()} warning>Delete</Button>
     </div>
   </ModalContent>
 
