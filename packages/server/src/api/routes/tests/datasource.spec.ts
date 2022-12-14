@@ -1,16 +1,16 @@
 jest.mock("pg")
+import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { checkCacheForDynamicVariable } from "../../../threads/utils"
+import { events } from "@budibase/backend-core"
 
-let setup = require("./utilities")
 let { basicDatasource } = setup.structures
-let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const pg = require("pg")
-const { checkCacheForDynamicVariable } = require("../../../threads/utils")
-const { events } = require("@budibase/backend-core") 
 
 describe("/datasources", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let datasource
+  let datasource: any
 
   afterAll(setup.afterAll)
 
@@ -26,7 +26,7 @@ describe("/datasources", () => {
         .post(`/api/datasources`)
         .send(basicDatasource())
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       expect(res.body.datasource.name).toEqual("Test")
@@ -42,7 +42,7 @@ describe("/datasources", () => {
         .put(`/api/datasources/${datasource._id}`)
         .send(datasource)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       expect(res.body.datasource.name).toEqual("Updated Test")
@@ -51,25 +51,34 @@ describe("/datasources", () => {
     })
 
     describe("dynamic variables", () => {
-      async function preview(datasource, fields) {
+      async function preview(
+        datasource: any,
+        fields: { path: string; queryString: string }
+      ) {
         return config.previewQuery(request, config, datasource, fields)
       }
 
       it("should invalidate changed or removed variables", async () => {
         const { datasource, query } = await config.dynamicVariableDatasource()
         // preview once to cache variables
-        await preview(datasource, { path: "www.test.com", queryString: "test={{ variable3 }}" })
+        await preview(datasource, {
+          path: "www.test.com",
+          queryString: "test={{ variable3 }}",
+        })
         // check variables in cache
-        let contents = await checkCacheForDynamicVariable(query._id, "variable3")
+        let contents = await checkCacheForDynamicVariable(
+          query._id,
+          "variable3"
+        )
         expect(contents.rows.length).toEqual(1)
-        
+
         // update the datasource to remove the variables
         datasource.config.dynamicVariables = []
         const res = await request
           .put(`/api/datasources/${datasource._id}`)
           .send(datasource)
           .set(config.defaultHeaders())
-          .expect('Content-Type', /json/)
+          .expect("Content-Type", /json/)
           .expect(200)
         expect(res.body.errors).toBeUndefined()
 
@@ -85,7 +94,7 @@ describe("/datasources", () => {
       const res = await request
         .get(`/api/datasources`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       const datasources = res.body
@@ -160,7 +169,7 @@ describe("/datasources", () => {
       const res = await request
         .get(`/api/datasources`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       expect(res.body.length).toEqual(1)
@@ -174,6 +183,5 @@ describe("/datasources", () => {
         url: `/api/datasources/${datasource._id}/${datasource._rev}`,
       })
     })
-
   })
 })

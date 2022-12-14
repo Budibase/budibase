@@ -12,13 +12,11 @@ jest.mock("../../../utilities/redis", () => ({
   shutdown: jest.fn(),
 }))
 
-const {
-  clearAllApps,
-  checkBuilderEndpoint,
-} = require("./utilities/TestFunctions")
-const setup = require("./utilities")
-const { AppStatus } = require("../../../db/utils")
-const { events } = require("@budibase/backend-core")
+import { clearAllApps, checkBuilderEndpoint } from "./utilities/TestFunctions"
+import * as setup from "./utilities"
+import { AppStatus } from "../../../db/utils"
+import { events } from "@budibase/backend-core"
+import env from "../../../environment"
 
 describe("/applications", () => {
   let request = setup.getRequest()
@@ -232,6 +230,41 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(getRes.body.application.updatedAt).toBeDefined()
+    })
+  })
+
+  describe("sync", () => {
+    it("app should sync correctly", async () => {
+      const res = await request
+        .post(`/api/applications/${config.getAppId()}/sync`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body.message).toEqual("App sync completed successfully.")
+    })
+
+    it("app should not sync if production", async () => {
+      const res = await request
+        .post(`/api/applications/app_123456/sync`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+      expect(res.body.message).toEqual(
+        "This action cannot be performed for production apps"
+      )
+    })
+
+    it("app should not sync if sync is disabled", async () => {
+      env._set("DISABLE_AUTO_PROD_APP_SYNC", true)
+      const res = await request
+        .post(`/api/applications/${config.getAppId()}/sync`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body.message).toEqual(
+        "App sync disabled. You can reenable with the DISABLE_AUTO_PROD_APP_SYNC environment variable."
+      )
+      env._set("DISABLE_AUTO_PROD_APP_SYNC", false)
     })
   })
 })
