@@ -2,7 +2,7 @@ import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
 import { db } from "@budibase/backend-core"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
-import generateApp from "../../../config/internal-api/fixtures/applications"
+import { generateApp, appFromTemplate } from "../../../config/internal-api/fixtures/applications"
 import generator from "../../../config/generator"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
 
@@ -18,16 +18,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     await config.afterAll()
   })
 
-  async function createAppFromTemplate() {
-    return config.applications.create({
-      name: generator.word(),
-      url: `/${generator.word()}`,
-      useTemplate: "true",
-      templateName: "Near Miss Register",
-      templateKey: "app/near-miss-register",
-      templateFile: undefined,
-    })
-  }
+
   it("Get applications without applications", async () => {
     await config.applications.fetchEmptyAppList()
   })
@@ -59,8 +50,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
 
   it("Publish app", async () => {
     // create the app
-    const appName = generator.word()
-    const app = await createAppFromTemplate()
+    const app = await config.applications.create(appFromTemplate())
     config.applications.api.appId = app.appId
 
     // check preview renders

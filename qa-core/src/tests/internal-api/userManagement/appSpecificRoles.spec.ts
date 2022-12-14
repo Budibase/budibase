@@ -1,11 +1,12 @@
 import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
-import generateApp from "../../../config/internal-api/fixtures/applications"
+import { generateApp, appFromTemplate } from "../../../config/internal-api/fixtures/applications"
 import { generateUser } from "../../../config/internal-api/fixtures/userManagement"
 import { User } from "@budibase/types"
 import { generateNewColumnForTable, generateTable } from "../../../config/internal-api/fixtures/table"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
+import { db } from "@budibase/backend-core"
 
 describe("Internal API - App Specific Roles & Permissions", () => {
     const api = new InternalAPIClient()
@@ -26,7 +27,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         expect(appUser[0].admin?.global).toEqual(false)
         const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
 
-        const app = await config.applications.create(generateApp())
+        const app = await config.applications.create(appFromTemplate())
         config.applications.api.appId = app.appId
 
         const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
@@ -50,7 +51,10 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         expect(adminUser[0].admin?.global).toEqual(true)
         const [createUserResponse, createUserJson] = await config.users.addMultiple(adminUser)
 
-        const app = await config.applications.create(generateApp())
+        //const app = await config.applications.create(generateApp())
+        //config.applications.api.appId = app.appId
+
+        const app = await config.applications.create(appFromTemplate())
         config.applications.api.appId = app.appId
 
         const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
@@ -65,6 +69,12 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
         expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("ADMIN")
+
+        // publish app
+        await config.applications.publish(<string>app.url)
+        // check published app renders
+        config.applications.api.appId = db.getProdAppID(app.appId!)
+        await config.applications.canRender()
 
     })
 
@@ -190,7 +200,9 @@ describe("Internal API - App Specific Roles & Permissions", () => {
                 true
             )
         })
+    })
 
+    describe("Screen Access for App specific roles", () => {
         it("Check Screen access for BASIC Role", async () => {
             const appUser = generateUser()
             expect(appUser[0].builder?.global).toEqual(false)
@@ -265,9 +277,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
 
         })
     })
-
-
-    describe.skip("App Access for custom roles", () => {
+    describe.skip("Screen Access for custom roles", () => {
         it("Custom role access for level 1 permissions", async () => { })
         it("Custom role access for level 2 permissions", async () => { })
         it("Custom role access for level 3 permissions", async () => { })
