@@ -19,6 +19,8 @@
     "node_modules",
     "dist",
     "src/tests",
+    "src/api/routes/tests/utilities",
+    "src/automations/tests/utilities",
     "**/*.spec.ts",
     "**/*.spec.js"
   ]

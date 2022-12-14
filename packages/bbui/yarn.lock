@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@adobe/spectrum-css-workflow-icons@^1.2.1":
+"@adobe/spectrum-css-workflow-icons@1.2.1":
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.2.1.tgz#7e2cb3fcfb5c8b12d7275afafbb6ec44913551b4"
   integrity sha512-uVgekyBXnOVkxp+CUssjN/gefARtudZC8duEn1vm0lBQFwGRZFlDEzU1QC+aIRWCrD1Z8OgRpmBYlSZ7QS003w==

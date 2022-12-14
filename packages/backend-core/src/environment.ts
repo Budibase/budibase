@@ -1,9 +1,13 @@
 function isTest() {
-  return (
-    process.env.NODE_ENV === "jest" ||
-    process.env.NODE_ENV === "cypress" ||
-    process.env.JEST_WORKER_ID != null
-  )
+  return isCypress() || isJest()
+}
+
+function isJest() {
+  return !!(process.env.NODE_ENV === "jest" || process.env.JEST_WORKER_ID)
+}
+
+function isCypress() {
+  return process.env.NODE_ENV === "cypress"
 }
 
 function isDev() {
@@ -27,6 +31,7 @@ const DefaultBucketName = {
 
 const environment = {
   isTest,
+  isJest,
   isDev,
   JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET,
@@ -66,7 +71,6 @@ const environment = {
   PLUGIN_BUCKET_NAME:
     process.env.PLUGIN_BUCKET_NAME || DefaultBucketName.PLUGINS,
   USE_COUCH: process.env.USE_COUCH || true,
-  DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
   SERVICE: process.env.SERVICE || "budibase",
   LOG_LEVEL: process.env.LOG_LEVEL,

@@ -1,4 +1,12 @@
-import "./mocks"
+import mocks from "./mocks"
+
+// init the licensing mock
+import * as pro from "@budibase/pro"
+mocks.licenses.init(pro)
+
+// use unlimited license by default
+mocks.licenses.useUnlimited()
+
 import * as dbConfig from "../db"
 dbConfig.init()
 import env from "../environment"
