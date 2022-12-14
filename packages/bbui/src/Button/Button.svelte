@@ -14,7 +14,7 @@
   export let active = false
   export let tooltip = undefined
   export let dataCy
-  export let newStyles = false
+  export let newStyles = true
 
   let showTooltip = false
 </script>

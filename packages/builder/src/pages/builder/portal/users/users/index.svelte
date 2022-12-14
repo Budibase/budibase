@@ -222,9 +222,7 @@
         <Button dataCy="add-user" on:click={createUserModal.show} cta>
           Add users
         </Button>
-        <Button on:click={importUsersModal.show} secondary newStyles>
-          Import
-        </Button>
+        <Button on:click={importUsersModal.show} secondary>Import</Button>
       </ButtonGroup>
       <div class="controls-right">
         <Search bind:value={searchEmail} placeholder="Search" />

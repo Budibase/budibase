@@ -278,7 +278,6 @@
               {#if $apps?.length > 0}
                 <Button
                   size="M"
-                  newStyles
                   secondary
                   on:click={$goto("/builder/portal/apps/templates")}
                 >
