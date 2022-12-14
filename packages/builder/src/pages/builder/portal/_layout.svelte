@@ -184,7 +184,6 @@
         </div>
         {#if !$adminStore.cloud && $auth.isAdmin}
           <Button
-            size="S"
             cta
             on:click={() => $goto("/builder/portal/settings/upgrade")}
           >

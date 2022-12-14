@@ -178,6 +178,7 @@
     <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
       <Button cta on:click={saveSmtp}>Save</Button>
       <Button
+        newStyles
         secondary
         on:click={deleteSmtp}
         disabled={!$admin.checklist.smtp.checked}

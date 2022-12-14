@@ -151,7 +151,8 @@
     overflow: visible;
   }
   .spectrum-Dialog-heading {
-    font-family: var(--font-sans);
+    font-family: var(--font-accent);
+    font-weight: 600;
   }
   .spectrum-Dialog-heading.noDivider {
     margin-bottom: 12px;
