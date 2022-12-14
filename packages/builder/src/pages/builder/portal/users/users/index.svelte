@@ -214,7 +214,7 @@
   <Layout noPadding gap="M">
     <Layout gap="XS" noPadding>
       <Heading>Users</Heading>
-      <Body>Add users and control who gets access to your published apps.</Body>
+      <Body>Add users and control who gets access to your published apps</Body>
     </Layout>
     <Divider />
     <div class="controls">

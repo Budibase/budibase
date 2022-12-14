@@ -98,14 +98,12 @@
         </Tags>
       {/if}
     </div>
-    <Body>
-      Easily assign and manage your users' access with groups.
-      {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
-        Contact your account holder to upgrade your plan.
-      {/if}
-    </Body>
+    <Body>Easily assign and manage your users' access with groups</Body>
   </Layout>
   <Divider />
+  {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
+    <Body>Contact your account holder to upgrade your plan.</Body>
+  {/if}
   <div class="controls">
     <ButtonGroup>
       {#if $licensing.groupsEnabled}

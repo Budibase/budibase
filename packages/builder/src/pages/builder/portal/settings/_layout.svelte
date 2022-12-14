@@ -7,7 +7,7 @@
 <Page narrow>
   <Content>
     <div slot="side-nav">
-      <SideNav title="Settings">
+      <SideNav>
         <SideNavItem
           text="API Key"
           url={$url("./api")}

@@ -50,7 +50,7 @@
 
 <Content>
   <div slot="side-nav">
-    <SideNav title="Templates">
+    <SideNav>
       <SideNavItem
         on:click={() => (selectedCategory = null)}
         text="All"

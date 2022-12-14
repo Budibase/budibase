@@ -218,7 +218,6 @@
   }
 
   label {
-    font-family: var(--font-sans);
     cursor: pointer;
     font-weight: 600;
     box-sizing: border-box;
