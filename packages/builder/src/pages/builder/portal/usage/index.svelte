@@ -182,18 +182,14 @@
       <Layout noPadding gap="XS">
         <Heading>Usage</Heading>
         <Body>
-          <div>Get information about your current usage within Budibase.</div>
-          {#if accountPortalAccess}
-            <div>
-              To upgrade your plan and usage limits visit your <Link
-                on:click={goToAccountPortal}
-                size="L">Account</Link
-              >
-            </div>
-          {/if}
+          <div>Get information about your current usage within Budibase</div>
         </Body>
       </Layout>
       <Divider />
+      <Body>
+        To upgrade your plan and usage limits visit your
+        <Link size="L" on:click={goToAccountPortal}>account</Link>.
+      </Body>
       <DashCard
         description="YOUR CURRENT PLAN"
         title={planTitle()}

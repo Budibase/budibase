@@ -117,7 +117,6 @@
   }
 
   label {
-    font-family: var(--font-sans);
     font-weight: 600;
     box-sizing: border-box;
     overflow: hidden;

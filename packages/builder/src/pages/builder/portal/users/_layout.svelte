@@ -10,7 +10,7 @@
 <Page>
   <Content {narrow}>
     <div slot="side-nav">
-      <SideNav title="Users">
+      <SideNav>
         <SideNavItem
           text="Users"
           url={$url("./users")}
