@@ -62,12 +62,12 @@
     </Layout>
     <Divider />
     {#if version}
-      <div>
+      <Layout noPadding gap="XS">
         <Label size="L">Current version</Label>
-        <Heading size="XS">
+        <Heading size="S">
           {version}
         </Heading>
-      </div>
+      </Layout>
     {/if}
     <div>
       <Button cta on:click={updateBudibase}>Check for updates</Button>
