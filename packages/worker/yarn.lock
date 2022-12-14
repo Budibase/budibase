@@ -470,12 +470,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.2.2":
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.2.tgz#f428d9192e3579bcec2a92bd3f51f7667f8f5986"
-  integrity sha512-xSjMNGmIIhg/BA+iAmhSAZzhUhERGqD1niRn5I2QguKzv/1AFDOq8RuKHXkkCoc/bkaVbrHoRYsGQp0eohdYvg==
+"@budibase/backend-core@2.2.3":
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.3.tgz#e2c3214bdbd6fa5cc95038816ecc40a9a0538be9"
+  integrity sha512-vGOWkQ8Xk6p6Lcvbtj6Z4UMoZoZlllMwmnWkwBbwr0am9bVFBF9k65Ca/vioA1egsvmM9hKCCQV6xeDcUz8qaQ==
   dependencies:
-    "@budibase/types" "^2.2.2"
+    "@budibase/nano" "10.1.1"
+    "@budibase/types" "^2.2.3"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -490,7 +491,6 @@
     koa-passport "4.1.4"
     lodash "4.17.21"
     lodash.isarguments "3.1.0"
-    nano "^10.1.0"
     node-fetch "2.6.7"
     passport-google-oauth "2.0.0"
     passport-jwt "4.0.0"
@@ -507,22 +507,34 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/pro@2.2.2":
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.2.tgz#2b15ad938cc303d672eca09ed77295d72053408c"
-  integrity sha512-fCrKTWjL5FJBVptJQLc7Cf/xovBrHWALG1Lu6/YwhFEw+SxPcFWCMISoRfYmMKuR70j4OhkfulmakkthLhuKOw==
+"@budibase/nano@10.1.1":
+  version "10.1.1"
+  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.1.tgz#36ccda4d9bb64b5ee14dd2b27a295b40739b1038"
+  integrity sha512-kbMIzMkjVtl+xI0UPwVU0/pn8/ccxTyfzwBz6Z+ZiN2oUSb0fJCe0qwA6o8dxwSa8nZu4MbGAeMJl3CJndmWtA==
   dependencies:
-    "@budibase/backend-core" "2.2.2"
-    "@budibase/types" "2.2.2"
+    "@types/tough-cookie" "^4.0.2"
+    axios "^1.1.3"
+    http-cookie-agent "^4.0.2"
+    node-abort-controller "^3.0.1"
+    qs "^6.11.0"
+    tough-cookie "^4.1.2"
+
+"@budibase/pro@2.2.3":
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.3.tgz#2e307353597e36df74f80d8affe4ba5686f895fb"
+  integrity sha512-o93ara4THEzMLyNyym+BzcPfB0S8XL4ayRnwbaUnF1cqwbJbiFUv4QR9PC2mrRW7f2EuyVdG2CiCh8EGi05f/A==
+  dependencies:
+    "@budibase/backend-core" "2.2.3"
+    "@budibase/types" "2.2.3"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
     node-fetch "^2.6.1"
 
-"@budibase/types@2.2.2", "@budibase/types@^2.2.2":
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.2.tgz#8d425f01d037758003b31bc7b72db2ecde490723"
-  integrity sha512-FjkymgLKipU5mzzzNf2ZtvbXOMJLyJXrxAQIvNyhdCEXR4Pfn45b8RDpusKn/MgpaljLbsTrASttPBdNfOMT7w==
+"@budibase/types@2.2.3", "@budibase/types@^2.2.3":
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.3.tgz#81ecc4d04cf74698bcd7ea77cee226b0dfd9d949"
+  integrity sha512-+LnzJvxbsUtFnSvd9uki6N7OPwmqu4R8nLXuLzDJyknHVdrLgkAduv+0AZ6WIqjgl6ADVcvk48Et40s0wotZxw==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
@@ -5492,18 +5504,6 @@ mute-stream@0.0.8:
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
-
-nano@^10.1.0:
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/nano/-/nano-10.1.0.tgz#afdd5a7440e62f09a8e23f41fcea328d27383922"
-  integrity sha512-COeN2TpLcHuSN44QLnPmfZCoCsKAg8/aelPOVqqm/2/MvRHDEA11/Kld5C4sLzDlWlhFZ3SO2WGJGevCsvcEzQ==
-  dependencies:
-    "@types/tough-cookie" "^4.0.2"
-    axios "^1.1.3"
-    http-cookie-agent "^4.0.2"
-    node-abort-controller "^3.0.1"
-    qs "^6.11.0"
-    tough-cookie "^4.1.2"
 
 napi-macros@~2.0.0:
   version "2.0.0"
