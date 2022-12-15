@@ -1,8 +1,10 @@
 import { Config } from "@jest/types"
 import * as fs from "fs"
+const preset = require("ts-jest/jest-preset")
 
 const config: Config.InitialOptions = {
-  preset: "ts-jest",
+  ...preset,
+  preset: "@trendyol/jest-testcontainers",
   testEnvironment: "node",
   setupFiles: ["./src/tests/jestSetup.ts"],
   collectCoverageFrom: ["src/**/*.{js,ts}"],
