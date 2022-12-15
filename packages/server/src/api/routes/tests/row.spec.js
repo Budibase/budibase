@@ -10,6 +10,7 @@ const {
   StaticQuotaName,
   MonthlyQuotaName,
 } = require("@budibase/types")
+const { structures } = require("@budibase/backend-core/tests");
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -494,12 +495,13 @@ describe("/rows", () => {
   describe("attachments", () => {
     it("should allow enriching attachment rows", async () => {
       const table = await config.createAttachmentTable()
+      const attachmentId = `${structures.uuid()}.csv`
       const row = await config.createRow({
         name: "test",
         description: "test",
         attachment: [
           {
-            key: `${config.getAppId()}/attachments/test/thing.csv`,
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
           },
         ],
         tableId: table._id,
@@ -509,7 +511,7 @@ describe("/rows", () => {
         context.doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
           expect(enriched[0].attachment[0].url).toBe(
-            `/prod-budi-app-assets/${config.getAppId()}/attachments/test/thing.csv`
+            `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
           )
         })
       })

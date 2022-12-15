@@ -1,4 +1,4 @@
-exports.mock = () => {
+export function mock() {
   // mock the email system
   const sendMailMock = jest.fn()
   const nodemailer = require("nodemailer")
