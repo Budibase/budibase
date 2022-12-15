@@ -2,7 +2,7 @@
 // store an app ID to pretend there is a context
 import env from "../environment"
 import Context from "./Context"
-import { getDevelopmentAppID, getProdAppID } from "../db/conversions"
+import * as conversions from "../db/conversions"
 import { getDB } from "../db/db"
 import {
   DocumentType,
@@ -181,6 +181,14 @@ export function getAppId(): string | undefined {
   }
 }
 
+export const getProdAppId = () => {
+  const appId = getAppId()
+  if (!appId) {
+    throw new Error("Could not get appId")
+  }
+  return conversions.getProdAppID(appId)
+}
+
 export function updateTenantId(tenantId?: string) {
   let context: ContextMap = updateContext({
     tenantId,
@@ -229,7 +237,7 @@ export function getProdAppDB(opts?: any): Database {
   if (!appId) {
     throw new Error("Unable to retrieve prod DB - no app ID.")
   }
-  return getDB(getProdAppID(appId), opts)
+  return getDB(conversions.getProdAppID(appId), opts)
 }
 
 /**
@@ -241,5 +249,5 @@ export function getDevAppDB(opts?: any): Database {
   if (!appId) {
     throw new Error("Unable to retrieve dev DB - no app ID.")
   }
-  return getDB(getDevelopmentAppID(appId), opts)
+  return getDB(conversions.getDevelopmentAppID(appId), opts)
 }
