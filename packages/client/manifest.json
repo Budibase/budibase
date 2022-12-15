@@ -3205,6 +3205,11 @@
         "key": "defaultValue"
       },
       {
+        "type": "text",
+        "label": "Disabled dates",
+        "key": "disabledDates"
+      },
+      {
         "type": "event",
         "label": "On Change",
         "key": "onChange",
@@ -3785,7 +3790,6 @@
         "defaultValue": false,
         "info": "Row selection is only compatible with internal or SQL tables"
       },
-
       {
         "section": true,
         "name": "On Row Click",

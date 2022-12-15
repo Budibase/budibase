@@ -12,6 +12,7 @@
   export let ignoreTimezones = false
   export let validation
   export let defaultValue
+  export let disabledDates
   export let onChange
 
   let fieldState
@@ -22,6 +23,13 @@
     if (onChange && changed) {
       onChange({ value: e.detail })
     }
+  }
+
+  const parseDisabledDates = disabledDates => {
+    if (typeof disabledDates === "string") {
+      return disabledDates.split(",")
+    }
+    return disabledDates || []
   }
 </script>
 
@@ -48,6 +56,7 @@
       {time24hr}
       {ignoreTimezones}
       {placeholder}
+      disabledDates={parseDisabledDates(disabledDates)}
     />
   {/if}
 </Field>

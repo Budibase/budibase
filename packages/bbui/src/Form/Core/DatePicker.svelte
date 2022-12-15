@@ -18,6 +18,7 @@
   export let ignoreTimezones = false
   export let time24hr = false
   export let range = false
+  export let disabledDates = []
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
   let open = false
@@ -53,6 +54,7 @@
     mode: range ? "range" : "single",
     appendTo,
     disableMobile: "true",
+    disable: disabledDates,
     onReady: () => {
       let timestamp = resolveTimeStamp(value)
       if (timeOnly && timestamp) {
