@@ -4,6 +4,7 @@
   import { Table, Modal, Heading, notifications, Layout } from "@budibase/bbui"
   import { API } from "api"
   import Spinner from "components/common/Spinner.svelte"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
   import CreateEditUser from "./modals/CreateEditUser.svelte"
@@ -34,8 +35,8 @@
   let editRowModal
   let editColumnModal
   let customRenderers = []
+  let confirmDelete
 
-  $: isInternal = type !== "external"
   $: isUsersTable = tableId === TableNames.USERS
   $: data && resetSelectedRows()
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
@@ -89,15 +90,17 @@
     )
   }
 
-  const deleteRows = async () => {
+  const deleteRows = async targetRows => {
     try {
       await API.deleteRows({
         tableId,
-        rows: selectedRows,
+        rows: targetRows,
       })
-      data = data.filter(row => !selectedRows.includes(row))
-      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
-      selectedRows = []
+
+      const deletedRowIds = targetRows.map(row => row._id)
+      data = data.filter(row => deletedRowIds.indexOf(row._id))
+
+      notifications.success(`Successfully deleted ${targetRows.length} rows`)
     } catch (error) {
       notifications.error("Error deleting rows")
     }
@@ -133,7 +136,14 @@
     <div class="popovers">
       <slot />
       {#if !isUsersTable && selectedRows.length > 0}
-        <DeleteRowsButton on:updaterows {selectedRows} {deleteRows} />
+        <DeleteRowsButton
+          on:updaterows
+          {selectedRows}
+          deleteRows={async rows => {
+            await deleteRows(rows)
+            resetSelectedRows()
+          }}
+        />
       {/if}
     </div>
   </Layout>
@@ -164,8 +174,33 @@
 </Layout>
 
 <Modal bind:this={editRowModal}>
-  <svelte:component this={editRowComponent} on:updaterows row={editableRow} />
+  <svelte:component
+    this={editRowComponent}
+    on:updaterows
+    on:deleteRows={() => {
+      confirmDelete.show()
+    }}
+    row={editableRow}
+  />
 </Modal>
+
+<ConfirmDialog
+  bind:this={confirmDelete}
+  okText="Delete"
+  onOk={async () => {
+    if (editableRow) {
+      await deleteRows([editableRow])
+    }
+    editableRow = undefined
+  }}
+  onCancel={async () => {
+    editRow(editableRow)
+  }}
+  title="Confirm Deletion"
+>
+  Are you sure you want to delete this row?
+</ConfirmDialog>
+
 <Modal bind:this={editColumnModal}>
   <CreateEditColumn
     field={editableColumn}

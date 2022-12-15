@@ -58,12 +58,15 @@ http {
     }
 
     location ~ ^/api/(system|admin|global)/ {
-      proxy_pass      http://worker-service;
       proxy_read_timeout 120s;
       proxy_connect_timeout 120s;
       proxy_send_timeout 120s;
       proxy_http_version 1.1;
+
+      proxy_set_header Host $host;
       proxy_set_header Connection "";
+
+      proxy_pass      http://worker-service;
     }
 
     location /api/backups/ {
@@ -78,60 +81,78 @@ http {
     location /api/ {
       proxy_read_timeout 120s;
       proxy_connect_timeout 120s;
-      proxy_send_timeout 120s; 
-      proxy_pass      http://app-service;
+      proxy_send_timeout 120s;
       proxy_http_version 1.1;
+
+      proxy_set_header Host $host;
       proxy_set_header Connection "";
+
+      proxy_pass      http://app-service;
     }
 
     location = / {
-      proxy_pass      http://app-service;
       proxy_read_timeout 120s;
       proxy_connect_timeout 120s;
       proxy_send_timeout 120s;
       proxy_http_version 1.1;
+
+      proxy_set_header Host $host;
       proxy_set_header Connection "";
+
+      proxy_pass      http://app-service;
     }
 
     location /app_ {
-      proxy_pass      http://app-service;
       proxy_read_timeout 120s;
       proxy_connect_timeout 120s;
       proxy_send_timeout 120s;
       proxy_http_version 1.1;
+
+      proxy_set_header Host $host;
       proxy_set_header Connection "";
+
+      proxy_pass      http://app-service;
     }
 
     location /app {
-      proxy_pass      http://app-service;
       proxy_read_timeout 120s;
       proxy_connect_timeout 120s;
       proxy_send_timeout 120s;
       proxy_http_version 1.1;
+
+      proxy_set_header Host $host;
       proxy_set_header Connection "";
+
+      proxy_pass      http://app-service;
     }
 
     location /builder {
-      proxy_pass      http://builder;
       proxy_read_timeout 120s;
       proxy_connect_timeout 120s;
       proxy_send_timeout 120s;
       proxy_http_version 1.1;
+
+      proxy_set_header Host $host;
       proxy_set_header Connection "";
+
+      proxy_pass      http://builder;
       rewrite ^/builder(.*)$ /builder/$1 break;
     }
 
     location /builder/ {
-      proxy_pass      http://builder;
-
       proxy_http_version  1.1;
+
+      proxy_set_header    Host                $host;
       proxy_set_header    Connection          $connection_upgrade;
       proxy_set_header    Upgrade             $http_upgrade;
       proxy_set_header    X-Real-IP           $remote_addr;
       proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+
       proxy_read_timeout 120s;
       proxy_connect_timeout 120s;
       proxy_send_timeout 120s;
+
+      proxy_pass      http://builder;
     }
 
     location /vite/ {
@@ -163,6 +184,26 @@ http {
       chunked_transfer_encoding off;
 
       proxy_pass      http://minio-service:9000;
+    }
+
+    location /files/signed/ {
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      # IMPORTANT: Signed urls will inspect the host header of the request.
+      # Normally a signed url will need to be generated with a specified client host in mind.
+      # To support dynamic hosts, e.g. some unknown self-hosted installation url,
+      # use a predefined host header. The host 'minio-service' is also used at the time of url signing.
+      proxy_set_header Host minio-service;
+
+      proxy_connect_timeout 300;
+      proxy_http_version 1.1;
+      proxy_set_header Connection "";
+      chunked_transfer_encoding off;
+
+      proxy_pass      http://minio-service:9000;
+      rewrite ^/files/signed/(.*)$ /$1 break;
     }
 
     client_header_timeout 60;

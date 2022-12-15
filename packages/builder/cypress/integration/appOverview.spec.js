@@ -140,7 +140,8 @@ filterTests(["all"], () => {
         })
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.get(".appTable .app-row-actions button")
+      cy.wait(1000)
+      cy.get(".appTable .app-row-actions button", { timeout: 10000 })
         .contains("Manage")
         .eq(0)
         .click({ force: true })

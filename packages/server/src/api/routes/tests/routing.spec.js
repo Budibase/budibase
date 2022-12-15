@@ -1,13 +1,13 @@
 const setup = require("./utilities")
 const { basicScreen } = setup.structures
 const { checkBuilderEndpoint, runInProd } = require("./utilities/TestFunctions")
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const { roles } = require("@budibase/backend-core")
+const { BUILTIN_ROLE_IDS } = roles
 
 const route = "/test"
 
 // there are checks which are disabled in test env,
 // these checks need to be enabled for this test
-
 
 describe("/routing", () => {
   let request = setup.getRequest()

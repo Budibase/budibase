@@ -440,8 +440,8 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
   // Creates an internal Budibase DB table
   if (!initialTable) {
     cy.navigateToDataSection()
-    cy.get(`[data-cy="new-table"]`, { timeout: 2000 }).click()
   }
+  cy.get(`[data-cy="new-datasource"]`, { timeout: 2000 }).click()
   cy.wait(2000)
   cy.get(".item", { timeout: 2000 })
     .contains("Budibase DB")
@@ -458,6 +458,9 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
   })
   // Ensure modal has closed and table is created
   cy.get(".spectrum-Modal", { timeout: 2000 }).should("not.exist")
+  cy.get(".nav-item", { timeout: 2000 })
+    .contains("Budibase DB")
+    .click({ force: true })
   cy.get(".spectrum-Tabs-content", { timeout: 2000 }).should(
     "contain",
     tableName
@@ -525,7 +528,7 @@ Cypress.Commands.add("addRowMultiValue", values => {
 })
 
 Cypress.Commands.add("selectTable", tableName => {
-  cy.expandBudibaseConnection()
+  cy.get(".nav-item").contains("Budibase DB").click()
   cy.contains(".nav-item", tableName).click()
 })
 
@@ -574,6 +577,18 @@ Cypress.Commands.add("searchAndAddComponent", component => {
     cy.getComponent(componentId, { timeout: 3000 }).should("exist")
     return cy.wrap(componentId)
   })
+})
+
+Cypress.Commands.add("deleteComponentByName", componentName => {
+  cy.get(".body")
+    .eq(0)
+    .contains(componentName)
+    .siblings(".actions")
+    .within(() => {
+      cy.get(".spectrum-Icon").click({ force: true })
+    })
+  cy.get(".spectrum-Menu").contains("Delete").click()
+  cy.get(".spectrum-Dialog").contains("Delete Component").click()
 })
 
 Cypress.Commands.add("addComponent", (category, component) => {
@@ -781,7 +796,7 @@ Cypress.Commands.add("selectExternalDatasource", datasourceName => {
   cy.navigateToDataSection()
   // Open Datasource modal
   cy.get(".nav").within(() => {
-    cy.get(".add-button").click()
+    cy.get("[data-cy='new-datasource']").click()
   })
   // Clicks specified datasource & continue
   cy.get(".item-list", { timeout: 1000 }).contains(datasourceName).click()

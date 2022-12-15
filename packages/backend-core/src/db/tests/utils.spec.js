@@ -1,15 +1,17 @@
-require("../../../tests/utilities/TestConfiguration");
+require("../../../tests")
 const {
-  generateAppID,
   getDevelopmentAppID,
   getProdAppID,
   isDevAppID,
   isProdAppID,
+} = require("../conversions")
+const {
+  generateAppID,
   getPlatformUrl,
   getScopedConfig
 } = require("../utils")
-const tenancy = require("../../tenancy");
-const { Configs, DEFAULT_TENANT_ID } = require("../../constants");
+const tenancy = require("../../tenancy")
+const { Config, DEFAULT_TENANT_ID } = require("../../constants")
 const env = require("../../environment")
 
 describe("utils", () => {
@@ -77,7 +79,7 @@ const setDbPlatformUrl = async () => {
   const db = tenancy.getGlobalDB()
   db.put({
     _id: "config_settings",
-    type: Configs.SETTINGS,
+    type: Config.SETTINGS,
     config: {
       platformUrl: DB_URL
     }
@@ -178,7 +180,7 @@ describe("getScopedConfig", () => {
       await tenancy.doInTenant(DEFAULT_TENANT_ID, async () => {
         await setDbPlatformUrl()
         const db = tenancy.getGlobalDB()
-        const config = await getScopedConfig(db, { type: Configs.SETTINGS })
+        const config = await getScopedConfig(db, { type: Config.SETTINGS })
         expect(config.platformUrl).toBe(DB_URL)
       })
     })
@@ -186,7 +188,7 @@ describe("getScopedConfig", () => {
     it("returns the platform url without an existing config", async () => {
       await tenancy.doInTenant(DEFAULT_TENANT_ID, async () => {
         const db = tenancy.getGlobalDB()
-        const config = await getScopedConfig(db, { type: Configs.SETTINGS })
+        const config = await getScopedConfig(db, { type: Config.SETTINGS })
         expect(config.platformUrl).toBe(DEFAULT_URL)
       })
     })
