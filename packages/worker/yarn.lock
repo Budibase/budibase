@@ -470,13 +470,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.2.3":
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.3.tgz#e2c3214bdbd6fa5cc95038816ecc40a9a0538be9"
-  integrity sha512-vGOWkQ8Xk6p6Lcvbtj6Z4UMoZoZlllMwmnWkwBbwr0am9bVFBF9k65Ca/vioA1egsvmM9hKCCQV6xeDcUz8qaQ==
+"@budibase/backend-core@2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.4.tgz#4fa83cb4b284573a02657a76c34b3095fe8f8961"
+  integrity sha512-F/9aXmO8xS6/o5kzyiSs5Jw61QoxqPIi+yXqmLmOOy3FtJdQT3QvvVphZSzWAVKGja4EH9DDfnJxt8zXE1MZWA==
   dependencies:
     "@budibase/nano" "10.1.1"
-    "@budibase/types" "^2.2.3"
+    "@budibase/types" "^2.2.4"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -519,22 +519,22 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
-"@budibase/pro@2.2.3":
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.3.tgz#2e307353597e36df74f80d8affe4ba5686f895fb"
-  integrity sha512-o93ara4THEzMLyNyym+BzcPfB0S8XL4ayRnwbaUnF1cqwbJbiFUv4QR9PC2mrRW7f2EuyVdG2CiCh8EGi05f/A==
+"@budibase/pro@2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.4.tgz#0a199e3f13b1c60b22f356cb3bac939e33a66232"
+  integrity sha512-l/IdyaVHlxmYcdY7BHsMGGNhKc14LPSgwat2J0soqqZgG8BYsNjukN+G8YbL4hVwCn/8ZvKVuokGMFp+b6ujzQ==
   dependencies:
-    "@budibase/backend-core" "2.2.3"
-    "@budibase/types" "2.2.3"
+    "@budibase/backend-core" "2.2.4"
+    "@budibase/types" "2.2.4"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
     node-fetch "^2.6.1"
 
-"@budibase/types@2.2.3", "@budibase/types@^2.2.3":
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.3.tgz#81ecc4d04cf74698bcd7ea77cee226b0dfd9d949"
-  integrity sha512-+LnzJvxbsUtFnSvd9uki6N7OPwmqu4R8nLXuLzDJyknHVdrLgkAduv+0AZ6WIqjgl6ADVcvk48Et40s0wotZxw==
+"@budibase/types@2.2.4", "@budibase/types@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.4.tgz#4baf9e54cbbdfb0a6d7e2b6f3eac50aab4712f8d"
+  integrity sha512-RIBkVKcdgyiWkvji3wxruW7N4WVSZGDs8gtSwmJmz74d6eKjE8GMLiIBkH1B6cWNtssSfhEoTANsNpbzK2/uvg==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
