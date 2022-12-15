@@ -327,7 +327,7 @@ const showNotificationHandler = action => {
   notificationStore.actions[type]?.(message, autoDismiss)
 }
 
-const promptUserHandler = () => { }
+const promptUserHandler = () => {}
 
 const OpenSidePanelHandler = action => {
   const { id } = action.parameters
