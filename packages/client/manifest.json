@@ -3200,6 +3200,18 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Range mode",
+        "key": "range",
+        "defaultValue": false
+      },
+      {
+        "type": "field/datetime",
+        "label": "To field",
+        "key": "toField",
+        "dependsOn": "range"
+      },
+      {
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"

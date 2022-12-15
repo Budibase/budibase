@@ -1,8 +1,10 @@
 <script>
   import { CoreDatePicker } from "@budibase/bbui"
+  import { getContext } from "svelte"
   import Field from "./Field.svelte"
 
   export let field
+  export let toField
   export let label
   export let placeholder
   export let disabled = false
@@ -10,16 +12,39 @@
   export let timeOnly = false
   export let time24hr = false
   export let ignoreTimezones = false
+  export let range = false
   export let validation
   export let defaultValue
   export let disabledDates
   export let onChange
 
-  let fieldState
-  let fieldApi
+  let fieldState, toFieldState
+  let fieldApi, toFieldApi
+  let rangeValue
+
+  const formContext = getContext("form")
+  const formApi = formContext?.formApi
+  $: toFormField = formApi?.registerField(toField, "datetime")
+  $: toUnsubscribe = toFormField?.subscribe(value => {
+    toFieldState = value?.fieldState
+    toFieldApi = value?.fieldApi
+  })
 
   const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
+    let fromValue, toValue
+    if (Array.isArray(e.detail)) {
+      rangeValue = e.detail[0]
+      fromValue = rangeValue[0]
+      toValue = rangeValue[1]
+    } else {
+      fromValue = e.detail
+      toFieldApi?.deregister()
+      toUnsubscribe?.()
+    }
+    const changed = fieldApi.setValue(fromValue)
+    if (toValue) {
+      toFieldApi.setValue(toValue)
+    }
     if (onChange && changed) {
       onChange({ value: e.detail })
     }
@@ -45,7 +70,7 @@
 >
   {#if fieldState}
     <CoreDatePicker
-      value={fieldState.value}
+      value={range ? rangeValue : fieldState.value}
       on:change={handleChange}
       disabled={fieldState.disabled}
       error={fieldState.error}
@@ -56,6 +81,7 @@
       {time24hr}
       {ignoreTimezones}
       {placeholder}
+      {range}
       disabledDates={parseDisabledDates(disabledDates)}
     />
   {/if}
