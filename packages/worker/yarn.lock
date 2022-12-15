@@ -470,14 +470,15 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.1.46-alpha.13":
-  version "2.1.46-alpha.13"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.1.46-alpha.13.tgz#a24c92f88c02ecf1fed0ea1c8f0d58f521d147ee"
-  integrity sha512-FtOJd7HLa3PxebwuLyGotTjdNG2DqLIjCDYyzk7lS+H7DhYX9pQ8nBS5TEc+pI9w7aXsWlIY5wFB90qIQ6tn+g==
+"@budibase/backend-core@2.1.46-alpha.14":
+  version "2.1.46-alpha.14"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.1.46-alpha.14.tgz#825ba57d92c69133530d15dacb20b9f17d293886"
+  integrity sha512-shPf4ZgI222gKGCn7u/MgxPmFVsP7YLREpbzkyxnoxjBoXcRTrlgT51sG+VfUcFrX4LEOn13wraBrxxaNyixSg==
   dependencies:
-    "@budibase/types" "2.1.46-alpha.13"
+    "@budibase/types" "2.1.46-alpha.14"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
+    aws-cloudfront-sign "2.2.0"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
     bcryptjs "2.4.3"
@@ -507,23 +508,23 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/pro@2.1.46-alpha.13":
-  version "2.1.46-alpha.13"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.1.46-alpha.13.tgz#63712d6f22930d1de9bd62d6b74a015da3675c32"
-  integrity sha512-FwVEH3269I6wW5oT0f/lL/N6KrD5cJFfXc0jTLPNWo4nWOyoxGWr77sYZEhHtny+ifYuTk+BJxn2VyDNON2/Iw==
+"@budibase/pro@2.1.46-alpha.14":
+  version "2.1.46-alpha.14"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.1.46-alpha.14.tgz#d6f08e9b3b68a57be75b8576dde99109b390ae8d"
+  integrity sha512-B8mtvC/Wpr/phFotDAdm9hHRLFUAFwA1g2TRNnocTmUzKUpcw/JMSNc7pxtdOgvWMsaY375l3z5Y/tySSKndpg==
   dependencies:
-    "@budibase/backend-core" "2.1.46-alpha.13"
-    "@budibase/types" "2.1.46-alpha.13"
+    "@budibase/backend-core" "2.1.46-alpha.14"
+    "@budibase/types" "2.1.46-alpha.14"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
     jsonwebtoken "8.5.1"
     node-fetch "^2.6.1"
 
-"@budibase/types@2.1.46-alpha.13":
-  version "2.1.46-alpha.13"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.1.46-alpha.13.tgz#0107530cc8321d468821eeff4adf221e33ea179b"
-  integrity sha512-SUN+RcaJBIuXvgveUje8y9I9FdB+LXAW3DUK0SZBEphL3LmU3/Mc2bfhS1kOoLyImVY52ByzinpCUyBHR7zWXQ==
+"@budibase/types@2.1.46-alpha.14":
+  version "2.1.46-alpha.14"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.1.46-alpha.14.tgz#d3f90cd28dce19989206ee7dacad6ba1ae764d61"
+  integrity sha512-FXLE9XFCaA87jf7lXatGtSiSIiMIhIYGXJS2O5DhpYTYMCdT528DZs8h7R+5CuMsDwEF8WO1IlHTQ7Zw09jZZA==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
@@ -1882,6 +1883,13 @@ atomic-sleep@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/atomic-sleep/-/atomic-sleep-1.0.0.tgz#eb85b77a601fc932cfe432c5acd364a9e2c9075b"
   integrity sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==
+
+aws-cloudfront-sign@2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/aws-cloudfront-sign/-/aws-cloudfront-sign-2.2.0.tgz#3910f5a6d0d90fec07f2b4ef8ab07f3eefb5625d"
+  integrity sha512-qG+rwZMP3KRTPPbVmWY8DlrT56AkA4iVOeo23vkdK2EXeW/brJFN2haSNKzVz+oYhFMEIzVVloeAcrEzuRkuVQ==
+  dependencies:
+    lodash "^3.6.0"
 
 aws-sdk@2.1030.0:
   version "2.1030.0"
@@ -5225,6 +5233,11 @@ lodash@4.17.21, lodash@^4.17.14, lodash@^4.17.19, lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
+
+lodash@^3.6.0:
+  version "3.10.1"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6"
+  integrity sha512-9mDDwqVIma6OZX79ZlDACZl8sBm0TEnkf99zV3iMA4GzkIT/9hiqP5mY0HoT1iNLCrKc/R1HByV+yJfRWVJryQ==
 
 lowercase-keys@^1.0.0, lowercase-keys@^1.0.1:
   version "1.0.1"
