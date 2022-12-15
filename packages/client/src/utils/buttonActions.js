@@ -327,10 +327,7 @@ const showNotificationHandler = action => {
   notificationStore.actions[type]?.(message, autoDismiss)
 }
 
-const promptUserHandler = action => {
-  action.parameters
-  return
-}
+const promptUserHandler = () => { }
 
 const OpenSidePanelHandler = action => {
   const { id } = action.parameters
@@ -441,13 +438,11 @@ export const enrichButtonActions = (actions, context) => {
                   const newContext = { ...context, actions: buttonContext }
 
                   // Enrich and call the next button action if there is more than one action remaining
-                  if (actions.length > 1) {
-                    const next = enrichButtonActions(
-                      actions.slice(i + 1),
-                      newContext
-                    )
-                    resolve(await next())
-                  }
+                  const next = enrichButtonActions(
+                    actions.slice(i + 1),
+                    newContext
+                  )
+                  resolve(await next())
                 } else {
                   resolve(false)
                 }
