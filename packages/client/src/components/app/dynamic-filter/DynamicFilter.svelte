@@ -21,6 +21,7 @@
     schema
 
   $: dataProviderId = dataProvider?.id
+  $: datasource = dataProvider?.datasource
   $: addExtension = getAction(
     dataProviderId,
     ActionTypes.AddDataProviderQueryExtension
@@ -29,7 +30,7 @@
     dataProviderId,
     ActionTypes.RemoveDataProviderQueryExtension
   )
-  $: fetchSchema(dataProvider || {})
+  $: fetchSchema(datasource)
   $: schemaFields = getSchemaFields(schema, allowedFields)
 
   // Add query extension to data provider
@@ -42,8 +43,7 @@
     }
   }
 
-  async function fetchSchema(dataProvider) {
-    const datasource = dataProvider?.datasource
+  async function fetchSchema(datasource) {
     if (datasource) {
       schema = await fetchDatasourceSchema(datasource, {
         enrichRelationships: true,
@@ -102,7 +102,7 @@
 
   <Modal bind:this={modal}>
     <ModalContent title="Edit filters" size="XL" onConfirm={updateQuery}>
-      <FilterModal bind:filters={tmpFilters} {schemaFields} />
+      <FilterModal bind:filters={tmpFilters} {schemaFields} {datasource} />
     </ModalContent>
   </Modal>
 {/if}
