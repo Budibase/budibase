@@ -38,11 +38,6 @@
           url={$url("./theme")}
           active={$isActive("./theme")}
         />
-        <SideNavItem
-          text="Upgrade"
-          url={$url("./upgrade")}
-          active={$isActive("./upgrade")}
-        />
       </SideNav>
     </div>
     <slot />

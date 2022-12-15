@@ -8,6 +8,7 @@
     Button,
     Input,
     Label,
+    ButtonGroup,
     notifications,
   } from "@budibase/bbui"
   import { auth, admin } from "stores/portal"
@@ -103,10 +104,10 @@
         {#if license.plan.type === "free"}
           Upgrade your Budibase installation to unlock additional features. To
           subscribe to a plan visit your
-          <Link size="L" href={upgradeUrl}>Account</Link>.
+          <Link size="L" href={upgradeUrl}>account</Link>.
         {:else}
           To manage your plan visit your
-          <Link size="L" href={upgradeUrl}>Account</Link>.
+          <Link size="L" href={upgradeUrl}>account</Link>
         {/if}
       </Body>
     </Layout>
@@ -127,44 +128,33 @@
           />
         </div>
       </div>
-      <div class="button-container">
-        <div class="action-button">
-          <Button cta on:click={activate} disabled={activateDisabled}
-            >Activate</Button
-          >
-        </div>
-        <div class="action-button">
-          {#if licenseInfo?.licenseKey}
-            <Button warning on:click={() => deleteLicenseKeyModal.show()}
-              >Delete</Button
-            >
-          {/if}
-        </div>
-      </div>
+      <ButtonGroup>
+        <Button cta on:click={activate} disabled={activateDisabled}>
+          Activate
+        </Button>
+        {#if licenseInfo?.licenseKey}
+          <Button warning on:click={() => deleteLicenseKeyModal.show()}>
+            Delete
+          </Button>
+        {/if}
+      </ButtonGroup>
     </Layout>
     <Divider />
-    <Layout gap="L" noPadding>
-      <Layout gap="S" noPadding>
-        <Heading size="S">Plan</Heading>
-        <Layout noPadding gap="XXS">
-          <Body size="S">You are currently on the {license.plan.type} plan</Body
-          >
-          <Body size="XS">
-            {processStringSync(
-              "Updated {{ duration time 'millisecond' }} ago",
-              {
-                time:
-                  new Date().getTime() -
-                  new Date(license.refreshedAt).getTime(),
-              }
-            )}
-          </Body>
-        </Layout>
+    <Layout gap="XS" noPadding>
+      <Heading size="S">Plan</Heading>
+      <Layout noPadding gap="XXS">
+        <Body size="S">You are currently on the {license.plan.type} plan</Body>
+        <Body size="XS">
+          {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+            time:
+              new Date().getTime() - new Date(license.refreshedAt).getTime(),
+          })}
+        </Body>
       </Layout>
-      <div>
-        <Button secondary on:click={refresh}>Refresh</Button>
-      </div>
     </Layout>
+    <div>
+      <Button secondary on:click={refresh}>Refresh</Button>
+    </div>
   </Layout>
 {/if}
 
@@ -178,11 +168,5 @@
     grid-template-columns: 100px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
-  }
-  .action-button {
-    margin-right: 10px;
-  }
-  .button-container {
-    display: flex;
   }
 </style>
