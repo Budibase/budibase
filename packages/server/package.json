@@ -123,6 +123,7 @@
     "@babel/preset-env": "7.16.11",
     "@budibase/standard-components": "^0.9.139",
     "@jest/test-sequencer": "24.9.0",
+    "@trendyol/jest-testcontainers": "^2.1.1",
     "@types/apidoc": "0.50.0",
     "@types/bson": "4.2.0",
     "@types/global-agent": "2.1.1",
