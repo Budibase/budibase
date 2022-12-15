@@ -57,8 +57,8 @@
           href: "/builder/portal/plugins",
         },
         {
-          title: "Usage",
-          href: "/builder/portal/usage",
+          title: "Account",
+          href: "/builder/portal/account",
         },
         {
           title: "Settings",
@@ -183,10 +183,7 @@
           />
         </div>
         {#if !$adminStore.cloud && $auth.isAdmin}
-          <Button
-            cta
-            on:click={() => $goto("/builder/portal/settings/upgrade")}
-          >
+          <Button cta on:click={() => $goto("/builder/portal/account/upgrade")}>
             Upgrade
           </Button>
         {/if}
@@ -216,8 +213,8 @@
             <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
               Close developer mode
             </MenuItem>
-            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}
-              >Log out
+            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}>
+              Log out
             </MenuItem>
           </ActionMenu>
         </div>
