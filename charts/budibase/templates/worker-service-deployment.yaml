@@ -69,7 +69,7 @@ spec:
           value: {{ .Values.services.objectStore.region }}
         {{ end }}
         - name: MINIO_ENABLED
-          value: {{ .Values.services.objectStore.minio }}
+          value: {{ .Values.services.objectStore.minio | quote }}
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:
