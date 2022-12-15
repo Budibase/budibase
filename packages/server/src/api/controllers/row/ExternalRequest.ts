@@ -25,6 +25,7 @@ import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { processFormulas, processDates } from "../../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
+import { removeKeyNumbering } from "./utils"
 
 export interface ManyRelationship {
   tableId?: string
@@ -55,15 +56,21 @@ function buildFilters(
   let idCopy: undefined | string | any[] = cloneDeep(id)
   if (filters) {
     // need to map over the filters and make sure the _id field isn't present
-    for (let filter of Object.values(filters)) {
-      if (filter._id && primary) {
-        const parts = breakRowIdField(filter._id)
-        for (let field of primary) {
-          filter[field] = parts.shift()
+    let prefix = 1
+    for (let operator of Object.values(filters)) {
+      for (let field of Object.keys(operator || {})) {
+        if (removeKeyNumbering(field) === "_id") {
+          if (primary) {
+            const parts = breakRowIdField(operator[field])
+            for (let field of primary) {
+              operator[`${prefix}:${field}`] = parts.shift()
+            }
+            prefix++
+          }
+          // make sure this field doesn't exist on any filter
+          delete operator[field]
         }
       }
-      // make sure this field doesn't exist on any filter
-      delete filter._id
     }
   }
   // there is no id, just use the user provided filters
