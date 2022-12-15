@@ -470,14 +470,16 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.1.46-alpha.6":
-  version "2.1.46-alpha.6"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.1.46-alpha.6.tgz#eb24abae6e3f6435a01b97978d25a466b672caff"
-  integrity sha512-oDPhUE1nPoBu74lWQFj+9p8Fxh42CbNiE+PqaIBrcjpgSmg88Ftcr82UHg3YPQSXGBa/7hVvIkyXqVYzhIfG/Q==
+"@budibase/backend-core@2.2.4-alpha.2":
+  version "2.2.4-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.4-alpha.2.tgz#7942695880cd5677d91dd1fc85deb0f13769bed1"
+  integrity sha512-2VMZjKeojP9S0aDKeK8y/I1xY5XoIWHmioqwydppG9R0hIRk2MsxNAg6XxcPMHFEwV2AJc9TX9byDo+qXKyvlw==
   dependencies:
-    "@budibase/types" "2.1.46-alpha.6"
+    "@budibase/nano" "10.1.1"
+    "@budibase/types" "2.2.4-alpha.2"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
+    aws-cloudfront-sign "2.2.0"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
     bcryptjs "2.4.3"
@@ -490,7 +492,6 @@
     koa-passport "4.1.4"
     lodash "4.17.21"
     lodash.isarguments "3.1.0"
-    nano "^10.1.0"
     node-fetch "2.6.7"
     passport-google-oauth "2.0.0"
     passport-jwt "4.0.0"
@@ -507,22 +508,35 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/pro@2.1.46-alpha.6":
-  version "2.1.46-alpha.6"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.1.46-alpha.6.tgz#c81465fe03c1a2dac69308ce5304e423bfbcabf4"
-  integrity sha512-76/29biUDsGfOE4nzMHuVyzTpXPXsNOSe1dkbhGvxBVn42CQGIaR17a+0do9XX5I9qn7zhFJmz2B3UYYb9rZ4g==
+"@budibase/nano@10.1.1":
+  version "10.1.1"
+  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.1.tgz#36ccda4d9bb64b5ee14dd2b27a295b40739b1038"
+  integrity sha512-kbMIzMkjVtl+xI0UPwVU0/pn8/ccxTyfzwBz6Z+ZiN2oUSb0fJCe0qwA6o8dxwSa8nZu4MbGAeMJl3CJndmWtA==
   dependencies:
-    "@budibase/backend-core" "2.1.46-alpha.6"
-    "@budibase/types" "2.1.46-alpha.6"
+    "@types/tough-cookie" "^4.0.2"
+    axios "^1.1.3"
+    http-cookie-agent "^4.0.2"
+    node-abort-controller "^3.0.1"
+    qs "^6.11.0"
+    tough-cookie "^4.1.2"
+
+"@budibase/pro@2.2.4-alpha.2":
+  version "2.2.4-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.4-alpha.2.tgz#1e1a26b9194669aed1737d1245be45b448a6e889"
+  integrity sha512-jqOuLIUqFyphG9K0Ovly2ipVdAMZ7yvqLo74S3KwVu74Rk5Ab7rBw4DecOdKvGbu/r0ssNdXDXv8bns/P6I2ng==
+  dependencies:
+    "@budibase/backend-core" "2.2.4-alpha.2"
+    "@budibase/types" "2.2.4-alpha.2"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
+    jsonwebtoken "8.5.1"
     node-fetch "^2.6.1"
 
-"@budibase/types@2.1.46-alpha.6":
-  version "2.1.46-alpha.6"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.1.46-alpha.6.tgz#d80f47aa57ffa0685f03f5aaf5477d1e985fc9cf"
-  integrity sha512-ol0/j0h5A6ZCQrc+qGkigFcuQ8EsyTLhHEhBynh/TWyTbjbUWPJBGTeY5lYzWD2bqQWnRDXsDP4iNdpbuviZNA==
+"@budibase/types@2.2.4-alpha.2":
+  version "2.2.4-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.4-alpha.2.tgz#56503aee0e1294ca5b27338f229290dc4739c79a"
+  integrity sha512-Z8VcC/TjuBz0SoFPRD+Kj1B0w5w4lNpSXQWecsHp9ne72vG788LrMeoepBnXMw/icNof1cG/vu7J/sr4ONzQTg==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
@@ -1324,10 +1338,10 @@
     "@types/koa-compose" "*"
     "@types/node" "*"
 
-"@types/koa__router@8.0.11":
-  version "8.0.11"
-  resolved "https://registry.yarnpkg.com/@types/koa__router/-/koa__router-8.0.11.tgz#d7b37e6db934fc072ea1baa2ab92bc8ac4564f3e"
-  integrity sha512-WXgKWpBsbS14kzmzD9LeFapOIa678h7zvUHxDwXwSx4ETKXhXLVUAToX6jZ/U7EihM7qwyD9W/BZvB0MRu7MTQ==
+"@types/koa__router@8.0.8":
+  version "8.0.8"
+  resolved "https://registry.yarnpkg.com/@types/koa__router/-/koa__router-8.0.8.tgz#b1e0e9a512498777d3366bbdf0e853df27ec831c"
+  integrity sha512-9pGCaDtzCsj4HJ8HmGuqzk8+s57sPj4njWd08GG5o92n5Xp9io2snc40CPpXFhoKcZ8OKhuu6ht4gNou9e1C2w==
   dependencies:
     "@types/koa" "*"
 
@@ -1533,6 +1547,13 @@
   integrity sha512-nCkHGI4w7ZgAdNkrEu0bv+4xNV/XDqW+DydknebMOQwkpDGx8G+HTlj7R7ABI8i8nKxVw0wtKPi1D+lPOkh4YQ==
   dependencies:
     "@types/mime" "^1"
+    "@types/node" "*"
+
+"@types/server-destroy@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/server-destroy/-/server-destroy-1.0.1.tgz#6010a89e2df4f2c15a265fe73c70fd3641486530"
+  integrity sha512-77QGr7waZbE0Y0uF+G+uH3H3SmhyA78Jf2r5r7QSrpg0U3kSXduWpGjzP9PvPLR/KCy+kHjjpnugRHsYTnHopg==
+  dependencies:
     "@types/node" "*"
 
 "@types/stack-utils@^2.0.0":
@@ -1874,6 +1895,13 @@ atomic-sleep@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/atomic-sleep/-/atomic-sleep-1.0.0.tgz#eb85b77a601fc932cfe432c5acd364a9e2c9075b"
   integrity sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==
+
+aws-cloudfront-sign@2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/aws-cloudfront-sign/-/aws-cloudfront-sign-2.2.0.tgz#3910f5a6d0d90fec07f2b4ef8ab07f3eefb5625d"
+  integrity sha512-qG+rwZMP3KRTPPbVmWY8DlrT56AkA4iVOeo23vkdK2EXeW/brJFN2haSNKzVz+oYhFMEIzVVloeAcrEzuRkuVQ==
+  dependencies:
+    lodash "^3.6.0"
 
 aws-sdk@2.1030.0:
   version "2.1030.0"
@@ -5218,6 +5246,11 @@ lodash@4.17.21, lodash@^4.17.14, lodash@^4.17.19, lodash@^4.17.21:
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
+lodash@^3.6.0:
+  version "3.10.1"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6"
+  integrity sha512-9mDDwqVIma6OZX79ZlDACZl8sBm0TEnkf99zV3iMA4GzkIT/9hiqP5mY0HoT1iNLCrKc/R1HByV+yJfRWVJryQ==
+
 lowercase-keys@^1.0.0, lowercase-keys@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/lowercase-keys/-/lowercase-keys-1.0.1.tgz#6f9e30b47084d971a7c820ff15a6c5167b74c26f"
@@ -5492,18 +5525,6 @@ mute-stream@0.0.8:
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
-
-nano@^10.1.0:
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/nano/-/nano-10.1.0.tgz#afdd5a7440e62f09a8e23f41fcea328d27383922"
-  integrity sha512-COeN2TpLcHuSN44QLnPmfZCoCsKAg8/aelPOVqqm/2/MvRHDEA11/Kld5C4sLzDlWlhFZ3SO2WGJGevCsvcEzQ==
-  dependencies:
-    "@types/tough-cookie" "^4.0.2"
-    axios "^1.1.3"
-    http-cookie-agent "^4.0.2"
-    node-abort-controller "^3.0.1"
-    qs "^6.11.0"
-    tough-cookie "^4.1.2"
 
 napi-macros@~2.0.0:
   version "2.0.0"

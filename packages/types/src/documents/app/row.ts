@@ -19,9 +19,10 @@ export enum FieldType {
 export interface RowAttachment {
   size: number
   name: string
-  url: string
   extension: string
   key: string
+  // Populated on read
+  url?: string
 }
 
 export interface Row extends Document {
