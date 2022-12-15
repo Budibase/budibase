@@ -25,7 +25,7 @@
   export let panel = ClientBindingPanel
   export let allowBindings = true
   export let fillWidth = false
-  export let tableId
+  export let datasource
 
   const dispatch = createEventDispatcher()
   const { OperatorOptions } = Constants
@@ -41,11 +41,7 @@
 
   $: parseFilters(filters)
   $: dispatch("change", enrichFilters(rawFilters, matchAny))
-  $: enrichedSchemaFields = getFields(
-    schemaFields || [],
-    { allowLinks: true },
-    tableId
-  )
+  $: enrichedSchemaFields = getFields(schemaFields || [], { allowLinks: true })
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
@@ -119,7 +115,11 @@
 
   const santizeOperator = filter => {
     // Ensure a valid operator is selected
-    const operators = getValidOperatorsForType(filter.type).map(x => x.value)
+    const operators = getValidOperatorsForType(
+      filter.type,
+      filter.field,
+      datasource
+    ).map(x => x.value)
     if (!operators.includes(filter.operator)) {
       filter.operator = operators[0] ?? OperatorOptions.Equals.value
     }
@@ -201,7 +201,11 @@
               />
               <Select
                 disabled={!filter.field}
-                options={getValidOperatorsForType(filter.type)}
+                options={getValidOperatorsForType(
+                  filter.type,
+                  filter.field,
+                  datasource
+                )}
                 bind:value={filter.operator}
                 on:change={() => onOperatorChange(filter)}
                 placeholder={null}

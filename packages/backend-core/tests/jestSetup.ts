@@ -17,7 +17,9 @@ env._set("MINIO_URL", "http://localhost")
 env._set("MINIO_ACCESS_KEY", "test")
 env._set("MINIO_SECRET_KEY", "test")
 
-global.console.log = jest.fn() // console.log are ignored in tests
+if (!process.env.DEBUG) {
+  global.console.log = jest.fn() // console.log are ignored in tests
+}
 
 if (!process.env.CI) {
   // set a longer timeout in dev for debugging

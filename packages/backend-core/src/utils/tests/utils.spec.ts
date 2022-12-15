@@ -1,8 +1,8 @@
-const { structures } = require("../../tests")
-const utils = require("../utils")
-const events = require("../events")
-const { DEFAULT_TENANT_ID } = require("../constants")
-const { doInTenant } = require("../context")
+import { structures } from "../../../tests"
+import * as utils from "../../utils"
+import * as events from "../../events"
+import { DEFAULT_TENANT_ID } from "../../constants"
+import { doInTenant } from "../../context"
 
 describe("utils", () => {
   describe("platformLogout", () => {
