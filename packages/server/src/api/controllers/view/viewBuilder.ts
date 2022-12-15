@@ -143,14 +143,10 @@ function parseEmitExpression(field: string, groupBy: string) {
  * filters: Array of filter objects containing predicates that are parsed into a JS expression
  * calculation: an optional calculation to be performed over the view data.
  */
-export = function ({
-  field,
-  tableId,
-  groupBy,
-  filters = [],
-  calculation,
-  groupByMulti,
-}: ViewTemplateOpts) {
+export = function (
+  { field, tableId, groupBy, filters = [], calculation }: ViewTemplateOpts,
+  groupByMulti?: boolean
+) {
   // first filter can't have a conjunction
   if (filters && filters.length > 0 && filters[0].conjunction) {
     delete filters[0].conjunction

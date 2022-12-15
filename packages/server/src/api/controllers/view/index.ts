@@ -29,8 +29,8 @@ export async function save(ctx: BBContext) {
   const existingTable = await db.get(ctx.request.body.tableId)
   const table = cloneDeep(existingTable)
 
-  const groupByField = Object.values(table.schema).find(
-    field => field.name == viewToSave.groupBy
+  const groupByField: any = Object.values(table.schema).find(
+    (field: any) => field.name == viewToSave.groupBy
   )
 
   const view = viewTemplate(viewToSave, groupByField?.type === FieldTypes.ARRAY)
