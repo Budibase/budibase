@@ -1,4 +1,4 @@
-const email = require("./email")
+import * as email from "./email"
 import { mocks } from "@budibase/backend-core/tests"
 
 export = {

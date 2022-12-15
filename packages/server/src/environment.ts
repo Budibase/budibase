@@ -112,9 +112,14 @@ if (isDev() && module.exports.DISABLE_THREADING == null) {
 }
 
 // clean up any environment variable edge cases
-for (let [key, value] of Object.entries(module.exports)) {
+for (let [key, value] of Object.entries(environment)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
+    // @ts-ignore
+    environment[key] = 0
+  }
+  // handle the edge case of "false" to disable an environment variable
+  if (value === "false") {
     // @ts-ignore
     environment[key] = 0
   }

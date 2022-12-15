@@ -23,6 +23,7 @@
     "@budibase/types": "2.1.46-alpha.13",
     "@shopify/jest-koa-mocks": "5.0.1",
     "@techpass/passport-openidconnect": "0.3.2",
+    "aws-cloudfront-sign": "2.2.0",
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.0.1",
     "bcryptjs": "2.4.3",

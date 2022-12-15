@@ -23,21 +23,18 @@ import {
   errors,
   events,
   migrations,
+  objectStore,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import {
-  clientLibraryPath,
-  stringToReadStream,
-  isQsTrue,
-} from "../../utilities"
+import { stringToReadStream, isQsTrue } from "../../utilities"
 import { getLocksById } from "../../utilities/redis"
 import {
   updateClientLibrary,
   backupClientLibrary,
   revertClientLibrary,
-} from "../../utilities/fileSystem/clientLibrary"
+} from "../../utilities/fileSystem"
 import { cleanupAutomations } from "../../automations/utils"
 import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
@@ -49,9 +46,9 @@ import {
   MigrationType,
   BBContext,
   Database,
+  UserCtx,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import { enrichPluginURLs } from "../../utilities/plugins"
 import sdk from "../../sdk"
 
 // utility function, need to do away with this
@@ -204,27 +201,34 @@ export async function fetchAppDefinition(ctx: BBContext) {
   }
 }
 
-export async function fetchAppPackage(ctx: BBContext) {
+export async function fetchAppPackage(ctx: UserCtx) {
   const db = context.getAppDB()
   let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
 
   // Enrich plugin URLs
-  application.usedPlugins = enrichPluginURLs(application.usedPlugins)
+  application.usedPlugins = objectStore.enrichPluginURLs(
+    application.usedPlugins
+  )
 
   // Only filter screens if the user is not a builder
-  if (!(ctx.user?.builder && ctx.user.builder.global)) {
+  if (!(ctx.user.builder && ctx.user.builder.global)) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
+  const clientLibPath = objectStore.clientLibraryUrl(
+    ctx.params.appId,
+    application.version
+  )
+
   ctx.body = {
     application,
     screens,
     layouts,
-    clientLibPath: clientLibraryPath(ctx.params.appId, application.version),
+    clientLibPath,
   }
 }
 
@@ -370,7 +374,7 @@ async function appPostCreate(ctx: BBContext, app: App) {
         if (err.code && err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
           // this import resulted in row usage exceeding the quota
           // delete the app
-          // skip pre- and post-steps as no rows have been added to quotas yet
+          // skip pre and post-steps as no rows have been added to quotas yet
           ctx.params.appId = app.appId
           await destroyApp(ctx)
         }
