@@ -2,14 +2,14 @@ import { Feature, License, Quotas } from "@budibase/types"
 import _ from "lodash"
 
 let CLOUD_FREE_LICENSE: License
-let TEST_LICENSE: License
+let UNLIMITED_LICENSE: License
 let getCachedLicense: any
 
 // init for the packages other than pro
 export function init(proPkg: any) {
   initInternal({
     CLOUD_FREE_LICENSE: proPkg.constants.licenses.CLOUD_FREE_LICENSE,
-    TEST_LICENSE: proPkg.constants.licenses.DEVELOPER_FREE_LICENSE,
+    UNLIMITED_LICENSE: proPkg.constants.licenses.UNLIMITED_LICENSE,
     getCachedLicense: proPkg.licensing.cache.getCachedLicense,
   })
 }
@@ -17,11 +17,11 @@ export function init(proPkg: any) {
 // init for the pro package
 export function initInternal(opts: {
   CLOUD_FREE_LICENSE: License
-  TEST_LICENSE: License
+  UNLIMITED_LICENSE: License
   getCachedLicense: any
 }) {
   CLOUD_FREE_LICENSE = opts.CLOUD_FREE_LICENSE
-  TEST_LICENSE = opts.TEST_LICENSE
+  UNLIMITED_LICENSE = opts.UNLIMITED_LICENSE
   getCachedLicense = opts.getCachedLicense
 }
 
@@ -48,7 +48,7 @@ export const useLicense = (license: License, opts?: UseLicenseOpts) => {
 }
 
 export const useUnlimited = (opts?: UseLicenseOpts) => {
-  return useLicense(TEST_LICENSE, opts)
+  return useLicense(UNLIMITED_LICENSE, opts)
 }
 
 export const useCloudFree = () => {
@@ -58,7 +58,7 @@ export const useCloudFree = () => {
 // FEATURES
 
 const useFeature = (feature: Feature) => {
-  const license = _.cloneDeep(TEST_LICENSE)
+  const license = _.cloneDeep(UNLIMITED_LICENSE)
   const opts: UseLicenseOpts = {
     features: [feature],
   }
@@ -77,7 +77,7 @@ export const useGroups = () => {
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {
-  const license = _.cloneDeep(TEST_LICENSE)
+  const license = _.cloneDeep(UNLIMITED_LICENSE)
   license.quotas.constant.automationLogRetentionDays.value = value
   return useLicense(license)
 }

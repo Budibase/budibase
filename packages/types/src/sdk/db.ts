@@ -1,5 +1,5 @@
 import PouchDB from "pouchdb"
-import Nano from "nano"
+import Nano from "@budibase/nano"
 import { AllDocsResponse, AnyDocument, Document } from "../"
 
 export type PouchOptions = {

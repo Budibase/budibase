@@ -167,6 +167,7 @@ services:
     resources: {}
 
   objectStore:
+    # Set to false if using another object store such as S3
     minio: true
     browser: true
     port: 9000
@@ -182,6 +183,13 @@ services:
     ##   set, choosing the default provisioner.
     storageClass: ""
     resources: {}
+    cloudfront:
+      # Set the url of a distribution to enable cloudfront
+      cdn: ""
+      # ID of public key stored in cloudfront
+      publicKeyId: ""
+      # Base64 encoded private key for the above public key
+      privateKey64: ""
 
 # Override values in couchDB subchart
 couchdb:
