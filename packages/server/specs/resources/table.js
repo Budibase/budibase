@@ -2,7 +2,7 @@ const {
   FieldTypes,
   RelationshipTypes,
   FormulaTypes,
-} = require("../../src/constants")
+} = require("../../dist/constants")
 const { object } = require("./utils")
 const Resource = require("./utils/Resource")
 
