@@ -1,17 +1,18 @@
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const { getAppDB } = require("@budibase/backend-core/context")
 const setup = require("./utilities")
 const { basicTable } = setup.structures
-const { events } = require("@budibase/backend-core")
+const { events, context } = require("@budibase/backend-core")
 
 describe("/tables", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
+  let appId
 
   afterAll(setup.afterAll)
 
   beforeEach(async () => {
-    await config.init()
+    const app = await config.init()
+    appId = app.appId
   })
 
   describe("create", () => {
@@ -199,38 +200,6 @@ describe("/tables", () => {
     })
   })
 
-  describe("indexing", () => {
-    it("should be able to create a table with indexes", async () => {
-      const db = getAppDB(config)
-      const indexCount = (await db.getIndexes()).total_rows
-      const table = basicTable()
-      table.indexes = ["name"]
-      const res = await request
-        .post(`/api/tables`)
-        .send(table)
-        .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
-        .expect(200)
-      expect(res.body._id).toBeDefined()
-      expect(res.body._rev).toBeDefined()
-      expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
-      // update index to see what happens
-      table.indexes = ["name", "description"]
-      await request
-        .post(`/api/tables`)
-        .send({
-          ...table,
-          _id: res.body._id,
-          _rev: res.body._rev,
-        })
-        .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
-        .expect(200)
-      // shouldn't have created a new index
-      expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
-    })
-  })
-
   describe("validate csv", () => {
     it("should be able to validate a CSV layout", async () => {
       const res = await request
@@ -245,6 +214,40 @@ describe("/tables", () => {
       expect(res.body.schema.a).toEqual({
         type: "string",
         success: true,
+      })
+    })
+  })
+
+  describe("indexing", () => {
+    it("should be able to create a table with indexes", async () => {
+      await context.doInAppContext(appId, async () => {
+        const db = context.getAppDB()
+        const indexCount = (await db.getIndexes()).total_rows
+        const table = basicTable()
+        table.indexes = ["name"]
+        const res = await request
+          .post(`/api/tables`)
+          .send(table)
+          .set(config.defaultHeaders())
+          .expect('Content-Type', /json/)
+          .expect(200)
+        expect(res.body._id).toBeDefined()
+        expect(res.body._rev).toBeDefined()
+        expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
+        // update index to see what happens
+        table.indexes = ["name", "description"]
+        await request
+          .post(`/api/tables`)
+          .send({
+            ...table,
+            _id: res.body._id,
+            _rev: res.body._rev,
+          })
+          .set(config.defaultHeaders())
+          .expect('Content-Type', /json/)
+          .expect(200)
+        // shouldn't have created a new index
+        expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
       })
     })
   })
@@ -268,7 +271,7 @@ describe("/tables", () => {
         .expect(200)
       expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
       expect(events.table.deleted).toBeCalledTimes(1)
-      expect(events.table.deleted).toBeCalledWith(testTable)
+      expect(events.table.deleted).toBeCalledWith({ ...testTable, tableId: testTable._id })
     })
 
     it("deletes linked references to the table after deletion", async () => {
@@ -285,6 +288,7 @@ describe("/tables", () => {
           },
           TestTable: {
             type: "link",
+            fieldName: "TestTable",
             tableId: testTable._id,
             constraints: {
               type: "array"

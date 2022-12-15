@@ -1,7 +1,6 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { apps } from "stores/portal"
   import {
     ActionMenu,
     MenuItem,
@@ -62,9 +61,6 @@
       return state
     })
   }
-
-  $: isPublished =
-    $apps.find(app => app.devId === application)?.status === "published"
 
   onMount(async () => {
     if (!hasSynced && application) {

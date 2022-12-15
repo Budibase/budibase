@@ -1,5 +1,5 @@
 import * as env from "./environment"
-import redis from "./utilities/redis"
+import * as redis from "./utilities/redis"
 import {
   createAdminUser,
   generateApiKey,
@@ -13,13 +13,13 @@ import {
 } from "@budibase/backend-core"
 import fs from "fs"
 import { watch } from "./watch"
-import automations from "./automations"
-import fileSystem from "./utilities/fileSystem"
+import * as automations from "./automations"
+import * as fileSystem from "./utilities/fileSystem"
 import eventEmitter from "./events"
 import * as migrations from "./migrations"
-import bullboard from "./automations/bullboard"
+import * as bullboard from "./automations/bullboard"
 import * as pro from "@budibase/pro"
-import api from "./api"
+import * as api from "./api"
 import sdk from "./sdk"
 const pino = require("koa-pino-logger")
 

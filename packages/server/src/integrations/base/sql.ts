@@ -96,7 +96,7 @@ function generateSelectStatement(
 ): (string | Knex.Raw)[] {
   const { resource, meta } = json
   const schema = meta?.table?.schema
-  return resource.fields.map(field => {
+  return resource!.fields.map(field => {
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     const columnName = fieldNames[1]

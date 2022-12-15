@@ -9,7 +9,8 @@
     "messagePassing": true,
     "rowSelection": true,
     "continueIfAction": true,
-    "showNotificationAction": true
+    "showNotificationAction": true,
+    "sidePanel": true
   },
   "layout": {
     "name": "Layout",
@@ -84,7 +85,6 @@
     "description": "This component contains things within itself",
     "icon": "Selection",
     "hasChildren": true,
-    "showSettingsBar": true,
     "size": {
       "width": 400,
       "height": 200
@@ -283,10 +283,9 @@
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
     "editable": true,
-    "showSettingsBar": true,
     "size": {
       "width": 105,
-      "height": 35
+      "height": 32
     },
     "settings": [
       {
@@ -420,7 +419,6 @@
       "section"
     ],
     "hasChildren": true,
-    "showSettingsBar": true,
     "size": {
       "width": 400,
       "height": 100
@@ -683,11 +681,10 @@
     "illegalChildren": [
       "section"
     ],
-    "showSettingsBar": true,
     "editable": true,
     "size": {
       "width": 400,
-      "height": 30
+      "height": 24
     },
     "settings": [
       {
@@ -809,11 +806,10 @@
     "illegalChildren": [
       "section"
     ],
-    "showSettingsBar": true,
     "editable": true,
     "size": {
       "width": 400,
-      "height": 40
+      "height": 32
     },
     "settings": [
       {
@@ -931,7 +927,6 @@
   "tag": {
     "name": "Tag",
     "icon": "Label",
-    "showSettingsBar": true,
     "size": {
       "width": 100,
       "height": 25
@@ -1189,7 +1184,6 @@
     "name": "Link",
     "description": "A basic link component for internal and external links",
     "icon": "Link",
-    "showSettingsBar": true,
     "editable": true,
     "size": {
       "width": 200,
@@ -2454,6 +2448,7 @@
     ]
   },
   "stringfield": {
+    "skeleton": false,
     "name": "Text Field",
     "icon": "Text",
     "styles": [
@@ -2462,7 +2457,7 @@
     "editable": true,
     "size": {
       "width": 400,
-      "height": 50
+      "height": 32
     },
     "settings": [
       {
@@ -2545,6 +2540,7 @@
     ]
   },
   "numberfield": {
+    "skeleton": false,
     "name": "Number Field",
     "icon": "123",
     "styles": [
@@ -2602,6 +2598,7 @@
     ]
   },
   "passwordfield": {
+    "skeleton": false,
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": [
@@ -2659,6 +2656,7 @@
     ]
   },
   "optionsfield": {
+    "skeleton": false,
     "name": "Options Picker",
     "icon": "Menu",
     "styles": [
@@ -2827,6 +2825,7 @@
     ]
   },
   "multifieldselect": {
+    "skeleton": false,
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": [
@@ -2989,12 +2988,13 @@
     ]
   },
   "booleanfield": {
+    "skeleton": false,
     "name": "Checkbox",
     "icon": "SelectBox",
     "editable": true,
     "size": {
-      "width": 400,
-      "height": 50
+      "width": 20,
+      "height": 20
     },
     "settings": [
       {
@@ -3067,6 +3067,7 @@
     ]
   },
   "longformfield": {
+    "skeleton": false,
     "name": "Long Form Field",
     "icon": "TextAlignLeft",
     "styles": [
@@ -3146,6 +3147,7 @@
     ]
   },
   "datetimefield": {
+    "skeleton": false,
     "name": "Date Picker",
     "icon": "Date",
     "styles": [
@@ -3227,6 +3229,7 @@
     ]
   },
   "codescanner": {
+    "skeleton": false,
     "name": "Barcode/QR Scanner",
     "icon": "Camera",
     "styles": [
@@ -3392,6 +3395,7 @@
     ]
   },
   "attachmentfield": {
+    "skeleton": false,
     "name": "Attachment",
     "icon": "Attach",
     "styles": [
@@ -3450,6 +3454,7 @@
     ]
   },
   "relationshipfield": {
+    "skeleton": false,
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": [
@@ -3513,6 +3518,7 @@
     ]
   },
   "jsonfield": {
+    "skeleton": false,
     "name": "JSON Field",
     "icon": "Brackets",
     "styles": [
@@ -3666,7 +3672,7 @@
           "Ascending",
           "Descending"
         ],
-        "defaultValue": "Descending"
+        "defaultValue": "Ascending"
       },
       {
         "type": "number",
@@ -3714,6 +3720,7 @@
     }
   },
   "table": {
+    "skeleton": false,
     "name": "Table",
     "icon": "Table",
     "illegalChildren": [
@@ -3731,12 +3738,6 @@
         "label": "Data provider",
         "key": "dataProvider",
         "required": true
-      },
-      {
-        "type": "number",
-        "label": "Row count",
-        "key": "rowCount",
-        "defaultValue": 8
       },
       {
         "type": "columns",
@@ -3762,6 +3763,12 @@
         ]
       },
       {
+        "type": "number",
+        "label": "Row count",
+        "key": "rowCount",
+        "defaultValue": 8
+      },
+      {
         "type": "boolean",
         "label": "Quiet",
         "key": "quiet"
@@ -3773,41 +3780,25 @@
       },
       {
         "type": "boolean",
-        "label": "Show auto columns",
-        "key": "showAutoColumns",
-        "defaultValue": false
-      },
-      {
-        "type": "boolean",
         "label": "Allow row selection",
         "key": "allowSelectRows",
         "defaultValue": false,
         "info": "Row selection is only compatible with internal or SQL tables"
       },
-      {
-        "type": "boolean",
-        "label": "Link table rows",
-        "key": "linkRows"
-      },
-      {
-        "type": "boolean",
-        "label": "Open link screens in modal",
-        "key": "linkPeek"
-      },
-      {
-        "type": "url",
-        "label": "Link screen",
-        "key": "linkURL"
-      },
+
       {
         "section": true,
-        "name": "Advanced",
+        "name": "On Row Click",
         "settings": [
           {
-            "type": "field",
-            "label": "ID column for linking (appended to URL)",
-            "key": "linkColumn",
-            "placeholder": "Default"
+            "type": "event",
+            "key": "onClick",
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
           }
         ]
       }
@@ -3927,7 +3918,6 @@
   "dynamicfilter": {
     "name": "Dynamic Filter",
     "icon": "Filter",
-    "showSettingsBar": true,
     "size": {
       "width": 100,
       "height": 35
@@ -3940,10 +3930,10 @@
         "required": true
       },
       {
-        "type": "multifield",
-        "label": "Allowed filter fields",
+        "type": "columns/basic",
+        "label": "Allowed filter columns",
         "key": "allowedFields",
-        "placeholder": "All fields"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -4461,69 +4451,14 @@
         "key": "title"
       },
       {
-        "type": "dataSource",
-        "label": "Data",
-        "key": "dataSource",
-        "required": true
-      },
-      {
-        "type": "searchfield",
-        "label": "Search Columns",
-        "key": "searchColumns",
-        "placeholder": "Choose search columns",
-        "info": "Only the first 5 search columns will be used"
-      },
-      {
-        "type": "filter",
-        "label": "Filtering",
-        "key": "filter"
-      },
-      {
-        "type": "field/sortable",
-        "label": "Sort Column",
-        "key": "sortColumn"
-      },
-      {
-        "type": "select",
-        "label": "Sort Order",
-        "key": "sortOrder",
-        "options": [
-          "Ascending",
-          "Descending"
-        ],
-        "defaultValue": "Descending"
-      },
-      {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "defaultValue": "spectrum--medium",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ]
-      },
-      {
-        "type": "boolean",
-        "label": "Paginate",
-        "key": "paginate",
-        "defaultValue": true
-      },
-      {
         "section": true,
         "name": "Table",
         "settings": [
           {
-            "type": "number",
-            "label": "Scroll Limit",
-            "key": "rowCount",
-            "defaultValue": 8
+            "type": "dataSource",
+            "label": "Data",
+            "key": "dataSource",
+            "required": true
           },
           {
             "type": "columns",
@@ -4534,8 +4469,51 @@
             "nested": true
           },
           {
+            "type": "field/sortable",
+            "label": "Sort By",
+            "key": "sortColumn"
+          },
+          {
+            "type": "select",
+            "label": "Sort Order",
+            "key": "sortOrder",
+            "options": [
+              "Ascending",
+              "Descending"
+            ],
+            "defaultValue": "Ascending"
+          },
+          {
+            "type": "select",
+            "label": "Size",
+            "key": "size",
+            "defaultValue": "spectrum--medium",
+            "options": [
+              {
+                "label": "Medium",
+                "value": "spectrum--medium"
+              },
+              {
+                "label": "Large",
+                "value": "spectrum--large"
+              }
+            ]
+          },
+          {
+            "type": "number",
+            "label": "Scroll Limit",
+            "key": "rowCount",
+            "defaultValue": 8
+          },
+          {
             "type": "boolean",
-            "label": "Quiet table variant",
+            "label": "Paginate",
+            "key": "paginate",
+            "defaultValue": true
+          },
+          {
+            "type": "boolean",
+            "label": "Quiet",
             "key": "quiet"
           },
           {
@@ -4545,68 +4523,105 @@
           },
           {
             "type": "boolean",
-            "label": "Show auto columns",
-            "key": "showAutoColumns"
-          },
-          {
-            "type": "boolean",
             "label": "Allow row selection",
             "key": "allowSelectRows",
             "info": "Row selection is only compatible with internal or SQL tables"
           },
           {
-            "type": "boolean",
-            "label": "Link table rows",
-            "key": "linkRows"
+            "type": "filter",
+            "label": "Filtering",
+            "key": "filter"
           },
           {
-            "type": "boolean",
-            "label": "Open link in modal",
-            "key": "linkPeek"
-          },
-          {
-            "type": "url",
-            "label": "Link screen",
-            "key": "linkURL"
+            "type": "searchfield",
+            "label": "Search Fields",
+            "key": "searchColumns",
+            "placeholder": "Choose search fields",
+            "info": "Only the first 5 search fields will be used"
           }
         ]
       },
       {
         "section": true,
-        "name": "Title button",
+        "name": "On row click",
+        "settings": [
+          {
+            "type": "radio",
+            "key": "clickBehaviour",
+            "sendEvents": true,
+            "defaultValue": "actions",
+            "info": "Details side panel is only compatible with internal or SQL tables",
+            "options": [
+              {
+                "label": "Run actions",
+                "value": "actions"
+              },
+              {
+                "label": "Show details side panel",
+                "value": "details"
+              }
+            ]
+          },
+          {
+            "type": "event",
+            "key": "onClick",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "actions"
+            },
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Button",
         "settings": [
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show link button",
+            "label": "Show button above table",
             "defaultValue": false
-          },
-          {
-            "type": "boolean",
-            "label": "Open link in modal",
-            "key": "titleButtonPeek"
           },
           {
             "type": "text",
             "key": "titleButtonText",
-            "label": "Button text"
+            "label": "Text",
+            "defaultValue": "Create row",
+            "dependsOn": "showTitleButton"
           },
           {
-            "type": "url",
-            "label": "Button link",
-            "key": "titleButtonURL"
-          }
-        ]
-      },
-      {
-        "section": true,
-        "name": "Advanced",
-        "settings": [
+            "type": "radio",
+            "key": "titleButtonClickBehaviour",
+            "label": "On Click",
+            "dependsOn": "showTitleButton",
+            "defaultValue": "actions",
+            "info": "New row side panel is only compatible with internal or SQL tables",
+            "options": [
+              {
+                "label": "Run actions",
+                "value": "actions"
+              },
+              {
+                "label": "Show new row side panel",
+                "value": "new"
+              }
+            ]
+          },
           {
-            "type": "field",
-            "label": "ID column for linking (appended to URL)",
-            "key": "linkColumn",
-            "placeholder": "Default"
+            "type": "event",
+            "key": "onClickTitleButton",
+            "nested": true,
+            "dependsOn": {
+              "setting": "titleButtonClickBehaviour",
+              "value": "actions"
+            }
           }
         ]
       }
@@ -4797,7 +4812,6 @@
       "section"
     ],
     "hasChildren": true,
-    "showSettingsBar": true,
     "size": {
       "width": 400,
       "height": 100
@@ -5106,7 +5120,8 @@
           {
             "type": "multifield",
             "label": "Fields",
-            "key": "fields"
+            "key": "fields",
+            "selectAllFields": true
           },
           {
             "type": "select",
@@ -5186,5 +5201,101 @@
         "suffix": "repeater"
       }
     ]
+  },
+  "sidepanel": {
+    "name": "Side Panel",
+    "icon": "RailRight",
+    "hasChildren": true,
+    "illegalChildren": [
+      "section",
+      "sidepanel"
+    ],
+    "showEmptyState": false,
+    "draggable": false,
+    "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
+  },
+  "rowexplorer": {
+    "block": true,
+    "name": "Row Explorer Block",
+    "icon": "PersonalizationField",
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "settings": [
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "dataSource",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "426px"
+      },
+      {
+        "section": true,
+        "name": "Cards",
+        "settings": [
+          {
+            "type": "field",
+            "label": "Search Field",
+            "key": "cardSearchField",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "key": "cardTitle",
+            "label": "Title",
+            "nested": true,
+            "defaultValue": "Title"
+          },
+          {
+            "type": "text",
+            "key": "cardSubtitle",
+            "label": "Subtitle",
+            "nested": true,
+            "defaultValue": "Subtitle"
+          },
+          {
+            "type": "text",
+            "key": "cardDescription",
+            "label": "Description",
+            "nested": true,
+            "defaultValue": "Description"
+          },
+          {
+            "type": "text",
+            "key": "cardImageURL",
+            "label": "Image URL",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Details",
+        "settings": [
+          {
+            "type": "text",
+            "key": "detailTitle",
+            "label": "Title"
+          },
+          {
+            "type": "multifield",
+            "label": "Fields",
+            "key": "detailFields",
+            "nested": true,
+            "selectAllFields": true
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "schema",
+      "suffix": "repeater"
+    }
   }
 }

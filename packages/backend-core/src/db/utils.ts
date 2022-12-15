@@ -1,31 +1,26 @@
-import { newid } from "../hashing"
-import { DEFAULT_TENANT_ID, Configs } from "../constants"
+import { newid } from "../newid"
 import env from "../environment"
 import {
+  DEFAULT_TENANT_ID,
   SEPARATOR,
   DocumentType,
   UNICODE_MAX,
   ViewName,
   InternalTable,
-} from "./constants"
-import { getTenantId, getGlobalDB } from "../context"
-import { getGlobalDBName } from "./tenancy"
-import { doWithDB, allDbs, directCouchAllDbs } from "./index"
+  APP_PREFIX,
+} from "../constants"
+import { getTenantId, getGlobalDB, getGlobalDBName } from "../context"
+import { doWithDB, allDbs, directCouchAllDbs } from "./db"
 import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
-import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-
-export * from "./constants"
-export * from "./conversions"
-export { default as Replication } from "./Replication"
-export * from "./tenancy"
+import { App, Database, ConfigType } from "@budibase/types"
 
 /**
  * Generates a new app ID.
  * @returns {string} The new app ID which the app doc can be stored under.
  */
-export const generateAppID = (tenantId = null) => {
+export const generateAppID = (tenantId?: string | null) => {
   let id = APP_PREFIX
   if (tenantId) {
     id += `${tenantId}${SEPARATOR}`
@@ -170,7 +165,7 @@ export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-export function getUserMetadataParams(userId?: string, otherProps = {}) {
+export function getUserMetadataParams(userId?: string | null, otherProps = {}) {
   return getRowParams(InternalTable.USER_METADATA, userId, otherProps)
 }
 
@@ -243,18 +238,18 @@ export function getTemplateParams(
  * Generates a new role ID.
  * @returns {string} The new role ID which the role doc can be stored under.
  */
-export function generateRoleID(id: any) {
+export function generateRoleID(id?: any) {
   return `${DocumentType.ROLE}${SEPARATOR}${id || newid()}`
 }
 
 /**
  * Gets parameters for retrieving a role, this is a utility function for the getDocParams function.
  */
-export function getRoleParams(roleId = null, otherProps = {}) {
+export function getRoleParams(roleId?: string | null, otherProps = {}) {
   return getDocParams(DocumentType.ROLE, roleId, otherProps)
 }
 
-export function getStartEndKeyURL(baseKey: any, tenantId = null) {
+export function getStartEndKeyURL(baseKey: any, tenantId?: string) {
   const tenancy = tenantId ? `${SEPARATOR}${tenantId}` : ""
   return `startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
 }
@@ -301,7 +296,12 @@ export async function getAllDbs(opts = { efficient: false }) {
  *
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
+export async function getAllApps({
+  dev,
+  all,
+  idsOnly,
+  efficient,
+}: any = {}): Promise<App[] | string[]> {
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
@@ -373,35 +373,23 @@ export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
  * Utility function for getAllApps but filters to production apps only.
  */
 export async function getProdAppIDs() {
-  return (await getAllApps({ idsOnly: true })).filter(
-    (id: any) => !isDevAppID(id)
-  )
+  const apps = (await getAllApps({ idsOnly: true })) as string[]
+  return apps.filter((id: any) => !isDevAppID(id))
 }
 
 /**
  * Utility function for the inverse of above.
  */
 export async function getDevAppIDs() {
-  return (await getAllApps({ idsOnly: true })).filter((id: any) =>
-    isDevAppID(id)
-  )
+  const apps = (await getAllApps({ idsOnly: true })) as string[]
+  return apps.filter((id: any) => isDevAppID(id))
 }
 
 export async function dbExists(dbName: any) {
-  let exists = false
   return doWithDB(
     dbName,
-    async (db: any) => {
-      try {
-        // check if database exists
-        const info = await db.info()
-        if (info && !info.error) {
-          exists = true
-        }
-      } catch (err) {
-        exists = false
-      }
-      return exists
+    async (db: Database) => {
+      return await db.exists()
     },
     { skip_setup: true }
   )
@@ -500,7 +488,7 @@ export const getScopedFullConfig = async function (
   )[0]
 
   // custom logic for settings doc
-  if (type === Configs.SETTINGS) {
+  if (type === ConfigType.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
       // overrides affected by environment variables
       scopedConfig.doc.config.platformUrl = await getPlatformUrl({
@@ -539,7 +527,7 @@ export const getPlatformUrl = async (opts = { tenantAware: true }) => {
     // get the doc directly instead of with getScopedConfig to prevent loop
     let settings
     try {
-      settings = await db.get(generateConfigID({ type: Configs.SETTINGS }))
+      settings = await db.get(generateConfigID({ type: ConfigType.SETTINGS }))
     } catch (e: any) {
       if (e.status !== 404) {
         throw e

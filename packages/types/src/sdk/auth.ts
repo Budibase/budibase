@@ -1,3 +1,6 @@
+import { BBContext } from "./koa"
+import { Hosting } from "./hosting"
+
 export interface AuthToken {
   userId: string
   tenantId: string
@@ -8,6 +11,7 @@ export interface CreateSession {
   sessionId: string
   tenantId: string
   csrfToken?: string
+  hosting?: Hosting
 }
 
 export interface Session extends CreateSession {
@@ -24,4 +28,10 @@ export interface SessionKey {
 
 export interface ScannedSession {
   value: Session
+}
+
+export interface PlatformLogoutOpts {
+  ctx: BBContext
+  userId: string
+  keepActiveSession?: boolean
 }

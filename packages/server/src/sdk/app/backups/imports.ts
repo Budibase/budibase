@@ -1,11 +1,8 @@
-import { db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, objectStore } from "@budibase/backend-core"
+import { Database } from "@budibase/types"
 import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
-import {
-  upload,
-  uploadDirectory,
-} from "../../../utilities/fileSystem/utilities"
 import { downloadTemplate } from "../../../utilities/fileSystem"
 import { FieldTypes, ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
@@ -17,7 +14,6 @@ import {
   CouchFindOptions,
   RowAttachment,
 } from "@budibase/types"
-import PouchDB from "pouchdb"
 const uuid = require("uuid/v4")
 const tar = require("tar")
 
@@ -29,10 +25,7 @@ type TemplateType = {
   key?: string
 }
 
-async function updateAttachmentColumns(
-  prodAppId: string,
-  db: PouchDB.Database
-) {
+async function updateAttachmentColumns(prodAppId: string, db: Database) {
   // iterate through attachment documents and update them
   const tables = await sdk.tables.getAllInternalTables(db)
   for (let table of tables) {
@@ -86,7 +79,7 @@ async function updateAttachmentColumns(
   }
 }
 
-async function updateAutomations(prodAppId: string, db: PouchDB.Database) {
+async function updateAutomations(prodAppId: string, db: Database) {
   const automations = (
     await db.allDocs(
       getAutomationParams(null, {
@@ -154,7 +147,7 @@ export function getListOfAppsInMulti(tmpPath: string) {
 
 export async function importApp(
   appId: string,
-  db: PouchDB.Database,
+  db: Database,
   template: TemplateType
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
@@ -177,11 +170,11 @@ export async function importApp(
         filename = join(prodAppId, filename)
         if (fs.lstatSync(path).isDirectory()) {
           promises.push(
-            uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
+            objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
           )
         } else {
           promises.push(
-            upload({
+            objectStore.upload({
               bucket: ObjectStoreBuckets.APPS,
               path,
               filename,

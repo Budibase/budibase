@@ -116,6 +116,18 @@
       "type": "application",
       "component": "ShowNotification",
       "dependsOnFeature": "showNotificationAction"
+    },
+    {
+      "name": "Open Side Panel",
+      "type": "application",
+      "component": "OpenSidePanel",
+      "dependsOnFeature": "sidePanel"
+    },
+    {
+      "name": "Close Side Panel",
+      "type": "application",
+      "component": "CloseSidePanel",
+      "dependsOnFeature": "sidePanel"
     }
   ]
 }

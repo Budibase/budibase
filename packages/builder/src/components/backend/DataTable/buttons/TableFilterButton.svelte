@@ -6,11 +6,13 @@
   export let schema
   export let filters
   export let disabled = false
+  export let tableId
 
   const dispatch = createEventDispatcher()
-  let modal
-  let tempValue = filters || []
 
+  let modal
+
+  $: tempValue = filters || []
   $: schemaFields = Object.values(schema || {})
 </script>
 
@@ -34,8 +36,10 @@
     <div class="wrapper">
       <FilterDrawer
         allowBindings={false}
-        bind:filters={tempValue}
+        {filters}
         {schemaFields}
+        datasource={{ type: "table", tableId }}
+        on:change={e => (tempValue = e.detail)}
       />
     </div>
   </ModalContent>

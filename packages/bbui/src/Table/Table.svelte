@@ -71,7 +71,8 @@
     visibleRowCount,
     rowCount,
     totalRowCount,
-    rowHeight
+    rowHeight,
+    loading
   )
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
@@ -120,8 +121,12 @@
     visibleRowCount,
     rowCount,
     totalRowCount,
-    rowHeight
+    rowHeight,
+    loading
   ) => {
+    if (loading) {
+      return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
+    }
     if (!rowCount || !visibleRowCount || totalRowCount <= rowCount) {
       return ""
     }
@@ -270,155 +275,159 @@
   }
 </script>
 
-<div
-  class="wrapper"
-  class:wrapper--quiet={quiet}
-  class:wrapper--compact={compact}
-  bind:offsetHeight={height}
-  style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
->
-  {#if !loaded}
-    <div class="loading" style={heightStyle}>
-      <ProgressCircle />
-    </div>
-  {:else}
-    <div class="spectrum-Table" style={`${heightStyle}${gridStyle}`}>
-      {#if fields.length}
-        <div class="spectrum-Table-head">
-          {#if showEditColumn}
-            <div
-              class:noBorderHeader={!showHeaderBorder}
-              class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
-            >
-              {#if allowSelectRows}
-                <Checkbox
-                  bind:value={checkboxStatus}
-                  on:change={toggleSelectAll}
-                />
-              {:else}
-                Edit
-              {/if}
-            </div>
-          {/if}
-          {#each fields as field}
-            <div
-              class="spectrum-Table-headCell"
-              class:noBorderHeader={!showHeaderBorder}
-              class:spectrum-Table-headCell--alignCenter={schema[field]
-                .align === "Center"}
-              class:spectrum-Table-headCell--alignRight={schema[field].align ===
-                "Right"}
-              class:is-sortable={schema[field].sortable !== false}
-              class:is-sorted-desc={sortColumn === field &&
-                sortOrder === "Descending"}
-              class:is-sorted-asc={sortColumn === field &&
-                sortOrder === "Ascending"}
-              on:click={() => sortBy(schema[field])}
-            >
-              <div class="title">{getDisplayName(schema[field])}</div>
-              {#if schema[field]?.autocolumn}
-                <svg
-                  class="spectrum-Icon spectrum-Table-autoIcon"
-                  focusable="false"
-                >
-                  <use xlink:href="#spectrum-icon-18-MagicWand" />
-                </svg>
-              {/if}
-              {#if sortColumn === field}
-                <svg
-                  class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
-                  focusable="false"
-                  aria-hidden="true"
-                >
-                  <use xlink:href="#spectrum-css-icon-Arrow100" />
-                </svg>
-              {/if}
-              {#if allowEditColumns && schema[field]?.editable !== false}
-                <svg
-                  class="spectrum-Icon spectrum-Table-editIcon"
-                  focusable="false"
-                  on:click={e => editColumn(e, field)}
-                >
-                  <use xlink:href="#spectrum-icon-18-Edit" />
-                </svg>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      {/if}
-      {#if sortedRows?.length}
-        {#each sortedRows as row, idx}
-          <div class="spectrum-Table-row">
+{#key fields?.length}
+  <div
+    class="wrapper"
+    class:wrapper--quiet={quiet}
+    class:wrapper--compact={compact}
+    bind:offsetHeight={height}
+    style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
+  >
+    {#if loading}
+      <div class="loading" style={heightStyle}>
+        <slot name="loadingIndicator">
+          <ProgressCircle />
+        </slot>
+      </div>
+    {:else}
+      <div class="spectrum-Table" style={`${heightStyle}${gridStyle}`}>
+        {#if fields.length}
+          <div class="spectrum-Table-head">
             {#if showEditColumn}
               <div
-                class:noBorderCheckbox={!showHeaderBorder}
-                class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
-                on:click={e => {
-                  toggleSelectRow(row)
-                  e.stopPropagation()
-                }}
+                class:noBorderHeader={!showHeaderBorder}
+                class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
               >
-                <SelectEditRenderer
-                  data={row}
-                  selected={selectedRows.findIndex(
-                    selectedRow => selectedRow._id === row._id
-                  ) !== -1}
-                  onEdit={e => editRow(e, row)}
-                  {allowSelectRows}
-                  {allowEditRows}
-                />
+                {#if allowSelectRows}
+                  <Checkbox
+                    bind:value={checkboxStatus}
+                    on:change={toggleSelectAll}
+                  />
+                {:else}
+                  Edit
+                {/if}
               </div>
             {/if}
             {#each fields as field}
               <div
-                class="spectrum-Table-cell"
-                class:spectrum-Table-cell--divider={!!schema[field].divider}
-                style={cellStyles[field]}
-                on:click={() => {
-                  if (!schema[field]?.preventSelectRow) {
-                    dispatch("click", row)
-                    toggleSelectRow(row)
-                  }
-                }}
+                class="spectrum-Table-headCell"
+                class:noBorderHeader={!showHeaderBorder}
+                class:spectrum-Table-headCell--alignCenter={schema[field]
+                  .align === "Center"}
+                class:spectrum-Table-headCell--alignRight={schema[field]
+                  .align === "Right"}
+                class:is-sortable={schema[field].sortable !== false}
+                class:is-sorted-desc={sortColumn === field &&
+                  sortOrder === "Descending"}
+                class:is-sorted-asc={sortColumn === field &&
+                  sortOrder === "Ascending"}
+                on:click={() => sortBy(schema[field])}
               >
-                <CellRenderer
-                  {customRenderers}
-                  {row}
-                  schema={schema[field]}
-                  value={deepGet(row, field)}
-                  on:clickrelationship
-                  on:buttonclick
-                >
-                  <slot />
-                </CellRenderer>
+                <div class="title">{getDisplayName(schema[field])}</div>
+                {#if schema[field]?.autocolumn}
+                  <svg
+                    class="spectrum-Icon spectrum-Table-autoIcon"
+                    focusable="false"
+                  >
+                    <use xlink:href="#spectrum-icon-18-MagicWand" />
+                  </svg>
+                {/if}
+                {#if sortColumn === field}
+                  <svg
+                    class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
+                    focusable="false"
+                    aria-hidden="true"
+                  >
+                    <use xlink:href="#spectrum-css-icon-Arrow100" />
+                  </svg>
+                {/if}
+                {#if allowEditColumns && schema[field]?.editable !== false}
+                  <svg
+                    class="spectrum-Icon spectrum-Table-editIcon"
+                    focusable="false"
+                    on:click={e => editColumn(e, field)}
+                  >
+                    <use xlink:href="#spectrum-icon-18-Edit" />
+                  </svg>
+                {/if}
               </div>
             {/each}
           </div>
-        {/each}
-      {:else}
-        <div
-          class="placeholder"
-          class:placeholder--custom={customPlaceholder}
-          class:placeholder--no-fields={!fields?.length}
-        >
-          {#if customPlaceholder}
-            <slot name="placeholder" />
-          {:else}
-            <div class="placeholder-content">
-              <svg
-                class="spectrum-Icon spectrum-Icon--sizeXXL"
-                focusable="false"
-              >
-                <use xlink:href="#spectrum-icon-18-Table" />
-              </svg>
-              <div>{placeholderText}</div>
+        {/if}
+        {#if sortedRows?.length}
+          {#each sortedRows as row, idx}
+            <div class="spectrum-Table-row">
+              {#if showEditColumn}
+                <div
+                  class:noBorderCheckbox={!showHeaderBorder}
+                  class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
+                  on:click={e => {
+                    toggleSelectRow(row)
+                    e.stopPropagation()
+                  }}
+                >
+                  <SelectEditRenderer
+                    data={row}
+                    selected={selectedRows.findIndex(
+                      selectedRow => selectedRow._id === row._id
+                    ) !== -1}
+                    onEdit={e => editRow(e, row)}
+                    {allowSelectRows}
+                    {allowEditRows}
+                  />
+                </div>
+              {/if}
+              {#each fields as field}
+                <div
+                  class="spectrum-Table-cell"
+                  class:spectrum-Table-cell--divider={!!schema[field].divider}
+                  style={cellStyles[field]}
+                  on:click={() => {
+                    if (!schema[field]?.preventSelectRow) {
+                      dispatch("click", row)
+                      toggleSelectRow(row)
+                    }
+                  }}
+                >
+                  <CellRenderer
+                    {customRenderers}
+                    {row}
+                    schema={schema[field]}
+                    value={deepGet(row, field)}
+                    on:clickrelationship
+                    on:buttonclick
+                  >
+                    <slot />
+                  </CellRenderer>
+                </div>
+              {/each}
             </div>
-          {/if}
-        </div>
-      {/if}
-    </div>
-  {/if}
-</div>
+          {/each}
+        {:else}
+          <div
+            class="placeholder"
+            class:placeholder--custom={customPlaceholder}
+            class:placeholder--no-fields={!fields?.length}
+          >
+            {#if customPlaceholder}
+              <slot name="placeholder" />
+            {:else}
+              <div class="placeholder-content">
+                <svg
+                  class="spectrum-Icon spectrum-Icon--sizeXXL"
+                  focusable="false"
+                >
+                  <use xlink:href="#spectrum-icon-18-Table" />
+                </svg>
+                <div>{placeholderText}</div>
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
+    {/if}
+  </div>
+{/key}
 
 <style>
   /* Wrapper */
@@ -438,9 +447,10 @@
 
   /* Loading */
   .loading {
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
     min-height: 100px;
+    justify-content: center;
   }
 
   /* Table */
