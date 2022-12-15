@@ -268,5 +268,5 @@ export const DatasourceTypes = {
   SPREADSHEET: "Spreadsheet",
   OBJECT_STORE: "Object store",
   GRAPH: "Graph",
-  API: "API"
+  API: "API",
 }
