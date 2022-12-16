@@ -1,57 +1,60 @@
 <script>
+  import { onMount } from "svelte"
   import DashCard from "components/common/DashCard.svelte"
   import { AppStatus } from "constants"
-  import { Icon, Heading, Link, Avatar, Layout, Body } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
+  import {
+    Icon,
+    Heading,
+    Link,
+    Avatar,
+    Layout,
+    Body,
+    notifications,
+  } from "@budibase/bbui"
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
-  import { users, auth, apps, groups } from "stores/portal"
+  import { users, auth, apps, groups, overview } from "stores/portal"
   import { createEventDispatcher } from "svelte"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
   import GroupIcon from "../../users/groups/_components/GroupIcon.svelte"
-
-  export let app
-  export let deployments
-  export let navigateTab
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { checkIncomingDeploymentStatus } from "components/deploy/utils"
 
   const dispatch = createEventDispatcher()
-  const appUsersFetch = fetchData({
+
+  let appEditor
+  let unpublishModal
+  let deployments
+
+  $: app = $overview.selectedApp
+  $: devAppId = app.devId
+  $: prodAppId = apps.getProdAppID(devAppId)
+  $: appUsersFetch = fetchData({
     API,
     datasource: {
       type: "user",
     },
     options: {
       query: {
-        appId: apps.getProdAppID(app.devId),
+        appId: apps.getProdAppID(devAppId),
       },
     },
   })
-
-  let appEditor
-
   $: updateAvailable = clientPackage.version !== $store.version
   $: isPublished = app?.status === AppStatus.DEPLOYED
   $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
   $: appEditorText = appEditor?.firstName || appEditor?.email
   $: fetchAppEditor(appEditorId)
   $: appUsers = $appUsersFetch.rows || []
-  $: appUsersFetch.update({
-    query: {
-      appId: apps.getProdAppID(app.devId),
-    },
-  })
-  $: prodAppId = apps.getProdAppID(app.devId)
   $: appGroups = $groups.filter(group => {
     if (!group.roles) {
       return false
     }
     return groups.actions.getGroupAppIds(group).includes(prodAppId)
   })
-
-  const unpublishApp = () => {
-    dispatch("unpublish", app)
-  }
 
   async function fetchAppEditor(editorId) {
     appEditor = await users.get(editorId)
@@ -64,10 +67,45 @@
 
     return initials === "" ? user.email[0] : initials
   }
+
+  const confirmUnpublishApp = async () => {
+    try {
+      await API.unpublishApp(app.prodId)
+      await apps.load()
+      notifications.success("App unpublished successfully")
+    } catch (err) {
+      notifications.error("Error unpublishing app")
+    }
+  }
+
+  const reviewPendingDeployments = (deployments, newDeployments) => {
+    if (deployments?.length > 0) {
+      const pending = checkIncomingDeploymentStatus(deployments, newDeployments)
+      if (pending.length) {
+        notifications.warning(
+          "Deployment has been queued and will be processed shortly"
+        )
+      }
+    }
+  }
+  async function fetchDeployments() {
+    try {
+      const newDeployments = await API.getAppDeployments()
+      reviewPendingDeployments(deployments, newDeployments)
+      return newDeployments
+    } catch (err) {
+      console.log(err)
+      notifications.error("Error fetching deployment history")
+    }
+  }
+
+  onMount(async () => {
+    deployments = await fetchDeployments()
+  })
 </script>
 
 <div class="overview-tab">
-  <Layout paddingX="XXL" paddingY="XXL" gap="XL">
+  <Layout noPadding gap="XL">
     <div class="top">
       <DashCard title={"App Status"} dataCy={"app-status"}>
         <div class="status-content">
@@ -77,7 +115,7 @@
               <span>Published</span>
             {:else}
               <Icon name="GlobeStrike" size="XL" disabled={true} />
-              <span class="disabled"> Unpublished </span>
+              <span class="disabled">Unpublished</span>
             {/if}
           </div>
 
@@ -92,7 +130,7 @@
                 }
               )}
               {#if isPublished}
-                - <Link on:click={unpublishApp}>Unpublish</Link>
+                - <Link on:click={unpublishModal.show}>Unpublish</Link>
               {/if}
             {/if}
             {#if !deployments?.length}
@@ -127,10 +165,10 @@
         </DashCard>
       {/if}
       <DashCard
-        title={"App Version"}
+        title={"Version"}
         showIcon={true}
         action={() => {
-          navigateTab("Settings")
+          $goto("../version")
         }}
         dataCy={"app-version"}
       >
@@ -142,9 +180,7 @@
               -
               <Link
                 on:click={() => {
-                  if (typeof navigateTab === "function") {
-                    navigateTab("Settings")
-                  }
+                  $goto("../version")
                 }}
               >
                 Update
@@ -160,7 +196,7 @@
           title={"Access"}
           showIcon={true}
           action={() => {
-            navigateTab("Access")
+            $goto("../access")
           }}
           dataCy={"access"}
         >
@@ -211,7 +247,7 @@
         <DashCard
           title={"Automation History"}
           action={() => {
-            navigateTab("Automation History")
+            $goto("../automation-history")
           }}
           dataCy={"automation-history"}
         >
@@ -237,7 +273,7 @@
         <DashCard
           title={"Backups"}
           action={() => {
-            navigateTab("Backups")
+            $goto("../backups")
           }}
           dataCy={"backups"}
         >
@@ -248,6 +284,16 @@
   </Layout>
 </div>
 
+<ConfirmDialog
+  bind:this={unpublishModal}
+  title="Confirm unpublish"
+  okText="Unpublish app"
+  onOk={confirmUnpublishApp}
+  dataCy={"unpublish-modal"}
+>
+  Are you sure you want to unpublish the app <b>{app?.name}</b>?
+</ConfirmDialog>
+
 <style>
   .overview-tab {
     display: grid;
@@ -256,7 +302,7 @@
   .overview-tab .top {
     display: grid;
     grid-gap: var(--spectrum-alias-grid-gutter-medium);
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
 
   .access-tab-content {

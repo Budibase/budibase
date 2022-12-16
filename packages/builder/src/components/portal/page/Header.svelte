@@ -5,6 +5,7 @@
 </script>
 
 <div class="header">
+  <slot name="icon" />
   <Heading size="L">{title}</Heading>
   <div class="buttons">
     <slot name="buttons" />
@@ -15,8 +16,13 @@
   .header {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
+    gap: var(--spacing-xl);
+  }
+  .header :global(.spectrum-Heading) {
+    flex: 1 1 auto;
+    margin-top: -2px;
   }
   .buttons {
     display: flex;
