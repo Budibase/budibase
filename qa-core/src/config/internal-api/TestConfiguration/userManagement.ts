@@ -115,4 +115,13 @@ export default class UserManagementApi {
         expect(response).toHaveStatusCode(200)
         return [response, json]
     }
+
+    async changeSelfPassword(body: Partial<User>): Promise<[Response, User]> {
+        const response = await this.api.post(`/global/self`, { body })
+        const json = await response.json()
+        expect(response).toHaveStatusCode(200)
+        expect(json._id).toEqual(body._id)
+        expect(json._rev).not.toEqual(body._rev)
+        return [response, json]
+    }
 } 

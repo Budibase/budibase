@@ -27,6 +27,7 @@ export default class AuthApi {
         password: password,
       },
     })
+    expect(response).toHaveStatusCode(200)
     const cookie = response.headers.get("set-cookie")
     this.api.cookie = cookie as any
     return [response, cookie]
