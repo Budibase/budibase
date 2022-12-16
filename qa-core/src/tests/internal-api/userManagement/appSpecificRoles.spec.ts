@@ -204,45 +204,48 @@ describe("Internal API - App Specific Roles & Permissions", () => {
 
     describe("Screen Access for App specific roles", () => {
         it("Check Screen access for BASIC Role", async () => {
+            // Set up user
             const appUser = generateUser()
             expect(appUser[0].builder?.global).toEqual(false)
             expect(appUser[0].admin?.global).toEqual(false)
             const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
 
+            // Create App
             const app = await config.applications.create(generateApp())
             config.applications.api.appId = app.appId
 
+            // Update user roles
             const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            const prodAppId = db.getProdAppID(app.appId!)
+
+            // Roles must always be set with prod appID
             const body: User = {
                 ...userInfoJson,
                 roles: {
-                    [<string>app.appId]: "BASIC",
+                    [prodAppId]: "BASIC",
                 }
             }
             await config.users.updateInfo(body)
 
             const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
-            expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
-            expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("BASIC")
+            expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
+            expect(changedUserInfoJson.roles[prodAppId]).toEqual("BASIC")
 
-            const [basicScreenResponse, basicScreenJson] = await config.screen.create(generateScreen("BASIC"))
-            const [powerScreenResponse, powerScreenJson] = await config.screen.create(generateScreen("POWER"))
-            const [adminScreenResponse, adminScreenJson] = await config.screen.create(generateScreen("ADMIN"))
+            await config.screen.create(generateScreen("BASIC"))
+            await config.screen.create(generateScreen("POWER"))
+            await config.screen.create(generateScreen("ADMIN"))
 
             await config.applications.publish(<string>app.url)
             const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
 
-            await config.login(<string>appUser[0].email, <string>appUser[0].password)
+            // login with BASIC user
+            await config.login(appUser[0].email!, appUser[0].password!)
             const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
-            //Update password
-            const userWithNewPassword = {
-                ...selfInfoJson,
-                password: <string>appUser[0].password
-            }
-            await config.users.changeSelfPassword(userWithNewPassword)
-            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+
+            // fetch app package
+            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(app.appId!)
             expect(appPackageJson.screens).toBeDefined()
             expect(appPackageJson.screens.length).toEqual(1)
             expect(appPackageJson.screens[0].routing.roleId).toEqual("BASIC")
@@ -255,35 +258,35 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
 
             const app = await config.applications.create(generateApp())
+
             config.applications.api.appId = app.appId
 
             const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
             const body: User = {
                 ...userInfoJson,
                 roles: {
-                    [<string>app.appId]: "POWER",
+                    [app.appId!]: "POWER",
                 }
             }
             await config.users.updateInfo(body)
 
             const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
-            expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
-            expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("POWER")
+            expect(changedUserInfoJson.roles[app.appId!]).toBeDefined()
+            expect(changedUserInfoJson.roles[app.appId!]).toEqual("POWER")
 
-            const [basicScreenResponse, basicScreenJson] = await config.screen.create(generateScreen("BASIC"))
-            const [powerScreenResponse, powerScreenJson] = await config.screen.create(generateScreen("POWER"))
-            const [adminScreenResponse, adminScreenJson] = await config.screen.create(generateScreen("ADMIN"))
+            await config.screen.create(generateScreen("BASIC"))
+            await config.screen.create(generateScreen("POWER"))
+            await config.screen.create(generateScreen("ADMIN"))
 
             await config.applications.publish(<string>app.url)
-            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(app.appId!)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
 
-            await config.login(<string>appUser[0].email, <string>appUser[0].password)
+            await config.login(appUser[0].email!, appUser[0].password!)
             const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(appPackageJson.screens).toBeDefined()
             expect(appPackageJson.screens.length).toEqual(2)
-            expect(appPackageJson.screens[0].routing.roleId).toEqual("BASIC")
         })
 
         it("Check Screen access for ADMIN role", async () => {
@@ -307,7 +310,6 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
             expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
             expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("ADMIN")
-
         })
     })
     describe.skip("Screen Access for custom roles", () => {
