@@ -5,6 +5,7 @@
   export let name
   export let size
   export let app
+  export let color
 
   let iconModal
 </script>
@@ -19,7 +20,7 @@
     <Icon name={"Edit"} size={"L"} />
   </div>
   <div class="app-icon">
-    <Icon {name} {size} />
+    <Icon {name} {size} {color} />
   </div>
 </div>
 <ChooseIconModal {app} bind:this={iconModal} />
