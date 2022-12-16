@@ -1273,13 +1273,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.2.4-alpha.3":
-  version "2.2.4-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.4-alpha.3.tgz#9651f883f94a8ad2f16078851a8d564ef05a2d0a"
-  integrity sha512-aJ5qLauH4wk6zFVjlpuy7+qpOgCDH+K5IaGQBMFBTswV/cZGmX5j6VkZin57CTZ/6RfaujvifAcDy90UDl8PRA==
+"@budibase/backend-core@2.2.4-alpha.4":
+  version "2.2.4-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.4-alpha.4.tgz#c0b858936131ef4631c6baa2282482e089e6e9bf"
+  integrity sha512-CAK7cy6VSIAcQHpvD+yX4BHSglJ0pYEHIWfGjXVAk8iI0BDQg76NWhHNkuqko2bUhKxcGLe7J9hF5zWvY+J+/w==
   dependencies:
     "@budibase/nano" "10.1.1"
-    "@budibase/types" "2.2.4-alpha.3"
+    "@budibase/types" "2.2.4-alpha.4"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -1373,13 +1373,13 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
-"@budibase/pro@2.2.4-alpha.3":
-  version "2.2.4-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.4-alpha.3.tgz#e872bc5db00716b3a3f180d2588c0cea5e3fb550"
-  integrity sha512-qHGgYdK1ny7gt73Qn3heAzadp3jqNQsJHuk9HEkmTIp5frvreya7J7FcA1thi6w2isUMxydk0bKegalDyT3fnA==
+"@budibase/pro@2.2.4-alpha.4":
+  version "2.2.4-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.4-alpha.4.tgz#e8eb302a227cd3ef24830ae4ccca32790221af09"
+  integrity sha512-484bPOjmo617tyd4L1qZfiBIN5IMZH7+J4f6QrUGtHYy1JfEf0W0A0ZIbLoC/U7a/6D/FhVPRLQU8aWYnr+BIw==
   dependencies:
-    "@budibase/backend-core" "2.2.4-alpha.3"
-    "@budibase/types" "2.2.4-alpha.3"
+    "@budibase/backend-core" "2.2.4-alpha.4"
+    "@budibase/types" "2.2.4-alpha.4"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1404,10 +1404,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@2.2.4-alpha.3":
-  version "2.2.4-alpha.3"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.4-alpha.3.tgz#23009c111ecc46aa99b29f97176c68c39bce5180"
-  integrity sha512-w0UxNeea1wV3DChKHNckxkAYfnirKXyWJLyLCyq1U4z5p2XADmHKmL7LTdFCWZPJzbH+JmtXgNYm7+Nt9h6ogw==
+"@budibase/types@2.2.4-alpha.4":
+  version "2.2.4-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.4-alpha.4.tgz#6f4ad1967546459efb49f8169e5d68147b90effc"
+  integrity sha512-VAPp8+FuM6lG2wUwVq9e7MvRnW/OBuNFDuB8vK2jUKxOMNu+C195DSQUBzVZGBgF/6R5pxnoLMfC0oJgftH7ww==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
