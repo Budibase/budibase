@@ -86,7 +86,7 @@ export const ObjectStore = (
 
   // custom S3 is in use i.e. minio
   if (env.MINIO_URL) {
-    if (opts.presigning && !env.MINIO_ENABLED) {
+    if (opts.presigning && env.MINIO_ENABLED) {
       // IMPORTANT: Signed urls will inspect the host header of the request.
       // Normally a signed url will need to be generated with a specified host in mind.
       // To support dynamic hosts, e.g. some unknown self-hosted installation url,
