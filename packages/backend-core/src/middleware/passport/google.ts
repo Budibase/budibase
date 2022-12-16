@@ -1,9 +1,9 @@
 import { ssoCallbackUrl } from "./utils"
-import { authenticateThirdParty } from "./third-party-common"
+import { authenticateThirdParty, SaveUserFunction } from "./third-party-common"
 import { ConfigType, GoogleConfig, Database, SSOProfile } from "@budibase/types"
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
-export function buildVerifyFn(saveUserFn?: Function) {
+export function buildVerifyFn(saveUserFn?: SaveUserFunction) {
   return (
     accessToken: string,
     refreshToken: string,
@@ -39,7 +39,7 @@ export function buildVerifyFn(saveUserFn?: Function) {
 export async function strategyFactory(
   config: GoogleConfig["config"],
   callbackUrl: string,
-  saveUserFn?: Function
+  saveUserFn?: SaveUserFunction
 ) {
   try {
     const { clientID, clientSecret } = config

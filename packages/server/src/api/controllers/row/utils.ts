@@ -7,6 +7,7 @@ import { BBContext, Row, Table } from "@budibase/types"
 export { removeKeyNumbering } from "../../../integrations/base/utils"
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
+import { Ctx } from "@budibase/types"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -25,7 +26,7 @@ export async function getDatasourceAndQuery(json: any) {
   return makeExternalQuery(datasource, json)
 }
 
-export async function findRow(ctx: BBContext, tableId: string, rowId: string) {
+export async function findRow(ctx: Ctx, tableId: string, rowId: string) {
   const db = context.getAppDB()
   let row
   // TODO remove special user case in future

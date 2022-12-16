@@ -48,7 +48,6 @@
           ? {
               title: "User Groups",
               href: "/builder/portal/manage/groups",
-              badge: "New",
             }
           : undefined,
         { title: "Auth", href: "/builder/portal/manage/auth" },
@@ -56,7 +55,6 @@
         {
           title: "Plugins",
           href: "/builder/portal/manage/plugins",
-          badge: "New",
         },
 
         {
@@ -119,14 +117,12 @@
           {
             title: "Upgrade",
             href: $adminStore.accountPortalUrl + "/portal/upgrade",
-            badge: "New",
           },
         ])
       } else if (!$adminStore.cloud && admin) {
         menu = menu.concat({
           title: "Upgrade",
           href: "/builder/portal/settings/upgrade",
-          badge: "New",
         })
       }
 

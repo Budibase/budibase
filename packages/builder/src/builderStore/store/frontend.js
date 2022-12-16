@@ -25,6 +25,7 @@ import {
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
+import { getSchemaForDatasource } from "builderStore/dataBinding"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -524,7 +525,9 @@ export const getFrontendStore = () => {
         // Generate default props
         let props = { ...presetProps }
         settings.forEach(setting => {
-          if (setting.defaultValue !== undefined) {
+          if (setting.type === "multifield" && setting.selectAllFields) {
+            props[setting.key] = Object.keys(defaultDatasource.schema || {})
+          } else if (setting.defaultValue !== undefined) {
             props[setting.key] = setting.defaultValue
           }
         })
@@ -1041,6 +1044,27 @@ export const getFrontendStore = () => {
           if (component[name] === value) {
             return false
           }
+
+          const settings = getComponentSettings(component._component)
+          const updatedSetting = settings.find(setting => setting.key === name)
+
+          if (
+            updatedSetting?.type === "dataSource" ||
+            updatedSetting?.type === "table"
+          ) {
+            const { schema } = getSchemaForDatasource(null, value)
+            const columnNames = Object.keys(schema || {})
+            const multifieldKeysToSelectAll = settings
+              .filter(setting => {
+                return setting.type === "multifield" && setting.selectAllFields
+              })
+              .map(setting => setting.key)
+
+            multifieldKeysToSelectAll.forEach(key => {
+              component[key] = columnNames
+            })
+          }
+
           component[name] = value
         })
       },

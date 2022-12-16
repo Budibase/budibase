@@ -1,3 +1,12 @@
+import { mocks } from "@budibase/backend-core/tests"
+
+// init the licensing mock
+import * as pro from "@budibase/pro"
+mocks.licenses.init(pro)
+
+// use unlimited license by default
+mocks.licenses.useUnlimited()
+
 import { init as dbInit } from "../../db"
 dbInit()
 import env from "../../environment"

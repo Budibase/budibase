@@ -22,6 +22,12 @@ serviceAccount:
 
 podAnnotations: {}
 
+# logAnnotations:
+#   co.elastic.logs/multiline.type: pattern
+#   co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#   co.elastic.logs/multiline.negate: false
+#   co.elastic.logs/multiline.match: after
+
 podSecurityContext:
   {}
   # fsGroup: 2000
@@ -106,6 +112,9 @@ globals:
 #  elasticApmEnabled:
 #  elasticApmSecretToken:
 #  elasticApmServerUrl:
+#  globalAgentHttpProxy:
+#  globalAgentHttpsProxy:
+#  globalAgentNoProxy:
 
 services:
   budibaseVersion: latest
@@ -158,6 +167,7 @@ services:
     resources: {}
 
   objectStore:
+    # Set to false if using another object store such as S3
     minio: true
     browser: true
     port: 9000
@@ -173,6 +183,13 @@ services:
     ##   set, choosing the default provisioner.
     storageClass: ""
     resources: {}
+    cloudfront:
+      # Set the url of a distribution to enable cloudfront
+      cdn: ""
+      # ID of public key stored in cloudfront
+      publicKeyId: ""
+      # Base64 encoded private key for the above public key
+      privateKey64: ""
 
 # Override values in couchDB subchart
 couchdb:

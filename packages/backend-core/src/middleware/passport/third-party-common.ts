@@ -9,6 +9,17 @@ import fetch from "node-fetch"
 import { ThirdPartyUser } from "@budibase/types"
 const jwt = require("jsonwebtoken")
 
+type SaveUserOpts = {
+  requirePassword?: boolean
+  hashPassword?: boolean
+  currentUserId?: string
+}
+
+export type SaveUserFunction = (
+  user: ThirdPartyUser,
+  opts: SaveUserOpts
+) => Promise<any>
+
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.
  */
@@ -16,7 +27,7 @@ export async function authenticateThirdParty(
   thirdPartyUser: ThirdPartyUser,
   requireLocalAccount: boolean = true,
   done: Function,
-  saveUserFn?: Function
+  saveUserFn?: SaveUserFunction
 ) {
   if (!saveUserFn) {
     throw new Error("Save user function must be provided")
@@ -81,7 +92,7 @@ export async function authenticateThirdParty(
 
   // create or sync the user
   try {
-    await saveUserFn(dbUser, false, false)
+    await saveUserFn(dbUser, { hashPassword: false, requirePassword: false })
   } catch (err: any) {
     return authError(done, err)
   }
