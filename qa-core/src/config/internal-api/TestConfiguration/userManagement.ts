@@ -1,5 +1,5 @@
 import { Response } from "node-fetch"
-import { Role, User, UserDeletedEvent } from "@budibase/types"
+import { Role, User, UserDeletedEvent, UserRoles } from "@budibase/types"
 import InternalAPIClient from "./InternalAPIClient"
 import { responseMessage } from "../fixtures/types/responseMessage"
 
@@ -87,7 +87,6 @@ export default class UserManagementApi {
         const response = await this.api.get(`/roles`)
         const json = await response.json()
         expect(response).toHaveStatusCode(200)
-        expect(json.length).toEqual(4)
         return [response, json]
     }
 
@@ -122,6 +121,13 @@ export default class UserManagementApi {
         expect(response).toHaveStatusCode(200)
         expect(json._id).toEqual(body._id)
         expect(json._rev).not.toEqual(body._rev)
+        return [response, json]
+    }
+
+    async createRole(body: Partial<UserRoles>): Promise<[Response, UserRoles]> {
+        const response = await this.api.post(`/roles`, { body })
+        const json = await response.json()
+        expect(response).toHaveStatusCode(200)
         return [response, json]
     }
 } 

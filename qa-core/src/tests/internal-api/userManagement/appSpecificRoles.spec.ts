@@ -252,72 +252,376 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         })
 
         it("Check Screen access for POWER role", async () => {
+            // Set up user
             const appUser = generateUser()
             expect(appUser[0].builder?.global).toEqual(false)
             expect(appUser[0].admin?.global).toEqual(false)
             const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
 
+            // Create App
             const app = await config.applications.create(generateApp())
-
             config.applications.api.appId = app.appId
 
+            // Update user roles
             const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            const prodAppId = db.getProdAppID(app.appId!)
+
+            // Roles must always be set with prod appID
             const body: User = {
                 ...userInfoJson,
                 roles: {
-                    [app.appId!]: "POWER",
+                    [prodAppId]: "POWER",
                 }
             }
             await config.users.updateInfo(body)
 
             const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
-            expect(changedUserInfoJson.roles[app.appId!]).toBeDefined()
-            expect(changedUserInfoJson.roles[app.appId!]).toEqual("POWER")
+            expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
+            expect(changedUserInfoJson.roles[prodAppId]).toEqual("POWER")
 
             await config.screen.create(generateScreen("BASIC"))
             await config.screen.create(generateScreen("POWER"))
             await config.screen.create(generateScreen("ADMIN"))
 
             await config.applications.publish(<string>app.url)
-            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(app.appId!)
+            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
 
+            // login with POWER user
             await config.login(appUser[0].email!, appUser[0].password!)
-            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+            const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
+
+            // fetch app package
+            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(app.appId!)
             expect(appPackageJson.screens).toBeDefined()
             expect(appPackageJson.screens.length).toEqual(2)
         })
 
         it("Check Screen access for ADMIN role", async () => {
+            // Set up user
             const appUser = generateUser()
             expect(appUser[0].builder?.global).toEqual(false)
             expect(appUser[0].admin?.global).toEqual(false)
             const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
 
+            // Create App
             const app = await config.applications.create(generateApp())
             config.applications.api.appId = app.appId
 
+            // Update user roles
             const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            const prodAppId = db.getProdAppID(app.appId!)
+
+            // Roles must always be set with prod appID
             const body: User = {
                 ...userInfoJson,
                 roles: {
-                    [<string>app.appId]: "ADMIN",
+                    [prodAppId]: "ADMIN",
                 }
             }
             await config.users.updateInfo(body)
 
             const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
-            expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
-            expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("ADMIN")
+            expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
+            expect(changedUserInfoJson.roles[prodAppId]).toEqual("ADMIN")
+
+            await config.screen.create(generateScreen("BASIC"))
+            await config.screen.create(generateScreen("POWER"))
+            await config.screen.create(generateScreen("ADMIN"))
+
+            await config.applications.publish(<string>app.url)
+            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+            expect(firstappPackageJson.screens).toBeDefined()
+            expect(firstappPackageJson.screens.length).toEqual(3)
+
+            // login with ADMIN user
+            await config.login(appUser[0].email!, appUser[0].password!)
+            const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
+
+            // fetch app package
+            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(app.appId!)
+            expect(appPackageJson.screens).toBeDefined()
+            expect(appPackageJson.screens.length).toEqual(3)
         })
     })
-    describe.skip("Screen Access for custom roles", () => {
-        it("Custom role access for level 1 permissions", async () => { })
-        it("Custom role access for level 2 permissions", async () => { })
-        it("Custom role access for level 3 permissions", async () => { })
-        it("Custom role access for level 4 permissions", async () => { })
-        it("Custom role access for level 5 permissions", async () => { })
+    describe("Screen Access for custom roles", () => {
+        it("Custom role access for level 1 permissions", async () => {
+            // Set up user
+            const appUser = generateUser()
+            expect(appUser[0].builder?.global).toEqual(false)
+            expect(appUser[0].admin?.global).toEqual(false)
+            const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
+
+            // Create App
+            const app = await config.applications.create(generateApp())
+            config.applications.api.appId = app.appId
+
+            //Create level 1 role
+            const role = {
+                inherits: "BASIC",
+                permissionId: "public",
+                name: "level 1"
+            }
+            const [createRoleResponse, createRoleJson] = await config.users.createRole(role)
+
+
+
+            // Update user roles
+            const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            const prodAppId = db.getProdAppID(app.appId!)
+
+            // Roles must always be set with prod appID
+            const body: User = {
+                ...userInfoJson,
+                roles: {
+                    [prodAppId]: createRoleJson._id,
+                }
+            }
+            await config.users.updateInfo(body)
+
+            const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
+            expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
+
+            await config.screen.create(generateScreen("BASIC"))
+            await config.screen.create(generateScreen("POWER"))
+            await config.screen.create(generateScreen("ADMIN"))
+
+            await config.applications.publish(<string>app.url)
+            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+            expect(firstappPackageJson.screens).toBeDefined()
+            expect(firstappPackageJson.screens.length).toEqual(3)
+
+            // login with level 1 user
+            await config.login(appUser[0].email!, appUser[0].password!)
+            const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
+
+            // fetch app package
+            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(app.appId!)
+            expect(appPackageJson.screens).toBeDefined()
+            expect(appPackageJson.screens.length).toEqual(1)
+        })
+        it("Custom role access for level 2 permissions", async () => {// Set up user
+            const appUser = generateUser()
+            expect(appUser[0].builder?.global).toEqual(false)
+            expect(appUser[0].admin?.global).toEqual(false)
+            const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
+
+            // Create App
+            const app = await config.applications.create(generateApp())
+            config.applications.api.appId = app.appId
+
+            //Create level 1 role
+            const role = {
+                inherits: "BASIC",
+                permissionId: "read_only",
+                name: "level 2"
+            }
+            const [createRoleResponse, createRoleJson] = await config.users.createRole(role)
+
+
+
+            // Update user roles
+            const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            const prodAppId = db.getProdAppID(app.appId!)
+
+            // Roles must always be set with prod appID
+            const body: User = {
+                ...userInfoJson,
+                roles: {
+                    [prodAppId]: createRoleJson._id,
+                }
+            }
+            await config.users.updateInfo(body)
+
+            const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
+            expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
+
+            await config.screen.create(generateScreen("BASIC"))
+            await config.screen.create(generateScreen("POWER"))
+            await config.screen.create(generateScreen("ADMIN"))
+
+            await config.applications.publish(<string>app.url)
+            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+            expect(firstappPackageJson.screens).toBeDefined()
+            expect(firstappPackageJson.screens.length).toEqual(3)
+
+            // login with level 1 user
+            await config.login(appUser[0].email!, appUser[0].password!)
+            const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
+
+            // fetch app package
+            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(app.appId!)
+            expect(appPackageJson.screens).toBeDefined()
+            expect(appPackageJson.screens.length).toEqual(1)
+        })
+        it("Custom role access for level 3 permissions", async () => {
+            const appUser = generateUser()
+            expect(appUser[0].builder?.global).toEqual(false)
+            expect(appUser[0].admin?.global).toEqual(false)
+            const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
+
+            // Create App
+            const app = await config.applications.create(generateApp())
+            config.applications.api.appId = app.appId
+
+            //Create level 1 role
+            const role = {
+                inherits: "BASIC",
+                permissionId: "write",
+                name: "level 3"
+            }
+            const [createRoleResponse, createRoleJson] = await config.users.createRole(role)
+
+
+
+            // Update user roles
+            const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            const prodAppId = db.getProdAppID(app.appId!)
+
+            // Roles must always be set with prod appID
+            const body: User = {
+                ...userInfoJson,
+                roles: {
+                    [prodAppId]: createRoleJson._id,
+                }
+            }
+            await config.users.updateInfo(body)
+
+            const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
+            expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
+
+            await config.screen.create(generateScreen("BASIC"))
+            await config.screen.create(generateScreen("POWER"))
+            await config.screen.create(generateScreen("ADMIN"))
+
+            await config.applications.publish(<string>app.url)
+            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+            expect(firstappPackageJson.screens).toBeDefined()
+            expect(firstappPackageJson.screens.length).toEqual(3)
+
+            // login with level 1 user
+            await config.login(appUser[0].email!, appUser[0].password!)
+            const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
+
+            // fetch app package
+            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(app.appId!)
+            expect(appPackageJson.screens).toBeDefined()
+            expect(appPackageJson.screens.length).toEqual(1)
+        })
+        it("Custom role access for level 4 permissions", async () => {
+            const appUser = generateUser()
+            expect(appUser[0].builder?.global).toEqual(false)
+            expect(appUser[0].admin?.global).toEqual(false)
+            const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
+
+            // Create App
+            const app = await config.applications.create(generateApp())
+            config.applications.api.appId = app.appId
+
+            //Create level 1 role
+            const role = {
+                inherits: "BASIC",
+                permissionId: "power",
+                name: "level 4"
+            }
+            const [createRoleResponse, createRoleJson] = await config.users.createRole(role)
+
+
+
+            // Update user roles
+            const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            const prodAppId = db.getProdAppID(app.appId!)
+
+            // Roles must always be set with prod appID
+            const body: User = {
+                ...userInfoJson,
+                roles: {
+                    [prodAppId]: createRoleJson._id,
+                }
+            }
+            await config.users.updateInfo(body)
+
+            const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
+            expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
+
+            await config.screen.create(generateScreen("BASIC"))
+            await config.screen.create(generateScreen("POWER"))
+            await config.screen.create(generateScreen("ADMIN"))
+
+            await config.applications.publish(<string>app.url)
+            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+            expect(firstappPackageJson.screens).toBeDefined()
+            expect(firstappPackageJson.screens.length).toEqual(3)
+
+            // login with level 1 user
+            await config.login(appUser[0].email!, appUser[0].password!)
+            const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
+
+            // fetch app package
+            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(app.appId!)
+            expect(appPackageJson.screens).toBeDefined()
+            expect(appPackageJson.screens.length).toEqual(1)
+        })
+        it("Custom role access for level 5 permissions", async () => {
+            const appUser = generateUser()
+            expect(appUser[0].builder?.global).toEqual(false)
+            expect(appUser[0].admin?.global).toEqual(false)
+            const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
+
+            // Create App
+            const app = await config.applications.create(generateApp())
+            config.applications.api.appId = app.appId
+
+            //Create level 1 role
+            const role = {
+                inherits: "BASIC",
+                permissionId: "admin",
+                name: "level 5"
+            }
+            const [createRoleResponse, createRoleJson] = await config.users.createRole(role)
+
+
+
+            // Update user roles
+            const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            const prodAppId = db.getProdAppID(app.appId!)
+
+            // Roles must always be set with prod appID
+            const body: User = {
+                ...userInfoJson,
+                roles: {
+                    [prodAppId]: createRoleJson._id,
+                }
+            }
+            await config.users.updateInfo(body)
+
+            const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+            expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
+            expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
+
+            await config.screen.create(generateScreen("BASIC"))
+            await config.screen.create(generateScreen("POWER"))
+            await config.screen.create(generateScreen("ADMIN"))
+
+            await config.applications.publish(<string>app.url)
+            const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
+            expect(firstappPackageJson.screens).toBeDefined()
+            expect(firstappPackageJson.screens.length).toEqual(3)
+
+            // login with level 1 user
+            await config.login(appUser[0].email!, appUser[0].password!)
+            const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
+
+            // fetch app package
+            const [appPackageResponse, appPackageJson] = await config.applications.getAppPackage(app.appId!)
+            expect(appPackageJson.screens).toBeDefined()
+            expect(appPackageJson.screens.length).toEqual(1)
+        })
     })
 
 })
