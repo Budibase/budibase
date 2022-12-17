@@ -103,16 +103,17 @@
 
   function sortIntegrations(integrations) {
     let integrationsArray = Object.entries(integrations)
-    integrationsArray.sort((a, b) => {
-      function getTypeOrder(schema) {
-        if (schema.type === DatasourceTypes.API) {
-          return 1
-        }
-        if (schema.type === DatasourceTypes.RELATIONAL) {
-          return 2
-        }
-        return schema.type?.charCodeAt(0)
+    function getTypeOrder(schema) {
+      if (schema.type === DatasourceTypes.API) {
+        return 1
       }
+      if (schema.type === DatasourceTypes.RELATIONAL) {
+        return 2
+      }
+      return schema.type?.charCodeAt(0)
+    }
+
+    integrationsArray.sort((a, b) => {
       let typeOrderA = getTypeOrder(a[1])
       let typeOrderB = getTypeOrder(b[1])
       if (typeOrderA === typeOrderB) {
