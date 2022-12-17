@@ -9,13 +9,13 @@
 
   $: views = $tables.list.flatMap(table => Object.keys(table.views || {}))
 
-  function saveView() {
+  const saveView = async () => {
     if (views.includes(name)) {
       notifications.error(`View exists with name ${name}`)
       return
     }
     try {
-      viewsStore.save({
+      await viewsStore.save({
         name,
         tableId: $tables.selected._id,
         field,
