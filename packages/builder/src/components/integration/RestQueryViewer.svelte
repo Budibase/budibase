@@ -1,5 +1,5 @@
 <script>
-  import { params } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "stores/backend"
   import {
     Banner,
@@ -23,7 +23,7 @@
   import CodeMirrorEditor, {
     EditorModes,
   } from "components/common/CodeMirrorEditor.svelte"
-  import RestBodyInput from "../../_components/RestBodyInput.svelte"
+  import RestBodyInput from "./RestBodyInput.svelte"
   import { capitalise } from "helpers"
   import { onMount } from "svelte"
   import restUtils from "helpers/data/utils"
@@ -36,7 +36,7 @@
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
-  import DynamicVariableModal from "../../_components/DynamicVariableModal.svelte"
+  import DynamicVariableModal from "./DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
 
@@ -48,6 +48,8 @@
     runtimeToReadableMap,
     toBindingsArray,
   } from "builderStore/dataBinding"
+
+  export let queryId
 
   let query, datasource
   let breakQs = {},
@@ -102,8 +104,8 @@
 
   function getSelectedQuery() {
     return cloneDeep(
-      $queries.list.find(q => q._id === $queries.selected) || {
-        datasourceId: $params.selectedDatasource,
+      $queries.list.find(q => q._id === queryId) || {
+        datasourceId: $params.datasourceId,
         parameters: [],
         fields: {
           // only init the objects, everything else is optional strings
@@ -159,6 +161,7 @@
   async function saveQuery() {
     const toSave = buildQuery()
     try {
+      const isNew = !query._rev
       const { _id } = await queries.save(toSave.datasourceId, toSave)
       saveId = _id
       query = getSelectedQuery()
@@ -174,6 +177,9 @@
         staticVariables,
         restBindings
       )
+      if (isNew) {
+        $goto(`../../${_id}`)
+      }
     } catch (err) {
       notifications.error(`Error saving query`)
     }
@@ -464,8 +470,9 @@
             on:click={saveQuery}
             tooltip={!hasSchema
               ? "Saving a query before sending will mean no schema is generated"
-              : null}>Save</Button
-          >
+              : null}
+            >Save
+          </Button>
         </div>
         <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
@@ -708,26 +715,33 @@
     margin: 0 auto;
     height: 100%;
   }
+
   .table {
     width: 960px;
   }
+
   .url-block {
     display: flex;
     gap: var(--spacing-s);
     z-index: 200;
   }
+
   .verb {
     flex: 1;
   }
+
   .url {
     flex: 4;
   }
+
   .top {
     min-height: 50%;
   }
+
   .bottom {
     padding-bottom: 50px;
   }
+
   .stats {
     display: flex;
     gap: var(--spacing-xl);
@@ -735,40 +749,49 @@
     margin-right: 0;
     align-items: center;
   }
+
   .green {
     color: #53a761;
   }
+
   .red {
     color: #ea7d82;
   }
+
   .top-bar {
     display: flex;
     justify-content: space-between;
   }
+
   .access {
     display: flex;
     gap: var(--spacing-m);
     align-items: center;
   }
+
   .placeholder-internal {
     display: flex;
     flex-direction: column;
     width: 200px;
     gap: var(--spacing-l);
   }
+
   .placeholder {
     display: flex;
     margin-top: var(--spacing-xl);
     justify-content: center;
   }
+
   .auth-container {
     width: 100%;
     display: flex;
     justify-content: space-between;
   }
+
   .auth-select {
     width: 200px;
   }
+
   .pagination {
     display: grid;
     grid-template-columns: 1fr 1fr;
