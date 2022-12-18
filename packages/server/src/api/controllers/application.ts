@@ -469,10 +469,9 @@ const unpublishApp = async (ctx: any) => {
   appId = dbCore.getProdAppID(appId)
 
   const db = context.getProdAppDB()
-  const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
 
-  await events.app.unpublished(app)
+  await events.app.unpublished({ appId } as App)
 
   // automations only in production
   await cleanupAutomations(appId)
@@ -531,6 +530,14 @@ export async function destroy(ctx: BBContext) {
 }
 
 export const unpublish = async (ctx: BBContext) => {
+  const prodAppId = dbCore.getProdAppID(ctx.params.appId)
+  const dbExists = await dbCore.dbExists(prodAppId)
+
+  // check app has been published
+  if (!dbExists) {
+    return ctx.throw(400, "App has not been published.")
+  }
+
   await preDestroyApp(ctx)
   const result = await unpublishApp(ctx)
   await postDestroyApp(ctx)

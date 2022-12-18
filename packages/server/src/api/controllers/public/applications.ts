@@ -87,7 +87,6 @@ export async function unpublish(ctx: any, next: any) {
 
 export async function publish(ctx: any, next: any) {
   await context.doInAppContext(ctx.params.appId, async () => {
-    // TODO: move this into the application controller
     await deployController.publishApp(ctx)
     await next()
   })

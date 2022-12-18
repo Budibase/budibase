@@ -159,93 +159,30 @@ describe("/applications", () => {
     })
   })
 
-  xdescribe("delete", () => {
-    it("should delete published app and dev apps with dev app ID", async () => {
-      await config.createApp("to-delete")
-      const appId = config.getAppId()
-      await request
-        .delete(`/api/applications/${appId}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(events.app.deleted).toBeCalledTimes(1)
-      expect(events.app.unpublished).toBeCalledTimes(1)
-    })
-
-    it("should delete published app and dev app with prod app ID", async () => {
-      await config.createApp("to-delete")
-      const appId = config.getProdAppId()
-      await request
-        .delete(`/api/applications/${appId}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(events.app.deleted).toBeCalledTimes(1)
-      expect(events.app.unpublished).toBeCalledTimes(1)
-    })
-  })
-
   describe("publish", () => {
     it("should publish app with dev app ID", async () => {
-      await config.createApp("to-publish")
       const appId = config.getAppId()
       await request
         .post(`/api/applications/${appId}/publish`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(events.app.published).toBeCalledTimes(2)
+      expect(events.app.published).toBeCalledTimes(1)
     })
 
     it("should publish app with prod app ID", async () => {
-      await config.createApp("to-publish")
       const appId = config.getProdAppId()
       await request
         .post(`/api/applications/${appId}/publish`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(events.app.published).toBeCalledTimes(2)
-    })
-  })
-
-  describe("unpublish", () => {
-    it("should unpublish app with dev app ID", async () => {
-      await config.createApp("to-unpublish")
-      const appId = config.getAppId()
-      await request
-        .post(`/api/applications/${appId}/unpublish`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(events.app.unpublished).toBeCalledTimes(1)
-    })
-
-    it("should unpublish app with prod app ID", async () => {
-      await config.createApp("to-unpublish")
-      const appId = config.getProdAppId()
-      await request
-        .post(`/api/applications/${appId}/unpublish`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(events.app.unpublished).toBeCalledTimes(1)
-    })
-
-    it("should fail when app is not published", async () => {
-      await config.createApp("to-unpublish", false)
-      const appId = config.getAppId()
-      await request
-        .post(`/api/applications/${appId}/unpublish`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(404)
+      expect(events.app.published).toBeCalledTimes(1)
     })
   })
 
   describe("manage client library version", () => {
     it("should be able to update the app client library version", async () => {
-      console.log(config.getAppId())
       await request
         .post(`/api/applications/${config.getAppId()}/client/update`)
         .set(config.defaultHeaders())
@@ -253,6 +190,7 @@ describe("/applications", () => {
         .expect(200)
       expect(events.app.versionUpdated).toBeCalledTimes(1)
     })
+
     it("should be able to revert the app client library version", async () => {
       // We need to first update the version so that we can then revert
       await request
@@ -324,6 +262,54 @@ describe("/applications", () => {
         "App sync disabled. You can reenable with the DISABLE_AUTO_PROD_APP_SYNC environment variable."
       )
       env._set("DISABLE_AUTO_PROD_APP_SYNC", false)
+    })
+  })
+
+  describe("unpublish", () => {
+    it("should unpublish app with dev app ID", async () => {
+      const appId = config.getAppId()
+      await request
+        .post(`/api/applications/${appId}/unpublish`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.unpublished).toBeCalledTimes(1)
+    })
+
+    it("should unpublish app with prod app ID", async () => {
+      const appId = config.getProdAppId()
+      await request
+        .post(`/api/applications/${appId}/unpublish`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.unpublished).toBeCalledTimes(1)
+    })
+  })
+
+  describe("delete", () => {
+    it("should delete published app and dev apps with dev app ID", async () => {
+      await config.createApp("to-delete")
+      const appId = config.getAppId()
+      await request
+        .delete(`/api/applications/${appId}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.deleted).toBeCalledTimes(1)
+      expect(events.app.unpublished).toBeCalledTimes(1)
+    })
+
+    it("should delete published app and dev app with prod app ID", async () => {
+      await config.createApp("to-delete")
+      const appId = config.getProdAppId()
+      await request
+        .delete(`/api/applications/${appId}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(events.app.deleted).toBeCalledTimes(1)
+      expect(events.app.unpublished).toBeCalledTimes(1)
     })
   })
 })
