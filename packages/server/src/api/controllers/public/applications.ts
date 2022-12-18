@@ -77,10 +77,7 @@ export async function destroy(ctx: any, next: any) {
 
 export async function unpublish(ctx: any, next: any) {
   await context.doInAppContext(ctx.params.appId, async () => {
-    const body = ctx.body
     await controller.unpublish(ctx)
-    // overwrite the body again
-    ctx.body = body
     await next()
   })
 }

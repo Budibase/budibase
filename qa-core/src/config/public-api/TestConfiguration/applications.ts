@@ -59,9 +59,9 @@ export default class AppApi {
     return [response, json.data]
   }
 
-  async unpublish(id: string): Promise<[Response, Application]> {
+  async unpublish(id: string): Promise<[Response, any]> {
     const response = await this.api.post(`/applications/${id}/unpublish`)
     const json = await response.json()
-    return [response, json.data]
+    return [response, json]
   }
 }

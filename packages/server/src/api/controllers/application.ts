@@ -50,6 +50,7 @@ import {
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
+import { getDB } from "@budibase/backend-core/src/db"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -482,17 +483,17 @@ const unpublishApp = async (ctx: any) => {
 
 async function destroyApp(ctx: BBContext) {
   let appId = ctx.params.appId
-  const prodAppId = dbCore.getProdAppID(appId)
+  appId = dbCore.getProdAppID(appId)
+  const devAppId = dbCore.getDevAppID(appId)
 
   // check if we need to unpublish first
-  if (await dbCore.dbExists(prodAppId)) {
+  if (await dbCore.dbExists(appId)) {
     // app is deployed, run through unpublish flow
-    const devAppId = dbCore.getDevAppID(appId)
     await sdk.applications.syncApp(devAppId)
     await unpublishApp(ctx)
   }
 
-  const db = context.getDevAppDB()
+  const db = dbCore.getDB(devAppId)
   // standard app deletion flow
   const app = await db.get(DocumentType.APP_METADATA)
   const result = await db.destroy()
@@ -504,7 +505,7 @@ async function destroyApp(ctx: BBContext) {
   }
 
   await removeAppFromUserRoles(ctx, appId)
-  await cache.app.invalidateAppMetadata(appId)
+  await cache.app.invalidateAppMetadata(devAppId)
   return result
 }
 

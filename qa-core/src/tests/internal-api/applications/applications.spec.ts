@@ -94,7 +94,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     config.applications.api.appId = app.appId
 
     // publish app
-    await config.applications.publish(<string>app.url)
+    await config.applications.publish(<string>app._id)
 
     const [syncResponse, sync] = await config.applications.sync(
       <string>app.appId
