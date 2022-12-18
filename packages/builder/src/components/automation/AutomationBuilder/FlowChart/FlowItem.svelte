@@ -180,7 +180,7 @@
               onSelect(block)
             }}
           >
-            <Icon name={showLooping ? "ChevronDown" : "ChevronUp"} />
+            <Icon name={showLooping ? "ChevronUp" : "ChevronDown"} />
           </div>
         </div>
       </div>
