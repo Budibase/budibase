@@ -1486,15 +1486,8 @@ paths:
       parameters:
         - $ref: "#/components/parameters/appIdUrl"
       responses:
-        "200":
-          description: Returns the unpublished application.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/applicationOutput"
-              examples:
-                application:
-                  $ref: "#/components/examples/application"
+        "204":
+          description: The app was published successfully.
   "/applications/{appId}/publish":
     post:
       operationId: publish

@@ -271,8 +271,7 @@ describe("/applications", () => {
       await request
         .post(`/api/applications/${appId}/unpublish`)
         .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+        .expect(204)
       expect(events.app.unpublished).toBeCalledTimes(1)
     })
 
@@ -281,8 +280,7 @@ describe("/applications", () => {
       await request
         .post(`/api/applications/${appId}/unpublish`)
         .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+        .expect(204)
       expect(events.app.unpublished).toBeCalledTimes(1)
     })
   })

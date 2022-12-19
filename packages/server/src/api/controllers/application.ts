@@ -540,10 +540,9 @@ export const unpublish = async (ctx: BBContext) => {
   }
 
   await preDestroyApp(ctx)
-  const result = await unpublishApp(ctx)
+  await unpublishApp(ctx)
   await postDestroyApp(ctx)
-  ctx.status = 200
-  ctx.body = result
+  ctx.status = 204
 }
 
 export async function sync(ctx: BBContext) {

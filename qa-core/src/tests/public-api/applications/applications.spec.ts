@@ -68,13 +68,8 @@ describe("Public API - /applications endpoints", () => {
 
   it("POST - unpublish a published application", async () => {
     await config.applications.publish(config.context._id)
-    const [response, unpublish] = await config.applications.unpublish(config.context._id)
-    expect(response).toHaveStatusCode(200)
-    expect(unpublish).toEqual({
-      data: {
-        status: 200
-      }
-    })
+    const [response] = await config.applications.unpublish(config.context._id)
+    expect(response).toHaveStatusCode(204)
   })
 
   it("POST - unpublish an unpublished application", async () => {

@@ -106,15 +106,8 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
  *     parameters:
  *       - $ref: '#/components/parameters/appIdUrl'
  *     responses:
- *       200:
- *         description: Returns the unpublished application.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/applicationOutput'
- *             examples:
- *               application:
- *                 $ref: '#/components/examples/application'
+ *       204:
+ *         description: The app was published successfully.
  */
 write.push(
   new Endpoint("post", "/applications/:appId/unpublish", controller.unpublish)

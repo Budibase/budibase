@@ -29,8 +29,7 @@ describe("/cloud", () => {
           )}/unpublish`
         )
         .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+        .expect(204)
       await request
         .delete(`/api/applications/${config.getAppId()}`)
         .set(config.defaultHeaders())

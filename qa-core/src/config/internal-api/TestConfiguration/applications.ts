@@ -147,13 +147,9 @@ export default class AppApi {
     return [response, json]
   }
 
-  async unpublish(appId: string): Promise<[Response, UnpublishAppResponse]> {
+  async unpublish(appId: string): Promise<[Response]> {
     const response = await this.api.post(`/applications/${appId}/unpublish`)
-    expect(response).toHaveStatusCode(200)
-    const json = await response.json()
-    expect(json.data.ok).toBe(true)
-    expect(json.ok).toBe(true)
-    expect(json.status).toBe(200)
-    return [response, json]
+    expect(response).toHaveStatusCode(204)
+    return [response]
   }
 }
