@@ -73,11 +73,10 @@ describe("Public API - /applications endpoints", () => {
   })
 
   it("POST - unpublish an unpublished application", async () => {
-    const [response, payload] = await config.applications.unpublish(
+    const [response] = await config.applications.unpublish(
       config.context._id
     )
     expect(response).toHaveStatusCode(400)
-    expect(payload.message).toEqual("App has not been published.")
   })
 
   it("DELETE - delete a published application and the dev application", async () => {
