@@ -203,4 +203,4 @@ jobs:
         with:
           repository: budibase/budibase-deploys
           event: deploy-develop-to-qa
-          github_pat: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          github_pat: ${{ secrets.GH_PERSONAL_TOKEN }}
