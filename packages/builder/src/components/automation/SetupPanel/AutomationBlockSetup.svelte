@@ -232,6 +232,7 @@
             {filters}
             {bindings}
             {schemaFields}
+            datasource={{ type: "table", tableId }}
             panel={AutomationBindingPanel}
             fillWidth
             on:change={e => (tempFilters = e.detail)}

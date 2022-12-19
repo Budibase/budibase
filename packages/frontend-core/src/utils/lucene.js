@@ -7,7 +7,7 @@ const HBS_REGEX = /{{([^{].*?)}}/g
  * Returns the valid operator options for a certain data type
  * @param type the data type
  */
-export const getValidOperatorsForType = type => {
+export const getValidOperatorsForType = (type, field, datasource) => {
   const Op = OperatorOptions
   const stringOps = [
     Op.Equals,
@@ -27,24 +27,37 @@ export const getValidOperatorsForType = type => {
     Op.NotEmpty,
     Op.In,
   ]
+  let ops = []
   if (type === "string") {
-    return stringOps
+    ops = stringOps
   } else if (type === "number") {
-    return numOps
+    ops = numOps
   } else if (type === "options") {
-    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   } else if (type === "array") {
-    return [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
+    ops = [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
   } else if (type === "boolean") {
-    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === "longform") {
-    return stringOps
+    ops = stringOps
   } else if (type === "datetime") {
-    return numOps
+    ops = numOps
   } else if (type === "formula") {
-    return stringOps.concat([Op.MoreThan, Op.LessThan])
+    ops = stringOps.concat([Op.MoreThan, Op.LessThan])
   }
-  return []
+
+  // Filter out "like" for internal tables
+  const externalTable = datasource?.tableId?.includes("datasource_plus")
+  if (datasource?.type === "table" && !externalTable) {
+    ops = ops.filter(x => x !== Op.Like)
+  }
+
+  // Only allow equal/not equal for _id in SQL tables
+  if (field === "_id" && externalTable) {
+    ops = [Op.Equals, Op.NotEquals]
+  }
+
+  return ops
 }
 
 /**
