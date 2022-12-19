@@ -35,9 +35,9 @@ export default class TestConfiguration<T> {
 
   async setupAccountAndTenant() {
     const account = generateAccount()
-    const [emailValidationResponse, emailValidationJson] = await this.accounts.validateEmail(account.email)
-    const [tenantIdValidationResponse, tenantIdValidationJson] = await this.accounts.validateTenantId(account.tenantId)
-    const [accountCreationResponse, accountCreationJson] = await this.accounts.create(account)
+    await this.accounts.validateEmail(account.email)
+    await this.accounts.validateTenantId(account.tenantId)
+    await this.accounts.create(account)
     await this.auth.login(account.email, account.password)
   }
 
