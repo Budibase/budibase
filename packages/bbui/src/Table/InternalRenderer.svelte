@@ -1,28 +1,24 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
+  import { copyToClipboard } from "../helpers"
   import { notifications } from "../Stores/notifications"
+
   export let value
 
-  const onClick = e => {
+  const onClick = async e => {
     e.stopPropagation()
-    copyToClipboard(value)
-  }
-
-  function copyToClipboard(value) {
-    navigator.clipboard.writeText(value).then(() => {
-      notifications.success("Copied")
-    })
+    try {
+      await copyToClipboard(value)
+      notifications.success("Copied to clipboard")
+    } catch (error) {
+      notifications.error(
+        "Failed to copy to clipboard. Check the dev console for the value."
+      )
+      console.warn("Failed to copy the value", value)
+    }
   }
 </script>
 
 <div on:click|stopPropagation={onClick}>
   <Icon size="S" name="Copy" />
 </div>
-
-<style>
-  div {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 150px;
-  }
-</style>

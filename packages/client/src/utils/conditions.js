@@ -1,4 +1,4 @@
-import { buildLuceneQuery, luceneQuery } from "builder/src/helpers/lucene"
+import { LuceneUtils } from "@budibase/frontend-core"
 
 export const getActiveConditions = conditions => {
   if (!conditions?.length) {
@@ -33,8 +33,8 @@ export const getActiveConditions = conditions => {
       value: condition.referenceValue,
     }
 
-    const query = buildLuceneQuery([luceneCondition])
-    const result = luceneQuery([luceneCondition], query)
+    const query = LuceneUtils.buildLuceneQuery([luceneCondition])
+    const result = LuceneUtils.runLuceneQuery([luceneCondition], query)
     return result.length > 0
   })
 }

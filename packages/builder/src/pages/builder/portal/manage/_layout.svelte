@@ -9,10 +9,12 @@
       $redirect("../")
     }
   }
+
+  $: wide = $page.path.includes("email/:template")
 </script>
 
 {#if $auth.isAdmin}
-  <Page wide={$page.path.includes("email/:template")}>
+  <Page maxWidth="90ch" {wide}>
     <slot />
   </Page>
 {/if}

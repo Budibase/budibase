@@ -1,11 +1,11 @@
 <script>
   import { datasources } from "stores/backend"
-  import { goto } from "@roxi/routify"
+  import { redirect } from "@roxi/routify"
   import { onMount } from "svelte"
 
   onMount(async () => {
     // navigate to first table in list, if not already selected
-    $datasources.list.length > 0 && $goto(`./${$datasources.list[0]._id}`)
+    $datasources.list.length > 0 && $redirect(`./${$datasources.list[0]._id}`)
   })
 </script>
 

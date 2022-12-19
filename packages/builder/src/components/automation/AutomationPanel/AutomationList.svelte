@@ -4,10 +4,16 @@
   import { automationStore } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
+  import { notifications } from "@budibase/bbui"
 
   $: selectedAutomationId = $automationStore.selectedAutomation?.automation?._id
-  onMount(() => {
-    automationStore.actions.fetch()
+
+  onMount(async () => {
+    try {
+      await automationStore.actions.fetch()
+    } catch (error) {
+      notifications.error("Error getting automations list")
+    }
   })
 
   function selectAutomation(automation) {
@@ -17,7 +23,7 @@
 </script>
 
 <div class="automations-list">
-  {#each $automationStore.automations as automation, idx}
+  {#each $automationStore.automations.sort(aut => aut.name) as automation, idx}
     <NavItem
       border={idx > 0}
       icon="ShareAndroid"

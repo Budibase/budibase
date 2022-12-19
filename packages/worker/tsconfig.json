@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/backend-core": ["../backend-core/src"],
+      "@budibase/backend-core/*": ["../backend-core/*"],
+      "@budibase/pro": ["../../../budibase-pro/packages/pro/src"]
+    }
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
+  "references": [
+    { "path": "../types" },
+    { "path": "../backend-core" },
+    { "path": "../../../budibase-pro/packages/pro" }
+  ],
+  "include": [
+    "src/**/*",
+    "package.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

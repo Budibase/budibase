@@ -1,5 +1,5 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, notifications } from "@budibase/bbui"
   import OidcLogo from "assets/oidc-logo.png"
   import Auth0Logo from "assets/auth0-logo.png"
   import MicrosoftLogo from "assets/microsoft-logo.png"
@@ -20,7 +20,11 @@
   }
 
   onMount(async () => {
-    await oidc.init()
+    try {
+      await oidc.init()
+    } catch (error) {
+      notifications.error("Error getting OIDC config")
+    }
   })
 
   $: src = !$oidc.logo

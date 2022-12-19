@@ -5,6 +5,7 @@
   export let valid
   export let value = ""
   export let allowJS = false
+  export let allowHelpers = true
 
   $: enrichedBindings = enrichBindings(bindings)
 
@@ -15,7 +16,6 @@
     }
     return bindings?.map(binding => ({
       ...binding,
-      category: "Bindable Values",
       type: null,
     }))
   }
@@ -26,5 +26,6 @@
   bindings={enrichedBindings}
   {value}
   {allowJS}
+  {allowHelpers}
   on:change
 />

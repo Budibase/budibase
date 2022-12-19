@@ -1,6 +1,6 @@
 <script>
   import "@spectrum-css/textfield/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
   export let value = null
   export let placeholder = null
@@ -12,8 +12,12 @@
   export let updateOnChange = true
   export let quiet = false
   export let dataCy
+  export let align
+  export let autofocus = false
 
   const dispatch = createEventDispatcher()
+
+  let field
   let focus = false
 
   const updateValue = newValue => {
@@ -57,6 +61,11 @@
       updateValue(event.target.value)
     }
   }
+
+  onMount(() => {
+    focus = autofocus
+    if (focus) field.focus()
+  })
 </script>
 
 <div
@@ -76,6 +85,7 @@
     </svg>
   {/if}
   <input
+    bind:this={field}
     {disabled}
     {readonly}
     {id}
@@ -92,13 +102,18 @@
     on:input={onInput}
     on:keyup={updateValueOnEnter}
     {type}
-    inputmode={type === "number" ? "decimal" : "text"}
     class="spectrum-Textfield-input"
+    style={align ? `text-align: ${align};` : ""}
+    inputmode={type === "number" ? "decimal" : "text"}
   />
 </div>
 
 <style>
   .spectrum-Textfield {
     width: 100%;
+  }
+  input:disabled {
+    color: var(--spectrum-global-color-gray-600) !important;
+    -webkit-text-fill-color: var(--spectrum-global-color-gray-600) !important;
   }
 </style>

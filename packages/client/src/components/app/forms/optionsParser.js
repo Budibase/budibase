@@ -17,7 +17,7 @@ export const getOptions = (
 
     dataProvider?.rows?.forEach(row => {
       const value = row?.[valueColumn]
-      if (value) {
+      if (value != null) {
         const label = row[labelColumn] || value
         optionsSet[value] = { value, label }
       }
@@ -30,7 +30,7 @@ export const getOptions = (
     let optionsSet = {}
     dataProvider?.rows?.forEach(row => {
       const value = row?.[valueColumn]
-      if (value) {
+      if (value != null) {
         const label = row[labelColumn] || value
         optionsSet[value] = { value, label }
       }
@@ -40,6 +40,15 @@ export const getOptions = (
 
   // Extract custom options
   if (optionsSource === "custom" && customOptions) {
+    customOptions.forEach(option => {
+      if (typeof option.value === "string") {
+        if (option.value.toLowerCase() === "true") {
+          option.value = true
+        } else if (option.value.toLowerCase() === "false") {
+          option.value = false
+        }
+      }
+    })
     return customOptions
   }
 

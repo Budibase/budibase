@@ -2,6 +2,8 @@
   import { writable, get } from "svelte/store"
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
+  import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
+  import { Constants, CookieUtils } from "@budibase/frontend-core"
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {
@@ -12,6 +14,8 @@
     routeStore,
     builderStore,
     themeStore,
+    appStore,
+    devToolsStore,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -19,13 +23,17 @@
   import UserBindingsProvider from "components/context/UserBindingsProvider.svelte"
   import DeviceBindingsProvider from "components/context/DeviceBindingsProvider.svelte"
   import StateBindingsProvider from "components/context/StateBindingsProvider.svelte"
+  import RowSelectionProvider from "components/context/RowSelectionProvider.svelte"
+  import QueryParamsProvider from "components/context/QueryParamsProvider.svelte"
   import SettingsBar from "components/preview/SettingsBar.svelte"
   import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import DNDHandler from "components/preview/DNDHandler.svelte"
-  import ErrorSVG from "builder/assets/error.svg"
+  import GridDNDHandler from "components/preview/GridDNDHandler.svelte"
   import KeyboardManager from "components/preview/KeyboardManager.svelte"
+  import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
+  import DevTools from "components/devtools/DevTools.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -35,6 +43,40 @@
   let dataLoaded = false
   let permissionError = false
 
+  // Determine if we should show devtools or not
+  $: showDevTools =
+    !$builderStore.inBuilder &&
+    $devToolsStore.enabled &&
+    !$routeStore.queryParams?.peek
+
+  // Handle no matching route
+  $: {
+    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
+      if ($screenStore.screens.length) {
+        // If we have some available screens, use the first screen which
+        // represents the best route based on rank
+        const route = $screenStore.screens[0].routing?.route
+        if (!route) {
+          permissionError = true
+          console.error("No route found but screens exist")
+        } else {
+          permissionError = false
+          routeStore.actions.navigate(route)
+        }
+      } else if ($authStore) {
+        // If the user is logged in but has no screens, they don't have
+        // permission to use the app
+        permissionError = true
+      } else {
+        // If they have no screens and are not logged in, it probably means
+        // they should log in to gain access
+        const returnUrl = `${window.location.pathname}${window.location.hash}`
+        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
+        window.location = "/builder/auth/login"
+      }
+    }
+  }
+
   // Load app config
   onMount(async () => {
     await initialise()
@@ -43,109 +85,126 @@
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
     } else {
-      builderStore.actions.pingEndUser()
+      builderStore.actions.analyticsPing({ source: "app" })
     }
   })
-
-  // Handle no matching route - this is likely a permission error
-  $: {
-    if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
-      if ($authStore) {
-        // There is a logged in user, so handle them
-        if ($screenStore.screens.length) {
-          // Screens exist so navigate back to the home screen
-          const firstRoute = $screenStore.screens[0].routing?.route ?? "/"
-          routeStore.actions.navigate(firstRoute)
-        } else {
-          // No screens likely means the user has no permissions to view this app
-          permissionError = true
-        }
-      } else {
-        // The user is not logged in, redirect them to login
-        const returnUrl = `${window.location.pathname}${window.location.hash}`
-        const encodedUrl = encodeURIComponent(returnUrl)
-        window.location = `/builder/auth/login?returnUrl=${encodedUrl}`
-      }
-    }
-  }
 </script>
+
+<svelte:head>
+  {#if $builderStore.usedPlugins?.length}
+    {#each $builderStore.usedPlugins as plugin (plugin.hash)}
+      <script src={`${plugin.jsUrl}?r=${plugin.hash || ""}`}></script>
+    {/each}
+  {/if}
+</svelte:head>
 
 {#if dataLoaded}
   <div
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {$themeStore.theme}"
+    class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
   >
-    {#if permissionError}
-      <div class="error">
-        <Layout justifyItems="center" gap="S">
-          {@html ErrorSVG}
-          <Heading size="L">You don't have permission to use this app</Heading>
-          <Body size="S">Ask your administrator to grant you access</Body>
-        </Layout>
-      </div>
-    {:else if $screenStore.activeLayout}
+    <DeviceBindingsProvider>
       <UserBindingsProvider>
-        <DeviceBindingsProvider>
-          <StateBindingsProvider>
-            <!-- Settings bar can be rendered outside of device preview -->
-            <!-- Key block needs to be outside the if statement or it breaks -->
-            {#key $builderStore.selectedComponentId}
-              {#if $builderStore.inBuilder}
-                <SettingsBar />
-              {/if}
-            {/key}
+        <StateBindingsProvider>
+          <RowSelectionProvider>
+            <QueryParamsProvider>
+              <!-- Settings bar can be rendered outside of device preview -->
+              <!-- Key block needs to be outside the if statement or it breaks -->
+              {#key $builderStore.selectedComponentId}
+                {#if $builderStore.inBuilder}
+                  <SettingsBar />
+                {/if}
+              {/key}
 
-            <!-- Clip boundary for selection indicators -->
-            <div
-              id="clip-root"
-              class:preview={$builderStore.inBuilder}
-              class:tablet-preview={$builderStore.previewDevice === "tablet"}
-              class:mobile-preview={$builderStore.previewDevice === "mobile"}
-            >
-              <!-- Actual app -->
-              <div id="app-root">
-                <CustomThemeWrapper>
-                  {#key $screenStore.activeLayout._id}
-                    <Component
-                      isLayout
-                      instance={$screenStore.activeLayout.props}
-                    />
-                  {/key}
+              <!-- Clip boundary for selection indicators -->
+              <div
+                id="clip-root"
+                class:preview={$builderStore.inBuilder}
+                class:tablet-preview={$builderStore.previewDevice === "tablet"}
+                class:mobile-preview={$builderStore.previewDevice === "mobile"}
+              >
+                <!-- Actual app -->
+                <div id="app-root">
+                  {#if showDevTools}
+                    <DevToolsHeader />
+                  {/if}
 
-                  <!--
-                    Flatpickr needs to be inside the theme wrapper.
-                    It also needs its own container because otherwise it hijacks
-                    key events on the whole page. It is painful to work with.
-                  -->
-                  <div id="flatpickr-root" />
+                  <div id="app-body">
+                    {#if permissionError}
+                      <div class="error">
+                        <Layout justifyItems="center" gap="S">
+                          {@html ErrorSVG}
+                          <Heading size="L">
+                            You don't have permission to use this app
+                          </Heading>
+                          <Body size="S">
+                            Ask your administrator to grant you access
+                          </Body>
+                        </Layout>
+                      </div>
+                    {:else if !$screenStore.activeLayout}
+                      <div class="error">
+                        <Layout justifyItems="center" gap="S">
+                          {@html ErrorSVG}
+                          <Heading size="L">
+                            Something went wrong rendering your app
+                          </Heading>
+                          <Body size="S">
+                            Get in touch with support if this issue persists
+                          </Body>
+                        </Layout>
+                      </div>
+                    {:else}
+                      <CustomThemeWrapper>
+                        {#key $screenStore.activeLayout._id}
+                          <Component
+                            isLayout
+                            instance={$screenStore.activeLayout.props}
+                          />
+                        {/key}
 
-                  <!-- Modal container to ensure they sit on top -->
-                  <div class="modal-container" />
+                        <!--
+                          Flatpickr needs to be inside the theme wrapper.
+                          It also needs its own container because otherwise it hijacks
+                          key events on the whole page. It is painful to work with.
+                        -->
+                        <div id="flatpickr-root" />
 
-                  <!-- Layers on top of app -->
-                  <NotificationDisplay />
-                  <ConfirmationDisplay />
-                  <PeekScreenDisplay />
-                </CustomThemeWrapper>
+                        <!-- Modal container to ensure they sit on top -->
+                        <div class="modal-container" />
+
+                        <!-- Layers on top of app -->
+                        <NotificationDisplay />
+                        <ConfirmationDisplay />
+                        <PeekScreenDisplay />
+                      </CustomThemeWrapper>
+                    {/if}
+
+                    {#if showDevTools}
+                      <DevTools />
+                    {/if}
+                  </div>
+                </div>
+
+                <!-- Preview and dev tools utilities  -->
+                {#if $appStore.isDevApp}
+                  <SelectionIndicator />
+                {/if}
+                {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
+                  <HoverIndicator />
+                {/if}
+                {#if $builderStore.inBuilder}
+                  <DNDHandler />
+                  <GridDNDHandler />
+                {/if}
               </div>
-
-              <!-- Selection indicators should be bounded by device -->
-              <!--
-                We don't want to key these by componentID as they control their own
-                re-mounting to avoid flashes.
-              -->
-              {#if $builderStore.inBuilder}
-                <SelectionIndicator />
-                <HoverIndicator />
-                <DNDHandler />
-              {/if}
-            </div>
-          </StateBindingsProvider>
-        </DeviceBindingsProvider>
+            </QueryParamsProvider>
+          </RowSelectionProvider>
+        </StateBindingsProvider>
       </UserBindingsProvider>
-    {/if}
+    </DeviceBindingsProvider>
   </div>
   <KeyboardManager />
 {/if}
@@ -163,6 +222,7 @@
     justify-content: center;
     align-items: center;
   }
+
   #clip-root {
     max-width: 100%;
     max-height: 100%;
@@ -172,14 +232,27 @@
     overflow: hidden;
     background-color: transparent;
   }
+
   #app-root {
     overflow: hidden;
     height: 100%;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+
+  #app-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow: hidden;
   }
 
   .error {
-    position: absolute;
     width: 100%;
     height: 100%;
     display: grid;
@@ -218,8 +291,19 @@
     width: calc(390px + 6px);
     height: calc(844px + 6px);
   }
+
   .preview #app-root {
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
+  }
+
+  /* Print styles */
+  @media print {
+    #spectrum-root,
+    #clip-root,
+    #app-root,
+    #app-body {
+      overflow: visible !important;
+    }
   }
 </style>

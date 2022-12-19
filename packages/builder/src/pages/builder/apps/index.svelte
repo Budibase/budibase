@@ -10,15 +10,17 @@
     Icon,
     Body,
     Modal,
+    notifications,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { apps, organisation, auth } from "stores/portal"
+  import { apps, organisation, auth, groups, licensing } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
+  import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
 
   let loaded = false
@@ -26,20 +28,63 @@
   let changePasswordModal
 
   onMount(async () => {
-    await organisation.init()
-    await apps.load()
+    try {
+      await organisation.init()
+      await apps.load()
+      await groups.actions.init()
+    } catch (error) {
+      notifications.error("Error loading apps")
+    }
     loaded = true
   })
-
   const publishedAppsOnly = app => app.status === AppStatus.DEPLOYED
 
+  $: userGroups = $groups.filter(group =>
+    group.users.find(user => user._id === $auth.user?._id)
+  )
+  let userApps = []
   $: publishedApps = $apps.filter(publishedAppsOnly)
 
-  $: userApps = $auth.user?.builder?.global
-    ? publishedApps
-    : publishedApps.filter(app =>
-        Object.keys($auth.user?.roles).includes(app.prodId)
-      )
+  $: {
+    if (!Object.keys($auth.user?.roles).length && $auth.user?.userGroups) {
+      userApps =
+        $auth.user?.builder?.global || $auth.user?.admin?.global
+          ? publishedApps
+          : publishedApps.filter(app => {
+              return userGroups.find(group => {
+                return groups.actions
+                  .getGroupAppIds(group)
+                  .map(role => apps.extractAppId(role))
+                  .includes(app.appId)
+              })
+            })
+    } else {
+      userApps =
+        $auth.user?.builder?.global || $auth.user?.admin?.global
+          ? publishedApps
+          : publishedApps.filter(app =>
+              Object.keys($auth.user?.roles)
+                .map(x => apps.extractAppId(x))
+                .includes(app.appId)
+            )
+    }
+  }
+
+  function getUrl(app) {
+    if (app.url) {
+      return `/app${app.url}`
+    } else {
+      return `/${app.prodId}`
+    }
+  }
+
+  const logout = async () => {
+    try {
+      await auth.logout()
+    } catch (error) {
+      // Swallow error and do nothing
+    }
+  }
 </script>
 
 {#if $auth.user && loaded}
@@ -48,8 +93,8 @@
       <div class="content">
         <Layout noPadding>
           <div class="header">
-            <img alt="logo" src={$organisation.logoUrl || Logo} />
-            <ActionMenu align="right">
+            <img class="logo" alt="logo" src={$organisation.logoUrl || Logo} />
+            <ActionMenu align="right" dataCy="user-menu">
               <div slot="control" class="avatar">
                 <Avatar
                   size="M"
@@ -75,7 +120,7 @@
                   Open developer mode
                 </MenuItem>
               {/if}
-              <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
+              <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
             </ActionMenu>
           </div>
           <Layout noPadding gap="XS">
@@ -88,12 +133,22 @@
             </Body>
           </Layout>
           <Divider />
-          {#if userApps.length}
+          {#if $licensing.usageMetrics?.dayPasses >= 100}
+            <div>
+              <Layout gap="S" justifyItems="center">
+                <img class="spaceman" alt="spaceman" src={Spaceman} />
+                <Heading size="M">
+                  {"Your apps are currently offline."}
+                </Heading>
+                Please contact the account holder to get them back online.
+              </Layout>
+            </div>
+          {:else if userApps.length}
             <Heading>Apps</Heading>
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each userApps as app, idx (app.appId)}
-                  <a class="app" target="_blank" href={`/${app.prodId}`}>
+                  <a class="app" target="_blank" href={getUrl(app)}>
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>
@@ -151,9 +206,12 @@
     justify-content: space-between;
     align-items: center;
   }
-  img {
+  img.logo {
     width: 40px;
     margin-bottom: -12px;
+  }
+  img.spaceman {
+    width: 100px;
   }
   .avatar {
     display: grid;

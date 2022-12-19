@@ -42,6 +42,7 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
+
         image: minio/minio
         imagePullPolicy: ""
         livenessProbe:
@@ -56,10 +57,25 @@ spec:
         name: minio-service
         ports:
         - containerPort: {{ .Values.services.objectStore.port }}
-        resources: {}
+        {{ with .Values.services.objectStore.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
         volumeMounts:
         - mountPath: /data
           name: minio-data
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      {{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
       volumes:

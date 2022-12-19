@@ -15,8 +15,8 @@ async function init() {
       MINIO_SECRET_KEY: "budibase",
       REDIS_URL: "localhost:6379",
       REDIS_PASSWORD: "budibase",
-      MINIO_URL: "http://localhost:10000/",
-      COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
+      MINIO_URL: "http://localhost:4004",
+      COUCH_DB_URL: "http://budibase:budibase@localhost:4005",
       COUCH_DB_USERNAME: "budibase",
       COUCH_DB_PASSWORD: "budibase",
       // empty string is false
@@ -26,6 +26,9 @@ async function init() {
       ACCOUNT_PORTAL_API_KEY: "budibase",
       PLATFORM_URL: "http://localhost:10000",
       APPS_URL: "http://localhost:4001",
+      SERVICE: "worker-service",
+      DEPLOYMENT_ENVIRONMENT: "development",
+      TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {

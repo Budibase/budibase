@@ -21,11 +21,11 @@
   }
 
   onMount(() => {
-    resizeObserver.observe(document.getElementById("app-root"))
+    resizeObserver.observe(document.getElementById("clip-root"))
   })
 
   onDestroy(() => {
-    resizeObserver.unobserve(document.getElementById("app-root"))
+    resizeObserver.unobserve(document.getElementById("clip-root"))
   })
 </script>
 

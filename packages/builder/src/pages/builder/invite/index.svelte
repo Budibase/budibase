@@ -1,35 +1,43 @@
 <script>
   import { Layout, Heading, Body, Button, notifications } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
-  import { users } from "stores/portal"
+  import { users, organisation } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import Logo from "assets/bb-emblem.svg"
+  import { onMount } from "svelte"
 
   const inviteCode = $params["?code"]
   let password, error
 
+  $: company = $organisation.company || "Budibase"
+
   async function acceptInvite() {
     try {
-      const res = await users.acceptInvite(inviteCode, password)
-      if (!res) {
-        throw new Error(res.message)
-      }
-      notifications.success(`User created.`)
+      await users.acceptInvite(inviteCode, password)
+      notifications.success("Invitation accepted successfully")
       $goto("../auth/login")
-    } catch (err) {
-      notifications.error(err)
+    } catch (error) {
+      notifications.error(error.message)
     }
   }
+
+  onMount(async () => {
+    try {
+      await organisation.init()
+    } catch (error) {
+      notifications.error("Error getting org config")
+    }
+  })
 </script>
 
 <section>
   <div class="container">
     <Layout>
-      <img src={Logo} alt="logo" />
+      <img alt="logo" src={$organisation.logoUrl || Logo} />
       <Layout gap="XS" justifyItems="center" noPadding>
-        <Heading size="M">Accept Invitation</Heading>
+        <Heading size="M">Invitation to {company}</Heading>
         <Body textAlign="center" size="M">
-          Please enter a password to set up your user.
+          Please enter a password to get started.
         </Body>
       </Layout>
       <PasswordRepeatInput bind:error bind:password />
@@ -49,7 +57,7 @@
   }
   .container {
     margin: 0 auto;
-    width: 260px;
+    width: 300px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;

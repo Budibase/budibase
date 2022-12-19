@@ -1,0 +1,27 @@
+{
+  "name": "nextjs-api-sales",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "bulma": "^0.9.3",
+    "next": "12.1.0",
+    "node-fetch": "^3.2.10",
+    "sass": "^1.52.3",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-notifications-component": "^3.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "17.0.21",
+    "@types/react": "17.0.39",
+    "eslint": "8.10.0",
+    "eslint-config-next": "12.1.0",
+    "typescript": "4.6.2"
+  }
+}

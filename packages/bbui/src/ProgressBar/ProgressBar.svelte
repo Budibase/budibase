@@ -8,6 +8,8 @@
   export let duration = 1000
   export let width = false
   export let sideLabel = false
+  export let hidePercentage = true
+  export let color // red, green, default = blue
 
   export let size = "M"
 
@@ -16,11 +18,11 @@
     easing: easing,
   })
 
-  $: if (value) $progress = value
+  $: if (value || value === 0) $progress = value
 </script>
 
 <div
-  class:spectrum-ProgressBar--indeterminate={!value}
+  class:spectrum-ProgressBar--indeterminate={!value && value !== 0}
   class:spectrum-ProgressBar--sideLabel={sideLabel}
   class="spectrum-ProgressBar spectrum-ProgressBar--size{size}"
   value={$progress}
@@ -28,7 +30,7 @@
   aria-valuenow={$progress}
   aria-valuemin="0"
   aria-valuemax="100"
-  style={width ? `width: ${width}px;` : ""}
+  style={width ? `width: ${width};` : ""}
 >
   {#if $$slots}
     <div
@@ -37,7 +39,7 @@
       <slot />
     </div>
   {/if}
-  {#if value}
+  {#if !hidePercentage && (value || value === 0)}
     <div
       class="spectrum-FieldLabel spectrum-ProgressBar-percentage spectrum-FieldLabel--size{size}"
     >
@@ -47,8 +49,19 @@
   <div class="spectrum-ProgressBar-track">
     <div
       class="spectrum-ProgressBar-fill"
-      style={value ? `width: ${$progress}%` : ""}
+      class:color-green={color === "green"}
+      class:color-red={color === "red"}
+      style={value || value === 0 ? `width: ${$progress}%` : ""}
     />
   </div>
   <div class="spectrum-ProgressBar-label" hidden="" />
 </div>
+
+<style>
+  .color-green {
+    background: #009562;
+  }
+  .color-red {
+    background: #dd2019;
+  }
+</style>

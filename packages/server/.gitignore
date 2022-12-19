@@ -2,8 +2,8 @@ node_modules/
 myapps/
 .env
 builder/*
+new_design_ui/*
 client/*
-public/
 db/dev.db/
 dist
 coverage/

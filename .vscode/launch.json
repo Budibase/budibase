@@ -22,9 +22,16 @@
             "name": "Budibase Worker",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/packages/worker/src/index.js",
+            "runtimeArgs": [
+                "--nolazy",
+                "-r",
+                "ts-node/register/transpile-only"
+            ],
+            "args": [
+                "${workspaceFolder}/packages/worker/src/index.ts"
+            ],
             "cwd": "${workspaceFolder}/packages/worker"
-        }
+        },
     ],
     "compounds": [
         {

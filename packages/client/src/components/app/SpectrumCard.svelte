@@ -19,9 +19,10 @@
 
   const handleLink = e => {
     if (!linkURL) {
-      return
+      return false
     }
     e.preventDefault()
+    e.stopPropagation()
     routeStore.actions.navigate(linkURL, linkPeek)
   }
 </script>
@@ -32,6 +33,8 @@
   tabindex="0"
   role="figure"
   class:horizontal
+  class:clickable={buttonOnClick && !showButton}
+  on:click={showButton ? null : buttonOnClick}
 >
   {#if imageURL}
     <div
@@ -67,7 +70,9 @@
     {/if}
     {#if showButton}
       <div class="spectrum-Card-footer button-container">
-        <Button on:click={buttonOnClick} secondary>{buttonText || ""}</Button>
+        <Button on:click={buttonOnClick} secondary>
+          {buttonText || "Click me"}
+        </Button>
       </div>
     {/if}
   </div>
@@ -81,6 +86,11 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    transition: border-color 130ms ease-out;
+  }
+  .spectrum-Card.clickable:hover {
+    cursor: pointer;
+    border-color: var(--spectrum-global-color-gray-500) !important;
   }
   .spectrum-Card.horizontal {
     flex-direction: row;
@@ -90,7 +100,7 @@
     padding: var(--spectrum-global-dimension-size-50) 0;
   }
   .spectrum-Card-title.link {
-    transition: color 130ms ease-in-out;
+    transition: color 130ms ease-out;
   }
   .spectrum-Card-title.link:hover {
     cursor: pointer;
@@ -102,7 +112,7 @@
     white-space: nowrap;
   }
   .spectrum-Card-footer {
-    word-wrap: anywhere;
+    word-wrap: break-word;
     white-space: pre-wrap;
   }
   .horizontal .spectrum-Card-coverPhoto {
@@ -130,6 +140,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-break: break-all;
   }
 
   .button-container {

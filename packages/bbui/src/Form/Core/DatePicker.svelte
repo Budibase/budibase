@@ -5,7 +5,7 @@
   import "@spectrum-css/textfield/dist/index-vars.css"
   import "@spectrum-css/picker/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { generateID } from "../../utils/helpers"
+  import { uuid } from "../../helpers"
 
   export let id = null
   export let disabled = false
@@ -14,28 +14,101 @@
   export let value = null
   export let placeholder = null
   export let appendTo = undefined
-
+  export let timeOnly = false
+  export let ignoreTimezones = false
+  export let time24hr = false
+  export let range = false
   const dispatch = createEventDispatcher()
-  const flatpickrId = `${generateID()}-wrapper`
+  const flatpickrId = `${uuid()}-wrapper`
   let open = false
-  let flatpickr
+  let flatpickr, flatpickrOptions
+
+  // Another classic flatpickr issue. Errors were randomly being thrown due to
+  // flatpickr internal code. Making sure that "destroy" is a valid function
+  // fixes it. The sooner we remove flatpickr the better.
+  $: {
+    if (flatpickr && !flatpickr.destroy) {
+      flatpickr.destroy = () => {}
+    }
+  }
+
+  const resolveTimeStamp = timestamp => {
+    let maskedDate = new Date(`0-${timestamp}`)
+
+    if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
+      return maskedDate
+    } else {
+      return null
+    }
+  }
+
   $: flatpickrOptions = {
     element: `#${flatpickrId}`,
-    enableTime: enableTime || false,
+    enableTime: timeOnly || enableTime || false,
+    noCalendar: timeOnly || false,
     altInput: true,
-    altFormat: enableTime ? "F j Y, H:i" : "F j, Y",
+    time_24hr: time24hr || false,
+    altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
+    mode: range ? "range" : "single",
     appendTo,
     disableMobile: "true",
+    onReady: () => {
+      let timestamp = resolveTimeStamp(value)
+      if (timeOnly && timestamp) {
+        dispatch("change", timestamp.toISOString())
+      }
+    },
+  }
+
+  $: redrawOptions = {
+    timeOnly,
+    enableTime,
+    time24hr,
   }
 
   const handleChange = event => {
     const [dates] = event.detail
+    const noTimezone = enableTime && !timeOnly && ignoreTimezones
     let newValue = dates[0]
     if (newValue) {
       newValue = newValue.toISOString()
     }
-    dispatch("change", newValue)
+    // If time only set date component to 2000-01-01
+    if (timeOnly) {
+      // Classic flackpickr causing issues.
+      // When selecting a value for the first time for a "time only" field,
+      // the time is always offset by 1 hour for some reason (regardless of time
+      // zone) so we need to correct it.
+      if (!value && newValue) {
+        newValue = new Date(dates[0].getTime() + 60 * 60 * 1000).toISOString()
+      }
+      newValue = `2000-01-01T${newValue.split("T")[1]}`
+    }
+
+    // For date-only fields, construct a manual timestamp string without a time
+    // or time zone
+    else if (!enableTime) {
+      const year = dates[0].getFullYear()
+      const month = `${dates[0].getMonth() + 1}`.padStart(2, "0")
+      const day = `${dates[0].getDate()}`.padStart(2, "0")
+      newValue = `${year}-${month}-${day}T00:00:00.000`
+    }
+
+    // For non-timezone-aware fields, create an ISO 8601 timestamp of the exact
+    // time picked, without timezone
+    else if (noTimezone) {
+      const offset = dates[0].getTimezoneOffset() * 60000
+      newValue = new Date(dates[0].getTime() - offset)
+        .toISOString()
+        .slice(0, -1)
+    }
+
+    if (range) {
+      dispatch("change", event.detail)
+    } else {
+      dispatch("change", newValue)
+    }
   }
 
   const clearDateOnBackspace = event => {
@@ -67,7 +140,14 @@
       return null
     }
     let date
-    if (val instanceof Date) {
+    let time
+
+    // it is a string like 00:00:00, just time
+    let ts = resolveTimeStamp(val)
+
+    if (timeOnly && ts) {
+      date = ts
+    } else if (val instanceof Date) {
       // Use real date obj if already parsed
       date = val
     } else if (isNaN(val)) {
@@ -77,10 +157,12 @@
       // Treat as numerical timestamp
       date = new Date(parseInt(val))
     }
-    const time = date.getTime()
+
+    time = date.getTime()
     if (isNaN(time)) {
       return null
     }
+
     // By rounding to the nearest second we avoid locking up in an endless
     // loop in the builder, caused by potentially enriching {{ now }} to every
     // millisecond.
@@ -88,69 +170,72 @@
   }
 </script>
 
-<Flatpickr
-  bind:flatpickr
-  value={parseDate(value)}
-  on:open={onOpen}
-  on:close={onClose}
-  options={flatpickrOptions}
-  on:change={handleChange}
-  element={`#${flatpickrId}`}
->
-  <div
-    id={flatpickrId}
-    class:is-disabled={disabled}
-    class:is-invalid={!!error}
-    class="flatpickr spectrum-InputGroup spectrum-Datepicker"
-    class:is-focused={open}
-    aria-readonly="false"
-    aria-required="false"
-    aria-haspopup="true"
+{#key redrawOptions}
+  <Flatpickr
+    bind:flatpickr
+    value={range ? value : parseDate(value)}
+    on:open={onOpen}
+    on:close={onClose}
+    options={flatpickrOptions}
+    on:change={handleChange}
+    element={`#${flatpickrId}`}
   >
     <div
-      on:click={flatpickr?.open}
-      class="spectrum-Textfield spectrum-InputGroup-textfield"
+      id={flatpickrId}
       class:is-disabled={disabled}
       class:is-invalid={!!error}
+      class="flatpickr spectrum-InputGroup spectrum-Datepicker"
+      class:is-focused={open}
+      aria-readonly="false"
+      aria-required="false"
+      aria-haspopup="true"
     >
-      {#if !!error}
+      <div
+        on:click={flatpickr?.open}
+        class="spectrum-Textfield spectrum-InputGroup-textfield"
+        class:is-disabled={disabled}
+        class:is-invalid={!!error}
+      >
+        {#if !!error}
+          <svg
+            class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+            focusable="false"
+            aria-hidden="true"
+          >
+            <use xlink:href="#spectrum-icon-18-Alert" />
+          </svg>
+        {/if}
+        <input
+          {disabled}
+          data-input
+          type="text"
+          class="spectrum-Textfield-input spectrum-InputGroup-input"
+          class:is-disabled={disabled}
+          {placeholder}
+          {id}
+          {value}
+        />
+      </div>
+      <button
+        type="button"
+        class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
+        tabindex="-1"
+        class:is-disabled={disabled}
+        class:is-invalid={!!error}
+        on:click={flatpickr?.open}
+      >
         <svg
-          class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+          class="spectrum-Icon spectrum-Icon--sizeM"
           focusable="false"
           aria-hidden="true"
+          aria-label="Calendar"
         >
-          <use xlink:href="#spectrum-icon-18-Alert" />
+          <use xlink:href="#spectrum-icon-18-Calendar" />
         </svg>
-      {/if}
-      <input
-        data-input
-        type="text"
-        {disabled}
-        class="spectrum-Textfield-input spectrum-InputGroup-input"
-        {placeholder}
-        {id}
-        {value}
-      />
+      </button>
     </div>
-    <button
-      type="button"
-      class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
-      tabindex="-1"
-      {disabled}
-      class:is-invalid={!!error}
-      on:click={flatpickr?.open}
-    >
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM"
-        focusable="false"
-        aria-hidden="true"
-        aria-label="Calendar"
-      >
-        <use xlink:href="#spectrum-icon-18-Calendar" />
-      </svg>
-    </button>
-  </div>
-</Flatpickr>
+  </Flatpickr>
+{/key}
 {#if open}
   <div class="overlay" on:mousedown|self={flatpickr?.close} />
 {/if}
@@ -176,8 +261,12 @@
     width: 100vw;
     height: 100vh;
     z-index: 999;
+    max-height: 100%;
   }
   :global(.flatpickr-calendar) {
     font-family: "Source Sans Pro", sans-serif;
+  }
+  .is-disabled {
+    pointer-events: none !important;
   }
 </style>

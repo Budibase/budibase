@@ -1,79 +1,70 @@
 <script>
   import { goto } from "@roxi/routify"
   import { ModalContent, notifications, Body, Layout } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import { datasources, tables } from "stores/backend"
-  import { IntegrationNames } from "constants"
+  import { IntegrationNames } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
+  import { saveDatasource as save } from "builderStore/datasource"
+  import { onMount } from "svelte"
 
   export let integration
   export let modal
 
   // kill the reference so the input isn't saved
-  let config = cloneDeep(integration)
+  let datasource = cloneDeep(integration)
+  let skipFetch = false
+  let isValid = false
 
-  function prepareData() {
-    let datasource = {}
-    let existingTypeCount = $datasources.list.filter(
-      ds => ds.source == config.type
-    ).length
+  $: name =
+    IntegrationNames[datasource.type] || datasource.name || datasource.type
 
-    let baseName = IntegrationNames[config.type]
-    let name =
-      existingTypeCount === 0
-        ? baseName
-        : `${baseName}-${existingTypeCount + 1}`
-
-    datasource.type = "datasource"
-    datasource.source = config.type
-    datasource.config = config.config
-    datasource.name = name
-    datasource.plus = config.plus
-
-    return datasource
-  }
   async function saveDatasource() {
-    const datasource = prepareData()
     try {
-      // Create datasource
-      const resp = await datasources.save(datasource, datasource.plus)
-
-      // update the tables incase data source plus
-      await tables.fetch()
-      await datasources.select(resp._id)
+      if (!datasource.name) {
+        datasource.name = name
+      }
+      const resp = await save(datasource, skipFetch)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
-      analytics.captureEvent(Events.DATASOURCE.CREATED, {
-        name: resp.name,
-        source: resp.source,
-      })
-      return true
     } catch (err) {
-      notifications.error(`Error saving datasource: ${err}`)
+      notifications.error(err?.message ?? "Error saving datasource")
+      // prevent the modal from closing
       return false
     }
   }
+
+  onMount(() => {
+    skipFetch = false
+  })
 </script>
 
 <ModalContent
-  title={`Connect to ${IntegrationNames[config.type]}`}
+  title={`Connect to ${name}`}
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
-  confirmText={config.plus
-    ? "Fetch tables from database"
+  confirmText={datasource.plus
+    ? "Save and fetch tables"
     : "Save and continue to query"}
   cancelText="Back"
+  showSecondaryButton={datasource.plus}
+  secondaryButtonText={datasource.plus ? "Skip table fetch" : undefined}
+  secondaryAction={() => {
+    skipFetch = true
+    saveDatasource()
+    return true
+  }}
   size="L"
+  disabled={!isValid}
 >
   <Layout noPadding>
     <Body size="XS"
       >Connect your database to Budibase using the config below.
     </Body>
   </Layout>
-
-  <IntegrationConfigForm schema={config.schema} integration={config.config} />
+  <IntegrationConfigForm
+    schema={datasource.schema}
+    bind:datasource
+    creating={true}
+    on:valid={e => (isValid = e.detail)}
+  />
 </ModalContent>
-
-<style>
-</style>

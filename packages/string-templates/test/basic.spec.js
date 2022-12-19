@@ -4,6 +4,10 @@ const {
   isValid,
   makePropSafe,
   getManifest,
+  encodeJSBinding,
+  doesContainString,
+  disableEscaping,
+  findHBSBlocks,
 } = require("../src/index.cjs")
 
 describe("Test that the string processing works correctly", () => {
@@ -102,6 +106,16 @@ describe("Test that the object processing works correctly", () => {
   })
 })
 
+describe("check returning objects", () => {
+  it("should handle an array of objects", async () => {
+    const json = [{a: 1},{a: 2}]
+    const output = await processString("{{ testing }}", {
+      testing: json
+    })
+    expect(output).toEqual(JSON.stringify(json))
+  })
+})
+
 describe("check the utility functions", () => {
   it("should return false for an invalid template string", () => {
     const valid = isValid("{{ table1.thing prop }}")
@@ -146,3 +160,64 @@ describe("check manifest", () => {
     )
   })
 })
+
+describe("check full stops that are safe", () => {
+  it("should allow using an escaped full stop", async () => {
+    const data = {
+      "c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI": { "persons.firstname": "1" }
+    }
+    const template = "{{ [c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI].[persons.firstname] }}"
+    const output = await processString(template, data)
+    expect(output).toEqual("1")
+  })
+})
+
+describe("check does contain string function", () => {
+  it("should work for a simple case", () => {
+    const hbs = "hello {{ name }}"
+    expect(doesContainString(hbs, "name")).toEqual(true)
+  })
+
+  it("should reject a case where its in the string, but not the handlebars", () => {
+    const hbs = "hello {{ name }}"
+    expect(doesContainString(hbs, "hello")).toEqual(false)
+  })
+
+  it("should handle if its in javascript", () => {
+    const js = encodeJSBinding(`return $("foo")`)
+    expect(doesContainString(js, "foo")).toEqual(true)
+  })
+})
+
+describe("check that disabling escaping function works", () => {
+  it("should work for a single statement", () => {
+    expect(disableEscaping("{{ name }}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work for two statements", () => {
+    expect(disableEscaping("{{ name }} welcome to {{ platform }}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+
+  it("shouldn't convert triple braces", () => {
+    expect(disableEscaping("{{{ name }}}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work with a combination", () => {
+    expect(disableEscaping("{{ name }} welcome to {{{ platform }}}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+
+  it("should work with multiple escaped", () => {
+    expect(disableEscaping("{{ name }} welcome to {{ name }}")).toEqual("{{{ name }}} welcome to {{{ name }}}")
+  })
+})
+
+describe("check find hbs blocks function", () => {
+  it("should find none", () => {
+    expect(findHBSBlocks("hello there")).toEqual([])
+  })
+
+  it("should find two", () => {
+    expect(findHBSBlocks("{{ hello }} there {{{ name }}}")).toEqual(["{{ hello }}", "{{{ name }}}"])
+  })
+})
+

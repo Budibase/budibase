@@ -5,6 +5,7 @@
   import Divider from "../Divider/Divider.svelte"
   import Icon from "../Icon/Icon.svelte"
   import Context from "../context"
+  import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
 
   export let title = undefined
   export let size = "S"
@@ -18,9 +19,22 @@
   export let disabled = false
   export let showDivider = true
 
+  export let showSecondaryButton = false
+  export let secondaryButtonText = undefined
+  export let secondaryAction = undefined
+  export let secondaryButtonWarning = false
+  export let dataCy = null
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
   $: confirmDisabled = disabled || loading
+
+  async function secondary(e) {
+    loading = true
+    if (!secondaryAction || (await secondaryAction(e)) !== false) {
+      hide()
+    }
+    loading = false
+  }
 
   async function confirm() {
     loading = true
@@ -49,43 +63,68 @@
   role="dialog"
   tabindex="-1"
   aria-modal="true"
+  data-cy={dataCy}
 >
   <div class="spectrum-Dialog-grid">
-    {#if title}
+    {#if title || $$slots.header}
       <h1
         class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
         class:noDivider={!showDivider}
         class:header-spacing={$$slots.header}
       >
-        {title}
-        <slot name="header" />
+        {#if title}
+          {title}
+        {:else if $$slots.header}
+          <slot name="header" />
+        {/if}
       </h1>
       {#if showDivider}
-        <Divider size="M" />
+        <Divider />
       {/if}
     {/if}
+
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">
       <slot />
     </section>
-    {#if showCancelButton || showConfirmButton}
+    {#if showCancelButton || showConfirmButton || $$slots.footer}
       <div
         class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter"
       >
         <slot name="footer" />
+        {#if showSecondaryButton && secondaryButtonText && secondaryAction}
+          <div class="secondary-action">
+            <Button
+              group
+              secondary
+              warning={secondaryButtonWarning}
+              on:click={secondary}>{secondaryButtonText}</Button
+            >
+          </div>
+        {/if}
+
         {#if showCancelButton}
-          <Button group secondary on:click={close}>{cancelText}</Button>
+          <Button group secondary newStyles on:click={close}>
+            {cancelText}
+          </Button>
         {/if}
         {#if showConfirmButton}
-          <Button
-            group
-            cta
-            {...$$restProps}
-            disabled={confirmDisabled}
-            on:click={confirm}
-          >
-            {confirmText}
-          </Button>
+          <span class="confirm-wrap">
+            <Button
+              group
+              cta
+              {...$$restProps}
+              disabled={confirmDisabled}
+              on:click={confirm}
+            >
+              {#if loading}
+                <ProgressCircle overBackground={true} size="S" />
+              {/if}
+              {#if !loading}
+                {confirmText}
+              {/if}
+            </Button>
+          </span>
         {/if}
       </div>
     {/if}
@@ -135,5 +174,17 @@
   .header-spacing {
     display: flex;
     justify-content: space-between;
+  }
+
+  .secondary-action {
+    margin-right: auto;
+  }
+
+  .spectrum-Dialog-buttonGroup {
+    padding-left: 0;
+  }
+
+  .confirm-wrap :global(.spectrum-Button-label) {
+    display: contents;
   }
 </style>

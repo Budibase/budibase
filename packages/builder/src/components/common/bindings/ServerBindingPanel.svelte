@@ -12,8 +12,8 @@
   const enrichBindings = bindings => {
     return bindings?.map(binding => ({
       ...binding,
-      readableBinding: binding.label || binding.readableBinding,
-      runtimeBinding: binding.path || binding.runtimeBinding,
+      readableBinding: binding.readableBinding || binding.label,
+      runtimeBinding: binding.runtimeBinding || binding.path,
     }))
   }
 </script>

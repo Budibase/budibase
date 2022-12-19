@@ -1,8 +1,20 @@
-import * as API from "../api"
-import { get, writable } from "svelte/store"
+import { API } from "api"
+import { get, writable, derived } from "svelte/store"
+
+const initialState = {
+  appId: null,
+  isDevApp: false,
+  clientLoadTime: window.INIT_TIME ? Date.now() - window.INIT_TIME : null,
+}
 
 const createAppStore = () => {
-  const store = writable({})
+  const store = writable(initialState)
+  const derivedStore = derived(store, $store => {
+    return {
+      ...$store,
+      isDevApp: $store.appId?.startsWith("app_dev"),
+    }
+  })
 
   // Fetches the app definition including screens, layouts and theme
   const fetchAppDefinition = async () => {
@@ -10,24 +22,33 @@ const createAppStore = () => {
     if (!appId) {
       throw "Cannot fetch app definition without app ID set"
     }
-    const appDefinition = await API.fetchAppPackage(appId)
-    store.set({
-      ...appDefinition,
-      appId: appDefinition?.application?.appId,
-    })
+    try {
+      const appDefinition = await API.fetchAppPackage(appId)
+      store.set({
+        ...initialState,
+        ...appDefinition,
+        appId: appDefinition?.application?.appId,
+      })
+    } catch (error) {
+      store.set(initialState)
+    }
   }
 
   // Sets the initial app ID
-  const setAppID = id => {
+  const setAppId = id => {
     store.update(state => {
-      state.appId = id
+      if (state) {
+        state.appId = id
+      } else {
+        state = { appId: id }
+      }
       return state
     })
   }
 
   return {
-    subscribe: store.subscribe,
-    actions: { setAppID, fetchAppDefinition },
+    subscribe: derivedStore.subscribe,
+    actions: { setAppId, fetchAppDefinition },
   }
 }
 
