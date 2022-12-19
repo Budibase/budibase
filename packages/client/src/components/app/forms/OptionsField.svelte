@@ -15,6 +15,9 @@
   export let valueColumn
   export let customOptions
   export let autocomplete = false
+  export let direction = "vertical"
+  export let onChange
+  export let sort = true
 
   let fieldState
   let fieldApi
@@ -29,6 +32,13 @@
     valueColumn,
     customOptions
   )
+
+  const handleChange = e => {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
+      onChange({ value: e.detail })
+    }
+  }
 </script>
 
 <Field
@@ -51,11 +61,11 @@
         error={fieldState.error}
         {options}
         {placeholder}
-        on:change={e => fieldApi.setValue(e.detail)}
+        on:change={handleChange}
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
         {autocomplete}
-        sort={true}
+        {sort}
       />
     {:else if optionsType === "radio"}
       <CoreRadioGroup
@@ -64,8 +74,10 @@
         disabled={fieldState.disabled}
         error={fieldState.error}
         {options}
-        on:change={e => fieldApi.setValue(e.detail)}
+        {direction}
+        on:change={handleChange}
         getOptionLabel={flatOptions ? x => x : x => x.label}
+        getOptionTitle={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
       />
     {/if}

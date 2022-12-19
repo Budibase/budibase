@@ -6,9 +6,9 @@ import { terser } from "rollup-plugin-terser"
 import postcss from "rollup-plugin-postcss"
 import svg from "rollup-plugin-svg"
 import json from "rollup-plugin-json"
-import builtins from "rollup-plugin-node-builtins"
-import globals from "rollup-plugin-node-globals"
+import nodePolyfills from "rollup-plugin-polyfill-node"
 import path from "path"
+import { visualizer } from "rollup-plugin-visualizer"
 
 const production = !process.env.ROLLUP_WATCH
 const ignoredWarnings = [
@@ -27,6 +27,15 @@ export default {
       file: `./dist/budibase-client.js`,
     },
   ],
+  onwarn(warning, warn) {
+    if (
+      warning.code === "THIS_IS_UNDEFINED" ||
+      warning.code === "CIRCULAR_DEPENDENCY"
+    ) {
+      return
+    }
+    warn(warning)
+  },
   plugins: [
     alias({
       entries: [
@@ -58,10 +67,6 @@ export default {
           find: "sdk",
           replacement: path.resolve("./src/sdk"),
         },
-        {
-          find: "builder",
-          replacement: path.resolve("../builder"),
-        },
       ],
     }),
     svelte({
@@ -75,8 +80,7 @@ export default {
     }),
     postcss(),
     commonjs(),
-    globals(),
-    builtins(),
+    nodePolyfills(),
     resolve({
       preferBuiltins: true,
       browser: true,
@@ -85,6 +89,7 @@ export default {
     svg(),
     json(),
     production && terser(),
+    !production && visualizer(),
   ],
   watch: {
     clearScreen: false,

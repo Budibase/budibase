@@ -17,23 +17,69 @@
   export let legend
   export let yAxisUnits
   export let palette
+  export let c1, c2, c3, c4, c5
 
   // Area specific props
   export let area
   export let stacked
   export let gradient
 
-  $: options = setUpChart(dataProvider)
+  $: options = setUpChart(
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumns,
+    xAxisLabel,
+    yAxisLabel,
+    height,
+    width,
+    animate,
+    dataLabels,
+    curve,
+    legend,
+    yAxisUnits,
+    palette,
+    area,
+    stacked,
+    gradient,
+    c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null,
+    customColor
+  )
 
-  // Fetch data on mount
-  const setUpChart = provider => {
+  $: customColor = palette === "Custom"
+
+  const setUpChart = (
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumns,
+    xAxisLabel,
+    yAxisLabel,
+    height,
+    width,
+    animate,
+    dataLabels,
+    curve,
+    legend,
+    yAxisUnits,
+    palette,
+    area,
+    stacked,
+    gradient,
+    colors,
+    customColor
+  ) => {
     const allCols = [labelColumn, ...(valueColumns || [null])]
-    if (!provider || !provider.rows?.length || allCols.find(x => x == null)) {
+    if (
+      !dataProvider ||
+      !dataProvider.rows?.length ||
+      allCols.find(x => x == null)
+    ) {
       return null
     }
 
     // Fetch, filter and sort data
-    const { schema, rows } = provider
+    const { schema, rows } = dataProvider
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
     const data = rows.filter(row => hasAllColumns(row))
@@ -57,6 +103,7 @@
       .legend(legend)
       .yUnits(yAxisUnits)
       .palette(palette)
+      .colors(customColor ? colors : null)
 
     // Add data
     let useDates = false

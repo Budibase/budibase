@@ -13,16 +13,19 @@
   export let readonly = false
   export let autocomplete = false
   export let sort = false
+  export let autoWidth = false
 
   const dispatch = createEventDispatcher()
+
   $: selectedLookupMap = getSelectedLookupMap(value)
   $: optionLookupMap = getOptionLookupMap(options)
+
   $: fieldText = getFieldText(value, optionLookupMap, placeholder)
   $: isOptionSelected = optionValue => selectedLookupMap[optionValue] === true
   $: toggleOption = makeToggleOption(selectedLookupMap, value)
 
   const getFieldText = (value, map, placeholder) => {
-    if (value?.length) {
+    if (Array.isArray(value) && value.length > 0) {
       if (!map) {
         return ""
       }
@@ -35,7 +38,7 @@
 
   const getSelectedLookupMap = value => {
     let map = {}
-    if (value?.length) {
+    if (Array.isArray(value) && value.length > 0) {
       value.forEach(option => {
         if (option) {
           map[option] = true
@@ -85,4 +88,5 @@
   {getOptionValue}
   onSelectOption={toggleOption}
   {sort}
+  {autoWidth}
 />

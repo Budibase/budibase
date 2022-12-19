@@ -1,26 +1,51 @@
 import { writable } from "svelte/store"
-import api from "../../api"
+import { API } from "api"
 import Automation from "./Automation"
 import { cloneDeep } from "lodash/fp"
-import analytics, { Events } from "analytics"
+
+const initialAutomationState = {
+  automations: [],
+  showTestPanel: false,
+  blockDefinitions: {
+    TRIGGER: [],
+    ACTION: [],
+  },
+  selectedAutomation: null,
+}
+
+export const getAutomationStore = () => {
+  const store = writable(initialAutomationState)
+  store.actions = automationActions(store)
+  return store
+}
 
 const automationActions = store => ({
+  definitions: async () => {
+    const response = await API.getAutomationDefinitions()
+    store.update(state => {
+      state.blockDefinitions = {
+        TRIGGER: response.trigger,
+        ACTION: response.action,
+      }
+      return state
+    })
+    return response
+  },
   fetch: async () => {
     const responses = await Promise.all([
-      api.get(`/api/automations`),
-      api.get(`/api/automations/definitions/list`),
+      API.getAutomations(),
+      API.getAutomationDefinitions(),
     ])
-    const jsonResponses = await Promise.all(responses.map(x => x.json()))
     store.update(state => {
       let selected = state.selectedAutomation?.automation
-      state.automations = jsonResponses[0]
+      state.automations = responses[0]
       state.blockDefinitions = {
-        TRIGGER: jsonResponses[1].trigger,
-        ACTION: jsonResponses[1].action,
+        TRIGGER: responses[1].trigger,
+        ACTION: responses[1].action,
       }
-      // if previously selected find the new obj and select it
+      // If previously selected find the new obj and select it
       if (selected) {
-        selected = jsonResponses[0].filter(
+        selected = responses[0].filter(
           automation => automation._id === selected._id
         )
         state.selectedAutomation = new Automation(selected[0])
@@ -36,40 +61,49 @@ const automationActions = store => ({
         steps: [],
       },
     }
-    const CREATE_AUTOMATION_URL = `/api/automations`
-    const response = await api.post(CREATE_AUTOMATION_URL, automation)
-    const json = await response.json()
+    const response = await API.createAutomation(automation)
     store.update(state => {
-      state.automations = [...state.automations, json.automation]
-      store.actions.select(json.automation)
+      state.automations = [...state.automations, response.automation]
+      store.actions.select(response.automation)
+      return state
+    })
+  },
+  duplicate: async automation => {
+    const response = await API.createAutomation({
+      ...automation,
+      name: `${automation.name} - copy`,
+      _id: undefined,
+      _ref: undefined,
+    })
+    store.update(state => {
+      state.automations = [...state.automations, response.automation]
+      store.actions.select(response.automation)
       return state
     })
   },
   save: async automation => {
-    const UPDATE_AUTOMATION_URL = `/api/automations`
-    const response = await api.put(UPDATE_AUTOMATION_URL, automation)
-    const json = await response.json()
+    const response = await API.updateAutomation(automation)
     store.update(state => {
-      const newAutomation = json.automation
+      const updatedAutomation = response.automation
       const existingIdx = state.automations.findIndex(
         existing => existing._id === automation._id
       )
       if (existingIdx !== -1) {
-        state.automations.splice(existingIdx, 1, newAutomation)
+        state.automations.splice(existingIdx, 1, updatedAutomation)
         state.automations = [...state.automations]
-        store.actions.select(newAutomation)
+        store.actions.select(updatedAutomation)
         return state
       }
     })
   },
   delete: async automation => {
-    const { _id, _rev } = automation
-    const DELETE_AUTOMATION_URL = `/api/automations/${_id}/${_rev}`
-    await api.delete(DELETE_AUTOMATION_URL)
-
+    await API.deleteAutomation({
+      automationId: automation?._id,
+      automationRev: automation?._rev,
+    })
     store.update(state => {
       const existingIdx = state.automations.findIndex(
-        existing => existing._id === _id
+        existing => existing._id === automation?._id
       )
       state.automations.splice(existingIdx, 1)
       state.automations = [...state.automations]
@@ -78,26 +112,39 @@ const automationActions = store => ({
       return state
     })
   },
-  trigger: async automation => {
-    const { _id } = automation
-    return await api.post(`/api/automations/${_id}/trigger`)
-  },
   test: async (automation, testData) => {
-    const { _id } = automation
-    const response = await api.post(`/api/automations/${_id}/test`, testData)
-    const json = await response.json()
     store.update(state => {
-      state.selectedAutomation.testResults = json
+      state.selectedAutomation.testResults = null
+      return state
+    })
+    const result = await API.testAutomation({
+      automationId: automation?._id,
+      testData,
+    })
+    store.update(state => {
+      state.selectedAutomation.testResults = result
       return state
     })
   },
   select: automation => {
     store.update(state => {
-      let testResults = state.selectedAutomation?.testResults
       state.selectedAutomation = new Automation(cloneDeep(automation))
-      state.selectedAutomation.testResults = testResults
       state.selectedBlock = null
       return state
+    })
+  },
+  getLogs: async ({ automationId, startDate, status, page } = {}) => {
+    return await API.getAutomationLogs({
+      automationId,
+      startDate,
+      status,
+      page,
+    })
+  },
+  clearLogErrors: async ({ automationId, appId } = {}) => {
+    return await API.clearAutomationLogErrors({
+      automationId,
+      appId,
     })
   },
   addTestDataToAutomation: data => {
@@ -108,15 +155,17 @@ const automationActions = store => ({
   },
   addBlockToAutomation: (block, blockIdx) => {
     store.update(state => {
-      const newBlock = state.selectedAutomation.addBlock(
+      state.selectedBlock = state.selectedAutomation.addBlock(
         cloneDeep(block),
         blockIdx
       )
-      state.selectedBlock = newBlock
       return state
     })
-    analytics.captureEvent(Events.AUTOMATION.BLOCK_ADDED, {
-      name: block.name,
+  },
+  toggleFieldControl: value => {
+    store.update(state => {
+      state.selectedBlock.rowControl = value
+      return state
     })
   },
   deleteAutomationBlock: block => {
@@ -143,17 +192,3 @@ const automationActions = store => ({
     })
   },
 })
-
-export const getAutomationStore = () => {
-  const INITIAL_AUTOMATION_STATE = {
-    automations: [],
-    blockDefinitions: {
-      TRIGGER: [],
-      ACTION: [],
-    },
-    selectedAutomation: null,
-  }
-  const store = writable(INITIAL_AUTOMATION_STATE)
-  store.actions = automationActions(store)
-  return store
-}

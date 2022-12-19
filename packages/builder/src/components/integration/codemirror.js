@@ -4,6 +4,7 @@ import "codemirror/lib/codemirror.css"
 // Modes
 import "codemirror/mode/javascript/javascript"
 import "codemirror/mode/sql/sql"
+import "codemirror/mode/xml/xml"
 import "codemirror/mode/css/css"
 import "codemirror/mode/handlebars/handlebars"
 

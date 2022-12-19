@@ -1,7 +1,7 @@
 <script>
-  import { Body } from "@budibase/bbui"
+  import { Body, notifications } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import api from "builderStore/api"
+  import { API } from "api"
   import ICONS from "../icons"
 
   export let integration = {}
@@ -9,14 +9,17 @@
   const INTERNAL = "BUDIBASE"
 
   async function fetchIntegrations() {
-    const response = await api.get("/api/integrations")
-    const json = await response.json()
-
+    let otherIntegrations
+    try {
+      otherIntegrations = await API.getIntegrations()
+    } catch (error) {
+      otherIntegrations = {}
+      notifications.error("Error getting integrations")
+    }
     integrations = {
       [INTERNAL]: { datasource: {}, name: "INTERNAL/CSV" },
-      ...json,
+      ...otherIntegrations,
     }
-    return json
   }
 
   function selectIntegration(integrationType) {

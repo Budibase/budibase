@@ -1,15 +1,25 @@
 <script>
   import {
-    Icon,
     Modal,
     notifications,
     ModalContent,
     Body,
     Button,
+    StatusLight,
   } from "@budibase/bbui"
   import { store } from "builderStore"
-  import api from "builderStore/api"
+  import { API } from "api"
   import clientPackage from "@budibase/client/package.json"
+
+  export function show() {
+    updateModal.show()
+  }
+
+  export function hide() {
+    updateModal.hide()
+  }
+
+  export let hideIcon = false
 
   let updateModal
 
@@ -18,26 +28,17 @@
   $: revertAvailable = $store.revertableVersion != null
 
   const refreshAppPackage = async () => {
-    const applicationPkg = await api.get(
-      `/api/applications/${appId}/appPackage`
-    )
-    const pkg = await applicationPkg.json()
-    if (applicationPkg.ok) {
+    try {
+      const pkg = await API.fetchAppPackage(appId)
       await store.actions.initialise(pkg)
-    } else {
-      throw new Error(pkg)
+    } catch (error) {
+      notifications.error("Error fetching app package")
     }
   }
 
   const update = async () => {
     try {
-      const response = await api.post(
-        `/api/applications/${appId}/client/update`
-      )
-      const json = await response.json()
-      if (response.status !== 200) {
-        throw json.message
-      }
+      await API.updateAppClientVersion(appId)
 
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
@@ -47,23 +48,17 @@
     } catch (err) {
       notifications.error(`Error updating app: ${err}`)
     }
+    updateModal.hide()
   }
 
   const revert = async () => {
     try {
-      const revertableVersion = $store.revertableVersion
-      const response = await api.post(
-        `/api/applications/${appId}/client/revert`
-      )
-      const json = await response.json()
-      if (response.status !== 200) {
-        throw json.message
-      }
+      await API.revertAppClientVersion(appId)
 
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App reverted successfully to version ${revertableVersion}`
+        `App reverted successfully to version ${$store.revertableVersion}`
       )
     } catch (err) {
       notifications.error(`Error reverting app: ${err}`)
@@ -72,9 +67,11 @@
   }
 </script>
 
-<div class="icon-wrapper" class:highlight={updateAvailable}>
-  <Icon name="Refresh" hoverable on:click={updateModal.show} />
-</div>
+{#if !hideIcon && updateAvailable}
+  <StatusLight hoverable on:click={updateModal.show} notice>
+    Update available
+  </StatusLight>
+{/if}
 <Modal bind:this={updateModal}>
   <ModalContent
     title="App version"
@@ -109,12 +106,3 @@
     {/if}
   </ModalContent>
 </Modal>
-
-<style>
-  .icon-wrapper {
-    display: contents;
-  }
-  .icon-wrapper.highlight :global(svg) {
-    color: var(--spectrum-global-color-blue-600);
-  }
-</style>

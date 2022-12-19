@@ -9,6 +9,7 @@
   export let size
   export let validation
   export let defaultValue
+  export let onChange
 
   let fieldState
   let fieldApi
@@ -24,6 +25,13 @@
       return true
     }
     return false
+  }
+
+  const handleChange = e => {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
+      onChange({ value: e.detail })
+    }
   }
 </script>
 
@@ -44,8 +52,8 @@
       error={fieldState.error}
       id={fieldState.fieldId}
       {size}
-      on:change={e => fieldApi.setValue(e.detail)}
       {text}
+      on:change={handleChange}
     />
   {/if}
 </Field>

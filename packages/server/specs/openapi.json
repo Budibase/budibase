@@ -1,0 +1,2659 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Budibase API",
+    "description": "The public API for Budibase apps and its services.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://budibase.app/api/public/v1",
+      "description": "Budibase Cloud API"
+    },
+    {
+      "url": "{protocol}://{hostname}/api/public/v1",
+      "description": "Budibase self hosted API",
+      "variables": {
+        "protocol": {
+          "default": "http",
+          "description": "Whether HTTP or HTTPS should be used to communicate with your Budibase instance."
+        },
+        "hostname": {
+          "default": "localhost:10000",
+          "description": "The URL of your Budibase instance."
+        }
+      }
+    }
+  ],
+  "components": {
+    "parameters": {
+      "tableId": {
+        "in": "path",
+        "name": "tableId",
+        "required": true,
+        "description": "The ID of the table which this request is targeting.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "rowId": {
+        "in": "path",
+        "name": "rowId",
+        "required": true,
+        "description": "The ID of the row which this request is targeting.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "appId": {
+        "in": "header",
+        "name": "x-budibase-app-id",
+        "required": true,
+        "description": "The ID of the app which this request is targeting.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "appIdUrl": {
+        "in": "path",
+        "name": "appId",
+        "required": true,
+        "description": "The ID of the app which this request is targeting.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "queryId": {
+        "in": "path",
+        "name": "queryId",
+        "required": true,
+        "description": "The ID of the query which this request is targeting.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "userId": {
+        "in": "path",
+        "name": "userId",
+        "required": true,
+        "description": "The ID of the user which this request is targeting.",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "examples": {
+      "application": {
+        "value": {
+          "data": {
+            "_id": "app_metadata",
+            "appId": "app_dev_957b12f943d348faa61db7e18e088d0f",
+            "version": "1.0.58-alpha.0",
+            "name": "App name",
+            "url": "/app-url",
+            "tenantId": "default",
+            "updatedAt": "2022-02-22T13:00:54.035Z",
+            "createdAt": "2022-02-11T18:02:26.961Z",
+            "status": "development"
+          }
+        }
+      },
+      "applications": {
+        "value": {
+          "data": [
+            {
+              "_id": "app_metadata",
+              "appId": "app_dev_957b12f943d348faa61db7e18e088d0f",
+              "version": "1.0.58-alpha.0",
+              "name": "App name",
+              "url": "/app-url",
+              "tenantId": "default",
+              "updatedAt": "2022-02-22T13:00:54.035Z",
+              "createdAt": "2022-02-11T18:02:26.961Z",
+              "status": "development"
+            }
+          ]
+        }
+      },
+      "inputRow": {
+        "value": {
+          "_id": "ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4",
+          "type": "row",
+          "tableId": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+          "name": "Mike",
+          "age": 30,
+          "relationship": [
+            "ro_ta_..."
+          ]
+        }
+      },
+      "row": {
+        "value": {
+          "data": {
+            "_id": "ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4",
+            "type": "row",
+            "tableId": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+            "name": "Mike",
+            "age": 30,
+            "relationship": [
+              {
+                "primaryDisplay": "Joe",
+                "_id": "ro_ta_..."
+              }
+            ]
+          }
+        }
+      },
+      "enrichedRow": {
+        "value": {
+          "data": {
+            "_id": "ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4",
+            "name": "eg",
+            "tableId": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+            "type": "row",
+            "relationship": [
+              {
+                "_id": "ro_ta_users_us_8f3d717147d74d759d8cef5b6712062f",
+                "name": "Joe",
+                "tableId": "ta_users",
+                "internal": [
+                  {
+                    "_id": "ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4",
+                    "primaryDisplay": "eg"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "rows": {
+        "value": {
+          "data": [
+            {
+              "_id": "ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4",
+              "type": "row",
+              "tableId": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+              "name": "Mike",
+              "age": 30,
+              "relationship": [
+                {
+                  "primaryDisplay": "Joe",
+                  "_id": "ro_ta_..."
+                }
+              ]
+            }
+          ],
+          "hasNextPage": true,
+          "bookmark": 10
+        }
+      },
+      "table": {
+        "value": {
+          "data": {
+            "_id": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+            "name": "People",
+            "schema": {
+              "name": {
+                "type": "string",
+                "name": "name"
+              },
+              "age": {
+                "type": "number",
+                "name": "age"
+              },
+              "relationship": {
+                "type": "link",
+                "name": "relationship",
+                "tableId": "ta_...",
+                "fieldName": "relatedColumn",
+                "relationshipType": "many-to-many"
+              }
+            }
+          }
+        }
+      },
+      "tables": {
+        "value": {
+          "data": [
+            {
+              "_id": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+              "name": "People",
+              "schema": {
+                "name": {
+                  "type": "string",
+                  "name": "name"
+                },
+                "age": {
+                  "type": "number",
+                  "name": "age"
+                },
+                "relationship": {
+                  "type": "link",
+                  "name": "relationship",
+                  "tableId": "ta_...",
+                  "fieldName": "relatedColumn",
+                  "relationshipType": "many-to-many"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "query": {
+        "value": {
+          "data": {
+            "_id": "query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e",
+            "datasourceId": "datasource_plus_4d8be0c506b9465daf4bf84d890fdab6",
+            "parameters": [],
+            "fields": {
+              "sql": "select * from persons"
+            },
+            "queryVerb": "read",
+            "name": "Help",
+            "schema": {
+              "personid": {
+                "name": "personid",
+                "type": "string"
+              },
+              "lastname": {
+                "name": "lastname",
+                "type": "string"
+              },
+              "firstname": {
+                "name": "firstname",
+                "type": "string"
+              },
+              "address": {
+                "name": "address",
+                "type": "string"
+              },
+              "city": {
+                "name": "city",
+                "type": "string"
+              }
+            },
+            "transformer": "return data",
+            "readable": true
+          }
+        }
+      },
+      "queries": {
+        "value": {
+          "data": [
+            {
+              "_id": "query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e",
+              "datasourceId": "datasource_plus_4d8be0c506b9465daf4bf84d890fdab6",
+              "parameters": [],
+              "fields": {
+                "sql": "select * from persons"
+              },
+              "queryVerb": "read",
+              "name": "Help",
+              "schema": {
+                "personid": {
+                  "name": "personid",
+                  "type": "string"
+                },
+                "lastname": {
+                  "name": "lastname",
+                  "type": "string"
+                },
+                "firstname": {
+                  "name": "firstname",
+                  "type": "string"
+                },
+                "address": {
+                  "name": "address",
+                  "type": "string"
+                },
+                "city": {
+                  "name": "city",
+                  "type": "string"
+                }
+              },
+              "transformer": "return data",
+              "readable": true
+            }
+          ]
+        }
+      },
+      "restResponse": {
+        "value": {
+          "data": [
+            {
+              "value": "<html lang='en-GB'></html>"
+            }
+          ],
+          "pagination": {
+            "cursor": "2"
+          },
+          "raw": "<html lang='en-GB'></html>",
+          "headers": {
+            "content-type": "text/html; charset=ISO-8859-1"
+          }
+        }
+      },
+      "sqlResponse": {
+        "value": {
+          "data": [
+            {
+              "personid": 1,
+              "lastname": "Hughes",
+              "firstname": "Mike",
+              "address": "123 Fake Street",
+              "city": "Belfast"
+            },
+            {
+              "personid": 2,
+              "lastname": "Smith",
+              "firstname": "John",
+              "address": "64 Updown Road",
+              "city": "Dublin"
+            }
+          ]
+        }
+      },
+      "user": {
+        "value": {
+          "data": {
+            "_id": "us_693a73206518477283a8d5ae31103252",
+            "email": "test@test.com",
+            "roles": {
+              "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
+            },
+            "builder": {
+              "global": false
+            },
+            "admin": {
+              "global": true
+            },
+            "tenantId": "default",
+            "status": "active",
+            "budibaseAccess": true,
+            "csrfToken": "9c70291d-7137-48f9-9166-99ab5473a3d4",
+            "userId": "us_693a73206518477283a8d5ae31103252",
+            "roleId": "ADMIN",
+            "role": {
+              "_id": "ADMIN",
+              "name": "Admin",
+              "permissionId": "admin",
+              "inherits": "POWER"
+            }
+          }
+        }
+      },
+      "users": {
+        "value": {
+          "data": [
+            {
+              "_id": "us_693a73206518477283a8d5ae31103252",
+              "email": "test@test.com",
+              "roles": {
+                "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
+              },
+              "builder": {
+                "global": false
+              },
+              "admin": {
+                "global": true
+              },
+              "tenantId": "default",
+              "status": "active",
+              "budibaseAccess": true,
+              "csrfToken": "9c70291d-7137-48f9-9166-99ab5473a3d4",
+              "userId": "us_693a73206518477283a8d5ae31103252",
+              "roleId": "ADMIN",
+              "role": {
+                "_id": "ADMIN",
+                "name": "Admin",
+                "permissionId": "admin",
+                "inherits": "POWER"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-budibase-api-key",
+        "description": "Your individual API key, this will provide access based on the configured RBAC settings of your user."
+      }
+    },
+    "schemas": {
+      "application": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the app.",
+            "type": "string"
+          },
+          "url": {
+            "description": "The URL by which the app is accessed, this must be URL encoded.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "applicationOutput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "The name of the app.",
+                "type": "string"
+              },
+              "url": {
+                "description": "The URL by which the app is accessed, this must be URL encoded.",
+                "type": "string"
+              },
+              "_id": {
+                "description": "The ID of the app.",
+                "type": "string"
+              },
+              "status": {
+                "description": "The status of the app, stating it if is the development or published version.",
+                "type": "string",
+                "enum": [
+                  "development",
+                  "published"
+                ]
+              },
+              "createdAt": {
+                "description": "States when the app was created, will be constant. Stored in ISO format.",
+                "type": "string"
+              },
+              "updatedAt": {
+                "description": "States the last time the app was updated - stored in ISO format.",
+                "type": "string"
+              },
+              "version": {
+                "description": "States the version of the Budibase client this app is currently based on.",
+                "type": "string"
+              },
+              "tenantId": {
+                "description": "In a multi-tenant environment this will state the tenant this app is within.",
+                "type": "string"
+              },
+              "lockedBy": {
+                "description": "The user this app is currently being built by.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "_id",
+              "name",
+              "url",
+              "status",
+              "createdAt",
+              "updatedAt",
+              "version"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "applicationSearch": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "description": "The name of the app.",
+                  "type": "string"
+                },
+                "url": {
+                  "description": "The URL by which the app is accessed, this must be URL encoded.",
+                  "type": "string"
+                },
+                "_id": {
+                  "description": "The ID of the app.",
+                  "type": "string"
+                },
+                "status": {
+                  "description": "The status of the app, stating it if is the development or published version.",
+                  "type": "string",
+                  "enum": [
+                    "development",
+                    "published"
+                  ]
+                },
+                "createdAt": {
+                  "description": "States when the app was created, will be constant. Stored in ISO format.",
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "description": "States the last time the app was updated - stored in ISO format.",
+                  "type": "string"
+                },
+                "version": {
+                  "description": "States the version of the Budibase client this app is currently based on.",
+                  "type": "string"
+                },
+                "tenantId": {
+                  "description": "In a multi-tenant environment this will state the tenant this app is within.",
+                  "type": "string"
+                },
+                "lockedBy": {
+                  "description": "The user this app is currently being built by.",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "_id",
+                "name",
+                "url",
+                "status",
+                "createdAt",
+                "updatedAt",
+                "version"
+              ]
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "row": {
+        "description": "The row to be created/updated, based on the table schema.",
+        "type": "object",
+        "additionalProperties": {
+          "description": "Key value properties of any type, depending on the table schema."
+        }
+      },
+      "searchOutput": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "description": "An array of rows, these will each contain an _id field which can be used to update or delete them.",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "bookmark": {
+            "description": "If pagination in use, this should be provided.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "hasNextPage": {
+            "description": "If pagination in use, this will determine if there is another page to fetch.",
+            "type": "boolean"
+          }
+        }
+      },
+      "rowOutput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "The row to be created/updated, based on the table schema.",
+            "type": "object",
+            "additionalProperties": {
+              "description": "Key value properties of any type, depending on the table schema."
+            },
+            "properties": {
+              "_id": {
+                "description": "The ID of the row.",
+                "type": "string"
+              },
+              "tableId": {
+                "description": "The ID of the table this row comes from.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "tableId",
+              "_id"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "table": {
+        "description": "The table to be created/updated.",
+        "type": "object",
+        "required": [
+          "name",
+          "schema"
+        ],
+        "properties": {
+          "name": {
+            "description": "The name of the table.",
+            "type": "string"
+          },
+          "primaryDisplay": {
+            "type": "string",
+            "description": "The name of the column which should be used in relationship tags when relating to this table."
+          },
+          "schema": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "link"
+                      ],
+                      "description": "A relationship column."
+                    },
+                    "constraints": {
+                      "type": "object",
+                      "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "string",
+                            "number",
+                            "object",
+                            "boolean"
+                          ]
+                        },
+                        "presence": {
+                          "type": "boolean",
+                          "description": "Defines whether the column is required or not."
+                        }
+                      }
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the column."
+                    },
+                    "autocolumn": {
+                      "type": "boolean",
+                      "description": "Defines whether the column is automatically generated."
+                    },
+                    "fieldName": {
+                      "type": "string",
+                      "description": "The name of the column which a relationship column is related to in another table."
+                    },
+                    "tableId": {
+                      "type": "string",
+                      "description": "The ID of the table which a relationship column is related to."
+                    },
+                    "relationshipType": {
+                      "type": "string",
+                      "enum": [
+                        "one-to-many",
+                        "many-to-one",
+                        "many-to-many"
+                      ],
+                      "description": "Defines the type of relationship that this column will be used for."
+                    },
+                    "through": {
+                      "type": "string",
+                      "description": "When using a SQL table that contains many to many relationships this defines the table the relationships are linked through."
+                    },
+                    "foreignKey": {
+                      "type": "string",
+                      "description": "When using a SQL table that contains a one to many relationship this defines the foreign key."
+                    },
+                    "throughFrom": {
+                      "type": "string",
+                      "description": "When using a SQL table that utilises a through table, this defines the primary key in the through table for this table."
+                    },
+                    "throughTo": {
+                      "type": "string",
+                      "description": "When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table."
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "formula"
+                      ],
+                      "description": "A formula column."
+                    },
+                    "constraints": {
+                      "type": "object",
+                      "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "string",
+                            "number",
+                            "object",
+                            "boolean"
+                          ]
+                        },
+                        "presence": {
+                          "type": "boolean",
+                          "description": "Defines whether the column is required or not."
+                        }
+                      }
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the column."
+                    },
+                    "autocolumn": {
+                      "type": "boolean",
+                      "description": "Defines whether the column is automatically generated."
+                    },
+                    "formula": {
+                      "type": "string",
+                      "description": "Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format."
+                    },
+                    "formulaType": {
+                      "type": "string",
+                      "enum": [
+                        "static",
+                        "dynamic"
+                      ],
+                      "description": "Defines whether this is a static or dynamic formula."
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "string",
+                        "barcodeqr",
+                        "longform",
+                        "options",
+                        "number",
+                        "boolean",
+                        "array",
+                        "datetime",
+                        "attachment",
+                        "link",
+                        "formula",
+                        "auto",
+                        "json",
+                        "internal"
+                      ],
+                      "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
+                    },
+                    "constraints": {
+                      "type": "object",
+                      "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "string",
+                            "number",
+                            "object",
+                            "boolean"
+                          ]
+                        },
+                        "presence": {
+                          "type": "boolean",
+                          "description": "Defines whether the column is required or not."
+                        }
+                      }
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the column."
+                    },
+                    "autocolumn": {
+                      "type": "boolean",
+                      "description": "Defines whether the column is automatically generated."
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "tableOutput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "The table to be created/updated.",
+            "type": "object",
+            "required": [
+              "name",
+              "schema",
+              "_id"
+            ],
+            "properties": {
+              "name": {
+                "description": "The name of the table.",
+                "type": "string"
+              },
+              "primaryDisplay": {
+                "type": "string",
+                "description": "The name of the column which should be used in relationship tags when relating to this table."
+              },
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "link"
+                          ],
+                          "description": "A relationship column."
+                        },
+                        "constraints": {
+                          "type": "object",
+                          "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "string",
+                                "number",
+                                "object",
+                                "boolean"
+                              ]
+                            },
+                            "presence": {
+                              "type": "boolean",
+                              "description": "Defines whether the column is required or not."
+                            }
+                          }
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "The name of the column."
+                        },
+                        "autocolumn": {
+                          "type": "boolean",
+                          "description": "Defines whether the column is automatically generated."
+                        },
+                        "fieldName": {
+                          "type": "string",
+                          "description": "The name of the column which a relationship column is related to in another table."
+                        },
+                        "tableId": {
+                          "type": "string",
+                          "description": "The ID of the table which a relationship column is related to."
+                        },
+                        "relationshipType": {
+                          "type": "string",
+                          "enum": [
+                            "one-to-many",
+                            "many-to-one",
+                            "many-to-many"
+                          ],
+                          "description": "Defines the type of relationship that this column will be used for."
+                        },
+                        "through": {
+                          "type": "string",
+                          "description": "When using a SQL table that contains many to many relationships this defines the table the relationships are linked through."
+                        },
+                        "foreignKey": {
+                          "type": "string",
+                          "description": "When using a SQL table that contains a one to many relationship this defines the foreign key."
+                        },
+                        "throughFrom": {
+                          "type": "string",
+                          "description": "When using a SQL table that utilises a through table, this defines the primary key in the through table for this table."
+                        },
+                        "throughTo": {
+                          "type": "string",
+                          "description": "When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table."
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "formula"
+                          ],
+                          "description": "A formula column."
+                        },
+                        "constraints": {
+                          "type": "object",
+                          "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "string",
+                                "number",
+                                "object",
+                                "boolean"
+                              ]
+                            },
+                            "presence": {
+                              "type": "boolean",
+                              "description": "Defines whether the column is required or not."
+                            }
+                          }
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "The name of the column."
+                        },
+                        "autocolumn": {
+                          "type": "boolean",
+                          "description": "Defines whether the column is automatically generated."
+                        },
+                        "formula": {
+                          "type": "string",
+                          "description": "Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format."
+                        },
+                        "formulaType": {
+                          "type": "string",
+                          "enum": [
+                            "static",
+                            "dynamic"
+                          ],
+                          "description": "Defines whether this is a static or dynamic formula."
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "string",
+                            "barcodeqr",
+                            "longform",
+                            "options",
+                            "number",
+                            "boolean",
+                            "array",
+                            "datetime",
+                            "attachment",
+                            "link",
+                            "formula",
+                            "auto",
+                            "json",
+                            "internal"
+                          ],
+                          "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
+                        },
+                        "constraints": {
+                          "type": "object",
+                          "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "string",
+                                "number",
+                                "object",
+                                "boolean"
+                              ]
+                            },
+                            "presence": {
+                              "type": "boolean",
+                              "description": "Defines whether the column is required or not."
+                            }
+                          }
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "The name of the column."
+                        },
+                        "autocolumn": {
+                          "type": "boolean",
+                          "description": "Defines whether the column is automatically generated."
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "_id": {
+                "description": "The ID of the table.",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "tableSearch": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "description": "The table to be created/updated.",
+              "type": "object",
+              "required": [
+                "name",
+                "schema",
+                "_id"
+              ],
+              "properties": {
+                "name": {
+                  "description": "The name of the table.",
+                  "type": "string"
+                },
+                "primaryDisplay": {
+                  "type": "string",
+                  "description": "The name of the column which should be used in relationship tags when relating to this table."
+                },
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "link"
+                            ],
+                            "description": "A relationship column."
+                          },
+                          "constraints": {
+                            "type": "object",
+                            "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "string",
+                                  "number",
+                                  "object",
+                                  "boolean"
+                                ]
+                              },
+                              "presence": {
+                                "type": "boolean",
+                                "description": "Defines whether the column is required or not."
+                              }
+                            }
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the column."
+                          },
+                          "autocolumn": {
+                            "type": "boolean",
+                            "description": "Defines whether the column is automatically generated."
+                          },
+                          "fieldName": {
+                            "type": "string",
+                            "description": "The name of the column which a relationship column is related to in another table."
+                          },
+                          "tableId": {
+                            "type": "string",
+                            "description": "The ID of the table which a relationship column is related to."
+                          },
+                          "relationshipType": {
+                            "type": "string",
+                            "enum": [
+                              "one-to-many",
+                              "many-to-one",
+                              "many-to-many"
+                            ],
+                            "description": "Defines the type of relationship that this column will be used for."
+                          },
+                          "through": {
+                            "type": "string",
+                            "description": "When using a SQL table that contains many to many relationships this defines the table the relationships are linked through."
+                          },
+                          "foreignKey": {
+                            "type": "string",
+                            "description": "When using a SQL table that contains a one to many relationship this defines the foreign key."
+                          },
+                          "throughFrom": {
+                            "type": "string",
+                            "description": "When using a SQL table that utilises a through table, this defines the primary key in the through table for this table."
+                          },
+                          "throughTo": {
+                            "type": "string",
+                            "description": "When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table."
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "formula"
+                            ],
+                            "description": "A formula column."
+                          },
+                          "constraints": {
+                            "type": "object",
+                            "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "string",
+                                  "number",
+                                  "object",
+                                  "boolean"
+                                ]
+                              },
+                              "presence": {
+                                "type": "boolean",
+                                "description": "Defines whether the column is required or not."
+                              }
+                            }
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the column."
+                          },
+                          "autocolumn": {
+                            "type": "boolean",
+                            "description": "Defines whether the column is automatically generated."
+                          },
+                          "formula": {
+                            "type": "string",
+                            "description": "Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format."
+                          },
+                          "formulaType": {
+                            "type": "string",
+                            "enum": [
+                              "static",
+                              "dynamic"
+                            ],
+                            "description": "Defines whether this is a static or dynamic formula."
+                          }
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "string",
+                              "barcodeqr",
+                              "longform",
+                              "options",
+                              "number",
+                              "boolean",
+                              "array",
+                              "datetime",
+                              "attachment",
+                              "link",
+                              "formula",
+                              "auto",
+                              "json",
+                              "internal"
+                            ],
+                            "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
+                          },
+                          "constraints": {
+                            "type": "object",
+                            "description": "A constraint can be applied to the column which will be validated against when a row is saved.",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "string",
+                                  "number",
+                                  "object",
+                                  "boolean"
+                                ]
+                              },
+                              "presence": {
+                                "type": "boolean",
+                                "description": "Defines whether the column is required or not."
+                              }
+                            }
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the column."
+                          },
+                          "autocolumn": {
+                            "type": "boolean",
+                            "description": "Defines whether the column is automatically generated."
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "_id": {
+                  "description": "The ID of the table.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "executeQuery": {
+        "description": "The parameters required for executing a query.",
+        "type": "object",
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "description": "This contains the required parameters for the query, this depends on query type, setup and bindings.",
+            "additionalProperties": {
+              "description": "Key value properties of any type, depending on the query output schema."
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "description": "For supported query types (currently on REST) pagination can be performed using these properties.",
+            "properties": {
+              "page": {
+                "type": "string",
+                "description": "The page which has been returned from a previous query."
+              },
+              "limit": {
+                "type": "number",
+                "description": "The number of rows to return per page."
+              }
+            }
+          }
+        }
+      },
+      "executeQueryOutput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "The data response from the query.",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "extra": {
+            "description": "Extra information that is not part of the main data, e.g. headers.",
+            "type": "object",
+            "properties": {
+              "headers": {
+                "description": "If carrying out a REST request, this will contain the response headers.",
+                "type": "object"
+              },
+              "raw": {
+                "description": "The raw query response, as a string.",
+                "type": "string"
+              }
+            }
+          },
+          "pagination": {
+            "description": "If pagination is supported, this will contain the bookmark/anchor information for it.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "query": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "description": "The ID of the query.",
+            "type": "string"
+          },
+          "datasourceId": {
+            "description": "The ID of the datasource the query belongs to.",
+            "type": "string"
+          },
+          "parameters": {
+            "description": "The bindings which are required to perform this query.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fields": {
+            "description": "The fields that are used to perform this query, e.g. the sql statement",
+            "type": "object"
+          },
+          "queryVerb": {
+            "description": "The verb that describes this query.",
+            "enum": [
+              "create",
+              "read",
+              "update",
+              "delete"
+            ]
+          },
+          "name": {
+            "description": "The name of the query.",
+            "type": "string"
+          },
+          "schema": {
+            "description": "The schema of the data returned when the query is executed.",
+            "type": "object"
+          },
+          "transformer": {
+            "description": "The JavaScript transformer function, applied after the query responds with data.",
+            "type": "string"
+          },
+          "readable": {
+            "description": "Whether the query has readable data.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "schema",
+          "_id"
+        ]
+      },
+      "querySearch": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "description": "The ID of the query.",
+                  "type": "string"
+                },
+                "datasourceId": {
+                  "description": "The ID of the datasource the query belongs to.",
+                  "type": "string"
+                },
+                "parameters": {
+                  "description": "The bindings which are required to perform this query.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "fields": {
+                  "description": "The fields that are used to perform this query, e.g. the sql statement",
+                  "type": "object"
+                },
+                "queryVerb": {
+                  "description": "The verb that describes this query.",
+                  "enum": [
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+                  ]
+                },
+                "name": {
+                  "description": "The name of the query.",
+                  "type": "string"
+                },
+                "schema": {
+                  "description": "The schema of the data returned when the query is executed.",
+                  "type": "object"
+                },
+                "transformer": {
+                  "description": "The JavaScript transformer function, applied after the query responds with data.",
+                  "type": "string"
+                },
+                "readable": {
+                  "description": "Whether the query has readable data.",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "name",
+                "schema",
+                "_id"
+              ]
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "user": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "description": "The email address of the user, this must be unique.",
+            "type": "string"
+          },
+          "password": {
+            "description": "The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure.",
+            "type": "string"
+          },
+          "status": {
+            "description": "The status of the user, if they are active.",
+            "type": "string",
+            "enum": [
+              "active"
+            ]
+          },
+          "firstName": {
+            "description": "The first name of the user",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "The last name of the user",
+            "type": "string"
+          },
+          "forceResetPassword": {
+            "description": "If set to true forces the user to reset their password on first login.",
+            "type": "boolean"
+          },
+          "builder": {
+            "description": "Describes if the user is a builder user or not.",
+            "type": "object",
+            "properties": {
+              "global": {
+                "description": "If set to true the user will be able to build any app in the system.",
+                "type": "boolean"
+              }
+            }
+          },
+          "admin": {
+            "description": "Describes if the user is an admin user or not.",
+            "type": "object",
+            "properties": {
+              "global": {
+                "description": "If set to true the user will be able to administrate the system.",
+                "type": "boolean"
+              }
+            }
+          },
+          "roles": {
+            "description": "Contains the roles of the user per app (assuming they are not a builder user).",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "description": "A map of app ID (production app ID, minus the _dev component) to a role ID, e.g. ADMIN."
+            }
+          }
+        },
+        "required": [
+          "email",
+          "roles"
+        ]
+      },
+      "userOutput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "description": "The email address of the user, this must be unique.",
+                "type": "string"
+              },
+              "password": {
+                "description": "The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure.",
+                "type": "string"
+              },
+              "status": {
+                "description": "The status of the user, if they are active.",
+                "type": "string",
+                "enum": [
+                  "active"
+                ]
+              },
+              "firstName": {
+                "description": "The first name of the user",
+                "type": "string"
+              },
+              "lastName": {
+                "description": "The last name of the user",
+                "type": "string"
+              },
+              "forceResetPassword": {
+                "description": "If set to true forces the user to reset their password on first login.",
+                "type": "boolean"
+              },
+              "builder": {
+                "description": "Describes if the user is a builder user or not.",
+                "type": "object",
+                "properties": {
+                  "global": {
+                    "description": "If set to true the user will be able to build any app in the system.",
+                    "type": "boolean"
+                  }
+                }
+              },
+              "admin": {
+                "description": "Describes if the user is an admin user or not.",
+                "type": "object",
+                "properties": {
+                  "global": {
+                    "description": "If set to true the user will be able to administrate the system.",
+                    "type": "boolean"
+                  }
+                }
+              },
+              "roles": {
+                "description": "Contains the roles of the user per app (assuming they are not a builder user).",
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "description": "A map of app ID (production app ID, minus the _dev component) to a role ID, e.g. ADMIN."
+                }
+              },
+              "_id": {
+                "description": "The ID of the user.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "email",
+              "roles",
+              "_id"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "userSearch": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "description": "The email address of the user, this must be unique.",
+                  "type": "string"
+                },
+                "password": {
+                  "description": "The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure.",
+                  "type": "string"
+                },
+                "status": {
+                  "description": "The status of the user, if they are active.",
+                  "type": "string",
+                  "enum": [
+                    "active"
+                  ]
+                },
+                "firstName": {
+                  "description": "The first name of the user",
+                  "type": "string"
+                },
+                "lastName": {
+                  "description": "The last name of the user",
+                  "type": "string"
+                },
+                "forceResetPassword": {
+                  "description": "If set to true forces the user to reset their password on first login.",
+                  "type": "boolean"
+                },
+                "builder": {
+                  "description": "Describes if the user is a builder user or not.",
+                  "type": "object",
+                  "properties": {
+                    "global": {
+                      "description": "If set to true the user will be able to build any app in the system.",
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "admin": {
+                  "description": "Describes if the user is an admin user or not.",
+                  "type": "object",
+                  "properties": {
+                    "global": {
+                      "description": "If set to true the user will be able to administrate the system.",
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "roles": {
+                  "description": "Contains the roles of the user per app (assuming they are not a builder user).",
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "description": "A map of app ID (production app ID, minus the _dev component) to a role ID, e.g. ADMIN."
+                  }
+                },
+                "_id": {
+                  "description": "The ID of the user.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "roles",
+                "_id"
+              ]
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "rowSearch": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "allOr": {
+                "type": "boolean",
+                "description": "Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used."
+              },
+              "string": {
+                "type": "object",
+                "example": {
+                  "columnName1": "value",
+                  "columnName2": "value"
+                },
+                "description": "A map of field name to the string to search for, this will look for rows that have a value starting with the string value.",
+                "additionalProperties": {
+                  "type": "string",
+                  "description": "The value to search for in the column."
+                }
+              },
+              "fuzzy": {
+                "type": "object",
+                "description": "A fuzzy search, only supported by internal tables."
+              },
+              "range": {
+                "type": "object",
+                "description": "Searches within a range, the format of this must be in the format of an object with a \"low\" and \"high\" property.",
+                "example": {
+                  "columnName1": {
+                    "low": 10,
+                    "high": 20
+                  }
+                }
+              },
+              "equal": {
+                "type": "object",
+                "description": "Searches for rows that have a column value that is exactly the value set."
+              },
+              "notEqual": {
+                "type": "object",
+                "description": "Searches for any row which does not contain the specified column value."
+              },
+              "empty": {
+                "type": "object",
+                "description": "Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.",
+                "example": {
+                  "columnName1": ""
+                }
+              },
+              "notEmpty": {
+                "type": "object",
+                "description": "Searches for rows which have the specified column."
+              },
+              "oneOf": {
+                "type": "object",
+                "description": "Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]."
+              }
+            }
+          },
+          "paginate": {
+            "type": "boolean",
+            "description": "Enables pagination, by default this is disabled."
+          },
+          "bookmark": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "description": "If retrieving another page, the bookmark from the previous request must be supplied."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "The maximum number of rows to return, useful when paginating, for internal tables this will be limited to 1000, for SQL tables it will be 5000."
+          },
+          "sort": {
+            "type": "object",
+            "description": "A set of parameters describing the sort behaviour of the search.",
+            "properties": {
+              "order": {
+                "type": "string",
+                "enum": [
+                  "ascending",
+                  "descending"
+                ],
+                "description": "The order of the sort, by default this is ascending."
+              },
+              "column": {
+                "type": "string",
+                "description": "The name of the column by which the rows will be sorted."
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "string",
+                  "number"
+                ],
+                "description": "Defines whether the column should be treated as a string or as numbers when sorting."
+              }
+            }
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "nameSearch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name to be used when searching - this will be used in a case insensitive starts with match."
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/applications": {
+      "post": {
+        "operationId": "create",
+        "summary": "Create an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/application"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the created application.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/applicationOutput"
+                },
+                "examples": {
+                  "application": {
+                    "$ref": "#/components/examples/application"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{appId}": {
+      "put": {
+        "operationId": "update",
+        "summary": "Update an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/application"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the updated application.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/applicationOutput"
+                },
+                "examples": {
+                  "application": {
+                    "$ref": "#/components/examples/application"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "destroy",
+        "summary": "Delete an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deleted application.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/applicationOutput"
+                },
+                "examples": {
+                  "application": {
+                    "$ref": "#/components/examples/application"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getById",
+        "summary": "Retrieve an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the retrieved application.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/applicationOutput"
+                },
+                "examples": {
+                  "application": {
+                    "$ref": "#/components/examples/application"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/search": {
+      "post": {
+        "operationId": "search",
+        "summary": "Search for applications",
+        "description": "Based on application properties (currently only name) search for applications.",
+        "tags": [
+          "applications"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/nameSearch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the applications that were found based on the search parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/applicationSearch"
+                },
+                "examples": {
+                  "applications": {
+                    "$ref": "#/components/examples/applications"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queries/{queryId}": {
+      "post": {
+        "operationId": "execute",
+        "summary": "Execute a query",
+        "description": "Queries which have been created within a Budibase app can be executed using this,",
+        "tags": [
+          "queries"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/queryId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/executeQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the result of the query execution.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/executeQueryOutput"
+                },
+                "examples": {
+                  "REST": {
+                    "$ref": "#/components/examples/restResponse"
+                  },
+                  "SQL": {
+                    "$ref": "#/components/examples/sqlResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queries/search": {
+      "post": {
+        "operationId": "search",
+        "summary": "Search for queries",
+        "description": "Based on query properties (currently only name) search for queries.",
+        "tags": [
+          "queries"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/nameSearch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the queries found based on the search parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/querySearch"
+                },
+                "examples": {
+                  "queries": {
+                    "$ref": "#/components/examples/queries"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tables/{tableId}/rows": {
+      "post": {
+        "operationId": "create",
+        "summary": "Create a row",
+        "description": "Creates a row within the specified table.",
+        "tags": [
+          "rows"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/row"
+              },
+              "examples": {
+                "row": {
+                  "$ref": "#/components/examples/inputRow"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the created row, including the ID which has been generated for it. This can be found in the Budibase portal, viewed under the developer information.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rowOutput"
+                },
+                "examples": {
+                  "row": {
+                    "$ref": "#/components/examples/row"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tables/{tableId}/rows/{rowId}": {
+      "put": {
+        "operationId": "update",
+        "summary": "Update a row",
+        "description": "Updates a row within the specified table.",
+        "tags": [
+          "rows"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/rowId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/row"
+              },
+              "examples": {
+                "row": {
+                  "$ref": "#/components/examples/inputRow"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the created row, including the ID which has been generated for it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rowOutput"
+                },
+                "examples": {
+                  "row": {
+                    "$ref": "#/components/examples/row"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "destroy",
+        "summary": "Delete a row",
+        "description": "Deletes a row within the specified table.",
+        "tags": [
+          "rows"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/rowId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deleted row, including the ID which has been generated for it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rowOutput"
+                },
+                "examples": {
+                  "row": {
+                    "$ref": "#/components/examples/row"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getById",
+        "summary": "Retrieve a row",
+        "description": "This gets a single row, it will be enriched with the full related rows, rather than the squashed \"primaryDisplay\" format returned by the search endpoint.",
+        "tags": [
+          "rows"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/rowId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the retrieved row.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rowOutput"
+                },
+                "examples": {
+                  "enrichedRow": {
+                    "$ref": "#/components/examples/enrichedRow"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tables/{tableId}/rows/search": {
+      "post": {
+        "operationId": "search",
+        "summary": "Search for rows",
+        "tags": [
+          "rows"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rowSearch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The response will contain an array of rows that match the search parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/searchOutput"
+                },
+                "examples": {
+                  "search": {
+                    "$ref": "#/components/examples/rows"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tables": {
+      "post": {
+        "operationId": "create",
+        "summary": "Create a table",
+        "description": "Create a table, this could be internal or external.",
+        "tags": [
+          "tables"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/table"
+              },
+              "examples": {
+                "table": {
+                  "$ref": "#/components/examples/table"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the created table, including the ID which has been generated for it. This can be internal or external datasources.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tableOutput"
+                },
+                "examples": {
+                  "table": {
+                    "$ref": "#/components/examples/table"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tables/{tableId}": {
+      "put": {
+        "operationId": "update",
+        "summary": "Update a table",
+        "description": "Update a table, this could be internal or external.",
+        "tags": [
+          "tables"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/table"
+              },
+              "examples": {
+                "table": {
+                  "$ref": "#/components/examples/table"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the updated table.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tableOutput"
+                },
+                "examples": {
+                  "table": {
+                    "$ref": "#/components/examples/table"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "destroy",
+        "summary": "Delete a table",
+        "description": "Delete a table, this could be internal or external.",
+        "tags": [
+          "tables"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deleted table.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tableOutput"
+                },
+                "examples": {
+                  "table": {
+                    "$ref": "#/components/examples/table"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getById",
+        "summary": "Retrieve a table",
+        "description": "Lookup a table, this could be internal or external.",
+        "tags": [
+          "tables"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the retrieved table.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tableOutput"
+                },
+                "examples": {
+                  "table": {
+                    "$ref": "#/components/examples/table"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tables/search": {
+      "post": {
+        "operationId": "search",
+        "summary": "Search for tables",
+        "description": "Based on table properties (currently only name) search for tables. This could be an internal or an external table.",
+        "tags": [
+          "tables"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/nameSearch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the found tables, based on the search parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tableSearch"
+                },
+                "examples": {
+                  "tables": {
+                    "$ref": "#/components/examples/tables"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "post": {
+        "operationId": "create",
+        "summary": "Create a user",
+        "tags": [
+          "users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/user"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the created user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/userOutput"
+                },
+                "examples": {
+                  "user": {
+                    "$ref": "#/components/examples/user"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{userId}": {
+      "put": {
+        "operationId": "update",
+        "summary": "Update a user",
+        "tags": [
+          "users"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/userId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/user"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the updated user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/userOutput"
+                },
+                "examples": {
+                  "user": {
+                    "$ref": "#/components/examples/user"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "destroy",
+        "summary": "Delete a user",
+        "tags": [
+          "users"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/userId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deleted user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/userOutput"
+                },
+                "examples": {
+                  "user": {
+                    "$ref": "#/components/examples/user"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getById",
+        "summary": "Retrieve a user",
+        "tags": [
+          "users"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/userId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the retrieved user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/userOutput"
+                },
+                "examples": {
+                  "user": {
+                    "$ref": "#/components/examples/user"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/search": {
+      "post": {
+        "operationId": "search",
+        "summary": "Search for users",
+        "description": "Based on user properties (currently only name) search for users.",
+        "tags": [
+          "users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/nameSearch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns the found users based on search parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/userSearch"
+                },
+                "examples": {
+                  "users": {
+                    "$ref": "#/components/examples/users"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}

@@ -2,20 +2,50 @@ import { Knex, knex } from "knex"
 import {
   Operation,
   QueryJson,
-  QueryOptions,
   RelationshipsJson,
   SearchFilters,
   SortDirection,
-} from "../../definitions/datasource"
-import { isIsoDateString, SqlClients } from "../utils"
+} from "@budibase/types"
+import { QueryOptions } from "../../definitions/datasource"
+import { isIsoDateString, SqlClient } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
+import environment from "../../environment"
+import { removeKeyNumbering } from "./utils"
 
-const BASE_LIMIT = 5000
+const envLimit = environment.SQL_MAX_ROWS
+  ? parseInt(environment.SQL_MAX_ROWS)
+  : null
+const BASE_LIMIT = envLimit || 5000
 
 type KnexQuery = Knex.QueryBuilder | Knex
 // these are invalid dates sent by the client, need to convert them to a real max date
 const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
 const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
+
+function likeKey(client: string, key: string): string {
+  if (!key.includes(" ")) {
+    return key
+  }
+  let start: string, end: string
+  switch (client) {
+    case SqlClient.MY_SQL:
+      start = end = "`"
+      break
+    case SqlClient.ORACLE:
+    case SqlClient.POSTGRES:
+      start = end = '"'
+      break
+    case SqlClient.MS_SQL:
+      start = "["
+      end = "]"
+      break
+    default:
+      throw "Unknown client"
+  }
+  const parts = key.split(".")
+  key = parts.map(part => `${start}${part}${end}`).join(".")
+  return key
+}
 
 function parse(input: any) {
   if (Array.isArray(input)) {
@@ -27,11 +57,8 @@ function parse(input: any) {
   if (typeof input !== "string") {
     return input
   }
-  if (input === MAX_ISO_DATE) {
-    return new Date(8640000000000000)
-  }
-  if (input === MIN_ISO_DATE) {
-    return new Date(-8640000000000000)
+  if (input === MAX_ISO_DATE || input === MIN_ISO_DATE) {
+    return null
   }
   if (isIsoDateString(input)) {
     return new Date(input)
@@ -63,6 +90,32 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
   return filters
 }
 
+function generateSelectStatement(
+  json: QueryJson,
+  knex: Knex
+): (string | Knex.Raw)[] {
+  const { resource, meta } = json
+  const schema = meta?.table?.schema
+  return resource!.fields.map(field => {
+    const fieldNames = field.split(/\./g)
+    const tableName = fieldNames[0]
+    const columnName = fieldNames[1]
+    if (
+      columnName &&
+      schema?.[columnName] &&
+      knex.client.config.client === SqlClient.POSTGRES
+    ) {
+      const externalType = schema[columnName].externalType
+      if (externalType?.includes("money")) {
+        return knex.raw(
+          `"${tableName}"."${columnName}"::money::numeric as "${field}"`
+        )
+      }
+    }
+    return `${field} as ${field}`
+  })
+}
+
 class InternalBuilder {
   private readonly client: string
 
@@ -72,18 +125,95 @@ class InternalBuilder {
 
   // right now we only do filters on the specific table being queried
   addFilters(
-    tableName: string,
     query: KnexQuery,
-    filters: SearchFilters | undefined
+    filters: SearchFilters | undefined,
+    opts: { relationship?: boolean; tableName?: string }
   ): KnexQuery {
     function iterate(
       structure: { [key: string]: any },
       fn: (key: string, value: any) => void
     ) {
       for (let [key, value] of Object.entries(structure)) {
-        fn(`${tableName}.${key}`, value)
+        const updatedKey = removeKeyNumbering(key)
+        const isRelationshipField = updatedKey.includes(".")
+        if (!opts.relationship && !isRelationshipField) {
+          fn(`${opts.tableName}.${updatedKey}`, value)
+        }
+        if (opts.relationship && isRelationshipField) {
+          fn(updatedKey, value)
+        }
       }
     }
+
+    const like = (key: string, value: any) => {
+      const fnc = allOr ? "orWhere" : "where"
+      // postgres supports ilike, nothing else does
+      if (this.client === SqlClient.POSTGRES) {
+        query = query[fnc](key, "ilike", `%${value}%`)
+      } else {
+        const rawFnc = `${fnc}Raw`
+        // @ts-ignore
+        query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
+          `%${value}%`,
+        ])
+      }
+    }
+
+    const contains = (mode: object, any: boolean = false) => {
+      const fnc = allOr ? "orWhere" : "where"
+      const rawFnc = `${fnc}Raw`
+      const not = mode === filters?.notContains ? "NOT " : ""
+      function stringifyArray(value: Array<any>, quoteStyle = '"'): string {
+        for (let i in value) {
+          if (typeof value[i] === "string") {
+            value[i] = `${quoteStyle}${value[i]}${quoteStyle}`
+          }
+        }
+        return `[${value.join(",")}]`
+      }
+      if (this.client === SqlClient.POSTGRES) {
+        iterate(mode, (key: string, value: Array<any>) => {
+          const wrap = any ? "" : "'"
+          const containsOp = any ? "\\?| array" : "@>"
+          const fieldNames = key.split(/\./g)
+          const tableName = fieldNames[0]
+          const columnName = fieldNames[1]
+          // @ts-ignore
+          query = query[rawFnc](
+            `${not}"${tableName}"."${columnName}"::jsonb ${containsOp} ${wrap}${stringifyArray(
+              value,
+              any ? "'" : '"'
+            )}${wrap}`
+          )
+        })
+      } else if (this.client === SqlClient.MY_SQL) {
+        const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
+        iterate(mode, (key: string, value: Array<any>) => {
+          // @ts-ignore
+          query = query[rawFnc](
+            `${not}${jsonFnc}(${key}, '${stringifyArray(value)}')`
+          )
+        })
+      } else {
+        const andOr = mode === filters?.containsAny ? " OR " : " AND "
+        iterate(mode, (key: string, value: Array<any>) => {
+          let statement = ""
+          for (let i in value) {
+            if (typeof value[i] === "string") {
+              value[i] = `%"${value[i]}"%`
+            } else {
+              value[i] = `%${value[i]}%`
+            }
+            statement +=
+              (statement ? andOr : "") +
+              `LOWER(${likeKey(this.client, key)}) LIKE ?`
+          }
+          // @ts-ignore
+          query = query[rawFnc](`${not}(${statement})`, value)
+        })
+      }
+    }
+
     if (!filters) {
       return query
     }
@@ -100,7 +230,7 @@ class InternalBuilder {
       iterate(filters.string, (key, value) => {
         const fnc = allOr ? "orWhere" : "where"
         // postgres supports ilike, nothing else does
-        if (this.client === SqlClients.POSTGRES) {
+        if (this.client === SqlClient.POSTGRES) {
           query = query[fnc](key, "ilike", `${value}%`)
         } else {
           const rawFnc = `${fnc}Raw`
@@ -110,25 +240,23 @@ class InternalBuilder {
       })
     }
     if (filters.fuzzy) {
-      iterate(filters.fuzzy, (key, value) => {
-        const fnc = allOr ? "orWhere" : "where"
-        // postgres supports ilike, nothing else does
-        if (this.client === SqlClients.POSTGRES) {
-          query = query[fnc](key, "ilike", `%${value}%`)
-        } else {
-          const rawFnc = `${fnc}Raw`
-          // @ts-ignore
-          query = query[rawFnc](`LOWER(${key}) LIKE ?`, [`%${value}%`])
-        }
-      })
+      iterate(filters.fuzzy, like)
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
-        if (!value.high || !value.low) {
-          return
+        if (value.low && value.high) {
+          // Use a between operator if we have 2 valid range values
+          const fnc = allOr ? "orWhereBetween" : "whereBetween"
+          query = query[fnc](key, [value.low, value.high])
+        } else if (value.low) {
+          // Use just a single greater than operator if we only have a low
+          const fnc = allOr ? "orWhere" : "where"
+          query = query[fnc](key, ">", value.low)
+        } else if (value.high) {
+          // Use just a single less than operator if we only have a high
+          const fnc = allOr ? "orWhere" : "where"
+          query = query[fnc](key, "<", value.high)
         }
-        const fnc = allOr ? "orWhereBetween" : "whereBetween"
-        query = query[fnc](key, [value.low, value.high])
       })
     }
     if (filters.equal) {
@@ -155,20 +283,27 @@ class InternalBuilder {
         query = query[fnc](key)
       })
     }
+    if (filters.contains) {
+      contains(filters.contains)
+    }
+    if (filters.notContains) {
+      contains(filters.notContains)
+    }
+    if (filters.containsAny) {
+      contains(filters.containsAny, true)
+    }
     return query
   }
 
   addSorting(query: KnexQuery, json: QueryJson): KnexQuery {
     let { sort, paginate } = json
-    if (!sort) {
-      return query
-    }
     const table = json.meta?.table
-    for (let [key, value] of Object.entries(sort)) {
-      const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
-      query = query.orderBy(`${table?.name}.${key}`, direction)
-    }
-    if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
+    if (sort) {
+      for (let [key, value] of Object.entries(sort)) {
+        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+        query = query.orderBy(`${table?.name}.${key}`, direction)
+      }
+    } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
       // @ts-ignore
       query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
     }
@@ -176,38 +311,65 @@ class InternalBuilder {
   }
 
   addRelationships(
-    knex: Knex,
     query: KnexQuery,
-    fields: string | string[],
     fromTable: string,
     relationships: RelationshipsJson[] | undefined
   ): KnexQuery {
     if (!relationships) {
       return query
     }
+    const tableSets: Record<string, [any]> = {}
+    // aggregate into table sets (all the same to tables)
     for (let relationship of relationships) {
-      const from = relationship.from,
-        to = relationship.to,
-        toTable = relationship.tableName
-      if (!relationship.through) {
-        // @ts-ignore
-        query = query.leftJoin(
-          toTable,
-          `${fromTable}.${from}`,
-          `${toTable}.${to}`
-        )
+      const keyObj: { toTable: string; throughTable: string | undefined } = {
+        toTable: relationship.tableName,
+        throughTable: undefined,
+      }
+      if (relationship.through) {
+        keyObj.throughTable = relationship.through
+      }
+      const key = JSON.stringify(keyObj)
+      if (tableSets[key]) {
+        tableSets[key].push(relationship)
       } else {
-        const throughTable = relationship.through
-        const fromPrimary = relationship.fromPrimary
-        const toPrimary = relationship.toPrimary
+        tableSets[key] = [relationship]
+      }
+    }
+    for (let [key, relationships] of Object.entries(tableSets)) {
+      const { toTable, throughTable } = JSON.parse(key)
+      if (!throughTable) {
+        // @ts-ignore
+        query = query.leftJoin(toTable, function () {
+          for (let relationship of relationships) {
+            const from = relationship.from,
+              to = relationship.to
+            // @ts-ignore
+            this.orOn(`${fromTable}.${from}`, "=", `${toTable}.${to}`)
+          }
+        })
+      } else {
         query = query
           // @ts-ignore
-          .leftJoin(
-            throughTable,
-            `${fromTable}.${fromPrimary}`,
-            `${throughTable}.${from}`
-          )
-          .leftJoin(toTable, `${toTable}.${toPrimary}`, `${throughTable}.${to}`)
+          .leftJoin(throughTable, function () {
+            for (let relationship of relationships) {
+              const fromPrimary = relationship.fromPrimary
+              const from = relationship.from
+              // @ts-ignore
+              this.orOn(
+                `${fromTable}.${fromPrimary}`,
+                "=",
+                `${throughTable}.${from}`
+              )
+            }
+          })
+          .leftJoin(toTable, function () {
+            for (let relationship of relationships) {
+              const toPrimary = relationship.toPrimary
+              const to = relationship.to
+              // @ts-ignore
+              this.orOn(`${toTable}.${toPrimary}`, `${throughTable}.${to}`)
+            }
+          })
       }
     }
     return query.limit(BASE_LIMIT)
@@ -216,6 +378,9 @@ class InternalBuilder {
   create(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, body } = json
     let query: KnexQuery = knex(endpoint.entityId)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
     const parsedBody = parseBody(body)
     // make sure no null values in body for creation
     for (let [key, value] of Object.entries(parsedBody)) {
@@ -234,6 +399,9 @@ class InternalBuilder {
   bulkCreate(knex: Knex, json: QueryJson): KnexQuery {
     const { endpoint, body } = json
     let query: KnexQuery = knex(endpoint.entityId)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
     if (!Array.isArray(body)) {
       return query
     }
@@ -242,18 +410,18 @@ class InternalBuilder {
   }
 
   read(knex: Knex, json: QueryJson, limit: number): KnexQuery {
-    let { endpoint, resource, filters, sort, paginate, relationships } = json
+    let { endpoint, resource, filters, paginate, relationships } = json
     const tableName = endpoint.entityId
     // select all if not specified
     if (!resource) {
       resource = { fields: [] }
     }
-    let selectStatement: string | string[] = "*"
+    let selectStatement: string | (string | Knex.Raw)[] = "*"
     // handle select
     if (resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
       // by the resource builder further up
-      selectStatement = resource.fields.map(field => `${field} as ${field}`)
+      selectStatement = generateSelectStatement(json, knex)
     }
     let foundLimit = limit || BASE_LIMIT
     // handle pagination
@@ -269,10 +437,13 @@ class InternalBuilder {
     }
     // start building the query
     let query: KnexQuery = knex(tableName).limit(foundLimit)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
-    query = this.addFilters(tableName, query, filters)
+    query = this.addFilters(query, filters, { tableName })
     // add sorting to pre-query
     query = this.addSorting(query, json)
     // @ts-ignore
@@ -281,24 +452,22 @@ class InternalBuilder {
       [tableName]: query,
     }).select(selectStatement)
     // have to add after as well (this breaks MS-SQL)
-    if (this.client !== SqlClients.MS_SQL) {
+    if (this.client !== SqlClient.MS_SQL) {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    return this.addRelationships(
-      knex,
-      preQuery,
-      selectStatement,
-      tableName,
-      relationships
-    )
+    query = this.addRelationships(preQuery, tableName, relationships)
+    return this.addFilters(query, filters, { relationship: true })
   }
 
   update(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, body, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
     const parsedBody = parseBody(body)
-    query = this.addFilters(endpoint.entityId, query, filters)
+    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.update(parsedBody)
@@ -310,7 +479,10 @@ class InternalBuilder {
   delete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
-    query = this.addFilters(endpoint.entityId, query, filters)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
+    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.delete()
@@ -431,9 +603,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     // same as delete, manage returning
     if (operation === Operation.CREATE || operation === Operation.UPDATE) {
       let id
-      if (sqlClient === SqlClients.MS_SQL) {
+      if (sqlClient === SqlClient.MS_SQL) {
         id = results?.[0].id
-      } else if (sqlClient === SqlClients.MY_SQL) {
+      } else if (sqlClient === SqlClient.MY_SQL) {
         id = results?.insertId
       }
       row = processFn(
@@ -448,4 +620,3 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
 }
 
 export default SqlQueryBuilder
-module.exports = SqlQueryBuilder

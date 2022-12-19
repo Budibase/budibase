@@ -7,7 +7,7 @@
     ModalContent,
   } from "@budibase/bbui"
   import { store } from "builderStore"
-  import api from "builderStore/api"
+  import { API } from "api"
 
   let revertModal
   let appName
@@ -16,29 +16,25 @@
 
   const revert = async () => {
     try {
-      const response = await api.post(`/api/dev/${appId}/revert`)
-      const json = await response.json()
-      if (response.status !== 200) throw json.message
+      await API.revertAppChanges(appId)
 
       // Reset frontend state after revert
-      const applicationPkg = await api.get(
-        `/api/applications/${appId}/appPackage`
-      )
-      const pkg = await applicationPkg.json()
-      if (applicationPkg.ok) {
-        await store.actions.initialise(pkg)
-      } else {
-        throw new Error(pkg)
-      }
-
-      notifications.info("Changes reverted.")
-    } catch (err) {
-      notifications.error(`Error reverting changes: ${err}`)
+      const applicationPkg = await API.fetchAppPackage(appId)
+      await store.actions.initialise(applicationPkg)
+      notifications.info("Changes reverted successfully")
+    } catch (error) {
+      notifications.error(`Error reverting changes: ${error}`)
     }
   }
 </script>
 
-<Icon name="Revert" hoverable on:click={revertModal.show} />
+<Icon
+  name="Revert"
+  hoverable
+  on:click={revertModal.show}
+  tooltip="Revert changes"
+  dataCy="revert-application-topnav"
+/>
 <Modal bind:this={revertModal}>
   <ModalContent
     title="Revert Changes"

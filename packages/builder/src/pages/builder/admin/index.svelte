@@ -10,7 +10,7 @@
     Modal,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { admin, auth } from "stores/portal"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import ImportAppsModal from "./_components/ImportAppsModal.svelte"
@@ -30,22 +30,22 @@
     try {
       adminUser.tenantId = tenantId
       // Save the admin user
-      const response = await api.post(`/api/global/users/init`, adminUser)
-      const json = await response.json()
-      if (response.status !== 200) {
-        throw new Error(json.message)
-      }
-      notifications.success(`Admin user created`)
+      await API.createAdminUser(adminUser)
+      notifications.success("Admin user created")
       await admin.init()
       $goto("../portal")
-    } catch (err) {
-      notifications.error(`Failed to create admin user: ${err}`)
+    } catch (error) {
+      notifications.error("Failed to create admin user")
     }
   }
 
   onMount(async () => {
     if (!cloud) {
-      await admin.checkImportComplete()
+      try {
+        await admin.checkImportComplete()
+      } catch (error) {
+        notifications.error("Error checking import status")
+      }
     }
   })
 </script>

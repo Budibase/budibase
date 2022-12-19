@@ -3,35 +3,44 @@ const path = require("path")
 
 const MONOREPO_ROOT = "packages"
 
-const packages = fs.readdirSync(MONOREPO_ROOT)
+const packages = getPackages()
+
+function getPackages() {
+  if (fs.existsSync(MONOREPO_ROOT)) {
+    return fs.readdirSync(MONOREPO_ROOT).map(pkg => path.join(MONOREPO_ROOT, pkg))
+  } else {
+    return ["./"]
+  }
+}
 
 function pinDeps(dependencies) {
-	for (let dependency in dependencies) {
-		if (dependency.startsWith("@budibase")) {
-			dependencies[dependency] = dependencies[dependency].replace("^", "")
-		}
-	}
+  for (let dependency in dependencies) {
+    if (dependency.startsWith("@budibase")) {
+      dependencies[dependency] = dependencies[dependency].replace("^", "")
+    }
+  }
+  return dependencies
 }
 
 // iterate over the monorepo packages
-for (let pkg of packages) {
-	const pkgPath = path.join(MONOREPO_ROOT, pkg)
+for (let pkgPath of packages) {
+  // only directories
+  if (fs.statSync(pkgPath).isDirectory()) {
+    // get the package JSON file
+    const pkgJsonPath = path.join(pkgPath, "package.json")
+    if (!fs.existsSync(pkgJsonPath)) {
+      continue
+    }
+    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath))
+    
 
-	// only directories
-	if (fs.statSync(pkgPath).isDirectory()) {
+    // find any budibase dependencies, and pin them
+    pkgJson.dependencies = pinDeps(pkgJson.dependencies)
+    pkgJson.devDependencies = pinDeps(pkgJson.devDependencies)
 
-
-		// get the package JSON file
-		const pkgJsonPath = path.join(pkgPath, "package.json")
-		const pkgJson = require(`../${pkgJsonPath}`)
-
-		// find any budibase dependencies, and pin them
-		pinDeps(pkgJson.dependencies)
-		pinDeps(pkgJson.devDependencies)
-
-		// update the package JSON files
-		fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
-	}
+    // update the package JSON files
+    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
+  }
 }
 
 console.log("Pinned dev versions for budibase packages successfully.")

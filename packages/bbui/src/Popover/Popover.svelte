@@ -10,6 +10,18 @@
   export let anchor
   export let align = "right"
   export let portalTarget
+  export let dataCy
+  export let maxWidth
+
+  export let direction = "bottom"
+  export let showTip = false
+
+  let tipSvg =
+    '<svg xmlns="http://www.w3.org/svg/2000" width="23" height="12" class="spectrum-Popover-tip" > <path class="spectrum-Popover-tip-triangle" d="M 0.7071067811865476 0 L 11.414213562373096 10.707106781186548 L 22.121320343559645 0" /> </svg>'
+
+  $: tooltipClasses = showTip
+    ? `spectrum-Popover--withTip spectrum-Popover--${direction}`
+    : ""
 
   export const show = () => {
     dispatch("open")
@@ -19,6 +31,13 @@
   export const hide = () => {
     dispatch("close")
     open = false
+  }
+
+  const handleOutsideClick = e => {
+    if (open) {
+      e.stopPropagation()
+      hide()
+    }
   }
 
   let open = null
@@ -34,12 +53,17 @@
   <Portal target={portalTarget}>
     <div
       tabindex="0"
-      use:positionDropdown={{ anchor, align }}
-      use:clickOutside={hide}
+      use:positionDropdown={{ anchor, align, maxWidth }}
+      use:clickOutside={handleOutsideClick}
       on:keydown={handleEscape}
-      class="spectrum-Popover is-open"
+      class={"spectrum-Popover is-open " + (tooltipClasses || "")}
       role="presentation"
+      data-cy={dataCy}
     >
+      {#if showTip}
+        {@html tipSvg}
+      {/if}
+
       <slot />
     </div>
   </Portal>
@@ -47,6 +71,16 @@
 
 <style>
   .spectrum-Popover {
-    min-width: var(--spectrum-global-dimension-size-2000) !important;
+    min-width: var(--spectrum-global-dimension-size-2000);
+    border-color: var(--spectrum-global-color-gray-300);
+  }
+  .spectrum-Popover.is-open.spectrum-Popover--withTip {
+    margin-top: var(--spacing-xs);
+    margin-left: var(--spacing-xl);
+  }
+  :global(.spectrum-Popover--bottom .spectrum-Popover-tip),
+  :global(.spectrum-Popover--top .spectrum-Popover-tip) {
+    left: 90%;
+    margin-left: calc(var(--spectrum-global-dimension-size-150) * -1);
   }
 </style>

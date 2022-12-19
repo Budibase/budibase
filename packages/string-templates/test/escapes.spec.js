@@ -30,6 +30,11 @@ describe("Handling context properties with spaces in their name", () => {
     })
     expect(output).toBe("testcase 1")
   })
+
+  it("should allow the use of a", async () => {
+    const output = await processString("{{ a }}", { a: 1 })
+    expect(output).toEqual("1")
+  })
 })
 
 describe("attempt some complex problems", () => {
@@ -57,5 +62,35 @@ describe("attempt some complex problems", () => {
     const hbs = "null{{ [c306d140d7e854f388bae056db380a0eb].[one prop] }}"
     const output = await processString(hbs, context)
     expect(output).toBe("nulltest")
+  })
+})
+
+describe("check behaviour with newlines", () => {
+  const context = {
+    binding: `Hello
+      there`
+  }
+  it("should escape new line to \\n with double brace", async () => {
+    const hbs = JSON.stringify({
+      body: "{{ binding }}"
+    })
+    const output = await processString(hbs, context, { escapeNewlines: true })
+    expect(JSON.parse(output).body).toBe(context.binding)
+  })
+
+  it("should work the same with triple brace", async () => {
+    const hbs = JSON.stringify({
+      body: "{{{ binding }}}"
+    })
+    const output = await processString(hbs, context, { escapeNewlines: true })
+    expect(JSON.parse(output).body).toBe(context.binding)
+  })
+
+  it("should still work with helpers disabled", async () => {
+    const hbs = JSON.stringify({
+      body: "{{ binding }}"
+    })
+    const output = await processString(hbs, context, { escapeNewlines: true, noHelpers: true })
+    expect(JSON.parse(output).body).toBe(context.binding)
   })
 })

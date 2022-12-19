@@ -1,0 +1,78 @@
+name: Budibase Deploy Production
+
+on:
+ workflow_dispatch:
+  inputs:
+    version:
+      description: Budibase release version. For example - 1.0.0
+      required: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master' 
+        run: | 
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+
+      - uses: actions/checkout@v2
+
+      - name: Pull values.yaml from budibase-infra
+        run: | 
+          curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
+          -H 'Accept: application/vnd.github.v3.raw' \
+          -o values.production.yaml \
+          -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.yaml
+          wc -l values.production.yaml
+      
+      - name: Get the latest budibase release version
+        id: version
+        run: | 
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            release_version=$(cat lerna.json | jq -r '.version')
+          else
+            release_version=${{ github.event.inputs.version }}
+          fi
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+      
+      - name: Tag and release Proxy service docker image
+        run: | 
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build:docker:proxy:prod
+          docker tag proxy-service budibase/proxy:$PROD_TAG
+          docker push budibase/proxy:$PROD_TAG
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+          PROD_TAG: k8s
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Deploy to EKS
+        uses: craftech-io/eks-helm-deploy-action@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS__KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+          cluster-name: budibase-eks-production
+          config-files: values.production.yaml
+          chart-path: charts/budibase
+          namespace: budibase
+          values: globals.appVersion=v${{ env.RELEASE_VERSION }},services.couchdb.url=${{ secrets.PRODUCTION_COUCHDB_URL }},services.couchdb.password=${{ secrets.PRODUCTION_COUCHDB_PASSWORD }}
+          name: budibase-prod
+
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v4.0.0
+        with:
+          webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
+          content: "Production Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Cloud."
+          embed-title: ${{ env.RELEASE_VERSION }}
+

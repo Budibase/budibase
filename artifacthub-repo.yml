@@ -1,0 +1,10 @@
+# Artifact Hub repository metadata file 
+# This file is used to verify ownership of the budibase Helm chart repo 
+# so that we appear as a verified owner on artifacthub.io
+
+repositoryID: a7536764-e72e-4961-87d8-efe7c8dedfa3
+owners: # (optional, used to claim repository ownership)
+  - name: Martin
+    email: budimaster@budibase.com
+  - name: DevOps
+    email: devops@budibase.com

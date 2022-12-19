@@ -9,7 +9,7 @@
     notifications,
     Label,
   } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
 
@@ -38,8 +38,12 @@
   }
 
   async function getVersion() {
-    const response = await api.get("/api/dev/version")
-    version = await response.text()
+    try {
+      version = await API.getBudibaseVersion()
+    } catch (error) {
+      notifications.error("Error getting Budibase version")
+      version = null
+    }
   }
 
   onMount(() => {
@@ -56,7 +60,7 @@
         latest features, security updates and much more.
       </Body>
     </Layout>
-    <Divider size="S" />
+    <Divider />
     {#if version}
       <div>
         <Label size="L">Current version</Label>

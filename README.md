@@ -11,7 +11,7 @@
   The low code platform you'll enjoy using
 </h3>
 <p align="center">
-  Budibase is an open source low-code platform, and the easiest way to build internal tools that improve productivity.
+  Budibase is an open source low-code platform, and the easiest way to build internal apps that improve productivity.
 </p>
 
 <h3 align="center">
@@ -40,9 +40,11 @@
 </p>
 
 <h3 align="center">
-  <a href="https://docs.budibase.com/getting-started">Get started</a>
+  <a href="https://account.budibase.app/register">Get started - we host (Budibase Cloud)</a>
   <span> · </span>
-  <a href="https://docs.budibase.com">Docs</a>
+  <a href="https://docs.budibase.com/docs/hosting-methods">Get started - you host (Docker, K8s, DO)</a>
+  <span> · </span>
+  <a href="https://docs.budibase.com/docs">Docs</a>
   <span> · </span>
   <a href="https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas">Feature request</a>
   <span> · </span>
@@ -63,7 +65,7 @@ Budibase is open-source - licensed as GPL v3. This should fill you with confiden
 <br /><br />
 
 ### Load data or start from scratch
-Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, MySQL, Airtable, S3, DynamoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new data sources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, MySQL, Airtable, S3, DynamoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no datasources. [Request new datasources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
   <img alt="Budibase data" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970242/Out%20of%20beta%20launch/data_n1tlhf.png">
@@ -100,23 +102,59 @@ Budibase is made to scale. With Budibase, you can self-host on your own infrastr
 
 - Checkout the promo video: https://youtu.be/xoljVpty_Kw
 
+<br />
+
+---
+
+<br />
+
+
+## Budibase Public API
+As with anything that we build in Budibase, our new public API is simple to use, flexible, and introduces new extensibility. To summarize, the Budibase API enables:
+
+- Budibase as a backend
+- Interoperability
+
+
+#### Docs
+You can learn more about the Budibase API at the following places:
+
+- [General documentation](https://docs.budibase.com/docs/public-api) : Learn how to get your API key, how to use spec, and how to use with Postman
+- [Interactive API documentation](https://docs.budibase.com/reference/post_applications) : Learn how to interact with the API
+
+#### Guides
+
+- [Build an app with Budibase and Next.js](https://budibase.com/blog/building-a-crud-app-with-budibase-and-next.js/)
+
+<p align="center">
+  <img alt="Budibase data" src="https://res.cloudinary.com/daog6scxm/image/upload/v1647858558/Feb%20release/Start_building_with_Budibase_s_API_3_rhlzhv.png">
+</p>
+<br /><br />
+
 <br /><br /><br />
 
 ## 🏁 Get started
 
-<img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" />
-
-Deploy Budibase self-Hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
+Deploy Budibase self-hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
 Or use Budibase Cloud if you don't need to self-host, and would like to get started quickly.
 
-### [Get started with Budibase](https://budibase.com)
+### [Get started with self-hosting Budibase](https://docs.budibase.com/docs/hosting-methods)
+
+- [Docker - single ARM compatible image](https://docs.budibase.com/docs/docker)
+- [Docker Compose](https://docs.budibase.com/docs/docker-compose)
+- [Kubernetes](https://docs.budibase.com/docs/kubernetes-k8s)
+- [Digital Ocean](https://docs.budibase.com/docs/digitalocean)
+- [Portainer](https://docs.budibase.com/docs/portainer)
+
+
+### [Get started with Budibase Cloud](https://budibase.com)
 
 
 <br /><br />
 
 ## 🎓 Learning Budibase
 
-The Budibase documentation [lives here](https://docs.budibase.com).
+The Budibase documentation [lives here](https://docs.budibase.com/docs).
 <br />
 
 
@@ -131,7 +169,7 @@ If you have a question or would like to talk with other Budibase users and join 
 
 ## ❗ Code of conduct
 
-Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/.github/CODE_OF_CONDUCT.md). Please read it.
+Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/docs/CODE_OF_CONDUCT.md). Please read it.
 <br />
 
 
@@ -141,6 +179,7 @@ Budibase is dedicated to providing a welcoming, diverse, and harrassment-free ex
 ## 🙌 Contributing to Budibase
 
 From opening a bug report to creating a pull request: every contribution is appreciated and welcomed. If you're planning to implement a new feature or change the API please create an issue first. This way we can ensure your work is not in vain.
+Environment setup instructions are available for [Debian](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-DEBIAN.md) and [MacOSX](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-MACOSX.md)
 
 ### Not Sure Where to Start?
 A good place to start contributing, is the [First time issues project](https://github.com/Budibase/budibase/projects/22).
@@ -154,7 +193,7 @@ Budibase is a monorepo managed by lerna. Lerna manages the building and publishi
 
 - [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server) - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
-For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
+For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/docs/CONTRIBUTING.md)
 
 <br /><br />
 
@@ -169,7 +208,7 @@ Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3
 
 [![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
 
-If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
+If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/docs/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 <br /><br />
 
@@ -200,9 +239,6 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/SOVLOOKUP"><img src="https://avatars.githubusercontent.com/u/53158137?v=4?s=100" width="100px;" alt=""/><br /><sub><b>SOVLOOKUP</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=SOVLOOKUP" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/seoulaja"><img src="https://avatars.githubusercontent.com/u/15101654?v=4?s=100" width="100px;" alt=""/><br /><sub><b>seoulaja</b></sub></a><br /><a href="#translation-seoulaja" title="Translation">🌍</a></td>
     <td align="center"><a href="https://github.com/mslourens"><img src="https://avatars.githubusercontent.com/u/1907152?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Maurits Lourens</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=mslourens" title="Tests">⚠️</a> <a href="https://github.com/Budibase/budibase/commits?author=mslourens" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://github.com/Rory-Powell"><img src="https://avatars.githubusercontent.com/u/8755148?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Rory Powell</b></sub></a><br /><a href="#infra-Rory-Powell" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/Budibase/budibase/commits?author=Rory-Powell" title="Tests">⚠️</a> <a href="https://github.com/Budibase/budibase/commits?author=Rory-Powell" title="Code">💻</a></td>
   </tr>
 </table>
 

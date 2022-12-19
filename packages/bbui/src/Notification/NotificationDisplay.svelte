@@ -1,7 +1,6 @@
 <script>
   import "@spectrum-css/toast/dist/index-vars.css"
   import Portal from "svelte-portal"
-  import { flip } from "svelte/animate"
   import { notifications } from "../Stores/notifications"
   import Notification from "./Notification.svelte"
   import { fly } from "svelte/transition"
@@ -9,9 +8,17 @@
 
 <Portal target=".modal-container">
   <div class="notifications">
-    {#each $notifications as { type, icon, message, id } (id)}
-      <div animate:flip transition:fly={{ y: -30 }}>
-        <Notification {type} {icon} {message} />
+    {#each $notifications as { type, icon, message, id, dismissable, action, wide } (id)}
+      <div transition:fly={{ y: 30 }}>
+        <Notification
+          {type}
+          {icon}
+          {message}
+          {dismissable}
+          {action}
+          {wide}
+          on:dismiss={() => notifications.dismiss(id)}
+        />
       </div>
     {/each}
   </div>
@@ -20,7 +27,7 @@
 <style>
   .notifications {
     position: fixed;
-    top: 20px;
+    bottom: 40px;
     left: 0;
     right: 0;
     margin: 0 auto;

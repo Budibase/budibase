@@ -13,17 +13,52 @@
   export let legend
   export let donut
   export let palette
+  export let c1, c2, c3, c4, c5
 
-  $: options = setUpChart(dataProvider)
+  $: options = setUpChart(
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumn,
+    height,
+    width,
+    dataLabels,
+    animate,
+    legend,
+    donut,
+    palette,
+    c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null,
+    customColor
+  )
 
-  // Fetch data on mount
-  const setUpChart = provider => {
-    if (!provider || !provider.rows?.length || !labelColumn || !valueColumn) {
+  $: customColor = palette === "Custom"
+
+  const setUpChart = (
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumn,
+    height,
+    width,
+    dataLabels,
+    animate,
+    legend,
+    donut,
+    palette,
+    colors,
+    customColor
+  ) => {
+    if (
+      !dataProvider ||
+      !dataProvider.rows?.length ||
+      !labelColumn ||
+      !valueColumn
+    ) {
       return null
     }
 
     // Fetch, filter and sort data
-    const { schema, rows } = provider
+    const { schema, rows } = dataProvider
     const data = rows
       .filter(row => row[labelColumn] != null && row[valueColumn] != null)
       .slice(0, 100)
@@ -42,6 +77,7 @@
       .legend(legend)
       .legendPosition("right")
       .palette(palette)
+      .colors(customColor ? colors : null)
 
     // Add data if valid datasource
     const series = data.map(row => parseFloat(row[valueColumn]))

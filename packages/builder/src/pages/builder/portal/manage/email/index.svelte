@@ -13,10 +13,9 @@
     Table,
     Checkbox,
   } from "@budibase/bbui"
-  import { email } from "stores/portal"
-  import api from "builderStore/api"
+  import { email, admin } from "stores/portal"
+  import { API } from "api"
   import { cloneDeep } from "lodash/fp"
-  import analytics, { Events } from "analytics"
 
   const ConfigTypes = {
     SMTP: "smtp",
@@ -54,55 +53,70 @@
       delete smtp.config.auth
     }
     // Save your SMTP config
-    const response = await api.post(`/api/global/configs`, smtp)
-
-    if (response.status !== 200) {
-      const error = await response.text()
-      let message
-      try {
-        message = JSON.parse(error).message
-      } catch (err) {
-        message = error
-      }
-      notifications.error(`Failed to save email settings, reason: ${message}`)
-    } else {
-      const json = await response.json()
-      smtpConfig._rev = json._rev
-      smtpConfig._id = json._id
-      notifications.success(`Settings saved.`)
-      analytics.captureEvent(Events.SMTP.SAVED)
+    try {
+      const savedConfig = await API.saveConfig(smtp)
+      smtpConfig._rev = savedConfig._rev
+      smtpConfig._id = savedConfig._id
+      await admin.getChecklist()
+      notifications.success(`Settings saved`)
+    } catch (error) {
+      notifications.error(
+        `Failed to save email settings, reason: ${error?.message || "Unknown"}`
+      )
     }
   }
 
-  async function fetchSmtp() {
-    loading = true
-    // fetch the configs for smtp
-    const smtpResponse = await api.get(
-      `/api/global/configs/${ConfigTypes.SMTP}`
-    )
-    const smtpDoc = await smtpResponse.json()
-
-    if (!smtpDoc._id) {
+  async function deleteSmtp() {
+    // Delete the SMTP config
+    try {
+      await API.deleteConfig({
+        id: smtpConfig._id,
+        rev: smtpConfig._rev,
+      })
       smtpConfig = {
         type: ConfigTypes.SMTP,
         config: {
           secure: true,
         },
       }
-    } else {
-      smtpConfig = smtpDoc
+      await admin.getChecklist()
+      notifications.success(`Settings cleared`)
+    } catch (error) {
+      notifications.error(
+        `Failed to clear email settings, reason: ${error?.message || "Unknown"}`
+      )
     }
-    loading = false
-    requireAuth = smtpConfig.config.auth != null
-    // always attach the auth for the forms purpose -
-    // this will be removed later if required
-    if (!smtpDoc.config) {
-      smtpDoc.config = {}
-    }
-    if (!smtpDoc.config.auth) {
-      smtpConfig.config.auth = {
-        type: "login",
+  }
+
+  async function fetchSmtp() {
+    loading = true
+    try {
+      // Fetch the configs for smtp
+      const smtpDoc = await API.getConfig(ConfigTypes.SMTP)
+      if (!smtpDoc._id) {
+        smtpConfig = {
+          type: ConfigTypes.SMTP,
+          config: {
+            secure: true,
+          },
+        }
+      } else {
+        smtpConfig = smtpDoc
       }
+      loading = false
+      requireAuth = smtpConfig.config.auth != null
+      // Always attach the auth for the forms purpose -
+      // this will be removed later if required
+      if (!smtpDoc.config) {
+        smtpDoc.config = {}
+      }
+      if (!smtpDoc.config.auth) {
+        smtpConfig.config.auth = {
+          type: "login",
+        }
+      }
+    } catch (error) {
+      notifications.error("Error fetching SMTP config")
     }
   }
 
@@ -162,8 +176,15 @@
         </div>
       {/if}
     </Layout>
-    <div>
+    <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
       <Button cta on:click={saveSmtp}>Save</Button>
+      <Button
+        secondary
+        on:click={deleteSmtp}
+        disabled={!$admin.checklist.smtp.checked}
+      >
+        Reset
+      </Button>
     </div>
     <Divider />
     <Layout gap="XS" noPadding>
@@ -191,5 +212,9 @@
     grid-template-columns: 120px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+  .spectrum-Settings-buttonGroup {
+    gap: var(--spectrum-global-dimension-static-size-200);
+    align-items: flex-end;
   }
 </style>

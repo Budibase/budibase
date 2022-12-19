@@ -1,0 +1,26 @@
+@charset "utf-8"
+
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,700')
+$family-sans-serif: "Roboto", sans-serif
+
+#__next
+  display: flex
+  flex-direction: column
+  justify-content: flex-start
+  align-items: stretch
+  height: 100vh
+  --bg-color: #f5f5f5
+
+.logo
+  padding: 0.75rem
+
+@import "../node_modules/bulma/bulma.sass"
+@import "../node_modules/react-notifications-component/dist/theme.css"
+
+// applied after bulma styles are enabled
+html
+  overflow-y: auto
+
+.navbar
+  background-color: var(--bg-color)
+  color: white

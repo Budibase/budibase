@@ -1,9 +1,6 @@
-export const TableNames = {
-  USERS: "ta_users",
-}
-
 export const FieldTypes = {
   STRING: "string",
+  BARCODEQR: "barcodeqr",
   LONGFORM: "longform",
   OPTIONS: "options",
   NUMBER: "number",
@@ -13,6 +10,7 @@ export const FieldTypes = {
   ATTACHMENT: "attachment",
   LINK: "link",
   FORMULA: "formula",
+  JSON: "json",
 }
 
 export const UnsortableTypes = [
@@ -24,6 +22,7 @@ export const UnsortableTypes = [
 
 export const ActionTypes = {
   ValidateForm: "ValidateForm",
+  UpdateFieldValue: "UpdateFieldValue",
   RefreshDatasource: "RefreshDatasource",
   AddDataProviderQueryExtension: "AddDataProviderQueryExtension",
   RemoveDataProviderQueryExtension: "RemoveDataProviderQueryExtension",
@@ -32,10 +31,5 @@ export const ActionTypes = {
   ChangeFormStep: "ChangeFormStep",
 }
 
-export const ApiVersion = "1"
-
-/**
- * API Version Changelog
- * v1:
- *   - Coerce types for search endpoint
- */
+export const DNDPlaceholderID = "dnd-placeholder"
+export const ScreenslotType = "screenslot"

@@ -1,37 +1,39 @@
 export class ApexOptionsBuilder {
-  formatters = {
-    ["Default"]: val => (isNaN(val) ? val : Math.round(val * 100) / 100),
-    ["Thousands"]: val => `${Math.round(val / 1000)}K`,
-    ["Millions"]: val => `${Math.round(val / 1000000)}M`,
-  }
-  options = {
-    series: [],
-    legend: {
-      show: false,
-      position: "top",
-      horizontalAlign: "right",
-      showForSingleSeries: true,
-      showForNullSeries: true,
-      showForZeroSeries: true,
-    },
-    chart: {
-      toolbar: {
+  constructor() {
+    this.formatters = {
+      ["Default"]: val => (isNaN(val) ? val : Math.round(val * 100) / 100),
+      ["Thousands"]: val => `${Math.round(val / 1000)}K`,
+      ["Millions"]: val => `${Math.round(val / 1000000)}M`,
+    }
+    this.options = {
+      series: [],
+      legend: {
         show: false,
+        position: "top",
+        horizontalAlign: "right",
+        showForSingleSeries: true,
+        showForNullSeries: true,
+        showForZeroSeries: true,
       },
-      zoom: {
-        enabled: false,
+      chart: {
+        toolbar: {
+          show: false,
+        },
+        zoom: {
+          enabled: false,
+        },
       },
-    },
-    xaxis: {
-      labels: {
-        formatter: this.formatters.Default,
+      xaxis: {
+        labels: {
+          formatter: this.formatters.Default,
+        },
       },
-    },
-    yaxis: {
-      labels: {
-        formatter: this.formatters.Default,
+      yaxis: {
+        labels: {
+          formatter: this.formatters.Default,
+        },
       },
-    },
+    }
   }
 
   setOption(path, value) {
@@ -62,8 +64,14 @@ export class ApexOptionsBuilder {
     return this.setOption(["title", "text"], title)
   }
 
-  color(color) {
-    return this.setOption(["colors"], [color])
+  colors(colors) {
+    if (!colors) {
+      delete this.options.colors
+      this.options["customColor"] = false
+      return this
+    }
+    this.options["customColor"] = true
+    return this.setOption(["colors"], colors)
   }
 
   width(width) {
@@ -176,6 +184,9 @@ export class ApexOptionsBuilder {
   }
 
   palette(palette) {
+    if (!palette) {
+      return this
+    }
     return this.setOption(
       ["theme", "palette"],
       palette.toLowerCase().replace(/[\W]/g, "")

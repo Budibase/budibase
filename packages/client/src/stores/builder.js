@@ -1,100 +1,118 @@
-import { writable, derived, get } from "svelte/store"
-import Manifest from "manifest.json"
-import { findComponentById, findComponentPathById } from "../utils/components"
-import { pingEndUser } from "../api"
-
-const dispatchEvent = (type, data = {}) => {
-  window.parent.postMessage({ type, data })
-}
+import { writable, get } from "svelte/store"
+import { API } from "api"
+import { devToolsStore } from "./devTools.js"
+import { eventStore } from "./events.js"
 
 const createBuilderStore = () => {
   const initialState = {
     inBuilder: false,
-    layout: null,
     screen: null,
     selectedComponentId: null,
     editMode: false,
     previewId: null,
-    previewType: null,
-    selectedPath: [],
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
-    isDragging: false,
+    navigation: null,
+    hiddenComponentIds: [],
+    usedPlugins: null,
+    eventResolvers: {},
+
+    // Legacy - allow the builder to specify a layout
+    layout: null,
   }
-  const writableStore = writable(initialState)
-  const derivedStore = derived(writableStore, $state => {
-    // Avoid any of this logic if we aren't in the builder preview
-    if (!$state.inBuilder) {
-      return $state
-    }
-
-    // Derive the selected component instance and definition
-    const { layout, screen, previewType, selectedComponentId } = $state
-    const asset = previewType === "layout" ? layout : screen
-    const component = findComponentById(asset?.props, selectedComponentId)
-    const prefix = "@budibase/standard-components/"
-    const type = component?._component?.replace(prefix, "")
-    const definition = type ? Manifest[type] : null
-
-    // Derive the selected component path
-    const path = findComponentPathById(asset.props, selectedComponentId) || []
-
-    return {
-      ...$state,
-      selectedComponent: component,
-      selectedComponentDefinition: definition,
-      selectedComponentPath: path?.map(component => component._id),
-    }
-  })
-
+  const store = writable(initialState)
   const actions = {
     selectComponent: id => {
-      if (id === get(writableStore).selectedComponentId) {
+      if (id === get(store).selectedComponentId) {
         return
       }
-      writableStore.update(state => ({ ...state, editMode: false }))
-      dispatchEvent("select-component", { id })
+      store.update(state => ({
+        ...state,
+        editMode: false,
+        selectedComponentId: id,
+      }))
+      devToolsStore.actions.setAllowSelection(false)
+      eventStore.actions.dispatchEvent("select-component", { id })
     },
     updateProp: (prop, value) => {
-      dispatchEvent("update-prop", { prop, value })
+      eventStore.actions.dispatchEvent("update-prop", { prop, value })
+    },
+    updateStyles: async (styles, id) => {
+      await eventStore.actions.dispatchEvent("update-styles", { styles, id })
+    },
+    keyDown: (key, ctrlKey) => {
+      eventStore.actions.dispatchEvent("key-down", { key, ctrlKey })
+    },
+    duplicateComponent: id => {
+      eventStore.actions.dispatchEvent("duplicate-component", { id })
     },
     deleteComponent: id => {
-      dispatchEvent("delete-component", { id })
+      eventStore.actions.dispatchEvent("delete-component", { id })
     },
     notifyLoaded: () => {
-      dispatchEvent("preview-loaded")
+      eventStore.actions.dispatchEvent("preview-loaded")
     },
-    pingEndUser: () => {
-      pingEndUser()
+    analyticsPing: async () => {
+      try {
+        await API.analyticsPing({ source: "app" })
+      } catch (error) {
+        // Do nothing
+      }
     },
-    setSelectedPath: path => {
-      writableStore.update(state => ({ ...state, selectedPath: path }))
-    },
-    moveComponent: (componentId, destinationComponentId, mode) => {
-      dispatchEvent("move-component", {
+    moveComponent: async (componentId, destinationComponentId, mode) => {
+      await eventStore.actions.dispatchEvent("move-component", {
         componentId,
         destinationComponentId,
         mode,
       })
     },
-    setDragging: dragging => {
-      if (dragging === get(writableStore).isDragging) {
-        return
-      }
-      writableStore.update(state => ({ ...state, isDragging: dragging }))
+    dropNewComponent: (component, parent, index) => {
+      eventStore.actions.dispatchEvent("drop-new-component", {
+        component,
+        parent,
+        index,
+      })
     },
     setEditMode: enabled => {
-      if (enabled === get(writableStore).editMode) {
+      if (enabled === get(store).editMode) {
         return
       }
-      writableStore.update(state => ({ ...state, editMode: enabled }))
+      store.update(state => ({ ...state, editMode: enabled }))
+    },
+    clickNav: () => {
+      eventStore.actions.dispatchEvent("click-nav")
+    },
+    requestAddComponent: () => {
+      eventStore.actions.dispatchEvent("request-add-component")
+    },
+    highlightSetting: setting => {
+      eventStore.actions.dispatchEvent("highlight-setting", { setting })
+    },
+    ejectBlock: (id, definition) => {
+      eventStore.actions.dispatchEvent("eject-block", { id, definition })
+    },
+    updateUsedPlugin: (name, hash) => {
+      // Check if we used this plugin
+      const used = get(store)?.usedPlugins?.find(x => x.name === name)
+      if (used) {
+        store.update(state => {
+          state.usedPlugins = state.usedPlugins.filter(x => x.name !== name)
+          state.usedPlugins.push({
+            ...used,
+            hash,
+          })
+          return state
+        })
+      }
+
+      // Notify the builder so we can reload component definitions
+      eventStore.actions.dispatchEvent("reload-plugin")
     },
   }
   return {
-    ...writableStore,
-    set: state => writableStore.set({ ...initialState, ...state }),
-    subscribe: derivedStore.subscribe,
+    ...store,
+    set: state => store.set({ ...initialState, ...state }),
     actions,
   }
 }

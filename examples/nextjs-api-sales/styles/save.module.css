@@ -1,0 +1,20 @@
+.container {
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  padding: 5rem 2rem 0;
+  align-items: center;
+  flex: 1 1 auto;
+}
+
+.formSection {
+  padding: 2rem;
+  background: var(--bg-color);
+  width: 400px;
+  border-radius: 10px;
+}
+
+.formSection h1 {
+  text-align: center;
+  color: black;
+}

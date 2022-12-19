@@ -5,218 +5,220 @@
     Input,
     ModalContent,
     Dropzone,
-    Body,
-    Checkbox,
+    Toggle,
   } from "@budibase/bbui"
-  import { store, automationStore, hostingStore } from "builderStore"
-  import { admin, auth } from "stores/portal"
-  import { string, mixed, object } from "yup"
-  import api, { get, post } from "builderStore/api"
-  import analytics, { Events } from "analytics"
+  import { store, automationStore } from "builderStore"
+  import { API } from "api"
+  import { apps, admin, auth } from "stores/portal"
   import { onMount } from "svelte"
-  import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
-  import { APP_NAME_REGEX } from "constants"
-  import TemplateList from "./TemplateList.svelte"
+  import { createValidationStore } from "helpers/validation/yup"
+  import * as appValidation from "helpers/validation/yup/app"
+  import TemplateCard from "components/common/TemplateCard.svelte"
+  import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
+  import { Roles } from "constants/backend"
 
   export let template
-  export let inline
 
-  const values = writable({ name: null })
-  const errors = writable({})
-  const touched = writable({})
-  const validator = {
-    name: string()
-      .trim()
-      .required("Your application must have a name")
-      .matches(
-        APP_NAME_REGEX,
-        "App name must be letters, numbers and spaces only"
-      ),
-    file: template?.fromFile
-      ? mixed().required("Please choose a file to import")
-      : null,
-  }
+  let creating = false
+  let defaultAppName
+  let includeSampleDB = true
 
-  let submitting = false
-  let valid = false
-  let initialTemplateInfo = template?.fromFile || template?.key
-
-  $: checkValidity($values, validator)
-  $: showTemplateSelection = !template && !initialTemplateInfo
+  const values = writable({ name: "", url: null })
+  const validation = createValidationStore()
+  $: validation.check($values)
 
   onMount(async () => {
-    await hostingStore.actions.fetchDeployedApps()
-    const existingAppNames = svelteGet(hostingStore).deployedAppNames
-    validator.name = string()
-      .trim()
-      .required("Your application must have a name")
-      .matches(APP_NAME_REGEX, "App name must be letters and numbers only")
-      .test(
-        "non-existing-app-name",
-        "Another app with the same name already exists",
-        value => {
-          return !existingAppNames.some(
-            appName => appName.toLowerCase() === value.toLowerCase()
-          )
-        }
-      )
+    const lastChar = $auth.user?.firstName
+      ? $auth.user?.firstName[$auth.user?.firstName.length - 1]
+      : null
+
+    defaultAppName =
+      lastChar && lastChar.toLowerCase() == "s"
+        ? `${$auth.user?.firstName} app`
+        : `${$auth.user.firstName}s app`
+
+    $values.name = resolveAppName(
+      template,
+      !$auth.user?.firstName ? "My app" : defaultAppName
+    )
+    nameToUrl($values.name)
+    await setupValidation()
   })
 
-  const checkValidity = async (values, validator) => {
-    const obj = object().shape(validator)
-    Object.keys(validator).forEach(key => ($errors[key] = null))
-    if (template?.fromFile && values.file == null) {
-      valid = false
-      return
-    }
+  const appPrefix = "/app"
 
-    try {
-      await obj.validate(values, { abortEarly: false })
-    } catch (validationErrors) {
-      validationErrors.inner.forEach(error => {
-        $errors[error.path] = capitalise(error.message)
-      })
-    }
+  $: appUrl = `${window.location.origin}${
+    $values.url
+      ? `${appPrefix}${$values.url}`
+      : `${appPrefix}${resolveAppUrl(template, $values.name)}`
+  }`
 
-    valid = await obj.isValid(values)
+  const resolveAppUrl = (template, name) => {
+    let parsedName
+    const resolvedName = resolveAppName(template, name)
+    parsedName = resolvedName ? resolvedName.toLowerCase() : ""
+    const parsedUrl = parsedName ? parsedName.replace(/\s+/g, "-") : ""
+    return encodeURI(parsedUrl)
+  }
+
+  const resolveAppName = (template, name) => {
+    if (template && !template.fromFile) {
+      return template.name
+    }
+    return name ? name.trim() : null
+  }
+
+  const tidyUrl = url => {
+    if (url && !url.startsWith("/")) {
+      url = `/${url}`
+    }
+    $values.url = url === "" ? null : url
+  }
+
+  const nameToUrl = appName => {
+    let resolvedUrl = resolveAppUrl(template, appName)
+    tidyUrl(resolvedUrl)
+  }
+
+  const setupValidation = async () => {
+    const applications = svelteGet(apps)
+    appValidation.name(validation, { apps: applications })
+    appValidation.url(validation, { apps: applications })
+    appValidation.file(validation, { template })
+    // init validation
+    validation.check($values)
   }
 
   async function createNewApp() {
-    const templateToUse = Object.keys(template).length === 0 ? null : template
-    submitting = true
-
-    // Check a template exists if we are important
-    if (templateToUse?.fromFile && !$values.file) {
-      $errors.file = "Please choose a file to import"
-      valid = false
-      submitting = false
-      return false
-    }
+    creating = true
 
     try {
       // Create form data to create app
       let data = new FormData()
       data.append("name", $values.name.trim())
-      data.append("useTemplate", templateToUse != null)
-      if (templateToUse) {
-        data.append("templateName", templateToUse.name)
-        data.append("templateKey", templateToUse.key)
+      if ($values.url) {
+        data.append("url", $values.url.trim())
+      }
+      data.append("useTemplate", template != null)
+      if (template) {
+        data.append("templateName", template.name)
+        data.append("templateKey", template.key)
         data.append("templateFile", $values.file)
+      } else {
+        data.append("sampleData", includeSampleDB)
       }
 
       // Create App
-      const appResp = await post("/api/applications", data, {})
-      const appJson = await appResp.json()
-      if (!appResp.ok) {
-        throw new Error(appJson.message)
-      }
-
-      analytics.captureEvent(Events.APP.CREATED, {
-        name: $values.name,
-        appId: appJson.instance._id,
-        templateToUse,
-      })
+      const createdApp = await API.createApp(data)
 
       // Select Correct Application/DB in prep for creating user
-      const applicationPkg = await get(
-        `/api/applications/${appJson.instance._id}/appPackage`
-      )
-      const pkg = await applicationPkg.json()
-      if (applicationPkg.ok) {
-        await store.actions.initialise(pkg)
-        await automationStore.actions.fetch()
-        // update checklist - incase first app
-        await admin.init()
-      } else {
-        throw new Error(pkg)
-      }
+      const pkg = await API.fetchAppPackage(createdApp.instance._id)
+      await store.actions.initialise(pkg)
+      await automationStore.actions.fetch()
+      // Update checklist - in case first app
+      await admin.init()
 
       // Create user
-      const user = {
-        roleId: $values.roleId,
-      }
-      const userResp = await api.post(`/api/users/metadata/self`, user)
-      await userResp.json()
       await auth.setInitInfo({})
-      $goto(`/builder/app/${appJson.instance._id}`)
+
+      // Create a default home screen if no template was selected
+      if (template == null) {
+        let defaultScreenTemplate = createFromScratchScreen.create()
+        defaultScreenTemplate.routing.route = "/home"
+        defaultScreenTemplate.routing.roldId = Roles.BASIC
+        try {
+          await store.actions.screens.save(defaultScreenTemplate)
+        } catch (err) {
+          console.error("Could not create a default application screen", err)
+          notifications.warning(
+            "Encountered an issue creating the default screen."
+          )
+        }
+      }
+
+      $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
+      creating = false
       console.error(error)
-      notifications.error(error)
-      submitting = false
+      notifications.error("Error creating app")
     }
-  }
-
-  function getModalTitle() {
-    let title = "Create App"
-    if (template.fromFile) {
-      title = "Import App"
-    } else if (template.key) {
-      title = "Create app from template"
-    }
-    return title
-  }
-
-  async function onCancel() {
-    template = null
-    await auth.setInitInfo({})
   }
 </script>
 
-{#if showTemplateSelection}
-  <ModalContent
-    title={"Get started quickly"}
-    showConfirmButton={false}
-    size="L"
-    onConfirm={() => {
-      template = {}
-      return false
-    }}
-    showCancelButton={!inline}
-    showCloseIcon={!inline}
-  >
-    <TemplateList
-      onSelect={(selected, { useImport } = {}) => {
-        if (!selected) {
-          template = useImport ? { fromFile: true } : {}
-          return
-        }
-        template = selected
+<ModalContent
+  title={"Create your app"}
+  confirmText={template?.fromFile ? "Import app" : "Create app"}
+  onConfirm={createNewApp}
+  disabled={!$validation.valid}
+>
+  {#if template && !template?.fromFile}
+    <TemplateCard
+      name={template.name}
+      imageSrc={template.image}
+      backgroundColour={template.background}
+      overlayEnabled={false}
+      icon={template.icon}
+    />
+  {/if}
+  {#if template?.fromFile}
+    <Dropzone
+      error={$validation.touched.file && $validation.errors.file}
+      gallery={false}
+      label="File to import"
+      value={[$values.file]}
+      on:change={e => {
+        $values.file = e.detail?.[0]
+        $validation.touched.file = true
       }}
     />
-  </ModalContent>
-{:else}
-  <ModalContent
-    title={getModalTitle()}
-    confirmText={template?.fromFile ? "Import app" : "Create app"}
-    onConfirm={createNewApp}
-    onCancel={inline ? onCancel : null}
-    cancelText={inline ? "Back" : undefined}
-    showCloseIcon={!inline}
-    disabled={!valid}
-  >
-    {#if template?.fromFile}
-      <Dropzone
-        error={$touched.file && $errors.file}
-        gallery={false}
-        label="File to import"
-        value={[$values.file]}
-        on:change={e => {
-          $values.file = e.detail?.[0]
-          $touched.file = true
-        }}
-      />
-    {/if}
-    <Body size="S">
-      Give your new app a name, and choose which groups have access (paid plans
-      only).
-    </Body>
+  {/if}
+  <Input
+    autofocus={true}
+    bind:value={$values.name}
+    disabled={creating}
+    error={$validation.touched.name && $validation.errors.name}
+    on:blur={() => ($validation.touched.name = true)}
+    on:change={nameToUrl($values.name)}
+    label="Name"
+    placeholder={defaultAppName}
+  />
+  <span>
     <Input
-      bind:value={$values.name}
-      error={$touched.name && $errors.name}
-      on:blur={() => ($touched.name = true)}
-      label="Name"
+      bind:value={$values.url}
+      disabled={creating}
+      error={$validation.touched.url && $validation.errors.url}
+      on:blur={() => ($validation.touched.url = true)}
+      on:change={tidyUrl($values.url)}
+      label="URL"
+      placeholder={$values.url
+        ? $values.url
+        : `/${resolveAppUrl(template, $values.name)}`}
     />
-    <Checkbox label="Group access" disabled value={true} text="All users" />
-  </ModalContent>
-{/if}
+    {#if $values.url && $values.url !== "" && !$validation.errors.url}
+      <div class="app-server" title={appUrl}>
+        {appUrl}
+      </div>
+    {/if}
+  </span>
+  {#if !template && !template?.fromFile}
+    <span>
+      <Toggle
+        text="Include sample data"
+        bind:value={includeSampleDB}
+        disabled={creating}
+      />
+    </span>
+  {/if}
+</ModalContent>
+
+<style>
+  .app-server {
+    color: var(--spectrum-global-color-gray-600);
+    margin-top: 10px;
+    width: 320px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

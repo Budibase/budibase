@@ -11,7 +11,7 @@
     Body,
     Icon,
   } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
+  import { TriggerStepID } from "constants/backend/automations"
 
   let name
   let selectedTrigger
@@ -24,29 +24,32 @@
     nameTouched && !name ? "Please specify a name for the automation." : null
 
   async function createAutomation() {
-    await automationStore.actions.create({
-      name,
-      instanceId,
-    })
-    const newBlock = $automationStore.selectedAutomation.constructBlock(
-      "TRIGGER",
-      triggerVal.stepId,
-      triggerVal
-    )
+    try {
+      await automationStore.actions.create({
+        name,
+        instanceId,
+      })
+      const newBlock = $automationStore.selectedAutomation.constructBlock(
+        "TRIGGER",
+        triggerVal.stepId,
+        triggerVal
+      )
 
-    automationStore.actions.addBlockToAutomation(newBlock)
-    if (triggerVal.stepId === "WEBHOOK") {
-      webhookModal.show
+      automationStore.actions.addBlockToAutomation(newBlock)
+      if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
+        webhookModal.show
+      }
+
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
+
+      notifications.success(`Automation ${name} created`)
+
+      $goto(`./${$automationStore.selectedAutomation.automation._id}`)
+    } catch (error) {
+      notifications.error("Error creating automation")
     }
-
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
-
-    notifications.success(`Automation ${name} created.`)
-
-    $goto(`./${$automationStore.selectedAutomation.automation._id}`)
-    analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
   }
   $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
 
@@ -73,7 +76,7 @@
   </Body>
   <Input
     bind:value={name}
-    on:change={() => (nameTouched = true)}
+    on:input={() => (nameTouched = true)}
     bind:error={nameError}
     label="Name"
   />
@@ -121,10 +124,13 @@
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
-    border: solid var(--spectrum-alias-border-color);
     border-radius: 5px;
     box-sizing: border-box;
     border-width: 2px;
+  }
+
+  .item:hover {
+    background: var(--spectrum-alias-background-color-tertiary);
   }
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);

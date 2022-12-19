@@ -1,30 +1,66 @@
 <script context="module">
+  // Cache the definition of settings for each component type
   let SettingsDefinitionCache = {}
+  let SettingsDefinitionMapCache = {}
+
+  // Cache the settings of each component ID.
+  // This speeds up remounting as well as repeaters.
+  let InstanceSettingsCache = {}
 </script>
 
 <script>
-  import { getContext, setContext } from "svelte"
-  import { writable } from "svelte/store"
-  import * as AppComponents from "components/app"
-  import Router from "./Router.svelte"
-  import { enrichProps, propsAreSame } from "utils/componentProps"
-  import { builderStore } from "stores"
-  import { hashString } from "utils/helpers"
-  import Manifest from "manifest.json"
+  import { getContext, setContext, onMount, onDestroy } from "svelte"
+  import { writable, get } from "svelte/store"
+  import {
+    enrichProps,
+    propsAreSame,
+    getSettingsDefinition,
+  } from "utils/componentProps"
+  import {
+    builderStore,
+    devToolsStore,
+    componentStore,
+    appStore,
+    dndComponentPath,
+    dndIsDragging,
+  } from "stores"
+  import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
+  import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
+  import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
+  import Skeleton from "components/app/Skeleton.svelte"
 
   export let instance = {}
   export let isLayout = false
   export let isScreen = false
   export let isBlock = false
+  export let parent = null
 
-  // Component settings are the un-enriched settings for this component that
-  // need to be enriched at this level.
-  // Nested settings are the un-enriched block settings that are to be passed on
-  // and enriched at a deeper level.
-  let componentSettings
-  let nestedSettings
+  // Get parent contexts
+  const context = getContext("context")
+  const loading = getContext("loading")
+  const insideScreenslot = !!getContext("screenslot")
+
+  // Create component context
+  const store = writable({})
+  setContext("component", store)
+
+  // Ref to the svelte component
+  let ref
+
+  // Initial settings are passed in on first render of the component.
+  // When the first instance of cachedSettings are set, this object is set to
+  // reference cachedSettings, so that mutations to cachedSettings also affect
+  // initialSettings, but it does not get caught by svelte invalidation - which
+  // would happen if we spread cachedSettings directly to the component.
+  let initialSettings
+
+  // Dynamic settings contain bindings and need enriched
+  let dynamicSettings
+
+  // Static settings do not contain any bindings and can be passed on down
+  let staticSettings
 
   // The enriched component settings
   let enrichedSettings
@@ -49,74 +85,103 @@
   // Visibility flag used by conditional UI
   let visible = true
 
-  // Get contexts
-  const context = getContext("context")
-  const insideScreenslot = !!getContext("screenslot")
+  // Component information derived during initialisation
+  let constructor
+  let definition
+  let settingsDefinition
+  let settingsDefinitionMap
+  let missingRequiredSettings = false
 
-  // Create component context
-  const componentStore = writable({})
-  setContext("component", componentStore)
+  // Temporary styles which can be added in the app preview for things like DND.
+  // We clear these whenever a new instance is received.
+  let ephemeralStyles
+
+  // Set up initial state for each new component instance
+  $: initialise(instance)
 
   // Extract component instance info
-  $: constructor = getComponentConstructor(instance._component)
-  $: definition = getComponentDefinition(instance._component)
-  $: settingsDefinition = getSettingsDefinition(definition)
   $: children = instance._children || []
   $: id = instance._id
-  $: name = instance._instanceName
+  $: name = isScreen ? "Screen" : instance._instanceName
+  $: icon = definition?.icon
 
   // Determine if the component is selected or is part of the critical path
   // leading to the selected component
   $: selected =
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
-  $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
+  $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
+  $: inDndPath = $dndComponentPath?.includes(id)
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
-  $: editable = !!definition?.editable
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
+  $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
+  $: editable = !!definition?.editable && !hasMissingRequiredSettings
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
-  $: interactive =
-    $builderStore.inBuilder &&
-    ($builderStore.previewType === "layout" || insideScreenslot) &&
-    !isBlock
+  $: builderInteractive =
+    $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
+  $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
+  $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
-  $: draggable = !inDragPath && interactive && !isLayout && !isScreen
-  $: droppable = interactive && !isLayout && !isScreen
+  $: draggable =
+    !inDragPath &&
+    interactive &&
+    !isLayout &&
+    !isScreen &&
+    definition?.draggable !== false
+  $: droppable = interactive
+  $: builderHidden =
+    $builderStore.inBuilder && $builderStore.hiddenComponentIds?.includes(id)
 
   // Empty components are those which accept children but do not have any.
   // Empty states can be shown for these components, but can be disabled
   // in the component manifest.
-  $: empty = interactive && !children.length && hasChildren
+  $: empty =
+    !isBlock &&
+    ((interactive && !children.length && hasChildren) ||
+      hasMissingRequiredSettings)
   $: emptyState = empty && showEmptyState
 
-  // Raw settings are all settings excluding internal props and children
-  $: rawSettings = getRawSettings(instance)
-  $: instanceKey = hashString(JSON.stringify(rawSettings))
-
-  // Update and enrich component settings
-  $: updateSettings(rawSettings, instanceKey, settingsDefinition, $context)
+  // Enrich component settings
+  $: enrichComponentSettings($context, settingsDefinitionMap)
 
   // Evaluate conditional UI settings and store any component setting changes
-  // which need to be made
-  $: evaluateConditions(enrichedSettings?._conditions)
+  // which need to be made. This is broken into 2 lines to avoid svelte
+  // reactivity re-evaluating conditions more often than necessary.
+  $: conditions = enrichedSettings?._conditions
+  $: evaluateConditions(conditions)
 
-  // Build up the final settings object to be passed to the component
-  $: cacheSettings(enrichedSettings, nestedSettings, conditionalSettings)
+  // Determine and apply settings to the component
+  $: applySettings(staticSettings, enrichedSettings, conditionalSettings)
 
-  // Render key is used to determine when components need to fully remount
-  $: renderKey = getRenderKey(id, editing)
+  // Determine custom css.
+  // Broken out as a separate variable to minimize reactivity updates.
+  $: customCSS = cachedSettings?._css
+
+  // Scroll the selected element into view
+  $: selected && scrollIntoView()
+
+  // When dragging and dropping, pad components to allow dropping between
+  // nested layers. Only reset this when dragging stops.
+  let pad = false
+  $: pad = pad || (interactive && hasChildren && inDndPath)
+  $: $dndIsDragging, (pad = false)
 
   // Update component context
-  $: componentStore.set({
+  $: store.set({
     id,
     children: children.length,
     styles: {
       ...instance._styles,
+      normal: {
+        ...instance._styles?.normal,
+        ...ephemeralStyles,
+      },
+      custom: customCSS,
       id,
       empty: emptyState,
       interactive,
@@ -125,111 +190,165 @@
     },
     empty: emptyState,
     selected,
+    inSelectedPath,
     name,
     editing,
+    type: instance._component,
+    missingRequiredSettings,
   })
 
-  // Extracts all settings from the component instance
-  const getRawSettings = instance => {
-    let validSettings = {}
-    Object.entries(instance)
-      .filter(([name]) => name === "_conditions" || !name.startsWith("_"))
-      .forEach(([key, value]) => {
-        validSettings[key] = value
-      })
-    return validSettings
-  }
-
-  // Gets the component constructor for the specified component
-  const getComponentConstructor = component => {
-    const split = component?.split("/")
-    const name = split?.[split.length - 1]
-    if (name === "screenslot" && $builderStore.previewType !== "layout") {
-      return Router
+  const initialise = (instance, force = false) => {
+    if (instance == null) {
+      return
     }
-    return AppComponents[name]
-  }
 
-  // Gets this component's definition from the manifest
-  const getComponentDefinition = component => {
-    const prefix = "@budibase/standard-components/"
-    const type = component?.replace(prefix, "")
-    return type ? Manifest[type] : null
-  }
+    // Ensure we're processing a new instance
+    const instanceKey = Helpers.hashString(JSON.stringify(instance))
+    if (instanceKey === lastInstanceKey && !force) {
+      return
+    } else {
+      lastInstanceKey = instanceKey
+    }
 
-  // Gets the definition of this component's settings from the manifest
-  const getSettingsDefinition = definition => {
+    // Pull definition and constructor
+    const component = instance._component
+    constructor = componentStore.actions.getComponentConstructor(component)
+    definition = componentStore.actions.getComponentDefinition(component)
     if (!definition) {
-      return []
+      return
     }
+
+    // Get the settings definition for this component, and cache it
     if (SettingsDefinitionCache[definition.name]) {
-      return SettingsDefinitionCache[definition.name]
+      settingsDefinition = SettingsDefinitionCache[definition.name]
+      settingsDefinitionMap = SettingsDefinitionMapCache[definition.name]
+    } else {
+      settingsDefinition = getSettingsDefinition(definition)
+      settingsDefinitionMap = getSettingsDefinitionMap(settingsDefinition)
+      SettingsDefinitionCache[definition.name] = settingsDefinition
+      SettingsDefinitionMapCache[definition.name] = settingsDefinitionMap
     }
-    let settings = []
-    definition.settings?.forEach(setting => {
-      if (setting.section) {
-        settings = settings.concat(setting.settings || [])
-      } else {
-        settings.push(setting)
+
+    // Parse the instance settings, and cache them
+    let instanceSettings
+    if (InstanceSettingsCache[instanceKey]) {
+      instanceSettings = InstanceSettingsCache[instanceKey]
+    } else {
+      instanceSettings = getInstanceSettings(instance, settingsDefinition)
+      InstanceSettingsCache[instanceKey] = instanceSettings
+    }
+
+    // Update the settings types
+    staticSettings = instanceSettings.staticSettings
+    dynamicSettings = instanceSettings.dynamicSettings
+
+    // Check if we have any missing required settings
+    missingRequiredSettings = settingsDefinition.filter(setting => {
+      let empty = instance[setting.key] == null || instance[setting.key] === ""
+      let missing = setting.required && empty
+
+      // Check if this setting depends on another, as it may not be required
+      if (setting.dependsOn) {
+        const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
+        const dependsOnValue = setting.dependsOn.value
+        const realDependentValue = instance[dependsOnKey]
+        if (dependsOnValue == null && realDependentValue == null) {
+          return false
+        }
+        if (dependsOnValue !== realDependentValue) {
+          return false
+        }
       }
+
+      return missing
     })
-    SettingsDefinitionCache[definition] = settings
-    return settings
+
+    // Force an initial enrichment of the new settings
+    enrichComponentSettings(get(context), settingsDefinitionMap, {
+      force: true,
+    })
   }
 
-  // Updates and enriches component settings when raw settings change
-  const updateSettings = (settings, key, settingsDefinition, context) => {
-    const instanceChanged = key !== lastInstanceKey
-
-    // Derive component and nested settings if the instance changed
-    if (instanceChanged) {
-      splitRawSettings(settings, settingsDefinition)
-    }
-
-    // Enrich component settings
-    enrichComponentSettings(componentSettings, context, instanceChanged)
-
-    // Update instance key
-    if (instanceChanged) {
-      lastInstanceKey = key
-    }
+  const getSettingsDefinitionMap = settingsDefinition => {
+    let map = {}
+    settingsDefinition?.forEach(setting => {
+      map[setting.key] = setting
+    })
+    return map
   }
 
-  // Splits the raw settings into those destined for the component itself
-  // and nexted settings for child components inside blocks
-  const splitRawSettings = (rawSettings, settingsDefinition) => {
-    let newComponentSettings = { ...rawSettings }
-    let newNestedSettings = { ...rawSettings }
+  const getInstanceSettings = (instance, settingsDefinition) => {
+    // Get raw settings
+    let settings = {}
+    Object.entries(instance)
+      .filter(([name]) => !name.startsWith("_"))
+      .forEach(([key, value]) => {
+        settings[key] = value
+      })
+    let newStaticSettings = { ...settings }
+    let newDynamicSettings = { ...settings }
+
+    // Attach some internal properties
+    newDynamicSettings["_conditions"] = instance._conditions
+    newDynamicSettings["_css"] = instance._styles?.custom
+
+    // Derive static, dynamic and nested settings if the instance changed
     settingsDefinition?.forEach(setting => {
       if (setting.nested) {
-        delete newComponentSettings[setting.key]
+        delete newDynamicSettings[setting.key]
       } else {
-        delete newNestedSettings[setting.key]
+        const value = settings[setting.key]
+        if (value == null) {
+          delete newDynamicSettings[setting.key]
+        } else if (typeof value === "string" && value.includes("{{")) {
+          // Strings can be trivially checked
+          delete newStaticSettings[setting.key]
+        } else if (setting.type === "event") {
+          // Always treat button actions as dynamic
+          delete newStaticSettings[setting.key]
+        } else if (typeof value === "object") {
+          // Stringify and check objects
+          const stringified = JSON.stringify(value)
+          if (stringified.includes("{{")) {
+            delete newStaticSettings[setting.key]
+          } else {
+            delete newDynamicSettings[setting.key]
+          }
+        } else {
+          // For other types, we can safely assume they are static
+          delete newDynamicSettings[setting.key]
+        }
       }
     })
-    componentSettings = newComponentSettings
-    nestedSettings = newNestedSettings
+
+    return {
+      staticSettings: newStaticSettings,
+      dynamicSettings: newDynamicSettings,
+    }
   }
 
   // Enriches any string component props using handlebars
-  const enrichComponentSettings = (rawSettings, context, instanceChanged) => {
+  const enrichComponentSettings = (
+    context,
+    settingsDefinitionMap,
+    options = { force: false }
+  ) => {
     const contextChanged = context.key !== lastContextKey
-
-    // Skip enrichment if the context and instance are unchanged
-    if (!contextChanged) {
-      if (!instanceChanged) {
-        return
-      }
-    } else {
-      lastContextKey = context.key
+    if (!contextChanged && !options?.force) {
+      return
     }
+    lastContextKey = context.key
 
     // Record the timestamp so we can reference it after enrichment
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
 
     // Enrich settings with context
-    const newEnrichedSettings = enrichProps(rawSettings, context)
+    const newEnrichedSettings = enrichProps(
+      dynamicSettings,
+      context,
+      settingsDefinitionMap
+    )
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {
@@ -264,67 +383,161 @@
   // Combines and caches all settings which will be passed to the component
   // instance. Settings are aggressively memoized to avoid triggering svelte
   // reactive statements as much as possible.
-  const cacheSettings = (enriched, nested, conditional) => {
-    const allSettings = { ...enriched, ...nested, ...conditional }
+  const applySettings = (
+    staticSettings,
+    enrichedSettings,
+    conditionalSettings
+  ) => {
+    const allSettings = {
+      ...staticSettings,
+      ...enrichedSettings,
+      ...conditionalSettings,
+    }
     if (!cachedSettings) {
-      cachedSettings = allSettings
+      cachedSettings = { ...allSettings }
+      initialSettings = cachedSettings
     } else {
       Object.keys(allSettings).forEach(key => {
-        if (!propsAreSame(allSettings[key], cachedSettings[key])) {
+        const same = propsAreSame(allSettings[key], cachedSettings[key])
+        if (!same) {
+          // Updated cachedSettings (which is assigned by reference to
+          // initialSettings) so that if we remount the component then the
+          // initial props are up to date. By setting it this way rather than
+          // setting it on initialSettings directly, we avoid a double render.
           cachedSettings[key] = allSettings[key]
+
+          // Don't update components for internal properties
+          if (key.startsWith("_")) {
+            return
+          }
+
+          if (ref?.$$set) {
+            // Programmatically set the prop to avoid svelte reactive statements
+            // firing inside components. This circumvents the problems caused by
+            // spreading a props object.
+            ref.$$set({ [key]: allSettings[key] })
+          } else {
+            // Sometimes enrichment can occur multiple times before the
+            // component has mounted and been assigned a ref.
+            // In these cases, for some reason we need to update the
+            // initial settings object, even though it is equivalent by
+            // reference to cached settings. This solves the problem of multiple
+            // initial enrichments, while also not causing wasted renders for
+            // any components not affected by this issue.
+            initialSettings[key] = allSettings[key]
+          }
         }
       })
     }
   }
 
-  // Generates a key used to determine when components need to fully remount.
-  // Currently only toggling editing requires remounting.
-  const getRenderKey = (id, editing) => {
-    return hashString(`${id}-${editing}`)
+  const scrollIntoView = () => {
+    // Don't scroll into view if we selected this component because we were
+    // starting dragging on it
+    if (get(dndIsDragging)) {
+      return
+    }
+    const node = document.getElementsByClassName(id)?.[0]?.children[0]
+    if (!node) {
+      return
+    }
+    node.style.scrollMargin = "100px"
+    node.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+      inline: "start",
+    })
   }
+
+  onMount(() => {
+    if (
+      $appStore.isDevApp &&
+      !componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.registerInstance(id, {
+        component: instance._component,
+        getSettings: () => cachedSettings,
+        getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
+        getDataContext: () => get(context),
+        reload: () => initialise(instance, true),
+        setEphemeralStyles: styles => (ephemeralStyles = styles),
+      })
+    }
+  })
+
+  onDestroy(() => {
+    if (
+      $appStore.isDevApp &&
+      componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.unregisterInstance(id)
+    }
+  })
+
+  $: showSkeleton =
+    $loading &&
+    definition.name !== "Screenslot" &&
+    children.length === 0 &&
+    !instance._blockElementHasChildren &&
+    !definition.block &&
+    definition.skeleton !== false
 </script>
 
-{#key renderKey}
-  {#if constructor && cachedSettings && (visible || inSelectedPath)}
-    <!-- The ID is used as a class because getElementsByClassName is O(1) -->
-    <!-- and the performance matters for the selection indicators -->
-    <div
-      class={`component ${id}`}
-      class:draggable
-      class:droppable
-      class:empty
-      class:interactive
-      class:editing
-      class:block={isBlock}
-      data-id={id}
-      data-name={name}
-    >
-      <svelte:component this={constructor} {...cachedSettings}>
-        {#if children.length}
-          {#each children as child (child._id)}
-            <svelte:self instance={child} />
-          {/each}
-        {:else if emptyState}
+{#if showSkeleton}
+  <Skeleton
+    height={initialSettings?.height || definition?.size?.height || 0}
+    width={initialSettings?.width || definition?.size?.width || 0}
+  />
+{:else if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}
+  <!-- The ID is used as a class because getElementsByClassName is O(1) -->
+  <!-- and the performance matters for the selection indicators -->
+  <div
+    class={`component ${id}`}
+    class:draggable
+    class:droppable
+    class:empty
+    class:interactive
+    class:editing
+    class:pad
+    class:parent={hasChildren}
+    class:block={isBlock}
+    data-id={id}
+    data-name={name}
+    data-icon={icon}
+    data-parent={parent}
+  >
+    <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
+      {#if hasMissingRequiredSettings}
+        <ComponentPlaceholder />
+      {:else if children.length}
+        {#each children as child (child._id)}
+          <svelte:self instance={child} parent={id} />
+        {/each}
+      {:else if emptyState}
+        {#if isScreen}
+          <ScreenPlaceholder />
+        {:else}
           <Placeholder />
-        {:else if isBlock}
-          <slot />
         {/if}
-      </svelte:component>
-    </div>
-  {/if}
-{/key}
+      {:else if isBlock}
+        <slot />
+      {/if}
+    </svelte:component>
+  </div>
+{/if}
 
 <style>
   .component {
     display: contents;
   }
-  .interactive :global(*:hover) {
-    cursor: pointer;
+  .component.pad :global(> *) {
+    padding: var(--spacing-m) !important;
+    gap: var(--spacing-m) !important;
+    border: 2px dashed var(--spectrum-global-color-gray-400) !important;
+    border-radius: 4px !important;
+    transition: padding 260ms ease-out, border 260ms ease-out;
   }
-  .draggable :global(*:hover) {
-    cursor: grab;
-  }
-  .editing :global(*:hover) {
-    cursor: auto;
+  .interactive :global(*) {
+    cursor: default;
   }
 </style>
