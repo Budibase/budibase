@@ -159,7 +159,7 @@ jobs:
 #        run: |
 #          echo "Ref is not develop, you must run this job from develop."
 #          exit 1
-#      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - name: Setup Helm
         uses: azure/setup-helm@v1
