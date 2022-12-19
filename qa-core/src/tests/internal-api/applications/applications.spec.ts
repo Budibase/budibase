@@ -57,7 +57,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     await config.applications.canRender()
 
     // publish app
-    await config.applications.publish(<string>app.url)
+    await config.applications.publish(<string>app.appId)
 
     // check published app renders
     config.applications.api.appId = db.getProdAppID(app.appId!)
@@ -84,7 +84,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     config.applications.api.appId = app.appId
 
     // publish app
-    await config.applications.publish(<string>app.url)
+    await config.applications.publish(<string>app._id)
 
     const [syncResponse, sync] = await config.applications.sync(
       <string>app.appId
@@ -116,7 +116,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     config.applications.api.appId = app.appId
 
     // publish app
-    await config.applications.publish(<string>app.url)
+    await config.applications.publish(<string>app._id)
 
     // Change/add component to the app
     await config.screen.create(generateScreen("BASIC"))

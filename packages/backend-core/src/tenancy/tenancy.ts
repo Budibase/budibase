@@ -1,4 +1,4 @@
-import { doWithDB, queryPlatformView, getGlobalDBName } from "../db"
+import { doWithDB, getGlobalDBName } from "../db"
 import {
   DEFAULT_TENANT_ID,
   getTenantId,
@@ -8,11 +8,10 @@ import {
 import env from "../environment"
 import {
   BBContext,
-  PlatformUser,
   TenantResolutionStrategy,
   GetTenantIdOptions,
 } from "@budibase/types"
-import { Header, StaticDatabases, ViewName } from "../constants"
+import { Header, StaticDatabases } from "../constants"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
@@ -111,27 +110,7 @@ export async function lookupTenantId(userId: string) {
   })
 }
 
-// lookup, could be email or userId, either will return a doc
-export async function getTenantUser(
-  identifier: string
-): Promise<PlatformUser | undefined> {
-  // use the view here and allow to find anyone regardless of casing
-  // Use lowercase to ensure email login is case-insensitive
-  const users = await queryPlatformView<PlatformUser>(
-    ViewName.PLATFORM_USERS_LOWERCASE,
-    {
-      keys: [identifier.toLowerCase()],
-      include_docs: true,
-    }
-  )
-  if (Array.isArray(users)) {
-    return users[0]
-  } else {
-    return users
-  }
-}
-
-export function isUserInAppTenant(appId: string, user?: any) {
+export const isUserInAppTenant = (appId: string, user?: any) => {
   let userTenantId
   if (user) {
     userTenantId = user.tenantId || DEFAULT_TENANT_ID

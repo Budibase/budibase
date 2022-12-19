@@ -104,7 +104,6 @@
   }
 
   function onClickTable(table) {
-    tables.select(table)
     $goto(`../../table/${table._id}`)
   }
 
