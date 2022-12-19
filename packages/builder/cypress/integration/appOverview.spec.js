@@ -9,7 +9,7 @@ filterTests(["all"], () => {
       cy.createApp("Cypress Tests")
     })
 
-    it("Should be accessible from the applications list", () => {
+    xit("Should be accessible from the applications list", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .title")
         .eq(0)
@@ -27,7 +27,7 @@ filterTests(["all"], () => {
     })
 
     // Find a more suitable place for this.
-    it("Should allow unlocking in the app list", () => {
+    xit("Should allow unlocking in the app list", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
 
       cy.get(".appTable .lock-status").eq(0).contains("Locked by you").click()
@@ -38,7 +38,7 @@ filterTests(["all"], () => {
       cy.get(".lock-status").should("not.be.visible")
     })
 
-    it("Should allow unlocking in the app overview screen", () => {
+    xit("Should allow unlocking in the app overview screen", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
 
       cy.get(".appTable .app-row-actions button")
@@ -58,7 +58,7 @@ filterTests(["all"], () => {
       cy.get(".lock-status").should("not.be.visible")
     })
 
-    it("Should reflect the deploy state of an app that hasn't been published.", () => {
+    xit("Should reflect the deploy state of an app that hasn't been published.", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
 
       cy.get(".appTable .app-row-actions button")
@@ -81,7 +81,7 @@ filterTests(["all"], () => {
       })
     })
 
-    it("Should reflect the app deployment state", () => {
+    xit("Should reflect the app deployment state", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       cy.get(".appTable .app-row-actions button")
         .contains("Edit")
@@ -117,7 +117,7 @@ filterTests(["all"], () => {
       })
     })
 
-    it("Should reflect an application that has been unpublished", () => {
+    xit("Should reflect an application that has been unpublished", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
         .contains("Edit")
@@ -154,7 +154,7 @@ filterTests(["all"], () => {
       })
     })
 
-    it("Should allow the editing of the application icon and colour", () => {
+    xit("Should allow the editing of the application icon and colour", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")
@@ -196,7 +196,7 @@ filterTests(["all"], () => {
       })
     })
 
-    it("Should reflect the last time the application was edited", () => {
+    xit("Should reflect the last time the application was edited", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")
@@ -221,7 +221,7 @@ filterTests(["all"], () => {
       })
     })
 
-    it("Should reflect application version is up-to-date", () => {
+    xit("Should reflect application version is up-to-date", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")
@@ -302,7 +302,7 @@ filterTests(["all"], () => {
       })
     })
 
-    it("Should allow editing of the app details.", () => {
+    xit("Should allow editing of the app details.", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")
@@ -373,13 +373,13 @@ filterTests(["all"], () => {
             .contains("Copy App ID")
             .click({ force: true })
         })
-      
+
       cy.get(".spectrum-Toast-content")
-      .contains("App ID copied to clipboard.")
-      .should("be.visible")
+        .contains("App ID copied to clipboard.")
+        .should("be.visible")
     })
 
-    it("Should allow unpublishing of the application via the Unpublish link", () => {
+    xit("Should allow unpublishing of the application via the Unpublish link", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")
@@ -388,7 +388,7 @@ filterTests(["all"], () => {
 
       cy.get(`[data-cy="app-status"]`).within(() => {
         cy.contains("Unpublish").click({ force: true })
-        })
+      })
 
       cy.get("[data-cy='unpublish-modal']")
         .should("be.visible")
@@ -399,11 +399,11 @@ filterTests(["all"], () => {
       cy.get(".overview-tab [data-cy='app-status']").within(() => {
         cy.get(".status-display").contains("Unpublished")
         cy.get(".status-display .icon svg[aria-label='GlobeStrike']")
-        .should("exist")
+          .should("exist")
       })
     })
 
-    it("Should allow deleting of the application", () => {
+    xit("Should allow deleting of the application", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")
