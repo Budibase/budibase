@@ -12,7 +12,6 @@
   import { ProgressCircle } from "@budibase/bbui"
   import CopyInput from "components/common/inputs/CopyInput.svelte"
 
-  let feedbackModal
   let publishModal
   let asyncModal
   let publishCompleteModal
@@ -23,13 +22,13 @@
 
   export let onOk
 
-  async function deployApp() {
+  async function publishApp() {
     try {
       //In Progress
       asyncModal.show()
       publishModal.hide()
 
-      published = await API.deployAppChanges()
+      published = await API.publishAppChanges($store.appId)
 
       if (typeof onOk === "function") {
         await onOk()
@@ -56,20 +55,11 @@
 </script>
 
 <Button cta on:click={publishModal.show}>Publish</Button>
-<Modal bind:this={feedbackModal}>
-  <ModalContent
-    title="Enjoying Budibase?"
-    size="L"
-    showConfirmButton={false}
-    showCancelButton={false}
-  />
-</Modal>
-
 <Modal bind:this={publishModal}>
   <ModalContent
     title="Publish to Production"
     confirmText="Publish"
-    onConfirm={deployApp}
+    onConfirm={publishApp}
     dataCy={"deploy-app-modal"}
   >
     <span

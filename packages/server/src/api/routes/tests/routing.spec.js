@@ -9,7 +9,6 @@ const route = "/test"
 // there are checks which are disabled in test env,
 // these checks need to be enabled for this test
 
-
 describe("/routing", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -26,7 +25,7 @@ describe("/routing", () => {
     screen2.routing.roleId = BUILTIN_ROLE_IDS.POWER
     screen2.routing.route = route
     screen2 = await config.createScreen(screen2)
-    await config.deploy()
+    await config.publish()
   })
 
   describe("fetch", () => {

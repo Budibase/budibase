@@ -327,6 +327,8 @@ const showNotificationHandler = action => {
   notificationStore.actions[type]?.(message, autoDismiss)
 }
 
+const promptUserHandler = () => {}
+
 const OpenSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
@@ -357,6 +359,7 @@ const handlerMap = {
   ["Export Data"]: exportDataHandler,
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
+  ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: OpenSidePanelHandler,
   ["Close Side Panel"]: CloseSidePanelHandler,
 }
@@ -366,6 +369,7 @@ const confirmTextMap = {
   ["Save Row"]: "Are you sure you want to save this row?",
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
+  ["Prompt User"]: "Are you sure you want to contiune?",
 }
 
 /**
@@ -417,8 +421,12 @@ export const enrichButtonActions = (actions, context) => {
           return new Promise(resolve => {
             const defaultText = confirmTextMap[action["##eventHandlerType"]]
             const confirmText = action.parameters?.confirmText || defaultText
+
+            const defaultTitleText = action["##eventHandlerType"]
+            const customTitleText =
+              action.parameters?.customTitleText || defaultTitleText
             confirmationStore.actions.showConfirmation(
-              action["##eventHandlerType"],
+              customTitleText,
               confirmText,
               async () => {
                 // When confirmed, execute this action immediately,
@@ -429,7 +437,7 @@ export const enrichButtonActions = (actions, context) => {
                   buttonContext.push(result)
                   const newContext = { ...context, actions: buttonContext }
 
-                  // Enrich and call the next button action
+                  // Enrich and call the next button action if there is more than one action remaining
                   const next = enrichButtonActions(
                     actions.slice(i + 1),
                     newContext

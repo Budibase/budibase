@@ -102,6 +102,16 @@ export interface components {
         lockedBy?: { [key: string]: unknown };
       };
     };
+    deploymentOutput: {
+      data: {
+        /** @description The ID of the deployment. */
+        _id: string;
+        /** @description The status of the deployment. */
+        status: "SUCCESS" | "FAILURE";
+        /** @description The URL by which the published app is accessed. */
+        appUrl?: string;
+      }
+    };
     applicationSearch: {
       data: {
         /** @description The name of the app. */

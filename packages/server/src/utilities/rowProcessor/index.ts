@@ -1,12 +1,11 @@
 import * as linkRows from "../../db/linkedRows"
 import { FieldTypes, AutoFieldSubTypes } from "../../constants"
-import { attachmentsRelativeURL } from "../index"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
 import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { Row, Table, ContextUser } from "@budibase/types"
+import { Row, RowAttachment, Table, ContextUser } from "@budibase/types"
 const { cloneDeep } = require("lodash/fp")
 export * from "./utils"
 
@@ -35,7 +34,7 @@ function getRemovedAttachmentKeys(
     return oldKeys
   }
   const newKeys = row[attachmentKey].map((attachment: any) => attachment.key)
-  return oldKeys.filter((key: any) => newKeys.indexOf(key) === -1)
+  return oldKeys.filter((key: string) => newKeys.indexOf(key) === -1)
 }
 
 /**
@@ -105,7 +104,7 @@ export function processAutoColumn(
  * @param {object} type The type fo coerce to
  * @returns {object} The coerced value
  */
-export function coerce(row: any, type: any) {
+export function coerce(row: any, type: string) {
   // no coercion specified for type, skip it
   if (!TYPE_TRANSFORM_MAP[type]) {
     return row
@@ -158,6 +157,16 @@ export function inputProcessing(
     else {
       clonedRow[key] = coerce(value, field.type)
     }
+
+    // remove any attachment urls, they are generated on read
+    if (field.type === FieldTypes.ATTACHMENT) {
+      const attachments = clonedRow[key]
+      if (attachments?.length) {
+        attachments.forEach((attachment: RowAttachment) => {
+          delete attachment.url
+        })
+      }
+    }
   }
 
   if (!clonedRow._id || !clonedRow._rev) {
@@ -194,15 +203,15 @@ export async function outputProcessing(
   // process formulas
   enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
 
-  // update the attachments URL depending on hosting
+  // set the attachments URLs
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
       for (let row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue
         }
-        row[property].forEach((attachment: any) => {
-          attachment.url = attachmentsRelativeURL(attachment.key)
+        row[property].forEach((attachment: RowAttachment) => {
+          attachment.url = objectStore.getAppFileUrl(attachment.key)
         })
       }
     }
@@ -265,6 +274,6 @@ export async function cleanupAttachments(
     }
   }
   if (files.length > 0) {
-    return objectStore.deleteFiles(ObjectStoreBuckets.APPS, files)
+    await objectStore.deleteFiles(ObjectStoreBuckets.APPS, files)
   }
 }

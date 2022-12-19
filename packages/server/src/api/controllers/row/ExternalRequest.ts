@@ -21,7 +21,6 @@ import { getDatasourceAndQuery } from "./utils"
 import { FieldTypes, RelationshipTypes } from "../../../constants"
 import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
-// @ts-ignore
 import { cloneDeep } from "lodash/fp"
 import { processFormulas, processDates } from "../../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
