@@ -16,6 +16,7 @@
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import Logo from "assets/bb-emblem.svg"
+  import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   // import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   let loaded = false
@@ -173,6 +174,9 @@
         {/each}
       </Tabs>
       <div class="toolbar">
+        {#if $auth.user?.admin?.global}
+          <ConfigChecklist />
+        {/if}
         <div class="mobile-toggle">
           <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
         </div>
