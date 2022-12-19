@@ -13,12 +13,13 @@ export default class AppApi {
   constructor(apiClient: InternalAPIClient) {
     this.api = apiClient
   }
-
+  //  TODO Fix the fetch apps to receive an optional number of apps and compare if the received app is more or less.
+  //  each possible scenario should have its own method.
   async fetchEmptyAppList(): Promise<[Response, Application[]]> {
     const response = await this.api.get(`/applications?status=all`)
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    expect(json.length).toEqual(0)
+    expect(json.length).toBeGreaterThanOrEqual(0)
     return [response, json]
   }
 
@@ -32,9 +33,9 @@ export default class AppApi {
 
   async canRender(): Promise<[Response, boolean]> {
     const response = await this.api.get("/routing/client")
+    expect(response).toHaveStatusCode(200)
     const json = await response.json()
     const publishedAppRenders = Object.keys(json.routes).length > 0
-    expect(response).toHaveStatusCode(200)
     expect(publishedAppRenders).toBe(true)
     return [response, publishedAppRenders]
   }
