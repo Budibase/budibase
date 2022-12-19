@@ -203,6 +203,6 @@ jobs:
         env:
           PAYLOAD_VERSION: "develop"
         with:
-          repository: budibase/budibase/deploys
+          repository: budibase/budibase-deploys
           event: deploy-develop-to-qa
           github_pat: ${{ secrets.GITHUB_TOKEN }}
