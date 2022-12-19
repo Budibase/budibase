@@ -175,7 +175,7 @@ jobs:
           git pull
           mkdir sync
           echo "Packaging chart to sync dir"
-          helm package charts/budibase 0.0.0-develop --app-version develop --destination sync
+          helm package charts/budibase --version 0.0.0-develop --app-version develop --destination sync
           echo "Packaging successful"
           git checkout gh-pages
           mv *.tgz docs
