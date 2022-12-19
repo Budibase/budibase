@@ -26,7 +26,7 @@ env:
   FEATURE_PREVIEW_URL: https://budirelease.live
       
 jobs:
-  release:
+  release-images:
     runs-on: ubuntu-latest 
 
     steps:
@@ -44,18 +44,11 @@ jobs:
         run: yarn install:pro develop
 
       - run: yarn 
-      - run: yarn bootstrap 
+      - run: yarn bootstrap
       - run: yarn lint 
       - run: yarn build
       - run: yarn build:sdk
       - run: yarn test
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
 
       - name: Publish budibase packages to NPM
         env:
@@ -76,12 +69,6 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
 
-      - name: Get the latest budibase release version
-        id: version
-        run: | 
-          release_version=$(cat lerna.json | jq -r '.version')
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-
       - name: Tag and release Proxy service docker image
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
@@ -92,6 +79,26 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           RELEASE_TAG: k8s-release
+
+  deploy-to-release-env:
+    needs: [release-images]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get the current budibase release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
 
       - name: Pull values.yaml from budibase-infra
         run: | 
@@ -151,16 +158,11 @@ jobs:
           embed-title: ${{ env.RELEASE_VERSION }}
 
   release-helm-chart:
+#    needs: [release-images]
     runs-on: ubuntu-latest
 
     steps:
-#      - name: Fail if branch is not develop
-#        if: github.ref != 'refs/heads/develop'
-#        run: |
-#          echo "Ref is not develop, you must run this job from develop."
-#          exit 1
       - uses: actions/checkout@v2
-
       - name: Setup Helm
         uses: azure/setup-helm@v1
         id: helm-install
@@ -187,19 +189,19 @@ jobs:
           git commit -m "Helm Release: develop"
           git push
 
-  deploy-develop-to-qa:
-#    needs: [release, release-helm-chart]
+  trigger-deploy-to-qa:
     needs: [release-helm-chart]
     runs-on: ubuntu-latest
     steps:
-#      - name: Fail if branch is not develop
-#        if: github.ref != 'refs/heads/develop'
-#        run: |
-#          echo "Ref is not develop, you must run this job from develop."
-#          exit 1
+      - name: Get the current budibase release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+
       - uses: passeidireto/trigger-external-workflow-action@main
         env:
-          PAYLOAD_VERSION: "develop"
+          PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
         with:
           repository: budibase/budibase-deploys
           event: deploy-develop-to-qa
