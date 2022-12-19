@@ -313,7 +313,8 @@ class InternalBuilder {
   addRelationships(
     query: KnexQuery,
     fromTable: string,
-    relationships: RelationshipsJson[] | undefined
+    relationships: RelationshipsJson[] | undefined,
+    schema: string | undefined
   ): KnexQuery {
     if (!relationships) {
       return query
@@ -337,9 +338,13 @@ class InternalBuilder {
     }
     for (let [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
+      const toTableWithSchema = schema ? `${schema}.${toTable}` : toTable
+      const throughTableWithSchema = schema
+        ? `${schema}.${throughTable}`
+        : throughTable
       if (!throughTable) {
         // @ts-ignore
-        query = query.leftJoin(toTable, function () {
+        query = query.leftJoin(toTableWithSchema, function () {
           for (let relationship of relationships) {
             const from = relationship.from,
               to = relationship.to
@@ -350,7 +355,7 @@ class InternalBuilder {
       } else {
         query = query
           // @ts-ignore
-          .leftJoin(throughTable, function () {
+          .leftJoin(throughTableWithSchema, function () {
             for (let relationship of relationships) {
               const fromPrimary = relationship.fromPrimary
               const from = relationship.from
@@ -362,7 +367,7 @@ class InternalBuilder {
               )
             }
           })
-          .leftJoin(toTable, function () {
+          .leftJoin(toTableWithSchema, function () {
             for (let relationship of relationships) {
               const toPrimary = relationship.toPrimary
               const to = relationship.to
@@ -456,7 +461,12 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    query = this.addRelationships(preQuery, tableName, relationships)
+    query = this.addRelationships(
+      preQuery,
+      tableName,
+      relationships,
+      endpoint.schema
+    )
     return this.addFilters(query, filters, { relationship: true })
   }
 
