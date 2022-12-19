@@ -1,5 +1,12 @@
 <script>
-  import { ModalContent, Tabs, Tab, TextArea, Label } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Tabs,
+    Tab,
+    TextArea,
+    Label,
+    notifications,
+  } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
@@ -8,16 +15,20 @@
   let trigger = {}
   let schemaProperties = {}
 
-  // clone the trigger so we're not mutating the reference
-  $: trigger = cloneDeep(
-    $automationStore.selectedAutomation.automation.definition.trigger
-  )
+  $: {
+    // clone the trigger so we're not mutating the reference
+    trigger = cloneDeep(
+      $automationStore.selectedAutomation.automation.definition.trigger
+    )
 
-  // get the outputs so we can define the fields
-  $: schemaProperties = Object.entries(trigger?.schema?.outputs?.properties)
+    // get the outputs so we can define the fields
+    let schema = Object.entries(trigger.schema?.outputs?.properties || {})
 
-  if (!$automationStore.selectedAutomation.automation.testData) {
-    $automationStore.selectedAutomation.automation.testData = {}
+    if (trigger?.event === "app:trigger") {
+      schema = [["fields", { customType: "fields" }]]
+    }
+
+    schemaProperties = schema
   }
 
   // check to see if there is existing test data in the store
@@ -25,7 +36,7 @@
 
   // Check the schema to see if required fields have been entered
   $: isError = !trigger.schema.outputs.required.every(
-    required => testData[required]
+    required => testData[required] || required !== "row"
   )
 
   function parseTestJSON(e) {
@@ -37,6 +48,18 @@
       failedParse = "Invalid JSON"
     }
   }
+
+  const testAutomation = async () => {
+    try {
+      await automationStore.actions.test(
+        $automationStore.selectedAutomation?.automation,
+        testData
+      )
+      $automationStore.showTestPanel = true
+    } catch (error) {
+      notifications.error("Error testing automation")
+    }
+  }
 </script>
 
 <ModalContent
@@ -44,12 +67,7 @@
   confirmText="Test"
   showConfirmButton={true}
   disabled={isError}
-  onConfirm={() => {
-    automationStore.actions.test(
-      $automationStore.selectedAutomation?.automation,
-      testData
-    )
-  }}
+  onConfirm={testAutomation}
   cancelText="Cancel"
 >
   <Tabs selected="Form" quiet

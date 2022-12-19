@@ -16,10 +16,17 @@
     /*  Buttons */
     --spectrum-semantic-cta-color-background-default: var(--primaryColor);
     --spectrum-semantic-cta-color-background-hover: var(--primaryColorHover);
-    --spectrum-button-primary-s-border-radius: var(--buttonBorderRadius);
+    --spectrum-semantic-cta-color-background-down: var(--primaryColorHover);
+    --spectrum-button-primary-s-border-radius: calc(
+      var(--buttonBorderRadius) * 0.9
+    );
     --spectrum-button-primary-m-border-radius: var(--buttonBorderRadius);
-    --spectrum-button-primary-l-border-radius: var(--buttonBorderRadius);
-    --spectrum-button-primary-xl-border-radius: var(--buttonBorderRadius);
+    --spectrum-button-primary-l-border-radius: calc(
+      var(--buttonBorderRadius) * 1.25
+    );
+    --spectrum-button-primary-xl-border-radius: calc(
+      var(--buttonBorderRadius) * 1.5
+    );
 
     /* Loading spinners */
     --spectrum-progresscircle-medium-track-fill-color: var(--primaryColor);

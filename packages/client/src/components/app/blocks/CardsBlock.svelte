@@ -2,8 +2,8 @@
   import { getContext } from "svelte"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
-  import { Heading } from "@budibase/bbui"
   import { makePropSafe as safe } from "@budibase/string-templates"
+  import { enrichSearchColumns, enrichFilter } from "utils/blocks.js"
 
   export let title
   export let dataSource
@@ -30,16 +30,7 @@
   export let cardButtonOnClick
   export let linkColumn
 
-  const { API, styleable } = getContext("sdk")
-  const context = getContext("context")
-  const component = getContext("component")
-  const schemaComponentMap = {
-    string: "stringfield",
-    options: "optionsfield",
-    number: "numberfield",
-    datetime: "datetimefield",
-    boolean: "booleanfield",
-  }
+  const { fetchDatasourceSchema } = getContext("sdk")
 
   let formId
   let dataProviderId
@@ -66,38 +57,6 @@
     },
   ]
 
-  // Enrich the default filter with the specified search fields
-  const enrichFilter = (filter, columns, formId) => {
-    let enrichedFilter = [...(filter || [])]
-    columns?.forEach(column => {
-      enrichedFilter.push({
-        field: column.name,
-        operator: column.type === "string" ? "string" : "equal",
-        type: "string",
-        valueType: "Binding",
-        value: `{{ [${formId}].[${column.name}] }}`,
-      })
-    })
-    return enrichedFilter
-  }
-
-  // Determine data types for search fields and only use those that are valid
-  const enrichSearchColumns = (searchColumns, schema) => {
-    let enrichedColumns = []
-    searchColumns?.forEach(column => {
-      const schemaType = schema?.[column]?.type
-      const componentType = schemaComponentMap[schemaType]
-      if (componentType) {
-        enrichedColumns.push({
-          name: column,
-          componentType,
-          type: schemaType,
-        })
-      }
-    })
-    return enrichedColumns.slice(0, 3)
-  }
-
   // Builds a full details page URL for the card title
   const buildFullCardUrl = (link, url, repeaterId, linkColumn) => {
     if (!link || !url || !repeaterId) {
@@ -111,164 +70,139 @@
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
     if (dataSource) {
-      schema = await API.fetchDatasourceSchema(dataSource)
+      schema = await fetchDatasourceSchema(dataSource, {
+        enrichRelationships: true,
+      })
     }
   }
 </script>
 
 <Block>
-  <div class="card-list" use:styleable={$component.styles}>
-    <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
-      {#if title || enrichedSearchColumns?.length || showTitleButton}
-        <div class="header" class:mobile={$context.device.mobile}>
-          <div class="title">
-            <Heading>{title || ""}</Heading>
-          </div>
-          <div class="controls">
-            {#if enrichedSearchColumns?.length}
-              <div
-                class="search"
-                style="--cols:{enrichedSearchColumns?.length}"
-              >
-                {#each enrichedSearchColumns as column}
-                  <BlockComponent
-                    type={column.componentType}
-                    props={{
-                      field: column.name,
-                      placeholder: column.name,
-                      text: column.name,
-                      autoWidth: true,
-                    }}
-                  />
-                {/each}
-              </div>
-            {/if}
-            {#if showTitleButton}
-              <BlockComponent
-                type="button"
-                props={{
-                  onClick: titleButtonAction,
-                  text: titleButtonText,
-                  type: "cta",
-                }}
-              />
-            {/if}
-          </div>
-        </div>
-      {/if}
+  <BlockComponent
+    type="form"
+    bind:id={formId}
+    props={{ dataSource, disableValidation: true }}
+  >
+    {#if title || enrichedSearchColumns?.length || showTitleButton}
       <BlockComponent
-        type="dataprovider"
-        bind:id={dataProviderId}
+        type="container"
         props={{
-          dataSource,
-          filter: enrichedFilter,
-          sortColumn,
-          sortOrder,
-          paginate,
-          limit,
+          direction: "row",
+          hAlign: "stretch",
+          vAlign: "middle",
+          gap: "M",
+          wrap: true,
         }}
+        styles={{
+          normal: {
+            "margin-bottom": "20px",
+          },
+        }}
+        order={0}
       >
         <BlockComponent
-          type="repeater"
-          bind:id={repeaterId}
-          context="repeater"
+          type="heading"
           props={{
-            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+            text: title,
+          }}
+          order={0}
+        />
+        <BlockComponent
+          type="container"
+          props={{
             direction: "row",
-            hAlign: "stretch",
-            vAlign: "top",
+            hAlign: "left",
+            vAlign: "middle",
             gap: "M",
-            noRowsMessage: "No rows found",
+            wrap: true,
           }}
-          styles={{
-            display: "grid",
-            "grid-template-columns": `repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr))`,
-          }}
+          order={1}
         >
-          <BlockComponent
-            type="spectrumcard"
-            props={{
-              title: cardTitle,
-              subtitle: cardSubtitle,
-              description: cardDescription,
-              imageURL: cardImageURL,
-              horizontal: cardHorizontal,
-              showButton: showCardButton,
-              buttonText: cardButtonText,
-              buttonOnClick: cardButtonOnClick,
-              linkURL: fullCardURL,
-              linkPeek: cardPeek,
-            }}
-            styles={{
-              width: "auto",
-            }}
-          />
+          {#if enrichedSearchColumns?.length}
+            {#each enrichedSearchColumns as column, idx}
+              <BlockComponent
+                type={column.componentType}
+                props={{
+                  field: column.name,
+                  placeholder: column.name,
+                  text: column.name,
+                  autoWidth: true,
+                }}
+                order={idx}
+                styles={{
+                  normal: {
+                    width: "192px",
+                  },
+                }}
+              />
+            {/each}
+          {/if}
+          {#if showTitleButton}
+            <BlockComponent
+              type="button"
+              props={{
+                onClick: titleButtonAction,
+                text: titleButtonText,
+                type: "cta",
+              }}
+              order={enrichedSearchColumns?.length ?? 0}
+            />
+          {/if}
         </BlockComponent>
       </BlockComponent>
+    {/if}
+    <BlockComponent
+      type="dataprovider"
+      bind:id={dataProviderId}
+      props={{
+        dataSource,
+        filter: enrichedFilter,
+        sortColumn,
+        sortOrder,
+        paginate,
+        limit,
+      }}
+      order={1}
+    >
+      <BlockComponent
+        type="repeater"
+        bind:id={repeaterId}
+        context="repeater"
+        props={{
+          dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+          direction: "row",
+          hAlign: "stretch",
+          vAlign: "top",
+          gap: "M",
+          noRowsMessage: "No rows found",
+        }}
+        styles={{
+          custom: `display: grid;\ngrid-template-columns: repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr));`,
+        }}
+        order={0}
+      >
+        <BlockComponent
+          type="spectrumcard"
+          props={{
+            title: cardTitle,
+            subtitle: cardSubtitle,
+            description: cardDescription,
+            imageURL: cardImageURL,
+            horizontal: cardHorizontal,
+            showButton: showCardButton,
+            buttonText: cardButtonText,
+            buttonOnClick: cardButtonOnClick,
+            linkURL: fullCardURL,
+            linkPeek: cardPeek,
+          }}
+          styles={{
+            normal: {
+              width: "auto",
+            },
+          }}
+          order={0}
+        />
+      </BlockComponent>
     </BlockComponent>
-  </div>
+  </BlockComponent>
 </Block>
-
-<style>
-  .header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-
-  .title {
-    overflow: hidden;
-  }
-  .title :global(.spectrum-Heading) {
-    flex: 1 1 auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .controls {
-    flex: 0 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 20px;
-  }
-  .controls :global(.spectrum-InputGroup .spectrum-InputGroup-input) {
-    width: 100%;
-  }
-
-  .search {
-    flex: 0 1 auto;
-    gap: 10px;
-    max-width: 100%;
-    display: grid;
-    grid-template-columns: repeat(var(--cols), minmax(120px, 200px));
-  }
-  .search :global(.spectrum-InputGroup) {
-    min-width: 0;
-  }
-
-  /* Mobile styles */
-  .mobile {
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-  .mobile .controls {
-    flex-direction: column-reverse;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-  .mobile .search {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    position: relative;
-    width: 100%;
-  }
-</style>

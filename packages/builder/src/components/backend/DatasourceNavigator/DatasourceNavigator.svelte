@@ -2,13 +2,19 @@
   import { onMount } from "svelte"
   import { get } from "svelte/store"
   import { goto, params } from "@roxi/routify"
-  import { BUDIBASE_INTERNAL_DB } from "constants"
+  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import { database, datasources, queries, tables, views } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
-  import ICONS from "./icons"
+  import {
+    customQueryIconText,
+    customQueryIconColor,
+    customQueryText,
+  } from "helpers/data/utils"
+  import IntegrationIcon from "./IntegrationIcon.svelte"
+  import { notifications } from "@budibase/bbui"
 
   let openDataSources = []
   $: enrichedDataSources = Array.isArray($datasources.list)
@@ -16,17 +22,18 @@
         const selected = $datasources.selected === datasource._id
         const open = openDataSources.includes(datasource._id)
         const containsSelected = containsActiveEntity(datasource)
+        const onlySource = $datasources.list.length === 1
         return {
           ...datasource,
           selected,
-          open: selected || open || containsSelected,
+          open: selected || open || containsSelected || onlySource,
         }
       })
     : []
   $: openDataSource = enrichedDataSources.find(x => x.open)
   $: {
-    // Ensure the open data source is always included in the list of open
-    // data sources
+    // Ensure the open datasource is always included in the list of open
+    // datasources
     if (openDataSource) {
       openNode(openDataSource)
     }
@@ -62,13 +69,17 @@
     }
   }
 
-  onMount(() => {
-    datasources.fetch()
-    queries.fetch()
+  onMount(async () => {
+    try {
+      await datasources.fetch()
+      await queries.fetch()
+    } catch (error) {
+      notifications.error("Error fetching datasources and queries")
+    }
   })
 
   const containsActiveEntity = datasource => {
-    // If we're view a query then the data source ID is in the URL
+    // If we're view a query then the datasource ID is in the URL
     if ($params.selectedDatasource === datasource._id) {
       return true
     }
@@ -112,13 +123,13 @@
         on:iconClick={() => toggleNode(datasource)}
       >
         <div class="datasource-icon" slot="icon">
-          <svelte:component
-            this={ICONS[datasource.source]}
-            height="18"
-            width="18"
+          <IntegrationIcon
+            integrationType={datasource.source}
+            schema={datasource.schema}
+            size="18"
           />
         </div>
-        {#if datasource._id !== BUDIBASE_INTERNAL_DB}
+        {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
           <EditDatasourcePopover {datasource} />
         {/if}
       </NavItem>
@@ -129,12 +140,14 @@
           <NavItem
             indentLevel={1}
             icon="SQLQuery"
-            text={query.name}
+            iconText={customQueryIconText(datasource, query)}
+            iconColor={customQueryIconColor(datasource, query)}
+            text={customQueryText(datasource, query)}
             opened={$queries.selected === query._id}
             selected={$queries.selected === query._id}
             on:click={() => onClickQuery(query)}
           >
-            <EditQueryPopover {query} />
+            <EditQueryPopover {query} {onClickQuery} />
           </NavItem>
         {/each}
       {/if}
@@ -144,7 +157,8 @@
 
 <style>
   .datasource-icon {
-    margin-right: 3px;
-    padding-top: 3px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 24px;
   }
 </style>

@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
 
 export default function (url) {
   const store = writable({ status: "LOADING", data: {}, error: {} })
@@ -7,8 +7,8 @@ export default function (url) {
   async function get() {
     store.update(u => ({ ...u, status: "LOADING" }))
     try {
-      const response = await api.get(url)
-      store.set({ data: await response.json(), status: "SUCCESS" })
+      const data = await API.get({ url })
+      store.set({ data, status: "SUCCESS" })
     } catch (e) {
       store.set({ data: {}, error: e, status: "ERROR" })
     }

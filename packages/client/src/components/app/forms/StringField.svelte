@@ -9,9 +9,18 @@
   export let disabled = false
   export let validation
   export let defaultValue = ""
+  export let align
+  export let onChange
 
   let fieldState
   let fieldApi
+
+  const handleChange = e => {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
+      onChange({ value: e.detail })
+    }
+  }
 </script>
 
 <Field
@@ -28,12 +37,13 @@
     <CoreTextField
       updateOnChange={false}
       value={fieldState.value}
-      on:change={e => fieldApi.setValue(e.detail)}
+      on:change={handleChange}
       disabled={fieldState.disabled}
       error={fieldState.error}
       id={fieldState.fieldId}
       {placeholder}
       {type}
+      {align}
     />
   {/if}
 </Field>

@@ -4,26 +4,32 @@
     Button,
     Combobox,
     DatePicker,
-    DrawerContent,
     Icon,
     Input,
     Layout,
     Select,
   } from "@budibase/bbui"
   import { generate } from "shortid"
-  import {
-    getValidOperatorsForType,
-    OperatorOptions,
-  } from "builder/src/constants/lucene"
+  import { LuceneUtils, Constants } from "@budibase/frontend-core"
+  import { getContext } from "svelte"
 
   export let schemaFields
   export let filters = []
+  export let datasource
 
-  const BannedTypes = ["link", "attachment", "formula"]
+  const context = getContext("context")
+  const BannedTypes = ["link", "attachment", "json"]
 
   $: fieldOptions = (schemaFields ?? [])
-    .filter(field => !BannedTypes.includes(field.type))
-    .map(field => field.name)
+    .filter(
+      field =>
+        !BannedTypes.includes(field.type) ||
+        (field.type === "formula" && field.formulaType === "static")
+    )
+    .map(field => ({
+      label: field.displayName || field.name,
+      value: field.name,
+    }))
 
   const addFilter = () => {
     filters = [
@@ -31,7 +37,7 @@
       {
         id: generate(),
         field: null,
-        operator: OperatorOptions.Equals.value,
+        operator: Constants.OperatorOptions.Equals.value,
         value: null,
         valueType: "Value",
       },
@@ -53,11 +59,14 @@
     expression.type = schemaFields.find(x => x.name === field)?.type
 
     // Ensure a valid operator is set
-    const validOperators = getValidOperatorsForType(expression.type).map(
-      x => x.value
-    )
+    const validOperators = LuceneUtils.getValidOperatorsForType(
+      expression.type,
+      expression.field,
+      datasource
+    ).map(x => x.value)
     if (!validOperators.includes(expression.operator)) {
-      expression.operator = validOperators[0] ?? OperatorOptions.Equals.value
+      expression.operator =
+        validOperators[0] ?? Constants.OperatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
     }
 
@@ -72,8 +81,8 @@
 
   const onOperatorChange = (expression, operator) => {
     const noValueOptions = [
-      OperatorOptions.Empty.value,
-      OperatorOptions.NotEmpty.value,
+      Constants.OperatorOptions.Empty.value,
+      Constants.OperatorOptions.NotEmpty.value,
     ]
     expression.noValue = noValueOptions.includes(operator)
     if (expression.noValue) {
@@ -85,57 +94,70 @@
     const schema = schemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
   }
+
+  const getSchema = filter => {
+    return schemaFields.find(field => field.name === filter.field)
+  }
 </script>
 
-<DrawerContent>
-  <div class="container">
-    <Layout noPadding>
-      <Body size="S">
-        {#if !filters?.length}
-          Add your first filter expression.
-        {:else}
-          Results are filtered to only those which match all of the following
-          constraints.
-        {/if}
-      </Body>
-      {#if filters?.length}
-        <div class="fields">
-          {#each filters as filter, idx}
-            <Select
-              bind:value={filter.field}
-              options={fieldOptions}
-              on:change={e => onFieldChange(filter, e.detail)}
-              placeholder="Column"
+<div class="container" class:mobile={$context.device.mobile}>
+  <Layout noPadding>
+    <Body size="S">
+      {#if !filters?.length}
+        Add your first filter expression.
+      {:else}
+        Results are filtered to only those which match all of the following
+        constraints.
+      {/if}
+    </Body>
+    {#if filters?.length}
+      <div class="fields">
+        {#each filters as filter, idx}
+          <Select
+            bind:value={filter.field}
+            options={fieldOptions}
+            on:change={e => onFieldChange(filter, e.detail)}
+            placeholder="Column"
+          />
+          <Select
+            disabled={!filter.field}
+            options={LuceneUtils.getValidOperatorsForType(
+              filter.type,
+              filter.field,
+              datasource
+            )}
+            bind:value={filter.operator}
+            on:change={e => onOperatorChange(filter, e.detail)}
+            placeholder={null}
+          />
+          {#if ["string", "longform", "number", "formula"].includes(filter.type)}
+            <Input disabled={filter.noValue} bind:value={filter.value} />
+          {:else if ["options", "array"].includes(filter.type)}
+            <Combobox
+              disabled={filter.noValue}
+              options={getFieldOptions(filter.field)}
+              bind:value={filter.value}
             />
-            <Select
-              disabled={!filter.field}
-              options={getValidOperatorsForType(filter.type)}
-              bind:value={filter.operator}
-              on:change={e => onOperatorChange(filter, e.detail)}
-              placeholder={null}
+          {:else if filter.type === "boolean"}
+            <Combobox
+              disabled={filter.noValue}
+              options={[
+                { label: "True", value: "true" },
+                { label: "False", value: "false" },
+              ]}
+              bind:value={filter.value}
             />
-            {#if ["string", "longform", "number"].includes(filter.type)}
-              <Input disabled={filter.noValue} bind:value={filter.value} />
-            {:else if ["options", "array"].includes(filter.type)}
-              <Combobox
-                disabled={filter.noValue}
-                options={getFieldOptions(filter.field)}
-                bind:value={filter.value}
-              />
-            {:else if filter.type === "boolean"}
-              <Combobox
-                disabled={filter.noValue}
-                options={[
-                  { label: "True", value: "true" },
-                  { label: "False", value: "false" },
-                ]}
-                bind:value={filter.value}
-              />
-            {:else if filter.type === "datetime"}
-              <DatePicker disabled={filter.noValue} bind:value={filter.value} />
-            {:else}
-              <Input disabled />
-            {/if}
+          {:else if filter.type === "datetime"}
+            <DatePicker
+              disabled={filter.noValue}
+              enableTime={!getSchema(filter).dateOnly}
+              timeOnly={getSchema(filter).timeOnly}
+              bind:value={filter.value}
+            />
+          {:else}
+            <Input disabled />
+          {/if}
+          <div class="controls">
             <Icon
               name="Duplicate"
               hoverable
@@ -148,17 +170,17 @@
               size="S"
               on:click={() => removeFilter(filter.id)}
             />
-          {/each}
-        </div>
-      {/if}
-      <div>
-        <Button icon="AddCircle" size="M" secondary on:click={addFilter}>
-          Add filter
-        </Button>
+          </div>
+        {/each}
       </div>
-    </Layout>
-  </div>
-</DrawerContent>
+    {/if}
+    <div>
+      <Button icon="AddCircle" size="M" secondary on:click={addFilter}>
+        Add filter
+      </Button>
+    </div>
+  </Layout>
+</div>
 
 <style>
   .container {
@@ -172,5 +194,20 @@
     row-gap: var(--spacing-s);
     align-items: center;
     grid-template-columns: 1fr 120px 1fr auto auto;
+  }
+  .controls {
+    display: contents;
+  }
+
+  .container.mobile .fields {
+    grid-template-columns: 1fr;
+  }
+  .container.mobile .controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: var(--spacing-s) 0;
+    gap: var(--spacing-s);
   }
 </style>

@@ -51,7 +51,7 @@ function extractPaths(apidocJson) {
     // Surrounds URL parameters with curly brackets -> :email with {email}
     let pathKeys = []
     for (let j = 1; j < matches.length; j++) {
-      let key = matches[j].substr(1)
+      let key = matches[j].slice(1)
       url = url.replace(matches[j], "{" + key + "}")
       pathKeys.push(key)
     }

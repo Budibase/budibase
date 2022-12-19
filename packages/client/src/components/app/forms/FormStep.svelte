@@ -5,7 +5,7 @@
 
   export let step = 1
 
-  const { styleable, builderStore } = getContext("sdk")
+  const { styleable, builderStore, componentStore } = getContext("sdk")
   const component = getContext("component")
   const formContext = getContext("form")
 
@@ -22,7 +22,7 @@
     if (
       formContext &&
       $builderStore.inBuilder &&
-      $builderStore.selectedComponentPath?.includes($component.id)
+      $componentStore.selectedComponentPath?.includes($component.id)
     ) {
       formContext.formApi.setStep(step)
     }

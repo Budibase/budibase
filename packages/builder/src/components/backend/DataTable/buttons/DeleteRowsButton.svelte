@@ -5,21 +5,24 @@
 
   export let selectedRows
   export let deleteRows
+  export let item = "row"
 
   const dispatch = createEventDispatcher()
   let modal
 
   async function confirmDeletion() {
-    await deleteRows()
+    await deleteRows(selectedRows)
     modal?.hide()
     dispatch("updaterows")
   }
+
+  $: text = `${item}${selectedRows?.length === 1 ? "" : "s"}`
 </script>
 
-<Button icon="Delete" size="s" primary quiet on:click={modal.show}>
+<Button icon="Delete" size="s" warning quiet on:click={modal.show}>
   Delete
   {selectedRows.length}
-  row(s)
+  {text}
 </Button>
 <ConfirmDialog
   bind:this={modal}
@@ -29,5 +32,5 @@
 >
   Are you sure you want to delete
   {selectedRows.length}
-  row{selectedRows.length > 1 ? "s" : ""}?
+  {text}?
 </ConfirmDialog>

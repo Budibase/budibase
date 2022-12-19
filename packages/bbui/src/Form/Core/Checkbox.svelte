@@ -47,7 +47,9 @@
       <use xlink:href="#spectrum-css-icon-Dash100" />
     </svg>
   </span>
-  <span class="spectrum-Checkbox-label">{text || ""}</span>
+  {#if text}
+    <span class="spectrum-Checkbox-label">{text}</span>
+  {/if}
 </label>
 
 <style>

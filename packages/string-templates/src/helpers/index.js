@@ -7,10 +7,21 @@ const {
   HelperFunctionBuiltin,
   LITERAL_MARKER,
 } = require("./constants")
+const { getHelperList } = require("./list")
 
 const HTML_SWAPS = {
   "<": "&lt;",
   ">": "&gt;",
+}
+
+function isObject(value) {
+  if (value == null || typeof value !== "object") {
+    return false
+  }
+  return (
+    value.toString() === "[object Object]" ||
+    (value.length > 0 && typeof value[0] === "object")
+  )
 }
 
 const HELPERS = [
@@ -21,12 +32,8 @@ const HELPERS = [
   // javascript helper
   new Helper(HelperFunctionNames.JS, processJS, false),
   // this help is applied to all statements
-  new Helper(HelperFunctionNames.ALL, value => {
-    if (
-      value != null &&
-      typeof value === "object" &&
-      value.toString() === "[object Object]"
-    ) {
+  new Helper(HelperFunctionNames.ALL, (value, { __opts }) => {
+    if (isObject(value)) {
       return new SafeString(JSON.stringify(value))
     }
     // null/undefined values produce bad results
@@ -36,7 +43,11 @@ const HELPERS = [
     if (value && value.string) {
       value = value.string
     }
-    let text = new SafeString(value.replace(/&amp;/g, "&"))
+    let text = value
+    if (__opts && __opts.escapeNewlines) {
+      text = value.replace(/\n/g, "\\n")
+    }
+    text = new SafeString(text.replace(/&amp;/g, "&"))
     if (text == null || typeof text !== "string") {
       return text
     }
@@ -62,10 +73,14 @@ module.exports.HelperNames = () => {
   )
 }
 
-module.exports.registerAll = handlebars => {
+module.exports.registerMinimum = handlebars => {
   for (let helper of HELPERS) {
     helper.register(handlebars)
   }
+}
+
+module.exports.registerAll = handlebars => {
+  module.exports.registerMinimum(handlebars)
   // register imported helpers
   externalHandlebars.registerAll(handlebars)
 }
@@ -77,3 +92,5 @@ module.exports.unregisterAll = handlebars => {
   // unregister all imported helpers
   externalHandlebars.unregisterAll(handlebars)
 }
+
+module.exports.getHelperList = getHelperList

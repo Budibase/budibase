@@ -12,6 +12,8 @@
   export let disabled = false
   export let validation
   export let autocomplete = false
+  export let defaultValue
+  export let onChange
 
   let fieldState
   let fieldApi
@@ -27,26 +29,34 @@
   $: singleValue = flatten(fieldState?.value)?.[0]
   $: multiValue = flatten(fieldState?.value) ?? []
   $: component = multiselect ? CoreMultiselect : CoreSelect
+  $: expandedDefaultValue = expand(defaultValue)
 
   const fetchTable = async id => {
     if (id) {
-      const result = await API.fetchTableDefinition(id)
-      if (!result.error) {
-        tableDefinition = result
+      try {
+        tableDefinition = await API.fetchTableDefinition(id)
+      } catch (error) {
+        tableDefinition = null
       }
     }
   }
 
   const fetchRows = async id => {
     if (id) {
-      const rows = await API.fetchTableData(id)
-      options = rows && !rows.error ? rows : []
+      try {
+        options = await API.fetchTableData(id)
+      } catch (error) {
+        options = []
+      }
     }
   }
 
   const flatten = values => {
     if (!values) {
       return []
+    }
+    if (!Array.isArray(values)) {
+      values = [values]
     }
     return values.map(value => (typeof value === "object" ? value._id : value))
   }
@@ -56,11 +66,28 @@
   }
 
   const singleHandler = e => {
-    fieldApi.setValue(e.detail == null ? [] : [e.detail])
+    handleChange(e.detail == null ? [] : [e.detail])
   }
 
   const multiHandler = e => {
-    fieldApi.setValue(e.detail)
+    handleChange(e.detail)
+  }
+
+  const expand = values => {
+    if (!values) {
+      return []
+    }
+    if (Array.isArray(values)) {
+      return values
+    }
+    return values.split(",").map(value => value.trim())
+  }
+
+  const handleChange = value => {
+    const changed = fieldApi.setValue(value)
+    if (onChange && changed) {
+      onChange({ value })
+    }
   }
 </script>
 
@@ -69,11 +96,11 @@
   {field}
   {disabled}
   {validation}
+  defaultValue={expandedDefaultValue}
   type={FieldTypes.LINK}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
-  defaultValue={[]}
 >
   {#if fieldState}
     <svelte:component

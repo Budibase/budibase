@@ -7,7 +7,8 @@ Array [
     "entities": Array [
       Object {
         "_id": "ta_users",
-        "_rev": "1-039883a06c1f9cb3945731d79838181e",
+        "_rev": "1-6f4013e796887f1771bf7837598d87e7",
+        "createdAt": "2020-01-01T00:00:00.000Z",
         "name": "Users",
         "primaryDisplay": "email",
         "schema": Object {
@@ -72,6 +73,7 @@ Array [
           },
         },
         "type": "table",
+        "updatedAt": "2020-01-01T00:00:00.000Z",
         "views": Object {},
       },
     ],
@@ -81,9 +83,11 @@ Array [
   },
   Object {
     "config": Object {},
+    "createdAt": "2020-01-01T00:00:00.000Z",
     "name": "Test",
     "source": "POSTGRES",
     "type": "datasource",
+    "updatedAt": "2020-01-01T00:00:00.000Z",
   },
 ]
 `;

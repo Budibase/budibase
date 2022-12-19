@@ -36,9 +36,9 @@
     try {
       // Save your template config
       await email.templates.save(selectedTemplate)
-      notifications.success(`Template saved.`)
-    } catch (err) {
-      notifications.error(`Failed to update template settings. ${err}`)
+      notifications.success("Template saved")
+    } catch (error) {
+      notifications.error("Failed to update template settings")
     }
   }
 

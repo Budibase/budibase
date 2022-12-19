@@ -17,10 +17,14 @@
   export let disabled = false
   export let fillWidth
   export let allowJS = true
+  export let allowHelpers = true
+  export let updateOnChange = true
+  export let drawerLeft
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
   let valid = true
+  let currentVal = value
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
@@ -28,22 +32,30 @@
 
   const saveBinding = () => {
     onChange(tempValue)
+    onBlur()
     bindingDrawer.hide()
   }
 
   const onChange = value => {
-    dispatch("change", readableToRuntimeBinding(bindings, value))
+    currentVal = readableToRuntimeBinding(bindings, value)
+    dispatch("change", currentVal)
+  }
+
+  const onBlur = () => {
+    dispatch("blur", currentVal)
   }
 </script>
 
-<div class="control">
+<div class="control" class:disabled>
   <Input
     {label}
     {disabled}
     readonly={isJS}
     value={isJS ? "(JavaScript function)" : readableValue}
     on:change={event => onChange(event.detail)}
+    on:blur={onBlur}
     {placeholder}
+    {updateOnChange}
   />
   {#if !disabled}
     <div class="icon" on:click={bindingDrawer.show}>
@@ -51,7 +63,7 @@
     </div>
   {/if}
 </div>
-<Drawer {fillWidth} bind:this={bindingDrawer} {title}>
+<Drawer {fillWidth} bind:this={bindingDrawer} {title} left={drawerLeft}>
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
@@ -66,6 +78,7 @@
     on:change={event => (tempValue = event.detail)}
     {bindings}
     {allowJS}
+    {allowHelpers}
   />
 </Drawer>
 
@@ -102,5 +115,9 @@
     color: var(--spectrum-alias-text-color-hover);
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-alias-border-color-hover);
+  }
+
+  .control:not(.disabled) :global(.spectrum-Textfield-input) {
+    padding-right: 40px;
   }
 </style>

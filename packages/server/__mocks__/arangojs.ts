@@ -9,7 +9,7 @@ module ArangoMock {
     this.close = jest.fn()
   }
 
-// @ts-ignore
+  // @ts-ignore
   arangodb.aql = (strings, ...args) => {
     let str = strings.join("{}")
 

@@ -1,9 +1,10 @@
 <script>
   import { getContext } from "svelte"
+  import { generate } from "shortid"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
-  import { Heading } from "@budibase/bbui"
   import { makePropSafe as safe } from "@budibase/string-templates"
+  import { enrichSearchColumns, enrichFilter } from "utils/blocks.js"
 
   export let title
   export let dataSource
@@ -13,219 +14,257 @@
   export let sortOrder
   export let paginate
   export let tableColumns
-  export let showAutoColumns
   export let rowCount
   export let quiet
+  export let compact
   export let size
-  export let linkRows
-  export let linkURL
-  export let linkColumn
-  export let linkPeek
+  export let allowSelectRows
+  export let clickBehaviour
+  export let onClick
   export let showTitleButton
   export let titleButtonText
-  export let titleButtonURL
-  export let titleButtonPeek
+  export let titleButtonClickBehaviour
+  export let onClickTitleButton
 
-  const { API, styleable } = getContext("sdk")
-  const context = getContext("context")
-  const component = getContext("component")
-  const schemaComponentMap = {
-    string: "stringfield",
-    options: "optionsfield",
-    number: "numberfield",
-    datetime: "datetimefield",
-    boolean: "booleanfield",
-  }
+  const { fetchDatasourceSchema, API } = getContext("sdk")
+  const stateKey = `ID_${generate()}`
 
   let formId
   let dataProviderId
+  let detailsFormBlockId
+  let detailsSidePanelId
+  let newRowSidePanelId
   let schema
+  let primaryDisplay
 
   $: fetchSchema(dataSource)
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
-  $: titleButtonAction = [
-    {
-      "##eventHandlerType": "Navigate To",
-      parameters: {
-        peek: titleButtonPeek,
-        url: titleButtonURL,
-      },
-    },
-  ]
-
-  // Enrich the default filter with the specified search fields
-  const enrichFilter = (filter, columns, formId) => {
-    let enrichedFilter = [...(filter || [])]
-    columns?.forEach(column => {
-      enrichedFilter.push({
-        field: column.name,
-        operator: column.type === "string" ? "string" : "equal",
-        type: "string",
-        valueType: "Binding",
-        value: `{{ ${safe(formId)}.${safe(column.name)} }}`,
-      })
-    })
-    return enrichedFilter
-  }
-
-  // Determine data types for search fields and only use those that are valid
-  const enrichSearchColumns = (searchColumns, schema) => {
-    let enrichedColumns = []
-    searchColumns?.forEach(column => {
-      const schemaType = schema?.[column]?.type
-      const componentType = schemaComponentMap[schemaType]
-      if (componentType) {
-        enrichedColumns.push({
-          name: column,
-          componentType,
-          type: schemaType,
-        })
-      }
-    })
-    return enrichedColumns.slice(0, 3)
-  }
+  $: editTitle = getEditTitle(detailsFormBlockId, primaryDisplay)
+  $: normalFields = getNormalFields(schema)
+  $: rowClickActions =
+    clickBehaviour === "actions" || dataSource?.type !== "table"
+      ? onClick
+      : [
+          {
+            id: 0,
+            "##eventHandlerType": "Update State",
+            parameters: {
+              key: stateKey,
+              type: "set",
+              persist: false,
+              value: `{{ ${safe("eventContext")}.${safe("row")}._id }}`,
+            },
+          },
+          {
+            id: 1,
+            "##eventHandlerType": "Open Side Panel",
+            parameters: {
+              id: detailsSidePanelId,
+            },
+          },
+        ]
+  $: buttonClickActions =
+    titleButtonClickBehaviour === "actions" || dataSource?.type !== "table"
+      ? onClickTitleButton
+      : [
+          {
+            id: 0,
+            "##eventHandlerType": "Open Side Panel",
+            parameters: {
+              id: newRowSidePanelId,
+            },
+          },
+        ]
 
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
-    if (dataSource) {
-      schema = await API.fetchDatasourceSchema(dataSource)
+    if (dataSource?.type === "table") {
+      const definition = await API.fetchTableDefinition(dataSource?.tableId)
+      schema = definition.schema
+      primaryDisplay = definition.primaryDisplay
+    } else if (dataSource) {
+      schema = await fetchDatasourceSchema(dataSource, {
+        enrichRelationships: true,
+      })
     }
+  }
+
+  const getNormalFields = schema => {
+    if (!schema) {
+      return []
+    }
+    return Object.entries(schema)
+      .filter(entry => {
+        return !entry[1].autocolumn
+      })
+      .map(entry => entry[0])
+  }
+
+  const getEditTitle = (detailsFormBlockId, primaryDisplay) => {
+    if (!primaryDisplay || !detailsFormBlockId) {
+      return "Edit"
+    }
+    const prefix = safe(detailsFormBlockId + "-repeater")
+    const binding = `${prefix}.${safe(primaryDisplay)}`
+    return `{{#if ${binding}}}{{${binding}}}{{else}}Details{{/if}}`
   }
 </script>
 
 <Block>
-  <div class={size} use:styleable={$component.styles}>
-    <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
-      {#if title || enrichedSearchColumns?.length || showTitleButton}
-        <div class="header" class:mobile={$context.device.mobile}>
-          <div class="title">
-            <Heading>{title || ""}</Heading>
-          </div>
-          <div class="controls">
-            {#if enrichedSearchColumns?.length}
-              <div
-                class="search"
-                style="--cols:{enrichedSearchColumns?.length}"
-              >
-                {#each enrichedSearchColumns as column}
-                  <BlockComponent
-                    type={column.componentType}
-                    props={{
-                      field: column.name,
-                      placeholder: column.name,
-                      text: column.name,
-                      autoWidth: true,
-                    }}
-                  />
-                {/each}
-              </div>
-            {/if}
-            {#if showTitleButton}
-              <BlockComponent
-                type="button"
-                props={{
-                  onClick: titleButtonAction,
-                  text: titleButtonText,
-                  type: "cta",
-                }}
-              />
-            {/if}
-          </div>
-        </div>
-      {/if}
+  <BlockComponent
+    type="form"
+    bind:id={formId}
+    props={{
+      dataSource,
+      disableValidation: true,
+      editAutoColumns: true,
+      size,
+    }}
+  >
+    {#if title || enrichedSearchColumns?.length || showTitleButton}
       <BlockComponent
-        type="dataprovider"
-        bind:id={dataProviderId}
+        type="container"
         props={{
-          dataSource,
-          filter: enrichedFilter,
-          sortColumn,
-          sortOrder,
-          paginate,
-          limit: rowCount,
+          direction: "row",
+          hAlign: "stretch",
+          vAlign: "middle",
+          gap: "M",
+          wrap: true,
         }}
+        styles={{
+          normal: {
+            "margin-bottom": "20px",
+          },
+        }}
+        order={0}
       >
         <BlockComponent
-          type="table"
+          type="heading"
           props={{
-            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
-            columns: tableColumns,
-            showAutoColumns,
-            rowCount,
-            quiet,
-            size,
-            linkRows,
-            linkURL,
-            linkColumn,
-            linkPeek,
+            text: title,
+          }}
+          order={0}
+        />
+        <BlockComponent
+          type="container"
+          props={{
+            direction: "row",
+            hAlign: "left",
+            vAlign: "center",
+            gap: "M",
+            wrap: true,
+          }}
+          order={1}
+        >
+          {#if enrichedSearchColumns?.length}
+            {#each enrichedSearchColumns as column, idx}
+              <BlockComponent
+                type={column.componentType}
+                props={{
+                  field: column.name,
+                  placeholder: column.name,
+                  text: column.name,
+                  autoWidth: true,
+                }}
+                styles={{
+                  normal: {
+                    width: "192px",
+                  },
+                }}
+                order={idx}
+              />
+            {/each}
+          {/if}
+          {#if showTitleButton}
+            <BlockComponent
+              type="button"
+              props={{
+                onClick: buttonClickActions,
+                text: titleButtonText,
+                type: "cta",
+              }}
+              order={enrichedSearchColumns?.length ?? 0}
+            />
+          {/if}
+        </BlockComponent>
+      </BlockComponent>
+    {/if}
+    <BlockComponent
+      type="dataprovider"
+      bind:id={dataProviderId}
+      props={{
+        dataSource,
+        filter: enrichedFilter,
+        sortColumn: sortColumn || primaryDisplay,
+        sortOrder,
+        paginate,
+        limit: rowCount,
+      }}
+      order={1}
+    >
+      <BlockComponent
+        type="table"
+        context="table"
+        props={{
+          dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+          columns: tableColumns,
+          rowCount,
+          quiet,
+          compact,
+          allowSelectRows,
+          size,
+          onClick: rowClickActions,
+        }}
+      />
+    </BlockComponent>
+    {#if clickBehaviour === "details"}
+      <BlockComponent
+        name="Details side panel"
+        type="sidepanel"
+        bind:id={detailsSidePanelId}
+        context="details-side-panel"
+        order={2}
+      >
+        <BlockComponent
+          name="Details form block"
+          type="formblock"
+          bind:id={detailsFormBlockId}
+          props={{
+            dataSource,
+            showSaveButton: true,
+            showDeleteButton: true,
+            actionType: "Update",
+            rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
+            fields: normalFields,
+            title: editTitle,
+            labelPosition: "left",
           }}
         />
       </BlockComponent>
-    </BlockComponent>
-  </div>
+    {/if}
+    {#if showTitleButton && titleButtonClickBehaviour === "new"}
+      <BlockComponent
+        name="New row side panel"
+        type="sidepanel"
+        bind:id={newRowSidePanelId}
+        context="new-side-panel"
+        order={3}
+      >
+        <BlockComponent
+          name="New row form block"
+          type="formblock"
+          props={{
+            dataSource,
+            showSaveButton: true,
+            showDeleteButton: false,
+            actionType: "Create",
+            fields: normalFields,
+            title: "Create Row",
+            labelPosition: "left",
+          }}
+        />
+      </BlockComponent>
+    {/if}
+  </BlockComponent>
 </Block>
-
-<style>
-  .header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-
-  .title {
-    overflow: hidden;
-  }
-  .title :global(.spectrum-Heading) {
-    flex: 1 1 auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .controls {
-    flex: 0 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 20px;
-  }
-  .controls :global(.spectrum-InputGroup .spectrum-InputGroup-input) {
-    width: 100%;
-  }
-
-  .search {
-    flex: 0 1 auto;
-    gap: 10px;
-    max-width: 100%;
-    display: grid;
-    grid-template-columns: repeat(var(--cols), minmax(120px, 200px));
-  }
-  .search :global(.spectrum-InputGroup) {
-    min-width: 0;
-  }
-
-  /* Mobile styles */
-  .mobile {
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-  .mobile .controls {
-    flex-direction: column-reverse;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
-  .mobile .search {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    position: relative;
-    width: 100%;
-  }
-</style>

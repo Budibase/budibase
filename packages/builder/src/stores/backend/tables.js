@@ -1,17 +1,19 @@
 import { get, writable } from "svelte/store"
 import { datasources, queries, views } from "./"
 import { cloneDeep } from "lodash/fp"
-import api from "builderStore/api"
-import { SWITCHABLE_TYPES } from "../../constants/backend"
+import { API } from "api"
+import { SWITCHABLE_TYPES } from "constants/backend"
 
 export function createTablesStore() {
   const store = writable({})
   const { subscribe, update, set } = store
 
   async function fetch() {
-    const tablesResponse = await api.get(`/api/tables`)
-    const tables = await tablesResponse.json()
-    update(state => ({ ...state, list: tables }))
+    const tables = await API.getTables()
+    update(state => ({
+      ...state,
+      list: tables,
+    }))
     return tables
   }
 
@@ -38,16 +40,16 @@ export function createTablesStore() {
     const oldTable = get(store).list.filter(t => t._id === table._id)[0]
 
     const fieldNames = []
-    // update any renamed schema keys to reflect their names
+    // Update any renamed schema keys to reflect their names
     for (let key of Object.keys(updatedTable.schema)) {
-      // if field name has been seen before remove it
+      // If field name has been seen before remove it
       if (fieldNames.indexOf(key.toLowerCase()) !== -1) {
         delete updatedTable.schema[key]
         continue
       }
       const field = updatedTable.schema[key]
       const oldField = oldTable?.schema[key]
-      // if the type has changed then revert back to the old field
+      // If the type has changed then revert back to the old field
       if (
         oldField != null &&
         oldField?.type !== field.type &&
@@ -55,21 +57,17 @@ export function createTablesStore() {
       ) {
         updatedTable.schema[key] = oldField
       }
-      // field has been renamed
+      // Field has been renamed
       if (field.name && field.name !== key) {
         updatedTable.schema[field.name] = field
         updatedTable._rename = { old: key, updated: field.name }
         delete updatedTable.schema[key]
       }
-      // finally record this field has been used
+      // Finally record this field has been used
       fieldNames.push(key.toLowerCase())
     }
 
-    const response = await api.post(`/api/tables`, updatedTable)
-    if (response.status !== 200) {
-      throw (await response.json()).message
-    }
-    const savedTable = await response.json()
+    const savedTable = await API.saveTable(updatedTable)
     await fetch()
     if (table.type === "external") {
       await datasources.fetch()
@@ -91,21 +89,18 @@ export function createTablesStore() {
     },
     save,
     init: async () => {
-      const response = await api.get("/api/tables")
-      const json = await response.json()
+      const tables = await API.getTables()
       set({
-        list: json,
+        list: tables,
         selected: {},
         draft: {},
       })
     },
     delete: async table => {
-      const response = await api.delete(
-        `/api/tables/${table._id}/${table._rev}`
-      )
-      if (response.status !== 200) {
-        throw (await response.json()).message
-      }
+      await API.deleteTable({
+        tableId: table?._id,
+        tableRev: table?._rev,
+      })
       update(state => ({
         ...state,
         list: state.list.filter(existing => existing._id !== table._id),
@@ -156,12 +151,16 @@ export function createTablesStore() {
         await promise
       }
     },
-    deleteField: field => {
+    deleteField: async field => {
+      let promise
       update(state => {
         delete state.draft.schema[field.name]
-        save(state.draft)
+        promise = save(state.draft)
         return state
       })
+      if (promise) {
+        await promise
+      }
     },
   }
 }

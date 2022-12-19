@@ -6,7 +6,8 @@ describe("test the filter logic", () => {
     let res = await setup.runStep(setup.actions.FILTER.stepId,
       { field, condition, value }
     )
-    expect(res.success).toEqual(pass)
+    expect(res.result).toEqual(pass)
+    expect(res.success).toEqual(true)
   }
 
   it("should be able test equality", async () => {

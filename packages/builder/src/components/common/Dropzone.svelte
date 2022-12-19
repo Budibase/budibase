@@ -1,6 +1,6 @@
 <script>
   import { Dropzone, notifications } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import { API } from "api"
 
   export let value = []
   export let label
@@ -20,8 +20,20 @@
     for (let i = 0; i < fileList.length; i++) {
       data.append("file", fileList[i])
     }
-    const response = await api.post(`/api/attachments/process`, data, {})
-    return await response.json()
+    try {
+      return await API.uploadBuilderAttachment(data)
+    } catch (error) {
+      notifications.error("Failed to upload attachment")
+      return []
+    }
+  }
+
+  async function deleteAttachments(fileList) {
+    try {
+      return await API.deleteBuilderAttachments(fileList)
+    } catch (error) {
+      return []
+    }
   }
 </script>
 
@@ -30,5 +42,6 @@
   {label}
   {...$$restProps}
   {processFiles}
+  {deleteAttachments}
   {handleFileTooLarge}
 />

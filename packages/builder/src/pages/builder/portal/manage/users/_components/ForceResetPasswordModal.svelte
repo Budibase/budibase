@@ -7,19 +7,19 @@
 
   export let user
 
-  const password = Math.random().toString(36).substr(2, 20)
+  const password = Math.random().toString(36).slice(2, 20)
 
   async function resetPassword() {
-    const res = await users.save({
-      ...user,
-      password,
-      forceResetPassword: true,
-    })
-    if (res.status) {
-      notifications.error(res.message)
-    } else {
-      notifications.success("Password reset.")
+    try {
+      await users.save({
+        ...user,
+        password,
+        forceResetPassword: true,
+      })
+      notifications.success("Password reset successfully")
       dispatch("update")
+    } catch (error) {
+      notifications.error("Error resetting password")
     }
   }
 </script>

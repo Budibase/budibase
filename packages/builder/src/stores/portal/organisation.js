@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
 import { auth } from "stores/portal"
 
 const DEFAULT_CONFIG = {
@@ -19,35 +19,23 @@ export function createOrganisationStore() {
 
   async function init() {
     const tenantId = get(auth).tenantId
-    const res = await api.get(`/api/global/configs/public?tenantId=${tenantId}`)
-    const json = await res.json()
-
-    if (json.status === 400) {
-      set(DEFAULT_CONFIG)
-    } else {
-      set({ ...DEFAULT_CONFIG, ...json.config, _rev: json._rev })
-    }
+    const tenant = await API.getTenantConfig(tenantId)
+    set({ ...DEFAULT_CONFIG, ...tenant.config, _rev: tenant._rev })
   }
 
   async function save(config) {
-    // delete non-persisted fields
+    // Delete non-persisted fields
     const storeConfig = get(store)
     delete storeConfig.oidc
     delete storeConfig.google
     delete storeConfig.oidcCallbackUrl
     delete storeConfig.googleCallbackUrl
-
-    const res = await api.post("/api/global/configs", {
+    await API.saveConfig({
       type: "settings",
       config: { ...get(store), ...config },
       _rev: get(store)._rev,
     })
-    const json = await res.json()
-    if (json.status) {
-      return json
-    }
     await init()
-    return { status: 200 }
   }
 
   return {

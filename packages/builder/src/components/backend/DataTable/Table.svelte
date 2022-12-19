@@ -2,12 +2,14 @@
   import { fade } from "svelte/transition"
   import { goto, params } from "@roxi/routify"
   import { Table, Modal, Heading, notifications, Layout } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import { API } from "api"
   import Spinner from "components/common/Spinner.svelte"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
   import CreateEditUser from "./modals/CreateEditUser.svelte"
   import CreateEditColumn from "./modals/CreateEditColumn.svelte"
+  import { cloneDeep } from "lodash/fp"
   import {
     TableNames,
     UNEDITABLE_USER_FIELDS,
@@ -25,6 +27,7 @@
   export let rowCount
   export let type
   export let disableSorting = false
+  export let customPlaceholder = false
 
   let selectedRows = []
   let editableColumn
@@ -32,14 +35,14 @@
   let editRowModal
   let editColumnModal
   let customRenderers = []
+  let confirmDelete
 
-  $: isInternal = type !== "external"
   $: isUsersTable = tableId === TableNames.USERS
   $: data && resetSelectedRows()
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
   $: {
     UNSORTABLE_TYPES.forEach(type => {
-      Object.values(schema).forEach(col => {
+      Object.values(schema || {}).forEach(col => {
         if (col.type === type) {
           col.sortable = false
         }
@@ -87,13 +90,20 @@
     )
   }
 
-  const deleteRows = async () => {
-    await api.delete(`/api/${tableId}/rows`, {
-      rows: selectedRows,
-    })
-    data = data.filter(row => !selectedRows.includes(row))
-    notifications.success(`Successfully deleted ${selectedRows.length} rows`)
-    selectedRows = []
+  const deleteRows = async targetRows => {
+    try {
+      await API.deleteRows({
+        tableId,
+        rows: targetRows,
+      })
+
+      const deletedRowIds = targetRows.map(row => row._id)
+      data = data.filter(row => deletedRowIds.indexOf(row._id))
+
+      notifications.success(`Successfully deleted ${targetRows.length} rows`)
+    } catch (error) {
+      notifications.error("Error deleting rows")
+    }
   }
 
   const editRow = row => {
@@ -104,7 +114,7 @@
   }
 
   const editColumn = field => {
-    editableColumn = schema?.[field]
+    editableColumn = cloneDeep(schema?.[field])
     if (editableColumn) {
       editColumnModal.show()
     }
@@ -112,26 +122,33 @@
 </script>
 
 <Layout noPadding gap="S">
-  <div>
-    <div class="table-title">
-      {#if title}
-        <Heading size="S">{title}</Heading>
-      {/if}
-      {#if loading}
-        <div transition:fade|local>
-          <Spinner size="10" />
-        </div>
-      {/if}
-    </div>
+  <Layout noPadding gap="XS">
+    {#if title}
+      <div class="table-title">
+        <Heading size="M">{title}</Heading>
+        {#if loading}
+          <div transition:fade|local>
+            <Spinner size="10" />
+          </div>
+        {/if}
+      </div>
+    {/if}
     <div class="popovers">
       <slot />
       {#if !isUsersTable && selectedRows.length > 0}
-        <DeleteRowsButton on:updaterows {selectedRows} {deleteRows} />
+        <DeleteRowsButton
+          on:updaterows
+          {selectedRows}
+          deleteRows={async rows => {
+            await deleteRows(rows)
+            resetSelectedRows()
+          }}
+        />
       {/if}
     </div>
-  </div>
+  </Layout>
   {#key tableId}
-    <div class="table-wrapper" in:fade={{ delay: 200, duration: 100 }}>
+    <div class="table-wrapper">
       <Table
         {data}
         {schema}
@@ -139,6 +156,7 @@
         {customRenderers}
         {rowCount}
         {disableSorting}
+        {customPlaceholder}
         bind:selectedRows
         allowSelectRows={allowEditing && !isUsersTable}
         allowEditRows={allowEditing}
@@ -148,14 +166,41 @@
         on:editrow={e => editRow(e.detail)}
         on:clickrelationship={e => selectRelationship(e.detail)}
         on:sort
-      />
+      >
+        <slot slot="placeholder" name="placeholder" />
+      </Table>
     </div>
   {/key}
 </Layout>
 
 <Modal bind:this={editRowModal}>
-  <svelte:component this={editRowComponent} on:updaterows row={editableRow} />
+  <svelte:component
+    this={editRowComponent}
+    on:updaterows
+    on:deleteRows={() => {
+      confirmDelete.show()
+    }}
+    row={editableRow}
+  />
 </Modal>
+
+<ConfirmDialog
+  bind:this={confirmDelete}
+  okText="Delete"
+  onOk={async () => {
+    if (editableRow) {
+      await deleteRows([editableRow])
+    }
+    editableRow = undefined
+  }}
+  onCancel={async () => {
+    editRow(editableRow)
+  }}
+  title="Confirm Deletion"
+>
+  Are you sure you want to delete this row?
+</ConfirmDialog>
+
 <Modal bind:this={editColumnModal}>
   <CreateEditColumn
     field={editableColumn}
@@ -171,6 +216,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+    margin-top: var(--spacing-m);
   }
   .table-title > div {
     margin-left: var(--spacing-xs);

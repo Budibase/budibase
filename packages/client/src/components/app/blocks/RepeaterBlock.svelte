@@ -17,45 +17,43 @@
   export let vAlign
   export let gap
 
-  let providerId
-
   const component = getContext("component")
-  const { styleable } = getContext("sdk")
+
+  let providerId
 </script>
 
 <Block>
-  <div use:styleable={$component.styles}>
-    <BlockComponent
-      type="dataprovider"
-      context="provider"
-      bind:id={providerId}
-      props={{
-        dataSource,
-        filter,
-        sortColumn,
-        sortOrder,
-        limit,
-        paginate,
-      }}
-    >
-      {#if $component.empty}
-        <Placeholder text={$component.name} />
-      {:else}
-        <BlockComponent
-          type="repeater"
-          context="repeater"
-          props={{
-            dataProvider: `{{ literal ${safe(providerId)} }}`,
-            noRowsMessage,
-            direction,
-            hAlign,
-            vAlign,
-            gap,
-          }}
-        >
-          <slot />
-        </BlockComponent>
-      {/if}
-    </BlockComponent>
-  </div>
+  <BlockComponent
+    type="dataprovider"
+    context="provider"
+    bind:id={providerId}
+    props={{
+      dataSource,
+      filter,
+      sortColumn,
+      sortOrder,
+      limit,
+      paginate,
+    }}
+  >
+    {#if $component.empty}
+      <Placeholder />
+    {:else}
+      <BlockComponent
+        type="repeater"
+        context="repeater"
+        containsSlot
+        props={{
+          dataProvider: `{{ literal ${safe(providerId)} }}`,
+          noRowsMessage,
+          direction,
+          hAlign,
+          vAlign,
+          gap,
+        }}
+      >
+        <slot />
+      </BlockComponent>
+    {/if}
+  </BlockComponent>
 </Block>

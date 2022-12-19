@@ -2,6 +2,7 @@
   import { redirect } from "@roxi/routify"
   import { auth, admin } from "stores/portal"
   import { onMount } from "svelte"
+  import { notifications } from "@budibase/bbui"
 
   $: tenantSet = $auth.tenantSet
   $: multiTenancyEnabled = $admin.multiTenancy
@@ -17,8 +18,12 @@
   }
 
   onMount(async () => {
-    await admin.init()
-    await auth.checkQueryString()
+    try {
+      await admin.init()
+      await auth.checkQueryString()
+    } catch (error) {
+      notifications.error("Error getting checklist")
+    }
     loaded = true
   })
 </script>

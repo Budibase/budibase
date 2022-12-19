@@ -1,79 +1,182 @@
-import { derived, get } from "svelte/store"
+import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
-import {
-  findComponentPathById,
-  findChildrenByType,
-  findComponentById,
-} from "../utils/components"
+import { dndIndex, dndParent, dndIsNewComponent, dndBounds } from "./dnd.js"
+import { RoleUtils } from "@budibase/frontend-core"
+import { findComponentById, findComponentParent } from "../utils/components.js"
+import { Helpers } from "@budibase/bbui"
+import { DNDPlaceholderID } from "constants"
 
 const createScreenStore = () => {
   const store = derived(
-    [appStore, routeStore, builderStore],
-    ([$appStore, $routeStore, $builderStore]) => {
+    [
+      appStore,
+      routeStore,
+      builderStore,
+      dndParent,
+      dndIndex,
+      dndIsNewComponent,
+      dndBounds,
+    ],
+    ([
+      $appStore,
+      $routeStore,
+      $builderStore,
+      $dndParent,
+      $dndIndex,
+      $dndIsNewComponent,
+      $dndBounds,
+    ]) => {
       let activeLayout, activeScreen
-      let layouts, screens
+      let screens
+
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
-        activeLayout = $builderStore.layout
-        activeScreen = $builderStore.screen
-        layouts = [activeLayout]
+        activeScreen = Helpers.cloneDeep($builderStore.screen)
         screens = [activeScreen]
-      } else {
-        activeLayout = { props: { _component: "screenslot" } }
 
+        // Legacy - allow the builder to specify a layout
+        if ($builderStore.layout) {
+          activeLayout = $builderStore.layout
+        }
+      } else {
         // Find the correct screen by matching the current route
-        screens = $appStore.screens
-        layouts = $appStore.layouts
+        screens = $appStore.screens || []
         if ($routeStore.activeRoute) {
-          activeScreen = screens.find(
-            screen => screen._id === $routeStore.activeRoute.screenId
+          activeScreen = Helpers.cloneDeep(
+            screens.find(
+              screen => screen._id === $routeStore.activeRoute.screenId
+            )
           )
         }
+
+        // Legacy - find the custom layout for the selected screen
         if (activeScreen) {
-          activeLayout = layouts.find(
+          const screenLayout = $appStore.layouts?.find(
             layout => layout._id === activeScreen.layoutId
           )
+          if (screenLayout) {
+            activeLayout = screenLayout
+          }
         }
       }
-      return { layouts, screens, activeLayout, activeScreen }
+
+      // Insert DND placeholder if required
+      if (activeScreen && $dndParent && $dndIndex != null) {
+        const { selectedComponentId } = $builderStore
+
+        // Extract and save the selected component as we need a reference to it
+        // later, and we may be removing it
+        let selectedParent = findComponentParent(
+          activeScreen.props,
+          selectedComponentId
+        )
+
+        // Remove selected component from tree if we are moving an existing
+        // component
+        if (!$dndIsNewComponent && selectedParent) {
+          selectedParent._children = selectedParent._children?.filter(
+            x => x._id !== selectedComponentId
+          )
+        }
+
+        // Insert placeholder component
+        const componentToInsert = {
+          _component: "@budibase/standard-components/container",
+          _id: DNDPlaceholderID,
+          _styles: {
+            normal: {
+              width: `${$dndBounds?.width || 400}px`,
+              height: `${$dndBounds?.height || 200}px`,
+              opacity: 0,
+            },
+          },
+          static: true,
+        }
+        let parent = findComponentById(activeScreen.props, $dndParent)
+        if (parent) {
+          if (!parent._children?.length) {
+            parent._children = [componentToInsert]
+          } else {
+            parent._children.splice($dndIndex, 0, componentToInsert)
+          }
+        }
+      }
+
+      // Assign ranks to screens, preferring higher roles and home screens
+      screens.forEach(screen => {
+        const roleId = screen.routing.roleId
+        let rank = RoleUtils.getRolePriority(roleId)
+        if (screen.routing.homeScreen) {
+          rank += 100
+        }
+        screen.rank = rank
+      })
+
+      // Sort screens so the best route is first
+      screens = screens.sort((a, b) => {
+        // First sort by rank
+        if (a.rank !== b.rank) {
+          return a.rank > b.rank ? -1 : 1
+        }
+        // Then sort alphabetically
+        return a.routing.route < b.routing.route ? -1 : 1
+      })
+
+      // If we don't have a legacy custom layout, build a layout structure
+      // from the screen navigation settings
+      if (!activeLayout) {
+        let navigationSettings = {
+          navigation: "None",
+          pageWidth: activeScreen?.width || "Large",
+        }
+        if (activeScreen?.showNavigation) {
+          navigationSettings = {
+            ...navigationSettings,
+            ...($builderStore.navigation || $appStore.application?.navigation),
+          }
+
+          // Default navigation to top
+          if (!navigationSettings.navigation) {
+            navigationSettings.navigation = "Top"
+          }
+
+          // Default title to app name
+          if (!navigationSettings.title && !navigationSettings.hideTitle) {
+            navigationSettings.title = $appStore.application?.name
+          }
+        }
+        activeLayout = {
+          _id: "layout",
+          props: {
+            _component: "@budibase/standard-components/layout",
+            _children: [
+              {
+                _component: "screenslot",
+                _id: "screenslot",
+                _styles: {
+                  normal: {
+                    flex: "1 1 auto",
+                    display: "flex",
+                    "flex-direction": "column",
+                    "justify-content": "flex-start",
+                    "align-items": "stretch",
+                  },
+                },
+              },
+            ],
+            ...navigationSettings,
+          },
+        }
+      }
+
+      return { screens, activeLayout, activeScreen }
     }
   )
 
-  // Utils to parse component definitions
-  const actions = {
-    findComponentById: componentId => {
-      const { activeScreen, activeLayout } = get(store)
-      let result = findComponentById(activeScreen?.props, componentId)
-      if (result) {
-        return result
-      }
-      return findComponentById(activeLayout?.props)
-    },
-    findComponentPathById: componentId => {
-      const { activeScreen, activeLayout } = get(store)
-      let result = findComponentPathById(activeScreen?.props, componentId)
-      if (result) {
-        return result
-      }
-      return findComponentPathById(activeLayout?.props)
-    },
-    findChildrenByType: (componentId, type) => {
-      const component = actions.findComponentById(componentId)
-      if (!component || !component._children) {
-        return null
-      }
-      let children = []
-      findChildrenByType(component, type, children)
-      console.log(children)
-      return children
-    },
-  }
-
   return {
     subscribe: store.subscribe,
-    actions,
   }
 }
 

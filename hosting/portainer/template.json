@@ -1,0 +1,94 @@
+{
+  "version": "2",
+  "templates": [
+    {
+      "type": 3,
+      "title": "Budibase",
+      "categories": ["Tools"],
+      "description": "Build modern business apps in minutes",
+      "logo": "https://budibase.com/favicon.ico",
+      "platform": "linux",
+      "repository": {
+        "url": "https://github.com/Budibase/budibase",
+        "stackfile": "hosting/docker-compose.yaml"
+      },
+      "env": [
+        {
+          "name": "MAIN_PORT",
+          "label": "Main port",
+          "default": "10000"
+        },
+        {
+          "name": "JWT_SECRET",
+          "label": "JWT secret",
+          "default": "change-me"
+        },
+        {
+          "name": "MINIO_ACCESS_KEY",
+          "label": "MinIO access key",
+          "default": "change-me"
+        },
+        {
+          "name": "MINIO_SECRET_KEY",
+          "label": "MinIO secret key",
+          "default": "change-me"
+        },
+        {
+          "name": "COUCH_DB_USER",
+          "default": "budibase",
+          "preset": true
+        },
+        {
+          "name": "COUCH_DB_PASSWORD",
+          "label": "Couch DB password",
+          "default": "change-me"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "label": "Redis password",
+          "default": "change-me"
+        },
+        {
+          "name": "INTERNAL_API_KEY",
+          "label": "Internal API key",
+          "default": "change-me"
+        },
+        {
+          "name": "APP_PORT",
+          "default": "4002",
+          "preset": true
+        },
+        {
+          "name": "WORKER_PORT",
+          "default": "4003",
+          "preset": true
+        },
+        {
+          "name": "MINIO_PORT",
+          "default": "4004",
+          "preset": true
+        },
+        {
+          "name": "COUCH_DB_PORT",
+          "default": "4005",
+          "preset": true
+        },
+        {
+          "name": "REDIS_PORT",
+          "default": "6379",
+          "preset": true
+        },
+        {
+          "name": "WATCHTOWER_PORT",
+          "default": "6161",
+          "preset": true
+        },
+        {
+          "name": "BUDIBASE_ENVIRONMENT",
+          "default": "PRODUCTION",
+          "preset": true
+        }
+      ]
+    }
+  ]
+}
