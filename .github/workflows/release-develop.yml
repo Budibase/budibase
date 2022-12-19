@@ -184,7 +184,7 @@ jobs:
           rm -rf sync
           echo "Pushing new helm release"
           git add -A
-          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git commit -m "Helm Release: develop"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
