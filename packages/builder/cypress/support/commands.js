@@ -461,10 +461,7 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
   cy.get(".nav-item", { timeout: 2000 })
     .contains("Budibase DB")
     .click({ force: true })
-  cy.get(".spectrum-Tabs-content", { timeout: 2000 }).should(
-    "contain",
-    tableName
-  )
+  cy.get(".nav-item-content", { timeout: 2000 }).should("contain", tableName)
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {
