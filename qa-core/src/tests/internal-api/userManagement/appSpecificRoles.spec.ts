@@ -71,7 +71,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("ADMIN")
 
         // publish app
-        await config.applications.publish(<string>app.url)
+        await config.applications.publish(<string>app.appId)
         // check published app renders
         config.applications.api.appId = db.getProdAppID(app.appId!)
         await config.applications.canRender()
@@ -235,7 +235,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             await config.screen.create(generateScreen("POWER"))
             await config.screen.create(generateScreen("ADMIN"))
 
-            await config.applications.publish(<string>app.url)
+            await config.applications.publish(<string>app.appId)
             const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
@@ -283,7 +283,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             await config.screen.create(generateScreen("POWER"))
             await config.screen.create(generateScreen("ADMIN"))
 
-            await config.applications.publish(<string>app.url)
+            await config.applications.publish(<string>app.appId)
             const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
@@ -330,7 +330,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             await config.screen.create(generateScreen("POWER"))
             await config.screen.create(generateScreen("ADMIN"))
 
-            await config.applications.publish(<string>app.url)
+            await config.applications.publish(<string>app.appId)
             const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
@@ -388,7 +388,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             await config.screen.create(generateScreen("POWER"))
             await config.screen.create(generateScreen("ADMIN"))
 
-            await config.applications.publish(<string>app.url)
+            await config.applications.publish(<string>app.appId)
             const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
@@ -443,7 +443,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             await config.screen.create(generateScreen("POWER"))
             await config.screen.create(generateScreen("ADMIN"))
 
-            await config.applications.publish(<string>app.url)
+            await config.applications.publish(<string>app.appId)
             const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
@@ -498,7 +498,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             await config.screen.create(generateScreen("POWER"))
             await config.screen.create(generateScreen("ADMIN"))
 
-            await config.applications.publish(<string>app.url)
+            await config.applications.publish(<string>app.appId)
             const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
@@ -553,7 +553,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             await config.screen.create(generateScreen("POWER"))
             await config.screen.create(generateScreen("ADMIN"))
 
-            await config.applications.publish(<string>app.url)
+            await config.applications.publish(<string>app.appId)
             const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
@@ -608,7 +608,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             await config.screen.create(generateScreen("POWER"))
             await config.screen.create(generateScreen("ADMIN"))
 
-            await config.applications.publish(<string>app.url)
+            await config.applications.publish(<string>app.appId)
             const [firstappPackageResponse, firstappPackageJson] = await config.applications.getAppPackage(<string>app.appId)
             expect(firstappPackageJson.screens).toBeDefined()
             expect(firstappPackageJson.screens.length).toEqual(3)
