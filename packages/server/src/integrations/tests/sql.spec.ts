@@ -54,30 +54,30 @@ function generateDeleteJson(table = TABLE_NAME, filters = {}) {
 function generateRelationshipJson(config: { schema?: string } = {}) {
   return {
     endpoint: {
-      datasourceId: 'Postgres',
-      entityId: 'brands',
-      operation: 'READ',
-      schema: config.schema
+      datasourceId: "Postgres",
+      entityId: "brands",
+      operation: "READ",
+      schema: config.schema,
     },
     resource: {
       fields: [
-        'brands.brand_id',
-        'brands.brand_name',
-        'products.product_id',
-        'products.product_name',
-        'products.brand_id',
-      ]
+        "brands.brand_id",
+        "brands.brand_name",
+        "products.product_id",
+        "products.product_name",
+        "products.brand_id",
+      ],
     },
     filters: {},
     sort: {},
     paginate: {},
     relationships: [
       {
-        from: 'brand_id',
-        to: 'brand_id',
-        tableName: 'products',
-        column: 'products'
-      }
+        from: "brand_id",
+        to: "brand_id",
+        tableName: "products",
+        column: "products",
+      },
     ],
     extra: { idFilter: {} },
   }
@@ -86,34 +86,34 @@ function generateRelationshipJson(config: { schema?: string } = {}) {
 function generateManyRelationshipJson(config: { schema?: string } = {}) {
   return {
     endpoint: {
-      datasourceId: 'Postgres',
-      entityId: 'stores',
-      operation: 'READ',
+      datasourceId: "Postgres",
+      entityId: "stores",
+      operation: "READ",
       schema: config.schema,
     },
     resource: {
       fields: [
-        'stores.store_id',
-        'stores.store_name',
-        'products.product_id',
-        'products.product_name',
-      ]
+        "stores.store_id",
+        "stores.store_name",
+        "products.product_id",
+        "products.product_name",
+      ],
     },
     filters: {},
     sort: {},
     paginate: {},
     relationships: [
       {
-        from: 'store_id',
-        to: 'product_id',
-        tableName: 'products',
-        column: 'products',
-        through: 'stocks',
-        fromPrimary: 'store_id',
-        toPrimary: 'product_id'
-      }
+        from: "store_id",
+        to: "product_id",
+        tableName: "products",
+        column: "products",
+        through: "stocks",
+        fromPrimary: "store_id",
+        toPrimary: "product_id",
+      },
     ],
-    extra: { idFilter: {} }
+    extra: { idFilter: {} },
   }
 }
 
@@ -493,9 +493,7 @@ describe("SQL query builder", () => {
   })
 
   it("should add the schema to the LEFT JOIN", () => {
-    const query = sql._query(
-      generateRelationshipJson({ schema: "production" })
-    )
+    const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
       bindings: [500, 5000],
       sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" limit $1) as "brands" left join "production"."products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
@@ -503,9 +501,7 @@ describe("SQL query builder", () => {
   })
 
   it("should handle if the schema is not present when doing a LEFT JOIN", () => {
-    const query = sql._query(
-      generateRelationshipJson()
-    )
+    const query = sql._query(generateRelationshipJson())
     expect(query).toEqual({
       bindings: [500, 5000],
       sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" limit $1) as "brands" left join "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,

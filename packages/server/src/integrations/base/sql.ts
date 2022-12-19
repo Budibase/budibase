@@ -339,7 +339,9 @@ class InternalBuilder {
     for (let [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
       const toTableWithSchema = schema ? `${schema}.${toTable}` : toTable
-      const throughTableWithSchema = schema ? `${schema}.${throughTable}` : throughTable
+      const throughTableWithSchema = schema
+        ? `${schema}.${throughTable}`
+        : throughTable
       if (!throughTable) {
         // @ts-ignore
         query = query.leftJoin(toTableWithSchema, function () {
@@ -459,7 +461,12 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    query = this.addRelationships(preQuery, tableName, relationships, endpoint.schema)
+    query = this.addRelationships(
+      preQuery,
+      tableName,
+      relationships,
+      endpoint.schema
+    )
     return this.addFilters(query, filters, { relationship: true })
   }
 
