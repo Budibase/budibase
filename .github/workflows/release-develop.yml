@@ -174,13 +174,16 @@ jobs:
 #          due to helm repo index issue: https://github.com/helm/helm/issues/7363
 #          we need to create new package in a different dir, merge the index and move the package back
           mkdir sync
+          echo "Packing chart to sync dir"
           helm package charts/budibase 0.0.0-develop --app-version develop --destination sync
           git checkout gh-pages
           mv *.tgz docs
+          echo "Indexing helm repo"         
           helm repo index --merge docs/index.yaml sync
 #         cleanup the sync dir before commit
           mv -f sync/* docs
           rm -rf sync
+          echo "Pushing new helm release"
           git add -A
           git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
           git push
