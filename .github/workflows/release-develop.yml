@@ -189,7 +189,7 @@ jobs:
           git commit -m "Helm Release: develop"
           git push
 
-  trigger-deploy-to-qa:
+  trigger-deploy-to-qa-env:
     needs: [release-helm-chart]
     runs-on: ubuntu-latest
     steps:
