@@ -47,15 +47,10 @@ export default class AppApi {
     return [response, json]
   }
 
-  async publish(appUrl: string): Promise<[Response, DeployConfig]> {
-    const response = await this.api.post("/deploy")
+  async publish(appId: string | undefined): Promise<[Response, DeployConfig]> {
+    const response = await this.api.post(`/applications/${appId}/publish`)
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    expect(json).toEqual({
-      _id: expect.any(String),
-      appUrl: appUrl,
-      status: "SUCCESS",
-    })
     return [response, json]
   }
 
@@ -152,13 +147,9 @@ export default class AppApi {
     return [response, json]
   }
 
-  async unpublish(appId: string): Promise<[Response, UnpublishAppResponse]> {
-    const response = await this.api.del(`/applications/${appId}?unpublish=1`)
-    expect(response).toHaveStatusCode(200)
-    const json = await response.json()
-    expect(json.data.ok).toBe(true)
-    expect(json.ok).toBe(true)
-    expect(json.status).toBe(200)
-    return [response, json]
+  async unpublish(appId: string): Promise<[Response]> {
+    const response = await this.api.post(`/applications/${appId}/unpublish`)
+    expect(response).toHaveStatusCode(204)
+    return [response]
   }
 }

@@ -107,7 +107,7 @@ const environment = {
 }
 
 // threading can cause memory issues with node-ts in development
-if (isDev() && module.exports.DISABLE_THREADING == null) {
+if (isDev() && environment.DISABLE_THREADING == null) {
   environment._set("DISABLE_THREADING", "1")
 }
 
