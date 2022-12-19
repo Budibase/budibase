@@ -94,7 +94,44 @@ async function initDeployedApp(prodAppId: any) {
   })
 }
 
-async function deployApp(deployment: any, userId: string) {
+export async function fetchDeployments(ctx: any) {
+  try {
+    const db = context.getAppDB()
+    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
+    const { updated, deployments } = await checkAllDeployments(deploymentDoc)
+    if (updated) {
+      await db.put(deployments)
+    }
+    ctx.body = Object.values(deployments.history).reverse()
+  } catch (err) {
+    ctx.body = []
+  }
+}
+
+export async function deploymentProgress(ctx: any) {
+  try {
+    const db = context.getAppDB()
+    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
+    ctx.body = deploymentDoc[ctx.params.deploymentId]
+  } catch (err) {
+    ctx.throw(
+      500,
+      `Error fetching data for deployment ${ctx.params.deploymentId}`
+    )
+  }
+}
+
+export const publishApp = async function (ctx: any) {
+  let deployment = new Deployment()
+  console.log("Deployment object created")
+  deployment.setStatus(DeploymentStatus.PENDING)
+  console.log("Deployment object set to pending")
+  deployment = await storeDeploymentHistory(deployment)
+  console.log("Stored deployment history")
+
+  console.log("Deploying app...")
+
+  let app
   let replication
   try {
     const appId = context.getAppId()!
@@ -108,7 +145,7 @@ async function deployApp(deployment: any, userId: string) {
         productionAppId,
         AppBackupTrigger.PUBLISH,
         {
-          createdBy: userId,
+          createdBy: ctx.user._id,
         }
       )
     }
@@ -147,7 +184,7 @@ async function deployApp(deployment: any, userId: string) {
     console.log("Deployed app initialised, setting deployment to successful")
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
-    return appDoc
+    app = appDoc
   } catch (err: any) {
     deployment.setStatus(DeploymentStatus.FAILURE, err.message)
     await storeDeploymentHistory(deployment)
@@ -160,62 +197,7 @@ async function deployApp(deployment: any, userId: string) {
       await replication.close()
     }
   }
-}
-
-export async function fetchDeployments(ctx: any) {
-  try {
-    const db = context.getAppDB()
-    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
-    const { updated, deployments } = await checkAllDeployments(deploymentDoc)
-    if (updated) {
-      await db.put(deployments)
-    }
-    ctx.body = Object.values(deployments.history).reverse()
-  } catch (err) {
-    ctx.body = []
-  }
-}
-
-export async function deploymentProgress(ctx: any) {
-  try {
-    const db = context.getAppDB()
-    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
-    ctx.body = deploymentDoc[ctx.params.deploymentId]
-  } catch (err) {
-    ctx.throw(
-      500,
-      `Error fetching data for deployment ${ctx.params.deploymentId}`
-    )
-  }
-}
-
-const isFirstDeploy = async () => {
-  try {
-    const db = context.getProdAppDB()
-    await db.get(DocumentType.APP_METADATA)
-  } catch (e: any) {
-    if (e.status === 404) {
-      return true
-    }
-    throw e
-  }
-  return false
-}
-
-const _deployApp = async function (ctx: any) {
-  let deployment = new Deployment()
-  console.log("Deployment object created")
-  deployment.setStatus(DeploymentStatus.PENDING)
-  console.log("Deployment object set to pending")
-  deployment = await storeDeploymentHistory(deployment)
-  console.log("Stored deployment history")
-
-  console.log("Deploying app...")
-
-  let app = await deployApp(deployment, ctx.user._id)
 
   await events.app.published(app)
   ctx.body = deployment
 }
-
-export { _deployApp as deployApp }

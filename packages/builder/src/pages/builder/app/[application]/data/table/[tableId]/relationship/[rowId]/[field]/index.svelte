@@ -4,7 +4,7 @@
 </script>
 
 <RelationshipDataTable
-  tableId={$params.selectedTable}
-  rowId={$params.selectedRow}
-  fieldName={decodeURI($params.selectedField)}
+  tableId={$params.tableId}
+  rowId={$params.rowId}
+  fieldName={decodeURI($params.field)}
 />
