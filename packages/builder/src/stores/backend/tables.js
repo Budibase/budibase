@@ -84,55 +84,43 @@ export function createTablesStore() {
     primaryDisplay = false,
     indexes,
   }) => {
-    let promise
-    store.update(state => {
-      // delete the original if renaming
-      // need to handle if the column had no name, empty string
-      if (originalName != null && originalName !== field.name) {
-        delete state.draft.schema[originalName]
-        state.draft._rename = {
-          old: originalName,
-          updated: field.name,
-        }
-      }
+    let draft = cloneDeep(get(derivedStore).selected)
 
-      // Optionally set display column
-      if (primaryDisplay) {
-        state.draft.primaryDisplay = field.name
-      } else if (state.draft.primaryDisplay === originalName) {
-        const fields = Object.keys(state.draft.schema)
-        // pick another display column randomly if unselecting
-        state.draft.primaryDisplay = fields.filter(
-          name => name !== originalName || name !== field
-        )[0]
+    // delete the original if renaming
+    // need to handle if the column had no name, empty string
+    if (originalName != null && originalName !== field.name) {
+      delete draft.schema[originalName]
+      draft._rename = {
+        old: originalName,
+        updated: field.name,
       }
-
-      if (indexes) {
-        state.draft.indexes = indexes
-      }
-
-      state.draft.schema = {
-        ...state.draft.schema,
-        [field.name]: cloneDeep(field),
-      }
-      promise = save(state.draft)
-      return state
-    })
-    if (promise) {
-      await promise
     }
+
+    // Optionally set display column
+    if (primaryDisplay) {
+      draft.primaryDisplay = field.name
+    } else if (draft.primaryDisplay === originalName) {
+      const fields = Object.keys(draft.schema)
+      // pick another display column randomly if unselecting
+      draft.primaryDisplay = fields.filter(
+        name => name !== originalName || name !== field
+      )[0]
+    }
+    if (indexes) {
+      draft.indexes = indexes
+    }
+    draft.schema = {
+      ...draft.schema,
+      [field.name]: cloneDeep(field),
+    }
+
+    await save(draft)
   }
 
   const deleteField = async field => {
-    let promise
-    store.update(state => {
-      delete state.draft.schema[field.name]
-      promise = save(state.draft)
-      return state
-    })
-    if (promise) {
-      await promise
-    }
+    let draft = cloneDeep(get(derivedStore).selected)
+    delete draft.schema[field.name]
+    await save(draft)
   }
 
   return {
