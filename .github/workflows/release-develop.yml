@@ -171,10 +171,16 @@ jobs:
           git config user.email "<>"
           git reset --hard
           git pull
-          helm package charts/budibase 0.0.0-develop --app-version develop
+#          due to helm repo index issue: https://github.com/helm/helm/issues/7363
+#          we need to create new package in a different dir, merge the index and move the package back
+          mkdir sync
+          helm package charts/budibase 0.0.0-develop --app-version develop --destination sync
           git checkout gh-pages
           mv *.tgz docs
-          helm repo index docs
+          helm repo index --merge docs/index.yaml sync
+#         cleanup the sync dir before commit
+          mv -f sync/* docs
+          rm -rf sync
           git add -A
           git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
           git push
