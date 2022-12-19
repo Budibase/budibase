@@ -21,8 +21,6 @@
       // Create datasource
       await datasources.save(datasource)
       notifications.success(`Relationship information saved.`)
-      const tableList = await tables.fetch()
-      await tables.select(tableList.find(tbl => tbl._id === table._id))
       dispatch("updatecolumns")
     } catch (err) {
       notifications.error(`Error saving relationship info: ${err}`)
