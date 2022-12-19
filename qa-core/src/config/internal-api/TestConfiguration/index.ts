@@ -6,6 +6,8 @@ import RowApi from "./rows"
 import ScreenApi from "./screens"
 import UserManagementApi from "./userManagement"
 import AccountsApi from "./accounts"
+import { generateAccount } from "../fixtures/accounts"
+
 export default class TestConfiguration<T> {
   applications: ApplicationApi
   auth: AuthApi
@@ -29,6 +31,14 @@ export default class TestConfiguration<T> {
 
   async loginAsAdmin() {
     await this.auth.login(<string>process.env.BB_ADMIN_USER_EMAIL, <string>process.env.BB_ADMIN_USER_PASSWORD)
+  }
+
+  async setupAccountAndTenant() {
+    const account = generateAccount()
+    const [emailValidationResponse, emailValidationJson] = await this.accounts.validateEmail(account.email)
+    const [tenantIdValidationResponse, tenantIdValidationJson] = await this.accounts.validateTenantId(account.tenantId)
+    const [accountCreationResponse, accountCreationJson] = await this.accounts.create(account)
+    await this.auth.login(account.email, account.password)
   }
 
   async login(email: string, password: string) {
