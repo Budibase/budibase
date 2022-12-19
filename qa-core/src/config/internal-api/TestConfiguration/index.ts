@@ -5,7 +5,7 @@ import TablesApi from "./tables"
 import RowApi from "./rows"
 import ScreenApi from "./screens"
 import UserManagementApi from "./userManagement"
-
+import AccountsApi from "./accounts"
 export default class TestConfiguration<T> {
   applications: ApplicationApi
   auth: AuthApi
@@ -14,6 +14,7 @@ export default class TestConfiguration<T> {
   tables: TablesApi
   rows: RowApi
   users: UserManagementApi
+  accounts: AccountsApi
 
   constructor(apiClient: InternalAPIClient) {
     this.applications = new ApplicationApi(apiClient)
@@ -22,6 +23,7 @@ export default class TestConfiguration<T> {
     this.auth = new AuthApi(apiClient)
     this.screen = new ScreenApi(apiClient)
     this.users = new UserManagementApi(apiClient)
+    this.accounts = new AccountsApi(apiClient)
     this.context = <T>{}
   }
 
