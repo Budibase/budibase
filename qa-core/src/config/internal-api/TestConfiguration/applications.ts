@@ -40,14 +40,6 @@ export default class AppApi {
     return [response, publishedAppRenders]
   }
 
-  async failRender(): Promise<[Response, responseMessage]> {
-    const response = await this.api.get("/routing/client")
-    const json = await response.json()
-    expect(response).toHaveStatusCode(404)
-    return [response, json]
-  }
-
-
   async getAppPackage(appId: string): Promise<[Response, AppPackageResponse]> {
     const response = await this.api.get(`/applications/${appId}/appPackage`)
     const json = await response.json()
