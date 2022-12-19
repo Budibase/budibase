@@ -188,3 +188,21 @@ jobs:
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-develop-to-qa:
+#    needs: [release, release-helm-chart]
+    needs: [release-helm-chart]
+    runs-on: ubuntu-latest
+    steps:
+#      - name: Fail if branch is not develop
+#        if: github.ref != 'refs/heads/develop'
+#        run: |
+#          echo "Ref is not develop, you must run this job from develop."
+#          exit 1
+      - uses: passeidireto/trigger-external-workflow-action@main
+        env:
+          PAYLOAD_VERSION: "develop"
+        with:
+          repository: budibase/budibase/deploys
+          event: deploy-develop-to-qa
+          github_pat: ${{ secrets.GITHUB_TOKEN }}
