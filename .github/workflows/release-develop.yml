@@ -174,8 +174,9 @@ jobs:
           git reset --hard
           git pull
           mkdir sync
-          echo "Packing chart to sync dir"
+          echo "Packaging chart to sync dir"
           helm package charts/budibase 0.0.0-develop --app-version develop --destination sync
+          echo "Packaging successful"
           git checkout gh-pages
           mv *.tgz docs
           echo "Indexing helm repo"         
