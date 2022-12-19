@@ -158,7 +158,7 @@ jobs:
           embed-title: ${{ env.RELEASE_VERSION }}
 
   release-helm-chart:
-#    needs: [release-images]
+    needs: [release-images]
     runs-on: ubuntu-latest
 
     steps:
