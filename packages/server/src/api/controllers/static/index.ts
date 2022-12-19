@@ -1,11 +1,9 @@
-import { enrichPluginURLs } from "../../../utilities/plugins"
-
 require("svelte/register")
 
 const send = require("koa-send")
 const { resolve, join } = require("../../../utilities/centralPath")
 const uuid = require("uuid")
-const { ObjectStoreBuckets } = require("../../../constants")
+import { ObjectStoreBuckets } from "../../../constants"
 const { processString } = require("@budibase/string-templates")
 const {
   loadHandlebarsFile,
@@ -13,8 +11,6 @@ const {
   TOP_LEVEL_PATH,
 } = require("../../../utilities/fileSystem")
 const env = require("../../../environment")
-const { clientLibraryPath } = require("../../../utilities")
-const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentType } = require("../../../db/utils")
 const { context, objectStore, utils } = require("@budibase/backend-core")
 const AWS = require("aws-sdk")
@@ -33,7 +29,7 @@ async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   return {
     size: file.size,
     name: file.name,
-    url: attachmentsRelativeURL(response.Key),
+    url: objectStore.getAppFileUrl(s3Key),
     extension: [...file.name.split(".")].pop(),
     key: response.Key,
   }
@@ -85,7 +81,7 @@ export const uploadFile = async function (ctx: any) {
 
     return prepareUpload({
       file,
-      s3Key: `${ctx.appId}/attachments/${processedFileName}`,
+      s3Key: `${context.getProdAppId()}/attachments/${processedFileName}`,
       bucket: ObjectStoreBuckets.APPS,
     })
   })
@@ -107,14 +103,14 @@ export const serveApp = async function (ctx: any) {
 
   if (!env.isJest()) {
     const App = require("./templates/BudibaseApp.svelte").default
-    const plugins = enrichPluginURLs(appInfo.usedPlugins)
+    const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
     const { head, html, css } = App.render({
       metaImage:
         "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
       title: appInfo.name,
       production: env.isProd(),
       appId,
-      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+      clientLibPath: objectStore.clientLibraryUrl(appId, appInfo.version),
       usedPlugins: plugins,
     })
 
@@ -139,7 +135,7 @@ export const serveBuilderPreview = async function (ctx: any) {
     let appId = context.getAppId()
     const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
     ctx.body = await processString(previewHbs, {
-      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+      clientLibPath: objectStore.clientLibraryUrl(appId, appInfo.version),
     })
   } else {
     // just return the app info for jest to assert on

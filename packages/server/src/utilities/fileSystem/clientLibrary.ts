@@ -4,7 +4,7 @@ import fs from "fs"
 import { objectStore } from "@budibase/backend-core"
 import { resolve } from "../centralPath"
 import env from "../../environment"
-const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
+import { TOP_LEVEL_PATH } from "./filesystem"
 
 /**
  * Client library paths in the object store:
