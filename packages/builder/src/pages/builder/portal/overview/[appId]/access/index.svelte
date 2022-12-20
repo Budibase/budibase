@@ -166,36 +166,38 @@
   </Layout>
   <Divider />
   <Layout noPadding gap="L">
-    <Layout noPadding gap="S">
-      <div class="title">
-        <Heading size="S">Users</Heading>
-        <Button secondary on:click={assignmentModal.show}>Assign user</Button>
-      </div>
-      <Table
-        customPlaceholder
-        data={appUsers}
-        schema={userSchema}
-        allowEditRows={false}
-        {customRenderers}
-      >
-        <div class="placeholder" slot="placeholder">
-          <Heading size="S">You have no users assigned yet</Heading>
+    {#if $usersFetch.loaded}
+      <Layout noPadding gap="S">
+        <div class="title">
+          <Heading size="S">Users</Heading>
+          <Button secondary on:click={assignmentModal.show}>Assign user</Button>
         </div>
-      </Table>
-      {#if $usersFetch.hasPrevPage || $usersFetch.hasNextPage}
-        <div class="pagination">
-          <Pagination
-            page={$usersFetch.pageNumber + 1}
-            hasPrevPage={$usersFetch.hasPrevPage}
-            hasNextPage={$usersFetch.hasNextPage}
-            goToPrevPage={$usersFetch.loading ? null : usersFetch.prevPage}
-            goToNextPage={$usersFetch.loading ? null : usersFetch.nextPage}
-          />
-        </div>
-      {/if}
-    </Layout>
+        <Table
+          customPlaceholder
+          data={appUsers}
+          schema={userSchema}
+          allowEditRows={false}
+          {customRenderers}
+        >
+          <div class="placeholder" slot="placeholder">
+            <Heading size="S">You have no users assigned yet</Heading>
+          </div>
+        </Table>
+        {#if $usersFetch.hasPrevPage || $usersFetch.hasNextPage}
+          <div class="pagination">
+            <Pagination
+              page={$usersFetch.pageNumber + 1}
+              hasPrevPage={$usersFetch.hasPrevPage}
+              hasNextPage={$usersFetch.hasNextPage}
+              goToPrevPage={$usersFetch.loading ? null : usersFetch.prevPage}
+              goToNextPage={$usersFetch.loading ? null : usersFetch.nextPage}
+            />
+          </div>
+        {/if}
+      </Layout>
+    {/if}
 
-    {#if $licensing.groupsEnabled && appGroups.length}
+    {#if $usersFetch.loaded && $licensing.groupsEnabled && appGroups.length}
       <Layout noPadding gap="S">
         <div class="title">
           <Heading size="S">Groups</Heading>
