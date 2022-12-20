@@ -4,17 +4,13 @@
     Heading,
     Body,
     Button,
-    List,
-    ListItem,
     Modal,
     notifications,
     Pagination,
     Divider,
-    Icon,
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import RoleSelect from "components/common/RoleSelect.svelte"
   import { users, groups, apps, licensing, overview } from "stores/portal"
   import AssignmentModal from "./_components/AssignmentModal.svelte"
   import { roles } from "stores/backend"
@@ -26,6 +22,7 @@
   const userSchema = {
     email: {
       type: "string",
+      width: "1fr",
     },
     userAppRole: {
       displayName: "Access",
@@ -36,6 +33,7 @@
   const groupSchema = {
     name: {
       type: "string",
+      width: "1fr",
     },
     groupAppRole: {
       displayName: "Access",
