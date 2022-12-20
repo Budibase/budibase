@@ -1,7 +1,6 @@
 <script>
   import Field from "./Field.svelte"
   import Select from "./Core/Select.svelte"
-  import { createEventDispatcher } from "svelte"
 
   export let value = null
   export let label = undefined
@@ -20,12 +19,6 @@
   export let autoWidth = false
   export let sort = false
   export let tooltip = ""
-
-  const dispatch = createEventDispatcher()
-  const onChange = e => {
-    value = e.detail
-    dispatch("change", e.detail)
-  }
 
   const extractProperty = (value, property) => {
     if (value && typeof value === "object") {
@@ -51,7 +44,7 @@
     {getOptionIcon}
     {getOptionColour}
     {isOptionEnabled}
-    on:change={onChange}
+    on:change
     on:click
   />
 </Field>

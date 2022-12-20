@@ -300,7 +300,11 @@
         </slot>
       </div>
     {:else}
-      <div class="spectrum-Table" style={`${heightStyle}${gridStyle}`}>
+      <div
+        class="spectrum-Table"
+        class:no-scroll={!rowCount}
+        style={`${heightStyle}${gridStyle}`}
+      >
         {#if fields.length}
           <div class="spectrum-Table-head">
             {#if showEditColumn}
@@ -443,7 +447,6 @@
   /* Wrapper */
   .wrapper {
     position: relative;
-    z-index: 0;
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: var(--spectrum-global-dimension-size-250);
@@ -469,6 +472,9 @@
     border-radius: 0;
     display: grid;
     overflow: auto;
+  }
+  .spectrum-Table.no-scroll {
+    overflow: visible;
   }
 
   /* Header */
