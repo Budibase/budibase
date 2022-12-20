@@ -55,6 +55,10 @@
         updatingModal.show()
       }}
       disabled={appDeployed}
+      tooltip={appDeployed
+        ? "You must unpublish your app to make changes to these settings"
+        : null}
+      icon={appDeployed ? "HelpOutline" : null}
     >
       Edit
     </Button>
