@@ -5,37 +5,46 @@
     ActionButton,
     Layout,
     Icon,
-    notifications,
   } from "@budibase/bbui"
   import { roles } from "stores/backend"
-  import { groups, users, auth } from "stores/portal"
-  import { RoleUtils } from "@budibase/frontend-core"
-  import { createPaginationStore } from "helpers/pagination"
+  import { groups, users, licensing, apps } from "stores/portal"
+  import { Constants, RoleUtils, fetchData } from "@budibase/frontend-core"
+  import { API } from "api"
+  import { createEventDispatcher } from "svelte"
 
   export let app
-  export let addData
   export let appUsers = []
 
-  let prevSearch = undefined,
-    search = undefined
-  let pageInfo = createPaginationStore()
-  let appData = [{ id: "", role: "" }]
-
-  $: page = $pageInfo.page
-  $: fetchUsers(page, search)
-  $: availableUsers = getAvailableUsers($users, appUsers, appData)
-  $: filteredGroups = $groups.filter(group => {
-    return !group.apps.find(appId => {
-      return appId === app.appId
-    })
+  const dispatch = createEventDispatcher()
+  const usersFetch = fetchData({
+    API,
+    datasource: {
+      type: "user",
+    },
+    options: {
+      query: {
+        email: "",
+      },
+    },
   })
-  $: valid =
-    appData?.length && !appData?.some(x => !x.id?.length || !x.role?.length)
+
+  let search = ""
+  let data = [{ id: "", role: "" }]
+
+  $: usersFetch.update({
+    query: {
+      email: search,
+    },
+  })
+  $: fixedAppId = apps.getProdAppID(app.devId)
+  $: availableUsers = getAvailableUsers($usersFetch.rows, appUsers, data)
+  $: availableGroups = getAvailableGroups($groups, app.appId, search, data)
+  $: valid = data?.length && !data?.some(x => !x.id?.length || !x.role?.length)
   $: optionSections = {
-    ...($auth.groupsEnabled &&
-      filteredGroups.length && {
+    ...($licensing.groupsEnabled &&
+      availableGroups.length && {
         ["User groups"]: {
-          data: filteredGroups,
+          data: availableGroups,
           getLabel: group => group.name,
           getValue: group => group._id,
           getIcon: group => group.icon,
@@ -51,8 +60,45 @@
     },
   }
 
+  const addData = async appData => {
+    const gr_prefix = "gr"
+    const us_prefix = "us"
+    for (let data of appData) {
+      // Assign group
+      if (data.id.startsWith(gr_prefix)) {
+        const group = $groups.find(group => {
+          return group._id === data.id
+        })
+        if (!group) {
+          continue
+        }
+        await groups.actions.addApp(group._id, fixedAppId, data.role)
+      }
+      // Assign user
+      else if (data.id.startsWith(us_prefix)) {
+        const user = await users.get(data.id)
+        await users.save({
+          ...user,
+          roles: {
+            ...user.roles,
+            [fixedAppId]: data.role,
+          },
+        })
+      }
+    }
+
+    // Refresh data when completed
+    await usersFetch.refresh()
+    dispatch("update")
+  }
+
   const getAvailableUsers = (allUsers, appUsers, newUsers) => {
-    return (allUsers.data || []).filter(user => {
+    return (allUsers || []).filter(user => {
+      // Filter out admin users
+      if (user?.admin?.global || user?.builder?.global) {
+        return false
+      }
+
       // Filter out assigned users
       if (appUsers.find(x => x._id === user._id)) {
         return false
@@ -63,31 +109,31 @@
     })
   }
 
-  async function fetchUsers(page, search) {
-    if ($pageInfo.loading) {
-      return
-    }
-    // need to remove the page if they've started searching
-    if (search && !prevSearch) {
-      pageInfo.reset()
-      page = undefined
-    }
-    prevSearch = search
-    try {
-      pageInfo.loading()
-      await users.search({ page, email: search })
-      pageInfo.fetched($users.hasNextPage, $users.nextPage)
-    } catch (error) {
-      notifications.error("Error getting user list")
-    }
+  const getAvailableGroups = (allGroups, appId, search, newGroups) => {
+    search = search?.toLowerCase()
+    return (allGroups || []).filter(group => {
+      // Filter out assigned groups
+      const appIds = groups.actions.getGroupAppIds(group)
+      if (appIds.includes(apps.getProdAppID(appId))) {
+        return false
+      }
+
+      // Filter out new groups which are going to be assigned
+      if (newGroups.find(x => x.id === group._id)) {
+        return false
+      }
+
+      // Match search string
+      return !search || group.name.toLowerCase().includes(search)
+    })
   }
 
   function addNewInput() {
-    appData = [...appData, { id: "", role: "" }]
+    data = [...data, { id: "", role: "" }]
   }
 
   const removeItem = index => {
-    appData = appData.filter((x, idx) => idx !== index)
+    data = data.filter((x, idx) => idx !== index)
   }
 </script>
 
@@ -96,20 +142,22 @@
   title="Assign users to your app"
   confirmText="Done"
   cancelText="Cancel"
-  onConfirm={() => addData(appData)}
+  onConfirm={() => addData(data)}
   showCloseIcon={false}
   disabled={!valid}
 >
-  {#if appData?.length}
+  {#if data.length}
     <Layout noPadding gap="XS">
-      {#each appData as input, index}
+      {#each data as input, index}
         <div class="item">
           <div class="picker">
             <PickerDropdown
               autocomplete
               showClearIcon={false}
               primaryOptions={optionSections}
-              secondaryOptions={$roles}
+              secondaryOptions={$roles.filter(
+                x => x._id !== Constants.Roles.PUBLIC
+              )}
               secondaryPlaceholder="Access"
               bind:primaryValue={input.id}
               bind:secondaryValue={input.role}

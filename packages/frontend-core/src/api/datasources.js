@@ -11,10 +11,14 @@ export const buildDatasourceEndpoints = API => ({
   /**
    * Prompts the server to build the schema for a datasource.
    * @param datasourceId the datasource ID to build the schema for
+   * @param tablesFilter list of specific table names to be build the schema
    */
-  buildDatasourceSchema: async datasourceId => {
+  buildDatasourceSchema: async ({ datasourceId, tablesFilter }) => {
     return await API.post({
       url: `/api/datasources/${datasourceId}/schema`,
+      body: {
+        tablesFilter,
+      },
     })
   },
 

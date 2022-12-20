@@ -14,7 +14,6 @@
   export let disabled = false
   export let readonly = false
   export let error = null
-  export let updateOnChange = true
   export let getSecondaryOptionLabel = option =>
     extractProperty(option, "label")
   export let getSecondaryOptionValue = option =>
@@ -100,7 +99,6 @@
     {searchTerm}
     {autocomplete}
     {dataCy}
-    {updateOnChange}
     {error}
     {disabled}
     {readonly}
@@ -130,5 +128,6 @@
     on:blur
     on:focus
     on:keyup
+    on:closed
   />
 </Field>

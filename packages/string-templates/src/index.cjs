@@ -1,6 +1,4 @@
-const { VM } = require("vm2")
 const templates = require("./index.js")
-const { setJSRunner } = require("./helpers/javascript")
 
 /**
  * CJS entrypoint for rollup
@@ -21,13 +19,17 @@ module.exports.disableEscaping = templates.disableEscaping
 module.exports.findHBSBlocks = templates.findHBSBlocks
 module.exports.convertToJS = templates.convertToJS
 
-/**
- * Use vm2 to run JS scripts in a node env
- */
-setJSRunner((js, context) => {
-  const vm = new VM({
-    sandbox: context,
-    timeout: 1000
+if (!process.env.NO_JS) {
+  const { VM } = require("vm2")
+  const { setJSRunner } = require("./helpers/javascript")
+  /**
+   * Use vm2 to run JS scripts in a node env
+   */
+  setJSRunner((js, context) => {
+    const vm = new VM({
+      sandbox: context,
+      timeout: 1000
+    })
+    return vm.run(js)
   })
-  return vm.run(js)
-})
+}

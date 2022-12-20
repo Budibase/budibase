@@ -34,8 +34,8 @@
   )
 
   const handleChange = e => {
-    fieldApi.setValue(e.detail)
-    if (onChange) {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
       onChange({ value: e.detail })
     }
   }
@@ -77,6 +77,7 @@
         {direction}
         on:change={handleChange}
         getOptionLabel={flatOptions ? x => x : x => x.label}
+        getOptionTitle={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
       />
     {/if}

@@ -4,22 +4,32 @@
   import { banner } from "../Stores/banner"
   import Banner from "./Banner.svelte"
   import { fly } from "svelte/transition"
+  import TooltipWrapper from "../Tooltip/TooltipWrapper.svelte"
 </script>
 
 <Portal target=".banner-container">
   <div class="banner">
-    {#if $banner.message}
+    {#each $banner.messages as message}
       <div transition:fly={{ y: -30 }}>
         <Banner
-          type={$banner.type}
-          extraButtonText={$banner.extraButtonText}
-          extraButtonAction={$banner.extraButtonAction}
-          on:change={$banner.onChange}
+          type={message.type}
+          extraButtonText={message.extraButtonText}
+          extraButtonAction={message.extraButtonAction}
+          on:change={() => {
+            if (message.onChange) {
+              message.onChange()
+            }
+          }}
+          showCloseButton={typeof message.showCloseButton === "boolean"
+            ? message.showCloseButton
+            : true}
         >
-          {$banner.message}
+          <TooltipWrapper tooltip={message.tooltip} disabled={false}>
+            {message.message}
+          </TooltipWrapper>
         </Banner>
       </div>
-    {/if}
+    {/each}
   </div>
 </Portal>
 

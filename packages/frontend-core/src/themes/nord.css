@@ -28,6 +28,7 @@
   --spectrum-global-color-static-blue-600: #5680b4;
   --spectrum-global-color-static-blue-700: #4e79af;
   --spectrum-global-color-static-blue-800: #4a73a6;
+  --spectrum-global-color-static-blue: var(--spectrum-global-color-blue-600);
 
   --spectrum-global-color-gray-50: #2e3440;
   --spectrum-global-color-gray-75: #353b4a;

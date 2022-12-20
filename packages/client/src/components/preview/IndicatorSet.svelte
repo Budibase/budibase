@@ -9,11 +9,13 @@
   export let transition
   export let zIndex
   export let prefix = null
+  export let allowResizeAnchors = false
 
   let indicators = []
   let interval
   let text
   let icon
+  let insideGrid = false
 
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
@@ -23,11 +25,26 @@
   let callbackCount = 0
   let nextIndicators = []
 
+  const checkInsideGrid = id => {
+    const component = document.getElementsByClassName(id)[0]
+    const domNode = component?.children[0]
+
+    // Ignore grid itself
+    if (domNode?.classList.contains("grid")) {
+      return false
+    }
+
+    return component?.parentNode
+      ?.closest?.(".component")
+      ?.childNodes[0]?.classList.contains("grid")
+  }
+
   const createIntersectionCallback = idx => entries => {
     if (callbackCount >= observers.length) {
       return
     }
-    nextIndicators[idx].visible = entries[0].isIntersecting
+    nextIndicators[idx].visible =
+      nextIndicators[idx].isSidePanel || entries[0].isIntersecting
     if (++callbackCount === observers.length) {
       indicators = nextIndicators
       updating = false
@@ -52,6 +69,11 @@
     observers = []
     nextIndicators = []
 
+    // Check if we're inside a grid
+    if (allowResizeAnchors) {
+      insideGrid = checkInsideGrid(componentId)
+    }
+
     // Determine next set of indicators
     const parents = document.getElementsByClassName(componentId)
     if (parents.length) {
@@ -70,8 +92,9 @@
 
     // Extract valid children
     // Sanity limit of 100 active indicators
-    const children = Array.from(parents)
-      .map(parent => parent?.children?.[0])
+    const children = Array.from(
+      document.getElementsByClassName(`${componentId}-dom`)
+    )
       .filter(x => x != null)
       .slice(0, 100)
 
@@ -100,6 +123,7 @@
         width: elBounds.width + 4,
         height: elBounds.height + 4,
         visible: false,
+        isSidePanel: child.classList.contains("side-panel"),
       })
     })
   }
@@ -127,6 +151,8 @@
       height={indicator.height}
       text={idx === 0 ? text : null}
       icon={idx === 0 ? icon : null}
+      showResizeAnchors={allowResizeAnchors && insideGrid}
+      {componentId}
       {transition}
       {zIndex}
       {color}

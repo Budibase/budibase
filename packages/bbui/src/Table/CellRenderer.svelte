@@ -56,6 +56,7 @@
       {schema}
       value={cellValue}
       on:clickrelationship
+      on:buttonclick
     >
       <slot />
     </svelte:component>

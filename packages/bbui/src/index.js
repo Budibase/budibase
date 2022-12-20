@@ -4,6 +4,7 @@ import "./bbui.css"
 import "@spectrum-css/icon/dist/index-vars.css"
 
 // Components
+export { default as Skeleton } from "./Skeleton/Skeleton.svelte"
 export { default as Input } from "./Form/Input.svelte"
 export { default as Stepper } from "./Form/Stepper.svelte"
 export { default as TextArea } from "./Form/TextArea.svelte"
@@ -20,6 +21,7 @@ export { default as Button } from "./Button/Button.svelte"
 export { default as ButtonGroup } from "./ButtonGroup/ButtonGroup.svelte"
 export { default as ClearButton } from "./ClearButton/ClearButton.svelte"
 export { default as Icon, directions } from "./Icon/Icon.svelte"
+export { default as IconAvatar } from "./Icon/IconAvatar.svelte"
 export { default as Toggle } from "./Form/Toggle.svelte"
 export { default as RadioGroup } from "./Form/RadioGroup.svelte"
 export { default as Checkbox } from "./Form/Checkbox.svelte"
@@ -34,6 +36,7 @@ export { default as Layout } from "./Layout/Layout.svelte"
 export { default as Page } from "./Layout/Page.svelte"
 export { default as Link } from "./Link/Link.svelte"
 export { default as Tooltip } from "./Tooltip/Tooltip.svelte"
+export { default as TooltipWrapper } from "./Tooltip/TooltipWrapper.svelte"
 export { default as Menu } from "./Menu/Menu.svelte"
 export { default as MenuSection } from "./Menu/Section.svelte"
 export { default as MenuSeparator } from "./Menu/Separator.svelte"
@@ -94,7 +97,7 @@ export { default as clickOutside } from "./Actions/click_outside"
 
 // Stores
 export { notifications, createNotificationStore } from "./Stores/notifications"
-export { banner } from "./Stores/banner"
+export { banner, BANNER_TYPES } from "./Stores/banner"
 
 // Helpers
 export * as Helpers from "./helpers"

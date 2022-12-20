@@ -9,6 +9,7 @@ const read = [],
  * @openapi
  * /queries/{queryId}:
  *   post:
+ *     operationId: execute
  *     summary: Execute a query
  *     description: Queries which have been created within a Budibase app can be executed using this,
  *     tags:
@@ -42,6 +43,7 @@ write.push(new Endpoint("post", "/queries/:queryId", controller.execute))
  * @openapi
  * /queries/search:
  *   post:
+ *     operationId: search
  *     summary: Search for queries
  *     description: Based on query properties (currently only name) search for queries.
  *     tags:

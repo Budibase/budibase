@@ -9,7 +9,7 @@
 </script>
 
 <div class="title" data-cy={`${app.devId}`}>
-  <div style="display: flex;">
+  <div>
     <div class="app-icon" style="color: {app.icon?.color || ''}">
       <Icon size="XL" name={app.icon?.name || "Apps"} />
     </div>
@@ -61,6 +61,11 @@
 </div>
 
 <style>
+  div.title,
+  div.title > div {
+    display: flex;
+    max-width: 100%;
+  }
   .app-row-actions {
     grid-gap: var(--spacing-s);
     display: flex;

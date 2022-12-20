@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
 
 env:
-  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-  BRANCH: ${{ github.event.pull_request.head.ref }}
   CI: true
   PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   REGISTRY_URL: registry.hub.docker.com
@@ -17,6 +15,11 @@ jobs:
       matrix:
         node-version: [14.x]
     steps:
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master'
+        run: | 
+          echo "Ref is not master, you must run this job from master."
+          exit 1
       - name: "Checkout"
         uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
@@ -28,8 +31,6 @@ jobs:
       - name: Setup Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
       - name: Run Yarn
         run: yarn
       - name: Run Yarn Bootstrap

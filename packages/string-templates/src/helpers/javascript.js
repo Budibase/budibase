@@ -36,6 +36,9 @@ const getContextValue = (path, context) => {
 
 // Evaluates JS code against a certain context
 module.exports.processJS = (handlebars, context) => {
+  if (process && process.env.NO_JS) {
+    throw new Error("JS disabled in environment.")
+  }
   try {
     // Wrap JS in a function and immediately invoke it.
     // This is required to allow the final `return` statement to be valid.

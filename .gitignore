@@ -4,6 +4,7 @@ builder/*
 packages/server/runtime_apps/
 .idea/
 bb-airgapped.tar.gz
+*.iml
 
 # Logs
 logs
@@ -63,6 +64,7 @@ typings/
 
 # dotenv environment variables file
 .env
+!qa-core/.env
 !hosting/.env
 hosting/.generated-nginx.dev.conf
 hosting/proxy/.generated-nginx.prod.conf
@@ -103,3 +105,10 @@ stats.html
 
 # TypeScript cache
 *.tsbuildinfo
+<<<<<<< HEAD
+=======
+budibase-component
+budibase-datasource
+
+*.iml
+>>>>>>> 090fa330d251fedc4440f683a9fbfaa48bbdc5dc

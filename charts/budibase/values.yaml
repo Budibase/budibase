@@ -22,6 +22,12 @@ serviceAccount:
 
 podAnnotations: {}
 
+# logAnnotations:
+#   co.elastic.logs/multiline.type: pattern
+#   co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#   co.elastic.logs/multiline.negate: false
+#   co.elastic.logs/multiline.match: after
+
 podSecurityContext:
   {}
   # fsGroup: 2000
@@ -60,19 +66,6 @@ ingress:
               port:
                 number: 10000
 
-resources:
-  {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -89,6 +82,7 @@ affinity: {}
 globals:
   appVersion: "latest"
   budibaseEnv: PRODUCTION
+  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS"
   enableAnalytics: "1"
   sentryDSN: ""
   posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
@@ -110,32 +104,44 @@ globals:
   # if createSecrets is set to false, you can hard-code your secrets here
   internalApiKey: ""
   jwtSecret: ""
+  cdnUrl: ""
 
   smtp:
     enabled: false
 
+#  elasticApmEnabled:
+#  elasticApmSecretToken:
+#  elasticApmServerUrl:
+#  globalAgentHttpProxy:
+#  globalAgentHttpsProxy:
+#  globalAgentNoProxy:
+
 services:
   budibaseVersion: latest
   dns: cluster.local
+  # tlsRejectUnauthorized: 0
 
   proxy:
     port: 10000
     replicaCount: 1
-    resolver: 'kube-dns.kube-system.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}'
     upstreams:
       apps: 'http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}'
       worker: 'http://worker-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.worker.port }}'
       minio: 'http://minio-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.objectStore.port }}'
       couchdb: 'http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}'
+    resources: {}
 
   apps:
     port: 4002
     replicaCount: 1
     logLevel: info
+    resources: {}
+#    nodeDebug: "" # set the value of NODE_DEBUG
 
   worker:
     port: 4003
     replicaCount: 1
+    resources: {}
 
   couchdb:
     enabled: true
@@ -149,6 +155,7 @@ services:
       target: ""
       # backup interval in seconds
       interval: ""
+      resources: {}
 
   redis:
     enabled: true # disable if using external redis
@@ -162,8 +169,10 @@ services:
     ## If undefined (the default) or set to null, no storageClassName spec is
     ##   set, choosing the default provisioner.
     storageClass: ""
+    resources: {}
 
   objectStore:
+    # Set to false if using another object store such as S3
     minio: true
     browser: true
     port: 9000
@@ -178,6 +187,14 @@ services:
     ## If undefined (the default) or set to null, no storageClassName spec is
     ##   set, choosing the default provisioner.
     storageClass: ""
+    resources: {}
+    cloudfront:
+      # Set the url of a distribution to enable cloudfront
+      cdn: ""
+      # ID of public key stored in cloudfront
+      publicKeyId: ""
+      # Base64 encoded private key for the above public key
+      privateKey64: ""
 
 # Override values in couchDB subchart
 couchdb:

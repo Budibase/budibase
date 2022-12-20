@@ -23,6 +23,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      couchdb:
+        image: ibmcom/couchdb3
+        env:
+          COUCHDB_PASSWORD: budibase
+          COUCHDB_USER: budibase
+        ports:
+          - 4567:5984
+
     strategy:
       matrix:
         node-version: [14.x]
@@ -49,13 +58,12 @@ jobs:
     - uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        files: ./packages/server/coverage/clover.xml
+        files: ./packages/server/coverage/clover.xml,./packages/worker/coverage/clover.xml,./packages/backend-core/coverage/clover.xml
         name: codecov-umbrella
         verbose: true 
 
-    # TODO: parallelise this
-    - name: Cypress run
-      uses: cypress-io/github-action@v2
-      with:
-        install: false
-        command: yarn test:e2e:ci
+    - name: QA Core Integration Tests
+      run: | 
+        cd qa-core
+        yarn
+        yarn api:test:ci

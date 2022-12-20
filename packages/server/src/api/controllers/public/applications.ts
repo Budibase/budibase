@@ -1,7 +1,7 @@
-const { getAllApps } = require("@budibase/backend-core/db")
-const { doInAppContext } = require("@budibase/backend-core/context")
+import { db as dbCore, context } from "@budibase/backend-core"
 import { search as stringSearch, addRev } from "./utils"
 import * as controller from "../application"
+import * as deployController from "../deploy"
 import { Application } from "../../../definitions/common"
 
 function fixAppID(app: Application, params: any) {
@@ -15,15 +15,22 @@ function fixAppID(app: Application, params: any) {
 }
 
 async function setResponseApp(ctx: any) {
-  if (ctx.body && ctx.body.appId && (!ctx.params || !ctx.params.appId)) {
-    ctx.params = { appId: ctx.body.appId }
+  const appId = ctx.body?.appId
+  if (appId && (!ctx.params || !ctx.params.appId)) {
+    ctx.params = { appId }
   }
-  await controller.fetchAppPackage(ctx)
+  if (appId) {
+    await context.doInContext(appId, () => {
+      return controller.fetchAppPackage(ctx)
+    })
+  } else {
+    return controller.fetchAppPackage(ctx)
+  }
 }
 
 export async function search(ctx: any, next: any) {
   const { name } = ctx.request.body
-  const apps = await getAllApps({ all: true })
+  const apps = await dbCore.getAllApps({ all: true })
   ctx.body = stringSearch(apps, name)
   await next()
 }
@@ -41,7 +48,7 @@ export async function create(ctx: any, next: any) {
 }
 
 export async function read(ctx: any, next: any) {
-  await doInAppContext(ctx.params.appId, async () => {
+  await context.doInAppContext(ctx.params.appId, async () => {
     await setResponseApp(ctx)
     await next()
   })
@@ -49,7 +56,7 @@ export async function read(ctx: any, next: any) {
 
 export async function update(ctx: any, next: any) {
   ctx.request.body = await addRev(fixAppID(ctx.request.body, ctx.params))
-  await doInAppContext(ctx.params.appId, async () => {
+  await context.doInAppContext(ctx.params.appId, async () => {
     await controller.update(ctx)
     await setResponseApp(ctx)
     await next()
@@ -57,7 +64,7 @@ export async function update(ctx: any, next: any) {
 }
 
 export async function destroy(ctx: any, next: any) {
-  await doInAppContext(ctx.params.appId, async () => {
+  await context.doInAppContext(ctx.params.appId, async () => {
     // get the app before deleting it
     await setResponseApp(ctx)
     const body = ctx.body
@@ -68,10 +75,26 @@ export async function destroy(ctx: any, next: any) {
   })
 }
 
+export async function unpublish(ctx: any, next: any) {
+  await context.doInAppContext(ctx.params.appId, async () => {
+    await controller.unpublish(ctx)
+    await next()
+  })
+}
+
+export async function publish(ctx: any, next: any) {
+  await context.doInAppContext(ctx.params.appId, async () => {
+    await deployController.publishApp(ctx)
+    await next()
+  })
+}
+
 export default {
   create,
   update,
   read,
   destroy,
   search,
+  publish,
+  unpublish,
 }

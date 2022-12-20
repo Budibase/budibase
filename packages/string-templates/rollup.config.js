@@ -4,6 +4,7 @@ import json from "@rollup/plugin-json"
 import { terser } from "rollup-plugin-terser"
 import builtins from "rollup-plugin-node-builtins"
 import globals from "rollup-plugin-node-globals"
+import injectProcessEnv from "rollup-plugin-inject-process-env"
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -24,6 +25,9 @@ export default [
       globals(),
       builtins(),
       json(),
+      injectProcessEnv({
+        NO_JS: process.env.NO_JS,
+      }),
       production && terser(),
     ],
   },

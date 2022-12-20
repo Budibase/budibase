@@ -2,17 +2,17 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(['smoke', 'all'], () => {
-  context("Create a automation", () => {
+  xcontext("Create a automation", () => {
     before(() => {
       cy.login()
       cy.createTestApp()
     })
 
-    it("should create a automation", () => {
+    xit("should create a automation", () => {
       cy.createTestTableWithData()
       cy.wait(2000)
       cy.contains("Automate").click()
-      cy.get(interact.ADD_BUTTON_SPECTRUM).click()
+      cy.get(interact.SPECTRUM_BUTTON_TEMPLATE).contains("Add automation").click({ force: true })
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.get("input").type("Add Row")
         cy.contains("Row Created").click({ force: true })
@@ -24,7 +24,7 @@ filterTests(['smoke', 'all'], () => {
       cy.wait(500)
       cy.contains("dog").click()
       // Create action
-      cy.get('[aria-label="AddCircle"]', { timeout: 2000 }).eq(1).click()
+      cy.get('[aria-label="AddCircle"]', { timeout: 2000 }).click()
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.wait(1000)
         cy.contains("Create Row").trigger('mouseover').click().click()

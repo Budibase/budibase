@@ -21,16 +21,18 @@ export const disableEscaping = templates.disableEscaping
 export const findHBSBlocks = templates.findHBSBlocks
 export const convertToJS = templates.convertToJS
 
-/**
- * Use polyfilled vm to run JS scripts in a browser Env
- */
-setJSRunner((js, context) => {
-  context = {
-    ...context,
-    alert: undefined,
-    setInterval: undefined,
-    setTimeout: undefined,
-  }
-  vm.createContext(context)
-  return vm.runInNewContext(js, context, { timeout: 1000 })
-})
+if (process && !process.env.NO_JS) {
+  /**
+   * Use polyfilled vm to run JS scripts in a browser Env
+   */
+  setJSRunner((js, context) => {
+    context = {
+      ...context,
+      alert: undefined,
+      setInterval: undefined,
+      setTimeout: undefined,
+    }
+    vm.createContext(context)
+    return vm.runInNewContext(js, context, { timeout: 1000 })
+  })
+}

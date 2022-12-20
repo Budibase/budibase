@@ -43,7 +43,7 @@ describe("/static", () => {
 
     it("should ping from app", async () => {
       const headers = config.defaultHeaders()
-      headers[constants.Headers.APP_ID] = config.prodAppId
+      headers[constants.Header.APP_ID] = config.prodAppId
 
       await request
         .post("/api/bbtel/ping")

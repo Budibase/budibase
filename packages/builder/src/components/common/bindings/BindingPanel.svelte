@@ -9,6 +9,9 @@
     Body,
     Layout,
     Button,
+    ActionButton,
+    Icon,
+    Popover,
   } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
   import {
@@ -36,18 +39,35 @@
   export let value = ""
   export let valid
   export let allowJS = false
+  export let allowHelpers = true
 
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
-  let initialValueJS = value?.startsWith("{{ js ")
+  let initialValueJS = typeof value === "string" && value?.startsWith("{{ js ")
   let mode = initialValueJS ? "JavaScript" : "Handlebars"
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
 
+  let selectedCategory = null
+
+  let popover
+  let popoverAnchor
+  let hoverTarget
+
   $: usingJS = mode === "JavaScript"
   $: searchRgx = new RegExp(search, "ig")
   $: categories = Object.entries(groupBy("category", bindings))
+
+  $: bindingIcons = bindings?.reduce((acc, ele) => {
+    if (ele.icon) {
+      acc[ele.category] = acc[ele.category] || ele.icon
+    }
+    return acc
+  }, {})
+
+  $: categoryIcons = { ...bindingIcons, Helpers: "MagicWand" }
+
   $: filteredCategories = categories
     .map(([name, categoryBindings]) => ({
       name,
@@ -55,10 +75,19 @@
         return binding.readableBinding.match(searchRgx)
       }),
     }))
-    .filter(category => category.bindings?.length > 0)
+    .filter(category => {
+      return (
+        category.bindings?.length > 0 &&
+        (!selectedCategory ? true : selectedCategory === category.name)
+      )
+    })
+
   $: filteredHelpers = helpers?.filter(helper => {
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })
+
+  $: categoryNames = getCategoryNames(categories)
+
   $: codeMirrorHints = bindings?.map(x => `$("${x.readableBinding}")`)
 
   const updateValue = val => {
@@ -66,6 +95,14 @@
     if (valid) {
       dispatch("change", val)
     }
+  }
+
+  const getCategoryNames = categories => {
+    let names = [...categories.map(cat => cat[0])]
+    if (allowHelpers) {
+      names.push("Helpers")
+    }
+    return names
   }
 
   // Adds a JS/HBS helper to the expression
@@ -140,58 +177,163 @@
   })
 </script>
 
+<span class="detailPopover">
+  <Popover
+    align="right-side"
+    bind:this={popover}
+    anchor={popoverAnchor}
+    maxWidth={300}
+  >
+    <Layout gap="S">
+      <div class="helper">
+        {#if hoverTarget.title}
+          <div class="helper__name">{hoverTarget.title}</div>
+        {/if}
+        {#if hoverTarget.description}
+          <div class="helper__description">
+            {@html hoverTarget.description}
+          </div>
+        {/if}
+        {#if hoverTarget.example}
+          <pre class="helper__example">{hoverTarget.example}</pre>
+        {/if}
+      </div>
+    </Layout>
+  </Popover>
+</span>
+
 <DrawerContent>
   <svelte:fragment slot="sidebar">
-    <div class="container">
-      <section>
+    <Layout noPadding gap="S">
+      {#if selectedCategory}
+        <div>
+          <ActionButton
+            secondary
+            icon={"ArrowLeft"}
+            on:click={() => {
+              selectedCategory = null
+            }}
+          >
+            Back
+          </ActionButton>
+        </div>
+      {/if}
+
+      {#if !selectedCategory}
         <div class="heading">Search</div>
         <Search placeholder="Search" bind:value={search} />
-      </section>
-      {#each filteredCategories as category}
-        {#if category.bindings?.length}
-          <section>
-            <div class="heading">{category.name}</div>
+      {/if}
+
+      {#if !selectedCategory && !search}
+        <ul class="category-list">
+          {#each categoryNames as categoryName}
+            <li
+              on:click={() => {
+                selectedCategory = categoryName
+              }}
+            >
+              <Icon name={categoryIcons[categoryName]} />
+              <span class="category-name">{categoryName} </span>
+              <span class="category-chevron"><Icon name="ChevronRight" /></span>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+
+      {#if selectedCategory || search}
+        {#each filteredCategories as category}
+          {#if category.bindings?.length}
+            <div class="cat-heading">
+              <Icon name={categoryIcons[category.name]} />{category.name}
+            </div>
             <ul>
               {#each category.bindings as binding}
-                <li on:click={() => addBinding(binding)}>
-                  <span class="binding__label">{binding.readableBinding}</span>
-                  {#if binding.type}
-                    <span class="binding__type">{binding.type}</span>
-                  {/if}
-                  {#if binding.description}
-                    <br />
-                    <div class="binding__description">
-                      {binding.description || ""}
-                    </div>
+                <li
+                  class="binding"
+                  on:mouseenter={e => {
+                    popoverAnchor = e.target
+                    if (!binding.description) {
+                      return
+                    }
+                    hoverTarget = {
+                      title: binding.display?.name || binding.fieldSchema?.name,
+                      description: binding.description,
+                    }
+                    popover.show()
+                    e.stopPropagation()
+                  }}
+                  on:mouseleave={() => {
+                    popover.hide()
+                    popoverAnchor = null
+                    hoverTarget = null
+                  }}
+                  on:focus={() => {}}
+                  on:blur={() => {}}
+                  on:click={() => addBinding(binding)}
+                >
+                  <span class="binding__label">
+                    {#if binding.display?.name}
+                      {binding.display.name}
+                    {:else if binding.fieldSchema?.name}
+                      {binding.fieldSchema?.name}
+                    {:else}
+                      {binding.readableBinding}
+                    {/if}
+                  </span>
+
+                  {#if binding.display?.type || binding.fieldSchema?.type}
+                    <span class="binding__typeWrap">
+                      <span class="binding__type">
+                        {binding.display?.type || binding.fieldSchema?.type}
+                      </span>
+                    </span>
                   {/if}
                 </li>
               {/each}
             </ul>
-          </section>
+          {/if}
+        {/each}
+
+        {#if selectedCategory === "Helpers" || search}
+          {#if filteredHelpers?.length}
+            <div class="heading">Helpers</div>
+            <ul class="helpers">
+              {#each filteredHelpers as helper}
+                <li
+                  class="binding"
+                  on:click={() => addHelper(helper, usingJS)}
+                  on:mouseenter={e => {
+                    popoverAnchor = e.target
+                    if (!helper.displayText && helper.description) {
+                      return
+                    }
+                    hoverTarget = {
+                      title: helper.displayText,
+                      description: helper.description,
+                      example: getHelperExample(helper, usingJS),
+                    }
+                    popover.show()
+                    e.stopPropagation()
+                  }}
+                  on:mouseleave={() => {
+                    popover.hide()
+                    popoverAnchor = null
+                    hoverTarget = null
+                  }}
+                  on:focus={() => {}}
+                  on:blur={() => {}}
+                >
+                  <span class="binding__label">{helper.displayText}</span>
+                  <span class="binding__typeWrap">
+                    <span class="binding__type">function</span>
+                  </span>
+                </li>
+              {/each}
+            </ul>
+          {/if}
         {/if}
-      {/each}
-      {#if filteredHelpers?.length}
-        <section>
-          <div class="heading">Helpers</div>
-          <ul>
-            {#each filteredHelpers as helper}
-              <li on:click={() => addHelper(helper, usingJS)}>
-                <div class="helper">
-                  <div class="helper__name">{helper.displayText}</div>
-                  <div class="helper__description">
-                    {@html helper.description}
-                  </div>
-                  <pre class="helper__example">{getHelperExample(
-                      helper,
-                      usingJS
-                    )}</pre>
-                </div>
-              </li>
-            {/each}
-          </ul>
-        </section>
       {/if}
-    </div>
+    </Layout>
   </svelte:fragment>
   <div class="main">
     <Tabs selected={mode} on:select={onChangeMode}>
@@ -210,7 +352,7 @@
               for more details.
             </p>
           {/if}
-          {#if $admin.isDev}
+          {#if $admin.isDev && allowJS}
             <div class="convert">
               <Button secondary on:click={convert}>Convert to JS</Button>
             </div>
@@ -241,6 +383,35 @@
 </DrawerContent>
 
 <style>
+  ul.helpers li * {
+    pointer-events: none;
+  }
+  ul.category-list li {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
+  }
+  ul.category-list .category-name {
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  ul.category-list .category-chevron {
+    flex: 1;
+    text-align: right;
+  }
+  ul.category-list .category-chevron :global(div.icon),
+  .cat-heading :global(div.icon) {
+    display: inline-block;
+  }
+  li.binding {
+    display: flex;
+    align-items: center;
+  }
+  li.binding .binding__typeWrap {
+    flex: 1;
+    text-align: right;
+    text-transform: capitalize;
+  }
   .main :global(textarea) {
     min-height: 202px !important;
   }
@@ -251,23 +422,20 @@
     padding: var(--spacing-s) var(--spacing-xl);
   }
 
-  .container {
-    margin: calc(-1 * var(--spacing-xl));
-  }
-  .heading {
+  .heading,
+  .cat-heading {
     font-size: var(--font-size-s);
     font-weight: 600;
     text-transform: uppercase;
     color: var(--spectrum-global-color-gray-600);
-    padding: var(--spacing-xl) 0 var(--spacing-m) 0;
   }
 
-  section {
-    padding: 0 var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
+  .cat-heading {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
   }
-  section:not(:first-child) {
-    border-top: var(--border-light);
-  }
+
   ul {
     list-style: none;
     padding: 0;
@@ -278,7 +446,7 @@
     font-size: var(--font-size-s);
     padding: var(--spacing-m);
     border-radius: 4px;
-    border: var(--border-light);
+    background-color: var(--spectrum-global-color-gray-200);
     transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
       border-color 130ms ease-in-out;
     word-wrap: break-word;
@@ -292,22 +460,14 @@
   li:hover {
     color: var(--spectrum-global-color-gray-900);
     background-color: var(--spectrum-global-color-gray-50);
-    border-color: var(--spectrum-global-color-gray-500);
     cursor: pointer;
-  }
-  li:hover :global(*) {
-    color: var(--spectrum-global-color-gray-900) !important;
   }
 
   .binding__label {
     font-weight: 600;
     text-transform: capitalize;
   }
-  .binding__description {
-    color: var(--spectrum-global-color-gray-700);
-    margin: 0.5rem 0 0 0;
-    white-space: normal;
-  }
+
   .binding__type {
     font-family: monospace;
     background-color: var(--spectrum-global-color-gray-200);

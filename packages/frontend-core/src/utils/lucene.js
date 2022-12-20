@@ -7,7 +7,7 @@ const HBS_REGEX = /{{([^{].*?)}}/g
  * Returns the valid operator options for a certain data type
  * @param type the data type
  */
-export const getValidOperatorsForType = type => {
+export const getValidOperatorsForType = (type, field, datasource) => {
   const Op = OperatorOptions
   const stringOps = [
     Op.Equals,
@@ -27,24 +27,37 @@ export const getValidOperatorsForType = type => {
     Op.NotEmpty,
     Op.In,
   ]
+  let ops = []
   if (type === "string") {
-    return stringOps
+    ops = stringOps
   } else if (type === "number") {
-    return numOps
+    ops = numOps
   } else if (type === "options") {
-    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   } else if (type === "array") {
-    return [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
+    ops = [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
   } else if (type === "boolean") {
-    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === "longform") {
-    return stringOps
+    ops = stringOps
   } else if (type === "datetime") {
-    return numOps
+    ops = numOps
   } else if (type === "formula") {
-    return stringOps.concat([Op.MoreThan, Op.LessThan])
+    ops = stringOps.concat([Op.MoreThan, Op.LessThan])
   }
-  return []
+
+  // Filter out "like" for internal tables
+  const externalTable = datasource?.tableId?.includes("datasource_plus")
+  if (datasource?.type === "table" && !externalTable) {
+    ops = ops.filter(x => x !== Op.Like)
+  }
+
+  // Only allow equal/not equal for _id in SQL tables
+  if (field === "_id" && externalTable) {
+    ops = [Op.Equals, Op.NotEquals]
+  }
+
+  return ops
 }
 
 /**
@@ -72,12 +85,25 @@ const cleanupQuery = query => {
       continue
     }
     for (let [key, value] of Object.entries(query[filterField])) {
-      if (!value || value === "") {
+      if (value == null || value === "") {
         delete query[filterField][key]
       }
     }
   }
   return query
+}
+
+/**
+ * Removes a numeric prefix on field names designed to give fields uniqueness
+ */
+const removeKeyNumbering = key => {
+  if (typeof key === "string" && key.match(/\d[0-9]*:/g) != null) {
+    const parts = key.split(":")
+    parts.shift()
+    return parts.join(":")
+  } else {
+    return key
+  }
 }
 
 /**
@@ -108,7 +134,12 @@ export const buildLuceneQuery = filter => {
         query.allOr = true
         return
       }
-      if (type === "datetime") {
+      if (
+        type === "datetime" &&
+        !isHbs &&
+        operator !== "empty" &&
+        operator !== "notEmpty"
+      ) {
         // Ensure date value is a valid date and parse into correct format
         if (!value) {
           return
@@ -186,7 +217,7 @@ export const runLuceneQuery = (docs, query) => {
     return docs
   }
 
-  // make query consistent first
+  // Make query consistent first
   query = cleanupQuery(query)
 
   // Iterates over a set of filters and evaluates a fail function against a doc
@@ -194,7 +225,7 @@ export const runLuceneQuery = (docs, query) => {
     const filters = Object.entries(query[type] || {})
     for (let i = 0; i < filters.length; i++) {
       const [key, testValue] = filters[i]
-      const docValue = Helpers.deepGet(doc, key)
+      const docValue = Helpers.deepGet(doc, removeKeyNumbering(key))
       if (failFn(docValue, testValue)) {
         return false
       }
@@ -218,7 +249,12 @@ export const runLuceneQuery = (docs, query) => {
 
   // Process a range match
   const rangeMatch = match("range", (docValue, testValue) => {
-    return !docValue || docValue < testValue.low || docValue > testValue.high
+    return (
+      docValue == null ||
+      docValue === "" ||
+      docValue < testValue.low ||
+      docValue > testValue.high
+    )
   })
 
   // Process an equal match (fails if the value is different)

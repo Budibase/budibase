@@ -5,30 +5,56 @@
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
-  import { users, auth, apps } from "stores/portal"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { users, auth, apps, groups } from "stores/portal"
+  import { createEventDispatcher } from "svelte"
+  import { fetchData } from "@budibase/frontend-core"
+  import { API } from "api"
+  import GroupIcon from "../../manage/groups/_components/GroupIcon.svelte"
 
   export let app
   export let deployments
   export let navigateTab
-  let userCount
+
   const dispatch = createEventDispatcher()
+  const appUsersFetch = fetchData({
+    API,
+    datasource: {
+      type: "user",
+    },
+    options: {
+      query: {
+        appId: apps.getProdAppID(app.devId),
+      },
+    },
+  })
+
+  let appEditor
+
+  $: updateAvailable = clientPackage.version !== $store.version
+  $: isPublished = app?.status === AppStatus.DEPLOYED
+  $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
+  $: appEditorText = appEditor?.firstName || appEditor?.email
+  $: fetchAppEditor(appEditorId)
+  $: appUsers = $appUsersFetch.rows || []
+  $: appUsersFetch.update({
+    query: {
+      appId: apps.getProdAppID(app.devId),
+    },
+  })
+  $: prodAppId = apps.getProdAppID(app.devId)
+  $: appGroups = $groups.filter(group => {
+    if (!group.roles) {
+      return false
+    }
+    return groups.actions.getGroupAppIds(group).includes(prodAppId)
+  })
 
   const unpublishApp = () => {
     dispatch("unpublish", app)
   }
 
-  let appEditor, appEditorPromise
-
-  $: updateAvailable = clientPackage.version !== $store.version
-  $: isPublished = app && app?.status === AppStatus.DEPLOYED
-  $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
-  $: appEditorText = appEditor?.firstName || appEditor?.email
-  $: fetchAppEditor(appEditorId)
-
   async function fetchAppEditor(editorId) {
-    appEditorPromise = users.get(editorId)
-    appEditor = await appEditorPromise
+    appEditor = await users.get(editorId)
   }
 
   const getInitials = user => {
@@ -36,16 +62,8 @@
     initials += user.firstName ? user.firstName[0] : ""
     initials += user.lastName ? user.lastName[0] : ""
 
-    return initials == "" ? user.email[0] : initials
+    return initials === "" ? user.email[0] : initials
   }
-
-  onMount(async () => {
-    let resp = await users.getUserCountByApp({
-      appId: apps.getProdAppID(app.devId),
-    })
-    userCount = resp.userCount
-    await users.search({ appId: apps.getProdAppID(app.devId), limit: 4 })
-  })
 </script>
 
 <div class="overview-tab">
@@ -83,11 +101,9 @@
           </div>
         </div>
       </DashCard>
-      <DashCard title={"Last Edited"} dataCy={"edited-by"}>
-        <div class="last-edited-content">
-          {#await appEditorPromise}
-            <Avatar size="M" initials={"-"} />
-          {:then _}
+      {#if appEditor}
+        <DashCard title={"Last Edited"} dataCy={"edited-by"}>
+          <div class="last-edited-content">
             <div class="updated-by">
               {#if appEditor}
                 <Avatar size="M" initials={getInitials(appEditor)} />
@@ -96,22 +112,20 @@
                 </div>
               {/if}
             </div>
-          {:catch error}
-            <p>Could not fetch user: {error.message}</p>
-          {/await}
-          <div class="last-edit-text">
-            {#if app}
-              {processStringSync(
-                "Last edited {{ duration time 'millisecond' }} ago",
-                {
-                  time:
-                    new Date().getTime() - new Date(app?.updatedAt).getTime(),
-                }
-              )}
-            {/if}
+            <div class="last-edit-text">
+              {#if app}
+                {processStringSync(
+                  "Last edited {{ duration time 'millisecond' }} ago",
+                  {
+                    time:
+                      new Date().getTime() - new Date(app?.updatedAt).getTime(),
+                  }
+                )}
+              {/if}
+            </div>
           </div>
-        </div>
-      </DashCard>
+        </DashCard>
+      {/if}
       <DashCard
         title={"App Version"}
         showIcon={true}
@@ -141,26 +155,44 @@
           {/if}
         </div>
       </DashCard>
-      <DashCard
-        title={"Access"}
-        showIcon={true}
-        action={() => {
-          navigateTab("Access")
-        }}
-        dataCy={"access"}
-      >
-        <div class="last-edited-content">
-          {#if $users?.data?.length}
+      {#if $appUsersFetch.loaded}
+        <DashCard
+          title={"Access"}
+          showIcon={true}
+          action={() => {
+            navigateTab("Access")
+          }}
+          dataCy={"access"}
+        >
+          {#if appUsers.length || appGroups.length}
             <Layout noPadding gap="S">
-              <div class="users-tab">
-                {#each $users?.data as user}
-                  <Avatar size="M" initials={getInitials(user)} />
-                {/each}
-              </div>
-
-              <div class="users-text">
-                {userCount}
-                {userCount > 1 ? `users have` : `user has`} access to this app
+              <div class="access-tab-content">
+                {#if appUsers.length}
+                  <div class="users">
+                    <div class="list">
+                      {#each appUsers.slice(0, 4) as user}
+                        <Avatar size="M" initials={getInitials(user)} />
+                      {/each}
+                    </div>
+                    <div class="text">
+                      {appUsers.length}
+                      {appUsers.length > 1 ? "users" : "user"} assigned
+                    </div>
+                  </div>
+                {/if}
+                {#if appGroups.length}
+                  <div class="groups">
+                    <div class="list">
+                      {#each appGroups.slice(0, 4) as group}
+                        <GroupIcon {group} />
+                      {/each}
+                    </div>
+                    <div class="text">
+                      {appGroups.length} user
+                      {appGroups.length > 1 ? "groups" : "group"} assigned
+                    </div>
+                  </div>
+                {/if}
               </div>
             </Layout>
           {:else}
@@ -171,8 +203,8 @@
               </div>
             </Layout>
           {/if}
-        </div>
-      </DashCard>
+        </DashCard>
+      {/if}
     </div>
     {#if false}
       <div class="bottom">
@@ -224,39 +256,34 @@
   .overview-tab .top {
     display: grid;
     grid-gap: var(--spectrum-alias-grid-gutter-medium);
-    grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   }
 
-  .users-tab {
+  .access-tab-content {
     display: flex;
-    gap: var(--spacing-m);
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+  .access-tab-content > * {
+    flex: 1 1 0;
+  }
+  .access-tab-content .list {
+    display: flex;
+    gap: 4px;
+  }
+  .access-tab-content .text {
+    color: var(--spectrum-global-color-gray-600);
+    margin-top: var(--spacing-xl);
   }
 
-  .users-text {
-    color: var(--spectrum-global-color-gray-600);
-  }
   .overview-tab .bottom,
   .automation-metrics {
     display: grid;
     grid-gap: var(--spectrum-alias-grid-gutter-large);
     grid-template-columns: 1fr 1fr;
-  }
-
-  @media (max-width: 1000px) {
-    .overview-tab .top {
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .overview-tab .bottom {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 800px) {
-    .overview-tab .top,
-    .overview-tab .bottom {
-      grid-template-columns: 1fr;
-    }
   }
 
   .status-display {

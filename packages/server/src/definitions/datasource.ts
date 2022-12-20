@@ -31,9 +31,11 @@ export interface BearerAuthConfig {
 
 export interface RestConfig {
   url: string
+  rejectUnauthorized: boolean
   defaultHeaders: {
     [key: string]: any
   }
+  legacyHttpParser: boolean
   authConfigs: AuthConfig[]
   staticVariables: {
     [key: string]: string

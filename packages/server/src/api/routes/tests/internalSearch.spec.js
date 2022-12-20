@@ -173,4 +173,24 @@ describe("internal search", () => {
     }, PARAMS)
     checkLucene(response, `*:* AND NOT column:(a AND b AND c)`, PARAMS)
   })
+
+  it("test equal without version query", async () => {
+    PARAMS.version = null
+    const response = await search.paginatedSearch({
+      equal: {
+        "column": "1",
+      }
+    }, PARAMS)
+    
+    const query = response.rows[0].query
+    const json = JSON.parse(query)
+    if (PARAMS.sort) {
+      expect(json.sort).toBe(`${PARAMS.sort}<${PARAMS.sortType}>`)
+    }
+    if (PARAMS.bookmark) {
+      expect(json.bookmark).toBe(PARAMS.bookmark)
+    }
+    expect(json.include_docs).toBe(true)
+    expect(json.q).toBe(`(*:* AND column:"1") AND tableId:${PARAMS.tableId}`)
+  })
 })

@@ -4,7 +4,7 @@ const fs = require("fs")
 const { join } = require("path")
 const { getAllDbs } = require("../core/db")
 const tar = require("tar")
-const { progressBar } = require("../utils")
+const { progressBar, httpCall } = require("../utils")
 const {
   TEMP_DIR,
   COUCH_DIR,
@@ -86,6 +86,15 @@ async function importBackup(opts) {
   bar.stop()
   console.log("MinIO Import")
   await importObjects()
+  // finish by letting the system know that a restore has occurred
+  try {
+    await httpCall(
+      `http://localhost:${config.MAIN_PORT}/api/system/restored`,
+      "POST"
+    )
+  } catch (err) {
+    // ignore error - it will be an older system
+  }
   console.log("Import complete")
   fs.rmSync(TEMP_DIR, { recursive: true })
 }

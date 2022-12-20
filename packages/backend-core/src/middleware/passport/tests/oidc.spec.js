@@ -1,7 +1,6 @@
 // Mock data
-
+const mockFetch = require("node-fetch")
 const { data } = require("./utilities/mock-data")
-
 const issuer = "mockIssuer"
 const sub = "mockSub"
 const profile = {
@@ -39,8 +38,6 @@ describe("oidc", () => {
     const mockStrategy = require("@techpass/passport-openidconnect").Strategy
     
     // mock the request to retrieve the oidc configuration
-    jest.mock("node-fetch")
-    const mockFetch = require("node-fetch")
     mockFetch.mockReturnValue({
       ok: true,
       json: () => oidcConfigUrlResponse

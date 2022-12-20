@@ -1,7 +1,14 @@
 import { writable } from "svelte/store"
 
+export const BANNER_TYPES = {
+  INFO: "info",
+  NEGATIVE: "negative",
+}
+
 export function createBannerStore() {
-  const DEFAULT_CONFIG = {}
+  const DEFAULT_CONFIG = {
+    messages: [],
+  }
 
   const banner = writable(DEFAULT_CONFIG)
 
@@ -20,17 +27,38 @@ export function createBannerStore() {
   const showStatus = async () => {
     const config = {
       message: "Some systems are experiencing issues",
-      type: "negative",
+      type: BANNER_TYPES.NEGATIVE,
       extraButtonText: "View Status",
       extraButtonAction: () => window.open("https://status.budibase.com/"),
     }
 
-    await show(config)
+    await queue([config])
+  }
+
+  const queue = async entries => {
+    const priority = {
+      [BANNER_TYPES.NEGATIVE]: 0,
+      [BANNER_TYPES.INFO]: 1,
+    }
+    banner.update(store => {
+      const sorted = [...store.messages, ...entries].sort((a, b) => {
+        if (priority[a.type] == priority[b.type]) {
+          return 0
+        }
+        return priority[a.type] < priority[b.type] ? -1 : 1
+      })
+      return {
+        ...store,
+        messages: sorted,
+      }
+    })
   }
 
   return {
     subscribe: banner.subscribe,
     showStatus,
+    show,
+    queue,
   }
 }
 

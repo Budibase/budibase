@@ -6,7 +6,7 @@
   export let label
   export let placeholder
   export let disabled = false
-  export let enableTime = false
+  export let enableTime = true
   export let timeOnly = false
   export let time24hr = false
   export let ignoreTimezones = false
@@ -18,8 +18,8 @@
   let fieldApi
 
   const handleChange = e => {
-    fieldApi.setValue(e.detail)
-    if (onChange) {
+    const changed = fieldApi.setValue(e.detail)
+    if (onChange && changed) {
       onChange({ value: e.detail })
     }
   }

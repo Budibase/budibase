@@ -9,13 +9,13 @@
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Detail from "../../Typography/Detail.svelte"
   import Search from "./Search.svelte"
+  import IconAvatar from "../../Icon/IconAvatar.svelte"
 
   export let primaryLabel = ""
   export let primaryValue = null
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
-  export let updateOnChange = true
   export let error = null
   export let secondaryOptions = []
   export let primaryOptions = []
@@ -61,6 +61,7 @@
   const onPickPrimary = newValue => {
     dispatch("pickprimary", newValue)
     primaryOpen = false
+    dispatch("closed")
   }
 
   const onClearPrimary = () => {
@@ -85,6 +86,21 @@
   const updateValueOnEnter = event => {
     if (event.key === "Enter") {
       updateValue(event.target.value)
+    }
+  }
+
+  const handlePrimaryOutsideClick = event => {
+    if (primaryOpen) {
+      event.stopPropagation()
+      primaryOpen = false
+      dispatch("closed")
+    }
+  }
+
+  const handleSecondaryOutsideClick = event => {
+    if (secondaryOpen) {
+      event.stopPropagation()
+      secondaryOpen = false
     }
   }
 </script>
@@ -148,7 +164,7 @@
   </div>
   {#if primaryOpen}
     <div
-      use:clickOutside={() => (primaryOpen = false)}
+      use:clickOutside={handlePrimaryOutsideClick}
       transition:fly|local={{ y: -20, duration: 200 }}
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
       class:auto-width={autoWidth}
@@ -204,19 +220,11 @@
                   })}
               >
                 {#if primaryOptions[title].getIcon(option)}
-                  <div
-                    style="background: {primaryOptions[title].getColour(
-                      option
-                    )};"
-                    class="circle"
-                  >
-                    <div>
-                      <Icon
-                        size="S"
-                        name={primaryOptions[title].getIcon(option)}
-                      />
-                    </div>
-                  </div>
+                  <IconAvatar
+                    size="S"
+                    icon={primaryOptions[title].getIcon(option)}
+                    background={primaryOptions[title].getColour(option)}
+                  />
                 {:else if getPrimaryOptionColour(option, idx)}
                   <span class="option-left">
                     <StatusLight
@@ -226,12 +234,13 @@
                   </span>
                 {/if}
                 <span class="spectrum-Menu-itemLabel">
-                  <span
+                  <div
+                    class="primary-text"
                     class:spacing-group={primaryOptions[title].getIcon(option)}
                   >
                     {primaryOptions[title].getLabel(option)}
                     <span />
-                  </span>
+                  </div>
                   <svg
                     class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
                     focusable="false"
@@ -263,7 +272,7 @@
         {disabled}
         class:is-open={secondaryOpen}
         aria-haspopup="listbox"
-        on:mousedown={onClickSecondary}
+        on:click={onClickSecondary}
       >
         {#if secondaryFieldIcon}
           <span class="option-left">
@@ -288,7 +297,7 @@
       </button>
       {#if secondaryOpen}
         <div
-          use:clickOutside={() => (secondaryOpen = false)}
+          use:clickOutside={handleSecondaryOutsideClick}
           transition:fly|local={{ y: -20, duration: 200 }}
           class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
           style="width: 30%"
@@ -335,6 +344,11 @@
 </div>
 
 <style>
+  .primary-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .spacing-group {
     margin-left: var(--spacing-m);
   }
@@ -365,25 +379,6 @@
   }
   .option-right {
     padding-left: 8px;
-  }
-
-  .circle {
-    border-radius: 50%;
-    height: 28px;
-    color: white;
-    font-weight: bold;
-    line-height: 48px;
-    font-size: 1.2em;
-    width: 28px;
-    position: relative;
-  }
-
-  .circle > div {
-    position: absolute;
-    text-decoration: none;
-    top: 50%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-50%);
   }
 
   .iconPadding {

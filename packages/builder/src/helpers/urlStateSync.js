@@ -6,10 +6,12 @@ export const syncURLToState = options => {
     urlParam,
     stateKey,
     validate,
+    update,
     baseUrl = "..",
     fallbackUrl,
     store,
     routify,
+    beforeNavigate,
   } = options || {}
   if (
     !urlParam ||
@@ -37,10 +39,19 @@ export const syncURLToState = options => {
   let cachedPage = get(routify.page)
   let previousParamsHash = null
   let debug = false
-  const log = (...params) => debug && console.log(...params)
+  const log = (...params) => debug && console.log(`[${urlParam}]`, ...params)
 
   // Navigate to a certain URL
   const gotoUrl = (url, params) => {
+    if (beforeNavigate) {
+      const res = beforeNavigate(url, params)
+      if (res?.url) {
+        url = res.url
+      }
+      if (res?.params) {
+        params = res.params
+      }
+    }
     log("Navigating to", url, "with params", params)
     cachedGoto(url, params)
   }
@@ -75,10 +86,16 @@ export const syncURLToState = options => {
     // Only update state if we have a new value
     if (urlValue !== stateValue) {
       log(`state.${stateKey} (${stateValue}) <= url.${urlParam} (${urlValue})`)
-      store.update(state => {
-        state[stateKey] = urlValue
-        return state
-      })
+      if (update) {
+        // Use custom update function if provided
+        update(urlValue)
+      } else {
+        // Otherwise manually update the store
+        store.update(state => ({
+          ...state,
+          [stateKey]: urlValue,
+        }))
+      }
     }
   }
 
