@@ -2,13 +2,13 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(['smoke', 'all'], () => {
-  context("Create a automation", () => {
+  xcontext("Create a automation", () => {
     before(() => {
       cy.login()
       cy.createTestApp()
     })
 
-    it("should create a automation", () => {
+    xit("should create a automation", () => {
       cy.createTestTableWithData()
       cy.wait(2000)
       cy.contains("Automate").click()
