@@ -121,6 +121,7 @@ services:
   proxy:
     port: 10000
     replicaCount: 1
+    resolver: 'kube-dns.kube-system.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}'
     upstreams:
       apps: 'http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}'
       worker: 'http://worker-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.worker.port }}'

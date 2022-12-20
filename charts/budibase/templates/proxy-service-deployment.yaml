@@ -40,7 +40,11 @@ spec:
         - name: COUCHDB_UPSTREAM_URL
           value: {{ .Values.services.couchdb.url | default (tpl .Values.services.proxy.upstreams.couchdb .) | quote }}
         - name: RESOLVER
+          {{ if .Values.services.proxy.resolver }}
+          value: {{ .Values.services.proxy.resolver }}
+          {{ else }}
           value: kube-dns.kube-system.svc.{{ .Values.services.dns }}
+          {{ end }}
         resources: {}
         volumeMounts:
     {{- with .Values.affinity }}
