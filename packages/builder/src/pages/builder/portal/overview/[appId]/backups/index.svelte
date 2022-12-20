@@ -16,7 +16,7 @@
     Table,
     Page,
   } from "@budibase/bbui"
-  import { backups, licensing, auth, admin } from "stores/portal"
+  import { backups, licensing, auth, admin, overview } from "stores/portal"
   import { createPaginationStore } from "helpers/pagination"
   import DateRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import AppSizeRenderer from "./_components/AppSizeRenderer.svelte"
@@ -29,7 +29,6 @@
   import BackupsDefault from "assets/backups-default.png"
   import { BackupTrigger, BackupType } from "constants/backend/backups"
   import { onMount } from "svelte"
-  export let app
 
   let backupData = null
   let modal
@@ -61,6 +60,7 @@
     },
   ]
 
+  $: app = $overview.selectedApp
   $: page = $pageInfo.page
   $: fetchBackups(filterOpt, page, startDate, endDate)
 
@@ -171,67 +171,56 @@
   })
 </script>
 
-<div class="root">
+<Layout noPadding>
+  <Layout gap="XS" noPadding>
+    <div class="title">
+      <Heading>Backups</Heading>
+      {#if !$licensing.backupsEnabled}
+        <Tags>
+          <Tag icon="LockClosed">Pro plan</Tag>
+        </Tags>
+      {/if}
+    </div>
+    <Body>Back up your apps and restore them to their previous state</Body>
+  </Layout>
+  <Divider />
+
   {#if !$licensing.backupsEnabled}
-    <Page wide={false}>
-      <Layout gap="XS" noPadding>
-        <div class="title">
-          <Heading size="M">Backups</Heading>
-          <Tags>
-            <Tag icon="LockClosed">Pro plan</Tag>
-          </Tags>
-        </div>
+    {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
+      <Body>Contact your account holder to upgrade your plan.</Body>
+    {/if}
+    <div class="pro-buttons">
+      {#if $auth.accountPortalAccess}
+        <Button
+          primary
+          disabled={!$auth.accountPortalAccess && $admin.cloud}
+          on:click={$licensing.goToUpgradePage()}
+        >
+          Upgrade
+        </Button>
+      {/if}
+      <Button
+        secondary
+        on:click={() => {
+          window.open("https://budibase.com/pricing/", "_blank")
+        }}
+      >
+        View plans
+      </Button>
+    </div>
+  {:else if backupData?.length === 0 && loaded && !filterOpt && !startDate}
+    <div class="center">
+      <Layout noPadding gap="S" justifyItems="center">
+        <img height="130px" src={BackupsDefault} alt="BackupsDefault" />
+        <Layout noPadding gap="XS">
+          <Heading>You have no backups yet</Heading>
+          <Body>You can manually back up your app any time</Body>
+        </Layout>
         <div>
-          <Body>
-            Back up your apps and restore them to their previous state.
-            {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
-              Contact your account holder to upgrade your plan.
-            {/if}
-          </Body>
-        </div>
-        <Divider />
-        <div class="pro-buttons">
-          {#if $auth.accountPortalAccess}
-            <Button
-              primary
-              disabled={!$auth.accountPortalAccess && $admin.cloud}
-              on:click={$licensing.goToUpgradePage()}
-            >
-              Upgrade
-            </Button>
-          {/if}
-          <!--Show the view plans button-->
-          <Button
-            secondary
-            on:click={() => {
-              window.open("https://budibase.com/pricing/", "_blank")
-            }}
-          >
-            View plans
-          </Button>
+          <Button on:click={modal.show} cta>Create backup</Button>
         </div>
       </Layout>
-    </Page>
-  {:else if backupData?.length === 0 && !loaded && !filterOpt && !startDate}
-    <Page wide={false}>
-      <div class="align">
-        <img
-          width="220px"
-          height="130px"
-          src={BackupsDefault}
-          alt="BackupsDefault"
-        />
-        <Layout gap="S">
-          <Heading>You have no backups yet</Heading>
-          <div class="opacity">
-            <Body size="S">You can manually backup your app any time</Body>
-          </div>
-          <div class="padding">
-            <Button on:click={modal.show} cta>Create Backup</Button>
-          </div>
-        </Layout>
-      </div>
-    </Page>
+    </div>
   {:else if loaded}
     <Layout noPadding gap="M" alignContent="start">
       <div class="search">
@@ -245,23 +234,21 @@
             bind:value={filterOpt}
           />
         </div>
-        <div>
-          <DatePicker
-            range={true}
-            label={"Filter Range"}
-            on:change={e => {
-              if (e.detail[0].length > 1) {
-                startDate = e.detail[0][0].toISOString()
-                endDate = e.detail[0][1].toISOString()
-              }
-            }}
-          />
-        </div>
+        <DatePicker
+          range={true}
+          label="Date Range"
+          on:change={e => {
+            if (e.detail[0].length > 1) {
+              startDate = e.detail[0][0].toISOString()
+              endDate = e.detail[0][1].toISOString()
+            }
+          }}
+        />
 
         <div class="split-buttons">
-          <ActionButton on:click={modal.show} icon="SaveAsFloppy"
-            >Create new backup</ActionButton
-          >
+          <ActionButton on:click={modal.show} icon="SaveAsFloppy">
+            Create new backup
+          </ActionButton>
         </div>
       </div>
       <div class="table">
@@ -289,19 +276,19 @@
       </div>
     </Layout>
   {/if}
-</div>
+</Layout>
 
 <Modal bind:this={modal}>
   <CreateBackupModal {createManualBackup} />
 </Modal>
 
 <style>
-  .root {
-    display: grid;
-    grid-template-columns: 1fr;
-    height: 100%;
-    padding: var(--spectrum-alias-grid-gutter-medium)
-      var(--spectrum-alias-grid-gutter-large);
+  .title {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xl);
   }
 
   .search {
@@ -312,7 +299,7 @@
   }
 
   .select {
-    flex-basis: 100px;
+    flex-basis: 160px;
   }
 
   .pagination {
@@ -327,7 +314,6 @@
     align-items: center;
     justify-content: flex-end;
     flex: 1;
-    gap: var(--spacing-xl);
   }
 
   .title {
@@ -337,11 +323,6 @@
     gap: var(--spacing-m);
   }
 
-  .align {
-    margin-top: 5%;
-    text-align: center;
-  }
-
   .pro-buttons {
     display: flex;
     gap: var(--spacing-m);
@@ -349,5 +330,10 @@
 
   .table {
     overflow-x: scroll;
+  }
+
+  .center {
+    text-align: center;
+    display: contents;
   }
 </style>
