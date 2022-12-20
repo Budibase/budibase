@@ -124,6 +124,7 @@
         <div slot="icon">
           <EditableIcon
             {app}
+            autoSave
             size="XL"
             name={app?.icon?.name || "Apps"}
             color={app?.icon?.color}

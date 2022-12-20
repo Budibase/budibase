@@ -14,20 +14,12 @@
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import {
-    apps,
-    auth,
-    admin,
-    templates,
-    licensing,
-    groups,
-  } from "stores/portal"
+  import { apps, auth, admin, licensing } from "stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
@@ -35,9 +27,7 @@
 
   let sortBy = "name"
   let template
-  let selectedApp
   let creationModal
-  let updatingModal
   let appLimitModal
   let creatingApp = false
   let searchTerm = ""
@@ -346,10 +336,6 @@
   on:hide={stopAppCreation}
 >
   <CreateAppModal {template} />
-</Modal>
-
-<Modal bind:this={updatingModal} padding={false} width="600px">
-  <UpdateAppModal app={selectedApp} />
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />
