@@ -1,21 +1,27 @@
 <script>
-  import { Layout, Table, Select, Pagination, Button } from "@budibase/bbui"
+  import {
+    Layout,
+    Table,
+    Select,
+    Pagination,
+    Button,
+    Body,
+    Heading,
+    Divider,
+  } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
-  import StatusRenderer from "./StatusRenderer.svelte"
-  import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
+  import StatusRenderer from "./_components/StatusRenderer.svelte"
+  import HistoryDetailsPanel from "./_components/HistoryDetailsPanel.svelte"
   import { automationStore } from "builderStore"
   import { createPaginationStore } from "helpers/pagination"
   import { onMount } from "svelte"
   import dayjs from "dayjs"
-  import { auth, licensing, admin } from "stores/portal"
+  import { auth, licensing, admin, overview } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
 
   const ERROR = "error",
     SUCCESS = "success",
     STOPPED = "stopped"
-  export let app
-
-  $: licensePlan = $auth.user?.license?.plan
 
   let pageInfo = createPaginationStore()
   let runHistory = null
@@ -26,6 +32,8 @@
   let status = null
   let timeRange = null
 
+  $: licensePlan = $auth.user?.license?.plan
+  $: app = $overview.selectedApp
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
 
@@ -47,8 +55,8 @@
 
   const runHistorySchema = {
     status: { displayName: "Status" },
-    createdAt: { displayName: "Time" },
     automationName: { displayName: "Automation" },
+    createdAt: { displayName: "Time" },
   }
 
   const customRenderers = [
@@ -124,97 +132,94 @@
   })
 </script>
 
-<div class="root" class:panelOpen={showPanel}>
-  <Layout noPadding gap="M" alignContent="start">
-    <div class="search">
-      <div class="select">
-        <Select
-          placeholder="All automations"
-          label="Automation"
-          bind:value={automationId}
-          options={automationOptions}
-        />
-      </div>
-      <div class="select">
-        <Select
-          placeholder="All"
-          label="Date range"
-          bind:value={timeRange}
-          options={timeOptions}
-          isOptionEnabled={x => {
-            if (licensePlan?.type === Constants.PlanType.FREE) {
-              return ["1-w", "30-d", "90-d"].indexOf(x.value) < 0
-            } else if (licensePlan?.type === Constants.PlanType.TEAM) {
-              return ["90-d"].indexOf(x.value) < 0
-            } else if (licensePlan?.type === Constants.PlanType.PRO) {
-              return ["30-d", "90-d"].indexOf(x.value) < 0
-            }
-            return true
-          }}
-        />
-      </div>
-      <div class="select">
-        <Select
-          placeholder="All status"
-          label="Status"
-          bind:value={status}
-          options={statusOptions}
-        />
-      </div>
-      {#if (licensePlan?.type !== Constants.PlanType.ENTERPRISE && $auth.user.accountPortalAccess) || !$admin.cloud}
-        <div class="pro-upgrade">
-          <div class="pro-copy">Expand your automation log history</div>
-          <Button primary on:click={$licensing.goToUpgradePage()}>
-            Upgrade
-          </Button>
-        </div>
-      {/if}
+<Layout noPadding>
+  <Layout gap="XS" noPadding>
+    <Heading>Automation History</Heading>
+    <Body>View the automations your app has executed</Body>
+  </Layout>
+  <Divider />
+
+  <div class="search">
+    <div class="select">
+      <Select
+        placeholder="All"
+        label="Status"
+        bind:value={status}
+        options={statusOptions}
+      />
     </div>
-    {#if runHistory}
-      <div>
-        <Table
-          on:click={viewDetails}
-          schema={runHistorySchema}
-          allowSelectRows={false}
-          allowEditColumns={false}
-          allowEditRows={false}
-          data={runHistory}
-          {customRenderers}
-          placeholderText="No history found"
-          border={false}
-        />
-        <div class="pagination">
-          <Pagination
-            page={$pageInfo.pageNumber}
-            hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
-            hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
-            goToPrevPage={pageInfo.prevPage}
-            goToNextPage={pageInfo.nextPage}
-          />
-        </div>
+    <div class="select">
+      <Select
+        placeholder="All"
+        label="Automation"
+        bind:value={automationId}
+        options={automationOptions}
+      />
+    </div>
+    <div class="select">
+      <Select
+        placeholder="All"
+        label="Date range"
+        bind:value={timeRange}
+        options={timeOptions}
+        isOptionEnabled={x => {
+          if (licensePlan?.type === Constants.PlanType.FREE) {
+            return ["1-w", "30-d", "90-d"].indexOf(x.value) < 0
+          } else if (licensePlan?.type === Constants.PlanType.TEAM) {
+            return ["90-d"].indexOf(x.value) < 0
+          } else if (licensePlan?.type === Constants.PlanType.PRO) {
+            return ["30-d", "90-d"].indexOf(x.value) < 0
+          }
+          return true
+        }}
+      />
+    </div>
+    {#if (licensePlan?.type !== Constants.PlanType.ENTERPRISE && $auth.user.accountPortalAccess) || !$admin.cloud}
+      <div class="pro-upgrade">
+        <Button secondary on:click={$licensing.goToUpgradePage()}>
+          Get more history
+        </Button>
       </div>
     {/if}
-  </Layout>
-  <div class="panel" class:panelShow={showPanel}>
-    <HistoryDetailsPanel
-      appId={app.devId}
-      bind:history={selectedHistory}
-      close={() => {
-        showPanel = false
-      }}
-    />
   </div>
+
+  {#if runHistory}
+    <div>
+      <Table
+        on:click={viewDetails}
+        schema={runHistorySchema}
+        allowSelectRows={false}
+        allowEditColumns={false}
+        allowEditRows={false}
+        data={runHistory}
+        {customRenderers}
+        placeholderText="No history found"
+        border={false}
+      />
+      <div class="pagination">
+        <Pagination
+          page={$pageInfo.pageNumber}
+          hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+          hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+          goToPrevPage={pageInfo.prevPage}
+          goToNextPage={pageInfo.nextPage}
+        />
+      </div>
+    </div>
+  {/if}
+</Layout>
+
+<div class="panel" class:panelShow={showPanel}>
+  <HistoryDetailsPanel
+    appId={app.devId}
+    bind:history={selectedHistory}
+    close={() => {
+      showPanel = false
+    }}
+  />
 </div>
 
 <style>
-  .root {
-    display: grid;
-    grid-template-columns: 1fr;
-    height: 100%;
-    padding: var(--spectrum-alias-grid-gutter-medium)
-      var(--spectrum-alias-grid-gutter-large);
-  }
-
   .search {
     display: flex;
     gap: var(--spacing-xl);
