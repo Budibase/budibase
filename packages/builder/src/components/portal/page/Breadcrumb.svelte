@@ -27,6 +27,9 @@
   a {
     color: inherit;
     transition: color 130ms ease-out;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   a:hover {
     color: var(--spectrum-global-color-gray-900);

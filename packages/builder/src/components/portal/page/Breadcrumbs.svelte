@@ -16,5 +16,7 @@
   }
   div :global(> *:last-child) {
     color: var(--spectrum-global-color-gray-900);
+    flex: 1 1 auto;
+    width: 0;
   }
 </style>
