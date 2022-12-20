@@ -190,9 +190,10 @@ jobs:
           git push
 
   trigger-deploy-to-qa-env:
-    needs: [release-helm-chart]
+#    needs: [release-helm-chart]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Get the current budibase release version
         id: version
         run: |
