@@ -5,6 +5,8 @@
 
 set -e
 
+pwd
+
 if [[ -d "../../../budibase-pro" ]]; then
   echo "Building pro"
   cd "../../../budibase-pro"
