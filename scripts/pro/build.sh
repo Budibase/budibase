@@ -1,19 +1,15 @@
 #!/bin/bash
 
-# This script is designed for building the pro repo after the backend-core has completed.
+# This script is designed for building the pro repo after the backend-core build has completed.
 # This ensures that any changes in core that are required by pro are done in the correct order.
 
 set -e
 
-pwd
-
+# Go to parent of budibase
 cd ../../../
-pwd
-ls
 
-if [[ -d "../../../budibase-pro" ]]; then
+if [[ -d "budibase-pro" ]]; then
+  cd budibase-pro
   echo "Building pro"
-  cd "../../../budibase-pro"
   yarn build
-  cd -
 fi

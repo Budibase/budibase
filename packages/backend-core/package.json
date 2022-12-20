@@ -15,7 +15,7 @@
     "prebuild": "rimraf dist/",
     "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json",
-    "build:pro": "sh ../../scripts/pro/build.sh",
+    "build:pro": "../../scripts/pro/build.sh",
     "postbuild": "yarn run build:pro",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "test": "jest --coverage --maxWorkers=2",
