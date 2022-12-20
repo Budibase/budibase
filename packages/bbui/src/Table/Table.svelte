@@ -21,6 +21,8 @@
    * template: a HBS or JS binding to use as the value
    * background: the background color
    * color: the text color
+   * borderLeft: show a left border
+   * borderRight: show a right border
    */
   export let data = []
   export let schema = {}
@@ -269,6 +271,14 @@
       }
       if (schema[field].align === "Right") {
         styles[field] += "justify-content: flex-end; text-align: right;"
+      }
+      if (schema[field].borderLeft) {
+        styles[field] +=
+          "border-left: 1px solid var(--spectrum-global-color-gray-200);"
+      }
+      if (schema[field].borderLeft) {
+        styles[field] +=
+          "border-right: 1px solid var(--spectrum-global-color-gray-200);"
       }
     })
     return styles
