@@ -25,9 +25,9 @@ services:
   proxy-service:
     container_name: budi-nginx-dev
     restart: on-failure
-    image: nginx:latest
+    image: budibase/proxy:latest
     volumes:
-      - ./nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./nginx.dev.conf:/etc/nginx/templates/nginx.conf.template
       - ./proxy/error.html:/usr/share/nginx/html/error.html
     ports:
       - "${MAIN_PORT}:10000"
@@ -37,7 +37,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      - PROXY_ADDRESS=${PROXY_ADDRESS}
+      - PROXY_ADDRESS=host.docker.internal
 
   couchdb-service:
     # platform: linux/amd64
