@@ -5813,10 +5813,10 @@ svelte-loading-spinners@^0.1.1:
   resolved "https://registry.yarnpkg.com/svelte-loading-spinners/-/svelte-loading-spinners-0.1.7.tgz#3fa6fa0ef67ab635773bf20b07d0b071debbadaa"
   integrity sha512-EKCId1DjVL2RSUVJJsvtNcqQHox03XIgh4xh/4p7r6ST7d8mut6INY9/LqK4A17PFU64+3quZmqiSfOlf480CA==
 
-svelte-portal@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-0.1.0.tgz#cc2821cc84b05ed5814e0218dcdfcbebc53c1742"
-  integrity sha512-kef+ksXVKun224mRxat+DdO4C+cGHla+fEcZfnBAvoZocwiaceOfhf5azHYOPXSSB1igWVFTEOF3CDENPnuWxg==
+svelte-portal@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-1.0.0.tgz#36a47c5578b1a4d9b4dc60fa32a904640ec4cdd3"
+  integrity sha512-nHf+DS/jZ6jjnZSleBMSaZua9JlG5rZv9lOGKgJuaZStfevtjIlUJrkLc3vbV8QdBvPPVmvcjTlazAzfKu0v3Q==
 
 svelte@^3.48.0:
   version "3.49.0"

@@ -177,68 +177,63 @@
 </script>
 
 {#if loaded}
-  <Page narrow>
-    <Layout noPadding>
-      <Layout noPadding gap="XS">
-        <Heading>Usage</Heading>
-        <Body>
-          <div>Get information about your current usage within Budibase</div>
-        </Body>
-      </Layout>
-      <Divider />
+  <Layout noPadding>
+    <Layout noPadding gap="XS">
+      <Heading>Usage</Heading>
       <Body>
-        To upgrade your plan and usage limits visit your
-        <Link size="L" on:click={goToAccountPortal}>account</Link>.
+        <div>Get information about your current usage within Budibase</div>
       </Body>
-      <DashCard
-        description="YOUR CURRENT PLAN"
-        title={planTitle()}
-        {primaryActionText}
-        primaryAction={accountPortalAccess ? goToAccountPortal : undefined}
-        {textRows}
-      >
-        <div class="content">
+    </Layout>
+    <Divider />
+    <Body>
+      To upgrade your plan and usage limits visit your
+      <Link size="L" on:click={goToAccountPortal}>account</Link>.
+    </Body>
+    <DashCard
+      description="YOUR CURRENT PLAN"
+      title={planTitle()}
+      {primaryActionText}
+      primaryAction={accountPortalAccess ? goToAccountPortal : undefined}
+      {textRows}
+    >
+      <div class="content">
+        <div class="column">
+          <Layout noPadding>
+            {#each staticUsage as usage}
+              <div class="usage">
+                <Usage {usage} warnWhenFull={WARN_USAGE.includes(usage.name)} />
+              </div>
+            {/each}
+          </Layout>
+        </div>
+
+        {#if monthlyUsage.length}
           <div class="column">
-            <Layout noPadding>
-              {#each staticUsage as usage}
-                <div class="usage">
+            <Layout noPadding gap="M">
+              <Layout gap="XS" noPadding>
+                <Heading size="S">Monthly limits</Heading>
+                <div class="detail">
+                  <TooltipWrapper tooltip={new Date(quotaReset)}>
+                    <Detail size="M">
+                      Resets in {daysRemainingInMonth} days
+                    </Detail>
+                  </TooltipWrapper>
+                </div>
+              </Layout>
+              <Layout noPadding gap="M">
+                {#each monthlyUsage as usage}
                   <Usage
                     {usage}
                     warnWhenFull={WARN_USAGE.includes(usage.name)}
                   />
-                </div>
-              {/each}
+                {/each}
+              </Layout>
             </Layout>
           </div>
-
-          {#if monthlyUsage.length}
-            <div class="column">
-              <Layout noPadding gap="M">
-                <Layout gap="XS" noPadding>
-                  <Heading size="S">Monthly limits</Heading>
-                  <div class="detail">
-                    <TooltipWrapper tooltip={new Date(quotaReset)}>
-                      <Detail size="M">
-                        Resets in {daysRemainingInMonth} days
-                      </Detail>
-                    </TooltipWrapper>
-                  </div>
-                </Layout>
-                <Layout noPadding gap="M">
-                  {#each monthlyUsage as usage}
-                    <Usage
-                      {usage}
-                      warnWhenFull={WARN_USAGE.includes(usage.name)}
-                    />
-                  {/each}
-                </Layout>
-              </Layout>
-            </div>
-          {/if}
-        </div>
-      </DashCard>
-    </Layout>
-  </Page>
+        {/if}
+      </div>
+    </DashCard>
+  </Layout>
 {/if}
 
 <style>

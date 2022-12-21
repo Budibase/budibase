@@ -1,15 +1,52 @@
 <script>
+  import { setContext } from "svelte"
+  import clickOutside from "../Actions/click_outside"
+
   export let wide = false
   export let narrow = false
   export let noPadding = false
+
+  let sidePanelVisble = false
+
+  setContext("side-panel", {
+    open: () => (sidePanelVisble = true),
+    close: () => (sidePanelVisble = false),
+  })
 </script>
 
-<div class:wide class:noPadding class:narrow>
-  <slot />
+<div class="page">
+  <div class="main">
+    <div class="content" class:wide class:noPadding class:narrow>
+      <slot />
+    </div>
+  </div>
+  <div
+    id="side-panel"
+    class:visible={sidePanelVisble}
+    use:clickOutside={() => {
+      sidePanelVisble = false
+    }}
+  >
+    <slot name="side-panel" />
+  </div>
 </div>
 
 <style>
-  div {
+  .page {
+    position: relative;
+  }
+  .page,
+  .main {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex: 1 1 auto;
+  }
+  .main {
+    overflow: auto;
+  }
+  .content {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -17,15 +54,31 @@
     max-width: 1080px;
     margin: 0 auto;
     flex: 1 1 auto;
-    padding-bottom: 50px;
+    padding: 50px;
+    z-index: 1;
   }
-
   .wide {
     max-width: none;
   }
-
   .narrow {
     max-width: 840px;
-    margin: 0;
+  }
+  #side-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 24px;
+    background: var(--background);
+    border-left: var(--border-light);
+    width: 320px;
+    overflow: auto;
+    overflow-x: hidden;
+    transform: translateX(100%);
+    transition: transform 130ms ease-out;
+    height: calc(100% - 48px);
+    z-index: 2;
+  }
+  #side-panel.visible {
+    transform: translateX(0);
   }
 </style>
