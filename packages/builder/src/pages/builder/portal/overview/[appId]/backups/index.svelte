@@ -165,8 +165,8 @@
     }
   }
 
-  onMount(() => {
-    fetchBackups(filterOpt, page, startDate, endDate)
+  onMount(async () => {
+    await fetchBackups(filterOpt, page, startDate, endDate)
     loaded = true
   })
 </script>
@@ -208,7 +208,7 @@
         View plans
       </Button>
     </div>
-  {:else if backupData?.length === 0 && loaded && !filterOpt && !startDate}
+  {:else if !backupData?.length && loaded && !filterOpt && !startDate}
     <div class="center">
       <Layout noPadding gap="S" justifyItems="center">
         <img height="130px" src={BackupsDefault} alt="BackupsDefault" />
