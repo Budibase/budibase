@@ -7,10 +7,7 @@
     Icon,
     Popover,
     notifications,
-    List,
-    ListItem,
-    StatusLight,
-    Divider,
+    Table,
     ActionMenu,
     MenuItem,
     Modal,
@@ -18,16 +15,52 @@
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { users, apps, groups } from "stores/portal"
-  import { onMount } from "svelte"
-  import { RoleUtils } from "@budibase/frontend-core"
+  import { onMount, setContext } from "svelte"
   import { roles } from "stores/backend"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
-  import AppAddModal from "./_components/AppAddModal.svelte"
   import { Breadcrumbs, Breadcrumb } from "components/portal/page"
+  import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
+  import RemoveUserTableRenderer from "./_components/RemoveUserTableRenderer.svelte"
+  import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
 
   export let groupId
+
+  const userSchema = {
+    email: {
+      width: "1fr",
+    },
+    _id: {
+      displayName: "",
+      width: "auto",
+      borderLeft: true,
+    },
+  }
+  const appSchema = {
+    name: {
+      width: "2fr",
+    },
+    role: {
+      width: "1fr",
+    },
+  }
+  const customUserTableRenderers = [
+    {
+      column: "_id",
+      component: RemoveUserTableRenderer,
+    },
+  ]
+  const customAppTableRenderers = [
+    {
+      column: "name",
+      component: AppNameTableRenderer,
+    },
+    {
+      column: "role",
+      component: AppRoleTableRenderer,
+    },
+  ]
 
   let popoverAnchor
   let popover
@@ -35,15 +68,23 @@
   let prevSearch = undefined
   let pageInfo = createPaginationStore()
   let loaded = false
-  let editModal, deleteModal, appAddModal
+  let editModal, deleteModal
 
   $: page = $pageInfo.page
   $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
   $: filtered = $users.data
-  $: groupApps = $apps.filter(app =>
-    groups.actions.getGroupAppIds(group).includes(apps.getProdAppID(app.devId))
-  )
+  $: groupApps = $apps
+    .filter(app =>
+      groups.actions
+        .getGroupAppIds(group)
+        .includes(apps.getProdAppID(app.devId))
+    )
+    .map(app => ({
+      ...app,
+      role: group?.roles?.[apps.getProdAppID(app.devId)],
+    }))
+  $: console.log(groupApps)
   $: {
     if (loaded && !group?._id) {
       $goto("./")
@@ -92,6 +133,22 @@
       notifications.error(`Failed to save user group`)
     }
   }
+
+  const removeUser = async id => {
+    await groups.actions.removeUser(groupId, id)
+  }
+
+  const removeApp = async app => {
+    await groups.actions.removeApp(groupId, apps.getProdAppID(app.devId))
+  }
+
+  setContext("users", {
+    removeUser,
+  })
+  setContext("roles", {
+    updateRole: () => {},
+    removeRole: removeApp,
+  })
 
   onMount(async () => {
     try {
@@ -143,86 +200,41 @@
           />
         </Popover>
       </div>
-      <List>
-        {#if group?.users.length}
-          {#each group.users as user}
-            <ListItem
-              title={user.email}
-              on:click={() => $goto(`../users/${user._id}`)}
-              hoverable
-            >
-              <Icon
-                on:click={e => {
-                  groups.actions.removeUser(groupId, user._id)
-                  e.stopPropagation()
-                }}
-                hoverable
-                size="S"
-                name="Close"
-              />
-            </ListItem>
-          {/each}
-        {:else}
-          <ListItem icon="UserGroup" title="This user group has no users" />
-        {/if}
-      </List>
+
+      <Table
+        schema={userSchema}
+        data={group?.users}
+        allowEditRows={false}
+        customPlaceholder
+        customRenderers={customUserTableRenderers}
+        on:click={e => $goto(`../users/${e.detail._id}`)}
+      >
+        <div class="placeholder" slot="placeholder">
+          <Heading size="S">This user group doesn't have any users</Heading>
+        </div>
+      </Table>
     </Layout>
 
     <Layout noPadding gap="S">
-      <div class="header">
-        <Heading size="S">Apps</Heading>
-        <div>
-          <Button on:click={appAddModal.show()} secondary>Add app</Button>
+      <Heading size="S">Apps</Heading>
+      <Table
+        schema={appSchema}
+        data={groupApps}
+        customPlaceholder
+        allowEditRows={false}
+        customRenderers={customAppTableRenderers}
+        on:click={e => $goto(`../../overview/${e.detail.devId}`)}
+      >
+        <div class="placeholder" slot="placeholder">
+          <Heading size="S">This group doesn't have access to any apps</Heading>
         </div>
-      </div>
-      <List>
-        {#if groupApps.length}
-          {#each groupApps as app}
-            <ListItem
-              title={app.name}
-              icon={app?.icon?.name || "Apps"}
-              iconColor={app?.icon?.color || ""}
-              on:click={() => $goto(`../../overview/${app.devId}`)}
-              hoverable
-            >
-              <div class="title ">
-                <StatusLight
-                  square
-                  color={RoleUtils.getRoleColour(
-                    group.roles[apps.getProdAppID(app.devId)]
-                  )}
-                >
-                  {getRoleLabel(app.devId)}
-                </StatusLight>
-              </div>
-              <Icon
-                on:click={e => {
-                  groups.actions.removeApp(
-                    groupId,
-                    apps.getProdAppID(app.devId)
-                  )
-                  e.stopPropagation()
-                }}
-                hoverable
-                size="S"
-                name="Close"
-              />
-            </ListItem>
-          {/each}
-        {:else}
-          <ListItem icon="Apps" title="This user group has access to no apps" />
-        {/if}
-      </List>
+      </Table>
     </Layout>
   </Layout>
 {/if}
 
 <Modal bind:this={editModal}>
   <CreateEditGroupModal {group} {saveGroup} />
-</Modal>
-
-<Modal bind:this={appAddModal}>
-  <AppAddModal {group} />
 </Modal>
 
 <ConfirmDialog
@@ -244,5 +256,9 @@
   }
   .header :global(.spectrum-Heading) {
     flex: 1 1 auto;
+  }
+  .placeholder {
+    width: 100%;
+    text-align: center;
   }
 </style>

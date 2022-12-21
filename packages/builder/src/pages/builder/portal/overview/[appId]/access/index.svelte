@@ -16,15 +16,14 @@
   import { roles } from "stores/backend"
   import { API } from "api"
   import { fetchData } from "@budibase/frontend-core"
-  import UserRoleRenderer from "./_components/UserRoleRenderer.svelte"
-  import GroupRoleRenderer from "./_components/GroupRoleRenderer.svelte"
+  import EditableRoleRenderer from "./_components/EditableRoleRenderer.svelte"
 
   const userSchema = {
     email: {
       type: "string",
       width: "1fr",
     },
-    userAppRole: {
+    role: {
       displayName: "Access",
       width: "150px",
       borderLeft: true,
@@ -35,7 +34,7 @@
       type: "string",
       width: "1fr",
     },
-    groupAppRole: {
+    role: {
       displayName: "Access",
       width: "150px",
       borderLeft: true,
@@ -43,12 +42,8 @@
   }
   const customRenderers = [
     {
-      column: "userAppRole",
-      component: UserRoleRenderer,
-    },
-    {
-      column: "groupAppRole",
-      component: GroupRoleRenderer,
+      column: "role",
+      component: EditableRoleRenderer,
     },
   ]
 
@@ -76,7 +71,7 @@
   const getAppUsers = (users, appId) => {
     return users.map(user => ({
       ...user,
-      userAppRole: user.roles[Object.keys(user.roles).find(x => x === appId)],
+      role: user.roles[Object.keys(user.roles).find(x => x === appId)],
     }))
   }
 
@@ -90,11 +85,28 @@
       })
       .map(group => ({
         ...group,
-        groupAppRole:
-          group.roles[
-            groups.actions.getGroupAppIds(group).find(x => x === appId)
-          ],
+        role: group.roles[
+          groups.actions.getGroupAppIds(group).find(x => x === appId)
+        ],
       }))
+  }
+
+  const updateRole = async (role, id) => {
+    // Check if this is a user or a group
+    if ($usersFetch.rows.some(user => user._id === id)) {
+      await updateUserRole(role, id)
+    } else {
+      await updateGroupRole(role, id)
+    }
+  }
+
+  const removeRole = async id => {
+    // Check if this is a user or a group
+    if ($usersFetch.rows.some(user => user._id === id)) {
+      await removeUserRole(id)
+    } else {
+      await removeGroupRole(id)
+    }
   }
 
   const updateUserRole = async (role, userId) => {
@@ -142,10 +154,8 @@
   }
 
   setContext("roles", {
-    updateUserRole,
-    removeUserRole,
-    updateGroupRole,
-    removeGroupRole,
+    updateRole,
+    removeRole,
   })
 
   onMount(async () => {

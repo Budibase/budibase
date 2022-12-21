@@ -2,6 +2,8 @@
   import { url, isActive } from "@roxi/routify"
   import { Page } from "@budibase/bbui"
   import { Content, SideNav, SideNavItem } from "components/portal/page"
+
+  $: narrow = !$isActive("./users/index") && !$isActive("./groups/index")
 </script>
 
 <Page narrow>

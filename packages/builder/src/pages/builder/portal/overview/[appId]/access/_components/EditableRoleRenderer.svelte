@@ -14,8 +14,8 @@
     quiet
     allowRemove
     allowPublic={false}
-    on:change={e => rolesContext.updateUserRole(e.detail, row._id)}
-    on:remove={() => rolesContext.removeUserRole(row._id)}
+    on:change={e => rolesContext.updateRole(e.detail, row._id)}
+    on:remove={() => rolesContext.removeRole(row._id)}
   />
 </div>
 

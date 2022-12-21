@@ -14,10 +14,10 @@
 <ModalContent
   onConfirm={() => saveGroup(group)}
   size="M"
-  title="Create User Group"
+  title={group?._rev ? "Edit group" : "Create group"}
   confirmText="Save"
 >
-  <Input bind:value={group.name} label="Team name" />
+  <Input bind:value={group.name} label="Name" />
   <div class="modal-format">
     <div class="modal-inner">
       <Body size="XS">Icon</Body>
