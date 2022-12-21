@@ -2,11 +2,6 @@
 const compose = require("docker-compose")
 const path = require("path")
 const fs = require("fs")
-const isWsl = require("is-wsl")
-
-function isLinux() {
-  return !isWsl && process.platform !== "darwin" && process.platform !== "win32"
-}
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {
@@ -49,7 +44,6 @@ async function init() {
       BB_ADMIN_USER_PASSWORD: "",
       PLUGINS_DIR: "",
       TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS",
-      PROXY_ADDRESS: isLinux() ? "172.17.0.1" : "host.docker.internal",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {
