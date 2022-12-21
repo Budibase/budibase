@@ -14,6 +14,7 @@
   import { redirect } from "@roxi/routify"
 
   let version
+  let loaded = false
 
   // Only admins allowed here
   $: {
@@ -46,8 +47,9 @@
     }
   }
 
-  onMount(() => {
-    getVersion()
+  onMount(async () => {
+    await getVersion()
+    loaded = true
   })
 </script>
 
@@ -61,16 +63,16 @@
       </Body>
     </Layout>
     <Divider />
-    {#if version}
+    {#if loaded}
       <Layout noPadding gap="XS">
         <Label size="L">Current version</Label>
         <Heading size="S">
-          {version}
+          {version || "-"}
         </Heading>
       </Layout>
+      <div>
+        <Button cta on:click={updateBudibase}>Check for updates</Button>
+      </div>
     {/if}
-    <div>
-      <Button cta on:click={updateBudibase}>Check for updates</Button>
-    </div>
   </Layout>
 {/if}
