@@ -12,6 +12,7 @@ export const syncURLToState = options => {
     store,
     routify,
     beforeNavigate,
+    decode,
   } = options || {}
   if (
     !urlParam ||
@@ -29,11 +30,23 @@ export const syncURLToState = options => {
     return
   }
 
+  // Decodes encoded URL params if required
+  const decodeParams = urlParams => {
+    if (!decode) {
+      return urlParams
+    }
+    let decoded = {}
+    Object.keys(urlParams || {}).forEach(key => {
+      decoded[key] = decode(urlParams[key])
+    })
+    return decoded
+  }
+
   // We can't dynamically fetch the value of stateful routify stores so we need
   // to just subscribe and cache the latest versions.
   // We can grab their initial values as this is during component
   // initialisation.
-  let cachedParams = get(routify.params)
+  let cachedParams = decodeParams(get(routify.params))
   let cachedGoto = get(routify.goto)
   let cachedRedirect = get(routify.redirect)
   let cachedPage = get(routify.page)
@@ -77,7 +90,7 @@ export const syncURLToState = options => {
     // Check if new value is valid
     if (validate && fallbackUrl) {
       if (!validate(urlValue)) {
-        log("Invalid URL param!")
+        log("Invalid URL param!", urlValue)
         redirectUrl(fallbackUrl)
         return
       }
@@ -109,7 +122,7 @@ export const syncURLToState = options => {
       log(`url.${urlParam} (${urlValue}) <= state.${stateKey} (${stateValue})`)
       if (validate && fallbackUrl) {
         if (!validate(stateValue)) {
-          log("Invalid state param!")
+          log("Invalid state param!", stateValue)
           redirectUrl(fallbackUrl)
           return
         }
@@ -137,6 +150,7 @@ export const syncURLToState = options => {
 
   // Subscribe to URL changes and cache them
   const unsubscribeParams = routify.params.subscribe($urlParams => {
+    $urlParams = decodeParams($urlParams)
     cachedParams = $urlParams
     mapUrlToState($urlParams)
   })
