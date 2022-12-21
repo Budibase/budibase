@@ -792,7 +792,7 @@ Cypress.Commands.add("selectExternalDatasource", datasourceName => {
   // Navigates to Data Section
   cy.navigateToDataSection()
   // Open Datasource modal
-  cy.get(".nav").within(() => {
+  cy.get(".container").within(() => {
     cy.get("[data-cy='new-datasource']").click()
   })
   // Clicks specified datasource & continue
