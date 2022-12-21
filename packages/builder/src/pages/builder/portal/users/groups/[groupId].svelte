@@ -111,25 +111,19 @@
     </Breadcrumbs>
 
     <div class="header">
-      <div class="title">
-        <GroupIcon {group} size="L" />
-        <div class="text-padding">
-          <Heading>{group?.name}</Heading>
-        </div>
-      </div>
-      <div>
-        <ActionMenu align="right">
-          <span slot="control">
-            <Icon hoverable name="More" />
-          </span>
-          <MenuItem icon="Refresh" on:click={() => editModal.show()}>
-            Edit
-          </MenuItem>
-          <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
-            Delete
-          </MenuItem>
-        </ActionMenu>
-      </div>
+      <GroupIcon {group} size="L" />
+      <Heading>{group?.name}</Heading>
+      <ActionMenu align="right">
+        <span slot="control">
+          <Icon hoverable name="More" />
+        </span>
+        <MenuItem icon="Refresh" on:click={() => editModal.show()}>
+          Edit
+        </MenuItem>
+        <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
+          Delete
+        </MenuItem>
+      </ActionMenu>
     </div>
 
     <Layout noPadding gap="S">
@@ -243,13 +237,12 @@
 <style>
   .header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
-  .title {
-    display: flex;
+    flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-m);
+  }
+  .header :global(.spectrum-Heading) {
+    flex: 1 1 auto;
   }
 </style>
