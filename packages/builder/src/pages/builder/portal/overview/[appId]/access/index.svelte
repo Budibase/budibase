@@ -181,17 +181,15 @@
             <Heading size="S">You have no users assigned yet</Heading>
           </div>
         </Table>
-        {#if $usersFetch.hasPrevPage || $usersFetch.hasNextPage}
-          <div class="pagination">
-            <Pagination
-              page={$usersFetch.pageNumber + 1}
-              hasPrevPage={$usersFetch.hasPrevPage}
-              hasNextPage={$usersFetch.hasNextPage}
-              goToPrevPage={$usersFetch.loading ? null : usersFetch.prevPage}
-              goToNextPage={$usersFetch.loading ? null : usersFetch.nextPage}
-            />
-          </div>
-        {/if}
+        <div class="pagination">
+          <Pagination
+            page={$usersFetch.pageNumber + 1}
+            hasPrevPage={$usersFetch.hasPrevPage}
+            hasNextPage={$usersFetch.hasNextPage}
+            goToPrevPage={$usersFetch.loading ? null : usersFetch.prevPage}
+            goToNextPage={$usersFetch.loading ? null : usersFetch.nextPage}
+          />
+        </div>
       </Layout>
     {/if}
 
