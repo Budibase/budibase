@@ -1,6 +1,6 @@
 <script>
   import { Body, ModalContent, Table, Icon } from "@budibase/bbui"
-  import PasswordCopyRenderer from "./PasswordCopyRenderer.svelte"
+  import PasswordCopyTableRenderer from "./PasswordCopyTableRenderer.svelte"
   import { parseToCsv } from "helpers/data/utils"
   import { onMount } from "svelte"
 
@@ -138,7 +138,7 @@
       allowEditRows={false}
       allowSelectRows={false}
       customRenderers={[
-        { column: "password", component: PasswordCopyRenderer },
+        { column: "password", component: PasswordCopyTableRenderer },
       ]}
     />
   {/if}

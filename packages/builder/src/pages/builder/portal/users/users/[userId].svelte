@@ -18,19 +18,62 @@
     Modal,
     notifications,
     Banner,
-    StatusLight,
+    Table,
   } from "@budibase/bbui"
-  import { onMount } from "svelte"
+  import { onMount, setContext } from "svelte"
   import { users, auth, groups, apps, licensing } from "stores/portal"
   import { roles } from "stores/backend"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"
   import GroupIcon from "../groups/_components/GroupIcon.svelte"
-  import { Constants, RoleUtils } from "@budibase/frontend-core"
+  import { Constants } from "@budibase/frontend-core"
   import { Breadcrumbs, Breadcrumb } from "components/portal/page"
+  import RemoveGroupTableRenderer from "./_components/RemoveGroupTableRenderer.svelte"
+  import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
+  import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
+  import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
 
   export let userId
+
+  const groupSchema = {
+    name: {
+      width: "1fr",
+    },
+    _id: {
+      displayName: "",
+      width: "auto",
+      borderLeft: true,
+    },
+  }
+  const appSchema = {
+    name: {
+      width: "2fr",
+    },
+    role: {
+      width: "1fr",
+    },
+  }
+  const customGroupTableRenderers = [
+    {
+      column: "name",
+      component: GroupNameTableRenderer,
+    },
+    {
+      column: "_id",
+      component: RemoveGroupTableRenderer,
+    },
+  ]
+  const customAppTableRenderers = [
+    {
+      column: "name",
+      component: AppNameTableRenderer,
+    },
+    {
+      column: "role",
+      component: AppRoleTableRenderer,
+    },
+  ]
 
   let deleteModal
   let resetPasswordModal
@@ -113,11 +156,6 @@
       .join("")
   }
 
-  const getRoleLabel = roleId => {
-    const role = $roles.find(x => x._id === roleId)
-    return role?.name || "Custom role"
-  }
-
   async function updateUserFirstName(evt) {
     try {
       await users.save({ ...user, firstName: evt.target.value })
@@ -171,6 +209,10 @@
     await groups.actions.removeUser(groupId, userId)
     await fetchUser()
   }
+
+  setContext("groups", {
+    removeGroup,
+  })
 
   onMount(async () => {
     try {
@@ -272,61 +314,43 @@
             />
           </Popover>
         </div>
-        <List>
-          {#if userGroups.length}
-            {#each userGroups as group}
-              <ListItem
-                title={group.name}
-                icon={group.icon}
-                iconBackground={group.color}
-                hoverable
-                on:click={() => $goto(`../groups/${group._id}`)}
-              >
-                <Icon
-                  on:click={e => {
-                    removeGroup(group._id)
-                    e.stopPropagation()
-                  }}
-                  hoverable
-                  size="S"
-                  name="Close"
-                />
-              </ListItem>
-            {/each}
-          {:else}
-            <ListItem icon="UserGroup" title="This user is in no user groups" />
-          {/if}
-        </List>
+        <Table
+          schema={groupSchema}
+          data={userGroups}
+          allowEditRows={false}
+          customPlaceholder
+          customRenderers={customGroupTableRenderers}
+          on:click={e => $goto(`../groups/${e.detail._id}`)}
+        >
+          <div class="placeholder" slot="placeholder">
+            <Heading size="S">This user is not in any groups</Heading>
+          </div>
+        </Table>
       </Layout>
     {/if}
 
     <Layout gap="S" noPadding>
       <Heading size="S">Apps</Heading>
-      <List>
-        {#if privileged}
-          <Banner showCloseButton={false}>
-            This user's role grants admin access to all apps
-          </Banner>
-        {:else if availableApps.length}
-          {#each availableApps as app}
-            <ListItem
-              title={app.name}
-              iconColor={app?.icon?.color}
-              icon={app?.icon?.name || "Apps"}
-              hoverable
-              on:click={() => $goto(`../../overview/${app.devId}`)}
-            >
-              <div class="title ">
-                <StatusLight square color={RoleUtils.getRoleColour(app.role)}>
-                  {getRoleLabel(app.role)}
-                </StatusLight>
-              </div>
-            </ListItem>
-          {/each}
-        {:else}
-          <ListItem icon="Apps" title="This user has access to no apps" />
-        {/if}
-      </List>
+      {#if privileged}
+        <Banner showCloseButton={false}>
+          This user's role grants admin access to all apps
+        </Banner>
+      {:else}
+        <Table
+          schema={appSchema}
+          data={availableApps}
+          customPlaceholder
+          allowEditRows={false}
+          customRenderers={customAppTableRenderers}
+          on:click={e => $goto(`../../overview/${e.detail.devId}`)}
+        >
+          <div class="placeholder" slot="placeholder">
+            <Heading size="S">
+              This user doesn't have access to any apps
+            </Heading>
+          </div>
+        </Table>
+      {/if}
     </Layout>
   </Layout>
 {/if}
@@ -348,24 +372,25 @@
     grid-template-columns: 120px 1fr;
     align-items: center;
   }
-
   .title {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-
   .tableTitle {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
   }
-
   .subtitle {
     padding: 0 0 0 var(--spacing-m);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
+  }
+  .placeholder {
+    width: 100%;
+    text-align: center;
   }
 </style>
