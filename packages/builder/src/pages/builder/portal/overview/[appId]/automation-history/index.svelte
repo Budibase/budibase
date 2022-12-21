@@ -14,14 +14,16 @@
   import HistoryDetailsPanel from "./_components/HistoryDetailsPanel.svelte"
   import { automationStore } from "builderStore"
   import { createPaginationStore } from "helpers/pagination"
-  import { onMount } from "svelte"
+  import { getContext, onDestroy, onMount } from "svelte"
   import dayjs from "dayjs"
   import { auth, licensing, admin, overview } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
+  import Portal from "svelte-portal"
 
   const ERROR = "error",
     SUCCESS = "success",
     STOPPED = "stopped"
+  const sidePanel = getContext("side-panel")
 
   let pageInfo = createPaginationStore()
   let runHistory = null
@@ -109,7 +111,7 @@
 
   function viewDetails({ detail }) {
     selectedHistory = detail
-    showPanel = true
+    sidePanel.open()
   }
 
   onMount(async () => {
@@ -129,6 +131,10 @@
     for (let automation of $automationStore.automations) {
       automationOptions.push({ value: automation._id, label: automation.name })
     }
+  })
+
+  onDestroy(() => {
+    sidePanel.close()
   })
 </script>
 
@@ -209,15 +215,15 @@
   {/if}
 </Layout>
 
-<div class="panel" class:panelShow={showPanel}>
-  <HistoryDetailsPanel
-    appId={app.devId}
-    bind:history={selectedHistory}
-    close={() => {
-      showPanel = false
-    }}
-  />
-</div>
+{#if selectedHistory}
+  <Portal target="#side-panel">
+    <HistoryDetailsPanel
+      appId={app.devId}
+      bind:history={selectedHistory}
+      close={sidePanel.close}
+    />
+  </Portal>
+{/if}
 
 <style>
   .search {
@@ -226,39 +232,19 @@
     width: 100%;
     align-items: flex-end;
   }
-
   .select {
     flex-basis: 150px;
   }
-
   .pagination {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     margin-top: var(--spacing-xl);
   }
-
-  .panel {
-    display: none;
-    margin-top: calc(-1 * var(--spectrum-alias-grid-gutter-medium));
-  }
-
-  .panelShow {
-    display: block;
-  }
-
-  .panelOpen {
-    grid-template-columns: auto 420px;
-  }
-
   .pro-upgrade {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     flex: 1;
-  }
-
-  .pro-copy {
-    margin-right: var(--spacing-l);
   }
 </style>

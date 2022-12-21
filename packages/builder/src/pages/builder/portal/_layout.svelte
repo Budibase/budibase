@@ -304,7 +304,6 @@
     justify-content: center;
     align-items: stretch;
     overflow: auto;
-    padding: 50px 50px 0 50px;
   }
 
   @media (max-width: 640px) {
