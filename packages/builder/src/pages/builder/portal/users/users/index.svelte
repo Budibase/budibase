@@ -56,15 +56,18 @@
   $: schema = {
     email: {
       sortable: false,
+      width: "2fr",
     },
     role: {
       sortable: false,
+      width: "1fr",
     },
     ...($licensing.groupsEnabled && {
-      userGroups: { sortable: false, displayName: "Groups" },
+      userGroups: { sortable: false, displayName: "Groups", width: "1fr" },
     }),
     apps: {
       sortable: false,
+      width: "1fr",
     },
   }
   $: userData = []

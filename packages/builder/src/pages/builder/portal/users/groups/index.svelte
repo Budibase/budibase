@@ -40,9 +40,9 @@
   ]
 
   $: schema = {
-    name: { displayName: "Group" },
-    users: { sortable: false },
-    roles: { sortable: false, displayName: "Apps" },
+    name: { displayName: "Group", width: "2fr" },
+    users: { sortable: false, width: "1fr" },
+    roles: { sortable: false, displayName: "Apps", width: "1fr" },
   }
   $: filteredGroups = filterGroups($groups, searchString)
 
