@@ -186,7 +186,9 @@
             <span>{$organisation?.company || "Budibase"}</span>
           </div>
           <div class="onboarding">
-            <ConfigChecklist />
+            {#if $auth.user?.admin?.global}
+              <ConfigChecklist />
+            {/if}
           </div>
         </div>
         <div class="menu">

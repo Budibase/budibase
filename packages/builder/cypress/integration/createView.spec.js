@@ -26,13 +26,15 @@ filterTests(['smoke', 'all'], () => {
         cy.get("input").type("Test View")
         cy.get("button").contains("Create View").click({ force: true })
       })
-      cy.get(interact.TABLE_TITLE_H1).contains("Test View")
-      cy.get(interact.TITLE).then($headers => {
-        expect($headers).to.have.length(3)
-        const headers = Array.from($headers).map(header =>
-          header.textContent.trim()
-        )
-        expect(removeSpacing(headers)).to.deep.eq(["group", "age", "rating"])
+      cy.contains(interact.TABLE_TITLE_H1, "Test View", { timeout: 10000 })
+      cy.get(".table-wrapper").within(() => {
+        cy.get(interact.TITLE).then($headers => {
+          expect($headers).to.have.length(3)
+          const headers = Array.from($headers).map(header =>
+            header.textContent.trim()
+          )
+          expect(removeSpacing(headers)).to.deep.eq(["group", "age", "rating"])
+        })
       })
     })
 
@@ -70,20 +72,22 @@ filterTests(['smoke', 'all'], () => {
       })
 
       cy.wait(1000)
-      cy.get(interact.TITLE).then($headers => {
-        expect($headers).to.have.length(7)
-        const headers = Array.from($headers).map(header =>
-          header.textContent.trim()
-        )
-        expect(removeSpacing(headers)).to.deep.eq([
-          "field",
-          "sum",
-          "min",
-          "max",
-          "count",
-          "sumsqr",
-          "avg",
-        ])
+      cy.get(".table-wrapper").within(() => {
+        cy.get(interact.TITLE).then($headers => {
+          expect($headers).to.have.length(7)
+          const headers = Array.from($headers).map(header =>
+            header.textContent.trim()
+          )
+          expect(removeSpacing(headers)).to.deep.eq([
+            "field",
+            "sum",
+            "min",
+            "max",
+            "count",
+            "sumsqr",
+            "avg",
+          ])
+        })
       })
       cy.get(interact.SPECTRUM_TABLE_CELL).then($values => {
         let values = Array.from($values).map(header => header.textContent.trim())

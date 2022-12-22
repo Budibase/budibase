@@ -82,7 +82,7 @@ export async function importApps(ctx: Ctx) {
       "Import file is required and environment must be fresh to import apps."
     )
   }
-  const file = ctx.request.files.importFile
+  const file = ctx.request.files.importFile as any
   if (Array.isArray(file)) {
     ctx.throw(400, "Single file is required")
   }

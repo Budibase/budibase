@@ -360,7 +360,6 @@ class TestConfiguration {
   }
 
   // APP
-
   async createApp(appName: string) {
     // create dev app
     // clear any old app
@@ -373,7 +372,7 @@ class TestConfiguration {
     await context.updateAppId(this.appId)
 
     // create production app
-    this.prodApp = await this.deploy()
+    this.prodApp = await this.publish()
 
     this.allApps.push(this.prodApp)
     this.allApps.push(this.app)
@@ -381,8 +380,8 @@ class TestConfiguration {
     return this.app
   }
 
-  async deploy() {
-    await this._req(null, null, controllers.deploy.deployApp)
+  async publish() {
+    await this._req(null, null, controllers.deploy.publishApp)
     // @ts-ignore
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
@@ -391,6 +390,17 @@ class TestConfiguration {
       const db = context.getProdAppDB()
       return await db.get(dbCore.DocumentType.APP_METADATA)
     })
+  }
+
+  async unpublish() {
+    const response = await this._req(
+      null,
+      { appId: this.appId },
+      controllers.app.unpublish
+    )
+    this.prodAppId = null
+    this.prodApp = null
+    return response
   }
 
   // TABLE

@@ -1,14 +1,19 @@
 <script>
-  import { redirect } from "@roxi/routify"
   import { onMount } from "svelte"
   import { tables } from "stores/backend"
+  import { redirect } from "@roxi/routify"
 
   onMount(async () => {
-    $tables.list.length > 0 && $redirect(`./${$tables.list[0]._id}`)
+    const { list, selected } = $tables
+    if (selected) {
+      $redirect(`./${selected?._id}`)
+    } else if (list?.length) {
+      $redirect(`./${list[0]._id}`)
+    }
   })
 </script>
 
-{#if $tables.list.length === 0}
+{#if !$tables.list?.length}
   <i>Create your first table to start building</i>
 {:else}<i>Select a table to edit</i>{/if}
 

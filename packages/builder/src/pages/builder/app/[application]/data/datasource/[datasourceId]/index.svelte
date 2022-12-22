@@ -21,34 +21,31 @@
   import { cloneDeep } from "lodash/fp"
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
 
-  let importQueriesModal
-
-  let changed,
-    isValid = true
-  let integration, baseDatasource, datasource
-  let queryList
   const querySchema = {
     name: {},
     queryVerb: { displayName: "Method" },
   }
 
-  $: baseDatasource = $datasources.list.find(
-    ds => ds._id === $datasources.selected
-  )
+  let importQueriesModal
+  let changed = false
+  let isValid = true
+  let integration, baseDatasource, datasource
+  let queryList
 
+  $: baseDatasource = $datasources.selected
   $: queryList = $queries.list.filter(
     query => query.datasourceId === datasource?._id
   )
   $: hasChanged(baseDatasource, datasource)
   $: updateDatasource(baseDatasource)
 
-  function hasChanged(base, ds) {
+  const hasChanged = (base, ds) => {
     if (base && ds) {
       changed = !isEqual(base, ds)
     }
   }
 
-  async function saveDatasource() {
+  const saveDatasource = async () => {
     try {
       // Create datasource
       await datasources.save(datasource)
@@ -63,12 +60,7 @@
     }
   }
 
-  function onClickQuery(query) {
-    queries.select(query)
-    $goto(`./${query._id}`)
-  }
-
-  function updateDatasource(base) {
+  const updateDatasource = base => {
     if (base) {
       datasource = cloneDeep(base)
       integration = $integrations[datasource.source]
@@ -87,7 +79,7 @@
 
 {#if datasource && integration}
   <section>
-    <Layout>
+    <Layout noPadding>
       <Layout gap="XS" noPadding>
         <header>
           <svelte:component
@@ -95,16 +87,16 @@
             height="26"
             width="26"
           />
-          <Heading size="M">{datasource.name}</Heading>
+          <Heading size="M">{$datasources.selected?.name}</Heading>
         </header>
         <Body size="M">{integration.description}</Body>
       </Layout>
       <Divider />
       <div class="config-header">
         <Heading size="S">Configuration</Heading>
-        <Button disabled={!changed || !isValid} cta on:click={saveDatasource}
-          >Save</Button
-        >
+        <Button disabled={!changed || !isValid} cta on:click={saveDatasource}>
+          Save
+        </Button>
       </div>
       <IntegrationConfigForm
         on:change={hasChanged}
@@ -120,12 +112,16 @@
         <Heading size="S">Queries</Heading>
         <div class="query-buttons">
           {#if datasource?.source === IntegrationTypes.REST}
-            <Button secondary on:click={() => importQueriesModal.show()}
-              >Import</Button
-            >
+            <Button secondary on:click={() => importQueriesModal.show()}>
+              Import
+            </Button>
           {/if}
-          <Button cta icon="Add" on:click={() => $goto("./new")}
-            >Add query
+          <Button
+            cta
+            icon="Add"
+            on:click={() => $goto(`../../query/new/${datasource._id}`)}
+          >
+            Add query
           </Button>
         </div>
       </div>
@@ -137,7 +133,7 @@
       {#if queryList && queryList.length > 0}
         <div class="query-list">
           <Table
-            on:click={({ detail }) => onClickQuery(detail)}
+            on:click={({ detail }) => $goto(`../../query/${detail._id}`)}
             schema={querySchema}
             data={queryList}
             allowEditColumns={false}

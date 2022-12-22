@@ -305,7 +305,7 @@ export async function upload(ctx: UserCtx) {
   if (ctx.request.files == null || Array.isArray(ctx.request.files.file)) {
     ctx.throw(400, "One file must be uploaded.")
   }
-  const file = ctx.request.files.file
+  const file = ctx.request.files.file as any
   const { type, name } = ctx.params
 
   let bucket = coreEnv.GLOBAL_BUCKET_NAME

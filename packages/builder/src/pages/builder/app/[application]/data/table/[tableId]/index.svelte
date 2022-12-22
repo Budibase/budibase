@@ -3,9 +3,11 @@
   import { tables, database } from "stores/backend"
 </script>
 
-{#if $database?._id && $tables?.selected?.name}
+{#if $database?._id && $tables?.selected}
   <TableDataTable />
-{:else}<i>Create your first table to start building</i>{/if}
+{:else}
+  <i>Create your first table to start building</i>
+{/if}
 
 <style>
   i {

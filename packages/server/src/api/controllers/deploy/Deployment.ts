@@ -9,6 +9,7 @@ export default class Deployment {
   verification: any
   status?: string
   err?: any
+  appUrl?: string
 
   constructor(id = null) {
     this._id = id || newid()

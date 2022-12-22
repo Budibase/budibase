@@ -113,7 +113,7 @@ describe("/webhooks", () => {
   describe("trigger", () => {
     it("should allow triggering from public", async () => {
       // replicate changes before checking webhook
-      await config.deploy()
+      await config.publish()
 
       const res = await request
         .post(`/api/webhooks/trigger/${config.prodAppId}/${webhook._id}`)

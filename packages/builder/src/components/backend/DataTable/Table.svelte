@@ -216,7 +216,6 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    margin-top: var(--spacing-m);
   }
   .table-title > div {
     margin-left: var(--spacing-xs);
