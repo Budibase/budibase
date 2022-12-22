@@ -113,7 +113,7 @@ async function handleViewEvents(existingView: View, newView: View) {
 
 export async function destroy(ctx: BBContext) {
   const db = context.getAppDB()
-  const viewName = decodeURI(ctx.params.viewName)
+  const viewName = decodeURIComponent(ctx.params.viewName)
   const view = await deleteView(viewName)
   const table = await db.get(view.meta.tableId)
   delete table.views[viewName]
@@ -124,7 +124,7 @@ export async function destroy(ctx: BBContext) {
 }
 
 export async function exportView(ctx: BBContext) {
-  const viewName = decodeURI(ctx.query.view as string)
+  const viewName = decodeURIComponent(ctx.query.view as string)
   const view = await getView(viewName)
 
   const format = ctx.query.format as string
