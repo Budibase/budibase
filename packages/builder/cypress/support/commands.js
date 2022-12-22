@@ -480,7 +480,7 @@ Cypress.Commands.add(
 
     // Configure column
     cy.get(".spectrum-Modal").within(() => {
-      cy.get("input").first().type(columnName).blur()
+      cy.get("input").first().type(columnName)
 
       // Unset table display column
       cy.contains("display column").click({ force: true })
