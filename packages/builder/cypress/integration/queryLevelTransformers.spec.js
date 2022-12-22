@@ -15,7 +15,7 @@ filterTests(["smoke", "all"], () => {
       cy.selectExternalDatasource(datasource)
       cy.createRestQuery("GET", restUrl, "/breweries")
       cy.reload()
-      cy.contains(".nav-item-content", "/breweries", { timeout: 2000 }).click()
+      cy.contains(".nav-item-content", "/breweries", { timeout: 20000 }).click()
       cy.contains(interact.SPECTRUM_TABS_ITEM, "Transformer", { timeout: 5000 }).click({ force: true })
       // Get Transformer Function from file
       cy.readFile("cypress/support/queryLevelTransformerFunction.js").then(
