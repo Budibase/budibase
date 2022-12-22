@@ -23,14 +23,13 @@ describe("/cloud", () => {
       // first we need to delete any existing apps on the system so it looks clean otherwise the
       // import will not run
       await request
-        .delete(
+        .post(
           `/api/applications/${dbCore.getProdAppID(
             config.getAppId()
-          )}?unpublish=true`
+          )}/unpublish`
         )
         .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+        .expect(204)
       await request
         .delete(`/api/applications/${config.getAppId()}`)
         .set(config.defaultHeaders())

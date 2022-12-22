@@ -98,17 +98,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-      - name: Tag and release Proxy service docker image
-        run: | 
-          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker:proxy:preprod
-          docker tag proxy-service budibase/proxy:$PREPROD_TAG
-          docker push budibase/proxy:$PREPROD_TAG
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          PREPROD_TAG: k8s-preprod
-
       - name: Pull values.yaml from budibase-infra
         run: | 
           curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \

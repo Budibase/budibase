@@ -464,41 +464,47 @@ export async function revertClient(ctx: BBContext) {
   ctx.body = app
 }
 
-async function destroyApp(ctx: BBContext) {
+const unpublishApp = async (ctx: any) => {
   let appId = ctx.params.appId
-  let isUnpublish = ctx.query && ctx.query.unpublish
+  appId = dbCore.getProdAppID(appId)
 
-  if (isUnpublish) {
-    appId = dbCore.getProdAppID(appId)
-    const devAppId = dbCore.getDevAppID(appId)
-    // sync before removing the published app
-    await sdk.applications.syncApp(devAppId)
-  }
-
-  const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
-  const app = await db.get(DocumentType.APP_METADATA)
+  const db = context.getProdAppDB()
   const result = await db.destroy()
 
-  if (isUnpublish) {
-    await events.app.unpublished(app)
-  } else {
-    await quotas.removeApp()
-    await events.app.deleted(app)
+  await events.app.unpublished({ appId } as App)
+
+  // automations only in production
+  await cleanupAutomations(appId)
+
+  await cache.app.invalidateAppMetadata(appId)
+  return result
+}
+
+async function destroyApp(ctx: BBContext) {
+  let appId = ctx.params.appId
+  appId = dbCore.getProdAppID(appId)
+  const devAppId = dbCore.getDevAppID(appId)
+
+  // check if we need to unpublish first
+  if (await dbCore.dbExists(appId)) {
+    // app is deployed, run through unpublish flow
+    await sdk.applications.syncApp(devAppId)
+    await unpublishApp(ctx)
   }
 
-  /* istanbul ignore next */
-  if (!env.isTest() && !isUnpublish) {
+  const db = dbCore.getDB(devAppId)
+  // standard app deletion flow
+  const app = await db.get(DocumentType.APP_METADATA)
+  const result = await db.destroy()
+  await quotas.removeApp()
+  await events.app.deleted(app)
+
+  if (!env.isTest()) {
     await deleteApp(appId)
   }
-  // automations only in production
-  if (isUnpublish) {
-    await cleanupAutomations(appId)
-  }
-  // remove app role when the dev app is deleted (no trace of app anymore)
-  else {
-    await removeAppFromUserRoles(ctx, appId)
-  }
-  await cache.app.invalidateAppMetadata(appId)
+
+  await removeAppFromUserRoles(ctx, appId)
+  await cache.app.invalidateAppMetadata(devAppId)
   return result
 }
 
@@ -521,6 +527,21 @@ export async function destroy(ctx: BBContext) {
   await postDestroyApp(ctx)
   ctx.status = 200
   ctx.body = result
+}
+
+export const unpublish = async (ctx: BBContext) => {
+  const prodAppId = dbCore.getProdAppID(ctx.params.appId)
+  const dbExists = await dbCore.dbExists(prodAppId)
+
+  // check app has been published
+  if (!dbExists) {
+    return ctx.throw(400, "App has not been published.")
+  }
+
+  await preDestroyApp(ctx)
+  await unpublishApp(ctx)
+  await postDestroyApp(ctx)
+  ctx.status = 204
 }
 
 export async function sync(ctx: BBContext) {

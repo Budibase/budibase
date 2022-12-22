@@ -29,17 +29,6 @@ jobs:
           release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
-      - name: Tag and release Proxy service docker image
-        run: | 
-          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker:proxy:release
-          docker tag proxy-service budibase/proxy:$RELEASE_TAG
-          docker push budibase/proxy:$RELEASE_TAG
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          RELEASE_TAG: k8s-release
-
       - name: Pull values.yaml from budibase-infra
         run: | 
           curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \

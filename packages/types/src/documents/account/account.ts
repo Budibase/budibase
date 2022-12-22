@@ -1,8 +1,10 @@
 import {
   Feature,
   Hosting,
+  License,
   MonthlyQuotaName,
   PlanType,
+  PriceDuration,
   Quotas,
   StaticQuotaName,
 } from "../../sdk"
@@ -46,6 +48,7 @@ export interface Account extends CreateAccount {
   tier: string // deprecated
   planType?: PlanType
   planTier?: number
+  license?: License
   stripeCustomerId?: string
   licenseKey?: string
   licenseKeyActivatedAt?: number
