@@ -12,6 +12,7 @@
     fallbackUrl: "../",
     store: views,
     routify,
+    decode: decodeURIComponent,
   })
 
   onDestroy(stopSyncing)
