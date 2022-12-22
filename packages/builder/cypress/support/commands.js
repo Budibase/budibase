@@ -413,7 +413,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
-  cy.get(".appTable", { timeout: 5000 }).within(() => {
+  cy.get(".appTable", { timeout: 30000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
 })
@@ -441,7 +441,7 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
   if (!initialTable) {
     cy.navigateToDataSection()
   }
-  cy.get(`[data-cy="new-datasource"]`, { timeout: 2000 }).click()
+  cy.get(`[data-cy="new-datasource"]`, { timeout: 20000 }).click()
   cy.wait(2000)
   cy.get(".item", { timeout: 2000 })
     .contains("Budibase DB")
