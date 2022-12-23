@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "2.2.4-alpha.7",
+  "version": "2.2.10-alpha.11",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -15,13 +15,15 @@
     "prebuild": "rimraf dist/",
     "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json",
+    "build:pro": "../../scripts/pro/build.sh",
+    "postbuild": "yarn run build:pro",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
     "@budibase/nano": "10.1.1",
-    "@budibase/types": "2.2.4-alpha.7",
+    "@budibase/types": "2.2.10-alpha.11",
     "@shopify/jest-koa-mocks": "5.0.1",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-cloudfront-sign": "2.2.0",
