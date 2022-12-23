@@ -104,6 +104,14 @@ describe("Internal API - Application creation, update, publish and delete", () =
     })
   })
 
+  it("Update the icon and color of an application", async () => {
+    const app = await config.applications.create(generateApp())
+
+    config.applications.api.appId = app.appId
+
+    await config.applications.updateIcon(<string>app.appId)
+  })
+
   it("POST - Revert Changes without changes", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
@@ -124,6 +132,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     // // Revert the app to published state
     await config.applications.revertPublished(<string>app.appId)
 
+    await config.applications.unlock(<string>app.appId)
     // Check screen is removed
     await config.applications.getRoutes()
   })
