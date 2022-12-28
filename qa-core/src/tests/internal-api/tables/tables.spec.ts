@@ -127,7 +127,7 @@ describe("Internal API - Table Operations", () => {
       await config.rows.add(<string>addColumnData._id, newRow)
     }
 
-    //Search multiple rows
+    //Search rows with pagination
     const [allRowsResponse, allRowsJson] = await config.rows.searchMultiPage(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
 
     //Delete Rows from table
@@ -135,7 +135,7 @@ describe("Internal API - Table Operations", () => {
       rows: [allRowsJson],
     }
     const [deleteRowResponse, deleteRowData] = await config.rows.delete(
-      <string>addColumnData._id,
+      <string>createdTableData._id,
       rowToDelete
     )
 
