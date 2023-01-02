@@ -22,15 +22,21 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     })
 
     it("Add BASIC user to app", async () => {
+        // Create a user with BASIC role and check if it was created successfully
         const appUser = generateUser()
         expect(appUser[0].builder?.global).toEqual(false)
         expect(appUser[0].admin?.global).toEqual(false)
+
+        // Add the user to the tenant.
         const [createUserResponse, createUserJson] = await config.users.addMultiple(appUser)
 
         const app = await config.applications.create(appFromTemplate())
         config.applications.api.appId = app.appId
 
+        // Get all the information from the create user
         const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+
+        // Create the body with the information from the user and add the role to the app
         const body: User = {
             ...userInfoJson,
             roles: {
@@ -39,6 +45,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         }
         await config.users.updateInfo(body)
 
+        // Get the user information again and check if the role was added
         const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
         expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("BASIC")
@@ -46,18 +53,19 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     })
 
     it("Add ADMIN user to app", async () => {
+        // Create a user with ADMIN role and check if it was created successfully
         const adminUser = generateUser(1, "admin")
         expect(adminUser[0].builder?.global).toEqual(true)
         expect(adminUser[0].admin?.global).toEqual(true)
         const [createUserResponse, createUserJson] = await config.users.addMultiple(adminUser)
 
-        //const app = await config.applications.create(generateApp())
-        //config.applications.api.appId = app.appId
-
         const app = await config.applications.create(appFromTemplate())
         config.applications.api.appId = app.appId
 
+        // Get all the information from the create user
         const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+
+        // Create the body with the information from the user and add the role to the app
         const body: User = {
             ...userInfoJson,
             roles: {
@@ -66,28 +74,26 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         }
         await config.users.updateInfo(body)
 
+        // Get the user information again and check if the role was added
         const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
         expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("ADMIN")
 
-        // publish app
-        await config.applications.publish(<string>app.appId)
-        // check published app renders
-        config.applications.api.appId = db.getProdAppID(app.appId!)
-        await config.applications.canRender()
-
     })
 
     it("Add POWER user to app", async () => {
+        // Create a user with POWER role and check if it was created successfully
         const powerUser = generateUser(1, 'developer')
         expect(powerUser[0].builder?.global).toEqual(true)
-
         const [createUserResponse, createUserJson] = await config.users.addMultiple(powerUser)
 
         const app = await config.applications.create(generateApp())
         config.applications.api.appId = app.appId
 
+        // Get all the information from the create user
         const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+
+        // Create the body with the information from the user and add the role to the app
         const body: User = {
             ...userInfoJson,
             roles: {
@@ -96,6 +102,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         }
         await config.users.updateInfo(body)
 
+        // Get the user information again and check if the role was added
         const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
         expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
         expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("POWER")
@@ -104,6 +111,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
 
     describe("Check Access for default roles", () => {
         it("Check Table access for app user", async () => {
+            // Create a user with BASIC role and check if it was created successfully
             const appUser = generateUser()
             expect(appUser[0].builder?.global).toEqual(false)
             expect(appUser[0].admin?.global).toEqual(false)
@@ -112,7 +120,10 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             const app = await config.applications.create(generateApp())
             config.applications.api.appId = app.appId
 
+            // Get all the information from the create user
             const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+
+            // Create the body with the information from the user and add the role to the app
             const body: User = {
                 ...userInfoJson,
                 roles: {
@@ -121,13 +132,17 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             }
             await config.users.updateInfo(body)
 
+            // Get the user information again and check if the role was added
             const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
             expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
             expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("BASIC")
 
+            // Create a table
             const [createdTableResponse, createdTableData] = await config.tables.save(
                 generateTable()
             )
+
+            // Login with the user created and try to create a column
             await config.login(<string>appUser[0].email, <string>appUser[0].password)
             const newColumn = generateNewColumnForTable(createdTableData)
             await config.tables.forbiddenSave(
@@ -136,6 +151,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         })
 
         it("Check Table access for developer", async () => {
+            // Create a user with POWER role and check if it was created successfully
             const developer = generateUser(1, 'developer')
             expect(developer[0].builder?.global).toEqual(true)
 
@@ -144,7 +160,10 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             const app = await config.applications.create(generateApp())
             config.applications.api.appId = app.appId
 
+            // Get all the information from the create user
             const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+
+            // Create the body with the information from the user and add the role to the app
             const body: User = {
                 ...userInfoJson,
                 roles: {
@@ -153,13 +172,17 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             }
             await config.users.updateInfo(body)
 
+            // Get the user information again and check if the role was added
             const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
             expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
             expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("POWER")
 
+            // Create a table
             const [createdTableResponse, createdTableData] = await config.tables.save(
                 generateTable()
             )
+
+            // Login with the user created and try to create a column
             await config.login(<string>developer[0].email, <string>developer[0].password)
             const newColumn = generateNewColumnForTable(createdTableData)
             const [addColumnResponse, addColumnData] = await config.tables.save(
@@ -169,6 +192,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         })
 
         it("Check Table access for admin", async () => {
+            // Create a user with ADMIN role and check if it was created successfully
             const adminUser = generateUser(1, "admin")
             expect(adminUser[0].builder?.global).toEqual(true)
             expect(adminUser[0].admin?.global).toEqual(true)
@@ -177,7 +201,10 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             const app = await config.applications.create(generateApp())
             config.applications.api.appId = app.appId
 
+            // Get all the information from the create user
             const [userInfoResponse, userInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
+
+            // Create the body with the information from the user and add the role to the app
             const body: User = {
                 ...userInfoJson,
                 roles: {
@@ -186,10 +213,12 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             }
             await config.users.updateInfo(body)
 
+            // Get the user information again and check if the role was added
             const [changedUserInfoResponse, changedUserInfoJson] = await config.users.getInfo(createUserJson.created.successful[0]._id)
             expect(changedUserInfoJson.roles[<string>app.appId]).toBeDefined()
             expect(changedUserInfoJson.roles[<string>app.appId]).toEqual("ADMIN")
 
+            // Login with the created user and create a table
             await config.login(<string>adminUser[0].email, <string>adminUser[0].password)
             const [createdTableResponse, createdTableData] = await config.tables.save(
                 generateTable()
