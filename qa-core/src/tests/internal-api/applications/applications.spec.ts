@@ -67,7 +67,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     await config.applications.unpublish(<string>app.appId)
   })
 
-  it("POST - Sync application before deployment", async () => {
+  it("Sync application before deployment", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
@@ -79,7 +79,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     })
   })
 
-  it("POST - Sync application after deployment", async () => {
+  it("Sync application after deployment", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
@@ -94,12 +94,12 @@ describe("Internal API - Application creation, update, publish and delete", () =
     })
   })
 
-  it("PUT - Update an application", async () => {
+  it("Rename an application", async () => {
     const app = await config.applications.create(generateApp())
 
     config.applications.api.appId = app.appId
 
-    await config.applications.update(<string>app.appId, <string>app.name, {
+    await config.applications.rename(<string>app.appId, <string>app.name, {
       name: generator.word(),
     })
   })
@@ -112,14 +112,14 @@ describe("Internal API - Application creation, update, publish and delete", () =
     await config.applications.updateIcon(<string>app.appId)
   })
 
-  it("POST - Revert Changes without changes", async () => {
+  it("Revert Changes without changes", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
     await config.applications.revertUnpublished(<string>app.appId)
   })
 
-  it("POST - Revert Changes", async () => {
+  it("Revert Changes", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
@@ -137,7 +137,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     await config.applications.getRoutes()
   })
 
-  it("DELETE - Delete an application", async () => {
+  it("Delete an application", async () => {
     const app = await config.applications.create(generateApp())
 
     await config.applications.delete(<string>app.appId)

@@ -18,9 +18,13 @@ describe("Internal API - User Management & Permissions", () => {
     })
 
     it("Add Users with different roles", async () => {
+        // Get all users
         await config.users.search()
+
+        // Get all roles
         await config.users.getRoles()
 
+        // Add users with each role
         const admin = generateUser(1, "admin")
         expect(admin[0].builder?.global).toEqual(true)
         expect(admin[0].admin?.global).toEqual(true)
@@ -34,6 +38,7 @@ describe("Internal API - User Management & Permissions", () => {
 
         await config.users.addMultiple(userList)
 
+        // Check users are added
         const [allUsersResponse, allUsersJson] = await config.users.getAll()
         expect(allUsersJson.length).toBeGreaterThan(0)
 

@@ -117,7 +117,7 @@ export default class AppApi {
     return [response, json]
   }
 
-  async update(
+  async rename(
     appId: string,
     oldName: string,
     body: any
