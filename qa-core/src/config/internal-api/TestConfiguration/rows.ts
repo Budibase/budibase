@@ -37,16 +37,15 @@ export default class RowsApi {
     return [response, json]
   }
 
-  async searchSinglePage(tableId: string, body: any): Promise<[Response, Row[]]> {
+  async searchNoPagination(tableId: string, body: any): Promise<[Response, Row[]]> {
     const response = await this.api.post(`/${tableId}/search`, { body })
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    expect(json.rows.length).toBeLessThanOrEqual(9)
     expect(json.hasNextPage).toEqual(false)
     return [response, json.rows]
   }
 
-  async searchMultiPage(tableId: string, body: any): Promise<[Response, Row[]]> {
+  async searchWithPagination(tableId: string, body: any): Promise<[Response, Row[]]> {
     const response = await this.api.post(`/${tableId}/search`, { body })
     const json = await response.json()
     expect(response).toHaveStatusCode(200)

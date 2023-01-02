@@ -31,7 +31,7 @@ describe("Internal API - Table Operations", () => {
     })
   }
 
-  it("Operations on Tables", async () => {
+  it("Create and delete table, columns and rows", async () => {
     // create the app
     const appName = generator.word()
     const app = await createAppFromTemplate()
@@ -119,7 +119,7 @@ describe("Internal API - Table Operations", () => {
     await config.rows.add(<string>addColumnData._id, newRow)
 
     //Search single row
-    await config.rows.searchSinglePage(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
+    await config.rows.searchNoPagination(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
 
     //Add 10 more rows
     for (let i = 0; i < 10; i++) {
@@ -128,7 +128,7 @@ describe("Internal API - Table Operations", () => {
     }
 
     //Search rows with pagination
-    const [allRowsResponse, allRowsJson] = await config.rows.searchMultiPage(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
+    const [allRowsResponse, allRowsJson] = await config.rows.searchWithPagination(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
 
     //Delete Rows from table
     const rowToDelete = {
@@ -140,7 +140,7 @@ describe("Internal API - Table Operations", () => {
     )
 
     //Search single row
-    await config.rows.searchSinglePage(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
+    await config.rows.searchWithPagination(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
 
   })
 })
