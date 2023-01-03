@@ -329,9 +329,12 @@ export const deleteFile = async (bucketName: string, filepath: string) => {
   await makeSureBucketExists(objectStore, bucketName)
   const params = {
     Bucket: bucketName,
-    Key: filepath,
+    Key: sanitizeKey(filepath),
   }
-  return objectStore.deleteObject(params)
+  return objectStore.deleteObject(params, function(err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else     console.log(data);           // successful response
+  });
 }
 
 export const deleteFiles = async (bucketName: string, filepaths: string[]) => {
@@ -340,7 +343,7 @@ export const deleteFiles = async (bucketName: string, filepaths: string[]) => {
   const params = {
     Bucket: bucketName,
     Delete: {
-      Objects: filepaths.map((path: any) => ({ Key: path })),
+      Objects: filepaths.map((path: any) => ({ Key: sanitizeKey(path) })),
     },
   }
   return objectStore.deleteObjects(params).promise()
