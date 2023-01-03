@@ -11,7 +11,9 @@ sources:
   - https://github.com/Budibase/budibase
   - https://budibase.com
 type: application
+# populates on packaging
 version: 0.0.0
+# populates on packaging
 appVersion: 0.0.0
 dependencies:
   - name: couchdb
