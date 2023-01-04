@@ -11,6 +11,8 @@ env._set("PORT", 0)
 env._set("MINIO_URL", "http://localhost")
 env._set("MINIO_ACCESS_KEY", "test")
 env._set("MINIO_SECRET_KEY", "test")
+env._set("COUCH_DB_USER", "budibase")
+env._set("COUCH_DB_PASSWORD", "budibase")
 
 import { mocks } from "@budibase/backend-core/tests"
 
