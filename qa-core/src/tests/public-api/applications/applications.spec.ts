@@ -73,15 +73,15 @@ describe("Public API - /applications endpoints", () => {
   })
 
   it("POST - unpublish an unpublished application", async () => {
-    const [response] = await config.applications.unpublish(
-      config.context._id
-    )
+    const [response] = await config.applications.unpublish(config.context._id)
     expect(response).toHaveStatusCode(400)
   })
 
   it("DELETE - delete a published application and the dev application", async () => {
     await config.applications.publish(config.context._id)
-    const [response, deletion] = await config.applications.delete(config.context._id)
+    const [response, deletion] = await config.applications.delete(
+      config.context._id
+    )
     expect(response).toHaveStatusCode(200)
     expect(deletion._id).toEqual(config.context._id)
 
