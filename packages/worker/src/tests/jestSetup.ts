@@ -1,4 +1,5 @@
 import env from "../environment"
+import { env as coreEnv } from "@budibase/backend-core"
 
 env._set("SELF_HOSTED", "0")
 env._set("NODE_ENV", "jest")
@@ -11,6 +12,8 @@ env._set("MINIO_SECRET_KEY", "test")
 env._set("PLATFORM_URL", "http://localhost:10000")
 env._set("INTERNAL_API_KEY", "test")
 env._set("DISABLE_ACCOUNT_PORTAL", false)
+coreEnv._set("COUCH_DB_USER", "budibase")
+coreEnv._set("COUCH_DB_PASSWORD", "budibase")
 
 import { mocks } from "@budibase/backend-core/tests"
 
