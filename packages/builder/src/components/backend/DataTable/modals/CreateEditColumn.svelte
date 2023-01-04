@@ -133,12 +133,12 @@
     editableColumn?.type !== JSON_TYPE &&
     editableColumn?.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
     editableColumn?.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY &&
-    editableColumn?.type !== FORMULA_TYPE &&
-    !editableColumn.autocolumn
+    editableColumn?.type !== FORMULA_TYPE
   $: canBeDisplay =
     editableColumn?.type !== LINK_TYPE &&
     editableColumn?.type !== AUTO_TYPE &&
-    (editableColumn?.type !== JSON_TYPE) & !editableColumn.autocolumn
+    editableColumn?.type !== JSON_TYPE &&
+    !editableColumn.autocolumn
   $: canBeRequired =
     editableColumn?.type !== LINK_TYPE &&
     !uneditable &&
