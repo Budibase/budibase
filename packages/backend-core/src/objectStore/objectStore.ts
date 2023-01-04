@@ -331,10 +331,7 @@ export const deleteFile = async (bucketName: string, filepath: string) => {
     Bucket: bucketName,
     Key: sanitizeKey(filepath),
   }
-  return objectStore.deleteObject(params, function(err, data) {
-    if (err) console.log(err, err.stack); // an error occurred
-    else     console.log(data);           // successful response
-  });
+  return objectStore.deleteObject(params).promise()
 }
 
 export const deleteFiles = async (bucketName: string, filepaths: string[]) => {
