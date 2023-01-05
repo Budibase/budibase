@@ -78,7 +78,7 @@ mkdir -p ${DATA_DIR}/search
 chown -R couchdb:couchdb ${DATA_DIR}/couch
 redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
 /opt/clouseau/bin/clouseau > /dev/stdout 2>&1 &
-/minio/minio server ${DATA_DIR}/minio > /dev/stdout 2>&1 &
+/minio/minio server --console-address ":9001" ${DATA_DIR}/minio > /dev/stdout 2>&1 &
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
