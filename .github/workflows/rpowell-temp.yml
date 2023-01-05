@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: rpowell-temp
 
 on:
   workflow_dispatch:
