@@ -438,6 +438,7 @@ class Orchestrator {
         })
         this._context.steps[loopStepNumber] = tempOutput
 
+        wasLoopStep = true
         loopSteps = []
       }
     }
