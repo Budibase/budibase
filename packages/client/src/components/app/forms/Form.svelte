@@ -1,7 +1,8 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, setContext } from "svelte"
   import InnerForm from "./InnerForm.svelte"
   import { Helpers } from "@budibase/bbui"
+  import { writable } from "svelte/store"
 
   export let dataSource
   export let theme
@@ -20,10 +21,17 @@
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
+  // Forms also use loading context as they require loading a schema
+  const parentLoading = getContext("loading")
+  const loading = writable(true)
+  setContext("loading", loading)
+
+  let loaded = false
   let schema
   let table
 
   $: fetchSchema(dataSource)
+  $: loading.set($parentLoading || !loaded)
 
   // Returns the closes data context which isn't a built in context
   const getInitialValues = (type, dataSource, context) => {
@@ -55,30 +63,32 @@
     }
     const res = await fetchDatasourceSchema(dataSource)
     schema = res || {}
+    if (!loaded) {
+      loaded = true
+    }
   }
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
   $: resetKey = Helpers.hashString(
-    !!schema +
-      JSON.stringify(initialValues) +
-      JSON.stringify(dataSource) +
-      disabled
+    JSON.stringify(initialValues) + JSON.stringify(dataSource) + disabled
   )
 </script>
 
-{#key resetKey}
-  <InnerForm
-    {dataSource}
-    {theme}
-    {size}
-    {disabled}
-    {actionType}
-    {schema}
-    {table}
-    {initialValues}
-    {disableValidation}
-    {editAutoColumns}
-  >
-    <slot />
-  </InnerForm>
-{/key}
+{#if loaded}
+  {#key resetKey}
+    <InnerForm
+      {dataSource}
+      {theme}
+      {size}
+      {disabled}
+      {actionType}
+      {schema}
+      {table}
+      {initialValues}
+      {disableValidation}
+      {editAutoColumns}
+    >
+      <slot />
+    </InnerForm>
+  {/key}
+{/if}
