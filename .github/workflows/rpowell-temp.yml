@@ -1,0 +1,9 @@
+name: Docker Image CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-qa-deploy:
+    uses: budibase/budibase-deploys/.github/workflows/deploy-budicloud-qa.yml@main
+    
