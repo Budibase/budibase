@@ -182,13 +182,21 @@ export const makeComponentUnique = component => {
     return
   }
 
-  // Replace component ID
-  const oldId = component._id
-  const newId = Helpers.uuid()
-  let definition = JSON.stringify(component)
+  // Generate a full set of component ID replacements in this tree
+  const idReplacements = []
+  const generateIdReplacements = (component, replacements) => {
+    const oldId = component._id
+    const newId = Helpers.uuid()
+    replacements.push([oldId, newId])
+    component._children?.forEach(x => generateIdReplacements(x, replacements))
+  }
+  generateIdReplacements(component, idReplacements)
 
   // Replace all instances of this ID in HBS bindings
-  definition = definition.replace(new RegExp(oldId, "g"), newId)
+  let definition = JSON.stringify(component)
+  idReplacements.forEach(([oldId, newId]) => {
+    definition = definition.replace(new RegExp(oldId, "g"), newId)
+  })
 
   // Replace all instances of this ID in JS bindings
   const bindings = findHBSBlocks(definition)
@@ -201,7 +209,9 @@ export const makeComponentUnique = component => {
     let js = decodeJSBinding(sanitizedBinding)
     if (js != null) {
       // Replace ID inside JS binding
-      js = js.replace(new RegExp(oldId, "g"), newId)
+      idReplacements.forEach(([oldId, newId]) => {
+        js = js.replace(new RegExp(oldId, "g"), newId)
+      })
 
       // Create new valid JS binding
       let newBinding = encodeJSBinding(js)
@@ -218,9 +228,5 @@ export const makeComponentUnique = component => {
   })
 
   // Recurse on all children
-  component = JSON.parse(definition)
-  return {
-    ...component,
-    _children: component._children?.map(makeComponentUnique),
-  }
+  return JSON.parse(definition)
 }

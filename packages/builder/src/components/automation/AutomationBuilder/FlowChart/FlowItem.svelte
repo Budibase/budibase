@@ -22,6 +22,7 @@
 
   export let block
   export let testDataModal
+  export let idx
   let selected
   let webhookModal
   let actionModal
@@ -179,7 +180,7 @@
               onSelect(block)
             }}
           >
-            <Icon name={showLooping ? "ChevronDown" : "ChevronUp"} />
+            <Icon name={showLooping ? "ChevronUp" : "ChevronDown"} />
           </div>
         </div>
       </div>
@@ -208,7 +209,7 @@
     {/if}
   {/if}
 
-  <FlowItemHeader bind:blockComplete {block} {testDataModal} />
+  <FlowItemHeader bind:blockComplete {block} {testDataModal} {idx} />
   {#if !blockComplete}
     <Divider noMargin />
     <div class="blockSection">

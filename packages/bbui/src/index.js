@@ -4,6 +4,7 @@ import "./bbui.css"
 import "@spectrum-css/icon/dist/index-vars.css"
 
 // Components
+export { default as Skeleton } from "./Skeleton/Skeleton.svelte"
 export { default as Input } from "./Form/Input.svelte"
 export { default as Stepper } from "./Form/Stepper.svelte"
 export { default as TextArea } from "./Form/TextArea.svelte"

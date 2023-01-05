@@ -1,4 +1,3 @@
-const env = require("../../environment")
 const setup = require("./utilities")
 
 describe("test the update row action", () => {

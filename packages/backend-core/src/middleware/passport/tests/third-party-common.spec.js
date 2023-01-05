@@ -4,7 +4,7 @@ const { data } = require("./utilities/mock-data")
 const { DEFAULT_TENANT_ID } = require("../../../constants")
 
 const { generateGlobalUserID } = require("../../../db/utils")
-const { newid } = require("../../../hashing")
+const { newid } = require("../../../utils")
 const { doWithGlobalDB, doInTenant } = require("../../../tenancy")
 
 const done = jest.fn()

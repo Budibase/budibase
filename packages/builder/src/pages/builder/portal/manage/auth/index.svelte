@@ -405,6 +405,7 @@
                 bind:value={providers.oidc.config.configs[0][field.name]}
                 readonly={field.readonly}
                 placeholder={field.placeholder}
+                dataCy={field.name}
               />
             </div>
             {#if field.copyButton}

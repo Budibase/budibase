@@ -4,7 +4,7 @@ const { getSkeleton, fleshOutSkeleton } = require("./skeleton")
 const questions = require("../questions")
 const fs = require("fs")
 const { PLUGIN_TYPE_ARR } = require("@budibase/types")
-const { validate } = require("@budibase/backend-core/plugins")
+const { plugins } = require("@budibase/backend-core")
 const { runPkgCommand } = require("../exec")
 const { join } = require("path")
 const { success, error, info, moveDirectory } = require("../utils")
@@ -107,7 +107,7 @@ async function verify() {
     }
     name = pkgJson.name
     version = pkgJson.version
-    validate(schemaJson)
+    plugins.validate(schemaJson)
     return { name, version }
   } catch (err) {
     if (err && err.message && err.message.includes("not valid JSON")) {

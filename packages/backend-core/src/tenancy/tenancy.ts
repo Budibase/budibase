@@ -1,26 +1,22 @@
-import { doWithDB } from "../db"
-import { queryPlatformView } from "../db/views"
-import { StaticDatabases, ViewName } from "../db/constants"
-import { getGlobalDBName } from "../db/tenancy"
+import { doWithDB, getGlobalDBName } from "../db"
 import {
-  getTenantId,
   DEFAULT_TENANT_ID,
-  isMultiTenant,
+  getTenantId,
   getTenantIDFromAppID,
+  isMultiTenant,
 } from "../context"
 import env from "../environment"
 import {
   BBContext,
-  PlatformUser,
   TenantResolutionStrategy,
   GetTenantIdOptions,
 } from "@budibase/types"
-import { Headers } from "../constants"
+import { Header, StaticDatabases } from "../constants"
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
-export const addTenantToUrl = (url: string) => {
+export function addTenantToUrl(url: string) {
   const tenantId = getTenantId()
 
   if (isMultiTenant()) {
@@ -31,7 +27,7 @@ export const addTenantToUrl = (url: string) => {
   return url
 }
 
-export const doesTenantExist = async (tenantId: string) => {
+export async function doesTenantExist(tenantId: string) {
   return doWithDB(PLATFORM_INFO_DB, async (db: any) => {
     let tenants
     try {
@@ -48,12 +44,12 @@ export const doesTenantExist = async (tenantId: string) => {
   })
 }
 
-export const tryAddTenant = async (
+export async function tryAddTenant(
   tenantId: string,
   userId: string,
   email: string,
   afterCreateTenant: () => Promise<void>
-) => {
+) {
   return doWithDB(PLATFORM_INFO_DB, async (db: any) => {
     const getDoc = async (id: string) => {
       if (!id) {
@@ -95,11 +91,11 @@ export const tryAddTenant = async (
   })
 }
 
-export const doWithGlobalDB = (tenantId: string, cb: any) => {
+export function doWithGlobalDB(tenantId: string, cb: any) {
   return doWithDB(getGlobalDBName(tenantId), cb)
 }
 
-export const lookupTenantId = async (userId: string) => {
+export async function lookupTenantId(userId: string) {
   return doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: any) => {
     let tenantId = env.MULTI_TENANCY ? DEFAULT_TENANT_ID : null
     try {
@@ -114,19 +110,6 @@ export const lookupTenantId = async (userId: string) => {
   })
 }
 
-// lookup, could be email or userId, either will return a doc
-export const getTenantUser = async (
-  identifier: string
-): Promise<PlatformUser | null> => {
-  // use the view here and allow to find anyone regardless of casing
-  // Use lowercase to ensure email login is case insensitive
-  const response = queryPlatformView(ViewName.PLATFORM_USERS_LOWERCASE, {
-    keys: [identifier.toLowerCase()],
-    include_docs: true,
-  }) as Promise<PlatformUser>
-  return response
-}
-
 export const isUserInAppTenant = (appId: string, user?: any) => {
   let userTenantId
   if (user) {
@@ -138,7 +121,7 @@ export const isUserInAppTenant = (appId: string, user?: any) => {
   return tenantId === userTenantId
 }
 
-export const getTenantIds = async () => {
+export async function getTenantIds() {
   return doWithDB(PLATFORM_INFO_DB, async (db: any) => {
     let tenants
     try {
@@ -193,7 +176,7 @@ export const getTenantIDFromCtx = (
 
   // header
   if (isAllowed(TenantResolutionStrategy.HEADER)) {
-    const headerTenantId = ctx.request.headers[Headers.TENANT_ID]
+    const headerTenantId = ctx.request.headers[Header.TENANT_ID]
     if (headerTenantId) {
       return headerTenantId as string
     }

@@ -1,11 +1,11 @@
 import Router from "@koa/router"
 import * as controller from "../../controllers/global/templates"
-import { TemplatePurpose, TemplateTypes } from "../../../constants"
+import { TemplatePurpose, TemplateType } from "../../../constants"
 import { auth as authCore } from "@budibase/backend-core"
 import Joi from "joi"
 const { adminOnly, joiValidator } = authCore
 
-const router = new Router()
+const router: Router = new Router()
 
 function buildTemplateSaveValidation() {
   // prettier-ignore
@@ -16,7 +16,7 @@ function buildTemplateSaveValidation() {
     name: Joi.string().allow(null, ""),
     contents: Joi.string().required(),
     purpose: Joi.string().required().valid(...Object.values(TemplatePurpose)),
-    type: Joi.string().required().valid(...Object.values(TemplateTypes)),
+    type: Joi.string().required().valid(...Object.values(TemplateType)),
   }).required().unknown(true).optional())
 }
 
@@ -34,4 +34,4 @@ router
   .get("/api/global/template/:id", controller.find)
   .delete("/api/global/template/:id/:rev", adminOnly, controller.destroy)
 
-export default router
+export = router

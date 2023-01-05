@@ -7,8 +7,8 @@ export interface RowResponse<T> {
   id: string
   key: string
   error: string
-  value: RowValue
-  doc: T
+  value: T | RowValue
+  doc?: T | any
 }
 
 export interface AllDocsResponse<T> {

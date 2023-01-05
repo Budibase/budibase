@@ -1,11 +1,8 @@
-import { db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, objectStore } from "@budibase/backend-core"
+import { Database } from "@budibase/types"
 import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
-import {
-  upload,
-  uploadDirectory,
-} from "../../../utilities/fileSystem/utilities"
 import { downloadTemplate } from "../../../utilities/fileSystem"
 import { FieldTypes, ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
@@ -17,7 +14,6 @@ import {
   CouchFindOptions,
   RowAttachment,
 } from "@budibase/types"
-import PouchDB from "pouchdb"
 const uuid = require("uuid/v4")
 const tar = require("tar")
 
@@ -29,10 +25,7 @@ type TemplateType = {
   key?: string
 }
 
-async function updateAttachmentColumns(
-  prodAppId: string,
-  db: PouchDB.Database
-) {
+async function updateAttachmentColumns(prodAppId: string, db: Database) {
   // iterate through attachment documents and update them
   const tables = await sdk.tables.getAllInternalTables(db)
   for (let table of tables) {
@@ -62,12 +55,8 @@ async function updateAttachmentColumns(
           continue
         }
         row[column] = row[column].map((attachment: RowAttachment) => {
-          // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
-          const urlParts = attachment.url.split("/")
-          // drop the first empty element
-          urlParts.shift()
-          // get the prefix
-          const prefix = urlParts.shift()
+          // Key looks like: appId/attachments/file.csv
+          const urlParts = attachment.key.split("/")
           // remove the app ID
           urlParts.shift()
           // add new app ID
@@ -76,7 +65,7 @@ async function updateAttachmentColumns(
           return {
             ...attachment,
             key,
-            url: `/${prefix}/${key}`,
+            url: "", // calculated on retrieval using key
           }
         })
       }
@@ -86,7 +75,7 @@ async function updateAttachmentColumns(
   }
 }
 
-async function updateAutomations(prodAppId: string, db: PouchDB.Database) {
+async function updateAutomations(prodAppId: string, db: Database) {
   const automations = (
     await db.allDocs(
       getAutomationParams(null, {
@@ -100,7 +89,7 @@ async function updateAutomations(prodAppId: string, db: PouchDB.Database) {
     const oldDevAppId = automation.appId,
       oldProdAppId = dbCore.getProdAppID(automation.appId)
     if (
-      automation.definition.trigger.stepId === AutomationTriggerStepId.WEBHOOK
+      automation.definition.trigger?.stepId === AutomationTriggerStepId.WEBHOOK
     ) {
       const old = automation.definition.trigger.inputs
       automation.definition.trigger.inputs = {
@@ -154,7 +143,7 @@ export function getListOfAppsInMulti(tmpPath: string) {
 
 export async function importApp(
   appId: string,
-  db: PouchDB.Database,
+  db: Database,
   template: TemplateType
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
@@ -177,11 +166,11 @@ export async function importApp(
         filename = join(prodAppId, filename)
         if (fs.lstatSync(path).isDirectory()) {
           promises.push(
-            uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
+            objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
           )
         } else {
           promises.push(
-            upload({
+            objectStore.upload({
               bucket: ObjectStoreBuckets.APPS,
               path,
               filename,

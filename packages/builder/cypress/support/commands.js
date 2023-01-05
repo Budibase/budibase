@@ -413,7 +413,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
-  cy.get(".appTable", { timeout: 5000 }).within(() => {
+  cy.get(".appTable", { timeout: 30000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
 })
@@ -440,8 +440,8 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
   // Creates an internal Budibase DB table
   if (!initialTable) {
     cy.navigateToDataSection()
-    cy.get(`[data-cy="new-datasource"]`, { timeout: 2000 }).click()
   }
+  cy.get(`[data-cy="new-datasource"]`, { timeout: 20000 }).click()
   cy.wait(2000)
   cy.get(".item", { timeout: 2000 })
     .contains("Budibase DB")
@@ -458,10 +458,10 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
   })
   // Ensure modal has closed and table is created
   cy.get(".spectrum-Modal", { timeout: 2000 }).should("not.exist")
-  cy.get(".spectrum-Tabs-content", { timeout: 2000 }).should(
-    "contain",
-    tableName
-  )
+  cy.get(".nav-item", { timeout: 2000 })
+    .contains("Budibase DB")
+    .click({ force: true })
+  cy.get(".nav-item-content", { timeout: 2000 }).should("contain", tableName)
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {
@@ -480,7 +480,7 @@ Cypress.Commands.add(
 
     // Configure column
     cy.get(".spectrum-Modal").within(() => {
-      cy.get("input").first().type(columnName).blur()
+      cy.get("input").first().type(columnName)
 
       // Unset table display column
       cy.contains("display column").click({ force: true })
@@ -525,7 +525,7 @@ Cypress.Commands.add("addRowMultiValue", values => {
 })
 
 Cypress.Commands.add("selectTable", tableName => {
-  cy.expandBudibaseConnection()
+  cy.get(".nav-item").contains("Budibase DB").click()
   cy.contains(".nav-item", tableName).click()
 })
 
@@ -574,6 +574,18 @@ Cypress.Commands.add("searchAndAddComponent", component => {
     cy.getComponent(componentId, { timeout: 3000 }).should("exist")
     return cy.wrap(componentId)
   })
+})
+
+Cypress.Commands.add("deleteComponentByName", componentName => {
+  cy.get(".body")
+    .eq(0)
+    .contains(componentName)
+    .siblings(".actions")
+    .within(() => {
+      cy.get(".spectrum-Icon").click({ force: true })
+    })
+  cy.get(".spectrum-Menu").contains("Delete").click()
+  cy.get(".spectrum-Dialog").contains("Delete Component").click()
 })
 
 Cypress.Commands.add("addComponent", (category, component) => {
@@ -780,7 +792,7 @@ Cypress.Commands.add("selectExternalDatasource", datasourceName => {
   // Navigates to Data Section
   cy.navigateToDataSection()
   // Open Datasource modal
-  cy.get(".nav").within(() => {
+  cy.get(".container").within(() => {
     cy.get("[data-cy='new-datasource']").click()
   })
   // Clicks specified datasource & continue

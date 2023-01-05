@@ -29,6 +29,7 @@
   import Placeholder from "components/app/Placeholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
   import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
+  import Skeleton from "components/app/Skeleton.svelte"
 
   export let instance = {}
   export let isLayout = false
@@ -38,6 +39,7 @@
 
   // Get parent contexts
   const context = getContext("context")
+  const loading = getContext("loading")
   const insideScreenslot = !!getContext("screenslot")
 
   // Create component context
@@ -188,6 +190,7 @@
     },
     empty: emptyState,
     selected,
+    inSelectedPath,
     name,
     editing,
     type: instance._component,
@@ -470,9 +473,22 @@
       componentStore.actions.unregisterInstance(id)
     }
   })
+
+  $: showSkeleton =
+    $loading &&
+    definition.name !== "Screenslot" &&
+    children.length === 0 &&
+    !instance._blockElementHasChildren &&
+    !definition.block &&
+    definition.skeleton !== false
 </script>
 
-{#if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}
+{#if showSkeleton}
+  <Skeleton
+    height={initialSettings?.height || definition?.size?.height || 0}
+    width={initialSettings?.width || definition?.size?.width || 0}
+  />
+{:else if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}
   <!-- The ID is used as a class because getElementsByClassName is O(1) -->
   <!-- and the performance matters for the selection indicators -->
   <div

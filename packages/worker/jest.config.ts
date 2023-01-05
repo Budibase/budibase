@@ -15,9 +15,12 @@ if (!process.env.CI) {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
     "@budibase/types": "<rootDir>/../types/src",
+    "^axios.*$": "<rootDir>/node_modules/axios/lib/axios.js",
   }
   // add pro sources if they exist
   if (fs.existsSync("../../../budibase-pro")) {
+    config.moduleNameMapper["@budibase/pro/(.*)"] =
+      "<rootDir>/../../../budibase-pro/packages/pro/$1"
     config.moduleNameMapper["@budibase/pro"] =
       "<rootDir>/../../../budibase-pro/packages/pro/src"
   }

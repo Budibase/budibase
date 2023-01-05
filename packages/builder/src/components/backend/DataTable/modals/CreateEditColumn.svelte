@@ -102,7 +102,7 @@
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
     opt =>
-      opt._id !== $tables.draft._id &&
+      opt._id !== $tables.selected._id &&
       opt.type === table.type &&
       table.sourceId === opt.sourceId
   )
@@ -112,7 +112,7 @@
 
   async function saveColumn() {
     if (field.type === AUTO_TYPE) {
-      field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
+      field = buildAutoColumn($tables.selected.name, field.name, field.subtype)
     }
     if (field.type !== LINK_TYPE) {
       delete field.fieldName
@@ -304,11 +304,13 @@
     const newError = {}
     if (!external && fieldInfo.name?.startsWith("_")) {
       newError.name = `Column name cannot start with an underscore.`
+    } else if (fieldInfo.name && !fieldInfo.name.match(/^[_a-zA-Z0-9\s]*$/g)) {
+      newError.name = `Illegal character; must be alpha-numeric.`
     } else if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
       newError.name = `${PROHIBITED_COLUMN_NAMES.join(
         ", "
       )} are not allowed as column names`
-    } else if (inUse($tables.draft, fieldInfo.name, originalName)) {
+    } else if (inUse($tables.selected, fieldInfo.name, originalName)) {
       newError.name = `Column name already in use.`
     }
     if (fieldInfo.fieldName && fieldInfo.tableId) {
