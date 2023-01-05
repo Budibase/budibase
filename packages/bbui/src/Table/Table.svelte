@@ -267,7 +267,7 @@
       condition => condition.setting === "color"
     )[0]
 
-    //Compute styles if 'applyToRow' is checked
+    //Compute row styles if 'applyToRow' is checked
     const rowStyles = computeRowStyles(row)
     if (rowStyles.length > 0) return rowStyles
 
@@ -304,7 +304,7 @@
       const conditionalCellValues = Helpers.getConditionalCellSettingValues(
         row,
         field,
-        rowConditions
+        rowConditions.filter(condition => condition.column === field)
       )
       const conditionalBackground = conditionalCellValues?.filter(
         condition => condition.setting === "background"

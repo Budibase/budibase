@@ -35,7 +35,7 @@
   }
 
   const open = () => {
-    boundValue = cloneDeep(value)
+    boundValue = cloneDeep(value) || []
     drawer.show()
   }
 
