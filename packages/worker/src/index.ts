@@ -24,7 +24,7 @@ import * as redis from "./utilities/redis"
 const Sentry = require("@sentry/node")
 const koaSession = require("koa-session")
 const logger = require("koa-pino-logger")
-const destroyable = require("server-destroy")
+import destroyable from "server-destroy"
 
 // this will setup http and https proxies form env variables
 bootstrap()
@@ -79,7 +79,6 @@ server.on("close", async () => {
 
 const shutdown = () => {
   server.close()
-  // @ts-ignore
   server.destroy()
 }
 

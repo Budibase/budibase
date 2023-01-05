@@ -8,7 +8,7 @@ import { promisify } from "util"
 import { join } from "path"
 import fs from "fs"
 import env from "../environment"
-import { budibaseTempDir, ObjectStoreBuckets } from "./utils"
+import { budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 
@@ -26,7 +26,7 @@ type UploadParams = {
   bucket: string
   filename: string
   path: string
-  type?: string
+  type?: string | null
   // can be undefined, we will remove it
   metadata?: {
     [key: string]: string | undefined
@@ -41,6 +41,7 @@ const CONTENT_TYPE_MAP: any = {
   json: "application/json",
   gz: "application/gzip",
 }
+
 const STRING_CONTENT_TYPES = [
   CONTENT_TYPE_MAP.html,
   CONTENT_TYPE_MAP.css,
@@ -58,35 +59,17 @@ export function sanitizeBucket(input: string) {
   return input.replace(new RegExp(APP_DEV_PREFIX, "g"), APP_PREFIX)
 }
 
-function publicPolicy(bucketName: string) {
-  return {
-    Version: "2012-10-17",
-    Statement: [
-      {
-        Effect: "Allow",
-        Principal: {
-          AWS: ["*"],
-        },
-        Action: "s3:GetObject",
-        Resource: [`arn:aws:s3:::${bucketName}/*`],
-      },
-    ],
-  }
-}
-
-const PUBLIC_BUCKETS = [
-  ObjectStoreBuckets.APPS,
-  ObjectStoreBuckets.GLOBAL,
-  ObjectStoreBuckets.PLUGINS,
-]
-
 /**
  * Gets a connection to the object store using the S3 SDK.
  * @param {string} bucket the name of the bucket which blobs will be uploaded/retrieved from.
+ * @param {object} opts configuration for the object store.
  * @return {Object} an S3 object store object, check S3 Nodejs SDK for usage.
  * @constructor
  */
-export const ObjectStore = (bucket: string) => {
+export const ObjectStore = (
+  bucket: string,
+  opts: { presigning: boolean } = { presigning: false }
+) => {
   const config: any = {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
@@ -100,9 +83,20 @@ export const ObjectStore = (bucket: string) => {
       Bucket: sanitizeBucket(bucket),
     }
   }
+
+  // custom S3 is in use i.e. minio
   if (env.MINIO_URL) {
-    config.endpoint = env.MINIO_URL
+    if (opts.presigning && env.MINIO_ENABLED) {
+      // IMPORTANT: Signed urls will inspect the host header of the request.
+      // Normally a signed url will need to be generated with a specified host in mind.
+      // To support dynamic hosts, e.g. some unknown self-hosted installation url,
+      // use a predefined host. The host 'minio-service' is also forwarded to minio requests via nginx
+      config.endpoint = "minio-service"
+    } else {
+      config.endpoint = env.MINIO_URL
+    }
   }
+
   return new AWS.S3(config)
 }
 
@@ -134,16 +128,6 @@ export const makeSureBucketExists = async (client: any, bucketName: string) => {
           .promise()
         await promises[bucketName]
         delete promises[bucketName]
-      }
-      // public buckets are quite hidden in the system, make sure
-      // no bucket is set accidentally
-      if (PUBLIC_BUCKETS.includes(bucketName)) {
-        await client
-          .putBucketPolicy({
-            Bucket: bucketName,
-            Policy: JSON.stringify(publicPolicy(bucketName)),
-          })
-          .promise()
       }
     } else {
       throw new Error("Unable to write to object store bucket.")
@@ -275,6 +259,36 @@ export const listAllObjects = async (bucketName: string, path: string) => {
 }
 
 /**
+ * Generate a presigned url with a default TTL of 1 hour
+ */
+export const getPresignedUrl = (
+  bucketName: string,
+  key: string,
+  durationSeconds: number = 3600
+) => {
+  const objectStore = ObjectStore(bucketName, { presigning: true })
+  const params = {
+    Bucket: sanitizeBucket(bucketName),
+    Key: sanitizeKey(key),
+    Expires: durationSeconds,
+  }
+  const url = objectStore.getSignedUrl("getObject", params)
+
+  if (!env.MINIO_ENABLED) {
+    // return the full URL to the client
+    return url
+  } else {
+    // return the path only to the client
+    // use the presigned url route to ensure the static
+    // hostname will be used in the request
+    const signedUrl = new URL(url)
+    const path = signedUrl.pathname
+    const query = signedUrl.search
+    return `/files/signed${path}${query}`
+  }
+}
+
+/**
  * Same as retrieval function but puts to a temporary file.
  */
 export const retrieveToTmp = async (bucketName: string, filepath: string) => {
@@ -315,9 +329,9 @@ export const deleteFile = async (bucketName: string, filepath: string) => {
   await makeSureBucketExists(objectStore, bucketName)
   const params = {
     Bucket: bucketName,
-    Key: filepath,
+    Key: sanitizeKey(filepath),
   }
-  return objectStore.deleteObject(params)
+  return objectStore.deleteObject(params).promise()
 }
 
 export const deleteFiles = async (bucketName: string, filepaths: string[]) => {
@@ -326,7 +340,7 @@ export const deleteFiles = async (bucketName: string, filepaths: string[]) => {
   const params = {
     Bucket: bucketName,
     Delete: {
-      Objects: filepaths.map((path: any) => ({ Key: path })),
+      Objects: filepaths.map((path: any) => ({ Key: sanitizeKey(path) })),
     },
   }
   return objectStore.deleteObjects(params).promise()

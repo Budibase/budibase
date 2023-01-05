@@ -479,6 +479,7 @@
     definition.name !== "Screenslot" &&
     children.length === 0 &&
     !instance._blockElementHasChildren &&
+    !definition.block &&
     definition.skeleton !== false
 </script>
 

@@ -129,3 +129,15 @@ describe("Test the JavaScript helper", () => {
     expect(output).toBe("Error while executing JS")
   })
 })
+
+describe("check JS helpers", () => {
+  it("should error if using the format helper. not helpers.", () => {
+    const output = processJS(`return helper.toInt(4.3)`)
+    expect(output).toBe("Error while executing JS")
+  })
+
+  it("should be able to use toInt", () => {
+    const output = processJS(`return helpers.toInt(4.3)`)
+    expect(output).toBe(4)
+  })
+})

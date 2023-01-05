@@ -61,7 +61,8 @@ ADD hosting/single/nginx/nginx.conf /etc/nginx
 ADD hosting/single/nginx/nginx-default-site.conf /etc/nginx/sites-enabled/default
 RUN mkdir -p /var/log/nginx && \
   touch /var/log/nginx/error.log && \
-  touch /var/run/nginx.pid
+  touch /var/run/nginx.pid && \
+  usermod -a -G tty www-data
 
 WORKDIR /
 RUN mkdir -p scripts/integrations/oracle

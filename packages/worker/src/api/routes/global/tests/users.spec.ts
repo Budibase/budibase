@@ -1,4 +1,4 @@
-import { InviteUsersResponse } from "@budibase/types"
+import { InviteUsersResponse, User } from "@budibase/types"
 
 jest.mock("nodemailer")
 import {
@@ -116,7 +116,7 @@ describe("/api/global/users", () => {
 
     it("should ignore users existing in other tenants", async () => {
       const user = await config.createUser()
-      jest.resetAllMocks()
+      jest.clearAllMocks()
 
       await tenancy.doInTenant(TENANT_1, async () => {
         const response = await config.api.users.bulkCreateUsers([user])
@@ -229,7 +229,7 @@ describe("/api/global/users", () => {
 
     it("should not be able to create user that exists in other tenant", async () => {
       const user = await config.createUser()
-      jest.resetAllMocks()
+      jest.clearAllMocks()
 
       await tenancy.doInTenant(TENANT_1, async () => {
         delete user._id
@@ -276,7 +276,11 @@ describe("/api/global/users", () => {
       await config.createSession(nonAdmin)
 
       const newUser = structures.users.user()
-      await api.users.saveUser(newUser, 403, config.authHeaders(nonAdmin))
+      await config.api.users.saveUser(
+        newUser,
+        403,
+        config.authHeaders(nonAdmin)
+      )
     })
   })
 
@@ -292,6 +296,23 @@ describe("/api/global/users", () => {
       expect(events.user.permissionBuilderAssigned).not.toBeCalled()
       expect(events.user.permissionAdminAssigned).not.toBeCalled()
       expect(events.user.passwordForceReset).not.toBeCalled()
+    })
+
+    it("should not allow a user to update their own admin/builder status", async () => {
+      const user = (await config.api.users.getUser(config.defaultUser?._id!))
+        .body as User
+      await config.api.users.saveUser({
+        ...user,
+        admin: {
+          global: false,
+        },
+        builder: {
+          global: false,
+        },
+      })
+      const userOut = (await config.api.users.getUser(user._id!)).body
+      expect(userOut.admin.global).toBe(true)
+      expect(userOut.builder.global).toBe(true)
     })
 
     it("should be able to force reset password", async () => {
@@ -440,7 +461,11 @@ describe("/api/global/users", () => {
       const nonAdmin = await config.createUser(structures.users.builderUser())
       await config.createSession(nonAdmin)
 
-      await api.users.saveUser(existingUser, 200, config.authHeaders(nonAdmin))
+      await config.api.users.saveUser(
+        existingUser,
+        200,
+        config.authHeaders(nonAdmin)
+      )
     })
   })
 

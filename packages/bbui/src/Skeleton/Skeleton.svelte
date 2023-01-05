@@ -9,7 +9,7 @@
     height: 100%;
     width: 100%;
     opacity: 0;
-    background-color: var(--spectrum-global-color-gray-300) !important;
+    background-color: var(--spectrum-global-color-gray-200) !important;
     border-radius: 7px;
     overflow: hidden;
     position: relative;
@@ -31,8 +31,8 @@
     background-image: linear-gradient(
       90deg,
       rgba(255, 255, 255, 0) 0,
-      rgba(255, 255, 255, 0.2) 20%,
-      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0.15) 20%,
+      rgba(255, 255, 255, 0.3) 60%,
       rgba(255, 255, 255, 0)
     );
     animation: shimmer 2s infinite;
@@ -44,7 +44,7 @@
       opacity: 0;
     }
     100% {
-      opacity: 1;
+      opacity: 0.75;
     }
   }
 

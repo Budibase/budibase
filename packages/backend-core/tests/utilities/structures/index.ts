@@ -6,3 +6,4 @@ export const generator = new Chance()
 export * as koa from "./koa"
 export * as accounts from "./accounts"
 export * as licenses from "./licenses"
+export * as plugins from "./plugins"

@@ -567,6 +567,40 @@
           "data"
         ]
       },
+      "deploymentOutput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "description": "The ID of the app.",
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of the deployment, whether it succeeded or failed",
+                "type": "string",
+                "enum": [
+                  "SUCCESS",
+                  "FAILURE"
+                ]
+              },
+              "appUrl": {
+                "description": "The URL of the published app",
+                "type": "string"
+              }
+            },
+            "required": [
+              "_id",
+              "status",
+              "appUrl"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
       "row": {
         "description": "The row to be created/updated, based on the table schema.",
         "type": "object",
@@ -1925,6 +1959,56 @@
                 "examples": {
                   "application": {
                     "$ref": "#/components/examples/application"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{appId}/unpublish": {
+      "post": {
+        "operationId": "unpublish",
+        "summary": "Unpublish an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The app was published successfully."
+          }
+        }
+      }
+    },
+    "/applications/{appId}/publish": {
+      "post": {
+        "operationId": "publish",
+        "summary": "Unpublish an application",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deployment object.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/deploymentOutput"
+                },
+                "examples": {
+                  "deployment": {
+                    "$ref": "#/components/examples/deploymentOutput"
                   }
                 }
               }

@@ -1,6 +1,7 @@
 <script>
   import "@spectrum-css/label/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
+  import Badge from "../Badge/Badge.svelte"
 
   export let row
   export let value
@@ -24,17 +25,11 @@
 
 {#each relationships as relationship}
   {#if relationship?.primaryDisplay}
-    <span class="spectrum-Label spectrum-Label--grey" on:click={onClick}>
+    <Badge hoverable grey on:click={onClick}>
       {relationship.primaryDisplay}
-    </span>
+    </Badge>
   {/if}
 {/each}
 {#if leftover}
   <div>+{leftover} more</div>
 {/if}
-
-<style>
-  span:hover {
-    cursor: pointer;
-  }
-</style>

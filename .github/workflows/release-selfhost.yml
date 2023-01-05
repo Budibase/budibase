@@ -73,7 +73,7 @@ jobs:
           git config user.email "<>"
           git reset --hard
           git pull
-          helm package charts/budibase
+          helm package charts/budibase --version "$RELEASE_VERSION" --app-version "$RELEASE_VERSION"
           git checkout gh-pages
           mv *.tgz docs
           helm repo index docs

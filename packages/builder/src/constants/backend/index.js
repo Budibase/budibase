@@ -261,3 +261,12 @@ export const BannedSearchTypes = [
   "json",
   "jsonarray",
 ]
+
+export const DatasourceTypes = {
+  RELATIONAL: "Relational",
+  NON_RELATIONAL: "Non-relational",
+  SPREADSHEET: "Spreadsheet",
+  OBJECT_STORE: "Object store",
+  GRAPH: "Graph",
+  API: "API",
+}
