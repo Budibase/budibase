@@ -11,10 +11,13 @@
   export let limit
   export let paginate
 
-  const loading = writable(false)
-
   const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
+
+  // Update loading state
+  const parentLoading = getContext("loading")
+  const loading = writable(true)
+  setContext("loading", loading)
 
   // We need to manage our lucene query manually as we want to allow components
   // to extend it
@@ -22,8 +25,9 @@
   $: defaultQuery = LuceneUtils.buildLuceneQuery(filter)
   $: query = extendQuery(defaultQuery, queryExtensions)
 
-  // Keep our data fetch instance up to date
+  // Only fetch initial data once we aren't in a loading context any more
   $: fetch = createFetch(dataSource)
+  $: !$parentLoading && fetch.getInitialData()
   $: fetch.update({
     query,
     sortColumn,
@@ -31,6 +35,9 @@
     limit,
     paginate,
   })
+
+  // Keep loading context updated
+  $: loading.set($parentLoading || !$fetch.loaded)
 
   // Build our action context
   $: actions = [
@@ -83,10 +90,6 @@
     limit: limit,
   }
 
-  const parentLoading = getContext("loading")
-  setContext("loading", loading)
-  $: loading.set($parentLoading || !$fetch.loaded)
-
   const createFetch = datasource => {
     return fetchData({
       API,
@@ -97,6 +100,7 @@
         sortOrder,
         limit,
         paginate,
+        fetchOnCreation: false,
       },
     })
   }
