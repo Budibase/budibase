@@ -419,7 +419,7 @@ class Orchestrator {
 
       // Delete the step after the loop step as it's irrelevant, since information is included
       // in the loop step
-      if (wasLoopStep) {
+      if (wasLoopStep && !loopStep) {
         this._context.steps.splice(loopStepNumber + 1, 1)
         wasLoopStep = false
       }
@@ -438,8 +438,7 @@ class Orchestrator {
         })
         this._context.steps[loopStepNumber] = tempOutput
 
-        loopSteps = undefined
-        wasLoopStep = true
+        loopSteps = []
       }
     }
 
