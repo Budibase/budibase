@@ -17,7 +17,7 @@ version: 0.0.0
 appVersion: 0.0.0
 dependencies:
   - name: couchdb
-    version: 3.6.1
+    version: 3.3.4
     repository: https://apache.github.io/couchdb-helm
     condition: services.couchdb.enabled
   - name: ingress-nginx
