@@ -13,7 +13,6 @@
   import { generate } from "shortid"
   import { getEventContextBindings } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
-  import { selectedScreen } from "../../../../../builderStore"
 
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
