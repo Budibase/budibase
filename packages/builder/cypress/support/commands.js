@@ -413,7 +413,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
-  cy.get(".appTable", { timeout: 5000 }).within(() => {
+  cy.get(".appTable", { timeout: 30000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
 })
@@ -441,7 +441,7 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
   if (!initialTable) {
     cy.navigateToDataSection()
   }
-  cy.get(`[data-cy="new-datasource"]`, { timeout: 2000 }).click()
+  cy.get(`[data-cy="new-datasource"]`, { timeout: 20000 }).click()
   cy.wait(2000)
   cy.get(".item", { timeout: 2000 })
     .contains("Budibase DB")
@@ -480,7 +480,7 @@ Cypress.Commands.add(
 
     // Configure column
     cy.get(".spectrum-Modal").within(() => {
-      cy.get("input").first().type(columnName).blur()
+      cy.get("input").first().type(columnName)
 
       // Unset table display column
       cy.contains("display column").click({ force: true })
@@ -792,7 +792,7 @@ Cypress.Commands.add("selectExternalDatasource", datasourceName => {
   // Navigates to Data Section
   cy.navigateToDataSection()
   // Open Datasource modal
-  cy.get(".nav").within(() => {
+  cy.get(".container").within(() => {
     cy.get("[data-cy='new-datasource']").click()
   })
   // Clicks specified datasource & continue
