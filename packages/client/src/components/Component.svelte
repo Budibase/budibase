@@ -171,8 +171,7 @@
   $: pad = pad || (interactive && hasChildren && inDndPath)
   $: $dndIsDragging, (pad = false)
 
-  // Determine whether we should render a skeleton loader in lieu of this
-  // component
+  // Determine whether we should render a skeleton loader for this component
   $: showSkeleton =
     $loading &&
     definition.name !== "Screenslot" &&

@@ -25,10 +25,9 @@
   $: defaultQuery = LuceneUtils.buildLuceneQuery(filter)
   $: query = extendQuery(defaultQuery, queryExtensions)
 
-  // Only fetch initial data once we aren't in a loading context any more
-  $: fetch = createFetch(dataSource)
-  $: !$parentLoading && fetch.getInitialData()
-  $: fetch.update({
+  // Fetch data and refresh when needed
+  $: fetch = createFetch(dataSource, $parentLoading)
+  $: updateFetch({
     query,
     sortColumn,
     sortOrder,
@@ -87,10 +86,21 @@
       sortColumn: $fetch.sortColumn,
       sortOrder: $fetch.sortOrder,
     },
-    limit: limit,
+    limit,
   }
 
-  const createFetch = datasource => {
+  const createFetch = (datasource, parentLoading) => {
+    // Return a dummy fetch if parent is still loading. We do this so that we
+    // can still properly subscribe to a valid fetch object and check all
+    // properties, but we want to avoid fetching the real data until all parents
+    // have finished loading.
+    // This logic is only needed due to skeleton loaders, as previously we
+    // simply blocked component rendering until data was ready.
+    if (parentLoading) {
+      return fetchData({ API })
+    }
+
+    // Otherwise return the real thing
     return fetchData({
       API,
       datasource,
@@ -100,9 +110,16 @@
         sortOrder,
         limit,
         paginate,
-        fetchOnCreation: false,
       },
     })
+  }
+
+  const updateFetch = opts => {
+    // Only update fetch if parents have stopped loading. Otherwise we will
+    // trigger a fetch of the real data before parents are ready.
+    if (!$parentLoading) {
+      fetch.update(opts)
+    }
   }
 
   const addQueryExtension = (key, extension) => {
