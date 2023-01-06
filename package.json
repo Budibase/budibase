@@ -45,7 +45,7 @@
     "dev:server": "yarn run kill-server && lerna run --parallel dev:builder --concurrency 1 --scope @budibase/backend-core --scope @budibase/worker --scope @budibase/server",
     "test": "lerna run test && yarn test:pro",
     "test:pro": "bash scripts/pro/test.sh",
-    "lint:eslint": "eslint packages",
+    "lint:eslint": "eslint packages && eslint qa-core",
     "lint:prettier": "prettier --check \"packages/**/*.{js,ts,svelte}\"",
     "lint": "yarn run lint:eslint && yarn run lint:prettier",
     "lint:fix:eslint": "eslint --fix packages qa-core",
