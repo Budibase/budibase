@@ -45,9 +45,6 @@ export default class DataFetch {
 
       // Pagination config
       paginate: true,
-
-      // Behaviour
-      fetchOnCreation: true,
     }
 
     // State of the fetch
@@ -105,9 +102,7 @@ export default class DataFetch {
     }
 
     // Initially fetch data but don't bother waiting for the result
-    if (this.options.fetchOnCreation) {
-      this.getInitialData()
-    }
+    this.getInitialData()
   }
 
   /**
