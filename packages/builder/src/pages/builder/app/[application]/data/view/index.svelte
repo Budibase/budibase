@@ -6,9 +6,9 @@
   onMount(async () => {
     const { list, selected } = $views
     if (selected) {
-      $redirect(`./${selected?.name}`)
+      $redirect(`./${encodeURIComponent(selected?.name)}`)
     } else if (list?.length) {
-      $redirect(`./${list[0].name}`)
+      $redirect(`./${encodeURIComponent(list[0].name)}`)
     } else {
       $redirect("../")
     }

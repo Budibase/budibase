@@ -33,7 +33,8 @@
 
   async function deleteView() {
     try {
-      const isSelected = $params.viewName === $views.selectedViewName
+      const isSelected =
+        decodeURIComponent($params.viewName) === $views.selectedViewName
       const name = view.name
       const id = view.tableId
       await views.delete(name)

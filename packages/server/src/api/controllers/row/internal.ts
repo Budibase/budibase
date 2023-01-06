@@ -187,7 +187,7 @@ export async function save(ctx: UserCtx) {
 }
 
 export async function fetchView(ctx: Ctx) {
-  const viewName = ctx.params.viewName
+  const viewName = decodeURIComponent(ctx.params.viewName)
 
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(DocumentType.TABLE)) {
