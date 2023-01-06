@@ -70,25 +70,26 @@
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
   $: resetKey = Helpers.hashString(
-    JSON.stringify(initialValues) + JSON.stringify(dataSource) + disabled
+    loaded +
+      JSON.stringify(initialValues) +
+      JSON.stringify(dataSource) +
+      disabled
   )
 </script>
 
-{#if loaded}
-  {#key resetKey}
-    <InnerForm
-      {dataSource}
-      {theme}
-      {size}
-      {disabled}
-      {actionType}
-      {schema}
-      {table}
-      {initialValues}
-      {disableValidation}
-      {editAutoColumns}
-    >
-      <slot />
-    </InnerForm>
-  {/key}
-{/if}
+{#key resetKey}
+  <InnerForm
+    {dataSource}
+    {theme}
+    {size}
+    {disabled}
+    {actionType}
+    {schema}
+    {table}
+    {initialValues}
+    {disableValidation}
+    {editAutoColumns}
+  >
+    <slot />
+  </InnerForm>
+{/key}
