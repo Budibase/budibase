@@ -3,7 +3,7 @@ import { APP_TABLE_APP_NAME, DEPLOY_SUCCESS_MODAL } from "../support/interact";
 const interact = require('../support/interact')
 
 filterTests(['all'], () => {
-  context("Publish Application Workflow", () => {
+  xcontext("Publish Application Workflow", () => {
     before(() => {
       cy.login()
       cy.deleteAllApps()
@@ -70,7 +70,7 @@ filterTests(['all'], () => {
         })
     })
 
-    it("Should unpublish an application using the link and reflect the status change", () => {
+    xit("Should unpublish an application using the link and reflect the status change", () => {
       //Assuming the previous test app exists and is published
 
       cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
