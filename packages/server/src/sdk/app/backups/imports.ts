@@ -4,21 +4,17 @@ import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import { downloadTemplate } from "../../../utilities/fileSystem"
-import { FieldTypes, ObjectStoreBuckets } from "../../../constants"
+import { ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
 import {
   Automation,
   AutomationTriggerStepId,
-  CouchFindOptions,
   RowAttachment,
 } from "@budibase/types"
 const uuid = require("uuid/v4")
 const tar = require("tar")
-
-// default limit - seems to work well for performance
-const FIND_LIMIT = 25
 
 type TemplateType = {
   file?: {
@@ -28,23 +24,23 @@ type TemplateType = {
   key?: string
 }
 
-function generateAttachmentFindParams(
-  attachmentCols: string[],
-  bookmark: null | string
-) {
-  const params: CouchFindOptions = {
-    selector: {
-      _id: {
-        $regex: `^${TABLE_ROW_PREFIX}`,
-      },
-    },
-    limit: FIND_LIMIT,
+function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
+  // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
+  const urlParts = attachment.url.split("/")
+  // drop the first empty element
+  urlParts.shift()
+  // get the prefix
+  const prefix = urlParts.shift()
+  // remove the app ID
+  urlParts.shift()
+  // add new app ID
+  urlParts.unshift(appId)
+  const key = urlParts.join("/")
+  return {
+    ...attachment,
+    key,
+    url: `/${prefix}/${key}`,
   }
-  attachmentCols.forEach(col => (params.selector[col] = { $exists: true }))
-  if (bookmark) {
-    params.bookmark = bookmark
-  }
-  return params
 }
 
 async function updateAttachmentColumns(prodAppId: string, db: Database) {
@@ -52,52 +48,22 @@ async function updateAttachmentColumns(prodAppId: string, db: Database) {
   const tables = await sdk.tables.getAllInternalTables(db)
   let updatedRows: Row[] = []
   for (let table of tables) {
-    const attachmentCols: string[] = []
-    for (let [key, column] of Object.entries(table.schema)) {
-      if (column.type === FieldTypes.ATTACHMENT) {
-        attachmentCols.push(key)
-      }
-    }
-    // no attachment columns, nothing to do
-    if (attachmentCols.length === 0) {
-      continue
-    }
-    let bookmark: null | string = null,
-      rowsLength = 0
-    do {
-      const params = generateAttachmentFindParams(attachmentCols, bookmark)
-      // use the CouchDB Mango query API to lookup rows that have attachments
-      const resp = await dbCore.directCouchFind(db.name, params)
-      bookmark = resp.bookmark
-      rowsLength = resp.rows.length
-      const rows = resp.rows
-      for (let row of rows) {
-        for (let column of attachmentCols) {
-          if (!Array.isArray(row[column])) {
-            continue
+    const { rows, columns } = await sdk.rows.getRowsWithAttachments(
+      db.name,
+      table
+    )
+    updatedRows = updatedRows.concat(
+      rows.map(row => {
+        for (let column of columns) {
+          if (Array.isArray(row[column])) {
+            row[column] = row[column].map((attachment: RowAttachment) =>
+              rewriteAttachmentUrl(prodAppId, attachment)
+            )
           }
-          row[column] = row[column].map((attachment: RowAttachment) => {
-            // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
-            const urlParts = attachment.url.split("/")
-            // drop the first empty element
-            urlParts.shift()
-            // get the prefix
-            const prefix = urlParts.shift()
-            // remove the app ID
-            urlParts.shift()
-            // add new app ID
-            urlParts.unshift(prodAppId)
-            const key = urlParts.join("/")
-            return {
-              ...attachment,
-              key,
-              url: `/${prefix}/${key}`,
-            }
-          })
         }
-      }
-      updatedRows = updatedRows.concat(rows)
-    } while (rowsLength === FIND_LIMIT)
+        return row
+      })
+    )
   }
   // write back the updated attachments
   await db.bulkDocs(updatedRows)
