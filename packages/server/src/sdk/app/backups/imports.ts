@@ -43,7 +43,7 @@ function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
   }
 }
 
-async function updateAttachmentColumns(prodAppId: string, db: Database) {
+export async function updateAttachmentColumns(prodAppId: string, db: Database) {
   // iterate through attachment documents and update them
   const tables = await sdk.tables.getAllInternalTables(db)
   let updatedRows: Row[] = []
