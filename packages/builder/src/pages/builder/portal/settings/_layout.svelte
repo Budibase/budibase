@@ -2,6 +2,7 @@
   import { url, isActive } from "@roxi/routify"
   import { Page } from "@budibase/bbui"
   import { Content, SideNav, SideNavItem } from "components/portal/page"
+  import { admin } from "stores/portal"
 
   $: wide = $isActive("./email/:template")
 </script>
@@ -25,11 +26,13 @@
           url={$url("./organisation")}
           active={$isActive("./organisation")}
         />
-        <SideNavItem
-          text="Version"
-          url={$url("./version")}
-          active={$isActive("./version")}
-        />
+        {#if !$admin.cloud}
+          <SideNavItem
+            text="Version"
+            url={$url("./version")}
+            active={$isActive("./version")}
+          />
+        {/if}
       </SideNav>
     </div>
     <slot />
