@@ -187,9 +187,6 @@
         {/each}
       </Tabs>
       <div class="toolbar">
-        {#if $auth.user?.admin?.global}
-          <ConfigChecklist />
-        {/if}
         <div class="mobile-toggle">
           <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
         </div>
