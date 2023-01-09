@@ -4,11 +4,11 @@
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
   import { isActive, url } from "@roxi/routify"
 
-  $: narrow = !$isActive("./users/index") && !$isActive("./groups/index")
+  $: wide = $isActive("./users/index") || $isActive("./groups/index")
 </script>
 
 <Page>
-  <Content {narrow}>
+  <Content narrow={!wide}>
     <div slot="side-nav">
       <SideNav>
         <SideNavItem

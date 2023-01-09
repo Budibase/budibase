@@ -11,10 +11,11 @@
     Tabs,
     Tab,
   } from "@budibase/bbui"
-  import { goto } from "@roxi/routify"
+  import { goto, url } from "@roxi/routify"
   import { email } from "stores/portal"
   import Editor from "components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"
+  import { Breadcrumbs, Breadcrumb } from "components/portal/page"
 
   // this is the email purpose
   export let template
@@ -71,24 +72,14 @@
   }
 </script>
 
-<Layout noPadding>
+<Layout gap="L" noPadding>
+  <Breadcrumbs>
+    <Breadcrumb url={$url("./")} text="Email" />
+    <Breadcrumb text={name} />
+  </Breadcrumbs>
+
   <Layout gap="XS" noPadding>
-    <div>
-      <ActionButton
-        on:click={() => $goto("./")}
-        quiet
-        size="S"
-        icon="BackAndroid"
-      >
-        Back to email settings
-      </ActionButton>
-    </div>
-    <header>
-      <Heading>
-        Email Template: {name}
-      </Heading>
-      <Button cta on:click={saveTemplate}>Save</Button>
-    </header>
+    <Heading size="M">{name}</Heading>
     <Body>
       {description}
       <br />
@@ -96,8 +87,9 @@
       on the right.
     </Body>
   </Layout>
+
   <div>
-    <Tabs selected="Edit" on:select={fixMountBug}>
+    <Tabs noHorizPadding selected="Edit" on:select={fixMountBug}>
       <Tab title="Edit">
         <div class="template-editor">
           <div class="template-text-editor">
@@ -112,9 +104,9 @@
             />
           </div>
           <div class="bindings-editor">
-            <Detail size="L">Bindings</Detail>
+            <Heading size="XS">Bindings</Heading>
             {#if mounted}
-              <Tabs selected="Template">
+              <Tabs noHorizPadding selected="Template">
                 <Tab title="Template">
                   <TemplateBindings
                     title="Template Bindings"
@@ -141,6 +133,10 @@
       </Tab>
     </Tabs>
   </div>
+
+  <div>
+    <Button cta on:click={saveTemplate}>Save</Button>
+  </div>
 </Layout>
 
 <style>
@@ -152,29 +148,24 @@
     flex-wrap: wrap;
     grid-gap: var(--spacing-xl);
     margin-top: var(--spacing-xl);
+    overflow: hidden;
+    height: 640px;
   }
   .template-text-editor {
     flex: 1 1 0;
     min-width: 250px;
+    margin-top: calc(-1 * var(--spacing-s));
   }
   .bindings-editor {
-    margin-top: var(--spacing-s);
-    max-height: 640px;
-    overflow: auto;
     flex: 0 0 300px;
-  }
-
-  header {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    align-items: flex-start;
   }
 
   .preview {
     height: 640px;
-    margin-top: calc(var(--spacing-xl) + var(--spacing-s));
+    margin-top: var(--spacing-xl);
     position: relative;
+    border-radius: 4px;
+    overflow: hidden;
   }
   iframe {
     width: 100%;
