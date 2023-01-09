@@ -42,8 +42,8 @@ export default class TestConfiguration<T> {
 
   async setupAccountAndTenant() {
     const account = generateAccount()
-    //await this.accounts.validateEmail(<string>account.email)
-    //await this.accounts.validateTenantId(<string>account.tenantId)
+    await this.accounts.validateEmail(<string>account.email)
+    await this.accounts.validateTenantId(<string>account.tenantId)
     process.env.TENANT_ID = <string>account.tenantId
     await this.accounts.create(account)
     await this.updateApiClients(<string>account.tenantName)
