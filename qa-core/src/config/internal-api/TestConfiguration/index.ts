@@ -1,6 +1,7 @@
 import ApplicationApi from "./applications"
 import AuthApi from "./auth"
 import InternalAPIClient from "./InternalAPIClient"
+import AccountsApiClient from "./accountsAPIClient"
 import TablesApi from "./tables"
 import RowApi from "./rows"
 import ScreenApi from "./screens"
@@ -17,15 +18,20 @@ export default class TestConfiguration<T> {
   rows: RowApi
   users: UserManagementApi
   accounts: AccountsApi
+  apiClient: InternalAPIClient
+  accountsApiClient: AccountsApiClient
 
-  constructor(apiClient: InternalAPIClient) {
-    this.applications = new ApplicationApi(apiClient)
-    this.tables = new TablesApi(apiClient)
-    this.rows = new RowApi(apiClient)
-    this.auth = new AuthApi(apiClient)
-    this.screen = new ScreenApi(apiClient)
-    this.users = new UserManagementApi(apiClient)
-    this.accounts = new AccountsApi(apiClient)
+  constructor(apiClient: InternalAPIClient, accountsApiClient: AccountsApiClient) {
+    this.apiClient = apiClient
+    this.accountsApiClient = accountsApiClient
+
+    this.applications = new ApplicationApi(this.apiClient)
+    this.tables = new TablesApi(this.apiClient)
+    this.rows = new RowApi(this.apiClient)
+    this.auth = new AuthApi(this.apiClient)
+    this.screen = new ScreenApi(this.apiClient)
+    this.users = new UserManagementApi(this.apiClient)
+    this.accounts = new AccountsApi(this.accountsApiClient)
     this.context = <T>{}
   }
 
@@ -35,10 +41,23 @@ export default class TestConfiguration<T> {
 
   async setupAccountAndTenant() {
     const account = generateAccount()
-    await this.accounts.validateEmail(account.email)
-    await this.accounts.validateTenantId(account.tenantId)
+    //await this.accounts.validateEmail(<string>account.email)
+    //await this.accounts.validateTenantId(<string>account.tenantId)
+    process.env.TENANT_ID = <string>account.tenantId
     await this.accounts.create(account)
-    await this.auth.login(account.email, account.password)
+    await this.updateApiClients(<string>account.tenantName)
+    await this.auth.login(<string>account.email, <string>account.password)
+  }
+
+  async updateApiClients(tenantName: string) {
+    this.apiClient.setTenantName(tenantName)
+    this.applications = new ApplicationApi(this.apiClient)
+    this.tables = new TablesApi(this.apiClient)
+    this.rows = new RowApi(this.apiClient)
+    this.auth = new AuthApi(this.apiClient)
+    this.screen = new ScreenApi(this.apiClient)
+    this.users = new UserManagementApi(this.apiClient)
+    this.context = <T>{}
   }
 
   async login(email: string, password: string) {
