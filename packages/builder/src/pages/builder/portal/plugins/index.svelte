@@ -90,7 +90,7 @@
               autoWidth
             />
           </div>
-          <Search bind:value={searchTerm} placeholder="Search plugins" />
+          <Search bind:value={searchTerm} placeholder="Search" />
         </div>
       {/if}
     </div>
