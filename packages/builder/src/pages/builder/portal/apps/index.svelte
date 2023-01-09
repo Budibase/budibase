@@ -95,10 +95,9 @@
 
   const goToAutomationError = appId => {
     const params = new URLSearchParams({
-      tab: "Automation History",
       open: "error",
     })
-    $goto(`../overview/${appId}?${params.toString()}`)
+    $goto(`../overview/${appId}/automation-history?${params.toString()}`)
   }
 
   const errorCount = errors => {
