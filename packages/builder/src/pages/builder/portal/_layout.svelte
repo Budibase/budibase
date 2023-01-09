@@ -13,15 +13,20 @@
   } from "@budibase/bbui"
   import { organisation, auth, admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
-  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
+  import ProfileModal from "components/settings/ProfileModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
+  import ThemeModal from "components/settings/ThemeModal.svelte"
+  import APIKeyModal from "components/settings/APIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   // import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   let loaded = false
+  let themeModal
+  let profileModal
   let userInfoModal
-  let changePasswordModal
+  let updatePasswordModal
+  let apiKeyModal
   let mobileMenuVisible = false
   let activeTab = "Apps"
 
@@ -202,17 +207,31 @@
               <Icon size="XL" name="ChevronDown" />
             </div>
             <MenuItem
+              icon="Moon"
+              on:click={() => themeModal.show()}
+              dataCy="theme"
+            >
+              Theme
+            </MenuItem>
+            <MenuItem
               icon="UserEdit"
               on:click={() => userInfoModal.show()}
-              dataCy={"user-info"}
+              dataCy="user-info"
             >
-              Update user information
+              My profile
             </MenuItem>
             <MenuItem
               icon="LockClosed"
-              on:click={() => changePasswordModal.show()}
+              on:click={() => updatePasswordModal.show()}
             >
               Update password
+            </MenuItem>
+            <MenuItem
+              icon="Key"
+              on:click={() => apiKeyModal.show()}
+              dataCy="api-key"
+            >
+              View API key
             </MenuItem>
             <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
               Close developer mode
@@ -228,11 +247,17 @@
       <slot />
     </div>
   </div>
-  <Modal bind:this={userInfoModal}>
-    <UpdateUserInfoModal />
+  <Modal bind:this={themeModal}>
+    <ThemeModal />
   </Modal>
-  <Modal bind:this={changePasswordModal}>
+  <Modal bind:this={userInfoModal}>
+    <ProfileModal />
+  </Modal>
+  <Modal bind:this={updatePasswordModal}>
     <ChangePasswordModal />
+  </Modal>
+  <Modal bind:this={apiKeyModal}>
+    <APIKeyModal />
   </Modal>
 {/if}
 

@@ -11,11 +11,6 @@
     <div slot="side-nav">
       <SideNav>
         <SideNavItem
-          text="API Key"
-          url={$url("./api")}
-          active={$isActive("./api")}
-        />
-        <SideNavItem
           text="Auth"
           url={$url("./auth")}
           active={$isActive("./auth")}
@@ -34,11 +29,6 @@
           text="Version"
           url={$url("./version")}
           active={$isActive("./version")}
-        />
-        <SideNavItem
-          text="Theme"
-          url={$url("./theme")}
-          active={$isActive("./theme")}
         />
       </SideNav>
     </div>
