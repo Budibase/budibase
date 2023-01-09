@@ -9,8 +9,9 @@
 
   async function deletePlugin() {
     try {
+      const name = plugin.name
       await plugins.deletePlugin(plugin._id)
-      notifications.success(`Plugin ${plugin?.name} deleted`)
+      notifications.success(`Plugin ${name} deleted successfully`)
       dispatch("deleted")
     } catch (error) {
       const msg = error?.message ? error.message : JSON.stringify(error)
@@ -28,6 +29,6 @@
   showCloseIcon={false}
 >
   <Body>
-    Are you sure you want to delete <strong>{plugin?.name}</strong>
+    Are you sure you want to delete <strong>{plugin?.name}</strong>?
   </Body>
 </ModalContent>

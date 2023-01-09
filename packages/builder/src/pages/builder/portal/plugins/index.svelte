@@ -9,11 +9,36 @@
     Modal,
     Search,
     Page,
+    Table,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { plugins, admin } from "stores/portal"
-  import PluginRow from "./_components/PluginRow.svelte"
   import AddPluginModal from "./_components/AddPluginModal.svelte"
+  import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
+  import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
+
+  const schema = {
+    name: {
+      width: "2fr",
+    },
+    version: {
+      width: "1fr",
+    },
+    "schema.type": {
+      width: "1fr",
+      displayName: "Type",
+      capitalise: true,
+    },
+    edit: {
+      width: "auto",
+      borderLeft: true,
+      displayName: "",
+    },
+  }
+  const customRenderers = [
+    { column: "name", component: PluginNameRenderer },
+    { column: "edit", component: EditPluginRenderer },
+  ]
 
   let modal
   let searchTerm = ""
@@ -50,33 +75,34 @@
       <Body>Add your own custom datasources and components</Body>
     </Layout>
     <Divider />
-    <Layout noPadding>
-      <div class="controls">
-        <div>
-          <Button on:click={modal.show} cta>Add plugin</Button>
-        </div>
-        {#if $plugins?.length}
-          <div class="filters">
-            <div class="select">
-              <Select
-                bind:value={filter}
-                placeholder={null}
-                options={filterOptions}
-                autoWidth
-              />
-            </div>
-            <Search bind:value={searchTerm} placeholder="Search plugins" />
-          </div>
-        {/if}
+
+    <div class="controls">
+      <div>
+        <Button on:click={modal.show} cta>Add plugin</Button>
       </div>
-      {#if filteredPlugins?.length}
-        <Layout noPadding gap="S">
-          {#each filteredPlugins as plugin (plugin._id)}
-            <PluginRow {plugin} />
-          {/each}
-        </Layout>
+      {#if $plugins?.length}
+        <div class="filters">
+          <div class="select">
+            <Select
+              bind:value={filter}
+              placeholder={null}
+              options={filterOptions}
+              autoWidth
+            />
+          </div>
+          <Search bind:value={searchTerm} placeholder="Search plugins" />
+        </div>
       {/if}
-    </Layout>
+    </div>
+
+    <Table
+      {schema}
+      data={filteredPlugins}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+      {customRenderers}
+    />
   </Layout>
 </Page>
 
