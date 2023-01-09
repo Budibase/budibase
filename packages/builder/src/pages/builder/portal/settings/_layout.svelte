@@ -3,11 +3,11 @@
   import { Page } from "@budibase/bbui"
   import { Content, SideNav, SideNavItem } from "components/portal/page"
 
-  $: narrow = !$isActive("./users/index") && !$isActive("./groups/index")
+  $: wide = $isActive("./email/:template")
 </script>
 
-<Page narrow>
-  <Content>
+<Page>
+  <Content narrow={!wide}>
     <div slot="side-nav">
       <SideNav>
         <SideNavItem
