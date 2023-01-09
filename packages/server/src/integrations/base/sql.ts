@@ -232,7 +232,9 @@ class InternalBuilder {
         } else {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
-          query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [`${value}%`])
+          query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
+            `${value}%`,
+          ])
         }
       })
     }

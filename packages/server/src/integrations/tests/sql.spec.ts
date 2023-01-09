@@ -535,7 +535,7 @@ describe("SQL query builder", () => {
       sql: `select * from (select * from \`${tableName}\` where LOWER(\`${tableName}\`.\`name\`) LIKE ? limit ?) as \`${tableName}\``,
     })
   })
-  
+
   it("should handle table names with dashes when performing a LIKE in SQL Server", () => {
     const tableName = "Table-Name-With-Dashes"
     const query = new Sql(SqlClient.MS_SQL, limit)._query(
