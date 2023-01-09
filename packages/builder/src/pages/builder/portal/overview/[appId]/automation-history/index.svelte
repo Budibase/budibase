@@ -33,6 +33,7 @@
   let automationId = null
   let status = null
   let timeRange = null
+  let loaded = false
 
   $: licensePlan = $auth.user?.license?.plan
   $: app = $overview.selectedApp
@@ -66,7 +67,16 @@
     { column: "status", component: StatusRenderer },
   ]
 
-  async function fetchLogs(automationId, status, page, timeRange) {
+  async function fetchLogs(
+    automationId,
+    status,
+    page,
+    timeRange,
+    force = false
+  ) {
+    if (!force && !loaded) {
+      return
+    }
     let startDate = null
     if (timeRange) {
       const [length, units] = timeRange.split("-")
@@ -118,19 +128,19 @@
     await automationStore.actions.fetch()
     const params = new URLSearchParams(window.location.search)
     const shouldOpen = params.get("open") === ERROR
-    // open with errors, open panel for latest
     if (shouldOpen) {
       status = ERROR
-    }
-    await automationStore.actions.fetch()
-    await fetchLogs(null, status)
-    if (shouldOpen) {
-      viewDetails({ detail: runHistory[0] })
     }
     automationOptions = []
     for (let automation of $automationStore.automations) {
       automationOptions.push({ value: automation._id, label: automation.name })
     }
+    await fetchLogs(automationId, status, 0, timeRange, true)
+    // Open the first automation info if one exists
+    if (shouldOpen && runHistory?.[0]) {
+      viewDetails({ detail: runHistory[0] })
+    }
+    loaded = true
   })
 
   onDestroy(() => {
