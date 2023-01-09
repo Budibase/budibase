@@ -18,13 +18,11 @@
   import ThemeModal from "components/settings/ThemeModal.svelte"
   import APIKeyModal from "components/settings/APIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
-  import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   // import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   let loaded = false
   let themeModal
   let profileModal
-  let userInfoModal
   let updatePasswordModal
   let apiKeyModal
   let mobileMenuVisible = false
@@ -220,7 +218,7 @@
             </MenuItem>
             <MenuItem
               icon="UserEdit"
-              on:click={() => userInfoModal.show()}
+              on:click={() => profileModal.show()}
               dataCy="user-info"
             >
               My profile
@@ -255,7 +253,7 @@
   <Modal bind:this={themeModal}>
     <ThemeModal />
   </Modal>
-  <Modal bind:this={userInfoModal}>
+  <Modal bind:this={profileModal}>
     <ProfileModal />
   </Modal>
   <Modal bind:this={updatePasswordModal}>
