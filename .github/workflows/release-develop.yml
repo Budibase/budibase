@@ -93,6 +93,30 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           RELEASE_TAG: k8s-release
 
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v1
+        id: helm-install
+
+      # Step below publishes the helm charts from the develop branch under
+      # the folder helm-develop rather than docs - allowing testing of helm
+      - name: Release helm chart from develop branch
+        run: |
+          git config user.name "Budibase Helm Bot"
+          git config user.email "<>"
+          git reset --hard
+          git pull
+          git checkout gh-pages
+          mkdir -p helm-develop
+          cd helm-develop
+          helm package ../charts/budibase
+          helm repo index .
+          git add -A
+          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Pull values.yaml from budibase-infra
         run: | 
           curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
