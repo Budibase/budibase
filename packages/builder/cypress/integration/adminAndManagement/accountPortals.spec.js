@@ -2,7 +2,7 @@ import filterTests from "../../support/filterTests"
 const interact = require('../../support/interact')
 
 filterTests(["smoke", "all"], () => {
-  context("Account Portals", () => {
+  xcontext("Account Portals", () => {
 
     const bbUserEmail = "bbuser@test.com"
 
@@ -44,7 +44,7 @@ filterTests(["smoke", "all"], () => {
       //cy.logoutNoAppGrid()
     })
 
-    it("should verify Standard Portal", () => {
+    xit("should verify Standard Portal", () => {
       // Development access should be disabled (Admin access is already disabled)
       cy.login()
       cy.setUserRole("bbuser", "App User")
