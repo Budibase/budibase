@@ -82,7 +82,8 @@
   .spectrum-Tabs-item {
     color: var(--spectrum-global-color-gray-600);
   }
-  .spectrum-Tabs-item.is-selected {
+  .spectrum-Tabs-item.is-selected,
+  .spectrum-Tabs-item:hover {
     color: var(--spectrum-global-color-gray-900);
   }
 </style>

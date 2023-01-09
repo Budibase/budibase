@@ -1,146 +1,93 @@
 <script>
-  import { isActive, redirect, goto } from "@roxi/routify"
+  import { isActive, redirect, goto, url } from "@roxi/routify"
   import {
     Icon,
     Avatar,
-    Layout,
-    SideNavigation as Navigation,
-    SideNavigationItem as Item,
     ActionMenu,
     MenuItem,
     Modal,
-    clickOutside,
     notifications,
+    Tabs,
+    Tab,
+    Button,
   } from "@budibase/bbui"
-  import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   import { organisation, auth, admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
-  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
+  import ProfileModal from "components/settings/ProfileModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
-  import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
+  import ThemeModal from "components/settings/ThemeModal.svelte"
+  import APIKeyModal from "components/settings/APIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   let loaded = false
-  let userInfoModal
-  let changePasswordModal
+  let themeModal
+  let profileModal
+  let updatePasswordModal
   let apiKeyModal
   let mobileMenuVisible = false
+  let activeTab = "Apps"
 
   $: menu = buildMenu($auth.isAdmin)
+  $: $url(), updateActiveTab()
+
+  const updateActiveTab = () => {
+    for (let entry of menu) {
+      if ($isActive(entry.href)) {
+        if (activeTab !== entry.title) {
+          activeTab = entry.title
+        }
+        break
+      }
+    }
+  }
 
   const buildMenu = admin => {
+    // Standard user and developer pages
     let menu = [
       {
         title: "Apps",
         href: "/builder/portal/apps",
       },
+      {
+        title: "Plugins",
+        href: "/builder/portal/plugins",
+      },
     ]
 
+    // Admin only pages
     if (admin) {
-      menu = menu.concat([
+      menu = [
+        {
+          title: "Apps",
+          href: "/builder/portal/apps",
+        },
         {
           title: "Users",
-          href: "/builder/portal/manage/users",
-          heading: "Manage",
+          href: "/builder/portal/users/users",
         },
-        isEnabled(TENANT_FEATURE_FLAGS.USER_GROUPS)
-          ? {
-              title: "User Groups",
-              href: "/builder/portal/manage/groups",
-            }
-          : undefined,
-        { title: "Auth", href: "/builder/portal/manage/auth" },
-        { title: "Email", href: "/builder/portal/manage/email" },
         {
           title: "Plugins",
-          href: "/builder/portal/manage/plugins",
-        },
-
-        {
-          title: "Organisation",
-          href: "/builder/portal/settings/organisation",
-          heading: "Settings",
+          href: "/builder/portal/plugins",
         },
         {
-          title: "Theming",
-          href: "/builder/portal/settings/theming",
+          title: "Settings",
+          href: "/builder/portal/settings",
         },
-      ])
-
-      if (!$adminStore.cloud) {
-        menu = menu.concat([
-          {
-            title: "Update",
-            href: "/builder/portal/settings/update",
-          },
-        ])
-      }
-    } else {
-      menu = menu.concat([
-        {
-          title: "Theming",
-          href: "/builder/portal/settings/theming",
-          heading: "Settings",
-        },
-      ])
+      ]
     }
 
-    // add link to account portal if the user has access
-    let accountSectionAdded = false
-
-    // link out to account-portal if account holder in cloud or always in self-host
-    if ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin)) {
-      accountSectionAdded = true
-      menu = menu.concat([
-        {
-          title: "Account",
-          href: $adminStore.accountPortalUrl,
-          heading: "Account",
-        },
-      ])
+    // Check if allowed access to account section
+    if (
+      isEnabled(TENANT_FEATURE_FLAGS.LICENSING) &&
+      ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin))
+    ) {
+      menu.push({
+        title: "Account",
+        href: "/builder/portal/account",
+      })
     }
 
-    if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
-      // always show usage in self-host or cloud if licensing enabled
-      menu = menu.concat([
-        {
-          title: "Usage",
-          href: "/builder/portal/settings/usage",
-          heading: accountSectionAdded ? "" : "Account",
-        },
-      ])
-
-      // show the relevant hosting upgrade page
-      if ($adminStore.cloud && $auth?.user?.accountPortalAccess) {
-        menu = menu.concat([
-          {
-            title: "Upgrade",
-            href: $adminStore.accountPortalUrl + "/portal/upgrade",
-          },
-        ])
-      } else if (!$adminStore.cloud && admin) {
-        menu = menu.concat({
-          title: "Upgrade",
-          href: "/builder/portal/settings/upgrade",
-        })
-      }
-
-      // show the billing page to licensed account holders in cloud
-      if (
-        $auth?.user?.accountPortalAccess &&
-        $auth.user.account.stripeCustomerId
-      ) {
-        menu = menu.concat([
-          {
-            title: "Billing",
-            href: $adminStore.accountPortalUrl + "/portal/billing",
-          },
-        ])
-      }
-    }
-
-    menu = menu.filter(item => !!item)
     return menu
   }
 
@@ -174,39 +121,15 @@
 
 {#if $auth.user && loaded}
   <div class="container">
-    <div
-      class="nav"
-      class:visible={mobileMenuVisible}
-      use:clickOutside={hideMobileMenu}
-    >
-      <Layout paddingX="L" paddingY="L">
-        <div class="branding">
-          <div class="name" on:click={() => $goto("./apps")}>
-            <img src={$organisation?.logoUrl || Logo} alt="Logotype" />
-            <span>{$organisation?.company || "Budibase"}</span>
-          </div>
-          <div class="onboarding">
-            {#if $auth.user?.admin?.global}
-              <ConfigChecklist />
-            {/if}
-          </div>
-        </div>
-        <div class="menu">
-          <Navigation>
-            {#each menu as { title, href, heading, badge }}
-              <Item
-                on:click={hideMobileMenu}
-                selected={$isActive(href)}
-                {href}
-                {badge}
-                {heading}>{title}</Item
-              >
-            {/each}
-          </Navigation>
-        </div>
-      </Layout>
-    </div>
-    <div class="main">
+    <div class="nav">
+      <div class="branding" on:click={() => $goto("./apps")}>
+        <img src={Logo} alt="Logotype" />
+      </div>
+      <Tabs selected={activeTab}>
+        {#each menu as { title, href }}
+          <Tab {title} on:click={() => $goto(href)} />
+        {/each}
+      </Tabs>
       <div class="toolbar">
         <div class="mobile-toggle">
           <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
@@ -217,56 +140,73 @@
             alt={$organisation?.company || "Budibase"}
           />
         </div>
+        {#if !$adminStore.cloud && $auth.isAdmin}
+          <Button cta on:click={() => $goto("/builder/portal/account/upgrade")}>
+            Upgrade
+          </Button>
+        {/if}
         <div class="user-dropdown">
           <ActionMenu align="right" dataCy="user-menu">
             <div slot="control" class="avatar">
               <Avatar
-                size="M"
+                size="L"
                 initials={$auth.initials}
                 url={$auth.user.pictureUrl}
               />
               <Icon size="XL" name="ChevronDown" />
             </div>
             <MenuItem
-              icon="UserEdit"
-              on:click={() => userInfoModal.show()}
-              dataCy={"user-info"}
+              icon="Moon"
+              on:click={() => themeModal.show()}
+              dataCy="theme"
             >
-              Update user information
+              Theme
             </MenuItem>
-            {#if $auth.isBuilder}
-              <MenuItem icon="Key" on:click={() => apiKeyModal.show()}>
-                View API key
-              </MenuItem>
-            {/if}
+            <MenuItem
+              icon="UserEdit"
+              on:click={() => profileModal.show()}
+              dataCy="user-info"
+            >
+              My profile
+            </MenuItem>
             <MenuItem
               icon="LockClosed"
-              on:click={() => changePasswordModal.show()}
+              on:click={() => updatePasswordModal.show()}
             >
               Update password
+            </MenuItem>
+            <MenuItem
+              icon="Key"
+              on:click={() => apiKeyModal.show()}
+              dataCy="api-key"
+            >
+              View API key
             </MenuItem>
             <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
               Close developer mode
             </MenuItem>
-            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}
-              >Log out
+            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}>
+              Log out
             </MenuItem>
           </ActionMenu>
         </div>
       </div>
-      <div class="content">
-        <slot />
-      </div>
+    </div>
+    <div class="main">
+      <slot />
     </div>
   </div>
-  <Modal bind:this={userInfoModal}>
-    <UpdateUserInfoModal />
+  <Modal bind:this={themeModal}>
+    <ThemeModal />
   </Modal>
-  <Modal bind:this={changePasswordModal}>
+  <Modal bind:this={profileModal}>
+    <ProfileModal />
+  </Modal>
+  <Modal bind:this={updatePasswordModal}>
     <ChangePasswordModal />
   </Modal>
   <Modal bind:this={apiKeyModal}>
-    <UpdateAPIKeyModal />
+    <APIKeyModal />
   </Modal>
 {/if}
 
@@ -274,78 +214,69 @@
   .container {
     height: 100%;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
   }
   .nav {
     background: var(--background);
-    border-right: var(--border-light);
-    overflow: auto;
-    flex: 0 0 auto;
-    width: 250px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    border-bottom: var(--border-light);
+    padding: 0 20px;
+    gap: 24px;
   }
-  .main {
-    flex: 1 1 auto;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    overflow: hidden;
+  .nav :global(.spectrum-Tabs) {
+    margin-bottom: -2px;
+    padding: 7px 0;
+  }
+  .nav :global(.spectrum-Tabs-itemLabel) {
+    font-weight: 600;
   }
   .branding {
     display: grid;
-    grid-gap: var(--spacing-s);
-    grid-template-columns: auto auto;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .name {
-    display: grid;
-    grid-template-columns: auto auto;
-    grid-gap: var(--spacing-m);
-    align-items: center;
-  }
-  .name:hover {
-    cursor: pointer;
+    place-items: center;
   }
   .avatar {
     display: grid;
     grid-template-columns: auto auto;
     place-items: center;
-    grid-gap: var(--spacing-xs);
+    grid-gap: var(--spacing-s);
   }
   .avatar:hover {
     cursor: pointer;
     filter: brightness(110%);
   }
   .toolbar {
-    background: var(--background);
-    border-bottom: var(--border-light);
+    flex: 1 1 auto;
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
+    gap: 24px;
   }
   .mobile-toggle,
   .mobile-logo {
     display: none;
   }
   .user-dropdown {
-    flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
   }
   img {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
   }
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 600;
-  }
-  .content {
+
+  .main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
     overflow: auto;
   }
 
