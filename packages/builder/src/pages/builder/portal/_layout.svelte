@@ -18,7 +18,7 @@
   import ThemeModal from "components/settings/ThemeModal.svelte"
   import APIKeyModal from "components/settings/APIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
-  // import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
+  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   let loaded = false
   let themeModal
@@ -43,6 +43,7 @@
   }
 
   const buildMenu = admin => {
+    // Standard user and developer pages
     let menu = [
       {
         title: "Apps",
@@ -54,6 +55,7 @@
       },
     ]
 
+    // Admin only pages
     if (admin) {
       menu = [
         {
@@ -72,76 +74,20 @@
           title: "Settings",
           href: "/builder/portal/settings",
         },
-        {
-          title: "Account",
-          href: "/builder/portal/account",
-        },
       ]
-      // if (!$adminStore.cloud) {
-      //   menu = menu.concat([
-      //     {
-      //       title: "Update",
-      //       href: "/builder/portal/settings/update",
-      //     },
-      //   ])
-      // }
     }
 
-    // add link to account portal if the user has access
-    // let accountSectionAdded = false
+    // Check if allowed access to account section
+    if (
+      isEnabled(TENANT_FEATURE_FLAGS.LICENSING) &&
+      ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin))
+    ) {
+      menu.push({
+        title: "Account",
+        href: "/builder/portal/account",
+      })
+    }
 
-    // link out to account-portal if account holder in cloud or always in self-host
-    // if ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin)) {
-    //   accountSectionAdded = true
-    //   menu = menu.concat([
-    //     {
-    //       title: "Account",
-    //       href: $adminStore.accountPortalUrl,
-    //       heading: "Account",
-    //     },
-    //   ])
-    // }
-    //
-    // if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
-    //   // always show usage in self-host or cloud if licensing enabled
-    //   menu = menu.concat([
-    //     {
-    //       title: "Usage",
-    //       href: "/builder/portal/settings/usage",
-    //       heading: accountSectionAdded ? "" : "Account",
-    //     },
-    //   ])
-    //
-    //   // show the relevant hosting upgrade page
-    //   if ($adminStore.cloud && $auth?.user?.accountPortalAccess) {
-    //     menu = menu.concat([
-    //       {
-    //         title: "Upgrade",
-    //         href: $adminStore.accountPortalUrl + "/portal/upgrade",
-    //       },
-    //     ])
-    //   } else if (!$adminStore.cloud && admin) {
-    //     menu = menu.concat({
-    //       title: "Upgrade",
-    //       href: "/builder/portal/settings/upgrade",
-    //     })
-    //   }
-    //
-    //   // show the billing page to licensed account holders in cloud
-    //   if (
-    //     $auth?.user?.accountPortalAccess &&
-    //     $auth.user.account.stripeCustomerId
-    //   ) {
-    //     menu = menu.concat([
-    //       {
-    //         title: "Billing",
-    //         href: $adminStore.accountPortalUrl + "/portal/billing",
-    //       },
-    //     ])
-    //   }
-    // }
-
-    menu = menu.filter(item => !!item)
     return menu
   }
 
