@@ -168,7 +168,7 @@
         title={"Version"}
         showIcon={true}
         action={() => {
-          $goto("../version")
+          $goto("./version")
         }}
         dataCy={"app-version"}
       >
@@ -196,7 +196,7 @@
           title={"Access"}
           showIcon={true}
           action={() => {
-            $goto("../access")
+            $goto("./access")
           }}
           dataCy={"access"}
         >
