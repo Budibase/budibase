@@ -18,11 +18,7 @@
   }
 </script>
 
-<ModalContent
-  title="Update user information"
-  confirmText="Update information"
-  onConfirm={updateInfo}
->
+<ModalContent title="My profile" confirmText="Save" onConfirm={updateInfo}>
   <Body size="S">
     Personalise the platform by adding your first name and last name.
   </Body>
