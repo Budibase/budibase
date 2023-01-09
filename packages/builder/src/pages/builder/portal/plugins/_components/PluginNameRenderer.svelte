@@ -8,19 +8,29 @@
   $: friendlyName = row?.schema?.schema?.friendlyName
 </script>
 
-<div title={value}>
+<div class="container" title={value}>
   {#if icon}
     <Icon name={icon} />
   {/if}
-  {friendlyName || value}
+  <div class="name">
+    {friendlyName || value}
+  </div>
 </div>
 
 <style>
-  div {
+  .container {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-m);
+  }
+  .name {
+    flex: 1 1 auto;
+    width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 </style>
