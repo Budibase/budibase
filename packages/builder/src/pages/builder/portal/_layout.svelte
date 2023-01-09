@@ -140,7 +140,16 @@
             alt={$organisation?.company || "Budibase"}
           />
         </div>
-        {#if !$adminStore.cloud && $auth.isAdmin}
+        {#if $adminStore.cloud && $auth?.user?.accountPortalAccess}
+          <Button
+            cta
+            on:click={() => {
+              $goto($adminStore.accountPortalUrl + "/portal/upgrade")
+            }}
+          >
+            Upgrade
+          </Button>
+        {:else if !$adminStore.cloud && $auth.isAdmin}
           <Button cta on:click={() => $goto("/builder/portal/account/upgrade")}>
             Upgrade
           </Button>
