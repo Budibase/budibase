@@ -121,30 +121,20 @@ router
     tableValidator(),
     tableController.save
   )
-  /**
-   * @api {post} /api/tables/csv/validate Validate a CSV for a table
-   * @apiName Validate a CSV for a table
-   * @apiGroup tables
-   * @apiPermission builder
-   * @apiDescription When creating a new table, or importing a CSV to an existing table the CSV must be validated and
-   * converted into a Budibase schema; this endpoint does this.
-   *
-   * @apiParam (Body) {string} csvString The CSV which is to be validated as a string.
-   * @apiParam (Body) {object} [schema] When a CSV has been validated it is possible to re-validate after changing the
-   * type of a field, by default everything will be strings as there is no way to infer types. The returned schema can
-   * be updated and then returned to the endpoint to re-validate and check if the type will work for the CSV, e.g.
-   * using a number instead of strings.
-   * @apiParam (Body) {string} [tableId] If importing data to an existing table this will pull the current table and
-   * remove any fields from the CSV schema which do not exist on the table/don't match the type of the table. When
-   * importing a CSV to an existing table only fields that are present on the table can be imported.
-   *
-   * @apiSuccess {object} schema The response body will contain a "schema" object that represents the schema found for
-   * the CSV - this will be in the same format used for table schema.s
-   */
   .post(
-    "/api/tables/csv/validate",
+    "/api/convert/csvToJson",
     authorized(BUILDER),
-    tableController.validateCSVSchema
+    tableController.csvToJson
+  )
+  .post(
+    "/api/tables/validateNewTableImport",
+    authorized(BUILDER),
+    tableController.validateNewTableImport
+  )
+  .post(
+    "/api/tables/validateExistingTableImport",
+    authorized(BUILDER),
+    tableController.validateExistingTableImport
   )
   /**
    * @api {post} /api/tables/:tableId/:revId Delete a table
