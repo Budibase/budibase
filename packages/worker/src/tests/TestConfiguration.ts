@@ -51,7 +51,7 @@ class TestConfiguration {
 
     if (opts.openServer) {
       env.PORT = "0" // random port
-      this.server = require("../index")
+      this.server = require("../index").default
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
     }
@@ -327,4 +327,4 @@ class TestConfiguration {
   }
 }
 
-export = TestConfiguration
+export default TestConfiguration

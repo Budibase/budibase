@@ -57,4 +57,4 @@ router
     datasourceController.destroy
   )
 
-export = router
+export default router

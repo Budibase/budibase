@@ -1,5 +1,5 @@
 // need to load environment first
-import * as env from "./environment"
+import env from "./environment"
 
 // enable APM if configured
 if (process.env.ELASTIC_APM_ENABLED) {
@@ -77,7 +77,7 @@ server.on("close", async () => {
   }
 })
 
-export = server.listen(env.PORT || 0, async () => {
+export default server.listen(env.PORT || 0, async () => {
   await startup(app, server)
 })
 

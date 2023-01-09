@@ -11,4 +11,4 @@ router.get(
   controller.fetchAppComponentDefinitions
 )
 
-export = router
+export default router

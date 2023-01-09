@@ -2,7 +2,6 @@ import fetch from "node-fetch"
 import { authenticateThirdParty, SaveUserFunction } from "./third-party-common"
 import { ssoCallbackUrl } from "./utils"
 import {
-  Config,
   ConfigType,
   OIDCInnerCfg,
   Database,

@@ -88,7 +88,7 @@ export const runMigration = async (
 
     await doWithDB(dbName, async (db: any) => {
       try {
-        const doc = await exports.getMigrationsDoc(db)
+        const doc = await getMigrationsDoc(db)
 
         // the migration has already been run
         if (doc[migrationName]) {
