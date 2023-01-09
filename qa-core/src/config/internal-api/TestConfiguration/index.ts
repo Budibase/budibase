@@ -38,6 +38,7 @@ export default class TestConfiguration<T> {
   async loginAsAdmin() {
     await this.auth.login(<string>process.env.BB_ADMIN_USER_EMAIL, <string>process.env.BB_ADMIN_USER_PASSWORD)
   }
+  // TODO: add logic to setup or login based in env variables
 
   async setupAccountAndTenant() {
     const account = generateAccount()
