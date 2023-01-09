@@ -50,10 +50,18 @@
         title: "Apps",
         href: "/builder/portal/apps",
       },
+      {
+        title: "Plugins",
+        href: "/builder/portal/plugins",
+      },
     ]
 
     if (admin) {
-      menu = menu.concat([
+      menu = [
+        {
+          title: "Apps",
+          href: "/builder/portal/apps",
+        },
         {
           title: "Users",
           href: "/builder/portal/users/users",
@@ -63,14 +71,14 @@
           href: "/builder/portal/plugins",
         },
         {
-          title: "Account",
-          href: "/builder/portal/account",
-        },
-        {
           title: "Settings",
           href: "/builder/portal/settings",
         },
-      ])
+        {
+          title: "Account",
+          href: "/builder/portal/account",
+        },
+      ]
       // if (!$adminStore.cloud) {
       //   menu = menu.concat([
       //     {
