@@ -22,11 +22,22 @@ serviceAccount:
 
 podAnnotations: {}
 
-# logAnnotations:
+# appServiceAnnotations:
 #   co.elastic.logs/multiline.type: pattern
 #   co.elastic.logs/multiline.pattern: '^[[:space:]]'
 #   co.elastic.logs/multiline.negate: false
 #   co.elastic.logs/multiline.match: after
+
+# workerServiceAnnotations:
+#   co.elastic.logs/multiline.type: pattern
+#   co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#   co.elastic.logs/multiline.negate: false
+#   co.elastic.logs/multiline.match: after
+
+# proxyServiceAnnotations:
+#  co.elastic.logs/module: nginx
+#  co.elastic.logs/fileset.stdout: access
+#  co.elastic.logs/fileset.stderr: error
 
 podSecurityContext:
   {}
