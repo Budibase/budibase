@@ -79,6 +79,7 @@
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionTitle={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
+        {sort}
       />
     {/if}
   {/if}
