@@ -1,17 +1,22 @@
-import { Account } from "@budibase/types";
-import generator from "../../generator";
+import { NewAccount } from "./types/newAccount";
 
-export const generateAccount = (): Account => {
+import generator from "../../generator";
+import { Hosting } from "@budibase/types";
+
+export const generateAccount = (): Partial<NewAccount> => {
     const randomGuid = generator.guid();
+    let tenant: string = 'a' + randomGuid;
+    tenant = tenant.replace(/-/g, '');
+
     return {
         email: `qa+${randomGuid}@budibase.com`,
-        hosting: "cloud",
+        hosting: Hosting.CLOUD,
         name: `qa+${randomGuid}@budibase.com`,
         password: `${randomGuid}`,
         profession: "software_engineer",
         size: "10+",
-        tenantId: `${randomGuid}`,
-        tenantName: `${randomGuid}`,
+        tenantId: `${tenant}`,
+        tenantName: `${tenant}`,
     }
 }
 

@@ -1,16 +1,18 @@
 import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
+import AccountsAPIClient from "../../../config/internal-api/TestConfiguration/accountsAPIClient"
 import { generateUser } from "../../../config/internal-api/fixtures/userManagement"
 import { User } from "@budibase/types"
 
 describe("Internal API - User Management & Permissions", () => {
     const api = new InternalAPIClient()
-    const config = new TestConfiguration<Application>(api)
+    const accountsAPI = new AccountsAPIClient()
+    const config = new TestConfiguration<Application>(api, accountsAPI)
 
     // Before each test, login as admin. Some tests will require login as a different user
-    beforeEach(async () => {
-        await config.loginAsAdmin()
+    beforeAll(async () => {
+        await config.setupAccountAndTenant()
     })
 
     afterAll(async () => {
