@@ -26,7 +26,10 @@ export default class TestConfiguration<T> {
   }
 
   async loginAsAdmin() {
-    await this.auth.login(<string>process.env.BB_ADMIN_USER_EMAIL, <string>process.env.BB_ADMIN_USER_PASSWORD)
+    await this.auth.login(
+      <string>process.env.BB_ADMIN_USER_EMAIL,
+      <string>process.env.BB_ADMIN_USER_PASSWORD
+    )
   }
 
   async login(email: string, password: string) {
