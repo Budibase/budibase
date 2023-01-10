@@ -117,15 +117,13 @@
     )
   }
 
-  function cleanUrl(inputUrl) {
-    return (
-      url
-        ?.replace(/(http)|(https)|[{}:]/g, "")
-        ?.replaceAll(".", "_")
-        ?.replaceAll("/", " ")
-        ?.trim() || inputUrl
-    )
-  }
+  const cleanUrl = inputUrl =>
+    url
+      ?.replace(/(http)|(https)|[{}:]/g, "")
+      ?.replaceAll(".", "_")
+      ?.replaceAll("/", " ")
+      ?.trim() || inputUrl
+
   function checkQueryName(inputUrl = null) {
     if (query && (!query.name || query.flags.urlName)) {
       query.flags.urlName = true
