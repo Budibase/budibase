@@ -38,6 +38,8 @@ import {
   Table,
 } from "@budibase/types"
 
+const { cleanExportRows } = require("./utils")
+
 const CALCULATION_TYPES = {
   SUM: "sum",
   COUNT: "count",
@@ -417,7 +419,7 @@ export async function exportRows(ctx: Ctx) {
   let rows: Row[] = []
   let schema = table.schema
 
-  // // Filter data to only specified columns if required
+  // Filter data to only specified columns if required
   if (columns && columns.length) {
     for (let i = 0; i < result.length; i++) {
       rows[i] = {}
@@ -429,8 +431,7 @@ export async function exportRows(ctx: Ctx) {
     rows = result
   }
 
-  // @ts-ignore
-  let exportRows = cleanExportRows(rows, schema, format, columns) //this isnt correct
+  let exportRows = cleanExportRows(rows, schema, format, columns)
   let headers = Object.keys(schema)
 
   // @ts-ignore
