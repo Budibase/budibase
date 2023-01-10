@@ -21,6 +21,8 @@
    * template: a HBS or JS binding to use as the value
    * background: the background color
    * color: the text color
+   * borderLeft: show a left border
+   * borderRight: show a right border
    */
   export let data = []
   export let schema = {}
@@ -270,6 +272,14 @@
       if (schema[field].align === "Right") {
         styles[field] += "justify-content: flex-end; text-align: right;"
       }
+      if (schema[field].borderLeft) {
+        styles[field] +=
+          "border-left: 1px solid var(--spectrum-global-color-gray-200);"
+      }
+      if (schema[field].borderLeft) {
+        styles[field] +=
+          "border-right: 1px solid var(--spectrum-global-color-gray-200);"
+      }
     })
     return styles
   }
@@ -290,7 +300,11 @@
         </slot>
       </div>
     {:else}
-      <div class="spectrum-Table" style={`${heightStyle}${gridStyle}`}>
+      <div
+        class="spectrum-Table"
+        class:no-scroll={!rowCount}
+        style={`${heightStyle}${gridStyle}`}
+      >
         {#if fields.length}
           <div class="spectrum-Table-head">
             {#if showEditColumn}
@@ -433,7 +447,6 @@
   /* Wrapper */
   .wrapper {
     position: relative;
-    z-index: 0;
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: var(--spectrum-global-dimension-size-250);
@@ -459,6 +472,9 @@
     border-radius: 0;
     display: grid;
     overflow: auto;
+  }
+  .spectrum-Table.no-scroll {
+    overflow: visible;
   }
 
   /* Header */
@@ -548,10 +564,7 @@
     display: contents;
   }
   .spectrum-Table-row:hover .spectrum-Table-cell {
-    /*background-color: var(--hover-bg) !important;*/
-  }
-  .spectrum-Table-row:hover .spectrum-Table-cell:after {
-    background-color: var(--spectrum-alias-highlight-hover);
+    background-color: var(--spectrum-global-color-gray-100);
   }
   .wrapper--quiet .spectrum-Table-row {
     border-left: none;
@@ -584,23 +597,12 @@
     border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
     background-color: var(--table-bg);
     z-index: auto;
+    transition: background-color 130ms ease-out;
   }
   .spectrum-Table-cell--edit {
     position: sticky;
     left: 0;
     z-index: 2;
-  }
-  .spectrum-Table-cell:after {
-    content: "";
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    transition: background-color
-      var(--spectrum-global-animation-duration-100, 0.13s) ease-in-out;
   }
 
   /* Placeholder  */
