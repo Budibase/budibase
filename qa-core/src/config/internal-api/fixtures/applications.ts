@@ -13,13 +13,12 @@ export const generateApp = (
 
 // Applications type doesn't work here, save to add useTemplate parameter?
 export const appFromTemplate = (): any => {
-  return ({
+  return {
     name: generator.word(),
     url: `/${generator.word()}`,
     useTemplate: "true",
     templateName: "Near Miss Register",
     templateKey: "app/near-miss-register",
     templateFile: undefined,
-  })
+  }
 }
-
