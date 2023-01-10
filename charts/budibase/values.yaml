@@ -124,7 +124,7 @@ services:
       minio: 'http://minio-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.objectStore.port }}'
       couchdb: 'http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}'
     resources: {}
-#    proxyServiceAnnotations:
+#    annotations:
 #      co.elastic.logs/module: nginx
 #      co.elastic.logs/fileset.stdout: access
 #      co.elastic.logs/fileset.stderr: error
@@ -135,7 +135,7 @@ services:
     logLevel: info
     resources: {}
 #    nodeDebug: "" # set the value of NODE_DEBUG
-#    appServiceAnnotations:
+#    annotations:
 #      co.elastic.logs/multiline.type: pattern
 #      co.elastic.logs/multiline.pattern: '^[[:space:]]'
 #      co.elastic.logs/multiline.negate: false
@@ -144,7 +144,7 @@ services:
     port: 4003
     replicaCount: 1
     resources: {}
-#    workerServiceAnnotations:
+#    annotations:
 #      co.elastic.logs/multiline.type: pattern
 #      co.elastic.logs/multiline.pattern: '^[[:space:]]'
 #      co.elastic.logs/multiline.negate: false
