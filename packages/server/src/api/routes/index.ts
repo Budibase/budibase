@@ -26,13 +26,14 @@ import cloudRoutes from "./cloud"
 import migrationRoutes from "./migrations"
 import pluginRoutes from "./plugin"
 import Router from "@koa/router"
-import { api } from "@budibase/pro"
+import { api as pro } from "@budibase/pro"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"
 
-const appBackupRoutes = api.appBackups
-const scheduleRoutes = api.schedules
+const appBackupRoutes = pro.appBackups
+const scheduleRoutes = pro.schedules
+
 export const mainRoutes: Router[] = [
   appBackupRoutes,
   backupRoutes,

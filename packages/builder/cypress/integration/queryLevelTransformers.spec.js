@@ -14,11 +14,13 @@ filterTests(["smoke", "all"], () => {
       const restUrl = "https://api.openbrewerydb.org/breweries"
       cy.selectExternalDatasource(datasource)
       cy.createRestQuery("GET", restUrl, "/breweries")
-      cy.get(interact.SPECTRUM_TABS_ITEM).contains("Transformer").click()
+      cy.reload()
+      cy.contains(".nav-item-content", "/breweries", { timeout: 20000 }).click()
+      cy.contains(interact.SPECTRUM_TABS_ITEM, "Transformer", { timeout: 5000 }).click({ force: true })
       // Get Transformer Function from file
       cy.readFile("cypress/support/queryLevelTransformerFunction.js").then(
         transformerFunction => {
-          cy.get(interact.CODEMIRROR_TEXTAREA)
+          cy.get(interact.CODEMIRROR_TEXTAREA, { timeout: 5000 })
             // Highlight current text and overwrite with file contents
             .type(Cypress.platform === "darwin" ? "{cmd}a" : "{ctrl}a", {
               force: true,
@@ -28,6 +30,7 @@ filterTests(["smoke", "all"], () => {
       )
       // Send Query
       cy.intercept("**/queries/preview").as("query")
+      cy.get(interact.SPECTRUM_BUTTON).contains("Save").click({ force: true })
       cy.get(interact.SPECTRUM_BUTTON).contains("Send").click({ force: true })
       cy.wait("@query")
       // Assert against Status Code, body, & body rows
@@ -42,7 +45,9 @@ filterTests(["smoke", "all"], () => {
       const restUrl = "https://api.openbrewerydb.org/breweries"
       cy.selectExternalDatasource(datasource)
       cy.createRestQuery("GET", restUrl, "/breweries")
-      cy.get(interact.SPECTRUM_TABS_ITEM).contains("Transformer").click()
+      cy.reload()
+      cy.contains(".nav-item-content", "/breweries", { timeout: 2000 }).click()
+      cy.contains(interact.SPECTRUM_TABS_ITEM, "Transformer", { timeout: 5000 }).click({ force: true })
       // Get Transformer Function with Data from file
       cy.readFile(
         "cypress/support/queryLevelTransformerFunctionWithData.js"
@@ -71,7 +76,9 @@ filterTests(["smoke", "all"], () => {
       const restUrl = "https://api.openbrewerydb.org/breweries"
       cy.selectExternalDatasource(datasource)
       cy.createRestQuery("GET", restUrl, "/breweries")
-      cy.get(interact.SPECTRUM_TABS_ITEM).contains("Transformer").click()
+      cy.reload()
+      cy.contains(".nav-item-content", "/breweries", { timeout: 2000 }).click()
+      cy.contains(interact.SPECTRUM_TABS_ITEM, "Transformer", { timeout: 5000 }).click({ force: true })
       // Clear the code box and add "test"
       cy.get(interact.CODEMIRROR_TEXTAREA)
         .type(Cypress.platform === "darwin" ? "{cmd}a" : "{ctrl}a", {

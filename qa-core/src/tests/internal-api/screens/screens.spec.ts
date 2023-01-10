@@ -1,7 +1,10 @@
 import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { App } from "@budibase/types"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
-import generateApp from "../../../config/internal-api/fixtures/applications"
+import {
+  generateApp,
+  appFromTemplate,
+} from "../../../config/internal-api/fixtures/applications"
 import { Screen } from "@budibase/types"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
 
@@ -11,7 +14,7 @@ describe("Internal API - /screens endpoints", () => {
   const appConfig = new TestConfiguration<App>(api)
 
   beforeAll(async () => {
-    await config.beforeAll()
+    await config.loginAsAdmin()
   })
 
   afterAll(async () => {

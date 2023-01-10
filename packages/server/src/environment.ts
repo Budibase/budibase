@@ -79,7 +79,6 @@ const environment = {
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
-  DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   DISABLE_AUTOMATION_LOGS: process.env.DISABLE_AUTOMATION_LOGS,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
@@ -108,14 +107,19 @@ const environment = {
 }
 
 // threading can cause memory issues with node-ts in development
-if (isDev() && module.exports.DISABLE_THREADING == null) {
+if (isDev() && environment.DISABLE_THREADING == null) {
   environment._set("DISABLE_THREADING", "1")
 }
 
 // clean up any environment variable edge cases
-for (let [key, value] of Object.entries(module.exports)) {
+for (let [key, value] of Object.entries(environment)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
+    // @ts-ignore
+    environment[key] = 0
+  }
+  // handle the edge case of "false" to disable an environment variable
+  if (value === "false") {
     // @ts-ignore
     environment[key] = 0
   }

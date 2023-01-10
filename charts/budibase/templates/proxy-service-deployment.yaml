@@ -4,9 +4,6 @@ metadata:
   annotations:
     kompose.cmd: kompose convert
     kompose.version: 1.21.0 (992df58d8)
-{{ if .Values.globals.logAnnotations }}
-{{ toYaml .Values.globals.logAnnotations | indent 4 }}
-{{ end }}
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: budibase-proxy
@@ -23,16 +20,34 @@ spec:
       annotations:
         kompose.cmd: kompose convert
         kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.proxy.annotations }}
+{{- toYaml .Values.services.proxy.annotations | indent 8 -}}
+{{ end }}
       creationTimestamp: null
       labels:
         app.kubernetes.io/name: budibase-proxy
     spec:
       containers:
-      - image: budibase/proxy:{{ .Values.services.proxy.tag | default "k8s" }}
+      - image: budibase/proxy:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
         name: proxy-service
         ports:
         - containerPort: {{ .Values.services.proxy.port }}
+        env:
+        - name: APPS_UPSTREAM_URL
+          value: {{ tpl .Values.services.proxy.upstreams.apps . | quote }}
+        - name: WORKER_UPSTREAM_URL
+          value: {{ tpl .Values.services.proxy.upstreams.worker . | quote }}
+        - name: MINIO_UPSTREAM_URL
+          value: {{ tpl .Values.services.proxy.upstreams.minio . | quote }}
+        - name: COUCHDB_UPSTREAM_URL
+          value: {{ .Values.services.couchdb.url | default (tpl .Values.services.proxy.upstreams.couchdb .) | quote }}
+        - name: RESOLVER
+          {{ if .Values.services.proxy.resolver }}
+          value: {{ .Values.services.proxy.resolver }}
+          {{ else }}
+          value: kube-dns.kube-system.svc.{{ .Values.services.dns }}
+          {{ end }}
         {{ with .Values.services.proxy.resources }}
         resources:
         {{- toYaml . | nindent 10 }}

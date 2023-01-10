@@ -92,7 +92,7 @@ describe("/permission", () => {
   describe("check public user allowed", () => {
     it("should be able to read the row", async () => {
       // replicate changes before checking permissions
-      await config.deploy()
+      await config.publish()
 
       const res = await request
         .get(`/api/${table._id}/rows`)
