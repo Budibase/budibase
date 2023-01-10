@@ -9,19 +9,20 @@
 
   $: views = $tables.list.flatMap(table => Object.keys(table.views || {}))
 
-  function saveView() {
+  const saveView = async () => {
+    name = name?.trim()
     if (views.includes(name)) {
       notifications.error(`View exists with name ${name}`)
       return
     }
     try {
-      viewsStore.save({
+      await viewsStore.save({
         name,
         tableId: $tables.selected._id,
         field,
       })
       notifications.success(`View ${name} created`)
-      $goto(`../../view/${name}`)
+      $goto(`../../view/${encodeURIComponent(name)}`)
     } catch (error) {
       notifications.error("Error creating view")
     }

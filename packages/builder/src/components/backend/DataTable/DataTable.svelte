@@ -220,6 +220,7 @@
             {filters}
             on:change={onFilter}
             disabled={!hasCols}
+            tableId={id}
           />
         {/key}
       </div>

@@ -1,4 +1,4 @@
-import Nano from "nano"
+import Nano from "@budibase/nano"
 import {
   AllDocsResponse,
   AnyDocument,
