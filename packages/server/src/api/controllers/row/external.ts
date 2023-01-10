@@ -20,7 +20,7 @@ import {
   Datasource,
 } from "@budibase/types"
 
-const { cleanExportRows } = require("../row/utils")
+const { cleanExportRows } = require("./utils")
 
 export async function handleRequest(
   operation: Operation,
