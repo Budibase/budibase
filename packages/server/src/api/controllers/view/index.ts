@@ -25,7 +25,15 @@ export async function fetch(ctx: BBContext) {
 export async function save(ctx: BBContext) {
   const db = context.getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
-  const view = viewTemplate(viewToSave)
+
+  const existingTable = await db.get(ctx.request.body.tableId)
+  const table = cloneDeep(existingTable)
+
+  const groupByField: any = Object.values(table.schema).find(
+    (field: any) => field.name == viewToSave.groupBy
+  )
+
+  const view = viewTemplate(viewToSave, groupByField?.type === FieldTypes.ARRAY)
   const viewName = viewToSave.name
 
   if (!viewName) {
@@ -35,8 +43,6 @@ export async function save(ctx: BBContext) {
   await saveView(originalName, viewName, view)
 
   // add views to table document
-  const existingTable = await db.get(ctx.request.body.tableId)
-  const table = cloneDeep(existingTable)
   if (!table.views) table.views = {}
   if (!view.meta.schema) {
     view.meta.schema = table.schema
