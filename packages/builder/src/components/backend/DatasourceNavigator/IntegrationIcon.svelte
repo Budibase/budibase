@@ -1,18 +1,15 @@
 <script>
   import { getIcon } from "./icons"
   import CustomSVG from "components/common/CustomSVG.svelte"
-  import { admin } from "stores/portal"
 
   export let integrationType
   export let schema
   export let size = "18"
 
-  $: objectStoreUrl = $admin.cloud ? "https://cdn.budi.live" : ""
-  $: pluginsUrl = `${objectStoreUrl}/plugins`
   $: iconInfo = getIcon(integrationType, schema)
 
   async function getSvgFromUrl(info) {
-    const url = `${pluginsUrl}/${info.url}`
+    const url = `${info.url}`
     const resp = await fetch(url, {
       headers: {
         ["pragma"]: "no-cache",

@@ -19,6 +19,8 @@ if (!process.env.CI) {
   }
   // add pro sources if they exist
   if (fs.existsSync("../../../budibase-pro")) {
+    config.moduleNameMapper["@budibase/pro/(.*)"] =
+      "<rootDir>/../../../budibase-pro/packages/pro/$1"
     config.moduleNameMapper["@budibase/pro"] =
       "<rootDir>/../../../budibase-pro/packages/pro/src"
   }

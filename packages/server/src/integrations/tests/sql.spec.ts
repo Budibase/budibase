@@ -51,6 +51,72 @@ function generateDeleteJson(table = TABLE_NAME, filters = {}) {
   }
 }
 
+function generateRelationshipJson(config: { schema?: string } = {}) {
+  return {
+    endpoint: {
+      datasourceId: "Postgres",
+      entityId: "brands",
+      operation: "READ",
+      schema: config.schema,
+    },
+    resource: {
+      fields: [
+        "brands.brand_id",
+        "brands.brand_name",
+        "products.product_id",
+        "products.product_name",
+        "products.brand_id",
+      ],
+    },
+    filters: {},
+    sort: {},
+    paginate: {},
+    relationships: [
+      {
+        from: "brand_id",
+        to: "brand_id",
+        tableName: "products",
+        column: "products",
+      },
+    ],
+    extra: { idFilter: {} },
+  }
+}
+
+function generateManyRelationshipJson(config: { schema?: string } = {}) {
+  return {
+    endpoint: {
+      datasourceId: "Postgres",
+      entityId: "stores",
+      operation: "READ",
+      schema: config.schema,
+    },
+    resource: {
+      fields: [
+        "stores.store_id",
+        "stores.store_name",
+        "products.product_id",
+        "products.product_name",
+      ],
+    },
+    filters: {},
+    sort: {},
+    paginate: {},
+    relationships: [
+      {
+        from: "store_id",
+        to: "product_id",
+        tableName: "products",
+        column: "products",
+        through: "stocks",
+        fromPrimary: "store_id",
+        toPrimary: "product_id",
+      },
+    ],
+    extra: { idFilter: {} },
+  }
+}
+
 describe("SQL query builder", () => {
   const limit = 500
   const client = SqlClient.POSTGRES
@@ -423,6 +489,32 @@ describe("SQL query builder", () => {
     expect(query).toEqual({
       bindings: [10],
       sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb ?| array [20,25] and \"${TABLE_NAME}\".\"name\"::jsonb ?| array ['John','Mary'] limit $1) as \"${TABLE_NAME}\"`,
+    })
+  })
+
+  it("should add the schema to the LEFT JOIN", () => {
+    const query = sql._query(generateRelationshipJson({ schema: "production" }))
+    expect(query).toEqual({
+      bindings: [500, 5000],
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" limit $1) as "brands" left join "production"."products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+    })
+  })
+
+  it("should handle if the schema is not present when doing a LEFT JOIN", () => {
+    const query = sql._query(generateRelationshipJson())
+    expect(query).toEqual({
+      bindings: [500, 5000],
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" limit $1) as "brands" left join "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+    })
+  })
+
+  it("should add the schema to both the toTable and throughTable in many-to-many join", () => {
+    const query = sql._query(
+      generateManyRelationshipJson({ schema: "production" })
+    )
+    expect(query).toEqual({
+      bindings: [500, 5000],
+      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" limit $1) as "stores" left join "production"."stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" on "products"."product_id" = "stocks"."product_id" limit $2`,
     })
   })
 })

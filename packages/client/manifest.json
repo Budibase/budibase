@@ -3442,6 +3442,12 @@
       },
       {
         "type": "boolean",
+        "label": "Compact",
+        "key": "compact",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -3785,7 +3791,6 @@
         "defaultValue": false,
         "info": "Row selection is only compatible with internal or SQL tables"
       },
-
       {
         "section": true,
         "name": "On Row Click",

@@ -1,10 +1,14 @@
 import { npmUpload, urlUpload, githubUpload, fileUpload } from "./uploaders"
-import { plugins as pluginCore, tenancy } from "@budibase/backend-core"
-import { PluginType, FileType, PluginSource } from "@budibase/types"
+import {
+  plugins as pluginCore,
+  db as dbCore,
+  tenancy,
+  objectStore,
+} from "@budibase/backend-core"
+import { PluginType, FileType, PluginSource, Plugin } from "@budibase/types"
 import env from "../../../environment"
 import { ClientAppSocket } from "../../../websocket"
-import { db as dbCore } from "@budibase/backend-core"
-import { plugins } from "@budibase/pro"
+import { sdk as pro } from "@budibase/pro"
 
 export async function getPlugins(type?: PluginType) {
   const db = tenancy.getGlobalDB()
@@ -13,9 +17,10 @@ export async function getPlugins(type?: PluginType) {
       include_docs: true,
     })
   )
-  const plugins = response.rows.map((row: any) => row.doc)
+  let plugins = response.rows.map((row: any) => row.doc) as Plugin[]
+  plugins = objectStore.enrichPluginURLs(plugins)
   if (type) {
-    return plugins.filter((plugin: any) => plugin.schema?.type === type)
+    return plugins.filter((plugin: Plugin) => plugin.schema?.type === type)
   } else {
     return plugins
   }
@@ -84,7 +89,7 @@ export async function create(ctx: any) {
       )
     }
 
-    const doc = await plugins.storePlugin(metadata, directory, source)
+    const doc = await pro.plugins.storePlugin(metadata, directory, source)
 
     ClientAppSocket.emit("plugins-update", { name, hash: doc.hash })
     ctx.body = {
@@ -107,7 +112,7 @@ export async function destroy(ctx: any) {
   const { pluginId } = ctx.params
 
   try {
-    await plugins.deletePlugin(pluginId)
+    await pro.plugins.deletePlugin(pluginId)
 
     ctx.body = { message: `Plugin ${ctx.params.pluginId} deleted.` }
   } catch (err: any) {
@@ -127,7 +132,7 @@ export async function processUploadedPlugin(
     throw new Error("Only component plugins are supported outside of self-host")
   }
 
-  const doc = await plugins.storePlugin(metadata, directory, source)
+  const doc = await pro.plugins.storePlugin(metadata, directory, source)
   ClientAppSocket.emit("plugin-update", { name: doc.name, hash: doc.hash })
   return doc
 }

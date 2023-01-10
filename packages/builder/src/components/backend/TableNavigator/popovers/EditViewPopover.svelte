@@ -1,6 +1,7 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import { views } from "stores/backend"
+  import { cloneDeep } from "lodash/fp"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     notifications,
@@ -15,27 +16,40 @@
   export let view
 
   let editorModal
-  let originalName = view.name
+  let originalName
+  let updatedName
   let confirmDeleteDialog
 
   async function save() {
+    const updatedView = cloneDeep(view)
+    updatedView.name = updatedName
+
     await views.save({
       originalName,
-      ...view,
+      ...updatedView,
     })
     notifications.success("View renamed successfully")
   }
 
   async function deleteView() {
     try {
+      const isSelected =
+        decodeURIComponent($params.viewName) === $views.selectedViewName
       const name = view.name
       const id = view.tableId
       await views.delete(name)
       notifications.success("View deleted")
-      $goto(`./table/${id}`)
+      if (isSelected) {
+        $goto(`./table/${id}`)
+      }
     } catch (error) {
       notifications.error("Error deleting view")
     }
+  }
+
+  const initForm = () => {
+    updatedName = view.name + ""
+    originalName = view.name + ""
   }
 </script>
 
@@ -46,9 +60,9 @@
   <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
-<Modal bind:this={editorModal}>
+<Modal bind:this={editorModal} on:show={initForm}>
   <ModalContent title="Edit View" onConfirm={save} confirmText="Save">
-    <Input label="View Name" thin bind:value={view.name} />
+    <Input label="View Name" thin bind:value={updatedName} />
   </ModalContent>
 </Modal>
 <ConfirmDialog
