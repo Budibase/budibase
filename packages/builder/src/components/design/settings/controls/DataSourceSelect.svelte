@@ -144,6 +144,11 @@
     drawer.show()
   }
 
+  const getQueryValue = queries => {
+    value = queries.find(q => q._id === value._id) || value
+    return value
+  }
+
   const saveQueryParams = () => {
     handleSelected({
       ...value,
@@ -175,7 +180,7 @@
           {/if}
           <IntegrationQueryEditor
             height={200}
-            query={value}
+            query={getQueryValue(queries)}
             schema={fetchQueryDefinition(value)}
             datasource={getQueryDatasource(value)}
             editable={false}
