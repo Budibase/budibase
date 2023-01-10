@@ -88,8 +88,8 @@
     on:click={onClick}
   >
     {#if fieldIcon}
-      <span class="option-extra">
-        <Icon name={fieldIcon} />
+      <span class="option-extra icon">
+        <Icon size="S" name={fieldIcon} />
       </span>
     {/if}
     {#if fieldColour}
@@ -168,8 +168,8 @@
               class:is-disabled={!isOptionEnabled(option)}
             >
               {#if getOptionIcon(option, idx)}
-                <span class="option-extra">
-                  <Icon name={getOptionIcon(option, idx)} />
+                <span class="option-extra icon">
+                  <Icon size="S" name={getOptionIcon(option, idx)} />
                 </span>
               {/if}
               {#if getOptionColour(option, idx)}
@@ -240,6 +240,9 @@
   }
   .option-extra {
     padding-right: 8px;
+  }
+  .option-extra.icon {
+    margin: 0 -1px;
   }
 
   .spectrum-Popover :global(.spectrum-Search) {
