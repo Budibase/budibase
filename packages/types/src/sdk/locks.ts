@@ -4,11 +4,14 @@ export enum LockType {
    * No retries will take place and no error will be thrown.
    */
   TRY_ONCE = "try_once",
+  DEFAULT = "default",
+  DELAY_500 = "delay_500",
 }
 
 export enum LockName {
   MIGRATIONS = "migrations",
   TRIGGER_QUOTA = "trigger_quota",
+  SYNC_ACCOUNT_LICENSE = "sync_account_license",
 }
 
 export interface LockOptions {

@@ -11,11 +11,13 @@ sources:
   - https://github.com/Budibase/budibase
   - https://budibase.com
 type: application
-version: 0.2.11
-appVersion: 1.0.214
+# populates on packaging
+version: 0.0.0
+# populates on packaging
+appVersion: 0.0.0
 dependencies:
   - name: couchdb
-    version: 3.6.1
+    version: 3.3.4
     repository: https://apache.github.io/couchdb-helm
     condition: services.couchdb.enabled
   - name: ingress-nginx

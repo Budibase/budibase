@@ -14,7 +14,7 @@ import { doWithDB, allDbs, directCouchAllDbs } from "./db"
 import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import * as events from "../events"
-import { App, Database, ConfigType } from "@budibase/types"
+import { App, Database, ConfigType, isSettingsConfig } from "@budibase/types"
 
 /**
  * Generates a new app ID.
@@ -489,24 +489,28 @@ export const getScopedFullConfig = async function (
 
   // custom logic for settings doc
   if (type === ConfigType.SETTINGS) {
-    if (scopedConfig && scopedConfig.doc) {
-      // overrides affected by environment variables
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
-        tenantAware: true,
-      })
-      scopedConfig.doc.config.analyticsEnabled =
-        await events.analytics.enabled()
-    } else {
+    if (!scopedConfig || !scopedConfig.doc) {
       // defaults
       scopedConfig = {
         doc: {
           _id: generateConfigID({ type, user, workspace }),
+          type: ConfigType.SETTINGS,
           config: {
             platformUrl: await getPlatformUrl({ tenantAware: true }),
             analyticsEnabled: await events.analytics.enabled(),
           },
         },
       }
+    }
+
+    // will always be true - use assertion function to get type access
+    if (isSettingsConfig(scopedConfig.doc)) {
+      // overrides affected by environment
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
+        tenantAware: true,
+      })
+      scopedConfig.doc.config.analyticsEnabled =
+        await events.analytics.enabled()
     }
   }
 
