@@ -1,4 +1,6 @@
+import { Header } from "./constants"
 import env from "./environment"
+const correlator = require("correlation-id")
 
 const NonErrors = ["AccountError"]
 
@@ -41,4 +43,15 @@ export function pinoSettings() {
       ignore: (req: { url: string }) => req.url.includes("/health"),
     },
   }
+}
+
+const setCorrelationHeader = (headers: any) => {
+  const correlationId = correlator.getId()
+  if (correlationId) {
+    headers[Header.CORRELATION_ID] = correlationId
+  }
+}
+
+export const correlation = {
+  setHeader: setCorrelationHeader,
 }
