@@ -42,7 +42,12 @@ const getIdentityId = () => {
 }
 
 const print = (fn: any, data: any[]) => {
-  let message = `[correlationId=${correlator.getId()}]`
+  let message = ""
+
+  const correlationId = correlator.getId()
+  if (correlationId) {
+    message = message + `[correlationId=${correlator.getId()}]`
+  }
 
   const tenantId = getTenantId()
   if (tenantId) {
