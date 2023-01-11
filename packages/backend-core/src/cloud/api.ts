@@ -1,6 +1,6 @@
 import fetch from "node-fetch"
 
-export = class API {
+export default class API {
   host: string
 
   constructor(host: string) {
