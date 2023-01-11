@@ -3,7 +3,7 @@ const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
 const uuid = require("uuid/v4")
-const env = require("../../environment")
+import env from "../../environment"
 import tar from "tar"
 
 export const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")

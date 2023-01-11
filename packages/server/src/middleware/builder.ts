@@ -64,7 +64,7 @@ async function updateAppUpdatedAt(ctx: BBContext) {
   })
 }
 
-export = async function builder(ctx: BBContext, permType: string) {
+export default async function builder(ctx: BBContext, permType: string) {
   const appId = ctx.appId
   // this only functions within an app context
   if (!appId) {

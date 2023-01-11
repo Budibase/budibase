@@ -8,6 +8,9 @@ const config: Config.InitialOptions = {
   setupFiles: ["./tests/jestSetup.ts"],
   collectCoverageFrom: ["src/**/*.{js,ts}"],
   coverageReporters: ["lcov", "json", "clover"],
+  transform: {
+    "^.+\\.ts?$": "@swc/jest",
+  },
 }
 
 if (!process.env.CI) {
