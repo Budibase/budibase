@@ -373,6 +373,7 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-xl);
+    overflow: hidden;
   }
 
   .empty-wrapper {

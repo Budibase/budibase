@@ -58,10 +58,10 @@
     padding: 50px;
     z-index: 1;
   }
-  .wide {
+  .content.wide {
     max-width: none;
   }
-  .narrow {
+  .content.narrow {
     max-width: 840px;
   }
   #side-panel {
@@ -81,5 +81,14 @@
   }
   #side-panel.visible {
     transform: translateX(0);
+  }
+
+  @media (max-width: 640px) {
+    .content {
+      padding: 24px;
+      max-width: calc(100vw - 48px) !important;
+      width: calc(100vw - 48px) !important;
+      overflow: auto;
+    }
   }
 </style>
