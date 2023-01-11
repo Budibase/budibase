@@ -20,6 +20,7 @@
   const schema = {
     name: {
       width: "2fr",
+      minWidth: "200px",
     },
     version: {
       width: "1fr",
@@ -28,6 +29,7 @@
       width: "1fr",
       displayName: "Type",
       capitalise: true,
+      minWidth: "120px",
     },
     edit: {
       width: "auto",
@@ -119,8 +121,19 @@
     display: flex;
     gap: var(--spacing-xl);
     justify-content: space-between;
+    flex-wrap: wrap;
   }
   .controls :global(.spectrum-Search) {
     width: 200px;
+  }
+
+  @media (max-width: 640px) {
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .controls :global(.spectrum-Search) {
+      width: auto;
+    }
   }
 </style>
