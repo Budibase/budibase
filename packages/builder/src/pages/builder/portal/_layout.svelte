@@ -228,7 +228,7 @@
     justify-content: flex-start;
     align-items: stretch;
     border-bottom: var(--border-light);
-    padding: 0 20px;
+    padding: 0 24px;
     gap: 24px;
     position: relative;
   }
@@ -265,8 +265,7 @@
     align-items: center;
     gap: 24px;
   }
-  .mobile-toggle,
-  .mobile-logo {
+  .mobile-toggle {
     display: none;
   }
   .user-dropdown {
@@ -278,7 +277,6 @@
     width: 30px;
     height: 30px;
   }
-
   .main {
     flex: 1 1 auto;
     display: flex;
@@ -289,14 +287,15 @@
   }
 
   @media (max-width: 640px) {
+    .nav {
+      flex: 0 0 64px;
+    }
     .toolbar {
       display: flex;
       flex-direction: row;
       justify-content: space-between;
       align-items: center;
-      padding: var(--spacing-m) calc(var(--spacing-xl) * 1.5);
     }
-
     .branding {
       position: absolute;
       left: 50%;
@@ -309,11 +308,9 @@
     .toolbar :global(.spectrum-Button) {
       display: none;
     }
-
     .mobile-toggle {
       display: block;
     }
-
     .mobile-toggle,
     .user-dropdown {
       flex: 0 1 0;

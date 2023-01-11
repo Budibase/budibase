@@ -78,6 +78,9 @@
   .name {
     flex: 1 1 auto;
   }
+  .name {
+    width: 0;
+  }
   .title,
   .app-status {
     display: flex;
@@ -116,9 +119,25 @@
     text-overflow: ellipsis;
   }
 
+  @media (max-width: 1000px) {
+    .app-row {
+      grid-template-columns: 45% 30% auto;
+    }
+    .updated {
+      display: none;
+    }
+  }
+  @media (max-width: 800px) {
+    .app-row {
+      grid-template-columns: 1fr auto;
+    }
+    .app-status {
+      display: none;
+    }
+  }
   @media (max-width: 640px) {
-    .desktop {
-      display: none !important;
+    .app-row {
+      padding: 24px 20px;
     }
   }
 </style>
