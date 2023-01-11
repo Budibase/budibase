@@ -33,4 +33,4 @@ router.post(
   controller.sendEmail
 )
 
-export = router
+export default router

@@ -10,7 +10,7 @@ const {
   NODE_MODULES_PATH,
   TOP_LEVEL_PATH,
 } = require("../../../utilities/fileSystem")
-const env = require("../../../environment")
+import env from "../../../environment"
 const { DocumentType } = require("../../../db/utils")
 const { context, objectStore, utils } = require("@budibase/backend-core")
 const AWS = require("aws-sdk")

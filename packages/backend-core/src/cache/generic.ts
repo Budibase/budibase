@@ -1,6 +1,6 @@
 const BaseCache = require("./base")
 
-const GENERIC = new BaseCache()
+const GENERIC = new BaseCache.default()
 
 export enum CacheKey {
   CHECKLIST = "checklist",
