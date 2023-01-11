@@ -1,7 +1,7 @@
 import { constants, utils } from "@budibase/backend-core"
 import { BBContext } from "@budibase/types"
 
-export = function ({ requiresAppId }: { requiresAppId?: boolean } = {}) {
+export default function ({ requiresAppId }: { requiresAppId?: boolean } = {}) {
   return async (ctx: BBContext, next: any) => {
     const appId = await utils.getAppIdFromCtx(ctx)
     if (requiresAppId && !appId) {
