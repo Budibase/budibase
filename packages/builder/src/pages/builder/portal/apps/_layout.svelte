@@ -4,7 +4,8 @@
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
 
-  let loaded = false
+  // Don't block loading if we've already hydrated state
+  let loaded = $apps.length > 0
 
   onMount(async () => {
     try {

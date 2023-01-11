@@ -40,7 +40,7 @@
   ]
 
   $: schema = {
-    name: { displayName: "Group", width: "2fr" },
+    name: { displayName: "Group", width: "2fr", minWidth: "200px" },
     users: { sortable: false, width: "1fr" },
     roles: { sortable: false, displayName: "Apps", width: "1fr" },
   }
