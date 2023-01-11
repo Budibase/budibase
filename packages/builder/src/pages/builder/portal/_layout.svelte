@@ -1,30 +1,15 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
-  import {
-    Icon,
-    Avatar,
-    ActionMenu,
-    MenuItem,
-    Modal,
-    notifications,
-    Tabs,
-    Tab,
-    Button,
-  } from "@budibase/bbui"
+  import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
   import { organisation, auth, admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
-  import ProfileModal from "components/settings/ProfileModal.svelte"
-  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
-  import ThemeModal from "components/settings/ThemeModal.svelte"
-  import APIKeyModal from "components/settings/APIKeyModal.svelte"
-  import Logo from "assets/bb-emblem.svg"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
+  import UpgradeButton from "./_components/UpgradeButton.svelte"
+  import MobileMenu from "./_components/MobileMenu.svelte"
+  import Logo from "./_components/Logo.svelte"
+  import UserDropdown from "./_components/UserDropdown.svelte"
 
   let loaded = false
-  let themeModal
-  let profileModal
-  let updatePasswordModal
-  let apiKeyModal
   let mobileMenuVisible = false
   let activeTab = "Apps"
 
@@ -95,14 +80,6 @@
     return menu
   }
 
-  const logout = async () => {
-    try {
-      await auth.logout()
-    } catch (error) {
-      // Swallow error and do nothing
-    }
-  }
-
   const showMobileMenu = () => (mobileMenuVisible = true)
   const hideMobileMenu = () => (mobileMenuVisible = false)
 
@@ -126,92 +103,31 @@
 {#if $auth.user && loaded}
   <div class="container">
     <div class="nav">
-      <div class="branding" on:click={() => $goto("./apps")}>
-        <img src={Logo} alt="Logotype" />
+      <div class="branding">
+        <Logo />
       </div>
-      <Tabs selected={activeTab}>
-        {#each menu as { title, href }}
-          <Tab {title} on:click={() => $goto(href)} />
-        {/each}
-      </Tabs>
-      <div class="toolbar">
-        <div class="mobile-toggle">
-          <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
-        </div>
-        <div class="mobile-logo">
-          <img
-            src={$organisation?.logoUrl || Logo}
-            alt={$organisation?.company || "Budibase"}
-          />
-        </div>
-        {#if !$adminStore.cloud && $auth.isAdmin}
-          <Button cta on:click={() => $goto("/builder/portal/account/upgrade")}>
-            Upgrade
-          </Button>
-        {/if}
-        <div class="user-dropdown">
-          <ActionMenu align="right" dataCy="user-menu">
-            <div slot="control" class="avatar">
-              <Avatar
-                size="L"
-                initials={$auth.initials}
-                url={$auth.user.pictureUrl}
-              />
-              <Icon size="XL" name="ChevronDown" />
-            </div>
-            <MenuItem
-              icon="Moon"
-              on:click={() => themeModal.show()}
-              dataCy="theme"
-            >
-              Theme
-            </MenuItem>
-            <MenuItem
-              icon="UserEdit"
-              on:click={() => profileModal.show()}
-              dataCy="user-info"
-            >
-              My profile
-            </MenuItem>
-            <MenuItem
-              icon="LockClosed"
-              on:click={() => updatePasswordModal.show()}
-            >
-              Update password
-            </MenuItem>
-            <MenuItem
-              icon="Key"
-              on:click={() => apiKeyModal.show()}
-              dataCy="api-key"
-            >
-              View API key
-            </MenuItem>
-            <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
-              Close developer mode
-            </MenuItem>
-            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}>
-              Log out
-            </MenuItem>
-          </ActionMenu>
-        </div>
+      <div class="desktop">
+        <Tabs selected={activeTab}>
+          {#each menu as { title, href }}
+            <Tab {title} on:click={() => $goto(href)} />
+          {/each}
+        </Tabs>
+      </div>
+      <div class="mobile">
+        <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
+      </div>
+      <div class="desktop">
+        <UpgradeButton />
+      </div>
+      <div class="dropdown">
+        <UserDropdown />
       </div>
     </div>
     <div class="main">
       <slot />
     </div>
+    <MobileMenu visible={mobileMenuVisible} {menu} on:close={hideMobileMenu} />
   </div>
-  <Modal bind:this={themeModal}>
-    <ThemeModal />
-  </Modal>
-  <Modal bind:this={profileModal}>
-    <ProfileModal />
-  </Modal>
-  <Modal bind:this={updatePasswordModal}>
-    <ChangePasswordModal />
-  </Modal>
-  <Modal bind:this={apiKeyModal}>
-    <APIKeyModal />
-  </Modal>
 {/if}
 
 <style>
@@ -227,54 +143,30 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: stretch;
+    align-items: center;
     border-bottom: var(--border-light);
-    padding: 0 20px;
+    padding: 0 24px;
     gap: 24px;
+    position: relative;
   }
+
+  /* Customise tabs appearance*/
   .nav :global(.spectrum-Tabs) {
     margin-bottom: -2px;
     padding: 7px 0;
+    flex: 1 1 auto;
+  }
+  .nav :global(.spectrum-Tabs-content) {
+    display: none;
   }
   .nav :global(.spectrum-Tabs-itemLabel) {
     font-weight: 600;
   }
+
   .branding {
     display: grid;
     place-items: center;
   }
-  .avatar {
-    display: grid;
-    grid-template-columns: auto auto;
-    place-items: center;
-    grid-gap: var(--spacing-s);
-  }
-  .avatar:hover {
-    cursor: pointer;
-    filter: brightness(110%);
-  }
-  .toolbar {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 24px;
-  }
-  .mobile-toggle,
-  .mobile-logo {
-    display: none;
-  }
-  .user-dropdown {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-  }
-  img {
-    width: 30px;
-    height: 30px;
-  }
-
   .main {
     flex: 1 1 auto;
     display: flex;
@@ -283,38 +175,29 @@
     align-items: stretch;
     overflow: auto;
   }
+  .mobile {
+    display: none;
+  }
+  .desktop {
+    display: contents;
+  }
 
   @media (max-width: 640px) {
-    .toolbar {
-      background: var(--background);
-      border-bottom: var(--border-light);
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-      padding: var(--spacing-m) calc(var(--spacing-xl) * 1.5);
+    .mobile {
+      display: contents;
     }
-
+    .desktop {
+      display: none;
+    }
     .nav {
+      flex: 0 0 52px;
+      justify-content: space-between;
+    }
+    .branding {
       position: absolute;
-      left: -250px;
-      height: 100%;
-      transition: left ease-in-out 230ms;
-      z-index: 100;
-    }
-    .nav.visible {
-      left: 0;
-      box-shadow: 0 0 80px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .mobile-toggle,
-    .mobile-logo {
-      display: block;
-    }
-
-    .mobile-toggle,
-    .user-dropdown {
-      flex: 0 1 0;
+      left: 50%;
+      top: 50%;
+      transform: translateX(-50%) translateY(-50%);
     }
   }
 </style>
