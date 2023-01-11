@@ -124,6 +124,11 @@ services:
   proxy:
     port: 10000
     replicaCount: 1
+    upstreams:
+      apps: 'http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}'
+      worker: 'http://worker-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.worker.port }}'
+      minio: 'http://minio-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.objectStore.port }}'
+      couchdb: 'http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}'
     resources: {}
 
   apps:
