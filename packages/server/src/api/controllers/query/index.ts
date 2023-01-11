@@ -4,13 +4,13 @@ import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
 import { invalidateDynamicVariables } from "../../../threads/utils"
-import { QUERY_THREAD_TIMEOUT } from "../../../environment"
+import env from "../../../environment"
 import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 const Runner = new Thread(ThreadType.QUERY, {
-  timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
+  timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
 })
 
 // simple function to append "readable" to all read queries

@@ -10,4 +10,4 @@ router.delete(
   controller.delete
 )
 
-export = router
+export default router

@@ -22,23 +22,6 @@ serviceAccount:
 
 podAnnotations: {}
 
-# appServiceAnnotations:
-#   co.elastic.logs/multiline.type: pattern
-#   co.elastic.logs/multiline.pattern: '^[[:space:]]'
-#   co.elastic.logs/multiline.negate: false
-#   co.elastic.logs/multiline.match: after
-
-# workerServiceAnnotations:
-#   co.elastic.logs/multiline.type: pattern
-#   co.elastic.logs/multiline.pattern: '^[[:space:]]'
-#   co.elastic.logs/multiline.negate: false
-#   co.elastic.logs/multiline.match: after
-
-# proxyServiceAnnotations:
-#  co.elastic.logs/module: nginx
-#  co.elastic.logs/fileset.stdout: access
-#  co.elastic.logs/fileset.stderr: error
-
 podSecurityContext:
   {}
   # fsGroup: 2000
@@ -141,6 +124,10 @@ services:
       minio: 'http://minio-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.objectStore.port }}'
       couchdb: 'http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}'
     resources: {}
+#    annotations:
+#      co.elastic.logs/module: nginx
+#      co.elastic.logs/fileset.stdout: access
+#      co.elastic.logs/fileset.stderr: error
 
   apps:
     port: 4002
@@ -148,11 +135,20 @@ services:
     logLevel: info
     resources: {}
 #    nodeDebug: "" # set the value of NODE_DEBUG
-
+#    annotations:
+#      co.elastic.logs/multiline.type: pattern
+#      co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#      co.elastic.logs/multiline.negate: false
+#      co.elastic.logs/multiline.match: after
   worker:
     port: 4003
     replicaCount: 1
     resources: {}
+#    annotations:
+#      co.elastic.logs/multiline.type: pattern
+#      co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#      co.elastic.logs/multiline.negate: false
+#      co.elastic.logs/multiline.match: after
 
   couchdb:
     enabled: true
