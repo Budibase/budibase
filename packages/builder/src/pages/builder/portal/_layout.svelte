@@ -288,7 +288,7 @@
 
   @media (max-width: 640px) {
     .nav {
-      flex: 0 0 64px;
+      flex: 0 0 52px;
     }
     .toolbar {
       display: flex;
