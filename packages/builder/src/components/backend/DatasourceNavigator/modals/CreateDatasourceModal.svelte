@@ -11,13 +11,14 @@
   import { onMount } from "svelte"
   import ICONS from "../icons"
   import { API } from "api"
-  import { IntegrationTypes } from "constants/backend"
+  import { IntegrationTypes, DatasourceTypes } from "constants/backend"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import GoogleDatasourceConfigModal from "components/backend/DatasourceNavigator/modals/GoogleDatasourceConfigModal.svelte"
   import { createRestDatasource } from "builderStore/datasource"
   import { goto } from "@roxi/routify"
   import ImportRestQueriesModal from "./ImportRestQueriesModal.svelte"
+  import DatasourceCard from "../_components/DatasourceCard.svelte"
 
   export let modal
   let integrations = {}
@@ -27,6 +28,10 @@
   let importModal
 
   $: showImportButton = false
+  $: customIntegrations = Object.entries(integrations).filter(
+    entry => entry[1].custom
+  )
+  $: sortedIntegrations = sortIntegrations(integrations)
 
   checkShowImport()
 
@@ -48,6 +53,9 @@
       config,
       schema: selected.datasource,
       auth: selected.auth,
+    }
+    if (selected.friendlyName) {
+      integration.name = selected.friendlyName
     }
     checkShowImport()
   }
@@ -92,6 +100,29 @@
     }
     integrations = newIntegrations
   }
+
+  function sortIntegrations(integrations) {
+    let integrationsArray = Object.entries(integrations)
+    function getTypeOrder(schema) {
+      if (schema.type === DatasourceTypes.API) {
+        return 1
+      }
+      if (schema.type === DatasourceTypes.RELATIONAL) {
+        return 2
+      }
+      return schema.type?.charCodeAt(0)
+    }
+
+    integrationsArray.sort((a, b) => {
+      let typeOrderA = getTypeOrder(a[1])
+      let typeOrderB = getTypeOrder(b[1])
+      if (typeOrderA === typeOrderB) {
+        return a[1].friendlyName?.localeCompare(b[1].friendlyName)
+      }
+      return typeOrderA < typeOrderB ? -1 : 1
+    })
+    return integrationsArray
+  }
 </script>
 
 <Modal bind:this={internalTableModal}>
@@ -119,7 +150,7 @@
 <Modal bind:this={modal}>
   <ModalContent
     disabled={!Object.keys(integration).length}
-    title="Add data source"
+    title="Add datasource"
     confirmText="Continue"
     showSecondaryButton={showImportButton}
     secondaryButtonText="Import"
@@ -148,38 +179,41 @@
     </Layout>
 
     <Layout noPadding gap="XS">
-      <Body size="S">Connect to an external data source</Body>
+      <Body size="S">Connect to an external datasource</Body>
       <div class="item-list">
-        {#each Object.entries(integrations).filter(([key]) => key !== IntegrationTypes.INTERNAL) as [integrationType, schema]}
-          <div
-            class:selected={integration.type === integrationType}
-            on:click={() => selectIntegration(integrationType)}
-            class="item hoverable"
-          >
-            <div class="item-body" class:with-type={!!schema.type}>
-              <svelte:component
-                this={ICONS[integrationType]}
-                height="20"
-                width="20"
-              />
-              <div class="text">
-                <Heading size="XXS">{schema.friendlyName}</Heading>
-                {#if schema.type}
-                  <Detail size="S">{schema.type || ""}</Detail>
-                {/if}
-              </div>
-            </div>
-          </div>
+        {#each sortedIntegrations.filter(([key, val]) => key !== IntegrationTypes.INTERNAL && !val.custom) as [integrationType, schema]}
+          <DatasourceCard
+            on:selected={evt => selectIntegration(evt.detail)}
+            {schema}
+            bind:integrationType
+            {integration}
+          />
         {/each}
       </div>
     </Layout>
+
+    {#if customIntegrations.length > 0}
+      <Layout noPadding gap="XS">
+        <Body size="S">Custom datasource</Body>
+        <div class="item-list">
+          {#each customIntegrations as [integrationType, schema]}
+            <DatasourceCard
+              on:selected={evt => selectIntegration(evt.detail)}
+              {schema}
+              bind:integrationType
+              {integration}
+            />
+          {/each}
+        </div>
+      </Layout>
+    {/if}
   </ModalContent>
 </Modal>
 
 <style>
   .item-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
     grid-gap: var(--spectrum-alias-grid-baseline);
   }
 
@@ -191,7 +225,6 @@
       var(--spectrum-alias-item-padding-m);
     background: var(--spectrum-alias-background-color-secondary);
     transition: background 0.13s ease-out;
-    border: solid var(--spectrum-alias-border-color);
     border-radius: 5px;
     box-sizing: border-box;
     border-width: 2px;

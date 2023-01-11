@@ -1,4 +1,5 @@
-import { Headers } from "./constants"
+import { Header } from "./constants"
+import env from "./environment"
 const correlator = require("correlation-id")
 
 const NonErrors = ["AccountError"]
@@ -32,20 +33,25 @@ export function logWarn(message: string) {
   console.warn(`bb-warn: ${message}`)
 }
 
-const setCorrelationHeader = (headers: any) => {
-  const correlationId = correlator.getId()
-  if (correlationId) {
-    headers[Headers.CORRELATION_ID] = correlationId
+export function pinoSettings() {
+  return {
+    prettyPrint: {
+      levelFirst: true,
+    },
+    level: env.LOG_LEVEL || "error",
+    autoLogging: {
+      ignore: (req: { url: string }) => req.url.includes("/health"),
+    },
   }
 }
 
-const correlation = {
-  setHeader: setCorrelationHeader,
+const setCorrelationHeader = (headers: any) => {
+  const correlationId = correlator.getId()
+  if (correlationId) {
+    headers[Header.CORRELATION_ID] = correlationId
+  }
 }
 
-export default {
-  logAlert,
-  logAlertWithInfo,
-  logWarn,
-  correlation,
+export const correlation = {
+  setHeader: setCorrelationHeader,
 }

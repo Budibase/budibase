@@ -64,7 +64,7 @@
     transition: color var(--spectrum-global-animation-duration-100, 130ms);
   }
   svg.hoverable:hover {
-    color: var(--spectrum-alias-icon-color-selected-hover);
+    color: var(--spectrum-alias-icon-color-selected-hover) !important;
     cursor: pointer;
   }
 
@@ -82,5 +82,10 @@
     max-width: 150px;
     transform: translateX(-50%);
     text-align: center;
+  }
+
+  .spectrum-Icon--sizeXS {
+    width: 10px;
+    height: 10px;
   }
 </style>

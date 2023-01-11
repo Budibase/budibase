@@ -45,6 +45,9 @@
       },
       [MessageTypes.CLOSE_SCREEN_MODAL]: () => {
         peekStore.actions.hidePeek()
+        if (message.data?.url) {
+          routeStore.actions.navigate(message.data.url)
+        }
       },
       [MessageTypes.INVALIDATE_DATASOURCE]: () => {
         proxyInvalidation(message.data)
@@ -58,7 +61,7 @@
     if (messageHandler) {
       messageHandler(message)
     } else {
-      console.warning("Unknown event type", message?.data?.type)
+      console.warn("Unknown event type", message?.data?.type)
     }
   }
 

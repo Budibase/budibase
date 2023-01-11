@@ -5,6 +5,7 @@
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
+  import ComponentInfoSection from "./ComponentInfoSection.svelte"
   import {
     getBindableProperties,
     getComponentBindableProperties,
@@ -28,7 +29,10 @@
 
 {#if $selectedComponent}
   {#key $selectedComponent._id}
-    <Panel {title} icon={componentDefinition.icon} borderLeft>
+    <Panel {title} icon={componentDefinition?.icon} borderLeft>
+      {#if componentDefinition.info}
+        <ComponentInfoSection {componentDefinition} />
+      {/if}
       <ComponentSettingsSection
         {componentInstance}
         {componentDefinition}

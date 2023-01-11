@@ -1,7 +1,7 @@
-#!/bin/bash 
+#!/bin/bash
 
 if [[ -z "${CI}" ]]; then
-  echo 'Cannot run insall.sh unless in CI'
+  echo 'Cannot run install.sh unless in CI'
   exit 0
 fi
 
@@ -18,6 +18,11 @@ git clone https://$PERSONAL_ACCESS_TOKEN@github.com/Budibase/budibase-pro.git
 if [[ -d "budibase-pro" ]]; then
   cd budibase-pro
 
+  if [[ -z "${BRANCH}" ]]; then
+    echo Using GITHUB_REF_NAME: $GITHUB_REF_NAME
+    export BRANCH=$GITHUB_REF_NAME
+  fi
+
   # Try to checkout the matching pro branch
   git checkout $BRANCH
 
@@ -30,5 +35,5 @@ if [[ -d "budibase-pro" ]]; then
   git pull
 
   echo "Initializing pro repo..."
-  yarn setup
+  yarn
 fi

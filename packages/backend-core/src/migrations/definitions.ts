@@ -11,23 +11,19 @@ export const DEFINITIONS: MigrationDefinition[] = [
   },
   {
     type: MigrationType.GLOBAL,
-    name: MigrationName.QUOTAS_1,
+    name: MigrationName.SYNC_QUOTAS,
   },
   {
     type: MigrationType.APP,
     name: MigrationName.APP_URLS,
   },
   {
-    type: MigrationType.GLOBAL,
-    name: MigrationName.DEVELOPER_QUOTA,
-  },
-  {
-    type: MigrationType.GLOBAL,
-    name: MigrationName.PUBLISHED_APP_QUOTA,
+    type: MigrationType.APP,
+    name: MigrationName.EVENT_APP_BACKFILL,
   },
   {
     type: MigrationType.APP,
-    name: MigrationName.EVENT_APP_BACKFILL,
+    name: MigrationName.TABLE_SETTINGS_LINKS_TO_ACTIONS,
   },
   {
     type: MigrationType.GLOBAL,

@@ -37,7 +37,7 @@ const FullScreenControl = L.Control.extend({
     this._fullScreenButton = this._createButton(
       options.fullScreenContent,
       options.fullScreenTitle,
-      "map-fullscreen",
+      "map-fullscreen map-svg-button",
       container,
       this._fullScreen
     )
@@ -87,7 +87,7 @@ const LocationControl = L.Control.extend({
     this._locationButton = this._createButton(
       options.locationContent,
       options.locationTitle,
-      "map-location",
+      "map-location map-svg-button",
       container,
       this._location
     )

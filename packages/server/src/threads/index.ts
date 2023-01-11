@@ -1,5 +1,5 @@
 import workerFarm from "worker-farm"
-import * as env from "../environment"
+import env from "../environment"
 
 export const ThreadType = {
   QUERY: "query",
@@ -106,5 +106,6 @@ export class Thread {
 
   static async shutdown() {
     await Thread.stopThreads()
+    console.log("Threads shutdown")
   }
 }

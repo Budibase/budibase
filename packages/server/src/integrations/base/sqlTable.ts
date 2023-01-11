@@ -1,10 +1,5 @@
 import { Knex, knex } from "knex"
-import { Table } from "../../definitions/common"
-import {
-  Operation,
-  QueryJson,
-  RenameColumn,
-} from "../../definitions/datasource"
+import { Operation, QueryJson, RenameColumn, Table } from "@budibase/types"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
@@ -45,6 +40,7 @@ function generateSchema(
       case FieldTypes.STRING:
       case FieldTypes.OPTIONS:
       case FieldTypes.LONGFORM:
+      case FieldTypes.BARCODEQR:
         schema.text(key)
         break
       case FieldTypes.NUMBER:
@@ -101,7 +97,9 @@ function generateSchema(
     const deletedColumns = Object.entries(oldTable.schema)
       .filter(
         ([key, schema]) =>
-          schema.type !== FieldTypes.LINK && table.schema[key] == null
+          schema.type !== FieldTypes.LINK &&
+          schema.type !== FieldTypes.FORMULA &&
+          table.schema[key] == null
       )
       .map(([key]) => key)
     deletedColumns.forEach(key => {
@@ -187,7 +185,7 @@ class SqlTableQueryBuilder {
           json.table,
           json.meta.tables,
           json.meta.table,
-          json.meta.renamed
+          json.meta.renamed!
         )
         break
       case Operation.DELETE_TABLE:

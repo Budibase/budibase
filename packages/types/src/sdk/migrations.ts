@@ -39,14 +39,14 @@ export interface MigrationOptions {
 
 export enum MigrationName {
   USER_EMAIL_VIEW_CASING = "user_email_view_casing",
-  QUOTAS_1 = "quotas_1",
   APP_URLS = "app_urls",
-  DEVELOPER_QUOTA = "developer_quota",
-  PUBLISHED_APP_QUOTA = "published_apps_quota",
   EVENT_APP_BACKFILL = "event_app_backfill",
   EVENT_GLOBAL_BACKFILL = "event_global_backfill",
   EVENT_INSTALLATION_BACKFILL = "event_installation_backfill",
   GLOBAL_INFO_SYNC_USERS = "global_info_sync_users",
+  TABLE_SETTINGS_LINKS_TO_ACTIONS = "table_settings_links_to_actions",
+  // increment this number to re-activate this migration
+  SYNC_QUOTAS = "sync_quotas_1",
 }
 
 export interface MigrationDefinition {

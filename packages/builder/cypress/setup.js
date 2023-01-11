@@ -1,16 +1,14 @@
 const cypressConfig = require("../cypress.json")
-const path = require("path")
-
-const tmpdir = path.join(require("os").tmpdir(), ".budibase")
 
 // normal development system
 const SERVER_PORT = cypressConfig.env.PORT
 const WORKER_PORT = cypressConfig.env.WORKER_PORT
 
-process.env.NODE_ENV = "cypress"
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = "cypress"
+}
 process.env.ENABLE_ANALYTICS = "0"
 process.env.JWT_SECRET = cypressConfig.env.JWT_SECRET
-process.env.COUCH_URL = `leveldb://${tmpdir}/.data/`
 process.env.SELF_HOSTED = 1
 process.env.WORKER_URL = `http://localhost:${WORKER_PORT}/`
 process.env.APPS_URL = `http://localhost:${SERVER_PORT}/`

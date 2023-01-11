@@ -13,9 +13,16 @@
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
   let skipFetch = false
+  let isValid = false
+
+  $: name =
+    IntegrationNames[datasource.type] || datasource.name || datasource.type
 
   async function saveDatasource() {
     try {
+      if (!datasource.name) {
+        datasource.name = name
+      }
       const resp = await save(datasource, skipFetch)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
@@ -32,7 +39,7 @@
 </script>
 
 <ModalContent
-  title={`Connect to ${IntegrationNames[datasource.type]}`}
+  title={`Connect to ${name}`}
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
   confirmText={datasource.plus
@@ -47,6 +54,7 @@
     return true
   }}
   size="L"
+  disabled={!isValid}
 >
   <Layout noPadding>
     <Body size="XS"
@@ -57,5 +65,6 @@
     schema={datasource.schema}
     bind:datasource
     creating={true}
+    on:valid={e => (isValid = e.detail)}
   />
 </ModalContent>

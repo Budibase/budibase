@@ -1,16 +1,16 @@
-const fetch = require("node-fetch")
-import { Headers, logging, tenancy } from "@budibase/backend-core"
-const { checkSlashesInUrl } = require("../utilities")
-const env = require("../environment")
+import fetch from "node-fetch"
+import { constants, tenancy, logging } from "@budibase/backend-core"
+import { checkSlashesInUrl } from "../utilities"
+import env from "../environment"
 
-const makeAppRequest = async (url: string, method: string, body: any) => {
+async function makeAppRequest(url: string, method: string, body: any) {
   if (env.isTest()) {
     return
   }
   const request: any = { headers: {} }
-  request.headers[Headers.API_KEY] = env.INTERNAL_API_KEY
+  request.headers[constants.Header.API_KEY] = env.INTERNAL_API_KEY
   if (tenancy.isTenantIdSet()) {
-    request.headers[Headers.TENANT_ID] = tenancy.getTenantId()
+    request.headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
   }
   if (body) {
     request.headers["Content-Type"] = "application/json"
@@ -24,7 +24,7 @@ const makeAppRequest = async (url: string, method: string, body: any) => {
   return fetch(checkSlashesInUrl(env.APPS_URL + url), request)
 }
 
-export const syncUserInApps = async (userId: string) => {
+export async function syncUserInApps(userId: string) {
   const response = await makeAppRequest(
     `/api/users/metadata/sync/${userId}`,
     "POST",

@@ -10,6 +10,15 @@ export const buildLicensingEndpoints = API => ({
   },
 
   /**
+   * Delete a self hosted license key
+   */
+  deleteLicenseKey: async () => {
+    return API.delete({
+      url: `/api/global/license/info`,
+    })
+  },
+
+  /**
    * Get the license info - metadata about the license including the
    * obfuscated license key.
    */

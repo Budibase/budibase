@@ -33,6 +33,7 @@
   export let showMenu = false
   export let bindings = []
   export let bindingDrawerLeft
+  export let allowHelpers = true
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -107,7 +108,7 @@
         placeholder={keyPlaceholder}
         readonly={readOnly}
         bind:value={field.name}
-        on:change={changed}
+        on:blur={changed}
       />
       {#if options}
         <Select bind:value={field.value} on:change={changed} {options} />
@@ -115,10 +116,14 @@
         <DrawerBindableInput
           {bindings}
           placeholder="Value"
-          on:change={e => (field.value = e.detail)}
+          on:blur={e => {
+            field.value = e.detail
+            changed()
+          }}
           disabled={readOnly}
           value={field.value}
           allowJS={false}
+          {allowHelpers}
           fillWidth={true}
           drawerLeft={bindingDrawerLeft}
         />
@@ -127,7 +132,7 @@
           placeholder={valuePlaceholder}
           readonly={readOnly}
           bind:value={field.value}
-          on:change={changed}
+          on:blur={changed}
         />
       {/if}
       {#if toggle}

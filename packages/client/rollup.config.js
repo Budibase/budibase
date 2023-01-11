@@ -27,6 +27,15 @@ export default {
       file: `./dist/budibase-client.js`,
     },
   ],
+  onwarn(warning, warn) {
+    if (
+      warning.code === "THIS_IS_UNDEFINED" ||
+      warning.code === "CIRCULAR_DEPENDENCY"
+    ) {
+      return
+    }
+    warn(warning)
+  },
   plugins: [
     alias({
       entries: [

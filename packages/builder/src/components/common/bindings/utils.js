@@ -18,10 +18,14 @@ export function addHBSBinding(value, caretPos, binding) {
   return value
 }
 
-export function addJSBinding(value, caretPos, binding) {
+export function addJSBinding(value, caretPos, binding, { helper } = {}) {
   binding = typeof binding === "string" ? binding : binding.path
   value = value == null ? "" : value
-  binding = `$("${binding}")`
+  if (!helper) {
+    binding = `$("${binding}")`
+  } else {
+    binding = `helpers.${binding}()`
+  }
   if (caretPos.start) {
     value =
       value.substring(0, caretPos.start) +

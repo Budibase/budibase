@@ -374,6 +374,11 @@
     min-height: 180px;
     min-width: 200px;
   }
+  .embedded-map :global(a.map-svg-button) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
   .embedded-map :global(.leaflet-top),
   .embedded-map :global(.leaflet-bottom) {
     z-index: 998;

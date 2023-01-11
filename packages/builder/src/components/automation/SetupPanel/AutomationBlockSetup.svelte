@@ -38,13 +38,15 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
+
   let webhookModal
   let drawer
-  let tempFilters = lookForFilters(schemaProperties) || []
   let fillWidth = true
   let codeBindingOpen = false
   let inputData
 
+  $: filters = lookForFilters(schemaProperties) || []
+  $: tempFilters = filters
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block || $automationStore.selectedBlock,
@@ -79,7 +81,7 @@
           automationStore.actions.addTestDataToAutomation({
             body: {
               [key]: e.detail,
-              ...$automationStore.selectedAutomation.automation.testData.body,
+              ...$automationStore.selectedAutomation.automation.testData?.body,
             },
           })
         }
@@ -113,16 +115,18 @@
 
     // Extract all outputs from all previous steps as available bindins
     let bindings = []
+    let loopBlockCount = 0
     for (let idx = 0; idx < blockIdx; idx++) {
-      let wasLoopBlock = allSteps[idx]?.stepId === ActionStepID.LOOP
+      let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
       let isLoopBlock =
         allSteps[idx]?.stepId === ActionStepID.LOOP &&
         allSteps.find(x => x.blockToLoop === block.id)
 
-      // If the previous block was a loop block, decerement the index so the following
+      // If the previous block was a loop block, decrement the index so the following
       // steps are in the correct order
       if (wasLoopBlock) {
-        blockIdx--
+        loopBlockCount++
+        continue
       }
 
       let schema = allSteps[idx]?.schema?.outputs?.properties ?? {}
@@ -143,8 +147,8 @@
           let runtimeName = isLoopBlock
             ? `loop.${name}`
             : block.name.startsWith("JS")
-            ? `steps[${idx}].${name}`
-            : `steps.${idx}.${name}`
+            ? `steps[${idx - loopBlockCount}].${name}`
+            : `steps.${idx - loopBlockCount}.${name}`
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
           return {
             label: runtime,
@@ -155,7 +159,7 @@
                 ? "Trigger outputs"
                 : isLoopBlock
                 ? "Loop Outputs"
-                : `Step ${idx} outputs`,
+                : `Step ${idx - loopBlockCount} outputs`,
             path: runtime,
           }
         })
@@ -220,15 +224,18 @@
       {:else if value.customType === "filters"}
         <ActionButton on:click={drawer.show}>Define filters</ActionButton>
         <Drawer bind:this={drawer} {fillWidth} title="Filtering">
-          <Button cta slot="buttons" on:click={() => saveFilters(key)}
-            >Save</Button
-          >
+          <Button cta slot="buttons" on:click={() => saveFilters(key)}>
+            Save
+          </Button>
           <FilterDrawer
             slot="body"
-            bind:filters={tempFilters}
+            {filters}
             {bindings}
             {schemaFields}
+            datasource={{ type: "table", tableId }}
             panel={AutomationBindingPanel}
+            fillWidth
+            on:change={e => (tempFilters = e.detail)}
           />
         </Drawer>
       {:else if value.customType === "password"}

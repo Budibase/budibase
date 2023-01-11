@@ -59,7 +59,6 @@
 
         // Use the currently selected role
         if (!screenAccessRole) {
-          console.log("NO ROLE")
           return
         }
         screen.routing.roleId = screenAccessRole
@@ -128,17 +127,13 @@
 
   // Handler for Datasource Screen Creation
   const completeDatasourceScreenCreation = async () => {
-    // // Handle template selection
-    if (selectedTemplates?.length > 1) {
-      // Autoscreens, so create immediately
-      const screens = selectedTemplates.map(template => {
-        let screenTemplate = template.create()
-        screenTemplate.datasource = template.datasource
-        screenTemplate.autoTableId = template.table
-        return screenTemplate
-      })
-      await createScreens({ screens, screenAccessRole })
-    }
+    const screens = selectedTemplates.map(template => {
+      let screenTemplate = template.create()
+      screenTemplate.datasource = template.datasource
+      screenTemplate.autoTableId = template.table
+      return screenTemplate
+    })
+    await createScreens({ screens, screenAccessRole })
   }
 
   const confirmScreenBlank = async ({ screenUrl }) => {

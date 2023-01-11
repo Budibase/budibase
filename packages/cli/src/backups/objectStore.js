@@ -1,14 +1,15 @@
+const { objectStore } = require("@budibase/backend-core")
+const fs = require("fs")
+const { join } = require("path")
+const { TEMP_DIR, MINIO_DIR } = require("./utils")
+const { progressBar } = require("../utils")
 const {
   ObjectStoreBuckets,
   ObjectStore,
   retrieve,
   uploadDirectory,
   makeSureBucketExists,
-} = require("@budibase/backend-core/objectStore")
-const fs = require("fs")
-const { join } = require("path")
-const { TEMP_DIR, MINIO_DIR } = require("./utils")
-const { progressBar } = require("../utils")
+} = objectStore
 
 const bucketList = Object.values(ObjectStoreBuckets)
 
@@ -16,15 +17,20 @@ exports.exportObjects = async () => {
   const path = join(TEMP_DIR, MINIO_DIR)
   fs.mkdirSync(path)
   let fullList = []
+  let errorCount = 0
   for (let bucket of bucketList) {
     const client = ObjectStore(bucket)
     try {
       await client.headBucket().promise()
     } catch (err) {
+      errorCount++
       continue
     }
     const list = await client.listObjectsV2().promise()
     fullList = fullList.concat(list.Contents.map(el => ({ ...el, bucket })))
+  }
+  if (errorCount === bucketList.length) {
+    throw new Error("Unable to access MinIO/S3 - check environment config.")
   }
   const bar = progressBar(fullList.length)
   let count = 0

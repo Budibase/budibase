@@ -1,10 +1,8 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
-const {
-  BUILTIN_PERMISSION_IDS,
-} = require("@budibase/backend-core/permissions")
+const { roles, events, permissions } = require("@budibase/backend-core")
 const setup = require("./utilities")
 const { basicRole } = setup.structures
-const { events } = require("@budibase/backend-core")
+const { BUILTIN_ROLE_IDS } = roles
+const { BuiltinPermissionID } = permissions
 
 describe("/roles", () => {
   let request = setup.getRequest()
@@ -76,18 +74,18 @@ describe("/roles", () => {
       const adminRole = res.body.find(r => r._id === BUILTIN_ROLE_IDS.ADMIN)
       expect(adminRole).toBeDefined()
       expect(adminRole.inherits).toEqual(BUILTIN_ROLE_IDS.POWER)
-      expect(adminRole.permissionId).toEqual(BUILTIN_PERMISSION_IDS.ADMIN)
+      expect(adminRole.permissionId).toEqual(BuiltinPermissionID.ADMIN)
 
       const powerUserRole = res.body.find(r => r._id === BUILTIN_ROLE_IDS.POWER)
       expect(powerUserRole).toBeDefined()
       expect(powerUserRole.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
-      expect(powerUserRole.permissionId).toEqual(BUILTIN_PERMISSION_IDS.POWER)
+      expect(powerUserRole.permissionId).toEqual(BuiltinPermissionID.POWER)
 
       const customRoleFetched = res.body.find(r => r._id === customRole._id)
       expect(customRoleFetched).toBeDefined()
       expect(customRoleFetched.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
       expect(customRoleFetched.permissionId).toEqual(
-        BUILTIN_PERMISSION_IDS.READ_ONLY
+        BuiltinPermissionID.READ_ONLY
       )
     })
 
@@ -109,7 +107,7 @@ describe("/roles", () => {
     it("should delete custom roles", async () => {
       const customRole = await config.createRole({
         name: "user",
-        permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY,
+        permissionId: BuiltinPermissionID.READ_ONLY,
         inherits: BUILTIN_ROLE_IDS.BASIC,
       })
       delete customRole._rev_tree

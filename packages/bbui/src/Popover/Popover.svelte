@@ -11,6 +11,7 @@
   export let align = "right"
   export let portalTarget
   export let dataCy
+  export let maxWidth
 
   export let direction = "bottom"
   export let showTip = false
@@ -32,6 +33,13 @@
     open = false
   }
 
+  const handleOutsideClick = e => {
+    if (open) {
+      e.stopPropagation()
+      hide()
+    }
+  }
+
   let open = null
 
   function handleEscape(e) {
@@ -45,8 +53,8 @@
   <Portal target={portalTarget}>
     <div
       tabindex="0"
-      use:positionDropdown={{ anchor, align }}
-      use:clickOutside={hide}
+      use:positionDropdown={{ anchor, align, maxWidth }}
+      use:clickOutside={handleOutsideClick}
       on:keydown={handleEscape}
       class={"spectrum-Popover is-open " + (tooltipClasses || "")}
       role="presentation"
@@ -63,7 +71,8 @@
 
 <style>
   .spectrum-Popover {
-    min-width: var(--spectrum-global-dimension-size-2000) !important;
+    min-width: var(--spectrum-global-dimension-size-2000);
+    border-color: var(--spectrum-global-color-gray-300);
   }
   .spectrum-Popover.is-open.spectrum-Popover--withTip {
     margin-top: var(--spacing-xs);

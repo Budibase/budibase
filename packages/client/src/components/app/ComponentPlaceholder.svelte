@@ -2,28 +2,25 @@
   import { getContext } from "svelte"
   import { builderStore } from "stores"
 
-  const { styleable } = getContext("sdk")
   const component = getContext("component")
 
   $: requiredSetting = $component.missingRequiredSettings?.[0]
 </script>
 
 {#if $builderStore.inBuilder && requiredSetting}
-  <div use:styleable={$component.styles}>
-    <div class="component-placeholder">
-      <span>
-        Add the <mark>{requiredSetting.label}</mark> setting to start using your
-        component -
-      </span>
-      <span
-        class="spectrum-Link"
-        on:click={() => {
-          builderStore.actions.highlightSetting(requiredSetting.key)
-        }}
-      >
-        Show me
-      </span>
-    </div>
+  <div class="component-placeholder">
+    <span>
+      Add the <mark>{requiredSetting.label}</mark> setting to start using your component
+      -
+    </span>
+    <span
+      class="spectrum-Link"
+      on:click={() => {
+        builderStore.actions.highlightSetting(requiredSetting.key)
+      }}
+    >
+      Show me
+    </span>
   </div>
 {/if}
 

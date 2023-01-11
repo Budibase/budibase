@@ -1,4 +1,4 @@
-export default function positionDropdown(element, { anchor, align }) {
+export default function positionDropdown(element, { anchor, align, maxWidth }) {
   let positionSide = "top"
   let maxHeight = 0
   let dimensions = getDimensions(anchor)
@@ -34,13 +34,24 @@ export default function positionDropdown(element, { anchor, align }) {
   }
 
   function calcLeftPosition() {
-    return align === "right"
-      ? dimensions.left + dimensions.width - dimensions.containerWidth
-      : dimensions.left
+    let left
+
+    if (align == "right") {
+      left = dimensions.left + dimensions.width - dimensions.containerWidth
+    } else if (align == "right-side") {
+      left = dimensions.left + dimensions.width
+    } else {
+      left = dimensions.left
+    }
+
+    return left
   }
 
   element.style.position = "absolute"
   element.style.zIndex = "9999"
+  if (maxWidth) {
+    element.style.maxWidth = `${maxWidth}px`
+  }
   element.style.minWidth = `${dimensions.width}px`
   element.style.maxHeight = `${maxHeight.toFixed(0)}px`
   element.style.transformOrigin = `center ${positionSide}`
@@ -54,10 +65,8 @@ export default function positionDropdown(element, { anchor, align }) {
       element.style.left = `${calcLeftPosition(dimensions).toFixed(0)}px`
     })
   })
-
   resizeObserver.observe(anchor)
   resizeObserver.observe(element)
-
   return {
     destroy() {
       resizeObserver.disconnect()

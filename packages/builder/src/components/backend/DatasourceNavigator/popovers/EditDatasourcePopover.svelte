@@ -1,10 +1,11 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { datasources, queries, tables } from "stores/backend"
+  import { datasources } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UpdateDatasourceModal from "components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
+  import { BUDIBASE_DATASOURCE_TYPE } from "constants/backend"
 
   export let datasource
 
@@ -13,23 +14,10 @@
 
   async function deleteDatasource() {
     try {
-      let wasSelectedSource = $datasources.selected
-      if (!wasSelectedSource && $queries.selected) {
-        const queryId = $queries.selected
-        wasSelectedSource = $datasources.list.find(ds =>
-          queryId.includes(ds._id)
-        )?._id
-      }
-      const wasSelectedTable = $tables.selected
+      const isSelected = datasource.selected || datasource.containsSelected
       await datasources.delete(datasource)
       notifications.success("Datasource deleted")
-      // Navigate to first index page if the source you are deleting is selected
-      const entities = Object.values(datasource?.entities || {})
-      if (
-        wasSelectedSource === datasource._id ||
-        (entities &&
-          entities.find(entity => entity._id === wasSelectedTable?._id))
-      ) {
+      if (isSelected) {
         $goto("./datasource")
       }
     } catch (error) {
@@ -42,7 +30,9 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Edit</MenuItem>
+  {#if datasource.type !== BUDIBASE_DATASOURCE_TYPE}
+    <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Edit</MenuItem>
+  {/if}
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 

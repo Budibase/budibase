@@ -37,7 +37,7 @@
   }
 </script>
 
-<Divider size="S" />
+<Divider />
 <div class="section-header">
   <div class="badge">
     <Heading size="S">Headers</Heading>
@@ -61,7 +61,7 @@
   </ActionButton>
 </div>
 
-<Divider size="S" />
+<Divider />
 <div class="section-header">
   <div class="badge">
     <Heading size="S">Authentication</Heading>
@@ -73,7 +73,7 @@
 </Body>
 <RestAuthenticationBuilder bind:configs={datasource.config.authConfigs} />
 
-<Divider size="S" />
+<Divider />
 <div class="section-header">
   <div class="badge">
     <Heading size="S">Variables</Heading>

@@ -20,6 +20,7 @@
   export let componentBindings = []
   export let nested = false
   export let highlighted = false
+  export let info = null
 
   $: nullishValue = value == null || value === ""
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
@@ -94,11 +95,15 @@
       bindings={allBindings}
       name={key}
       text={label}
+      {nested}
       {key}
       {type}
       {...props}
     />
   </div>
+  {#if info}
+    <div class="text">{@html info}</div>
+  {/if}
 </div>
 
 <style>
@@ -122,5 +127,10 @@
   }
   .control {
     position: relative;
+  }
+  .text {
+    margin-top: var(--spectrum-global-dimension-size-65);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--grey-6);
   }
 </style>

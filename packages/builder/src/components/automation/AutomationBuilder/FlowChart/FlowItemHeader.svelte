@@ -9,6 +9,7 @@
   export let showParameters = {}
   export let testResult
   export let isTrigger
+  export let idx
 
   $: {
     if (!testResult) {
@@ -64,7 +65,7 @@
           width="28px"
           height="28px"
           class="spectrum-Icon"
-          style="color:grey;"
+          style="color:var(--spectrum-global-color-gray-700);"
           focusable="false"
         >
           <use xlink:href="#spectrum-icon-18-{block.icon}" />
@@ -72,11 +73,12 @@
       {/if}
       <div class="iconAlign">
         {#if isTrigger}
+          <Body size="XS"><b>Trigger</b></Body>
           <Body size="XS">When this happens:</Body>
         {:else}
+          <Body size="XS"><b>Step {idx}</b></Body>
           <Body size="XS">Do this:</Body>
         {/if}
-
         <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
       </div>
     </div>

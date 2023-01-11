@@ -1,30 +1,41 @@
 <script>
   import {
-    TextArea,
     DetailSummary,
     ActionButton,
     Drawer,
-    DrawerContent,
-    Layout,
-    Body,
     Button,
     notifications,
   } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { selectedScreen, store } from "builderStore"
+  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  import {
+    getBindableProperties,
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "builderStore/dataBinding"
 
   export let componentInstance
 
   let tempValue
   let drawer
 
+  $: bindings = getBindableProperties(
+    $selectedScreen,
+    $store.selectedComponentId
+  )
+
   const openDrawer = () => {
-    tempValue = componentInstance?._styles?.custom
+    tempValue = runtimeToReadableBinding(
+      bindings,
+      componentInstance?._styles?.custom
+    )
     drawer.show()
   }
 
   const save = async () => {
     try {
-      await store.actions.components.updateCustomStyle(tempValue)
+      const value = readableToRuntimeBinding(bindings, tempValue)
+      await store.actions.components.updateCustomStyle(value)
     } catch (error) {
       notifications.error("Error updating custom style")
     }
@@ -42,26 +53,17 @@
 </DetailSummary>
 {#key componentInstance?._id}
   <Drawer bind:this={drawer} title="Custom CSS">
+    <svelte:fragment slot="description">
+      Custom CSS overrides all other component styles.
+    </svelte:fragment>
     <Button cta slot="buttons" on:click={save}>Save</Button>
-    <DrawerContent slot="body">
-      <div class="content">
-        <Layout gap="S" noPadding>
-          <Body size="S">Custom CSS overrides all other component styles.</Body>
-          <TextArea bind:value={tempValue} placeholder="Enter some CSS..." />
-        </Layout>
-      </div>
-    </DrawerContent>
+    <svelte:component
+      this={ClientBindingPanel}
+      slot="body"
+      value={tempValue}
+      on:change={event => (tempValue = event.detail)}
+      allowJS
+      {bindings}
+    />
   </Drawer>
 {/key}
-
-<style>
-  .content {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  .content :global(textarea) {
-    font-family: monospace;
-    min-height: 240px !important;
-    font-size: var(--font-size-s);
-  }
-</style>

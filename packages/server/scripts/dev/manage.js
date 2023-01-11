@@ -2,12 +2,6 @@
 const compose = require("docker-compose")
 const path = require("path")
 const fs = require("fs")
-const isWsl = require("is-wsl")
-const { processStringSync } = require("@budibase/string-templates")
-
-function isLinux() {
-  return !isWsl && process.platform !== "darwin" && process.platform !== "win32"
-}
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {
@@ -23,16 +17,6 @@ const Commands = {
 }
 
 async function init() {
-  // generate nginx file, always do this incase it has changed
-  const hostingPath = path.join(process.cwd(), "..", "..", "hosting")
-  const nginxHbsPath = path.join(hostingPath, "nginx.dev.conf.hbs")
-  const nginxOutputPath = path.join(hostingPath, ".generated-nginx.dev.conf")
-  const contents = fs.readFileSync(nginxHbsPath, "utf8")
-  const config = {
-    address: isLinux() ? "172.17.0.1" : "host.docker.internal",
-  }
-  fs.writeFileSync(nginxOutputPath, processStringSync(contents, config))
-
   const envFilePath = path.join(process.cwd(), ".env")
   if (!fs.existsSync(envFilePath)) {
     const envFileJson = {
@@ -58,6 +42,8 @@ async function init() {
       DEPLOYMENT_ENVIRONMENT: "development",
       BB_ADMIN_USER_EMAIL: "",
       BB_ADMIN_USER_PASSWORD: "",
+      PLUGINS_DIR: "",
+      TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {
@@ -71,6 +57,9 @@ async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
   await init()
   await compose.upAll(CONFIG)
+
+  // We always ensure to restart the proxy service in case of nginx conf changes
+  await compose.restartOne("proxy-service", CONFIG)
 }
 
 async function down() {

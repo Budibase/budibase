@@ -1,19 +1,23 @@
-const fetch = require("node-fetch")
-const env = require("../environment")
-const { checkSlashesInUrl } = require("./index")
-const { getProdAppID } = require("@budibase/backend-core/db")
-const { updateAppRole } = require("./global")
-const { getTenantId, isTenantIdSet } = require("@budibase/backend-core/tenancy")
-import { Headers, logging } from "@budibase/backend-core"
+import fetch from "node-fetch"
+import env from "../environment"
+import { checkSlashesInUrl } from "./index"
+import {
+  db as dbCore,
+  constants,
+  tenancy,
+  logging,
+} from "@budibase/backend-core"
+import { updateAppRole } from "./global"
+import { BBContext, User } from "@budibase/types"
 
-export function request(ctx: any, request: any) {
+export function request(ctx?: BBContext, request?: any) {
   if (!request.headers) {
     request.headers = {}
   }
   if (!ctx) {
-    request.headers[Headers.API_KEY] = env.INTERNAL_API_KEY
-    if (isTenantIdSet()) {
-      request.headers[Headers.TENANT_ID] = getTenantId()
+    request.headers[constants.Header.API_KEY] = env.INTERNAL_API_KEY
+    if (tenancy.isTenantIdSet()) {
+      request.headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
     }
   }
   if (request.body && Object.keys(request.body).length > 0) {
@@ -38,7 +42,7 @@ export function request(ctx: any, request: any) {
 async function checkResponse(
   response: any,
   errorMsg: string,
-  { ctx }: any = {}
+  { ctx }: { ctx?: BBContext } = {}
 ) {
   if (response.status !== 200) {
     let error
@@ -60,23 +64,27 @@ async function checkResponse(
 }
 
 // have to pass in the tenant ID as this could be coming from an automation
-export const sendSmtpEmail = async (
+export async function sendSmtpEmail(
   to: string,
   from: string,
   subject: string,
-  contents: any,
-  automation: any
-) => {
+  contents: string,
+  cc: string,
+  bcc: string,
+  automation: boolean
+) {
   // tenant ID will be set in header
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
-    request(null, {
+    request(undefined, {
       method: "POST",
       body: {
         email: to,
         from,
         contents,
         subject,
+        cc,
+        bcc,
         purpose: "custom",
         automation,
       },
@@ -85,7 +93,7 @@ export const sendSmtpEmail = async (
   return checkResponse(response, "send email")
 }
 
-export const getGlobalSelf = async (ctx: any, appId = null) => {
+export async function getGlobalSelf(ctx: BBContext, appId?: string) {
   const endpoint = `/api/global/self`
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
@@ -99,8 +107,8 @@ export const getGlobalSelf = async (ctx: any, appId = null) => {
   return json
 }
 
-export const removeAppFromUserRoles = async (ctx: any, appId: any) => {
-  const prodAppId = getProdAppID(appId)
+export async function removeAppFromUserRoles(ctx: BBContext, appId: string) {
+  const prodAppId = dbCore.getProdAppID(appId)
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
     request(ctx, {
@@ -110,7 +118,7 @@ export const removeAppFromUserRoles = async (ctx: any, appId: any) => {
   return checkResponse(response, "remove app role")
 }
 
-export const allGlobalUsers = async (ctx: any) => {
+export async function allGlobalUsers(ctx: BBContext) {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
     // we don't want to use API key when getting self
@@ -119,7 +127,7 @@ export const allGlobalUsers = async (ctx: any) => {
   return checkResponse(response, "get users", { ctx })
 }
 
-export const saveGlobalUser = async (ctx: any) => {
+export async function saveGlobalUser(ctx: BBContext) {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
     // we don't want to use API key when getting self
@@ -128,7 +136,7 @@ export const saveGlobalUser = async (ctx: any) => {
   return checkResponse(response, "save user", { ctx })
 }
 
-export const deleteGlobalUser = async (ctx: any) => {
+export async function deleteGlobalUser(ctx: BBContext) {
   const response = await fetch(
     checkSlashesInUrl(
       env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
@@ -136,10 +144,10 @@ export const deleteGlobalUser = async (ctx: any) => {
     // we don't want to use API key when getting self
     request(ctx, { method: "DELETE" })
   )
-  return checkResponse(response, "delete user", { ctx, body: ctx.request.body })
+  return checkResponse(response, "delete user", { ctx })
 }
 
-export const readGlobalUser = async (ctx: any) => {
+export async function readGlobalUser(ctx: BBContext): Promise<User> {
   const response = await fetch(
     checkSlashesInUrl(
       env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
@@ -150,22 +158,30 @@ export const readGlobalUser = async (ctx: any) => {
   return checkResponse(response, "get user", { ctx })
 }
 
-export const createAdminUser = async (
+export async function createAdminUser(
   email: string,
   password: string,
   tenantId: string
-) => {
+) {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users/init"),
-    request(null, { method: "POST", body: { email, password, tenantId } })
+    request(undefined, { method: "POST", body: { email, password, tenantId } })
   )
   return checkResponse(response, "create admin user")
 }
 
-export const getChecklist = async () => {
+export async function getChecklist() {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/configs/checklist"),
-    request(null, { method: "GET" })
+    request(undefined, { method: "GET" })
   )
   return checkResponse(response, "get checklist")
+}
+
+export async function generateApiKey(userId: string) {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + "/api/global/self/api_key"),
+    request(undefined, { method: "POST", body: { userId } })
+  )
+  return checkResponse(response, "generate API key")
 }

@@ -17,11 +17,20 @@
   $: selectedRoleId = selectedRole._id
   $: otherRoles = editableRoles.filter(role => role._id !== selectedRoleId)
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
+
+  $: hasUniqueRoleName = !otherRoles
+    ?.map(role => role.name)
+    ?.includes(selectedRole.name)
+
   $: valid =
     selectedRole.name &&
     selectedRole.inherits &&
     selectedRole.permissionId &&
     !builtInRoles.includes(selectedRole.name)
+
+  $: shouldDisableRoleInput =
+    builtInRoles.includes(selectedRole.name) &&
+    selectedRole.name?.toLowerCase() === selectedRoleId?.toLowerCase()
 
   const fetchBasePermissions = async () => {
     try {
@@ -99,7 +108,7 @@
   title="Edit Roles"
   confirmText={isCreating ? "Create" : "Save"}
   onConfirm={saveRole}
-  disabled={!valid}
+  disabled={!valid || !hasUniqueRoleName}
 >
   {#if errors.length}
     <ErrorsBox {errors} />
@@ -119,15 +128,16 @@
     <Input
       label="Name"
       bind:value={selectedRole.name}
-      disabled={builtInRoles.includes(selectedRole.name)}
+      disabled={shouldDisableRoleInput}
+      error={!hasUniqueRoleName ? "Select a unique role name." : null}
     />
     <Select
       label="Inherits Role"
       bind:value={selectedRole.inherits}
-      options={otherRoles}
+      options={selectedRole._id === "BASIC" ? $roles : otherRoles}
       getOptionValue={role => role._id}
       getOptionLabel={role => role.name}
-      disabled={builtInRoles.includes(selectedRole.name)}
+      disabled={shouldDisableRoleInput}
     />
     <Select
       label="Base Permissions"
@@ -135,11 +145,11 @@
       options={basePermissions}
       getOptionValue={x => x._id}
       getOptionLabel={x => x.name}
-      disabled={builtInRoles.includes(selectedRole.name)}
+      disabled={shouldDisableRoleInput}
     />
   {/if}
   <div slot="footer">
-    {#if !isCreating}
+    {#if !isCreating && !builtInRoles.includes(selectedRole.name)}
       <Button warning on:click={deleteRole}>Delete</Button>
     {/if}
   </div>

@@ -29,4 +29,13 @@ export const buildRoleEndpoints = API => ({
       url: "/api/roles",
     })
   },
+
+  /**
+   * Gets a list of roles within a specified app.
+   */
+  getRolesForApp: async appId => {
+    return await API.get({
+      url: `/api/global/roles/${appId}`,
+    })
+  },
 })

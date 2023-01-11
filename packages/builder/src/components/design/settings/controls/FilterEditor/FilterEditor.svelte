@@ -15,15 +15,15 @@
   export let bindings = []
 
   let drawer
-  let tempValue = value || []
 
-  $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource($currentAsset, dataSource)?.schema
+  $: tempValue = value
+  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: schema = getSchemaForDatasource($currentAsset, datasource)?.schema
   $: schemaFields = Object.values(schema || {})
 
-  const saveFilter = async () => {
+  async function saveFilter() {
     dispatch("change", tempValue)
-    notifications.success("Filters saved.")
+    notifications.success("Filters saved")
     drawer.hide()
   }
 </script>
@@ -33,8 +33,10 @@
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
   <FilterDrawer
     slot="body"
-    bind:filters={tempValue}
+    filters={value}
     {bindings}
     {schemaFields}
+    {datasource}
+    on:change={e => (tempValue = e.detail)}
   />
 </Drawer>

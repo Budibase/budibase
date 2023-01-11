@@ -272,6 +272,14 @@ describe("test the string helpers", () => {
     )
     expect(output).toBe("Hi!")
   })
+
+  it("should allow use of the ellipsis helper", async () => {
+    const output = await processString(
+      "{{ ellipsis \"adfasdfasdfasf\" 7 }}",
+      {},
+    )
+    expect(output).toBe("adfasdf…")
+  })
 })
 
 describe("test the comparison helpers", () => {

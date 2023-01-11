@@ -1,5 +1,5 @@
 const correlator = require("correlation-id")
-import { Headers } from "../constants"
+import { Header } from "../constants"
 import { v4 as uuid } from "uuid"
 import * as context from "../context"
 
@@ -64,7 +64,7 @@ const print = (fn: any, data: any[]) => {
 
 const logging = (ctx: any, next: any) => {
   // use the provided correlation id header if present
-  let correlationId = ctx.headers[Headers.CORRELATION_ID]
+  let correlationId = ctx.headers[Header.CORRELATION_ID]
   if (!correlationId) {
     correlationId = uuid()
   }
@@ -80,4 +80,4 @@ const logging = (ctx: any, next: any) => {
   })
 }
 
-export = logging
+export default logging

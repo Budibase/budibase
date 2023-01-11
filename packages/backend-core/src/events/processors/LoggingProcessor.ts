@@ -23,9 +23,11 @@ export default class LoggingProcessor implements EventProcessor {
       return
     }
     let timestampString = getTimestampString(timestamp)
-    console.log(
-      `[audit] [tenant=${identity.tenantId}] [identityType=${identity.type}] [identity=${identity.id}] ${timestampString} ${event} `
-    )
+    let message = `[audit] [tenant=${identity.tenantId}] [identityType=${identity.type}] [identity=${identity.id}] ${timestampString} ${event} `
+    if (env.isDev()) {
+      message = message + `[debug: [properties=${JSON.stringify(properties)}] ]`
+    }
+    console.log(message)
   }
 
   async identify(identity: Identity, timestamp?: string | number) {

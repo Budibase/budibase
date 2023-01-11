@@ -14,52 +14,52 @@ import { convertJSONSchemaToTableSchema } from "../utils/json"
  * For other types of datasource, this class is overridden and extended.
  */
 export default class DataFetch {
-  // API client
-  API = null
-
-  // Feature flags
-  featureStore = writable({
-    supportsSearch: false,
-    supportsSort: false,
-    supportsPagination: false,
-  })
-
-  // Config
-  options = {
-    datasource: null,
-    limit: 10,
-
-    // Search config
-    filter: null,
-    query: null,
-
-    // Sorting config
-    sortColumn: null,
-    sortOrder: "ascending",
-    sortType: null,
-
-    // Pagination config
-    paginate: true,
-  }
-
-  // State of the fetch
-  store = writable({
-    rows: [],
-    info: null,
-    schema: null,
-    loading: false,
-    loaded: false,
-    query: null,
-    pageNumber: 0,
-    cursor: null,
-    cursors: [],
-  })
-
   /**
    * Constructs a new DataFetch instance.
    * @param opts the fetch options
    */
   constructor(opts) {
+    // API client
+    this.API = null
+
+    // Feature flags
+    this.featureStore = writable({
+      supportsSearch: false,
+      supportsSort: false,
+      supportsPagination: false,
+    })
+
+    // Config
+    this.options = {
+      datasource: null,
+      limit: 10,
+
+      // Search config
+      filter: null,
+      query: null,
+
+      // Sorting config
+      sortColumn: null,
+      sortOrder: "ascending",
+      sortType: null,
+
+      // Pagination config
+      paginate: true,
+    }
+
+    // State of the fetch
+    this.store = writable({
+      rows: [],
+      info: null,
+      schema: null,
+      loading: false,
+      loaded: false,
+      query: null,
+      pageNumber: 0,
+      cursor: null,
+      cursors: [],
+    })
+
     // Merge options with their default values
     this.API = opts?.API
     this.options = {
@@ -117,7 +117,7 @@ export default class DataFetch {
    * Fetches a fresh set of data from the server, resetting pagination
    */
   async getInitialData() {
-    const { datasource, filter, sortColumn, paginate } = this.options
+    const { datasource, filter, paginate } = this.options
 
     // Fetch datasource definition and determine feature flags
     const definition = await this.getDefinition(datasource)
@@ -135,15 +135,24 @@ export default class DataFetch {
       return
     }
 
-    // Determine what sort type to use
-    if (!this.options.sortType) {
-      let sortType = "string"
-      if (sortColumn) {
-        const type = schema?.[sortColumn]?.type
-        sortType = type === "number" ? "number" : "string"
-      }
-      this.options.sortType = sortType
+    // If no sort order, default to descending
+    if (!this.options.sortOrder) {
+      this.options.sortOrder = "ascending"
     }
+
+    // If no sort column, use the first field in the schema
+    if (!this.options.sortColumn) {
+      this.options.sortColumn = Object.keys(schema)[0]
+    }
+    const { sortColumn } = this.options
+
+    // Determine what sort type to use
+    let sortType = "string"
+    if (sortColumn) {
+      const type = schema?.[sortColumn]?.type
+      sortType = type === "number" ? "number" : "string"
+    }
+    this.options.sortType = sortType
 
     // Build the lucene query
     let query = this.options.query
@@ -158,6 +167,8 @@ export default class DataFetch {
       schema,
       query,
       loading: true,
+      cursors: [],
+      cursor: null,
     }))
 
     // Actually fetch data
