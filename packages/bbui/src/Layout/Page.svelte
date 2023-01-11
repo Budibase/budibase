@@ -42,6 +42,7 @@
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
+    overflow-x: hidden;
   }
   .main {
     overflow: auto;
