@@ -1273,13 +1273,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.2.12-alpha.11":
-  version "2.2.12-alpha.11"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.12-alpha.11.tgz#4407563e2cf806b400d8fb01df46923e252f261e"
-  integrity sha512-ZLyE/o/RmRHoVwtGs7MdZyiBAiXSma70N/r5Ahyr/JWxumUSUFkIh/Pa1uij/SjSwlJ/+RFGbZxr7Vx7ThCg9g==
+"@budibase/backend-core@2.2.12-alpha.12":
+  version "2.2.12-alpha.12"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.12-alpha.12.tgz#faf5c7577cde33179b079215896cc5615085eaed"
+  integrity sha512-f/4Po2Lrw6svzGFoxqUCYkQAtNY64hFc/Y3X9ne4WDqn99NNU50YxtNiBFSsK1KzLrHwDB7jQfDBoCxrH+Zmcg==
   dependencies:
     "@budibase/nano" "10.1.1"
-    "@budibase/types" "2.2.12-alpha.11"
+    "@budibase/types" "2.2.12-alpha.12"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -1287,6 +1287,7 @@
     bcrypt "5.0.1"
     bcryptjs "2.4.3"
     bull "4.10.1"
+    correlation-id "4.0.0"
     dotenv "16.0.1"
     emitter-listener "1.1.2"
     ioredis "4.28.0"
@@ -1373,13 +1374,13 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
-"@budibase/pro@2.2.12-alpha.11":
-  version "2.2.12-alpha.11"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.12-alpha.11.tgz#ae15831bba07daba68870d10652556caeda2559b"
-  integrity sha512-1atNUPT/O6rwQIbwInoIulTjKJ0DMPwf0w+siuEvp+gJNRj0HtpeV+aR/DgptRvFbhBq9kNM30uv7jDSHW8xrw==
+"@budibase/pro@2.2.12-alpha.12":
+  version "2.2.12-alpha.12"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.12-alpha.12.tgz#4a2ae938240fb4dd65389bb83817dc480eba9f11"
+  integrity sha512-RPtdUDdIulQTHoLTGTIO2pw9mlF9adi6GC0zZLdMDXVMRWiekFxpncPQxF4aLgdNraiWkmWMnlPHpbvCOGXUZA==
   dependencies:
-    "@budibase/backend-core" "2.2.12-alpha.11"
-    "@budibase/types" "2.2.12-alpha.11"
+    "@budibase/backend-core" "2.2.12-alpha.12"
+    "@budibase/types" "2.2.12-alpha.12"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1404,10 +1405,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@2.2.12-alpha.11":
-  version "2.2.12-alpha.11"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.12-alpha.11.tgz#f3ee7fcf9f87ac49896796278b377928b021beff"
-  integrity sha512-jHx+rBGUDtVGy9V6jq0ftXJEJof48yh4Mc5O/GibR5Z8+imMniAQ3f38LlFChuc9P9Ch+RsG1LFLFUXX+3fw1w==
+"@budibase/types@2.2.12-alpha.12":
+  version "2.2.12-alpha.12"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.12-alpha.12.tgz#759671df216f37e6131897a31ba0e48a27c2c142"
+  integrity sha512-yMcxHpEYuFI9n5+srj3vU5x4nnGmnZv/AMAwLvvrQduShGZrageTMInUnn/dvIcbR6yauvxH4SXMdRiwywl2tw==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -5520,6 +5521,13 @@ core-util-is@^1.0.2, core-util-is@~1.0.0:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.3.tgz#a6042d3634c2b27e9328f837b965fac83808db85"
   integrity sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==
+
+correlation-id@4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/correlation-id/-/correlation-id-4.0.0.tgz#c1d3038e5f30d7bfeae5728ff96f27a7506bc2c0"
+  integrity sha512-WvXtJBlovvOBKqTz/YwWP2gm6CXJZJArfGimp9s/ehmhJMPFbmnPMQe3K60Q9idGNixMvKojMjleyDhZEFdHfg==
+  dependencies:
+    uuid "^8.3.1"
 
 cors@~2.8.5:
   version "2.8.5"
@@ -14802,7 +14810,7 @@ uuid@8.1.0:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.1.0.tgz#6f1536eb43249f473abc6bd58ff983da1ca30d8d"
   integrity sha512-CI18flHDznR0lq54xBycOVmphdCYnQLKn8abKn7PXUiKUGdEd+/l9LWNJmugXel4hXq7S+RMNl34ecyC9TntWg==
 
-uuid@8.3.2, uuid@^8.3.0, uuid@^8.3.2:
+uuid@8.3.2, uuid@^8.3.0, uuid@^8.3.1, uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
