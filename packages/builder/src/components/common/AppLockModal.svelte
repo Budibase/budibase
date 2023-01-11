@@ -63,7 +63,8 @@
       name="LockClosed"
       hoverable
       size={buttonSize}
-      on:click={() => {
+      on:click={e => {
+        e.stopPropagation()
         appLockModal.show()
       }}
     />

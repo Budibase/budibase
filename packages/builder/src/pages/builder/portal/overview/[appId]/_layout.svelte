@@ -120,7 +120,7 @@
         <Breadcrumb url={$url("../")} text="Apps" />
         <Breadcrumb text={app?.name} />
       </Breadcrumbs>
-      <Header title={app?.name}>
+      <Header title={app?.name} wrap={false}>
         <div slot="icon">
           <EditableIcon
             {app}
@@ -132,27 +132,45 @@
         </div>
         <div slot="buttons">
           <AppLockModal {app} />
-          <Button
-            size="M"
-            quiet
-            secondary
-            disabled={!isPublished}
-            on:click={viewApp}
-            dataCy="view-app"
-          >
-            View
-          </Button>
-          <Button
-            size="M"
-            cta
-            disabled={appLocked && !lockedByYou}
-            on:click={editApp}
-          >
-            Edit
-          </Button>
+          <span class="desktop">
+            <Button
+              size="M"
+              quiet
+              secondary
+              disabled={!isPublished}
+              on:click={viewApp}
+              dataCy="view-app"
+            >
+              View
+            </Button>
+          </span>
+          <span class="desktop">
+            <Button
+              size="M"
+              cta
+              disabled={appLocked && !lockedByYou}
+              on:click={editApp}
+            >
+              Edit
+            </Button>
+          </span>
           <ActionMenu align="right" dataCy="app-overview-menu-popover">
             <span slot="control" class="app-overview-actions-icon">
               <Icon hoverable name="More" />
+            </span>
+            <span class="mobile">
+              <MenuItem icon="Globe" disabled={!isPublished} on:click={viewApp}>
+                View
+              </MenuItem>
+            </span>
+            <span class="mobile">
+              <MenuItem
+                icon="Edit"
+                disabled={appLocked && !lockedByYou}
+                on:click={editApp}
+              >
+                Edit
+              </MenuItem>
             </span>
             <MenuItem
               on:click={() => exportApp({ published: false })}
@@ -177,7 +195,7 @@
           </ActionMenu>
         </div>
       </Header>
-      <Content>
+      <Content showMobileNav>
         <SideNav slot="side-nav">
           <SideNavItem
             text="Overview"
@@ -237,3 +255,15 @@
     />
   </ConfirmDialog>
 {/key}
+
+<style>
+  .desktop {
+    display: contents;
+  }
+
+  @media (max-width: 640px) {
+    .desktop {
+      display: none;
+    }
+  }
+</style>
