@@ -12,7 +12,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
   const accountsAPI = new AccountsAPIClient()
   const config = new TestConfiguration<Application>(api, accountsAPI)
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await config.setupAccountAndTenant()
   })
 
@@ -69,7 +69,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     await config.applications.unpublish(<string>app.appId)
   })
 
-  it("POST - Sync application before deployment", async () => {
+  it("Sync application before deployment", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
@@ -81,7 +81,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     })
   })
 
-  it("POST - Sync application after deployment", async () => {
+  it("Sync application after deployment", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
@@ -96,7 +96,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     })
   })
 
-  it("PUT - Update an application", async () => {
+  it("Update an application", async () => {
     const app = await config.applications.create(generateApp())
 
     config.applications.api.appId = app.appId
@@ -106,14 +106,14 @@ describe("Internal API - Application creation, update, publish and delete", () =
     })
   })
 
-  it("POST - Revert Changes without changes", async () => {
+  it("Revert Changes without changes", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
     await config.applications.revertUnpublished(<string>app.appId)
   })
 
-  it("POST - Revert Changes", async () => {
+  it("Revert Changes", async () => {
     const app = await config.applications.create(generateApp())
     config.applications.api.appId = app.appId
 
