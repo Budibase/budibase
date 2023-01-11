@@ -72,6 +72,7 @@
     background: var(--background);
     border-left: var(--border-light);
     width: 320px;
+    max-width: calc(100vw - 48px - 48px);
     overflow: auto;
     overflow-x: hidden;
     transform: translateX(100%);
