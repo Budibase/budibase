@@ -26,7 +26,7 @@
     [PluginSource.FILE]: [opt("File Upload")],
   }
   let file
-  let source = PluginSource.URL
+  let source = PluginSource.GITHUB
   let dynamicValues = {}
 
   let validation
