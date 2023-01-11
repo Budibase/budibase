@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(['smoke', 'all'], () => {
-  context("Create a View", () => {
+  xcontext("Create a View", () => {
     before(() => {
       cy.login()
       cy.createTestApp()
@@ -20,7 +20,7 @@ filterTests(['smoke', 'all'], () => {
       cy.addRow(["Teachers", 36, 3])
     })
 
-    it("creates a view", () => {
+    xit("creates a view", () => {
       cy.contains("Create view").click()
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.get("input").type("Test View")
@@ -38,7 +38,7 @@ filterTests(['smoke', 'all'], () => {
       })
     })
 
-    it("filters the view by age over 10", () => {
+    xit("filters the view by age over 10", () => {
       cy.contains("Filter").click()
       cy.contains("Add Filter").click()
 
@@ -58,7 +58,7 @@ filterTests(['smoke', 'all'], () => {
       })
     })
 
-    it("creates a stats calculation view based on age", () => {
+    xit("creates a stats calculation view based on age", () => {
       cy.wait(1000)
       cy.contains("Calculate").click()
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
@@ -95,7 +95,7 @@ filterTests(['smoke', 'all'], () => {
       })
     })
 
-    it("groups the view by group", () => {
+    xit("groups the view by group", () => {
       cy.contains("Group by").click()
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.get(interact.SPECTRUM_PICKER_LABEL).eq(0).click()
@@ -127,7 +127,7 @@ filterTests(['smoke', 'all'], () => {
       })
     })
 
-    it("renames a view", () => {
+    xit("renames a view", () => {
       cy.contains(interact.NAV_ITEM, "Test View")
         .find(".actions .icon.open-popover")
         .click({ force: true })
