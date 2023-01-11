@@ -354,11 +354,6 @@
     gap: var(--spacing-xl);
     flex-wrap: wrap;
   }
-  @media (max-width: 1000px) {
-    .img-logo {
-      display: none;
-    }
-  }
   .app-actions {
     display: flex;
     flex-direction: row;
@@ -387,5 +382,24 @@
   .img-size {
     width: 160px;
     height: 160px;
+  }
+
+  @media (max-width: 1000px) {
+    .img-logo {
+      display: none;
+    }
+  }
+  @media (max-width: 640px) {
+    .app-actions {
+      margin-top: var(--spacing-xl);
+      margin-bottom: calc(-1 * var(--spacing-m));
+    }
+    /*  Hide download apps icon */
+    .app-actions :global(> .spectrum-Icon) {
+      display: none;
+    }
+    .app-actions > :global(*) {
+      flex: 0 0 50%;
+    }
   }
 </style>
