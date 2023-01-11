@@ -1,7 +1,7 @@
 require("../../../tests")
 const context = require("../")
 const { DEFAULT_TENANT_ID } = require("../../constants")
-const env = require("../../environment")
+import env from "../../environment"
 
 describe("context", () => {
   describe("doInTenant", () => {
@@ -26,7 +26,7 @@ describe("context", () => {
 
       it("fails when no tenant id is set", () => {
         const test = () => {
-          let error
+          let error: any
           try {
             context.getTenantId()
           } catch (e) {
@@ -45,7 +45,7 @@ describe("context", () => {
 
       it("fails when no tenant db is set", () => {
         const test = () => {
-          let error
+          let error: any
           try {
             context.getGlobalDB()
           } catch (e) {

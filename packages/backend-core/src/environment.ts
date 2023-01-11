@@ -102,4 +102,4 @@ for (let [key, value] of Object.entries(environment)) {
   }
 }
 
-export = environment
+export default environment

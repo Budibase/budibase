@@ -14,7 +14,7 @@ import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { auth, logging, events, pinoSettings } from "@budibase/backend-core"
+import { auth, logging, events } from "@budibase/backend-core"
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"
@@ -36,7 +36,7 @@ app.keys = ["secret", "key"]
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
-app.use(logger(pinoSettings()))
+app.use(logger(logging.pinoSettings()))
 
 // authentication
 app.use(auth.passport.initialize())
@@ -82,7 +82,7 @@ const shutdown = () => {
   server.destroy()
 }
 
-export = server.listen(parseInt(env.PORT || "4002"), async () => {
+export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await redis.init()
 })

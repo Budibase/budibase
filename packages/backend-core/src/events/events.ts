@@ -1,6 +1,6 @@
 import { Event } from "@budibase/types"
 import { processors } from "./processors"
-import * as identification from "./identification"
+import identification from "./identification"
 import * as backfill from "./backfill"
 
 export const publishEvent = async (
