@@ -58,6 +58,7 @@ export default class AppApi {
   async create(body: any): Promise<Partial<App>> {
     const response = await this.api.post(`/applications`, { body })
     const json = await response.json()
+    console.log(json)
     expect(response).toHaveStatusCode(200)
     expect(json._id).toBeDefined()
     return json

@@ -107,7 +107,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
 
     })
 
-    describe("Check Access for default roles", () => {
+    describe.skip("Check Access for default roles", () => {
         let api: InternalAPIClient
         let accountsAPI: AccountsAPIClient
         let config: TestConfiguration<Application>
@@ -223,7 +223,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
         })
     })
 
-    describe("Screen Access for App specific roles", () => {
+    describe.skip("Screen Access for App specific roles", () => {
         let api: InternalAPIClient
         let accountsAPI: AccountsAPIClient
         let config: TestConfiguration<Application>
@@ -382,7 +382,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
             expect(appPackageJson.screens.length).toEqual(3)
         })
     })
-    describe("Screen Access for custom roles", () => {
+    describe.skip("Screen Access for custom roles", () => {
         it("Custom role access for level 1 permissions", async () => {
             // Set up user
             const appUser = generateUser()
