@@ -13,6 +13,8 @@ import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { db as dbCore, context, events } from "@budibase/backend-core"
 import { BBContext, Datasource, Row } from "@budibase/types"
+import sdk from "../../sdk"
+import { cloneDeep } from "lodash/fp"
 
 export async function fetch(ctx: BBContext) {
   // Get internal tables
@@ -61,7 +63,7 @@ export async function fetch(ctx: BBContext) {
 
 export async function buildSchemaFromDb(ctx: BBContext) {
   const db = context.getAppDB()
-  const datasource = await db.get(ctx.params.datasourceId)
+  const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   const tablesFilter = ctx.request.body.tablesFilter
 
   let { tables, error } = await buildSchemaHelper(datasource)
@@ -149,8 +151,8 @@ async function invalidateVariables(
 export async function update(ctx: BBContext) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
-  let datasource = await db.get(datasourceId)
-  const auth = datasource.config.auth
+  let datasource = await sdk.datasources.get(datasourceId)
+  const auth = datasource.config?.auth
   await invalidateVariables(datasource, ctx.request.body)
 
   const isBudibaseSource = datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
@@ -162,7 +164,7 @@ export async function update(ctx: BBContext) {
   datasource = { ...datasource, ...dataSourceBody }
   if (auth && !ctx.request.body.auth) {
     // don't strip auth config from DB
-    datasource.config.auth = auth
+    datasource.config!.auth = auth
   }
 
   const response = await db.put(datasource)
@@ -255,7 +257,7 @@ export async function destroy(ctx: BBContext) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
 
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId)
   // Delete all queries for the datasource
 
   if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
@@ -313,6 +315,7 @@ function updateError(error: any, newError: any, tables: string[]) {
 
 async function buildSchemaHelper(datasource: Datasource) {
   const Connector = await getIntegration(datasource.source)
+  datasource = await sdk.datasources.enrichDatasourceWithValues(datasource)
 
   // Connect to the DB and build the schema
   const connector = new Connector(datasource.config)

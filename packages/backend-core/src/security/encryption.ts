@@ -12,9 +12,9 @@ function stretchString(string: string, salt: Buffer) {
   return crypto.pbkdf2Sync(string, salt, ITERATIONS, STRETCH_LENGTH, "sha512")
 }
 
-export function encrypt(input: string) {
+export function encrypt(input: string, secret: string | undefined = SECRET) {
   const salt = crypto.randomBytes(RANDOM_BYTES)
-  const stretched = stretchString(SECRET!, salt)
+  const stretched = stretchString(secret!, salt)
   const cipher = crypto.createCipheriv(ALGO, stretched, salt)
   const base = cipher.update(input)
   const final = cipher.final()
@@ -22,10 +22,10 @@ export function encrypt(input: string) {
   return `${salt.toString("hex")}${SEPARATOR}${encrypted}`
 }
 
-export function decrypt(input: string) {
+export function decrypt(input: string, secret: string | undefined = SECRET) {
   const [salt, encrypted] = input.split(SEPARATOR)
   const saltBuffer = Buffer.from(salt, "hex")
-  const stretched = stretchString(SECRET!, saltBuffer)
+  const stretched = stretchString(secret!, saltBuffer)
   const decipher = crypto.createDecipheriv(ALGO, stretched, saltBuffer)
   const base = decipher.update(Buffer.from(encrypted, "hex"))
   const final = decipher.final()
