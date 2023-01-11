@@ -49,8 +49,6 @@
           )
         : true)
   )
-  $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
-  $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
 
   const enrichApps = (apps, user, sortBy) => {
@@ -309,7 +307,7 @@
             {/if}
           </div>
 
-          <div class="appTable" class:unlocked>
+          <div class="app-table">
             {#each filteredApps as app (app.appId)}
               <AppRow {app} {editApp} {appOverview} />
             {/each}
@@ -369,19 +367,14 @@
     gap: var(--spacing-xl);
   }
 
-  .appTable {
+  .app-table {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: 24px;
+    gap: var(--spacing-xl);
   }
 
-  @media (max-width: 640px) {
-    .appTable {
-      grid-template-columns: 1fr auto !important;
-    }
-  }
   .empty-wrapper {
     flex: 1 1 auto;
     height: 100%;

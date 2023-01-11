@@ -134,12 +134,6 @@
         <div class="mobile-toggle">
           <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
         </div>
-        <div class="mobile-logo">
-          <img
-            src={$organisation?.logoUrl || Logo}
-            alt={$organisation?.company || "Budibase"}
-          />
-        </div>
         {#if $adminStore.cloud && $auth?.user?.accountPortalAccess}
           <Button
             cta
@@ -236,11 +230,16 @@
     border-bottom: var(--border-light);
     padding: 0 20px;
     gap: 24px;
+    position: relative;
   }
   .nav :global(.spectrum-Tabs) {
     margin-bottom: -2px;
     padding: 7px 0;
   }
+  .nav :global(.spectrum-Tabs-content) {
+    display: none;
+  }
+
   .nav :global(.spectrum-Tabs-itemLabel) {
     font-weight: 600;
   }
@@ -291,8 +290,6 @@
 
   @media (max-width: 640px) {
     .toolbar {
-      background: var(--background);
-      border-bottom: var(--border-light);
       display: flex;
       flex-direction: row;
       justify-content: space-between;
@@ -300,20 +297,20 @@
       padding: var(--spacing-m) calc(var(--spacing-xl) * 1.5);
     }
 
-    .nav {
+    .branding {
       position: absolute;
-      left: -250px;
-      height: 100%;
-      transition: left ease-in-out 230ms;
-      z-index: 100;
+      left: 50%;
+      top: 50%;
+      transform: translateY(-50%) translateX(-50%);
     }
-    .nav.visible {
-      left: 0;
-      box-shadow: 0 0 80px 20px rgba(0, 0, 0, 0.3);
+    .nav :global(.spectrum-Tabs) {
+      display: none !important;
+    }
+    .toolbar :global(.spectrum-Button) {
+      display: none;
     }
 
-    .mobile-toggle,
-    .mobile-logo {
+    .mobile-toggle {
       display: block;
     }
 
