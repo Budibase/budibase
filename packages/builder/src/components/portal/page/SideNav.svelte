@@ -23,12 +23,4 @@
     color: var(--spectrum-global-color-gray-700);
     margin-bottom: var(--spacing-m);
   }
-
-  @media (max-width: 640px) {
-    .side-nav {
-      border-bottom: var(--border-light);
-      margin: 0 -24px;
-      padding: 0 24px 32px 24px;
-    }
-  }
 </style>

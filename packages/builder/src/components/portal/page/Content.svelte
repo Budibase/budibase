@@ -37,5 +37,10 @@
     .side-nav:not(.show-mobile) {
       display: none;
     }
+    .side-nav.show-mobile :global(.side-nav) {
+      border-bottom: var(--border-light);
+      margin: 0 -24px;
+      padding: 0 24px 32px 24px;
+    }
   }
 </style>
