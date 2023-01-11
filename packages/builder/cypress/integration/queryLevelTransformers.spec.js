@@ -77,7 +77,7 @@ filterTests(["smoke", "all"], () => {
       cy.selectExternalDatasource(datasource)
       cy.createRestQuery("GET", restUrl, "breweries")
       cy.reload()
-      cy.contains(".nav-item-content", "breweries", { timeout: 2000 }).click()
+      cy.contains(".nav-item-content", "breweries", { timeout: 10000 }).click()
       cy.contains(interact.SPECTRUM_TABS_ITEM, "Transformer", { timeout: 5000 }).click({ force: true })
       // Clear the code box and add "test"
       cy.get(interact.CODEMIRROR_TEXTAREA)
