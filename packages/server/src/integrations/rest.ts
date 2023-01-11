@@ -16,11 +16,11 @@ import {
 import { get } from "lodash"
 import * as https from "https"
 import qs from "querystring"
-const fetch = require("node-fetch")
-const { formatBytes } = require("../utilities")
-const { performance } = require("perf_hooks")
-const FormData = require("form-data")
-const { URLSearchParams } = require("url")
+import fetch from "node-fetch"
+import { formatBytes } from "../utilities"
+import { performance } from "perf_hooks"
+import FormData from "form-data"
+import { URLSearchParams } from "url"
 
 const BodyTypes = {
   NONE: "none",
@@ -204,12 +204,12 @@ class RestIntegration implements IntegrationBase {
 
       // Append page number or cursor param if configured
       if (pageParam && paginationValues.page != null) {
-        params.append(pageParam, paginationValues.page)
+        params.append(pageParam, paginationValues.page as string)
       }
 
       // Append page size param if configured
       if (sizeParam && paginationValues.limit != null) {
-        params.append(sizeParam, paginationValues.limit)
+        params.append(sizeParam, String(paginationValues.limit))
       }
 
       // Prepend query string with pagination params
@@ -280,7 +280,7 @@ class RestIntegration implements IntegrationBase {
       case BodyTypes.ENCODED:
         const params = new URLSearchParams()
         for (let [key, value] of Object.entries(object)) {
-          params.append(key, value)
+          params.append(key, value as string)
         }
         addPaginationToBody((key: string, value: any) => {
           params.append(key, value)

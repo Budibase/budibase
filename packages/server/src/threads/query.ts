@@ -9,11 +9,11 @@ import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
 
-const { isSQL } = require("../integrations/utils")
-const {
+import { isSQL } from "../integrations/utils"
+import {
   enrichQueryFields,
   interpolateSQL,
-} = require("../integrations/queries/sql")
+} from "../integrations/queries/sql"
 
 class QueryRunner {
   datasource: any

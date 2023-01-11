@@ -3,7 +3,7 @@ import { Operation, QueryJson, RenameColumn, Table } from "@budibase/types"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-const { FieldTypes, RelationshipTypes } = require("../../constants")
+import { FieldTypes, RelationshipTypes } from "../../constants"
 
 function generateSchema(
   schema: CreateTableBuilder,
