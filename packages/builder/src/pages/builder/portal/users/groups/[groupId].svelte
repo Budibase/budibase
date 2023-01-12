@@ -110,12 +110,6 @@
     }
   }
 
-  const getRoleLabel = appId => {
-    const roleId = group?.roles?.[apps.getProdAppID(appId)]
-    const role = $roles.find(x => x._id === roleId)
-    return role?.name || "Custom role"
-  }
-
   async function deleteGroup() {
     try {
       await groups.actions.delete(group)

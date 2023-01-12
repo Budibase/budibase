@@ -57,6 +57,7 @@
     email: {
       sortable: false,
       width: "2fr",
+      minWidth: "200px",
     },
     role: {
       sortable: false,
@@ -296,6 +297,8 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-xl);
   }
 
   .controls-right {
