@@ -385,7 +385,7 @@
       display: none;
     }
     .app-actions > :global(*) {
-      flex: 0 0 50%;
+      flex: 1 1 auto;
     }
   }
 </style>
