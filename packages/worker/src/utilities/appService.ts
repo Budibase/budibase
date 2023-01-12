@@ -30,3 +30,14 @@ export async function syncUserInApps(userId: string) {
     throw "Unable to sync user."
   }
 }
+
+export async function removeUserFromApp(userId: string, appId: string) {
+  const response = await makeAppRequest(
+    `/api/users/metadata/${userId}/app/${appId}`,
+    "DELETE",
+    undefined
+  )
+  if (response && response.status !== 200) {
+    throw "Unable to delete user from app."
+  }
+}

@@ -188,6 +188,10 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   }
 }
 
+function instanceOfUser(user: User | ThirdPartyUser): user is User {
+  return !!(user as User).roles
+}
+
 export const save = async (
   user: User | ThirdPartyUser,
   opts: SaveUserOpts = {}
@@ -257,6 +261,17 @@ export const save = async (
     }
   }
 
+  let appsToRemove: string[] = []
+  if (dbUser && instanceOfUser(user)) {
+    const newRoles = Object.keys(user.roles)
+    const existingRoles = Object.keys(dbUser.roles)
+
+    appsToRemove = existingRoles.filter(r => !newRoles.includes(r))
+    if (appsToRemove.length) {
+      console.log("Deleting access to apps", { appsToRemove })
+    }
+  }
+
   try {
     // save the user to db
     let response = await db.put(builtUser)
@@ -265,6 +280,11 @@ export const save = async (
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
     await addTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
+
+    for (const appId of appsToRemove) {
+      await apps.removeUserFromApp(_id, appId)
+    }
+
     // let server know to sync user
     await apps.syncUserInApps(_id)
 
