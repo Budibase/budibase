@@ -36,7 +36,7 @@
     },
     role: {
       displayName: "Access",
-      width: "160px",
+      width: "150px",
       borderLeft: true,
     },
   }
@@ -50,6 +50,8 @@
   let assignmentModal
   let appGroups
   let appUsers
+  let showAddUsers = false
+  let showAddGroups = false
 
   $: app = $overview.selectedApp
   $: devAppId = app.devId
@@ -153,6 +155,18 @@
     await usersFetch.refresh()
   }
 
+  const showUsersModal = () => {
+    showAddUsers = true
+    showAddGroups = false
+    assignmentModal.show()
+  }
+
+  const showGroupsModal = () => {
+    showAddUsers = false
+    showAddGroups = true
+    assignmentModal.show()
+  }
+
   setContext("roles", {
     updateRole,
     removeRole,
@@ -178,7 +192,7 @@
       <Layout noPadding gap="S">
         <div class="title">
           <Heading size="S">Users</Heading>
-          <Button secondary on:click={assignmentModal.show}>Assign user</Button>
+          <Button secondary on:click={showUsersModal}>Assign user</Button>
         </div>
         <Table
           customPlaceholder
@@ -207,9 +221,7 @@
       <Layout noPadding gap="S">
         <div class="title">
           <Heading size="S">Groups</Heading>
-          <Button secondary on:click={assignmentModal.show}>
-            Assign group
-          </Button>
+          <Button secondary on:click={showGroupsModal}>Assign group</Button>
         </div>
         <Table
           customPlaceholder
@@ -228,7 +240,13 @@
 </Layout>
 
 <Modal bind:this={assignmentModal}>
-  <AssignmentModal {app} {appUsers} on:update={usersFetch.refresh} />
+  <AssignmentModal
+    {app}
+    {appUsers}
+    on:update={usersFetch.refresh}
+    showGroups={showAddGroups}
+    showUsers={showAddUsers}
+  />
 </Modal>
 
 <style>

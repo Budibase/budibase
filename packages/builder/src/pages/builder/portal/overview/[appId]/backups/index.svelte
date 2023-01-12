@@ -90,7 +90,7 @@
     },
     actions: {
       displayName: null,
-      width: "5%",
+      width: "auto",
     },
   }
 
