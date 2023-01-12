@@ -6,16 +6,21 @@ export function createEnvVarsStore() {
 
   async function load() {
     // const envVars = await API.fetchEnvVars()
-
-    let testVars = ['blah', 'blah123']
-    const vars = testVars.map((name) => ({ name }))
+    let testVars = ["blah", "blah123"]
+    const vars = testVars.map(name => ({ name }))
     console.log(vars)
     set(vars)
+  }
+
+  async function create() {
+    const envVar = await API.createEnvVar()
+    update(envVars => [envVar, ...envVars])
   }
 
   return {
     subscribe,
     load,
+    create,
   }
 }
 

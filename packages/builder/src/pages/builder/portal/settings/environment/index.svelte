@@ -4,12 +4,9 @@
     Heading,
     Body,
     Button,
-    Select,
     Divider,
     Modal,
     ModalContent,
-    Search,
-    Page,
     Table,
     Input,
     Checkbox,
@@ -42,30 +39,28 @@
   })
 </script>
 
-<Page narrow>
-  <Layout noPadding>
-    <Layout gap="XS" noPadding>
-      <Heading size="M">Envrironment Variables</Heading>
-      <Body
-        >Add and manage environment variable for development and production</Body
-      >
-    </Layout>
-    <Divider size="S" />
-    <Layout noPadding>
-      <Table
-        {schema}
-        data={$envVars}
-        allowEditColumns={false}
-        allowEditRows={false}
-        allowSelectRows={false}
-        {customRenderers}
-      />
-    </Layout>
-    <div>
-      <Button on:click={modal.show} cta>Add Variable</Button>
-    </div>
+<Layout noPadding>
+  <Layout gap="XS" noPadding>
+    <Heading size="M">Envrironment Variables</Heading>
+    <Body
+      >Add and manage environment variable for development and production</Body
+    >
   </Layout>
-</Page>
+  <Divider size="S" />
+  <Layout noPadding>
+    <Table
+      {schema}
+      data={$envVars}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+      {customRenderers}
+    />
+  </Layout>
+  <div>
+    <Button on:click={modal.show} cta>Add Variable</Button>
+  </div>
+</Layout>
 
 <Modal bind:this={modal}>
   <ModalContent title="Add new environment variable">
