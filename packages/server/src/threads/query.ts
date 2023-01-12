@@ -10,10 +10,7 @@ import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
 
 import { isSQL } from "../integrations/utils"
-import {
-  enrichQueryFields,
-  interpolateSQL,
-} from "../integrations/queries/sql"
+import { enrichQueryFields, interpolateSQL } from "../integrations/queries/sql"
 
 class QueryRunner {
   datasource: any

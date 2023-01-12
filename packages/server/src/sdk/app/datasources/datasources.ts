@@ -1,13 +1,18 @@
 import { environmentVariables } from "@budibase/pro"
-import { context } from "@budibase/backend-core"
-import { processObject } from "@budibase/string-templates"
-import { Datasource } from "@budibase/types"
+import { context, db as dbCore } from "@budibase/backend-core"
+import { processObjectSync } from "@budibase/string-templates"
+import { AppEnvironment, Datasource } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 
 export async function enrichDatasourceWithValues(datasource: Datasource) {
+  const appId = context.getAppId()
+  const appEnv = dbCore.isDevAppID(appId)
+    ? AppEnvironment.DEVELOPMENT
+    : AppEnvironment.PRODUCTION
   const cloned = cloneDeep(datasource)
-  const envVars = await environmentVariables.fetchValues()
-  return (await processObject(cloned, envVars)) as Datasource
+  const envVars = await environmentVariables.fetchValues(appEnv)
+  const processed = processObjectSync(cloned, { env: envVars })
+  return processed as Datasource
 }
 
 export async function get(
