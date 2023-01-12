@@ -26,6 +26,11 @@
           url={$url("./organisation")}
           active={$isActive("./organisation")}
         />
+        <SideNavItem
+          text="Environment"
+          url={$url("./environment")}
+          active={$isActive("./environment")}
+        />
         {#if !$admin.cloud}
           <SideNavItem
             text="Version"
