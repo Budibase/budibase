@@ -1,38 +1,20 @@
 <script>
-  import { url, isActive } from "@roxi/routify"
+  import { isActive } from "@roxi/routify"
   import { Page } from "@budibase/bbui"
   import { Content, SideNav, SideNavItem } from "components/portal/page"
-  import { admin } from "stores/portal"
+  import { menu } from "stores/portal"
 
   $: wide = $isActive("./email/:template")
+  $: pages = $menu.find(x => x.title === "Settings").subPages
 </script>
 
 <Page>
   <Content narrow={!wide}>
     <div slot="side-nav">
       <SideNav>
-        <SideNavItem
-          text="Auth"
-          url={$url("./auth")}
-          active={$isActive("./auth")}
-        />
-        <SideNavItem
-          text="Email"
-          url={$url("./email")}
-          active={$isActive("./email")}
-        />
-        <SideNavItem
-          text="Organisation"
-          url={$url("./organisation")}
-          active={$isActive("./organisation")}
-        />
-        {#if !$admin.cloud}
-          <SideNavItem
-            text="Version"
-            url={$url("./version")}
-            active={$isActive("./version")}
-          />
-        {/if}
+        {#each pages as { title, href }}
+          <SideNavItem text={title} url={href} active={$isActive(href)} />
+        {/each}
       </SideNav>
     </div>
     <slot />
