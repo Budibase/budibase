@@ -77,31 +77,3 @@
   <CreateAppModal {template} />
 </Modal>
 <AppLimitModal bind:this={appLimitModal} />
-
-<style>
-  .title .welcome > .buttons {
-    padding-top: 30px;
-  }
-  .title {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--spacing-xl);
-    flex-wrap: wrap;
-  }
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacing-xl);
-    flex-wrap: wrap;
-  }
-  @media (max-width: 640px) {
-    .buttons {
-      flex-direction: row-reverse;
-      justify-content: flex-end;
-    }
-  }
-</style>

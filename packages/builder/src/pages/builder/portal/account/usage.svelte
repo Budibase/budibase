@@ -8,12 +8,11 @@
     Detail,
     Link,
     TooltipWrapper,
-    Page,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { admin, auth, licensing } from "../../../../stores/portal"
+  import { admin, auth, licensing } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
-  import { DashCard, Usage } from "../../../../components/usage"
+  import { DashCard, Usage } from "components/usage"
 
   let staticUsage = []
   let monthlyUsage = []
