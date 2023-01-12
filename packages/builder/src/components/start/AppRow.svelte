@@ -1,14 +1,35 @@
 <script>
-  import { Heading, Body, Button, Icon } from "@budibase/bbui"
+  import { Heading, Body, Button, Icon, notifications } from "@budibase/bbui"
   import AppLockModal from "../common/AppLockModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
+  import { goto } from "@roxi/routify"
 
   export let app
-  export let editApp
-  export let appOverview
+
+  const handleDefaultClick = () => {
+    if (window.innerWidth < 640) {
+      goToOverview()
+    } else {
+      goToBuilder()
+    }
+  }
+
+  const goToBuilder = () => {
+    if (app.lockedOther) {
+      notifications.error(
+        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
+      )
+      return
+    }
+    $goto(`../../app/${app.devId}`)
+  }
+
+  const goToOverview = () => {
+    $goto(`../overview/${app.devId}`)
+  }
 </script>
 
-<div class="app-row" on:click={() => editApp(app)}>
+<div class="app-row" on:click={handleDefaultClick}>
   <div class="title" data-cy={`${app.devId}`}>
     <div class="app-icon">
       <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
@@ -35,21 +56,12 @@
     <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
-  <div data-cy={`row_actions_${app.appId}`}>
-    <div class="app-row-actions">
-      <AppLockModal {app} buttonSize="M" />
-      <Button size="S" secondary on:click={() => appOverview(app)}>
-        Manage
-      </Button>
-      <Button
-        size="S"
-        primary
-        disabled={app.lockedOther}
-        on:click={() => editApp(app)}
-      >
-        Edit
-      </Button>
-    </div>
+  <div class="app-row-actions" data-cy={`row_actions_${app.appId}`}>
+    <AppLockModal {app} buttonSize="M" />
+    <Button size="S" secondary on:click={goToOverview}>Manage</Button>
+    <Button size="S" primary disabled={app.lockedOther} on:click={goToBuilder}>
+      Edit
+    </Button>
   </div>
 </div>
 
@@ -138,6 +150,9 @@
   @media (max-width: 640px) {
     .app-row {
       padding: 20px;
+    }
+    .app-row-actions {
+      display: none;
     }
   }
 </style>

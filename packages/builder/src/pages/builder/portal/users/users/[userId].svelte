@@ -8,8 +8,6 @@
     Heading,
     Body,
     Label,
-    List,
-    ListItem,
     Icon,
     Input,
     MenuItem,

@@ -263,6 +263,7 @@
                     orderMap[component.component]}
                   on:click={() => addComponent(component.component)}
                   on:mouseover={() => (selectedIndex = null)}
+                  on:focus
                 >
                   <Icon name={component.icon} />
                   <Body size="XS">{component.name}</Body>

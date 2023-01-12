@@ -2,16 +2,14 @@
   import { onMount, tick } from "svelte"
   import {
     Button,
-    Detail,
     Heading,
-    ActionButton,
     Body,
     Layout,
     notifications,
     Tabs,
     Tab,
   } from "@budibase/bbui"
-  import { goto, url } from "@roxi/routify"
+  import { url } from "@roxi/routify"
   import { email } from "stores/portal"
   import Editor from "components/integration/QueryEditor.svelte"
   import TemplateBindings from "./_components/TemplateBindings.svelte"

@@ -280,6 +280,9 @@
         styles[field] +=
           "border-right: 1px solid var(--spectrum-global-color-gray-200);"
       }
+      if (schema[field].minWidth) {
+        styles[field] += `min-width: ${schema[field].minWidth};`
+      }
     })
     return styles
   }
@@ -450,6 +453,7 @@
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: var(--spectrum-global-dimension-size-250);
+    overflow: auto;
   }
   .wrapper--quiet {
     --table-bg: var(--spectrum-alias-background-color-transparent);

@@ -178,20 +178,6 @@
     creatingApp = false
   }
 
-  const appOverview = app => {
-    $goto(`../overview/${app.devId}`)
-  }
-
-  const editApp = app => {
-    if (app.lockedOther) {
-      notifications.error(
-        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
-      )
-      return
-    }
-    $goto(`../../app/${app.devId}`)
-  }
-
   function createAppFromTemplateUrl(templateKey) {
     // validate the template key just to make sure
     const templateParts = templateKey.split("/")
@@ -309,7 +295,7 @@
 
           <div class="app-table">
             {#each filteredApps as app (app.appId)}
-              <AppRow {app} {editApp} {appOverview} />
+              <AppRow {app} />
             {/each}
           </div>
         </Layout>
@@ -399,7 +385,7 @@
       display: none;
     }
     .app-actions > :global(*) {
-      flex: 0 0 50%;
+      flex: 1 1 auto;
     }
   }
 </style>

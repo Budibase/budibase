@@ -36,7 +36,7 @@
     },
     role: {
       displayName: "Access",
-      width: "150px",
+      width: "160px",
       borderLeft: true,
     },
   }

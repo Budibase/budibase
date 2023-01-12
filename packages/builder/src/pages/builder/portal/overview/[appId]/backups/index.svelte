@@ -14,7 +14,6 @@
     Tags,
     Tag,
     Table,
-    Page,
   } from "@budibase/bbui"
   import { backups, licensing, auth, admin, overview } from "stores/portal"
   import { createPaginationStore } from "helpers/pagination"
@@ -223,29 +222,30 @@
     </div>
   {:else if loaded}
     <Layout noPadding gap="M" alignContent="start">
-      <div class="search">
-        <div class="select">
-          <Select
-            placeholder="All"
-            label="Type"
-            options={filters}
-            getOptionValue={filter => filter.value}
-            getOptionLabel={filter => filter.label}
-            bind:value={filterOpt}
+      <div class="controls">
+        <div class="search">
+          <div class="select">
+            <Select
+              placeholder="All"
+              label="Type"
+              options={filters}
+              getOptionValue={filter => filter.value}
+              getOptionLabel={filter => filter.label}
+              bind:value={filterOpt}
+            />
+          </div>
+          <DatePicker
+            range={true}
+            label="Date Range"
+            on:change={e => {
+              if (e.detail[0].length > 1) {
+                startDate = e.detail[0][0].toISOString()
+                endDate = e.detail[0][1].toISOString()
+              }
+            }}
           />
         </div>
-        <DatePicker
-          range={true}
-          label="Date Range"
-          on:change={e => {
-            if (e.detail[0].length > 1) {
-              startDate = e.detail[0][0].toISOString()
-              endDate = e.detail[0][1].toISOString()
-            }
-          }}
-        />
-
-        <div class="split-buttons">
+        <div>
           <ActionButton on:click={modal.show} icon="SaveAsFloppy">
             Create new backup
           </ActionButton>
@@ -291,15 +291,29 @@
     gap: var(--spacing-xl);
   }
 
+  .controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-end;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+
   .search {
+    flex: 1 1 auto;
     display: flex;
     gap: var(--spacing-xl);
-    width: 100%;
     align-items: flex-end;
+  }
+  .search :global(.spectrum-InputGroup) {
+    min-width: 100px;
   }
 
   .select {
     flex-basis: 160px;
+    width: 0;
+    min-width: 100px;
   }
 
   .pagination {
@@ -307,13 +321,6 @@
     flex-direction: row;
     justify-content: flex-end;
     margin-top: var(--spacing-xl);
-  }
-
-  .split-buttons {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex: 1;
   }
 
   .title {
