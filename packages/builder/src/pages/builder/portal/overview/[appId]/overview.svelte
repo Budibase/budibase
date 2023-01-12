@@ -180,7 +180,7 @@
               -
               <Link
                 on:click={() => {
-                  $goto("../version")
+                  $goto("./version")
                 }}
               >
                 Update
