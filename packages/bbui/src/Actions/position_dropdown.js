@@ -1,6 +1,10 @@
-export default function positionDropdown(element, { anchor, align, maxWidth }) {
+export default function positionDropdown(
+  element,
+  { anchor, align, maxWidth, useAnchorWidth }
+) {
   let positionSide = "top"
   let maxHeight = 0
+  let minWidth = 0
   let dimensions = getDimensions(anchor)
 
   function getDimensions() {
@@ -14,8 +18,7 @@ export default function positionDropdown(element, { anchor, align, maxWidth }) {
     const containerRect = element.getBoundingClientRect()
 
     let y
-
-    if (spaceAbove > spaceBelow) {
+    if (window.innerHeight - bottom < 100) {
       positionSide = "bottom"
       maxHeight = spaceAbove - 20
       y = window.innerHeight - spaceAbove + 5
@@ -23,6 +26,13 @@ export default function positionDropdown(element, { anchor, align, maxWidth }) {
       positionSide = "top"
       y = bottom + 5
       maxHeight = spaceBelow - 20
+    }
+
+    if (!maxWidth && useAnchorWidth) {
+      maxWidth = width
+    }
+    if (useAnchorWidth) {
+      minWidth = width
     }
 
     return {
@@ -36,9 +46,9 @@ export default function positionDropdown(element, { anchor, align, maxWidth }) {
   function calcLeftPosition() {
     let left
 
-    if (align == "right") {
+    if (align === "right") {
       left = dimensions.left + dimensions.width - dimensions.containerWidth
-    } else if (align == "right-side") {
+    } else if (align === "right-side") {
       left = dimensions.left + dimensions.width
     } else {
       left = dimensions.left
@@ -52,7 +62,9 @@ export default function positionDropdown(element, { anchor, align, maxWidth }) {
   if (maxWidth) {
     element.style.maxWidth = `${maxWidth}px`
   }
-  element.style.minWidth = `${dimensions.width}px`
+  if (minWidth) {
+    element.style.minWidth = `${minWidth}px`
+  }
   element.style.maxHeight = `${maxHeight.toFixed(0)}px`
   element.style.transformOrigin = `center ${positionSide}`
   element.style[positionSide] = `${dimensions[positionSide]}px`
