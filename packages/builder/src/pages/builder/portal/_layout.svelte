@@ -38,10 +38,6 @@
         title: "Plugins",
         href: "/builder/portal/plugins",
       },
-      {
-        title: "Environment",
-        href: "/builder/portal/environment",
-      },
     ]
 
     // Admin only pages
