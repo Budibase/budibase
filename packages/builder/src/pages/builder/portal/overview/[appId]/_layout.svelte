@@ -1,5 +1,5 @@
 <script>
-  import { url, isActive, params, goto } from "@roxi/routify"
+  import { url, isActive, goto } from "@roxi/routify"
   import {
     Page,
     Layout,
@@ -20,7 +20,7 @@
     Breadcrumb,
     Header,
   } from "components/portal/page"
-  import { apps, auth, groups, overview } from "stores/portal"
+  import { apps, auth, overview } from "stores/portal"
   import { AppStatus } from "constants"
   import analytics, { Events, EventSource } from "analytics"
   import { store } from "builderStore"
@@ -29,7 +29,7 @@
   import { API } from "api"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import ExportAppModal from "components/start/ExportAppModal.svelte"
-  import { syncURLToState } from "../../../../../helpers/urlStateSync"
+  import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
 
