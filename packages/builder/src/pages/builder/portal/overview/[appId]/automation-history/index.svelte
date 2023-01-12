@@ -27,7 +27,6 @@
 
   let pageInfo = createPaginationStore()
   let runHistory = null
-  let showPanel = false
   let selectedHistory = null
   let automationOptions = []
   let automationId = null
