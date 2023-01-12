@@ -340,7 +340,9 @@
   {:else if isManyToOne && toTable}
     <Select
       label={`Foreign Key (${toTable?.name})`}
-      options={Object.keys(toTable?.schema)}
+      options={Object.keys(toTable?.schema).filter(
+        field => toTable?.primary.indexOf(field) === -1
+      )}
       on:change={() => ($touched.foreign = true)}
       bind:error={errors.foreign}
       bind:value={fromRelationship.fieldName}
