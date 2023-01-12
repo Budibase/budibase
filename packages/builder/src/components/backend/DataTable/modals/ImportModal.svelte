@@ -40,11 +40,11 @@
   disabled={!allValid}
 >
   <Body size="S">
-    Import rows to an existing table from a CSV. Only columns from the CSV which
-    exist in the table will be imported.
+    Import rows to an existing table from a CSV or JSON file. Only columns from
+    the file which exist in the table will be imported.
   </Body>
   <Layout gap="XS" noPadding>
-    <Label grey extraSmall>CSV to import</Label>
+    <Label grey extraSmall>CSV or JSON file to import</Label>
     <TableDataImport {tableId} bind:rows bind:allValid bind:displayColumn />
   </Layout>
 </ModalContent>

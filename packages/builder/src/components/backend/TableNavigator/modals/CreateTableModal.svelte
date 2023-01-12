@@ -126,7 +126,9 @@
   </div>
   <div>
     <Layout gap="XS" noPadding>
-      <Label grey extraSmall>Create Table from CSV (Optional)</Label>
+      <Label grey extraSmall
+        >Create a Table from a CSV or JSON file (Optional)</Label
+      >
       <TableDataImport bind:rows bind:schema bind:allValid bind:displayColumn />
     </Layout>
   </div>

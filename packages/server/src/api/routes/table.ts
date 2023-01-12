@@ -67,10 +67,7 @@ router
    * structure, and the "updated", new column name should also be supplied. The schema should also be updated, this field
    * lets the server know that a field hasn't just been deleted, that the data has moved to a new name, this will fix
    * the rows in the table. This functionality is only available for internal tables.
-   * @apiParam (Body) {object} [dataImport] When creating an internal table it can be built from a CSV, by using the
-   * CSV validation endpoint. Send the CSV data to the validation endpoint, then put the results of that call
-   * into this property, along with the CSV and a table/rows will be built from it. This is not supported when updating
-   * or for external tables.
+   * @apiParam (Body) {object[]} [rows] When creating a table using a compatible data source, an array of objects to be imported into the new table can be provided.
    *
    * @apiParamExample {json} Example:
    * {
@@ -99,15 +96,7 @@ router
    *     "old": "columnName",
    *     "updated": "newColumnName",
    *   },
-   *   "dataImport": {
-   *     "csvString": "column\nvalue",
-   *     "primaryDisplay": "column",
-   *     "schema": {
-   *       "column": {
-   *         "type": "string"
-   *       }
-   *     }
-   *   }
+   *   "rows": []
    * }
    *
    * @apiSuccess {object} table The response body will contain the table structure after being cleaned up and
@@ -167,9 +156,7 @@ router
    *
    * @apiParam {string} tableId The ID of the table which the data should be imported to.
    *
-   * @apiParam (Body) {object} dataImport This is the same as the structure used when creating an internal table with
-   * a CSV, it will have the "schema" returned from the CSV validation endpoint and the "csvString" which is to be
-   * turned into rows.
+   * @apiParam (Body) {object[]} rows An array of objects representing the rows to be imported, key-value pairs not matching the table schema will be ignored.
    *
    * @apiSuccess {string} message A message stating that the data was imported successfully.
    */

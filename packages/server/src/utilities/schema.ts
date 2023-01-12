@@ -3,6 +3,7 @@ import { FieldTypes } from "../constants"
 interface SchemaColumn {
   readonly name: string
   readonly type: FieldTypes
+  readonly autocolumn?: boolean
 }
 
 interface Schema {
@@ -51,39 +52,42 @@ export function isSchema(schema: any): schema is Schema {
         typeof column === "object" &&
         typeof column.type === "string" &&
         Object.values(FieldTypes).includes(column.type as FieldTypes)
-        )
-      })
-    )
+      )
+    })
+  )
+}
+
+export function isRows(rows: any): rows is Rows {
+  return Array.isArray(rows) && rows.every(row => typeof row === "object")
+}
+
+export function validate(rows: Rows, schema: Schema): ValidationResults {
+  const results: ValidationResults = {
+    schemaValidation: {},
+    allValid: false,
+    invalidColumns: [],
   }
 
-  export function isRows(rows: any): rows is Rows {
-    return Array.isArray(rows) && rows.every(row => typeof row === "object")
-  }
+  rows.forEach(row => {
+    Object.entries(row).forEach(([columnName, columnData]) => {
+      const columnType = schema[columnName]?.type
+      const isAutoColumn = schema[columnName]?.autocolumn
 
-  export function validate(rows: Rows, schema: Schema): ValidationResults {
-    const results: ValidationResults = {
-      schemaValidation: {},
-      allValid: false,
-      invalidColumns: [],
-    }
-
-    rows.forEach(row => {
-      Object.entries(row).forEach(([columnName, columnData]) => {
-        const columnType = schema[columnName]?.type
-
-        // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
-        if (typeof columnType !== "string") {
-          results.invalidColumns.push(columnName)
-        }
-      else if (
+      // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
+      if (typeof columnType !== "string") {
+        results.invalidColumns.push(columnName)
+      } else if (
         // If there's no data for this field don't bother with further checks
         // If the field is already marked as invalid there's no need for further checks
         results.schemaValidation[columnName] === false ||
-        columnData == null
+        columnData == null ||
+        isAutoColumn
       ) {
         return
-      }
-      else if (columnType === FieldTypes.NUMBER && isNaN(Number(columnData))) {
+      } else if (
+        columnType === FieldTypes.NUMBER &&
+        isNaN(Number(columnData))
+      ) {
         // If provided must be a valid number
         results.schemaValidation[columnName] = false
       } else if (
@@ -112,7 +116,7 @@ export function parse(rows: Rows, schema: Schema): Rows {
     const parsedRow: Row = {}
 
     Object.entries(row).forEach(([columnName, columnData]) => {
-      if (!(columnName in schema)) {
+      if (!(columnName in schema) || schema[columnName]?.autocolumn) {
         // Objects can be present in the row data but not in the schema, so make sure we don't proceed in such a case
         return
       }

@@ -15,10 +15,7 @@ const created = async (count: number, timestamp?: string | number) => {
   await publishEvent(Event.ROWS_CREATED, properties, timestamp)
 }
 
-const imported = async (
-  table: Table,
-  count: number
-) => {
+const imported = async (table: Table, count: number) => {
   const properties: RowsImportedEvent = {
     tableId: table._id as string,
     count,
