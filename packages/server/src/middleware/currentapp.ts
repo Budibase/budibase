@@ -12,7 +12,7 @@ import env from "../environment"
 import { isWebhookEndpoint } from "./utils"
 import { BBContext } from "@budibase/types"
 
-export = async (ctx: BBContext, next: any) => {
+export default async (ctx: BBContext, next: any) => {
   // try to get the appID from the request
   let requestAppId = await utils.getAppIdFromCtx(ctx)
   // get app cookie if it exists

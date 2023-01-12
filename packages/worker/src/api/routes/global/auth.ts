@@ -85,4 +85,4 @@ router
   .get("/api/global/auth/oidc/callback", authController.oidcAuth)
   .get("/api/admin/auth/oidc/callback", authController.oidcAuth)
 
-export = router
+export default router

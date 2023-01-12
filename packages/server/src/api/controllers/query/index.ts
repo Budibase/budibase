@@ -4,12 +4,13 @@ import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
 import { invalidateDynamicVariables } from "../../../threads/utils"
-import { QUERY_THREAD_TIMEOUT } from "../../../environment"
+import env from "../../../environment"
 import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
+import sdk from "../../../sdk"
 
 const Runner = new Thread(ThreadType.QUERY, {
-  timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
+  timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
 })
 
 // simple function to append "readable" to all read queries
@@ -81,7 +82,7 @@ export async function save(ctx: any) {
   const db = context.getAppDB()
   const query = ctx.request.body
 
-  const datasource = await db.get(query.datasourceId)
+  const datasource = await sdk.datasources.get(query.datasourceId)
 
   let eventFn
   if (!query._id) {
@@ -126,9 +127,9 @@ function getAuthConfig(ctx: any) {
 }
 
 export async function preview(ctx: any) {
-  const db = context.getAppDB()
-
-  const datasource = await db.get(ctx.request.body.datasourceId)
+  const datasource = await sdk.datasources.get(ctx.request.body.datasourceId, {
+    withEnvVars: true,
+  })
   const query = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
@@ -201,7 +202,9 @@ async function execute(
   const db = context.getAppDB()
 
   const query = await db.get(ctx.params.queryId)
-  const datasource = await db.get(query.datasourceId)
+  const datasource = await sdk.datasources.get(query.datasourceId, {
+    withEnvVars: true,
+  })
 
   let authConfigCtx: any = {}
   if (!opts.isAutomation) {
@@ -266,18 +269,18 @@ export async function executeV2(
 const removeDynamicVariables = async (queryId: any) => {
   const db = context.getAppDB()
   const query = await db.get(queryId)
-  const datasource = await db.get(query.datasourceId)
-  const dynamicVariables = datasource.config.dynamicVariables
+  const datasource = await sdk.datasources.get(query.datasourceId)
+  const dynamicVariables = datasource.config?.dynamicVariables as any[]
 
   if (dynamicVariables) {
     // delete dynamic variables from the datasource
-    datasource.config.dynamicVariables = dynamicVariables.filter(
+    datasource.config!.dynamicVariables = dynamicVariables!.filter(
       (dv: any) => dv.queryId !== queryId
     )
     await db.put(datasource)
 
     // invalidate the deleted variables
-    const variablesToDelete = dynamicVariables.filter(
+    const variablesToDelete = dynamicVariables!.filter(
       (dv: any) => dv.queryId === queryId
     )
     await invalidateDynamicVariables(variablesToDelete)
@@ -289,7 +292,7 @@ export async function destroy(ctx: any) {
   const queryId = ctx.params.queryId
   await removeDynamicVariables(queryId)
   const query = await db.get(queryId)
-  const datasource = await db.get(query.datasourceId)
+  const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200

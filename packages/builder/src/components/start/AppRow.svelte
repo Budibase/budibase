@@ -8,41 +8,39 @@
   export let appOverview
 </script>
 
-<div class="app-row">
-  <div class="header">
-    <div class="title" data-cy={`${app.devId}`}>
-      <div class="app-icon">
-        <Icon
-          size="L"
-          name={app.icon?.name || "Apps"}
-          color={app.icon?.color}
-        />
-      </div>
-      <div class="name" data-cy="app-name-link" on:click={() => editApp(app)}>
-        <Heading size="S">
-          {app.name}
-        </Heading>
-      </div>
+<div class="app-row" on:click={() => editApp(app)}>
+  <div class="title" data-cy={`${app.devId}`}>
+    <div class="app-icon">
+      <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
     </div>
+    <div class="name" data-cy="app-name-link">
+      <Heading size="S">
+        {app.name}
+      </Heading>
+    </div>
+  </div>
 
-    <div class="updated">
-      {#if app.updatedAt}
-        {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
-          time: new Date().getTime() - new Date(app.updatedAt).getTime(),
-        })}
-      {:else}
-        Never updated
-      {/if}
-    </div>
+  <div class="updated">
+    {#if app.updatedAt}
+      {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+        time: new Date().getTime() - new Date(app.updatedAt).getTime(),
+      })}
+    {:else}
+      Never updated
+    {/if}
   </div>
 
   <div class="title app-status" class:deployed={app.deployed}>
     <Icon size="L" name={app.deployed ? "GlobeCheck" : "GlobeStrike"} />
-    <Body size="S">{`${window.origin}/app${app.url}`}</Body>
+    <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
   <div data-cy={`row_actions_${app.appId}`}>
     <div class="app-row-actions">
+      <AppLockModal {app} buttonSize="M" />
+      <Button size="S" secondary on:click={() => appOverview(app)}>
+        Manage
+      </Button>
       <Button
         size="S"
         primary
@@ -51,10 +49,6 @@
       >
         Edit
       </Button>
-      <Button size="S" secondary on:click={() => appOverview(app)}>
-        Manage
-      </Button>
-      <AppLockModal {app} buttonSize="M" />
     </div>
   </div>
 </div>
@@ -64,24 +58,29 @@
     background: var(--background);
     padding: 24px 32px;
     border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: var(--spacing-m);
-  }
-
-  .header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 35% 25% 15% auto;
     align-items: center;
+    gap: var(--spacing-m);
+    transition: border 130ms ease-out;
+    border: 1px solid transparent;
+  }
+  .app-row:hover {
+    cursor: pointer;
+    border-color: var(--spectrum-global-color-gray-300);
   }
 
   .updated {
     color: var(--spectrum-global-color-gray-700);
   }
 
+  .title,
+  .name {
+    flex: 1 1 auto;
+  }
+  .name {
+    width: 0;
+  }
   .title,
   .app-status {
     display: flex;
@@ -106,9 +105,8 @@
     gap: var(--spacing-m);
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: flex-end;
     align-items: center;
-    margin-top: var(--spacing-m);
   }
 
   .name {
@@ -120,15 +118,26 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .title :global(h1:hover) {
-    color: var(--spectrum-global-color-blue-600);
-    cursor: pointer;
-    transition: color 130ms ease;
-  }
 
+  @media (max-width: 1000px) {
+    .app-row {
+      grid-template-columns: 45% 30% auto;
+    }
+    .updated {
+      display: none;
+    }
+  }
+  @media (max-width: 800px) {
+    .app-row {
+      grid-template-columns: 1fr auto;
+    }
+    .app-status {
+      display: none;
+    }
+  }
   @media (max-width: 640px) {
-    .desktop {
-      display: none !important;
+    .app-row {
+      padding: 20px;
     }
   }
 </style>

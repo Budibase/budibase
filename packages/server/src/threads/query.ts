@@ -6,13 +6,11 @@ import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
+import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
 
-const { isSQL } = require("../integrations/utils")
-const {
-  enrichQueryFields,
-  interpolateSQL,
-} = require("../integrations/queries/sql")
+import { isSQL } from "../integrations/utils"
+import { enrichQueryFields, interpolateSQL } from "../integrations/queries/sql"
 
 class QueryRunner {
   datasource: any
@@ -166,7 +164,9 @@ class QueryRunner {
   async runAnotherQuery(queryId: string, parameters: any) {
     const db = context.getAppDB()
     const query = await db.get(queryId)
-    const datasource = await db.get(query.datasourceId)
+    const datasource = await sdk.datasources.get(query.datasourceId, {
+      withEnvVars: true,
+    })
     return new QueryRunner(
       {
         datasource,
