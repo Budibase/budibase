@@ -47,5 +47,10 @@ router
     authorized(PermissionType.USER, PermissionLevel.READ),
     controller.getFlags
   )
+  .delete(
+    "/api/users/metadata/:id/app/:prodAppId",
+    authorized(PermissionType.USER, PermissionLevel.WRITE),
+    controller.removeUserFromApp
+  )
 
 export default router

@@ -173,3 +173,35 @@ export async function getFlags(ctx: BBContext) {
   }
   ctx.body = doc
 }
+
+export async function removeUserFromApp(ctx: BBContext) {
+  const { id: userId, prodAppId } = ctx.params
+
+  const devAppId = dbCore.getDevelopmentAppID(prodAppId)
+  for (let appId of [prodAppId, devAppId]) {
+    if (!(await dbCore.dbExists(appId))) {
+      continue
+    }
+    await context.doInAppContext(appId, async () => {
+      const db = context.getAppDB()
+      const metadataId = generateUserMetadataID(userId)
+      let metadata
+      try {
+        metadata = await db.get(metadataId)
+      } catch (err) {
+        return
+      }
+
+      let combined = {
+        ...metadata,
+        status: constants.UserStatus.INACTIVE,
+        metadata: rolesCore.BUILTIN_ROLE_IDS.PUBLIC,
+      }
+
+      await db.put(combined)
+    })
+  }
+  ctx.body = {
+    message: `User ${userId} deleted from ${prodAppId} and ${"devapp"}.`,
+  }
+}
