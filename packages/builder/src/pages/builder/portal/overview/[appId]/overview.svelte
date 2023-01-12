@@ -16,14 +16,11 @@
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
   import { users, auth, apps, groups, overview } from "stores/portal"
-  import { createEventDispatcher } from "svelte"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
   import GroupIcon from "../../users/groups/_components/GroupIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
-
-  const dispatch = createEventDispatcher()
 
   let appEditor
   let unpublishModal
@@ -180,7 +177,7 @@
               -
               <Link
                 on:click={() => {
-                  $goto("../version")
+                  $goto("./version")
                 }}
               >
                 Update

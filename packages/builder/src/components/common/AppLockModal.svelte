@@ -141,8 +141,4 @@
     gap: var(--spacing-s);
     max-width: 175px;
   }
-  .lock-status-text {
-    font-weight: 400;
-    color: var(--spectrum-global-color-gray-800);
-  }
 </style>
