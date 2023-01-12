@@ -56,11 +56,6 @@
           href: "/builder/portal/plugins",
         },
         {
-          title: "Environment",
-          href: "/builder/portal/environment",
-        },
-
-        {
           title: "Settings",
           href: "/builder/portal/settings",
         },
