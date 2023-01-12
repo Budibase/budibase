@@ -27,7 +27,6 @@
 
   let pageInfo = createPaginationStore()
   let runHistory = null
-  let showPanel = false
   let selectedHistory = null
   let automationOptions = []
   let automationId = null
@@ -155,47 +154,47 @@
   </Layout>
   <Divider />
 
-  <div class="search">
-    <div class="select">
-      <Select
-        placeholder="All"
-        label="Status"
-        bind:value={status}
-        options={statusOptions}
-      />
-    </div>
-    <div class="select">
-      <Select
-        placeholder="All"
-        label="Automation"
-        bind:value={automationId}
-        options={automationOptions}
-      />
-    </div>
-    <div class="select">
-      <Select
-        placeholder="All"
-        label="Date range"
-        bind:value={timeRange}
-        options={timeOptions}
-        isOptionEnabled={x => {
-          if (licensePlan?.type === Constants.PlanType.FREE) {
-            return ["1-w", "30-d", "90-d"].indexOf(x.value) < 0
-          } else if (licensePlan?.type === Constants.PlanType.TEAM) {
-            return ["90-d"].indexOf(x.value) < 0
-          } else if (licensePlan?.type === Constants.PlanType.PRO) {
-            return ["30-d", "90-d"].indexOf(x.value) < 0
-          }
-          return true
-        }}
-      />
+  <div class="controls">
+    <div class="search">
+      <div class="select">
+        <Select
+          placeholder="All"
+          label="Status"
+          bind:value={status}
+          options={statusOptions}
+        />
+      </div>
+      <div class="select">
+        <Select
+          placeholder="All"
+          label="Automation"
+          bind:value={automationId}
+          options={automationOptions}
+        />
+      </div>
+      <div class="select">
+        <Select
+          placeholder="All"
+          label="Date range"
+          bind:value={timeRange}
+          options={timeOptions}
+          isOptionEnabled={x => {
+            if (licensePlan?.type === Constants.PlanType.FREE) {
+              return ["1-w", "30-d", "90-d"].indexOf(x.value) < 0
+            } else if (licensePlan?.type === Constants.PlanType.TEAM) {
+              return ["90-d"].indexOf(x.value) < 0
+            } else if (licensePlan?.type === Constants.PlanType.PRO) {
+              return ["30-d", "90-d"].indexOf(x.value) < 0
+            }
+            return true
+          }}
+        />
+      </div>
     </div>
     {#if (licensePlan?.type !== Constants.PlanType.ENTERPRISE && $auth.user.accountPortalAccess) || !$admin.cloud}
-      <div class="pro-upgrade">
-        <Button secondary on:click={$licensing.goToUpgradePage()}>
-          Get more history
-        </Button>
-      </div>
+      <Button secondary on:click={$licensing.goToUpgradePage()}>
+        Get more history
+      </Button>
     {/if}
   </div>
 
@@ -236,25 +235,29 @@
 {/if}
 
 <style>
+  .controls {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-xl);
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
   .search {
     display: flex;
     gap: var(--spacing-xl);
-    width: 100%;
-    align-items: flex-end;
+    align-items: flex-start;
+    flex: 1 0 auto;
+    max-width: 100%;
   }
   .select {
-    flex-basis: 150px;
+    flex: 1 1 0;
+    max-width: 150px;
+    min-width: 80px;
   }
   .pagination {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     margin-top: var(--spacing-xl);
-  }
-  .pro-upgrade {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex: 1;
   }
 </style>
