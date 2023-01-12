@@ -2,6 +2,7 @@
   import { Page } from "@budibase/bbui"
   import { SideNav, SideNavItem, Content } from "components/portal/page"
   import { isActive, url } from "@roxi/routify"
+  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 
   $: wide = $isActive("./users/index") || $isActive("./groups/index")
 </script>
@@ -15,11 +16,13 @@
           url={$url("./users")}
           active={$isActive("./users")}
         />
-        <SideNavItem
-          text="Groups"
-          url={$url("./groups")}
-          active={$isActive("./groups")}
-        />
+        {#if isEnabled(TENANT_FEATURE_FLAGS.USER_GROUPS)}
+          <SideNavItem
+            text="Groups"
+            url={$url("./groups")}
+            active={$isActive("./groups")}
+          />
+        {/if}
       </SideNav>
     </div>
     <slot />
