@@ -40,6 +40,7 @@ export function pinoSettings(): Options {
     prettyPrint: {
       levelFirst: true,
     },
+    genReqId: correlator.getId,
     level: env.LOG_LEVEL || "error",
     autoLogging: {
       ignore: (req: IncomingMessage) => !!req.url?.includes("/health"),
