@@ -38,7 +38,7 @@
       {/each}
     </SideNav>
     <div>
-      <UpgradeButton />
+      <UpgradeButton on:click={close} />
     </div>
   </Layout>
 </div>
