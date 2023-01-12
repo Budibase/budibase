@@ -14,6 +14,8 @@
 
   export let app
   export let appUsers = []
+  export let showUsers = false
+  export let showGroups = false
 
   const dispatch = createEventDispatcher()
   const usersFetch = fetchData({
@@ -41,7 +43,8 @@
   $: availableGroups = getAvailableGroups($groups, app.appId, search, data)
   $: valid = data?.length && !data?.some(x => !x.id?.length || !x.role?.length)
   $: optionSections = {
-    ...($licensing.groupsEnabled &&
+    ...(showGroups &&
+      $licensing.groupsEnabled &&
       availableGroups.length && {
         ["User groups"]: {
           data: availableGroups,
@@ -51,13 +54,15 @@
           getColour: group => group.color,
         },
       }),
-    users: {
-      data: availableUsers,
-      getLabel: user => user.email,
-      getValue: user => user._id,
-      getIcon: user => user.icon,
-      getColour: user => user.color,
-    },
+    ...(showUsers && {
+      users: {
+        data: availableUsers,
+        getLabel: user => user.email,
+        getValue: user => user._id,
+        getIcon: user => user.icon,
+        getColour: user => user.color,
+      },
+    }),
   }
 
   const addData = async appData => {
@@ -185,7 +190,7 @@
     </Layout>
   {/if}
   <div>
-    <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
+    <ActionButton on:click={addNewInput} icon="Add">Add more</ActionButton>
   </div>
 </ModalContent>
 
