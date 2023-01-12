@@ -42,6 +42,7 @@
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
+    overflow-x: hidden;
   }
   .main {
     overflow: auto;
@@ -57,10 +58,10 @@
     padding: 50px;
     z-index: 1;
   }
-  .wide {
+  .content.wide {
     max-width: none;
   }
-  .narrow {
+  .content.narrow {
     max-width: 840px;
   }
   #side-panel {
@@ -71,6 +72,7 @@
     background: var(--background);
     border-left: var(--border-light);
     width: 320px;
+    max-width: calc(100vw - 48px - 48px);
     overflow: auto;
     overflow-x: hidden;
     transform: translateX(100%);
@@ -80,5 +82,14 @@
   }
   #side-panel.visible {
     transform: translateX(0);
+  }
+
+  @media (max-width: 640px) {
+    .content {
+      padding: 24px;
+      max-width: calc(100vw - 48px) !important;
+      width: calc(100vw - 48px) !important;
+      overflow: auto;
+    }
   }
 </style>

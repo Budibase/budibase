@@ -276,4 +276,4 @@ class RedisWrapper {
   }
 }
 
-export = RedisWrapper
+export default RedisWrapper

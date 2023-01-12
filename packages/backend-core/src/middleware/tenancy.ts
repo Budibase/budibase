@@ -8,7 +8,7 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 
-export = function (
+export default function (
   allowQueryStringPatterns: EndpointMatcher[],
   noTenancyPatterns: EndpointMatcher[],
   opts: { noTenancyRequired?: boolean } = { noTenancyRequired: false }

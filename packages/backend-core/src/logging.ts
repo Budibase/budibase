@@ -1,3 +1,5 @@
+import env from "./environment"
+
 const NonErrors = ["AccountError"]
 
 function isSuppressed(e?: any) {
@@ -29,8 +31,14 @@ export function logWarn(message: string) {
   console.warn(`bb-warn: ${message}`)
 }
 
-export default {
-  logAlert,
-  logAlertWithInfo,
-  logWarn,
+export function pinoSettings() {
+  return {
+    prettyPrint: {
+      levelFirst: true,
+    },
+    level: env.LOG_LEVEL || "error",
+    autoLogging: {
+      ignore: (req: { url: string }) => req.url.includes("/health"),
+    },
+  }
 }

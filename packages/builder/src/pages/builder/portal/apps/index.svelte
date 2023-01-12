@@ -49,8 +49,6 @@
           )
         : true)
   )
-  $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
-  $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
 
   const enrichApps = (apps, user, sortBy) => {
@@ -309,7 +307,7 @@
             {/if}
           </div>
 
-          <div class="appTable" class:unlocked>
+          <div class="app-table">
             {#each filteredApps as app (app.appId)}
               <AppRow {app} {editApp} {appOverview} />
             {/each}
@@ -356,11 +354,6 @@
     gap: var(--spacing-xl);
     flex-wrap: wrap;
   }
-  @media (max-width: 1000px) {
-    .img-logo {
-      display: none;
-    }
-  }
   .app-actions {
     display: flex;
     flex-direction: row;
@@ -369,19 +362,15 @@
     gap: var(--spacing-xl);
   }
 
-  .appTable {
+  .app-table {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: 24px;
+    gap: var(--spacing-xl);
+    overflow: hidden;
   }
 
-  @media (max-width: 640px) {
-    .appTable {
-      grid-template-columns: 1fr auto !important;
-    }
-  }
   .empty-wrapper {
     flex: 1 1 auto;
     height: 100%;
@@ -393,5 +382,24 @@
   .img-size {
     width: 160px;
     height: 160px;
+  }
+
+  @media (max-width: 1000px) {
+    .img-logo {
+      display: none;
+    }
+  }
+  @media (max-width: 640px) {
+    .app-actions {
+      margin-top: var(--spacing-xl);
+      margin-bottom: calc(-1 * var(--spacing-m));
+    }
+    /*  Hide download apps icon */
+    .app-actions :global(> .spectrum-Icon) {
+      display: none;
+    }
+    .app-actions > :global(*) {
+      flex: 0 0 50%;
+    }
   }
 </style>

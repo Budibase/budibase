@@ -1,16 +1,18 @@
-const mockFetch = jest.fn(() => ({
-  headers: {
-    raw: () => {
-      return { "content-type": ["application/json"] }
+jest.mock("node-fetch", () => {
+  return jest.fn(() => ({
+    headers: {
+      raw: () => {
+        return { "content-type": ["application/json"] }
+      },
+      get: () => ["application/json"],
     },
-    get: () => ["application/json"],
-  },
-  json: jest.fn(() => ({
-    my_next_cursor: 123,
-  })),
-  text: jest.fn(),
-}))
-jest.mock("node-fetch", () => mockFetch)
+    json: jest.fn(() => ({
+      my_next_cursor: 123,
+    })),
+    text: jest.fn(),
+  }))
+})
+
 import fetch from "node-fetch"
 import { default as RestIntegration } from "../rest"
 const FormData = require("form-data")
@@ -579,7 +581,7 @@ describe("REST Integration", () => {
     })
     await config.integration.read({})
 
-    const calls: any = mockFetch.mock.calls[0]
+    const calls: any = fetch.mock.calls[0]
     const url = calls[0]
     expect(url).toBe(`${BASE_URL}/`)
 
