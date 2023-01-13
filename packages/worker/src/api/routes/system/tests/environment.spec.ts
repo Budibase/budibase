@@ -20,7 +20,7 @@ describe("/api/system/environment", () => {
       const env = await config.api.environment.getEnvironment()
       expect(env.body).toEqual({
         cloud: true,
-        disableAccountPortal: false,
+        disableAccountPortal: 0,
         isDev: false,
         multiTenancy: true,
       })

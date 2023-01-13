@@ -1,38 +1,19 @@
-import * as jwt from "./passport/jwt"
-import * as local from "./passport/local"
-import * as google from "./passport/google"
-import * as oidc from "./passport/oidc"
-import { authError, ssoCallbackUrl } from "./passport/utils"
-import authenticated from "./authenticated"
-import auditLog from "./auditLog"
-import tenancy from "./tenancy"
-import internalApi from "./internalApi"
+export * as jwt from "./passport/jwt"
+export * as local from "./passport/local"
+export * as google from "./passport/google"
+export * as oidc from "./passport/oidc"
 import * as datasourceGoogle from "./passport/datasource/google"
-import csrf from "./csrf"
-import adminOnly from "./adminOnly"
-import builderOrAdmin from "./builderOrAdmin"
-import builderOnly from "./builderOnly"
-import * as joiValidator from "./joi-validator"
-
-const pkg = {
-  google,
-  oidc,
-  jwt,
-  local,
-  authenticated,
-  auditLog,
-  tenancy,
-  authError,
-  internalApi,
-  ssoCallbackUrl,
-  datasource: {
-    google: datasourceGoogle,
-  },
-  csrf,
-  adminOnly,
-  builderOnly,
-  builderOrAdmin,
-  joiValidator,
+export const datasource = {
+  google: datasourceGoogle,
 }
-
-export = pkg
+export { authError, ssoCallbackUrl } from "./passport/utils"
+export { default as authenticated } from "./authenticated"
+export { default as auditLog } from "./auditLog"
+export { default as tenancy } from "./tenancy"
+export { default as internalApi } from "./internalApi"
+export { default as csrf } from "./csrf"
+export { default as adminOnly } from "./adminOnly"
+export { default as builderOrAdmin } from "./builderOrAdmin"
+export { default as builderOnly } from "./builderOnly"
+export { default as logging } from "./logging"
+export * as joiValidator from "./joi-validator"
