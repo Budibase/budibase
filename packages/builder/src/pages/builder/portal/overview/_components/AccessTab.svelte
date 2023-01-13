@@ -68,7 +68,8 @@
 
   async function updateUserRole(role, user) {
     user.roles[fixedAppId] = role
-    await users.save(user)
+    const response = await users.save(user)
+    user._rev = response._rev
   }
 
   async function updateGroupRole(role, group) {
