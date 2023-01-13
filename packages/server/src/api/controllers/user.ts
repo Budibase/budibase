@@ -4,19 +4,21 @@ import { getGlobalUsers, getRawGlobalUser } from "../../utilities/global"
 import { getFullUser } from "../../utilities/users"
 import {
   context,
-  constants,
   roles as rolesCore,
   db as dbCore,
 } from "@budibase/backend-core"
-import { BBContext, Ctx, User } from "@budibase/types"
+import { BBContext, Ctx, isUser, User } from "@budibase/types"
 import sdk from "../../sdk"
 
-export async function syncUser(ctx: BBContext) {
+export async function syncUser(ctx: Ctx) {
   let deleting = false,
     user: User | any
   const userId = ctx.params.id
+
+  const previousUser = ctx.request.body?.previousUser
+
   try {
-    user = await getRawGlobalUser(userId)
+    user = (await getRawGlobalUser(userId)) as User
   } catch (err: any) {
     if (err && err.status === 404) {
       user = {}
@@ -25,6 +27,11 @@ export async function syncUser(ctx: BBContext) {
       throw err
     }
   }
+
+  let previousApps = isUser(previousUser)
+    ? Object.keys(previousUser.roles).map(appId => appId)
+    : []
+
   const roles = deleting ? {} : user.roles
   // remove props which aren't useful to metadata
   delete user.password
@@ -40,8 +47,9 @@ export async function syncUser(ctx: BBContext) {
       .filter(entry => entry[1] !== rolesCore.BUILTIN_ROLE_IDS.PUBLIC)
       .map(([appId]) => appId)
   }
-  for (let prodAppId of prodAppIds) {
+  for (let prodAppId of new Set([...prodAppIds, ...previousApps])) {
     const roleId = roles[prodAppId]
+    const deleteFromApp = !roleId
     const devAppId = dbCore.getDevelopmentAppID(prodAppId)
     for (let appId of [prodAppId, devAppId]) {
       if (!(await dbCore.dbExists(appId))) {
@@ -54,24 +62,24 @@ export async function syncUser(ctx: BBContext) {
         try {
           metadata = await db.get(metadataId)
         } catch (err) {
-          if (deleting) {
+          if (deleteFromApp) {
             return
           }
           metadata = {
             tableId: InternalTables.USER_METADATA,
           }
         }
+
+        if (deleteFromApp) {
+          await db.remove(metadata)
+          return
+        }
+
         // assign the roleId for the metadata doc
         if (roleId) {
           metadata.roleId = roleId
         }
-        let combined = !deleting
-          ? sdk.users.combineMetadataAndUser(user, metadata)
-          : {
-              ...metadata,
-              status: constants.UserStatus.INACTIVE,
-              metadata: rolesCore.BUILTIN_ROLE_IDS.PUBLIC,
-            }
+        let combined = sdk.users.combineMetadataAndUser(user, metadata)
         // if its null then there was no updates required
         if (combined) {
           await db.put(combined)
@@ -172,31 +180,4 @@ export async function getFlags(ctx: BBContext) {
     doc = { _id: docId }
   }
   ctx.body = doc
-}
-
-export async function removeUserFromApp(ctx: Ctx) {
-  const { id: userId, prodAppId } = ctx.params
-
-  const devAppId = dbCore.getDevelopmentAppID(prodAppId)
-  for (let appId of [prodAppId, devAppId]) {
-    if (!(await dbCore.dbExists(appId))) {
-      continue
-    }
-    await context.doInAppContext(appId, async () => {
-      const db = context.getAppDB()
-      const metadataId = generateUserMetadataID(userId)
-      let metadata
-      try {
-        metadata = await db.get(metadataId)
-      } catch (err) {
-        console.warn(`User cannot be found in the app`, { userId, appId })
-        return
-      }
-
-      await db.remove(metadata)
-    })
-  }
-  ctx.body = {
-    message: `User ${userId} deleted from ${prodAppId} and ${devAppId}.`,
-  }
 }
