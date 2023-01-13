@@ -127,7 +127,10 @@
   let fromPrimary
   $: {
     if (!fromPrimary && fromTable) {
-      fromPrimary = fromTable.primary[0]
+      const relationshipKey = fromRelationship?.fieldName
+      fromPrimary =
+        fromTable.primary.filter(val => val === relationshipKey)[0] ||
+        fromTable.primary[0]
     }
   }
   $: isManyToMany =
