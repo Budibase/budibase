@@ -39,6 +39,7 @@
     { column: "roles", component: GroupAppsTableRenderer },
   ]
 
+  $: readonly = !$auth.isAdmin
   $: schema = {
     name: { displayName: "Group", width: "2fr", minWidth: "200px" },
     users: { sortable: false, width: "1fr" },
@@ -108,7 +109,9 @@
     <ButtonGroup>
       {#if $licensing.groupsEnabled}
         <!--Show the group create button-->
-        <Button cta on:click={showCreateGroupModal}>Add group</Button>
+        <Button disabled={readonly} cta on:click={showCreateGroupModal}>
+          Add group
+        </Button>
       {:else}
         <Button
           primary

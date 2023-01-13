@@ -3,7 +3,7 @@ import * as appController from "../../../controllers/application"
 import { AppStatus } from "../../../../db/utils"
 import { roles, tenancy, context } from "@budibase/backend-core"
 import { TENANT_ID } from "../../../../tests/utilities/structures"
-import * as env from "../../../../environment"
+import env from "../../../../environment"
 
 class Request {
   appId: any

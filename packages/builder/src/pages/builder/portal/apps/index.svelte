@@ -346,6 +346,10 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+  .app-actions :global(.spectrum-Textfield) {
+    max-width: 180px;
   }
 
   .app-table {
@@ -379,6 +383,9 @@
     .app-actions {
       margin-top: var(--spacing-xl);
       margin-bottom: calc(-1 * var(--spacing-m));
+    }
+    .app-actions :global(.spectrum-Textfield) {
+      max-width: none;
     }
     /*  Hide download apps icon */
     .app-actions :global(> .spectrum-Icon) {
