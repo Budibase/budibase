@@ -22,6 +22,12 @@
 
   let originalFromName = fromRelationship.name,
     originalToName = toRelationship.name
+  let originalFromTable = plusTables.find(
+    table => table._id === toRelationship?.tableId
+  )
+  let originalToTable = plusTables.find(
+    table => table._id === fromRelationship?.tableId
+  )
   let fromTable, toTable, through, linkTable, tableOptions
   let isManyToMany, isManyToOne, relationshipTypes
   let errors, valid
@@ -254,8 +260,8 @@
   }
 
   async function deleteRelationship() {
-    delete datasource.entities[fromTable.name].schema[originalFromName]
-    delete datasource.entities[toTable.name].schema[originalToName]
+    delete datasource.entities[originalFromTable.name].schema[originalFromName]
+    delete datasource.entities[originalToTable.name].schema[originalToName]
     await save()
     await tables.fetch()
     close()
