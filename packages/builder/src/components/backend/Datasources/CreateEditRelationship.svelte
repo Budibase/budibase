@@ -267,13 +267,21 @@
     close()
   }
 
+  function hasTableChanged(fromTbl, toTbl) {
+    const areRelationshipsSet =
+      (originalFromName || originalToName) &&
+      originalFromTable?.name === fromTbl?.name &&
+      originalToTable?.name === toTbl?.name
+
+    return (
+      currentTables?.from?._id !== fromTbl?._id ||
+      currentTables?.to?._id !== toTbl?._id ||
+      !areRelationshipsSet
+    )
+  }
+
   function tableChanged(fromTbl, toTbl) {
-    if (
-      (currentTables?.from?._id === fromTbl?._id &&
-        currentTables?.to?._id === toTbl?._id) ||
-      originalFromName ||
-      originalToName
-    ) {
+    if (!hasTableChanged(fromTbl, toTbl)) {
       return
     }
     fromRelationship.name = toTbl?.name || ""
