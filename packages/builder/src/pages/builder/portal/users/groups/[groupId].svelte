@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
-  import { users, apps, groups } from "stores/portal"
+  import { users, apps, groups, auth } from "stores/portal"
   import { onMount, setContext } from "svelte"
   import { roles } from "stores/backend"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -70,6 +70,7 @@
   let loaded = false
   let editModal, deleteModal
 
+  $: readonly = !$auth.isAdmin
   $: page = $pageInfo.page
   $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
@@ -164,24 +165,28 @@
     <div class="header">
       <GroupIcon {group} size="L" />
       <Heading>{group?.name}</Heading>
-      <ActionMenu align="right">
-        <span slot="control">
-          <Icon hoverable name="More" />
-        </span>
-        <MenuItem icon="Refresh" on:click={() => editModal.show()}>
-          Edit
-        </MenuItem>
-        <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
-          Delete
-        </MenuItem>
-      </ActionMenu>
+      {#if !readonly}
+        <ActionMenu align="right">
+          <span slot="control">
+            <Icon hoverable name="More" />
+          </span>
+          <MenuItem icon="Refresh" on:click={() => editModal.show()}>
+            Edit
+          </MenuItem>
+          <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
+            Delete
+          </MenuItem>
+        </ActionMenu>
+      {/if}
     </div>
 
     <Layout noPadding gap="S">
       <div class="header">
         <Heading size="S">Users</Heading>
         <div bind:this={popoverAnchor}>
-          <Button on:click={popover.show()} cta>Add user</Button>
+          <Button disabled={readonly} on:click={popover.show()} cta
+            >Add user</Button
+          >
         </div>
         <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
           <UserGroupPicker

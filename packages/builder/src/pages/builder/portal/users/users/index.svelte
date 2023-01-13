@@ -52,6 +52,7 @@
   ]
   let userData = []
 
+  $: readonly = !$auth.isAdmin
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -223,10 +224,17 @@
     <Divider />
     <div class="controls">
       <ButtonGroup>
-        <Button dataCy="add-user" on:click={createUserModal.show} cta>
+        <Button
+          disabled={readonly}
+          dataCy="add-user"
+          on:click={createUserModal.show}
+          cta
+        >
           Add users
         </Button>
-        <Button on:click={importUsersModal.show} secondary>Import</Button>
+        <Button disabled={readonly} on:click={importUsersModal.show} secondary
+          >Import</Button
+        >
       </ButtonGroup>
       <div class="controls-right">
         <Search bind:value={searchEmail} placeholder="Search" />
@@ -247,7 +255,7 @@
       data={enrichedUsers}
       allowEditColumns={false}
       allowEditRows={false}
-      allowSelectRows={true}
+      allowSelectRows={!readonly}
       {customRenderers}
     />
     <div class="pagination">
