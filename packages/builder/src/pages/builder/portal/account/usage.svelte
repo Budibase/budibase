@@ -249,6 +249,7 @@
     justify-content: flex-start;
     align-items: flex-start;
     gap: 40px;
+    flex-wrap: wrap;
   }
   .column {
     flex: 1 1 0;
