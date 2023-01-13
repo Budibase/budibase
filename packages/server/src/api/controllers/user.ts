@@ -8,7 +8,7 @@ import {
   roles as rolesCore,
   db as dbCore,
 } from "@budibase/backend-core"
-import { BBContext, User } from "@budibase/types"
+import { BBContext, Ctx, User } from "@budibase/types"
 import sdk from "../../sdk"
 
 export async function syncUser(ctx: BBContext) {
@@ -174,7 +174,7 @@ export async function getFlags(ctx: BBContext) {
   ctx.body = doc
 }
 
-export async function removeUserFromApp(ctx: BBContext) {
+export async function removeUserFromApp(ctx: Ctx) {
   const { id: userId, prodAppId } = ctx.params
 
   const devAppId = dbCore.getDevelopmentAppID(prodAppId)
