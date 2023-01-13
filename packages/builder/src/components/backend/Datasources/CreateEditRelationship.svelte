@@ -254,8 +254,8 @@
   }
 
   async function deleteRelationship() {
-    delete datasource.entities[fromTable.name].schema[fromRelationship.name]
-    delete datasource.entities[toTable.name].schema[toRelationship.name]
+    delete datasource.entities[fromTable.name].schema[originalFromName]
+    delete datasource.entities[toTable.name].schema[originalToName]
     await save()
     await tables.fetch()
     close()
