@@ -189,16 +189,11 @@ export async function removeUserFromApp(ctx: BBContext) {
       try {
         metadata = await db.get(metadataId)
       } catch (err) {
+        console.warn(`User cannot be found in the app`, { userId, appId })
         return
       }
 
-      let combined = {
-        ...metadata,
-        status: constants.UserStatus.INACTIVE,
-        metadata: rolesCore.BUILTIN_ROLE_IDS.PUBLIC,
-      }
-
-      await db.put(combined)
+      await db.remove(metadata)
     })
   }
   ctx.body = {
