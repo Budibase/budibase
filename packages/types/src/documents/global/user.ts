@@ -70,6 +70,6 @@ export interface AdminUser extends User {
   }
 }
 
-export function isUser(user: any): user is User {
+export function isUser(user: object): user is User {
   return !!(user as User).roles
 }
