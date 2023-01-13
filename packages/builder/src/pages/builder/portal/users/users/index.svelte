@@ -35,7 +35,7 @@
     },
   })
 
-  let loaded = false
+  let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
   let enrichedUsers = []
   let createUserModal,
     inviteConfirmationModal,
@@ -206,69 +206,67 @@
 
   onMount(async () => {
     try {
-      loaded = false
       await groups.actions.init()
-      loaded = true
+      groupsLoaded = true
     } catch (error) {
-      notifications.error("Error fetching User Group data")
+      notifications.error("Error fetching user group data")
     }
   })
 </script>
 
-{#if loaded && $fetch.loaded}
-  <Layout noPadding gap="M">
-    <Layout gap="XS" noPadding>
-      <Heading>Users</Heading>
-      <Body>Add users and control who gets access to your published apps</Body>
-    </Layout>
-    <Divider />
-    <div class="controls">
-      <ButtonGroup>
-        <Button
-          disabled={readonly}
-          dataCy="add-user"
-          on:click={createUserModal.show}
-          cta
-        >
-          Add users
-        </Button>
-        <Button disabled={readonly} on:click={importUsersModal.show} secondary
-          >Import</Button
-        >
-      </ButtonGroup>
-      <div class="controls-right">
-        <Search bind:value={searchEmail} placeholder="Search" />
-        {#if selectedRows.length > 0}
-          <DeleteRowsButton
-            item="user"
-            on:updaterows
-            {selectedRows}
-            {deleteRows}
-          />
-        {/if}
-      </div>
-    </div>
-    <Table
-      on:click={({ detail }) => $goto(`./${detail._id}`)}
-      {schema}
-      bind:selectedRows
-      data={enrichedUsers}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={!readonly}
-      {customRenderers}
-    />
-    <div class="pagination">
-      <Pagination
-        page={$fetch.pageNumber + 1}
-        hasPrevPage={$fetch.loading ? false : $fetch.hasPrevPage}
-        hasNextPage={$fetch.loading ? false : $fetch.hasNextPage}
-        goToPrevPage={fetch.prevPage}
-        goToNextPage={fetch.nextPage}
-      />
-    </div>
+<Layout noPadding gap="M">
+  <Layout gap="XS" noPadding>
+    <Heading>Users</Heading>
+    <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
-{/if}
+  <Divider />
+  <div class="controls">
+    <ButtonGroup>
+      <Button
+        disabled={readonly}
+        dataCy="add-user"
+        on:click={createUserModal.show}
+        cta
+      >
+        Add users
+      </Button>
+      <Button disabled={readonly} on:click={importUsersModal.show} secondary>
+        Import
+      </Button>
+    </ButtonGroup>
+    <div class="controls-right">
+      <Search bind:value={searchEmail} placeholder="Search" />
+      {#if selectedRows.length > 0}
+        <DeleteRowsButton
+          item="user"
+          on:updaterows
+          {selectedRows}
+          {deleteRows}
+        />
+      {/if}
+    </div>
+  </div>
+  <Table
+    on:click={({ detail }) => $goto(`./${detail._id}`)}
+    {schema}
+    bind:selectedRows
+    data={enrichedUsers}
+    allowEditColumns={false}
+    allowEditRows={false}
+    allowSelectRows={!readonly}
+    {customRenderers}
+    loading={!$fetch.loaded || !groupsLoaded}
+  />
+  <div class="pagination">
+    <Pagination
+      page={$fetch.pageNumber + 1}
+      hasPrevPage={$fetch.loading ? false : $fetch.hasPrevPage}
+      hasNextPage={$fetch.loading ? false : $fetch.hasNextPage}
+      goToPrevPage={fetch.prevPage}
+      goToNextPage={fetch.nextPage}
+    />
+  </div>
+</Layout>
 
 <Modal bind:this={createUserModal}>
   <AddUserModal {showOnboardingTypeModal} />
