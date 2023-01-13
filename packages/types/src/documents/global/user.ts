@@ -69,3 +69,7 @@ export interface AdminUser extends User {
     global: boolean
   }
 }
+
+export function isUser(user: User | ThirdPartyUser): user is User {
+  return !!(user as User).roles
+}

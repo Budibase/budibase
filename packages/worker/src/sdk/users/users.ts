@@ -31,6 +31,7 @@ import {
   SearchUsersRequest,
   User,
   ThirdPartyUser,
+  isUser,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
@@ -188,10 +189,6 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   }
 }
 
-function instanceOfUser(user: User | ThirdPartyUser): user is User {
-  return !!(user as User).roles
-}
-
 export const save = async (
   user: User | ThirdPartyUser,
   opts: SaveUserOpts = {}
@@ -262,7 +259,7 @@ export const save = async (
   }
 
   let appsToRemove: string[] = []
-  if (dbUser && instanceOfUser(user)) {
+  if (dbUser && isUser(user)) {
     const newRoles = Object.keys(user.roles)
     const existingRoles = Object.keys(dbUser.roles)
 
