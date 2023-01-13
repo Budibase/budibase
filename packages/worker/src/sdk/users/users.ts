@@ -258,17 +258,6 @@ export const save = async (
     }
   }
 
-  let appsToRemove: string[] = []
-  if (dbUser && isUser(user)) {
-    const newRoles = Object.keys(user.roles)
-    const existingRoles = Object.keys(dbUser.roles)
-
-    appsToRemove = existingRoles.filter(r => !newRoles.includes(r))
-    if (appsToRemove.length) {
-      console.log("Deleting access to apps", { appsToRemove })
-    }
-  }
-
   try {
     // save the user to db
     let response = await db.put(builtUser)
@@ -278,12 +267,8 @@ export const save = async (
     await addTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
 
-    for (const appId of appsToRemove) {
-      await apps.removeUserFromApp(_id, appId)
-    }
-
     // let server know to sync user
-    await apps.syncUserInApps(_id)
+    await apps.syncUserInApps(_id, dbUser)
 
     await Promise.all(groupPromises)
 

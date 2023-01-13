@@ -2,6 +2,7 @@ import fetch from "node-fetch"
 import { constants, tenancy } from "@budibase/backend-core"
 import { checkSlashesInUrl } from "../utilities"
 import env from "../environment"
+import { User } from "@budibase/types"
 
 async function makeAppRequest(url: string, method: string, body: any) {
   if (env.isTest()) {
@@ -20,24 +21,13 @@ async function makeAppRequest(url: string, method: string, body: any) {
   return fetch(checkSlashesInUrl(env.APPS_URL + url), request)
 }
 
-export async function syncUserInApps(userId: string) {
+export async function syncUserInApps(userId: string, previousUser?: User) {
   const response = await makeAppRequest(
     `/api/users/metadata/sync/${userId}`,
     "POST",
-    {}
+    { previousUser }
   )
   if (response && response.status !== 200) {
     throw "Unable to sync user."
-  }
-}
-
-export async function removeUserFromApp(userId: string, appId: string) {
-  const response = await makeAppRequest(
-    `/api/users/metadata/${userId}/app/${appId}`,
-    "DELETE",
-    undefined
-  )
-  if (response && response.status !== 200) {
-    throw "Unable to delete user from app."
   }
 }
