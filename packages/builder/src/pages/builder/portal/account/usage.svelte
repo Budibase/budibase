@@ -184,10 +184,15 @@
       </Body>
     </Layout>
     <Divider />
-    <Body>
-      To upgrade your plan and usage limits visit your
-      <Link size="L" on:click={goToAccountPortal}>account</Link>.
-    </Body>
+    {#if $auth?.user?.accountPortalAccess}
+      <Body>
+        To upgrade your plan and usage limits visit your
+        <Link size="L" on:click={goToAccountPortal}>account</Link>.
+      </Body>
+    {:else}
+      <Body>Contact your account holder to upgrade your plan.</Body>
+    {/if}
+
     <DashCard
       description="YOUR CURRENT PLAN"
       title={planTitle()}

@@ -20,8 +20,8 @@ spec:
       annotations:
         kompose.cmd: kompose convert
         kompose.version: 1.21.0 (992df58d8)
-{{ if .Values.globals.appServiceAnnotations }}
-{{ toYaml .Values.globals.appServiceAnnotations | indent 4 }}
+{{ if .Values.services.apps.annotations }}
+{{- toYaml .Values.services.apps.annotations | indent 8 -}}
 {{ end }}
       creationTimestamp: null
       labels:

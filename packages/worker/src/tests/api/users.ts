@@ -5,7 +5,7 @@ import {
   User,
   CreateAdminUserRequest,
 } from "@budibase/types"
-import * as structures from "../structures"
+import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI, TestAPIOpts } from "./base"

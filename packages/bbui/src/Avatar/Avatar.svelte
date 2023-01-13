@@ -58,5 +58,6 @@
     overflow: hidden;
     user-select: none;
     text-transform: uppercase;
+    flex-shrink: 0;
   }
 </style>

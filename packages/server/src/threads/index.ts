@@ -1,5 +1,5 @@
 import workerFarm from "worker-farm"
-import * as env from "../environment"
+import env from "../environment"
 
 export const ThreadType = {
   QUERY: "query",

@@ -1,9 +1,8 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
   import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
-  import { organisation, auth, admin as adminStore } from "stores/portal"
+  import { organisation, auth, menu } from "stores/portal"
   import { onMount } from "svelte"
-  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
   import MobileMenu from "./_components/MobileMenu.svelte"
   import Logo from "./_components/Logo.svelte"
@@ -13,10 +12,9 @@
   let mobileMenuVisible = false
   let activeTab = "Apps"
 
-  $: menu = buildMenu($auth.isAdmin)
-  $: $url(), updateActiveTab()
+  $: $url(), updateActiveTab($menu)
 
-  const updateActiveTab = () => {
+  const updateActiveTab = menu => {
     for (let entry of menu) {
       if ($isActive(entry.href)) {
         if (activeTab !== entry.title) {
@@ -25,55 +23,6 @@
         break
       }
     }
-  }
-
-  const buildMenu = admin => {
-    // Standard user and developer pages
-    let menu = [
-      {
-        title: "Apps",
-        href: "/builder/portal/apps",
-      },
-      {
-        title: "Plugins",
-        href: "/builder/portal/plugins",
-      },
-    ]
-
-    // Admin only pages
-    if (admin) {
-      menu = [
-        {
-          title: "Apps",
-          href: "/builder/portal/apps",
-        },
-        {
-          title: "Users",
-          href: "/builder/portal/users/users",
-        },
-        {
-          title: "Plugins",
-          href: "/builder/portal/plugins",
-        },
-        {
-          title: "Settings",
-          href: "/builder/portal/settings",
-        },
-      ]
-    }
-
-    // Check if allowed access to account section
-    if (
-      isEnabled(TENANT_FEATURE_FLAGS.LICENSING) &&
-      ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin))
-    ) {
-      menu.push({
-        title: "Account",
-        href: "/builder/portal/account",
-      })
-    }
-
-    return menu
   }
 
   const showMobileMenu = () => (mobileMenuVisible = true)
@@ -104,7 +53,7 @@
       </div>
       <div class="desktop">
         <Tabs selected={activeTab}>
-          {#each menu as { title, href }}
+          {#each $menu as { title, href }}
             <Tab {title} on:click={() => $goto(href)} />
           {/each}
         </Tabs>
@@ -122,7 +71,7 @@
     <div class="main">
       <slot />
     </div>
-    <MobileMenu visible={mobileMenuVisible} {menu} on:close={hideMobileMenu} />
+    <MobileMenu visible={mobileMenuVisible} on:close={hideMobileMenu} />
   </div>
 {/if}
 
