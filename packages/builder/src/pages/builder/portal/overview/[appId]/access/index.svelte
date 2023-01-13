@@ -217,7 +217,7 @@
       </Layout>
     {/if}
 
-    {#if $usersFetch.loaded && $licensing.groupsEnabled && appGroups.length}
+    {#if $usersFetch.loaded && $licensing.groupsEnabled}
       <Layout noPadding gap="S">
         <div class="title">
           <Heading size="S">Groups</Heading>
