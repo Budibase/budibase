@@ -28,9 +28,10 @@ export async function syncUser(ctx: Ctx) {
     }
   }
 
-  let previousApps = isUser(previousUser)
-    ? Object.keys(previousUser.roles).map(appId => appId)
-    : []
+  let previousApps =
+    previousUser && isUser(previousUser)
+      ? Object.keys(previousUser.roles).map(appId => appId)
+      : []
 
   const roles = deleting ? {} : user.roles
   // remove props which aren't useful to metadata
