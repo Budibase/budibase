@@ -32,6 +32,8 @@
   $: license = $auth.user?.license
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: quotaReset = quotaUsage?.quotaReset
+  $: canManagePlan =
+    ($admin.cloud && accountPortalAccess) || (!$admin.cloud && $auth.isAdmin)
 
   const setMonthlyUsage = () => {
     monthlyUsage = []
@@ -184,7 +186,7 @@
       </Body>
     </Layout>
     <Divider />
-    {#if $auth?.user?.accountPortalAccess}
+    {#if canManagePlan}
       <Body>
         To upgrade your plan and usage limits visit your
         <Link size="L" on:click={goToAccountPortal}>account</Link>.
