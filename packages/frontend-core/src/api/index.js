@@ -26,7 +26,7 @@ import { buildLicensingEndpoints } from "./licensing"
 import { buildGroupsEndpoints } from "./groups"
 import { buildPluginEndpoints } from "./plugins"
 import { buildBackupsEndpoints } from "./backups"
-
+import { buildEnvironmentVariableEndpoints } from "./environmentVariables"
 const defaultAPIClientConfig = {
   /**
    * Certain definitions can't change at runtime for client apps, such as the
@@ -247,5 +247,6 @@ export const createAPIClient = config => {
     ...buildGroupsEndpoints(API),
     ...buildPluginEndpoints(API),
     ...buildBackupsEndpoints(API),
+    ...buildEnvironmentVariableEndpoints(API),
   }
 }

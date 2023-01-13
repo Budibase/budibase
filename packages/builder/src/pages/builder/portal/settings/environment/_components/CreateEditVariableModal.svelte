@@ -1,0 +1,89 @@
+<script>
+  import {
+    ModalContent,
+    Button,
+    Input,
+    Checkbox,
+    Heading,
+    notifications,
+  } from "@budibase/bbui"
+  import { environment } from "stores/portal"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+
+  export let save
+  export let row
+
+  let deleteDialog
+  let name = row?.name || ""
+  let productionValue
+  let developmentValue
+
+  let useProductionValue = true
+
+  const deleteVariable = name => {
+    try {
+      environment.deleteVariable(name)
+      notifications.success("Environment variable deleted")
+    } catch (err) {
+      notifications.error(err.message)
+    }
+  }
+</script>
+
+<ModalContent
+  onConfirm={() =>
+    save({
+      name,
+      production: productionValue,
+      development: developmentValue,
+    })}
+  title={!row ? "Add new environment variable" : "Edit environment variable"}
+>
+  <Input disabled={row} label="Name" bind:value={name} />
+  <div>
+    <Heading size="XS">Production</Heading>
+    <Input
+      type="password"
+      label="Value"
+      on:change={e => {
+        productionValue = e.detail
+        if (useProductionValue) {
+          developmentValue = e.detail
+        }
+      }}
+      value={productionValue}
+    />
+  </div>
+  <div>
+    <Heading size="XS">Development</Heading>
+    <Input
+      type="password"
+      on:change={e => {
+        developmentValue = e.target.value
+      }}
+      disabled={useProductionValue}
+      label="Value"
+      value={useProductionValue ? productionValue : developmentValue}
+    />
+    <Checkbox bind:value={useProductionValue} text="Use production value" />
+  </div>
+
+  <div class="footer" slot="footer">
+    {#if row}
+      <Button on:click={deleteDialog.show} warning>Delete</Button>
+    {/if}
+  </div>
+</ModalContent>
+
+<ConfirmDialog
+  bind:this={deleteDialog}
+  onOk={() => {
+    deleteVariable(row.name)
+  }}
+  okText="Delete Environment Variable"
+  title="Confirm Deletion"
+>
+  Are you sure you wish to delete the environment variable
+  <i>{row.name}?</i>
+  This action cannot be undone.
+</ConfirmDialog>
