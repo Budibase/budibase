@@ -245,12 +245,22 @@
     datasource.entities[toTable.name].schema[toRelationship.name] =
       toRelationship
 
-    // If relationship has been renamed
-    if (originalFromName !== fromRelationship.name) {
-      delete datasource.entities[fromTable.name].schema[originalFromName]
+    // If relationship has been renamed or a different table selected
+    if (
+      originalFromTable?.name &&
+      (originalFromName !== fromRelationship.name ||
+        hasTableChanged(fromTable, toTable))
+    ) {
+      delete datasource.entities[originalFromTable.name].schema[
+        originalFromName
+      ]
     }
-    if (originalToName !== toRelationship.name) {
-      delete datasource.entities[toTable.name].schema[originalToName]
+    if (
+      originalToTable?.name &&
+      (originalToName !== toRelationship.name ||
+        hasTableChanged(fromTable, toTable))
+    ) {
+      delete datasource.entities[originalToTable.name].schema[originalToName]
     }
 
     // store the original names so it won't cause an error
