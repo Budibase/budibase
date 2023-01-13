@@ -13,6 +13,7 @@ import {
   UserPermissionAssignedEvent,
   UserPermissionRemovedEvent,
   UserUpdatedEvent,
+  UserOnboardingEvent,
 } from "@budibase/types"
 
 export async function created(user: User, timestamp?: number) {
@@ -34,6 +35,21 @@ export async function deleted(user: User) {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_DELETED, properties)
+}
+
+export async function onboardingComplete(user: User) {
+  const properties: UserOnboardingEvent = {
+    userId: user._id as string,
+  }
+  await publishEvent(Event.USER_ONBOARDING_COMPLETE, properties)
+}
+
+export async function onboardingProgress(user: User, step?: string) {
+  const properties: UserOnboardingEvent = {
+    userId: user._id as string,
+    step,
+  }
+  await publishEvent(Event.USER_ONBOARDING_STEP, properties)
 }
 
 // PERMISSIONS
