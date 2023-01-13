@@ -574,7 +574,7 @@ export const destroy = async (id: string, currentUser: any) => {
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(userId)
+  await apps.syncUserInApps(userId, dbUser)
 }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
@@ -584,7 +584,7 @@ const bulkDeleteProcessing = async (dbUser: User) => {
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(userId)
+  await apps.syncUserInApps(userId, dbUser)
 }
 
 export const invite = async (
