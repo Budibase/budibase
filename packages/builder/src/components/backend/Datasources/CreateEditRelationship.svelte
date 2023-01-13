@@ -84,10 +84,10 @@
       errObj.foreign = "Please pick the foreign key"
     }
     const colNotSet = "Please specify a column name"
-    if ($touched.fromCol && !fromRelate.name) {
+    if ($touched.fromCol && !toRelate.name) {
       errObj.fromCol = colNotSet
     }
-    if ($touched.toCol && !toRelate.name) {
+    if ($touched.toCol && !fromRelate.name) {
       errObj.toCol = colNotSet
     }
     if ($touched.primary && !fromPrimary) {
@@ -143,7 +143,10 @@
   $: through = plusTables.find(table => table._id === fromRelationship?.through)
   $: checkForErrors(fromRelationship, toRelationship)
   $: valid =
-    Object.keys(errors).length === 0 && Object.keys($touched).length !== 0
+    Object.keys(errors).length === 0 &&
+    Object.keys($touched).length !== 0 &&
+    fromTable &&
+    toTable
   $: linkTable = through || toTable
   $: relationshipTypes = [
     {
@@ -293,7 +296,10 @@
     label="Select from table"
     options={tableOptions}
     disabled={!!selectedFromTable}
-    on:change={() => ($touched.from = true)}
+    on:change={() => {
+      $touched.from = true
+      $touched.primary = true
+    }}
     bind:error={errors.from}
     bind:value={toRelationship.tableId}
   />
@@ -309,7 +315,10 @@
   <Select
     label={"Select to table"}
     options={tableOptions}
-    on:change={() => ($touched.to = true)}
+    on:change={() => {
+      $touched.to = true
+      $touched.foreign = true
+    }}
     bind:error={errors.to}
     bind:value={fromRelationship.tableId}
   />
@@ -317,7 +326,11 @@
     <Select
       label={"Through"}
       options={tableOptions}
-      on:change={() => ($touched.through = true)}
+      on:change={() => {
+        $touched.through = true
+        $touched.fromForeign = true
+        $touched.toForeign = true
+      }}
       bind:error={errors.through}
       bind:value={fromRelationship.through}
     />
@@ -355,15 +368,17 @@
   </Body>
   <Input
     on:blur={() => ($touched.fromCol = true)}
+    on:change={() => ($touched.fromCol = true)}
     bind:error={errors.fromCol}
     label="From table column"
-    bind:value={fromRelationship.name}
+    bind:value={toRelationship.name}
   />
   <Input
     on:blur={() => ($touched.toCol = true)}
+    on:change={() => ($touched.toCol = true)}
     bind:error={errors.toCol}
     label="To table column"
-    bind:value={toRelationship.name}
+    bind:value={fromRelationship.name}
   />
   <div slot="footer">
     {#if originalFromName != null}
