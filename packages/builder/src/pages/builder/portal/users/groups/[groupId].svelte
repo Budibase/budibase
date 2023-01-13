@@ -85,7 +85,6 @@
       ...app,
       role: group?.roles?.[apps.getProdAppID(app.devId)],
     }))
-  $: console.log(groupApps)
   $: {
     if (loaded && !group?._id) {
       $goto("./")
