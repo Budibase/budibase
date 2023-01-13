@@ -2,12 +2,6 @@
 const compose = require("docker-compose")
 const path = require("path")
 const fs = require("fs")
-const isWsl = require("is-wsl")
-const { processStringSync } = require("@budibase/string-templates")
-
-function isLinux() {
-  return !isWsl && process.platform !== "darwin" && process.platform !== "win32"
-}
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {
@@ -23,16 +17,6 @@ const Commands = {
 }
 
 async function init() {
-  // generate nginx file, always do this incase it has changed
-  const hostingPath = path.join(process.cwd(), "..", "..", "hosting")
-  const nginxHbsPath = path.join(hostingPath, "nginx.dev.conf.hbs")
-  const nginxOutputPath = path.join(hostingPath, ".generated-nginx.dev.conf")
-  const contents = fs.readFileSync(nginxHbsPath, "utf8")
-  const config = {
-    address: isLinux() ? "172.17.0.1" : "host.docker.internal",
-  }
-  fs.writeFileSync(nginxOutputPath, processStringSync(contents, config))
-
   const envFilePath = path.join(process.cwd(), ".env")
   if (!fs.existsSync(envFilePath)) {
     const envFileJson = {

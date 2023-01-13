@@ -1,5 +1,5 @@
 const setup = require("./utilities")
-const { events, constants, db } = require("@budibase/backend-core")
+const { events, constants } = require("@budibase/backend-core")
 
 describe("/static", () => {
   let request = setup.getRequest()
