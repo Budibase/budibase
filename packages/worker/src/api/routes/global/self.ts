@@ -15,4 +15,4 @@ router
     controller.updateSelf
   )
 
-export = router
+export default router
