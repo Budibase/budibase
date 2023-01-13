@@ -197,6 +197,6 @@ export async function removeUserFromApp(ctx: Ctx) {
     })
   }
   ctx.body = {
-    message: `User ${userId} deleted from ${prodAppId} and ${"devapp"}.`,
+    message: `User ${userId} deleted from ${prodAppId} and ${devAppId}.`,
   }
 }
