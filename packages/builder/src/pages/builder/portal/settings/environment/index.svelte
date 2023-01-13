@@ -6,21 +6,15 @@
     Button,
     Divider,
     Modal,
-    ModalContent,
     Table,
-    Input,
-    Checkbox,
   } from "@budibase/bbui"
-  import { envVars } from "stores/portal"
+  import { environment } from "stores/portal"
   import { onMount } from "svelte"
-  import EditVariableModal from "./_components/editVariableModal.svelte"
+  import CreateEditVariableModal from "./_components/CreateEditVariableModal.svelte"
+  import EditVariableColumn from "./_components/EditVariableColumn.svelte"
 
   let modal
 
-  let useProductionValue = true
-
-  let developmentValue
-  let productionValue
   const schema = {
     name: {
       width: "2fr",
@@ -32,11 +26,16 @@
     },
   }
 
-  const customRenderers = [{ column: "edit", component: EditVariableModal }]
+  const customRenderers = [{ column: "edit", component: EditVariableColumn }]
 
   onMount(async () => {
-    await envVars.load()
+    await environment.loadVariables()
   })
+
+  const save = data => {
+    environment.createVariable(data)
+    modal.hide()
+  }
 </script>
 
 <Layout noPadding>
@@ -50,7 +49,7 @@
   <Layout noPadding>
     <Table
       {schema}
-      data={$envVars}
+      data={$environment}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
@@ -63,30 +62,7 @@
 </Layout>
 
 <Modal bind:this={modal}>
-  <ModalContent title="Add new environment variable">
-    <Input label="Name" value="" />
-
-    <div>
-      <Heading size="XS">Production</Heading>
-      <Input type="password" label="Value" bind:value={productionValue} />
-    </div>
-    <div>
-      <Heading size="XS">Development</Heading>
-      <Input
-        type="password"
-        disabled={useProductionValue}
-        label="Value"
-        bind:value={developmentValue}
-      />
-      <Checkbox
-        on:change={() => {
-          developmentValue = productionValue
-        }}
-        bind:value={useProductionValue}
-        text="Use production value"
-      />
-    </div>
-  </ModalContent>
+  <CreateEditVariableModal {save} />
 </Modal>
 
 <style>
