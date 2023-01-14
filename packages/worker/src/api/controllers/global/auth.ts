@@ -204,13 +204,16 @@ export const googleAuth = async (ctx: any, next: any) => {
 
   return passport.authenticate(
     strategy,
-    { successRedirect: "/", failureRedirect: "/error" },
+    {
+      successRedirect: env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT,
+      failureRedirect: "/error",
+    },
     async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
       await context.identity.doInUserContext(user, async () => {
         await events.auth.login("google-internal")
       })
-      ctx.redirect("/")
+      ctx.redirect(env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT)
     }
   )(ctx, next)
 }
@@ -268,13 +271,16 @@ export const oidcAuth = async (ctx: any, next: any) => {
 
   return passport.authenticate(
     strategy,
-    { successRedirect: "/", failureRedirect: "/error" },
+    {
+      successRedirect: env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT,
+      failureRedirect: "/error",
+    },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
       await context.identity.doInUserContext(user, async () => {
         await events.auth.login("oidc")
       })
-      ctx.redirect("/")
+      ctx.redirect(env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT)
     }
   )(ctx, next)
 }
