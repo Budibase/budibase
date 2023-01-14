@@ -206,7 +206,7 @@ export const googleAuth = async (ctx: any, next: any) => {
     strategy,
     {
       successRedirect: env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT,
-      failureRedirect: "/error",
+      failureRedirect: env.PASSPORT_GOOGLEAUTH_FAILURE_REDIRECT,
     },
     async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
@@ -273,7 +273,7 @@ export const oidcAuth = async (ctx: any, next: any) => {
     strategy,
     {
       successRedirect: env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT,
-      failureRedirect: "/error",
+      failureRedirect: env.PASSPORT_OIDCAUTH_FAILURE_REDIRECT,
     },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
