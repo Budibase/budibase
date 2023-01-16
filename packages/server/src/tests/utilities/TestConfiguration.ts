@@ -38,7 +38,7 @@ import { cleanup } from "../../utilities/fileSystem"
 import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
-const supertest = require("supertest")
+import supertest from "supertest"
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -48,7 +48,7 @@ const CSRF_TOKEN = "e3727778-7af0-4226-b5eb-f43cbe60a306"
 
 class TestConfiguration {
   server: any
-  request: any
+  request: supertest.SuperTest<supertest.Test> | undefined
   started: boolean
   appId: string | null
   allApps: any[]

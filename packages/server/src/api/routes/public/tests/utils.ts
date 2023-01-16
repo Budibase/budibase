@@ -1,5 +1,12 @@
 import { checkSlashesInUrl } from "../../../../utilities"
 
+export type MakeRequestResponse = (
+  method: string,
+  endpoint: string,
+  body?: any,
+  intAppId?: string
+) => Promise<any>
+
 export function generateMakeRequest(apiKey: string, setup: any) {
   const request = setup.getRequest()
   const config = setup.getConfig()
