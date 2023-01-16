@@ -10,7 +10,7 @@ export async function enrichContext(
     return enrichedQuery
   }
   const env = await getEnvironmentVariables()
-  const parameters = { ...inputs, ...env }
+  const parameters = { ...inputs, env }
   // enrich the fields with dynamic parameters
   for (let key of Object.keys(fields)) {
     if (fields[key] == null) {

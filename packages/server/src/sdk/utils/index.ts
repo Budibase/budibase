@@ -12,5 +12,5 @@ export async function getEnvironmentVariables() {
 
     envVars = await environmentVariables.fetchValues(appEnv)
   }
-  return { env: envVars }
+  return envVars
 }
