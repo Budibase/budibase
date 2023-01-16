@@ -6,7 +6,10 @@ import {
   generateTable,
   generateNewColumnForTable,
 } from "../../../config/internal-api/fixtures/table"
-import { generateNewRowForTable, searchBody } from "../../../config/internal-api/fixtures/rows"
+import {
+  generateNewRowForTable,
+  searchBody,
+} from "../../../config/internal-api/fixtures/rows"
 
 describe("Internal API - Table Operations", () => {
   const api = new InternalAPIClient()
@@ -119,7 +122,10 @@ describe("Internal API - Table Operations", () => {
     await config.rows.add(<string>addColumnData._id, newRow)
 
     //Search single row
-    await config.rows.searchNoPagination(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
+    await config.rows.searchNoPagination(
+      <string>createdTableData._id,
+      searchBody(<string>createdTableData.primaryDisplay)
+    )
 
     //Add 10 more rows
     for (let i = 0; i < 10; i++) {
@@ -128,7 +134,11 @@ describe("Internal API - Table Operations", () => {
     }
 
     //Search rows with pagination
-    const [allRowsResponse, allRowsJson] = await config.rows.searchWithPagination(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
+    const [allRowsResponse, allRowsJson] =
+      await config.rows.searchWithPagination(
+        <string>createdTableData._id,
+        searchBody(<string>createdTableData.primaryDisplay)
+      )
 
     //Delete Rows from table
     const rowToDelete = {
@@ -140,7 +150,9 @@ describe("Internal API - Table Operations", () => {
     )
 
     //Search single row
-    await config.rows.searchWithPagination(<string>createdTableData._id, searchBody(<string>createdTableData.primaryDisplay))
-
+    await config.rows.searchWithPagination(
+      <string>createdTableData._id,
+      searchBody(<string>createdTableData.primaryDisplay)
+    )
   })
 })

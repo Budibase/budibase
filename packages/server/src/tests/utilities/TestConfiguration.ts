@@ -67,7 +67,7 @@ class TestConfiguration {
     if (openServer) {
       // use a random port because it doesn't matter
       env.PORT = "0"
-      this.server = require("../../app")
+      this.server = require("../../app").default
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
       this.started = true

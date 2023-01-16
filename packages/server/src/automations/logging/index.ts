@@ -1,4 +1,4 @@
-import * as env from "../../environment"
+import env from "../../environment"
 import { AutomationResults, Automation, App } from "@budibase/types"
 import { automations } from "@budibase/pro"
 import { db as dbUtils } from "@budibase/backend-core"

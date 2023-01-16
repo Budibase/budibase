@@ -37,7 +37,10 @@ export default class RowsApi {
     return [response, json]
   }
 
-  async searchNoPagination(tableId: string, body: any): Promise<[Response, Row[]]> {
+  async searchNoPagination(
+    tableId: string,
+    body: any
+  ): Promise<[Response, Row[]]> {
     const response = await this.api.post(`/${tableId}/search`, { body })
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
@@ -45,7 +48,10 @@ export default class RowsApi {
     return [response, json.rows]
   }
 
-  async searchWithPagination(tableId: string, body: any): Promise<[Response, Row[]]> {
+  async searchWithPagination(
+    tableId: string,
+    body: any
+  ): Promise<[Response, Row[]]> {
     const response = await this.api.post(`/${tableId}/search`, { body })
     const json = await response.json()
     expect(response).toHaveStatusCode(200)

@@ -27,6 +27,6 @@ export const searchBody = (primaryDisplay: string): any => {
     },
     sort: primaryDisplay,
     sortOrder: "ascending",
-    sortType: "string"
+    sortType: "string",
   }
 }

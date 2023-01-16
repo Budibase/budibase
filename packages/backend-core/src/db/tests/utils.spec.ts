@@ -5,18 +5,13 @@ const {
   isDevAppID,
   isProdAppID,
 } = require("../conversions")
-const {
-  generateAppID,
-  getPlatformUrl,
-  getScopedConfig
-} = require("../utils")
+const { generateAppID, getPlatformUrl, getScopedConfig } = require("../utils")
 const tenancy = require("../../tenancy")
 const { Config, DEFAULT_TENANT_ID } = require("../../constants")
-const env = require("../../environment")
+import env from "../../environment"
 
 describe("utils", () => {
   describe("app ID manipulation", () => {
-
     function getID() {
       const appId = generateAppID()
       const split = appId.split("_")
@@ -28,42 +23,42 @@ describe("utils", () => {
     it("should be able to generate a new app ID", () => {
       expect(generateAppID().startsWith("app_")).toEqual(true)
     })
-  
+
     it("should be able to convert a production app ID to development", () => {
       const { appId, uuid } = getID()
       expect(getDevelopmentAppID(appId)).toEqual(`app_dev_${uuid}`)
     })
-  
+
     it("should be able to convert a development app ID to development", () => {
       const { devAppId, uuid } = getID()
       expect(getDevelopmentAppID(devAppId)).toEqual(`app_dev_${uuid}`)
     })
-  
+
     it("should be able to convert a development ID to a production", () => {
       const { devAppId, uuid } = getID()
       expect(getProdAppID(devAppId)).toEqual(`app_${uuid}`)
     })
-  
+
     it("should be able to convert a production ID to production", () => {
       const { appId, uuid } = getID()
       expect(getProdAppID(appId)).toEqual(`app_${uuid}`)
     })
-  
+
     it("should be able to confirm dev app ID is development", () => {
       const { devAppId } = getID()
       expect(isDevAppID(devAppId)).toEqual(true)
     })
-  
+
     it("should be able to confirm prod app ID is not development", () => {
       const { appId } = getID()
       expect(isDevAppID(appId)).toEqual(false)
     })
-  
+
     it("should be able to confirm prod app ID is prod", () => {
       const { appId } = getID()
       expect(isProdAppID(appId)).toEqual(true)
     })
-  
+
     it("should be able to confirm dev app ID is not prod", () => {
       const { devAppId } = getID()
       expect(isProdAppID(devAppId)).toEqual(false)
@@ -81,8 +76,8 @@ const setDbPlatformUrl = async () => {
     _id: "config_settings",
     type: Config.SETTINGS,
     config: {
-      platformUrl: DB_URL
-    }
+      platformUrl: DB_URL,
+    },
   })
 }
 
@@ -92,17 +87,16 @@ const clearSettingsConfig = async () => {
     try {
       const config = await db.get("config_settings")
       await db.remove("config_settings", config._rev)
-    } catch (e) {
+    } catch (e: any) {
       if (e.status !== 404) {
         throw e
       }
     }
   })
 }
- 
+
 describe("getPlatformUrl", () => {
   describe("self host", () => {
-
     beforeEach(async () => {
       env._set("SELF_HOST", 1)
       await clearSettingsConfig()
@@ -129,9 +123,8 @@ describe("getPlatformUrl", () => {
         const url = await getPlatformUrl()
         expect(url).toBe(DB_URL)
       })
-    })    
+    })
   })
-
 
   describe("cloud", () => {
     const TENANT_AWARE_URL = "http://default.env.com"
@@ -163,13 +156,12 @@ describe("getPlatformUrl", () => {
         const url = await getPlatformUrl()
         expect(url).toBe(TENANT_AWARE_URL)
       })
-    })    
+    })
   })
 })
 
 describe("getScopedConfig", () => {
   describe("settings config", () => {
-
     beforeEach(async () => {
       env._set("SELF_HOSTED", 1)
       env._set("PLATFORM_URL", "")
