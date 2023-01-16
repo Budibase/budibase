@@ -44,7 +44,7 @@ export function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-let request: any, config: any
+let request: any, config: TestConfig
 
 export function beforeAll() {
   config = new TestConfig()
@@ -58,7 +58,6 @@ export function afterAll() {
   // clear app files
 
   request = null
-  config = null
 }
 
 export function getRequest() {
