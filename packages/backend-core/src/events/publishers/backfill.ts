@@ -8,18 +8,18 @@ import {
   InstallationBackfillSucceededEvent,
   InstallationBackfillFailedEvent,
 } from "@budibase/types"
-const env = require("../../environment")
+import env from "../../environment"
 
 const shouldSkip = !env.SELF_HOSTED && !env.isDev()
 
-export async function appSucceeded(properties: AppBackfillSucceededEvent) {
+async function appSucceeded(properties: AppBackfillSucceededEvent) {
   if (shouldSkip) {
     return
   }
   await publishEvent(Event.APP_BACKFILL_SUCCEEDED, properties)
 }
 
-export async function appFailed(error: any) {
+async function appFailed(error: any) {
   if (shouldSkip) {
     return
   }
@@ -29,16 +29,14 @@ export async function appFailed(error: any) {
   await publishEvent(Event.APP_BACKFILL_FAILED, properties)
 }
 
-export async function tenantSucceeded(
-  properties: TenantBackfillSucceededEvent
-) {
+async function tenantSucceeded(properties: TenantBackfillSucceededEvent) {
   if (shouldSkip) {
     return
   }
   await publishEvent(Event.TENANT_BACKFILL_SUCCEEDED, properties)
 }
 
-export async function tenantFailed(error: any) {
+async function tenantFailed(error: any) {
   if (shouldSkip) {
     return
   }
@@ -48,7 +46,7 @@ export async function tenantFailed(error: any) {
   await publishEvent(Event.TENANT_BACKFILL_FAILED, properties)
 }
 
-export async function installationSucceeded() {
+async function installationSucceeded() {
   if (shouldSkip) {
     return
   }
@@ -56,7 +54,7 @@ export async function installationSucceeded() {
   await publishEvent(Event.INSTALLATION_BACKFILL_SUCCEEDED, properties)
 }
 
-export async function installationFailed(error: any) {
+async function installationFailed(error: any) {
   if (shouldSkip) {
     return
   }
@@ -64,4 +62,13 @@ export async function installationFailed(error: any) {
     error: JSON.stringify(error, Object.getOwnPropertyNames(error)),
   }
   await publishEvent(Event.INSTALLATION_BACKFILL_FAILED, properties)
+}
+
+export default {
+  appSucceeded,
+  appFailed,
+  tenantSucceeded,
+  tenantFailed,
+  installationSucceeded,
+  installationFailed,
 }

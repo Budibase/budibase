@@ -25,13 +25,16 @@ const jwt = require("jsonwebtoken")
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
+const BUILDER_PREVIEW_PATH = "/app/preview"
+const BUILDER_REFERER_PREFIX = "/builder/app/"
+
 function confirmAppId(possibleAppId: string | undefined) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
     ? possibleAppId
     : undefined
 }
 
-async function resolveAppUrl(ctx: Ctx) {
+export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
@@ -75,7 +78,7 @@ export function isServingApp(ctx: Ctx) {
  */
 export async function getAppIdFromCtx(ctx: Ctx) {
   // look in headers
-  const options = [ctx.headers[Header.APP_ID]]
+  const options = [ctx.request.headers[Header.APP_ID]]
   let appId
   for (let option of options) {
     appId = confirmAppId(option as string)
@@ -95,15 +98,23 @@ export async function getAppIdFromCtx(ctx: Ctx) {
     appId = confirmAppId(pathId)
   }
 
-  // look in the referer
-  const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
-  if (!appId && refererId) {
-    appId = confirmAppId(refererId)
+  // lookup using custom url - prod apps only
+  // filter out the builder preview path which collides with the prod app path
+  // to ensure we don't load all apps excessively
+  const isBuilderPreview = ctx.path.startsWith(BUILDER_PREVIEW_PATH)
+  const isViewingProdApp =
+    ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
+  if (!appId && isViewingProdApp) {
+    appId = confirmAppId(await resolveAppUrl(ctx))
   }
 
-  // look in the url - prod app
-  if (!appId && ctx.path.startsWith(PROD_APP_PREFIX)) {
-    appId = confirmAppId(await resolveAppUrl(ctx))
+  // look in the referer - builder only
+  // make sure this is performed after prod app url resolution, in case the
+  // referer header is present from a builder redirect
+  const referer = ctx.request.headers.referer
+  if (!appId && referer?.includes(BUILDER_REFERER_PREFIX)) {
+    const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
+    appId = confirmAppId(refererId)
   }
 
   return appId

@@ -441,4 +441,4 @@ class LinkController {
   }
 }
 
-export = LinkController
+export default LinkController

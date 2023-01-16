@@ -3,7 +3,7 @@ import { getRowParams, generateTableID } from "../../../db/utils"
 import { FieldTypes } from "../../../constants"
 import { TableSaveFunctions, hasTypeChanged, handleDataImport } from "./utils"
 import { context } from "@budibase/backend-core"
-import { isTest } from "../../../environment"
+import env from "../../../environment"
 import {
   cleanupAttachments,
   fixAutoColumnSubType,
@@ -13,7 +13,6 @@ import { Table } from "@budibase/types"
 import { quotas } from "@budibase/pro"
 import { isEqual } from "lodash"
 import { cloneDeep } from "lodash/fp"
-import env from "../../../environment"
 import sdk from "../../../sdk"
 
 function checkAutoColumns(table: Table, oldTable: Table) {
@@ -164,7 +163,7 @@ export async function destroy(ctx: any) {
   await db.remove(tableToDelete._id, tableToDelete._rev)
 
   // remove table search index
-  if (!isTest() || env.COUCH_DB_URL) {
+  if (!env.isTest() || env.COUCH_DB_URL) {
     const currentIndexes = await db.getIndexes()
     const existingIndex = currentIndexes.indexes.find(
       (existing: any) => existing.name === `search:${ctx.params.tableId}`

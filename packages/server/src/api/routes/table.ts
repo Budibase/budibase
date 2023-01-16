@@ -190,4 +190,4 @@ router
     tableController.bulkImport
   )
 
-export = router
+export default router

@@ -33,7 +33,7 @@ const pkg = require("../../package.json")
  * - tenant
  * - installation
  */
-export const getCurrentIdentity = async (): Promise<Identity> => {
+const getCurrentIdentity = async (): Promise<Identity> => {
   let identityContext = identityCtx.getIdentity()
   const environment = getDeploymentEnvironment()
 
@@ -94,7 +94,7 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
   }
 }
 
-export const identifyInstallationGroup = async (
+const identifyInstallationGroup = async (
   installId: string,
   timestamp?: string | number
 ): Promise<void> => {
@@ -118,7 +118,7 @@ export const identifyInstallationGroup = async (
   await identify({ ...group, id: `$${type}_${id}` }, timestamp)
 }
 
-export const identifyTenantGroup = async (
+const identifyTenantGroup = async (
   tenantId: string,
   account: Account | undefined,
   timestamp?: string | number
@@ -156,7 +156,7 @@ export const identifyTenantGroup = async (
   await identify({ ...group, id: `$${type}_${id}` }, timestamp)
 }
 
-export const identifyUser = async (
+const identifyUser = async (
   user: User,
   account: CloudAccount | undefined,
   timestamp?: string | number
@@ -191,7 +191,7 @@ export const identifyUser = async (
   await identify(identity, timestamp)
 }
 
-export const identifyAccount = async (account: Account) => {
+const identifyAccount = async (account: Account) => {
   let id = account.accountId
   const tenantId = account.tenantId
   let type = IdentityType.USER
@@ -224,17 +224,11 @@ export const identifyAccount = async (account: Account) => {
   await identify(identity)
 }
 
-export const identify = async (
-  identity: Identity,
-  timestamp?: string | number
-) => {
+const identify = async (identity: Identity, timestamp?: string | number) => {
   await processors.identify(identity, timestamp)
 }
 
-export const identifyGroup = async (
-  group: Group,
-  timestamp?: string | number
-) => {
+const identifyGroup = async (group: Group, timestamp?: string | number) => {
   await processors.identifyGroup(group, timestamp)
 }
 
@@ -250,7 +244,7 @@ const getHostingFromEnv = () => {
   return env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
 }
 
-export const getInstallationId = async () => {
+const getInstallationId = async () => {
   if (isAccountPortal()) {
     return "account-portal"
   }
@@ -299,4 +293,15 @@ const formatDistinctId = (id: string, type: IdentityType) => {
   } else {
     return id
   }
+}
+
+export default {
+  getCurrentIdentity,
+  identifyInstallationGroup,
+  identifyTenantGroup,
+  identifyUser,
+  identifyAccount,
+  identify,
+  identifyGroup,
+  getInstallationId,
 }

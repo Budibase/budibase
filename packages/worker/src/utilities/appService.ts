@@ -1,5 +1,5 @@
 import fetch from "node-fetch"
-import { constants, tenancy } from "@budibase/backend-core"
+import { constants, tenancy, logging } from "@budibase/backend-core"
 import { checkSlashesInUrl } from "../utilities"
 import env from "../environment"
 
@@ -17,6 +17,10 @@ async function makeAppRequest(url: string, method: string, body: any) {
     request.body = JSON.stringify(body)
   }
   request.method = method
+
+  // add x-budibase-correlation-id header
+  logging.correlation.setHeader(request.headers)
+
   return fetch(checkSlashesInUrl(env.APPS_URL + url), request)
 }
 

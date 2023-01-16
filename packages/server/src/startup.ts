@@ -1,16 +1,11 @@
-import * as env from "./environment"
+import env from "./environment"
 import * as redis from "./utilities/redis"
 import {
   createAdminUser,
   generateApiKey,
   getChecklist,
 } from "./utilities/workerRequests"
-import {
-  installation,
-  pinoSettings,
-  tenancy,
-  logging,
-} from "@budibase/backend-core"
+import { installation, tenancy, logging } from "@budibase/backend-core"
 import fs from "fs"
 import { watch } from "./watch"
 import * as automations from "./automations"
@@ -26,7 +21,7 @@ const pino = require("koa-pino-logger")
 let STARTUP_RAN = false
 
 async function initRoutes(app: any) {
-  app.use(pino(pinoSettings()))
+  app.use(pino(logging.pinoSettings()))
 
   if (!env.isTest()) {
     const plugin = await bullboard.init()

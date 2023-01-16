@@ -166,8 +166,8 @@ export default class AppApi {
     const body = {
       icon: {
         name: "ConversionFunnel",
-        color: "var(--spectrum-global-color-red-400)"
-      }
+        color: "var(--spectrum-global-color-red-400)",
+      },
     }
     const response = await this.api.put(`/applications/${appId}`, { body })
     const json = await response.json()

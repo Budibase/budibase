@@ -113,4 +113,4 @@ router
     selfController.updateSelf
   )
 
-export = router
+export default router

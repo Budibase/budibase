@@ -57,4 +57,4 @@ class LinkDocumentImpl implements LinkDocument {
   }
 }
 
-export = LinkDocumentImpl
+export default LinkDocumentImpl
