@@ -389,6 +389,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    gap: var(--spacing-l);
   }
   .tableTitle {
     display: flex;
@@ -396,7 +397,6 @@
     align-items: flex-end;
   }
   .subtitle {
-    padding: 0 0 0 var(--spacing-m);
     display: flex;
     flex-direction: column;
     justify-content: center;

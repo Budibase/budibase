@@ -192,7 +192,7 @@
       <Layout noPadding gap="S">
         <div class="title">
           <Heading size="S">Users</Heading>
-          <Button secondary on:click={showUsersModal}>Assign user</Button>
+          <Button cta on:click={showUsersModal}>Assign user</Button>
         </div>
         <Table
           customPlaceholder
@@ -217,11 +217,11 @@
       </Layout>
     {/if}
 
-    {#if $usersFetch.loaded && $licensing.groupsEnabled && appGroups.length}
+    {#if $usersFetch.loaded && $licensing.groupsEnabled}
       <Layout noPadding gap="S">
         <div class="title">
           <Heading size="S">Groups</Heading>
-          <Button secondary on:click={showGroupsModal}>Assign group</Button>
+          <Button cta on:click={showGroupsModal}>Assign group</Button>
         </div>
         <Table
           customPlaceholder

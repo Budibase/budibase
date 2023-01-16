@@ -103,6 +103,7 @@
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
+      allowClickRows={false}
       {customRenderers}
     />
   </Layout>

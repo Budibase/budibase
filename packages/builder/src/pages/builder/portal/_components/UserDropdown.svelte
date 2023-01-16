@@ -23,7 +23,7 @@
 
 <ActionMenu align="right" dataCy="user-menu">
   <div slot="control" class="user-dropdown">
-    <Avatar size="L" initials={$auth.initials} url={$auth.user.pictureUrl} />
+    <Avatar size="M" initials={$auth.initials} url={$auth.user.pictureUrl} />
     <Icon size="XL" name="ChevronDown" />
   </div>
   <MenuItem icon="Moon" on:click={() => themeModal.show()} dataCy="theme">

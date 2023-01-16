@@ -144,7 +144,7 @@
 
 <ModalContent
   size="M"
-  title="Assign users to your app"
+  title="Assign access to your app"
   confirmText="Done"
   cancelText="Cancel"
   onConfirm={() => addData(data)}
