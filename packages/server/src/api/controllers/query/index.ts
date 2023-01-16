@@ -147,6 +147,7 @@ export async function preview(ctx: any) {
       parameters,
       transformer,
       queryId,
+      // have to pass down to the thread runner - can't put into context now
       environmentVariables: envVars,
       ctx: {
         user: ctx.user,
@@ -233,6 +234,7 @@ async function execute(
       parameters: enrichedParameters,
       transformer: query.transformer,
       queryId: ctx.params.queryId,
+      // have to pass down to the thread runner - can't put into context now
       environmentVariables: envVars,
       ctx: {
         user: ctx.user,

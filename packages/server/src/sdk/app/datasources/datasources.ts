@@ -10,7 +10,7 @@ async function enrichDatasourceWithValues(datasource: Datasource) {
   const processed = processObjectSync(cloned, env)
   return {
     datasource: processed as Datasource,
-    envVars: env.env as Record<string, string>,
+    envVars: env as Record<string, string>,
   }
 }
 
