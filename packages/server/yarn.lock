@@ -1273,13 +1273,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.2.12-alpha.19":
-  version "2.2.12-alpha.19"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.12-alpha.19.tgz#c90508ad051e95e293bf89f11bcceffeaed34a20"
-  integrity sha512-39xg1sy38eoMMGCU8+84rJCwFFLDRxTndBo6SmS2vETkwHCM9UMxNgAUOjdKEfUD4DYTDXa9QTfpSgRqVPB/BQ==
+"@budibase/backend-core@2.2.12-alpha.20":
+  version "2.2.12-alpha.20"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.12-alpha.20.tgz#aac6b995d0c53c599eff1f069bbde6426f383a36"
+  integrity sha512-ta9gEa3fklCQHUybJk8wxQM0VawV+IN7P4yVH4kZU3mr9nAS42rhvb+xoqx4vB8HIa6312uj0UgUaYWacK15Rw==
   dependencies:
     "@budibase/nano" "10.1.1"
-    "@budibase/types" "2.2.12-alpha.19"
+    "@budibase/types" "2.2.12-alpha.20"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -1374,13 +1374,13 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
-"@budibase/pro@2.2.12-alpha.19":
-  version "2.2.12-alpha.19"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.12-alpha.19.tgz#a0e86c17e98b2554a35223b1c4970267e8fb8e72"
-  integrity sha512-2BW4jANRUmULaT0qxLPV0utLXuZpuy/1xzSk3mw2lygtIodeILtXln74vq6eFZvoJYzgxsop8A39NQ0U02T/6g==
+"@budibase/pro@2.2.12-alpha.20":
+  version "2.2.12-alpha.20"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.12-alpha.20.tgz#3eb45b7ddef7e5c2190851a8f021b6638d01ef90"
+  integrity sha512-j169PLqdCxR6oPR6nevdVrwHDTH1SilKhtA7GSrP3ANPGTK3G9fxVBvx+KH4IaGikTSZnCaGUP6p376EcOMMCg==
   dependencies:
-    "@budibase/backend-core" "2.2.12-alpha.19"
-    "@budibase/types" "2.2.12-alpha.19"
+    "@budibase/backend-core" "2.2.12-alpha.20"
+    "@budibase/types" "2.2.12-alpha.20"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1405,10 +1405,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@2.2.12-alpha.19":
-  version "2.2.12-alpha.19"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.12-alpha.19.tgz#1bc3aa4657aae29236054f791a5578bc8df105ee"
-  integrity sha512-1QLTmOLefJ1u0mG1AZzf17NOxgmfecGg1itsga1S/Rd2xQO6/W3FZmFiYY/Fseu47YfkODwNvC/ok2hksa7xoQ==
+"@budibase/types@2.2.12-alpha.20":
+  version "2.2.12-alpha.20"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.12-alpha.20.tgz#d708eb74df555a7649873247662b6d6be1054bfe"
+  integrity sha512-HQjCgYjgd8NLkykMy5oQA48VS03Py/GbDqnIuUT70fhmX8mgORctvvK7AgNsSLTrv2uRFuvZOcL8VE8MyJBhKA==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
