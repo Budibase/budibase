@@ -250,7 +250,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
   }
   .header :global(.spectrum-Heading) {
     flex: 1 1 auto;

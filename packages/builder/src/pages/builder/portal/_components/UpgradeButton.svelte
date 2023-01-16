@@ -17,6 +17,7 @@
 {:else if !$admin.cloud && $auth.isAdmin}
   <Button
     cta
+    size="S"
     on:click={() => $goto("/builder/portal/account/upgrade")}
     on:click
   >
