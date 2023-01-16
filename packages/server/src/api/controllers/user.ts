@@ -7,10 +7,10 @@ import {
   roles as rolesCore,
   db as dbCore,
 } from "@budibase/backend-core"
-import { BBContext, Ctx, isUser, User } from "@budibase/types"
+import { BBContext, Ctx, SyncUserRequest, User } from "@budibase/types"
 import sdk from "../../sdk"
 
-export async function syncUser(ctx: Ctx) {
+export async function syncUser(ctx: Ctx<SyncUserRequest>) {
   let deleting = false,
     user: User | any
   const userId = ctx.params.id
@@ -28,10 +28,9 @@ export async function syncUser(ctx: Ctx) {
     }
   }
 
-  let previousApps =
-    previousUser && isUser(previousUser)
-      ? Object.keys(previousUser.roles).map(appId => appId)
-      : []
+  let previousApps = previousUser
+    ? Object.keys(previousUser.roles).map(appId => appId)
+    : []
 
   const roles = deleting ? {} : user.roles
   // remove props which aren't useful to metadata
