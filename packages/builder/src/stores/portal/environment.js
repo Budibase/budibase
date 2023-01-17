@@ -26,6 +26,7 @@ export function createEnvironmentStore() {
   async function updateVariable(data) {
     await API.updateEnvironmentVariable(data)
   }
+
   return {
     subscribe,
     loadVariables,
