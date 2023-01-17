@@ -70,7 +70,8 @@
       <Button on:click={modal.show} cta>Add Variable</Button>
     </div>
   {:else}
-    <div>
+    <Divider />
+    <div class="buttons">
       <Button
         primary
         disabled={!$auth.accountPortalAccess && $admin.cloud}
@@ -96,6 +97,10 @@
 </Modal>
 
 <style>
+  .buttons {
+    display: flex;
+    gap: var(--spacing-l);
+  }
   .title {
     display: flex;
     flex-direction: row;
