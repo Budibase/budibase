@@ -115,6 +115,7 @@ const environment = {
   isInThread: () => {
     return inThread
   },
+  isDockerisedTest,
 }
 
 // threading can cause memory issues with node-ts in development
