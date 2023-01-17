@@ -74,7 +74,7 @@ server.on("close", async () => {
   await events.shutdown()
   await Thread.shutdown()
   api.shutdown()
-  if (!env.isTest()) {
+  if (!env.isTest() && !env.isDockerisedTest()) {
     process.exit(errCode)
   }
 })
