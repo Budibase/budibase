@@ -1,20 +1,24 @@
+import * as setup from "../../tests/utilities"
 import { checkSlashesInUrl } from "../../../../utilities"
+import supertest from "supertest"
+
+export type HttpMethod = "post" | "get"
 
 export type MakeRequestResponse = (
-  method: string,
+  method: HttpMethod,
   endpoint: string,
   body?: any,
   intAppId?: string
-) => Promise<any>
+) => Promise<supertest.Response>
 
-export function generateMakeRequest(apiKey: string, setup: any) {
-  const request = setup.getRequest()
+export function generateMakeRequest(apiKey: string): MakeRequestResponse {
+  const request = setup.getRequest()!
   const config = setup.getConfig()
   return async (
-    method: string,
+    method: HttpMethod,
     endpoint: string,
     body?: any,
-    intAppId: string = config.getAppId()
+    intAppId: string | null = config.getAppId()
   ) => {
     const extraHeaders: any = {
       "x-budibase-api-key": apiKey,
