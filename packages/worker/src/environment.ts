@@ -4,7 +4,17 @@ function isDev() {
   return process.env.NODE_ENV !== "production"
 }
 
+function isDockerisedTest() {
+  return process.env.DOCKERISED_TEST === "true"
+}
+
 function isTest() {
+  if (isDockerisedTest()) {
+    // While we are migrating all the tests to use docker instead of mocked in memory,
+    // we want to keep treating the old tests as tests,
+    // but the new tests should not make a difference
+    return false
+  }
   return (
     process.env.NODE_ENV === "jest" ||
     process.env.NODE_ENV === "cypress" ||
