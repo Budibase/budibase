@@ -16,21 +16,4 @@ const config: Config.InitialOptions = {
   },
 }
 
-if (!process.env.CI) {
-  // use sources when not in CI
-  config.moduleNameMapper = {
-    "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
-    "@budibase/backend-core": "<rootDir>/../backend-core/src",
-    "@budibase/types": "<rootDir>/../types/src",
-    "^axios.*$": "<rootDir>/node_modules/axios/lib/axios.js",
-  }
-  // add pro sources if they exist
-  if (fs.existsSync("../../../budibase-pro")) {
-    config.moduleNameMapper["@budibase/pro"] =
-      "<rootDir>/../../../budibase-pro/packages/pro/src"
-  }
-} else {
-  console.log("Running tests with compiled dependency sources")
-}
-
 export default config
