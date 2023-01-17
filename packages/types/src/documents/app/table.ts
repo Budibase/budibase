@@ -1,10 +1,10 @@
 import { Document } from "../document"
 import { View } from "./view"
 import { RenameColumn } from "../../sdk"
+import { FieldType } from "./row"
 
 export interface FieldSchema {
-  // TODO: replace with field types enum when done
-  type: string
+  type: FieldType
   externalType?: string
   fieldName?: string
   name: string
