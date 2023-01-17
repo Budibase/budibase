@@ -5,11 +5,12 @@
     Button,
     Divider,
     Heading,
-    Input,
     Layout,
     notifications,
     Link,
   } from "@budibase/bbui"
+  import { FancyInput, FancyForm } from "@budibase/bbui"
+  import { TestimonialPage } from "@budibase/frontend-core"
   import { goto } from "@roxi/routify"
   import { auth, organisation, oidc, admin } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
@@ -20,12 +21,16 @@
   let username = ""
   let password = ""
   let loaded = false
+  let form
 
   $: company = $organisation.company || "Budibase"
   $: multiTenancyEnabled = $admin.multiTenancy
   $: cloud = $admin.cloud
 
   async function login() {
+    if (!form.validate()) {
+      return
+    }
     try {
       await auth.login({
         username: username.trim(),
@@ -57,60 +62,78 @@
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
-<div class="login">
-  <div class="main">
-    <Layout>
-      <Layout noPadding justifyItems="center">
-        <img alt="logo" src={$organisation.logoUrl || Logo} />
-        <Heading textAlign="center">Sign in to {company}</Heading>
-      </Layout>
-      {#if loaded}
-        <GoogleButton />
-        <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
-      {/if}
-      <Divider noGrid />
-      <Layout gap="XS" noPadding>
-        <Body size="S" textAlign="center">Sign in with email</Body>
-        <Input label="Email" bind:value={username} />
-        <Input
-          label="Password"
-          type="password"
-          on:change
-          bind:value={password}
-        />
-      </Layout>
-      <Layout gap="XS" noPadding>
-        <Button cta disabled={!username && !password} on:click={login}
-          >Sign in to {company}</Button
+
+<TestimonialPage>
+  <Layout noPadding>
+    <Layout noPadding justifyItems="center">
+      <img alt="logo" src={$organisation.logoUrl || Logo} />
+      <Heading textAlign="center">Log in to {company}</Heading>
+    </Layout>
+    {#if loaded}
+      <GoogleButton />
+      <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
+    {/if}
+    <Divider />
+    <FancyForm bind:this={form}>
+      <FancyInput
+        validate={x => !x && "Please enter your work email"}
+        label="Your work email"
+        value={username}
+        on:change={e => (username = e.detail)}
+      />
+      <FancyInput
+        disabled
+        label="Work email"
+        value={username}
+        on:change={e => (username = e.detail)}
+      />
+      <FancyInput
+        label="Work email"
+        value={username}
+        on:change={e => (username = e.detail)}
+      />
+      <FancyInput
+        validate={x => !x && "Please enter your password"}
+        label="Password"
+        type="password"
+        value={password}
+        on:change={e => (password = e.detail)}
+      />
+    </FancyForm>
+    <Layout gap="XS" noPadding justifyItems="center">
+      <div>
+        <Button cta on:click={login}>
+          Log in to {company}
+        </Button>
+      </div>
+
+      <ActionButton quiet on:click={() => $goto("./forgot")}>
+        Forgot password?
+      </ActionButton>
+      {#if multiTenancyEnabled && !cloud}
+        <ActionButton
+          quiet
+          on:click={() => {
+            admin.unload()
+            $goto("./org")
+          }}
         >
-        <ActionButton quiet on:click={() => $goto("./forgot")}>
-          Forgot password?
+          Change organisation
         </ActionButton>
-        {#if multiTenancyEnabled && !cloud}
-          <ActionButton
-            quiet
-            on:click={() => {
-              admin.unload()
-              $goto("./org")
-            }}
-          >
-            Change organisation
-          </ActionButton>
-        {/if}
-      </Layout>
-      {#if cloud}
-        <Body size="xs" textAlign="center">
-          By using Budibase Cloud
-          <br />
-          you are agreeing to our
-          <Link href="https://budibase.com/eula" target="_blank"
-            >License Agreement</Link
-          >
-        </Body>
       {/if}
     </Layout>
-  </div>
-</div>
+    {#if cloud}
+      <Body size="xs" textAlign="center">
+        By using Budibase Cloud
+        <br />
+        you are agreeing to our
+        <Link href="https://budibase.com/eula" target="_blank">
+          License Agreement
+        </Link>
+      </Body>
+    {/if}
+  </Layout>
+</TestimonialPage>
 
 <style>
   .login {
