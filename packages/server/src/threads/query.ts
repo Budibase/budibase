@@ -89,7 +89,7 @@ class QueryRunner {
     let query
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
-      query = interpolateSQL(fieldsClone, enrichedParameters, integration)
+      query = interpolateSQL(fieldsClone, enrichedContext, integration)
     } else {
       query = enrichQueryFields(fieldsClone, enrichedContext)
     }

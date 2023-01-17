@@ -151,6 +151,9 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         ) {
           return field.string()
         }
+        if (field.type === "BIT" && field.length === 1) {
+          return field.buffer()?.[0]
+        }
         return next()
       },
     }

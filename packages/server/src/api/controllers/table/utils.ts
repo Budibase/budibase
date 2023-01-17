@@ -316,7 +316,13 @@ export async function checkForViewUpdates(
 
     // Update view if required
     if (needsUpdated) {
-      const newViewTemplate = viewTemplate(view.meta)
+      const groupByField: any = Object.values(table.schema).find(
+        (field: any) => field.name == view.groupBy
+      )
+      const newViewTemplate = viewTemplate(
+        view.meta,
+        groupByField?.type === FieldTypes.ARRAY
+      )
       await saveView(null, view.name, newViewTemplate)
       if (!newViewTemplate.meta.schema) {
         newViewTemplate.meta.schema = table.schema
