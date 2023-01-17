@@ -116,42 +116,42 @@ async function createInstance(template: any, includeSampleData: boolean) {
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
-  await context.updateAppId(appId)
+  return await context.doInAppContext(appId, async () => {
+    const db = context.getAppDB()
+    await db.put({
+      _id: "_design/database",
+      // view collation information, read before writing any complex views:
+      // https://docs.couchdb.org/en/master/ddocs/views/collation.html#collation-specification
+      views: {},
+    })
 
-  const db = context.getAppDB()
-  await db.put({
-    _id: "_design/database",
-    // view collation information, read before writing any complex views:
-    // https://docs.couchdb.org/en/master/ddocs/views/collation.html#collation-specification
-    views: {},
+    // NOTE: indexes need to be created before any tables/templates
+    // add view for linked rows
+    await createLinkView()
+    await createRoutingView()
+    await createAllSearchIndex()
+
+    // replicate the template data to the instance DB
+    // this is currently very hard to test, downloading and importing template files
+    if (template && template.templateString) {
+      const { ok } = await db.load(stringToReadStream(template.templateString))
+      if (!ok) {
+        throw "Error loading database dump from memory."
+      }
+    } else if (template && template.useTemplate === "true") {
+      await sdk.backups.importApp(appId, db, template)
+    } else {
+      // create the users table
+      await db.put(USERS_TABLE_SCHEMA)
+
+      if (includeSampleData) {
+        // create ootb stock db
+        await addDefaultTables(db)
+      }
+    }
+
+    return { _id: appId }
   })
-
-  // NOTE: indexes need to be created before any tables/templates
-  // add view for linked rows
-  await createLinkView()
-  await createRoutingView()
-  await createAllSearchIndex()
-
-  // replicate the template data to the instance DB
-  // this is currently very hard to test, downloading and importing template files
-  if (template && template.templateString) {
-    const { ok } = await db.load(stringToReadStream(template.templateString))
-    if (!ok) {
-      throw "Error loading database dump from memory."
-    }
-  } else if (template && template.useTemplate === "true") {
-    await sdk.backups.importApp(appId, db, template)
-  } else {
-    // create the users table
-    await db.put(USERS_TABLE_SCHEMA)
-
-    if (includeSampleData) {
-      // create ootb stock db
-      await addDefaultTables(db)
-    }
-  }
-
-  return { _id: appId }
 }
 
 async function addDefaultTables(db: Database) {

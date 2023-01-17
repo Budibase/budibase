@@ -8,6 +8,7 @@ import env from "../../../environment"
 import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import { QueryEvent } from "../../../threads/definitions"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
@@ -127,9 +128,9 @@ function getAuthConfig(ctx: any) {
 }
 
 export async function preview(ctx: any) {
-  const datasource = await sdk.datasources.get(ctx.request.body.datasourceId, {
-    withEnvVars: true,
-  })
+  const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
+    ctx.request.body.datasourceId
+  )
   const query = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
@@ -138,20 +139,22 @@ export async function preview(ctx: any) {
   const authConfigCtx: any = getAuthConfig(ctx)
 
   try {
-    const runFn = () =>
-      Runner.run({
-        appId: ctx.appId,
-        datasource,
-        queryVerb,
-        fields,
-        parameters,
-        transformer,
-        queryId,
-        ctx: {
-          user: ctx.user,
-          auth: { ...authConfigCtx },
-        },
-      })
+    const inputs: QueryEvent = {
+      appId: ctx.appId,
+      datasource,
+      queryVerb,
+      fields,
+      parameters,
+      transformer,
+      queryId,
+      // have to pass down to the thread runner - can't put into context now
+      environmentVariables: envVars,
+      ctx: {
+        user: ctx.user,
+        auth: { ...authConfigCtx },
+      },
+    }
+    const runFn = () => Runner.run(inputs)
 
     const { rows, keys, info, extra } = await quotas.addQuery(runFn, {
       datasourceId: datasource._id,
@@ -202,9 +205,9 @@ async function execute(
   const db = context.getAppDB()
 
   const query = await db.get(ctx.params.queryId)
-  const datasource = await sdk.datasources.get(query.datasourceId, {
-    withEnvVars: true,
-  })
+  const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
+    query.datasourceId
+  )
 
   let authConfigCtx: any = {}
   if (!opts.isAutomation) {
@@ -222,21 +225,23 @@ async function execute(
 
   // call the relevant CRUD method on the integration class
   try {
-    const runFn = () =>
-      Runner.run({
-        appId: ctx.appId,
-        datasource,
-        queryVerb: query.queryVerb,
-        fields: query.fields,
-        pagination: ctx.request.body.pagination,
-        parameters: enrichedParameters,
-        transformer: query.transformer,
-        queryId: ctx.params.queryId,
-        ctx: {
-          user: ctx.user,
-          auth: { ...authConfigCtx },
-        },
-      })
+    const inputs: QueryEvent = {
+      appId: ctx.appId,
+      datasource,
+      queryVerb: query.queryVerb,
+      fields: query.fields,
+      pagination: ctx.request.body.pagination,
+      parameters: enrichedParameters,
+      transformer: query.transformer,
+      queryId: ctx.params.queryId,
+      // have to pass down to the thread runner - can't put into context now
+      environmentVariables: envVars,
+      ctx: {
+        user: ctx.user,
+        auth: { ...authConfigCtx },
+      },
+    }
+    const runFn = () => Runner.run(inputs)
 
     const { rows, pagination, extra } = await quotas.addQuery(runFn, {
       datasourceId: datasource._id,

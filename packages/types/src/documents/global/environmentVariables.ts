@@ -14,3 +14,7 @@ export type EnvironmentVariablesDecrypted = Record<
   string,
   EnvironmentVariableValue
 >
+
+export interface EnvironmentVariablesDocDecrypted extends Document {
+  variables: EnvironmentVariablesDecrypted
+}

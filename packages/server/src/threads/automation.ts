@@ -16,7 +16,6 @@ import { storeLog } from "../automations/logging"
 import { Automation, AutomationStep, AutomationStatus } from "@budibase/types"
 import {
   LoopStep,
-  LoopStepType,
   LoopInput,
   TriggerOutput,
   AutomationContext,
@@ -26,6 +25,7 @@ import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
 import { processObject } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
+import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
@@ -221,6 +221,8 @@ class Orchestrator {
   }
 
   async execute() {
+    // this will retrieve from context created at start of thread
+    this._context.env = await sdkUtils.getEnvironmentVariables()
     let automation = this._automation
     let stopped = false
     let loopStep: AutomationStep | undefined = undefined
@@ -474,7 +476,11 @@ export const removeStalled = async (job: Job) => {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
   await context.doInAppContext(appId, async () => {
-    const automationOrchestrator = new Orchestrator(job)
-    await automationOrchestrator.stopCron("stalled")
+    const envVars = await sdkUtils.getEnvironmentVariables()
+    // put into automation thread for whole context
+    await context.doInEnvironmentContext(envVars, async () => {
+      const automationOrchestrator = new Orchestrator(job)
+      await automationOrchestrator.stopCron("stalled")
+    })
   })
 }

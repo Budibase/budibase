@@ -15,6 +15,7 @@ import { db as dbCore, context, events } from "@budibase/backend-core"
 import { BBContext, Datasource, Row } from "@budibase/types"
 import sdk from "../../sdk"
 import { cloneDeep } from "lodash/fp"
+import { enrich } from "../../sdk/app/datasources/datasources"
 
 export async function fetch(ctx: BBContext) {
   // Get internal tables
@@ -315,8 +316,7 @@ function updateError(error: any, newError: any, tables: string[]) {
 
 async function buildSchemaHelper(datasource: Datasource) {
   const Connector = await getIntegration(datasource.source)
-  datasource = await sdk.datasources.enrichDatasourceWithValues(datasource)
-
+  datasource = await sdk.datasources.enrich(datasource)
   // Connect to the DB and build the schema
   const connector = new Connector(datasource.config)
   await connector.buildSchema(datasource._id, datasource.entities)

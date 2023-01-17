@@ -155,7 +155,7 @@ export const getSignedUploadURL = async function (ctx: any) {
   let datasource
   try {
     const { datasourceId } = ctx.params
-    datasource = await sdk.datasources.get(datasourceId, { withEnvVars: true })
+    datasource = await sdk.datasources.get(datasourceId, { enriched: true })
     if (!datasource) {
       ctx.throw(400, "The specified datasource could not be found")
     }
