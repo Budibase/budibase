@@ -39,6 +39,7 @@ import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
+import { Table } from "@budibase/types"
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -418,7 +419,7 @@ class TestConfiguration {
     return this.table
   }
 
-  async createTable(config?: any) {
+  async createTable(config?: Table) {
     if (config != null && config._id) {
       delete config._id
     }
