@@ -1,4 +1,6 @@
 <script>
+  import Icon from "../Icon/Icon.svelte"
+
   export let disabled = false
   export let error = null
   export let focused = false
@@ -13,7 +15,14 @@
   class:clickable
 >
   <div class="content" on:click>
-    <slot />
+    <div class="field">
+      <slot />
+    </div>
+    {#if error}
+      <div class="error-icon">
+        <Icon name="Alert" />
+      </div>
+    {/if}
   </div>
   {#if error}
     <div class="error-message">
@@ -53,14 +62,20 @@
     pointer-events: none;
   }
   .content {
+    position: relative;
     height: 64px;
     padding: 0 16px;
+  }
+  .content,
+  .field {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: 16px;
-    position: relative;
+    gap: 10px;
+  }
+  .field {
+    flex: 1 1 auto;
   }
   .error-message {
     background: var(--spectrum-global-color-red-400);
@@ -68,5 +83,11 @@
     font-size: 14px;
     padding: 6px 16px;
     font-weight: 500;
+  }
+  .error-icon {
+    flex: 0 0 auto;
+  }
+  .error-icon :global(.spectrum-Icon) {
+    fill: var(--spectrum-global-color-red-400);
   }
 </style>

@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import FancyField from "./FancyField.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   export let label
   export let value
@@ -29,8 +30,6 @@
     validate: () => {
       if (validate) {
         error = validate(value)
-      } else {
-        error = null
       }
       return !error
     },
@@ -69,25 +68,25 @@
   .label {
     font-size: 14px;
     font-weight: 500;
-    transform: translateY(-12px);
+    transform: translateY(calc(-50% - 12px));
     position: absolute;
+    top: 50%;
     color: var(--spectrum-global-color-gray-600);
     transition: font-size 130ms ease-out, transform 130ms ease-out;
   }
   .label.placeholder {
     font-size: 15px;
-    transform: translateY(0);
+    transform: translateY(-50%);
   }
   input {
-    z-index: 1;
+    width: 100%;
+    transition: transform 130ms ease-out;
+    transform: translateY(9px);
     background: transparent;
     font-size: 15px;
     color: var(--spectrum-global-color-gray-900);
     outline: none;
     border: none;
-    transition: transform 130ms ease-out;
-    width: 100%;
-    transform: translateY(9px);
   }
   input.placeholder {
     transform: translateY(0);
