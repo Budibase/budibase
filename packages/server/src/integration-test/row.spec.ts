@@ -41,7 +41,7 @@ describe("row api", () => {
   describe("create a row", () => {
     test("Given than no row exists, adding a new rows persists it", async () => {
       const tableName = faker.lorem.word()
-      let table = await config.createTable({
+      const table = await config.createTable({
         name: tableName,
         schema: {
           name: {
@@ -62,12 +62,21 @@ describe("row api", () => {
       const newRow = {
         name: faker.name.fullName(),
         description: faker.lorem.paragraphs(),
-        value: faker.random.numeric(),
+        value: +faker.random.numeric(),
       }
 
       const res = await makeRequest("post", `/tables/${table._id}/rows`, newRow)
 
       expect(res.status).toBe(200)
+
+      const persistedRows = await config.getRows(table._id!)
+      expect(persistedRows).toHaveLength(1)
+      expect(persistedRows).toEqual([
+        expect.objectContaining({
+          ...res.body.data,
+          ...newRow,
+        }),
+      ])
     })
   })
 })

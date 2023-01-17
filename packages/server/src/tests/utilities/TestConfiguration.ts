@@ -413,7 +413,7 @@ class TestConfiguration {
 
   // TABLE
 
-  async updateTable(config?: any) {
+  async updateTable(config?: any): Promise<Table> {
     config = config || basicTable()
     this.table = await this._req(config, null, controllers.table.save)
     return this.table
