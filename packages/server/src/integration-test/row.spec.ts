@@ -130,6 +130,37 @@ describe("row api - postgres", () => {
     })
   })
 
+  describe("update a row", () => {
+    test("Given than a row exists, updating it persists it", async () => {
+      let { rowData, row } = _.sample(await populateRows(10))!
+
+      const newName = faker.random.words(3)
+      const newValue = +faker.random.numeric()
+      const updateRow = {
+        name: newName,
+        value: newValue,
+      }
+
+      const res = await makeRequest(
+        "put",
+        `/tables/${postgresTable._id}/rows/${row._id}`,
+        updateRow
+      )
+
+      expect(res.status).toBe(200)
+
+      const persistedRows = await config.getRow(postgresTable._id!, row._id!)
+
+      expect(persistedRows).toEqual(
+        expect.objectContaining({
+          ...res.body.data,
+          ...rowData,
+          ...updateRow,
+        })
+      )
+    })
+  })
+
   describe("retrieve a row", () => {
     test("Given than a table have a single row, the row can be retrieved successfully", async () => {
       const [{ rowData, row }] = await populateRows(1)

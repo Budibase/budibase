@@ -472,7 +472,7 @@ class TestConfiguration {
     return this._req(config, { tableId }, controllers.row.save)
   }
 
-  async getRow(tableId: string, rowId: string) {
+  async getRow(tableId: string, rowId: string): Promise<Row> {
     return this._req(null, { tableId, rowId }, controllers.row.find)
   }
 
