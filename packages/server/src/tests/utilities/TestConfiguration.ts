@@ -39,7 +39,7 @@ import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
-import { Datasource, SourceName, Table } from "@budibase/types"
+import { Datasource, Row, SourceName, Table } from "@budibase/types"
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -463,7 +463,7 @@ class TestConfiguration {
 
   // ROW
 
-  async createRow(config: any = null) {
+  async createRow(config: any = null): Promise<Row> {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
