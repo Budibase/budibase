@@ -53,7 +53,7 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <div class="title">
-      <Heading size="M">Envrironment Variables</Heading>
+      <Heading size="M">Environment Variables</Heading>
       {#if !$licensing.environmentVariablesEnabled}
         <Tags>
           <Tag icon="LockClosed">Pro plan</Tag>
