@@ -46,8 +46,5 @@
     .right {
       display: none;
     }
-    .content {
-      width: auto;
-    }
   }
 </style>
