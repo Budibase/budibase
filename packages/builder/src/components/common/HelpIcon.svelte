@@ -31,6 +31,7 @@
     bottom: var(--spacing-m);
     right: var(--spacing-m);
     border-radius: 55%;
+    z-index: 99999;
   }
   .hidden {
     display: none;

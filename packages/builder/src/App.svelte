@@ -11,11 +11,8 @@
 
 <div class="banner-container" />
 <BannerDisplay />
-
 <NotificationDisplay />
-
 <LicensingOverlays />
-
 <Router {routes} config={{ queryHandler }} />
 <div class="modal-container" />
 <HelpIcon />
