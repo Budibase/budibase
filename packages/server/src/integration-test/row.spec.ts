@@ -6,73 +6,89 @@ import {
 
 import * as setup from "../api/routes/tests/utilities"
 import { Datasource, FieldType, SourceName, Table } from "@budibase/types"
+import _ from "lodash"
 
 const config = setup.getConfig()
-let apiKey,
-  makeRequest: MakeRequestResponse,
-  postgresDatasource: Datasource,
-  postgresTable: Table
 
-beforeEach(async () => {
-  await config.init()
-  apiKey = await config.generateApiKey()
-  postgresDatasource = await config.createDatasource({
-    type: "datasource",
-    source: SourceName.POSTGRES,
-    plus: true,
-    config: {
-      host: "192.168.1.98",
-      port: 54321,
-      database: "postgres",
-      user: "root",
-      password: "root",
-      schema: "public",
-      ssl: false,
-      rejectUnauthorized: false,
-      ca: false,
-    },
-  })
+describe("row api - postgres", () => {
+  let apiKey,
+    makeRequest: MakeRequestResponse,
+    postgresDatasource: Datasource,
+    postgresTable: Table
 
-  makeRequest = generateMakeRequest(apiKey)
+  beforeEach(async () => {
+    await config.init()
+    apiKey = await config.generateApiKey()
+    postgresDatasource = await config.createDatasource({
+      type: "datasource",
+      source: SourceName.POSTGRES,
+      plus: true,
+      config: {
+        host: "192.168.1.98",
+        port: 54321,
+        database: "postgres",
+        user: "root",
+        password: "root",
+        schema: "public",
+        ssl: false,
+        rejectUnauthorized: false,
+        ca: false,
+      },
+    })
 
-  postgresTable = await config.createTable({
-    name: faker.lorem.word(),
-    schema: {
-      name: {
-        name: "name",
-        type: FieldType.STRING,
-        constraints: {
-          presence: true,
+    makeRequest = generateMakeRequest(apiKey)
+
+    postgresTable = await config.createTable({
+      name: faker.lorem.word(),
+      schema: {
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+          constraints: {
+            presence: true,
+          },
+        },
+        description: {
+          name: "description",
+          type: FieldType.STRING,
+        },
+        value: {
+          name: "value",
+          type: FieldType.NUMBER,
         },
       },
-      description: {
-        name: "description",
-        type: FieldType.STRING,
-      },
-      value: {
-        name: "value",
-        type: FieldType.NUMBER,
-      },
-    },
-    sourceId: postgresDatasource._id,
+      sourceId: postgresDatasource._id,
+    })
   })
-})
 
-afterAll(async () => {
-  await config.end()
-})
+  afterAll(async () => {
+    await config.end()
+  })
 
-function createRandomRow() {
-  return {
-    name: faker.name.fullName(),
-    description: faker.lorem.paragraphs(),
-    value: +faker.random.numeric(),
+  function createRandomRow() {
+    return {
+      name: faker.name.fullName(),
+      description: faker.lorem.paragraphs(),
+      value: +faker.random.numeric(),
+    }
   }
-}
 
-describe("row api", () => {
+  async function populateRows(count: number) {
+    return await Promise.all(
+      Array(count)
+        .fill({})
+        .map(async () => {
+          const rowData = createRandomRow()
+          return {
+            rowData,
+            row: await config.createRow(rowData),
+          }
+        })
+    )
+  }
+
   describe("create a row", () => {
-    test("Given than no row exists, adding a new rows persists it", async () => {
+    test("Given than no row exists, adding a new row persists it", async () => {
       const newRow = createRandomRow()
 
       const res = await makeRequest(
@@ -114,10 +130,9 @@ describe("row api", () => {
     })
   })
 
-  describe("Retrieve a row", () => {
+  describe("retrieve a row", () => {
     test("Given than a table have a single row, the row can be retrieved successfully", async () => {
-      const rowData = createRandomRow()
-      const row = await config.createRow(rowData)
+      const [{ rowData, row }] = await populateRows(1)
 
       const res = await makeRequest(
         "get",
@@ -130,10 +145,8 @@ describe("row api", () => {
     })
 
     test("Given than a table have a multiple rows, a single row can be retrieved successfully", async () => {
-      await Promise.all(Array(5).map(() => config.createRow(createRandomRow())))
-      const rowData = createRandomRow()
-      const row = await config.createRow(rowData)
-      await Promise.all(Array(2).map(() => config.createRow(createRandomRow())))
+      const rows = await populateRows(10)
+      const { rowData, row } = _.sample(rows)!
 
       const res = await makeRequest(
         "get",
