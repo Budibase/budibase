@@ -29,11 +29,11 @@
 </div>
 
 <style>
-  .fancy-form :global(.fancy-field:not(:first-child)) {
+  .fancy-form :global(.fancy-field:not(:first-of-type)) {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
   }
-  .fancy-form :global(.fancy-field:not(:last-child)) {
+  .fancy-form :global(.fancy-field:not(:last-of-type)) {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
   }
