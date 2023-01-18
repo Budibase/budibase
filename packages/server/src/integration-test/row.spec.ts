@@ -149,14 +149,36 @@ describe("row api - postgres", () => {
 
       expect(res.status).toBe(200)
 
-      const persistedRows = await config.getRow(postgresTable._id!, row._id!)
+      const persistedRow = await config.getRow(postgresTable._id!, row._id!)
 
-      expect(persistedRows).toEqual(
+      expect(persistedRow).toEqual(
         expect.objectContaining({
           ...res.body.data,
           ...rowData,
           ...updateRow,
         })
+      )
+    })
+  })
+
+  describe("delete a row", () => {
+    test("Given than a row exists, delete request removes it", async () => {
+      const numberOfInitialRows = 5
+      let { row } = _.sample(await populateRows(numberOfInitialRows))!
+
+      const res = await makeRequest(
+        "delete",
+        `/tables/${postgresTable._id}/rows/${row._id}`
+      )
+
+      expect(res.status).toBe(200)
+
+      const persistedRows = await config.getRows(postgresTable._id!)
+      expect(persistedRows).toHaveLength(numberOfInitialRows - 1)
+
+      expect(row._id).toBeDefined()
+      expect(persistedRows).not.toContain(
+        expect.objectContaining({ _id: row._id })
       )
     })
   })

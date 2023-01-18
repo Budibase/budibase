@@ -2,7 +2,7 @@ import * as setup from "../../tests/utilities"
 import { checkSlashesInUrl } from "../../../../utilities"
 import supertest from "supertest"
 
-export type HttpMethod = "post" | "get" | "put"
+export type HttpMethod = "post" | "get" | "put" | "delete"
 
 export type MakeRequestResponse = (
   method: HttpMethod,
