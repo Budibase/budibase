@@ -100,5 +100,48 @@ describe("row api", () => {
         }),
       ])
     })
+
+    test("Given than no row exists, multiple rows can be persisted", async () => {
+      const tableName = faker.lorem.word()
+
+      const table = await config.createTable({
+        name: tableName,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+          },
+          description: {
+            name: "description",
+            type: FieldType.STRING,
+          },
+          value: {
+            name: "value",
+            type: FieldType.NUMBER,
+          },
+        },
+        sourceId: postgresDatasource._id,
+      })
+
+      const numberOfRows = 10
+      const newRows = Array(numberOfRows).map(() => ({
+        name: faker.name.fullName(),
+        description: faker.lorem.paragraphs(),
+        value: +faker.random.numeric(),
+      }))
+
+      for (const newRow of newRows) {
+        const res = await makeRequest(
+          "post",
+          `/tables/${table._id}/rows`,
+          newRow
+        )
+        expect(res.status).toBe(200)
+      }
+
+      const persistedRows = await config.getRows(table._id!)
+      expect(persistedRows).toHaveLength(numberOfRows)
+      expect(persistedRows).toEqual(expect.arrayContaining(newRows))
+    })
   })
 })
