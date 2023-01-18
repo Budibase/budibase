@@ -9,4 +9,4 @@ router
   .get("/api/keys", authorized(permissions.BUILDER), controller.fetch)
   .put("/api/keys/:key", authorized(permissions.BUILDER), controller.update)
 
-export = router
+export default router

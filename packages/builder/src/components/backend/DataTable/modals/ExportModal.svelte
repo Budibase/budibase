@@ -12,6 +12,10 @@
       name: "JSON",
       key: "json",
     },
+    {
+      name: "JSON with Schema",
+      key: "jsonWithSchema",
+    },
   ]
 
   export let view
@@ -24,7 +28,7 @@
         viewName: view,
         format: exportFormat,
       })
-      download(data, `export.${exportFormat}`)
+      download(data, `export.${exportFormat === "csv" ? "csv" : "json"}`)
     } catch (error) {
       notifications.error(`Unable to export ${exportFormat.toUpperCase()} data`)
     }

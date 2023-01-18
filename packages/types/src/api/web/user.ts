@@ -57,3 +57,7 @@ export interface CreateAdminUserRequest {
   password: string
   tenantId: string
 }
+
+export interface SyncUserRequest {
+  previousUser?: User
+}

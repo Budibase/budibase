@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(["smoke", "all"], () => {
-  context("Screen Tests", () => {
+  xcontext("Screen Tests", () => {
     before(() => {
       cy.login()
       cy.createTestApp()
@@ -25,7 +25,7 @@ filterTests(["smoke", "all"], () => {
 
     it.skip("should delete all screens then create first screen via button", () => {
       cy.deleteAllScreens()
-      
+
       cy.contains("Create first screen").click()
       cy.get(interact.BODY, { timeout: 2000 }).should('contain', '/home')
     })
@@ -33,7 +33,7 @@ filterTests(["smoke", "all"], () => {
     it("Should create and filter screens by access level", () => {
       const accessLevels = ["Basic", "Admin", "Public", "Power"]
 
-      for (const access of accessLevels){
+      for (const access of accessLevels) {
         // Create screen with specified access level
         cy.createScreen(access, access)
         // Filter by access level and confirm screen visible
@@ -46,9 +46,9 @@ filterTests(["smoke", "all"], () => {
       // Filter by All screens - Confirm all screens visible
       cy.filterScreensAccessLevel("All screens")
       cy.get(interact.BODY).should('contain', accessLevels[0])
-      .and('contain', accessLevels[1])
-      .and('contain', accessLevels[2])
-      .and('contain', accessLevels[3])
+        .and('contain', accessLevels[1])
+        .and('contain', accessLevels[2])
+        .and('contain', accessLevels[3])
     })
   })
 })

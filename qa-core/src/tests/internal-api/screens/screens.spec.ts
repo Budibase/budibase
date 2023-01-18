@@ -2,7 +2,7 @@ import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { App } from "@budibase/types"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
 import AccountsAPIClient from "../../../config/internal-api/TestConfiguration/accountsAPIClient"
-import { generateApp, appFromTemplate } from "../../../config/internal-api/fixtures/applications"
+import { generateApp } from "../../../config/internal-api/fixtures/applications"
 import { Screen } from "@budibase/types"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
 
@@ -20,7 +20,7 @@ describe("Internal API - /screens endpoints", () => {
     await config.afterAll()
   })
 
-  it("POST - Create a screen with each role type", async () => {
+  it("Create a screen with each role type", async () => {
     // Create app
     const app = await appConfig.applications.create(generateApp())
 
@@ -34,7 +34,7 @@ describe("Internal API - /screens endpoints", () => {
     }
   })
 
-  it("GET - Fetch screens", async () => {
+  it("Get screens", async () => {
     // Create app
     const app = await appConfig.applications.create(generateApp())
 
@@ -46,7 +46,7 @@ describe("Internal API - /screens endpoints", () => {
     await appConfig.applications.getRoutes(true)
   })
 
-  it("DELETE - Delete a screen", async () => {
+  it("Delete a screen", async () => {
     // Create app
     const app = await appConfig.applications.create(generateApp())
 

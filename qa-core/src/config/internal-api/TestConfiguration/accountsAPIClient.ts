@@ -24,35 +24,35 @@ class AccountsAPIClient {
 
   apiCall =
     (method: APIMethod) =>
-      async (url = "", options: ApiOptions = {}) => {
-        const requestOptions = {
-          method,
-          body: JSON.stringify(options.body),
-          headers: {
-            "x-budibase-app-id": this.appId,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            cookie: this.cookie,
-            redirect: "follow",
-            follow: 20,
-            ...options.headers,
-          },
-          credentials: "include",
-        }
-
-        // @ts-ignore
-        const response = await fetch(`${this.host}${url}`, requestOptions)
-        if (response.status == 404 || response.status == 500) {
-          console.error("Error in apiCall")
-          console.error("Response:")
-          console.error(response)
-          console.error("Response body:")
-          console.error(response.body)
-          console.error("Request body:")
-          console.error(requestOptions.body)
-        }
-        return response
+    async (url = "", options: ApiOptions = {}) => {
+      const requestOptions = {
+        method,
+        body: JSON.stringify(options.body),
+        headers: {
+          "x-budibase-app-id": this.appId,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          cookie: this.cookie,
+          redirect: "follow",
+          follow: 20,
+          ...options.headers,
+        },
+        credentials: "include",
       }
+
+      // @ts-ignore
+      const response = await fetch(`${this.host}${url}`, requestOptions)
+      if (response.status == 404 || response.status == 500) {
+        console.error("Error in apiCall")
+        console.error("Response:")
+        console.error(response)
+        console.error("Response body:")
+        console.error(response.body)
+        console.error("Request body:")
+        console.error(requestOptions.body)
+      }
+      return response
+    }
 
   post = this.apiCall("POST")
   get = this.apiCall("GET")

@@ -21,7 +21,10 @@ export default class TestConfiguration<T> {
   apiClient: InternalAPIClient
   accountsApiClient: AccountsApiClient
 
-  constructor(apiClient: InternalAPIClient, accountsApiClient: AccountsApiClient) {
+  constructor(
+    apiClient: InternalAPIClient,
+    accountsApiClient: AccountsApiClient
+  ) {
     this.apiClient = apiClient
     this.accountsApiClient = accountsApiClient
 
@@ -36,7 +39,10 @@ export default class TestConfiguration<T> {
   }
 
   async loginAsAdmin() {
-    await this.auth.login(<string>process.env.BB_ADMIN_USER_EMAIL, <string>process.env.BB_ADMIN_USER_PASSWORD)
+    await this.auth.login(
+      <string>process.env.BB_ADMIN_USER_EMAIL,
+      <string>process.env.BB_ADMIN_USER_PASSWORD
+    )
   }
   // TODO: add logic to setup or login based in env variables
 

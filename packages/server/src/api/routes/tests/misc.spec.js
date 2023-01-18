@@ -42,7 +42,7 @@ describe("run misc tests", () => {
   })
 
   describe("test table utilities", () => {
-    it("should be able to import a CSV", async () => {
+    it("should be able to import data", async () => {
       return config.doInContext(null, async () => {
         const table = await config.createTable({
           name: "table",
@@ -75,17 +75,11 @@ describe("run misc tests", () => {
             },
           },
         })
-        const dataImport = {
-          csvString: "a,b,c,d\n1,2,3,4",
-          schema: {},
-        }
-        for (let col of ["a", "b", "c", "d"]) {
-          dataImport.schema[col] = { type: "string" }
-        }
+
         await tableUtils.handleDataImport(
           { userId: "test" },
           table,
-          dataImport
+          [{ a: '1', b: '2', c: '3', d: '4'}]
         )
         const rows = await config.getRows()
         expect(rows[0].a).toEqual("1")
