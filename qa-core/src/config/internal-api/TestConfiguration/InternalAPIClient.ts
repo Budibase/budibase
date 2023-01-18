@@ -45,11 +45,9 @@ class InternalAPIClient {
         credentials: "include",
       }
 
+      // prettier-ignore
       // @ts-ignore
-      const response = await fetch(
-        `https://${process.env.TENANT_ID}.${this.host}${url}`,
-        requestOptions
-      )
+      const response = await fetch(`https://${process.env.TENANT_ID}.${this.host}${url}`, requestOptions)
 
       if (response.status == 404 || response.status == 500) {
         console.error("Error in apiCall")
