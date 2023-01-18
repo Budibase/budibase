@@ -11,11 +11,12 @@
   let loading = false
   let validation = {}
   let validateHash = ""
+  let schema = null
+  let invalidColumns = []
 
+  export let tableId = null
   export let rows = []
-  export let schema = {}
   export let allValid = false
-  export let displayColumn = null
 
   const typeOptions = [
     {
@@ -48,6 +49,19 @@
     },
   ]
 
+  $: {
+    schema = fetchSchema(tableId)
+  }
+
+  async function fetchSchema(tableId) {
+    try {
+      const definition = await API.fetchTableDefinition(tableId)
+      schema = definition.schema
+    } catch (e) {
+      error = e
+    }
+  }
+
   async function handleFile(e) {
     loading = true
     error = null
@@ -56,7 +70,6 @@
     try {
       const response = await parseFile(e)
       rows = response.rows
-      schema = response.schema
       fileName = response.fileName
       fileType = response.fileType
     } catch (e) {
@@ -65,7 +78,7 @@
     }
   }
 
-  async function validate(rows, schema) {
+  async function validate(rows) {
     loading = true
     error = null
     validation = {}
@@ -73,8 +86,13 @@
 
     try {
       if (rows.length > 0) {
-        const response = await API.validateNewTableImport({ rows, schema })
+        const response = await API.validateExistingTableImport({
+          rows,
+          tableId,
+        })
+
         validation = response.schemaValidation
+        invalidColumns = response.invalidColumns
         allValid = response.allValid
       }
     } catch (e) {
@@ -86,10 +104,10 @@
 
   $: {
     // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
+    const newValidateHash = JSON.stringify(rows)
 
     if (newValidateHash !== validateHash) {
-      validate(rows, schema)
+      validate(rows)
     }
 
     validateHash = newValidateHash
@@ -98,7 +116,7 @@
 
 <div class="dropzone">
   <input
-    disabled={loading}
+    disabled={!schema || loading}
     id="file-upload"
     accept="text/csv,application/json"
     type="file"
@@ -116,47 +134,42 @@
     {/if}
   </label>
 </div>
-{#if rows.length > 0 && !error}
+{#if fileName && Object.keys(validation).length === 0}
+  <p>No valid fields, try another file</p>
+{:else if rows.length > 0 && !error}
   <div class="schema-fields">
-    {#each Object.values(schema) as column}
+    {#each Object.keys(validation) as name}
       <div class="field">
-        <span>{column.name}</span>
+        <span>{name}</span>
         <Select
-          bind:value={column.type}
-          on:change={e => (column.type = e.detail)}
+          value={schema[name]?.type}
           options={typeOptions}
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          disabled={loading}
+          disabled
         />
         <span
-          class={loading || validation[column.name]
+          class={loading || validation[name]
             ? "fieldStatusSuccess"
             : "fieldStatusFailure"}
         >
-          {validation[column.name] ? "Success" : "Failure"}
+          {validation[name] ? "Success" : "Failure"}
         </span>
-        <i
-          class={`omit-button ri-close-circle-fill ${
-            loading ? "omit-button-disabled" : ""
-          }`}
-          on:click={() => {
-            delete schema[column.name]
-            schema = schema
-          }}
-        />
       </div>
     {/each}
   </div>
-  <div class="display-column">
-    <Select
-      label="Display Column"
-      bind:value={displayColumn}
-      options={Object.keys(schema)}
-      sort
-    />
-  </div>
+  {#if invalidColumns.length > 0}
+    <p class="spectrum-FieldLabel spectrum-FieldLabel--sizeM">
+      The following columns are present in the data you wish to import, but do
+      not match the schema of this table and will be ignored.
+    </p>
+    <ul class="ignoredList">
+      {#each invalidColumns as column}
+        <li>{column}</li>
+      {/each}
+    </ul>
+  {/if}
 {/if}
 
 <style>
@@ -229,19 +242,10 @@
     font-weight: 600;
   }
 
-  .omit-button {
-    font-size: 1.2em;
-    color: var(--grey-7);
-    cursor: pointer;
-    justify-self: flex-end;
-  }
-
-  .omit-button-disabled {
-    pointer-events: none;
-    opacity: 70%;
-  }
-
-  .display-column {
-    margin-top: var(--spacing-xl);
+  .ignoredList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
 </style>
