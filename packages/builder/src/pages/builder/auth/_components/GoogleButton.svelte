@@ -6,20 +6,11 @@
   let show
 
   $: tenantId = $auth.tenantId
-  $: show = true //$organisation.google
+  $: show = $organisation.google
 </script>
 
 {#if show}
   <FancyButton
-    on:click={() => {
-      window.open(`/api/global/auth/${tenantId}/google`, "_blank")
-    }}
-    icon={GoogleLogo}
-  >
-    Log in with Google
-  </FancyButton>
-  <FancyButton
-    disabled
     on:click={() => {
       window.open(`/api/global/auth/${tenantId}/google`, "_blank")
     }}
