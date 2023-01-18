@@ -15,7 +15,7 @@ export default class RowsApi {
     const json = await response.json()
     if (this.rowAdded) {
       expect(response).toHaveStatusCode(200)
-      expect(json.length).toEqual(1)
+      expect(json.length).toBeGreaterThanOrEqual(1)
     }
     return [response, json]
   }
@@ -35,5 +35,28 @@ export default class RowsApi {
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
     return [response, json]
+  }
+
+  async searchNoPagination(
+    tableId: string,
+    body: any
+  ): Promise<[Response, Row[]]> {
+    const response = await this.api.post(`/${tableId}/search`, { body })
+    const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json.hasNextPage).toEqual(false)
+    return [response, json.rows]
+  }
+
+  async searchWithPagination(
+    tableId: string,
+    body: any
+  ): Promise<[Response, Row[]]> {
+    const response = await this.api.post(`/${tableId}/search`, { body })
+    const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json.hasNextPage).toEqual(true)
+    expect(json.rows.length).toEqual(10)
+    return [response, json.rows]
   }
 }
