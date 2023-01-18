@@ -5,13 +5,12 @@ import {
 } from "../api/routes/public/tests/utils"
 
 import * as setup from "../api/routes/tests/utilities"
-import supertest from "supertest"
 import { Datasource, FieldType, SourceName } from "@budibase/types"
 
 const config = setup.getConfig()
 let apiKey, makeRequest: MakeRequestResponse, postgresDatasource: Datasource
 
-beforeAll(async () => {
+beforeEach(async () => {
   await config.init()
   apiKey = await config.generateApiKey()
   postgresDatasource = await config.createDatasource({
@@ -35,25 +34,10 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  require("../app").default
   await config.end()
 })
 
 describe("row api", () => {
-  let request: supertest.SuperTest<supertest.Test>
-  let server: any
-
-  beforeAll(() => {
-    server = require("../app").default
-  })
-  afterAll(() => {
-    server.close()
-  })
-
-  beforeEach(async () => {
-    request = supertest(server)
-  })
-
   describe("create a row", () => {
     test("Given than no row exists, adding a new rows persists it", async () => {
       const tableName = faker.lorem.word()
@@ -64,6 +48,9 @@ describe("row api", () => {
           name: {
             name: "name",
             type: FieldType.STRING,
+            constraints: {
+              presence: true,
+            },
           },
           description: {
             name: "description",
@@ -106,6 +93,9 @@ describe("row api", () => {
           name: {
             name: "name",
             type: FieldType.STRING,
+            constraints: {
+              presence: true,
+            },
           },
           description: {
             name: "description",
@@ -120,11 +110,11 @@ describe("row api", () => {
       })
 
       const numberOfRows = 10
-      const newRows = Array(numberOfRows).map(() => ({
+      const newRows = Array(numberOfRows).fill({
         name: faker.name.fullName(),
         description: faker.lorem.paragraphs(),
         value: +faker.random.numeric(),
-      }))
+      })
 
       for (const newRow of newRows) {
         const res = await makeRequest(
@@ -137,7 +127,9 @@ describe("row api", () => {
 
       const persistedRows = await config.getRows(table._id!)
       expect(persistedRows).toHaveLength(numberOfRows)
-      expect(persistedRows).toEqual(expect.arrayContaining(newRows))
+      expect(persistedRows).toEqual(
+        expect.arrayContaining(newRows.map(expect.objectContaining))
+      )
     })
   })
 })
