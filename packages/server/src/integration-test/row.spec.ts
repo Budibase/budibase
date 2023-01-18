@@ -6,15 +6,35 @@ import {
 
 import * as setup from "../api/routes/tests/utilities"
 import supertest from "supertest"
-import { FieldType } from "@budibase/types"
+import { Datasource, FieldType, SourceName } from "@budibase/types"
 
 const config = setup.getConfig()
-let apiKey, table, app, makeRequest: MakeRequestResponse
+let apiKey,
+  table,
+  app,
+  makeRequest: MakeRequestResponse,
+  postgresDatasource: Datasource
 
 beforeAll(async () => {
   app = await config.init()
   table = await config.updateTable()
   apiKey = await config.generateApiKey()
+  postgresDatasource = await config.createDatasource({
+    type: "datasource",
+    source: SourceName.POSTGRES,
+    plus: true,
+    config: {
+      host: "192.168.1.98",
+      port: 54321,
+      database: "postgres",
+      user: "root",
+      password: "root",
+      schema: "public",
+      ssl: false,
+      rejectUnauthorized: false,
+      ca: false,
+    },
+  })
   makeRequest = generateMakeRequest(apiKey)
 })
 
@@ -41,6 +61,7 @@ describe("row api", () => {
   describe("create a row", () => {
     test("Given than no row exists, adding a new rows persists it", async () => {
       const tableName = faker.lorem.word()
+
       const table = await config.createTable({
         name: tableName,
         schema: {
@@ -57,6 +78,7 @@ describe("row api", () => {
             type: FieldType.NUMBER,
           },
         },
+        sourceId: postgresDatasource._id,
       })
 
       const newRow = {
