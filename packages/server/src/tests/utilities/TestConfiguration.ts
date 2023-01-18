@@ -39,7 +39,7 @@ import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
-import { Table } from "@budibase/types"
+import { Datasource, SourceName, Table } from "@budibase/types"
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -554,9 +554,13 @@ class TestConfiguration {
 
   // DATASOURCE
 
-  async createDatasource(config?: any) {
+  async createDatasource(config?: Datasource): Promise<Datasource> {
     config = config || basicDatasource()
-    const response = await this._req(config, null, controllers.datasource.save)
+    const response = await this._req(
+      { datasource: config },
+      null,
+      controllers.datasource.save
+    )
     this.datasource = response.datasource
     return this.datasource
   }
@@ -573,18 +577,16 @@ class TestConfiguration {
 
   async restDatasource(cfg?: any) {
     return this.createDatasource({
-      datasource: {
-        ...basicDatasource().datasource,
-        source: "REST",
-        config: cfg || {},
-      },
+      ...basicDatasource(),
+      source: SourceName.REST,
+      config: cfg || {},
     })
   }
 
   async dynamicVariableDatasource() {
     let datasource = await this.restDatasource()
     const basedOnQuery = await this.createQuery({
-      ...basicQuery(datasource._id),
+      ...basicQuery(datasource._id!),
       fields: {
         path: "www.google.com",
       },

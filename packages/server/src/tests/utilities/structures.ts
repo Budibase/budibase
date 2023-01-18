@@ -3,6 +3,7 @@ import { createHomeScreen } from "../../constants/screens"
 import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
 import { TRIGGER_DEFINITIONS, ACTION_DEFINITIONS } from "../../automations"
+import { Datasource, SourceName } from "@budibase/types"
 const { v4: uuidv4 } = require("uuid")
 
 export const TENANT_ID = "default"
@@ -144,14 +145,12 @@ export function basicRole() {
   }
 }
 
-export function basicDatasource() {
+export function basicDatasource(): Datasource {
   return {
-    datasource: {
-      type: "datasource",
-      name: "Test",
-      source: "POSTGRES",
-      config: {},
-    },
+    type: "datasource",
+    name: "Test",
+    source: SourceName.POSTGRES,
+    config: {},
   }
 }
 
