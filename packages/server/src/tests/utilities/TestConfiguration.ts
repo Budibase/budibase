@@ -373,11 +373,11 @@ class TestConfiguration {
     // clear any old app
     this.appId = null
     // @ts-ignore
-    await context.updateAppId(null)
+    context.updateAppId(null)
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app.appId
     // @ts-ignore
-    await context.updateAppId(this.appId)
+    context.updateAppId(this.appId)
 
     // create production app
     this.prodApp = await this.publish()

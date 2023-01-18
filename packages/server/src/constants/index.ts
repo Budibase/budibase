@@ -1,4 +1,5 @@
 import { objectStore, roles, constants } from "@budibase/backend-core"
+export { FieldType as FieldTypes } from "@budibase/types"
 
 export enum FilterTypes {
   STRING = "string",
@@ -21,23 +22,6 @@ export const NoEmptyFilterStrings = [
   FilterTypes.CONTAINS,
   FilterTypes.NOT_CONTAINS,
 ]
-
-export enum FieldTypes {
-  STRING = "string",
-  BARCODEQR = "barcodeqr",
-  LONGFORM = "longform",
-  OPTIONS = "options",
-  NUMBER = "number",
-  BOOLEAN = "boolean",
-  ARRAY = "array",
-  DATETIME = "datetime",
-  ATTACHMENT = "attachment",
-  LINK = "link",
-  FORMULA = "formula",
-  AUTO = "auto",
-  JSON = "json",
-  INTERNAL = "internal",
-}
 
 export const CanSwitchTypes = [
   [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
