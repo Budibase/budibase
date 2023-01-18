@@ -1,6 +1,6 @@
 import viewTemplate from "./viewBuilder"
 import { apiFileReturn } from "../../../utilities/fileSystem"
-import * as exporters from "./exporters"
+import { csv, json, jsonWithSchema, Format, isFormat } from "./exporters"
 import { deleteView, getView, getViews, saveView } from "./utils"
 import { fetchView } from "../row"
 import { FieldTypes } from "../../../constants"
@@ -127,9 +127,13 @@ export async function exportView(ctx: BBContext) {
   const viewName = decodeURIComponent(ctx.query.view as string)
   const view = await getView(viewName)
 
-  const format = ctx.query.format as string
-  if (!format || !Object.values(exporters.ExportFormats).includes(format)) {
-    ctx.throw(400, "Format must be specified, either csv or json")
+  const format = ctx.query.format as unknown
+
+  if (!isFormat(format)) {
+    ctx.throw(
+      400,
+      "Format must be specified, either csv, json or jsonWithSchema"
+    )
   }
 
   if (view) {
@@ -171,7 +175,7 @@ export async function exportView(ctx: BBContext) {
   })
 
   // make sure no "undefined" entries appear in the CSV
-  if (format === exporters.ExportFormats.CSV) {
+  if (format === Format.CSV) {
     const schemaKeys = Object.keys(schema)
     for (let key of schemaKeys) {
       for (let row of rows) {
@@ -182,13 +186,18 @@ export async function exportView(ctx: BBContext) {
     }
   }
 
-  // Export part
-  let headers = Object.keys(schema)
-  const exporter = format === "csv" ? exporters.csv : exporters.json
-  const filename = `${viewName}.${format}`
-  // send down the file
-  ctx.attachment(filename)
-  ctx.body = apiFileReturn(exporter(headers, rows))
+  if (format === Format.CSV) {
+    ctx.attachment(`${viewName}.csv`)
+    ctx.body = apiFileReturn(csv(Object.keys(schema), rows))
+  } else if (format === Format.JSON) {
+    ctx.attachment(`${viewName}.json`)
+    ctx.body = apiFileReturn(json(rows))
+  } else if (format === Format.JSON_WITH_SCHEMA) {
+    ctx.attachment(`${viewName}.json`)
+    ctx.body = apiFileReturn(jsonWithSchema(schema, rows))
+  } else {
+    throw "Format not recognised"
+  }
 
   if (viewName.startsWith(DocumentType.TABLE)) {
     await events.table.exported(table, format as TableExportFormat)

@@ -6,10 +6,6 @@ export const generateTable = (): Table => {
     schema: {},
     sourceId: "bb_internal",
     type: "internal",
-    dataImport: {
-      valid: true,
-      schema: {},
-    },
   }
 }
 
