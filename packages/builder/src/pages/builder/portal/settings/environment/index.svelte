@@ -18,25 +18,31 @@
 
   let modal
 
-  const schema = {
-    name: {
-      width: "2fr",
-    },
-    edit: {
-      width: "auto",
-      borderLeft: true,
-      displayName: "",
-    },
-  }
-
   const customRenderers = [{ column: "edit", component: EditVariableColumn }]
 
-  $: encryptionKeyAvailable = $environment.status?.encryptionKeyAvailable
+  $: noEncryptionKey = $environment.status?.encryptionKeyAvailable === false
+  $: schema = buildSchema(noEncryptionKey)
 
   onMount(async () => {
     await environment.checkStatus()
     await environment.loadVariables()
   })
+
+  const buildSchema = noEncryptionKey => {
+    const schema = {
+      name: {
+        width: "2fr",
+      },
+    }
+    if (!noEncryptionKey) {
+      schema.edit = {
+        width: "auto",
+        borderLeft: true,
+        displayName: "",
+      }
+    }
+    return schema
+  }
 
   const save = data => {
     environment.createVariable(data)
@@ -58,8 +64,8 @@
       >Add and manage environment variables for development and production</Body
     >
   </Layout>
-  {#if $licensing.environmentVariablesEnabled}
-    {#if encryptionKeyAvailable === false}
+  {#if !$licensing.environmentVariablesEnabled}
+    {#if noEncryptionKey}
       <InlineAlert
         message="Your Budibase installation does not have a key for encryption, please update your app service's environment variables to contain an 'ENCRYPTION_KEY' value."
         header="No encryption key found"
@@ -78,7 +84,9 @@
       />
     </Layout>
     <div>
-      <Button on:click={modal.show} cta>Add Variable</Button>
+      <Button on:click={modal.show} cta disabled={noEncryptionKey}
+        >Add Variable</Button
+      >
     </div>
   {:else}
     <div class="buttons">
