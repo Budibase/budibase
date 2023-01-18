@@ -14,7 +14,7 @@
 
   export let rows = []
   export let schema = {}
-  export let allValid = false
+  export let allValid = true
   export let displayColumn = null
 
   const typeOptions = [
