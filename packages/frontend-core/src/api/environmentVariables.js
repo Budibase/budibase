@@ -1,4 +1,10 @@
 export const buildEnvironmentVariableEndpoints = API => ({
+  checkEnvironmentVariableStatus: async () => {
+    return await API.get({
+      url: `/api/env/variables/status`,
+    })
+  },
+
   /**
    * Fetches a list of environment variables
    */
