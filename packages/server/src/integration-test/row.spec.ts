@@ -9,15 +9,10 @@ import supertest from "supertest"
 import { Datasource, FieldType, SourceName } from "@budibase/types"
 
 const config = setup.getConfig()
-let apiKey,
-  table,
-  app,
-  makeRequest: MakeRequestResponse,
-  postgresDatasource: Datasource
+let apiKey, makeRequest: MakeRequestResponse, postgresDatasource: Datasource
 
 beforeAll(async () => {
-  app = await config.init()
-  table = await config.updateTable()
+  await config.init()
   apiKey = await config.generateApiKey()
   postgresDatasource = await config.createDatasource({
     type: "datasource",
@@ -35,6 +30,7 @@ beforeAll(async () => {
       ca: false,
     },
   })
+
   makeRequest = generateMakeRequest(apiKey)
 })
 
