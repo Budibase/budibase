@@ -1,10 +1,35 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
+  import { getContext, onMount } from "svelte"
 
   export let disabled = false
   export let error = null
   export let focused = false
   export let clickable = false
+  export let validate
+  export let value
+
+  const formContext = getContext("fancy-form")
+  const id = Math.random()
+  const API = {
+    validate: () => {
+      if (validate) {
+        error = validate(value)
+      }
+      return !error
+    },
+  }
+
+  onMount(() => {
+    if (formContext) {
+      formContext.registerField(id, API)
+    }
+    return () => {
+      if (formContext) {
+        formContext.unregisterField(id)
+      }
+    }
+  })
 </script>
 
 <div
