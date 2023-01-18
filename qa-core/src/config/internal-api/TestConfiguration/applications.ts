@@ -58,7 +58,6 @@ export default class AppApi {
   async create(body: any): Promise<Partial<App>> {
     const response = await this.api.post(`/applications`, { body })
     const json = await response.json()
-    console.log(json)
     expect(response).toHaveStatusCode(200)
     expect(json._id).toBeDefined()
     return json
@@ -111,11 +110,10 @@ export default class AppApi {
     return [response, json]
   }
 
-  async delete(appId: string): Promise<[Response, any]> {
+  async delete(appId: string): Promise<Response> {
     const response = await this.api.del(`/applications/${appId}`)
-    const json = await response.json()
-    expect(response).toHaveStatusCode(200)
-    return [response, json]
+    expect(response).toHaveStatusCode(204)
+    return response
   }
 
   async update(
