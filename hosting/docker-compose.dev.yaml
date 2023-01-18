@@ -6,7 +6,8 @@ services:
   minio-service:
     container_name: budi-minio-dev
     restart: on-failure
-    image: minio/minio
+    # Last version that supports the "fs" backend
+    image: minio/minio:RELEASE.2022-10-24T18-35-07Z
     volumes:
       - minio_data:/data
     ports:
