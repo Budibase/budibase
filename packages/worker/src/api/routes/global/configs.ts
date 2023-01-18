@@ -121,4 +121,4 @@ router
     controller.upload
   )
 
-export = router
+export default router

@@ -12,6 +12,7 @@
     "declaration": true,
     "types": [ "node", "jest" ],
     "outDir": "dist",
+    "skipLibCheck": true
   },
   "include": [
     "**/*.js",
@@ -22,6 +23,7 @@
     "node_modules",
     "dist",
     "**/*.spec.ts",
-    "**/*.spec.js"
+    "**/*.spec.js",
+    "__mocks__"
   ]
 }

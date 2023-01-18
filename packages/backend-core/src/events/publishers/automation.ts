@@ -12,10 +12,7 @@ import {
   AutomationsRunEvent,
 } from "@budibase/types"
 
-export async function created(
-  automation: Automation,
-  timestamp?: string | number
-) {
+async function created(automation: Automation, timestamp?: string | number) {
   const properties: AutomationCreatedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
@@ -25,7 +22,7 @@ export async function created(
   await publishEvent(Event.AUTOMATION_CREATED, properties, timestamp)
 }
 
-export async function triggerUpdated(automation: Automation) {
+async function triggerUpdated(automation: Automation) {
   const properties: AutomationTriggerUpdatedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
@@ -35,7 +32,7 @@ export async function triggerUpdated(automation: Automation) {
   await publishEvent(Event.AUTOMATION_TRIGGER_UPDATED, properties)
 }
 
-export async function deleted(automation: Automation) {
+async function deleted(automation: Automation) {
   const properties: AutomationDeletedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
@@ -45,7 +42,7 @@ export async function deleted(automation: Automation) {
   await publishEvent(Event.AUTOMATION_DELETED, properties)
 }
 
-export async function tested(automation: Automation) {
+async function tested(automation: Automation) {
   const properties: AutomationTestedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
@@ -55,14 +52,14 @@ export async function tested(automation: Automation) {
   await publishEvent(Event.AUTOMATION_TESTED, properties)
 }
 
-export const run = async (count: number, timestamp?: string | number) => {
+const run = async (count: number, timestamp?: string | number) => {
   const properties: AutomationsRunEvent = {
     count,
   }
   await publishEvent(Event.AUTOMATIONS_RUN, properties, timestamp)
 }
 
-export async function stepCreated(
+async function stepCreated(
   automation: Automation,
   step: AutomationStep,
   timestamp?: string | number
@@ -78,10 +75,7 @@ export async function stepCreated(
   await publishEvent(Event.AUTOMATION_STEP_CREATED, properties, timestamp)
 }
 
-export async function stepDeleted(
-  automation: Automation,
-  step: AutomationStep
-) {
+async function stepDeleted(automation: Automation, step: AutomationStep) {
   const properties: AutomationStepDeletedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
@@ -91,4 +85,14 @@ export async function stepDeleted(
     stepType: step.stepId,
   }
   await publishEvent(Event.AUTOMATION_STEP_DELETED, properties)
+}
+
+export default {
+  created,
+  triggerUpdated,
+  deleted,
+  tested,
+  run,
+  stepCreated,
+  stepDeleted,
 }

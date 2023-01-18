@@ -84,4 +84,4 @@ router
     controller.test
   )
 
-export = router
+export default router

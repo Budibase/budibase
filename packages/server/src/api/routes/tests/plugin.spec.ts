@@ -1,8 +1,3 @@
-let mockObjectStore = jest.fn().mockImplementation(() => {
-  return [{ name: "test.js" }]
-})
-
-let deleteFolder = jest.fn().mockImplementation()
 jest.mock("@budibase/backend-core", () => {
   const core = jest.requireActual("@budibase/backend-core")
   return {
@@ -10,14 +5,19 @@ jest.mock("@budibase/backend-core", () => {
     objectStore: {
       ...core.objectStore,
       upload: jest.fn(),
-      uploadDirectory: mockObjectStore,
-      deleteFolder: deleteFolder,
+      uploadDirectory: jest.fn().mockImplementation(() => {
+        return [{ name: "test.js" }]
+      }),
+      deleteFolder: jest.fn().mockImplementation(),
     },
   }
 })
 
-import { events } from "@budibase/backend-core"
+import { events, objectStore } from "@budibase/backend-core"
 import * as setup from "./utilities"
+
+const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
+const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
 
 describe("/plugins", () => {
   let request = setup.getRequest()
@@ -57,7 +57,7 @@ describe("/plugins", () => {
     })
 
     it("should not be able to create a plugin if there is an error", async () => {
-      mockObjectStore.mockImplementationOnce(() => {
+      mockUploadDirectory.mockImplementationOnce(() => {
         throw new Error()
       })
       let res = await createPlugin(400)
@@ -92,7 +92,7 @@ describe("/plugins", () => {
       expect(events.plugin.deleted).toHaveBeenCalledTimes(1)
     })
     it("should handle an error deleting a plugin", async () => {
-      deleteFolder.mockImplementationOnce(() => {
+      mockDeleteFolder.mockImplementationOnce(() => {
         throw new Error()
       })
 

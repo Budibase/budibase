@@ -1,11 +1,16 @@
 import * as internal from "./internal"
 import * as external from "./external"
-import * as csvParser from "../../../utilities/csvParser"
+import {
+  validate as validateSchema,
+  isSchema,
+  isRows,
+} from "../../../utilities/schema"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { getDatasourceParams } from "../../../db/utils"
 import { context, events } from "@budibase/backend-core"
 import { Table, BBContext } from "@budibase/types"
 import sdk from "../../../sdk"
+import csv from "csvtojson"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -56,16 +61,16 @@ export async function find(ctx: BBContext) {
 export async function save(ctx: BBContext) {
   const appId = ctx.appId
   const table = ctx.request.body
-  const importFormat =
-    table.dataImport && table.dataImport.csvString ? "csv" : undefined
+  const isImport = table.rows
+
   const savedTable = await pickApi({ table }).save(ctx)
   if (!table._id) {
     await events.table.created(savedTable)
   } else {
     await events.table.updated(savedTable)
   }
-  if (importFormat) {
-    await events.table.imported(savedTable, importFormat)
+  if (isImport) {
+    await events.table.imported(savedTable)
   }
   ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`
@@ -96,19 +101,43 @@ export async function bulkImport(ctx: BBContext) {
   ctx.body = { message: `Bulk rows created.` }
 }
 
-export async function validateCSVSchema(ctx: BBContext) {
-  // tableId being specified means its an import to an existing table
-  const { csvString, schema = {}, tableId } = ctx.request.body
-  let existingTable
+export async function csvToJson(ctx: BBContext) {
+  const { csvString } = ctx.request.body
+
+  const result = await csv().fromString(csvString)
+
+  ctx.status = 200
+  ctx.body = result
+}
+
+export async function validateNewTableImport(ctx: BBContext) {
+  const { rows, schema }: { rows: unknown; schema: unknown } = ctx.request.body
+
+  if (isRows(rows) && isSchema(schema)) {
+    ctx.status = 200
+    ctx.body = validateSchema(rows, schema)
+  } else {
+    ctx.status = 422
+  }
+}
+
+export async function validateExistingTableImport(ctx: BBContext) {
+  const { rows, tableId }: { rows: unknown; tableId: unknown } =
+    ctx.request.body
+
+  let schema = null
   if (tableId) {
-    existingTable = await sdk.tables.getTable(tableId)
+    const table = await sdk.tables.getTable(tableId)
+    schema = table.schema
+  } else {
+    ctx.status = 422
+    return
   }
-  let result: Record<string, any> | undefined = await csvParser.parse(
-    csvString,
-    schema
-  )
-  if (existingTable) {
-    result = csvParser.updateSchema({ schema: result, existingTable })
+
+  if (tableId && isRows(rows) && isSchema(schema)) {
+    ctx.status = 200
+    ctx.body = validateSchema(rows, schema)
+  } else {
+    ctx.status = 422
   }
-  ctx.body = { schema: result }
 }

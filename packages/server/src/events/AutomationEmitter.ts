@@ -55,4 +55,4 @@ class AutomationEmitter {
   }
 }
 
-export = AutomationEmitter
+export default AutomationEmitter

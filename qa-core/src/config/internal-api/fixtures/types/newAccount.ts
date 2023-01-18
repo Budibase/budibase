@@ -1,5 +1,5 @@
-import { Account } from "@budibase/types";
+import { Account } from "@budibase/types"
 
 export interface NewAccount extends Account {
-    password: string;
+  password: string
 }
