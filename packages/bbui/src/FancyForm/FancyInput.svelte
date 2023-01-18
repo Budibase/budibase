@@ -1,7 +1,6 @@
 <script>
-  import { createEventDispatcher, getContext, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import FancyField from "./FancyField.svelte"
-  import Icon from "../Icon/Icon.svelte"
 
   export let label
   export let value
@@ -11,8 +10,6 @@
   export let validate = null
 
   const dispatch = createEventDispatcher()
-  const formContext = getContext("fancy-form")
-  const id = Math.random()
 
   let focused = false
   $: placeholder = !focused && !value
@@ -25,29 +22,9 @@
       error = validate(newValue)
     }
   }
-
-  const API = {
-    validate: () => {
-      if (validate) {
-        error = validate(value)
-      }
-      return !error
-    },
-  }
-
-  onMount(() => {
-    if (formContext) {
-      formContext.registerField(id, API)
-    }
-    return () => {
-      if (formContext) {
-        formContext.unregisterField(id)
-      }
-    }
-  })
 </script>
 
-<FancyField {error} {disabled} {focused}>
+<FancyField {error} {value} {validate} {disabled} {focused}>
   {#if label}
     <div class="label" class:placeholder>
       {label}

@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, getContext, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import FancyField from "./FancyField.svelte"
   import Checkbox from "../Form/Core/Checkbox.svelte"
 
@@ -10,8 +10,6 @@
   export let validate = null
 
   const dispatch = createEventDispatcher()
-  const formContext = getContext("fancy-form")
-  const id = Math.random()
 
   const onChange = () => {
     const newValue = !value
@@ -21,29 +19,9 @@
       error = validate(newValue)
     }
   }
-
-  const API = {
-    validate: () => {
-      if (validate) {
-        error = validate(value)
-      }
-      return !error
-    },
-  }
-
-  onMount(() => {
-    if (formContext) {
-      formContext.registerField(id, API)
-    }
-    return () => {
-      if (formContext) {
-        formContext.unregisterField(id)
-      }
-    }
-  })
 </script>
 
-<FancyField {error} {disabled} clickable on:click={onChange}>
+<FancyField {error} {value} {validate} {disabled} clickable on:click={onChange}>
   <span>
     <Checkbox {disabled} {value} />
   </span>
