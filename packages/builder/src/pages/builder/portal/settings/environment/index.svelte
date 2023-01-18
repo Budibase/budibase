@@ -9,6 +9,7 @@
     Table,
     Tags,
     Tag,
+    InlineAlert,
   } from "@budibase/bbui"
   import { environment, licensing, auth, admin } from "stores/portal"
   import { onMount } from "svelte"
@@ -30,7 +31,10 @@
 
   const customRenderers = [{ column: "edit", component: EditVariableColumn }]
 
+  $: encryptionKeyAvailable = $environment.status?.encryptionKeyAvailable
+
   onMount(async () => {
+    await environment.checkStatus()
     await environment.loadVariables()
   })
 
@@ -55,11 +59,18 @@
     >
   </Layout>
   {#if $licensing.environmentVariablesEnabled}
+    {#if encryptionKeyAvailable === false}
+      <InlineAlert
+        message="Your Budibase installation does not have a key for encryption, please update your app service's environment variables to contain an 'ENCRYPTION_KEY' value."
+        header="No encryption key found"
+        type="error"
+      />
+    {/if}
     <Divider size="S" />
     <Layout noPadding>
       <Table
         {schema}
-        data={$environment}
+        data={$environment.variables}
         allowEditColumns={false}
         allowEditRows={false}
         allowSelectRows={false}
@@ -70,7 +81,7 @@
       <Button on:click={modal.show} cta>Add Variable</Button>
     </div>
   {:else}
-    <div>
+    <div class="buttons">
       <Button
         primary
         disabled={!$auth.accountPortalAccess && $admin.cloud}
@@ -101,6 +112,12 @@
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
+    gap: var(--spacing-m);
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
     gap: var(--spacing-m);
   }
 </style>
