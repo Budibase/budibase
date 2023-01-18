@@ -128,5 +128,21 @@ describe("row api", () => {
 
       expect(res.body.data).toEqual(expect.objectContaining(rowData))
     })
+
+    test("Given than a table have a multiple rows, a single row can be retrieved successfully", async () => {
+      await Promise.all(Array(5).map(() => config.createRow(createRandomRow())))
+      const rowData = createRandomRow()
+      const row = await config.createRow(rowData)
+      await Promise.all(Array(2).map(() => config.createRow(createRandomRow())))
+
+      const res = await makeRequest(
+        "get",
+        `/tables/${postgresTable._id}/rows/${row._id}`
+      )
+
+      expect(res.status).toBe(200)
+
+      expect(res.body.data).toEqual(expect.objectContaining(rowData))
+    })
   })
 })
