@@ -1,6 +1,7 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
   import { getContext, onMount } from "svelte"
+  import { slide } from "svelte/transition"
 
   export let disabled = false
   export let error = null
@@ -8,6 +9,7 @@
   export let clickable = false
   export let validate
   export let value
+  export let ref
 
   const formContext = getContext("fancy-form")
   const id = Math.random()
@@ -33,6 +35,7 @@
 </script>
 
 <div
+  bind:this={ref}
   class="fancy-field"
   class:error
   class:disabled
@@ -50,7 +53,7 @@
     {/if}
   </div>
   {#if error}
-    <div class="error-message">
+    <div transition:slide|local={{ duration: 130 }} class="error-message">
       {error}
     </div>
   {/if}
@@ -97,7 +100,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
   }
   .field {
     flex: 1 1 auto;

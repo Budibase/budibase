@@ -25,10 +25,10 @@
   <span>
     <Checkbox {disabled} {value} />
   </span>
-  {#if text}
-    {text}
-  {/if}
-  <div>
+  <div class="text">
+    {#if text}
+      {text}
+    {/if}
     <slot />
   </div>
 </FancyField>
@@ -36,5 +36,17 @@
 <style>
   span {
     pointer-events: none;
+  }
+  .text {
+    font-size: 15px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .text > :global(*) {
+    font-size: inherit !important;
   }
 </style>

@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import FancyField from "./FancyField.svelte"
+  import FancyFieldLabel from "./FancyFieldLabel.svelte"
 
   export let label
   export let value
@@ -26,9 +27,7 @@
 
 <FancyField {error} {value} {validate} {disabled} {focused}>
   {#if label}
-    <div class="label" class:placeholder>
-      {label}
-    </div>
+    <FancyFieldLabel {placeholder}>{label}</FancyFieldLabel>
   {/if}
   <input
     {disabled}
@@ -42,19 +41,6 @@
 </FancyField>
 
 <style>
-  .label {
-    font-size: 14px;
-    font-weight: 500;
-    transform: translateY(calc(-50% - 12px));
-    position: absolute;
-    top: 50%;
-    color: var(--spectrum-global-color-gray-600);
-    transition: font-size 130ms ease-out, transform 130ms ease-out;
-  }
-  .label.placeholder {
-    font-size: 15px;
-    transform: translateY(-50%);
-  }
   input {
     width: 100%;
     transition: transform 130ms ease-out;

@@ -22,7 +22,6 @@
 <style>
   img {
     width: 22px;
-    margin-right: 6px;
   }
   div {
     font-size: var(--font-size-l);

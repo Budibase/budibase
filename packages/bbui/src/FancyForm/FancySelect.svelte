@@ -3,6 +3,7 @@
   import FancyField from "./FancyField.svelte"
   import Icon from "../Icon/Icon.svelte"
   import Popover from "../Popover/Popover.svelte"
+  import FancyFieldLabel from "./FancyFieldLabel.svelte"
 
   export let label
   export let value
@@ -38,88 +39,59 @@
   }
 </script>
 
-<div bind:this={wrapper}>
-  <FancyField
-    {error}
-    {value}
-    {validate}
-    {disabled}
-    clickable
-    on:click={() => (open = true)}
-  >
-    {#if label}
-      <div class="label" class:placeholder>
-        {label}
-      </div>
+<FancyField
+  bind:ref={wrapper}
+  {error}
+  {value}
+  {validate}
+  {disabled}
+  clickable
+  on:click={() => (open = true)}
+>
+  {#if label}
+    <FancyFieldLabel {placeholder}>{label}</FancyFieldLabel>
+  {/if}
+
+  <div class="value" class:placeholder>
+    {value || ""}
+  </div>
+
+  <div class="arrow">
+    <Icon name="ChevronDown" />
+  </div>
+</FancyField>
+
+<Popover
+  anchor={wrapper}
+  align="left"
+  portalTarget={document.documentElement}
+  bind:this={popover}
+  {open}
+  on:close={() => (open = false)}
+  useAnchorWidth={true}
+  maxWidth={null}
+>
+  <div class="popover-content">
+    {#if options.length}
+      {#each options as option, idx}
+        <div
+          class="popover-option"
+          tabindex="0"
+          on:click={() => onChange(getOptionValue(option, idx))}
+        >
+          <span class="option-text">
+            {getOptionLabel(option, idx)}
+          </span>
+          {#if value === getOptionValue(option, idx)}
+            <Icon name="Checkmark" />
+          {/if}
+        </div>
+      {/each}
     {/if}
-
-    <div class="value" class:placeholder>
-      {value || ""}
-    </div>
-
-    <div class="arrow">
-      <Icon name="ChevronDown" />
-    </div>
-  </FancyField>
-</div>
-
-<svelte:head>
-  <script>
-    console.log("FOO")
-  </script>
-</svelte:head>
-
-<span>
-  <Popover
-    anchor={wrapper}
-    align="left"
-    portalTarget={document.documentElement}
-    bind:this={popover}
-    {open}
-    on:close={() => (open = false)}
-    useAnchorWidth={true}
-    maxWidth={null}
-  >
-    <div class="popover-content">
-      {#if options.length}
-        {#each options as option, idx}
-          <div
-            class="popover-option"
-            tabindex="0"
-            on:click={() => onChange(getOptionValue(option, idx))}
-          >
-            <span class="option-text">
-              {getOptionLabel(option, idx)}
-            </span>
-            {#if value === getOptionValue(option, idx)}
-              <Icon name="Checkmark" />
-            {/if}
-          </div>
-        {/each}
-      {/if}
-    </div>
-  </Popover>
-</span>
+  </div>
+</Popover>
 
 <style>
-  span :global(.spectrum-Popover) {
-    background: red !important;
-  }
-
-  .label {
-    font-size: 14px;
-    font-weight: 500;
-    transform: translateY(-50%);
-    position: absolute;
-    top: 18px;
-    color: var(--spectrum-global-color-gray-600);
-    transition: font-size 130ms ease-out, top 130ms ease-out;
-  }
-  .label.placeholder {
-    top: 50%;
-    font-size: 15px;
-    transform: translateY(-50%);
-  }
   .value {
     display: block;
     flex: 1 1 auto;
@@ -128,6 +100,10 @@
     color: var(--spectrum-global-color-gray-900);
     transition: margin-top 130ms ease-out, opacity 130ms ease-out;
     opacity: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 0;
   }
   .value.placeholder {
     opacity: 0;
@@ -139,15 +115,16 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    padding: 10px 0;
+    padding: 7px 0;
   }
   .popover-option {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 7px 12px;
+    padding: 7px 16px;
     transition: background 130ms ease-out;
+    font-size: 15px;
   }
   .popover-option:hover {
     background: var(--spectrum-global-color-gray-200);
