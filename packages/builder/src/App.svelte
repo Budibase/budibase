@@ -3,7 +3,7 @@
   import { routes } from "../.routify/routes"
   import { NotificationDisplay, BannerDisplay } from "@budibase/bbui"
   import { parse, stringify } from "qs"
-  import HelpIcon from "components/common/HelpIcon.svelte"
+  import HelpMenu from "components/common/HelpMenu.svelte"
   import LicensingOverlays from "components/portal/licensing/LicensingOverlays.svelte"
 
   const queryHandler = { parse, stringify }
@@ -15,7 +15,7 @@
 <LicensingOverlays />
 <Router {routes} config={{ queryHandler }} />
 <div class="modal-container" />
-<HelpIcon />
+<HelpMenu />
 
 <style>
   .modal-container {
