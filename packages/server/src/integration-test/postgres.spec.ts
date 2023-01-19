@@ -38,7 +38,7 @@ describe("row api - postgres", () => {
       },
     })
 
-    makeRequest = generateMakeRequest(apiKey)
+    makeRequest = generateMakeRequest(apiKey, true)
 
     postgresTable = await config.createTable({
       name: faker.lorem.word(),
@@ -103,17 +103,33 @@ describe("row api - postgres", () => {
     )
   }
 
-  test.only("validate schema", async () => {
+  test("validate table schema", async () => {
     const res = await makeRequest(
       "get",
-      `api/datasources/${postgresDatasource._id}`,
-      undefined,
-      undefined,
-      true
+      `/api/datasources/${postgresDatasource._id}`
     )
 
     expect(res.status).toBe(200)
-    expect(res.body).toEqual({})
+    expect(res.body).toEqual({
+      config: {
+        ca: false,
+        database: "postgres",
+        host: "192.168.1.98",
+        password: "root",
+        port: 54321,
+        rejectUnauthorized: false,
+        schema: "public",
+        ssl: false,
+        user: "root",
+      },
+      plus: true,
+      source: "POSTGRES",
+      type: "datasource",
+      _id: expect.any(String),
+      _rev: expect.any(String),
+      createdAt: expect.any(String),
+      updatedAt: expect.any(String),
+    })
   })
 
   describe("create a row", () => {
