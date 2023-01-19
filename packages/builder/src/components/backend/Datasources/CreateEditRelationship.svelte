@@ -83,8 +83,7 @@
       errObj.through = tableNotSet
     }
     if ($touched.through && invalidThroughTable(fromRelate)) {
-      errObj.through =
-        "Ensure all columns in table are nullable or auto generated"
+      errObj.through = "Ensure non-key columns are nullable or auto-generated"
     }
     if ($touched.foreign && !isMany && !fromRelate.fieldName) {
       errObj.foreign = "Please pick the foreign key"
