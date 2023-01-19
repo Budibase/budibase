@@ -76,12 +76,14 @@ export const enrichFilter = (filter, columns, formId) => {
         value: `{{ ${binding} }}`,
       })
       const format = "YYYY-MM-DDTHH:mm:ss.SSSZ"
+      let hbs = `{{ date (add (date ${binding} "x") 86399999) "${format}" }}`
+      hbs = `{{#if ${binding} }}${hbs}{{/if}}`
       enrichedFilter.push({
         field: column.name,
         type: column.type,
         operator: "rangeHigh",
         valueType: "Binding",
-        value: `{{ date (add (date ${binding} "x") 86399999) "${format}" }}`,
+        value: hbs,
       })
     }
 
