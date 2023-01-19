@@ -3,7 +3,6 @@ import {
   Event,
   RowsImportedEvent,
   RowsCreatedEvent,
-  RowImportFormat,
   Table,
 } from "@budibase/types"
 
@@ -16,14 +15,9 @@ const created = async (count: number, timestamp?: string | number) => {
   await publishEvent(Event.ROWS_CREATED, properties, timestamp)
 }
 
-const imported = async (
-  table: Table,
-  format: RowImportFormat,
-  count: number
-) => {
+const imported = async (table: Table, count: number) => {
   const properties: RowsImportedEvent = {
     tableId: table._id as string,
-    format,
     count,
   }
   await publishEvent(Event.ROWS_IMPORTED, properties)

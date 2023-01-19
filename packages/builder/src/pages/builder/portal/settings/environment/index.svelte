@@ -9,6 +9,7 @@
     Table,
     Tags,
     Tag,
+    InlineAlert,
   } from "@budibase/bbui"
   import { environment, licensing, auth, admin } from "stores/portal"
   import { onMount } from "svelte"
@@ -17,22 +18,31 @@
 
   let modal
 
-  const schema = {
-    name: {
-      width: "2fr",
-    },
-    edit: {
-      width: "auto",
-      borderLeft: true,
-      displayName: "",
-    },
-  }
-
   const customRenderers = [{ column: "edit", component: EditVariableColumn }]
 
+  $: noEncryptionKey = $environment.status?.encryptionKeyAvailable === false
+  $: schema = buildSchema(noEncryptionKey)
+
   onMount(async () => {
+    await environment.checkStatus()
     await environment.loadVariables()
   })
+
+  const buildSchema = noEncryptionKey => {
+    const schema = {
+      name: {
+        width: "2fr",
+      },
+    }
+    if (!noEncryptionKey) {
+      schema.edit = {
+        width: "auto",
+        borderLeft: true,
+        displayName: "",
+      }
+    }
+    return schema
+  }
 
   const save = data => {
     environment.createVariable(data)
@@ -43,7 +53,7 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <div class="title">
-      <Heading size="M">Envrironment Variables</Heading>
+      <Heading size="M">Environment Variables</Heading>
       {#if !$licensing.environmentVariablesEnabled}
         <Tags>
           <Tag icon="LockClosed">Pro plan</Tag>
@@ -54,12 +64,19 @@
       >Add and manage environment variables for development and production</Body
     >
   </Layout>
-  {#if $licensing.environmentVariablesEnabled}
+  {#if !$licensing.environmentVariablesEnabled}
+    {#if noEncryptionKey}
+      <InlineAlert
+        message="Your Budibase installation does not have a key for encryption, please update your app service's environment variables to contain an 'ENCRYPTION_KEY' value."
+        header="No encryption key found"
+        type="error"
+      />
+    {/if}
     <Divider size="S" />
     <Layout noPadding>
       <Table
         {schema}
-        data={$environment}
+        data={$environment.variables}
         allowEditColumns={false}
         allowEditRows={false}
         allowSelectRows={false}
@@ -67,10 +84,11 @@
       />
     </Layout>
     <div>
-      <Button on:click={modal.show} cta>Add Variable</Button>
+      <Button on:click={modal.show} cta disabled={noEncryptionKey}
+        >Add Variable</Button
+      >
     </div>
   {:else}
-    <Divider />
     <div class="buttons">
       <Button
         primary
@@ -106,6 +124,12 @@
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
+    gap: var(--spacing-m);
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
     gap: var(--spacing-m);
   }
 </style>
