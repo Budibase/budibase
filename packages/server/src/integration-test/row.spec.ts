@@ -229,12 +229,12 @@ describe("row api - postgres", () => {
   })
 
   describe("search for rows", () => {
+    const search = (tableId: string | undefined, body?: object) =>
+      makeRequest("post", `/tables/${postgresTable._id}/rows/search`, body)
+
     describe("empty search", () => {
       test("Given than a table has no rows, search without query returns empty", async () => {
-        const res = await makeRequest(
-          "post",
-          `/tables/${postgresTable._id}/rows/search`
-        )
+        const res = await search(postgresTable._id)
 
         expect(res.status).toBe(200)
 
@@ -245,10 +245,7 @@ describe("row api - postgres", () => {
         const rowsCount = 6
         const rows = await populateRows(rowsCount)
 
-        const res = await makeRequest(
-          "post",
-          `/tables/${postgresTable._id}/rows/search`
-        )
+        const res = await search(postgresTable._id)
 
         expect(res.status).toBe(200)
 
@@ -266,10 +263,7 @@ describe("row api - postgres", () => {
         await populateRows(rowsCount)
         await populateRows(2, (await config.createTable())._id)
 
-        const res = await makeRequest(
-          "post",
-          `/tables/${postgresTable._id}/rows/search`
-        )
+        const res = await search(postgresTable._id)
 
         expect(res.status).toBe(200)
 
@@ -298,17 +292,13 @@ describe("row api - postgres", () => {
       }
       await populateRows(1)
 
-      const res = await makeRequest(
-        "post",
-        `/tables/${postgresTable._id}/rows/search`,
-        {
-          query: {
-            string: {
-              name,
-            },
+      const res = await search(postgresTable._id, {
+        query: {
+          string: {
+            name,
           },
-        }
-      )
+        },
+      })
 
       expect(res.status).toBe(200)
 
@@ -321,13 +311,9 @@ describe("row api - postgres", () => {
     test("Querying respects the limit fields", async () => {
       await populateRows(6)
 
-      const res = await makeRequest(
-        "post",
-        `/tables/${postgresTable._id}/rows/search`,
-        {
-          limit: 2,
-        }
-      )
+      const res = await search(postgresTable._id, {
+        limit: 2,
+      })
 
       expect(res.status).toBe(200)
 
@@ -361,17 +347,13 @@ describe("row api - postgres", () => {
       })
 
       test("Querying respects the sort order when sorting ascending by a string value", async () => {
-        const res = await makeRequest(
-          "post",
-          `/tables/${postgresTable._id}/rows/search`,
-          {
-            sort: {
-              order: "ascending",
-              column: "name",
-              type: "string",
-            },
-          }
-        )
+        const res = await search(postgresTable._id, {
+          sort: {
+            order: "ascending",
+            column: "name",
+            type: "string",
+          },
+        })
 
         expect(res.status).toBe(200)
         expect(res.body.data).toEqual([
@@ -383,17 +365,13 @@ describe("row api - postgres", () => {
       })
 
       test("Querying respects the sort order when sorting descending by a string value", async () => {
-        const res = await makeRequest(
-          "post",
-          `/tables/${postgresTable._id}/rows/search`,
-          {
-            sort: {
-              order: "descending",
-              column: "name",
-              type: "string",
-            },
-          }
-        )
+        const res = await search(postgresTable._id, {
+          sort: {
+            order: "descending",
+            column: "name",
+            type: "string",
+          },
+        })
 
         expect(res.status).toBe(200)
         expect(res.body.data).toEqual([
@@ -405,17 +383,13 @@ describe("row api - postgres", () => {
       })
 
       test("Querying respects the sort order when sorting ascending by a numeric value", async () => {
-        const res = await makeRequest(
-          "post",
-          `/tables/${postgresTable._id}/rows/search`,
-          {
-            sort: {
-              order: "ascending",
-              column: "value",
-              type: "number",
-            },
-          }
-        )
+        const res = await search(postgresTable._id, {
+          sort: {
+            order: "ascending",
+            column: "value",
+            type: "number",
+          },
+        })
 
         expect(res.status).toBe(200)
         expect(res.body.data).toEqual([
@@ -427,17 +401,13 @@ describe("row api - postgres", () => {
       })
 
       test("Querying respects the sort order when sorting descending by a numeric value", async () => {
-        const res = await makeRequest(
-          "post",
-          `/tables/${postgresTable._id}/rows/search`,
-          {
-            sort: {
-              order: "descending",
-              column: "value",
-              type: "number",
-            },
-          }
-        )
+        const res = await search(postgresTable._id, {
+          sort: {
+            order: "descending",
+            column: "value",
+            type: "number",
+          },
+        })
 
         expect(res.status).toBe(200)
         expect(res.body.data).toEqual([
@@ -447,6 +417,48 @@ describe("row api - postgres", () => {
           expect.objectContaining({ value: -5 }),
         ])
       })
+    })
+  })
+
+  describe("get all rows", () => {
+    const getAll = (tableId: string | undefined) =>
+      makeRequest("get", `/tables/${postgresTable._id}/rows`)
+
+    test("Given than a table has no rows, get returns empty", async () => {
+      const res = await getAll(postgresTable._id)
+
+      expect(res.status).toBe(200)
+
+      expect(res.body.data).toHaveLength(0)
+    })
+
+    test("Given than a table has multiple rows, get returns all of them", async () => {
+      const rowsCount = 6
+      const rows = await populateRows(rowsCount)
+
+      const res = await getAll(postgresTable._id)
+
+      expect(res.status).toBe(200)
+
+      expect(res.body.data).toHaveLength(rowsCount)
+      expect(res.body.data).toEqual(
+        expect.arrayContaining(
+          rows.map(r => expect.objectContaining(r.rowData))
+        )
+      )
+    })
+
+    test("Given than multiple tables have multiple rows, get returns the requested ones", async () => {
+      await populateRows(2, (await config.createTable())._id)
+      const rowsCount = 6
+      await populateRows(rowsCount)
+      await populateRows(2, (await config.createTable())._id)
+
+      const res = await getAll(postgresTable._id)
+
+      expect(res.status).toBe(200)
+
+      expect(res.body.data).toHaveLength(rowsCount)
     })
   })
 })
