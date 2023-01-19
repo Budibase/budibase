@@ -218,50 +218,96 @@ describe("row api - postgres", () => {
   })
 
   describe("search for rows", () => {
-    test("Given than a table has no rows, search without query returns empty", async () => {
-      const res = await makeRequest(
-        "post",
-        `/tables/${postgresTable._id}/rows/search`
-      )
-
-      expect(res.status).toBe(200)
-
-      expect(res.body.data).toHaveLength(0)
-    })
-
-    test("Given than a table has multiple rows, search without query returns all of them", async () => {
-      const rowsCount = 6
-      const rows = await populateRows(rowsCount)
-
-      const res = await makeRequest(
-        "post",
-        `/tables/${postgresTable._id}/rows/search`
-      )
-
-      expect(res.status).toBe(200)
-
-      expect(res.body.data).toHaveLength(rowsCount)
-      expect(res.body.data).toEqual(
-        expect.arrayContaining(
-          rows.map(r => expect.objectContaining(r.rowData))
+    describe("empty search", () => {
+      test("Given than a table has no rows, search without query returns empty", async () => {
+        const res = await makeRequest(
+          "post",
+          `/tables/${postgresTable._id}/rows/search`
         )
-      )
+
+        expect(res.status).toBe(200)
+
+        expect(res.body.data).toHaveLength(0)
+      })
+
+      test("Given than a table has multiple rows, search without query returns all of them", async () => {
+        const rowsCount = 6
+        const rows = await populateRows(rowsCount)
+
+        const res = await makeRequest(
+          "post",
+          `/tables/${postgresTable._id}/rows/search`
+        )
+
+        expect(res.status).toBe(200)
+
+        expect(res.body.data).toHaveLength(rowsCount)
+        expect(res.body.data).toEqual(
+          expect.arrayContaining(
+            rows.map(r => expect.objectContaining(r.rowData))
+          )
+        )
+      })
+
+      test("Given than multiple tables have multiple rows, search only return the requested ones", async () => {
+        await populateRows(2, (await config.createTable())._id)
+        const rowsCount = 6
+        await populateRows(rowsCount)
+        await populateRows(2, (await config.createTable())._id)
+
+        const res = await makeRequest(
+          "post",
+          `/tables/${postgresTable._id}/rows/search`
+        )
+
+        expect(res.status).toBe(200)
+
+        expect(res.body.data).toHaveLength(rowsCount)
+      })
     })
 
-    test("Given than multiple tables have multiple rows, search only return the requested ones", async () => {
-      await populateRows(2, (await config.createTable())._id)
-      const rowsCount = 6
-      await populateRows(rowsCount)
-      await populateRows(2, (await config.createTable())._id)
+    test("Given than a table has multiple rows, querying by a string field returns the rows with field containing or starting by that value", async () => {
+      const name = faker.name.fullName()
+      const rowsToFilter = [
+        ...Array(2).fill({
+          name,
+          description: faker.lorem.paragraphs(),
+          value: +faker.random.numeric(),
+        }),
+        ...Array(2).fill({
+          name: `${name}${faker.random.alphaNumeric(5)}`,
+          description: faker.lorem.paragraphs(),
+          value: +faker.random.numeric(),
+        }),
+      ]
+
+      await populateRows(3)
+      for (const row of rowsToFilter) {
+        await config.createRow({
+          tableId: postgresTable._id,
+          ...row,
+        })
+      }
+      await populateRows(1)
 
       const res = await makeRequest(
         "post",
-        `/tables/${postgresTable._id}/rows/search`
+        `/tables/${postgresTable._id}/rows/search`,
+        {
+          query: {
+            string: {
+              name,
+            },
+          },
+        }
       )
 
       expect(res.status).toBe(200)
 
-      expect(res.body.data).toHaveLength(rowsCount)
+      expect(res.body.data).toHaveLength(4)
+      expect(res.body.data).toEqual(
+        expect.arrayContaining(rowsToFilter.map(expect.objectContaining))
+      )
     })
   })
 })
