@@ -230,7 +230,7 @@ describe("row api - postgres", () => {
 
   describe("search for rows", () => {
     const search = (tableId: string | undefined, body?: object) =>
-      makeRequest("post", `/tables/${postgresTable._id}/rows/search`, body)
+      makeRequest("post", `/tables/${tableId}/rows/search`, body)
 
     describe("empty search", () => {
       test("Given than a table has no rows, search without query returns empty", async () => {
