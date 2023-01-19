@@ -1,5 +1,7 @@
 import { Table } from "../documents"
 
+export const PASSWORD_REPLACEMENT = "--secret-value--"
+
 export enum Operation {
   CREATE = "CREATE",
   READ = "READ",
@@ -104,7 +106,16 @@ export interface Integration {
   friendlyName: string
   type?: string
   iconUrl?: string
-  datasource: {}
+  datasource: Record<
+    string,
+    {
+      type: string
+      display?: string
+      deprecated?: boolean
+      default?: any
+      required?: boolean
+    }
+  >
   query: {
     [key: string]: QueryDefinition
   }

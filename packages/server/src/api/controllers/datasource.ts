@@ -8,18 +8,24 @@ import {
 } from "../../db/utils"
 import { destroy as tableDestroy } from "./table/internal"
 import { BuildSchemaErrors, InvalidColumns } from "../../constants"
-import { getIntegration } from "../../integrations"
+import { getIntegration, getDefinitions } from "../../integrations"
 import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { db as dbCore, context, events } from "@budibase/backend-core"
-import { BBContext, Datasource, Row } from "@budibase/types"
+import {
+  UserCtx,
+  Datasource,
+  Row,
+  DatasourceFieldType,
+  PASSWORD_REPLACEMENT,
+} from "@budibase/types"
 import sdk from "../../sdk"
-import { cloneDeep } from "lodash/fp"
-import { enrich } from "../../sdk/app/datasources/datasources"
+import { removeSecrets } from "../../sdk/app/datasources/datasources"
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: UserCtx) {
   // Get internal tables
   const db = context.getAppDB()
+  const definitions = await getDefinitions()
   const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
@@ -46,23 +52,19 @@ export async function fetch(ctx: BBContext) {
     )
   ).rows.map(row => row.doc)
 
-  const allDatasources = [bbInternalDb, ...datasources]
+  const allDatasources: Datasource[] = [bbInternalDb, ...datasources]
 
   for (let datasource of allDatasources) {
-    if (datasource.config && datasource.config.auth) {
-      // strip secrets from response so they don't show in the network request
-      delete datasource.config.auth
-    }
-
+    datasource = sdk.datasources.removeSecrets(definitions, datasource)
     if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
-      datasource.entities = internal[datasource._id]
+      datasource.entities = internal[datasource._id!]
     }
   }
 
   ctx.body = [bbInternalDb, ...datasources]
 }
 
-export async function buildSchemaFromDb(ctx: BBContext) {
+export async function buildSchemaFromDb(ctx: UserCtx) {
   const db = context.getAppDB()
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   const tablesFilter = ctx.request.body.tablesFilter
@@ -149,11 +151,12 @@ async function invalidateVariables(
   await invalidateDynamicVariables(toInvalidate)
 }
 
-export async function update(ctx: BBContext) {
+export async function update(ctx: UserCtx) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
   let datasource = await sdk.datasources.get(datasourceId)
   const auth = datasource.config?.auth
+  const definitions = await getDefinitions()
   await invalidateVariables(datasource, ctx.request.body)
 
   const isBudibaseSource = datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
@@ -182,13 +185,16 @@ export async function update(ctx: BBContext) {
 
   ctx.status = 200
   ctx.message = "Datasource saved successfully."
-  ctx.body = { datasource }
+  ctx.body = {
+    datasource: sdk.datasources.removeSecrets(definitions, datasource),
+  }
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: UserCtx) {
   const db = context.getAppDB()
   const plus = ctx.request.body.datasource.plus
   const fetchSchema = ctx.request.body.fetchSchema
+  const definitions = await getDefinitions()
 
   const datasource = {
     _id: generateDatasourceID({ plus }),
@@ -216,7 +222,9 @@ export async function save(ctx: BBContext) {
     }
   }
 
-  const response: any = { datasource }
+  const response: any = {
+    datasource: sdk.datasources.removeSecrets(definitions, datasource),
+  }
   if (schemaError) {
     response.error = schemaError
   }
@@ -254,7 +262,7 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
   }
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
 
@@ -282,13 +290,15 @@ export async function destroy(ctx: BBContext) {
   ctx.status = 200
 }
 
-export async function find(ctx: BBContext) {
+export async function find(ctx: UserCtx) {
   const database = context.getAppDB()
-  ctx.body = await database.get(ctx.params.datasourceId)
+  const definitions = await getDefinitions()
+  const datasource = await database.get(ctx.params.datasourceId)
+  ctx.body = sdk.datasources.removeSecrets(definitions, datasource)
 }
 
 // dynamic query functionality
-export async function query(ctx: BBContext) {
+export async function query(ctx: UserCtx) {
   const queryJson = ctx.request.body
   try {
     ctx.body = await getDatasourceAndQuery(queryJson)

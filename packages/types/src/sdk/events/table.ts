@@ -1,4 +1,4 @@
-import { BaseEvent, TableExportFormat, TableImportFormat } from "./event"
+import { BaseEvent, TableExportFormat } from "./event"
 
 export interface TableCreatedEvent extends BaseEvent {
   tableId: string
@@ -19,5 +19,4 @@ export interface TableExportedEvent extends BaseEvent {
 
 export interface TableImportedEvent extends BaseEvent {
   tableId: string
-  format: TableImportFormat
 }

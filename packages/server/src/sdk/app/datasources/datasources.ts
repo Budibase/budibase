@@ -1,6 +1,11 @@
 import { context } from "@budibase/backend-core"
-import { processObjectSync } from "@budibase/string-templates"
-import { Datasource } from "@budibase/types"
+import { processObjectSync, findHBSBlocks } from "@budibase/string-templates"
+import {
+  Datasource,
+  DatasourceFieldType,
+  Integration,
+  PASSWORD_REPLACEMENT,
+} from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
 
@@ -36,4 +41,32 @@ export async function getWithEnvVars(datasourceId: string) {
   const appDb = context.getAppDB()
   const datasource = await appDb.get(datasourceId)
   return enrichDatasourceWithValues(datasource)
+}
+
+export function removeSecrets(
+  definitions: Record<string, Integration>,
+  datasource: Datasource
+) {
+  const schema = definitions[datasource.source]
+  if (datasource.config) {
+    // strip secrets from response, so they don't show in the network request
+    if (datasource.config.auth) {
+      delete datasource.config.auth
+    }
+    // remove passwords
+    for (let key of Object.keys(datasource.config)) {
+      if (typeof datasource.config[key] !== "string") {
+        continue
+      }
+      const blocks = findHBSBlocks(datasource.config[key] as string)
+      const usesEnvVars = blocks.find(block => block.includes("env.")) != null
+      if (
+        !usesEnvVars &&
+        schema.datasource?.[key]?.type === DatasourceFieldType.PASSWORD
+      ) {
+        datasource.config[key] = PASSWORD_REPLACEMENT
+      }
+    }
+  }
+  return datasource
 }
