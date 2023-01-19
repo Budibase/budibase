@@ -15,7 +15,7 @@
 </script>
 
 <a
-  on:click={e => e.stopPropagation() && dispatch(e)}
+  on:click={e => dispatch("click") && e.stopPropagation()}
   {href}
   {target}
   {download}
