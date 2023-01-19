@@ -683,7 +683,7 @@ export class ExternalRequest {
     )
     //if the sort column is a formula, remove it
     for (let sortColumn of Object.keys(sort || {})) {
-      if (table.schema[sortColumn].type === "formula") {
+      if (table.schema[sortColumn]?.type === "formula") {
         delete sort?.[sortColumn]
       }
     }
