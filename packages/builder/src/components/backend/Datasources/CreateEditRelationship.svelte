@@ -153,7 +153,6 @@
     fromTable &&
     toTable
 
-  $: console.log("Errors ", errors)
   $: linkTable = through || toTable
   $: relationshipTypes = [
     {
