@@ -63,6 +63,8 @@ export const createLicensingStore = () => {
       let environmentVariablesEnabled = license.features.includes(
         Constants.Features.ENVIRONMENT_VARIABLES
       )
+
+      environmentVariablesEnabled = true
       store.update(state => {
         return {
           ...state,

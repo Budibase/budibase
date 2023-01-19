@@ -20,7 +20,7 @@
   export let allowHelpers = true
   export let updateOnChange = true
   export let drawerLeft
-
+  $: console.log(bindings)
   const dispatch = createEventDispatcher()
   let bindingDrawer
   let valid = true
@@ -28,6 +28,7 @@
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
+  $: console.log(tempValue)
   $: isJS = isJSBinding(value)
 
   const saveBinding = () => {
