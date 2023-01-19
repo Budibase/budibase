@@ -449,15 +449,45 @@ describe("row api - postgres", () => {
     })
   })
 
+  describe("get all rows", () => {
+    const getAll = (tableId: string | undefined) =>
+      makeRequest("get", `/api/${tableId}/rows`)
 
+    test("Given than a table has no rows, get returns empty", async () => {
+      const res = await getAll(postgresTable._id)
 
+      expect(res.status).toBe(200)
 
+      expect(res.body).toHaveLength(0)
+    })
 
+    test("Given than a table has multiple rows, get returns all of them", async () => {
+      const rowsCount = 6
+      const rows = await populateRows(rowsCount)
 
+      const res = await getAll(postgresTable._id)
 
+      expect(res.status).toBe(200)
 
+      expect(res.body).toHaveLength(rowsCount)
+      expect(res.body).toEqual(
+        expect.arrayContaining(
+          rows.map(r => expect.objectContaining(r.rowData))
+        )
+      )
+    })
 
+    test("Given than multiple tables have multiple rows, get returns the requested ones", async () => {
+      await populateRows(2, (await config.createTable())._id)
+      const rowsCount = 6
+      await populateRows(rowsCount, postgresTable._id)
+      await populateRows(2, (await config.createTable())._id)
 
+      const res = await getAll(postgresTable._id)
 
+      expect(res.status).toBe(200)
 
+      expect(res.body).toHaveLength(rowsCount)
+    })
+  })
 })
