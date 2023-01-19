@@ -75,6 +75,20 @@ describe("row api - postgres", () => {
     }
   }
 
+  function createRow(
+    row: {
+      name: string
+      description: string
+      value: number
+    },
+    tableId?: string
+  ) {
+    return config.createRow({
+      tableId: tableId || postgresTable._id,
+      ...row,
+    })
+  }
+
   async function populateRows(count: number, tableId?: string) {
     return await Promise.all(
       Array(count)
@@ -83,10 +97,7 @@ describe("row api - postgres", () => {
           const rowData = createRandomRow()
           return {
             rowData,
-            row: await config.createRow({
-              tableId: tableId || postgresTable._id,
-              ...rowData,
-            }),
+            row: await createRow(rowData, tableId || postgresTable._id),
           }
         })
     )
@@ -266,7 +277,7 @@ describe("row api - postgres", () => {
       })
     })
 
-    test("Given than a table has multiple rows, querying by a string field returns the rows with field containing or starting by that value", async () => {
+    test("Querying by a string field returns the rows with field containing or starting by that value", async () => {
       const name = faker.name.fullName()
       const rowsToFilter = [
         ...Array(2).fill({
@@ -283,10 +294,7 @@ describe("row api - postgres", () => {
 
       await populateRows(3)
       for (const row of rowsToFilter) {
-        await config.createRow({
-          tableId: postgresTable._id,
-          ...row,
-        })
+        await createRow(row, postgresTable._id)
       }
       await populateRows(1)
 
@@ -308,6 +316,137 @@ describe("row api - postgres", () => {
       expect(res.body.data).toEqual(
         expect.arrayContaining(rowsToFilter.map(expect.objectContaining))
       )
+    })
+
+    test("Querying respects the limit fields", async () => {
+      await populateRows(6)
+
+      const res = await makeRequest(
+        "post",
+        `/tables/${postgresTable._id}/rows/search`,
+        {
+          limit: 2,
+        }
+      )
+
+      expect(res.status).toBe(200)
+
+      expect(res.body.data).toHaveLength(2)
+    })
+
+    describe("sort", () => {
+      beforeEach(async () => {
+        const defaultValue = createRandomRow()
+
+        await createRow(
+          {
+            ...defaultValue,
+            name: "d",
+            value: 3,
+          },
+          postgresTable._id
+        )
+        await createRow(
+          { ...defaultValue, name: "aaa", value: 40 },
+          postgresTable._id
+        )
+        await createRow(
+          { ...defaultValue, name: "ccccc", value: -5 },
+          postgresTable._id
+        )
+        await createRow(
+          { ...defaultValue, name: "bb", value: 0 },
+          postgresTable._id
+        )
+      })
+
+      test("Querying respects the sort order when sorting ascending by a string value", async () => {
+        const res = await makeRequest(
+          "post",
+          `/tables/${postgresTable._id}/rows/search`,
+          {
+            sort: {
+              order: "ascending",
+              column: "name",
+              type: "string",
+            },
+          }
+        )
+
+        expect(res.status).toBe(200)
+        expect(res.body.data).toEqual([
+          expect.objectContaining({ name: "aaa" }),
+          expect.objectContaining({ name: "bb" }),
+          expect.objectContaining({ name: "ccccc" }),
+          expect.objectContaining({ name: "d" }),
+        ])
+      })
+
+      test("Querying respects the sort order when sorting descending by a string value", async () => {
+        const res = await makeRequest(
+          "post",
+          `/tables/${postgresTable._id}/rows/search`,
+          {
+            sort: {
+              order: "descending",
+              column: "name",
+              type: "string",
+            },
+          }
+        )
+
+        expect(res.status).toBe(200)
+        expect(res.body.data).toEqual([
+          expect.objectContaining({ name: "d" }),
+          expect.objectContaining({ name: "ccccc" }),
+          expect.objectContaining({ name: "bb" }),
+          expect.objectContaining({ name: "aaa" }),
+        ])
+      })
+
+      test("Querying respects the sort order when sorting ascending by a numeric value", async () => {
+        const res = await makeRequest(
+          "post",
+          `/tables/${postgresTable._id}/rows/search`,
+          {
+            sort: {
+              order: "ascending",
+              column: "value",
+              type: "number",
+            },
+          }
+        )
+
+        expect(res.status).toBe(200)
+        expect(res.body.data).toEqual([
+          expect.objectContaining({ value: -5 }),
+          expect.objectContaining({ value: 0 }),
+          expect.objectContaining({ value: 3 }),
+          expect.objectContaining({ value: 40 }),
+        ])
+      })
+
+      test("Querying respects the sort order when sorting descending by a numeric value", async () => {
+        const res = await makeRequest(
+          "post",
+          `/tables/${postgresTable._id}/rows/search`,
+          {
+            sort: {
+              order: "descending",
+              column: "value",
+              type: "number",
+            },
+          }
+        )
+
+        expect(res.status).toBe(200)
+        expect(res.body.data).toEqual([
+          expect.objectContaining({ value: 40 }),
+          expect.objectContaining({ value: 3 }),
+          expect.objectContaining({ value: 0 }),
+          expect.objectContaining({ value: -5 }),
+        ])
+      })
     })
   })
 })
