@@ -6,7 +6,7 @@ labels: bug
 assignees: ''
 
 ---
-## Checklist
+**Checklist**
 - [ ] I have searched budibase discussions and github issues to check if my issue already exists
 
 **Hosting**

@@ -14,7 +14,7 @@
 
   export let rows = []
   export let schema = {}
-  export let allValid = false
+  export let allValid = true
   export let displayColumn = null
 
   const typeOptions = [
@@ -174,7 +174,6 @@
   }
 
   label {
-    font-family: var(--font-sans);
     cursor: pointer;
     font-weight: 600;
     box-sizing: border-box;

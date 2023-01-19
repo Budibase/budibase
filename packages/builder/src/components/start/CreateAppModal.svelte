@@ -138,6 +138,7 @@
       }
 
       $goto(`/builder/app/${createdApp.instance._id}`)
+      // apps.load()
     } catch (error) {
       creating = false
       console.error(error)

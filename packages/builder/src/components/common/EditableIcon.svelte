@@ -1,47 +1,46 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Icon, Modal } from "@budibase/bbui"
   import ChooseIconModal from "components/start/ChooseIconModal.svelte"
 
   export let name
-  export let size
+  export let size = "M"
   export let app
+  export let color
+  export let autoSave = false
 
-  let iconModal
+  let modal
 </script>
 
 <div class="editable-icon">
-  <div
-    class="edit-hover"
-    on:click={() => {
-      iconModal.show()
-    }}
-  >
-    <Icon name={"Edit"} size={"L"} />
+  <div class="hover" on:click={modal.show}>
+    <Icon name="Edit" {size} color="var(--spectrum-global-color-gray-600)" />
   </div>
-  <div class="app-icon">
-    <Icon {name} {size} />
+  <div class="normal">
+    <Icon {name} {size} {color} />
   </div>
 </div>
-<ChooseIconModal {app} bind:this={iconModal} />
+
+<Modal bind:this={modal}>
+  <ChooseIconModal {name} {color} {app} {autoSave} on:change />
+</Modal>
 
 <style>
-  .editable-icon:hover .app-icon {
-    opacity: 0;
-  }
   .editable-icon {
     position: relative;
+    display: flex;
+    justify-content: flex-start;
   }
-  .editable-icon:hover .edit-hover {
-    opacity: 1;
+  .normal {
+    display: block;
   }
-  .edit-hover {
-    color: var(--spectrum-global-color-gray-600);
+  .hover {
+    display: none;
     cursor: pointer;
-    z-index: 100;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    opacity: 0;
-    /* transition: opacity var(--spectrum-global-animation-duration-100) ease; */
+  }
+  .editable-icon:hover .normal {
+    display: none;
+  }
+  .editable-icon:hover .hover {
+    display: block;
   }
 </style>
