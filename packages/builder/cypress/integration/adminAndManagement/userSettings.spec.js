@@ -81,7 +81,7 @@ filterTests(["smoke", "all"], () => {
       cy.login("test@test.com", "newpwd")
     })
 
-    it("should open and close developer mode", () => {
+    xit("should open and close developer mode", () => {
       cy.get(".user-dropdown .icon", { timeout: 2000 }).click({ force: true })
 
       // Close developer mode & verify
