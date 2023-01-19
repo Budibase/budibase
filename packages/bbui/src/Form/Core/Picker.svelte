@@ -131,7 +131,6 @@
 <Popover
   anchor={button}
   align="left"
-  portalTarget={document.documentElement}
   bind:this={popover}
   {open}
   on:close={() => (open = false)}
