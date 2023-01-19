@@ -75,7 +75,7 @@ describe("row api - postgres", () => {
     }
   }
 
-  async function populateRows(count: number) {
+  async function populateRows(count: number, tableId?: string) {
     return await Promise.all(
       Array(count)
         .fill({})
@@ -84,7 +84,7 @@ describe("row api - postgres", () => {
           return {
             rowData,
             row: await config.createRow({
-              tableId: postgresTable._id,
+              tableId: tableId || postgresTable._id,
               ...rowData,
             }),
           }
@@ -218,7 +218,18 @@ describe("row api - postgres", () => {
   })
 
   describe("search for rows", () => {
-    test("Given than a table multiple rows, search without query returns all of them", async () => {
+    test("Given than a table has no rows, search without query returns empty", async () => {
+      const res = await makeRequest(
+        "post",
+        `/tables/${postgresTable._id}/rows/search`
+      )
+
+      expect(res.status).toBe(200)
+
+      expect(res.body.data).toHaveLength(0)
+    })
+
+    test("Given than a table has multiple rows, search without query returns all of them", async () => {
       const rowsCount = 6
       const rows = await populateRows(rowsCount)
 
@@ -235,6 +246,22 @@ describe("row api - postgres", () => {
           rows.map(r => expect.objectContaining(r.rowData))
         )
       )
+    })
+
+    test("Given than multiple tables have multiple rows, search only return the requested ones", async () => {
+      await populateRows(2, (await config.createTable())._id)
+      const rowsCount = 6
+      await populateRows(rowsCount)
+      await populateRows(2, (await config.createTable())._id)
+
+      const res = await makeRequest(
+        "post",
+        `/tables/${postgresTable._id}/rows/search`
+      )
+
+      expect(res.status).toBe(200)
+
+      expect(res.body.data).toHaveLength(rowsCount)
     })
   })
 })
