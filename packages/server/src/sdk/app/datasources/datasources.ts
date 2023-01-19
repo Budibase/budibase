@@ -7,6 +7,7 @@ import {
   PASSWORD_REPLACEMENT,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
+import { env } from "process"
 import { getEnvironmentVariables } from "../../utils"
 
 async function enrichDatasourceWithValues(datasource: Datasource) {
@@ -40,7 +41,13 @@ export async function get(
 export async function getWithEnvVars(datasourceId: string) {
   const appDb = context.getAppDB()
   const datasource = await appDb.get(datasourceId)
-  return enrichDatasourceWithValues(datasource)
+  const blocks = findHBSBlocks(JSON.stringify(datasource))
+  const usesEnvVars = blocks.find(block => block.includes("env.")) != null
+  if (usesEnvVars) {
+    return enrichDatasourceWithValues(datasource)
+  } else {
+    throw new Error("Environment variables binding format incorrect")
+  }
 }
 
 export function removeSecrets(
