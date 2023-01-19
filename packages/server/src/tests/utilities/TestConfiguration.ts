@@ -300,7 +300,7 @@ class TestConfiguration {
     })
   }
 
-  defaultHeaders(extras = {}) {
+  defaultHeaders(extras = {}, isInternal: boolean) {
     const authObj = {
       userId: GLOBAL_USER_ID,
       sessionId: "sessionid",
@@ -314,13 +314,17 @@ class TestConfiguration {
     const appToken = auth.jwt.sign(app, env.JWT_SECRET)
     const headers: any = {
       Accept: "application/json",
-      Cookie: [
-        `${constants.Cookie.Auth}=${authToken}`,
-        `${constants.Cookie.CurrentApp}=${appToken}`,
-      ],
       [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
       ...extras,
     }
+
+    if (!isInternal) {
+      headers.Cookie = [
+        `${constants.Cookie.Auth}=${authToken}`,
+        `${constants.Cookie.CurrentApp}=${appToken}`,
+      ]
+    }
+
     if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
