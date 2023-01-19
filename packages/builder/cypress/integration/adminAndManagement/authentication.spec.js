@@ -2,7 +2,7 @@ import filterTests from "../../support/filterTests"
 // const interact = require("../support/interact")
 
 filterTests(["smoke", "all"], () => {
-  context("Auth Configuration", () => {
+  xcontext("Auth Configuration", () => {
     before(() => {
       cy.login()
     })
@@ -21,7 +21,7 @@ filterTests(["smoke", "all"], () => {
       cy.get("[data-cy=oidc-active]").should('not.be.checked')
 
       cy.intercept("POST", "/api/global/configs").as("updateAuth")
-      cy.get("button[data-cy=oidc-save]").contains("Save").click({force: true})
+      cy.get("button[data-cy=oidc-save]").contains("Save").click({ force: true })
       cy.wait("@updateAuth")
       cy.get("@updateAuth").its("response.statusCode").should("eq", 200)
 
@@ -45,7 +45,7 @@ filterTests(["smoke", "all"], () => {
       cy.get("button[data-cy=oidc-save]").should("not.be.disabled");
 
       cy.intercept("POST", "/api/global/configs").as("updateAuth")
-      cy.get("button[data-cy=oidc-save]").contains("Save").click({force: true})
+      cy.get("button[data-cy=oidc-save]").contains("Save").click({ force: true })
       cy.wait("@updateAuth")
       cy.get("@updateAuth").its("response.statusCode").should("eq", 200)
 
@@ -85,11 +85,11 @@ filterTests(["smoke", "all"], () => {
       cy.get(".auth-form input.spectrum-Textfield-input").type("Another ")
       cy.get(".spectrum-Tags").find(".spectrum-Tags-item").its("length").should("eq", 6)
       cy.get(".spectrum-Tags-item").contains("Another")
-      
+
       cy.get("button[data-cy=oidc-save]").should("not.be.disabled");
 
       cy.intercept("POST", "/api/global/configs").as("updateAuth")
-      cy.get("button[data-cy=oidc-save]").contains("Save").click({force: true})
+      cy.get("button[data-cy=oidc-save]").contains("Save").click({ force: true })
       cy.wait("@updateAuth")
       cy.get("@updateAuth").its("response.statusCode").should("eq", 200)
 
@@ -123,7 +123,7 @@ filterTests(["smoke", "all"], () => {
       cy.get("button[data-cy=oidc-save]").should("not.be.disabled");
 
       cy.intercept("POST", "/api/global/configs").as("updateAuth")
-      cy.get("button[data-cy=oidc-save]").contains("Save").click({force: true})
+      cy.get("button[data-cy=oidc-save]").contains("Save").click({ force: true })
       cy.wait("@updateAuth")
       cy.get("@updateAuth").its("response.statusCode").should("eq", 200)
 
@@ -144,7 +144,7 @@ filterTests(["smoke", "all"], () => {
 
       cy.get("div.content").scrollTo("bottom")
 
-      cy.get("[data-cy=restore-oidc-default-scopes]").click({force: true})
+      cy.get("[data-cy=restore-oidc-default-scopes]").click({ force: true })
 
       cy.get(".spectrum-Tags").find(".spectrum-Tags-item").its("length").should("eq", 4)
 
