@@ -172,6 +172,8 @@
       delete element.createdAt
       delete element.updatedAt
 
+      const { activated } = element.config
+
       if (element.type === ConfigTypes.OIDC) {
         // Add a UUID here so each config is distinguishable when it arrives at the login page
         for (let config of element.config.configs) {
@@ -181,30 +183,26 @@
           // Callback urls shouldn't be included
           delete config.callbackURL
         }
-        if (partialOidc) {
-          if (!oidcComplete) {
-            notifications.error(
-              `Please fill in all required ${ConfigTypes.OIDC} fields`
-            )
-          } else {
-            calls.push(API.saveConfig(element))
-            // Turn the save button grey when clicked
-            oidcSaveButtonDisabled = true
-            originalOidcDoc = cloneDeep(providers.oidc)
-          }
+        if ((partialOidc || activated) && !oidcComplete) {
+          notifications.error(
+            `Please fill in all required ${ConfigTypes.OIDC} fields`
+          )
+        } else if (oidcComplete || !activated) {
+          calls.push(API.saveConfig(element))
+          // Turn the save button grey when clicked
+          oidcSaveButtonDisabled = true
+          originalOidcDoc = cloneDeep(providers.oidc)
         }
       }
       if (element.type === ConfigTypes.Google) {
-        if (partialGoogle) {
-          if (!googleComplete) {
-            notifications.error(
-              `Please fill in all required ${ConfigTypes.Google} fields`
-            )
-          } else {
-            calls.push(API.saveConfig(element))
-            googleSaveButtonDisabled = true
-            originalGoogleDoc = cloneDeep(providers.google)
-          }
+        if ((partialGoogle || activated) && !googleComplete) {
+          notifications.error(
+            `Please fill in all required ${ConfigTypes.Google} fields`
+          )
+        } else if (googleComplete || !activated) {
+          calls.push(API.saveConfig(element))
+          googleSaveButtonDisabled = true
+          originalGoogleDoc = cloneDeep(providers.google)
         }
       }
     })
