@@ -3,6 +3,12 @@ import { View } from "./view"
 import { RenameColumn } from "../../sdk"
 import { FieldType } from "./row"
 
+export enum RelationshipTypes {
+  ONE_TO_MANY = "one-to-many",
+  MANY_TO_ONE = "many-to-one",
+  MANY_TO_MANY = "many-to-many",
+}
+
 export interface FieldSchema {
   type: FieldType
   externalType?: string
@@ -10,7 +16,7 @@ export interface FieldSchema {
   name: string
   sortable?: boolean
   tableId?: string
-  relationshipType?: string
+  relationshipType?: RelationshipTypes
   through?: string
   foreignKey?: string
   icon?: string
