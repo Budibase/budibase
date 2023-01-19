@@ -320,7 +320,7 @@
     options={relationshipTypes}
     bind:value={relationshipType}
     bind:error={errors.relationshipType}
-    on:change={e => (errors.relationshipType = null)}
+    on:change={() => (errors.relationshipType = null)}
   />
   <div class="headings">
     <Detail>Tables</Detail>
@@ -342,7 +342,7 @@
       options={Object.keys(fromTable.schema)}
       bind:value={fromPrimary}
       bind:error={errors.fromPrimary}
-      on:change={e => (errors.fromPrimary = null)}
+      on:change={() => (errors.fromPrimary = null)}
     />
   {/if}
   <Select
@@ -369,14 +369,14 @@
         options={Object.keys(throughTable?.schema)}
         bind:value={throughToKey}
         bind:error={errors.throughToKey}
-        on:change={e => (errors.throughToKey = null)}
+        on:change={() => (errors.throughToKey = null)}
       />
       <Select
         label={`Foreign Key (${toTable?.name})`}
         options={Object.keys(throughTable?.schema)}
         bind:value={throughFromKey}
         bind:error={errors.throughFromKey}
-        on:change={e => (errors.throughFromKey = null)}
+        on:change={() => (errors.throughFromKey = null)}
       />
     {/if}
   {:else if isManyToOne && toTable}
@@ -385,7 +385,7 @@
       options={Object.keys(toTable?.schema)}
       bind:value={fromForeign}
       bind:error={errors.fromForeign}
-      on:change={e => (errors.fromForeign = null)}
+      on:change={() => (errors.fromForeign = null)}
     />
   {/if}
   <div class="headings">
