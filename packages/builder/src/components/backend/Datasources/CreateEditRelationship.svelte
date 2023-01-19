@@ -78,7 +78,7 @@
     }
     if ($touched.through && invalidThroughTable(fromRelate)) {
       errObj.through =
-        "Ensure all columns in table are nullable or auto generated"
+        "Ensure non-key columns in table are nullable or auto-generated"
     }
     if ($touched.foreign && !isMany && !fromRelate.fieldName) {
       errObj.foreign = "Please pick the foreign key"
