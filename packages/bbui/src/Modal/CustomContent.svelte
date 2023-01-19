@@ -26,7 +26,6 @@
     padding: 40px;
     background-color: var(--purple);
     color: white;
-    font-family: var(--font-sans);
     font-weight: bold;
     text-align: center;
     user-select: none;
