@@ -6,16 +6,22 @@
     Toggle,
     Button,
     TextArea,
+    Modal,
+    EnvDropdown,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
   import { IntegrationTypes } from "constants/backend"
   import { createValidationStore } from "helpers/validation/yup"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
+  import { environment } from "stores/portal"
+  import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
 
   export let datasource
   export let schema
   export let creating
+
+  let createVariableModal
   const validation = createValidationStore()
   const dispatch = createEventDispatcher()
 
@@ -60,6 +66,18 @@
     }
     return capitalise(name)
   }
+
+  function save(data) {
+    environment.createVariable(data)
+    createVariableModal.hide()
+  }
+
+  function showModal() {
+    createVariableModal.show()
+  }
+  onMount(async () => {
+    await environment.loadVariables()
+  })
 </script>
 
 <form>
@@ -103,7 +121,9 @@
       {:else}
         <div class="form-row">
           <Label>{getDisplayName(configKey)}</Label>
-          <Input
+          <EnvDropdown
+            {showModal}
+            variables={$environment.variables}
             type={schema[configKey].type}
             on:change
             bind:value={config[configKey]}
@@ -114,6 +134,10 @@
     {/each}
   </Layout>
 </form>
+
+<Modal bind:this={createVariableModal}>
+  <CreateEditVariableModal {save} />
+</Modal>
 
 <style>
   .form-row {

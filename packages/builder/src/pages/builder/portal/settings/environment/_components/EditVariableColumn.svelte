@@ -2,7 +2,7 @@
   import { ActionButton, Modal } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { environment } from "stores/portal"
-  import CreateEditVariableModal from "./CreateEditVariableModal.svelte"
+  import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
 
   export let row
 
