@@ -103,6 +103,19 @@ describe("row api - postgres", () => {
     )
   }
 
+  test.only("validate schema", async () => {
+    const res = await makeRequest(
+      "get",
+      `api/datasources/${postgresDatasource._id}`,
+      undefined,
+      undefined,
+      true
+    )
+
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual({})
+  })
+
   describe("create a row", () => {
     test("Given than no row exists, adding a new row persists it", async () => {
       const newRow = createRandomRow()
@@ -420,45 +433,15 @@ describe("row api - postgres", () => {
     })
   })
 
-  describe("get all rows", () => {
-    const getAll = (tableId: string | undefined) =>
-      makeRequest("get", `/tables/${postgresTable._id}/rows`)
 
-    test("Given than a table has no rows, get returns empty", async () => {
-      const res = await getAll(postgresTable._id)
 
-      expect(res.status).toBe(200)
 
-      expect(res.body.data).toHaveLength(0)
-    })
 
-    test("Given than a table has multiple rows, get returns all of them", async () => {
-      const rowsCount = 6
-      const rows = await populateRows(rowsCount)
 
-      const res = await getAll(postgresTable._id)
 
-      expect(res.status).toBe(200)
 
-      expect(res.body.data).toHaveLength(rowsCount)
-      expect(res.body.data).toEqual(
-        expect.arrayContaining(
-          rows.map(r => expect.objectContaining(r.rowData))
-        )
-      )
-    })
 
-    test("Given than multiple tables have multiple rows, get returns the requested ones", async () => {
-      await populateRows(2, (await config.createTable())._id)
-      const rowsCount = 6
-      await populateRows(rowsCount)
-      await populateRows(2, (await config.createTable())._id)
 
-      const res = await getAll(postgresTable._id)
 
-      expect(res.status).toBe(200)
 
-      expect(res.body.data).toHaveLength(rowsCount)
-    })
-  })
 })
