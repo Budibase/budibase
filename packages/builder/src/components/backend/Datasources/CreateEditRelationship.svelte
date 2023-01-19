@@ -95,7 +95,7 @@
     if ($touched.toCol && !fromRelate.name) {
       errObj.toCol = colNotSet
     }
-    if ($touched.primary && !fromPrimary) {
+    if ($touched.primary && !isMany && !fromPrimary) {
       errObj.primary = "Please pick the primary key"
     }
     // currently don't support relationships back onto the table itself, needs to relate out
@@ -152,6 +152,8 @@
     Object.keys($touched).length !== 0 &&
     fromTable &&
     toTable
+
+  $: console.log("Errors ", errors)
   $: linkTable = through || toTable
   $: relationshipTypes = [
     {
