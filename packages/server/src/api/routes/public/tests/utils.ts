@@ -2,7 +2,7 @@ import * as setup from "../../tests/utilities"
 import { checkSlashesInUrl } from "../../../../utilities"
 import supertest from "supertest"
 
-export type HttpMethod = "post" | "get" | "put" | "delete"
+export type HttpMethod = "post" | "get" | "put" | "delete" | "patch"
 
 export type MakeRequestResponse = (
   method: HttpMethod,
@@ -11,7 +11,10 @@ export type MakeRequestResponse = (
   intAppId?: string
 ) => Promise<supertest.Response>
 
-export function generateMakeRequest(apiKey: string): MakeRequestResponse {
+export function generateMakeRequest(
+  apiKey: string,
+  isInternal = false
+): MakeRequestResponse {
   const request = setup.getRequest()!
   const config = setup.getConfig()
   return async (
@@ -26,9 +29,14 @@ export function generateMakeRequest(apiKey: string): MakeRequestResponse {
     if (intAppId) {
       extraHeaders["x-budibase-app-id"] = intAppId
     }
-    const req = request[method](
-      checkSlashesInUrl(`/api/public/v1/${endpoint}`)
-    ).set(config.defaultHeaders(extraHeaders))
+
+    const url = isInternal
+      ? endpoint
+      : checkSlashesInUrl(`/api/public/v1/${endpoint}`)
+
+    const req = request[method](url).set(
+      config.defaultHeaders(extraHeaders, isInternal)
+    )
     if (body) {
       req.send(body)
     }

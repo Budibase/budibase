@@ -5,7 +5,7 @@ import {
 } from "../api/routes/public/tests/utils"
 
 import * as setup from "../api/routes/tests/utilities"
-import { Datasource, FieldType, SourceName, Table } from "@budibase/types"
+import { Datasource, FieldType, Row, SourceName, Table } from "@budibase/types"
 import _ from "lodash"
 
 const config = setup.getConfig()
@@ -133,14 +133,13 @@ describe("row api - postgres", () => {
   })
 
   describe("create a row", () => {
+    const createRow = (tableId: string | undefined, body: object) =>
+      makeRequest("post", `/api/${tableId}/rows`, body)
+
     test("Given than no row exists, adding a new row persists it", async () => {
       const newRow = createRandomRow()
 
-      const res = await makeRequest(
-        "post",
-        `/tables/${postgresTable._id}/rows`,
-        newRow
-      )
+      const res = await createRow(postgresTable._id, newRow)
 
       expect(res.status).toBe(200)
 
@@ -148,7 +147,7 @@ describe("row api - postgres", () => {
       expect(persistedRows).toHaveLength(1)
       expect(persistedRows).toEqual([
         expect.objectContaining({
-          ...res.body.data,
+          ...res.body,
           ...newRow,
         }),
       ])
@@ -159,11 +158,7 @@ describe("row api - postgres", () => {
       const newRows = Array(numberOfRows).fill(createRandomRow())
 
       for (const newRow of newRows) {
-        const res = await makeRequest(
-          "post",
-          `/tables/${postgresTable._id}/rows`,
-          newRow
-        )
+        const res = await createRow(postgresTable._id, newRow)
         expect(res.status).toBe(200)
       }
 
@@ -176,21 +171,21 @@ describe("row api - postgres", () => {
   })
 
   describe("update a row", () => {
+    const updateRow = (tableId: string | undefined, body: Row) =>
+      makeRequest("patch", `/api/${tableId}/rows`, body)
+
     test("Given than a row exists, updating it persists it", async () => {
-      let { rowData, row } = _.sample(await populateRows(10))!
+      let { row } = _.sample(await populateRows(10))!
 
       const newName = faker.random.words(3)
       const newValue = +faker.random.numeric()
-      const updateRow = {
+      const updatedRow = {
+        ...row,
         name: newName,
         value: newValue,
       }
 
-      const res = await makeRequest(
-        "put",
-        `/tables/${postgresTable._id}/rows/${row._id}`,
-        updateRow
-      )
+      const res = await updateRow(postgresTable._id, updatedRow)
 
       expect(res.status).toBe(200)
 
@@ -198,23 +193,25 @@ describe("row api - postgres", () => {
 
       expect(persistedRow).toEqual(
         expect.objectContaining({
-          ...res.body.data,
-          ...rowData,
-          ...updateRow,
+          _id: row._id,
+          name: newName,
+          value: newValue,
         })
       )
     })
   })
 
   describe("delete a row", () => {
+    const deleteRow = (
+      tableId: string | undefined,
+      body: Row | { rows: Row[] }
+    ) => makeRequest("delete", `/api/${tableId}/rows`, body)
+
     test("Given than a row exists, delete request removes it", async () => {
       const numberOfInitialRows = 5
       let { row } = _.sample(await populateRows(numberOfInitialRows))!
 
-      const res = await makeRequest(
-        "delete",
-        `/tables/${postgresTable._id}/rows/${row._id}`
-      )
+      const res = await deleteRow(postgresTable._id, row)
 
       expect(res.status).toBe(200)
 
@@ -226,40 +223,39 @@ describe("row api - postgres", () => {
         expect.objectContaining({ _id: row._id })
       )
     })
+
+    // TODO: delete multiple rows
   })
 
   describe("retrieve a row", () => {
+    const getRow = (tableId: string | undefined, rowId?: string | undefined) =>
+      makeRequest("get", `/api/${tableId}/rows/${rowId}`)
+
     test("Given than a table have a single row, the row can be retrieved successfully", async () => {
       const [{ rowData, row }] = await populateRows(1)
 
-      const res = await makeRequest(
-        "get",
-        `/tables/${postgresTable._id}/rows/${row._id}`
-      )
+      const res = await getRow(postgresTable._id, row._id)
 
       expect(res.status).toBe(200)
 
-      expect(res.body.data).toEqual(expect.objectContaining(rowData))
+      expect(res.body).toEqual(expect.objectContaining(rowData))
     })
 
     test("Given than a table have a multiple rows, a single row can be retrieved successfully", async () => {
       const rows = await populateRows(10)
       const { rowData, row } = _.sample(rows)!
 
-      const res = await makeRequest(
-        "get",
-        `/tables/${postgresTable._id}/rows/${row._id}`
-      )
+      const res = await getRow(postgresTable._id, row._id)
 
       expect(res.status).toBe(200)
 
-      expect(res.body.data).toEqual(expect.objectContaining(rowData))
+      expect(res.body).toEqual(expect.objectContaining(rowData))
     })
   })
 
   describe("search for rows", () => {
     const search = (tableId: string | undefined, body?: object) =>
-      makeRequest("post", `/tables/${tableId}/rows/search`, body)
+      makeRequest("post", `/api/${tableId}/search`, body)
 
     describe("empty search", () => {
       test("Given than a table has no rows, search without query returns empty", async () => {
@@ -267,7 +263,7 @@ describe("row api - postgres", () => {
 
         expect(res.status).toBe(200)
 
-        expect(res.body.data).toHaveLength(0)
+        expect(res.body).toEqual({ rows: [] })
       })
 
       test("Given than a table has multiple rows, search without query returns all of them", async () => {
@@ -278,12 +274,12 @@ describe("row api - postgres", () => {
 
         expect(res.status).toBe(200)
 
-        expect(res.body.data).toHaveLength(rowsCount)
-        expect(res.body.data).toEqual(
-          expect.arrayContaining(
+        expect(res.body).toEqual({
+          rows: expect.arrayContaining(
             rows.map(r => expect.objectContaining(r.rowData))
-          )
-        )
+          ),
+        })
+        expect(res.body.rows).toHaveLength(rowsCount)
       })
 
       test("Given than multiple tables have multiple rows, search only return the requested ones", async () => {
@@ -296,7 +292,7 @@ describe("row api - postgres", () => {
 
         expect(res.status).toBe(200)
 
-        expect(res.body.data).toHaveLength(rowsCount)
+        expect(res.body.rows).toHaveLength(rowsCount)
       })
     })
 
@@ -331,10 +327,10 @@ describe("row api - postgres", () => {
 
       expect(res.status).toBe(200)
 
-      expect(res.body.data).toHaveLength(4)
-      expect(res.body.data).toEqual(
-        expect.arrayContaining(rowsToFilter.map(expect.objectContaining))
-      )
+      expect(res.body).toEqual({
+        rows: expect.arrayContaining(rowsToFilter.map(expect.objectContaining)),
+      })
+      expect(res.body.rows).toHaveLength(4)
     })
 
     test("Querying respects the limit fields", async () => {
@@ -346,7 +342,7 @@ describe("row api - postgres", () => {
 
       expect(res.status).toBe(200)
 
-      expect(res.body.data).toHaveLength(2)
+      expect(res.body.rows).toHaveLength(2)
     })
 
     describe("sort", () => {
@@ -377,15 +373,13 @@ describe("row api - postgres", () => {
 
       test("Querying respects the sort order when sorting ascending by a string value", async () => {
         const res = await search(postgresTable._id, {
-          sort: {
-            order: "ascending",
-            column: "name",
-            type: "string",
-          },
+          sort: "name",
+          sortOrder: "ascending",
+          sortType: "string",
         })
 
         expect(res.status).toBe(200)
-        expect(res.body.data).toEqual([
+        expect(res.body.rows).toEqual([
           expect.objectContaining({ name: "aaa" }),
           expect.objectContaining({ name: "bb" }),
           expect.objectContaining({ name: "ccccc" }),
@@ -395,15 +389,13 @@ describe("row api - postgres", () => {
 
       test("Querying respects the sort order when sorting descending by a string value", async () => {
         const res = await search(postgresTable._id, {
-          sort: {
-            order: "descending",
-            column: "name",
-            type: "string",
-          },
+          sort: "name",
+          sortOrder: "descending",
+          sortType: "string",
         })
 
         expect(res.status).toBe(200)
-        expect(res.body.data).toEqual([
+        expect(res.body.rows).toEqual([
           expect.objectContaining({ name: "d" }),
           expect.objectContaining({ name: "ccccc" }),
           expect.objectContaining({ name: "bb" }),
@@ -413,15 +405,13 @@ describe("row api - postgres", () => {
 
       test("Querying respects the sort order when sorting ascending by a numeric value", async () => {
         const res = await search(postgresTable._id, {
-          sort: {
-            order: "ascending",
-            column: "value",
-            type: "number",
-          },
+          sort: "value",
+          sortOrder: "ascending",
+          sortType: "number",
         })
 
         expect(res.status).toBe(200)
-        expect(res.body.data).toEqual([
+        expect(res.body.rows).toEqual([
           expect.objectContaining({ value: -5 }),
           expect.objectContaining({ value: 0 }),
           expect.objectContaining({ value: 3 }),
@@ -431,15 +421,13 @@ describe("row api - postgres", () => {
 
       test("Querying respects the sort order when sorting descending by a numeric value", async () => {
         const res = await search(postgresTable._id, {
-          sort: {
-            order: "descending",
-            column: "value",
-            type: "number",
-          },
+          sort: "value",
+          sortOrder: "descending",
+          sortType: "number",
         })
 
         expect(res.status).toBe(200)
-        expect(res.body.data).toEqual([
+        expect(res.body.rows).toEqual([
           expect.objectContaining({ value: 40 }),
           expect.objectContaining({ value: 3 }),
           expect.objectContaining({ value: 0 }),
