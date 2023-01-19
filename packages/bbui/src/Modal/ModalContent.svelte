@@ -104,7 +104,7 @@
         {/if}
 
         {#if showCancelButton}
-          <Button group secondary newStyles on:click={close}>
+          <Button group secondary on:click={close}>
             {cancelText}
           </Button>
         {/if}
@@ -151,7 +151,8 @@
     overflow: visible;
   }
   .spectrum-Dialog-heading {
-    font-family: var(--font-sans);
+    font-family: var(--font-accent);
+    font-weight: 600;
   }
   .spectrum-Dialog-heading.noDivider {
     margin-bottom: 12px;

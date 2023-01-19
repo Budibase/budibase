@@ -57,15 +57,13 @@
 <Button cta on:click={publishModal.show}>Publish</Button>
 <Modal bind:this={publishModal}>
   <ModalContent
-    title="Publish to Production"
+    title="Publish to production"
     confirmText="Publish"
     onConfirm={publishApp}
     dataCy={"deploy-app-modal"}
   >
-    <span
-      >The changes you have made will be published to the production version of
-      the application.</span
-    >
+    The changes you have made will be published to the production version of the
+    application.
   </ModalContent>
 </Modal>
 
