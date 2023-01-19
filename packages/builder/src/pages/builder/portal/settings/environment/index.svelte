@@ -13,7 +13,7 @@
   } from "@budibase/bbui"
   import { environment, licensing, auth, admin } from "stores/portal"
   import { onMount } from "svelte"
-  import CreateEditVariableModal from "./_components/CreateEditVariableModal.svelte"
+  import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
   import EditVariableColumn from "./_components/EditVariableColumn.svelte"
 
   let modal
@@ -64,7 +64,7 @@
       >Add and manage environment variables for development and production</Body
     >
   </Layout>
-  {#if !$licensing.environmentVariablesEnabled}
+  {#if $licensing.environmentVariablesEnabled}
     {#if noEncryptionKey}
       <InlineAlert
         message="Your Budibase installation does not have a key for encryption, please update your app service's environment variables to contain an 'ENCRYPTION_KEY' value."
@@ -115,6 +115,10 @@
 </Modal>
 
 <style>
+  .buttons {
+    display: flex;
+    gap: var(--spacing-l);
+  }
   .title {
     display: flex;
     flex-direction: row;
