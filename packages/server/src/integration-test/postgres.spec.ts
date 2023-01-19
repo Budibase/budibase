@@ -224,7 +224,25 @@ describe("row api - postgres", () => {
       )
     })
 
-    // TODO: delete multiple rows
+    test("Given than multiple rows exist, multiple rows can be removed", async () => {
+      const numberOfInitialRows = 5
+      let rows = _.sampleSize(await populateRows(numberOfInitialRows), 3)!.map(
+        x => x.row
+      )
+
+      const res = await deleteRow(postgresTable._id, { rows })
+
+      expect(res.status).toBe(200)
+
+      const persistedRows = await config.getRows(postgresTable._id!)
+      expect(persistedRows).toHaveLength(numberOfInitialRows - 3)
+
+      for (const row of rows) {
+        expect(persistedRows).not.toContain(
+          expect.objectContaining({ _id: row._id })
+        )
+      }
+    })
   })
 
   describe("retrieve a row", () => {
