@@ -5,7 +5,14 @@ import {
 } from "../api/routes/public/tests/utils"
 
 import * as setup from "../api/routes/tests/utilities"
-import { Datasource, FieldType, Row, SourceName, Table } from "@budibase/types"
+import {
+  Datasource,
+  FieldType,
+  RelationshipTypes,
+  Row,
+  SourceName,
+  Table,
+} from "@budibase/types"
 import _ from "lodash"
 
 const config = setup.getConfig()
@@ -16,7 +23,8 @@ describe("row api - postgres", () => {
   let apiKey,
     makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
-    postgresTable: Table
+    postgresTable: Table,
+    auxPostgresTable: Table
 
   beforeEach(async () => {
     await config.init()
@@ -57,6 +65,31 @@ describe("row api - postgres", () => {
         value: {
           name: "value",
           type: FieldType.NUMBER,
+        },
+      },
+      sourceId: postgresDatasource._id,
+    })
+
+    auxPostgresTable = await config.createTable({
+      name: faker.lorem.word(),
+      schema: {
+        title: {
+          name: "title",
+          type: FieldType.STRING,
+          constraints: {
+            presence: true,
+          },
+        },
+        linkedField: {
+          type: FieldType.LINK,
+          constraints: {
+            type: "array",
+            presence: true,
+          },
+          fieldName: "foreignField",
+          name: "linkedField",
+          relationshipType: RelationshipTypes.MANY_TO_MANY,
+          tableId: postgresTable._id,
         },
       },
       sourceId: postgresDatasource._id,
@@ -269,6 +302,31 @@ describe("row api - postgres", () => {
 
       expect(res.body).toEqual(expect.objectContaining(rowData))
     })
+
+    test("given having rows with relation data, only the ids are retrieved", async () => {
+      let [{ row }] = await populateRows(1)
+
+      const foreignRow = await config.createRow({
+        tableId: auxPostgresTable._id,
+        title: faker.random.alphaNumeric(10),
+        linkedField: row._id,
+      })
+
+      const res = await getRow(postgresTable._id, row._id)
+
+      expect(res.status).toBe(200)
+
+      expect(res.body).toEqual({
+        ...row,
+        foreignField: [
+          {
+            _id: foreignRow._id,
+          },
+        ],
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+      })
+    })
   })
 
   describe("search for rows", () => {
@@ -451,6 +509,39 @@ describe("row api - postgres", () => {
           expect.objectContaining({ value: 0 }),
           expect.objectContaining({ value: -5 }),
         ])
+      })
+    })
+  })
+
+  describe("enrich a row", () => {
+    const getAll = (tableId: string | undefined, rowId: string | undefined) =>
+      makeRequest("get", `/api/${tableId}/${rowId}/enrich`)
+
+    test("given having rows with relation data, enrich populates the", async () => {
+      let [{ row }] = await populateRows(1)
+
+      const foreignRow = await config.createRow({
+        tableId: auxPostgresTable._id,
+        title: faker.random.alphaNumeric(10),
+        linkedField: row._id,
+      })
+
+      const res = await getAll(postgresTable._id, row._id)
+
+      expect(res.status).toBe(200)
+
+      expect(res.body).toEqual({
+        ...row,
+        foreignField: [
+          {
+            ...foreignRow,
+            linkedField: [{ _id: row._id }],
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          },
+        ],
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
       })
     })
   })
