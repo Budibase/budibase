@@ -8,24 +8,16 @@ import {
 } from "../../db/utils"
 import { destroy as tableDestroy } from "./table/internal"
 import { BuildSchemaErrors, InvalidColumns } from "../../constants"
-import { getIntegration, getDefinitions } from "../../integrations"
+import { getIntegration } from "../../integrations"
 import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { db as dbCore, context, events } from "@budibase/backend-core"
-import {
-  UserCtx,
-  Datasource,
-  Row,
-  DatasourceFieldType,
-  PASSWORD_REPLACEMENT,
-} from "@budibase/types"
+import { UserCtx, Datasource, Row } from "@budibase/types"
 import sdk from "../../sdk"
-import { removeSecrets } from "../../sdk/app/datasources/datasources"
 
 export async function fetch(ctx: UserCtx) {
   // Get internal tables
   const db = context.getAppDB()
-  const definitions = await getDefinitions()
   const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
@@ -52,10 +44,12 @@ export async function fetch(ctx: UserCtx) {
     )
   ).rows.map(row => row.doc)
 
-  const allDatasources: Datasource[] = [bbInternalDb, ...datasources]
+  const allDatasources: Datasource[] = await sdk.datasources.removeSecrets([
+    bbInternalDb,
+    ...datasources,
+  ])
 
   for (let datasource of allDatasources) {
-    datasource = sdk.datasources.removeSecrets(definitions, datasource)
     if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
       datasource.entities = internal[datasource._id!]
     }
@@ -156,8 +150,11 @@ export async function update(ctx: UserCtx) {
   const datasourceId = ctx.params.datasourceId
   let datasource = await sdk.datasources.get(datasourceId)
   const auth = datasource.config?.auth
-  const definitions = await getDefinitions()
   await invalidateVariables(datasource, ctx.request.body)
+
+  if (!sdk.datasources.isValid(datasource)) {
+    ctx.throw(400, "Environment variables binding format incorrect")
+  }
 
   const isBudibaseSource = datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
 
@@ -186,7 +183,7 @@ export async function update(ctx: UserCtx) {
   ctx.status = 200
   ctx.message = "Datasource saved successfully."
   ctx.body = {
-    datasource: sdk.datasources.removeSecrets(definitions, datasource),
+    datasource: await sdk.datasources.removeSecretSingle(datasource),
   }
 }
 
@@ -194,12 +191,15 @@ export async function save(ctx: UserCtx) {
   const db = context.getAppDB()
   const plus = ctx.request.body.datasource.plus
   const fetchSchema = ctx.request.body.fetchSchema
-  const definitions = await getDefinitions()
 
   const datasource = {
     _id: generateDatasourceID({ plus }),
     type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
     ...ctx.request.body.datasource,
+  }
+
+  if (!sdk.datasources.isValid(datasource)) {
+    ctx.throw(400, "Environment variables binding format incorrect")
   }
 
   let schemaError = null
@@ -223,7 +223,7 @@ export async function save(ctx: UserCtx) {
   }
 
   const response: any = {
-    datasource: sdk.datasources.removeSecrets(definitions, datasource),
+    datasource: await sdk.datasources.removeSecretSingle(datasource),
   }
   if (schemaError) {
     response.error = schemaError
@@ -292,9 +292,8 @@ export async function destroy(ctx: UserCtx) {
 
 export async function find(ctx: UserCtx) {
   const database = context.getAppDB()
-  const definitions = await getDefinitions()
   const datasource = await database.get(ctx.params.datasourceId)
-  ctx.body = sdk.datasources.removeSecrets(definitions, datasource)
+  ctx.body = await sdk.datasources.removeSecretSingle(datasource)
 }
 
 // dynamic query functionality

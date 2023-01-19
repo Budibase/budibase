@@ -7,8 +7,10 @@ import {
   PASSWORD_REPLACEMENT,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
-import { env } from "process"
 import { getEnvironmentVariables } from "../../utils"
+import { getDefinitions } from "../../../integrations"
+
+const ENV_VAR_PREFIX = "env."
 
 async function enrichDatasourceWithValues(datasource: Datasource) {
   const cloned = cloneDeep(datasource)
@@ -42,38 +44,50 @@ export async function getWithEnvVars(datasourceId: string) {
   const appDb = context.getAppDB()
   const datasource = await appDb.get(datasourceId)
   const blocks = findHBSBlocks(JSON.stringify(datasource))
-  const usesEnvVars = blocks.find(block => block.includes("env.")) != null
+  const usesEnvVars =
+    blocks.find(block => block.includes(ENV_VAR_PREFIX)) != null
   if (usesEnvVars) {
     return enrichDatasourceWithValues(datasource)
   } else {
-    throw new Error("Environment variables binding format incorrect")
+    return datasource
   }
 }
 
-export function removeSecrets(
-  definitions: Record<string, Integration>,
-  datasource: Datasource
-) {
-  const schema = definitions[datasource.source]
-  if (datasource.config) {
-    // strip secrets from response, so they don't show in the network request
-    if (datasource.config.auth) {
-      delete datasource.config.auth
-    }
-    // remove passwords
-    for (let key of Object.keys(datasource.config)) {
-      if (typeof datasource.config[key] !== "string") {
-        continue
+export function isValid(datasource: Datasource) {
+  const blocks = findHBSBlocks(JSON.stringify(datasource))
+  const validList = blocks.filter(block => block.includes(ENV_VAR_PREFIX))
+  return blocks.length === validList.length
+}
+
+export async function removeSecrets(datasources: Datasource[]) {
+  const definitions = await getDefinitions()
+  for (let datasource of datasources) {
+    const schema = definitions[datasource.source]
+    if (datasource.config) {
+      // strip secrets from response, so they don't show in the network request
+      if (datasource.config.auth) {
+        delete datasource.config.auth
       }
-      const blocks = findHBSBlocks(datasource.config[key] as string)
-      const usesEnvVars = blocks.find(block => block.includes("env.")) != null
-      if (
-        !usesEnvVars &&
-        schema.datasource?.[key]?.type === DatasourceFieldType.PASSWORD
-      ) {
-        datasource.config[key] = PASSWORD_REPLACEMENT
+      // remove passwords
+      for (let key of Object.keys(datasource.config)) {
+        if (typeof datasource.config[key] !== "string") {
+          continue
+        }
+        const blocks = findHBSBlocks(datasource.config[key] as string)
+        const usesEnvVars =
+          blocks.find(block => block.includes(ENV_VAR_PREFIX)) != null
+        if (
+          !usesEnvVars &&
+          schema.datasource?.[key]?.type === DatasourceFieldType.PASSWORD
+        ) {
+          datasource.config[key] = PASSWORD_REPLACEMENT
+        }
       }
     }
   }
-  return datasource
+  return datasources
+}
+
+export async function removeSecretSingle(datasource: Datasource) {
+  return (await removeSecrets([datasource]))[0]
 }
