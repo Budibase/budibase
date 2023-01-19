@@ -463,7 +463,7 @@ class TestConfiguration {
 
   // ROW
 
-  async createRow(config: any = null): Promise<Row> {
+  async createRow(config?: Row): Promise<Row> {
     if (!this.table) {
       throw "Test requires table to be configured."
     }

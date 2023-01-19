@@ -10,6 +10,8 @@ import _ from "lodash"
 
 const config = setup.getConfig()
 
+jest.unmock("node-fetch")
+
 describe("row api - postgres", () => {
   let apiKey,
     makeRequest: MakeRequestResponse,
@@ -81,7 +83,10 @@ describe("row api - postgres", () => {
           const rowData = createRandomRow()
           return {
             rowData,
-            row: await config.createRow(rowData),
+            row: await config.createRow({
+              tableId: postgresTable._id,
+              ...rowData,
+            }),
           }
         })
     )
@@ -209,6 +214,27 @@ describe("row api - postgres", () => {
       expect(res.status).toBe(200)
 
       expect(res.body.data).toEqual(expect.objectContaining(rowData))
+    })
+  })
+
+  describe("search for rows", () => {
+    test("Given than a table multiple rows, search without query returns all of them", async () => {
+      const rowsCount = 6
+      const rows = await populateRows(rowsCount)
+
+      const res = await makeRequest(
+        "post",
+        `/tables/${postgresTable._id}/rows/search`
+      )
+
+      expect(res.status).toBe(200)
+
+      expect(res.body.data).toHaveLength(rowsCount)
+      expect(res.body.data).toEqual(
+        expect.arrayContaining(
+          rows.map(r => expect.objectContaining(r.rowData))
+        )
+      )
     })
   })
 })
