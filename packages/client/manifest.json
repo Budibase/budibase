@@ -4019,7 +4019,8 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "nested": true
       },
       {
         "type": "field",
@@ -4535,7 +4536,8 @@
           {
             "type": "filter",
             "label": "Filtering",
-            "key": "filter"
+            "key": "filter",
+            "nested": true
           },
           {
             "type": "searchfield",
@@ -4665,7 +4667,8 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "nested": true
       },
       {
         "type": "field/sortable",
@@ -4831,7 +4834,8 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "nested": true
       },
       {
         "type": "field/sortable",

@@ -5,6 +5,8 @@
   import positionDropdown from "../Actions/position_dropdown"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
+  import { getContext } from "svelte"
+  import Context from "../context"
 
   const dispatch = createEventDispatcher()
 
@@ -24,6 +26,7 @@
   $: tooltipClasses = showTip
     ? `spectrum-Popover--withTip spectrum-Popover--${direction}`
     : ""
+  $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
   export const show = () => {
     dispatch("open")
@@ -61,7 +64,7 @@
 </script>
 
 {#if open}
-  <Portal target={portalTarget}>
+  <Portal {target}>
     <div
       tabindex="0"
       use:positionDropdown={{ anchor, align, maxWidth, useAnchorWidth }}

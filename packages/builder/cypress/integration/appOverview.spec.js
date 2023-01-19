@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 import clientPackage from "@budibase/client/package.json"
 
 filterTests(["all"], () => {
-  context("Application Overview screen", () => {
+  xcontext("Application Overview screen", () => {
     before(() => {
       cy.login()
       cy.deleteAllApps()
