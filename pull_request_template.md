@@ -1,6 +1,3 @@
-## Checklist
-- [ ] I have searched budibase discussions and github issues to check if my issue already exists
-
 ## Description
 _Describe the problem or feature in addition to a link to the relevant github issues._
 

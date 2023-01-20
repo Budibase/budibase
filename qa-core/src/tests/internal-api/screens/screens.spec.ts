@@ -21,7 +21,7 @@ describe("Internal API - /screens endpoints", () => {
     await config.afterAll()
   })
 
-  it("POST - Create a screen with each role type", async () => {
+  it("Create a screen with each role type", async () => {
     // Create app
     const app = await appConfig.applications.create(generateApp())
 
@@ -35,7 +35,7 @@ describe("Internal API - /screens endpoints", () => {
     }
   })
 
-  it("GET - Fetch screens", async () => {
+  it("Get screens", async () => {
     // Create app
     const app = await appConfig.applications.create(generateApp())
 
@@ -47,7 +47,7 @@ describe("Internal API - /screens endpoints", () => {
     await appConfig.applications.getRoutes(true)
   })
 
-  it("DELETE - Delete a screen", async () => {
+  it("Delete a screen", async () => {
     // Create app
     const app = await appConfig.applications.create(generateApp())
 
