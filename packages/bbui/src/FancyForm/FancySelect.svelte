@@ -96,16 +96,18 @@
     display: block;
     flex: 1 1 auto;
     font-size: 15px;
-    margin-top: 18px;
+    line-height: 17px;
     color: var(--spectrum-global-color-gray-900);
-    transition: margin-top 130ms ease-out, opacity 130ms ease-out;
+    transition: transform 130ms ease-out, opacity 130ms ease-out;
     opacity: 1;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
     width: 0;
+    transform: translateY(9px);
   }
   .value.placeholder {
+    transform: translateY(0);
     opacity: 0;
     pointer-events: none;
     margin-top: 0;

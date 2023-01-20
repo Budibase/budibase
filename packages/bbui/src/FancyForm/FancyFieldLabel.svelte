@@ -9,6 +9,7 @@
 <style>
   div {
     font-size: 14px;
+    line-height: 15px;
     font-weight: 500;
     position: absolute;
     top: 10px;

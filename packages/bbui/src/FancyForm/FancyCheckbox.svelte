@@ -39,6 +39,7 @@
   }
   .text {
     font-size: 15px;
+    line-height: 17px;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
