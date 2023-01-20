@@ -10,11 +10,11 @@
   div {
     font-size: 14px;
     font-weight: 500;
-    transform: translateY(-50%);
     position: absolute;
-    top: 18px;
+    top: 10px;
     color: var(--spectrum-global-color-gray-600);
-    transition: font-size 130ms ease-out, top 130ms ease-out;
+    transition: font-size 130ms ease-out, top 130ms ease-out,
+      transform 130ms ease-out;
   }
   div.placeholder {
     top: 50%;
