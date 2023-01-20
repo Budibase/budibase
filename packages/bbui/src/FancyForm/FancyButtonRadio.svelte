@@ -33,7 +33,7 @@
   }
 </script>
 
-<FancyField {error} {value} {validate} {disabled}>
+<FancyField {error} {value} {validate} {disabled} autoHeight>
   {#if label}
     <FancyFieldLabel placeholder={false}>{label}</FancyFieldLabel>
   {/if}
@@ -42,7 +42,6 @@
     {#each options as option}
       <ActionButton
         selected={getOptionValue(option) === value}
-        size="S"
         on:click={() => onChange(getOptionValue(option))}
       >
         {getOptionLabel(option)}
@@ -53,11 +52,18 @@
 
 <style>
   .options {
-    margin-top: 22px;
+    margin-top: 34px;
+    margin-bottom: 14px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: 6px;
+  }
+  .options :global(.spectrum-ActionButton) {
+    font-size: 15px;
+    line-height: 17px;
+    height: auto;
+    padding: 6px 10px;
   }
 </style>

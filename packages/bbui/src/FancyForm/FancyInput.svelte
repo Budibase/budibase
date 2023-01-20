@@ -47,6 +47,8 @@
     transform: translateY(9px);
     background: transparent;
     font-size: 15px;
+    line-height: 17px;
+    font-family: var(--font-sans);
     color: var(--spectrum-global-color-gray-900);
     outline: none;
     border: none;

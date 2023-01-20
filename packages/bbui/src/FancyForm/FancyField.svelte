@@ -10,6 +10,7 @@
   export let validate
   export let value
   export let ref
+  export let autoHeight
 
   const formContext = getContext("fancy-form")
   const id = Math.random()
@@ -41,6 +42,7 @@
   class:disabled
   class:focused
   class:clickable
+  class:auto-height={autoHeight}
 >
   <div class="content" on:click>
     <div class="field">
@@ -93,6 +95,9 @@
     position: relative;
     height: 64px;
     padding: 0 16px;
+  }
+  .fancy-field.auto-height .content {
+    height: auto;
   }
   .content,
   .field {
