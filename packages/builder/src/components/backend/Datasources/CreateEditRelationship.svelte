@@ -30,8 +30,8 @@
     },
   ]
 
-  let originalFromColumnName = fromRelationship.name,
-    originalToColumnName = toRelationship.name
+  let originalFromColumnName = toRelationship.name,
+    originalToColumnName = fromRelationship.name
   let originalFromTable = plusTables.find(
     table => table._id === toRelationship?.tableId
   )
@@ -170,10 +170,10 @@
       errObj.throughTable = tableError
     }
     const colError = "Column name cannot be an existing column"
-    if (isColumnNameBeingUsed(fromTable, fromColumn, originalFromColumnName)) {
+    if (isColumnNameBeingUsed(toTable, fromColumn, originalFromColumnName)) {
       errObj.fromColumn = colError
     }
-    if (isColumnNameBeingUsed(toTable, toColumn, originalToColumnName)) {
+    if (isColumnNameBeingUsed(fromTable, toColumn, originalToColumnName)) {
       errObj.toColumn = colError
     }
 
@@ -274,12 +274,12 @@
   function removeExistingRelationship() {
     if (originalFromTable && originalFromColumnName) {
       delete datasource.entities[originalFromTable.name].schema[
-        originalFromColumnName
+        originalToColumnName
       ]
     }
     if (originalToTable && originalToColumnName) {
       delete datasource.entities[originalToTable.name].schema[
-        originalToColumnName
+        originalFromColumnName
       ]
     }
   }
@@ -369,14 +369,24 @@
         options={Object.keys(throughTable?.schema)}
         bind:value={throughToKey}
         bind:error={errors.throughToKey}
-        on:change={() => (errors.throughToKey = null)}
+        on:change={e => {
+          if (throughFromKey === e.detail) {
+            throughFromKey = null
+          }
+          errors.throughToKey = null
+        }}
       />
       <Select
         label={`Foreign Key (${toTable?.name})`}
         options={Object.keys(throughTable?.schema)}
         bind:value={throughFromKey}
         bind:error={errors.throughFromKey}
-        on:change={() => (errors.throughFromKey = null)}
+        on:change={e => {
+          if (throughToKey === e.detail) {
+            throughToKey = null
+          }
+          errors.throughFromKey = null
+        }}
       />
     {/if}
   {:else if isManyToOne && toTable}
