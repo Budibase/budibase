@@ -46,7 +46,7 @@ export function delay(ms: number) {
 }
 
 let request: supertest.SuperTest<supertest.Test> | undefined | null,
-  config: TestConfig
+  config: TestConfig | null
 
 export function beforeAll() {
   config = new TestConfig()
@@ -60,6 +60,7 @@ export function afterAll() {
   // clear app files
 
   request = null
+  config = null
 }
 
 export function getRequest() {

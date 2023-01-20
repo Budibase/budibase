@@ -145,11 +145,13 @@ class TestConfiguration {
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
 
-      await this._req(
-        null,
-        { appId: this.prodApp.appId },
-        controllers.app.destroy
-      )
+      if (env.isDockerisedTest()) {
+        await this._req(
+          null,
+          { appId: this.prodApp.appId },
+          controllers.app.destroy
+        )
+      }
     }
 
     if (this.server) {
@@ -300,7 +302,7 @@ class TestConfiguration {
     })
   }
 
-  defaultHeaders(extras = {}, isInternal: boolean) {
+  defaultHeaders(extras = {}, isInternal: boolean = false) {
     const authObj = {
       userId: GLOBAL_USER_ID,
       sessionId: "sessionid",
