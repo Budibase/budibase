@@ -369,14 +369,24 @@
         options={Object.keys(throughTable?.schema)}
         bind:value={throughToKey}
         bind:error={errors.throughToKey}
-        on:change={() => (errors.throughToKey = null)}
+        on:change={e => {
+          if (throughFromKey === e.detail) {
+            throughFromKey = null
+          }
+          errors.throughToKey = null
+        }}
       />
       <Select
         label={`Foreign Key (${toTable?.name})`}
         options={Object.keys(throughTable?.schema)}
         bind:value={throughFromKey}
         bind:error={errors.throughFromKey}
-        on:change={() => (errors.throughFromKey = null)}
+        on:change={e => {
+          if (throughToKey === e.detail) {
+            throughToKey = null
+          }
+          errors.throughFromKey = null
+        }}
       />
     {/if}
   {:else if isManyToOne && toTable}
