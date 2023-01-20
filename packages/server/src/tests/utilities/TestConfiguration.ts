@@ -620,7 +620,7 @@ class TestConfiguration {
     datasource: any,
     fields: any,
     params: any,
-    verb: string
+    verb?: string
   ) {
     return request
       .post(`/api/queries/preview`)
