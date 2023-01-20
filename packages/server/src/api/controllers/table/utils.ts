@@ -1,4 +1,4 @@
-import { transform } from "../../../utilities/csvParser"
+import { parse, isSchema, isRows } from "../../../utilities/schema"
 import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
 import { isEqual } from "lodash"
 import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
@@ -128,24 +128,23 @@ export function importToRows(data: any, table: any, user: any = {}) {
   return finalData
 }
 
-export async function handleDataImport(user: any, table: any, dataImport: any) {
-  if (!dataImport || !dataImport.csvString) {
+export async function handleDataImport(user: any, table: any, rows: any) {
+  const schema: unknown = table.schema
+
+  if (!rows || !isRows(rows) || !isSchema(schema)) {
     return table
   }
 
   const db = context.getAppDB()
-  // Populate the table with rows imported from CSV in a bulk update
-  const data = await transform({
-    ...dataImport,
-    existingTable: table,
-  })
+  const data = parse(rows, schema)
 
   let finalData: any = importToRows(data, table, user)
 
   await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
     tableId: table._id,
   })
-  await events.rows.imported(table, "csv", finalData.length)
+
+  await events.rows.imported(table, finalData.length)
   return table
 }
 
@@ -210,14 +209,14 @@ class TableSaveFunctions {
   db: any
   user: any
   oldTable: any
-  dataImport: any
+  importRows: any
   rows: any
 
-  constructor({ user, oldTable, dataImport }: any) {
+  constructor({ user, oldTable, importRows }: any) {
     this.db = context.getAppDB()
     this.user = user
     this.oldTable = oldTable
-    this.dataImport = dataImport
+    this.importRows = importRows
     // any rows that need updated
     this.rows = []
   }
@@ -241,7 +240,7 @@ class TableSaveFunctions {
   // after saving
   async after(table: any) {
     table = await handleSearchIndexes(table)
-    table = await handleDataImport(this.user, table, this.dataImport)
+    table = await handleDataImport(this.user, table, this.importRows)
     return table
   }
 

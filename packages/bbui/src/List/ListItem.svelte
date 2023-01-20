@@ -30,9 +30,11 @@
       <Label>{subtitle}</Label>
     {/if}
   </div>
-  <div class="right">
-    <slot />
-  </div>
+  {#if $$slots.default}
+    <div class="right">
+      <slot />
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -45,6 +47,7 @@
     justify-content: space-between;
     border: 1px solid var(--spectrum-global-color-gray-300);
     transition: background 130ms ease-out;
+    gap: var(--spacing-m);
   }
   .list-item:not(:first-child) {
     border-top: none;
