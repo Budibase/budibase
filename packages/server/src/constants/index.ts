@@ -38,12 +38,6 @@ export const SwitchableTypes = CanSwitchTypes.reduce((prev, current) =>
   prev ? prev.concat(current) : current
 )
 
-export enum RelationshipTypes {
-  ONE_TO_MANY = "one-to-many",
-  MANY_TO_ONE = "many-to-one",
-  MANY_TO_MANY = "many-to-many",
-}
-
 export enum FormulaTypes {
   STATIC = "static",
   DYNAMIC = "dynamic",

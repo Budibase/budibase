@@ -1,8 +1,4 @@
-import {
-  FieldTypes,
-  AutoFieldSubTypes,
-  RelationshipTypes,
-} from "../../constants"
+import { FieldTypes, AutoFieldSubTypes } from "../../constants"
 import { importToRows } from "../../api/controllers/table/utils"
 import { cloneDeep } from "lodash/fp"
 import LinkDocument from "../linkedRows/LinkDocument"
@@ -11,7 +7,7 @@ import { employeeImport } from "./employeeImport"
 import { jobsImport } from "./jobsImport"
 import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
-import { Table, Row } from "@budibase/types"
+import { Table, Row, RelationshipTypes } from "@budibase/types"
 
 export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
 export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
