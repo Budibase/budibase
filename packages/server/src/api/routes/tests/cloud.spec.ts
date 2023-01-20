@@ -4,7 +4,7 @@ import { AppStatus } from "../../../db/utils"
 import * as setup from "./utilities"
 
 describe("/cloud", () => {
-  let request = setup.getRequest()
+  let request = setup.getRequest()!
   let config = setup.getConfig()
 
   afterAll(setup.afterAll)
@@ -25,7 +25,7 @@ describe("/cloud", () => {
       await request
         .post(
           `/api/applications/${dbCore.getProdAppID(
-            config.getAppId()
+            config.getAppId()!
           )}/unpublish`
         )
         .set(config.defaultHeaders())

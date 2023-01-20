@@ -15,11 +15,12 @@ import {
 } from "@budibase/types"
 import _ from "lodash"
 
-const config = setup.getConfig()
+const config = setup.getConfig()!
 
 jest.unmock("node-fetch")
 
-describe("row api - postgres", () => {
+// TODO: Waiting for the test image to exist
+describe.skip("row api - postgres", () => {
   let apiKey,
     makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
@@ -30,19 +31,21 @@ describe("row api - postgres", () => {
     await config.init()
     apiKey = await config.generateApiKey()
     postgresDatasource = await config.createDatasource({
-      type: "datasource",
-      source: SourceName.POSTGRES,
-      plus: true,
-      config: {
-        host: "192.168.1.98",
-        port: 54321,
-        database: "postgres",
-        user: "root",
-        password: "root",
-        schema: "public",
-        ssl: false,
-        rejectUnauthorized: false,
-        ca: false,
+      datasource: {
+        type: "datasource",
+        source: SourceName.POSTGRES,
+        plus: true,
+        config: {
+          host: "192.168.1.98",
+          port: 54321,
+          database: "postgres",
+          user: "root",
+          password: "root",
+          schema: "public",
+          ssl: false,
+          rejectUnauthorized: false,
+          ca: false,
+        },
       },
     })
 
