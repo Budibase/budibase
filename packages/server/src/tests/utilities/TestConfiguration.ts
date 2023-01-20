@@ -558,13 +558,11 @@ class TestConfiguration {
 
   // DATASOURCE
 
-  async createDatasource(config?: Datasource): Promise<Datasource> {
+  async createDatasource(config?: {
+    datasource: Datasource
+  }): Promise<Datasource> {
     config = config || basicDatasource()
-    const response = await this._req(
-      { datasource: config },
-      null,
-      controllers.datasource.save
-    )
+    const response = await this._req(config, null, controllers.datasource.save)
     this.datasource = response.datasource
     return this.datasource
   }
@@ -581,9 +579,11 @@ class TestConfiguration {
 
   async restDatasource(cfg?: any) {
     return this.createDatasource({
-      ...basicDatasource(),
-      source: SourceName.REST,
-      config: cfg || {},
+      datasource: {
+        ...basicDatasource().datasource,
+        source: SourceName.REST,
+        config: cfg || {},
+      },
     })
   }
 
