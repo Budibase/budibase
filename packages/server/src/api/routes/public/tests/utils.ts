@@ -16,7 +16,7 @@ export function generateMakeRequest(
   isInternal = false
 ): MakeRequestResponse {
   const request = setup.getRequest()!
-  const config = setup.getConfig()
+  const config = setup.getConfig()!
   return async (
     method: HttpMethod,
     endpoint: string,
