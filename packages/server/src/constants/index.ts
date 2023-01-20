@@ -1,5 +1,5 @@
 import { objectStore, roles, constants } from "@budibase/backend-core"
-export { FieldType as FieldTypes } from "@budibase/types"
+export { FieldType as FieldTypes, RelationshipTypes } from "@budibase/types"
 
 export enum FilterTypes {
   STRING = "string",
