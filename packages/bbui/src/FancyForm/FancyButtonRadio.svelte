@@ -59,6 +59,7 @@
     justify-content: flex-start;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
   }
   .options :global(.spectrum-ActionButton) {
     font-size: 15px;
