@@ -145,12 +145,14 @@ export function basicRole() {
   }
 }
 
-export function basicDatasource(): Datasource {
+export function basicDatasource(): { datasource: Datasource } {
   return {
-    type: "datasource",
-    name: "Test",
-    source: SourceName.POSTGRES,
-    config: {},
+    datasource: {
+      type: "datasource",
+      name: "Test",
+      source: SourceName.POSTGRES,
+      config: {},
+    },
   }
 }
 
