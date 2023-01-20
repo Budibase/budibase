@@ -10,6 +10,7 @@ import {
   FieldSchema,
   Row,
   Table,
+  RelationshipTypes,
 } from "@budibase/types"
 import {
   breakRowIdField,
@@ -18,7 +19,7 @@ import {
   convertRowId,
 } from "../../../integrations/utils"
 import { getDatasourceAndQuery } from "./utils"
-import { FieldTypes, RelationshipTypes } from "../../../constants"
+import { FieldTypes } from "../../../constants"
 import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
