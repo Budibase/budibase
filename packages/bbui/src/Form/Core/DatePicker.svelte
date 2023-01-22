@@ -106,7 +106,7 @@
 
   const clearDateOnBackspace = event => {
     if (["Backspace", "Clear", "Delete"].includes(event.key)) {
-      dispatch("change", null)
+      dispatch("change", "")
       flatpickr.close()
     }
   }
