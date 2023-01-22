@@ -8,6 +8,10 @@
     }
   },
   "references": [
-    { "path": "../types" },
+    { "path": "../types" }
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
   ]
 }

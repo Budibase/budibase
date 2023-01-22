@@ -1,8 +1,7 @@
 const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
-const { doInAppContext } = require("@budibase/backend-core/context")
-const { doInTenant } = require("@budibase/backend-core/tenancy")
+const { context, tenancy } = require("@budibase/backend-core")
 const {
   quotas,
 } = require("@budibase/pro")
@@ -11,6 +10,7 @@ const {
   StaticQuotaName,
   MonthlyQuotaName,
 } = require("@budibase/types")
+const { structures } = require("@budibase/backend-core/tests");
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -447,7 +447,7 @@ describe("/rows", () => {
 
   describe("fetchEnrichedRows", () => {
     it("should allow enriching some linked rows", async () => {
-      const { table, firstRow, secondRow } = await doInTenant(
+      const { table, firstRow, secondRow } = await tenancy.doInTenant(
         setup.structures.TENANT_ID,
         async () => {
           const table = await config.createLinkedTable()
@@ -495,22 +495,23 @@ describe("/rows", () => {
   describe("attachments", () => {
     it("should allow enriching attachment rows", async () => {
       const table = await config.createAttachmentTable()
+      const attachmentId = `${structures.uuid()}.csv`
       const row = await config.createRow({
         name: "test",
         description: "test",
         attachment: [
           {
-            key: `${config.getAppId()}/attachments/test/thing.csv`,
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
           },
         ],
         tableId: table._id,
       })
       // the environment needs configured for this
       await setup.switchToSelfHosted(async () => {
-        doInAppContext(config.getAppId(), async () => {
+        context.doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
           expect(enriched[0].attachment[0].url).toBe(
-            `/prod-budi-app-assets/${config.getAppId()}/attachments/test/thing.csv`
+            `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
           )
         })
       })

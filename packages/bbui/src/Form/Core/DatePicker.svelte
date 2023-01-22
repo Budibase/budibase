@@ -23,6 +23,15 @@
   let open = false
   let flatpickr, flatpickrOptions
 
+  // Another classic flatpickr issue. Errors were randomly being thrown due to
+  // flatpickr internal code. Making sure that "destroy" is a valid function
+  // fixes it. The sooner we remove flatpickr the better.
+  $: {
+    if (flatpickr && !flatpickr.destroy) {
+      flatpickr.destroy = () => {}
+    }
+  }
+
   const resolveTimeStamp = timestamp => {
     let maskedDate = new Date(`0-${timestamp}`)
 
@@ -41,7 +50,7 @@
     time_24hr: time24hr || false,
     altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
-    mode: range ? "range" : null,
+    mode: range ? "range" : "single",
     appendTo,
     disableMobile: "true",
     onReady: () => {
@@ -66,7 +75,7 @@
       newValue = newValue.toISOString()
     }
     // If time only set date component to 2000-01-01
-    else if (timeOnly) {
+    if (timeOnly) {
       // Classic flackpickr causing issues.
       // When selecting a value for the first time for a "time only" field,
       // the time is always offset by 1 hour for some reason (regardless of time
@@ -197,6 +206,7 @@
           </svg>
         {/if}
         <input
+          {disabled}
           data-input
           type="text"
           class="spectrum-Textfield-input spectrum-InputGroup-input"
@@ -251,9 +261,10 @@
     width: 100vw;
     height: 100vh;
     z-index: 999;
+    max-height: 100%;
   }
   :global(.flatpickr-calendar) {
-    font-family: "Source Sans Pro", sans-serif;
+    font-family: var(--font-sans);
   }
   .is-disabled {
     pointer-events: none !important;

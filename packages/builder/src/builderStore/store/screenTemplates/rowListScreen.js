@@ -1,5 +1,4 @@
 import sanitizeUrl from "./utils/sanitizeUrl"
-import { newRowUrl } from "./newRowScreen"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
 
@@ -21,12 +20,6 @@ const generateTableBlock = table => {
   const tableBlock = new Component("@budibase/standard-components/tableblock")
   tableBlock
     .customProps({
-      linkRows: true,
-      linkURL: `${rowListUrl(table)}/:id`,
-      showAutoColumns: false,
-      showTitleButton: true,
-      titleButtonText: "Create new",
-      titleButtonURL: newRowUrl(table),
       title: table.name,
       dataSource: {
         label: table.name,
@@ -34,9 +27,14 @@ const generateTableBlock = table => {
         tableId: table._id,
         type: "table",
       },
+      sortOrder: "Ascending",
       size: "spectrum--medium",
       paginate: true,
       rowCount: 8,
+      clickBehaviour: "details",
+      showTitleButton: true,
+      titleButtonText: "Create row",
+      titleButtonClickBehaviour: "new",
     })
     .instanceName(`${table.name} - Table block`)
   return tableBlock

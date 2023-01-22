@@ -1,17 +1,18 @@
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const { getAppDB } = require("@budibase/backend-core/context")
 const setup = require("./utilities")
 const { basicTable } = setup.structures
-const { events } = require("@budibase/backend-core")
+const { events, context } = require("@budibase/backend-core")
 
 describe("/tables", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
+  let appId
 
   afterAll(setup.afterAll)
 
   beforeEach(async () => {
-    await config.init()
+    const app = await config.init()
+    appId = app.appId
   })
 
   describe("create", () => {
@@ -42,21 +43,18 @@ describe("/tables", () => {
       expect(events.table.created).toBeCalledWith(res.body)
     })
 
-    it("creates a table via data import CSV", async () => {
+    it("creates a table via data import", async () => {
       const table = basicTable()
-      table.dataImport = {
-        csvString: "\"name\",\"description\"\n\"test-name\",\"test-desc\"",
-      }
-      table.dataImport.schema = table.schema
+      table.rows = [{ name: 'test-name', description: 'test-desc' }]
 
       const res = await createTable(table)
- 
+
       expect(events.table.created).toBeCalledTimes(1)
       expect(events.table.created).toBeCalledWith(res.body)
       expect(events.table.imported).toBeCalledTimes(1)
-      expect(events.table.imported).toBeCalledWith(res.body, "csv")
+      expect(events.table.imported).toBeCalledWith(res.body)
       expect(events.rows.imported).toBeCalledTimes(1)
-      expect(events.rows.imported).toBeCalledWith(res.body, "csv", 1)
+      expect(events.rows.imported).toBeCalledWith(res.body, 1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -86,6 +84,12 @@ describe("/tables", () => {
 
     it("updates all the row fields for a table when a schema key is renamed", async () => {
       const testTable = await config.createTable()
+      await config.createView({
+        name: "TestView",
+        field: "Price",
+        calculation: "stats",
+        tableId: testTable._id,
+      })
 
       const testRow = await request
         .post(`/api/${testTable._id}/rows`)
@@ -108,7 +112,7 @@ describe("/tables", () => {
             updated: "updatedName"
           },
           schema: {
-            updatedName: {type: "string"}
+            updatedName: { type: "string" }
           }
         })
         .set(config.defaultHeaders())
@@ -148,11 +152,10 @@ describe("/tables", () => {
     it("imports rows successfully", async () => {
       const table = await config.createTable()
       const importRequest = {
-        dataImport: {
-          csvString: "\"name\",\"description\"\n\"test-name\",\"test-desc\"",
-          schema: table.schema
-        }
+        schema: table.schema,
+        rows: [{ name: 'test-name', description: 'test-desc' }]
       }
+
       jest.clearAllMocks()
 
       await request
@@ -164,7 +167,7 @@ describe("/tables", () => {
 
       expect(events.table.created).not.toHaveBeenCalled()
       expect(events.rows.imported).toBeCalledTimes(1)
-      expect(events.rows.imported).toBeCalledWith(table, "csv", 1)
+      expect(events.rows.imported).toBeCalledWith(table, 1)
     })
   })
 
@@ -201,50 +204,34 @@ describe("/tables", () => {
 
   describe("indexing", () => {
     it("should be able to create a table with indexes", async () => {
-      const db = getAppDB(config)
-      const indexCount = (await db.getIndexes()).total_rows
-      const table = basicTable()
-      table.indexes = ["name"]
-      const res = await request
-        .post(`/api/tables`)
-        .send(table)
-        .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
-        .expect(200)
-      expect(res.body._id).toBeDefined()
-      expect(res.body._rev).toBeDefined()
-      expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
-      // update index to see what happens
-      table.indexes = ["name", "description"]
-      await request
-        .post(`/api/tables`)
-        .send({
-          ...table,
-          _id: res.body._id,
-          _rev: res.body._rev,
-        })
-        .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
-        .expect(200)
-      // shouldn't have created a new index
-      expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
-    })
-  })
-
-  describe("validate csv", () => {
-    it("should be able to validate a CSV layout", async () => {
-      const res = await request
-        .post(`/api/tables/csv/validate`)
-        .send({
-          csvString: "a,b,c,d\n1,2,3,4"
-        })
-        .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
-        .expect(200)
-      expect(res.body.schema).toBeDefined()
-      expect(res.body.schema.a).toEqual({
-        type: "string",
-        success: true,
+      await context.doInAppContext(appId, async () => {
+        const db = context.getAppDB()
+        const indexCount = (await db.getIndexes()).total_rows
+        const table = basicTable()
+        table.indexes = ["name"]
+        const res = await request
+          .post(`/api/tables`)
+          .send(table)
+          .set(config.defaultHeaders())
+          .expect('Content-Type', /json/)
+          .expect(200)
+        expect(res.body._id).toBeDefined()
+        expect(res.body._rev).toBeDefined()
+        expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
+        // update index to see what happens
+        table.indexes = ["name", "description"]
+        await request
+          .post(`/api/tables`)
+          .send({
+            ...table,
+            _id: res.body._id,
+            _rev: res.body._rev,
+          })
+          .set(config.defaultHeaders())
+          .expect('Content-Type', /json/)
+          .expect(200)
+        // shouldn't have created a new index
+        expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
       })
     })
   })
@@ -268,7 +255,7 @@ describe("/tables", () => {
         .expect(200)
       expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
       expect(events.table.deleted).toBeCalledTimes(1)
-      expect(events.table.deleted).toBeCalledWith(testTable)
+      expect(events.table.deleted).toBeCalledWith({ ...testTable, tableId: testTable._id })
     })
 
     it("deletes linked references to the table after deletion", async () => {
@@ -285,6 +272,7 @@ describe("/tables", () => {
           },
           TestTable: {
             type: "link",
+            fieldName: "TestTable",
             tableId: testTable._id,
             constraints: {
               type: "array"

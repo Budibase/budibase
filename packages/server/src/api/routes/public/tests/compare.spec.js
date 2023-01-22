@@ -1,40 +1,22 @@
 const jestOpenAPI = require("jest-openapi").default
 const generateSchema = require("../../../../../specs/generate")
 const setup = require("../../tests/utilities")
-const { checkSlashesInUrl } = require("../../../../utilities")
+const { generateMakeRequest } = require("./utils")
 
 const yamlPath = generateSchema()
 jestOpenAPI(yamlPath)
 
-let request = setup.getRequest()
 let config = setup.getConfig()
-let apiKey, table, app
+let apiKey, table, app, makeRequest
 
 beforeAll(async () => {
   app = await config.init()
   table = await config.updateTable()
   apiKey = await config.generateApiKey()
+  makeRequest = generateMakeRequest(apiKey, setup)
 })
 
 afterAll(setup.afterAll)
-
-async function makeRequest(method, endpoint, body, appId = config.getAppId()) {
-  const extraHeaders = {
-    "x-budibase-api-key": apiKey,
-  }
-  if (appId) {
-    extraHeaders["x-budibase-app-id"] = appId
-  }
-  const req = request
-    [method](checkSlashesInUrl(`/api/public/v1/${endpoint}`))
-    .set(config.defaultHeaders(extraHeaders))
-  if (body) {
-    req.send(body)
-  }
-  const res = await req.expect("Content-Type", /json/).expect(200)
-  expect(res.body).toBeDefined()
-  return res
-}
 
 describe("check the applications endpoints", () => {
   it("should allow retrieving applications through search", async () => {

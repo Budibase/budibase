@@ -171,6 +171,7 @@ export enum Event {
 
   // BACKUP
   APP_BACKUP_RESTORED = "app:backup:restored",
+  APP_BACKUP_TRIGGERED = "app:backup:triggered",
 }
 
 // properties added at the final stage of the event pipeline
@@ -184,6 +185,4 @@ export interface BaseEvent {
   hosting?: Hosting
 }
 
-export type RowImportFormat = "csv"
 export type TableExportFormat = "json" | "csv"
-export type TableImportFormat = "csv"

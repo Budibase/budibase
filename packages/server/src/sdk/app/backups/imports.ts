@@ -1,20 +1,20 @@
-import { db as dbCore } from "@budibase/backend-core"
-import { TABLE_ROW_PREFIX } from "../../../db/utils"
+import { db as dbCore, objectStore } from "@budibase/backend-core"
+import { Database, Row } from "@budibase/types"
+import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
-import {
-  uploadDirectory,
-  upload,
-} from "../../../utilities/fileSystem/utilities"
 import { downloadTemplate } from "../../../utilities/fileSystem"
-import { ObjectStoreBuckets, FieldTypes } from "../../../constants"
+import { ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
-import { CouchFindOptions, RowAttachment } from "@budibase/types"
+import {
+  Automation,
+  AutomationTriggerStepId,
+  RowAttachment,
+} from "@budibase/types"
 const uuid = require("uuid/v4")
 const tar = require("tar")
-import PouchDB from "pouchdb"
 
 type TemplateType = {
   file?: {
@@ -24,61 +24,73 @@ type TemplateType = {
   key?: string
 }
 
-async function updateAttachmentColumns(
-  prodAppId: string,
-  db: PouchDB.Database
-) {
+function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
+  // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
+  const urlParts = attachment.key.split("/")
+  // remove the app ID
+  urlParts.shift()
+  // add new app ID
+  urlParts.unshift(appId)
+  const key = urlParts.join("/")
+  return {
+    ...attachment,
+    key,
+    url: "", // calculated on retrieval using key
+  }
+}
+
+export async function updateAttachmentColumns(prodAppId: string, db: Database) {
   // iterate through attachment documents and update them
   const tables = await sdk.tables.getAllInternalTables(db)
+  let updatedRows: Row[] = []
   for (let table of tables) {
-    const attachmentCols: string[] = []
-    for (let [key, column] of Object.entries(table.schema)) {
-      if (column.type === FieldTypes.ATTACHMENT) {
-        attachmentCols.push(key)
-      }
-    }
-    // no attachment columns, nothing to do
-    if (attachmentCols.length === 0) {
-      continue
-    }
-    // use the CouchDB Mango query API to lookup rows that have attachments
-    const params: CouchFindOptions = {
-      selector: {
-        _id: {
-          $regex: `^${TABLE_ROW_PREFIX}`,
-        },
-      },
-    }
-    attachmentCols.forEach(col => (params.selector[col] = { $exists: true }))
-    const { rows } = await dbCore.directCouchFind(db.name, params)
-    for (let row of rows) {
-      for (let column of attachmentCols) {
-        if (!Array.isArray(row[column])) {
-          continue
-        }
-        row[column] = row[column].map((attachment: RowAttachment) => {
-          // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
-          const urlParts = attachment.url.split("/")
-          // drop the first empty element
-          urlParts.shift()
-          // get the prefix
-          const prefix = urlParts.shift()
-          // remove the app ID
-          urlParts.shift()
-          // add new app ID
-          urlParts.unshift(prodAppId)
-          const key = urlParts.join("/")
-          return {
-            ...attachment,
-            key,
-            url: `/${prefix}/${key}`,
+    const { rows, columns } = await sdk.rows.getRowsWithAttachments(
+      db.name,
+      table
+    )
+    updatedRows = updatedRows.concat(
+      rows.map(row => {
+        for (let column of columns) {
+          if (Array.isArray(row[column])) {
+            row[column] = row[column].map((attachment: RowAttachment) =>
+              rewriteAttachmentUrl(prodAppId, attachment)
+            )
           }
-        })
+        }
+        return row
+      })
+    )
+  }
+  // write back the updated attachments
+  await db.bulkDocs(updatedRows)
+}
+
+async function updateAutomations(prodAppId: string, db: Database) {
+  const automations = (
+    await db.allDocs(
+      getAutomationParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc) as Automation[]
+  const devAppId = dbCore.getDevAppID(prodAppId)
+  let toSave: Automation[] = []
+  for (let automation of automations) {
+    const oldDevAppId = automation.appId,
+      oldProdAppId = dbCore.getProdAppID(automation.appId)
+    if (
+      automation.definition.trigger?.stepId === AutomationTriggerStepId.WEBHOOK
+    ) {
+      const old = automation.definition.trigger.inputs
+      automation.definition.trigger.inputs = {
+        schemaUrl: old.schemaUrl.replace(oldDevAppId, devAppId),
+        triggerUrl: old.triggerUrl.replace(oldProdAppId, prodAppId),
       }
     }
-    // write back the updated attachments
-    await db.bulkDocs(rows)
+    automation.appId = devAppId
+    toSave.push(automation)
   }
+  await db.bulkDocs(toSave)
 }
 
 /**
@@ -87,6 +99,9 @@ async function updateAttachmentColumns(
  * @returns {Object} Returns a fs read stream which can be loaded into the database.
  */
 async function getTemplateStream(template: TemplateType) {
+  if (template.file && template.file.type !== "text/plain") {
+    throw new Error("Cannot import a non-text based file.")
+  }
   if (template.file) {
     return fs.createReadStream(template.file.path)
   } else if (template.key) {
@@ -118,12 +133,12 @@ export function getListOfAppsInMulti(tmpPath: string) {
 
 export async function importApp(
   appId: string,
-  db: PouchDB.Database,
+  db: Database,
   template: TemplateType
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
-  const isTar = template.file && template.file.type === "application/gzip"
+  const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
     template.file && fs.lstatSync(template.file.path).isDirectory()
   if (template.file && (isTar || isDirectory)) {
@@ -141,11 +156,11 @@ export async function importApp(
         filename = join(prodAppId, filename)
         if (fs.lstatSync(path).isDirectory()) {
           promises.push(
-            uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
+            objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
           )
         } else {
           promises.push(
-            upload({
+            objectStore.upload({
               bucket: ObjectStoreBuckets.APPS,
               path,
               filename,
@@ -165,5 +180,6 @@ export async function importApp(
     throw "Error loading database dump from template."
   }
   await updateAttachmentColumns(prodAppId, db)
+  await updateAutomations(prodAppId, db)
   return ok
 }

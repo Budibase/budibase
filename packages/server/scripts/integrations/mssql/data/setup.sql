@@ -11,7 +11,7 @@ GO
 CREATE TABLE products 
 (  
   id int IDENTITY(1,1),  
-  name varchar (20),  
+  name varchar (20) NOT NULL,  
   description varchar(30),
   CONSTRAINT pk_products PRIMARY KEY NONCLUSTERED (id)
 );
@@ -22,7 +22,7 @@ GO
 CREATE TABLE tasks
 (
   taskid int IDENTITY(1,1),
-  taskname varchar (20),
+  taskname varchar (20) NOT NULL,
   productid int,
   CONSTRAINT pk_tasks PRIMARY KEY NONCLUSTERED (taskid),
   CONSTRAINT fk_products FOREIGN KEY (productid) REFERENCES products (id),
@@ -33,7 +33,7 @@ IF OBJECT_ID ('dbo.people', 'U') IS NOT NULL
 GO
 CREATE TABLE people
 (
-  name varchar(30),
+  name varchar(30) NOT NULL,
   age varchar(20),
   CONSTRAINT pk_people PRIMARY KEY NONCLUSTERED (name, age)
 );

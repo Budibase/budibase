@@ -4,11 +4,14 @@ export enum LockType {
    * No retries will take place and no error will be thrown.
    */
   TRY_ONCE = "try_once",
+  DEFAULT = "default",
+  DELAY_500 = "delay_500",
 }
 
 export enum LockName {
   MIGRATIONS = "migrations",
   TRIGGER_QUOTA = "trigger_quota",
+  SYNC_ACCOUNT_LICENSE = "sync_account_license",
 }
 
 export interface LockOptions {
@@ -28,4 +31,8 @@ export interface LockOptions {
    * The suffix to add to the lock name for additional uniqueness
    */
   nameSuffix?: string
+  /**
+   * This is a system-wide lock - don't use tenancy in lock key
+   */
+  systemLock?: boolean
 }

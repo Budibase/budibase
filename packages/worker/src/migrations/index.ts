@@ -53,6 +53,7 @@ const migrateWithLock = async (options?: MigrationOptions) => {
       type: LockType.TRY_ONCE,
       name: LockName.MIGRATIONS,
       ttl: 1000 * 60 * 15, // auto expire the migration lock after 15 minutes
+      systemLock: true,
     },
     async () => {
       await migrations.runMigrations(MIGRATIONS, options)

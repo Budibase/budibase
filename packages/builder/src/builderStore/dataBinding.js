@@ -378,6 +378,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
           providerId,
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
+          component: component._component,
           category: component._instanceName,
           icon: def.icon,
           display: {
@@ -481,6 +482,7 @@ const getSelectedRowsBindings = asset => {
           block._id + "-table"
         )}.${makePropSafe("selectedRows")}`,
         readableBinding: `${block._instanceName}.Selected rows`,
+        category: "Selected rows",
       }))
     )
   }
@@ -1004,7 +1006,10 @@ const bindingReplacement = (
  * {{ literal [componentId] }}
  */
 const extractLiteralHandlebarsID = value => {
-  return value?.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
+  if (!value || typeof value !== "string") {
+    return null
+  }
+  return value.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
 }
 
 /**

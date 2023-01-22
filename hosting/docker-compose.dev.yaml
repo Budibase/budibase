@@ -6,7 +6,8 @@ services:
   minio-service:
     container_name: budi-minio-dev
     restart: on-failure
-    image: minio/minio
+    # Last version that supports the "fs" backend
+    image: minio/minio:RELEASE.2022-10-24T18-35-07Z
     volumes:
       - minio_data:/data
     ports:
@@ -25,9 +26,9 @@ services:
   proxy-service:
     container_name: budi-nginx-dev
     restart: on-failure
-    image: nginx:latest
+    image: budibase/proxy:latest
     volumes:
-      - ./.generated-nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./nginx.dev.conf:/etc/nginx/templates/nginx.conf.template
       - ./proxy/error.html:/usr/share/nginx/html/error.html
     ports:
       - "${MAIN_PORT}:10000"
@@ -36,6 +37,8 @@ services:
       - couchdb-service
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    environment:
+      - PROXY_ADDRESS=host.docker.internal
 
   couchdb-service:
     # platform: linux/amd64

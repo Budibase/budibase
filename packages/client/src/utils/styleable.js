@@ -25,6 +25,8 @@ export const styleable = (node, styles = {}) => {
 
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
+    node.classList.add(`${newStyles.id}-dom`)
+
     let baseStyles = {}
     if (newStyles.empty) {
       baseStyles.border = "2px dashed var(--spectrum-global-color-gray-400)"

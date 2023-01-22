@@ -179,7 +179,7 @@
 </ConfirmDialog>
 
 <div class="buttons">
-  <Button on:click={previewApp} newStyles secondary>Preview</Button>
+  <Button on:click={previewApp} secondary>Preview</Button>
   <DeployModal onOk={completePublish} />
 </div>
 

@@ -23,4 +23,5 @@ export interface Price {
   duration: PriceDuration
   priceId: string
   dayPasses: number
+  isPerUser: boolean
 }

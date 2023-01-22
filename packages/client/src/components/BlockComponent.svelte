@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onDestroy } from "svelte"
   import { generate } from "shortid"
   import { builderStore } from "../stores/builder.js"
   import Component from "components/Component.svelte"
@@ -8,6 +8,7 @@
   export let props
   export let styles
   export let context
+  export let name
   export let order = 0
   export let containsSlot = false
 
@@ -23,9 +24,10 @@
   // to render this part of the block, taking advantage of binding enrichment
   $: id = `${block.id}-${context ?? rand}`
   $: instance = {
+    _blockElementHasChildren: $$slots?.default ?? false,
     _component: `@budibase/standard-components/${type}`,
     _id: id,
-    _instanceName: type[0].toUpperCase() + type.slice(1),
+    _instanceName: name || type[0].toUpperCase() + type.slice(1),
     _styles: {
       ...styles,
       normal: styles?.normal || {},
@@ -41,6 +43,12 @@
       block.registerComponent(id, order ?? 0, $component?.id, instance)
     }
   }
+
+  onDestroy(() => {
+    if ($builderStore.inBuilder) {
+      block.unregisterComponent(order ?? 0, $component?.id)
+    }
+  })
 </script>
 
 <Component {instance} isBlock>

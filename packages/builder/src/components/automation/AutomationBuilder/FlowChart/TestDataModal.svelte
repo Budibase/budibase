@@ -57,7 +57,7 @@
       )
       $automationStore.showTestPanel = true
     } catch (error) {
-      notifications.error("Error testing notification")
+      notifications.error("Error testing automation")
     }
   }
 </script>

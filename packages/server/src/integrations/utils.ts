@@ -230,7 +230,7 @@ function shouldCopySpecialColumn(
   const fetchedIsNumber =
     !fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER
   return (
-    specialTypes.indexOf(column.type) !== -1 ||
+    specialTypes.indexOf(column.type as FieldTypes) !== -1 ||
     (fetchedIsNumber && column.type === FieldTypes.BOOLEAN)
   )
 }
@@ -292,7 +292,11 @@ export function finaliseExternalTables(
     if (table.primary == null || table.primary.length === 0) {
       errors[name] = BuildSchemaErrors.NO_KEY
       continue
-    } else if (schemaFields.find(field => invalidColumns.includes(field))) {
+    } else if (
+      schemaFields.find(field =>
+        invalidColumns.includes(field as InvalidColumns)
+      )
+    ) {
       errors[name] = BuildSchemaErrors.INVALID_COLUMN
       continue
     }
