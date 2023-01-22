@@ -6,11 +6,11 @@
     Toggle,
     Button,
     TextArea,
+    Accordion,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
   import { IntegrationTypes } from "constants/backend"
-  import "@spectrum-css/accordion"
   import { createValidationStore } from "helpers/validation/yup"
   import { createEventDispatcher } from "svelte"
 
@@ -127,44 +127,14 @@
           />
         </div>
       {:else if schema[configKey].type === "fieldGroup"}
-        <div class="spectrum-Accordion" role={configKey}>
-          <div class="spectrum-Accordion-item {openAccordionItems[configKey]}">
-            <h3 class="spectrum-Accordion-itemHeading">
-              <button
-                class="spectrum-Accordion-itemHeader"
-                type="button"
-                on:click={() =>
-                  (openAccordionItems[configKey] =
-                    openAccordionItems[configKey] !== "is-open"
-                      ? "is-open"
-                      : "")}
-              >
-                {getDisplayName(configKey)}
-              </button>
-              <svg
-                class="spectrum-Icon spectrum-UIIcon-ChevronRight100 spectrum-Accordion-itemIndicator"
-                focusable="false"
-                aria-hidden="true"
-              >
-                <use xlink:href="#spectrum-css-icon-Chevron100" />
-              </svg>
-            </h3>
-            <div class="spectrum-Accordion-itemContent" role={configKey}>
-              <Layout gap="S">
-                {#each getFieldGroupKeys(configKey) as fieldKey}
-                  <div class="form-row">
-                    <Label>{getDisplayName(configKey, fieldKey)}</Label>
-                    <Input
-                      type={schema[configKey]["fields"][fieldKey]?.type}
-                      on:change
-                      bind:value={config[fieldKey]}
-                    />
-                  </div>
-                {/each}
-              </Layout>
-            </div>
-          </div>
-        </div>
+        <Accordion
+          {configKey}
+          {config}
+          {schema}
+          {openAccordionItems}
+          fieldGroupKeys={getFieldGroupKeys(configKey)}
+          displayNameFn={getDisplayName}
+        />
       {:else}
         <div class="form-row">
           <Label>{getDisplayName(configKey)}</Label>
@@ -181,21 +151,6 @@
 </form>
 
 <style>
-  .spectrum-Accordion {
-    margin-left: -20px;
-  }
-  .spectrum-Accordion-item {
-    border: none;
-  }
-  .spectrum-Accordion-itemContent {
-    width: 97%;
-    padding-left: 30px;
-  }
-  .spectrum-Accordion-itemHeader {
-    text-transform: none;
-    font-weight: bold;
-    font-size: 0.875rem;
-  }
   .form-row {
     display: grid;
     grid-template-columns: 20% 1fr;
