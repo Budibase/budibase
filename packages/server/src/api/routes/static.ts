@@ -2,15 +2,12 @@ import Router from "@koa/router"
 import * as controller from "../controllers/static"
 import { budibaseTempDir } from "../../utilities/budibaseDir"
 import authorized from "../../middleware/authorized"
-import {
-  BUILDER,
-  PermissionTypes,
-  PermissionLevels,
-} from "@budibase/backend-core/permissions"
+import { permissions } from "@budibase/backend-core"
 import * as env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
+const { BUILDER, PermissionType, PermissionLevel } = permissions
 
-const router = new Router()
+const router: Router = new Router()
 
 /* istanbul ignore next */
 router.param("file", async (file: any, ctx: any, next: any) => {
@@ -47,13 +44,13 @@ router
   .post(
     "/api/attachments/:tableId/upload",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     controller.uploadFile
   )
   .post(
     "/api/attachments/:tableId/delete",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     controller.deleteObjects
   )
   .get("/app/preview", authorized(BUILDER), controller.serveBuilderPreview)
@@ -61,8 +58,8 @@ router
   .get("/app/:appUrl/:path*", controller.serveApp)
   .post(
     "/api/attachments/:datasourceId/url",
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionType.TABLE, PermissionLevel.READ),
     controller.getSignedUploadURL
   )
 
-export default router
+export = router

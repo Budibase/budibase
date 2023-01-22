@@ -20,6 +20,12 @@ import {
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { Utils } from "@budibase/frontend-core"
+import {
+  BUDIBASE_INTERNAL_DB_ID,
+  DB_TYPE_INTERNAL,
+  DB_TYPE_EXTERNAL,
+} from "constants/backend"
+import { getSchemaForDatasource } from "builderStore/dataBinding"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -40,6 +46,7 @@ const INITIAL_FRONTEND_STATE = {
     messagePassing: false,
     continueIfAction: false,
     showNotificationAction: false,
+    sidePanel: false,
   },
   errors: [],
   hasAppPackage: false,
@@ -481,14 +488,58 @@ export const getFrontendStore = () => {
           return null
         }
 
-        // Generate default props
+        // Flattened settings
         const settings = getComponentSettings(componentName)
+
+        let dataSourceField = settings.find(
+          setting => setting.type == "dataSource" || setting.type == "table"
+        )
+
+        let defaultDatasource
+        if (dataSourceField) {
+          const _tables = get(tables)
+          const filteredTables = _tables.list.filter(
+            table => table._id != "ta_users"
+          )
+
+          const internalTable = filteredTables.find(
+            table =>
+              table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+              table.type == DB_TYPE_INTERNAL
+          )
+
+          const defaultSourceTable = filteredTables.find(
+            table =>
+              table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
+              table.type == DB_TYPE_INTERNAL
+          )
+
+          const defaultExternalTable = filteredTables.find(
+            table => table.type == DB_TYPE_EXTERNAL
+          )
+
+          defaultDatasource =
+            defaultSourceTable || internalTable || defaultExternalTable
+        }
+
+        // Generate default props
         let props = { ...presetProps }
         settings.forEach(setting => {
-          if (setting.defaultValue !== undefined) {
+          if (setting.type === "multifield" && setting.selectAllFields) {
+            props[setting.key] = Object.keys(defaultDatasource.schema || {})
+          } else if (setting.defaultValue !== undefined) {
             props[setting.key] = setting.defaultValue
           }
         })
+
+        // Set a default datasource
+        if (dataSourceField && defaultDatasource) {
+          props[dataSourceField.key] = {
+            label: defaultDatasource.name,
+            tableId: defaultDatasource._id,
+            type: "table",
+          }
+        }
 
         // Add any extra properties the component needs
         let extras = {}
@@ -993,6 +1044,27 @@ export const getFrontendStore = () => {
           if (component[name] === value) {
             return false
           }
+
+          const settings = getComponentSettings(component._component)
+          const updatedSetting = settings.find(setting => setting.key === name)
+
+          if (
+            updatedSetting?.type === "dataSource" ||
+            updatedSetting?.type === "table"
+          ) {
+            const { schema } = getSchemaForDatasource(null, value)
+            const columnNames = Object.keys(schema || {})
+            const multifieldKeysToSelectAll = settings
+              .filter(setting => {
+                return setting.type === "multifield" && setting.selectAllFields
+              })
+              .map(setting => setting.key)
+
+            multifieldKeysToSelectAll.forEach(key => {
+              component[key] = columnNames
+            })
+          }
+
           component[name] = value
         })
       },

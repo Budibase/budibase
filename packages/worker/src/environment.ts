@@ -26,7 +26,7 @@ function parseIntSafe(number: any) {
   }
 }
 
-const env = {
+const environment = {
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
@@ -68,7 +68,7 @@ const env = {
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
-    env[key] = value
+    environment[key] = value
   },
   isDev,
   isTest,
@@ -78,17 +78,19 @@ const env = {
 }
 
 // if some var haven't been set, define them
-if (!env.APPS_URL) {
-  env.APPS_URL = isDev() ? "http://localhost:4001" : "http://app-service:4002"
+if (!environment.APPS_URL) {
+  environment.APPS_URL = isDev()
+    ? "http://localhost:4001"
+    : "http://app-service:4002"
 }
 
 // clean up any environment variable edge cases
-for (let [key, value] of Object.entries(env)) {
+for (let [key, value] of Object.entries(environment)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
     // @ts-ignore
-    env[key] = 0
+    environment[key] = 0
   }
 }
 
-export = env
+export = environment

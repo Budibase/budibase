@@ -18,6 +18,7 @@ import {
 import dayjs from "dayjs"
 const { NUMBER_REGEX } = require("../utilities")
 import Sql from "./base/sql"
+import { MySQLColumn } from "./base/types"
 
 const mysql = require("mysql2/promise")
 
@@ -151,6 +152,9 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         ) {
           return field.string()
         }
+        if (field.type === "BIT" && field.length === 1) {
+          return field.buffer()?.[0]
+        }
         return next()
       },
     }
@@ -204,11 +208,11 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
     try {
       // get the tables first
-      const tablesResp = await this.internalQuery(
+      const tablesResp: Record<string, string>[] = await this.internalQuery(
         { sql: "SHOW TABLES;" },
         { connect: false }
       )
-      const tableNames = tablesResp.map(
+      const tableNames: string[] = tablesResp.map(
         (obj: any) =>
           obj[`Tables_in_${database}`] ||
           obj[`Tables_in_${database.toLowerCase()}`]
@@ -216,7 +220,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       for (let tableName of tableNames) {
         const primaryKeys = []
         const schema: TableSchema = {}
-        const descResp = await this.internalQuery(
+        const descResp: MySQLColumn[] = await this.internalQuery(
           { sql: `DESCRIBE \`${tableName}\`;` },
           { connect: false }
         )

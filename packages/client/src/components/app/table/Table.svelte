@@ -1,25 +1,22 @@
 <script>
   import { getContext } from "svelte"
-  import { Table } from "@budibase/bbui"
+  import { Table, Skeleton } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
   import { UnsortableTypes } from "../../../constants"
   import { onDestroy } from "svelte"
 
   export let dataProvider
   export let columns
-  export let showAutoColumns
   export let rowCount
   export let quiet
   export let size
-  export let linkRows
-  export let linkURL
-  export let linkColumn
-  export let linkPeek
   export let allowSelectRows
   export let compact
+  export let onClick
 
+  const loading = getContext("loading")
   const component = getContext("component")
-  const { styleable, getAction, ActionTypes, routeStore, rowSelectionStore } =
+  const { styleable, getAction, ActionTypes, rowSelectionStore } =
     getContext("sdk")
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
@@ -28,19 +25,19 @@
       component: SlotRenderer,
     },
   ]
+
   let selectedRows = []
+
   $: hasChildren = $component.children
-  $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
   $: fullSchema = dataProvider?.schema ?? {}
-  $: fields = getFields(fullSchema, columns, showAutoColumns)
+  $: fields = getFields(fullSchema, columns, false)
   $: schema = getFilteredSchema(fullSchema, fields, hasChildren)
   $: setSorting = getAction(
     dataProvider?.id,
     ActionTypes.SetDataProviderSorting
   )
   $: table = dataProvider?.datasource?.type === "table"
-
   $: {
     rowSelectionStore.actions.updateSelection(
       $component.id,
@@ -118,17 +115,10 @@
     })
   }
 
-  const onClick = e => {
-    if (!linkRows || !linkURL) {
-      return
+  const handleClick = e => {
+    if (onClick) {
+      onClick({ row: e.detail })
     }
-    const col = linkColumn || "_id"
-    const id = e.detail?.[col]
-    if (!id) {
-      return
-    }
-    const split = linkURL.split("/:")
-    routeStore.actions.navigate(`${split[0]}/${id}`, linkPeek)
   }
 
   onDestroy(() => {
@@ -140,7 +130,7 @@
   <Table
     {data}
     {schema}
-    {loading}
+    loading={$loading}
     {rowCount}
     {quiet}
     {compact}
@@ -153,8 +143,11 @@
     disableSorting
     autoSortColumns={!columns?.length}
     on:sort={onSort}
-    on:click={onClick}
+    on:click={handleClick}
   >
+    <div class="skeleton" slot="loadingIndicator">
+      <Skeleton />
+    </div>
     <slot />
   </Table>
   {#if allowSelectRows && selectedRows.length}
@@ -167,6 +160,11 @@
 <style>
   div {
     background-color: var(--spectrum-alias-background-color-secondary);
+  }
+
+  .skeleton {
+    height: 100%;
+    width: 100%;
   }
 
   .row-count {

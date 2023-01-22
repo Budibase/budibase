@@ -44,6 +44,20 @@
       "##eventHandlerType": "Close Screen Modal",
     },
     {
+      "##eventHandlerType": "Close Side Panel",
+    },
+    // Clear a create form once submitted
+    ...(actionType !== "Create"
+      ? []
+      : [
+          {
+            "##eventHandlerType": "Clear Form",
+            parameters: {
+              componentId: formId,
+            },
+          },
+        ]),
+    {
       "##eventHandlerType": "Navigate To",
       parameters: {
         url: actionUrl,
@@ -62,6 +76,9 @@
     },
     {
       "##eventHandlerType": "Close Screen Modal",
+    },
+    {
+      "##eventHandlerType": "Close Side Panel",
     },
     {
       "##eventHandlerType": "Navigate To",

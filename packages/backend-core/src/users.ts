@@ -3,15 +3,14 @@ import {
   getUsersByAppParams,
   getProdAppID,
   generateAppUserID,
-} from "./db/utils"
-import { queryGlobalView } from "./db/views"
-import { UNICODE_MAX } from "./db/constants"
+  queryGlobalView,
+  UNICODE_MAX,
+} from "./db"
 import { BulkDocsResponse, User } from "@budibase/types"
 import { getGlobalDB } from "./context"
-import PouchDB from "pouchdb"
 
 export const bulkGetGlobalUsersById = async (userIds: string[]) => {
-  const db = getGlobalDB() as PouchDB.Database
+  const db = getGlobalDB()
   return (
     await db.allDocs({
       keys: userIds,
@@ -21,7 +20,7 @@ export const bulkGetGlobalUsersById = async (userIds: string[]) => {
 }
 
 export const bulkUpdateGlobalUsers = async (users: User[]) => {
-  const db = getGlobalDB() as PouchDB.Database
+  const db = getGlobalDB()
   return (await db.bulkDocs(users)) as BulkDocsResponse
 }
 
@@ -69,7 +68,7 @@ export const getGlobalUserByAppPage = (appId: string, user: User) => {
   if (!user) {
     return
   }
-  return generateAppUserID(getProdAppID(appId), user._id!)
+  return generateAppUserID(getProdAppID(appId)!, user._id!)
 }
 
 /**

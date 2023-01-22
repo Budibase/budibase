@@ -29,7 +29,7 @@
     }
 
     // Always refresh rows just to be sure
-    dispatch("updaterows")
+    dispatch("importrows")
   }
 </script>
 

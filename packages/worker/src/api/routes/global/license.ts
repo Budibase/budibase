@@ -1,7 +1,7 @@
 import Router from "@koa/router"
 import * as controller from "../../controllers/global/license"
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   .post("/api/global/license/activate", controller.activate)

@@ -23,6 +23,15 @@
   let open = false
   let flatpickr, flatpickrOptions
 
+  // Another classic flatpickr issue. Errors were randomly being thrown due to
+  // flatpickr internal code. Making sure that "destroy" is a valid function
+  // fixes it. The sooner we remove flatpickr the better.
+  $: {
+    if (flatpickr && !flatpickr.destroy) {
+      flatpickr.destroy = () => {}
+    }
+  }
+
   const resolveTimeStamp = timestamp => {
     let maskedDate = new Date(`0-${timestamp}`)
 
@@ -67,13 +76,6 @@
     }
     // If time only set date component to 2000-01-01
     if (timeOnly) {
-      // Classic flackpickr causing issues.
-      // When selecting a value for the first time for a "time only" field,
-      // the time is always offset by 1 hour for some reason (regardless of time
-      // zone) so we need to correct it.
-      if (!value && newValue) {
-        newValue = new Date(dates[0].getTime() + 60 * 60 * 1000).toISOString()
-      }
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
 
@@ -104,7 +106,7 @@
 
   const clearDateOnBackspace = event => {
     if (["Backspace", "Clear", "Delete"].includes(event.key)) {
-      dispatch("change", null)
+      dispatch("change", "")
       flatpickr.close()
     }
   }
@@ -252,6 +254,7 @@
     width: 100vw;
     height: 100vh;
     z-index: 999;
+    max-height: 100%;
   }
   :global(.flatpickr-calendar) {
     font-family: "Source Sans Pro", sans-serif;
