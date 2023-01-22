@@ -66,6 +66,7 @@ const getSchema = () => {
       },
       aggregate: {
         type: QueryType.JSON,
+        readable: true,
         steps: [
           {
             key: "$addFields",
