@@ -43,29 +43,6 @@
     return keys.indexOf(prop.toLowerCase()) !== -1
   }
 
-  function hasCompatibleRelationshipTypes(fromRelate) {
-    let fromType, toType
-    if (fromPrimary && fromRelate.fieldName) {
-      const primaryField = fromTable?.schema[fromPrimary]
-      const relatedField = toTable?.schema[fromRelate.fieldName]
-      fromType = primaryField?.type
-      toType = relatedField?.type
-
-      //BigInt is compatible with number types for the purpose of relationships
-      if (primaryField?.externalType === "bigint") {
-        return (
-          relatedField?.type === "number" || relatedField?.type === "string"
-        )
-      }
-      if (relatedField?.externalType === "bigint") {
-        return (
-          primaryField?.type === "number" || primaryField?.type === "string"
-        )
-      }
-    }
-    return fromType === toType
-  }
-
   const touched = writable({})
 
   function invalidThroughTable({ through, throughTo, throughFrom }) {
@@ -134,7 +111,13 @@
     if (inSchema(toTable, toRelate.name, originalToName)) {
       errObj.toCol = colError
     }
-    if (!hasCompatibleRelationshipTypes(fromRelate)) {
+
+    let fromType, toType
+    if (fromPrimary && fromRelate.fieldName) {
+      fromType = fromTable?.schema[fromPrimary]?.type
+      toType = toTable?.schema[fromRelate.fieldName]?.type
+    }
+    if (fromType && toType && fromType !== toType) {
       errObj.foreign =
         "Column type of the foreign key must match the primary key"
     }
