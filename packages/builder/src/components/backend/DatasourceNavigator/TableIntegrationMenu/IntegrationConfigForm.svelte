@@ -51,7 +51,6 @@
   )
 
   let addButton
-  let openAccordionItems = initialOpenAccordionItems()
 
   function getDisplayName(key, fieldKey) {
     let name
@@ -70,21 +69,6 @@
     return Object.entries(schema[fieldGroup].fields || {})
       .filter(el => filter(el))
       .map(([key]) => key)
-  }
-  function initialOpenAccordionItems() {
-    let openAccordionItems = {}
-    for (const configKey in schema) {
-      if (schema[configKey].type === "fieldGroup") {
-        if (
-          Object.keys(schema[configKey].fields)?.some(
-            field => !!datasource?.config[field]
-          )
-        ) {
-          openAccordionItems[configKey] = "is-open"
-        }
-      }
-    }
-    return openAccordionItems
   }
 </script>
 
@@ -128,13 +112,25 @@
         </div>
       {:else if schema[configKey].type === "fieldGroup"}
         <Accordion
-          {configKey}
-          {config}
-          {schema}
-          {openAccordionItems}
-          fieldGroupKeys={getFieldGroupKeys(configKey)}
-          displayNameFn={getDisplayName}
-        />
+          itemName={configKey}
+          initialOpen={getFieldGroupKeys(configKey).some(
+            fieldKey => !!config[fieldKey]
+          )}
+          header={getDisplayName(configKey)}
+        >
+          <Layout gap="S">
+            {#each getFieldGroupKeys(configKey) as fieldKey}
+              <div class="form-row">
+                <Label>{getDisplayName(configKey, fieldKey)}</Label>
+                <Input
+                  type={schema[configKey]["fields"][fieldKey]?.type}
+                  on:change
+                  bind:value={config[fieldKey]}
+                />
+              </div>
+            {/each}
+          </Layout>
+        </Accordion>
       {:else}
         <div class="form-row">
           <Label>{getDisplayName(configKey)}</Label>

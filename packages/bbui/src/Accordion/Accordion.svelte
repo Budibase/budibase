@@ -1,28 +1,29 @@
 <script>
   import "@spectrum-css/accordion"
-  import Layout from "../Layout/Layout.svelte"
-  import Input from "../Form/Input.svelte"
-  import Label from "../Label/Label.svelte"
 
-  export let configKey
-  export let openAccordionItems
-  export let displayNameFn
-  export let fieldGroupKeys
-  export let schema
-  export let config
+  export let itemName
+  export let initialOpen
+  export let header
+
+  let isOpen
+
+  function getOpenClass(isOpen) {
+    if (isOpen === undefined) {
+      isOpen = initialOpen
+    }
+    return isOpen ? "is-open" : ""
+  }
 </script>
 
-<div class="spectrum-Accordion" role={configKey}>
-  <div class="spectrum-Accordion-item {openAccordionItems[configKey]}">
+<div class="spectrum-Accordion" role={itemName}>
+  <div class="spectrum-Accordion-item {getOpenClass(isOpen)}">
     <h3 class="spectrum-Accordion-itemHeading">
       <button
         class="spectrum-Accordion-itemHeader"
         type="button"
-        on:click={() =>
-          (openAccordionItems[configKey] =
-            openAccordionItems[configKey] !== "is-open" ? "is-open" : "")}
+        on:click={() => (isOpen = !isOpen)}
       >
-        {displayNameFn(configKey)}
+        {header}
       </button>
       <svg
         class="spectrum-Icon spectrum-UIIcon-ChevronRight100 spectrum-Accordion-itemIndicator"
@@ -32,19 +33,8 @@
         <use xlink:href="#spectrum-css-icon-Chevron100" />
       </svg>
     </h3>
-    <div class="spectrum-Accordion-itemContent" role={configKey}>
-      <Layout gap="S">
-        {#each fieldGroupKeys as fieldKey}
-          <div class="form-row">
-            <Label>{displayNameFn(configKey, fieldKey)}</Label>
-            <Input
-              type={schema[configKey]["fields"][fieldKey]?.type}
-              on:change
-              bind:value={config[fieldKey]}
-            />
-          </div>
-        {/each}
-      </Layout>
+    <div class="spectrum-Accordion-itemContent" role={itemName}>
+      <slot />
     </div>
   </div>
 </div>
