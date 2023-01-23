@@ -72,11 +72,14 @@ const getTours = () => {
               onboardedAt: new Date().toISOString(),
             })
 
+            // Update the cached user
+            await auth.getSelf()
+
             store.update(state => ({
               ...state,
-              tourNodes: null,
-              tourKey: null,
-              tourKeyStep: null,
+              tourNodes: undefined,
+              tourKey: undefined,
+              tourKeyStep: undefined,
               onboarding: false,
             }))
           }
