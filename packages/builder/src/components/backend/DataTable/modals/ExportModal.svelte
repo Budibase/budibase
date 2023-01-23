@@ -32,24 +32,9 @@
 
   let exportFormat = FORMATS[0].key
   let filterLookup
-  let exportOpDisplay = []
 
   $: luceneFilter = LuceneUtils.buildLuceneQuery(filters)
-
-  $: if (filters) {
-    exportOpDisplay = filterDisplay()
-  }
-
-  $: if (sorting) {
-    exportOpDisplay = [
-      ...exportOpDisplay,
-      {
-        Field: sorting.sortColumn,
-        Operation: "Order By",
-        "Field Value": sorting.sortOrder,
-      },
-    ]
-  }
+  $: exportOpDisplay = buildExportOpDisplay(sorting, filterDisplay, filters)
 
   const buildFilterLookup = () => {
     return Object.keys(Constants.OperatorOptions).reduce((acc, key) => {
@@ -61,6 +46,9 @@
   filterLookup = buildFilterLookup()
 
   const filterDisplay = () => {
+    if (!filters) {
+      return []
+    }
     return filters.map(filter => {
       let newFieldName = filter.field + ""
       const parts = newFieldName.split(":")
@@ -72,6 +60,21 @@
         "Field Value": filter.value || "",
       }
     })
+  }
+
+  const buildExportOpDisplay = (sorting, filterDisplay) => {
+    let filterDisplayConfig = filterDisplay()
+    if (sorting) {
+      filterDisplayConfig = [
+        ...filterDisplayConfig,
+        {
+          Field: sorting.sortColumn,
+          Operation: "Order By",
+          "Field Value": sorting.sortOrder,
+        },
+      ]
+    }
+    return filterDisplayConfig
   }
 
   const displaySchema = {
