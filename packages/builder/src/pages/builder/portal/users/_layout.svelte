@@ -1,11 +1,12 @@
 <script>
   import { Page } from "@budibase/bbui"
   import { SideNav, SideNavItem, Content } from "components/portal/page"
-  import { isActive } from "@roxi/routify"
+  import { isActive, goto } from "@roxi/routify"
   import { menu } from "stores/portal"
 
   $: wide = $isActive("./users/index") || $isActive("./groups/index")
-  $: pages = $menu.find(x => x.title === "Users").subPages
+  $: pages = $menu.find(x => x.title === "Users")?.subPages || []
+  $: !pages.length && $goto("../")
 </script>
 
 <Page>
