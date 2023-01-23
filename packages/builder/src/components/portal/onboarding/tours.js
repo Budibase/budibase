@@ -17,7 +17,6 @@ export const TOUR_KEYS = {
 }
 
 const tourEvent = eventKey => {
-  console.log("Emitting EVENT ", eventKey)
   analytics.captureEvent(`${ONBOARDING_EVENT_PREFIX}:${eventKey}`, {
     eventSource: EventSource.PORTAL,
   })
