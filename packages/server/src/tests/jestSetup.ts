@@ -1,3 +1,5 @@
+import env from "../environment"
+import { env as coreEnv } from "@budibase/backend-core"
 import { mocks } from "@budibase/backend-core/tests"
 
 // mock all dates to 2020-01-01T00:00:00.000Z
@@ -15,3 +17,22 @@ if (!process.env.CI) {
   // 100 seconds
   jest.setTimeout(100000)
 }
+
+function overrideConfigValue(key: string, value: string) {
+  env._set(key, value)
+  coreEnv._set(key, value)
+}
+
+overrideConfigValue("COUCH_DB_PORT", global.__TESTCONTAINERS_DEVENV_PORT_5984__)
+overrideConfigValue(
+  "COUCH_DB_URL",
+  `http://localhost:${global.__TESTCONTAINERS_DEVENV_PORT_5984__}`
+)
+
+overrideConfigValue(
+  "MINIO_URL",
+  `http://localhost:${global.__TESTCONTAINERS_DEVENV_PORT_9000__}`
+)
+
+overrideConfigValue("COUCH_DB_USERNAME", "admin")
+overrideConfigValue("COUCH_DB_PASSWORD", "admin")
