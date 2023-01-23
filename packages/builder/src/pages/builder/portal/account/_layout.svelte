@@ -7,8 +7,8 @@
   $: pages = $menu.find(x => x.title === "Account").subPages
 </script>
 
-<Page narrow>
-  <Content>
+<Page>
+  <Content narrow>
     <div slot="side-nav">
       <SideNav>
         {#each pages as { title, href }}
