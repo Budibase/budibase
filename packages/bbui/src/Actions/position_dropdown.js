@@ -1,6 +1,6 @@
 export default function positionDropdown(
   element,
-  { anchor, align, maxWidth, useAnchorWidth }
+  { anchor, align, maxWidth, useAnchorWidth, showTip }
 ) {
   const update = () => {
     const anchorBounds = anchor.getBoundingClientRect()
@@ -12,6 +12,9 @@ export default function positionDropdown(
       left: null,
       top: null,
     }
+
+    let popoverLeftPad = 20
+    let tipOffset = showTip ? 12.5 : 0
 
     // Determine vertical styles
     if (window.innerHeight - anchorBounds.bottom < 100) {
@@ -29,7 +32,16 @@ export default function positionDropdown(
       styles.minWidth = anchorBounds.width
     }
     if (align === "right") {
-      styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
+      let left =
+        anchorBounds.left +
+        anchorBounds.width / 2 -
+        elementBounds.width +
+        tipOffset
+      // Accommodate margin on popover: 1.25rem; ~20px
+      if (left + elementBounds.width + popoverLeftPad > window.innerWidth) {
+        left -= 20
+      }
+      styles.left = left
     } else if (align === "right-side") {
       styles.left = anchorBounds.left + anchorBounds.width
     } else {
@@ -56,6 +68,7 @@ export default function positionDropdown(
   })
   resizeObserver.observe(anchor)
   resizeObserver.observe(element)
+  resizeObserver.observe(document.body)
 
   document.addEventListener("scroll", update, true)
 
