@@ -26,15 +26,15 @@
     <Avatar size="M" initials={$auth.initials} url={$auth.user.pictureUrl} />
     <Icon size="XL" name="ChevronDown" />
   </div>
-  <MenuItem icon="Moon" on:click={() => themeModal.show()} dataCy="theme">
-    Theme
-  </MenuItem>
   <MenuItem
     icon="UserEdit"
     on:click={() => profileModal.show()}
     dataCy="user-info"
   >
     My profile
+  </MenuItem>
+  <MenuItem icon="Moon" on:click={() => themeModal.show()} dataCy="theme">
+    Theme
   </MenuItem>
   <MenuItem icon="LockClosed" on:click={() => updatePasswordModal.show()}>
     Update password
