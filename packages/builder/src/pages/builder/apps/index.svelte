@@ -17,7 +17,7 @@
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
-  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
+  import ProfileModal from "components/settings/ProfileModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
   import Spaceman from "assets/bb-space-man.svg"
@@ -89,7 +89,7 @@
 
 {#if $auth.user && loaded}
   <div class="container">
-    <Page>
+    <Page narrow>
       <div class="content">
         <Layout noPadding>
           <div class="header">
@@ -104,7 +104,7 @@
                 <Icon size="XL" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-                Update user information
+                My profile
               </MenuItem>
               <MenuItem
                 icon="LockClosed"
@@ -185,7 +185,7 @@
     </Page>
   </div>
   <Modal bind:this={userInfoModal}>
-    <UpdateUserInfoModal />
+    <ProfileModal />
   </Modal>
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal />
@@ -196,6 +196,11 @@
   .container {
     height: 100%;
     overflow: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 80px;
   }
   .content {
     width: 100%;

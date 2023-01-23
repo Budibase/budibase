@@ -1,4 +1,4 @@
-import { Row } from "@budibase/types"
+import { Row, TableSchema } from "@budibase/types"
 
 export function csv(headers: string[], rows: Row[]) {
   let csv = headers.map(key => `"${key}"`).join(",")
@@ -18,11 +18,26 @@ export function csv(headers: string[], rows: Row[]) {
   return csv
 }
 
-export function json(headers: string[], rows: Row[]) {
+export function json(rows: Row[]) {
   return JSON.stringify(rows, undefined, 2)
 }
 
-export const ExportFormats = {
-  CSV: "csv",
-  JSON: "json",
+export function jsonWithSchema(schema: TableSchema, rows: Row[]) {
+  const newSchema: TableSchema = {}
+  Object.values(schema).forEach(column => {
+    if (!column.autocolumn) {
+      newSchema[column.name] = column
+    }
+  })
+  return JSON.stringify({ schema: newSchema, rows }, undefined, 2)
+}
+
+export enum Format {
+  CSV = "csv",
+  JSON = "json",
+  JSON_WITH_SCHEMA = "jsonWithSchema",
+}
+
+export function isFormat(format: any): format is Format {
+  return Object.values(Format).includes(format as Format)
 }

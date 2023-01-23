@@ -14,7 +14,7 @@ import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { auth, logging, events } from "@budibase/backend-core"
+import { auth, logging, events, middleware } from "@budibase/backend-core"
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"
@@ -36,6 +36,7 @@ app.keys = ["secret", "key"]
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
+app.use(middleware.logging)
 app.use(logger(logging.pinoSettings()))
 
 // authentication
