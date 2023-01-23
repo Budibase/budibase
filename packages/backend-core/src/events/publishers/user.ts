@@ -44,14 +44,6 @@ export async function onboardingComplete(user: User) {
   await publishEvent(Event.USER_ONBOARDING_COMPLETE, properties)
 }
 
-export async function onboardingProgress(user: User, step?: string) {
-  const properties: UserOnboardingEvent = {
-    userId: user._id as string,
-    step,
-  }
-  await publishEvent(Event.USER_ONBOARDING_STEP, properties)
-}
-
 // PERMISSIONS
 
 async function permissionAdminAssigned(user: User, timestamp?: number) {
@@ -142,6 +134,7 @@ export default {
   permissionAdminRemoved,
   permissionBuilderAssigned,
   permissionBuilderRemoved,
+  onboardingComplete,
   invited,
   inviteAccepted,
   passwordForceReset,
