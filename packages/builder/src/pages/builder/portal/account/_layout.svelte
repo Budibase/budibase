@@ -1,10 +1,11 @@
 <script>
-  import { isActive } from "@roxi/routify"
+  import { goto, isActive } from "@roxi/routify"
   import { Page } from "@budibase/bbui"
   import { Content, SideNav, SideNavItem } from "components/portal/page"
   import { menu } from "stores/portal"
 
-  $: pages = $menu.find(x => x.title === "Account").subPages
+  $: pages = $menu.find(x => x.title === "Account")?.subPages || []
+  $: !pages.length && $goto("../")
 </script>
 
 <Page>
