@@ -278,6 +278,14 @@
   }
 
   function relationshipExists() {
+    if (
+      originalFromTable &&
+      originalToTable &&
+      originalFromTable === fromTable &&
+      originalToTable === toTable
+    ) {
+      return false
+    }
     let match = false
     let fromThroughLinks = Object.values(
       datasource.entities[fromTable.name].schema
