@@ -3,8 +3,8 @@ version: "3"
 # optional ports are specified throughout for more advanced use cases.
 
 services:
-  dev-service:
-    container_name: budi-dev
+  dependencies:
+    container_name: budi-dependencies
     restart: on-failure
     image: budibase/dependencies
     ports:
@@ -31,7 +31,7 @@ services:
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:
-      - dev-service
+      - dependencies
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
