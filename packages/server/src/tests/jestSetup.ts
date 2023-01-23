@@ -23,13 +23,18 @@ function overrideConfigValue(key: string, value: string) {
   coreEnv._set(key, value)
 }
 
-overrideConfigValue("COUCH_DB_PORT", global.__TESTCONTAINERS_DEVENV_PORT_5984__)
+const globalSafe = global as any
+
+overrideConfigValue(
+  "COUCH_DB_PORT",
+  globalSafe.__TESTCONTAINERS_DEVENV_PORT_5984__
+)
 overrideConfigValue(
   "COUCH_DB_URL",
-  `http://${global.__TESTCONTAINERS_DEVENV_IP__}:${global.__TESTCONTAINERS_DEVENV_PORT_5984__}`
+  `http://${globalSafe.__TESTCONTAINERS_DEVENV_IP__}:${globalSafe.__TESTCONTAINERS_DEVENV_PORT_5984__}`
 )
 
 overrideConfigValue(
   "MINIO_URL",
-  `http://${global.__TESTCONTAINERS_DEVENV_IP__}:${global.__TESTCONTAINERS_DEVENV_PORT_9000__}`
+  `http://${globalSafe.__TESTCONTAINERS_DEVENV_IP__}:${globalSafe.__TESTCONTAINERS_DEVENV_PORT_9000__}`
 )
