@@ -26,13 +26,10 @@ function overrideConfigValue(key: string, value: string) {
 overrideConfigValue("COUCH_DB_PORT", global.__TESTCONTAINERS_DEVENV_PORT_5984__)
 overrideConfigValue(
   "COUCH_DB_URL",
-  `http://localhost:${global.__TESTCONTAINERS_DEVENV_PORT_5984__}`
+  `http://${global.__TESTCONTAINERS_DEVENV_IP__}:${global.__TESTCONTAINERS_DEVENV_PORT_5984__}`
 )
 
 overrideConfigValue(
   "MINIO_URL",
-  `http://localhost:${global.__TESTCONTAINERS_DEVENV_PORT_9000__}`
+  `http://${global.__TESTCONTAINERS_DEVENV_IP__}:${global.__TESTCONTAINERS_DEVENV_PORT_9000__}`
 )
-
-overrideConfigValue("COUCH_DB_USERNAME", "test_couchdb_user")
-overrideConfigValue("COUCH_DB_PASSWORD", "test_couchdb_password")
