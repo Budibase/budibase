@@ -188,6 +188,4 @@ export interface BaseEvent {
   hosting?: Hosting
 }
 
-export type RowImportFormat = "csv"
 export type TableExportFormat = "json" | "csv"
-export type TableImportFormat = "csv"

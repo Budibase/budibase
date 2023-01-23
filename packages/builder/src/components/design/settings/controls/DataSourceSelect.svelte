@@ -70,7 +70,10 @@
       type: "provider",
     }))
   $: links = bindings
+    // Get only link bindings
     .filter(x => x.fieldSchema?.type === "link")
+    // Filter out bindings provided by forms
+    .filter(x => !x.component?.endsWith("/form"))
     .map(binding => {
       const { providerId, readableBinding, fieldSchema } = binding || {}
       const { name, tableId } = fieldSchema || {}
