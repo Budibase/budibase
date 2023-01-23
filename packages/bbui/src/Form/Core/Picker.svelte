@@ -131,25 +131,17 @@
 <Popover
   anchor={button}
   align="left"
-<<<<<<< HEAD
-  portalTarget={document.documentElement}
-=======
->>>>>>> origin/develop
   bind:this={popover}
   {open}
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
   maxWidth={autoWidth ? 400 : null}
 >
-<<<<<<< HEAD
-  <div class="popover-content" class:auto-width={autoWidth}>
-=======
   <div
     class="popover-content"
     class:auto-width={autoWidth}
     use:clickOutside={() => (open = false)}
   >
->>>>>>> origin/develop
     {#if autocomplete}
       <Search
         value={searchTerm}
