@@ -6,6 +6,7 @@
     Toggle,
     Button,
     TextArea,
+    Accordion,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
@@ -51,14 +52,23 @@
 
   let addButton
 
-  function getDisplayName(key) {
+  function getDisplayName(key, fieldKey) {
     let name
-    if (schema[key]?.display) {
+    if (fieldKey && schema[key]["fields"][fieldKey]?.display) {
+      name = schema[key]["fields"][fieldKey].display
+    } else if (fieldKey) {
+      name = fieldKey
+    } else if (schema[key]?.display) {
       name = schema[key].display
     } else {
       name = key
     }
     return capitalise(name)
+  }
+  function getFieldGroupKeys(fieldGroup) {
+    return Object.entries(schema[fieldGroup].fields || {})
+      .filter(el => filter(el))
+      .map(([key]) => key)
   }
 </script>
 
@@ -100,6 +110,27 @@
             error={$validation.errors[configKey]}
           />
         </div>
+      {:else if schema[configKey].type === "fieldGroup"}
+        <Accordion
+          itemName={configKey}
+          initialOpen={getFieldGroupKeys(configKey).some(
+            fieldKey => !!config[fieldKey]
+          )}
+          header={getDisplayName(configKey)}
+        >
+          <Layout gap="S">
+            {#each getFieldGroupKeys(configKey) as fieldKey}
+              <div class="form-row">
+                <Label>{getDisplayName(configKey, fieldKey)}</Label>
+                <Input
+                  type={schema[configKey]["fields"][fieldKey]?.type}
+                  on:change
+                  bind:value={config[fieldKey]}
+                />
+              </div>
+            {/each}
+          </Layout>
+        </Accordion>
       {:else}
         <div class="form-row">
           <Label>{getDisplayName(configKey)}</Label>
