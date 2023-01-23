@@ -3,6 +3,9 @@ export default function positionDropdown(
   { anchor, align, maxWidth, useAnchorWidth, showTip }
 ) {
   const update = () => {
+    if (!anchor) {
+      return
+    }
     const anchorBounds = anchor.getBoundingClientRect()
     const elementBounds = element.getBoundingClientRect()
     let styles = {
@@ -66,7 +69,9 @@ export default function positionDropdown(
   const resizeObserver = new ResizeObserver(entries => {
     entries.forEach(update)
   })
-  resizeObserver.observe(anchor)
+  if (anchor) {
+    resizeObserver.observe(anchor)
+  }
   resizeObserver.observe(element)
   resizeObserver.observe(document.body)
 

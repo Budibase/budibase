@@ -20,7 +20,9 @@
     ready = true
   })
   onDestroy(() => {
-    handler.destroy()
+    if (handler) {
+      handler.destroy()
+    }
   })
 </script>
 

@@ -16,6 +16,9 @@
   $: tourStepKey = $store.tourStepKey
 
   const initTour = targetKey => {
+    if (!targetKey) {
+      return
+    }
     tourSteps = [...TOURS[targetKey]]
     tourStepIdx = 0
     tourStep = { ...tourSteps[tourStepIdx] }
@@ -24,6 +27,9 @@
   $: initTour(tourKey)
 
   const updateTourStep = targetStepKey => {
+    if (!tourSteps?.length) {
+      return
+    }
     tourStepIdx = getCurrentStepIdx(tourSteps, targetStepKey)
     lastStep = tourStepIdx + 1 == tourSteps.length
     tourStep = { ...tourSteps[tourStepIdx] }
@@ -33,6 +39,9 @@
   $: updateTourStep(tourStepKey)
 
   const showPopover = (tourStep, tourNodes, popover) => {
+    if (!tourStep) {
+      return
+    }
     popoverAnchor = tourNodes[tourStep.id]
     popover?.show()
   }
