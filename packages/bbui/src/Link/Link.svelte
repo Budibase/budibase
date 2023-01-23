@@ -1,5 +1,6 @@
 <script>
   import "@spectrum-css/link/dist/index-vars.css"
+  import { createEventDispatcher } from "svelte"
 
   export let href = "#"
   export let size = "M"
@@ -9,10 +10,12 @@
   export let overBackground = false
   export let target
   export let download
+
+  const dispatch = createEventDispatcher()
 </script>
 
 <a
-  on:click
+  on:click={e => dispatch("click") && e.stopPropagation()}
   {href}
   {target}
   {download}
