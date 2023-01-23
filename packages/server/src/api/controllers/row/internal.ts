@@ -27,7 +27,7 @@ import {
 import { cloneDeep } from "lodash/fp"
 import { context, db as dbCore } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
-import * as exporters from "../view/exporters"
+import { csv, json, jsonWithSchema, Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
   Ctx,
@@ -432,15 +432,18 @@ export async function exportRows(ctx: Ctx) {
   }
 
   let exportRows = cleanExportRows(rows, schema, format, columns)
-  let headers = Object.keys(schema)
-
-  // @ts-ignore
-  const exporter = exporters[format]
-  const filename = `export.${format}`
-
-  // send down the file
-  ctx.attachment(filename)
-  return apiFileReturn(exporter(headers, exportRows))
+  if (format === Format.CSV) {
+    ctx.attachment("export.csv")
+    return apiFileReturn(csv(Object.keys(rows[0]), exportRows))
+  } else if (format === Format.JSON) {
+    ctx.attachment("export.json")
+    return apiFileReturn(json(exportRows))
+  } else if (format === Format.JSON_WITH_SCHEMA) {
+    ctx.attachment("export.json")
+    return apiFileReturn(jsonWithSchema(schema, exportRows))
+  } else {
+    throw "Format not recognised"
+  }
 }
 
 export async function fetchEnrichedRow(ctx: Ctx) {

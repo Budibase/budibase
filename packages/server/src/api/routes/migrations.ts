@@ -11,4 +11,4 @@ router
     auth.internalApi,
     migrationsController.fetchDefinitions
   )
-export = router
+export default router

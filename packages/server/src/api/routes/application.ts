@@ -54,4 +54,4 @@ router
     controller.destroy
   )
 
-export = router
+export default router

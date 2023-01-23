@@ -1,8 +1,7 @@
-const processors = require("../../../src/events/processors")
+import * as processors from "../../../src/events/processors"
+import * as events from "../../../src/events"
 
 jest.spyOn(processors.analyticsProcessor, "processEvent")
-
-const events = require("../../../src/events")
 
 jest.spyOn(events.identification, "identifyTenantGroup")
 jest.spyOn(events.identification, "identifyUser")

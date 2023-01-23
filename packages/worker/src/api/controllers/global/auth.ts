@@ -13,7 +13,7 @@ import { isEmailConfigured, sendEmail } from "../../../utilities/email"
 import { checkResetPasswordCode } from "../../../utilities/redis"
 import env from "../../../environment"
 import sdk from "../../../sdk"
-import { Config, ConfigType, User } from "@budibase/types"
+import { ConfigType, User } from "@budibase/types"
 
 const { setCookie, getCookie, clearCookie, hash, platformLogout } = utils
 const { Cookie, Header } = constants
