@@ -93,7 +93,10 @@
       <Button
         primary
         disabled={!$auth.accountPortalAccess && $admin.cloud}
-        on:click={$licensing.goToUpgradePage()}
+        on:click={async () => {
+          await environment.upgradePanelOpened()
+          $licensing.goToUpgradePage()
+        }}
       >
         Upgrade
       </Button>

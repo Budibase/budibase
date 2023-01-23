@@ -1,5 +1,6 @@
 import { writable } from "svelte/store"
 import { API } from "api"
+import { Constants } from "@budibase/frontend-core"
 
 export function createEnvironmentStore() {
   const { subscribe, update } = writable({
@@ -47,6 +48,12 @@ export function createEnvironmentStore() {
     await API.updateEnvironmentVariable(data)
   }
 
+  async function upgradePanelOpened() {
+    await API.publishEvent(
+      Constants.EventPublishType.ENV_VAR_UPGRADE_PANEL_OPENED
+    )
+  }
+
   return {
     subscribe,
     checkStatus,
@@ -54,6 +61,7 @@ export function createEnvironmentStore() {
     createVariable,
     deleteVariable,
     updateVariable,
+    upgradePanelOpened,
   }
 }
 
