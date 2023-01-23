@@ -1,6 +1,6 @@
 module.exports = {
   devEnv: {
-    image: "budibase/tests",
+    image: "budibase/dependencies",
     tag: "latest",
     ports: [6379, 5984, 9000],
     env: {},

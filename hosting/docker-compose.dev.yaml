@@ -6,7 +6,7 @@ services:
   dev-service:
     container_name: budi-dev
     restart: on-failure
-    image: budibase/tests
+    image: budibase/dependencies
     ports:
       - "${MINIO_PORT}:9000"
       - "9001:9001"

@@ -12,7 +12,7 @@ RUN chmod +x install.sh && ./install.sh
 
 WORKDIR /
 
-ADD hosting/tests/runner.sh .
+ADD hosting/dependencies/runner.sh .
 RUN chmod +x ./runner.sh
 
 EXPOSE 5984
