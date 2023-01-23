@@ -1,6 +1,6 @@
 <script>
   import SplitPage from "./SplitPage.svelte"
-  import { Layout, Body } from "@budibase/bbui"
+  import { Layout } from "@budibase/bbui"
 </script>
 
 <SplitPage>
