@@ -34,5 +34,5 @@ overrideConfigValue(
   `http://localhost:${global.__TESTCONTAINERS_DEVENV_PORT_9000__}`
 )
 
-overrideConfigValue("COUCH_DB_USERNAME", "admin")
-overrideConfigValue("COUCH_DB_PASSWORD", "admin")
+overrideConfigValue("COUCH_DB_USERNAME", "test_couchdb_user")
+overrideConfigValue("COUCH_DB_PASSWORD", "test_couchdb_password")
