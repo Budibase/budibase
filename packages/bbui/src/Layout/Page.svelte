@@ -18,6 +18,7 @@
   <div class="main">
     <div class="content" class:wide class:noPadding class:narrow>
       <slot />
+      <div class="fix-scroll-padding" />
     </div>
   </div>
   <div
@@ -55,8 +56,13 @@
     max-width: 1080px;
     margin: 0 auto;
     flex: 1 1 auto;
-    padding: 50px;
+    padding: 50px 50px 0 50px;
     z-index: 1;
+  }
+  .fix-scroll-padding {
+    content: "";
+    display: block;
+    flex: 0 0 50px;
   }
   .content.wide {
     max-width: none;
