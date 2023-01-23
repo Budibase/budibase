@@ -172,7 +172,7 @@
         {bindings}
       />
     {/each}
-    <Button secondary newStyles on:click={() => $goto("../components")}>
+    <Button secondary on:click={() => $goto("../components")}>
       View components
     </Button>
   </Layout>

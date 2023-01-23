@@ -5,9 +5,11 @@ export const newContext = (): BBContext => {
   const ctx = createMockContext()
   return {
     ...ctx,
+    path: "/",
     cookies: createMockCookies(),
     request: {
       ...ctx.request,
+      headers: {},
       body: {},
     },
   }

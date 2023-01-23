@@ -101,7 +101,7 @@ Cypress.Commands.add("deleteUser", email => {
 })
 
 Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
-  cy.get(".user-dropdown .avatar > .icon", { timeout: 2000 }).click({
+  cy.get(".user-dropdown .icon", { timeout: 2000 }).click({
     force: true,
   })
 
@@ -132,7 +132,7 @@ Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
         .blur()
     }
     cy.get(".confirm-wrap").within(() => {
-      cy.get("button").contains("Update information").click({ force: true })
+      cy.get("button").contains("Save").click({ force: true })
     })
     cy.get(".spectrum-Dialog-grid").should("not.exist")
   })
@@ -222,9 +222,12 @@ Cypress.Commands.add("deleteApp", name => {
           // Go to app overview
           const appIdParsed = appId.split("_").pop()
           const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
-          cy.get(actionEleId).within(() => {
-            cy.contains("Manage").click({ force: true })
+          cy.get(actionEleId).click()
+          cy.get(`[aria-label="ShowMenu"]`).click()
+          cy.get(".spectrum-Menu").within(() => {
+            cy.contains("Overview").click()
           })
+
           cy.wait(500)
 
           // Unpublish first if needed
@@ -400,7 +403,7 @@ Cypress.Commands.add("searchForApplication", appName => {
         return
       } else {
         // Searches for the app
-        cy.get(".filter").then(() => {
+        cy.get(".spectrum-Search").then(() => {
           cy.get(".spectrum-Textfield").within(() => {
             cy.get("input").eq(0).clear({ force: true })
             cy.get("input").eq(0).type(appName, { force: true })
@@ -413,7 +416,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 30000 })
-  cy.get(".appTable", { timeout: 30000 }).within(() => {
+  cy.get(".app-table", { timeout: 30000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
 })

@@ -19,6 +19,10 @@
       name: "JSON",
       key: "json",
     },
+    {
+      name: "JSON with Schema",
+      key: "jsonWithSchema",
+    },
   ]
 
   export let view
@@ -37,11 +41,14 @@
   }
 
   $: if (sorting) {
-    exportOpDisplay.push({
-      Field: sorting.sortColumn,
-      Operation: "Order By",
-      "Field Value": sorting.sortOrder,
-    })
+    exportOpDisplay = [
+      ...exportOpDisplay,
+      {
+        Field: sorting.sortColumn,
+        Operation: "Order By",
+        "Field Value": sorting.sortOrder,
+      },
+    ]
   }
 
   const buildFilterLookup = () => {
@@ -88,7 +95,7 @@
         viewName: view,
         format: exportFormat,
       })
-      download(data, `export.${exportFormat}`)
+      download(data, `export.${exportFormat === "csv" ? "csv" : "json"}`)
     } catch (error) {
       notifications.error(`Unable to export ${exportFormat.toUpperCase()} data`)
     }

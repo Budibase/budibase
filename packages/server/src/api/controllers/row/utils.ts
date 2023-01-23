@@ -7,7 +7,7 @@ import { BBContext, Row, Table } from "@budibase/types"
 export { removeKeyNumbering } from "../../../integrations/base/utils"
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
-import { ExportFormats } from "../view/exporters"
+import { Format } from "../view/exporters"
 import { Ctx } from "@budibase/types"
 
 validateJs.extend(validateJs.validators.datetime, {
@@ -139,7 +139,7 @@ export function cleanExportRows(
   })
 
   // Intended to avoid 'undefined' in export
-  if (format === ExportFormats.CSV) {
+  if (format === Format.CSV) {
     const schemaKeys = Object.keys(schema)
     for (let key of schemaKeys) {
       if (columns?.length && columns.indexOf(key) > 0) {

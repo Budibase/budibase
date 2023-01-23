@@ -12,7 +12,7 @@ import env from "../environment"
 import { isWebhookEndpoint } from "./utils"
 import { BBContext } from "@budibase/types"
 
-export = async (ctx: BBContext, next: any) => {
+export default async (ctx: BBContext, next: any) => {
   // try to get the appID from the request
   let requestAppId = await utils.getAppIdFromCtx(ctx)
   // get app cookie if it exists
@@ -25,6 +25,7 @@ export = async (ctx: BBContext, next: any) => {
   if (!appCookie && !requestAppId) {
     return next()
   }
+
   // check the app exists referenced in cookie
   if (appCookie) {
     const appId = appCookie.appId
@@ -51,7 +52,7 @@ export = async (ctx: BBContext, next: any) => {
 
   let appId: string | undefined,
     roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
-  if (!ctx.user) {
+  if (!ctx.user?._id) {
     // not logged in, try to set a cookie for public apps
     appId = requestAppId
   } else if (requestAppId != null) {
@@ -96,7 +97,7 @@ export = async (ctx: BBContext, next: any) => {
     // need to judge this only based on the request app ID,
     if (
       env.MULTI_TENANCY &&
-      ctx.user &&
+      ctx.user?._id &&
       requestAppId &&
       !tenancy.isUserInAppTenant(requestAppId, ctx.user)
     ) {

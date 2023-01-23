@@ -1,6 +1,7 @@
 import fetch from "node-fetch"
+import * as logging from "../logging"
 
-export = class API {
+export default class API {
   host: string
 
   constructor(host: string) {
@@ -21,6 +22,9 @@ export = class API {
     }
 
     let json = options.headers["Content-Type"] === "application/json"
+
+    // add x-budibase-correlation-id header
+    logging.correlation.setHeader(options.headers)
 
     const requestOptions = {
       method: method,

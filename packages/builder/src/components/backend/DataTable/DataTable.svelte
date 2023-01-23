@@ -52,7 +52,7 @@
       selectedRows = []
     }
 
-  $: if ($fetch.pageNumber) {
+  $: if (Number.isInteger($fetch.pageNumber)) {
     selectedRows = []
   }
 

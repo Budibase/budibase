@@ -17,4 +17,4 @@ router
     controller.deploymentProgress
   )
 
-export = router
+export default router

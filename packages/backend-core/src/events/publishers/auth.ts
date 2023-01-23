@@ -12,7 +12,7 @@ import {
 } from "@budibase/types"
 import { identification } from ".."
 
-export async function login(source: LoginSource) {
+async function login(source: LoginSource) {
   const identity = await identification.getCurrentIdentity()
   const properties: LoginEvent = {
     userId: identity.id,
@@ -21,7 +21,7 @@ export async function login(source: LoginSource) {
   await publishEvent(Event.AUTH_LOGIN, properties)
 }
 
-export async function logout() {
+async function logout() {
   const identity = await identification.getCurrentIdentity()
   const properties: LogoutEvent = {
     userId: identity.id,
@@ -29,30 +29,39 @@ export async function logout() {
   await publishEvent(Event.AUTH_LOGOUT, properties)
 }
 
-export async function SSOCreated(type: SSOType, timestamp?: string | number) {
+async function SSOCreated(type: SSOType, timestamp?: string | number) {
   const properties: SSOCreatedEvent = {
     type,
   }
   await publishEvent(Event.AUTH_SSO_CREATED, properties, timestamp)
 }
 
-export async function SSOUpdated(type: SSOType) {
+async function SSOUpdated(type: SSOType) {
   const properties: SSOUpdatedEvent = {
     type,
   }
   await publishEvent(Event.AUTH_SSO_UPDATED, properties)
 }
 
-export async function SSOActivated(type: SSOType, timestamp?: string | number) {
+async function SSOActivated(type: SSOType, timestamp?: string | number) {
   const properties: SSOActivatedEvent = {
     type,
   }
   await publishEvent(Event.AUTH_SSO_ACTIVATED, properties, timestamp)
 }
 
-export async function SSODeactivated(type: SSOType) {
+async function SSODeactivated(type: SSOType) {
   const properties: SSODeactivatedEvent = {
     type,
   }
   await publishEvent(Event.AUTH_SSO_DEACTIVATED, properties)
+}
+
+export default {
+  login,
+  logout,
+  SSOCreated,
+  SSOUpdated,
+  SSOActivated,
+  SSODeactivated,
 }
