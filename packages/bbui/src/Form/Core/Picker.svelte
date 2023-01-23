@@ -45,7 +45,9 @@
     getOptionLabel
   )
 
-  const onClick = () => {
+  const onClick = e => {
+    e.preventDefault()
+    e.stopPropagation()
     dispatch("click")
     if (readonly) {
       return
@@ -88,7 +90,6 @@
   class:is-open={open}
   aria-haspopup="listbox"
   on:click={onClick}
-  use:clickOutside={() => (open = false)}
   bind:this={button}
 >
   {#if fieldIcon}
@@ -130,14 +131,25 @@
 <Popover
   anchor={button}
   align="left"
+<<<<<<< HEAD
   portalTarget={document.documentElement}
+=======
+>>>>>>> origin/develop
   bind:this={popover}
   {open}
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
   maxWidth={autoWidth ? 400 : null}
 >
+<<<<<<< HEAD
   <div class="popover-content" class:auto-width={autoWidth}>
+=======
+  <div
+    class="popover-content"
+    class:auto-width={autoWidth}
+    use:clickOutside={() => (open = false)}
+  >
+>>>>>>> origin/develop
     {#if autocomplete}
       <Search
         value={searchTerm}

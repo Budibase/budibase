@@ -69,7 +69,7 @@ export interface Table extends Document {
   constrained?: string[]
   sql?: boolean
   indexes?: { [key: string]: any }
-  dataImport?: { [key: string]: any }
+  rows?: { [key: string]: any }
 }
 
 export interface TableRequest extends Table {

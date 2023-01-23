@@ -31,6 +31,7 @@ import {
   SearchUsersRequest,
   User,
   ThirdPartyUser,
+  isUser,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
@@ -265,8 +266,9 @@ export const save = async (
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
     await addTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
+
     // let server know to sync user
-    await apps.syncUserInApps(_id)
+    await apps.syncUserInApps(_id, dbUser)
 
     await Promise.all(groupPromises)
 
@@ -572,7 +574,7 @@ export const destroy = async (id: string, currentUser: any) => {
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(userId)
+  await apps.syncUserInApps(userId, dbUser)
 }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
@@ -582,7 +584,7 @@ const bulkDeleteProcessing = async (dbUser: User) => {
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(userId)
+  await apps.syncUserInApps(userId, dbUser)
 }
 
 export const invite = async (
