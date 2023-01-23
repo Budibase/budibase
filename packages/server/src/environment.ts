@@ -21,11 +21,20 @@ function isCypress() {
 }
 
 let LOADED = false
-if (!LOADED && isDev() && !isTest()) {
-  require("dotenv").config({
-    path: join(__dirname, "..", ".env"),
-  })
-  LOADED = true
+if (!LOADED) {
+  if (isDev() && !isTest()) {
+    require("dotenv").config({
+      path: join(__dirname, "..", ".env"),
+    })
+    LOADED = true
+  }
+  // TODO: remove when all tests (cypress, e2e, unit, etc) use docker for testing dependencies
+  else if (isJest()) {
+    require("dotenv").config({
+      path: join(__dirname, "..", ".env.test"),
+    })
+    LOADED = true
+  }
 }
 
 function parseIntSafe(number?: string) {
