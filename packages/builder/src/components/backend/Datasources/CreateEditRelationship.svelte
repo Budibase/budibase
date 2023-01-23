@@ -154,6 +154,12 @@
     if (!isMany && !fromPrimary) {
       errObj.fromPrimary = "Please pick the primary key"
     }
+    const relationshipAlreadyExists =
+      "A relationship between these tables already exists."
+    if (isMany && relationshipExists()) {
+      errObj.fromTable = relationshipAlreadyExists
+      errObj.toTable = relationshipAlreadyExists
+    }
 
     // currently don't support relationships back onto the table itself, needs to relate out
     const tableError = "From/to/through tables must be different"
@@ -271,6 +277,31 @@
     toRelationship = relateTo
   }
 
+  function relationshipExists() {
+    let match = false
+    let fromThroughLinks = Object.values(
+      datasource.entities[fromTable.name].schema
+    ).filter(value => value.through)
+    let toThroughLinks = Object.values(
+      datasource.entities[toTable.name].schema
+    ).filter(value => value.through)
+
+    fromThroughLinks.forEach(fromVal => {
+      toThroughLinks.forEach(toVal => {
+        if (fromVal.through === toVal.through) {
+          if (
+            (fromVal.tableId === fromId && toVal.tableId === toId) ||
+            (fromVal.tableId === toId && toVal.tableId === fromId)
+          ) {
+            match = true
+            return
+          }
+        }
+      })
+    })
+    return match
+  }
+
   function removeExistingRelationship() {
     if (originalFromTable && originalFromColumnName) {
       delete datasource.entities[originalFromTable.name].schema[
@@ -334,6 +365,8 @@
       fromColumn = tableOptions.find(opt => opt.value === e.detail)?.label || ""
       errors.fromTable = null
       errors.fromColumn = null
+      errors.toTable = null
+      errors.throughTable = null
     }}
   />
   {#if isManyToOne && fromTable}
@@ -354,6 +387,8 @@
       toColumn = tableOptions.find(opt => opt.value === e.detail)?.label || ""
       errors.toTable = null
       errors.toColumn = null
+      errors.fromTable = null
+      errors.throughTable = null
     }}
   />
   {#if isManyToMany}
@@ -362,6 +397,11 @@
       options={tableOptions}
       bind:value={throughId}
       bind:error={errors.throughTable}
+      on:change={() => {
+        errors.fromTable = null
+        errors.toTable = null
+        errors.throughTable = null
+      }}
     />
     {#if fromTable && toTable && throughTable}
       <Select
