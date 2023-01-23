@@ -378,6 +378,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
           providerId,
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
+          component: component._component,
           category: component._instanceName,
           icon: def.icon,
           display: {
