@@ -5,7 +5,7 @@
 </script>
 
 <a on:click href={url} class:active>
-  {text}
+  {text || ""}
 </a>
 
 <style>
