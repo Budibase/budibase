@@ -101,3 +101,6 @@ export { banner, BANNER_TYPES } from "./Stores/banner"
 
 // Helpers
 export * as Helpers from "./helpers"
+
+// Fancy form components
+export * from "./FancyForm"
