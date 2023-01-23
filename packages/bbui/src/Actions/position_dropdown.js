@@ -1,75 +1,68 @@
-export default function positionDropdown(element, { anchor, align, maxWidth }) {
-  let positionSide = "top"
-  let maxHeight = 0
-  let dimensions = getDimensions(anchor)
+export default function positionDropdown(
+  element,
+  { anchor, align, maxWidth, useAnchorWidth }
+) {
+  const update = () => {
+    const anchorBounds = anchor.getBoundingClientRect()
+    const elementBounds = element.getBoundingClientRect()
+    let styles = {
+      maxHeight: null,
+      minWidth: null,
+      maxWidth,
+      left: null,
+      top: null,
+    }
 
-  function getDimensions() {
-    const {
-      bottom,
-      top: spaceAbove,
-      left,
-      width,
-    } = anchor.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - bottom
-    const containerRect = element.getBoundingClientRect()
-
-    let y
-
-    if (spaceAbove > spaceBelow) {
-      positionSide = "bottom"
-      maxHeight = spaceAbove - 20
-      y = window.innerHeight - spaceAbove + 5
+    // Determine vertical styles
+    if (window.innerHeight - anchorBounds.bottom < 100) {
+      styles.top = anchorBounds.top - elementBounds.height - 5
     } else {
-      positionSide = "top"
-      y = bottom + 5
-      maxHeight = spaceBelow - 20
+      styles.top = anchorBounds.bottom + 5
+      styles.maxHeight = window.innerHeight - anchorBounds.bottom - 20
     }
 
-    return {
-      [positionSide]: y,
-      left,
-      width,
-      containerWidth: containerRect.width,
+    // Determine horizontal styles
+    if (!maxWidth && useAnchorWidth) {
+      styles.maxWidth = anchorBounds.width
     }
+    if (useAnchorWidth) {
+      styles.minWidth = anchorBounds.width
+    }
+    if (align === "right") {
+      styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
+    } else if (align === "right-side") {
+      styles.left = anchorBounds.left + anchorBounds.width
+    } else {
+      styles.left = anchorBounds.left
+    }
+
+    // Apply styles
+    Object.entries(styles).forEach(([style, value]) => {
+      if (value) {
+        element.style[style] = `${value.toFixed(0)}px`
+      } else {
+        element.style[style] = null
+      }
+    })
   }
 
-  function calcLeftPosition() {
-    let left
-
-    if (align == "right") {
-      left = dimensions.left + dimensions.width - dimensions.containerWidth
-    } else if (align == "right-side") {
-      left = dimensions.left + dimensions.width
-    } else {
-      left = dimensions.left
-    }
-
-    return left
-  }
-
+  // Apply initial styles which don't need to change
   element.style.position = "absolute"
   element.style.zIndex = "9999"
-  if (maxWidth) {
-    element.style.maxWidth = `${maxWidth}px`
-  }
-  element.style.minWidth = `${dimensions.width}px`
-  element.style.maxHeight = `${maxHeight.toFixed(0)}px`
-  element.style.transformOrigin = `center ${positionSide}`
-  element.style[positionSide] = `${dimensions[positionSide]}px`
-  element.style.left = `${calcLeftPosition(dimensions).toFixed(0)}px`
 
+  // Observe both anchor and element and resize the popover as appropriate
   const resizeObserver = new ResizeObserver(entries => {
-    entries.forEach(() => {
-      dimensions = getDimensions()
-      element.style[positionSide] = `${dimensions[positionSide]}px`
-      element.style.left = `${calcLeftPosition(dimensions).toFixed(0)}px`
-    })
+    entries.forEach(update)
   })
   resizeObserver.observe(anchor)
   resizeObserver.observe(element)
+
+  document.addEventListener("scroll", update, true)
+
   return {
     destroy() {
       resizeObserver.disconnect()
+      document.removeEventListener("scroll", update, true)
     },
   }
 }

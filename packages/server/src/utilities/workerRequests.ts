@@ -1,7 +1,12 @@
 import fetch from "node-fetch"
 import env from "../environment"
 import { checkSlashesInUrl } from "./index"
-import { db as dbCore, constants, tenancy } from "@budibase/backend-core"
+import {
+  db as dbCore,
+  constants,
+  tenancy,
+  logging,
+} from "@budibase/backend-core"
 import { updateAppRole } from "./global"
 import { BBContext, User } from "@budibase/types"
 
@@ -27,6 +32,10 @@ export function request(ctx?: BBContext, request?: any) {
   if (ctx && ctx.headers) {
     request.headers = ctx.headers
   }
+
+  // add x-budibase-correlation-id header
+  logging.correlation.setHeader(request.headers)
+
   return request
 }
 
