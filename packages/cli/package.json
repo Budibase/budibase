@@ -1,6 +1,6 @@
 {
   "name": "@budibase/cli",
-  "version": "2.2.12-alpha.32",
+  "version": "2.2.12-alpha.33",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "src/index.js",
   "bin": {
@@ -26,9 +26,9 @@
     "outputPath": "build"
   },
   "dependencies": {
-    "@budibase/backend-core": "2.2.12-alpha.32",
-    "@budibase/string-templates": "2.2.12-alpha.32",
-    "@budibase/types": "2.2.12-alpha.32",
+    "@budibase/backend-core": "2.2.12-alpha.33",
+    "@budibase/string-templates": "2.2.12-alpha.33",
+    "@budibase/types": "2.2.12-alpha.33",
     "axios": "0.21.2",
     "chalk": "4.1.0",
     "cli-progress": "3.11.2",

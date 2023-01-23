@@ -1,7 +1,7 @@
 {
   "name": "@budibase/bbui",
   "description": "A UI solution used in the different Budibase projects.",
-  "version": "2.2.12-alpha.32",
+  "version": "2.2.12-alpha.33",
   "license": "MPL-2.0",
   "svelte": "src/index.js",
   "module": "dist/bbui.es.js",
@@ -38,7 +38,7 @@
   ],
   "dependencies": {
     "@adobe/spectrum-css-workflow-icons": "1.2.1",
-    "@budibase/string-templates": "2.2.12-alpha.32",
+    "@budibase/string-templates": "2.2.12-alpha.33",
     "@spectrum-css/actionbutton": "1.0.1",
     "@spectrum-css/actiongroup": "1.0.1",
     "@spectrum-css/avatar": "3.0.2",
