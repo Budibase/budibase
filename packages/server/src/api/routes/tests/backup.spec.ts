@@ -1,13 +1,3 @@
-jest.mock("@budibase/backend-core", () => {
-  const core = jest.requireActual("@budibase/backend-core")
-  return {
-    ...core,
-    objectStore: {
-      budibaseTempDir: core.objectStore.budibaseTempDir,
-    },
-  }
-})
-
 import * as setup from "./utilities"
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
