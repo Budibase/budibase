@@ -319,10 +319,7 @@ async function performAppCreate(ctx: BBContext) {
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
 
-  /* istanbul ignore next */
-  if (!env.isTest()) {
-    await createApp(appId)
-  }
+  await createApp(appId)
 
   await cache.app.invalidateAppMetadata(appId, newApplication)
   return newApplication
@@ -499,9 +496,7 @@ async function destroyApp(ctx: BBContext) {
   await quotas.removeApp()
   await events.app.deleted(app)
 
-  if (!env.isTest()) {
-    await deleteApp(appId)
-  }
+  await deleteApp(appId)
 
   await removeAppFromUserRoles(ctx, appId)
   await cache.app.invalidateAppMetadata(devAppId)
