@@ -15,7 +15,7 @@ const ENV_VAR_PREFIX = "env."
 async function enrichDatasourceWithValues(datasource: Datasource) {
   const cloned = cloneDeep(datasource)
   const env = await getEnvironmentVariables()
-  const processed = processObjectSync(cloned, env)
+  const processed = processObjectSync(cloned, { env })
   return {
     datasource: processed as Datasource,
     envVars: env as Record<string, string>,
