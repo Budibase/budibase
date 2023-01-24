@@ -137,15 +137,22 @@ class TestConfiguration {
     return this.createApp(appName)
   }
 
-  end() {
+  async end() {
     if (!this) {
       return
     }
-    if (this.server) {
-      this.server.close()
-    }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
+
+      await this._req(
+        null,
+        { appId: this.prodApp.appId },
+        controllers.app.destroy
+      )
+    }
+
+    if (this.server) {
+      this.server.close()
     }
   }
 
