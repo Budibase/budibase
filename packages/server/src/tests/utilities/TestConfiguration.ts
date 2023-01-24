@@ -38,6 +38,8 @@ import { cleanup } from "../../utilities/fileSystem"
 import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
+import { db } from "@budibase/backend-core"
+import Nano from "@budibase/nano"
 const supertest = require("supertest")
 
 const GLOBAL_USER_ID = "us_uuid1"
@@ -127,6 +129,7 @@ class TestConfiguration {
 
   // use a new id as the name to avoid name collisions
   async init(appName = newid()) {
+    await this.cleanAllDbs()
     if (!this.started) {
       await startup()
     }
@@ -137,22 +140,33 @@ class TestConfiguration {
     return this.createApp(appName)
   }
 
-  async end() {
+  async cleanAllDbs() {
+    const couchInfo = db.getCouchInfo()
+    const nano = Nano({
+      url: couchInfo.url,
+      requestDefaults: {
+        headers: {
+          Authorization: couchInfo.cookie,
+        },
+      },
+      parseUrl: false,
+    })
+    let dbs
+    do {
+      dbs = await nano.db.list()
+      await Promise.all(dbs.map(x => nano.db.destroy(x)))
+    } while (dbs.length)
+  }
+
+  end() {
     if (!this) {
       return
     }
-    if (this.allApps) {
-      cleanup(this.allApps.map(app => app.appId))
-
-      await this._req(
-        null,
-        { appId: this.prodApp.appId },
-        controllers.app.destroy
-      )
-    }
-
     if (this.server) {
       this.server.close()
+    }
+    if (this.allApps) {
+      cleanup(this.allApps.map(app => app.appId))
     }
   }
 
