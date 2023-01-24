@@ -6,9 +6,12 @@
     Checkbox,
     Heading,
     notifications,
+    Context,
   } from "@budibase/bbui"
   import { environment } from "stores/portal"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { getContext } from "svelte"
+  const modalContext = getContext(Context.Modal)
 
   export let save
   export let row
@@ -23,6 +26,7 @@
   const deleteVariable = name => {
     try {
       environment.deleteVariable(name)
+      modalContext.hide()
       notifications.success("Environment variable deleted")
     } catch (err) {
       notifications.error(err.message)

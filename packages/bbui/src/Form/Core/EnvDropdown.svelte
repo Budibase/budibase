@@ -3,7 +3,6 @@
   import { createEventDispatcher, onMount } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Divider from "../../Divider/Divider.svelte"
-  import Body from "../../Typography/Body.svelte"
   export let value = null
   export let placeholder = null
   export let type = "text"
@@ -16,11 +15,12 @@
   export let autofocus = false
   export let variables
   export let showModal
-  $: console.log(showModal)
+
   const dispatch = createEventDispatcher()
 
   let field
   let focus = false
+  let iconFocused = false
   let open = false
 
   const updateValue = newValue => {
@@ -69,14 +69,15 @@
     if (open) {
       event.stopPropagation()
       open = false
+      focus = false
+      iconFocused = false
       dispatch("closed")
     }
   }
 
   const handleVarSelect = variable => {
-    console.log(variable)
     open = false
-    updateValue(`{{ ${variable} }}`)
+    updateValue(`{{ env.${variable} }}`)
   }
 
   onMount(() => {
@@ -86,15 +87,17 @@
 </script>
 
 <div class="spectrum-InputGroup">
-  <div
-    class:is-focused={focus}
-    class="spectrum-Textfield spectrum-InputGroup-textfield "
-  >
+  <div class:is-focused={focus} class="spectrum-Textfield ">
     <svg
+      class:focused={iconFocused}
       class="hoverable icon-position spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
       focusable="false"
       aria-hidden="true"
-      on:click={() => (open = true)}
+      on:click={() => {
+        open = true
+        focus = true
+        iconFocused = true
+      }}
     >
       <use xlink:href="#spectrum-icon-18-Key" />
     </svg>
@@ -127,7 +130,11 @@
       use:clickOutside={handleOutsideClick}
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
     >
-      <ul class="spectrum-Menu" role="listbox">
+      <ul
+        class:no-variables-height={variables.length}
+        class="spectrum-Menu"
+        role="listbox"
+      >
         {#if variables.length}
           {#each variables as variable, idx}
             <li
@@ -153,17 +160,13 @@
             </li>
           {/each}
         {:else}
-          <li class="spectrum-Menu-item" role="option" aria-selected="true">
-            <span class="spectrum-Menu-itemLabel">
-              <div class="primary-text">
-                You don't have any environment variables yet
-              </div>
-            </span>
-          </li>
+          <div class="no-variables-text primary-text">
+            You don't have any environment variables yet
+          </div>
         {/if}
       </ul>
       <Divider noMargin />
-      <div class="add-variable">
+      <div on:click={() => showModal()} class="add-variable">
         <svg
           class="spectrum-Icon spectrum-Icon--sizeS "
           focusable="false"
@@ -171,9 +174,7 @@
         >
           <use xlink:href="#spectrum-icon-18-Add" />
         </svg>
-        <div on:click={() => showModal()} class="primary-text">
-          <Body size="S">Add Variable</Body>
-        </div>
+        <div class="primary-text">Add Variable</div>
       </div>
     </div>
   {/if}
@@ -209,12 +210,6 @@
     min-width: 0;
     width: 100%;
   }
-  .spectrum-InputGroup :global(.spectrum-Search-input) {
-    border: none;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
 
   .spectrum-Popover {
     max-height: 240px;
@@ -226,10 +221,13 @@
     width: 100%;
   }
 
-  /* Fix focus borders to show only when opened */
-  .spectrum-Textfield-input {
-    border-color: var(--spectrum-global-color-gray-400) !important;
-    border-right-width: 1px;
+  .no-variables-height {
+    height: 100px;
+  }
+
+  .no-variables-text {
+    padding: var(--spacing-m);
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .add-variable {
@@ -237,5 +235,14 @@
     padding: var(--spacing-m) 0 var(--spacing-m) var(--spacing-m);
     align-items: center;
     gap: var(--spacing-s);
+    cursor: pointer;
+  }
+
+  .focused {
+    color: var(--spectrum-global-color-blue-400);
+  }
+
+  .add-variable:hover {
+    background: var(--grey-1);
   }
 </style>
