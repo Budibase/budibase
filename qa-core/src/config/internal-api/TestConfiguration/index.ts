@@ -68,6 +68,7 @@ export default class TestConfiguration<T> {
   }
 
   async login(email: string, password: string) {
+    await this.auth.logout()
     await this.auth.login(email, password)
   }
 
