@@ -10,7 +10,7 @@ import {
   APP_PREFIX,
 } from "../constants"
 import { getTenantId, getGlobalDB, getGlobalDBName } from "../context"
-import { doWithDB, allDbs, directCouchAllDbs } from "./db"
+import { doWithDB, directCouchAllDbs } from "./db"
 import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import * as events from "../events"
@@ -262,10 +262,7 @@ export function getStartEndKeyURL(baseKey: any, tenantId?: string) {
  */
 export async function getAllDbs(opts = { efficient: false }) {
   const efficient = opts && opts.efficient
-  // specifically for testing we use the pouch package for this
-  if (env.isTest()) {
-    return allDbs()
-  }
+
   let dbs: any[] = []
   async function addDbs(queryString?: string) {
     const json = await directCouchAllDbs(queryString)
