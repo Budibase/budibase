@@ -156,6 +156,9 @@
   .icon {
     font-size: 13px;
     margin-right: 7px;
+    min-width: 18px;
+    justify-content: center;
+    display: flex;
   }
 
   .premiumLinkContent {
