@@ -17,6 +17,8 @@
   export let autofocus
   export let variables
   export let showModal
+  export let environmentVariablesEnabled
+  export let handleUpgradePanel
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
@@ -38,6 +40,8 @@
     {autofocus}
     {variables}
     {showModal}
+    {environmentVariablesEnabled}
+    {handleUpgradePanel}
     on:change={onChange}
     on:click
     on:input

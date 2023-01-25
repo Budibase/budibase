@@ -14,7 +14,7 @@
   import { IntegrationTypes } from "constants/backend"
   import { createValidationStore } from "helpers/validation/yup"
   import { createEventDispatcher, onMount } from "svelte"
-  import { environment } from "stores/portal"
+  import { environment, licensing } from "stores/portal"
   import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
 
   export let datasource
@@ -75,6 +75,12 @@
   function showModal() {
     createVariableModal.show()
   }
+
+  async function handleUpgradePanel() {
+    await environment.upgradePanelOpened()
+    $licensing.goToUpgradePage()
+  }
+
   onMount(async () => {
     await environment.loadVariables()
   })
@@ -127,6 +133,8 @@
             on:change
             bind:value={config[configKey]}
             error={$validation.errors[configKey]}
+            environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
+            {handleUpgradePanel}
           />
         </div>
       {/if}
