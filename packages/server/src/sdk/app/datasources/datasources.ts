@@ -43,14 +43,7 @@ export async function get(
 export async function getWithEnvVars(datasourceId: string) {
   const appDb = context.getAppDB()
   const datasource = await appDb.get(datasourceId)
-  const blocks = findHBSBlocks(JSON.stringify(datasource))
-  const usesEnvVars =
-    blocks.find(block => block.includes(ENV_VAR_PREFIX)) != null
-  if (usesEnvVars) {
-    return enrichDatasourceWithValues(datasource)
-  } else {
-    return datasource
-  }
+  return enrichDatasourceWithValues(datasource)
 }
 
 export function isValid(datasource: Datasource) {
