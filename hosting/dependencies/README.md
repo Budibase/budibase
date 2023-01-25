@@ -53,5 +53,5 @@ yarn build
 #### Build Image
 The following yarn command does some prep and then runs the docker build command:
 ```
-yarn build:docker:tests
+yarn build:docker:dependencies
 ```
