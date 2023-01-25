@@ -1,6 +1,7 @@
 <script>
   import { goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "stores/backend"
+  import { environment } from "stores/portal"
   import {
     Banner,
     Body,
@@ -360,6 +361,13 @@
       await datasources.init()
     } catch (error) {
       notifications.error("Error getting datasources")
+    }
+
+    try {
+      // load the environment variables
+      await environment.loadVariables()
+    } catch (error) {
+      notifications.error("Error getting environment variables")
     }
 
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
