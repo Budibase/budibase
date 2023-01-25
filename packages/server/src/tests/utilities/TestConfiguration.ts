@@ -88,7 +88,7 @@ class TestConfiguration {
 
   populateDefaultValues() {
     return {
-      globalUserId: faker.datatype.uuid(),
+      globalUserId: `us_${faker.datatype.uuid()}`,
       email: faker.internet.email(),
       firstName: faker.name.firstName(),
       lastName: faker.name.lastName(),
