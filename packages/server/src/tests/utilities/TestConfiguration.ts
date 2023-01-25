@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker"
 import { mocks } from "@budibase/backend-core/tests"
 
 // init the licensing mock
@@ -40,13 +41,8 @@ import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import { db } from "@budibase/backend-core"
 import Nano from "@budibase/nano"
+import { AuthToken } from "@budibase/types"
 const supertest = require("supertest")
-
-const GLOBAL_USER_ID = "us_uuid1"
-const EMAIL = "babs@babs.com"
-const FIRSTNAME = "Barbara"
-const LASTNAME = "Barbington"
-const CSRF_TOKEN = "e3727778-7af0-4226-b5eb-f43cbe60a306"
 
 class TestConfiguration {
   server: any
@@ -64,6 +60,14 @@ class TestConfiguration {
   linkedTable: any
   automation: any
   datasource: any
+  tenantId: string | null
+  defaultValues: {
+    globalUserId: string
+    email: string
+    firstName: string
+    lastName: string
+    csrfToken: string
+  }
 
   constructor(openServer = true) {
     if (openServer) {
@@ -78,6 +82,18 @@ class TestConfiguration {
     }
     this.appId = null
     this.allApps = []
+    this.tenantId = null
+    this.defaultValues = this.populateDefaultValues()
+  }
+
+  populateDefaultValues() {
+    return {
+      globalUserId: faker.datatype.uuid(),
+      email: faker.internet.email(),
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+      csrfToken: faker.datatype.uuid(),
+    }
   }
 
   getRequest() {
@@ -102,10 +118,10 @@ class TestConfiguration {
 
   getUserDetails() {
     return {
-      globalId: GLOBAL_USER_ID,
-      email: EMAIL,
-      firstName: FIRSTNAME,
-      lastName: LASTNAME,
+      globalId: this.defaultValues.globalUserId,
+      email: this.defaultValues.email,
+      firstName: this.defaultValues.firstName,
+      lastName: this.defaultValues.lastName,
     }
   }
 
@@ -113,7 +129,9 @@ class TestConfiguration {
     if (!appId) {
       appId = this.appId
     }
-    return tenancy.doInTenant(TENANT_ID, () => {
+
+    const tenant = this.getTenantId()
+    return tenancy.doInTenant(tenant, () => {
       // check if already in a context
       if (context.getAppId() == null && appId !== null) {
         return context.doInAppContext(appId, async () => {
@@ -129,7 +147,12 @@ class TestConfiguration {
 
   // use a new id as the name to avoid name collisions
   async init(appName = newid()) {
-    await this.cleanAllDbs()
+    this.defaultValues = this.populateDefaultValues()
+    if (context.isMultiTenant()) {
+      this.tenantId = `tenant-${newid()}`
+      context.updateTenantId(this.tenantId)
+    }
+
     if (!this.started) {
       await startup()
     }
@@ -138,24 +161,6 @@ class TestConfiguration {
     this.userMetadataId = generateUserMetadataID(this.globalUserId)
 
     return this.createApp(appName)
-  }
-
-  async cleanAllDbs() {
-    const couchInfo = db.getCouchInfo()
-    const nano = Nano({
-      url: couchInfo.url,
-      requestDefaults: {
-        headers: {
-          Authorization: couchInfo.cookie,
-        },
-      },
-      parseUrl: false,
-    })
-    let dbs
-    do {
-      dbs = await nano.db.list()
-      await Promise.all(dbs.map(x => nano.db.destroy(x)))
-    } while (dbs.length)
   }
 
   end() {
@@ -180,7 +185,7 @@ class TestConfiguration {
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
-    request.user = { appId, tenantId: TENANT_ID }
+    request.user = { appId, tenantId: this.getTenantId() }
     request.query = {}
     request.request = {
       body,
@@ -196,15 +201,15 @@ class TestConfiguration {
 
   // USER / AUTH
   async globalUser({
-    id = GLOBAL_USER_ID,
-    firstName = FIRSTNAME,
-    lastName = LASTNAME,
+    id = this.defaultValues.globalUserId,
+    firstName = this.defaultValues.firstName,
+    lastName = this.defaultValues.lastName,
     builder = true,
     admin = false,
-    email = EMAIL,
+    email = this.defaultValues.email,
     roles,
   }: any = {}) {
-    return tenancy.doWithGlobalDB(TENANT_ID, async (db: any) => {
+    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: any) => {
       let existing
       try {
         existing = await db.get(id)
@@ -215,14 +220,14 @@ class TestConfiguration {
         _id: id,
         ...existing,
         roles: roles || {},
-        tenantId: TENANT_ID,
+        tenantId: this.getTenantId(),
         firstName,
         lastName,
       }
       await sessions.createASession(id, {
         sessionId: "sessionid",
-        tenantId: TENANT_ID,
-        csrfToken: CSRF_TOKEN,
+        tenantId: this.getTenantId(),
+        csrfToken: this.defaultValues.csrfToken,
       })
       if (builder) {
         user.builder = { global: true }
@@ -244,9 +249,9 @@ class TestConfiguration {
 
   async createUser(
     id = null,
-    firstName = FIRSTNAME,
-    lastName = LASTNAME,
-    email = EMAIL,
+    firstName = this.defaultValues.firstName,
+    lastName = this.defaultValues.lastName,
+    email = this.defaultValues.email,
     builder = true,
     admin = false,
     roles = {}
@@ -285,13 +290,13 @@ class TestConfiguration {
       }
       await sessions.createASession(userId, {
         sessionId: "sessionid",
-        tenantId: TENANT_ID,
+        tenantId: this.getTenantId(),
       })
       // have to fake this
       const authObj = {
         userId,
         sessionId: "sessionid",
-        tenantId: TENANT_ID,
+        tenantId: this.getTenantId(),
       }
       const app = {
         roleId: roleId,
@@ -314,10 +319,11 @@ class TestConfiguration {
   }
 
   defaultHeaders(extras = {}) {
-    const authObj = {
-      userId: GLOBAL_USER_ID,
+    const tenantId = this.getTenantId()
+    const authObj: AuthToken = {
+      userId: this.defaultValues.globalUserId,
       sessionId: "sessionid",
-      tenantId: TENANT_ID,
+      tenantId,
     }
     const app = {
       roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
@@ -331,13 +337,20 @@ class TestConfiguration {
         `${constants.Cookie.Auth}=${authToken}`,
         `${constants.Cookie.CurrentApp}=${appToken}`,
       ],
-      [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
+      [constants.Header.CSRF_TOKEN]: this.defaultValues.csrfToken,
       ...extras,
     }
     if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
+    if (this.tenantId) {
+      headers[constants.Header.TENANT_ID] = this.tenantId
+    }
     return headers
+  }
+
+  getTenantId() {
+    return this.tenantId || TENANT_ID
   }
 
   publicHeaders({ prodApp = true } = {}) {
@@ -353,7 +366,7 @@ class TestConfiguration {
   }
 
   async roleHeaders({
-    email = EMAIL,
+    email = this.defaultValues.email,
     roleId = roles.BUILTIN_ROLE_IDS.ADMIN,
     builder = false,
     prodApp = true,
@@ -363,8 +376,8 @@ class TestConfiguration {
 
   // API
 
-  async generateApiKey(userId = GLOBAL_USER_ID) {
-    return tenancy.doWithGlobalDB(TENANT_ID, async (db: any) => {
+  async generateApiKey(userId = this.defaultValues.globalUserId) {
+    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: any) => {
       const id = dbCore.generateDevInfoID(userId)
       let devInfo
       try {
@@ -373,7 +386,7 @@ class TestConfiguration {
         devInfo = { _id: id, userId }
       }
       devInfo.apiKey = encryption.encrypt(
-        `${TENANT_ID}${dbCore.SEPARATOR}${newid()}`
+        `${this.getTenantId()}${dbCore.SEPARATOR}${newid()}`
       )
       await db.put(devInfo)
       return devInfo.apiKey
