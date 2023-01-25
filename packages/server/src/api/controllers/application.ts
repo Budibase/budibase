@@ -319,7 +319,11 @@ async function performAppCreate(ctx: BBContext) {
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
 
+  /* istanbul ignore next */
   await createApp(appId)
+  if (!env.isTest()) {
+    await createApp(appId)
+  }
 
   await cache.app.invalidateAppMetadata(appId, newApplication)
   return newApplication
