@@ -500,7 +500,9 @@ async function destroyApp(ctx: BBContext) {
   await quotas.removeApp()
   await events.app.deleted(app)
 
-  await deleteApp(appId)
+  if (!env.isTest()) {
+    await deleteApp(appId)
+  }
 
   await removeAppFromUserRoles(ctx, appId)
   await cache.app.invalidateAppMetadata(devAppId)
