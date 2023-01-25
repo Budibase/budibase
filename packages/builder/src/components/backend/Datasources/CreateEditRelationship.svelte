@@ -19,6 +19,8 @@
   export let close
 
   const colNotSet = "Please specify a column name"
+  const relationshipAlreadyExists =
+    "A relationship between these tables already exists."
   const relationshipTypes = [
     {
       label: "One to Many",
@@ -154,8 +156,6 @@
     if (!isMany && !fromPrimary) {
       errObj.fromPrimary = "Please pick the primary key"
     }
-    const relationshipAlreadyExists =
-      "A relationship between these tables already exists."
     if (isMany && relationshipExists()) {
       errObj.fromTable = relationshipAlreadyExists
       errObj.toTable = relationshipAlreadyExists
@@ -286,7 +286,6 @@
     ) {
       return false
     }
-    let match = false
     let fromThroughLinks = Object.values(
       datasource.entities[fromTable.name].schema
     ).filter(value => value.through)
@@ -294,20 +293,17 @@
       datasource.entities[toTable.name].schema
     ).filter(value => value.through)
 
-    fromThroughLinks.forEach(fromVal => {
-      toThroughLinks.forEach(toVal => {
-        if (fromVal.through === toVal.through) {
-          if (
-            (fromVal.tableId === fromId && toVal.tableId === toId) ||
-            (fromVal.tableId === toId && toVal.tableId === fromId)
-          ) {
-            match = true
-            return
-          }
-        }
-      })
-    })
-    return match
+    const matchAgainstUserInput = (fromTableId, toTableId) =>
+      (fromTableId === fromId && toTableId === toId) ||
+      (fromTableId === toId && toTableId === fromId)
+
+    return !!fromThroughLinks.find(from =>
+      toThroughLinks.find(
+        to =>
+          from.through === to.through &&
+          matchAgainstUserInput(from.tableId, to.tableId)
+      )
+    )
   }
 
   function removeExistingRelationship() {
@@ -371,6 +367,9 @@
     bind:error={errors.fromTable}
     on:change={e => {
       fromColumn = tableOptions.find(opt => opt.value === e.detail)?.label || ""
+      if (errors.fromTable === relationshipAlreadyExists) {
+        errors.toColumn = null
+      }
       errors.fromTable = null
       errors.fromColumn = null
       errors.toTable = null
@@ -393,6 +392,9 @@
     bind:error={errors.toTable}
     on:change={e => {
       toColumn = tableOptions.find(opt => opt.value === e.detail)?.label || ""
+      if (errors.toTable === relationshipAlreadyExists) {
+        errors.fromColumn = null
+      }
       errors.toTable = null
       errors.toColumn = null
       errors.fromTable = null
