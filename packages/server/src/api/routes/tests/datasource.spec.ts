@@ -4,6 +4,10 @@ import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { checkCacheForDynamicVariable } from "../../../threads/utils"
 import { events } from "@budibase/backend-core"
 
+import tk from "timekeeper"
+import { mocks } from "@budibase/backend-core/tests"
+tk.freeze(mocks.date.MOCK_DATE)
+
 let { basicDatasource } = setup.structures
 const pg = require("pg")
 
@@ -55,7 +59,14 @@ describe("/datasources", () => {
         datasource: any,
         fields: { path: string; queryString: string }
       ) {
-        return config.previewQuery(request, config, datasource, fields)
+        return config.previewQuery(
+          request,
+          config,
+          datasource,
+          fields,
+          undefined,
+          ""
+        )
       }
 
       it("should invalidate changed or removed variables", async () => {
