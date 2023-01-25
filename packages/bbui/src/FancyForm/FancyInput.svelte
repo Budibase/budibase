@@ -57,6 +57,8 @@
     color: var(--spectrum-global-color-gray-900);
     outline: none;
     border: none;
+    padding: 0;
+    margin: 0;
   }
   input.placeholder {
     transform: translateY(0);
