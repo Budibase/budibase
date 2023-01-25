@@ -15,7 +15,8 @@
   export let autofocus = false
   export let variables
   export let showModal
-
+  export let environmentVariablesEnabled
+  export let handleUpgradePanel
   const dispatch = createEventDispatcher()
 
   let field
@@ -131,34 +132,41 @@
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
     >
       <ul
-        class:no-variables-height={variables.length}
+        class:no-variables-height={variables.length &&
+          environmentVariablesEnabled}
         class="spectrum-Menu"
         role="listbox"
       >
-        {#if variables.length}
-          {#each variables as variable, idx}
-            <li
-              class="spectrum-Menu-item"
-              role="option"
-              aria-selected="true"
-              tabindex="0"
-              on:click={() => handleVarSelect(variable.name)}
-            >
-              <span class="spectrum-Menu-itemLabel">
-                <div class="primary-text">
-                  {variable.name}
-                  <span />
-                </div>
-                <svg
-                  class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-                  focusable="false"
-                  aria-hidden="true"
-                >
-                  <use xlink:href="#spectrum-css-icon-Checkmark100" />
-                </svg>
-              </span>
-            </li>
-          {/each}
+        {#if !environmentVariablesEnabled}
+          <div class="no-variables-text primary-text">
+            Upgrade your plan to get environment variables
+          </div>
+        {:else if variables.length}
+          <div style="max-height: 100px">
+            {#each variables as variable, idx}
+              <li
+                class="spectrum-Menu-item"
+                role="option"
+                aria-selected="true"
+                tabindex="0"
+                on:click={() => handleVarSelect(variable.name)}
+              >
+                <span class="spectrum-Menu-itemLabel">
+                  <div class="primary-text">
+                    {variable.name}
+                    <span />
+                  </div>
+                  <svg
+                    class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+                    focusable="false"
+                    aria-hidden="true"
+                  >
+                    <use xlink:href="#spectrum-css-icon-Checkmark100" />
+                  </svg>
+                </span>
+              </li>
+            {/each}
+          </div>
         {:else}
           <div class="no-variables-text primary-text">
             You don't have any environment variables yet
@@ -166,16 +174,29 @@
         {/if}
       </ul>
       <Divider noMargin />
-      <div on:click={() => showModal()} class="add-variable">
-        <svg
-          class="spectrum-Icon spectrum-Icon--sizeS "
-          focusable="false"
-          aria-hidden="true"
-        >
-          <use xlink:href="#spectrum-icon-18-Add" />
-        </svg>
-        <div class="primary-text">Add Variable</div>
-      </div>
+      {#if environmentVariablesEnabled}
+        <div on:click={() => showModal()} class="add-variable">
+          <svg
+            class="spectrum-Icon spectrum-Icon--sizeS "
+            focusable="false"
+            aria-hidden="true"
+          >
+            <use xlink:href="#spectrum-icon-18-Add" />
+          </svg>
+          <div class="primary-text">Add Variable</div>
+        </div>
+      {:else}
+        <div on:click={() => handleUpgradePanel()} class="add-variable">
+          <svg
+            class="spectrum-Icon spectrum-Icon--sizeS "
+            focusable="false"
+            aria-hidden="true"
+          >
+            <use xlink:href="#spectrum-icon-18-ArrowUp" />
+          </svg>
+          <div class="primary-text">Upgrade plan</div>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -222,7 +243,6 @@
   }
 
   .no-variables-height {
-    height: 100px;
   }
 
   .no-variables-text {
