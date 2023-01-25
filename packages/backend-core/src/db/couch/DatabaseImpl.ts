@@ -146,7 +146,7 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     try {
-      await DatabaseImpl.nano.db.destroy(this.name)
+      return await DatabaseImpl.nano.db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
       if (err.statusCode === 404) {
