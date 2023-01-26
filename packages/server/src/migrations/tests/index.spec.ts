@@ -25,10 +25,6 @@ const clearMigrations = async () => {
 
 jest.setTimeout(10000)
 
-afterAll(() => {
-  tk.reset()
-})
-
 describe("migrations", () => {
   const config = new TestConfig()
 

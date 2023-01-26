@@ -1,3 +1,6 @@
+const tk = require( "timekeeper")
+tk.freeze(Date.now())
+
 // Mock out postgres for this
 jest.mock("pg")
 jest.mock("node-fetch")
