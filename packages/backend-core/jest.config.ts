@@ -13,4 +13,13 @@ const config: Config.InitialOptions = {
   },
 }
 
+if (!process.env.CI) {
+  // use sources when not in CI
+  config.moduleNameMapper = {
+    "@budibase/types": "<rootDir>/../types/src",
+  }
+} else {
+  console.log("Running tests with compiled dependency sources")
+}
+
 export default config
