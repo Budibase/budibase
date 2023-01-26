@@ -5,7 +5,9 @@ import { getThemeStore } from "./store/theme"
 import { derived } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
+import { createHistoryStore } from "builderStore/store/history"
 
+export const screenHistoryStore = createHistoryStore()
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()

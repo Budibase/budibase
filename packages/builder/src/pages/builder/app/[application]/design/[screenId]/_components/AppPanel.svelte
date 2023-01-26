@@ -1,8 +1,8 @@
 <script>
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { store, sortedScreens } from "builderStore"
-  import { Select } from "@budibase/bbui"
+  import { store, sortedScreens, screenHistoryStore } from "builderStore"
+  import { Select, Icon } from "@budibase/bbui"
   import { RoleUtils } from "@budibase/frontend-core"
 </script>
 
@@ -22,6 +22,20 @@
       />
     </div>
     <div class="header-right">
+      <div class="undo-redo">
+        <Icon
+          name="Undo"
+          hoverable
+          on:click={screenHistoryStore.undo}
+          disabled={!$screenHistoryStore.canUndo}
+        />
+        <Icon
+          name="Redo"
+          hoverable
+          on:click={screenHistoryStore.redo}
+          disabled={!$screenHistoryStore.canRedo}
+        />
+      </div>
       {#if $store.clientFeatures.devicePreview}
         <DevicePreviewSelect />
       {/if}
@@ -54,12 +68,13 @@
     margin: 0 2px;
   }
   .header-left,
-  .header-right {
+  .header-right,
+  .undo-redo {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-l);
+    gap: var(--spacing-xl);
   }
   .header-left {
     flex: 1 1 auto;
@@ -74,5 +89,8 @@
   }
   .content {
     flex: 1 1 auto;
+  }
+  .undo-redo {
+    gap: var(--spacing-m);
   }
 </style>

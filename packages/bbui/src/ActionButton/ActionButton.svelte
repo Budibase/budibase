@@ -88,7 +88,6 @@
   }
   .is-selected:not(.spectrum-ActionButton--emphasized) {
     background: var(--spectrum-global-color-gray-300);
-    border-color: var(--spectrum-global-color-gray-700);
   }
   .noPadding {
     padding: 0;

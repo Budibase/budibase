@@ -1,6 +1,10 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { selectedScreen, selectedComponent } from "builderStore"
+import {
+  selectedScreen,
+  selectedComponent,
+  screenHistoryStore,
+} from "builderStore"
 import {
   datasources,
   integrations,
@@ -118,6 +122,7 @@ export const getFrontendStore = () => {
         navigation: application.navigation || {},
         usedPlugins: application.usedPlugins || [],
       }))
+      screenHistoryStore.reset()
 
       // Initialise backend stores
       database.set(application.instance)
@@ -166,7 +171,10 @@ export const getFrontendStore = () => {
       },
     },
     screens: {
-      select: screenId => {
+      get: screenHistoryStore.wrapGet(screenId => {
+        return get(store).screens?.find(x => x._id === screenId)
+      }),
+      select: screenHistoryStore.wrapSelect(screenId => {
         // Check this screen exists
         const state = get(store)
         const screen = state.screens.find(screen => screen._id === screenId)
@@ -188,7 +196,7 @@ export const getFrontendStore = () => {
           state.selectedComponentId = screen.props?._id
           return state
         })
-      },
+      }),
       validate: screen => {
         // Recursive function to find any illegal children in component trees
         const findIllegalChild = (
@@ -251,8 +259,8 @@ export const getFrontendStore = () => {
           throw `You can't place a ${def.name} here`
         }
       },
-      save: async screen => {
-        /* 
+      save: screenHistoryStore.wrapSave(async screen => {
+        /*
           Temporarily disabled to accomodate migration issues.
           store.actions.screens.validate(screen)
         */
@@ -292,7 +300,7 @@ export const getFrontendStore = () => {
           return state
         })
         return savedScreen
-      },
+      }),
       patch: async (patchFn, screenId) => {
         // Default to the currently selected screen
         if (!screenId) {
@@ -304,7 +312,7 @@ export const getFrontendStore = () => {
         }
         return await sequentialScreenPatch(patchFn, screenId)
       },
-      delete: async screens => {
+      delete: screenHistoryStore.wrapDelete(async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
 
         // Build array of promises to speed up bulk deletions
@@ -322,8 +330,6 @@ export const getFrontendStore = () => {
           deleteUrls.push(screen.routing.route)
         })
 
-        promises.push(store.actions.links.delete(deleteUrls))
-        await Promise.all(promises)
         const deletedIds = screensToDelete.map(screen => screen._id)
         const routesResponse = await API.fetchAppRoutes()
         store.update(state => {
@@ -343,7 +349,8 @@ export const getFrontendStore = () => {
 
           return state
         })
-      },
+        return null
+      }),
       updateSetting: async (screen, name, value) => {
         if (!screen || !name) {
           return
