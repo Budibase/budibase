@@ -177,24 +177,24 @@ class TestConfiguration {
   }
 
   // MODES
-  setMultiTenancy = (value: boolean) => {
+  #setMultiTenancy = (value: boolean) => {
     env._set("MULTI_TENANCY", value)
     coreEnv._set("MULTI_TENANCY", value)
   }
 
-  setSelfHosted = (value: boolean) => {
+  #setSelfHosted = (value: boolean) => {
     env._set("SELF_HOSTED", value)
     coreEnv._set("SELF_HOSTED", value)
   }
 
   modeCloud = () => {
-    this.setSelfHosted(false)
-    this.setMultiTenancy(true)
+    this.#setSelfHosted(false)
+    this.#setMultiTenancy(true)
   }
 
   modeSelf = () => {
-    this.setSelfHosted(true)
-    this.setMultiTenancy(false)
+    this.#setSelfHosted(true)
+    this.#setMultiTenancy(false)
   }
 
   // UTILS
@@ -288,7 +288,7 @@ class TestConfiguration {
       admin,
       roles,
     })
-    await cache.user.invalidateUser(globalId)
+    await cache.user.invalidateUser(globalId, this.getTenantId())
     return {
       ...resp,
       globalId,
@@ -328,7 +328,7 @@ class TestConfiguration {
       const appToken = auth.jwt.sign(app, env.JWT_SECRET)
 
       // returning necessary request headers
-      await cache.user.invalidateUser(userId)
+      await cache.user.invalidateUser(userId, this.getTenantId())
       return {
         Accept: "application/json",
         Cookie: [
@@ -384,6 +384,11 @@ class TestConfiguration {
     if (appId) {
       headers[constants.Header.APP_ID] = appId
     }
+
+    if (this.tenantId) {
+      headers[constants.Header.TENANT_ID] = this.tenantId
+    }
+
     return headers
   }
 
