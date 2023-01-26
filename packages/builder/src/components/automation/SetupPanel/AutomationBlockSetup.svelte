@@ -18,7 +18,7 @@
 
   import { automationStore } from "builderStore"
   import { tables } from "stores/backend"
-  import { environment } from "stores/portal"
+  import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
@@ -169,21 +169,22 @@
     }
 
     // Environment bindings
-    bindings = bindings.concat(
-      $environment.variables.map(variable => {
-        return {
-          label: `env.${variable.name}`,
-          path: `env.${variable.name}`,
-          type: "test",
-          icon: "Key",
-          category: "Environment",
-          display: {
-            type: "string",
-            name: variable.name,
-          },
-        }
-      })
-    )
+    if ($licensing.environmentVariablesEnabled) {
+      bindings = bindings.concat(
+        $environment.variables.map(variable => {
+          return {
+            label: `env.${variable.name}`,
+            path: `env.${variable.name}`,
+            icon: "Key",
+            category: "Environment",
+            display: {
+              type: "string",
+              name: variable.name,
+            },
+          }
+        })
+      )
+    }
 
     return bindings
   }

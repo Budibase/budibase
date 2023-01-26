@@ -21,7 +21,7 @@ import {
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
-import { environment } from "stores/portal"
+import { environment, licensing } from "stores/portal"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -54,8 +54,13 @@ export const getBindableProperties = (asset, componentId) => {
  * Gets all rest bindable data fields
  */
 export const getRestBindings = () => {
+  const hasEnvironmentVariablesEnabled = get(licensing).hasEnvironmentVariables
   const userBindings = getUserBindings()
-  return [...userBindings, ...getAuthBindings(), ...getEnvironmentBindings()]
+  return [
+    ...userBindings,
+    ...getAuthBindings(),
+    ...(hasEnvironmentVariablesEnabled ? getEnvironmentBindings() : []),
+  ]
 }
 
 /**
