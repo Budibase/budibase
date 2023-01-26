@@ -114,6 +114,7 @@ export const ApiVersion = "1"
 export const Features = {
   USER_GROUPS: "userGroups",
   BACKUPS: "appBackups",
+  ENVIRONMENT_VARIABLES: "environmentVariables",
 }
 
 // Role IDs
