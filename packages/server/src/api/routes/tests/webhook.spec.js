@@ -10,6 +10,7 @@ describe("/webhooks", () => {
   afterAll(setup.afterAll)
 
   beforeEach(async () => {
+    config.modeSelf()
     await config.init()
     const autoConfig = basicAutomation()
     autoConfig.definition.trigger = {
