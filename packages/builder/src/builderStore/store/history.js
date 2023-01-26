@@ -10,6 +10,7 @@ const Operations = {
 const initialState = {
   history: [],
   position: 0,
+  loading: false,
 }
 
 export const createHistoryStore = () => {
@@ -25,6 +26,20 @@ export const createHistoryStore = () => {
   let selectFn
   let saveFn
   let deleteFn
+
+  const startLoading = () => {
+    store.update(state => {
+      state.loading = true
+      return state
+    })
+  }
+
+  const stopLoading = () => {
+    store.update(state => {
+      state.loading = false
+      return state
+    })
+  }
 
   /**
    * Resets history state
@@ -54,17 +69,27 @@ export const createHistoryStore = () => {
   }
 
   /**
-   * Adds an operation to history.
+   * Adds or updates an operation in history.
    * For internal use only.
-   * @param operation the operation to add
+   * @param operation the operation to save
    */
-  const addOperation = operation => {
+  const saveOperation = operation => {
     store.update(state => {
-      // Every time a new operation occurs we discard any redo potential
-      return {
-        history: [...state.history.slice(0, state.position), operation],
-        position: state.position + 1,
+      // Update history
+      let history = state.history
+      let position = state.position
+      if (!operation.id) {
+        // Every time a new operation occurs we discard any redo potential
+        operation.id = Math.random()
+        history = [...history.slice(0, state.position), operation]
+        position += 1
+      } else {
+        // If this is a redo/undo of an existing operation, just update history
+        // to replace the doc object as revisions may have changed
+        const idx = history.findIndex(op => op.id === operation.id)
+        history[idx].doc = operation.doc
       }
+      return { history, position }
     })
   }
 
@@ -76,33 +101,32 @@ export const createHistoryStore = () => {
    * @returns {function} a wrapped version of the save function
    */
   const wrapSave = fn => {
-    saveFn = fn
-    return async (doc, storeHistory = true) => {
+    saveFn = async (doc, operationId) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
       }
-
       const oldDoc = getFn(doc._id)
       const newDoc = jsonpatch.deepClone(await fn(doc))
 
       // Store the change
-      if (storeHistory) {
-        if (!oldDoc) {
-          addOperation({
-            type: Operations.Add,
-            doc: newDoc,
-          })
-        } else {
-          addOperation({
-            type: Operations.Change,
-            forwardPatch: jsonpatch.compare(oldDoc, doc),
-            backwardsPatch: jsonpatch.compare(doc, oldDoc),
-            doc: newDoc,
-          })
-        }
+      if (!oldDoc) {
+        saveOperation({
+          type: Operations.Add,
+          doc: newDoc,
+          id: operationId,
+        })
+      } else {
+        saveOperation({
+          type: Operations.Change,
+          forwardPatch: jsonpatch.compare(oldDoc, doc),
+          backwardsPatch: jsonpatch.compare(doc, oldDoc),
+          doc: newDoc,
+          id: operationId,
+        })
       }
     }
+    return saveFn
   }
 
   /**
@@ -113,8 +137,7 @@ export const createHistoryStore = () => {
    * @returns {function} a wrapped version of the delete function
    */
   const wrapDelete = fn => {
-    deleteFn = fn
-    return async (doc, storeHistory = true) => {
+    deleteFn = async (doc, operationId) => {
       // Only works on a single doc at a time
       if (!doc || Array.isArray(doc)) {
         return
@@ -122,15 +145,13 @@ export const createHistoryStore = () => {
 
       const oldDoc = jsonpatch.deepClone(doc)
       await fn(doc)
-
-      // If not storing history, just call the operation
-      if (storeHistory) {
-        addOperation({
-          type: Operations.Delete,
-          doc: oldDoc,
-        })
-      }
+      saveOperation({
+        type: Operations.Delete,
+        doc: oldDoc,
+        id: operationId,
+      })
     }
+    return deleteFn
   }
 
   /**
@@ -145,10 +166,10 @@ export const createHistoryStore = () => {
       return
     }
     const operation = history[position - 1]
-    console.log("UNDO", operation)
     if (!operation) {
       return
     }
+    startLoading()
 
     // Update state immediately to prevent further clicks and to prevent bad
     // history in the event of an update failing
@@ -162,7 +183,7 @@ export const createHistoryStore = () => {
     // Undo the operation
     // Undo ADD
     if (operation.type === Operations.Add) {
-      await deleteFn(operation.doc, false)
+      await deleteFn(operation.doc, operation.id)
     }
 
     // Undo DELETE
@@ -171,7 +192,7 @@ export const createHistoryStore = () => {
       // doc again without conflicts
       let doc = jsonpatch.deepClone(operation.doc)
       delete doc._rev
-      await saveFn(doc, false)
+      await saveFn(doc, operation.id)
     }
 
     // Undo CHANGE
@@ -179,13 +200,15 @@ export const createHistoryStore = () => {
       // Get the current doc and apply the backwards patch on top of it
       let doc = jsonpatch.deepClone(getFn(operation.doc._id))
       jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.backwardsPatch))
-      await saveFn(doc, false)
+      await saveFn(doc, operation.id)
     }
 
     // Ensure the changed doc is selected
     if (operation.doc?._id && selectFn) {
       selectFn(operation.doc._id)
     }
+
+    stopLoading()
   }
 
   /**
@@ -200,10 +223,10 @@ export const createHistoryStore = () => {
       return
     }
     const operation = history[position]
-    console.log("REDO", operation)
     if (!operation) {
       return
     }
+    startLoading()
 
     // Update state immediately to prevent further clicks and to prevent bad
     // history in the event of an update failing
@@ -217,12 +240,16 @@ export const createHistoryStore = () => {
     // Redo the operation
     // Redo ADD
     if (operation.type === Operations.Add) {
-      await saveFn(operation.doc, false)
+      // Delete the _rev from the deleted doc so that we can save it as a new
+      // doc again without conflicts
+      let doc = jsonpatch.deepClone(operation.doc)
+      delete doc._rev
+      await saveFn(doc, operation.id)
     }
 
     // Redo DELETE
     else if (operation.type === Operations.Delete) {
-      await deleteFn(operation.doc, false)
+      await deleteFn(operation.doc, operation.id)
     }
 
     // Redo CHANGE
@@ -230,13 +257,15 @@ export const createHistoryStore = () => {
       // Get the current doc and apply the forwards patch on top of it
       let doc = jsonpatch.deepClone(getFn(operation.doc._id))
       jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.forwardPatch))
-      await saveFn(doc, false)
+      await saveFn(doc, operation.id)
     }
 
     // Ensure the changed doc is selected
     if (operation.doc?._id && selectFn) {
       selectFn(operation.doc._id)
     }
+
+    stopLoading()
   }
 
   return {

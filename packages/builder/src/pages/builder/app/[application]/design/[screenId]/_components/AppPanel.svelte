@@ -27,13 +27,13 @@
           name="Undo"
           hoverable
           on:click={screenHistoryStore.undo}
-          disabled={!$screenHistoryStore.canUndo}
+          disabled={$screenHistoryStore.loading || !$screenHistoryStore.canUndo}
         />
         <Icon
           name="Redo"
           hoverable
           on:click={screenHistoryStore.redo}
-          disabled={!$screenHistoryStore.canRedo}
+          disabled={$screenHistoryStore.loading || !$screenHistoryStore.canRedo}
         />
       </div>
       {#if $store.clientFeatures.devicePreview}
