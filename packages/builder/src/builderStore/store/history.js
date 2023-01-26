@@ -161,8 +161,8 @@ export const createHistoryStore = () => {
    */
   const undo = async () => {
     // Sanity checks
-    const { canUndo, history, position } = get(derivedStore)
-    if (!canUndo) {
+    const { canUndo, history, position, loading } = get(derivedStore)
+    if (!canUndo || loading) {
       return
     }
     const operation = history[position - 1]
@@ -218,8 +218,8 @@ export const createHistoryStore = () => {
    */
   const redo = async () => {
     // Sanity checks
-    const { canRedo, history, position } = get(derivedStore)
-    if (!canRedo) {
+    const { canRedo, history, position, loading } = get(derivedStore)
+    if (!canRedo || loading) {
       return
     }
     const operation = history[position]
