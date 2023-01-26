@@ -3,6 +3,9 @@
   import { createEventDispatcher, onMount } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Divider from "../../Divider/Divider.svelte"
+  import Tag from "../../Tags/Tag.svelte"
+  import Tags from "../../Tags/Tags.svelte"
+
   export let value = null
   export let placeholder = null
   export let type = "text"
@@ -23,6 +26,12 @@
   let focus = false
   let iconFocused = false
   let open = false
+
+  //eslint-disable-next-line
+  const STRIP_NAME_REGEX = /(?<=\.)(.*?)(?=\ })/g
+
+  // Strips the name out of the value which is {{ env.Variable }} resulting in an array like ["Variable"]
+  $: tags = String(value)?.match(STRIP_NAME_REGEX) || []
 
   const updateValue = newValue => {
     if (readonly) {
@@ -57,15 +66,6 @@
     updateValue(event.target.value)
   }
 
-  const updateValueOnEnter = event => {
-    if (readonly) {
-      return
-    }
-    if (event.key === "Enter") {
-      updateValue(event.target.value)
-    }
-  }
-
   const handleOutsideClick = event => {
     if (open) {
       event.stopPropagation()
@@ -78,6 +78,8 @@
 
   const handleVarSelect = variable => {
     open = false
+    focus = false
+    iconFocused = false
     updateValue(`{{ env.${variable} }}`)
   }
 
@@ -102,6 +104,17 @@
     >
       <use xlink:href="#spectrum-icon-18-Key" />
     </svg>
+    <Tags>
+      <div class="tags">
+        <div class="tag">
+          {#each tags as tag}
+            <Tag closable on:click={() => updateValue("")}>
+              {tag}
+            </Tag>
+          {/each}
+        </div>
+      </div>
+    </Tags>
 
     <input
       bind:this={field}
@@ -109,7 +122,7 @@
       {readonly}
       {id}
       data-cy={dataCy}
-      value={value || ""}
+      value={!tags.length ? value : ""}
       placeholder={placeholder || ""}
       on:click
       on:blur
@@ -119,7 +132,6 @@
       on:blur={onBlur}
       on:focus={onFocus}
       on:input={onInput}
-      on:keyup={updateValueOnEnter}
       {type}
       class="spectrum-Textfield-input"
       style={align ? `text-align: ${align};` : ""}
@@ -205,10 +217,6 @@
   .spectrum-Textfield {
     width: 100%;
   }
-  input:disabled {
-    color: var(--spectrum-global-color-gray-600) !important;
-    -webkit-text-fill-color: var(--spectrum-global-color-gray-600) !important;
-  }
 
   .icon-position {
     position: absolute;
@@ -243,6 +251,7 @@
   }
 
   .no-variables-height {
+    height: 100px;
   }
 
   .no-variables-text {
@@ -264,5 +273,11 @@
 
   .add-variable:hover {
     background: var(--grey-1);
+  }
+
+  .tags {
+    position: absolute;
+    bottom: 12%;
+    left: 1px;
   }
 </style>
