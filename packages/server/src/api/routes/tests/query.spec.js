@@ -31,6 +31,7 @@ describe("/queries", () => {
   afterAll(setup.afterAll)
 
   beforeEach(async () => {
+    config.modeSelf()
     await config.init()
     datasource = await config.createDatasource()
     query = await config.createQuery()

@@ -11,6 +11,7 @@ mocks.licenses.useUnlimited()
 import { init as dbInit } from "../../db"
 dbInit()
 import env from "../../environment"
+import { env as coreEnv } from "@budibase/backend-core"
 import {
   basicTable,
   basicRow,
@@ -173,6 +174,27 @@ class TestConfiguration {
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
     }
+  }
+
+  // MODES
+  setMultiTenancy = (value: boolean) => {
+    env._set("MULTI_TENANCY", value)
+    coreEnv._set("MULTI_TENANCY", value)
+  }
+
+  setSelfHosted = (value: boolean) => {
+    env._set("SELF_HOSTED", value)
+    coreEnv._set("SELF_HOSTED", value)
+  }
+
+  modeCloud = () => {
+    this.setSelfHosted(false)
+    this.setMultiTenancy(true)
+  }
+
+  modeSelf = () => {
+    this.setSelfHosted(true)
+    this.setMultiTenancy(false)
   }
 
   // UTILS

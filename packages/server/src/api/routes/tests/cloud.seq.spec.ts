@@ -1,13 +1,19 @@
-import { db as dbCore } from "@budibase/backend-core"
 import { AppStatus } from "../../../db/utils"
 
 import * as setup from "./utilities"
+
+import { wipeDb } from "./utilities/TestFunctions"
 
 describe("/cloud", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
 
   afterAll(setup.afterAll)
+
+  beforeAll(() => {
+    // Importing is only allowed in self hosted environments
+    config.modeSelf()
+  })
 
   beforeEach(async () => {
     await config.init()
@@ -22,19 +28,7 @@ describe("/cloud", () => {
     it("should be able to import apps", async () => {
       // first we need to delete any existing apps on the system so it looks clean otherwise the
       // import will not run
-      await request
-        .post(
-          `/api/applications/${dbCore.getProdAppID(
-            config.getAppId()
-          )}/unpublish`
-        )
-        .set(config.defaultHeaders())
-        .expect(204)
-      await request
-        .delete(`/api/applications/${config.getAppId()}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await wipeDb()
 
       // get a count of apps before the import
       const preImportApps = await request
