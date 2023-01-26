@@ -1,1 +1,0 @@
-../../hosting/tests/jest-testcontainers-config.js
