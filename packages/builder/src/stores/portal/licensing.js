@@ -60,7 +60,7 @@ export const createLicensingStore = () => {
       const backupsEnabled = license.features.includes(
         Constants.Features.BACKUPS
       )
-      let environmentVariablesEnabled = license.features.includes(
+      const environmentVariablesEnabled = license.features.includes(
         Constants.Features.ENVIRONMENT_VARIABLES
       )
 
