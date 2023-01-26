@@ -28,7 +28,6 @@
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
-  $: console.log(tempValue)
   $: isJS = isJSBinding(value)
 
   const saveBinding = () => {
