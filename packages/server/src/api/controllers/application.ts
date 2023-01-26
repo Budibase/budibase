@@ -320,7 +320,6 @@ async function performAppCreate(ctx: BBContext) {
   newApplication._rev = response.rev
 
   /* istanbul ignore next */
-  await createApp(appId)
   if (!env.isTest()) {
     await createApp(appId)
   }
