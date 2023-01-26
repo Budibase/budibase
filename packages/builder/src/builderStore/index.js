@@ -6,12 +6,39 @@ import { derived } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
 import { createHistoryStore } from "builderStore/store/history"
+import { get } from "svelte/store"
 
-export const screenHistoryStore = createHistoryStore()
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
 export const temporalStore = getTemporalStore()
+
+// Setup history for screens
+export const screenHistoryStore = createHistoryStore({
+  saveMetadata: () => {
+    const state = get(store)
+    return {
+      selectedScreenId: state.selectedScreenId,
+      selectedComponentId: state.selectedComponentId,
+    }
+  },
+  restoreMetadata: metadata => {
+    store.update(state => {
+      state.selectedScreenId = metadata.selectedScreenId
+      state.selectedComponentId = metadata.selectedComponentId
+      return state
+    })
+  },
+})
+store.actions.screens.get = screenHistoryStore.wrapGet(
+  store.actions.screens.get
+)
+store.actions.screens.save = screenHistoryStore.wrapSave(
+  store.actions.screens.save
+)
+store.actions.screens.delete = screenHistoryStore.wrapDelete(
+  store.actions.screens.delete
+)
 
 export const selectedScreen = derived(store, $store => {
   return $store.screens.find(screen => screen._id === $store.selectedScreenId)

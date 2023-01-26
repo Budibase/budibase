@@ -13,7 +13,7 @@ const initialState = {
   loading: false,
 }
 
-export const createHistoryStore = () => {
+export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
   const store = writable(initialState)
   const derivedStore = derived(store, $store => {
     return {
@@ -23,7 +23,6 @@ export const createHistoryStore = () => {
     }
   })
   let getFn
-  let selectFn
   let saveFn
   let deleteFn
 
@@ -54,17 +53,6 @@ export const createHistoryStore = () => {
    */
   const wrapGet = fn => {
     getFn = fn
-    return fn
-  }
-
-  /**
-   * Wraps the select function, which selects a doc by ID synchronously.
-   * Optionally used to ensure changed docs are "selected" again so that changes
-   * are visible.
-   * @param fn the select function
-   */
-  const wrapSelect = fn => {
-    selectFn = fn
     return fn
   }
 
@@ -106,6 +94,7 @@ export const createHistoryStore = () => {
       if (!doc || Array.isArray(doc)) {
         return
       }
+      const metadata = saveMetadata()
       const oldDoc = getFn(doc._id)
       const newDoc = jsonpatch.deepClone(await fn(doc))
 
@@ -115,6 +104,7 @@ export const createHistoryStore = () => {
           type: Operations.Add,
           doc: newDoc,
           id: operationId,
+          metadata,
         })
       } else {
         saveOperation({
@@ -123,6 +113,7 @@ export const createHistoryStore = () => {
           backwardsPatch: jsonpatch.compare(doc, oldDoc),
           doc: newDoc,
           id: operationId,
+          metadata,
         })
       }
     }
@@ -142,13 +133,14 @@ export const createHistoryStore = () => {
       if (!doc || Array.isArray(doc)) {
         return
       }
-
+      const metadata = saveMetadata()
       const oldDoc = jsonpatch.deepClone(doc)
       await fn(doc)
       saveOperation({
         type: Operations.Delete,
         doc: oldDoc,
         id: operationId,
+        metadata,
       })
     }
     return deleteFn
@@ -204,11 +196,10 @@ export const createHistoryStore = () => {
     }
 
     // Ensure the changed doc is selected
-    if (operation.doc?._id && selectFn) {
-      selectFn(operation.doc._id)
-    }
-
-    stopLoading()
+    // if (operation.doc?._id && selectFn) {
+    //   selectFn(operation.doc._id)
+    // }
+    restoreMetadata(operation.metadata)
   }
 
   /**
@@ -261,9 +252,7 @@ export const createHistoryStore = () => {
     }
 
     // Ensure the changed doc is selected
-    if (operation.doc?._id && selectFn) {
-      selectFn(operation.doc._id)
-    }
+    restoreMetadata(operation.metadata)
 
     stopLoading()
   }
@@ -271,7 +260,6 @@ export const createHistoryStore = () => {
   return {
     subscribe: derivedStore.subscribe,
     wrapGet,
-    wrapSelect,
     wrapSave,
     wrapDelete,
     reset,
