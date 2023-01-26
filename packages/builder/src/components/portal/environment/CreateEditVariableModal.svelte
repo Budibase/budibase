@@ -32,15 +32,23 @@
       notifications.error(err.message)
     }
   }
+
+  const saveVariable = () => {
+    try {
+      save({
+        name,
+        production: productionValue,
+        development: developmentValue,
+      })
+      notifications.success("Environment variable saved")
+    } catch (err) {
+      notifications.error("Error saving environment variable")
+    }
+  }
 </script>
 
 <ModalContent
-  onConfirm={() =>
-    save({
-      name,
-      production: productionValue,
-      development: developmentValue,
-    })}
+  onConfirm={() => saveVariable()}
   title={!row ? "Add new environment variable" : "Edit environment variable"}
 >
   <Input disabled={row} label="Name" bind:value={name} />

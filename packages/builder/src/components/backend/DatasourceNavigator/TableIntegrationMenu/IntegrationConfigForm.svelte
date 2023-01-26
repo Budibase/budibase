@@ -14,7 +14,7 @@
   import { IntegrationTypes } from "constants/backend"
   import { createValidationStore } from "helpers/validation/yup"
   import { createEventDispatcher, onMount } from "svelte"
-  import { environment, licensing } from "stores/portal"
+  import { environment, licensing, auth } from "stores/portal"
   import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
 
   export let datasource
@@ -22,6 +22,8 @@
   export let creating
 
   let createVariableModal
+  let selectedKey
+
   const validation = createValidationStore()
   const dispatch = createEventDispatcher()
 
@@ -69,10 +71,13 @@
 
   function save(data) {
     environment.createVariable(data)
+    config[selectedKey] = `{{ env.${data.name} }}`
     createVariableModal.hide()
   }
 
-  function showModal() {
+  function showModal(configKey) {
+    selectedKey = configKey
+    console.log(selectedKey)
     createVariableModal.show()
   }
 
@@ -83,7 +88,13 @@
 
   onMount(async () => {
     await environment.loadVariables()
+
+    if ($auth.user) {
+      await licensing.init()
+    }
   })
+
+  $: console.log(config)
 </script>
 
 <form>
@@ -128,7 +139,7 @@
         <div class="form-row">
           <Label>{getDisplayName(configKey)}</Label>
           <EnvDropdown
-            {showModal}
+            showModal={() => showModal(configKey)}
             variables={$environment.variables}
             on:change
             bind:value={config[configKey]}
