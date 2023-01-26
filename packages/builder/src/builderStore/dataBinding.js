@@ -92,7 +92,7 @@ export const getAuthBindings = () => {
 
 export const getEnvironmentBindings = () => {
   let envVars = get(environment).variables
-  let test = envVars.map(variable => {
+  return envVars.map(variable => {
     return {
       type: "context",
       runtimeBinding: `env.${makePropSafe(variable.name)}`,
@@ -102,7 +102,6 @@ export const getEnvironmentBindings = () => {
       display: { type: "string", name: variable.name },
     }
   })
-  return test
 }
 
 /**
