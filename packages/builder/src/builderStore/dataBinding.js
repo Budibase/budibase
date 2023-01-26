@@ -54,12 +54,12 @@ export const getBindableProperties = (asset, componentId) => {
  * Gets all rest bindable data fields
  */
 export const getRestBindings = () => {
-  const hasEnvironmentVariablesEnabled = get(licensing).hasEnvironmentVariables
+  const environmentVariablesEnabled = get(licensing).environmentVariablesEnabled
   const userBindings = getUserBindings()
   return [
     ...userBindings,
     ...getAuthBindings(),
-    ...(hasEnvironmentVariablesEnabled ? getEnvironmentBindings() : []),
+    ...(environmentVariablesEnabled ? getEnvironmentBindings() : []),
   ]
 }
 
