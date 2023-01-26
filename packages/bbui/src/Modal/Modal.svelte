@@ -38,7 +38,6 @@
   }
 
   function handleKey(e) {
-    console.log("MODAL", e.key)
     if (visible && e.key === "Escape") {
       cancel()
     }
