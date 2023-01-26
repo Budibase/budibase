@@ -62,8 +62,8 @@ export async function getUser(
   return user
 }
 
-export async function invalidateUser(userId: string) {
-  const tenantId = getTenantId()
+export async function invalidateUser(userId: string, tenantId?: string) {
+  tenantId = tenantId || getTenantId()
   const cacheKey = getCacheKey(tenantId, userId)
   const client = await redis.getUserClient()
   await client.delete(cacheKey)

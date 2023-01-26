@@ -44,7 +44,6 @@ const config: Config = {
     },
     {
       ...configSettings,
-      displayName: "parallel test",
       testMatch: ["<rootDir>/**/!(*.seq).spec.[jt]s"],
     },
   ],
