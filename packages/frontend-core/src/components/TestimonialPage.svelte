@@ -14,6 +14,7 @@
         </div>
         <div class="user">
           <img
+            alt="a-happy-budibase-user"
             src="https://icon-library.com/images/male-user-icon/male-user-icon-24.jpg"
           />
           <div class="author">
