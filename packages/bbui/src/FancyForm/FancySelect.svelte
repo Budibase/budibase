@@ -21,6 +21,7 @@
   let wrapper
 
   $: placeholder = !value
+  $: selectedLabel = getSelectedLabel(value)
 
   const extractProperty = (value, property) => {
     if (value && typeof value === "object") {
@@ -36,6 +37,17 @@
       error = validate(newValue)
     }
     open = false
+  }
+
+  const getSelectedLabel = value => {
+    if (!value || !options?.length) {
+      return ""
+    }
+    const selectedOption = options.find(x => getOptionValue(x) === value)
+    if (!selectedOption) {
+      return value
+    }
+    return getOptionLabel(selectedOption)
   }
 </script>
 
@@ -53,7 +65,7 @@
   {/if}
 
   <div class="value" class:placeholder>
-    {value || ""}
+    {selectedLabel || ""}
   </div>
 
   <div class="arrow">
