@@ -98,7 +98,7 @@
   /* Customise tabs appearance*/
   .nav :global(.spectrum-Tabs) {
     margin-bottom: -2px;
-    padding: 7px 0;
+    padding: 5px 0;
     flex: 1 1 auto;
   }
   .nav :global(.spectrum-Tabs-content) {

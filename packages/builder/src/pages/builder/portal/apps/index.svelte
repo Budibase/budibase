@@ -227,7 +227,7 @@
       {/each}
       <div class="title">
         <div class="welcome">
-          <Layout noPadding gap="S">
+          <Layout noPadding gap="XS">
             <Heading size="L">{welcomeHeader}</Heading>
             <Body size="M">
               Manage your apps and get a head start with templates
