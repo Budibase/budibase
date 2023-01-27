@@ -20,8 +20,11 @@ import {
   auth,
   constants,
   env as coreEnv,
+  context,
+  utils,
+  DEFAULT_TENANT_ID,
 } from "@budibase/backend-core"
-import structures, { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
+import structures, { TENANT_ID, CSRF_TOKEN } from "./structures"
 import { CreateUserResponse, User, AuthToken } from "@budibase/types"
 import API from "./api"
 
@@ -36,6 +39,7 @@ class TestConfiguration {
   api: API
   defaultUser?: User
   tenant1User?: User
+  #tenantId?: string
 
   constructor(
     opts: { openServer: boolean; mode: Mode } = {
@@ -112,10 +116,12 @@ class TestConfiguration {
   // SETUP / TEARDOWN
 
   async beforeAll() {
+    this.#tenantId = `tenant-${utils.newid()}`
+
     await this.createDefaultUser()
     await this.createSession(this.defaultUser!)
 
-    await tenancy.doInTenant(TENANT_1, async () => {
+    await tenancy.doInTenant(this.#tenantId, async () => {
       await this.createTenant1User()
       await this.createSession(this.tenant1User!)
     })
@@ -152,7 +158,7 @@ class TestConfiguration {
     try {
       return tenancy.getTenantId()
     } catch (e: any) {
-      return TENANT_ID
+      return DEFAULT_TENANT_ID
     }
   }
 
@@ -203,7 +209,7 @@ class TestConfiguration {
     const tenantId = this.getTenantId()
     if (tenantId === TENANT_ID) {
       return this.authHeaders(this.defaultUser!)
-    } else if (tenantId === TENANT_1) {
+    } else if (tenantId === this.getTenantId()) {
       return this.authHeaders(this.tenant1User!)
     } else {
       throw new Error("could not determine auth headers to use")
@@ -222,7 +228,6 @@ class TestConfiguration {
 
   async createDefaultUser() {
     const user = structures.users.adminUser({
-      email: "test@test.com",
       password: "test",
     })
     this.defaultUser = await this.createUser(user)
@@ -230,7 +235,6 @@ class TestConfiguration {
 
   async createTenant1User() {
     const user = structures.users.adminUser({
-      email: "tenant1@test.com",
       password: "test",
     })
     this.tenant1User = await this.createUser(user)
