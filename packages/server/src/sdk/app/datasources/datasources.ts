@@ -16,7 +16,7 @@ const USER_PREFIX = "user"
 async function enrichDatasourceWithValues(datasource: Datasource) {
   const cloned = cloneDeep(datasource)
   const env = await getEnvironmentVariables()
-  const processed = processObjectSync(cloned, { env })
+  const processed = processObjectSync(cloned, { env }, { onlyFound: true })
   return {
     datasource: processed as Datasource,
     envVars: env as Record<string, string>,
