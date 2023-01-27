@@ -87,7 +87,6 @@
 
   function showModal(configKey) {
     selectedKey = configKey
-    console.log(selectedKey)
     createVariableModal.show()
   }
 
@@ -103,8 +102,6 @@
       await licensing.init()
     }
   })
-
-  $: console.log(config)
 </script>
 
 <form>

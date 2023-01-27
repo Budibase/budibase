@@ -122,7 +122,6 @@
 
   // Adds a data binding to the expression
   const addBinding = (binding, { forceJS } = {}) => {
-    console.log(binding)
     if (usingJS || forceJS) {
       let js = decodeJSBinding(jsValue)
       js = addJSBinding(js, getCaretPosition(), binding.readableBinding)
