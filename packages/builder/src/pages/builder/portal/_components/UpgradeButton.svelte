@@ -7,9 +7,10 @@
 {#if $admin.cloud && $auth?.user?.accountPortalAccess}
   <Button
     cta
+    size="S"
     on:click
     on:click={() => {
-      $goto($admin.accountPortalUrl + "/portal/upgrade")
+      window.open($admin.accountPortalUrl + "/portal/upgrade", "_blank")
     }}
   >
     Upgrade

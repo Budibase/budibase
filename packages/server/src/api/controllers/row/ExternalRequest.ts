@@ -681,6 +681,12 @@ export class ExternalRequest {
       config,
       table
     )
+    //if the sort column is a formula, remove it
+    for (let sortColumn of Object.keys(sort || {})) {
+      if (table.schema[sortColumn]?.type === "formula") {
+        delete sort?.[sortColumn]
+      }
+    }
     filters = buildFilters(id, filters || {}, table)
     const relationships = this.buildRelationships(table)
     // clean up row on ingress using schema
