@@ -62,6 +62,10 @@ const PUBLIC_ENDPOINTS = [
     route: "/api/system/restored",
     method: "POST",
   },
+  {
+    route: "/api/global/users/invite",
+    method: "GET",
+  },
 ]
 
 const NO_TENANCY_ENDPOINTS = [
