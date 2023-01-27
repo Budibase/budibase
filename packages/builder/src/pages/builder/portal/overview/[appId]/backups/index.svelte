@@ -1,6 +1,5 @@
 <script>
   import {
-    ActionButton,
     Button,
     DatePicker,
     Divider,
@@ -90,7 +89,7 @@
     },
     actions: {
       displayName: null,
-      width: "5%",
+      width: "auto",
     },
   }
 
@@ -246,9 +245,7 @@
           />
         </div>
         <div>
-          <ActionButton on:click={modal.show} icon="SaveAsFloppy">
-            Create new backup
-          </ActionButton>
+          <Button cta on:click={modal.show}>Create new backup</Button>
         </div>
       </div>
       <div class="table">

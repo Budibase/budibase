@@ -1,6 +1,7 @@
 <script>
   import { ActionButton } from "@budibase/bbui"
   import { getContext } from "svelte"
+  import { auth } from "stores/portal"
 
   export let value
 
@@ -12,4 +13,6 @@
   }
 </script>
 
-<ActionButton size="S" on:click={onClick}>Remove</ActionButton>
+<ActionButton disabled={!$auth.isAdmin} size="S" on:click={onClick}>
+  Remove
+</ActionButton>

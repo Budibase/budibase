@@ -3,7 +3,6 @@ export default function positionDropdown(
   { anchor, align, maxWidth, useAnchorWidth }
 ) {
   const update = () => {
-    console.log("update")
     const anchorBounds = anchor.getBoundingClientRect()
     const elementBounds = element.getBoundingClientRect()
     let styles = {

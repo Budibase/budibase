@@ -33,6 +33,7 @@
   export let allowSelectRows
   export let allowEditRows = true
   export let allowEditColumns = true
+  export let allowClickRows = true
   export let selectedRows = []
   export let customRenderers = []
   export let disableSorting = false
@@ -373,7 +374,7 @@
         {/if}
         {#if sortedRows?.length}
           {#each sortedRows as row, idx}
-            <div class="spectrum-Table-row">
+            <div class="spectrum-Table-row" class:clickable={allowClickRows}>
               {#if showEditColumn}
                 <div
                   class:noBorderCheckbox={!showHeaderBorder}
@@ -566,8 +567,12 @@
   /* Table rows */
   .spectrum-Table-row {
     display: contents;
+    cursor: auto;
   }
-  .spectrum-Table-row:hover .spectrum-Table-cell {
+  .spectrum-Table-row.clickable {
+    cursor: pointer;
+  }
+  .spectrum-Table-row.clickable:hover .spectrum-Table-cell {
     background-color: var(--spectrum-global-color-gray-100);
   }
   .wrapper--quiet .spectrum-Table-row {

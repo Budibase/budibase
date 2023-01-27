@@ -5,7 +5,7 @@ let clickHandlers = []
  * Handle a body click event
  */
 const handleClick = event => {
-  // Ignore click if needed
+  // Ignore click if this is an ignored class
   for (let className of ignoredClasses) {
     if (event.target.closest(className)) {
       return
@@ -14,9 +14,18 @@ const handleClick = event => {
 
   // Process handlers
   clickHandlers.forEach(handler => {
-    if (!handler.element.contains(event.target)) {
-      handler.callback?.(event)
+    if (handler.element.contains(event.target)) {
+      return
     }
+
+    // Ignore clicks for modals, unless the handler is registered from a modal
+    const sourceInModal = handler.element.closest(".spectrum-Modal") != null
+    const clickInModal = event.target.closest(".spectrum-Modal") != null
+    if (clickInModal && !sourceInModal) {
+      return
+    }
+
+    handler.callback?.(event)
   })
 }
 document.documentElement.addEventListener("click", handleClick, true)

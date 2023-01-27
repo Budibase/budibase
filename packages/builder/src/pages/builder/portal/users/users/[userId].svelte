@@ -81,6 +81,7 @@
   let user
   let loaded = false
 
+  $: readonly = !$auth.isAdmin
   $: fullName = user?.firstName ? user?.firstName + " " + user?.lastName : ""
   $: privileged = user?.admin?.global || user?.builder?.global
   $: nameLabel = getNameLabel(user)
@@ -235,18 +236,16 @@
     </Breadcrumbs>
 
     <div class="title">
-      <div>
-        <div style="display: flex;">
-          <Avatar size="XXL" {initials} />
-          <div class="subtitle">
-            <Heading size="M">{nameLabel}</Heading>
-            {#if nameLabel !== user?.email}
-              <Body size="S">{user?.email}</Body>
-            {/if}
-          </div>
+      <div class="user-info">
+        <Avatar size="XXL" {initials} />
+        <div class="subtitle">
+          <Heading size="M">{nameLabel}</Heading>
+          {#if nameLabel !== user?.email}
+            <Body size="S">{user?.email}</Body>
+          {/if}
         </div>
       </div>
-      {#if userId !== $auth.user?._id}
+      {#if userId !== $auth.user?._id && !readonly}
         <div>
           <ActionMenu align="right">
             <span slot="control">
@@ -271,17 +270,26 @@
         </div>
         <div class="field">
           <Label size="L">First name</Label>
-          <Input value={user?.firstName} on:blur={updateUserFirstName} />
+          <Input
+            disabled={readonly}
+            value={user?.firstName}
+            on:blur={updateUserFirstName}
+          />
         </div>
         <div class="field">
           <Label size="L">Last name</Label>
-          <Input value={user?.lastName} on:blur={updateUserLastName} />
+          <Input
+            disabled={readonly}
+            value={user?.lastName}
+            on:blur={updateUserLastName}
+          />
         </div>
         <!-- don't let a user remove the privileges that let them be here -->
         {#if userId !== $auth.user._id}
           <div class="field">
             <Label size="L">Role</Label>
             <Select
+              disabled={readonly}
               value={globalRole}
               options={Constants.BudibaseRoleOptions}
               on:change={updateUserRole}
@@ -297,7 +305,9 @@
         <div class="tableTitle">
           <Heading size="S">Groups</Heading>
           <div bind:this={popoverAnchor}>
-            <Button on:click={popover.show()} secondary>Add to group</Button>
+            <Button disabled={readonly} on:click={popover.show()} secondary>
+              Add to group
+            </Button>
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
             <UserGroupPicker
@@ -375,13 +385,18 @@
     align-items: center;
     justify-content: space-between;
   }
+  .user-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--spacing-l);
+  }
   .tableTitle {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
   }
   .subtitle {
-    padding: 0 0 0 var(--spacing-m);
     display: flex;
     flex-direction: column;
     justify-content: center;

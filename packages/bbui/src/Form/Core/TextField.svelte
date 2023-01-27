@@ -112,8 +112,4 @@
   .spectrum-Textfield {
     width: 100%;
   }
-  input:disabled {
-    color: var(--spectrum-global-color-gray-600) !important;
-    -webkit-text-fill-color: var(--spectrum-global-color-gray-600) !important;
-  }
 </style>

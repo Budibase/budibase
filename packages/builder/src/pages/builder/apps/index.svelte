@@ -104,7 +104,7 @@
                 <Icon size="XL" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-                Update user information
+                My profile
               </MenuItem>
               <MenuItem
                 icon="LockClosed"

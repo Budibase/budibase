@@ -6,9 +6,9 @@
   import UpgradeButton from "./UpgradeButton.svelte"
   import { fade } from "svelte/transition"
   import Logo from "./Logo.svelte"
+  import { menu } from "stores/portal"
 
   export let visible = false
-  export let menu
 
   const dispatch = createEventDispatcher()
 
@@ -28,17 +28,32 @@
       <Logo />
     </div>
     <SideNav>
-      {#each menu as { title, href }}
-        <SideNavItem
-          text={title}
-          url={href}
-          active={$isActive(href)}
-          on:click={close}
-        />
+      {#each $menu as { title, href, subPages }}
+        {#if !subPages?.length}
+          <SideNavItem
+            text={title}
+            url={href}
+            active={$isActive(href)}
+            on:click={close}
+          />
+        {/if}
+      {/each}
+      {#each $menu as { title, href, subPages }}
+        {#if subPages?.length}
+          <div class="category">{title}</div>
+          {#each subPages as { title, href }}
+            <SideNavItem
+              text={title}
+              url={href}
+              active={$isActive(href)}
+              on:click={close}
+            />
+          {/each}
+        {/if}
       {/each}
     </SideNav>
     <div>
-      <UpgradeButton />
+      <UpgradeButton on:click={close} />
     </div>
   </Layout>
 </div>
@@ -46,6 +61,13 @@
 <style>
   .mobile-nav {
     display: none;
+  }
+  .category {
+    color: var(--spectrum-global-color-gray-600);
+    font-size: var(--font-size-s);
+    margin-left: var(--spacing-m);
+    margin-top: 24px;
+    margin-bottom: 4px;
   }
 
   @media (max-width: 640px) {

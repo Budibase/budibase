@@ -260,10 +260,16 @@
   .desktop {
     display: contents;
   }
+  .mobile {
+    display: none;
+  }
 
   @media (max-width: 640px) {
     .desktop {
       display: none;
+    }
+    .mobile {
+      display: contents;
     }
   }
 </style>
