@@ -11,6 +11,7 @@ import { getEnvironmentVariables } from "../../utils"
 import { getDefinitions } from "../../../integrations"
 
 const ENV_VAR_PREFIX = "env."
+const USER_PREFIX = "user"
 
 async function enrichDatasourceWithValues(datasource: Datasource) {
   const cloned = cloneDeep(datasource)
@@ -48,7 +49,9 @@ export async function getWithEnvVars(datasourceId: string) {
 
 export function isValid(datasource: Datasource) {
   const blocks = findHBSBlocks(JSON.stringify(datasource))
-  const validList = blocks.filter(block => block.includes(ENV_VAR_PREFIX))
+  const validList = blocks.filter(
+    block => block.includes(ENV_VAR_PREFIX) || block.includes(USER_PREFIX)
+  )
   return blocks.length === validList.length
 }
 
