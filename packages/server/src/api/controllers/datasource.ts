@@ -14,6 +14,7 @@ import { invalidateDynamicVariables } from "../../threads/utils"
 import { db as dbCore, context, events } from "@budibase/backend-core"
 import { UserCtx, Datasource, Row } from "@budibase/types"
 import sdk from "../../sdk"
+import { mergeConfigs } from "../../sdk/app/datasources/datasources"
 
 export async function fetch(ctx: UserCtx) {
   // Get internal tables
@@ -158,7 +159,10 @@ export async function update(ctx: UserCtx) {
     ? { name: ctx.request.body?.name }
     : ctx.request.body
 
-  datasource = { ...datasource, ...dataSourceBody }
+  datasource = {
+    ...datasource,
+    ...sdk.datasources.mergeConfigs(dataSourceBody, datasource),
+  }
   if (auth && !ctx.request.body.auth) {
     // don't strip auth config from DB
     datasource.config!.auth = auth
