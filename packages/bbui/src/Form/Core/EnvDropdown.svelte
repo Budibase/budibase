@@ -122,7 +122,7 @@
       bind:this={field}
       disabled={false}
       {readonly}
-      id={"thisOne"}
+      {id}
       data-cy={dataCy}
       value={hbsValue.length ? `{{ ${hbsValue[0]} }}` : value}
       placeholder={placeholder || ""}
@@ -135,7 +135,7 @@
       on:focus={onFocus}
       on:input={onInput}
       {type}
-      style="color: white !important;"
+      style={align ? `text-align: ${align};` : ""}
       class="spectrum-Textfield-input"
       inputmode={type === "number" ? "decimal" : "text"}
     />
