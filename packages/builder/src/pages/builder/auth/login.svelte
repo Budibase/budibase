@@ -66,7 +66,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <TestimonialPage>
-  <Layout gap="M" noPadding>
+  <Layout gap="S" noPadding>
     <Layout justifyItems="center" noPadding>
       {#if loaded}
         <img alt="logo" src={$organisation.logoUrl || Logo} />
@@ -92,13 +92,12 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              return {
-                username: !formData.username
-                  ? "Please enter a valid email"
-                  : undefined,
-              }
-            }, errors)
+            let fieldError = {
+              username: !formData.username
+                ? "Please enter a valid email"
+                : undefined,
+            }
+            errors = handleError({ ...errors, ...fieldError })
           }}
           error={errors.username}
         />
@@ -113,13 +112,12 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              return {
-                password: !formData.password
-                  ? "Please enter your password"
-                  : undefined,
-              }
-            }, errors)
+            let fieldError = {
+              password: !formData.password
+                ? "Please enter your password"
+                : undefined,
+            }
+            errors = handleError({ ...errors, ...fieldError })
           }}
           error={errors.password}
         />

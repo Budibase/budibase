@@ -15,7 +15,7 @@
   import { onMount } from "svelte"
   import { FancyForm, FancyInput, ActionButton } from "@budibase/bbui"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
-  import { handleError, passwordsMatch } from "../auth/_components/utils"
+  import { passwordsMatch, handleError } from "../auth/_components/utils"
 
   let modal
   let form
@@ -26,7 +26,6 @@
   $: tenantId = $auth.tenantId
   $: cloud = $admin.cloud
   $: imported = $admin.importComplete
-  $: multiTenancyEnabled = $admin.multiTenancy
 
   async function save() {
     form.validate()
@@ -35,7 +34,8 @@
     }
     submitted = true
     try {
-      const adminUser = { ...formData, tenantId }
+      let adminUser = { ...formData, tenantId }
+      delete adminUser.confirmationPassword
       // Save the admin user
       await API.createAdminUser(adminUser)
       notifications.success("Admin user created")
@@ -81,13 +81,10 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              return {
-                email: !formData.email
-                  ? "Please enter a valid email"
-                  : undefined,
-              }
-            }, errors)
+            let fieldError = {
+              email: !formData.email ? "Please enter a valid email" : undefined,
+            }
+            errors = handleError({ ...errors, ...fieldError })
           }}
           disabled={submitted}
           error={errors.email}
@@ -103,23 +100,21 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              let err = {}
+            let fieldError = {}
 
-              err["password"] = !formData.password
-                ? "Please enter a password"
+            fieldError["password"] = !formData.password
+              ? "Please enter a password"
+              : undefined
+
+            fieldError["confirmationPassword"] =
+              !passwordsMatch(
+                formData.password,
+                formData.confirmationPassword
+              ) && formData.confirmationPassword
+                ? "Passwords must match"
                 : undefined
 
-              err["confirmationPassword"] =
-                !passwordsMatch(
-                  formData.password,
-                  formData.confirmationPassword
-                ) && formData.confirmationPassword
-                  ? "Passwords must match"
-                  : undefined
-
-              return err
-            }, errors)
+            errors = handleError({ ...errors, ...fieldError })
           }}
           error={errors.password}
           disabled={submitted}
@@ -135,17 +130,16 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              return {
-                confirmationPassword:
-                  !passwordsMatch(
-                    formData.password,
-                    formData.confirmationPassword
-                  ) && formData.password
-                    ? "Passwords must match"
-                    : undefined,
-              }
-            }, errors)
+            let fieldError = {
+              confirmationPassword:
+                !passwordsMatch(
+                  formData.password,
+                  formData.confirmationPassword
+                ) && formData.password
+                  ? "Passwords must match"
+                  : undefined,
+            }
+            errors = handleError({ ...errors, ...fieldError })
           }}
           error={errors.confirmationPassword}
           disabled={submitted}
@@ -163,7 +157,7 @@
     </Layout>
     <Layout gap="XS" noPadding justifyItems="center">
       <div class="user-actions">
-        {#if !cloud && !imported && !multiTenancyEnabled}
+        {#if !cloud && !imported}
           <ActionButton
             quiet
             on:click={() => {

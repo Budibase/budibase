@@ -44,7 +44,7 @@
 </script>
 
 <TestimonialPage>
-  <Layout gap="M" noPadding>
+  <Layout gap="S" noPadding>
     <img alt="logo" src={$organisation.logoUrl || Logo} />
     <span class="heading-wrap">
       <Heading size="M">

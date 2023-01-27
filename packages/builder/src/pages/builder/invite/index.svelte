@@ -68,7 +68,7 @@
 </script>
 
 <TestimonialPage>
-  <Layout gap="M" noPadding>
+  <Layout gap="S" noPadding>
     <img alt="logo" src={$organisation.logoUrl || Logo} />
     <Layout gap="XS" noPadding>
       <Heading size="M">Join {company}</Heading>
@@ -84,7 +84,7 @@
           error={errors.email}
         />
         <FancyInput
-          label="First Name"
+          label="First name"
           value={formData.firstName}
           on:change={e => {
             formData = {
@@ -93,19 +93,19 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              return {
-                firstName: !formData.firstName
-                  ? "Please enter your first name"
-                  : undefined,
-              }
-            }, errors)
+            let fieldError = {
+              firstName: !formData.firstName
+                ? "Please enter your first name"
+                : undefined,
+            }
+
+            errors = handleError({ ...errors, ...fieldError })
           }}
           error={errors.firstName}
           disabled={onboarding}
         />
         <FancyInput
-          label="Last Name (Optional)"
+          label="Last name (optional)"
           value={formData.lastName}
           on:change={e => {
             formData = {
@@ -126,29 +126,27 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              let err = {}
+            let fieldError = {}
 
-              err["password"] = !formData.password
-                ? "Please enter a password"
+            fieldError["password"] = !formData.password
+              ? "Please enter a password"
+              : undefined
+
+            fieldError["confirmationPassword"] =
+              !passwordsMatch(
+                formData.password,
+                formData.confirmationPassword
+              ) && formData.confirmationPassword
+                ? "Passwords must match"
                 : undefined
 
-              err["confirmationPassword"] =
-                !passwordsMatch(
-                  formData.password,
-                  formData.confirmationPassword
-                ) && formData.confirmationPassword
-                  ? "Passwords must match"
-                  : undefined
-
-              return err
-            }, errors)
+            errors = handleError({ ...errors, ...fieldError })
           }}
           error={errors.password}
           disabled={onboarding}
         />
         <FancyInput
-          label="Repeat Password"
+          label="Repeat password"
           value={formData.confirmationPassword}
           type="password"
           on:change={e => {
@@ -158,17 +156,17 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              return {
-                confirmationPassword:
-                  !passwordsMatch(
-                    formData.password,
-                    formData.confirmationPassword
-                  ) && formData.password
-                    ? "Passwords must match"
-                    : undefined,
-              }
-            }, errors)
+            let fieldError = {
+              confirmationPassword:
+                !passwordsMatch(
+                  formData.password,
+                  formData.confirmationPassword
+                ) && formData.password
+                  ? "Passwords must match"
+                  : undefined,
+            }
+
+            errors = handleError({ ...errors, ...fieldError })
           }}
           error={errors.confirmationPassword}
           disabled={onboarding}
