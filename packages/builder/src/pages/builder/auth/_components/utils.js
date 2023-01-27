@@ -1,7 +1,6 @@
-exports.handleError = (validate, errors) => {
-  const err = validate()
-  let update = { ...errors, ...err }
-  errors = Object.keys(update).reduce((acc, key) => {
+export const handleError = err => {
+  let update = { ...err }
+  return Object.keys(update).reduce((acc, key) => {
     if (update[key]) {
       acc[key] = update[key]
     }
@@ -9,7 +8,7 @@ exports.handleError = (validate, errors) => {
   }, {})
 }
 
-exports.passwordsMatch = (password, confirmation) => {
+export const passwordsMatch = (password, confirmation) => {
   let confirm = confirmation?.trim()
   let pwd = password?.trim()
   return (

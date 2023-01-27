@@ -10,10 +10,9 @@
 
   const resetCode = $params["?code"]
   let form
-
   let formData = {}
   let errors = {}
-  $: console.log(errors)
+  let loaded = false
 
   $: submitted = false
   $: forceResetPassword = $auth?.user?.forceResetPassword
@@ -50,12 +49,15 @@
     } catch (error) {
       notifications.error("Error getting org config")
     }
+    loaded = true
   })
 </script>
 
 <TestimonialPage>
-  <Layout gap="M" noPadding>
-    <img alt="logo" src={$organisation.logoUrl || Logo} />
+  <Layout gap="S" noPadding>
+    {#if loaded}
+      <img alt="logo" src={$organisation.logoUrl || Logo} />
+    {/if}
     <Layout gap="XS" noPadding>
       <Heading size="M">Reset your password</Heading>
       <Body size="M">Please enter the new password you'd like to use.</Body>
@@ -74,23 +76,21 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              let err = {}
+            let fieldError = {}
 
-              err["password"] = !formData.password
-                ? "Please enter a password"
+            fieldError["password"] = !formData.password
+              ? "Please enter a password"
+              : undefined
+
+            fieldError["confirmationPassword"] =
+              !passwordsMatch(
+                formData.password,
+                formData.confirmationPassword
+              ) && formData.confirmationPassword
+                ? "Passwords must match"
                 : undefined
 
-              err["confirmationPassword"] =
-                !passwordsMatch(
-                  formData.password,
-                  formData.confirmationPassword
-                ) && formData.confirmationPassword
-                  ? "Passwords must match"
-                  : undefined
-
-              return err
-            }, errors)
+            errors = handleError({ ...errors, ...fieldError })
           }}
           error={errors.password}
           disabled={submitted}
@@ -106,17 +106,17 @@
             }
           }}
           validate={() => {
-            handleError(() => {
-              return {
-                confirmationPassword:
-                  !passwordsMatch(
-                    formData.password,
-                    formData.confirmationPassword
-                  ) && formData.password
-                    ? "Passwords must match"
-                    : undefined,
-              }
-            }, errors)
+            const isValid =
+              !passwordsMatch(
+                formData.password,
+                formData.confirmationPassword
+              ) && formData.password
+
+            let fieldError = {
+              confirmationPassword: isValid ? "Passwords must match" : null,
+            }
+
+            errors = handleError({ ...errors, ...fieldError })
           }}
           error={errors.confirmationPassword}
           disabled={submitted}
