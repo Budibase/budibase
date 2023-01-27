@@ -4,8 +4,8 @@ const preset = require("ts-jest/jest-preset")
 const config: Config.InitialOptions = {
   ...preset,
   preset: "@trendyol/jest-testcontainers",
-  testEnvironment: "node",
-  setupFiles: ["./tests/jestSetup.ts"],
+  setupFiles: ["./tests/jestEnv.ts"],
+  setupFilesAfterEnv: ["./tests/jestSetup.ts"],
   collectCoverageFrom: ["src/**/*.{js,ts}"],
   coverageReporters: ["lcov", "json", "clover"],
   transform: {

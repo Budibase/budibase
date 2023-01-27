@@ -8,6 +8,7 @@ const {
 const { generateAppID, getPlatformUrl, getScopedConfig } = require("../utils")
 const tenancy = require("../../tenancy")
 const { Config, DEFAULT_TENANT_ID } = require("../../constants")
+import { faker } from "@faker-js/faker"
 import env from "../../environment"
 
 describe("utils", () => {
@@ -66,17 +67,16 @@ describe("utils", () => {
   })
 })
 
-const DB_URL = "http://dburl.com"
 const DEFAULT_URL = "http://localhost:10000"
 const ENV_URL = "http://env.com"
 
-const setDbPlatformUrl = async () => {
+const setDbPlatformUrl = async (dbUrl: string) => {
   const db = tenancy.getGlobalDB()
-  db.put({
+  await db.put({
     _id: "config_settings",
     type: Config.SETTINGS,
     config: {
-      platformUrl: DB_URL,
+      platformUrl: dbUrl,
     },
   })
 }
@@ -119,9 +119,10 @@ describe("getPlatformUrl", () => {
 
     it("gets the platform url from the database", async () => {
       await tenancy.doInTenant(null, async () => {
-        await setDbPlatformUrl()
+        const dbUrl = faker.internet.url()
+        await setDbPlatformUrl(dbUrl)
         const url = await getPlatformUrl()
-        expect(url).toBe(DB_URL)
+        expect(url).toBe(dbUrl)
       })
     })
   })
@@ -152,7 +153,7 @@ describe("getPlatformUrl", () => {
 
     it("never gets the platform url from the database", async () => {
       await tenancy.doInTenant(DEFAULT_TENANT_ID, async () => {
-        await setDbPlatformUrl()
+        await setDbPlatformUrl(faker.internet.url())
         const url = await getPlatformUrl()
         expect(url).toBe(TENANT_AWARE_URL)
       })
@@ -170,10 +171,11 @@ describe("getScopedConfig", () => {
 
     it("returns the platform url with an existing config", async () => {
       await tenancy.doInTenant(DEFAULT_TENANT_ID, async () => {
-        await setDbPlatformUrl()
+        const dbUrl = faker.internet.url()
+        await setDbPlatformUrl(dbUrl)
         const db = tenancy.getGlobalDB()
         const config = await getScopedConfig(db, { type: Config.SETTINGS })
-        expect(config.platformUrl).toBe(DB_URL)
+        expect(config.platformUrl).toBe(dbUrl)
       })
     })
 

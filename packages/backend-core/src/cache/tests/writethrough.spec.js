@@ -6,10 +6,12 @@ const tk = require("timekeeper")
 const START_DATE = Date.now()
 tk.freeze(START_DATE)
 
+const { faker } = require( "@faker-js/faker")
+
 const DELAY = 5000
 
-const db = getDB("test")
-const db2 = getDB("test2")
+const db = getDB(faker.random.alpha(10))
+const db2 = getDB(faker.random.alpha(10))
 const writethrough = new Writethrough(db, DELAY), writethrough2 = new Writethrough(db2, DELAY)
 
 describe("writethrough", () => {
