@@ -32,6 +32,8 @@
   $: license = $auth.user?.license
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: quotaReset = quotaUsage?.quotaReset
+  $: canManagePlan =
+    ($admin.cloud && accountPortalAccess) || (!$admin.cloud && $auth.isAdmin)
 
   const setMonthlyUsage = () => {
     monthlyUsage = []
@@ -184,10 +186,15 @@
       </Body>
     </Layout>
     <Divider />
-    <Body>
-      To upgrade your plan and usage limits visit your
-      <Link size="L" on:click={goToAccountPortal}>account</Link>.
-    </Body>
+    {#if canManagePlan}
+      <Body>
+        To upgrade your plan and usage limits visit your
+        <Link size="L" on:click={goToAccountPortal}>account</Link>.
+      </Body>
+    {:else}
+      <Body>Contact your account holder to upgrade your plan.</Body>
+    {/if}
+
     <DashCard
       description="YOUR CURRENT PLAN"
       title={planTitle()}
@@ -242,6 +249,7 @@
     justify-content: flex-start;
     align-items: flex-start;
     gap: 40px;
+    flex-wrap: wrap;
   }
   .column {
     flex: 1 1 0;

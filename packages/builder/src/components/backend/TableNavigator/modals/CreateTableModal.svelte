@@ -33,7 +33,7 @@
   let autoColumns = getAutoColumnInformation()
   let schema = {}
   let rows = []
-  let allValid = false
+  let allValid = true
   let displayColumn = null
 
   function getAutoColumns() {
@@ -99,7 +99,7 @@
   title="Create Table"
   confirmText="Create"
   onConfirm={saveTable}
-  disabled={error || !name || !allValid}
+  disabled={error || !name || (rows.length && !allValid)}
 >
   <Input
     data-cy="table-name-input"
