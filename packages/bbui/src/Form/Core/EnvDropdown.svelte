@@ -101,7 +101,7 @@
   <div
     class:is-disabled={disabled || hbsValue.length}
     class:is-focused={focus}
-    class="spectrum-Textfield "
+    class="spectrum-Textfield"
   >
     <svg
       class:close-color={hbsValue.length}
@@ -120,7 +120,7 @@
 
     <input
       bind:this={field}
-      disabled={false}
+      disabled={hbsValue.length || disabled}
       {readonly}
       {id}
       data-cy={dataCy}
