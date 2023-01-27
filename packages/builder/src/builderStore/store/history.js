@@ -204,7 +204,10 @@ export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
     try {
       // Undo ADD
       if (operation.type === Operations.Add) {
-        await deleteFn(operation.doc, operation.id)
+        // Try to get the latest doc version to delete
+        const latestDoc = getFn(operation.doc._id)
+        const doc = latestDoc || operation.doc
+        await deleteFn(doc, operation.id)
       }
 
       // Undo DELETE
@@ -274,7 +277,10 @@ export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
 
       // Redo DELETE
       else if (operation.type === Operations.Delete) {
-        await deleteFn(operation.doc, operation.id)
+        // Try to get the latest doc version to delete
+        const latestDoc = getFn(operation.doc._id)
+        const doc = latestDoc || operation.doc
+        await deleteFn(doc, operation.id)
       }
 
       // Redo CHANGE
