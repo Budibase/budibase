@@ -14,6 +14,7 @@ const initialState = {
 }
 
 export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
+  // Use a derived store to check if we are able to undo or redo any operations
   const store = writable(initialState)
   const derivedStore = derived(store, $store => {
     return {
@@ -22,10 +23,16 @@ export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
       canRedo: $store.position < $store.history.length,
     }
   })
+
+  // Wrapped versions of essential functions which we call ourselves when using
+  // undo and redo
   let getFn
   let saveFn
   let deleteFn
 
+  /**
+   * Internal util to set the loading flag
+   */
   const startLoading = () => {
     store.update(state => {
       state.loading = true
@@ -33,6 +40,9 @@ export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
     })
   }
 
+  /**
+   * Internal util to unset the loading flag
+   */
   const stopLoading = () => {
     store.update(state => {
       state.loading = false
@@ -94,27 +104,36 @@ export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
       if (!doc || Array.isArray(doc)) {
         return
       }
-      const metadata = saveMetadata()
-      const oldDoc = getFn(doc._id)
-      const newDoc = jsonpatch.deepClone(await fn(doc))
+      startLoading()
+      try {
+        const metadata = saveMetadata ? saveMetadata() : null
+        const oldDoc = getFn(doc._id)
+        const newDoc = jsonpatch.deepClone(await fn(doc))
 
-      // Store the change
-      if (!oldDoc) {
-        saveOperation({
-          type: Operations.Add,
-          doc: newDoc,
-          id: operationId,
-          metadata,
-        })
-      } else {
-        saveOperation({
-          type: Operations.Change,
-          forwardPatch: jsonpatch.compare(oldDoc, doc),
-          backwardsPatch: jsonpatch.compare(doc, oldDoc),
-          doc: newDoc,
-          id: operationId,
-          metadata,
-        })
+        // Store the change
+        if (!oldDoc) {
+          saveOperation({
+            type: Operations.Add,
+            doc: newDoc,
+            id: operationId,
+            metadata,
+          })
+        } else {
+          saveOperation({
+            type: Operations.Change,
+            forwardPatch: jsonpatch.compare(oldDoc, doc),
+            backwardsPatch: jsonpatch.compare(doc, oldDoc),
+            doc: newDoc,
+            id: operationId,
+            metadata,
+          })
+        }
+        stopLoading()
+      } catch (error) {
+        // We want to allow errors to propagate up to normal handlers, but we
+        // want to stop loading first
+        stopLoading()
+        throw error
       }
     }
     return saveFn
@@ -133,15 +152,24 @@ export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
       if (!doc || Array.isArray(doc)) {
         return
       }
-      const metadata = saveMetadata()
-      const oldDoc = jsonpatch.deepClone(doc)
-      await fn(doc)
-      saveOperation({
-        type: Operations.Delete,
-        doc: oldDoc,
-        id: operationId,
-        metadata,
-      })
+      startLoading()
+      try {
+        const metadata = saveMetadata ? saveMetadata() : null
+        const oldDoc = jsonpatch.deepClone(doc)
+        await fn(doc)
+        saveOperation({
+          type: Operations.Delete,
+          doc: oldDoc,
+          id: operationId,
+          metadata,
+        })
+        stopLoading()
+      } catch (error) {
+        // We want to allow errors to propagate up to normal handlers, but we
+        // want to stop loading first
+        stopLoading()
+        throw error
+      }
     }
     return deleteFn
   }
@@ -173,33 +201,38 @@ export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
     })
 
     // Undo the operation
-    // Undo ADD
-    if (operation.type === Operations.Add) {
-      await deleteFn(operation.doc, operation.id)
-    }
+    try {
+      // Undo ADD
+      if (operation.type === Operations.Add) {
+        await deleteFn(operation.doc, operation.id)
+      }
 
-    // Undo DELETE
-    else if (operation.type === Operations.Delete) {
-      // Delete the _rev from the deleted doc so that we can save it as a new
-      // doc again without conflicts
-      let doc = jsonpatch.deepClone(operation.doc)
-      delete doc._rev
-      await saveFn(doc, operation.id)
-    }
+      // Undo DELETE
+      else if (operation.type === Operations.Delete) {
+        // Delete the _rev from the deleted doc so that we can save it as a new
+        // doc again without conflicts
+        let doc = jsonpatch.deepClone(operation.doc)
+        delete doc._rev
+        await saveFn(doc, operation.id)
+      }
 
-    // Undo CHANGE
-    else {
-      // Get the current doc and apply the backwards patch on top of it
-      let doc = jsonpatch.deepClone(getFn(operation.doc._id))
-      jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.backwardsPatch))
-      await saveFn(doc, operation.id)
-    }
+      // Undo CHANGE
+      else {
+        // Get the current doc and apply the backwards patch on top of it
+        let doc = jsonpatch.deepClone(getFn(operation.doc._id))
+        jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.backwardsPatch))
+        await saveFn(doc, operation.id)
+      }
 
-    // Ensure the changed doc is selected
-    // if (operation.doc?._id && selectFn) {
-    //   selectFn(operation.doc._id)
-    // }
-    restoreMetadata(operation.metadata)
+      // Restore metadata related to this change
+      if (restoreMetadata && operation.metadata) {
+        restoreMetadata(operation.metadata)
+      }
+      stopLoading()
+    } catch (error) {
+      stopLoading()
+      throw error
+    }
   }
 
   /**
@@ -229,32 +262,38 @@ export const createHistoryStore = ({ saveMetadata, restoreMetadata }) => {
     })
 
     // Redo the operation
-    // Redo ADD
-    if (operation.type === Operations.Add) {
-      // Delete the _rev from the deleted doc so that we can save it as a new
-      // doc again without conflicts
-      let doc = jsonpatch.deepClone(operation.doc)
-      delete doc._rev
-      await saveFn(doc, operation.id)
+    try {
+      // Redo ADD
+      if (operation.type === Operations.Add) {
+        // Delete the _rev from the deleted doc so that we can save it as a new
+        // doc again without conflicts
+        let doc = jsonpatch.deepClone(operation.doc)
+        delete doc._rev
+        await saveFn(doc, operation.id)
+      }
+
+      // Redo DELETE
+      else if (operation.type === Operations.Delete) {
+        await deleteFn(operation.doc, operation.id)
+      }
+
+      // Redo CHANGE
+      else {
+        // Get the current doc and apply the forwards patch on top of it
+        let doc = jsonpatch.deepClone(getFn(operation.doc._id))
+        jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.forwardPatch))
+        await saveFn(doc, operation.id)
+      }
+
+      // Restore metadata
+      if (restoreMetadata && operation.metadata) {
+        restoreMetadata(operation.metadata)
+      }
+      stopLoading()
+    } catch (error) {
+      stopLoading()
+      throw error
     }
-
-    // Redo DELETE
-    else if (operation.type === Operations.Delete) {
-      await deleteFn(operation.doc, operation.id)
-    }
-
-    // Redo CHANGE
-    else {
-      // Get the current doc and apply the forwards patch on top of it
-      let doc = jsonpatch.deepClone(getFn(operation.doc._id))
-      jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.forwardPatch))
-      await saveFn(doc, operation.id)
-    }
-
-    // Ensure the changed doc is selected
-    restoreMetadata(operation.metadata)
-
-    stopLoading()
   }
 
   return {

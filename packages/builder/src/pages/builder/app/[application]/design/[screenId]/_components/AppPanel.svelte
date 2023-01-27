@@ -27,13 +27,13 @@
           name="Undo"
           hoverable
           on:click={screenHistoryStore.undo}
-          disabled={$screenHistoryStore.loading || !$screenHistoryStore.canUndo}
+          disabled={!$screenHistoryStore.canUndo}
         />
         <Icon
           name="Redo"
           hoverable
           on:click={screenHistoryStore.redo}
-          disabled={$screenHistoryStore.loading || !$screenHistoryStore.canRedo}
+          disabled={!$screenHistoryStore.canRedo}
         />
       </div>
       {#if $store.clientFeatures.devicePreview}
@@ -91,6 +91,11 @@
     flex: 1 1 auto;
   }
   .undo-redo {
-    gap: var(--spacing-m);
+    gap: var(--spacing-xs);
+    padding-right: var(--spacing-xl);
+    border-right: var(--border-light);
+  }
+  .undo-redo :global(svg) {
+    padding: 6px;
   }
 </style>
