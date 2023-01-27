@@ -145,12 +145,7 @@
       use:clickOutside={handleOutsideClick}
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
     >
-      <ul
-        class:no-variables-height={variables.length &&
-          environmentVariablesEnabled}
-        class="spectrum-Menu"
-        role="listbox"
-      >
+      <ul class="spectrum-Menu" role="listbox">
         {#if !environmentVariablesEnabled}
           <div class="no-variables-text primary-text">
             Upgrade your plan to get environment variables
