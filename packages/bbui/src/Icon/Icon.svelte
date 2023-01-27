@@ -67,6 +67,9 @@
     color: var(--spectrum-alias-icon-color-selected-hover) !important;
     cursor: pointer;
   }
+  svg.hoverable:active {
+    color: var(--spectrum-global-color-blue-400) !important;
+  }
 
   svg.disabled {
     color: var(--spectrum-global-color-gray-500) !important;
