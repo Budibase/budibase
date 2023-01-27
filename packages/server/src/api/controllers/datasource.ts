@@ -152,10 +152,6 @@ export async function update(ctx: UserCtx) {
   const auth = datasource.config?.auth
   await invalidateVariables(datasource, ctx.request.body)
 
-  if (!sdk.datasources.isValid(datasource)) {
-    ctx.throw(400, "Environment variables binding format incorrect")
-  }
-
   const isBudibaseSource = datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
 
   const dataSourceBody = isBudibaseSource
@@ -196,10 +192,6 @@ export async function save(ctx: UserCtx) {
     _id: generateDatasourceID({ plus }),
     type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
     ...ctx.request.body.datasource,
-  }
-
-  if (!sdk.datasources.isValid(datasource)) {
-    ctx.throw(400, "Environment variables binding format incorrect")
   }
 
   let schemaError = null

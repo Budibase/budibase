@@ -47,14 +47,6 @@ export async function getWithEnvVars(datasourceId: string) {
   return enrichDatasourceWithValues(datasource)
 }
 
-export function isValid(datasource: Datasource) {
-  const blocks = findHBSBlocks(JSON.stringify(datasource))
-  const validList = blocks.filter(
-    block => block.includes(ENV_VAR_PREFIX) || block.includes(USER_PREFIX)
-  )
-  return blocks.length === validList.length
-}
-
 export async function removeSecrets(datasources: Datasource[]) {
   const definitions = await getDefinitions()
   for (let datasource of datasources) {
