@@ -20,7 +20,6 @@
   let name = row?.name || ""
   let productionValue
   let developmentValue
-
   let useProductionValue = true
 
   const deleteVariable = name => {
@@ -71,7 +70,7 @@
     <Input
       type="password"
       on:change={e => {
-        developmentValue = e.target.value
+        developmentValue = e.detail
       }}
       disabled={useProductionValue}
       label="Value"
