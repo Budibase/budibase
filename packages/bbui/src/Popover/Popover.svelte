@@ -75,7 +75,10 @@
         useAnchorWidth,
         showTip,
       }}
-      use:clickOutside={dismissible ? handleOutsideClick : () => {}}
+      use:clickOutside={{
+        callback: dismissible ? handleOutsideClick : () => {},
+        anchor,
+      }}
       on:keydown={handleEscape}
       class={"spectrum-Popover is-open " + (tooltipClasses || "")}
       role="presentation"
