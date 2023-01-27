@@ -16,6 +16,7 @@
     runtimeToReadableMap,
   } from "builderStore/dataBinding"
   import { cloneDeep } from "lodash/fp"
+  import { getEnvironmentBindings } from "builderStore/dataBinding"
 
   export let datasource
   export let queries
@@ -93,6 +94,7 @@
     headings
     bind:object={datasource.config.staticVariables}
     on:change
+    bindings={getEnvironmentBindings()}
   />
 </Layout>
 <div />
