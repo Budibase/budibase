@@ -398,8 +398,4 @@
   .test :global(.drawer) {
     width: 10000px !important;
   }
-
-  :global(.spectrum-Textfield-input) {
-    padding-right: 40px;
-  }
 </style>
