@@ -56,7 +56,7 @@
       <Heading size="M">Environment Variables</Heading>
       {#if !$licensing.environmentVariablesEnabled}
         <Tags>
-          <Tag icon="LockClosed">Pro plan</Tag>
+          <Tag icon="LockClosed">Business plan</Tag>
         </Tags>
       {/if}
     </div>
@@ -64,6 +64,8 @@
       >Add and manage environment variables for development and production</Body
     >
   </Layout>
+  <Divider size="S" />
+
   {#if $licensing.environmentVariablesEnabled}
     {#if noEncryptionKey}
       <InlineAlert
@@ -72,7 +74,12 @@
         type="error"
       />
     {/if}
-    <Divider size="S" />
+    <div>
+      <Button on:click={modal.show} cta disabled={noEncryptionKey}
+        >Add Variable</Button
+      >
+    </div>
+
     <Layout noPadding>
       <Table
         {schema}
@@ -83,11 +90,6 @@
         {customRenderers}
       />
     </Layout>
-    <div>
-      <Button on:click={modal.show} cta disabled={noEncryptionKey}
-        >Add Variable</Button
-      >
-    </div>
   {:else}
     <div class="buttons">
       <Button
