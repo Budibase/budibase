@@ -330,6 +330,8 @@ export const getFrontendStore = () => {
           deleteUrls.push(screen.routing.route)
         })
 
+        promises.push(store.actions.links.delete(deleteUrls))
+        await Promise.all(promises)
         const deletedIds = screensToDelete.map(screen => screen._id)
         const routesResponse = await API.fetchAppRoutes()
         store.update(state => {
