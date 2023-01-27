@@ -3,8 +3,6 @@
   import { createEventDispatcher, onMount } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Divider from "../../Divider/Divider.svelte"
-  import Tag from "../../Tags/Tag.svelte"
-  import Tags from "../../Tags/Tags.svelte"
 
   export let value = null
   export let placeholder = null
@@ -31,7 +29,7 @@
   const STRIP_NAME_REGEX = /(?<=\.)(.*?)(?=\ })/g
 
   // Strips the name out of the value which is {{ env.Variable }} resulting in an array like ["Variable"]
-  $: tags = String(value)?.match(STRIP_NAME_REGEX) || []
+  $: hbsValue = String(value)?.match(STRIP_NAME_REGEX) || []
 
   const updateValue = newValue => {
     if (readonly) {
@@ -87,42 +85,46 @@
     focus = autofocus
     if (focus) field.focus()
   })
+
+  function removeVariable() {
+    updateValue("")
+  }
+
+  function openPopover() {
+    open = true
+    focus = true
+    iconFocused = true
+  }
 </script>
 
 <div class="spectrum-InputGroup">
-  <div class:is-focused={focus} class="spectrum-Textfield ">
+  <div
+    class:is-disabled={disabled || hbsValue.length}
+    class:is-focused={focus}
+    class="spectrum-Textfield "
+  >
     <svg
+      class:close-color={hbsValue.length}
       class:focused={iconFocused}
-      class="hoverable icon-position spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+      class="hoverable icon-position spectrum-Icon spectrum-Icon--sizeS spectrum-Textfield-validationIcon"
       focusable="false"
       aria-hidden="true"
       on:click={() => {
-        open = true
-        focus = true
-        iconFocused = true
+        hbsValue.length ? removeVariable() : openPopover()
       }}
     >
-      <use xlink:href="#spectrum-icon-18-Key" />
+      <use
+        xlink:href={`#spectrum-icon-18-${!hbsValue.length ? "Key" : "Close"}`}
+      />
     </svg>
-    <Tags>
-      <div class="tags">
-        <div class="tag">
-          {#each tags as tag}
-            <Tag closable on:click={() => updateValue("")}>
-              {tag}
-            </Tag>
-          {/each}
-        </div>
-      </div>
-    </Tags>
 
     <input
       bind:this={field}
-      {disabled}
+      disabled={false}
       {readonly}
-      {id}
+      id={"thisOne"}
       data-cy={dataCy}
-      value={!tags.length ? value : ""}
+      value={hbsValue.length ? `{{ ${hbsValue[0]} }}` : value}
       placeholder={placeholder || ""}
       on:click
       on:blur
@@ -133,8 +135,8 @@
       on:focus={onFocus}
       on:input={onInput}
       {type}
+      style="color: white !important;"
       class="spectrum-Textfield-input"
-      style={align ? `text-align: ${align};` : ""}
       inputmode={type === "number" ? "decimal" : "text"}
     />
   </div>
@@ -220,7 +222,7 @@
 
   .icon-position {
     position: absolute;
-    top: 20%;
+    top: 25%;
     right: 2%;
   }
 
@@ -275,9 +277,11 @@
     background: var(--grey-1);
   }
 
-  .tags {
-    position: absolute;
-    bottom: 12%;
-    left: 1px;
+  .close-color {
+    color: var(--spectrum-global-color-gray-900) !important;
+  }
+
+  .close-color:hover {
+    color: var(--spectrum-global-color-blue-400) !important;
   }
 </style>
