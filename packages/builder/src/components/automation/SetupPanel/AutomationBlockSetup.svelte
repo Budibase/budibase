@@ -74,6 +74,16 @@
   $: isTrigger = block?.type === "TRIGGER"
 
   const onChange = Utils.sequential(async (e, key) => {
+    if (e.detail?.tableId) {
+      const tableSchema = getSchemaForTable(e.detail.tableId, {
+        searchableSchema: true,
+      }).schema
+      if (isTestModal) {
+        testData.schema = tableSchema
+      } else {
+        block.inputs.schema = tableSchema
+      }
+    }
     try {
       if (isTestModal) {
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents

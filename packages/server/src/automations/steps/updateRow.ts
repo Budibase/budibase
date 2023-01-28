@@ -19,6 +19,10 @@ export const definition: AutomationStepSchema = {
   schema: {
     inputs: {
       properties: {
+        schema: {
+          type: "object",
+          title: "Schema",
+        },
         row: {
           type: "object",
           customType: "row",
