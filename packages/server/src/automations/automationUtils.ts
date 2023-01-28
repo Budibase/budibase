@@ -55,6 +55,7 @@ export function cleanInputValues(inputs: Record<string, any>, schema: any) {
   for (let key in inputs.row) {
     if (
       inputs.schema?.[key]?.type === "link" &&
+      inputs.row[key] &&
       typeof inputs.row[key] === "string"
     ) {
       inputs.row[key] = JSON.parse(inputs.row[key])
