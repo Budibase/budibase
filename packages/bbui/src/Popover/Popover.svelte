@@ -21,9 +21,6 @@
   export let useAnchorWidth = false
   export let dismissible = true
 
-  let tipSvg =
-    '<svg xmlns="http://www.w3.org/svg/2000" width="23" height="12" class="spectrum-Popover-tip" > <path class="spectrum-Popover-tip-triangle" d="M 0.7071067811865476 0 L 11.414213562373096 10.707106781186548 L 22.121320343559645 0" /> </svg>'
-
   $: tooltipClasses = showTip
     ? `spectrum-Popover--withTip spectrum-Popover--${direction}`
     : ""
@@ -73,7 +70,7 @@
         align,
         maxWidth,
         useAnchorWidth,
-        showTip,
+        showTip: false,
       }}
       use:clickOutside={{
         callback: dismissible ? handleOutsideClick : () => {},
@@ -85,10 +82,6 @@
       data-cy={dataCy}
       transition:fly|local={{ y: -20, duration: 200 }}
     >
-      {#if showTip}
-        {@html tipSvg}
-      {/if}
-
       <slot />
     </div>
   </Portal>

@@ -110,12 +110,11 @@
 
 {#key tourStepKey}
   <Popover
-    align="right"
+    align={tourStep?.align}
     bind:this={popover}
     anchor={popoverAnchor}
     dataCy="tour-popover-menu"
     maxWidth={300}
-    showTip={true}
     dismissible={false}
   >
     <Layout gap="M">
@@ -160,6 +159,7 @@
   }
   :global([data-cy="tour-popover-menu"]) {
     padding: 10px;
+    margin-top: var(--spacing-l);
   }
   .tour-body :global(.feature-list) {
     margin-bottom: 0px;
