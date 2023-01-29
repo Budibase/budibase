@@ -1,7 +1,7 @@
 <script>
   import TableDataTable from "components/backend/DataTable/DataTable.svelte"
   import { tables, database } from "stores/backend"
-  import { InlineAlert } from "@budibase/bbui"
+  import { Banner } from "@budibase/bbui"
 
   const verifyAutocolumns = table => {
     // Check for duplicates
@@ -34,13 +34,11 @@
 {#if $database?._id && $tables?.selected?.name}
   {#if duplicates?.length}
     <div class="alert-wrap">
-      <InlineAlert
-        error
-        header="Schema Invalid"
-        message={`There are duplicate auto column types defined in this schema. Please delete the duplicate entries where appropriate: 
-      - ${invalidColumnText.join(", ")}
-      This validation will be enforced at a later date.`}
-      />
+      <Banner type="warning" showCloseButton={false}>
+        {`Schema Invalid - There are duplicate auto column types defined in this schema. 
+      Please delete the duplicate entries where appropriate: - 
+      ${invalidColumnText.join(", ")}`}
+      </Banner>
     </div>
   {/if}
   <TableDataTable />
