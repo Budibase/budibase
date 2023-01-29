@@ -6,7 +6,6 @@
   const verifyAutocolumns = table => {
     // Check for duplicates
     return Object.values(table?.schema || {}).reduce((acc, fieldSchema) => {
-      console.log(fieldSchema)
       if (!fieldSchema.autocolumn || !fieldSchema.subtype) {
         return acc
       }
