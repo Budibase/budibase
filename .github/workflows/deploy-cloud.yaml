@@ -38,17 +38,6 @@ jobs:
           fi
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
       
-      - name: Tag and release Proxy service docker image
-        run: | 
-          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker:proxy:prod
-          docker tag proxy-service budibase/proxy:$PROD_TAG
-          docker push budibase/proxy:$PROD_TAG
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          PROD_TAG: k8s
-      
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

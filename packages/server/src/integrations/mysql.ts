@@ -147,7 +147,8 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         if (
           field.type == "DATETIME" ||
           field.type === "DATE" ||
-          field.type === "TIMESTAMP"
+          field.type === "TIMESTAMP" ||
+          field.type === "LONGLONG"
         ) {
           return field.string()
         }
