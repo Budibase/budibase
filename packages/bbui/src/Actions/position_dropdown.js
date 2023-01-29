@@ -1,6 +1,6 @@
 export default function positionDropdown(
   element,
-  { anchor, align, maxWidth, useAnchorWidth, showTip }
+  { anchor, align, maxWidth, useAnchorWidth }
 ) {
   const update = () => {
     if (!anchor) {
@@ -17,7 +17,6 @@ export default function positionDropdown(
     }
 
     let popoverLeftPad = 20
-    let tipOffset = showTip ? 12.5 : 0
 
     // Determine vertical styles
     if (window.innerHeight - anchorBounds.bottom < 100) {
@@ -36,10 +35,7 @@ export default function positionDropdown(
     }
     if (align === "right") {
       let left =
-        anchorBounds.left +
-        anchorBounds.width / 2 -
-        elementBounds.width +
-        tipOffset
+        anchorBounds.left + anchorBounds.width / 2 - elementBounds.width
       // Accommodate margin on popover: 1.25rem; ~20px
       if (left + elementBounds.width + popoverLeftPad > window.innerWidth) {
         left -= 20

@@ -34,6 +34,7 @@ const getTours = () => {
         onLoad: async () => {
           tourEvent(TOUR_STEP_KEYS.BUILDER_DATA_SECTION)
         },
+        align: "left",
       },
       {
         id: TOUR_STEP_KEYS.BUILDER_DESIGN_SECTION,
@@ -44,6 +45,7 @@ const getTours = () => {
         onLoad: () => {
           tourEvent(TOUR_STEP_KEYS.BUILDER_DESIGN_SECTION)
         },
+        align: "left",
       },
       {
         id: TOUR_STEP_KEYS.BUILDER_AUTOMATE_SECTION,
@@ -54,6 +56,7 @@ const getTours = () => {
         onLoad: () => {
           tourEvent(TOUR_STEP_KEYS.BUILDER_AUTOMATE_SECTION)
         },
+        align: "left",
       },
       {
         id: TOUR_STEP_KEYS.BUILDER_APP_PUBLISH,
