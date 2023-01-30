@@ -22,6 +22,7 @@ import * as redis from "./utilities/redis"
 import { events, logging, middleware } from "@budibase/backend-core"
 import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
+import { retry } from "./utilities/retry"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")
 
@@ -80,7 +81,11 @@ server.on("close", async () => {
 })
 
 export default server.listen(env.PORT || 0, async () => {
-  await startup(app, server)
+  if (!env.isTest()) {
+    await startup(app, server)
+  } else {
+    await retry(async () => await startup(app, server))
+  }
 })
 
 const shutdown = () => {
