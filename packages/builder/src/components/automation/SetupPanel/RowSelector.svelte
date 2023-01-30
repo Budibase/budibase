@@ -10,11 +10,11 @@
   const dispatch = createEventDispatcher()
 
   export let value
+  export let meta
   export let bindings
   export let block
   export let isTestModal
   export let isUpdateRow
-  export let clearRelationships = false
 
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
@@ -99,6 +99,17 @@
     dispatch("change", value)
   }
 
+  const onChangeSetting = (e, field) => {
+    let fields = {}
+    fields[field] = {
+      clearRelationships: e.detail,
+    }
+    dispatch("change", {
+      key: "meta",
+      fields,
+    })
+  }
+
   // Ensure any nullish tableId values get set to empty string so
   // that the select works
   $: if (value?.tableId == null) value = { tableId: "" }
@@ -145,9 +156,10 @@
               {#if isUpdateRow && schema.type === "link"}
                 <div class="checkbox-field">
                   <Checkbox
-                    bind:value={clearRelationships}
+                    value={meta.fields?.[field]?.clearRelationships}
                     text={"Clear relationships if empty?"}
                     size={"S"}
+                    on:change={e => onChangeSetting(e, field)}
                   />
                 </div>
               {/if}
@@ -169,7 +181,7 @@
     text-transform: capitalize;
   }
   .checkbox-field {
-    padding-bottom: var(--spacing-m);
+    padding-bottom: var(--spacing-s);
     padding-left: var(--spacing-s);
     padding-top: var(--spacing-s);
   }

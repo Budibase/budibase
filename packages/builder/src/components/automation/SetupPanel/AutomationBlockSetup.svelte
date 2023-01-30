@@ -304,7 +304,14 @@
         <RowSelector
           {block}
           value={inputData[key]}
-          on:change={e => onChange(e, key)}
+          meta={inputData["meta"] || {}}
+          on:change={e => {
+            if (e.detail?.key) {
+              onChange(e, e.detail.key)
+            } else {
+              onChange(e, key)
+            }
+          }}
           {bindings}
           {isTestModal}
           {isUpdateRow}
