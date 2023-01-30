@@ -9,6 +9,7 @@
     Modal,
     EnvDropdown,
     Accordion,
+    notifications,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
@@ -79,10 +80,14 @@
       .map(([key]) => key)
   }
 
-  function save(data) {
-    environment.createVariable(data)
-    config[selectedKey] = `{{ env.${data.name} }}`
-    createVariableModal.hide()
+  async function save(data) {
+    try {
+      await environment.createVariable(data)
+      config[selectedKey] = `{{ env.${data.name} }}`
+      createVariableModal.hide()
+    } catch (err) {
+      notifications.error(`Failed to create variable: ${err.message}`)
+    }
   }
 
   function showModal(configKey) {
