@@ -25,7 +25,6 @@
   export let loading = false
   export let hideAutocolumns
   export let rowCount
-  export let type
   export let disableSorting = false
   export let customPlaceholder = false
 
