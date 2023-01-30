@@ -1,12 +1,9 @@
 <script>
   import FontAwesomeIcon from "./FontAwesomeIcon.svelte"
   import { Popover, Heading, Body } from "@budibase/bbui"
-  import { auth } from "stores/portal"
+  import { licensing } from "stores/portal"
 
-  $: licenseType = $auth.user?.license?.plan?.type
-  $: isPremiumUser = ["pro", "team", "business", "enterprise"].includes(
-    licenseType
-  )
+  $: isPremiumUser = $licensing.license && !$licensing.isFreePlan
 
   let show
   let hide
@@ -71,12 +68,14 @@
           </div>
           <Body size="S">Email support</Body>
         </div>
-        <div class="premiumBadge">
-          <div class="icon">
-            <FontAwesomeIcon name="fa-solid fa-lock" />
+        {#if !isPremiumUser}
+          <div class="premiumBadge">
+            <div class="icon">
+              <FontAwesomeIcon name="fa-solid fa-lock" />
+            </div>
+            <Body size="XS">Premium</Body>
           </div>
-          <Body size="XS">Premium</Body>
-        </div>
+        {/if}
       </a>
     </nav>
   </Popover>
@@ -86,8 +85,8 @@
   .help {
     z-index: 2;
     position: absolute;
-    bottom: var(--spacing-l);
-    right: var(--spacing-l);
+    bottom: var(--spacing-xl);
+    right: 24px;
   }
 
   .openMenu {
@@ -112,14 +111,13 @@
   }
 
   .divider {
-    border-bottom: var(--border-light);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
   }
 
   .header {
     display: flex;
     align-items: center;
     padding: 0 0 0 16px;
-    background-color: var(--background);
   }
 
   .closeButton {
@@ -146,7 +144,7 @@
   }
 
   a:hover {
-    background-color: var(--background);
+    background-color: var(--spectrum-global-color-gray-300);
   }
 
   a:last-child {

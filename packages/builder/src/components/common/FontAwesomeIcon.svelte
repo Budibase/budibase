@@ -18,3 +18,9 @@
 </script>
 
 <i class={name} />
+
+<style>
+  .svg-inline--fa {
+    color: var(--spectrum-body-m-text-color, var(--spectrum-alias-text-color));
+  }
+</style>
