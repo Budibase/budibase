@@ -171,8 +171,8 @@
     }
   }
 
-  const save = data => {
-    environment.createVariable(data)
+  const save = async data => {
+    await environment.createVariable(data)
     form.basic[formFieldkey] = `{{ env.${data.name} }}`
     createVariableModal.hide()
   }
