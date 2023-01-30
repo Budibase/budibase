@@ -277,12 +277,13 @@ export class ExternalRequest {
       const linkTable = this.tables[linkTableName]
       // @ts-ignore
       const linkTablePrimary = linkTable.primary[0]
+      const idArray =
+        typeof row[key] === "string"
+          ? JSON.parse(decodeURIComponent(row[key]).replace(/'/g, '"'))
+          : row[key]
       // one to many
       if (isOneSide(field)) {
-        let id = row[key][0]
-        if (typeof row[key] === "string") {
-          id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
-        }
+        let id = idArray[0]
         newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
       }
       // many to many
@@ -290,7 +291,7 @@ export class ExternalRequest {
         // we're not inserting a doc, will be a bunch of update calls
         const otherKey: string = field.throughFrom || linkTablePrimary
         const thisKey: string = field.throughTo || tablePrimary
-        row[key].map((relationship: any) => {
+        idArray.map((relationship: any) => {
           manyRelationships.push({
             tableId: field.through || field.tableId,
             isUpdate: false,
@@ -306,7 +307,7 @@ export class ExternalRequest {
         const thisKey: string = "id"
         // @ts-ignore
         const otherKey: string = field.fieldName
-        row[key].map((relationship: any) => {
+        idArray.map((relationship: any) => {
           manyRelationships.push({
             tableId: field.tableId,
             isUpdate: true,
