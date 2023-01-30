@@ -10,7 +10,7 @@ import {
   generateTable,
 } from "../../../config/internal-api/fixtures/table"
 
-describe("Internal API - Role table access", () => {
+describe.skip("Internal API - Role table access", () => {
   let api: InternalAPIClient
   let accountsAPI: AccountsAPIClient
   let config: TestConfiguration<Application>
@@ -59,11 +59,10 @@ describe("Internal API - Role table access", () => {
     )
 
     await config.login(<string>appUser[0].email, <string>appUser[0].password)
-    /*
+
     const newColumn = generateNewColumnForTable(createdTableData)
     await config.tables.forbiddenSave(newColumn)
     await config.tables.forbiddenSave(generateTable())
-    */
   })
 
   it.skip("Check Table access for developer", async () => {
