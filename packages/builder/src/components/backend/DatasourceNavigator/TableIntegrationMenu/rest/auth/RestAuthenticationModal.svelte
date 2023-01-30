@@ -45,10 +45,13 @@
   let formFieldkey
 
   onMount(async () => {
-    await environment.loadVariables()
-
-    if ($auth.user) {
-      await licensing.init()
+    try {
+      await environment.loadVariables()
+      if ($auth.user) {
+        await licensing.init()
+      }
+    } catch (err) {
+      console.error(err)
     }
 
     if (currentConfig) {

@@ -9,8 +9,8 @@
   let editVariableModal
   let deleteDialog
 
-  const save = data => {
-    environment.updateVariable(data)
+  const save = async data => {
+    await environment.updateVariable(data)
     editVariableModal.hide()
   }
 </script>
@@ -23,8 +23,8 @@
 
 <ConfirmDialog
   bind:this={deleteDialog}
-  onOk={() => {
-    environment.deleteVariable(row.name)
+  onOk={async () => {
+    await environment.deleteVariable(row.name)
   }}
   okText="Delete Environment Variable"
   title="Confirm Deletion"
