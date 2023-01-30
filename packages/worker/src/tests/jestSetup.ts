@@ -30,14 +30,14 @@ const globalSafe = global as any
 
 overrideConfigValue(
   "COUCH_DB_PORT",
-  globalSafe.__TESTCONTAINERS_DEVENV_PORT_5984__
+  globalSafe["__TESTCONTAINERS_COUCHDB-SERVICE-1_PORT_5984__"]
 )
 overrideConfigValue(
   "COUCH_DB_URL",
-  `http://${globalSafe.__TESTCONTAINERS_DEVENV_IP__}:${globalSafe.__TESTCONTAINERS_DEVENV_PORT_5984__}`
+  `http://${globalSafe["__TESTCONTAINERS_COUCHDB-SERVICE-1_IP__"]}:${globalSafe["__TESTCONTAINERS_COUCHDB-SERVICE-1_PORT_5984__"]}`
 )
 
 overrideConfigValue(
   "MINIO_URL",
-  `http://${globalSafe.__TESTCONTAINERS_DEVENV_IP__}:${globalSafe.__TESTCONTAINERS_DEVENV_PORT_9000__}`
+  `http://${globalSafe["__TESTCONTAINERS_MINIO-SERVICE-1_IP__"]}:${globalSafe["__TESTCONTAINERS_MINIO-SERVICE-1_PORT_9000__"]}`
 )
