@@ -7,7 +7,7 @@ import { Config, context, events } from "@budibase/backend-core"
 describe("configs", () => {
   const config = new TestConfiguration()
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await config.beforeAll()
   })
 
