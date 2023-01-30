@@ -33,7 +33,7 @@ enum Mode {
   SELF = "self",
 }
 
-export async function retry<T extends (...arg0: any[]) => any>(
+async function retry<T extends (...arg0: any[]) => any>(
   fn: T,
   maxTry: number = 5,
   retryCount = 1
