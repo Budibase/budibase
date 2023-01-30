@@ -79,8 +79,8 @@
       .map(([key]) => key)
   }
 
-  function save(data) {
-    environment.createVariable(data)
+  async function save(data) {
+    await environment.createVariable(data)
     config[selectedKey] = `{{ env.${data.name} }}`
     createVariableModal.hide()
   }

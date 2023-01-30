@@ -22,9 +22,9 @@
   let developmentValue
   let useProductionValue = true
 
-  const deleteVariable = name => {
+  const deleteVariable = async name => {
     try {
-      environment.deleteVariable(name)
+      await environment.deleteVariable(name)
       modalContext.hide()
       notifications.success("Environment variable deleted")
     } catch (err) {
@@ -32,9 +32,9 @@
     }
   }
 
-  const saveVariable = () => {
+  const saveVariable = async () => {
     try {
-      save({
+      await save({
         name,
         production: productionValue,
         development: developmentValue,
