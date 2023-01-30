@@ -12,11 +12,11 @@
   import ViewDynamicVariables from "./variables/ViewDynamicVariables.svelte"
   import {
     getRestBindings,
+    getEnvironmentBindings,
     readableToRuntimeBinding,
     runtimeToReadableMap,
   } from "builderStore/dataBinding"
   import { cloneDeep } from "lodash/fp"
-  import { getEnvironmentBindings } from "builderStore/dataBinding"
 
   export let datasource
   export let queries
