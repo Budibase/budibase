@@ -1,17 +1,19 @@
 import { context } from "@budibase/backend-core"
-import { processObjectSync, findHBSBlocks } from "@budibase/string-templates"
+import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
 import {
   Datasource,
   DatasourceFieldType,
-  Integration,
   PASSWORD_REPLACEMENT,
+  RestAuthConfig,
+  RestAuthType,
+  RestBasicAuthConfig,
+  SourceName,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
 import { getDefinitions } from "../../../integrations"
 
 const ENV_VAR_PREFIX = "env."
-const USER_PREFIX = "user"
 
 async function enrichDatasourceWithValues(datasource: Datasource) {
   const cloned = cloneDeep(datasource)
@@ -47,6 +49,18 @@ export async function getWithEnvVars(datasourceId: string) {
   return enrichDatasourceWithValues(datasource)
 }
 
+function hasAuthConfigs(datasource: Datasource) {
+  return datasource.source === SourceName.REST && datasource.config?.authConfigs
+}
+
+function useEnvVars(str: any) {
+  if (typeof str !== "string") {
+    return false
+  }
+  const blocks = findHBSBlocks(str)
+  return blocks.find(block => block.includes(ENV_VAR_PREFIX)) != null
+}
+
 export async function removeSecrets(datasources: Datasource[]) {
   const definitions = await getDefinitions()
   for (let datasource of datasources) {
@@ -56,17 +70,24 @@ export async function removeSecrets(datasources: Datasource[]) {
       if (datasource.config.auth) {
         delete datasource.config.auth
       }
-      // remove passwords
-      for (let key of Object.keys(datasource.config)) {
-        if (typeof datasource.config[key] !== "string") {
-          continue
+      // specific to REST datasources, contains passwords
+      if (hasAuthConfigs(datasource)) {
+        const configs = datasource.config.authConfigs as RestAuthConfig[]
+        for (let config of configs) {
+          if (config.type !== RestAuthType.BASIC) {
+            continue
+          }
+          const basic = config.config as RestBasicAuthConfig
+          if (!useEnvVars(basic.password)) {
+            basic.password = PASSWORD_REPLACEMENT
+          }
         }
-        const blocks = findHBSBlocks(datasource.config[key] as string)
-        const usesEnvVars =
-          blocks.find(block => block.includes(ENV_VAR_PREFIX)) != null
+      }
+      // remove general passwords
+      for (let key of Object.keys(datasource.config)) {
         if (
-          !usesEnvVars &&
-          schema.datasource?.[key]?.type === DatasourceFieldType.PASSWORD
+          schema.datasource?.[key]?.type === DatasourceFieldType.PASSWORD &&
+          !useEnvVars(datasource.config[key])
         ) {
           datasource.config[key] = PASSWORD_REPLACEMENT
         }
@@ -84,6 +105,23 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   if (!update.config) {
     return update
   }
+  // specific to REST datasources, fix the auth configs again if required
+  if (hasAuthConfigs(update)) {
+    const configs = update.config.authConfigs as RestAuthConfig[]
+    const oldConfigs = old.config?.authConfigs as RestAuthConfig[]
+    for (let config of configs) {
+      if (config.type !== RestAuthType.BASIC) {
+        continue
+      }
+      const basic = config.config as RestBasicAuthConfig
+      const oldBasic = oldConfigs.find(old => old.name === config.name)
+        ?.config as RestBasicAuthConfig
+      if (basic.password === PASSWORD_REPLACEMENT) {
+        basic.password = oldBasic.password
+      }
+    }
+  }
+  // update back to actual passwords for everything else
   for (let [key, value] of Object.entries(update.config)) {
     if (value !== PASSWORD_REPLACEMENT) {
       continue
