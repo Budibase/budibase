@@ -14,6 +14,7 @@ import { invalidateDynamicVariables } from "../../threads/utils"
 import { db as dbCore, context, events } from "@budibase/backend-core"
 import { UserCtx, Datasource, Row } from "@budibase/types"
 import sdk from "../../sdk"
+import { mergeConfigs } from "../../sdk/app/datasources/datasources"
 
 export async function fetch(ctx: UserCtx) {
   // Get internal tables
@@ -152,17 +153,16 @@ export async function update(ctx: UserCtx) {
   const auth = datasource.config?.auth
   await invalidateVariables(datasource, ctx.request.body)
 
-  if (!sdk.datasources.isValid(datasource)) {
-    ctx.throw(400, "Environment variables binding format incorrect")
-  }
-
   const isBudibaseSource = datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
 
   const dataSourceBody = isBudibaseSource
     ? { name: ctx.request.body?.name }
     : ctx.request.body
 
-  datasource = { ...datasource, ...dataSourceBody }
+  datasource = {
+    ...datasource,
+    ...sdk.datasources.mergeConfigs(dataSourceBody, datasource),
+  }
   if (auth && !ctx.request.body.auth) {
     // don't strip auth config from DB
     datasource.config!.auth = auth
@@ -196,10 +196,6 @@ export async function save(ctx: UserCtx) {
     _id: generateDatasourceID({ plus }),
     type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
     ...ctx.request.body.datasource,
-  }
-
-  if (!sdk.datasources.isValid(datasource)) {
-    ctx.throw(400, "Environment variables binding format incorrect")
   }
 
   let schemaError = null
