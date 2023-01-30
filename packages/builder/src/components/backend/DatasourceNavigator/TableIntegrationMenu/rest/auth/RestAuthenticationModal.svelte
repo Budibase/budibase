@@ -8,6 +8,7 @@
     Input,
     EnvDropdown,
     Modal,
+    notifications,
   } from "@budibase/bbui"
   import { AUTH_TYPE_LABELS, AUTH_TYPES } from "./authTypes"
   import BindableCombobox from "components/common/bindings/BindableCombobox.svelte"
@@ -171,10 +172,14 @@
     }
   }
 
-  const save = data => {
-    environment.createVariable(data)
-    form.basic[formFieldkey] = `{{ env.${data.name} }}`
-    createVariableModal.hide()
+  const save = async data => {
+    try {
+      await environment.createVariable(data)
+      form.basic[formFieldkey] = `{{ env.${data.name} }}`
+      createVariableModal.hide()
+    } catch (err) {
+      notifications.error(`Failed to create variable: ${err.message}`)
+    }
   }
 
   const onFieldChange = () => {
