@@ -14,6 +14,7 @@
       <Icon name={icon} />
     {/if}
   {/if}
+  <slot name="icon" />
   <div>
     <slot />
   </div>
