@@ -218,7 +218,11 @@
   }
 
   onMount(async () => {
-    await environment.loadVariables()
+    try {
+      await environment.loadVariables()
+    } catch (error) {
+      console.error(error)
+    }
   })
 </script>
 
