@@ -105,32 +105,34 @@
           </MenuItem>
           <MenuItem
             on:click={() =>
-              $goto(`../../portal/overview/${application}?tab=Access`)}
+              $goto(`../../portal/overview/${application}/access`)}
           >
             Access
           </MenuItem>
           <MenuItem
             on:click={() =>
-              $goto(
-                `../../portal/overview/${application}?tab=${encodeURIComponent(
-                  "Automation History"
-                )}`
-              )}
+              $goto(`../../portal/overview/${application}/automation-history`)}
           >
             Automation history
           </MenuItem>
           <MenuItem
             on:click={() =>
-              $goto(`../../portal/overview/${application}?tab=Backups`)}
+              $goto(`../../portal/overview/${application}/backups`)}
           >
             Backups
           </MenuItem>
 
           <MenuItem
             on:click={() =>
-              $goto(`../../portal/overview/${application}?tab=Settings`)}
+              $goto(`../../portal/overview/${application}/name-and-url`)}
           >
-            Settings
+            Name and URL
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/version`)}
+          >
+            Version
           </MenuItem>
         </ActionMenu>
         <Heading size="XS">{$store.name || "App"}</Heading>
