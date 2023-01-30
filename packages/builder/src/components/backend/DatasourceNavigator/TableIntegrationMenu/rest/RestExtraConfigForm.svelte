@@ -12,10 +12,12 @@
   import ViewDynamicVariables from "./variables/ViewDynamicVariables.svelte"
   import {
     getRestBindings,
+    getEnvironmentBindings,
     readableToRuntimeBinding,
     runtimeToReadableMap,
   } from "builderStore/dataBinding"
   import { cloneDeep } from "lodash/fp"
+  import { licensing } from "stores/portal"
 
   export let datasource
   export let queries
@@ -93,6 +95,9 @@
     headings
     bind:object={datasource.config.staticVariables}
     on:change
+    bindings={$licensing.environmentVariablesEnabled
+      ? getEnvironmentBindings()
+      : []}
   />
 </Layout>
 <div />

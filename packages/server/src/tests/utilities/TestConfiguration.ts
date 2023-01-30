@@ -425,20 +425,23 @@ class TestConfiguration {
     // create dev app
     // clear any old app
     this.appId = null
-    // @ts-ignore
-    context.updateAppId(null)
-    this.app = await this._req({ name: appName }, null, controllers.app.create)
-    this.appId = this.app.appId
-    // @ts-ignore
-    context.updateAppId(this.appId)
+    await context.doInAppContext(null, async () => {
+      this.app = await this._req(
+        { name: appName },
+        null,
+        controllers.app.create
+      )
+      this.appId = this.app.appId
+    })
+    return await context.doInAppContext(this.appId, async () => {
+      // create production app
+      this.prodApp = await this.publish()
 
-    // create production app
-    this.prodApp = await this.publish()
+      this.allApps.push(this.prodApp)
+      this.allApps.push(this.app)
 
-    this.allApps.push(this.prodApp)
-    this.allApps.push(this.app)
-
-    return this.app
+      return this.app
+    })
   }
 
   async publish() {

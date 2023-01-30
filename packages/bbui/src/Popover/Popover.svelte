@@ -68,7 +68,10 @@
     <div
       tabindex="0"
       use:positionDropdown={{ anchor, align, maxWidth, useAnchorWidth }}
-      use:clickOutside={handleOutsideClick}
+      use:clickOutside={{
+        callback: handleOutsideClick,
+        anchor,
+      }}
       on:keydown={handleEscape}
       class={"spectrum-Popover is-open " + (tooltipClasses || "")}
       role="presentation"
