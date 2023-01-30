@@ -78,6 +78,7 @@
     "chance": "1.1.8",
     "ioredis-mock": "5.8.0",
     "jest": "28.1.1",
+    "jest-serial-runner": "^1.2.1",
     "koa": "2.13.4",
     "nodemon": "2.0.16",
     "pouchdb-adapter-memory": "7.2.2",
