@@ -18,7 +18,7 @@ describe("/api/global/tenants", () => {
 
   describe("DELETE /api/system/tenants/:tenantId", () => {
     it("allows deleting the current tenant", async () => {
-      const user = await config.createTenant()
+      const user = await config.createTenant({ addTenantToGlobalDb: true })
 
       await config.api.tenants.delete(user.tenantId, {
         headers: config.authHeaders(user),
@@ -26,9 +26,9 @@ describe("/api/global/tenants", () => {
     })
 
     it("rejects deleting another tenant", async () => {
-      const user1 = await config.createTenant()
+      const user1 = await config.createTenant({ addTenantToGlobalDb: true })
       // create a second user in another tenant
-      const user2 = await config.createTenant()
+      const user2 = await config.createTenant({ addTenantToGlobalDb: true })
 
       const status = 403
       const res = await config.api.tenants.delete(user1.tenantId, {
@@ -43,7 +43,7 @@ describe("/api/global/tenants", () => {
     })
 
     it("rejects non-admin", async () => {
-      const user1 = await config.createTenant()
+      const user1 = await config.createTenant({ addTenantToGlobalDb: true })
       // create an internal non-admin user
       const user2 = await tenancy.doInTenant(user1.tenantId, () => {
         return config.createUser()
