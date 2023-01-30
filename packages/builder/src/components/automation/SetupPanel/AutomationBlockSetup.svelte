@@ -72,6 +72,7 @@
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
+  $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
 
   const onChange = Utils.sequential(async (e, key) => {
     if (e.detail?.tableId) {
@@ -306,6 +307,7 @@
           on:change={e => onChange(e, key)}
           {bindings}
           {isTestModal}
+          {isUpdateRow}
         />
       {:else if value.customType === "webhookUrl"}
         <WebhookDisplay

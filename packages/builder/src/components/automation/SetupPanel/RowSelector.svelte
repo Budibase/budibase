@@ -1,6 +1,6 @@
 <script>
   import { tables } from "stores/backend"
-  import { Select } from "@budibase/bbui"
+  import { Select, Checkbox } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
@@ -13,6 +13,8 @@
   export let bindings
   export let block
   export let isTestModal
+  export let isUpdateRow
+  export let clearRelationships = false
 
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
@@ -124,21 +126,32 @@
               {onChange}
             />
           {:else}
-            <svelte:component
-              this={isTestModal ? ModalBindableInput : DrawerBindableInput}
-              placeholder={placeholders[schema.type]}
-              panel={AutomationBindingPanel}
-              value={Array.isArray(value[field])
-                ? value[field].join(" ")
-                : value[field]}
-              on:change={e => onChange(e, field, schema.type)}
-              label={field}
-              type="string"
-              bindings={parsedBindings}
-              fillWidth={true}
-              allowJS={true}
-              updateOnChange={false}
-            />
+            <div>
+              <svelte:component
+                this={isTestModal ? ModalBindableInput : DrawerBindableInput}
+                placeholder={placeholders[schema.type]}
+                panel={AutomationBindingPanel}
+                value={Array.isArray(value[field])
+                  ? value[field].join(" ")
+                  : value[field]}
+                on:change={e => onChange(e, field, schema.type)}
+                label={field}
+                type="string"
+                bindings={parsedBindings}
+                fillWidth={true}
+                allowJS={true}
+                updateOnChange={false}
+              />
+              {#if isUpdateRow && schema.type === "link"}
+                <div class="checkbox-field">
+                  <Checkbox
+                    bind:value={clearRelationships}
+                    text={"Clear relationships if empty?"}
+                    size={"S"}
+                  />
+                </div>
+              {/if}
+            </div>
           {/if}
         {/if}
       {/if}
@@ -154,5 +167,13 @@
   }
   .schema-fields :global(label) {
     text-transform: capitalize;
+  }
+  .checkbox-field {
+    padding-bottom: var(--spacing-m);
+    padding-left: var(--spacing-s);
+    padding-top: var(--spacing-s);
+  }
+  .checkbox-field :global(label) {
+    text-transform: none;
   }
 </style>
