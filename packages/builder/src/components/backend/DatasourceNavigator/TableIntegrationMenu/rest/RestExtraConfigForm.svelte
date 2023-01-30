@@ -17,6 +17,7 @@
     runtimeToReadableMap,
   } from "builderStore/dataBinding"
   import { cloneDeep } from "lodash/fp"
+  import { licensing } from "stores/portal"
 
   export let datasource
   export let queries
@@ -94,7 +95,9 @@
     headings
     bind:object={datasource.config.staticVariables}
     on:change
-    bindings={getEnvironmentBindings()}
+    bindings={$licensing.environmentVariablesEnabled
+      ? getEnvironmentBindings()
+      : []}
   />
 </Layout>
 <div />
