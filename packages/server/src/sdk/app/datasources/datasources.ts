@@ -47,14 +47,6 @@ export async function getWithEnvVars(datasourceId: string) {
   return enrichDatasourceWithValues(datasource)
 }
 
-export function isValid(datasource: Datasource) {
-  const blocks = findHBSBlocks(JSON.stringify(datasource))
-  const validList = blocks.filter(
-    block => block.includes(ENV_VAR_PREFIX) || block.includes(USER_PREFIX)
-  )
-  return blocks.length === validList.length
-}
-
 export async function removeSecrets(datasources: Datasource[]) {
   const definitions = await getDefinitions()
   for (let datasource of datasources) {
@@ -86,4 +78,21 @@ export async function removeSecrets(datasources: Datasource[]) {
 
 export async function removeSecretSingle(datasource: Datasource) {
   return (await removeSecrets([datasource]))[0]
+}
+
+export function mergeConfigs(update: Datasource, old: Datasource) {
+  if (!update.config) {
+    return update
+  }
+  for (let [key, value] of Object.entries(update.config)) {
+    if (value !== PASSWORD_REPLACEMENT) {
+      continue
+    }
+    if (old.config?.[key]) {
+      update.config[key] = old.config?.[key]
+    } else {
+      delete update.config[key]
+    }
+  }
+  return update
 }
