@@ -177,6 +177,7 @@
           <EnvDropdown
             showModal={() => showModal(configKey)}
             variables={$environment.variables}
+            type={schema[configKey].type}
             on:change
             bind:value={config[configKey]}
             error={$validation.errors[configKey]}
