@@ -10,6 +10,7 @@
     Tags,
     Tag,
     InlineAlert,
+    notifications,
   } from "@budibase/bbui"
   import { environment, licensing, auth, admin } from "stores/portal"
   import { onMount } from "svelte"
@@ -44,9 +45,13 @@
     return schema
   }
 
-  const save = data => {
-    environment.createVariable(data)
-    modal.hide()
+  const save = async data => {
+    try {
+      await environment.createVariable(data)
+      modal.hide()
+    } catch (err) {
+      notifications.error(`Error saving variable: ${err.message}`)
+    }
   }
 </script>
 
