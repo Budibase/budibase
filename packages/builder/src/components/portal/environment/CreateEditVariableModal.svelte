@@ -41,7 +41,7 @@
       })
       notifications.success("Environment variable saved")
     } catch (err) {
-      notifications.error("Error saving environment variable")
+      notifications.error(`Error saving environment variable - ${err.message}`)
     }
   }
 </script>

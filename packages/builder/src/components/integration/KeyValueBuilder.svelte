@@ -105,7 +105,7 @@
   >
     {#each fields as field, idx}
       <Input
-        placeholder={"hello"}
+        placeholder={keyPlaceholder}
         readonly={readOnly}
         bind:value={field.name}
         on:blur={changed}

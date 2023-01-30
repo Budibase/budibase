@@ -367,7 +367,7 @@
       // load the environment variables
       await environment.loadVariables()
     } catch (error) {
-      notifications.error("Error getting environment variables")
+      notifications.error(`Error getting environment variables - ${error}`)
     }
 
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
