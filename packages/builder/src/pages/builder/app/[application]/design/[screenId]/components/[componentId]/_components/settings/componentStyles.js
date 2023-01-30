@@ -196,7 +196,6 @@ export const size = {
 
 export const background = {
   label: "Background",
-  columns: "auto 1fr",
   settings: [
     {
       label: "Color",
@@ -277,6 +276,55 @@ export const background = {
           label: "Black Noir",
           value:
             "linear-gradient(312deg, rgba(60,60,60,1) 0%, rgba(42,42,42,1) 100%);",
+        },
+      ],
+    },
+    {
+      control: Input,
+      label: "Image URL",
+      key: "background-image-url",
+    },
+    {
+      control: Select,
+      label: "Position",
+      key: "background-position",
+      defaultValue: "center center",
+      options: [
+        {
+          label: "Center Top",
+          value: "center top",
+        },
+        {
+          label: "Center",
+          value: "center center",
+        },
+        {
+          label: "Center Bottom",
+          value: "center bottom",
+        },
+        {
+          label: "Left Top",
+          value: "left top",
+        },
+        {
+          label: "Left Center",
+          value: "left center",
+        },
+        {
+          label: "Left Bottom",
+          value: "left bottom",
+        },
+        {
+          label: "Right Top",
+          value: "right top",
+        },
+        {
+          label: "Right Center",
+          value: "right center",
+        },
+        {
+          label: "Right Bottom",
+          value: "right bottom",
         },
       ],
     },

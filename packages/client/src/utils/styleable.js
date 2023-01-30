@@ -6,7 +6,9 @@ import { builderStore } from "stores"
 const buildStyleString = (styleObject, customStyles) => {
   let str = ""
   Object.entries(styleObject || {}).forEach(([style, value]) => {
-    if (style && value != null) {
+    if (style === "background-image-url" && value != null) {
+      str += `background-image: url("${value}"); background-repeat: no-repeat; background-size: cover; `
+    } else if (style && value != null) {
       str += `${style}: ${value}; `
     }
   })
