@@ -3,7 +3,6 @@ import { apiFileReturn } from "../../../utilities/fileSystem"
 import { csv, json, jsonWithSchema, Format, isFormat } from "./exporters"
 import { deleteView, getView, getViews, saveView } from "./utils"
 import { fetchView } from "../row"
-import { FieldTypes } from "../../../constants"
 import { context, events } from "@budibase/backend-core"
 import { DocumentType } from "../../../db/utils"
 import sdk from "../../../sdk"
@@ -15,6 +14,7 @@ import {
   TableSchema,
   View,
 } from "@budibase/types"
+import { cleanExportRows } from "../row/utils"
 
 const { cloneDeep, isEqual } = require("lodash")
 
@@ -162,39 +162,17 @@ export async function exportView(ctx: BBContext) {
     schema = table.schema
   }
 
-  // remove any relationships
-  const relationships = Object.entries(schema)
-    .filter(entry => entry[1].type === FieldTypes.LINK)
-    .map(entry => entry[0])
-  // iterate relationship columns and remove from and row and schema
-  relationships.forEach(column => {
-    rows.forEach(row => {
-      delete row[column]
-    })
-    delete schema[column]
-  })
-
-  // make sure no "undefined" entries appear in the CSV
-  if (format === Format.CSV) {
-    const schemaKeys = Object.keys(schema)
-    for (let key of schemaKeys) {
-      for (let row of rows) {
-        if (row[key] == null) {
-          row[key] = ""
-        }
-      }
-    }
-  }
+  let exportRows = cleanExportRows(rows, schema, format, [])
 
   if (format === Format.CSV) {
     ctx.attachment(`${viewName}.csv`)
-    ctx.body = apiFileReturn(csv(Object.keys(schema), rows))
+    ctx.body = apiFileReturn(csv(Object.keys(schema), exportRows))
   } else if (format === Format.JSON) {
     ctx.attachment(`${viewName}.json`)
-    ctx.body = apiFileReturn(json(rows))
+    ctx.body = apiFileReturn(json(exportRows))
   } else if (format === Format.JSON_WITH_SCHEMA) {
     ctx.attachment(`${viewName}.json`)
-    ctx.body = apiFileReturn(jsonWithSchema(schema, rows))
+    ctx.body = apiFileReturn(jsonWithSchema(schema, exportRows))
   } else {
     throw "Format not recognised"
   }
