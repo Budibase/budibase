@@ -21,6 +21,8 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
+const { cleanExportRows } = require("./utils")
+
 export async function handleRequest(
   operation: Operation,
   tableId: string,
@@ -100,7 +102,7 @@ export async function destroy(ctx: BBContext) {
 export async function bulkDestroy(ctx: BBContext) {
   const { rows } = ctx.request.body
   const tableId = ctx.params.tableId
-  let promises = []
+  let promises: Promise<Row[] | { row: Row; table: Table }>[] = []
   for (let row of rows) {
     promises.push(
       handleRequest(Operation.DELETE, tableId, {
@@ -186,20 +188,24 @@ export async function exportRows(ctx: BBContext) {
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
-  ctx.request.body = {
-    query: {
-      oneOf: {
-        _id: ctx.request.body.rows.map(
-          (row: string) => JSON.parse(decodeURI(row))[0]
-        ),
+
+  if (ctx.request.body.rows) {
+    ctx.request.body = {
+      query: {
+        oneOf: {
+          _id: ctx.request.body.rows.map(
+            (row: string) => JSON.parse(decodeURI(row))[0]
+          ),
+        },
       },
-    },
+    }
   }
 
   let result = await search(ctx)
   let rows: Row[] = []
 
   // Filter data to only specified columns if required
+
   if (columns && columns.length) {
     for (let i = 0; i < result.rows.length; i++) {
       rows[i] = {}
@@ -211,14 +217,19 @@ export async function exportRows(ctx: BBContext) {
     rows = result.rows
   }
 
-  let headers = Object.keys(rows[0])
+  // @ts-ignore
+  let schema = datasource.entities[tableName].schema
+  let exportRows = cleanExportRows(rows, schema, format, columns)
+
+  let headers = Object.keys(schema)
+
   // @ts-ignore
   const exporter = exporters[format]
   const filename = `export.${format}`
 
   // send down the file
   ctx.attachment(filename)
-  return apiFileReturn(exporter(headers, rows))
+  return apiFileReturn(exporter(headers, exportRows))
 }
 
 export async function fetchEnrichedRow(ctx: BBContext) {
