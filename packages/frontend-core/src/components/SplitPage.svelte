@@ -30,6 +30,7 @@
     overflow-y: auto;
   }
   .right {
+    overflow: hidden;
     position: relative;
   }
   .right img {

@@ -1,7 +1,7 @@
 <script>
-  import { isActive, redirect, goto, url } from "@roxi/routify"
+  import { page, isActive, redirect, goto, url } from "@roxi/routify"
   import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
-  import { organisation, auth, menu } from "stores/portal"
+  import { organisation, auth, menu, apps } from "stores/portal"
   import { onMount } from "svelte"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
   import MobileMenu from "./_components/MobileMenu.svelte"
@@ -46,7 +46,9 @@
   })
 </script>
 
-{#if $auth.user && loaded}
+{#if $page?.path?.includes("/builder/portal/apps/create") && !$apps.length}
+  <slot />
+{:else if $auth.user && loaded}
   <HelpMenu />
   <div class="container">
     <div class="nav">
