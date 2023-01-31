@@ -17,9 +17,14 @@
   export let name
 </script>
 
-<i class={name} />
+<span>
+  <i class={name} />
+</span>
 
 <style>
+  span {
+    display: contents;
+  }
   .svg-inline--fa {
     color: var(--spectrum-body-m-text-color, var(--spectrum-alias-text-color));
   }
