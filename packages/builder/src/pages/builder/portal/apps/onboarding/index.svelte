@@ -79,11 +79,6 @@
     }
   }
 
-  const goToDesign = appId => {
-    $goto(`/builder/app/${appId}/design`)
-    notifications.success(`App created successfully.`)
-  }
-
   const handleCreateApp = async ({ datasourceConfig, useSampleData }) => {
     try {
       appId = await createApp(useSampleData)
@@ -99,7 +94,8 @@
         })
       }
 
-      goToDesign(appId)
+      $goto(`/builder/app/${appId}`)
+      notifications.success(`App created successfully`)
     } catch (e) {
       console.log(e)
       notifications.error("There was a problem creating your app")
