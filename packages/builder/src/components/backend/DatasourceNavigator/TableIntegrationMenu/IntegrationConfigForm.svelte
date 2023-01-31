@@ -6,17 +6,26 @@
     Toggle,
     Button,
     TextArea,
+    Modal,
+    EnvDropdown,
     Accordion,
+    notifications,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
   import { IntegrationTypes } from "constants/backend"
   import { createValidationStore } from "helpers/validation/yup"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
+  import { environment, licensing, auth } from "stores/portal"
+  import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
 
   export let datasource
   export let schema
   export let creating
+
+  let createVariableModal
+  let selectedKey
+
   const validation = createValidationStore()
   const dispatch = createEventDispatcher()
 
@@ -70,6 +79,37 @@
       .filter(el => filter(el))
       .map(([key]) => key)
   }
+
+  async function save(data) {
+    try {
+      await environment.createVariable(data)
+      config[selectedKey] = `{{ env.${data.name} }}`
+      createVariableModal.hide()
+    } catch (err) {
+      notifications.error(`Failed to create variable: ${err.message}`)
+    }
+  }
+
+  function showModal(configKey) {
+    selectedKey = configKey
+    createVariableModal.show()
+  }
+
+  async function handleUpgradePanel() {
+    await environment.upgradePanelOpened()
+    $licensing.goToUpgradePage()
+  }
+
+  onMount(async () => {
+    try {
+      await environment.loadVariables()
+      if ($auth.user) {
+        await licensing.init()
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  })
 </script>
 
 <form>
@@ -134,17 +174,25 @@
       {:else}
         <div class="form-row">
           <Label>{getDisplayName(configKey)}</Label>
-          <Input
+          <EnvDropdown
+            showModal={() => showModal(configKey)}
+            variables={$environment.variables}
             type={schema[configKey].type}
             on:change
             bind:value={config[configKey]}
             error={$validation.errors[configKey]}
+            environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
+            {handleUpgradePanel}
           />
         </div>
       {/if}
     {/each}
   </Layout>
 </form>
+
+<Modal bind:this={createVariableModal}>
+  <CreateEditVariableModal {save} />
+</Modal>
 
 <style>
   .form-row {

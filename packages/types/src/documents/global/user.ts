@@ -47,6 +47,7 @@ export interface User extends ThirdPartyUser {
   account?: {
     authType: string
   }
+  onboardedAt?: string
 }
 
 export interface UserRoles {

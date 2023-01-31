@@ -77,6 +77,7 @@ export const StaticDatabases = {
       apiKeys: "apikeys",
       usageQuota: "usage_quota",
       licenseInfo: "license_info",
+      environmentVariables: "environmentvariables",
     },
   },
   // contains information about tenancy and so on
