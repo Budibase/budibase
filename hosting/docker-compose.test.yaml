@@ -45,15 +45,3 @@ services:
       - 6379
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-
-  # wait-for-load:
-  #   container_name: wait
-  #   image: curlimages/curl
-  #   depends_on:
-  #     minio-service:
-  #       condition: service_healthy
-  #     couchdb-service:
-  #       condition: service_healthy
-  #     redis-service:
-  #       condition: service_healthy
-  #   restart: always
