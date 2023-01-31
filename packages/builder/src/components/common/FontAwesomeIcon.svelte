@@ -11,7 +11,17 @@
   } from "@fortawesome/free-solid-svg-icons"
   import { faGithub, faDiscord } from "@fortawesome/free-brands-svg-icons"
 
-  library.add(faXmark, faBook, faPlay, faLock, faGithub, faDiscord, faEnvelope, faFileArrowUp, faChevronLeft)
+  library.add(
+    faXmark,
+    faBook,
+    faPlay,
+    faLock,
+    faGithub,
+    faDiscord,
+    faEnvelope,
+    faFileArrowUp,
+    faChevronLeft
+  )
   dom.watch()
 </script>
 
@@ -26,8 +36,5 @@
 <style>
   span {
     display: contents;
-  }
-  .svg-inline--fa {
-    color: var(--spectrum-body-m-text-color, var(--spectrum-alias-text-color));
   }
 </style>
