@@ -1,14 +1,14 @@
-const cypressConfig = require("./cypress.json")
+const testConfig = require("./testConfig.json")
 
 // normal development system
-const SERVER_PORT = cypressConfig.env.PORT
-const WORKER_PORT = cypressConfig.env.WORKER_PORT
+const SERVER_PORT = testConfig.env.PORT
+const WORKER_PORT = testConfig.env.WORKER_PORT
 
 if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = "cypress"
+  process.env.NODE_ENV = "test"
 }
 process.env.ENABLE_ANALYTICS = "0"
-process.env.JWT_SECRET = cypressConfig.env.JWT_SECRET
+process.env.JWT_SECRET = testConfig.env.JWT_SECRET
 process.env.SELF_HOSTED = 1
 process.env.WORKER_URL = `http://localhost:${WORKER_PORT}/`
 process.env.APPS_URL = `http://localhost:${SERVER_PORT}/`
