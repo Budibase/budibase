@@ -17,7 +17,9 @@ export default function positionDropdown(
     }
 
     // Determine vertical styles
-    if (window.innerHeight - anchorBounds.bottom < 100) {
+    if (align === "right-outside") {
+      styles.top = anchorBounds.top
+    } else if (window.innerHeight - anchorBounds.bottom < 100) {
       styles.top = anchorBounds.top - elementBounds.height - 5
     } else {
       styles.top = anchorBounds.bottom + 5
@@ -33,6 +35,8 @@ export default function positionDropdown(
     }
     if (align === "right") {
       styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
+    } else if (align === "right-outside") {
+      styles.left = anchorBounds.right + 10
     } else {
       styles.left = anchorBounds.left
     }

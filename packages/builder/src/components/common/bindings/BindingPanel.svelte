@@ -179,7 +179,7 @@
 
 <span class="detailPopover">
   <Popover
-    align="right"
+    align="right-outside"
     bind:this={popover}
     anchor={popoverAnchor}
     maxWidth={300}
