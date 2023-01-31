@@ -11,7 +11,7 @@ mocks.licenses.useUnlimited()
 import { init as dbInit } from "../../db"
 dbInit()
 import env from "../../environment"
-import { env as coreEnv } from "@budibase/backend-core"
+import { db, env as coreEnv, StaticDatabases } from "@budibase/backend-core"
 import {
   basicTable,
   basicRow,
@@ -151,7 +151,16 @@ class TestConfiguration {
     this.defaultUserValues = this.populateDefaultUserValues()
     if (context.isMultiTenant()) {
       this.tenantId = `tenant-${newid()}`
-      context.updateTenantId(this.tenantId)
+    }
+
+    try {
+      // Prepopulate dbs to avoid race conditions
+      await db.getDB(StaticDatabases.PLATFORM_INFO.name).checkSetup()
+      await db.getDB(StaticDatabases.PLATFORM_INFO.docs.install).checkSetup()
+    } catch (err: any) {
+      if (err.status !== 409) {
+        throw err
+      }
     }
 
     if (!this.started) {
