@@ -13,6 +13,7 @@ import {
   UserPermissionAssignedEvent,
   UserPermissionRemovedEvent,
   UserUpdatedEvent,
+  UserOnboardingEvent,
 } from "@budibase/types"
 
 async function created(user: User, timestamp?: number) {
@@ -34,6 +35,13 @@ async function deleted(user: User) {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_DELETED, properties)
+}
+
+export async function onboardingComplete(user: User) {
+  const properties: UserOnboardingEvent = {
+    userId: user._id as string,
+  }
+  await publishEvent(Event.USER_ONBOARDING_COMPLETE, properties)
 }
 
 // PERMISSIONS
@@ -126,6 +134,7 @@ export default {
   permissionAdminRemoved,
   permissionBuilderAssigned,
   permissionBuilderRemoved,
+  onboardingComplete,
   invited,
   inviteAccepted,
   passwordForceReset,
