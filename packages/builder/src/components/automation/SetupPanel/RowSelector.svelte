@@ -182,7 +182,7 @@
   }
   .checkbox-field {
     padding-bottom: var(--spacing-s);
-    padding-left: var(--spacing-s);
+    padding-left: 1px;
     padding-top: var(--spacing-s);
   }
   .checkbox-field :global(label) {
