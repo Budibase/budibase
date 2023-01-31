@@ -1,5 +1,7 @@
+// @ts-ignore
 import fs from "fs"
 module FetchMock {
+  // @ts-ignore
   const fetch = jest.requireActual("node-fetch")
   let failCount = 0
 

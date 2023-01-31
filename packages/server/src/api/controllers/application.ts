@@ -112,12 +112,11 @@ function checkAppName(
   }
 }
 
-async function createInstance(template: any, includeSampleData: boolean) {
-  const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
-  const baseAppId = generateAppID(tenantId)
-  const appId = generateDevAppID(baseAppId)
-  await context.updateAppId(appId)
-
+async function createInstance(
+  appId: string,
+  template: any,
+  includeSampleData: boolean
+) {
   const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
@@ -250,82 +249,90 @@ async function performAppCreate(ctx: BBContext) {
     instanceConfig.file = ctx.request.files.templateFile
   }
   const includeSampleData = isQsTrue(ctx.request.body.sampleData)
-  const instance = await createInstance(instanceConfig, includeSampleData)
-  const appId = instance._id
-  const db = context.getAppDB()
+  const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
+  const appId = generateDevAppID(generateAppID(tenantId))
 
-  let newApplication: App = {
-    _id: DocumentType.APP_METADATA,
-    _rev: undefined,
-    appId,
-    type: "app",
-    version: packageJson.version,
-    componentLibraries: ["@budibase/standard-components"],
-    name: name,
-    url: url,
-    template: templateKey,
-    instance,
-    tenantId: tenancy.getTenantId(),
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-    status: AppStatus.DEV,
-    navigation: {
-      navigation: "Top",
-      title: name,
-      navWidth: "Large",
-      navBackground: "var(--spectrum-global-color-gray-100)",
-      links: [
-        {
-          url: "/home",
-          text: "Home",
-        },
-      ],
-    },
-    theme: "spectrum--light",
-    customTheme: {
-      buttonBorderRadius: "16px",
-    },
-  }
+  return await context.doInAppContext(appId, async () => {
+    const instance = await createInstance(
+      appId,
+      instanceConfig,
+      includeSampleData
+    )
+    const db = context.getAppDB()
 
-  // If we used a template or imported an app there will be an existing doc.
-  // Fetch and migrate some metadata from the existing app.
-  try {
-    const existing: App = await db.get(DocumentType.APP_METADATA)
-    const keys: (keyof App)[] = [
-      "_rev",
-      "navigation",
-      "theme",
-      "customTheme",
-      "icon",
-    ]
-    keys.forEach(key => {
-      if (existing[key]) {
-        // @ts-ignore
-        newApplication[key] = existing[key]
-      }
-    })
-
-    // Migrate navigation settings and screens if required
-    if (existing) {
-      const navigation = await migrateAppNavigation()
-      if (navigation) {
-        newApplication.navigation = navigation
-      }
+    let newApplication: App = {
+      _id: DocumentType.APP_METADATA,
+      _rev: undefined,
+      appId,
+      type: "app",
+      version: packageJson.version,
+      componentLibraries: ["@budibase/standard-components"],
+      name: name,
+      url: url,
+      template: templateKey,
+      instance,
+      tenantId: tenancy.getTenantId(),
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      status: AppStatus.DEV,
+      navigation: {
+        navigation: "Top",
+        title: name,
+        navWidth: "Large",
+        navBackground: "var(--spectrum-global-color-gray-100)",
+        links: [
+          {
+            url: "/home",
+            text: "Home",
+          },
+        ],
+      },
+      theme: "spectrum--light",
+      customTheme: {
+        buttonBorderRadius: "16px",
+      },
     }
-  } catch (err) {
-    // Nothing to do
-  }
 
-  const response = await db.put(newApplication, { force: true })
-  newApplication._rev = response.rev
+    // If we used a template or imported an app there will be an existing doc.
+    // Fetch and migrate some metadata from the existing app.
+    try {
+      const existing: App = await db.get(DocumentType.APP_METADATA)
+      const keys: (keyof App)[] = [
+        "_rev",
+        "navigation",
+        "theme",
+        "customTheme",
+        "icon",
+      ]
+      keys.forEach(key => {
+        if (existing[key]) {
+          // @ts-ignore
+          newApplication[key] = existing[key]
+        }
+      })
 
-  /* istanbul ignore next */
-  if (!env.isTest()) {
-    await createApp(appId)
-  }
+      // Migrate navigation settings and screens if required
+      if (existing) {
+        const navigation = await migrateAppNavigation()
+        if (navigation) {
+          newApplication.navigation = navigation
+        }
+      }
+    } catch (err) {
+      // Nothing to do
+    }
 
-  await cache.app.invalidateAppMetadata(appId, newApplication)
-  return newApplication
+    const response = await db.put(newApplication, { force: true })
+    newApplication._rev = response.rev
+
+    /* istanbul ignore next */
+    if (!env.isTest()) {
+      await createApp(appId)
+    }
+
+    await cache.app.invalidateAppMetadata(appId, newApplication)
+    return newApplication
+  })
 }
 
 async function creationEvents(request: any, app: App) {

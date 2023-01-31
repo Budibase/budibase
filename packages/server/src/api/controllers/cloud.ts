@@ -86,7 +86,7 @@ export async function importApps(ctx: Ctx) {
   if (Array.isArray(file)) {
     ctx.throw(400, "Single file is required")
   }
-  if (file.type !== "application/gzip") {
+  if (file.type !== "application/gzip" && file.type !== "application/x-gzip") {
     ctx.throw(400, "Import file must be a gzipped tarball.")
   }
 
