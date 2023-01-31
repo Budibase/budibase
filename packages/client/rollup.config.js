@@ -5,6 +5,7 @@ import svelte from "rollup-plugin-svelte"
 import { terser } from "rollup-plugin-terser"
 import postcss from "rollup-plugin-postcss"
 import svg from "rollup-plugin-svg"
+import image from "@rollup/plugin-image"
 import json from "rollup-plugin-json"
 import nodePolyfills from "rollup-plugin-polyfill-node"
 import path from "path"
@@ -87,6 +88,7 @@ export default {
       dedupe: ["svelte", "svelte/internal"],
     }),
     svg(),
+    image(),
     json(),
     production && terser(),
     !production && visualizer(),
