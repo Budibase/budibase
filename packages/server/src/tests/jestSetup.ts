@@ -19,7 +19,7 @@ function overrideConfigValue(key: string, value: string) {
 
 const globalSafe = global as any
 
-console.log(global)
+console.error(global)
 
 overrideConfigValue(
   "COUCH_DB_PORT",
