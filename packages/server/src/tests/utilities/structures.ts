@@ -255,3 +255,15 @@ export function basicWebhook(automationId: string) {
     },
   }
 }
+
+export function basicEnvironmentVariable(
+  name: string,
+  prod: string,
+  dev?: string
+) {
+  return {
+    name,
+    production: prod,
+    development: dev || prod,
+  }
+}
