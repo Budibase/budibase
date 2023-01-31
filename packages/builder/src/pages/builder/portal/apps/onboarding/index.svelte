@@ -1,9 +1,9 @@
 <script>
   import { goto } from "@roxi/routify"
-  import NamePanel from "./NamePanel.svelte"
-  import DataPanel from "./DataPanel.svelte"
-  import DatasourceConfigPanel from "./DatasourceConfigPanel.svelte"
-  import ExampleApp from "./ExampleApp.svelte"
+  import NamePanel from "./_components/NamePanel.svelte"
+  import DataPanel from "./_components/DataPanel.svelte"
+  import DatasourceConfigPanel from "./_components/DatasourceConfigPanel.svelte"
+  import ExampleApp from "./_components/ExampleApp.svelte"
   import { FancyButton, notifications, Modal } from "@budibase/bbui"
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import { SplitPage } from "@budibase/frontend-core"

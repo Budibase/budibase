@@ -26,12 +26,12 @@
 
 <style>
   .header {
-    margin-bottom: 34px;
+    margin-bottom: 20px;
   }
 
   .budibaseLogo {
     width: 42px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
 
   .headingAndBack {

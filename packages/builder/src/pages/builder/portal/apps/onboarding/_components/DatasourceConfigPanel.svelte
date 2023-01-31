@@ -88,6 +88,7 @@
             bind:error={errors[name]}
             validate={required ? validateRequired : () => {}}
             label={formatName(name)}
+            {type}
           />
         {/if}
       {/each}
