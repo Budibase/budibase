@@ -6,13 +6,11 @@ import {
   IntegrationBase,
   PaginationValues,
   RestQueryFields as RestQuery,
-} from "@budibase/types"
-import {
   RestConfig,
-  AuthType,
-  BasicAuthConfig,
-  BearerAuthConfig,
-} from "../definitions/datasource"
+  RestAuthType,
+  RestBasicAuthConfig,
+  RestBearerAuthConfig,
+} from "@budibase/types"
 import { get } from "lodash"
 import * as https from "https"
 import qs from "querystring"
@@ -331,14 +329,14 @@ class RestIntegration implements IntegrationBase {
       if (authConfig) {
         let config
         switch (authConfig.type) {
-          case AuthType.BASIC:
-            config = authConfig.config as BasicAuthConfig
+          case RestAuthType.BASIC:
+            config = authConfig.config as RestBasicAuthConfig
             headers.Authorization = `Basic ${Buffer.from(
               `${config.username}:${config.password}`
             ).toString("base64")}`
             break
-          case AuthType.BEARER:
-            config = authConfig.config as BearerAuthConfig
+          case RestAuthType.BEARER:
+            config = authConfig.config as RestBearerAuthConfig
             headers.Authorization = `Bearer ${config.token}`
             break
         }
@@ -428,5 +426,4 @@ class RestIntegration implements IntegrationBase {
 export default {
   schema: SCHEMA,
   integration: RestIntegration,
-  AuthType,
 }
