@@ -143,11 +143,11 @@
     display: flex;
     padding: 12px;
     align-items: center;
-    transition: filter 0.5s;
+    transition: filter 0.5s, background 0.13s ease-out;
   }
 
   a:hover {
-    background-color: var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-200);
   }
 
   a:last-child {
@@ -168,14 +168,14 @@
   }
 
   .disabled {
-    opacity: 70%;
+    opacity: 60%;
   }
 
   .premiumBadge {
     align-items: center;
     margin-left: auto;
     display: flex;
-    border: var(--border-light);
+    border: 1px solid var(--spectrum-global-color-gray-400);
     border-radius: 4px;
     padding: 4px 7px 5px 8px;
   }
