@@ -48,6 +48,7 @@ export class UserAPI extends TestAPI {
       .send({
         password: "newpassword",
         inviteCode: code,
+        firstName: "Ted",
       })
       .expect("Content-Type", /json/)
       .expect(200)
