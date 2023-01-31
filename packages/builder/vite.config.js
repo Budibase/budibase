@@ -1,8 +1,15 @@
 import { svelte } from "@sveltejs/vite-plugin-svelte"
 import replace from "@rollup/plugin-replace"
 import { defineConfig, loadEnv } from "vite"
-
 import path from "path"
+
+const ignoredWarnings = [
+  "unused-export-let",
+  "css-unused-selector",
+  "module-script-reactive-declaration",
+  "a11y-no-onchange",
+  "a11y-click-events-have-key-events",
+]
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
@@ -29,6 +36,12 @@ export default defineConfig(({ mode }) => {
       svelte({
         hot: !isProduction,
         emitCss: true,
+        onwarn: (warning, handler) => {
+          // Ignore some warnings
+          if (!ignoredWarnings.includes(warning.code)) {
+            handler(warning)
+          }
+        },
       }),
       replace({
         preventAssignment: true,
