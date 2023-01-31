@@ -172,6 +172,11 @@ export enum Event {
   // BACKUP
   APP_BACKUP_RESTORED = "app:backup:restored",
   APP_BACKUP_TRIGGERED = "app:backup:triggered",
+
+  // ENVIRONMENT VARIABLE
+  ENVIRONMENT_VARIABLE_CREATED = "environment_variable:created",
+  ENVIRONMENT_VARIABLE_DELETED = "environment_variable:deleted",
+  ENVIRONMENT_VARIABLE_UPGRADE_PANEL_OPENED = "environment_variable:upgrade_panel_opened",
 }
 
 // properties added at the final stage of the event pipeline

@@ -16,6 +16,7 @@ export type ContextMap = {
   tenantId?: string
   appId?: string
   identity?: IdentityContext
+  environmentVariables?: Record<string, string>
 }
 
 let TEST_APP_ID: string | null = null
@@ -75,7 +76,7 @@ export function getTenantIDFromAppID(appId: string) {
   }
 }
 
-function updateContext(updates: ContextMap) {
+function updateContext(updates: ContextMap): ContextMap {
   let context: ContextMap
   try {
     context = Context.get()
@@ -120,15 +121,23 @@ export async function doInTenant(
   return newContext(updates, task)
 }
 
-export async function doInAppContext(appId: string, task: any): Promise<any> {
-  if (!appId) {
+export async function doInAppContext(
+  appId: string | null,
+  task: any
+): Promise<any> {
+  if (!appId && !env.isTest()) {
     throw new Error("appId is required")
   }
 
-  const tenantId = getTenantIDFromAppID(appId)
-  const updates: ContextMap = { appId }
-  if (tenantId) {
-    updates.tenantId = tenantId
+  let updates: ContextMap
+  if (!appId) {
+    updates = { appId: "" }
+  } else {
+    const tenantId = getTenantIDFromAppID(appId)
+    updates = { appId }
+    if (tenantId) {
+      updates.tenantId = tenantId
+    }
   }
   return newContext(updates, task)
 }
@@ -189,25 +198,25 @@ export const getProdAppId = () => {
   return conversions.getProdAppID(appId)
 }
 
-export function updateTenantId(tenantId?: string) {
-  let context: ContextMap = updateContext({
-    tenantId,
-  })
-  Context.set(context)
+export function doInEnvironmentContext(
+  values: Record<string, string>,
+  task: any
+) {
+  if (!values) {
+    throw new Error("Must supply environment variables.")
+  }
+  const updates = {
+    environmentVariables: values,
+  }
+  return newContext(updates, task)
 }
 
-export function updateAppId(appId: string) {
-  let context: ContextMap = updateContext({
-    appId,
-  })
-  try {
-    Context.set(context)
-  } catch (err) {
-    if (env.isTest()) {
-      TEST_APP_ID = appId
-    } else {
-      throw err
-    }
+export function getEnvironmentVariables() {
+  const context = Context.get()
+  if (!context.environmentVariables) {
+    return null
+  } else {
+    return context.environmentVariables
   }
 }
 

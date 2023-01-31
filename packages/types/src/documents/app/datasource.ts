@@ -8,7 +8,7 @@ export interface Datasource extends Document {
   source: SourceName
   // the config is defined by the schema
   config?: {
-    [key: string]: string | number | boolean
+    [key: string]: string | number | boolean | any[]
   }
   plus?: boolean
   entities?: {

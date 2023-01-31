@@ -29,6 +29,7 @@ async function init() {
       ACCOUNT_PORTAL_URL: "http://localhost:10001",
       ACCOUNT_PORTAL_API_KEY: "budibase",
       JWT_SECRET: "testsecret",
+      ENCRYPTION_KEY: "testsecret",
       REDIS_PASSWORD: "budibase",
       MINIO_ACCESS_KEY: "budibase",
       MINIO_SECRET_KEY: "budibase",
