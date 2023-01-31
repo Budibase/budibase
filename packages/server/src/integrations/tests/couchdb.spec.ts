@@ -1,16 +1,19 @@
-jest.mock(
-  "pouchdb",
-  () =>
-    function CouchDBMock(this: any) {
-      this.post = jest.fn()
-      this.allDocs = jest.fn(() => ({ rows: [] }))
-      this.put = jest.fn()
-      this.get = jest.fn()
-      this.remove = jest.fn()
-      this.plugin = jest.fn()
-      this.close = jest.fn()
-    }
-)
+jest.mock("@budibase/backend-core", () => {
+  const core = jest.requireActual("@budibase/backend-core")
+  return {
+    ...core,
+    db: {
+      ...core.db,
+      DatabaseImpl: function () {
+        this.post = jest.fn()
+        this.allDocs = jest.fn().mockReturnValue({ rows: [] })
+        this.put = jest.fn()
+        this.get = jest.fn().mockReturnValue({ _rev: "a" })
+        this.remove = jest.fn()
+      },
+    },
+  }
+})
 
 import { default as CouchDBIntegration } from "../couchdb"
 
@@ -33,8 +36,8 @@ describe("CouchDB Integration", () => {
     const doc = {
       test: 1,
     }
-    const response = await config.integration.create({
-      json: doc,
+    await config.integration.create({
+      json: JSON.stringify(doc),
     })
     expect(config.integration.client.post).toHaveBeenCalledWith(doc)
   })
@@ -44,8 +47,8 @@ describe("CouchDB Integration", () => {
       name: "search",
     }
 
-    const response = await config.integration.read({
-      json: doc,
+    await config.integration.read({
+      json: JSON.stringify(doc),
     })
 
     expect(config.integration.client.allDocs).toHaveBeenCalledWith({
@@ -60,11 +63,14 @@ describe("CouchDB Integration", () => {
       name: "search",
     }
 
-    const response = await config.integration.update({
-      json: doc,
+    await config.integration.update({
+      json: JSON.stringify(doc),
     })
 
-    expect(config.integration.client.put).toHaveBeenCalledWith(doc)
+    expect(config.integration.client.put).toHaveBeenCalledWith({
+      ...doc,
+      _rev: "a",
+    })
   })
 
   it("calls the delete method with the correct params", async () => {
