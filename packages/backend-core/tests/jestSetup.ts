@@ -2,6 +2,8 @@ import env from "../src/environment"
 
 const globalSafe = global as any
 
+console.log(global)
+
 env._set(
   "COUCH_DB_PORT",
   globalSafe["__TESTCONTAINERS_COUCHDB-SERVICE-1_PORT_5984__"]
