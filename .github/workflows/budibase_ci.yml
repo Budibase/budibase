@@ -23,15 +23,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      couchdb:
-        image: ibmcom/couchdb3
-        env:
-          COUCHDB_PASSWORD: budibase
-          COUCHDB_USER: budibase
-        ports:
-          - 4567:5984
-
     strategy:
       matrix:
         node-version: [14.x]
