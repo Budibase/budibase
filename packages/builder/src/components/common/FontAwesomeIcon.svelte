@@ -36,5 +36,6 @@
 <style>
   span {
     display: contents;
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>
