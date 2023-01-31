@@ -1,6 +1,6 @@
 <script>
   import { url } from "@roxi/routify"
-  import FirstAppOnboarding from "./_FirstAppOnboarding/index.svelte"
+  import FirstAppOnboarding from "./onboarding/index.svelte"
   import { Layout, Page, Button, Modal } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"

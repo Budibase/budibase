@@ -2,7 +2,7 @@
   import { notifications } from "@budibase/bbui"
   import { apps, templates, licensing, groups } from "stores/portal"
   import { onMount } from "svelte"
-  import { goto } from "@roxi/routify"
+  import { redirect } from "@roxi/routify"
 
   // Don't block loading if we've already hydrated state
   let loaded = $apps.length > 0
@@ -24,7 +24,7 @@
 
       // Go to new app page if no apps exists
       if (!$apps.length) {
-        $goto("./create")
+        $redirect("./onboarding")
       }
     } catch (error) {
       notifications.error("Error loading apps and templates")
