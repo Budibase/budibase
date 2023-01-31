@@ -16,10 +16,10 @@ export default function positionDropdown(
       top: null,
     }
 
-    let popoverLeftPad = 20
-
     // Determine vertical styles
-    if (window.innerHeight - anchorBounds.bottom < 100) {
+    if (align === "right-outside") {
+      styles.top = anchorBounds.top
+    } else if (window.innerHeight - anchorBounds.bottom < 100) {
       styles.top = anchorBounds.top - elementBounds.height - 5
     } else {
       styles.top = anchorBounds.bottom + 5
@@ -34,15 +34,9 @@ export default function positionDropdown(
       styles.minWidth = anchorBounds.width
     }
     if (align === "right") {
-      let left =
-        anchorBounds.left + anchorBounds.width / 2 - elementBounds.width
-      // Accommodate margin on popover: 1.25rem; ~20px
-      if (left + elementBounds.width + popoverLeftPad > window.innerWidth) {
-        left -= 20
-      }
-      styles.left = left
-    } else if (align === "right-side") {
-      styles.left = anchorBounds.left + anchorBounds.width
+      styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
+    } else if (align === "right-outside") {
+      styles.left = anchorBounds.right + 10
     } else {
       styles.left = anchorBounds.left
     }

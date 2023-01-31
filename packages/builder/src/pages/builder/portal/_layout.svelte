@@ -1,7 +1,7 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
   import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
-  import { organisation, auth, menu } from "stores/portal"
+  import { organisation, auth, menu, apps } from "stores/portal"
   import { onMount } from "svelte"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
   import MobileMenu from "./_components/MobileMenu.svelte"
@@ -14,6 +14,7 @@
   let activeTab = "Apps"
 
   $: $url(), updateActiveTab($menu)
+  $: fullScreen = !$apps?.length
 
   const updateActiveTab = menu => {
     for (let entry of menu) {
@@ -46,7 +47,9 @@
   })
 </script>
 
-{#if $auth.user && loaded}
+{#if fullScreen}
+  <slot />
+{:else if $auth.user && loaded}
   <HelpMenu />
   <div class="container">
     <div class="nav">
