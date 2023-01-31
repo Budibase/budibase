@@ -15,7 +15,6 @@
   export let portalTarget
   export let dataCy
   export let maxWidth
-  export let direction = "bottom"
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true

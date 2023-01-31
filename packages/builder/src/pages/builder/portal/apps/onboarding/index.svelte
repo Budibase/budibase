@@ -79,6 +79,11 @@
     }
   }
 
+  const goToApp = appId => {
+    $goto(`/builder/app/${appId}`)
+    notifications.success(`App created successfully`)
+  }
+
   const handleCreateApp = async ({ datasourceConfig, useSampleData }) => {
     try {
       appId = await createApp(useSampleData)
@@ -94,8 +99,7 @@
         })
       }
 
-      $goto(`/builder/app/${appId}`)
-      notifications.success(`App created successfully`)
+      goToApp(appId)
     } catch (e) {
       console.log(e)
       notifications.error("There was a problem creating your app")
@@ -107,7 +111,7 @@
   <CreateTableModal
     name="Your Data"
     beforeSave={createApp}
-    afterSave={() => goToDesign(appId)}
+    afterSave={() => goToApp(appId)}
   />
 </Modal>
 
