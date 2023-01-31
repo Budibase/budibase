@@ -135,16 +135,20 @@ class TestConfiguration {
   // SETUP / TEARDOWN
 
   async beforeAll() {
-    this.#tenantId = `tenant-${utils.newid()}`
+    try {
+      this.#tenantId = `tenant-${utils.newid()}`
 
-    // Running tests in parallel causes issues creating the globaldb twice. This ensures the db is properly created before starting
-    await retry(async () => await this.createDefaultUser())
-    await this.createSession(this.defaultUser!)
+      // Running tests in parallel causes issues creating the globaldb twice. This ensures the db is properly created before starting
+      await retry(async () => await this.createDefaultUser())
+      await this.createSession(this.defaultUser!)
 
-    await tenancy.doInTenant(this.#tenantId, async () => {
-      await this.createTenant1User()
-      await this.createSession(this.tenant1User!)
-    })
+      await tenancy.doInTenant(this.#tenantId, async () => {
+        await this.createTenant1User()
+        await this.createSession(this.tenant1User!)
+      })
+    } catch (e: any) {
+      throw new Error(e.message)
+    }
   }
 
   async afterAll() {
