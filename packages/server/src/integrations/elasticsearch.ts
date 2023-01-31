@@ -164,12 +164,12 @@ class ElasticSearchIntegration implements IntegrationBase {
     }
   }
 
-  async delete(query: { id: string; index: string; }) {
+  async delete(query: { id: string; index: string }) {
     const { id, index } = query
     try {
       const result = await this.client.delete({
         id,
-        index
+        index,
       })
       return result.body
     } catch (err) {
