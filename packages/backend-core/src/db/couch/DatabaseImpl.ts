@@ -58,7 +58,14 @@ export class DatabaseImpl implements Database {
       throw new Error("DB does not exist")
     }
     if (!exists) {
-      await DatabaseImpl.nano.db.create(this.name)
+      try {
+        await DatabaseImpl.nano.db.create(this.name)
+      } catch (err: any) {
+        // Handling race conditions
+        if (err.statusCode !== 412) {
+          throw err
+        }
+      }
     }
     return DatabaseImpl.nano.db.use(this.name)
   }
