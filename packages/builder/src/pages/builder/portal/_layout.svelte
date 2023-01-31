@@ -7,6 +7,7 @@
   import MobileMenu from "./_components/MobileMenu.svelte"
   import Logo from "./_components/Logo.svelte"
   import UserDropdown from "./_components/UserDropdown.svelte"
+  import HelpMenu from "components/common/HelpMenu.svelte"
 
   let loaded = false
   let mobileMenuVisible = false
@@ -46,6 +47,7 @@
 </script>
 
 {#if $auth.user && loaded}
+  <HelpMenu />
   <div class="container">
     <div class="nav">
       <div class="branding">
