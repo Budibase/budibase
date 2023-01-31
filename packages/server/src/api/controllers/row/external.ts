@@ -19,6 +19,7 @@ import {
   Table,
   Datasource,
 } from "@budibase/types"
+import sdk from "../../../sdk"
 
 const { cleanExportRows } = require("./utils")
 
@@ -101,7 +102,7 @@ export async function destroy(ctx: BBContext) {
 export async function bulkDestroy(ctx: BBContext) {
   const { rows } = ctx.request.body
   const tableId = ctx.params.tableId
-  let promises = []
+  let promises: Promise<Row[] | { row: Row; table: Table }>[] = []
   for (let row of rows) {
     promises.push(
       handleRequest(Operation.DELETE, tableId, {
@@ -180,11 +181,10 @@ export async function validate(ctx: BBContext) {
 }
 
 export async function exportRows(ctx: BBContext) {
-  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
-  const db = context.getAppDB()
+  const { datasourceId } = breakExternalTableId(ctx.params.tableId)
   const format = ctx.query.format
   const { columns } = ctx.request.body
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId!)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
@@ -236,8 +236,7 @@ export async function fetchEnrichedRow(ctx: BBContext) {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const db = context.getAppDB()
-  const datasource: Datasource = await db.get(datasourceId)
+  const datasource: Datasource = await sdk.datasources.get(datasourceId!)
   if (!tableName) {
     ctx.throw(400, "Unable to find table.")
   }

@@ -1,5 +1,7 @@
 import { Table } from "../documents"
 
+export const PASSWORD_REPLACEMENT = "--secret-value--"
+
 export enum Operation {
   CREATE = "CREATE",
   READ = "READ",
@@ -33,6 +35,7 @@ export enum DatasourceFieldType {
   OBJECT = "object",
   JSON = "json",
   FILE = "file",
+  FIELD_GROUP = "fieldGroup",
 }
 
 export enum SourceName {
@@ -95,6 +98,16 @@ export interface ExtraQueryConfig {
   }
 }
 
+export interface DatasourceConfig {
+  [key: string]: {
+    type: string
+    display?: string
+    required?: boolean
+    default?: any
+    deprecated?: boolean
+  }
+}
+
 export interface Integration {
   docs: string
   plus?: boolean
@@ -104,7 +117,7 @@ export interface Integration {
   friendlyName: string
   type?: string
   iconUrl?: string
-  datasource: {}
+  datasource: DatasourceConfig
   query: {
     [key: string]: QueryDefinition
   }

@@ -9,6 +9,7 @@ const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
 import { Format } from "../view/exporters"
 import { Ctx } from "@budibase/types"
+import sdk from "../../../sdk"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -22,8 +23,7 @@ validateJs.extend(validateJs.validators.datetime, {
 
 export async function getDatasourceAndQuery(json: any) {
   const datasourceId = json.endpoint.datasourceId
-  const db = context.getAppDB()
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId)
   return makeExternalQuery(datasource, json)
 }
 

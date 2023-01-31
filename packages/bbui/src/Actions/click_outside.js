@@ -1,4 +1,4 @@
-const ignoredClasses = [".flatpickr-calendar"]
+const ignoredClasses = [".flatpickr-calendar", ".spectrum-Popover"]
 let clickHandlers = []
 
 /**
@@ -19,7 +19,7 @@ const handleClick = event => {
     }
 
     // Ignore clicks for modals, unless the handler is registered from a modal
-    const sourceInModal = handler.element.closest(".spectrum-Modal") != null
+    const sourceInModal = handler.anchor.closest(".spectrum-Modal") != null
     const clickInModal = event.target.closest(".spectrum-Modal") != null
     if (clickInModal && !sourceInModal) {
       return
@@ -33,10 +33,10 @@ document.documentElement.addEventListener("click", handleClick, true)
 /**
  * Adds or updates a click handler
  */
-const updateHandler = (id, element, callback) => {
+const updateHandler = (id, element, anchor, callback) => {
   let existingHandler = clickHandlers.find(x => x.id === id)
   if (!existingHandler) {
-    clickHandlers.push({ id, element, callback })
+    clickHandlers.push({ id, element, anchor, callback })
   } else {
     existingHandler.callback = callback
   }
@@ -51,12 +51,22 @@ const removeHandler = id => {
 
 /**
  * Svelte action to apply a click outside handler for a certain element
+ * opts.anchor is an optional param specifying the real root source of the
+ * component being observed. This is required for things like popovers, where
+ * the element using the clickoutside action is the popover, but the popover is
+ * rendered at the root of the DOM somewhere, whereas the popover anchor is the
+ * element we actually want to consider when determining the source component.
  */
-export default (element, callback) => {
+export default (element, opts) => {
   const id = Math.random()
-  updateHandler(id, element, callback)
+  const update = newOpts => {
+    const callback = newOpts?.callback || newOpts
+    const anchor = newOpts?.anchor || element
+    updateHandler(id, element, anchor, callback)
+  }
+  update(opts)
   return {
-    update: newCallback => updateHandler(id, element, newCallback),
+    update,
     destroy: () => removeHandler(id),
   }
 }

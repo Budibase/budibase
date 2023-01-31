@@ -8,6 +8,8 @@
     Divider,
     notifications,
     Label,
+    Modal,
+    ModalContent,
   } from "@budibase/bbui"
   import { API } from "api"
   import { auth, admin } from "stores/portal"
@@ -15,6 +17,11 @@
 
   let version
   let loaded = false
+  let githubVersion
+  let githubPublishedDate
+  let githubPublishedTime
+  let needsUpdate = true
+  let updateModal
 
   // Only admins allowed here
   $: {
@@ -47,8 +54,37 @@
     }
   }
 
+  async function getLatestVersion() {
+    try {
+      //Check github API for the latest release
+      const githubCheck = await fetch(
+        "https://api.github.com/repos/Budibase/budibase/releases/latest"
+      )
+      const githubResponse = await githubCheck.json()
+
+      //Get tag and remove the v infront of the tage name e.g. v1.0.0 is 1.0.0
+      githubVersion = githubResponse.tag_name.slice(1)
+
+      //Get the release date and output it in the local time format
+      githubPublishedDate = new Date(githubResponse.published_at)
+      githubPublishedTime = githubPublishedDate.toLocaleTimeString()
+      githubPublishedDate = githubPublishedDate.toLocaleDateString()
+
+      //Does Budibase need to be updated?
+      if (githubVersion === version) {
+        needsUpdate = false
+      } else {
+        needsUpdate = true
+      }
+    } catch (error) {
+      notifications.error("Error getting the latest Budibase version")
+      githubVersion = null
+    }
+  }
+
   onMount(async () => {
     await getVersion()
+    await getLatestVersion()
     loaded = true
   })
 </script>
@@ -69,9 +105,32 @@
         <Heading size="S">
           {version || "-"}
         </Heading>
+        <Divider />
+        <Label size="L">Latest version</Label>
+        <Heading size="S">
+          {githubVersion}
+        </Heading>
+        <Label size="L"
+          >This version was released on {githubPublishedDate} at {githubPublishedTime}</Label
+        >
       </Layout>
+      <Divider />
       <div>
-        <Button cta on:click={updateBudibase}>Check for updates</Button>
+        <Button cta on:click={updateModal.show} disabled={!needsUpdate}
+          >Update Budibase</Button
+        >
+        <Modal bind:this={updateModal}>
+          <ModalContent
+            title="Update Budibase"
+            confirmText="Update"
+            onConfirm={updateBudibase}
+          >
+            <span
+              >Are you sure you want to update your budibase installation to the
+              latest version?</span
+            >
+          </ModalContent>
+        </Modal>
       </div>
     {/if}
   </Layout>
