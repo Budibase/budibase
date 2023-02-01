@@ -15,18 +15,47 @@ import { getCouchInfo } from "./connections"
 import { directCouchCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { WriteStream, ReadStream } from "fs"
+import { newid } from "../../newid"
+
+function buildNano(couchInfo: { url: string; cookie: string }) {
+  return Nano({
+    url: couchInfo.url,
+    requestDefaults: {
+      headers: {
+        Authorization: couchInfo.cookie,
+      },
+    },
+    parseUrl: false,
+  })
+}
+
+export function DatabaseWithConnection(
+  dbName: string,
+  connection: string,
+  opts?: DatabaseOpts
+) {
+  if (!connection) {
+    throw new Error("Must provide connection details")
+  }
+  return new DatabaseImpl(dbName, opts, connection)
+}
 
 export class DatabaseImpl implements Database {
   public readonly name: string
   private static nano: Nano.ServerScope
+  private readonly instanceNano?: Nano.ServerScope
   private readonly pouchOpts: DatabaseOpts
 
-  constructor(dbName?: string, opts?: DatabaseOpts) {
+  constructor(dbName?: string, opts?: DatabaseOpts, connection?: string) {
     if (dbName == null) {
       throw new Error("Database name cannot be undefined.")
     }
     this.name = dbName
     this.pouchOpts = opts || {}
+    if (connection) {
+      const couchInfo = getCouchInfo(connection)
+      this.instanceNano = buildNano(couchInfo)
+    }
     if (!DatabaseImpl.nano) {
       DatabaseImpl.init()
     }
@@ -34,20 +63,16 @@ export class DatabaseImpl implements Database {
 
   static init() {
     const couchInfo = getCouchInfo()
-    DatabaseImpl.nano = Nano({
-      url: couchInfo.url,
-      requestDefaults: {
-        headers: {
-          Authorization: couchInfo.cookie,
-        },
-      },
-      parseUrl: false,
-    })
+    DatabaseImpl.nano = buildNano(couchInfo)
   }
 
   async exists() {
     let response = await directCouchCall(`/${this.name}`, "HEAD")
     return response.status === 200
+  }
+
+  private nano() {
+    return this.instanceNano || DatabaseImpl.nano
   }
 
   async checkSetup() {
@@ -58,9 +83,9 @@ export class DatabaseImpl implements Database {
       throw new Error("DB does not exist")
     }
     if (!exists) {
-      await DatabaseImpl.nano.db.create(this.name)
+      await this.nano().db.create(this.name)
     }
-    return DatabaseImpl.nano.db.use(this.name)
+    return this.nano().db.use(this.name)
   }
 
   private async updateOutput(fnc: any) {
@@ -99,6 +124,13 @@ export class DatabaseImpl implements Database {
       throw new Error("Unable to remove doc without a valid _id and _rev.")
     }
     return this.updateOutput(() => db.destroy(_id, _rev))
+  }
+
+  async post(document: AnyDocument, opts?: DatabasePutOpts) {
+    if (!document._id) {
+      document._id = newid()
+    }
+    return this.put(document, opts)
   }
 
   async put(document: AnyDocument, opts?: DatabasePutOpts) {
@@ -146,7 +178,7 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     try {
-      await DatabaseImpl.nano.db.destroy(this.name)
+      await this.nano().db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
       if (err.statusCode === 404) {
