@@ -28,7 +28,7 @@
   // and appends it if not
   const getEnrichedBindings = (bindings, key) => {
     const ownBinding = makeStateBinding(key)
-    const hasKey = !!bindings.find(binding => {
+    const hasKey = bindings.some(binding => {
       return binding.runtimeBinding === ownBinding.runtimeBinding
     })
     return hasKey || !key ? bindings : [...bindings, ownBinding]
