@@ -2,7 +2,10 @@
   import { Select, Label, Combobox, Checkbox, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { getAllStateVariables } from "builderStore/dataBinding"
+  import {
+    getAllStateVariables,
+    makeStateBinding,
+  } from "builderStore/dataBinding"
 
   export let parameters
   export let bindings = []
@@ -18,6 +21,15 @@
       value: "delete",
     },
   ]
+
+  $: enrichedBindings = getEnrichedBindings(bindings, parameters.key)
+
+  // Checks if the binding list contains a state binding for this action's key,
+  // and appends it if not
+  const getEnrichedBindings = (bindings, key) => {
+    const hasKey = !!bindings.find(x => x.runtimeBinding === `[state].[${key}]`)
+    return hasKey || !key ? bindings : [...bindings, makeStateBinding(key)]
+  }
 
   onMount(() => {
     if (!parameters.type) {
@@ -38,7 +50,7 @@
   {#if parameters.type === "set"}
     <Label small>Value</Label>
     <DrawerBindableInput
-      {bindings}
+      bindings={enrichedBindings}
       value={parameters.value}
       on:change={e => (parameters.value = e.detail)}
     />
