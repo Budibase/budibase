@@ -15,3 +15,44 @@ export interface Datasource extends Document {
     [key: string]: Table
   }
 }
+
+export enum RestAuthType {
+  BASIC = "basic",
+  BEARER = "bearer",
+}
+
+export interface RestBasicAuthConfig {
+  username: string
+  password: string
+}
+
+export interface RestBearerAuthConfig {
+  token: string
+}
+
+export interface RestAuthConfig {
+  _id: string
+  name: string
+  type: RestAuthType
+  config: RestBasicAuthConfig | RestBearerAuthConfig
+}
+
+export interface RestConfig {
+  url: string
+  rejectUnauthorized: boolean
+  defaultHeaders: {
+    [key: string]: any
+  }
+  legacyHttpParser: boolean
+  authConfigs: RestAuthConfig[]
+  staticVariables: {
+    [key: string]: string
+  }
+  dynamicVariables: [
+    {
+      name: string
+      queryId: string
+      value: string
+    }
+  ]
+}

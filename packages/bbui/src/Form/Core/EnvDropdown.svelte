@@ -134,7 +134,7 @@
       on:blur={onBlur}
       on:focus={onFocus}
       on:input={onInput}
-      {type}
+      type={hbsValue.length ? "text" : type}
       style={align ? `text-align: ${align};` : ""}
       class="spectrum-Textfield-input"
       inputmode={type === "number" ? "decimal" : "text"}
@@ -245,10 +245,6 @@
 
   .spectrum-Popover.spectrum-Popover--bottom.spectrum-Picker-popover.is-open {
     width: 100%;
-  }
-
-  .no-variables-height {
-    height: 100px;
   }
 
   .no-variables-text {
