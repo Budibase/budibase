@@ -279,7 +279,6 @@
                   <Icon
                     name="Download"
                     hoverable
-                    tooltip="test"
                     on:click={confirmDownloadDialog.show}
                   />
                 {/if}
