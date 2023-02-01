@@ -22,6 +22,8 @@
   let developmentValue
   let useProductionValue = true
 
+  const HasSpacesRegex = /[\\"\s]/
+
   const deleteVariable = async name => {
     try {
       await environment.deleteVariable(name)
@@ -47,10 +49,16 @@
 </script>
 
 <ModalContent
+  disabled={HasSpacesRegex.test(name)}
   onConfirm={() => saveVariable()}
   title={!row ? "Add new environment variable" : "Edit environment variable"}
 >
-  <Input disabled={row} label="Name" bind:value={name} />
+  <Input
+    disabled={row}
+    label="Name"
+    bind:value={name}
+    error={HasSpacesRegex.test(name) && "Must not include spaces"}
+  />
   <div>
     <Heading size="XS">Production</Heading>
     <Input
