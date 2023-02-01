@@ -62,64 +62,17 @@
   let isManyToMany, isManyToOne, relationshipType
   let hasValidated = false
 
-  $: {
-    if (!fromPrimary) {
-      fromPrimary = fromRelationship.foreignKey
-    }
-    if (!fromForeign) {
-      fromForeign = toRelationship.foreignKey
-    }
-    if (!fromColumn && !errors.fromColumn) {
-      fromColumn = toRelationship.name
-    }
-    if (!toColumn && !errors.toColumn) {
-      toColumn = fromRelationship.name
-    }
-    if (!fromId) {
-      fromId = toRelationship.tableId
-    }
-    if (!toId) {
-      toId = fromRelationship.tableId
-    }
-    if (!throughId) {
-      throughId = fromRelationship.through
-      throughFromKey = fromRelationship.throughFrom
-      throughToKey = fromRelationship.throughTo
-    }
-    if (!relationshipType) {
-      relationshipType =
-        fromRelationship.relationshipType || RelationshipTypes.MANY_TO_ONE
-    }
-  }
-
   $: tableOptions = plusTables.map(table => ({
     label: table.name,
     value: table._id,
   }))
   $: valid = getErrorCount(errors) === 0 && allRequiredAttributesSet()
-
   $: isManyToMany = relationshipType === RelationshipTypes.MANY_TO_MANY
   $: isManyToOne = relationshipType === RelationshipTypes.MANY_TO_ONE
   $: fromTable = plusTables.find(table => table._id === fromId)
   $: toTable = plusTables.find(table => table._id === toId)
   $: throughTable = plusTables.find(table => table._id === throughId)
-
   $: toRelationship.relationshipType = fromRelationship?.relationshipType
-
-  function getErrorCount(errors) {
-    return Object.entries(errors)
-      .filter(entry => !!entry[1])
-      .map(entry => entry[0]).length
-  }
-
-  function allRequiredAttributesSet() {
-    const base = fromTable && toTable && fromColumn && toColumn
-    if (isManyToOne) {
-      return base && fromPrimary && fromForeign
-    } else {
-      return base && throughTable && throughFromKey && throughToKey
-    }
-  }
 
   function invalidThroughTable() {
     // need to know the foreign key columns to check error
@@ -137,6 +90,49 @@
     }
     return false
   }
+  function relationshipExists() {
+    if (
+      originalFromTable &&
+      originalToTable &&
+      originalFromTable === fromTable &&
+      originalToTable === toTable
+    ) {
+      return false
+    }
+    let fromThroughLinks = Object.values(
+      datasource.entities[fromTable.name].schema
+    ).filter(value => value.through)
+    let toThroughLinks = Object.values(
+      datasource.entities[toTable.name].schema
+    ).filter(value => value.through)
+
+    const matchAgainstUserInput = (fromTableId, toTableId) =>
+      (fromTableId === fromId && toTableId === toId) ||
+      (fromTableId === toId && toTableId === fromId)
+
+    return !!fromThroughLinks.find(from =>
+      toThroughLinks.find(
+        to =>
+          from.through === to.through &&
+          matchAgainstUserInput(from.tableId, to.tableId)
+      )
+    )
+  }
+
+  function getErrorCount(errors) {
+    return Object.entries(errors)
+      .filter(entry => !!entry[1])
+      .map(entry => entry[0]).length
+  }
+
+  function allRequiredAttributesSet() {
+    const base = fromTable && toTable && fromColumn && toColumn
+    if (isManyToOne) {
+      return base && fromPrimary && fromForeign
+    } else {
+      return base && throughTable && throughFromKey && throughToKey
+    }
+  }
 
   function validate() {
     if (!allRequiredAttributesSet() && !hasValidated) {
@@ -153,7 +149,7 @@
     errObj.throughToKey = errorChecker.manyForeignKeySet(throughToKey)
     errObj.throughTable = errorChecker.throughIsNullable()
     errObj.fromForeign = errorChecker.foreignKeySet(fromForeign)
-    errObj.fromPrimary = errorChecker.foreignKeySet(fromPrimary)
+    errObj.fromPrimary = errorChecker.primaryKeySet(fromPrimary)
     errObj.fromTable = errorChecker.doesRelationshipExists()
     errObj.toTable = errorChecker.doesRelationshipExists()
     // currently don't support relationships back onto the table itself, needs to relate out
@@ -252,35 +248,6 @@
     toRelationship = relateTo
   }
 
-  function relationshipExists() {
-    if (
-      originalFromTable &&
-      originalToTable &&
-      originalFromTable === fromTable &&
-      originalToTable === toTable
-    ) {
-      return false
-    }
-    let fromThroughLinks = Object.values(
-      datasource.entities[fromTable.name].schema
-    ).filter(value => value.through)
-    let toThroughLinks = Object.values(
-      datasource.entities[toTable.name].schema
-    ).filter(value => value.through)
-
-    const matchAgainstUserInput = (fromTableId, toTableId) =>
-      (fromTableId === fromId && toTableId === toId) ||
-      (fromTableId === toId && toTableId === fromId)
-
-    return !!fromThroughLinks.find(from =>
-      toThroughLinks.find(
-        to =>
-          from.through === to.through &&
-          matchAgainstUserInput(from.tableId, to.tableId)
-      )
-    )
-  }
-
   function removeExistingRelationship() {
     if (originalFromTable && originalFromColumnName) {
       delete datasource.entities[originalFromTable.name].schema[
@@ -325,6 +292,21 @@
   }
 
   onMount(() => {
+    if (fromRelationship) {
+      fromPrimary = fromRelationship.foreignKey
+      toId = fromRelationship.tableId
+      throughId = fromRelationship.through
+      throughFromKey = fromRelationship.throughFrom
+      throughToKey = fromRelationship.throughTo
+      toColumn = fromRelationship.name
+    }
+    if (toRelationship) {
+      fromForeign = toRelationship.foreignKey
+      fromId = toRelationship.tableId
+      fromColumn = toRelationship.name
+    }
+    relationshipType =
+      fromRelationship.relationshipType || RelationshipTypes.MANY_TO_ONE
     if (selectedFromTable) {
       fromColumn = selectedFromTable.name
       fromPrimary = selectedFromTable?.primary[0] || null
