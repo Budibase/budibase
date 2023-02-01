@@ -50,20 +50,10 @@
       </Breadcrumbs>
       <Header title={"Create new app"}>
         <div slot="buttons">
-          <Button
-            dataCy="import-app-btn"
-            size="M"
-            secondary
-            on:click={initiateAppImport}
-          >
+          <Button size="M" secondary on:click={initiateAppImport}>
             Import app
           </Button>
-          <Button
-            dataCy="create-app-btn"
-            size="M"
-            cta
-            on:click={initiateAppCreation}
-          >
+          <Button size="M" cta on:click={initiateAppCreation}>
             Start from scratch
           </Button>
         </div>

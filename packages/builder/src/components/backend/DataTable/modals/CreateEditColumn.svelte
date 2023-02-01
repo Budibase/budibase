@@ -546,9 +546,5 @@
     Your data will be deleted and this action cannot be undone - enter the column
     name to confirm.
   </p>
-  <Input
-    dataCy="delete-column-confirm"
-    bind:value={deleteColName}
-    placeholder={originalName}
-  />
+  <Input bind:value={deleteColName} placeholder={originalName} />
 </ConfirmDialog>
