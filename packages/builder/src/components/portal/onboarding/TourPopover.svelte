@@ -113,53 +113,54 @@
     align={tourStep?.align}
     bind:this={popover}
     anchor={popoverAnchor}
-    dataCy="tour-popover-menu"
     maxWidth={300}
     dismissible={false}
+    offset={15}
   >
-    <Layout gap="M">
-      <div class="tour-header">
-        <Heading size="XS">{tourStep?.title || "-"}</Heading>
-        <div>{`${tourStepIdx + 1}/${tourSteps?.length}`}</div>
-      </div>
-      <Body size="S">
-        <span class="tour-body">
-          {#if tourStep.layout}
-            <svelte:component this={tourStep.layout} />
-          {:else}
-            {tourStep?.body || ""}
-          {/if}
-        </span>
-      </Body>
-      <div class="tour-footer">
-        <div class="tour-navigation">
-          {#if tourStepIdx > 0}
-            <Button
-              secondary
-              on:click={previousStep}
-              disabled={tourStepIdx == 0}
-            >
-              <div>Back</div>
-            </Button>
-          {/if}
-          <Button cta on:click={nextStep}>
-            <div>{lastStep ? "Finish" : "Next"}</div>
-          </Button>
+    <div class="tour-content">
+      <Layout noPadding gap="M">
+        <div class="tour-header">
+          <Heading size="XS">{tourStep?.title || "-"}</Heading>
+          <div>{`${tourStepIdx + 1}/${tourSteps?.length}`}</div>
         </div>
-      </div>
-    </Layout>
+        <Body size="S">
+          <span class="tour-body">
+            {#if tourStep.layout}
+              <svelte:component this={tourStep.layout} />
+            {:else}
+              {tourStep?.body || ""}
+            {/if}
+          </span>
+        </Body>
+        <div class="tour-footer">
+          <div class="tour-navigation">
+            {#if tourStepIdx > 0}
+              <Button
+                secondary
+                on:click={previousStep}
+                disabled={tourStepIdx == 0}
+              >
+                <div>Back</div>
+              </Button>
+            {/if}
+            <Button cta on:click={nextStep}>
+              <div>{lastStep ? "Finish" : "Next"}</div>
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    </div>
   </Popover>
 {/key}
 
 <style>
+  .tour-content {
+    padding: var(--spacing-xl);
+  }
   .tour-navigation {
     grid-gap: var(--spectrum-alias-grid-baseline);
     display: flex;
     justify-content: end;
-  }
-  :global([data-cy="tour-popover-menu"]) {
-    padding: 10px;
-    margin-top: var(--spacing-l);
   }
   .tour-body :global(.feature-list) {
     margin-bottom: 0px;
