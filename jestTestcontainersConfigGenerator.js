@@ -1,4 +1,4 @@
-module.exports = dependenciesEnv => {
+module.exports = () => {
   return {
     dockerCompose: {
       composeFilePath: "../../hosting",
