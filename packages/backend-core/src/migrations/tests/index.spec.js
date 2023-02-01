@@ -2,9 +2,8 @@ require("../../../tests")
 const { runMigrations, getMigrationsDoc } = require("../index")
 const { getGlobalDBName, getDB } = require("../../db")
 
-const { faker } = require( "@faker-js/faker")
-
 const { default: environment } = require("../../environment")
+const { newid } = require("../../newid")
 environment._set("MULTI_TENANCY", 'TRUE')
 
 let db
@@ -22,7 +21,7 @@ describe("migrations", () => {
   let tenantId
 
   beforeEach(() => {
-    tenantId =faker.random.alpha(10)
+    tenantId = `tenant_${newid()}`
     db = getDB(getGlobalDBName(tenantId))
   })
 

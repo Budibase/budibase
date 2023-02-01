@@ -4,8 +4,8 @@ import * as events from "../../events"
 import * as db from "../../db"
 import { Header } from "../../constants"
 import { doInTenant } from "../../context"
-import { faker } from "@faker-js/faker"
 import environment from "../../environment"
+import { newid } from "../../utils"
 
 describe("utils", () => {
   describe("platformLogout", () => {
@@ -14,7 +14,7 @@ describe("utils", () => {
     })
 
     it("should call platform logout", async () => {
-      await doInTenant(faker.random.alpha(10), async () => {
+      await doInTenant(`tenant-${newid()}`, async () => {
         const ctx = structures.koa.newContext()
         await utils.platformLogout({ ctx, userId: "test" })
         expect(events.auth.logout).toBeCalledTimes(1)
@@ -64,7 +64,7 @@ describe("utils", () => {
       const app = structures.apps.app(expected)
 
       // set custom url
-      const appUrl = faker.datatype.uuid()
+      const appUrl = newid()
       app.url = `/${appUrl}`
       ctx.path = `/app/${appUrl}`
 
