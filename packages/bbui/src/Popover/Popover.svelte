@@ -17,6 +17,7 @@
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
+  export let offset = 5
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -65,6 +66,7 @@
           align,
           maxWidth,
           useAnchorWidth,
+          offset,
         }}
         use:clickOutside={{
           callback: dismissible ? handleOutsideClick : () => {},
