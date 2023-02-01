@@ -146,6 +146,8 @@ spec:
           value: {{ .Values.globals.google.secret | quote }}
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        - name: ENCRYPTION_KEY
+          value: {{ .Values.globals.bbEncryptionKey | quote }}
         {{ if .Values.globals.elasticApmEnabled }}
         - name: ELASTIC_APM_ENABLED
           value: {{ .Values.globals.elasticApmEnabled | quote }}
