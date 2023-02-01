@@ -11,6 +11,15 @@ const testContainersSettings = {
   },
 }
 
+if (!process.env.CI) {
+  // use sources when not in CI
+  testContainersSettings.moduleNameMapper = {
+    "@budibase/types": "<rootDir>/../types/src",
+  }
+} else {
+  console.log("Running tests with compiled dependency sources")
+}
+
 const config: Config = {
   projects: [
     {
@@ -26,15 +35,6 @@ const config: Config = {
   ],
   collectCoverageFrom: ["src/**/*.{js,ts}"],
   coverageReporters: ["lcov", "json", "clover"],
-}
-
-if (!process.env.CI) {
-  // use sources when not in CI
-  config.moduleNameMapper = {
-    "@budibase/types": "<rootDir>/../types/src",
-  }
-} else {
-  console.log("Running tests with compiled dependency sources")
 }
 
 export default config
