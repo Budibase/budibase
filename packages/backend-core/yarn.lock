@@ -487,17 +487,17 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
+"@budibase/types@2.2.12-alpha.59":
+  version "2.2.12-alpha.59"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.12-alpha.59.tgz#41635c1e405acfa6162b5ca0f79f0c73f16bc764"
+  integrity sha512-cEcM0nnTEOEan9UYVspwcdgYgIbtY2zQTe1uDdwys+NFplMrbiwGyQbsafOx2IA0jCxmyqqYGmUAC0eF1napKQ==
+
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz#00629c35a688e05a88b1cda684fb9d5e73f000a1"
   integrity sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
-
-"@faker-js/faker@^7.6.0":
-  version "7.6.0"
-  resolved "https://registry.yarnpkg.com/@faker-js/faker/-/faker-7.6.0.tgz#9ea331766084288634a9247fcd8b84f16ff4ba07"
-  integrity sha512-XK6BTq1NDMo9Xqw/YkYyGjSsg44fbNwYRx7QK2CuoQgyy+f1rrTDHoExVM5PsyXCtfl2vs2vVJ0MN0yN6LppRw==
 
 "@hapi/hoek@^9.0.0":
   version "9.3.0"
