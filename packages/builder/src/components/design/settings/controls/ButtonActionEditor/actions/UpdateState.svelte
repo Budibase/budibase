@@ -27,8 +27,11 @@
   // Checks if the binding list contains a state binding for this action's key,
   // and appends it if not
   const getEnrichedBindings = (bindings, key) => {
-    const hasKey = !!bindings.find(x => x.runtimeBinding === `[state].[${key}]`)
-    return hasKey || !key ? bindings : [...bindings, makeStateBinding(key)]
+    const ownBinding = makeStateBinding(key)
+    const hasKey = !!bindings.find(binding => {
+      return binding.runtimeBinding === ownBinding.runtimeBinding
+    })
+    return hasKey || !key ? bindings : [...bindings, ownBinding]
   }
 
   onMount(() => {
