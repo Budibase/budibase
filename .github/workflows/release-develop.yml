@@ -194,5 +194,5 @@ jobs:
           PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
         with:
           repository: budibase/budibase-deploys
-          event: deploy-develop-to-qa
+          event: deploy-budibase-develop-to-qa
           github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
