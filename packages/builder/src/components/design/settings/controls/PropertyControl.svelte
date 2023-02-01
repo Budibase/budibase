@@ -74,17 +74,13 @@
   })
 </script>
 
-<div
-  class="property-control"
-  class:highlighted={highlighted && nullishValue}
-  data-cy={`setting-${key}`}
->
+<div class="property-control" class:highlighted={highlighted && nullishValue}>
   {#if type !== "boolean" && label}
     <div class="label">
       <Label>{label}</Label>
     </div>
   {/if}
-  <div data-cy={`${key}-prop-control`} class="control">
+  <div id={`${key}-prop-control`} class="control">
     <svelte:component
       this={control}
       {componentInstance}

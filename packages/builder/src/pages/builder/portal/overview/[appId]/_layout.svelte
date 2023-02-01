@@ -139,7 +139,6 @@
               secondary
               disabled={!isPublished}
               on:click={viewApp}
-              dataCy="view-app"
             >
               View
             </Button>
@@ -154,7 +153,7 @@
               Edit
             </Button>
           </span>
-          <ActionMenu align="right" dataCy="app-overview-menu-popover">
+          <ActionMenu align="right">
             <span slot="control" class="app-overview-actions-icon">
               <Icon hoverable name="More" />
             </span>
@@ -248,11 +247,7 @@
     <br />
     Please enter the app name below to confirm.
     <br /><br />
-    <Input
-      bind:value={deletionConfirmationAppName}
-      data-cy="delete-app-confirmation"
-      placeholder={app?.name}
-    />
+    <Input bind:value={deletionConfirmationAppName} placeholder={app?.name} />
   </ConfirmDialog>
 {/key}
 

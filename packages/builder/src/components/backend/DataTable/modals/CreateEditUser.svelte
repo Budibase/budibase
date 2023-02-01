@@ -119,7 +119,6 @@
        selection is always undefined -->
   <Select
     label="Role"
-    data-cy="roleId-select"
     bind:value={row.roleId}
     options={$roles}
     getOptionLabel={role => role.name}
