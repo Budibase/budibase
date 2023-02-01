@@ -80,11 +80,11 @@ const SCHEMA: Integration = {
     delete: {
       type: QueryType.FIELDS,
       fields: {
-        index: {
+        id: {
           type: DatasourceFieldType.STRING,
           required: true,
         },
-        id: {
+        index: {
           type: DatasourceFieldType.STRING,
           required: true,
         },
@@ -164,9 +164,13 @@ class ElasticSearchIntegration implements IntegrationBase {
     }
   }
 
-  async delete(query: object) {
+  async delete(query: { id: string; index: string }) {
+    const { id, index } = query
     try {
-      const result = await this.client.delete(query)
+      const result = await this.client.delete({
+        id,
+        index,
+      })
       return result.body
     } catch (err) {
       console.error("Error deleting from elasticsearch", err)

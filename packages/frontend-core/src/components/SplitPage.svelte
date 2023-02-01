@@ -1,10 +1,16 @@
+<script>
+  import BG from "../../assets/bg.png"
+</script>
+
 <div class="split-page">
   <div class="left">
     <div class="content">
       <slot />
     </div>
   </div>
-  <div class="right">
+  <div class="right spectrum spectrum--darkest">
+    <!-- No alt attribute to avoid flash -->
+    <img src={BG} alt=" " />
     <slot name="right" />
   </div>
 </div>
@@ -25,11 +31,15 @@
     overflow-y: auto;
   }
   .right {
-    background: linear-gradient(
-      to bottom right,
-      var(--spectrum-global-color-gray-300) 0%,
-      var(--background) 100%
-    );
+    overflow: hidden;
+    position: relative;
+  }
+  .right img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
   }
   .content {
     width: 100%;

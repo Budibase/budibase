@@ -15,11 +15,13 @@
   export let tooltip = undefined
   export let dataCy
   export let newStyles = true
+  export let id
 
   let showTooltip = false
 </script>
 
 <button
+  {id}
   class:spectrum-Button--cta={cta}
   class:spectrum-Button--primary={primary}
   class:spectrum-Button--secondary={secondary}

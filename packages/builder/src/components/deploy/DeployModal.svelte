@@ -11,6 +11,8 @@
   import { store } from "builderStore"
   import { ProgressCircle } from "@budibase/bbui"
   import CopyInput from "components/common/inputs/CopyInput.svelte"
+  import TourWrap from "../portal/onboarding/TourWrap.svelte"
+  import { TOUR_STEP_KEYS } from "../portal/onboarding/tours.js"
 
   let publishModal
   let asyncModal
@@ -54,7 +56,11 @@
   }
 </script>
 
-<Button cta on:click={publishModal.show}>Publish</Button>
+<TourWrap tourStepKey={TOUR_STEP_KEYS.BUILDER_APP_PUBLISH}>
+  <Button cta on:click={publishModal.show} id={"builder-app-publish-button"}>
+    Publish
+  </Button>
+</TourWrap>
 <Modal bind:this={publishModal}>
   <ModalContent
     title="Publish to production"

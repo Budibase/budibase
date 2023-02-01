@@ -246,6 +246,7 @@
   .spectrum-Popover.spectrum-Popover--bottom.spectrum-Picker-popover.is-open {
     width: 100%;
   }
+
   .no-variables-text {
     padding: var(--spacing-m);
     color: var(--spectrum-global-color-gray-600);
