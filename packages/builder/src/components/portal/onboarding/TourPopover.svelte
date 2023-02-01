@@ -113,7 +113,6 @@
     align={tourStep?.align}
     bind:this={popover}
     anchor={popoverAnchor}
-    dataCy="tour-popover-menu"
     maxWidth={300}
     dismissible={false}
   >

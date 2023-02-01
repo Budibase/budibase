@@ -124,7 +124,6 @@
         bind:this={publishPopover}
         align="right"
         disabled={!isPublished}
-        dataCy="publish-popover-menu"
         showTip={true}
         anchor={publishPopoverAnchor}
       >
@@ -148,7 +147,6 @@
               icon="GlobeStrike"
               disabled={!isPublished}
               on:click={unpublishApp}
-              dataCy="publish-popover-action"
             >
               Unpublish
             </Button>
@@ -173,7 +171,6 @@
   title="Confirm unpublish"
   okText="Unpublish app"
   onOk={confirmUnpublishApp}
-  dataCy={"unpublish-modal"}
 >
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>

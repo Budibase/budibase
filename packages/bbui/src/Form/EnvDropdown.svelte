@@ -13,7 +13,6 @@
   export let error = null
   export let updateOnChange = true
   export let quiet = false
-  export let dataCy
   export let autofocus
   export let variables
   export let showModal
@@ -28,7 +27,6 @@
 
 <Field {label} {labelPosition} {error}>
   <EnvDropdown
-    {dataCy}
     {updateOnChange}
     {error}
     {disabled}
