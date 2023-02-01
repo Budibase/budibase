@@ -11,6 +11,8 @@ if (!process.env.CI) {
   // set a longer timeout in dev for debugging
   // 100 seconds
   jest.setTimeout(100000)
+} else {
+  jest.setTimeout(30000)
 }
 
 testContainerUtils.setupEnv(env, coreEnv)
