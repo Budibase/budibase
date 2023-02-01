@@ -125,7 +125,6 @@
         align="right"
         disabled={!isPublished}
         dataCy="publish-popover-menu"
-        showTip={true}
         anchor={publishPopoverAnchor}
       >
         <Layout gap="M">
