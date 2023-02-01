@@ -142,7 +142,7 @@
             <div class="dataButtonIcon">
               <FontAwesomeIcon name="fa-solid fa-file-arrow-up" />
             </div>
-            Upload file
+            Upload data (CSV or JSON)
           </div>
         </FancyButton>
       </div>
