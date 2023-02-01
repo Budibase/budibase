@@ -2,6 +2,7 @@
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
   import { auth } from "stores/portal"
+  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
     ActionMenu,
     MenuItem,
@@ -68,7 +69,10 @@
   }
 
   const initTour = async () => {
-    if (!$auth.user?.onboardedAt) {
+    if (
+      !$auth.user?.onboardedAt &&
+      isEnabled(TENANT_FEATURE_FLAGS.ONBOADING_TOUR)
+    ) {
       // Determine the correct step
       const activeNav = $layout.children.find(c => $isActive(c.path))
       const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
