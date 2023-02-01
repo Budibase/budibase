@@ -49,11 +49,10 @@ export async function getUser(
   }
   const client = await redis.getUserClient()
   // try cache
-  const cacheKey = getCacheKey(tenantId!, userId)
-  let user = await client.get(cacheKey)
+  let user = await client.get(userId)
   if (!user) {
     user = await populateUser(userId, tenantId)
-    await client.store(cacheKey, user, EXPIRY_SECONDS)
+    await client.store(userId, user, EXPIRY_SECONDS)
   }
   if (user && !user.tenantId && tenantId) {
     // make sure the tenant ID is always correct/set
@@ -62,12 +61,7 @@ export async function getUser(
   return user
 }
 
-export async function invalidateUser(userId: string, tenantId?: string) {
-  tenantId = tenantId || getTenantId()
-  const cacheKey = getCacheKey(tenantId, userId)
+export async function invalidateUser(userId: string) {
   const client = await redis.getUserClient()
-  await client.delete(cacheKey)
+  await client.delete(userId)
 }
-
-const getCacheKey = (tenantId: string, userId: string) =>
-  `${tenantId}_${userId}`
