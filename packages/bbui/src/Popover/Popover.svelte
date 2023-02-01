@@ -14,15 +14,10 @@
   export let align = "right"
   export let portalTarget
   export let maxWidth
-  export let direction = "bottom"
-  export let showTip = false
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
 
-  $: tooltipClasses = showTip
-    ? `spectrum-Popover--withTip spectrum-Popover--${direction}`
-    : ""
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
   export const show = () => {
@@ -61,28 +56,29 @@
 </script>
 
 {#if open}
-  <Portal {target}>
-    <div
-      tabindex="0"
-      use:positionDropdown={{
-        anchor,
-        align,
-        maxWidth,
-        useAnchorWidth,
-        showTip: false,
-      }}
-      use:clickOutside={{
-        callback: dismissible ? handleOutsideClick : () => {},
-        anchor,
-      }}
-      on:keydown={handleEscape}
-      class={"spectrum-Popover is-open " + (tooltipClasses || "")}
-      role="presentation"
-      transition:fly|local={{ y: -20, duration: 200 }}
-    >
-      <slot />
-    </div>
-  </Portal>
+  {#key anchor}
+    <Portal {target}>
+      <div
+        tabindex="0"
+        use:positionDropdown={{
+          anchor,
+          align,
+          maxWidth,
+          useAnchorWidth,
+        }}
+        use:clickOutside={{
+          callback: dismissible ? handleOutsideClick : () => {},
+          anchor,
+        }}
+        on:keydown={handleEscape}
+        class="spectrum-Popover is-open"
+        role="presentation"
+        transition:fly|local={{ y: -20, duration: 200 }}
+      >
+        <slot />
+      </div>
+    </Portal>
+  {/key}
 {/if}
 
 <style>
@@ -90,14 +86,5 @@
     min-width: var(--spectrum-global-dimension-size-2000);
     border-color: var(--spectrum-global-color-gray-300);
     overflow: auto;
-  }
-  .spectrum-Popover.is-open.spectrum-Popover--withTip {
-    margin-top: var(--spacing-xs);
-    margin-left: var(--spacing-xl);
-  }
-  :global(.spectrum-Popover--bottom .spectrum-Popover-tip),
-  :global(.spectrum-Popover--top .spectrum-Popover-tip) {
-    left: 90%;
-    margin-left: calc(var(--spectrum-global-dimension-size-150) * -1);
   }
 </style>

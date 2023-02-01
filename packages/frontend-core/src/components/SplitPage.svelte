@@ -9,7 +9,8 @@
     </div>
   </div>
   <div class="right spectrum spectrum--darkest">
-    <img src={BG} alt="background" />
+    <!-- No alt attribute to avoid flash -->
+    <img src={BG} alt=" " />
     <slot name="right" />
   </div>
 </div>
@@ -30,6 +31,7 @@
     overflow-y: auto;
   }
   .right {
+    overflow: hidden;
     position: relative;
   }
   .right img {

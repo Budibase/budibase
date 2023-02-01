@@ -1,5 +1,6 @@
 <script>
   import { url } from "@roxi/routify"
+  import FirstAppOnboarding from "./onboarding/index.svelte"
   import { Layout, Page, Button, Modal } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
@@ -38,32 +39,35 @@
   }
 </script>
 
-<Page>
-  <Layout noPadding gap="L">
-    <Breadcrumbs>
-      <Breadcrumb url={$url("./")} text="Apps" />
-      <Breadcrumb text="Create new app" />
-    </Breadcrumbs>
-    <Header title={$apps.length ? "Create new app" : "Create your first app"}>
-      <div slot="buttons">
-        <Button size="M" secondary on:click={initiateAppImport}>
-          Import app
-        </Button>
-        <Button size="M" cta on:click={initiateAppCreation}>
-          Start from scratch
-        </Button>
-      </div>
-    </Header>
-    <TemplateDisplay templates={$templates} />
-  </Layout>
-</Page>
-
-<Modal
-  bind:this={creationModal}
-  padding={false}
-  width="600px"
-  on:hide={stopAppCreation}
->
-  <CreateAppModal {template} />
-</Modal>
-<AppLimitModal bind:this={appLimitModal} />
+{#if !$apps.length}
+  <FirstAppOnboarding />
+{:else}
+  <Page>
+    <Layout noPadding gap="L">
+      <Breadcrumbs>
+        <Breadcrumb url={$url("./")} text="Apps" />
+        <Breadcrumb text="Create new app" />
+      </Breadcrumbs>
+      <Header title={"Create new app"}>
+        <div slot="buttons">
+          <Button size="M" secondary on:click={initiateAppImport}>
+            Import app
+          </Button>
+          <Button size="M" cta on:click={initiateAppCreation}>
+            Start from scratch
+          </Button>
+        </div>
+      </Header>
+      <TemplateDisplay templates={$templates} />
+    </Layout>
+  </Page>
+  <Modal
+    bind:this={creationModal}
+    padding={false}
+    width="600px"
+    on:hide={stopAppCreation}
+  >
+    <CreateAppModal {template} />
+  </Modal>
+  <AppLimitModal bind:this={appLimitModal} />
+{/if}

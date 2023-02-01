@@ -124,7 +124,6 @@
         bind:this={publishPopover}
         align="right"
         disabled={!isPublished}
-        showTip={true}
         anchor={publishPopoverAnchor}
       >
         <Layout gap="M">
@@ -181,12 +180,6 @@
 </div>
 
 <style>
-  .publish-popover-actions :global([data-cy="publish-popover-action"]) {
-    margin-right: var(--spacing-s);
-  }
-  :global([data-cy="publish-popover-menu"]) {
-    padding: 10px;
-  }
   .buttons {
     display: flex;
     flex-direction: row;
