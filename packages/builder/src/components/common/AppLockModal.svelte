@@ -74,7 +74,6 @@
 <Modal bind:this={appLockModal}>
   <ModalContent
     title={lockedByHeading}
-    dataCy={"app-lock-modal"}
     showConfirmButton={false}
     showCancelButton={false}
   >

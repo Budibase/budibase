@@ -204,7 +204,7 @@
       store.actions.settings.highlight(data.setting)
 
       // Also scroll setting into view
-      const selector = `[data-cy="${data.setting}-prop-control"`
+      const selector = `#${data.setting}-prop-control`
       const element = document.querySelector(selector)?.parentElement
       if (element) {
         element.scrollIntoView({
