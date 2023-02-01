@@ -1,10 +1,13 @@
 function getTestContainerSettings(serverName: string, key: string) {
-  const [_, value] = Object.entries(global).find(
+  const entry = Object.entries(global).find(
     ([k]) =>
       k.includes(`_${serverName.toUpperCase()}`) &&
       k.includes(`_${key.toUpperCase()}__`)
-  )!
-  return value
+  )
+  if (!entry) {
+    return null
+  }
+  return entry[1]
 }
 
 function getCouchConfig() {
@@ -31,7 +34,7 @@ export function setupEnv(...envs: any[]) {
     { key: "MINIO_URL", value: getMinioConfig().url },
   ]
 
-  for (const config of configs) {
+  for (const config of configs.filter(x => x.value !== null)) {
     for (const env of envs) {
       env._set(config.key, config.value)
     }
