@@ -1,15 +1,19 @@
+import { DatabaseWithConnection } from "@budibase/backend-core/src/db"
+
 jest.mock("@budibase/backend-core", () => {
   const core = jest.requireActual("@budibase/backend-core")
   return {
     ...core,
     db: {
       ...core.db,
-      DatabaseImpl: function () {
-        this.post = jest.fn()
-        this.allDocs = jest.fn().mockReturnValue({ rows: [] })
-        this.put = jest.fn()
-        this.get = jest.fn().mockReturnValue({ _rev: "a" })
-        this.remove = jest.fn()
+      DatabaseWithConnection: function () {
+        return {
+          post: jest.fn(),
+          allDocs: jest.fn().mockReturnValue({ rows: [] }),
+          put: jest.fn(),
+          get: jest.fn().mockReturnValue({ _rev: "a" }),
+          remove: jest.fn(),
+        }
       },
     },
   }
@@ -20,7 +24,9 @@ import { default as CouchDBIntegration } from "../couchdb"
 class TestConfiguration {
   integration: any
 
-  constructor(config: any = {}) {
+  constructor(
+    config: any = { url: "http://somewhere", database: "something" }
+  ) {
     this.integration = new CouchDBIntegration.integration(config)
   }
 }

@@ -29,6 +29,17 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
   })
 }
 
+export function DatabaseWithConnection(
+  dbName: string,
+  connection: string,
+  opts?: DatabaseOpts
+) {
+  if (!connection) {
+    throw new Error("Must provide connection details")
+  }
+  return new DatabaseImpl(dbName, opts, connection)
+}
+
 export class DatabaseImpl implements Database {
   public readonly name: string
   private static nano: Nano.ServerScope
