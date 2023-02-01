@@ -17,8 +17,8 @@
   import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
   import { Roles } from "constants/backend"
 
-  let name = ""
-  let url = ""
+  let name = "My first app"
+  let url = "my-first-app"
   let stage = "name"
   let appId = null
 
