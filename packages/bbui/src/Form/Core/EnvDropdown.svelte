@@ -247,10 +247,6 @@
     width: 100%;
   }
 
-  .no-variables-height {
-    height: 100px;
-  }
-
   .no-variables-text {
     padding: var(--spacing-m);
     color: var(--spectrum-global-color-gray-600);
