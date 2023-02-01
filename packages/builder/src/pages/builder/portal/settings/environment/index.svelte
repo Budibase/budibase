@@ -25,8 +25,14 @@
   $: schema = buildSchema(noEncryptionKey)
 
   onMount(async () => {
-    await environment.checkStatus()
-    await environment.loadVariables()
+    try {
+      await environment.checkStatus()
+      await environment.loadVariables()
+    } catch (error) {
+      notifications.error(
+        `Error loading environment variables: ${error.message}`
+      )
+    }
   })
 
   const buildSchema = noEncryptionKey => {
