@@ -1,16 +1,15 @@
 import { RelationshipTypes } from "constants/backend"
 
-export const typeMismatch =
-  "Column type of the foreign key must match the primary key"
-export const columnCantExist = "Column name cannot be an existing column"
-export const mustBeDifferentTables = "From/to/through tables must be different"
-export const primaryKeyNotSet = "Please pick the primary key"
-export const throughNotNullable =
+const typeMismatch = "Column type of the foreign key must match the primary key"
+const columnCantExist = "Column name cannot be an existing column"
+const mustBeDifferentTables = "From/to/through tables must be different"
+const primaryKeyNotSet = "Please pick the primary key"
+const throughNotNullable =
   "Ensure non-key columns are nullable or auto-generated"
-export const noRelationshipType = "Please specify a relationship type"
-export const tableNotSet = "Please specify a table"
-export const foreignKeyNotSet = "Please pick a foreign key"
-export const relationshipAlreadyExists =
+const noRelationshipType = "Please specify a relationship type"
+const tableNotSet = "Please specify a table"
+const foreignKeyNotSet = "Please pick a foreign key"
+const relationshipAlreadyExists =
   "A relationship between these tables already exists"
 
 function isColumnNameBeingUsed(table, columnName, originalName) {
@@ -53,6 +52,10 @@ export class RelationshipErrorChecker {
 
   foreignKeySet(key) {
     return !this.isMany() && !key ? foreignKeyNotSet : null
+  }
+
+  primaryKeySet(key) {
+    return !this.isMany() && !key ? primaryKeyNotSet : null
   }
 
   throughIsNullable() {
