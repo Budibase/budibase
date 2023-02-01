@@ -5,7 +5,7 @@ const SERVER_PORT = testConfig.env.PORT
 const WORKER_PORT = testConfig.env.WORKER_PORT
 
 if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = "test"
+  process.env.NODE_ENV = "cypress"
 }
 process.env.ENABLE_ANALYTICS = "0"
 process.env.JWT_SECRET = testConfig.env.JWT_SECRET

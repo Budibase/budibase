@@ -1,6 +1,5 @@
 {
     "baseUrl": "http://localhost:4100",
-    "video": true,
     "projectId": "bmbemn",
     "reporterOptions": {
         "configFile": "reporterConfig.json"
