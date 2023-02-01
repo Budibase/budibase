@@ -248,6 +248,7 @@
       />
       <EnvDropdown
         label="Password"
+        type="password"
         bind:value={form.basic.password}
         on:change={onFieldChange}
         on:blur={() => (blurred.basic.password = true)}
