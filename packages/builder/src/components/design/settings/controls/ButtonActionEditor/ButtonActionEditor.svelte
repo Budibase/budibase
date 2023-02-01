@@ -5,6 +5,10 @@
   import ButtonActionDrawer from "./ButtonActionDrawer.svelte"
   import { automationStore } from "builderStore"
   import { cloneDeep } from "lodash/fp"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "builderStore/dataBinding"
 
   const dispatch = createEventDispatcher()
 
@@ -16,10 +20,36 @@
 
   let drawer
   let tmpValue
+  let shouldUpdateBindings = false
+
+  $: completeSave(value)
 
   const openDrawer = () => {
     tmpValue = cloneDeep(value)
     drawer.show()
+  }
+
+  const completeSave = () => {
+    if (!shouldUpdateBindings) {
+      return
+    }
+
+    // make sure any newly created app state variables are bound across all actions
+    tmpValue = tmpValue?.map(action => ({
+      ...action,
+      parameters: {
+        ...action.parameters,
+        value: readableToRuntimeBinding(
+          bindings,
+          runtimeToReadableBinding(bindings, action.parameters.value)
+        ),
+      },
+    }))
+
+    dispatch("change", tmpValue)
+    notifications.success("Component actions saved.")
+    shouldUpdateBindings = false
+    drawer.hide()
   }
 
   const saveEventData = async () => {
@@ -32,8 +62,14 @@
     }
 
     dispatch("change", tmpValue)
-    notifications.success("Component actions saved.")
-    drawer.hide()
+    if (
+      tmpValue?.some(action => action["##eventHandlerType"] === "Update State")
+    ) {
+      shouldUpdateBindings = true
+    } else {
+      notifications.success("Component actions saved.")
+      drawer.hide()
+    }
   }
 
   // called by the parent modal when actions are saved
