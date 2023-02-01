@@ -36,18 +36,33 @@ export function isEnabled(featureFlag: string) {
 }
 
 export function getTenantFeatureFlags(tenantId: string) {
-  const flags = []
+  let flags: string[] = []
 
   if (TENANT_FEATURE_FLAGS) {
     const globalFlags = TENANT_FEATURE_FLAGS["*"]
-    const tenantFlags = TENANT_FEATURE_FLAGS[tenantId]
+    const tenantFlags = TENANT_FEATURE_FLAGS[tenantId] || []
+
+    // Explicitly exclude tenants from global features if required.
+    // Prefix the tenant flag with '!'
+    const tenantOverrides = tenantFlags.reduce((acc: string[], flag) => {
+      if (flag.startsWith("!")) {
+        let stripped = flag.substring(1)
+        acc.push(stripped)
+      }
+      return acc
+    }, [])
 
     if (globalFlags) {
       flags.push(...globalFlags)
     }
-    if (tenantFlags) {
+    if (tenantFlags.length) {
       flags.push(...tenantFlags)
     }
+
+    // Purge any tenant specific overrides
+    flags = flags.filter(flag => {
+      return tenantOverrides.indexOf(flag) == -1 && !flag.startsWith("!")
+    })
   }
 
   return flags

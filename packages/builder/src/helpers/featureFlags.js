@@ -4,7 +4,7 @@ import { get } from "svelte/store"
 export const TENANT_FEATURE_FLAGS = {
   LICENSING: "LICENSING",
   USER_GROUPS: "USER_GROUPS",
-  ONBOADING_TOUR: "ONBOADING_TOUR",
+  ONBOARDING_TOUR: "ONBOARDING_TOUR",
 }
 
 export const isEnabled = featureFlag => {
