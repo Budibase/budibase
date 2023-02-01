@@ -156,10 +156,6 @@
     display: flex;
     justify-content: end;
   }
-  :global([data-cy="tour-popover-menu"]) {
-    padding: 10px;
-    margin-top: var(--spacing-l);
-  }
   .tour-body :global(.feature-list) {
     margin-bottom: 0px;
     padding-left: var(--spacing-xl);

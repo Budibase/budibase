@@ -17,6 +17,7 @@ const ignoredWarnings = [
   "css-unused-selector",
   "module-script-reactive-declaration",
   "a11y-no-onchange",
+  "a11y-click-events-have-key-events",
 ]
 
 export default {
@@ -88,7 +89,9 @@ export default {
       dedupe: ["svelte", "svelte/internal"],
     }),
     svg(),
-    image(),
+    image({
+      exclude: "**/*.svg",
+    }),
     json(),
     production && terser(),
     !production && visualizer(),
