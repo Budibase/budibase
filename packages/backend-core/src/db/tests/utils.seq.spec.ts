@@ -8,7 +8,7 @@ const {
 const { generateAppID, getPlatformUrl, getScopedConfig } = require("../utils")
 const tenancy = require("../../tenancy")
 const { Config, DEFAULT_TENANT_ID } = require("../../constants")
-import { faker } from "@faker-js/faker"
+import { generator } from "../../../tests"
 import env from "../../environment"
 
 describe("utils", () => {
@@ -119,7 +119,7 @@ describe("getPlatformUrl", () => {
 
     it("gets the platform url from the database", async () => {
       await tenancy.doInTenant(null, async () => {
-        const dbUrl = faker.internet.url()
+        const dbUrl = generator.url()
         await setDbPlatformUrl(dbUrl)
         const url = await getPlatformUrl()
         expect(url).toBe(dbUrl)
@@ -153,7 +153,7 @@ describe("getPlatformUrl", () => {
 
     it("never gets the platform url from the database", async () => {
       await tenancy.doInTenant(DEFAULT_TENANT_ID, async () => {
-        await setDbPlatformUrl(faker.internet.url())
+        await setDbPlatformUrl(generator.url())
         const url = await getPlatformUrl()
         expect(url).toBe(TENANT_AWARE_URL)
       })
@@ -171,7 +171,7 @@ describe("getScopedConfig", () => {
 
     it("returns the platform url with an existing config", async () => {
       await tenancy.doInTenant(DEFAULT_TENANT_ID, async () => {
-        const dbUrl = faker.internet.url()
+        const dbUrl = generator.url()
         await setDbPlatformUrl(dbUrl)
         const db = tenancy.getGlobalDB()
         const config = await getScopedConfig(db, { type: Config.SETTINGS })
