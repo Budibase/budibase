@@ -13,7 +13,6 @@
   export let anchor
   export let align = "right"
   export let portalTarget
-  export let dataCy
   export let maxWidth
   export let direction = "bottom"
   export let showTip = false
@@ -79,7 +78,6 @@
       on:keydown={handleEscape}
       class={"spectrum-Popover is-open " + (tooltipClasses || "")}
       role="presentation"
-      data-cy={dataCy}
       transition:fly|local={{ y: -20, duration: 200 }}
     >
       <slot />

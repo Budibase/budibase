@@ -11,7 +11,6 @@
   export let id = null
   export let readonly = false
   export let updateOnChange = true
-  export let dataCy
   export let align
   export let autofocus = false
   export let variables
@@ -123,7 +122,6 @@
       disabled={hbsValue.length || disabled}
       {readonly}
       {id}
-      data-cy={dataCy}
       value={hbsValue.length ? `{{ ${hbsValue[0]} }}` : value}
       placeholder={placeholder || ""}
       on:click

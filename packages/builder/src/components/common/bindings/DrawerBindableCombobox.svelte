@@ -66,11 +66,7 @@
     {error}
   />
   {#if !disabled}
-    <div
-      class="icon"
-      on:click={bindingDrawer.show}
-      data-cy="text-binding-button"
-    >
+    <div class="icon" on:click={bindingDrawer.show}>
       <Icon size="S" name="FlashOn" />
     </div>
   {/if}

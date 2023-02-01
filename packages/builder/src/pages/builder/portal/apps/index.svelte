@@ -240,12 +240,7 @@
         <Layout noPadding gap="L">
           <div class="title">
             <div class="buttons">
-              <Button
-                dataCy="create-app-btn"
-                size="M"
-                cta
-                on:click={initiateAppCreation}
-              >
+              <Button size="M" cta on:click={initiateAppCreation}>
                 Create new app
               </Button>
               {#if $apps?.length > 0}
@@ -258,13 +253,7 @@
                 </Button>
               {/if}
               {#if !$apps?.length}
-                <Button
-                  dataCy="import-app-btn"
-                  size="L"
-                  quiet
-                  secondary
-                  on:click={initiateAppImport}
-                >
+                <Button size="L" quiet secondary on:click={initiateAppImport}>
                   Import app
                 </Button>
               {/if}
