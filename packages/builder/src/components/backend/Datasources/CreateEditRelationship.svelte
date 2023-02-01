@@ -176,7 +176,6 @@
       fromPrimary,
       fromForeign
     )
-    console.log(errObj)
     errors = errObj
     return getErrorCount(errors) === 0
   }
