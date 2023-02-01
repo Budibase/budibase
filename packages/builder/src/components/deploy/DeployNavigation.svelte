@@ -125,33 +125,36 @@
         align="right"
         disabled={!isPublished}
         anchor={publishPopoverAnchor}
+        offset={10}
       >
-        <Layout gap="M">
-          <Heading size="XS">Your published app</Heading>
-          <Body size="S">
-            <span class="publish-popover-message">
-              {processStringSync(
-                "Last published {{ duration time 'millisecond' }} ago",
-                {
-                  time:
-                    new Date().getTime() -
-                    new Date(latestDeployments[0].updatedAt).getTime(),
-                }
-              )}
-            </span>
-          </Body>
-          <div class="publish-popover-actions">
-            <Button
-              warning={true}
-              icon="GlobeStrike"
-              disabled={!isPublished}
-              on:click={unpublishApp}
-            >
-              Unpublish
-            </Button>
-            <Button cta on:click={viewApp}>View app</Button>
-          </div>
-        </Layout>
+        <div class="popover-content">
+          <Layout noPadding gap="M">
+            <Heading size="XS">Your published app</Heading>
+            <Body size="S">
+              <span class="publish-popover-message">
+                {processStringSync(
+                  "Last published {{ duration time 'millisecond' }} ago",
+                  {
+                    time:
+                      new Date().getTime() -
+                      new Date(latestDeployments[0].updatedAt).getTime(),
+                  }
+                )}
+              </span>
+            </Body>
+            <div class="buttons">
+              <Button
+                warning={true}
+                icon="GlobeStrike"
+                disabled={!isPublished}
+                on:click={unpublishApp}
+              >
+                Unpublish
+              </Button>
+              <Button cta on:click={viewApp}>View app</Button>
+            </div>
+          </Layout>
+        </div>
       </Popover>
     </div>
   {/if}
@@ -180,6 +183,9 @@
 </div>
 
 <style>
+  .popover-content {
+    padding: var(--spacing-xl);
+  }
   .buttons {
     display: flex;
     flex-direction: row;
