@@ -1,5 +1,4 @@
-import { faker } from "@faker-js/faker"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 
 // init the licensing mock
 import * as pro from "@budibase/pro"
@@ -89,11 +88,11 @@ class TestConfiguration {
 
   populateDefaultUserValues(): DefaultUserValues {
     return {
-      globalUserId: `us_${faker.datatype.uuid()}`,
-      email: faker.internet.email(),
-      firstName: faker.name.firstName(),
-      lastName: faker.name.lastName(),
-      csrfToken: faker.datatype.uuid(),
+      globalUserId: `us_${newid()}`,
+      email: generator.email(),
+      firstName: generator.first(),
+      lastName: generator.last(),
+      csrfToken: generator.hash(),
     }
   }
 
