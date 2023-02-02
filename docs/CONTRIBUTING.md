@@ -108,9 +108,10 @@ Asdf is a package manager that allows managing multiple dependencies.
    - asdf plugin add python
    - npm install -g yarn
 
-#### 1.2 Using NVM
+#### 1.2 Using NVM and pyenv
 
-- https://github.com/nvm-sh/nvm#installing-and-updating
+- NVM: https://github.com/nvm-sh/nvm#installing-and-updating
+- Pyenv: https://github.com/pyenv/pyenv#installation
 
 - _yarn -_ `npm install -g yarn`
 
