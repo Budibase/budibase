@@ -65,16 +65,8 @@
   $: isManyToOne = relationshipType === RelationshipTypes.MANY_TO_ONE
   $: toRelationship.relationshipType = fromRelationship?.relationshipType
 
-  function getFromTable() {
-    return plusTables.find(table => table._id === fromId)
-  }
-
-  function getToTable() {
-    return plusTables.find(table => table._id === toId)
-  }
-
-  function getThroughTable() {
-    return plusTables.find(table => table._id === throughId)
+  function getTable(id) {
+    return plusTables.find(table => table._id === id)
   }
 
   function invalidThroughTable() {
@@ -97,16 +89,16 @@
     if (
       originalFromTable &&
       originalToTable &&
-      originalFromTable === getFromTable() &&
-      originalToTable === getToTable()
+      originalFromTable === getTable(fromId) &&
+      originalToTable === getTable(toId)
     ) {
       return false
     }
     let fromThroughLinks = Object.values(
-      datasource.entities[getFromTable().name].schema
+      datasource.entities[getTable(fromId).name].schema
     ).filter(value => value.through)
     let toThroughLinks = Object.values(
-      datasource.entities[getToTable().name].schema
+      datasource.entities[getTable(toId).name].schema
     ).filter(value => value.through)
 
     const matchAgainstUserInput = (fromTableId, toTableId) =>
@@ -127,11 +119,11 @@
   }
 
   function allRequiredAttributesSet() {
-    const base = getFromTable() && getToTable() && fromColumn && toColumn
+    const base = getTable(fromId) && getTable(toId) && fromColumn && toColumn
     if (relationshipType === RelationshipTypes.MANY_TO_ONE) {
       return base && fromPrimary && fromForeign
     } else {
-      return base && getThroughTable() && throughFromKey && throughToKey
+      return base && getTable(throughId) && throughFromKey && throughToKey
     }
   }
 
@@ -141,9 +133,9 @@
     }
     hasValidated = true
     errorChecker.setType(relationshipType)
-    const fromTable = getFromTable(),
-      toTable = getToTable(),
-      throughTable = getThroughTable()
+    const fromTable = getTable(fromId),
+      toTable = getTable(toId),
+      throughTable = getTable(throughId)
     errors = {
       relationshipType: errorChecker.relationshipTypeSet(relationshipType),
       fromTable:
@@ -158,8 +150,22 @@
         errorChecker.throughTableSet(throughTable) ||
         errorChecker.throughIsNullable() ||
         errorChecker.differentTables(throughId, fromId, toId),
-      throughFromKey: errorChecker.manyForeignKeySet(throughFromKey),
-      throughToKey: errorChecker.manyForeignKeySet(throughToKey),
+      throughFromKey:
+        errorChecker.manyForeignKeySet(throughFromKey) ||
+        errorChecker.manyTypeMismatch(
+          fromTable,
+          throughTable,
+          fromTable.primary[0],
+          throughFromKey
+        ),
+      throughToKey:
+        errorChecker.manyForeignKeySet(throughToKey) ||
+        errorChecker.manyTypeMismatch(
+          toTable,
+          throughTable,
+          toTable.primary[0],
+          throughToKey
+        ),
       fromForeign:
         errorChecker.foreignKeySet(fromForeign) ||
         errorChecker.typeMismatch(fromTable, toTable, fromPrimary, fromForeign),
@@ -216,13 +222,13 @@
     if (manyToMany) {
       relateFrom = {
         ...relateFrom,
-        through: getThroughTable()._id,
-        fieldName: getToTable().primary[0],
+        through: getTable(throughId)._id,
+        fieldName: getTable(toId).primary[0],
       }
       relateTo = {
         ...relateTo,
-        through: getThroughTable()._id,
-        fieldName: getFromTable().primary[0],
+        through: getTable(throughId)._id,
+        fieldName: getTable(fromId).primary[0],
         throughFrom: relateFrom.throughTo,
         throughTo: relateFrom.throughFrom,
       }
@@ -271,10 +277,10 @@
     removeExistingRelationship()
 
     // source of relationship
-    datasource.entities[getFromTable().name].schema[fromRelationship.name] =
+    datasource.entities[getTable(fromId).name].schema[fromRelationship.name] =
       fromRelationship
     // save other side of relationship in the other schema
-    datasource.entities[getToTable().name].schema[toRelationship.name] =
+    datasource.entities[getTable(toId).name].schema[toRelationship.name] =
       toRelationship
 
     await save()
@@ -351,8 +357,8 @@
   {/if}
   {#if isManyToOne && fromId}
     <Select
-      label={`Primary Key (${getFromTable().name})`}
-      options={Object.keys(getFromTable().schema)}
+      label={`Primary Key (${getTable(fromId).name})`}
+      options={Object.keys(getTable(fromId).schema)}
       bind:value={fromPrimary}
       bind:error={errors.fromPrimary}
       on:change={changed}
@@ -384,8 +390,8 @@
     />
     {#if fromId && toId && throughId}
       <Select
-        label={`Foreign Key (${getFromTable()?.name})`}
-        options={Object.keys(getThroughTable()?.schema)}
+        label={`Foreign Key (${getTable(fromId)?.name})`}
+        options={Object.keys(getTable(throughId)?.schema)}
         bind:value={throughToKey}
         bind:error={errors.throughToKey}
         on:change={e =>
@@ -396,8 +402,8 @@
           })}
       />
       <Select
-        label={`Foreign Key (${getToTable()?.name})`}
-        options={Object.keys(getThroughTable()?.schema)}
+        label={`Foreign Key (${getTable(toId)?.name})`}
+        options={Object.keys(getTable(throughId)?.schema)}
         bind:value={throughFromKey}
         bind:error={errors.throughFromKey}
         on:change={e =>
@@ -410,8 +416,8 @@
     {/if}
   {:else if isManyToOne && toId}
     <Select
-      label={`Foreign Key (${getToTable()?.name})`}
-      options={Object.keys(getToTable()?.schema)}
+      label={`Foreign Key (${getTable(toId)?.name})`}
+      options={Object.keys(getTable(toId)?.schema)}
       bind:value={fromForeign}
       bind:error={errors.fromForeign}
       on:change={changed}
