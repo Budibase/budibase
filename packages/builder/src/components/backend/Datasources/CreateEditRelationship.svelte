@@ -120,14 +120,12 @@
   }
 
   function getErrorCount(errors) {
-    return Object.entries(errors)
-      .filter(entry => !!entry[1])
-      .map(entry => entry[0]).length
+    return Object.entries(errors).filter(entry => !!entry[1]).length
   }
 
   function allRequiredAttributesSet() {
     const base = fromTable && toTable && fromColumn && toColumn
-    if (isManyToOne) {
+    if (relationshipType === RelationshipTypes.MANY_TO_ONE) {
       return base && fromPrimary && fromForeign
     } else {
       return base && throughTable && throughFromKey && throughToKey
@@ -140,39 +138,37 @@
     }
     hasValidated = true
     errorChecker.setType(relationshipType)
-    const errObj = {}
-    errObj.relationshipType = errorChecker.relationshipTypeSet(relationshipType)
-    errObj.fromTable = errorChecker.tableSet(fromTable)
-    errObj.toTable = errorChecker.tableSet(toTable)
-    errObj.throughTable = errorChecker.throughTableSet(throughTable)
-    errObj.throughFromKey = errorChecker.manyForeignKeySet(throughFromKey)
-    errObj.throughToKey = errorChecker.manyForeignKeySet(throughToKey)
-    errObj.throughTable = errorChecker.throughIsNullable()
-    errObj.fromForeign = errorChecker.foreignKeySet(fromForeign)
-    errObj.fromPrimary = errorChecker.primaryKeySet(fromPrimary)
-    errObj.fromTable = errorChecker.doesRelationshipExists()
-    errObj.toTable = errorChecker.doesRelationshipExists()
-    // currently don't support relationships back onto the table itself, needs to relate out
-    errObj.fromTable = errorChecker.differentTables(fromId, toId, throughId)
-    errObj.toTable = errorChecker.differentTables(toId, fromId, throughId)
-    errObj.throughTable = errorChecker.differentTables(throughId, fromId, toId)
-    errObj.fromColumn = errorChecker.columnBeingUsed(
-      toTable,
-      fromColumn,
-      originalFromColumnName
-    )
-    errObj.toColumn = errorChecker.columnBeingUsed(
-      fromTable,
-      toColumn,
-      originalToColumnName
-    )
-    errObj.fromForeign = errorChecker.typeMismatch(
-      fromTable,
-      toTable,
-      fromPrimary,
-      fromForeign
-    )
-    errors = errObj
+    errors = {
+      relationshipType: errorChecker.relationshipTypeSet(relationshipType),
+      fromTable:
+        errorChecker.tableSet(fromTable) ||
+        errorChecker.doesRelationshipExists() ||
+        errorChecker.differentTables(fromId, toId, throughId),
+      toTable:
+        errorChecker.tableSet(toTable) ||
+        errorChecker.doesRelationshipExists() ||
+        errorChecker.differentTables(toId, fromId, throughId),
+      throughTable:
+        errorChecker.throughTableSet(throughTable) ||
+        errorChecker.throughIsNullable() ||
+        errorChecker.differentTables(throughId, fromId, toId),
+      throughFromKey: errorChecker.manyForeignKeySet(throughFromKey),
+      throughToKey: errorChecker.manyForeignKeySet(throughToKey),
+      fromForeign:
+        errorChecker.foreignKeySet(fromForeign) ||
+        errorChecker.typeMismatch(fromTable, toTable, fromPrimary, fromForeign),
+      fromPrimary: errorChecker.primaryKeySet(fromPrimary),
+      fromColumn: errorChecker.columnBeingUsed(
+        toTable,
+        fromColumn,
+        originalFromColumnName
+      ),
+      toColumn: errorChecker.columnBeingUsed(
+        fromTable,
+        toColumn,
+        originalToColumnName
+      ),
+    }
     return getErrorCount(errors) === 0
   }
 
@@ -285,7 +281,7 @@
   }
 
   function changed(fn) {
-    if (fn && typeof fn === "function") {
+    if (typeof fn === "function") {
       fn()
     }
     validate()
@@ -325,7 +321,10 @@
     options={relationshipTypes}
     bind:value={relationshipType}
     bind:error={errors.relationshipType}
-    on:change={changed}
+    on:change={() =>
+      changed(() => {
+        hasValidated = false
+      })}
   />
   <div class="headings">
     <Detail>Tables</Detail>
