@@ -134,11 +134,7 @@
     This action cannot be undone - to continue please enter the table name below
     to confirm.
   </p>
-  <Input
-    bind:value={deleteTableName}
-    placeholder={table.name}
-    dataCy="delete-table-confirm"
-  />
+  <Input bind:value={deleteTableName} placeholder={table.name} />
 </ConfirmDialog>
 
 <style>

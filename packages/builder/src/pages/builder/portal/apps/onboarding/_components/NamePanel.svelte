@@ -5,6 +5,8 @@
   export let name = ""
   export let url = ""
   export let onNext = () => {}
+
+  const nameRegex = /^[a-zA-Z0-9\s]*$/
   let nameError = null
   let urlError = null
 
@@ -13,6 +15,9 @@
   const validateName = name => {
     if (name.length < 1) {
       return "Name must be provided"
+    }
+    if (!nameRegex.test(name)) {
+      return "No special characters are allowed"
     }
   }
 

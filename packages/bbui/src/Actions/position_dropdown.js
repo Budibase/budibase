@@ -1,11 +1,21 @@
-export default function positionDropdown(
-  element,
-  { anchor, align, maxWidth, useAnchorWidth }
-) {
-  const update = () => {
+export default function positionDropdown(element, opts) {
+  let resizeObserver
+  let latestOpts = opts
+
+  // We need a static reference to this function so that we can properly
+  // clean up the scroll listener.
+  const scrollUpdate = () => {
+    updatePosition(latestOpts)
+  }
+
+  // Updates the position of the dropdown
+  const updatePosition = opts => {
+    const { anchor, align, maxWidth, useAnchorWidth, offset = 5 } = opts
     if (!anchor) {
       return
     }
+
+    // Compute bounds
     const anchorBounds = anchor.getBoundingClientRect()
     const elementBounds = element.getBoundingClientRect()
     let styles = {
@@ -20,9 +30,9 @@ export default function positionDropdown(
     if (align === "right-outside") {
       styles.top = anchorBounds.top
     } else if (window.innerHeight - anchorBounds.bottom < 100) {
-      styles.top = anchorBounds.top - elementBounds.height - 5
+      styles.top = anchorBounds.top - elementBounds.height - offset
     } else {
-      styles.top = anchorBounds.bottom + 5
+      styles.top = anchorBounds.bottom + offset
       styles.maxHeight = window.innerHeight - anchorBounds.bottom - 20
     }
 
@@ -36,7 +46,7 @@ export default function positionDropdown(
     if (align === "right") {
       styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
     } else if (align === "right-outside") {
-      styles.left = anchorBounds.right + 10
+      styles.left = anchorBounds.right + offset
     } else {
       styles.left = anchorBounds.left
     }
@@ -51,26 +61,47 @@ export default function positionDropdown(
     })
   }
 
+  // The actual svelte action callback which creates observers on the relevant
+  // DOM elements
+  const update = newOpts => {
+    latestOpts = newOpts
+
+    // Cleanup old state
+    if (resizeObserver) {
+      resizeObserver.disconnect()
+    }
+
+    // Do nothing if no anchor
+    const { anchor } = newOpts
+    if (!anchor) {
+      return
+    }
+
+    // Observe both anchor and element and resize the popover as appropriate
+    resizeObserver = new ResizeObserver(() => updatePosition(newOpts))
+    resizeObserver.observe(anchor)
+    resizeObserver.observe(element)
+    resizeObserver.observe(document.body)
+  }
+
   // Apply initial styles which don't need to change
   element.style.position = "absolute"
   element.style.zIndex = "9999"
 
-  // Observe both anchor and element and resize the popover as appropriate
-  const resizeObserver = new ResizeObserver(entries => {
-    entries.forEach(update)
-  })
-  if (anchor) {
-    resizeObserver.observe(anchor)
-  }
-  resizeObserver.observe(element)
-  resizeObserver.observe(document.body)
+  // Set up a scroll listener
+  document.addEventListener("scroll", scrollUpdate, true)
 
-  document.addEventListener("scroll", update, true)
+  // Perform initial update
+  update(opts)
 
   return {
+    update,
     destroy() {
-      resizeObserver.disconnect()
-      document.removeEventListener("scroll", update, true)
+      // Cleanup
+      if (resizeObserver) {
+        resizeObserver.disconnect()
+      }
+      document.removeEventListener("scroll", scrollUpdate, true)
     },
   }
 }

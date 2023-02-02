@@ -47,7 +47,6 @@
     disabled={error || !name || !datasource?.type}
   >
     <Input
-      data-cy="datasource-name-input"
       label="Datasource Name"
       on:input={checkValid}
       bind:value={name}

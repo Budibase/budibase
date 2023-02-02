@@ -68,7 +68,7 @@
   <div class="template-categories">
     <Layout gap="XL" noPadding>
       {#each filteredCategories as category}
-        <div class="template-category" data-cy={category.name}>
+        <div class="template-category">
           <Detail size="M">{category.name}</Detail>
           <div class="template-grid">
             {#each category.templates as templateEntry}

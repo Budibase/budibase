@@ -1,14 +1,14 @@
-const cypressConfig = require("../cypress.json")
+const testConfig = require("./testConfig.json")
 
 // normal development system
-const SERVER_PORT = cypressConfig.env.PORT
-const WORKER_PORT = cypressConfig.env.WORKER_PORT
+const SERVER_PORT = testConfig.env.PORT
+const WORKER_PORT = testConfig.env.WORKER_PORT
 
 if (!process.env.NODE_ENV) {
   process.env.NODE_ENV = "cypress"
 }
 process.env.ENABLE_ANALYTICS = "0"
-process.env.JWT_SECRET = cypressConfig.env.JWT_SECRET
+process.env.JWT_SECRET = testConfig.env.JWT_SECRET
 process.env.SELF_HOSTED = 1
 process.env.WORKER_URL = `http://localhost:${WORKER_PORT}/`
 process.env.APPS_URL = `http://localhost:${SERVER_PORT}/`
@@ -23,10 +23,7 @@ process.env.ALLOW_DEV_AUTOMATIONS = 1
 // Stop info logs polluting test outputs
 process.env.LOG_LEVEL = "error"
 
-exports.run = (
-  serverLoc = "../../server/dist",
-  workerLoc = "../../worker/dist"
-) => {
+exports.run = (serverLoc = "../server/dist", workerLoc = "../worker/dist") => {
   // require("dotenv").config({ path: resolve(dir, ".env") })
   // don't make this a variable or top level require
   // it will cause environment module to be loaded prematurely
