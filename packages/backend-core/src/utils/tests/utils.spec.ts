@@ -2,13 +2,19 @@ import { structures } from "../../../tests"
 import * as utils from "../../utils"
 import * as events from "../../events"
 import * as db from "../../db"
-import { DEFAULT_TENANT_ID, Header } from "../../constants"
+import { Header } from "../../constants"
 import { doInTenant } from "../../context"
+import environment from "../../environment"
+import { newid } from "../../utils"
 
 describe("utils", () => {
   describe("platformLogout", () => {
+    beforeEach(() => {
+      environment._set("MULTI_TENANCY", "TRUE")
+    })
+
     it("should call platform logout", async () => {
-      await doInTenant(DEFAULT_TENANT_ID, async () => {
+      await doInTenant(`tenant-${newid()}`, async () => {
         const ctx = structures.koa.newContext()
         await utils.platformLogout({ ctx, userId: "test" })
         expect(events.auth.logout).toBeCalledTimes(1)
@@ -17,6 +23,10 @@ describe("utils", () => {
   })
 
   describe("getAppIdFromCtx", () => {
+    beforeEach(() => {
+      environment._set("MULTI_TENANCY", undefined)
+    })
+
     it("gets appId from header", async () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateAppID()
@@ -54,7 +64,7 @@ describe("utils", () => {
       const app = structures.apps.app(expected)
 
       // set custom url
-      const appUrl = "custom-url"
+      const appUrl = newid()
       app.url = `/${appUrl}`
       ctx.path = `/app/${appUrl}`
 

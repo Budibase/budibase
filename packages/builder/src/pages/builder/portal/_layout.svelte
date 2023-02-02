@@ -1,18 +1,20 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
   import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
-  import { organisation, auth, menu } from "stores/portal"
+  import { organisation, auth, menu, apps } from "stores/portal"
   import { onMount } from "svelte"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
   import MobileMenu from "./_components/MobileMenu.svelte"
   import Logo from "./_components/Logo.svelte"
   import UserDropdown from "./_components/UserDropdown.svelte"
+  import HelpMenu from "components/common/HelpMenu.svelte"
 
   let loaded = false
   let mobileMenuVisible = false
   let activeTab = "Apps"
 
   $: $url(), updateActiveTab($menu)
+  $: fullScreen = !$apps?.length
 
   const updateActiveTab = menu => {
     for (let entry of menu) {
@@ -45,7 +47,10 @@
   })
 </script>
 
-{#if $auth.user && loaded}
+{#if fullScreen}
+  <slot />
+{:else if $auth.user && loaded}
+  <HelpMenu />
   <div class="container">
     <div class="nav">
       <div class="branding">
@@ -98,7 +103,7 @@
   /* Customise tabs appearance*/
   .nav :global(.spectrum-Tabs) {
     margin-bottom: -2px;
-    padding: 7px 0;
+    padding: 5px 0;
     flex: 1 1 auto;
   }
   .nav :global(.spectrum-Tabs-content) {

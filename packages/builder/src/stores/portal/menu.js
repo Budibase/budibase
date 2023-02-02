@@ -50,6 +50,10 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         title: "Organisation",
         href: "/builder/portal/settings/organisation",
       },
+      {
+        title: "Environment",
+        href: "/builder/portal/settings/environment",
+      },
     ]
     if (!$admin.cloud) {
       settingsSubPages.push({

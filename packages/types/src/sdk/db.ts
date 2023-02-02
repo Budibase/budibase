@@ -1,4 +1,3 @@
-import PouchDB from "pouchdb"
 import Nano from "@budibase/nano"
 import { AllDocsResponse, AnyDocument, Document } from "../"
 

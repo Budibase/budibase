@@ -39,6 +39,23 @@
   $: showError($fetch.error)
   $: id, (filters = null)
 
+  let appliedFilter
+  let rawFilter
+  let appliedSort
+  let selectedRows = []
+
+  $: enrichedSchema,
+    () => {
+      appliedFilter = null
+      rawFilter = null
+      appliedSort = null
+      selectedRows = []
+    }
+
+  $: if (Number.isInteger($fetch.pageNumber)) {
+    selectedRows = []
+  }
+
   const showError = error => {
     if (error) {
       notifications.error(error?.message || "Unable to fetch data.")
@@ -95,11 +112,15 @@
   }
 
   // Fetch data whenever sorting option changes
-  const onSort = e => {
-    fetch.update({
+  const onSort = async e => {
+    const sort = {
       sortColumn: e.detail.column,
       sortOrder: e.detail.order,
-    })
+    }
+    await fetch.update(sort)
+    appliedSort = { ...sort }
+    appliedSort.sortOrder = appliedSort.sortOrder.toLowerCase()
+    selectedRows = []
   }
 
   // Fetch data whenever filters change
@@ -108,16 +129,19 @@
     fetch.update({
       filter: filters,
     })
+    appliedFilter = e.detail
   }
 
   // Fetch data whenever schema changes
   const onUpdateColumns = () => {
+    selectedRows = []
     fetch.refresh()
   }
 
   // Fetch data whenever rows are modified. Unfortunately we have to lose
   // our pagination place, as our bookmarks will have shifted.
   const onUpdateRows = () => {
+    selectedRows = []
     fetch.refresh()
   }
 
@@ -142,6 +166,9 @@
     disableSorting
     on:updatecolumns={onUpdateColumns}
     on:updaterows={onUpdateRows}
+    on:selectionUpdated={e => {
+      selectedRows = e.detail
+    }}
     customPlaceholder
   >
     <div class="buttons">
@@ -183,6 +210,9 @@
         <ExportButton
           disabled={!hasRows || !hasCols}
           view={$tables.selected?._id}
+          filters={appliedFilter}
+          sorting={appliedSort}
+          {selectedRows}
         />
         {#key id}
           <TableFilterButton

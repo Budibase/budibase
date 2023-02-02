@@ -10,6 +10,7 @@ describe("test the link controller", () => {
   let table1, table2, appId
 
   beforeEach(async () => {
+    config.modeCloud()
     const app = await config.init()
     appId = app.appId
     const { _id } = await config.createTable()

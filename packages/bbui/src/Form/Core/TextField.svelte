@@ -11,7 +11,6 @@
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
-  export let dataCy
   export let align
   export let autofocus = false
 
@@ -89,7 +88,6 @@
     {disabled}
     {readonly}
     {id}
-    data-cy={dataCy}
     value={value || ""}
     placeholder={placeholder || ""}
     on:click
