@@ -100,8 +100,9 @@
   const deleteApp = async () => {
     try {
       await API.deleteApp(app?.devId)
+      apps.load()
       notifications.success("App deleted successfully")
-      $goto("../")
+      $goto("../../")
     } catch (err) {
       notifications.error("Error deleting app")
     }

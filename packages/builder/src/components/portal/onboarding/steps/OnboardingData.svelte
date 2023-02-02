@@ -1,5 +1,5 @@
 <div>
-  In this section you can mange the data for your app:
+  In this section you can manage the data for your app:
   <ul class="feature-list">
     <li>Connect data sources</li>
     <li>Edit data</li>

@@ -86,7 +86,7 @@
   }
   .is-selected:not(.spectrum-ActionButton--emphasized):not(.spectrum-ActionButton--quiet) {
     background: var(--spectrum-global-color-gray-300);
-    border-color: var(--spectrum-global-color-gray-700);
+    border-color: var(--spectrum-global-color-gray-500);
   }
   .noPadding {
     padding: 0;
