@@ -21,3 +21,7 @@ fi
 # Install ASDF Plugins
 asdf plugin add nodejs
 asdf plugin add python
+
+asdf install
+
+npm install -g yarn
