@@ -215,12 +215,7 @@
 
   onMount(async () => {
     try {
-      await Promise.all([
-        fetchUser(),
-        groups.actions.init(),
-        apps.load(),
-        roles.fetch(),
-      ])
+      await Promise.all([fetchUser(), groups.actions.init(), roles.fetch()])
       loaded = true
     } catch (error) {
       notifications.error("Error getting user groups")

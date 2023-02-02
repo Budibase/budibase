@@ -14,7 +14,7 @@
   let activeTab = "Apps"
 
   $: $url(), updateActiveTab($menu)
-  $: fullScreen = !$apps?.length
+  $: fullscreen = !$apps.length
 
   const updateActiveTab = menu => {
     for (let entry of menu) {
@@ -37,7 +37,8 @@
         $redirect("../")
       } else {
         try {
-          await organisation.init()
+          // We need to load apps to know if we need to show onboarding fullscreen
+          await Promise.all([apps.load(), organisation.init()])
         } catch (error) {
           notifications.error("Error getting org config")
         }
@@ -47,37 +48,39 @@
   })
 </script>
 
-{#if fullScreen}
-  <slot />
-{:else if $auth.user && loaded}
-  <HelpMenu />
-  <div class="container">
-    <div class="nav">
-      <div class="branding">
-        <Logo />
+{#if $auth.user && loaded}
+  {#if fullscreen}
+    <slot />
+  {:else}
+    <HelpMenu />
+    <div class="container">
+      <div class="nav">
+        <div class="branding">
+          <Logo />
+        </div>
+        <div class="desktop">
+          <Tabs selected={activeTab}>
+            {#each $menu as { title, href }}
+              <Tab {title} on:click={() => $goto(href)} />
+            {/each}
+          </Tabs>
+        </div>
+        <div class="mobile">
+          <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
+        </div>
+        <div class="desktop">
+          <UpgradeButton />
+        </div>
+        <div class="dropdown">
+          <UserDropdown />
+        </div>
       </div>
-      <div class="desktop">
-        <Tabs selected={activeTab}>
-          {#each $menu as { title, href }}
-            <Tab {title} on:click={() => $goto(href)} />
-          {/each}
-        </Tabs>
+      <div class="main">
+        <slot />
       </div>
-      <div class="mobile">
-        <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
-      </div>
-      <div class="desktop">
-        <UpgradeButton />
-      </div>
-      <div class="dropdown">
-        <UserDropdown />
-      </div>
+      <MobileMenu visible={mobileMenuVisible} on:close={hideMobileMenu} />
     </div>
-    <div class="main">
-      <slot />
-    </div>
-    <MobileMenu visible={mobileMenuVisible} on:close={hideMobileMenu} />
-  </div>
+  {/if}
 {/if}
 
 <style>
