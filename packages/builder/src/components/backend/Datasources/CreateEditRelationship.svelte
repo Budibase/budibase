@@ -47,13 +47,7 @@
     relationshipExists
   )
   let errors = {}
-  let fromPrimary,
-    fromForeign,
-    fromTable,
-    toTable,
-    throughTable,
-    fromColumn,
-    toColumn
+  let fromPrimary, fromForeign, fromColumn, toColumn
   let fromId = selectedFromTable?._id,
     toId,
     throughId,
@@ -69,10 +63,19 @@
   $: valid = getErrorCount(errors) === 0 && allRequiredAttributesSet()
   $: isManyToMany = relationshipType === RelationshipTypes.MANY_TO_MANY
   $: isManyToOne = relationshipType === RelationshipTypes.MANY_TO_ONE
-  $: fromTable = plusTables.find(table => table._id === fromId)
-  $: toTable = plusTables.find(table => table._id === toId)
-  $: throughTable = plusTables.find(table => table._id === throughId)
   $: toRelationship.relationshipType = fromRelationship?.relationshipType
+
+  function getFromTable() {
+    return plusTables.find(table => table._id === fromId)
+  }
+
+  function getToTable() {
+    return plusTables.find(table => table._id === toId)
+  }
+
+  function getThroughTable() {
+    return plusTables.find(table => table._id === throughId)
+  }
 
   function invalidThroughTable() {
     // need to know the foreign key columns to check error
@@ -94,16 +97,16 @@
     if (
       originalFromTable &&
       originalToTable &&
-      originalFromTable === fromTable &&
-      originalToTable === toTable
+      originalFromTable === getFromTable() &&
+      originalToTable === getToTable()
     ) {
       return false
     }
     let fromThroughLinks = Object.values(
-      datasource.entities[fromTable.name].schema
+      datasource.entities[getFromTable().name].schema
     ).filter(value => value.through)
     let toThroughLinks = Object.values(
-      datasource.entities[toTable.name].schema
+      datasource.entities[getToTable().name].schema
     ).filter(value => value.through)
 
     const matchAgainstUserInput = (fromTableId, toTableId) =>
@@ -124,11 +127,11 @@
   }
 
   function allRequiredAttributesSet() {
-    const base = fromTable && toTable && fromColumn && toColumn
+    const base = getFromTable() && getToTable() && fromColumn && toColumn
     if (relationshipType === RelationshipTypes.MANY_TO_ONE) {
       return base && fromPrimary && fromForeign
     } else {
-      return base && throughTable && throughFromKey && throughToKey
+      return base && getThroughTable() && throughFromKey && throughToKey
     }
   }
 
@@ -138,6 +141,9 @@
     }
     hasValidated = true
     errorChecker.setType(relationshipType)
+    const fromTable = getFromTable(),
+      toTable = getToTable(),
+      throughTable = getThroughTable()
     errors = {
       relationshipType: errorChecker.relationshipTypeSet(relationshipType),
       fromTable:
@@ -210,13 +216,13 @@
     if (manyToMany) {
       relateFrom = {
         ...relateFrom,
-        through: throughTable._id,
-        fieldName: toTable.primary[0],
+        through: getThroughTable()._id,
+        fieldName: getToTable().primary[0],
       }
       relateTo = {
         ...relateTo,
-        through: throughTable._id,
-        fieldName: fromTable.primary[0],
+        through: getThroughTable()._id,
+        fieldName: getFromTable().primary[0],
         throughFrom: relateFrom.throughTo,
         throughTo: relateFrom.throughFrom,
       }
@@ -265,10 +271,10 @@
     removeExistingRelationship()
 
     // source of relationship
-    datasource.entities[fromTable.name].schema[fromRelationship.name] =
+    datasource.entities[getFromTable().name].schema[fromRelationship.name] =
       fromRelationship
     // save other side of relationship in the other schema
-    datasource.entities[toTable.name].schema[toRelationship.name] =
+    datasource.entities[getToTable().name].schema[toRelationship.name] =
       toRelationship
 
     await save()
@@ -343,10 +349,10 @@
         })}
     />
   {/if}
-  {#if isManyToOne && fromTable}
+  {#if isManyToOne && fromId}
     <Select
-      label={`Primary Key (${fromTable.name})`}
-      options={Object.keys(fromTable.schema)}
+      label={`Primary Key (${getFromTable().name})`}
+      options={Object.keys(getFromTable().schema)}
       bind:value={fromPrimary}
       bind:error={errors.fromPrimary}
       on:change={changed}
@@ -376,10 +382,10 @@
           throughFromKey = null
         })}
     />
-    {#if fromTable && toTable && throughTable}
+    {#if fromId && toId && throughId}
       <Select
-        label={`Foreign Key (${fromTable?.name})`}
-        options={Object.keys(throughTable?.schema)}
+        label={`Foreign Key (${getFromTable()?.name})`}
+        options={Object.keys(getThroughTable()?.schema)}
         bind:value={throughToKey}
         bind:error={errors.throughToKey}
         on:change={e =>
@@ -390,8 +396,8 @@
           })}
       />
       <Select
-        label={`Foreign Key (${toTable?.name})`}
-        options={Object.keys(throughTable?.schema)}
+        label={`Foreign Key (${getToTable()?.name})`}
+        options={Object.keys(getThroughTable()?.schema)}
         bind:value={throughFromKey}
         bind:error={errors.throughFromKey}
         on:change={e =>
@@ -402,10 +408,10 @@
           })}
       />
     {/if}
-  {:else if isManyToOne && toTable}
+  {:else if isManyToOne && toId}
     <Select
-      label={`Foreign Key (${toTable?.name})`}
-      options={Object.keys(toTable?.schema)}
+      label={`Foreign Key (${getToTable()?.name})`}
+      options={Object.keys(getToTable()?.schema)}
       bind:value={fromForeign}
       bind:error={errors.fromForeign}
       on:change={changed}
