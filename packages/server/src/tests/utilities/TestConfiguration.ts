@@ -168,14 +168,6 @@ class TestConfiguration {
     }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
-
-      if (env.isDockerisedTest()) {
-        await this._req(
-          null,
-          { appId: this.prodApp.appId },
-          controllers.app.destroy
-        )
-      }
     }
 
     if (this.server) {
