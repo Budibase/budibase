@@ -66,7 +66,6 @@
     title="Publish to production"
     confirmText="Publish"
     onConfirm={publishApp}
-    dataCy={"deploy-app-modal"}
   >
     The changes you have made will be published to the production version of the
     application.
@@ -88,12 +87,7 @@
 
 <!-- Publish complete -->
 <Modal bind:this={publishCompleteModal}>
-  <ModalContent
-    confirmText="Done"
-    cancelText="View App"
-    onCancel={viewApp}
-    dataCy="deploy-app-success-modal"
-  >
+  <ModalContent confirmText="Done" cancelText="View App" onCancel={viewApp}>
     <div slot="header" class="app-published-header">
       <svg
         width="26px"
@@ -105,11 +99,7 @@
       </svg>
       <span class="app-published-header-text">App Published!</span>
     </div>
-    <CopyInput
-      value={publishedUrl}
-      label="You can view your app at:"
-      dataCy="deployed-app-url"
-    />
+    <CopyInput value={publishedUrl} label="You can view your app at:" />
   </ModalContent>
 </Modal>
 

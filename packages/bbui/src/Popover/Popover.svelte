@@ -13,11 +13,11 @@
   export let anchor
   export let align = "right"
   export let portalTarget
-  export let dataCy
   export let maxWidth
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
+  export let offset = 5
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -65,7 +65,7 @@
         align,
         maxWidth,
         useAnchorWidth,
-        showTip: false,
+        offset,
       }}
       use:clickOutside={{
         callback: dismissible ? handleOutsideClick : () => {},
@@ -74,7 +74,6 @@
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
       role="presentation"
-      data-cy={dataCy}
       transition:fly|local={{ y: -20, duration: 200 }}
     >
       <slot />

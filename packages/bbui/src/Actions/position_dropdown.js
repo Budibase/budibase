@@ -10,7 +10,7 @@ export default function positionDropdown(element, opts) {
 
   // Updates the position of the dropdown
   const updatePosition = opts => {
-    const { anchor, align, maxWidth, useAnchorWidth } = opts
+    const { anchor, align, maxWidth, useAnchorWidth, offset = 5 } = opts
     if (!anchor) {
       return
     }
@@ -30,9 +30,9 @@ export default function positionDropdown(element, opts) {
     if (align === "right-outside") {
       styles.top = anchorBounds.top
     } else if (window.innerHeight - anchorBounds.bottom < 100) {
-      styles.top = anchorBounds.top - elementBounds.height - 5
+      styles.top = anchorBounds.top - elementBounds.height - offset
     } else {
-      styles.top = anchorBounds.bottom + 5
+      styles.top = anchorBounds.bottom + offset
       styles.maxHeight = window.innerHeight - anchorBounds.bottom - 20
     }
 
@@ -46,7 +46,7 @@ export default function positionDropdown(element, opts) {
     if (align === "right") {
       styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
     } else if (align === "right-outside") {
-      styles.left = anchorBounds.right + 10
+      styles.left = anchorBounds.right + offset
     } else {
       styles.left = anchorBounds.left
     }
