@@ -13,7 +13,6 @@
   export let icon = undefined
   export let active = false
   export let tooltip = undefined
-  export let dataCy
   export let newStyles = true
   export let id
 
@@ -33,7 +32,6 @@
   class:disabled
   class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
   {disabled}
-  data-cy={dataCy}
   on:click|preventDefault
   on:mouseover={() => (showTooltip = true)}
   on:focus={() => (showTooltip = true)}

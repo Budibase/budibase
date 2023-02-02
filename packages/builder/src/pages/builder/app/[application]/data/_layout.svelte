@@ -11,9 +11,7 @@
 <div class="data">
   <Panel title="Sources" borderRight>
     <Layout paddingX="L" paddingY="XL" gap="S">
-      <Button dataCy={`new-datasource`} cta on:click={modal.show}>
-        Add source
-      </Button>
+      <Button cta on:click={modal.show}>Add source</Button>
       <CreateDatasourceModal bind:modal />
       <DatasourceNavigator />
     </Layout>

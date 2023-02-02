@@ -256,7 +256,6 @@
                   draggable="true"
                   on:dragstart={() => onDragStart(component.component)}
                   on:dragend={onDragEnd}
-                  data-cy={`component-${component.name}`}
                   class="component"
                   class:selected={selectedIndex ===
                     orderMap[component.component]}

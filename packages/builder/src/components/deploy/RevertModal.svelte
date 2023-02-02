@@ -33,7 +33,6 @@
   hoverable
   on:click={revertModal.show}
   tooltip="Revert changes"
-  dataCy="revert-application-topnav"
 />
 <Modal bind:this={revertModal}>
   <ModalContent
