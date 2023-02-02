@@ -20,6 +20,15 @@ function isColumnNameBeingUsed(table, columnName, originalName) {
   return keys.indexOf(columnName.toLowerCase()) !== -1
 }
 
+function typeMismatchCheck(fromTable, toTable, primary, foreign) {
+  let fromType, toType
+  if (primary && foreign) {
+    fromType = fromTable?.schema[primary]?.type
+    toType = toTable?.schema[foreign]?.type
+  }
+  return fromType && toType && fromType !== toType ? typeMismatch : null
+}
+
 export class RelationshipErrorChecker {
   constructor(invalidThroughTableFn, relationshipExistsFn) {
     this.invalidThroughTable = invalidThroughTableFn
@@ -79,11 +88,16 @@ export class RelationshipErrorChecker {
   }
 
   typeMismatch(fromTable, toTable, primary, foreign) {
-    let fromType, toType
-    if (primary && foreign) {
-      fromType = fromTable?.schema[primary]?.type
-      toType = toTable?.schema[foreign]?.type
+    if (this.isMany()) {
+      return null
     }
-    return fromType && toType && fromType !== toType ? typeMismatch : null
+    return typeMismatchCheck(fromTable, toTable, primary, foreign)
+  }
+
+  manyTypeMismatch(table, throughTable, primary, foreign) {
+    if (!this.isMany()) {
+      return null
+    }
+    return typeMismatchCheck(table, throughTable, primary, foreign)
   }
 }
