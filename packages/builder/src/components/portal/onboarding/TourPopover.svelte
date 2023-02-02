@@ -108,50 +108,52 @@
   }
 </script>
 
-{#key tourStepKey}
-  <Popover
-    align={tourStep?.align}
-    bind:this={popover}
-    anchor={popoverAnchor}
-    maxWidth={300}
-    dismissible={false}
-    offset={15}
-  >
-    <div class="tour-content">
-      <Layout noPadding gap="M">
-        <div class="tour-header">
-          <Heading size="XS">{tourStep?.title || "-"}</Heading>
-          <div>{`${tourStepIdx + 1}/${tourSteps?.length}`}</div>
-        </div>
-        <Body size="S">
-          <span class="tour-body">
-            {#if tourStep.layout}
-              <svelte:component this={tourStep.layout} />
-            {:else}
-              {tourStep?.body || ""}
-            {/if}
-          </span>
-        </Body>
-        <div class="tour-footer">
-          <div class="tour-navigation">
-            {#if tourStepIdx > 0}
-              <Button
-                secondary
-                on:click={previousStep}
-                disabled={tourStepIdx == 0}
-              >
-                <div>Back</div>
-              </Button>
-            {/if}
-            <Button cta on:click={nextStep}>
-              <div>{lastStep ? "Finish" : "Next"}</div>
-            </Button>
+{#if tourKey}
+  {#key tourStepKey}
+    <Popover
+      align={tourStep?.align}
+      bind:this={popover}
+      anchor={popoverAnchor}
+      maxWidth={300}
+      dismissible={false}
+      offset={15}
+    >
+      <div class="tour-content">
+        <Layout noPadding gap="M">
+          <div class="tour-header">
+            <Heading size="XS">{tourStep?.title || "-"}</Heading>
+            <div>{`${tourStepIdx + 1}/${tourSteps?.length}`}</div>
           </div>
-        </div>
-      </Layout>
-    </div>
-  </Popover>
-{/key}
+          <Body size="S">
+            <span class="tour-body">
+              {#if tourStep.layout}
+                <svelte:component this={tourStep.layout} />
+              {:else}
+                {tourStep?.body || ""}
+              {/if}
+            </span>
+          </Body>
+          <div class="tour-footer">
+            <div class="tour-navigation">
+              {#if tourStepIdx > 0}
+                <Button
+                  secondary
+                  on:click={previousStep}
+                  disabled={tourStepIdx == 0}
+                >
+                  <div>Back</div>
+                </Button>
+              {/if}
+              <Button cta on:click={nextStep}>
+                <div>{lastStep ? "Finish" : "Next"}</div>
+              </Button>
+            </div>
+          </div>
+        </Layout>
+      </div>
+    </Popover>
+  {/key}
+{/if}
 
 <style>
   .tour-content {
