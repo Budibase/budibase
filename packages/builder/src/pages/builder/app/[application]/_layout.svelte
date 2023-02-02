@@ -71,7 +71,7 @@
   const initTour = async () => {
     if (
       !$auth.user?.onboardedAt &&
-      isEnabled(TENANT_FEATURE_FLAGS.ONBOADING_TOUR)
+      isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)
     ) {
       // Determine the correct step
       const activeNav = $layout.children.find(c => $isActive(c.path))
