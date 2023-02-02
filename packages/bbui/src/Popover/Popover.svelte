@@ -57,30 +57,28 @@
 </script>
 
 {#if open}
-  {#key anchor}
-    <Portal {target}>
-      <div
-        tabindex="0"
-        use:positionDropdown={{
-          anchor,
-          align,
-          maxWidth,
-          useAnchorWidth,
-          offset,
-        }}
-        use:clickOutside={{
-          callback: dismissible ? handleOutsideClick : () => {},
-          anchor,
-        }}
-        on:keydown={handleEscape}
-        class="spectrum-Popover is-open"
-        role="presentation"
-        transition:fly|local={{ y: -20, duration: 200 }}
-      >
-        <slot />
-      </div>
-    </Portal>
-  {/key}
+  <Portal {target}>
+    <div
+      tabindex="0"
+      use:positionDropdown={{
+        anchor,
+        align,
+        maxWidth,
+        useAnchorWidth,
+        offset,
+      }}
+      use:clickOutside={{
+        callback: dismissible ? handleOutsideClick : () => {},
+        anchor,
+      }}
+      on:keydown={handleEscape}
+      class="spectrum-Popover is-open"
+      role="presentation"
+      transition:fly|local={{ y: -20, duration: 200 }}
+    >
+      <slot />
+    </div>
+  </Portal>
 {/if}
 
 <style>
