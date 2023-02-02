@@ -8,7 +8,7 @@
         "editor.defaultFormatter": "vscode.json-language-features"
     },
     "[javascript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "debug.javascript.terminalOptions": {
         "skipFiles": [
@@ -17,6 +17,9 @@
         ]
     },
     "[typescript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[dockercompose]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
 }
