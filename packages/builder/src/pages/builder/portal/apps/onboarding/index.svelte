@@ -16,6 +16,7 @@
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
   import { Roles } from "constants/backend"
+  import Spinner from "components/common/Spinner.svelte"
 
   let name = "My first app"
   let url = "my-first-app"
@@ -25,39 +26,46 @@
   let plusIntegrations = {}
   let integrationsLoading = true
   $: getIntegrations()
+  let creationLoading = false
 
   let uploadModal
 
   const createApp = async useSampleData => {
+    creationLoading = true
     // Create form data to create app
     // This is form based and not JSON
-    let data = new FormData()
-    data.append("name", name.trim())
-    data.append("url", url.trim())
-    data.append("useTemplate", false)
+    try {
+      let data = new FormData()
+      data.append("name", name.trim())
+      data.append("url", url.trim())
+      data.append("useTemplate", false)
 
-    if (useSampleData) {
-      data.append("sampleData", true)
+      if (useSampleData) {
+        data.append("sampleData", true)
+      }
+
+      const createdApp = await API.createApp(data)
+
+      // Select Correct Application/DB in prep for creating user
+      const pkg = await API.fetchAppPackage(createdApp.instance._id)
+      await store.actions.initialise(pkg)
+      await automationStore.actions.fetch()
+      // Update checklist - in case first app
+      await admin.init()
+
+      // Create user
+      await auth.setInitInfo({})
+
+      let defaultScreenTemplate = createFromScratchScreen.create()
+      defaultScreenTemplate.routing.route = "/home"
+      defaultScreenTemplate.routing.roldId = Roles.BASIC
+      await store.actions.screens.save(defaultScreenTemplate)
+
+      appId = createdApp.instance._id
+    } catch (e) {
+      creationLoading = false
+      throw e
     }
-
-    const createdApp = await API.createApp(data)
-
-    // Select Correct Application/DB in prep for creating user
-    const pkg = await API.fetchAppPackage(createdApp.instance._id)
-    await store.actions.initialise(pkg)
-    await automationStore.actions.fetch()
-    // Update checklist - in case first app
-    await admin.init()
-
-    // Create user
-    await auth.setInitInfo({})
-
-    let defaultScreenTemplate = createFromScratchScreen.create()
-    defaultScreenTemplate.routing.route = "/home"
-    defaultScreenTemplate.routing.roldId = Roles.BASIC
-    await store.actions.screens.save(defaultScreenTemplate)
-
-    appId = createdApp.instance._id
   }
 
   const getIntegrations = async () => {
@@ -118,8 +126,10 @@
 <SplitPage>
   {#if stage === "name"}
     <NamePanel bind:name bind:url onNext={() => (stage = "data")} />
-  {:else if integrationsLoading}
-    <p>loading...</p>
+  {:else if integrationsLoading || creationLoading}
+    <div class="spinner">
+      <Spinner />
+    </div>
   {:else if stage === "data"}
     <DataPanel onBack={() => (stage = "name")}>
       <div class="dataButton">
@@ -175,6 +185,13 @@
 </SplitPage>
 
 <style>
+  .spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+  }
+
   .dataButton {
     margin-bottom: 12px;
   }
