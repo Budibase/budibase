@@ -9,22 +9,17 @@ interface ApiOptions {
   headers?: HeadersInit | undefined
 }
 
-class InternalAPIClient {
+class AccountsAPIClient {
   host: string
-  tenantName?: string
   appId?: string
   cookie?: string
 
   constructor(appId?: string) {
-    if (!env.BUDIBASE_HOST) {
+    if (!env.BUDIBASE_ACCOUNTS_URL) {
       throw new Error("Must set BUDIBASE_SERVER_URL env var")
     }
-    this.host = `${env.BUDIBASE_HOST}/api`
+    this.host = `${env.BUDIBASE_ACCOUNTS_URL}/api`
     this.appId = appId
-  }
-
-  setTenantName(tenantName: string) {
-    this.tenantName = tenantName
   }
 
   apiCall =
@@ -45,10 +40,8 @@ class InternalAPIClient {
         credentials: "include",
       }
 
-      // prettier-ignore
       // @ts-ignore
-      const response = await fetch(`https://${process.env.TENANT_ID}.${this.host}${url}`, requestOptions)
-
+      const response = await fetch(`${this.host}${url}`, requestOptions)
       if (response.status == 404 || response.status == 500) {
         console.error("Error in apiCall")
         console.error("Response:")
@@ -68,4 +61,4 @@ class InternalAPIClient {
   put = this.apiCall("PUT")
 }
 
-export default InternalAPIClient
+export default AccountsAPIClient
