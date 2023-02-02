@@ -25,16 +25,21 @@
   const getOptions = (schema, type) => {
     let entries = Object.entries(schema ?? {})
     let types = []
-    if (type === "field/options" || type === "field/barcode/qr") {
+    if (type === "field/options") {
       // allow options to be used on both options and string fields
       types = [type, "field/string"]
     } else {
       types = [type]
     }
 
-    types = types.map(type => type.slice(type.indexOf("/") + 1))
+    types = types.map(type => {
+      let fieldTypeRaw = type.slice(type.indexOf("/") + 1)
+      let fieldTypeParsed = fieldTypeRaw.replace("/", "")
+      return fieldTypeParsed
+    })
 
     entries = entries.filter(entry => types.includes(entry[1].type))
+
     return entries.map(entry => entry[0])
   }
 </script>
