@@ -48,11 +48,7 @@
   )
   let errors = {}
   let fromPrimary, fromForeign, fromColumn, toColumn
-  let fromId = selectedFromTable?._id,
-    toId,
-    throughId,
-    throughToKey,
-    throughFromKey
+  let fromId, toId, throughId, throughToKey, throughFromKey
   let isManyToMany, isManyToOne, relationshipType
   let hasValidated = false
 
@@ -316,6 +312,7 @@
     relationshipType =
       fromRelationship.relationshipType || RelationshipTypes.MANY_TO_ONE
     if (selectedFromTable) {
+      fromId = selectedFromTable._id
       fromColumn = selectedFromTable.name
       fromPrimary = selectedFromTable?.primary[0] || null
     }
