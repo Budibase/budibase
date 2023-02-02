@@ -6,7 +6,6 @@ import {
   QueryType,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
-import { DatabaseWithConnection } from "@budibase/backend-core/src/db"
 
 interface CouchDBConfig {
   url: string
