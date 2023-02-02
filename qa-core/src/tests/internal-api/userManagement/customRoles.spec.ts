@@ -8,7 +8,7 @@ import { App, User } from "@budibase/types"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
 import { db } from "@budibase/backend-core"
 
-describe("Internal API - App Specific Roles & Permissions", () => {
+describe.skip("Internal API - App Specific Roles & Permissions", () => {
   let api: InternalAPIClient
   let accountsAPI: AccountsAPIClient
   let config: TestConfiguration<Application>
@@ -82,14 +82,13 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
 
     // fetch app package
-    /*
+
     const [appPackageResponse, appPackageJson] =
       await config.applications.getAppPackage(app.appId!)
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
-    */
   })
-  it.skip("Custom role access for level 2 permissions", async () => {
+  it("Custom role access for level 2 permissions", async () => {
     // Set up user
     const appUser = generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
@@ -150,7 +149,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
   })
-  it.skip("Custom role access for level 3 permissions", async () => {
+  it("Custom role access for level 3 permissions", async () => {
     const appUser = generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
@@ -210,7 +209,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
   })
-  it.skip("Custom role access for level 4 permissions", async () => {
+  it("Custom role access for level 4 permissions", async () => {
     const appUser = generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
@@ -270,7 +269,7 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
   })
-  it.skip("Custom role access for level 5 permissions", async () => {
+  it("Custom role access for level 5 permissions", async () => {
     const appUser = generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)

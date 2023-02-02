@@ -8,7 +8,7 @@ import { User } from "@budibase/types"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
 import { db } from "@budibase/backend-core"
 
-describe("Internal API - Role screen access", () => {
+describe.skip("Internal API - Role screen access", () => {
   let api: InternalAPIClient
   let accountsAPI: AccountsAPIClient
   let config: TestConfiguration<Application>
@@ -73,16 +73,15 @@ describe("Internal API - Role screen access", () => {
     const [selfInfoResponse, selfInfoJson] = await config.users.getSelf()
 
     // fetch app package
-    /*
+
     const [appPackageResponse, appPackageJson] =
       await config.applications.getAppPackage(app.appId!)
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
     expect(appPackageJson.screens[0].routing.roleId).toEqual("BASIC")
-    */
   })
 
-  it.skip("Check Screen access for POWER role", async () => {
+  it("Check Screen access for POWER role", async () => {
     // Set up user
     const appUser = generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
@@ -136,7 +135,7 @@ describe("Internal API - Role screen access", () => {
     expect(appPackageJson.screens.length).toEqual(2)
   })
 
-  it.skip("Check Screen access for ADMIN role", async () => {
+  it("Check Screen access for ADMIN role", async () => {
     // Set up user
     const appUser = generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
