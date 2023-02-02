@@ -57,7 +57,7 @@
     defaultScreenTemplate.routing.roldId = Roles.BASIC
     await store.actions.screens.save(defaultScreenTemplate)
 
-    return createdApp.instance._id
+    appId = createdApp.instance._id
   }
 
   const getIntegrations = async () => {
@@ -79,14 +79,14 @@
     }
   }
 
-  const goToApp = appId => {
+  const goToApp = () => {
     $goto(`/builder/app/${appId}`)
     notifications.success(`App created successfully`)
   }
 
   const handleCreateApp = async ({ datasourceConfig, useSampleData }) => {
     try {
-      appId = await createApp(useSampleData)
+      await createApp(useSampleData)
 
       if (datasourceConfig) {
         await saveDatasource({
@@ -99,7 +99,7 @@
         })
       }
 
-      goToApp(appId)
+      goToApp()
     } catch (e) {
       console.log(e)
       notifications.error("There was a problem creating your app")
@@ -111,7 +111,7 @@
   <CreateTableModal
     name="Your Data"
     beforeSave={createApp}
-    afterSave={() => goToApp(appId)}
+    afterSave={goToApp}
   />
 </Modal>
 
