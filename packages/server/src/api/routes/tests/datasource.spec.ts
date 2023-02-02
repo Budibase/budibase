@@ -2,7 +2,12 @@ jest.mock("pg")
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { checkCacheForDynamicVariable } from "../../../threads/utils"
-import { events } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
+import sdk from "../../../sdk"
+
+import tk from "timekeeper"
+import { mocks } from "@budibase/backend-core/tests"
+tk.freeze(mocks.date.MOCK_DATE)
 
 let { basicDatasource } = setup.structures
 const pg = require("pg")
@@ -55,7 +60,14 @@ describe("/datasources", () => {
         datasource: any,
         fields: { path: string; queryString: string }
       ) {
-        return config.previewQuery(request, config, datasource, fields)
+        return config.previewQuery(
+          request,
+          config,
+          datasource,
+          fields,
+          undefined,
+          ""
+        )
       }
 
       it("should invalidate changed or removed variables", async () => {
@@ -181,6 +193,39 @@ describe("/datasources", () => {
         config,
         method: "DELETE",
         url: `/api/datasources/${datasource._id}/${datasource._rev}`,
+      })
+    })
+  })
+
+  describe("check secret replacement", () => {
+    async function makeDatasource() {
+      datasource = basicDatasource()
+      datasource.datasource.config.password = "testing"
+      const res = await request
+        .post(`/api/datasources`)
+        .send(datasource)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      return res.body.datasource
+    }
+
+    it("should save a datasource with password", async () => {
+      const datasource = await makeDatasource()
+      expect(datasource.config.password).toBe("--secret-value--")
+    })
+
+    it("should not the password on update with the --secret-value--", async () => {
+      const datasource = await makeDatasource()
+      await request
+        .put(`/api/datasources/${datasource._id}`)
+        .send(datasource)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      await context.doInAppContext(config.getAppId(), async () => {
+        const dbDatasource: any = await sdk.datasources.get(datasource._id)
+        expect(dbDatasource.config.password).toBe("testing")
       })
     })
   })

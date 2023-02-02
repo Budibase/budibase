@@ -30,11 +30,11 @@
 </script>
 
 <div class="app-row" on:click={handleDefaultClick}>
-  <div class="title" data-cy={`${app.devId}`}>
+  <div class="title">
     <div class="app-icon">
       <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
     </div>
-    <div class="name" data-cy="app-name-link">
+    <div class="name">
       <Heading size="S">
         {app.name}
       </Heading>
@@ -56,7 +56,7 @@
     <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
-  <div class="app-row-actions" data-cy={`row_actions_${app.appId}`}>
+  <div class="app-row-actions">
     <AppLockModal {app} buttonSize="M" />
     <Button size="S" secondary on:click={goToOverview}>Manage</Button>
     <Button size="S" primary disabled={app.lockedOther} on:click={goToBuilder}>

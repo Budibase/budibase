@@ -21,6 +21,7 @@ import {
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
+import { environment, licensing } from "stores/portal"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -53,8 +54,13 @@ export const getBindableProperties = (asset, componentId) => {
  * Gets all rest bindable data fields
  */
 export const getRestBindings = () => {
+  const environmentVariablesEnabled = get(licensing).environmentVariablesEnabled
   const userBindings = getUserBindings()
-  return [...userBindings, ...getAuthBindings()]
+  return [
+    ...userBindings,
+    ...getAuthBindings(),
+    ...(environmentVariablesEnabled ? getEnvironmentBindings() : []),
+  ]
 }
 
 /**
@@ -87,6 +93,20 @@ export const getAuthBindings = () => {
     }
   })
   return bindings
+}
+
+export const getEnvironmentBindings = () => {
+  let envVars = get(environment).variables
+  return envVars.map(variable => {
+    return {
+      type: "context",
+      runtimeBinding: `env.${makePropSafe(variable.name)}`,
+      readableBinding: `env.${variable.name}`,
+      category: "Environment",
+      icon: "Key",
+      display: { type: "string", name: variable.name },
+    }
+  })
 }
 
 /**

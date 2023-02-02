@@ -11,15 +11,17 @@
     Body,
     Icon,
     Search,
+    InlineAlert,
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, licensing } from "stores/portal"
+  import { apps, auth, admin, licensing, environment } from "stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
@@ -35,6 +37,7 @@
   let creatingFromTemplate = false
   let automationErrors
   let accessFilterList = null
+  let confirmDownloadDialog
 
   $: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
@@ -193,6 +196,7 @@
 
   onMount(async () => {
     try {
+      await environment.loadVariables()
       // If the portal is loaded from an external URL with a template param
       const initInfo = await auth.getInitInfo()
       if (initInfo?.init_template) {
@@ -227,7 +231,7 @@
       {/each}
       <div class="title">
         <div class="welcome">
-          <Layout noPadding gap="S">
+          <Layout noPadding gap="XS">
             <Heading size="L">{welcomeHeader}</Heading>
             <Body size="M">
               Manage your apps and get a head start with templates
@@ -240,12 +244,7 @@
         <Layout noPadding gap="L">
           <div class="title">
             <div class="buttons">
-              <Button
-                dataCy="create-app-btn"
-                size="M"
-                cta
-                on:click={initiateAppCreation}
-              >
+              <Button size="M" cta on:click={initiateAppCreation}>
                 Create new app
               </Button>
               {#if $apps?.length > 0}
@@ -258,13 +257,7 @@
                 </Button>
               {/if}
               {#if !$apps?.length}
-                <Button
-                  dataCy="import-app-btn"
-                  size="L"
-                  quiet
-                  secondary
-                  on:click={initiateAppImport}
-                >
+                <Button size="L" quiet secondary on:click={initiateAppImport}>
                   Import app
                 </Button>
               {/if}
@@ -275,7 +268,7 @@
                   <Icon
                     name="Download"
                     hoverable
-                    on:click={initiateAppsExport}
+                    on:click={confirmDownloadDialog.show}
                   />
                 {/if}
                 <Select
@@ -322,6 +315,18 @@
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />
+
+<ConfirmDialog
+  bind:this={confirmDownloadDialog}
+  okText="Continue"
+  onOk={initiateAppsExport}
+  warning={false}
+  title="Download all apps"
+>
+  <InlineAlert
+    header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
+  />
+</ConfirmDialog>
 
 <style>
   .title {

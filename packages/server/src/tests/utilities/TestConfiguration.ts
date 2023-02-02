@@ -1,4 +1,4 @@
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 
 // init the licensing mock
 import * as pro from "@budibase/pro"
@@ -10,6 +10,7 @@ mocks.licenses.useUnlimited()
 import { init as dbInit } from "../../db"
 dbInit()
 import env from "../../environment"
+import { env as coreEnv } from "@budibase/backend-core"
 import {
   basicTable,
   basicRow,
@@ -39,13 +40,15 @@ import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
-import { Datasource, Row, SourceName, Table } from "@budibase/types"
+import { AuthToken, Datasource, Row, SourceName, Table } from "@budibase/types"
 
-const GLOBAL_USER_ID = "us_uuid1"
-const EMAIL = "babs@babs.com"
-const FIRSTNAME = "Barbara"
-const LASTNAME = "Barbington"
-const CSRF_TOKEN = "e3727778-7af0-4226-b5eb-f43cbe60a306"
+type DefaultUserValues = {
+  globalUserId: string
+  email: string
+  firstName: string
+  lastName: string
+  csrfToken: string
+}
 
 class TestConfiguration {
   server: any
@@ -63,6 +66,8 @@ class TestConfiguration {
   linkedTable: any
   automation: any
   datasource: any
+  tenantId: string | null
+  defaultUserValues: DefaultUserValues
 
   constructor(openServer = true) {
     if (openServer) {
@@ -77,6 +82,18 @@ class TestConfiguration {
     }
     this.appId = null
     this.allApps = []
+    this.tenantId = null
+    this.defaultUserValues = this.populateDefaultUserValues()
+  }
+
+  populateDefaultUserValues(): DefaultUserValues {
+    return {
+      globalUserId: `us_${newid()}`,
+      email: generator.email(),
+      firstName: generator.first(),
+      lastName: generator.last(),
+      csrfToken: generator.hash(),
+    }
   }
 
   getRequest() {
@@ -101,10 +118,10 @@ class TestConfiguration {
 
   getUserDetails() {
     return {
-      globalId: GLOBAL_USER_ID,
-      email: EMAIL,
-      firstName: FIRSTNAME,
-      lastName: LASTNAME,
+      globalId: this.defaultUserValues.globalUserId,
+      email: this.defaultUserValues.email,
+      firstName: this.defaultUserValues.firstName,
+      lastName: this.defaultUserValues.lastName,
     }
   }
 
@@ -112,7 +129,9 @@ class TestConfiguration {
     if (!appId) {
       appId = this.appId
     }
-    return tenancy.doInTenant(TENANT_ID, () => {
+
+    const tenant = this.getTenantId()
+    return tenancy.doInTenant(tenant, () => {
       // check if already in a context
       if (context.getAppId() == null && appId !== null) {
         return context.doInAppContext(appId, async () => {
@@ -128,6 +147,11 @@ class TestConfiguration {
 
   // use a new id as the name to avoid name collisions
   async init(appName = newid()) {
+    this.defaultUserValues = this.populateDefaultUserValues()
+    if (context.isMultiTenant()) {
+      this.tenantId = `tenant-${newid()}`
+    }
+
     if (!this.started) {
       await startup()
     }
@@ -159,6 +183,27 @@ class TestConfiguration {
     }
   }
 
+  // MODES
+  #setMultiTenancy = (value: boolean) => {
+    env._set("MULTI_TENANCY", value)
+    coreEnv._set("MULTI_TENANCY", value)
+  }
+
+  #setSelfHosted = (value: boolean) => {
+    env._set("SELF_HOSTED", value)
+    coreEnv._set("SELF_HOSTED", value)
+  }
+
+  modeCloud = () => {
+    this.#setSelfHosted(false)
+    this.#setMultiTenancy(true)
+  }
+
+  modeSelf = () => {
+    this.#setSelfHosted(true)
+    this.#setMultiTenancy(false)
+  }
+
   // UTILS
 
   _req(body: any, params: any, controlFunc: any) {
@@ -169,7 +214,7 @@ class TestConfiguration {
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
-    request.user = { appId, tenantId: TENANT_ID }
+    request.user = { appId, tenantId: this.getTenantId() }
     request.query = {}
     request.request = {
       body,
@@ -185,15 +230,15 @@ class TestConfiguration {
 
   // USER / AUTH
   async globalUser({
-    id = GLOBAL_USER_ID,
-    firstName = FIRSTNAME,
-    lastName = LASTNAME,
+    id = this.defaultUserValues.globalUserId,
+    firstName = this.defaultUserValues.firstName,
+    lastName = this.defaultUserValues.lastName,
     builder = true,
     admin = false,
-    email = EMAIL,
+    email = this.defaultUserValues.email,
     roles,
   }: any = {}) {
-    return tenancy.doWithGlobalDB(TENANT_ID, async (db: any) => {
+    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: any) => {
       let existing
       try {
         existing = await db.get(id)
@@ -204,14 +249,14 @@ class TestConfiguration {
         _id: id,
         ...existing,
         roles: roles || {},
-        tenantId: TENANT_ID,
+        tenantId: this.getTenantId(),
         firstName,
         lastName,
       }
       await sessions.createASession(id, {
         sessionId: "sessionid",
-        tenantId: TENANT_ID,
-        csrfToken: CSRF_TOKEN,
+        tenantId: this.getTenantId(),
+        csrfToken: this.defaultUserValues.csrfToken,
       })
       if (builder) {
         user.builder = { global: true }
@@ -233,9 +278,9 @@ class TestConfiguration {
 
   async createUser(
     id = null,
-    firstName = FIRSTNAME,
-    lastName = LASTNAME,
-    email = EMAIL,
+    firstName = this.defaultUserValues.firstName,
+    lastName = this.defaultUserValues.lastName,
+    email = this.defaultUserValues.email,
     builder = true,
     admin = false,
     roles = {}
@@ -274,13 +319,13 @@ class TestConfiguration {
       }
       await sessions.createASession(userId, {
         sessionId: "sessionid",
-        tenantId: TENANT_ID,
+        tenantId: this.getTenantId(),
       })
       // have to fake this
       const authObj = {
         userId,
         sessionId: "sessionid",
-        tenantId: TENANT_ID,
+        tenantId: this.getTenantId(),
       }
       const app = {
         roleId: roleId,
@@ -303,10 +348,11 @@ class TestConfiguration {
   }
 
   defaultHeaders(extras = {}, isInternal: boolean = false) {
-    const authObj = {
-      userId: GLOBAL_USER_ID,
+    const tenantId = this.getTenantId()
+    const authObj: AuthToken = {
+      userId: this.defaultUserValues.globalUserId,
       sessionId: "sessionid",
-      tenantId: TENANT_ID,
+      tenantId,
     }
     const app = {
       roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
@@ -316,7 +362,11 @@ class TestConfiguration {
     const appToken = auth.jwt.sign(app, env.JWT_SECRET)
     const headers: any = {
       Accept: "application/json",
-      [constants.Header.CSRF_TOKEN]: CSRF_TOKEN,
+      Cookie: [
+        `${constants.Cookie.Auth}=${authToken}`,
+        `${constants.Cookie.CurrentApp}=${appToken}`,
+      ],
+      [constants.Header.CSRF_TOKEN]: this.defaultUserValues.csrfToken,
       ...extras,
     }
 
@@ -330,7 +380,14 @@ class TestConfiguration {
     if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
+    if (this.tenantId) {
+      headers[constants.Header.TENANT_ID] = this.tenantId
+    }
     return headers
+  }
+
+  getTenantId() {
+    return this.tenantId || TENANT_ID
   }
 
   publicHeaders({ prodApp = true } = {}) {
@@ -342,11 +399,16 @@ class TestConfiguration {
     if (appId) {
       headers[constants.Header.APP_ID] = appId
     }
+
+    if (this.tenantId) {
+      headers[constants.Header.TENANT_ID] = this.tenantId
+    }
+
     return headers
   }
 
   async roleHeaders({
-    email = EMAIL,
+    email = this.defaultUserValues.email,
     roleId = roles.BUILTIN_ROLE_IDS.ADMIN,
     builder = false,
     prodApp = true,
@@ -356,8 +418,8 @@ class TestConfiguration {
 
   // API
 
-  async generateApiKey(userId = GLOBAL_USER_ID) {
-    return tenancy.doWithGlobalDB(TENANT_ID, async (db: any) => {
+  async generateApiKey(userId = this.defaultUserValues.globalUserId) {
+    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: any) => {
       const id = dbCore.generateDevInfoID(userId)
       let devInfo
       try {
@@ -366,7 +428,7 @@ class TestConfiguration {
         devInfo = { _id: id, userId }
       }
       devInfo.apiKey = encryption.encrypt(
-        `${TENANT_ID}${dbCore.SEPARATOR}${newid()}`
+        `${this.getTenantId()}${dbCore.SEPARATOR}${newid()}`
       )
       await db.put(devInfo)
       return devInfo.apiKey
@@ -378,20 +440,23 @@ class TestConfiguration {
     // create dev app
     // clear any old app
     this.appId = null
-    // @ts-ignore
-    context.updateAppId(null)
-    this.app = await this._req({ name: appName }, null, controllers.app.create)
-    this.appId = this.app.appId
-    // @ts-ignore
-    context.updateAppId(this.appId)
+    await context.doInAppContext(null, async () => {
+      this.app = await this._req(
+        { name: appName },
+        null,
+        controllers.app.create
+      )
+      this.appId = this.app.appId
+    })
+    return await context.doInAppContext(this.appId, async () => {
+      // create production app
+      this.prodApp = await this.publish()
 
-    // create production app
-    this.prodApp = await this.publish()
+      this.allApps.push(this.prodApp)
+      this.allApps.push(this.app)
 
-    this.allApps.push(this.prodApp)
-    this.allApps.push(this.app)
-
-    return this.app
+      return this.app
+    })
   }
 
   async publish() {

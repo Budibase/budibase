@@ -220,7 +220,7 @@ export async function save(ctx: BBContext) {
   }
 
   const db = context.getAppDB()
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId)
   if (!datasource.entities) {
     datasource.entities = {}
   }
@@ -323,15 +323,17 @@ export async function destroy(ctx: BBContext) {
   const datasourceId = getDatasourceId(tableToDelete)
 
   const db = context.getAppDB()
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId!)
   const tables = datasource.entities
 
   const operation = Operation.DELETE_TABLE
-  await makeTableRequest(datasource, operation, tableToDelete, tables)
+  if (tables) {
+    await makeTableRequest(datasource, operation, tableToDelete, tables)
+    cleanupRelationships(tableToDelete, tables)
+    delete tables[tableToDelete.name]
+    datasource.entities = tables
+  }
 
-  cleanupRelationships(tableToDelete, tables)
-
-  delete datasource.entities[tableToDelete.name]
   await db.put(datasource)
 
   return tableToDelete

@@ -1,9 +1,10 @@
 require("../../../tests")
 const { runMigrations, getMigrationsDoc } = require("../index")
-const { getDB } = require("../../db")
-const {
-  StaticDatabases,
-} = require("../../constants")
+const { getGlobalDBName, getDB } = require("../../db")
+
+const { default: environment } = require("../../environment")
+const { newid } = require("../../newid")
+environment._set("MULTI_TENANCY", 'TRUE')
 
 let db
 
@@ -17,8 +18,11 @@ describe("migrations", () => {
     fn: migrationFunction
   }]
 
+  let tenantId
+
   beforeEach(() => {
-    db = getDB(StaticDatabases.GLOBAL.name)
+    tenantId = `tenant_${newid()}`
+    db = getDB(getGlobalDBName(tenantId))
   })
 
   afterEach(async () => {
@@ -27,7 +31,7 @@ describe("migrations", () => {
   })
 
   const migrate = () => {
-    return runMigrations(MIGRATIONS)
+    return runMigrations(MIGRATIONS, { tenantIds: [tenantId]})
   }
 
   it("should run a new migration", async () => {

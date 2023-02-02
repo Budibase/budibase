@@ -64,7 +64,7 @@ const print = (fn: any, data: any[]) => {
     message = message + ` [identityId=${identityId}]`
   }
 
-  fn(message, data)
+  // fn(message, data)
 }
 
 const logging = (ctx: any, next: any) => {

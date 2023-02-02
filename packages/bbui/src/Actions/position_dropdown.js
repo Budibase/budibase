@@ -1,8 +1,11 @@
 export default function positionDropdown(
   element,
-  { anchor, align, maxWidth, useAnchorWidth }
+  { anchor, align, maxWidth, useAnchorWidth, offset = 5 }
 ) {
   const update = () => {
+    if (!anchor) {
+      return
+    }
     const anchorBounds = anchor.getBoundingClientRect()
     const elementBounds = element.getBoundingClientRect()
     let styles = {
@@ -14,10 +17,12 @@ export default function positionDropdown(
     }
 
     // Determine vertical styles
-    if (window.innerHeight - anchorBounds.bottom < 100) {
-      styles.top = anchorBounds.top - elementBounds.height - 5
+    if (align === "right-outside") {
+      styles.top = anchorBounds.top
+    } else if (window.innerHeight - anchorBounds.bottom < 100) {
+      styles.top = anchorBounds.top - elementBounds.height - offset
     } else {
-      styles.top = anchorBounds.bottom + 5
+      styles.top = anchorBounds.bottom + offset
       styles.maxHeight = window.innerHeight - anchorBounds.bottom - 20
     }
 
@@ -30,8 +35,8 @@ export default function positionDropdown(
     }
     if (align === "right") {
       styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
-    } else if (align === "right-side") {
-      styles.left = anchorBounds.left + anchorBounds.width
+    } else if (align === "right-outside") {
+      styles.left = anchorBounds.right + offset
     } else {
       styles.left = anchorBounds.left
     }
@@ -54,8 +59,11 @@ export default function positionDropdown(
   const resizeObserver = new ResizeObserver(entries => {
     entries.forEach(update)
   })
-  resizeObserver.observe(anchor)
+  if (anchor) {
+    resizeObserver.observe(anchor)
+  }
   resizeObserver.observe(element)
+  resizeObserver.observe(document.body)
 
   document.addEventListener("scroll", update, true)
 

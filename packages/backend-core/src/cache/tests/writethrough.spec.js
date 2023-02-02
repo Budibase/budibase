@@ -1,4 +1,4 @@
-require("../../../tests")
+const{generator}=require("../../../tests")
 const { Writethrough } = require("../writethrough")
 const { getDB } = require("../../db")
 const tk = require("timekeeper")
@@ -6,10 +6,12 @@ const tk = require("timekeeper")
 const START_DATE = Date.now()
 tk.freeze(START_DATE)
 
+const { newid } = require("../../newid")
+
 const DELAY = 5000
 
-const db = getDB("test")
-const db2 = getDB("test2")
+const db = getDB(`db_${newid()}`)
+const db2 = getDB(`db_${newid()}`)
 const writethrough = new Writethrough(db, DELAY), writethrough2 = new Writethrough(db2, DELAY)
 
 describe("writethrough", () => {

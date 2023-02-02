@@ -1,19 +1,19 @@
 require("../../../tests")
-const { getDB } = require("../")
+const { newid } = require("../../newid")
+const { getDB } = require("../db")
 
-describe("db", () => { 
-  
+describe("db", () => {
   describe("getDB", () => {
     it("returns a db", async () => {
-      const db = getDB("test")
+      
+      const dbName = `db_${newid()}`
+      const db = getDB(dbName)
       expect(db).toBeDefined()
-      expect(db._adapter).toBe("memory")
-      expect(db.prefix).toBe("_pouch_")
-      expect(db.name).toBe("test")
+      expect(db.name).toBe(dbName)
     })
 
     it("uses the custom put function", async () => {
-      const db = getDB("test")
+      const db = getDB(`db_${newid()}`)
       let doc = { _id: "test" }
       await db.put(doc)
       doc = await db.get(doc._id)
@@ -23,4 +23,3 @@ describe("db", () => {
     })
   })
 })
-

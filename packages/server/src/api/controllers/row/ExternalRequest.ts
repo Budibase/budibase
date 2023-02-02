@@ -26,6 +26,7 @@ import { cloneDeep } from "lodash/fp"
 import { processFormulas, processDates } from "../../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
 import { removeKeyNumbering } from "./utils"
+import sdk from "../../../sdk"
 
 export interface ManyRelationship {
   tableId?: string
@@ -665,8 +666,7 @@ export class ExternalRequest {
       throw "Unable to run without a table name"
     }
     if (!this.datasource) {
-      const db = context.getAppDB()
-      this.datasource = await db.get(datasourceId)
+      this.datasource = await sdk.datasources.get(datasourceId!)
       if (!this.datasource || !this.datasource.entities) {
         throw "No tables found, fetch tables before query."
       }

@@ -67,14 +67,14 @@ export function getRequest() {
   if (!request) {
     beforeAll()
   }
-  return request
+  return request!
 }
 
 export function getConfig() {
   if (!config) {
     beforeAll()
   }
-  return config
+  return config!
 }
 
 export async function switchToSelfHosted(func: any) {

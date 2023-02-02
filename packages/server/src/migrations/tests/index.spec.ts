@@ -10,8 +10,9 @@ import * as structures from "../../tests/utilities/structures"
 import { MIGRATIONS } from "../"
 import * as helpers from "./helpers"
 
-const { mocks } = require("@budibase/backend-core/tests")
-const timestamp = mocks.date.MOCK_DATE.toISOString()
+import tk from "timekeeper"
+const timestamp = new Date().toISOString()
+tk.freeze(timestamp)
 
 const clearMigrations = async () => {
   const dbs = [context.getDevAppDB(), context.getProdAppDB()]

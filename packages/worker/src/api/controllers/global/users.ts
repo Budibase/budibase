@@ -210,6 +210,19 @@ export const inviteMultiple = async (ctx: any) => {
   ctx.body = await sdk.users.invite(request)
 }
 
+export const checkInvite = async (ctx: any) => {
+  const { code } = ctx.params
+  let invite
+  try {
+    invite = await checkInviteCode(code, false)
+  } catch (e) {
+    ctx.throw(400, "There was a problem with the invite")
+  }
+  ctx.body = {
+    email: invite.email,
+  }
+}
+
 export const inviteAccept = async (ctx: any) => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {

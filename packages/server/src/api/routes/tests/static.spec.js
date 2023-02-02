@@ -9,6 +9,7 @@ describe("/static", () => {
   afterAll(setup.afterAll)
 
   beforeEach(async () => {
+    config.modeSelf()
     app = await config.init()
   })
 
