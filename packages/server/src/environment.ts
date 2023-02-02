@@ -1,17 +1,6 @@
 import { join } from "path"
 
-function isDockerisedTest() {
-  return process.env.DOCKERISED_TEST === "true"
-}
-
 function isTest() {
-  if (isDockerisedTest()) {
-    // While we are migrating all the tests to use docker instead of mocked in memory,
-    // we want to keep treating the old tests as tests,
-    // but the new tests should not make a difference
-    return false
-  }
-
   return isCypress() || isJest()
 }
 
@@ -115,7 +104,6 @@ const environment = {
   isInThread: () => {
     return inThread
   },
-  isDockerisedTest,
 }
 
 // threading can cause memory issues with node-ts in development
