@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker"
 import {
   generateMakeRequest,
   MakeRequestResponse,
@@ -14,18 +13,23 @@ import {
   Table,
 } from "@budibase/types"
 import _ from "lodash"
+import { generator } from "@budibase/backend-core/tests"
+import { utils } from "@budibase/backend-core"
 
 const config = setup.getConfig()!
 
 jest.unmock("node-fetch")
 
 // TODO: Waiting for the test image to exist
-describe.skip("row api - postgres", () => {
+describe("row api - postgres", () => {
   let apiKey,
     makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
     postgresTable: Table,
     auxPostgresTable: Table
+
+  const host = generator.ip()
+  const port = generator.natural()
 
   beforeEach(async () => {
     await config.init()
@@ -36,8 +40,8 @@ describe.skip("row api - postgres", () => {
         source: SourceName.POSTGRES,
         plus: true,
         config: {
-          host: "192.168.1.98",
-          port: 54321,
+          host,
+          port,
           database: "postgres",
           user: "root",
           password: "root",
@@ -52,7 +56,7 @@ describe.skip("row api - postgres", () => {
     makeRequest = generateMakeRequest(apiKey, true)
 
     postgresTable = await config.createTable({
-      name: faker.lorem.word(),
+      name: generator.word(),
       schema: {
         name: {
           name: "name",
@@ -74,7 +78,7 @@ describe.skip("row api - postgres", () => {
     })
 
     auxPostgresTable = await config.createTable({
-      name: faker.lorem.word(),
+      name: generator.word(),
       schema: {
         title: {
           name: "title",
@@ -105,9 +109,9 @@ describe.skip("row api - postgres", () => {
 
   function createRandomRow() {
     return {
-      name: faker.name.fullName(),
-      description: faker.lorem.paragraphs(),
-      value: +faker.random.numeric(),
+      name: generator.name(),
+      description: generator.paragraph(),
+      value: generator.integer(),
     }
   }
 
@@ -150,9 +154,9 @@ describe.skip("row api - postgres", () => {
       config: {
         ca: false,
         database: "postgres",
-        host: "192.168.1.98",
-        password: "root",
-        port: 54321,
+        host,
+        password: "--secret-value--",
+        port,
         rejectUnauthorized: false,
         schema: "public",
         ssl: false,
@@ -213,8 +217,8 @@ describe.skip("row api - postgres", () => {
     test("Given than a row exists, updating it persists it", async () => {
       let { row } = _.sample(await populateRows(10))!
 
-      const newName = faker.random.words(3)
-      const newValue = +faker.random.numeric()
+      const newName = generator.name()
+      const newValue = generator.integer()
       const updatedRow = {
         ...row,
         name: newName,
@@ -311,7 +315,7 @@ describe.skip("row api - postgres", () => {
 
       const foreignRow = await config.createRow({
         tableId: auxPostgresTable._id,
-        title: faker.random.alphaNumeric(10),
+        title: generator.sentence(),
         linkedField: row._id,
       })
 
@@ -376,17 +380,17 @@ describe.skip("row api - postgres", () => {
     })
 
     test("Querying by a string field returns the rows with field containing or starting by that value", async () => {
-      const name = faker.name.fullName()
+      const name = generator.name()
       const rowsToFilter = [
         ...Array(2).fill({
           name,
-          description: faker.lorem.paragraphs(),
-          value: +faker.random.numeric(),
+          description: generator.paragraph(),
+          value: generator.integer(),
         }),
         ...Array(2).fill({
-          name: `${name}${faker.random.alphaNumeric(5)}`,
-          description: faker.lorem.paragraphs(),
-          value: +faker.random.numeric(),
+          name: `${name}${utils.newid()}`,
+          description: generator.paragraph(),
+          value: generator.integer(),
         }),
       ]
 
@@ -525,7 +529,7 @@ describe.skip("row api - postgres", () => {
 
       const foreignRow = await config.createRow({
         tableId: auxPostgresTable._id,
-        title: faker.random.alphaNumeric(10),
+        title: generator.name(),
         linkedField: row._id,
       })
 

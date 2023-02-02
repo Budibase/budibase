@@ -817,6 +817,7 @@
                       "type": "string",
                       "enum": [
                         "string",
+                        "barcodeqr",
                         "longform",
                         "options",
                         "number",
@@ -828,8 +829,7 @@
                         "formula",
                         "auto",
                         "json",
-                        "internal",
-                        "barcodeqr"
+                        "internal"
                       ],
                       "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                     },
@@ -1021,6 +1021,7 @@
                           "type": "string",
                           "enum": [
                             "string",
+                            "barcodeqr",
                             "longform",
                             "options",
                             "number",
@@ -1032,8 +1033,7 @@
                             "formula",
                             "auto",
                             "json",
-                            "internal",
-                            "barcodeqr"
+                            "internal"
                           ],
                           "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                         },
@@ -1236,6 +1236,7 @@
                             "type": "string",
                             "enum": [
                               "string",
+                              "barcodeqr",
                               "longform",
                               "options",
                               "number",
@@ -1247,8 +1248,7 @@
                               "formula",
                               "auto",
                               "json",
-                              "internal",
-                              "barcodeqr"
+                              "internal"
                             ],
                             "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                           },
