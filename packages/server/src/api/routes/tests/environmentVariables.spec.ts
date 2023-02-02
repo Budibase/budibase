@@ -92,6 +92,48 @@ describe("/api/env/variables", () => {
 
   it("should run a query preview and check the mocked results", async () => {
     // TODO: use the preview API
-    expect(postgres.integration).toHaveBeenCalledWith()
+    const datasourceBase = structures.basicDatasource()
+    await request
+      .post(`/api/env/variables`)
+      .send(structures.basicEnvironmentVariable("test", "test"))
+      .set(config.defaultHeaders())
+
+    datasourceBase.datasource.config = {
+      password: "{{ env.test }}",
+    }
+    const response = await request
+      .post(`/api/datasources`)
+      .send(datasourceBase)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+    expect(response.body.datasource._id).toBeDefined()
+
+    const query = {
+      datasourceId: response.body.datasource._id,
+      parameters: {},
+      fields: {},
+      queryVerb: "read",
+      name: response.body.datasource.name,
+    }
+    const res = await request
+      .post(`/api/queries/preview`)
+      .send(query)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+    // these responses come from the mock
+    expect(res.body.schemaFields).toEqual({
+      a: "string",
+      b: "number",
+    })
+
+    expect(res.body.rows.length).toEqual(1)
+    expect(events.query.previewed).toBeCalledTimes(1)
+    expect(events.query.previewed).toBeCalledWith(
+      response.body.datasource,
+      query
+    )
+    //expect(postgres.integration).toHaveBeenCalledWith()
   })
 })
