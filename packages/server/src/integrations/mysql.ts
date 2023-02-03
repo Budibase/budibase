@@ -16,7 +16,7 @@ import {
   finaliseExternalTables,
 } from "./utils"
 import dayjs from "dayjs"
-const { NUMBER_REGEX } = require("../utilities")
+import { NUMBER_REGEX } from "../utilities"
 import Sql from "./base/sql"
 import { MySQLColumn } from "./base/types"
 

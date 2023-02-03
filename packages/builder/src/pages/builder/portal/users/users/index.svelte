@@ -222,12 +222,7 @@
   <Divider />
   <div class="controls">
     <ButtonGroup>
-      <Button
-        disabled={readonly}
-        dataCy="add-user"
-        on:click={createUserModal.show}
-        cta
-      >
+      <Button disabled={readonly} on:click={createUserModal.show} cta>
         Add users
       </Button>
       <Button disabled={readonly} on:click={importUsersModal.show} secondary>

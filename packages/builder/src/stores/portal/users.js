@@ -29,11 +29,17 @@ export function createUsersStore() {
   async function invite(payload) {
     return API.inviteUsers(payload)
   }
-  async function acceptInvite(inviteCode, password) {
+  async function acceptInvite(inviteCode, password, firstName, lastName) {
     return API.acceptInvite({
       inviteCode,
       password,
+      firstName,
+      lastName,
     })
+  }
+
+  async function fetchInvite(inviteCode) {
+    return API.getUserInvite(inviteCode)
   }
 
   async function create(data) {
@@ -101,6 +107,7 @@ export function createUsersStore() {
     fetch,
     invite,
     acceptInvite,
+    fetchInvite,
     create,
     save,
     bulkDelete,

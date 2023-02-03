@@ -14,8 +14,8 @@
     "test:debug": "DEBUG=1 jest",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "api:server:setup": "npm run docker:up && env-cmd ts-node ../packages/builder/cypress/ts/setup.ts",
-    "api:server:setup:ci": "env-cmd node ../packages/builder/cypress/setup.js",
+    "api:server:setup": "npm run docker:up && env-cmd ts-node ../packages/builder/ts/setup.ts",
+    "api:server:setup:ci": "env-cmd node ../packages/builder/setup.js",
     "api:test:ci": "start-server-and-test api:server:setup:ci http://localhost:4100/builder test",
     "api:test": "start-server-and-test api:server:setup http://localhost:4100/builder test"
   },

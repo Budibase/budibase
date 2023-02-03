@@ -21,33 +21,25 @@
   }
 </script>
 
-<ActionMenu align="right" dataCy="user-menu">
+<ActionMenu align="right">
   <div slot="control" class="user-dropdown">
     <Avatar size="M" initials={$auth.initials} url={$auth.user.pictureUrl} />
     <Icon size="XL" name="ChevronDown" />
   </div>
-  <MenuItem
-    icon="UserEdit"
-    on:click={() => profileModal.show()}
-    dataCy="user-info"
-  >
+  <MenuItem icon="UserEdit" on:click={() => profileModal.show()}>
     My profile
   </MenuItem>
-  <MenuItem icon="Moon" on:click={() => themeModal.show()} dataCy="theme">
-    Theme
-  </MenuItem>
+  <MenuItem icon="Moon" on:click={() => themeModal.show()}>Theme</MenuItem>
   <MenuItem icon="LockClosed" on:click={() => updatePasswordModal.show()}>
     Update password
   </MenuItem>
-  <MenuItem icon="Key" on:click={() => apiKeyModal.show()} dataCy="api-key">
+  <MenuItem icon="Key" on:click={() => apiKeyModal.show()}>
     View API key
   </MenuItem>
   <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
     Close developer mode
   </MenuItem>
-  <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}>
-    Log out
-  </MenuItem>
+  <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
 </ActionMenu>
 
 <Modal bind:this={themeModal}>

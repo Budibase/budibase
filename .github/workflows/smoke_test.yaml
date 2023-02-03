@@ -18,30 +18,18 @@ jobs:
       - run: yarn
       - run: yarn bootstrap
       - run: yarn build
-      - name: Pull cypress.env.yaml from budibase-infra
+      - name: Pull  from budibase-infra
         run: | 
           curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
           -H 'Accept: application/vnd.github.v3.raw' \
-          -o packages/builder/cypress.env.json \
-          -L https://api.github.com/repos/budibase/budibase-infra/contents/test/cypress.env.json
-          wc -l packages/builder/cypress.env.json
-
-      - name: Cypress run
-        id: cypress
-        continue-on-error: true
-        uses: cypress-io/github-action@v2
-        with:
-          record: true
-          install: false
-          tag: nightly
-          command: yarn test:e2e:ci:record
-        env:
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          -o 
+          -L 
+          wc -l 
       
       - uses: actions/upload-artifact@v3
         with:
           name: Test Reports
-          path: packages/builder/cypress/reports/testReport.html
+          path: 
 
       # TODO: enable once running in QA test env
       # - name: Configure AWS Credentials
@@ -54,11 +42,3 @@ jobs:
       # - name: Upload test results HTML
       #   uses: aws-actions/configure-aws-credentials@v1
       #   run: aws s3 cp packages/builder/cypress/reports/testReport.html s3://{{ secrets.BUDI_QA_REPORTS_BUCKET_NAME }}/$GITHUB_RUN_ID/index.html
-
-      - name: Cypress Discord Notify
-        run: yarn test:e2e:ci:notify
-        env:
-          CYPRESS_WEBHOOK_URL: ${{ secrets.BUDI_QA_WEBHOOK }}
-          CYPRESS_OUTCOME: ${{ steps.cypress.outcome }}
-          CYPRESS_DASHBOARD_URL: ${{ steps.cypress.outputs.dashboardUrl }}
-          GITHUB_RUN_URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID

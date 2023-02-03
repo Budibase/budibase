@@ -67,6 +67,10 @@ const INITIAL_FRONTEND_STATE = {
   selectedScreenId: null,
   selectedComponentId: null,
   selectedLayoutId: null,
+
+  // onboarding
+  onboarding: false,
+  tourNodes: null,
 }
 
 export const getFrontendStore = () => {

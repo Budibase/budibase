@@ -1,20 +1,19 @@
 import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { App } from "@budibase/types"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
-import {
-  generateApp,
-  appFromTemplate,
-} from "../../../config/internal-api/fixtures/applications"
+import AccountsAPIClient from "../../../config/internal-api/TestConfiguration/accountsAPIClient"
+import { generateApp } from "../../../config/internal-api/fixtures/applications"
 import { Screen } from "@budibase/types"
 import generateScreen from "../../../config/internal-api/fixtures/screens"
 
 describe("Internal API - /screens endpoints", () => {
   const api = new InternalAPIClient()
-  const config = new TestConfiguration<Screen>(api)
-  const appConfig = new TestConfiguration<App>(api)
+  const accountsAPI = new AccountsAPIClient()
+  const config = new TestConfiguration<Screen>(api, accountsAPI)
+  const appConfig = new TestConfiguration<App>(api, accountsAPI)
 
   beforeAll(async () => {
-    await config.loginAsAdmin()
+    await config.setupAccountAndTenant()
   })
 
   afterAll(async () => {
