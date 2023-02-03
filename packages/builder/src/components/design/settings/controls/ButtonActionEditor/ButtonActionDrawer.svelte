@@ -118,6 +118,10 @@
   const getAllBindings = (bindings, eventContextBindings, actions) => {
     let allBindings = eventContextBindings.concat(bindings)
 
+    if (!actions) {
+      return []
+    }
+
     // Ensure bindings are generated for all "update state" action keys
     actions
       .filter(action => {
