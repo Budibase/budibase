@@ -1,5 +1,5 @@
 import { newid } from "../../../src/newid"
 
-export function name() {
+export function id() {
   return `tenant-${newid()}`
 }
