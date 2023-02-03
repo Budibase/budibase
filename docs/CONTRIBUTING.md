@@ -112,8 +112,13 @@ You can install them following any of the steps described below:
 
 ### Using NVM and pyenv
 
-- NVM: https://github.com/nvm-sh/nvm#installing-and-updating
-- Pyenv: https://github.com/pyenv/pyenv#installation
+- NVM:
+  - Install: https://github.com/nvm-sh/nvm#installing-and-updating
+  - Setup: `nvm use`
+- Pyenv:
+
+  - Install: https://github.com/pyenv/pyenv#installation
+  - Setup: `pyenv install -v 3.7.2`
 
 - _yarn -_ `npm install -g yarn`
 
