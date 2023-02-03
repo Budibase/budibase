@@ -1,6 +1,5 @@
-jest.mock("../../../integrations/postgres")
+jest.mock("pg")
 import * as setup from "./utilities"
-import postgres from "../../../integrations/postgres"
 import { mocks } from "@budibase/backend-core/tests"
 import { env, events } from "@budibase/backend-core"
 const structures = setup.structures
@@ -127,7 +126,6 @@ describe("/api/env/variables", () => {
       a: "string",
       b: "number",
     })
-
     expect(res.body.rows.length).toEqual(1)
     expect(events.query.previewed).toBeCalledTimes(1)
     expect(events.query.previewed).toBeCalledWith(
