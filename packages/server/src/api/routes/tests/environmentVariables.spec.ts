@@ -1,3 +1,4 @@
+const pg = require("pg")
 jest.mock("pg")
 import * as setup from "./utilities"
 import { mocks } from "@budibase/backend-core/tests"
@@ -126,6 +127,7 @@ describe("/api/env/variables", () => {
       a: "string",
       b: "number",
     })
+    expect(pg.queryMock).toHaveBeenCalled()
     expect(res.body.rows.length).toEqual(1)
     expect(events.query.previewed).toBeCalledTimes(1)
     expect(events.query.previewed).toBeCalledWith(
