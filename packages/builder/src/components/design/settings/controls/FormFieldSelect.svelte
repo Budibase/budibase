@@ -32,11 +32,7 @@
       types = [type]
     }
 
-    types = types.map(type => {
-      let fieldTypeRaw = type.slice(type.indexOf("/") + 1)
-      let fieldTypeParsed = fieldTypeRaw.replace("/", "")
-      return fieldTypeParsed
-    })
+    types = types.map(type => type.slice(type.indexOf("/") + 1))
 
     entries = entries.filter(entry => types.includes(entry[1].type))
 
