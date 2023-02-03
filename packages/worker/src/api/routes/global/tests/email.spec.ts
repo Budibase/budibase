@@ -6,7 +6,7 @@ import { EmailTemplatePurpose } from "../../../../constants"
 describe("/api/global/email", () => {
   const config = new TestConfiguration()
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.beforeAll()
   })
 
