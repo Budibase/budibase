@@ -1,10 +1,9 @@
 const setup = require("./utilities")
 
 describe("test the execute query action", () => {
-    let datasource
     let config = setup.getConfig()
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         await config.init()
 
         await config.createDatasource()
