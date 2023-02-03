@@ -25,8 +25,11 @@ describe("/rows", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async()=>{
     table = await config.createTable()
     row = basicRow(table._id)
   })
