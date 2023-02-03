@@ -36,7 +36,7 @@ async function init() {
       COUCH_DB_PASSWORD: "budibase",
       COUCH_DB_USER: "budibase",
       SELF_HOSTED: 1,
-      DISABLE_ACCOUNT_PORTAL: "",
+      DISABLE_ACCOUNT_PORTAL: 1,
       MULTI_TENANCY: "",
       DISABLE_THREADING: 1,
       SERVICE: "app-service",
