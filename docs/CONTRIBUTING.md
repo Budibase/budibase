@@ -93,22 +93,24 @@ Component libraries are collections of components as well as the definition of t
 - NodeJS version `14.x.x`
 - Python version `3.x`
 
-#### 1.1 Using asdf (recommended)
+### Using asdf (recommended)
 
 Asdf is a package manager that allows managing multiple dependencies.
 
-1. Install using script (recommended):
+You can install them following any of the steps described below:
+
+- Install using script (only for mac users):
 
 `./scripts/install-contributor-dependencies.sh`
 
-2. Manually
+- Or, manually:
 
-   - Installation steps: https://asdf-vm.com/guide/getting-started.html
-   - asdf plugin add nodejs
-   - asdf plugin add python
-   - npm install -g yarn
+  - Installation steps: https://asdf-vm.com/guide/getting-started.html
+  - asdf plugin add nodejs
+  - asdf plugin add python
+  - npm install -g yarn
 
-#### 1.2 Using NVM and pyenv
+### Using NVM and pyenv
 
 - NVM: https://github.com/nvm-sh/nvm#installing-and-updating
 - Pyenv: https://github.com/pyenv/pyenv#installation
