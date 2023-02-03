@@ -1,7 +1,9 @@
 jest.mock("nodemailer")
-import { TestConfiguration, mocks } from "../../../../tests"
+import { TestConfiguration, mocks, } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
-import { events, tenancy, utils } from "@budibase/backend-core"
+import { events, tenancy } from "@budibase/backend-core"
+import { structures } from "@budibase/backend-core/tests"
+
 
 const expectSetAuthCookie = (res: any) => {
   expect(
@@ -26,7 +28,7 @@ describe("/api/global/auth", () => {
 
   describe("password", () => {
     describe("POST /api/global/auth/:tenantId/login", () => {
-      it("should login", () => {})
+      it("should login", () => { })
     })
 
     describe("POST /api/global/auth/logout", () => {
@@ -41,7 +43,7 @@ describe("/api/global/auth", () => {
     describe("POST /api/global/auth/:tenantId/reset", () => {
       it("should generate password reset email", async () => {
         await tenancy.doInTenant(config.tenant1User!.tenantId, async () => {
-          const userEmail = `${utils.newid()}@test.com`
+          const userEmail = structures.email()
           const { res, code } = await config.api.auth.requestPasswordReset(
             sendMailMock,
             userEmail
@@ -63,7 +65,7 @@ describe("/api/global/auth", () => {
     describe("POST /api/global/auth/:tenantId/reset/update", () => {
       it("should reset password", async () => {
         await tenancy.doInTenant(config.tenant1User!.tenantId, async () => {
-          const userEmail = `${utils.newid()}@test.com`
+          const userEmail = structures.email()
           const { code } = await config.api.auth.requestPasswordReset(
             sendMailMock,
             userEmail
@@ -83,35 +85,35 @@ describe("/api/global/auth", () => {
   })
 
   describe("init", () => {
-    describe("POST /api/global/auth/init", () => {})
+    describe("POST /api/global/auth/init", () => { })
 
-    describe("GET /api/global/auth/init", () => {})
+    describe("GET /api/global/auth/init", () => { })
   })
 
   describe("datasource", () => {
     // MULTI TENANT
 
-    describe("GET /api/global/auth/:tenantId/datasource/:provider", () => {})
+    describe("GET /api/global/auth/:tenantId/datasource/:provider", () => { })
 
-    describe("GET /api/global/auth/:tenantId/datasource/:provider/callback", () => {})
+    describe("GET /api/global/auth/:tenantId/datasource/:provider/callback", () => { })
 
     // SINGLE TENANT
 
-    describe("GET /api/global/auth/datasource/:provider/callback", () => {})
+    describe("GET /api/global/auth/datasource/:provider/callback", () => { })
   })
 
   describe("google", () => {
     // MULTI TENANT
 
-    describe("GET /api/global/auth/:tenantId/google", () => {})
+    describe("GET /api/global/auth/:tenantId/google", () => { })
 
-    describe("GET /api/global/auth/:tenantId/google/callback", () => {})
+    describe("GET /api/global/auth/:tenantId/google/callback", () => { })
 
     // SINGLE TENANT
 
-    describe("GET /api/global/auth/google/callback", () => {})
+    describe("GET /api/global/auth/google/callback", () => { })
 
-    describe("GET /api/admin/auth/google/callback", () => {})
+    describe("GET /api/admin/auth/google/callback", () => { })
   })
 
   describe("oidc", () => {
@@ -176,10 +178,10 @@ describe("/api/global/auth", () => {
 
     // SINGLE TENANT
 
-    describe("GET /api/global/auth/oidc/callback", () => {})
+    describe("GET /api/global/auth/oidc/callback", () => { })
 
-    describe("GET /api/global/auth/oidc/callback", () => {})
+    describe("GET /api/global/auth/oidc/callback", () => { })
 
-    describe("GET /api/admin/auth/oidc/callback", () => {})
+    describe("GET /api/admin/auth/oidc/callback", () => { })
   })
 })
