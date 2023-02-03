@@ -108,7 +108,6 @@
   disabled={error || !name || (rows.length && !allValid)}
 >
   <Input
-    data-cy="table-name-input"
     thin
     label="Table Name"
     on:input={checkValid}

@@ -94,7 +94,7 @@
         <Layout noPadding>
           <div class="header">
             <img class="logo" alt="logo" src={$organisation.logoUrl || Logo} />
-            <ActionMenu align="right" dataCy="user-menu">
+            <ActionMenu align="right">
               <div slot="control" class="avatar">
                 <Avatar
                   size="M"
