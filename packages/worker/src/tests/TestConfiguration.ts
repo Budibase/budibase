@@ -160,18 +160,11 @@ class TestConfiguration {
 
   // TENANCY
 
-  createTenant = async ({
-    addTenantToGlobalDb,
-  }: {
-    addTenantToGlobalDb: boolean
-  }): Promise<User> => {
+  createTenant = async (): Promise<User> => {
     // create user / new tenant
     const res = await this.api.users.createAdminUser()
 
-    // This needs to be added because it was disabled for bulk testing: // https://github.com/Budibase/budibase/issues/6134
-    if (addTenantToGlobalDb) {
-      await sdk.users.addTenant(res.tenantId, res.userId, res.email)
-    }
+    await sdk.users.addTenant(res.tenantId, res.userId, res.email)
 
     // return the created user
     const userRes = await this.api.users.getUser(res.userId, {
