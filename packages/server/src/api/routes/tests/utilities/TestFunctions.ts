@@ -32,7 +32,10 @@ export const getAllTableRows = async (config: any) => {
   return req.body
 }
 
-export const clearAllApps = async (tenantId = TENANT_ID) => {
+export const clearAllApps = async (
+  tenantId = TENANT_ID,
+  exceptions: Array<string> = []
+) => {
   await tenancy.doInTenant(tenantId, async () => {
     const req: any = { query: { status: AppStatus.DEV }, user: { tenantId } }
     await appController.fetch(req)
@@ -40,7 +43,7 @@ export const clearAllApps = async (tenantId = TENANT_ID) => {
     if (!apps || apps.length <= 0) {
       return
     }
-    for (let app of apps) {
+    for (let app of apps.filter((x: any) => !exceptions.includes(x.appId))) {
       const { appId } = app
       const req = new Request(null, { appId })
       await runRequest(appId, appController.destroy, req)

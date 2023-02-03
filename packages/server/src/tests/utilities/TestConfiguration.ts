@@ -363,9 +363,6 @@ class TestConfiguration {
     if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
-    if (this.tenantId) {
-      headers[constants.Header.TENANT_ID] = this.tenantId
-    }
     return headers
   }
 
