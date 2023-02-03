@@ -1,4 +1,4 @@
-const{generator}=require("../../../tests")
+require("../../../tests")
 const { Writethrough } = require("../writethrough")
 const { getDB } = require("../../db")
 const tk = require("timekeeper")
