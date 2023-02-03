@@ -47,6 +47,8 @@ describe("/webhooks", () => {
   })
 
   describe("fetch", () => {
+    beforeAll(setupTest)
+
     it("returns the correct routing for basic user", async () => {
       const res = await request
         .get(`/api/webhooks`)
@@ -67,6 +69,8 @@ describe("/webhooks", () => {
   })
 
   describe("delete", () => {
+    beforeAll(setupTest)
+    
     it("should successfully delete", async () => {
       const res = await request
         .delete(`/api/webhooks/${webhook._id}/${webhook._rev}`)
