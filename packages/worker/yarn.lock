@@ -475,13 +475,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.2.12-alpha.68":
-  version "2.2.12-alpha.68"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.12-alpha.68.tgz#9efda78dfa35d3c431da188b4e3a0011b734c6b2"
-  integrity sha512-k+Edcvz3XcddlJv9YR+TuoYs7e583lpf9nRCu6WOO889s9e8QS+zzfkC9++Vx8aH16JTizibPDY9oNeRrMQALw==
+"@budibase/backend-core@2.2.12-alpha.70":
+  version "2.2.12-alpha.70"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.2.12-alpha.70.tgz#9894e8d676cfa25f8eb163c623eda003a43a2016"
+  integrity sha512-1nZzkZ6kQyrfL9IvNp09JUrdpCzxtE59CAW26SbXNwId5qEJLSa7zVvZCTNo2K644XNM6qCJzA5LwCwW67AL3A==
   dependencies:
     "@budibase/nano" "10.1.1"
-    "@budibase/types" "2.2.12-alpha.68"
+    "@budibase/types" "2.2.12-alpha.70"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -526,13 +526,13 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
-"@budibase/pro@2.2.12-alpha.68":
-  version "2.2.12-alpha.68"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.12-alpha.68.tgz#ee992a6451ecaabdb71b5c4d5f9a269710524529"
-  integrity sha512-jp+gYg03Q39kc9PIEREC/3QikTzW9mavGrpnWQNcaFyELwmmRbI5tDZkxRmK38TNuW/1ArqKricd9uCVRb3UGA==
+"@budibase/pro@2.2.12-alpha.70":
+  version "2.2.12-alpha.70"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.2.12-alpha.70.tgz#067fce5e023817ead1452f21b7abe0ab3585d1d3"
+  integrity sha512-V3EwQd4r/wztKPzbeLbTHJGWvYUqDELbx0HPTSbI24ee9ZFwF/Wjaapg1I6VHyku1rWgzny4/Y0+H4GvwzzEeg==
   dependencies:
-    "@budibase/backend-core" "2.2.12-alpha.68"
-    "@budibase/types" "2.2.12-alpha.68"
+    "@budibase/backend-core" "2.2.12-alpha.70"
+    "@budibase/types" "2.2.12-alpha.70"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -540,10 +540,10 @@
     lru-cache "^7.14.1"
     node-fetch "^2.6.1"
 
-"@budibase/types@2.2.12-alpha.68":
-  version "2.2.12-alpha.68"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.12-alpha.68.tgz#6284f083aceca49a8de52ebc15c9da8c8416586e"
-  integrity sha512-xNl/L6M8X+qcVytBgdPSWNM7CYk7Rr2I+ubx5+3u4Z8tF3IWoqk6pj7hMMCORAYAGK7ZdjG7xx+tvXiKK8v1NQ==
+"@budibase/types@2.2.12-alpha.70":
+  version "2.2.12-alpha.70"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.12-alpha.70.tgz#c86f43b953d3b15c6f286903ac94091ba9c6cef3"
+  integrity sha512-+6f3uc6fCviRCeDNoKftcg8iuXksj2F+teCPXVmGNAs+tfwqYjX/32s5DB9EjdE3qHC70XAX+lvTWIrrNchDDA==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
