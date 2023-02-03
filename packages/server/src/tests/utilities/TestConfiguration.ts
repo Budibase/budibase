@@ -286,7 +286,7 @@ class TestConfiguration {
       admin,
       roles,
     })
-    await cache.user.invalidateUser(globalId, this.getTenantId())
+    await cache.user.invalidateUser(globalId)
     return {
       ...resp,
       globalId,
@@ -326,7 +326,7 @@ class TestConfiguration {
       const appToken = auth.jwt.sign(app, env.JWT_SECRET)
 
       // returning necessary request headers
-      await cache.user.invalidateUser(userId, this.getTenantId())
+      await cache.user.invalidateUser(userId)
       return {
         Accept: "application/json",
         Cookie: [
