@@ -39,7 +39,7 @@ import { cleanup } from "../../utilities/fileSystem"
 import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
-import { AuthToken } from "@budibase/types"
+import { AuthToken, Database } from "@budibase/types"
 const supertest = require("supertest")
 
 type DefaultUserValues = {
@@ -229,7 +229,7 @@ class TestConfiguration {
     email = this.defaultUserValues.email,
     roles,
   }: any = {}) {
-    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: any) => {
+    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: Database) => {
       let existing
       try {
         existing = await db.get(id)
@@ -261,7 +261,7 @@ class TestConfiguration {
       }
       const resp = await db.put(user)
       return {
-        _rev: resp._rev,
+        _rev: resp.rev,
         ...user,
       }
     })

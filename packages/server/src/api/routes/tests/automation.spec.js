@@ -16,8 +16,12 @@ describe("/automations", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+  
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
   describe("get definitions", () => {
