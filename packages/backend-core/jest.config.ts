@@ -1,7 +1,7 @@
 import { Config } from "@jest/types"
 const preset = require("ts-jest/jest-preset")
 
-const testContainersSettings: Config.InitialProjectOptions = {
+const baseConfig: Config.InitialProjectOptions = {
   ...preset,
   preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./tests/jestEnv.ts"],
@@ -13,7 +13,7 @@ const testContainersSettings: Config.InitialProjectOptions = {
 
 if (!process.env.CI) {
   // use sources when not in CI
-  testContainersSettings.moduleNameMapper = {
+  baseConfig.moduleNameMapper = {
     "@budibase/types": "<rootDir>/../types/src",
   }
 } else {
@@ -23,13 +23,13 @@ if (!process.env.CI) {
 const config: Config.InitialOptions = {
   projects: [
     {
-      ...testContainersSettings,
+      ...baseConfig,
       displayName: "sequential test",
       testMatch: ["<rootDir>/**/*.seq.spec.[jt]s"],
       runner: "jest-serial-runner",
     },
     {
-      ...testContainersSettings,
+      ...baseConfig,
       testMatch: ["<rootDir>/**/!(*.seq).spec.[jt]s"],
     },
   ],

@@ -3,7 +3,7 @@ import { Config } from "@jest/types"
 import * as fs from "fs"
 const preset = require("ts-jest/jest-preset")
 
-const testContainersSettings: Config.InitialProjectOptions = {
+const baseConfig: Config.InitialProjectOptions = {
   ...preset,
   preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./src/tests/jestEnv.ts"],
@@ -15,14 +15,14 @@ const testContainersSettings: Config.InitialProjectOptions = {
 
 if (!process.env.CI) {
   // use sources when not in CI
-  testContainersSettings.moduleNameMapper = {
+  baseConfig.moduleNameMapper = {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
     "@budibase/types": "<rootDir>/../types/src",
   }
   // add pro sources if they exist
   if (fs.existsSync("../../../budibase-pro")) {
-    testContainersSettings.moduleNameMapper["@budibase/pro"] =
+    baseConfig.moduleNameMapper["@budibase/pro"] =
       "<rootDir>/../../../budibase-pro/packages/pro/src"
   }
 } else {
@@ -32,13 +32,13 @@ if (!process.env.CI) {
 const config: Config.InitialOptions = {
   projects: [
     {
-      ...testContainersSettings,
+      ...baseConfig,
       displayName: "sequential test",
       testMatch: ["<rootDir>/**/*.seq.spec.[jt]s"],
       runner: "jest-serial-runner",
     },
     {
-      ...testContainersSettings,
+      ...baseConfig,
       testMatch: ["<rootDir>/**/!(*.seq).spec.[jt]s"],
     },
   ],
