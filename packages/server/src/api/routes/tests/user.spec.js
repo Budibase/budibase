@@ -19,7 +19,7 @@ describe("/users", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 
