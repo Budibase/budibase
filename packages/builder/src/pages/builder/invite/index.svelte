@@ -68,7 +68,7 @@
 </script>
 
 <TestimonialPage>
-  <Layout gap="S" noPadding>
+  <Layout gap="M" noPadding>
     <img alt="logo" src={$organisation.logoUrl || Logo} />
     <Layout gap="XS" noPadding>
       <Heading size="M">Join {company}</Heading>
@@ -175,6 +175,7 @@
     </Layout>
     <div>
       <Button
+        size="L"
         disabled={Object.keys(errors).length > 0 || onboarding}
         cta
         on:click={acceptInvite}

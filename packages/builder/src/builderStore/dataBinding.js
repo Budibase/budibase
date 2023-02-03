@@ -509,21 +509,24 @@ const getSelectedRowsBindings = asset => {
   return bindings
 }
 
+export const makeStateBinding = key => {
+  return {
+    type: "context",
+    runtimeBinding: `${makePropSafe("state")}.${makePropSafe(key)}`,
+    readableBinding: `State.${key}`,
+    category: "State",
+    icon: "AutomatedSegment",
+    display: { name: key },
+  }
+}
+
 /**
  * Gets all state bindings that are globally available.
  */
 const getStateBindings = () => {
   let bindings = []
   if (get(store).clientFeatures?.state) {
-    const safeState = makePropSafe("state")
-    bindings = getAllStateVariables().map(key => ({
-      type: "context",
-      runtimeBinding: `${safeState}.${makePropSafe(key)}`,
-      readableBinding: `State.${key}`,
-      category: "State",
-      icon: "AutomatedSegment",
-      display: { name: key },
-    }))
+    bindings = getAllStateVariables().map(makeStateBinding)
   }
   return bindings
 }

@@ -17,8 +17,8 @@
   import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
   import { Roles } from "constants/backend"
 
-  let name = ""
-  let url = ""
+  let name = "My first app"
+  let url = "my-first-app"
   let stage = "name"
   let appId = null
 
@@ -57,7 +57,7 @@
     defaultScreenTemplate.routing.roldId = Roles.BASIC
     await store.actions.screens.save(defaultScreenTemplate)
 
-    return createdApp.instance._id
+    appId = createdApp.instance._id
   }
 
   const getIntegrations = async () => {
@@ -79,14 +79,14 @@
     }
   }
 
-  const goToApp = appId => {
+  const goToApp = () => {
     $goto(`/builder/app/${appId}`)
     notifications.success(`App created successfully`)
   }
 
   const handleCreateApp = async ({ datasourceConfig, useSampleData }) => {
     try {
-      appId = await createApp(useSampleData)
+      await createApp(useSampleData)
 
       if (datasourceConfig) {
         await saveDatasource({
@@ -99,7 +99,7 @@
         })
       }
 
-      goToApp(appId)
+      goToApp()
     } catch (e) {
       console.log(e)
       notifications.error("There was a problem creating your app")
@@ -111,7 +111,7 @@
   <CreateTableModal
     name="Your Data"
     beforeSave={createApp}
-    afterSave={() => goToApp(appId)}
+    afterSave={goToApp}
   />
 </Modal>
 
@@ -142,7 +142,7 @@
             <div class="dataButtonIcon">
               <FontAwesomeIcon name="fa-solid fa-file-arrow-up" />
             </div>
-            Upload file
+            Upload data (CSV or JSON)
           </div>
         </FancyButton>
       </div>

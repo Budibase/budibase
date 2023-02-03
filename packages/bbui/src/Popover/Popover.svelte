@@ -13,11 +13,11 @@
   export let anchor
   export let align = "right"
   export let portalTarget
-  export let dataCy
   export let maxWidth
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
+  export let offset = 5
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -57,31 +57,28 @@
 </script>
 
 {#if open}
-  {#key anchor}
-    <Portal {target}>
-      <div
-        tabindex="0"
-        use:positionDropdown={{
-          anchor,
-          align,
-          maxWidth,
-          useAnchorWidth,
-          showTip: false,
-        }}
-        use:clickOutside={{
-          callback: dismissible ? handleOutsideClick : () => {},
-          anchor,
-        }}
-        on:keydown={handleEscape}
-        class="spectrum-Popover is-open"
-        role="presentation"
-        data-cy={dataCy}
-        transition:fly|local={{ y: -20, duration: 200 }}
-      >
-        <slot />
-      </div>
-    </Portal>
-  {/key}
+  <Portal {target}>
+    <div
+      tabindex="0"
+      use:positionDropdown={{
+        anchor,
+        align,
+        maxWidth,
+        useAnchorWidth,
+        offset,
+      }}
+      use:clickOutside={{
+        callback: dismissible ? handleOutsideClick : () => {},
+        anchor,
+      }}
+      on:keydown={handleEscape}
+      class="spectrum-Popover is-open"
+      role="presentation"
+      transition:fly|local={{ y: -20, duration: 200 }}
+    >
+      <slot />
+    </div>
+  </Portal>
 {/if}
 
 <style>
