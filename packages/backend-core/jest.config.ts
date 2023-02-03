@@ -1,7 +1,7 @@
-import { Config } from "jest"
+import { Config } from "@jest/types"
 const preset = require("ts-jest/jest-preset")
 
-const testContainersSettings = {
+const testContainersSettings: Config.InitialProjectOptions = {
   ...preset,
   preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./tests/jestEnv.ts"],
@@ -20,7 +20,7 @@ if (!process.env.CI) {
   console.log("Running tests with compiled dependency sources")
 }
 
-const config: Config = {
+const config: Config.InitialOptions = {
   projects: [
     {
       ...testContainersSettings,
