@@ -20,7 +20,6 @@ import {
   auth,
   constants,
   env as coreEnv,
-  utils,
   DEFAULT_TENANT_ID,
 } from "@budibase/backend-core"
 import structures, { TENANT_ID, CSRF_TOKEN } from "./structures"
@@ -136,7 +135,7 @@ class TestConfiguration {
 
   async beforeAll() {
     try {
-      this.#tenantId = `tenant-${utils.newid()}`
+      this.#tenantId = structures.tenant.name()
 
       // Running tests in parallel causes issues creating the globaldb twice. This ensures the db is properly created before starting
       await retry(async () => await this.createDefaultUser())

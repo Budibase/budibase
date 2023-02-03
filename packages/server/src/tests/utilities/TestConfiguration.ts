@@ -1,4 +1,4 @@
-import { generator, mocks } from "@budibase/backend-core/tests"
+import { generator, mocks, structures } from "@budibase/backend-core/tests"
 
 // init the licensing mock
 import * as pro from "@budibase/pro"
@@ -149,7 +149,7 @@ class TestConfiguration {
   async init(appName = newid()) {
     this.defaultUserValues = this.populateDefaultUserValues()
     if (context.isMultiTenant()) {
-      this.tenantId = `tenant-${newid()}`
+      this.tenantId = structures.tenant.name()
     }
 
     if (!this.started) {
