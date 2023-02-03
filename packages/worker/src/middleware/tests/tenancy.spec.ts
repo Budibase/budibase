@@ -17,7 +17,7 @@ describe("tenancy middleware", () => {
   })
 
   it("should get tenant id from user", async () => {
-    const user = await config.createTenant({ addTenantToGlobalDb: false })
+    const user = await config.createTenant()
     await config.createSession(user)
     const res = await config.api.self.getSelf(user)
     expect(res.headers[constants.Header.TENANT_ID]).toBe(user.tenantId)
@@ -54,7 +54,7 @@ describe("tenancy middleware", () => {
   })
 
   it("should get tenant id from path variable", async () => {
-    const user = await config.createTenant({ addTenantToGlobalDb: false })
+    const user = await config.createTenant()
     const res = await config.request
       .post(`/api/global/auth/${user.tenantId}/login`)
       .send({
