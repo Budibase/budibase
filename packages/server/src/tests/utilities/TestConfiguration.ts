@@ -149,7 +149,7 @@ class TestConfiguration {
   async init(appName = newid()) {
     this.defaultUserValues = this.populateDefaultUserValues()
     if (context.isMultiTenant()) {
-      this.tenantId = structures.tenant.name()
+      this.tenantId = structures.tenant.id()
     }
 
     if (!this.started) {

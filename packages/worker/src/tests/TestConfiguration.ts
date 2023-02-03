@@ -135,7 +135,7 @@ class TestConfiguration {
 
   async beforeAll() {
     try {
-      this.#tenantId = structures.tenant.name()
+      this.#tenantId = structures.tenant.id()
 
       // Running tests in parallel causes issues creating the globaldb twice. This ensures the db is properly created before starting
       await retry(async () => await this.createDefaultUser())
