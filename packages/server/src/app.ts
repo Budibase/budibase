@@ -63,22 +63,22 @@ initialiseWebsockets(server)
 let shuttingDown = false,
   errCode = 0
 
-if (!env.isTest()) {
-  server.on("close", async () => {
-    // already in process
-    if (shuttingDown) {
-      return
-    }
-    shuttingDown = true
-    console.log("Server Closed")
-    await automations.shutdown()
-    await redis.shutdown()
-    await events.shutdown()
-    await Thread.shutdown()
-    api.shutdown()
+server.on("close", async () => {
+  // already in process
+  if (shuttingDown) {
+    return
+  }
+  shuttingDown = true
+  console.log("Server Closed")
+  await automations.shutdown()
+  await redis.shutdown()
+  events.shutdown()
+  await Thread.shutdown()
+  api.shutdown()
+  if (!env.isTest()) {
     process.exit(errCode)
-  })
-}
+  }
+})
 
 export default server.listen(env.PORT || 0, async () => {
   await startup(app, server)
