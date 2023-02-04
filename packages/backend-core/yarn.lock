@@ -487,11 +487,6 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
-"@budibase/types@2.2.12-alpha.62":
-  version "2.2.12-alpha.62"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.2.12-alpha.62.tgz#385ef000610d5c00b83cb2eafda2bd63c86b7f3f"
-  integrity sha512-idlhB4fSyBCEDWsVvQvdmN9Dg9VAEwxZ8TLE9pGnXIRZPg48MKXPNn5AUT9zv6cDlbQdlU2tFFF8st9b6lyLuw==
-
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz#00629c35a688e05a88b1cda684fb9d5e73f000a1"
