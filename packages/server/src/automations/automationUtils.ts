@@ -52,6 +52,16 @@ export function cleanInputValues(inputs: Record<string, any>, schema: any) {
       }
     }
   }
+  //Check if input field should be a relationship and cast to array
+  for (let key in inputs.row) {
+    if (
+      inputs.schema?.[key]?.type === "link" &&
+      inputs.row[key] &&
+      typeof inputs.row[key] === "string"
+    ) {
+      inputs.row[key] = JSON.parse(inputs.row[key])
+    }
+  }
   return inputs
 }
 
