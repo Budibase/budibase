@@ -7,6 +7,7 @@ import {
   objectStore,
   tenancy,
   db as dbCore,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
@@ -17,127 +18,106 @@ import {
   GoogleConfig,
   OIDCConfig,
   SettingsConfig,
-  BBContext,
+  isGoogleConfig,
+  isOIDCConfig,
+  isSettingsConfig,
+  isSMTPConfig,
+  Ctx,
+  UserCtx,
 } from "@budibase/types"
 
 const getEventFns = async (db: Database, config: ConfigDoc) => {
   const fns = []
-  const type = config.type
 
   let existing
   if (config._id) {
     existing = await db.get(config._id)
   }
 
-  const ssoType = type as SSOType
   if (!existing) {
-    switch (config.type) {
-      case ConfigType.SMTP: {
-        fns.push(events.email.SMTPCreated)
-        break
+    if (isSMTPConfig(config)) {
+      fns.push(events.email.SMTPCreated)
+    } else if (isGoogleConfig(config)) {
+      fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
+      if (config.config.activated) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.GOOGLE))
       }
-      case ConfigType.GOOGLE: {
-        const googleCfg = config as GoogleConfig
-        fns.push(() => events.auth.SSOCreated(ssoType))
-        if (googleCfg.config.activated) {
-          fns.push(() => events.auth.SSOActivated(ssoType))
-        }
-        break
+    } else if (isOIDCConfig(config)) {
+      fns.push(() => events.auth.SSOCreated(ConfigType.OIDC))
+      if (config.config.configs[0].activated) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.OIDC))
       }
-      case ConfigType.OIDC: {
-        const oidcCfg = config as OIDCConfig
-        fns.push(() => events.auth.SSOCreated(ssoType))
-        if (oidcCfg.config.configs[0].activated) {
-          fns.push(() => events.auth.SSOActivated(ssoType))
-        }
-        break
+    } else if (isSettingsConfig(config)) {
+      // company
+      const company = config.config.company
+      if (company && company !== "Budibase") {
+        fns.push(events.org.nameUpdated)
       }
-      case ConfigType.SETTINGS: {
-        // company
-        const settingsCfg = config as SettingsConfig
-        const company = settingsCfg.config.company
-        if (company && company !== "Budibase") {
-          fns.push(events.org.nameUpdated)
-        }
 
-        // logo
-        const logoUrl = settingsCfg.config.logoUrl
-        if (logoUrl) {
-          fns.push(events.org.logoUpdated)
-        }
+      // logo
+      const logoUrl = config.config.logoUrl
+      if (logoUrl) {
+        fns.push(events.org.logoUpdated)
+      }
 
-        // platform url
-        const platformUrl = settingsCfg.config.platformUrl
-        if (
-          platformUrl &&
-          platformUrl !== "http://localhost:10000" &&
-          env.SELF_HOSTED
-        ) {
-          fns.push(events.org.platformURLUpdated)
-        }
-        break
+      // platform url
+      const platformUrl = config.config.platformUrl
+      if (
+        platformUrl &&
+        platformUrl !== "http://localhost:10000" &&
+        env.SELF_HOSTED
+      ) {
+        fns.push(events.org.platformURLUpdated)
       }
     }
   } else {
-    switch (config.type) {
-      case ConfigType.SMTP: {
-        fns.push(events.email.SMTPUpdated)
-        break
+    if (isSMTPConfig(config)) {
+      fns.push(events.email.SMTPUpdated)
+    } else if (isGoogleConfig(config)) {
+      fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
+      if (!existing.config.activated && config.config.activated) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.GOOGLE))
+      } else if (existing.config.activated && !config.config.activated) {
+        fns.push(() => events.auth.SSODeactivated(ConfigType.GOOGLE))
       }
-      case ConfigType.GOOGLE: {
-        const googleCfg = config as GoogleConfig
-        fns.push(() => events.auth.SSOUpdated(ssoType))
-        if (!existing.config.activated && googleCfg.config.activated) {
-          fns.push(() => events.auth.SSOActivated(ssoType))
-        } else if (existing.config.activated && !googleCfg.config.activated) {
-          fns.push(() => events.auth.SSODeactivated(ssoType))
-        }
-        break
+    } else if (isOIDCConfig(config)) {
+      fns.push(() => events.auth.SSOUpdated(ConfigType.OIDC))
+      if (
+        !existing.config.configs[0].activated &&
+        config.config.configs[0].activated
+      ) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.OIDC))
+      } else if (
+        existing.config.configs[0].activated &&
+        !config.config.configs[0].activated
+      ) {
+        fns.push(() => events.auth.SSODeactivated(ConfigType.OIDC))
       }
-      case ConfigType.OIDC: {
-        const oidcCfg = config as OIDCConfig
-        fns.push(() => events.auth.SSOUpdated(ssoType))
-        if (
-          !existing.config.configs[0].activated &&
-          oidcCfg.config.configs[0].activated
-        ) {
-          fns.push(() => events.auth.SSOActivated(ssoType))
-        } else if (
-          existing.config.configs[0].activated &&
-          !oidcCfg.config.configs[0].activated
-        ) {
-          fns.push(() => events.auth.SSODeactivated(ssoType))
-        }
-        break
+    } else if (isSettingsConfig(config)) {
+      // company
+      const existingCompany = existing.config.company
+      const company = config.config.company
+      if (company && company !== "Budibase" && existingCompany !== company) {
+        fns.push(events.org.nameUpdated)
       }
-      case ConfigType.SETTINGS: {
-        // company
-        const settingsCfg = config as SettingsConfig
-        const existingCompany = existing.config.company
-        const company = settingsCfg.config.company
-        if (company && company !== "Budibase" && existingCompany !== company) {
-          fns.push(events.org.nameUpdated)
-        }
 
-        // logo
-        const existingLogoUrl = existing.config.logoUrl
-        const logoUrl = settingsCfg.config.logoUrl
-        if (logoUrl && existingLogoUrl !== logoUrl) {
-          fns.push(events.org.logoUpdated)
-        }
+      // logo
+      const existingLogoUrl = existing.config.logoUrl
+      const logoUrl = config.config.logoUrl
+      if (logoUrl && existingLogoUrl !== logoUrl) {
+        fns.push(events.org.logoUpdated)
+      }
 
-        // platform url
-        const existingPlatformUrl = existing.config.platformUrl
-        const platformUrl = settingsCfg.config.platformUrl
-        if (
-          platformUrl &&
-          platformUrl !== "http://localhost:10000" &&
-          existingPlatformUrl !== platformUrl &&
-          env.SELF_HOSTED
-        ) {
-          fns.push(events.org.platformURLUpdated)
-        }
-        break
+      // platform url
+      const existingPlatformUrl = existing.config.platformUrl
+      const platformUrl = config.config.platformUrl
+      if (
+        platformUrl &&
+        platformUrl !== "http://localhost:10000" &&
+        existingPlatformUrl !== platformUrl &&
+        env.SELF_HOSTED
+      ) {
+        fns.push(events.org.platformURLUpdated)
       }
     }
   }
@@ -145,7 +125,7 @@ const getEventFns = async (db: Database, config: ConfigDoc) => {
   return fns
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: UserCtx) {
   const db = tenancy.getGlobalDB()
   const { type, workspace, user, config } = ctx.request.body
   let eventFns = await getEventFns(db, ctx.request.body)
@@ -187,7 +167,7 @@ export async function save(ctx: BBContext) {
   }
 }
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: UserCtx) {
   const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
     dbCore.getConfigParams(
@@ -204,7 +184,7 @@ export async function fetch(ctx: BBContext) {
  * Gets the most granular config for a particular configuration type.
  * The hierarchy is type -> workspace -> user.
  */
-export async function find(ctx: BBContext) {
+export async function find(ctx: UserCtx) {
   const db = tenancy.getGlobalDB()
 
   const { userId, workspaceId } = ctx.query
@@ -237,18 +217,18 @@ export async function find(ctx: BBContext) {
   }
 }
 
-export async function publicOidc(ctx: BBContext) {
+export async function publicOidc(ctx: Ctx) {
   const db = tenancy.getGlobalDB()
   try {
     // Find the config with the most granular scope based on context
-    const oidcConfig = await dbCore.getScopedFullConfig(db, {
+    const oidcConfig: OIDCConfig = await dbCore.getScopedFullConfig(db, {
       type: ConfigType.OIDC,
     })
 
     if (!oidcConfig) {
       ctx.body = {}
     } else {
-      ctx.body = oidcConfig.config.configs.map((config: any) => ({
+      ctx.body = oidcConfig.config.configs.map(config => ({
         logo: config.logo,
         name: config.name,
         uuid: config.uuid,
@@ -259,7 +239,7 @@ export async function publicOidc(ctx: BBContext) {
   }
 }
 
-export async function publicSettings(ctx: BBContext) {
+export async function publicSettings(ctx: Ctx) {
   const db = tenancy.getGlobalDB()
 
   try {
@@ -283,6 +263,16 @@ export async function publicSettings(ctx: BBContext) {
       }
     } else {
       config = publicConfig
+    }
+
+    // enrich the logo url
+    // empty url means deleted
+    if (config.config.logoUrl && config.config.logoUrl !== "") {
+      config.config.logoUrl = objectStore.getGlobalFileUrl(
+        "settings",
+        "logoUrl",
+        config.config.logoUrlEtag
+      )
     }
 
     // google button flag
@@ -311,28 +301,17 @@ export async function publicSettings(ctx: BBContext) {
   }
 }
 
-export async function upload(ctx: BBContext) {
-  if (ctx.request.files == null || ctx.request.files.file.length > 1) {
+export async function upload(ctx: UserCtx) {
+  if (ctx.request.files == null || Array.isArray(ctx.request.files.file)) {
     ctx.throw(400, "One file must be uploaded.")
   }
-  const file = ctx.request.files.file
+  const file = ctx.request.files.file as any
   const { type, name } = ctx.params
 
-  let bucket
-  if (env.SELF_HOSTED) {
-    bucket = objectStore.ObjectStoreBuckets.GLOBAL
-  } else {
-    bucket = objectStore.ObjectStoreBuckets.GLOBAL_CLOUD
-  }
+  let bucket = coreEnv.GLOBAL_BUCKET_NAME
+  const key = objectStore.getGlobalFileS3Key(type, name)
 
-  let key
-  if (env.MULTI_TENANCY) {
-    key = `${tenancy.getTenantId()}/${type}/${name}`
-  } else {
-    key = `${type}/${name}`
-  }
-
-  await objectStore.upload({
+  const result = await objectStore.upload({
     bucket,
     filename: key,
     path: file.path,
@@ -349,24 +328,26 @@ export async function upload(ctx: BBContext) {
       config: {},
     }
   }
-  let url
-  if (env.SELF_HOSTED) {
-    url = `/${bucket}/${key}`
-  } else {
-    url = `${env.CDN_URL}/${key}`
+
+  // save the Etag for cache bursting
+  const etag = result.ETag
+  if (etag) {
+    cfgStructure.config[`${name}Etag`] = etag.replace(/"/g, "")
   }
 
-  cfgStructure.config[`${name}`] = url
-  // write back to db with url updated
+  // save the file key
+  cfgStructure.config[`${name}`] = key
+
+  // write back to db
   await db.put(cfgStructure)
 
   ctx.body = {
     message: "File has been uploaded and url stored to config.",
-    url,
+    url: objectStore.getGlobalFileUrl(type, name, etag),
   }
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx) {
   const db = tenancy.getGlobalDB()
   const { id, rev } = ctx.params
   try {
@@ -378,7 +359,7 @@ export async function destroy(ctx: BBContext) {
   }
 }
 
-export async function configChecklist(ctx: BBContext) {
+export async function configChecklist(ctx: Ctx) {
   const db = tenancy.getGlobalDB()
   const tenantId = tenancy.getTenantId()
 

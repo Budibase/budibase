@@ -143,7 +143,7 @@ function parseEmitExpression(field: string, groupBy: string) {
  * filters: Array of filter objects containing predicates that are parsed into a JS expression
  * calculation: an optional calculation to be performed over the view data.
  */
-export = function (
+export default function (
   { field, tableId, groupBy, filters = [], calculation }: ViewTemplateOpts,
   groupByMulti?: boolean
 ) {

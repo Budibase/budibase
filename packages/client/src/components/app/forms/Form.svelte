@@ -31,6 +31,11 @@
   let table
 
   $: fetchSchema(dataSource)
+  $: schemaKey = generateSchemaKey(schema)
+  $: initialValues = getInitialValues(actionType, dataSource, $context)
+  $: resetKey = Helpers.hashString(
+    schemaKey + JSON.stringify(initialValues) + disabled
+  )
   $: loading.set($parentLoading || !loaded)
 
   // Returns the closes data context which isn't a built in context
@@ -68,13 +73,17 @@
     }
   }
 
-  $: initialValues = getInitialValues(actionType, dataSource, $context)
-  $: resetKey = Helpers.hashString(
-    loaded +
-      JSON.stringify(initialValues) +
-      JSON.stringify(dataSource) +
-      disabled
-  )
+  // Generates a predictable string that uniquely identifies a schema. We can't
+  // simply stringify the whole schema as there are array fields which have
+  // random order.
+  const generateSchemaKey = schema => {
+    if (!schema) {
+      return null
+    }
+    const fields = Object.keys(schema)
+    fields.sort()
+    return fields.map(field => `${field}:${schema[field].type}`).join("-")
+  }
 </script>
 
 {#key resetKey}

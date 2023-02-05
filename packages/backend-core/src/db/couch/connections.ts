@@ -1,7 +1,7 @@
 import env from "../../environment"
 
-export const getCouchInfo = () => {
-  const urlInfo = getUrlInfo()
+export const getCouchInfo = (connection?: string) => {
+  const urlInfo = getUrlInfo(connection)
   let username
   let password
   if (env.COUCH_DB_USERNAME) {

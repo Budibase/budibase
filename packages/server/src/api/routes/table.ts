@@ -67,10 +67,7 @@ router
    * structure, and the "updated", new column name should also be supplied. The schema should also be updated, this field
    * lets the server know that a field hasn't just been deleted, that the data has moved to a new name, this will fix
    * the rows in the table. This functionality is only available for internal tables.
-   * @apiParam (Body) {object} [dataImport] When creating an internal table it can be built from a CSV, by using the
-   * CSV validation endpoint. Send the CSV data to the validation endpoint, then put the results of that call
-   * into this property, along with the CSV and a table/rows will be built from it. This is not supported when updating
-   * or for external tables.
+   * @apiParam (Body) {object[]} [rows] When creating a table using a compatible data source, an array of objects to be imported into the new table can be provided.
    *
    * @apiParamExample {json} Example:
    * {
@@ -99,15 +96,7 @@ router
    *     "old": "columnName",
    *     "updated": "newColumnName",
    *   },
-   *   "dataImport": {
-   *     "csvString": "column\nvalue",
-   *     "primaryDisplay": "column",
-   *     "schema": {
-   *       "column": {
-   *         "type": "string"
-   *       }
-   *     }
-   *   }
+   *   "rows": []
    * }
    *
    * @apiSuccess {object} table The response body will contain the table structure after being cleaned up and
@@ -121,30 +110,20 @@ router
     tableValidator(),
     tableController.save
   )
-  /**
-   * @api {post} /api/tables/csv/validate Validate a CSV for a table
-   * @apiName Validate a CSV for a table
-   * @apiGroup tables
-   * @apiPermission builder
-   * @apiDescription When creating a new table, or importing a CSV to an existing table the CSV must be validated and
-   * converted into a Budibase schema; this endpoint does this.
-   *
-   * @apiParam (Body) {string} csvString The CSV which is to be validated as a string.
-   * @apiParam (Body) {object} [schema] When a CSV has been validated it is possible to re-validate after changing the
-   * type of a field, by default everything will be strings as there is no way to infer types. The returned schema can
-   * be updated and then returned to the endpoint to re-validate and check if the type will work for the CSV, e.g.
-   * using a number instead of strings.
-   * @apiParam (Body) {string} [tableId] If importing data to an existing table this will pull the current table and
-   * remove any fields from the CSV schema which do not exist on the table/don't match the type of the table. When
-   * importing a CSV to an existing table only fields that are present on the table can be imported.
-   *
-   * @apiSuccess {object} schema The response body will contain a "schema" object that represents the schema found for
-   * the CSV - this will be in the same format used for table schema.s
-   */
   .post(
-    "/api/tables/csv/validate",
+    "/api/convert/csvToJson",
     authorized(BUILDER),
-    tableController.validateCSVSchema
+    tableController.csvToJson
+  )
+  .post(
+    "/api/tables/validateNewTableImport",
+    authorized(BUILDER),
+    tableController.validateNewTableImport
+  )
+  .post(
+    "/api/tables/validateExistingTableImport",
+    authorized(BUILDER),
+    tableController.validateExistingTableImport
   )
   /**
    * @api {post} /api/tables/:tableId/:revId Delete a table
@@ -177,9 +156,7 @@ router
    *
    * @apiParam {string} tableId The ID of the table which the data should be imported to.
    *
-   * @apiParam (Body) {object} dataImport This is the same as the structure used when creating an internal table with
-   * a CSV, it will have the "schema" returned from the CSV validation endpoint and the "csvString" which is to be
-   * turned into rows.
+   * @apiParam (Body) {object[]} rows An array of objects representing the rows to be imported, key-value pairs not matching the table schema will be ignored.
    *
    * @apiSuccess {string} message A message stating that the data was imported successfully.
    */
@@ -190,4 +167,4 @@ router
     tableController.bulkImport
   )
 
-export = router
+export default router

@@ -1,5 +1,5 @@
-const { Config } = require("../../constants")
-const { utils } = require("@budibase/backend-core")
+import { Config } from "../../constants"
+import { utils } from "@budibase/backend-core"
 
 export function oidc(conf?: any) {
   return {

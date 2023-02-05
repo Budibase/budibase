@@ -7,4 +7,4 @@ const router: Router = new Router()
 
 router.post("/api/script", authorized(permissions.BUILDER), controller.save)
 
-export = router
+export default router

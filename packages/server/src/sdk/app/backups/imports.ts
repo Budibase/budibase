@@ -26,11 +26,7 @@ type TemplateType = {
 
 function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
   // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
-  const urlParts = attachment.url.split("/")
-  // drop the first empty element
-  urlParts.shift()
-  // get the prefix
-  const prefix = urlParts.shift()
+  const urlParts = attachment.key.split("/")
   // remove the app ID
   urlParts.shift()
   // add new app ID
@@ -39,7 +35,7 @@ function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
   return {
     ...attachment,
     key,
-    url: `/${prefix}/${key}`,
+    url: "", // calculated on retrieval using key
   }
 }
 

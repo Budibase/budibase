@@ -1,6 +1,13 @@
 import { getAllApps, queryGlobalView } from "../db"
 import { options } from "../middleware/passport/jwt"
-import { Header, Cookie, MAX_VALID_DATE } from "../constants"
+import {
+  Header,
+  Cookie,
+  MAX_VALID_DATE,
+  DocumentType,
+  SEPARATOR,
+  ViewName,
+} from "../constants"
 import env from "../environment"
 import * as userCache from "../cache/user"
 import { getSessionsForUser, invalidateSessions } from "../security/sessions"
@@ -8,16 +15,18 @@ import * as events from "../events"
 import * as tenancy from "../tenancy"
 import {
   App,
-  BBContext,
+  Ctx,
   PlatformLogoutOpts,
   TenantResolutionStrategy,
 } from "@budibase/types"
 import { SetOption } from "cookies"
-import { DocumentType, SEPARATOR, ViewName } from "../constants"
 const jwt = require("jsonwebtoken")
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
+
+const BUILDER_PREVIEW_PATH = "/app/preview"
+const BUILDER_REFERER_PREFIX = "/builder/app/"
 
 function confirmAppId(possibleAppId: string | undefined) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
@@ -25,7 +34,7 @@ function confirmAppId(possibleAppId: string | undefined) {
     : undefined
 }
 
-async function resolveAppUrl(ctx: BBContext) {
+export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
@@ -50,7 +59,7 @@ async function resolveAppUrl(ctx: BBContext) {
   return app && app.appId ? app.appId : undefined
 }
 
-export function isServingApp(ctx: BBContext) {
+export function isServingApp(ctx: Ctx) {
   // dev app
   if (ctx.path.startsWith(`/${APP_PREFIX}`)) {
     return true
@@ -67,9 +76,9 @@ export function isServingApp(ctx: BBContext) {
  * @param {object} ctx The main request body to look through.
  * @returns {string|undefined} If an appId was found it will be returned.
  */
-export async function getAppIdFromCtx(ctx: BBContext) {
+export async function getAppIdFromCtx(ctx: Ctx) {
   // look in headers
-  const options = [ctx.headers[Header.APP_ID]]
+  const options = [ctx.request.headers[Header.APP_ID]]
   let appId
   for (let option of options) {
     appId = confirmAppId(option as string)
@@ -83,20 +92,39 @@ export async function getAppIdFromCtx(ctx: BBContext) {
     appId = confirmAppId(ctx.request.body.appId)
   }
 
-  // look in the url - dev app
-  let appPath =
-    ctx.request.headers.referrer ||
-    ctx.path.split("/").filter(subPath => subPath.startsWith(APP_PREFIX))
-  if (!appId && appPath.length) {
-    appId = confirmAppId(appPath[0])
+  // look in the path
+  const pathId = parseAppIdFromUrl(ctx.path)
+  if (!appId && pathId) {
+    appId = confirmAppId(pathId)
   }
 
-  // look in the url - prod app
-  if (!appId && ctx.path.startsWith(PROD_APP_PREFIX)) {
+  // lookup using custom url - prod apps only
+  // filter out the builder preview path which collides with the prod app path
+  // to ensure we don't load all apps excessively
+  const isBuilderPreview = ctx.path.startsWith(BUILDER_PREVIEW_PATH)
+  const isViewingProdApp =
+    ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
+  if (!appId && isViewingProdApp) {
     appId = confirmAppId(await resolveAppUrl(ctx))
   }
 
+  // look in the referer - builder only
+  // make sure this is performed after prod app url resolution, in case the
+  // referer header is present from a builder redirect
+  const referer = ctx.request.headers.referer
+  if (!appId && referer?.includes(BUILDER_REFERER_PREFIX)) {
+    const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
+    appId = confirmAppId(refererId)
+  }
+
   return appId
+}
+
+function parseAppIdFromUrl(url?: string) {
+  if (!url) {
+    return
+  }
+  return url.split("/").find(subPath => subPath.startsWith(APP_PREFIX))
 }
 
 /**
@@ -115,7 +143,7 @@ export function openJwt(token: string) {
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to get.
  */
-export function getCookie(ctx: BBContext, name: string) {
+export function getCookie(ctx: Ctx, name: string) {
   const cookie = ctx.cookies.get(name)
 
   if (!cookie) {
@@ -133,7 +161,7 @@ export function getCookie(ctx: BBContext, name: string) {
  * @param {object} opts options like whether to sign.
  */
 export function setCookie(
-  ctx: BBContext,
+  ctx: Ctx,
   value: any,
   name = "builder",
   opts = { sign: true }
@@ -159,7 +187,7 @@ export function setCookie(
 /**
  * Utility function, simply calls setCookie with an empty string for value
  */
-export function clearCookie(ctx: BBContext, name: string) {
+export function clearCookie(ctx: Ctx, name: string) {
   setCookie(ctx, null, name)
 }
 
@@ -169,7 +197,7 @@ export function clearCookie(ctx: BBContext, name: string) {
  * @param {object} ctx The koa context object to be tested.
  * @return {boolean} returns true if the call is from the client lib (a built app rather than the builder).
  */
-export function isClient(ctx: BBContext) {
+export function isClient(ctx: Ctx) {
   return ctx.headers[Header.TYPE] === "client"
 }
 

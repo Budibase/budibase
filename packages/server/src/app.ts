@@ -1,5 +1,5 @@
 // need to load environment first
-import * as env from "./environment"
+import env from "./environment"
 
 // enable APM if configured
 if (process.env.ELASTIC_APM_ENABLED) {
@@ -19,7 +19,7 @@ import * as api from "./api"
 import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
-import { events, logging } from "@budibase/backend-core"
+import { events, logging, middleware } from "@budibase/backend-core"
 import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
@@ -39,6 +39,8 @@ app.use(
     parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
   })
 )
+
+app.use(middleware.logging)
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")
@@ -77,7 +79,7 @@ server.on("close", async () => {
   }
 })
 
-export = server.listen(env.PORT || 0, async () => {
+export default server.listen(env.PORT || 0, async () => {
   await startup(app, server)
 })
 

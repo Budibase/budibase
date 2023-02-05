@@ -69,10 +69,7 @@ describe("should be able to re-write attachment URLs", () => {
     const finalRows = await sdk.rows.getAllInternalRows(db.name)
     for (let rowToCheck of finalRows) {
       expect(rowToCheck.otherCol).toBe(row.otherCol)
-      expect(rowToCheck.photo[0].url).not.toBe(row.photo[0].url)
-      expect(rowToCheck.photo[0].url).toBe(
-        `/prod-budi-app-assets/${db.name}/attachments/a.png`
-      )
+      expect(rowToCheck.photo[0].url).toBe("")
       expect(rowToCheck.photo[0].key).toBe(`${db.name}/attachments/a.png`)
     }
   })

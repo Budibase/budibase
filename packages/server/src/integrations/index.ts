@@ -17,8 +17,8 @@ import oracle from "./oracle"
 import { getPlugins } from "../api/controllers/plugin"
 import { SourceName, Integration, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
-const environment = require("../environment")
-const { cloneDeep } = require("lodash")
+import env from "../environment"
+import { cloneDeep } from "lodash"
 
 const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.POSTGRES]: postgres.schema,
@@ -69,7 +69,7 @@ if (
 
 export async function getDefinitions() {
   const pluginSchemas: { [key: string]: Integration } = {}
-  if (environment.SELF_HOSTED) {
+  if (env.SELF_HOSTED) {
     const plugins = await getPlugins(PluginType.DATASOURCE)
     // extract the actual schema from each custom
     for (let plugin of plugins) {
@@ -93,16 +93,12 @@ export async function getIntegration(integration: string) {
   if (INTEGRATIONS[integration]) {
     return INTEGRATIONS[integration]
   }
-  if (environment.SELF_HOSTED) {
+  if (env.SELF_HOSTED) {
     const plugins = await getPlugins(PluginType.DATASOURCE)
     for (let plugin of plugins) {
       if (plugin.name === integration) {
         // need to use commonJS require due to its dynamic runtime nature
-        const retrieved: any = await getDatasourcePlugin(
-          plugin.name,
-          plugin.jsUrl,
-          plugin.schema?.hash
-        )
+        const retrieved: any = await getDatasourcePlugin(plugin)
         if (retrieved.integration) {
           return retrieved.integration
         } else {

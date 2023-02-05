@@ -51,6 +51,7 @@
 <style>
   .panel {
     width: 260px;
+    flex: 0 0 260px;
     background: var(--background);
     display: flex;
     flex-direction: column;
@@ -66,6 +67,7 @@
   }
   .panel.wide {
     width: 420px;
+    flex: 0 0 420px;
   }
   .header {
     flex: 0 0 48px;

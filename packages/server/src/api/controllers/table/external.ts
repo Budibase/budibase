@@ -10,9 +10,9 @@ import {
 } from "./utils"
 import { FieldTypes, RelationshipTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import * as csvParser from "../../../utilities/csvParser"
 import { handleRequest } from "../row/external"
 import { events, context } from "@budibase/backend-core"
+import { parse, isRows, isSchema } from "../../../utilities/schema"
 import {
   Datasource,
   Table,
@@ -197,7 +197,7 @@ export async function save(ctx: BBContext) {
   const table: TableRequest = ctx.request.body
   const renamed = table?._rename
   // can't do this right now
-  delete table.dataImport
+  delete table.rows
   const datasourceId = getDatasourceId(ctx.request.body)!
   // table doesn't exist already, note that it is created
   if (!table._id) {
@@ -219,7 +219,7 @@ export async function save(ctx: BBContext) {
   }
 
   const db = context.getAppDB()
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId)
   if (!datasource.entities) {
     datasource.entities = {}
   }
@@ -322,15 +322,17 @@ export async function destroy(ctx: BBContext) {
   const datasourceId = getDatasourceId(tableToDelete)
 
   const db = context.getAppDB()
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId!)
   const tables = datasource.entities
 
   const operation = Operation.DELETE_TABLE
-  await makeTableRequest(datasource, operation, tableToDelete, tables)
+  if (tables) {
+    await makeTableRequest(datasource, operation, tableToDelete, tables)
+    cleanupRelationships(tableToDelete, tables)
+    delete tables[tableToDelete.name]
+    datasource.entities = tables
+  }
 
-  cleanupRelationships(tableToDelete, tables)
-
-  delete datasource.entities[tableToDelete.name]
   await db.put(datasource)
 
   return tableToDelete
@@ -338,17 +340,17 @@ export async function destroy(ctx: BBContext) {
 
 export async function bulkImport(ctx: BBContext) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
-  const { dataImport } = ctx.request.body
-  if (!dataImport || !dataImport.schema || !dataImport.csvString) {
+  const { rows }: { rows: unknown } = ctx.request.body
+  const schema: unknown = table.schema
+
+  if (!rows || !isRows(rows) || !isSchema(schema)) {
     ctx.throw(400, "Provided data import information is invalid.")
   }
-  const rows = await csvParser.transform({
-    ...dataImport,
-    existingTable: table,
-  })
+
+  const parsedRows = await parse(rows, schema)
   await handleRequest(Operation.BULK_CREATE, table._id!, {
-    rows,
+    rows: parsedRows,
   })
-  await events.rows.imported(table, "csv", rows.length)
+  await events.rows.imported(table, parsedRows.length)
   return table
 }

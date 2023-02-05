@@ -5,8 +5,8 @@ import { stringToReadStream } from "../../utilities"
 import { getDocParams, DocumentType, isDevAppID } from "../../db/utils"
 import { create } from "./application"
 import { join } from "path"
-import { App, BBContext, Database } from "@budibase/types"
 import sdk from "../../sdk"
+import { App, Ctx, Database } from "@budibase/types"
 
 async function createApp(appName: string, appDirectory: string) {
   const ctx = {
@@ -35,7 +35,7 @@ async function getAllDocType(db: Database, docType: string) {
   return response.rows.map(row => row.doc)
 }
 
-export async function exportApps(ctx: BBContext) {
+export async function exportApps(ctx: Ctx) {
   if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
     ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
   }
@@ -65,13 +65,13 @@ async function checkHasBeenImported() {
   return apps.length !== 0
 }
 
-export async function hasBeenImported(ctx: BBContext) {
+export async function hasBeenImported(ctx: Ctx) {
   ctx.body = {
     imported: await checkHasBeenImported(),
   }
 }
 
-export async function importApps(ctx: BBContext) {
+export async function importApps(ctx: Ctx) {
   if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
     ctx.throw(400, "Importing only allowed in self hosted environments.")
   }
@@ -82,12 +82,16 @@ export async function importApps(ctx: BBContext) {
       "Import file is required and environment must be fresh to import apps."
     )
   }
-  if (ctx.request.files.importFile.type !== "application/gzip") {
+  const file = ctx.request.files.importFile as any
+  if (Array.isArray(file)) {
+    ctx.throw(400, "Single file is required")
+  }
+  if (file.type !== "application/gzip" && file.type !== "application/x-gzip") {
     ctx.throw(400, "Import file must be a gzipped tarball.")
   }
 
   // initially get all the app databases out of the tarball
-  const tmpPath = sdk.backups.untarFile(ctx.request.files.importFile)
+  const tmpPath = sdk.backups.untarFile(file)
   const globalDbImport = sdk.backups.getGlobalDBFile(tmpPath)
   const appNames = sdk.backups.getListOfAppsInMulti(tmpPath)
 

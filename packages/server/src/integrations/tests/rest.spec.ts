@@ -1,18 +1,21 @@
-const mockFetch = jest.fn(() => ({
-  headers: {
-    raw: () => {
-      return { "content-type": ["application/json"] }
+jest.mock("node-fetch", () => {
+  return jest.fn(() => ({
+    headers: {
+      raw: () => {
+        return { "content-type": ["application/json"] }
+      },
+      get: () => ["application/json"],
     },
-    get: () => ["application/json"],
-  },
-  json: jest.fn(() => ({
-    my_next_cursor: 123,
-  })),
-  text: jest.fn(),
-}))
-jest.mock("node-fetch", () => mockFetch)
+    json: jest.fn(() => ({
+      my_next_cursor: 123,
+    })),
+    text: jest.fn(),
+  }))
+})
+
 import fetch from "node-fetch"
 import { default as RestIntegration } from "../rest"
+import { RestAuthType } from "@budibase/types"
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
 
@@ -227,7 +230,7 @@ describe("REST Integration", () => {
     const basicAuth = {
       _id: "c59c14bd1898a43baa08da68959b24686",
       name: "basic-1",
-      type: RestIntegration.AuthType.BASIC,
+      type: RestAuthType.BASIC,
       config: {
         username: "user",
         password: "password",
@@ -237,7 +240,7 @@ describe("REST Integration", () => {
     const bearerAuth = {
       _id: "0d91d732f34e4befabeff50b392a8ff3",
       name: "bearer-1",
-      type: RestIntegration.AuthType.BEARER,
+      type: RestAuthType.BEARER,
       config: {
         token: "mytoken",
       },
@@ -579,7 +582,8 @@ describe("REST Integration", () => {
     })
     await config.integration.read({})
 
-    const calls: any = mockFetch.mock.calls[0]
+    // @ts-ignore
+    const calls: any = fetch.mock.calls[0]
     const url = calls[0]
     expect(url).toBe(`${BASE_URL}/`)
 

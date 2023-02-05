@@ -16,7 +16,10 @@ const { cloneDeep } = require("lodash/fp")
  * updated.
  * NOTE: this will only for affect static formulas.
  */
-export async function updateRelatedFormula(table: Table, enrichedRows: Row[]) {
+export async function updateRelatedFormula(
+  table: Table,
+  enrichedRows: Row[] | Row
+) {
   const db = context.getAppDB()
   // no formula to update, we're done
   if (!table.relatedFormula) {
@@ -155,7 +158,7 @@ export async function finaliseRow(
   enrichedRow = await processFormulas(table, enrichedRow, { dynamic: false })
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
-    await exports.updateRelatedFormula(table, enrichedRow)
+    await updateRelatedFormula(table, enrichedRow)
   }
   return { row: enrichedRow, table }
 }

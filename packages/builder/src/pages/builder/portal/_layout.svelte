@@ -1,154 +1,29 @@
 <script>
-  import { isActive, redirect, goto } from "@roxi/routify"
-  import {
-    Icon,
-    Avatar,
-    Layout,
-    SideNavigation as Navigation,
-    SideNavigationItem as Item,
-    ActionMenu,
-    MenuItem,
-    Modal,
-    clickOutside,
-    notifications,
-  } from "@budibase/bbui"
-  import ConfigChecklist from "components/common/ConfigChecklist.svelte"
-  import { organisation, auth, admin as adminStore } from "stores/portal"
+  import { isActive, redirect, goto, url } from "@roxi/routify"
+  import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
+  import { organisation, auth, menu, apps } from "stores/portal"
   import { onMount } from "svelte"
-  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
-  import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
-  import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
-  import Logo from "assets/bb-emblem.svg"
-  import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
+  import UpgradeButton from "./_components/UpgradeButton.svelte"
+  import MobileMenu from "./_components/MobileMenu.svelte"
+  import Logo from "./_components/Logo.svelte"
+  import UserDropdown from "./_components/UserDropdown.svelte"
+  import HelpMenu from "components/common/HelpMenu.svelte"
 
   let loaded = false
-  let userInfoModal
-  let changePasswordModal
-  let apiKeyModal
   let mobileMenuVisible = false
+  let activeTab = "Apps"
 
-  $: menu = buildMenu($auth.isAdmin)
+  $: $url(), updateActiveTab($menu)
+  $: fullscreen = !$apps.length
 
-  const buildMenu = admin => {
-    let menu = [
-      {
-        title: "Apps",
-        href: "/builder/portal/apps",
-      },
-    ]
-
-    if (admin) {
-      menu = menu.concat([
-        {
-          title: "Users",
-          href: "/builder/portal/manage/users",
-          heading: "Manage",
-        },
-        isEnabled(TENANT_FEATURE_FLAGS.USER_GROUPS)
-          ? {
-              title: "User Groups",
-              href: "/builder/portal/manage/groups",
-            }
-          : undefined,
-        { title: "Auth", href: "/builder/portal/manage/auth" },
-        { title: "Email", href: "/builder/portal/manage/email" },
-        {
-          title: "Plugins",
-          href: "/builder/portal/manage/plugins",
-        },
-
-        {
-          title: "Organisation",
-          href: "/builder/portal/settings/organisation",
-          heading: "Settings",
-        },
-        {
-          title: "Theming",
-          href: "/builder/portal/settings/theming",
-        },
-      ])
-
-      if (!$adminStore.cloud) {
-        menu = menu.concat([
-          {
-            title: "Update",
-            href: "/builder/portal/settings/update",
-          },
-        ])
+  const updateActiveTab = menu => {
+    for (let entry of menu) {
+      if ($isActive(entry.href)) {
+        if (activeTab !== entry.title) {
+          activeTab = entry.title
+        }
+        break
       }
-    } else {
-      menu = menu.concat([
-        {
-          title: "Theming",
-          href: "/builder/portal/settings/theming",
-          heading: "Settings",
-        },
-      ])
-    }
-
-    // add link to account portal if the user has access
-    let accountSectionAdded = false
-
-    // link out to account-portal if account holder in cloud or always in self-host
-    if ($auth?.user?.accountPortalAccess || (!$adminStore.cloud && admin)) {
-      accountSectionAdded = true
-      menu = menu.concat([
-        {
-          title: "Account",
-          href: $adminStore.accountPortalUrl,
-          heading: "Account",
-        },
-      ])
-    }
-
-    if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
-      // always show usage in self-host or cloud if licensing enabled
-      menu = menu.concat([
-        {
-          title: "Usage",
-          href: "/builder/portal/settings/usage",
-          heading: accountSectionAdded ? "" : "Account",
-        },
-      ])
-
-      // show the relevant hosting upgrade page
-      if ($adminStore.cloud && $auth?.user?.accountPortalAccess) {
-        menu = menu.concat([
-          {
-            title: "Upgrade",
-            href: $adminStore.accountPortalUrl + "/portal/upgrade",
-          },
-        ])
-      } else if (!$adminStore.cloud && admin) {
-        menu = menu.concat({
-          title: "Upgrade",
-          href: "/builder/portal/settings/upgrade",
-        })
-      }
-
-      // show the billing page to licensed account holders in cloud
-      if (
-        $auth?.user?.accountPortalAccess &&
-        $auth.user.account.stripeCustomerId
-      ) {
-        menu = menu.concat([
-          {
-            title: "Billing",
-            href: $adminStore.accountPortalUrl + "/portal/billing",
-          },
-        ])
-      }
-    }
-
-    menu = menu.filter(item => !!item)
-    return menu
-  }
-
-  const logout = async () => {
-    try {
-      await auth.logout()
-    } catch (error) {
-      // Swallow error and do nothing
     }
   }
 
@@ -162,7 +37,8 @@
         $redirect("../")
       } else {
         try {
-          await organisation.init()
+          // We need to load apps to know if we need to show onboarding fullscreen
+          await Promise.all([apps.load(), organisation.init()])
         } catch (error) {
           notifications.error("Error getting org config")
         }
@@ -173,211 +49,108 @@
 </script>
 
 {#if $auth.user && loaded}
-  <div class="container">
-    <div
-      class="nav"
-      class:visible={mobileMenuVisible}
-      use:clickOutside={hideMobileMenu}
-    >
-      <Layout paddingX="L" paddingY="L">
+  {#if fullscreen}
+    <slot />
+  {:else}
+    <HelpMenu />
+    <div class="container">
+      <div class="nav">
         <div class="branding">
-          <div class="name" on:click={() => $goto("./apps")}>
-            <img src={$organisation?.logoUrl || Logo} alt="Logotype" />
-            <span>{$organisation?.company || "Budibase"}</span>
-          </div>
-          <div class="onboarding">
-            <ConfigChecklist />
-          </div>
+          <Logo />
         </div>
-        <div class="menu">
-          <Navigation>
-            {#each menu as { title, href, heading, badge }}
-              <Item
-                on:click={hideMobileMenu}
-                selected={$isActive(href)}
-                {href}
-                {badge}
-                {heading}>{title}</Item
-              >
+        <div class="desktop">
+          <Tabs selected={activeTab}>
+            {#each $menu as { title, href }}
+              <Tab {title} on:click={() => $goto(href)} />
             {/each}
-          </Navigation>
+          </Tabs>
         </div>
-      </Layout>
-    </div>
-    <div class="main">
-      <div class="toolbar">
-        <div class="mobile-toggle">
+        <div class="mobile">
           <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
         </div>
-        <div class="mobile-logo">
-          <img
-            src={$organisation?.logoUrl || Logo}
-            alt={$organisation?.company || "Budibase"}
-          />
+        <div class="desktop">
+          <UpgradeButton />
         </div>
-        <div class="user-dropdown">
-          <ActionMenu align="right" dataCy="user-menu">
-            <div slot="control" class="avatar">
-              <Avatar
-                size="M"
-                initials={$auth.initials}
-                url={$auth.user.pictureUrl}
-              />
-              <Icon size="XL" name="ChevronDown" />
-            </div>
-            <MenuItem
-              icon="UserEdit"
-              on:click={() => userInfoModal.show()}
-              dataCy={"user-info"}
-            >
-              Update user information
-            </MenuItem>
-            {#if $auth.isBuilder}
-              <MenuItem icon="Key" on:click={() => apiKeyModal.show()}>
-                View API key
-              </MenuItem>
-            {/if}
-            <MenuItem
-              icon="LockClosed"
-              on:click={() => changePasswordModal.show()}
-            >
-              Update password
-            </MenuItem>
-            <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
-              Close developer mode
-            </MenuItem>
-            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}
-              >Log out
-            </MenuItem>
-          </ActionMenu>
+        <div class="dropdown">
+          <UserDropdown />
         </div>
       </div>
-      <div class="content">
+      <div class="main">
         <slot />
       </div>
+      <MobileMenu visible={mobileMenuVisible} on:close={hideMobileMenu} />
     </div>
-  </div>
-  <Modal bind:this={userInfoModal}>
-    <UpdateUserInfoModal />
-  </Modal>
-  <Modal bind:this={changePasswordModal}>
-    <ChangePasswordModal />
-  </Modal>
-  <Modal bind:this={apiKeyModal}>
-    <UpdateAPIKeyModal />
-  </Modal>
+  {/if}
 {/if}
 
 <style>
   .container {
     height: 100%;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
   }
   .nav {
     background: var(--background);
-    border-right: var(--border-light);
-    overflow: auto;
-    flex: 0 0 auto;
-    width: 250px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    border-bottom: var(--border-light);
+    padding: 0 24px;
+    gap: 24px;
+    position: relative;
+  }
+
+  /* Customise tabs appearance*/
+  .nav :global(.spectrum-Tabs) {
+    margin-bottom: -2px;
+    padding: 5px 0;
+    flex: 1 1 auto;
+  }
+  .nav :global(.spectrum-Tabs-content) {
+    display: none;
+  }
+  .nav :global(.spectrum-Tabs-itemLabel) {
+    font-weight: 600;
+  }
+
+  .branding {
+    display: grid;
+    place-items: center;
   }
   .main {
     flex: 1 1 auto;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    overflow: hidden;
-  }
-  .branding {
-    display: grid;
-    grid-gap: var(--spacing-s);
-    grid-template-columns: auto auto;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .name {
-    display: grid;
-    grid-template-columns: auto auto;
-    grid-gap: var(--spacing-m);
-    align-items: center;
-  }
-  .name:hover {
-    cursor: pointer;
-  }
-  .avatar {
-    display: grid;
-    grid-template-columns: auto auto;
-    place-items: center;
-    grid-gap: var(--spacing-xs);
-  }
-  .avatar:hover {
-    cursor: pointer;
-    filter: brightness(110%);
-  }
-  .toolbar {
-    background: var(--background);
-    border-bottom: var(--border-light);
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
+    justify-content: center;
+    align-items: stretch;
+    overflow: auto;
   }
-  .mobile-toggle,
-  .mobile-logo {
+  .mobile {
     display: none;
   }
-  .user-dropdown {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-  }
-  img {
-    width: 28px;
-    height: 28px;
-  }
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 600;
-  }
-  .content {
-    overflow: auto;
+  .desktop {
+    display: contents;
   }
 
   @media (max-width: 640px) {
-    .toolbar {
-      background: var(--background);
-      border-bottom: var(--border-light);
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-      padding: var(--spacing-m) calc(var(--spacing-xl) * 1.5);
+    .mobile {
+      display: contents;
     }
-
+    .desktop {
+      display: none;
+    }
     .nav {
+      flex: 0 0 52px;
+      justify-content: space-between;
+    }
+    .branding {
       position: absolute;
-      left: -250px;
-      height: 100%;
-      transition: left ease-in-out 230ms;
-      z-index: 100;
-    }
-    .nav.visible {
-      left: 0;
-      box-shadow: 0 0 80px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .mobile-toggle,
-    .mobile-logo {
-      display: block;
-    }
-
-    .mobile-toggle,
-    .user-dropdown {
-      flex: 0 1 0;
+      left: 50%;
+      top: 50%;
+      transform: translateX(-50%) translateY(-50%);
     }
   }
 </style>

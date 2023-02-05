@@ -5,7 +5,6 @@
     Button,
     Divider,
     Heading,
-    Input,
     Layout,
     notifications,
     Link,
@@ -14,22 +13,30 @@
   import { auth, organisation, oidc, admin } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
   import OIDCButton from "./_components/OIDCButton.svelte"
+  import { handleError } from "./_components/utils"
   import Logo from "assets/bb-emblem.svg"
+  import { TestimonialPage } from "@budibase/frontend-core/src/components"
+  import { FancyForm, FancyInput } from "@budibase/bbui"
   import { onMount } from "svelte"
 
-  let username = ""
-  let password = ""
   let loaded = false
+  let form
+  let errors = {}
+  let formData = {}
 
   $: company = $organisation.company || "Budibase"
-  $: multiTenancyEnabled = $admin.multiTenancy
   $: cloud = $admin.cloud
 
   async function login() {
+    form.validate()
+    if (Object.keys(errors).length > 0) {
+      console.log("errors")
+      return
+    }
     try {
       await auth.login({
-        username: username.trim(),
-        password,
+        username: formData?.username.trim(),
+        password: formData?.password,
       })
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
@@ -57,75 +64,101 @@
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
-<div class="login">
-  <div class="main">
-    <Layout>
-      <Layout noPadding justifyItems="center">
-        <img alt="logo" src={$organisation.logoUrl || Logo} />
-        <Heading textAlign="center">Sign in to {company}</Heading>
-      </Layout>
+
+<TestimonialPage>
+  <Layout gap="L" noPadding>
+    <Layout justifyItems="center" noPadding>
       {#if loaded}
-        <GoogleButton />
-        <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
+        <img alt="logo" src={$organisation.logoUrl || Logo} />
       {/if}
-      <Divider noGrid />
-      <Layout gap="XS" noPadding>
-        <Body size="S" textAlign="center">Sign in with email</Body>
-        <Input label="Email" bind:value={username} />
-        <Input
-          label="Password"
-          type="password"
-          on:change
-          bind:value={password}
+      <Heading size="M">Log in to Budibase</Heading>
+    </Layout>
+    <Layout gap="S" noPadding>
+      {#if loaded && ($organisation.google || $organisation.oidc)}
+        <FancyForm>
+          <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
+          <GoogleButton />
+        </FancyForm>
+        <Divider />
+      {/if}
+      <FancyForm bind:this={form}>
+        <FancyInput
+          label="Your work email"
+          value={formData.username}
+          on:change={e => {
+            formData = {
+              ...formData,
+              username: e.detail,
+            }
+          }}
+          validate={() => {
+            let fieldError = {
+              username: !formData.username
+                ? "Please enter a valid email"
+                : undefined,
+            }
+            errors = handleError({ ...errors, ...fieldError })
+          }}
+          error={errors.username}
         />
-      </Layout>
-      <Layout gap="XS" noPadding>
-        <Button cta disabled={!username && !password} on:click={login}
-          >Sign in to {company}</Button
-        >
-        <ActionButton quiet on:click={() => $goto("./forgot")}>
+        <FancyInput
+          label="Password"
+          value={formData.password}
+          type="password"
+          on:change={e => {
+            formData = {
+              ...formData,
+              password: e.detail,
+            }
+          }}
+          validate={() => {
+            let fieldError = {
+              password: !formData.password
+                ? "Please enter your password"
+                : undefined,
+            }
+            errors = handleError({ ...errors, ...fieldError })
+          }}
+          error={errors.password}
+        />
+      </FancyForm>
+    </Layout>
+    <Layout gap="XS" noPadding justifyItems="center">
+      <Button
+        size="L"
+        cta
+        disabled={Object.keys(errors).length > 0}
+        on:click={login}
+      >
+        Log in to {company}
+      </Button>
+    </Layout>
+    <Layout gap="XS" noPadding justifyItems="center">
+      <div class="user-actions">
+        <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
           Forgot password?
         </ActionButton>
-        {#if multiTenancyEnabled && !cloud}
-          <ActionButton
-            quiet
-            on:click={() => {
-              admin.unload()
-              $goto("./org")
-            }}
-          >
-            Change organisation
-          </ActionButton>
-        {/if}
-      </Layout>
-      {#if cloud}
-        <Body size="xs" textAlign="center">
-          By using Budibase Cloud
-          <br />
-          you are agreeing to our
-          <Link href="https://budibase.com/eula" target="_blank"
-            >License Agreement</Link
-          >
-        </Body>
-      {/if}
+      </div>
     </Layout>
-  </div>
-</div>
+
+    {#if cloud}
+      <Body size="xs" textAlign="center">
+        By using Budibase Cloud
+        <br />
+        you are agreeing to our
+        <Link href="https://budibase.com/eula" target="_blank" secondary={true}>
+          License Agreement
+        </Link>
+      </Body>
+    {/if}
+  </Layout>
+</TestimonialPage>
 
 <style>
-  .login {
-    width: 100%;
-    height: 100%;
+  .user-actions {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
   }
-
-  .main {
-    width: 300px;
-  }
-
   img {
     width: 48px;
   }

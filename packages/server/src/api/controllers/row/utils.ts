@@ -7,6 +7,9 @@ import { BBContext, Row, Table } from "@budibase/types"
 export { removeKeyNumbering } from "../../../integrations/base/utils"
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
+import { Format } from "../view/exporters"
+import { Ctx } from "@budibase/types"
+import sdk from "../../../sdk"
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -20,12 +23,11 @@ validateJs.extend(validateJs.validators.datetime, {
 
 export async function getDatasourceAndQuery(json: any) {
   const datasourceId = json.endpoint.datasourceId
-  const db = context.getAppDB()
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId)
   return makeExternalQuery(datasource, json)
 }
 
-export async function findRow(ctx: BBContext, tableId: string, rowId: string) {
+export async function findRow(ctx: Ctx, tableId: string, rowId: string) {
   const db = context.getAppDB()
   let row
   // TODO remove special user case in future
@@ -115,4 +117,41 @@ export async function validate({
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
+}
+
+export function cleanExportRows(
+  rows: any[],
+  schema: any,
+  format: string,
+  columns: string[]
+) {
+  let cleanRows = [...rows]
+
+  const relationships = Object.entries(schema)
+    .filter((entry: any[]) => entry[1].type === FieldTypes.LINK)
+    .map(entry => entry[0])
+
+  relationships.forEach(column => {
+    cleanRows.forEach(row => {
+      delete row[column]
+    })
+    delete schema[column]
+  })
+
+  // Intended to avoid 'undefined' in export
+  if (format === Format.CSV) {
+    const schemaKeys = Object.keys(schema)
+    for (let key of schemaKeys) {
+      if (columns?.length && columns.indexOf(key) > 0) {
+        continue
+      }
+      for (let row of cleanRows) {
+        if (row[key] == null) {
+          row[key] = ""
+        }
+      }
+    }
+  }
+
+  return cleanRows
 }

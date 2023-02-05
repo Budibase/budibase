@@ -7,6 +7,7 @@ import templateRoutes from "./global/templates"
 import emailRoutes from "./global/email"
 import authRoutes from "./global/auth"
 import roleRoutes from "./global/roles"
+import eventRoutes from "./global/events"
 import environmentRoutes from "./system/environment"
 import tenantsRoutes from "./system/tenants"
 import statusRoutes from "./system/status"
@@ -34,4 +35,5 @@ export const routes: Router[] = [
   migrationRoutes,
   accountRoutes,
   restoreRoutes,
+  eventRoutes,
 ]

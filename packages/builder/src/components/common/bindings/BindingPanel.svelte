@@ -179,7 +179,7 @@
 
 <span class="detailPopover">
   <Popover
-    align="right-side"
+    align="right-outside"
     bind:this={popover}
     anchor={popoverAnchor}
     maxWidth={300}
@@ -469,7 +469,7 @@
   }
 
   .binding__type {
-    font-family: monospace;
+    font-family: var(--font-mono);
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: var(--border-radius-s);
     padding: 2px 4px;

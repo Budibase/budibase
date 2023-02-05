@@ -48,4 +48,4 @@ router
     controller.getFlags
   )
 
-export = router
+export default router

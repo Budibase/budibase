@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "2.2.26",
+  "version": "2.2.27-alpha.0",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -9,20 +9,7 @@
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
-    "test": "jest",
-    "cy:setup": "ts-node ./cypress/ts/setup.ts",
-    "cy:setup:ci": "node ./cypress/setup.js",
-    "cy:open": "cypress open",
-    "cy:run": "cypress run",
-    "cy:run:ci": "cypress run --headed --browser chrome --spec cypress/integration/createApp.spec.js",
-    "cy:run:ci:record": "xvfb-run cypress run --headed --browser chrome --record",
-    "cy:test": "start-server-and-test cy:setup http://localhost:4100/builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci",
-    "cy:ci:record": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci:record; npm run cy:ci:report",
-    "cy:ci:report": "mochawesome-merge cypress/reports/*.json > cypress/reports/testReport.json && marge cypress/reports/testReport.json --reportDir cypress/reports --inline",
-    "cy:ci:notify": "node scripts/cypressResultsWebhook",
-    "cy:debug": "start-server-and-test cy:setup http://localhost:4100/builder cy:open",
-    "cy:debug:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:open"
+    "test": "jest"
   },
   "jest": {
     "globals": {
@@ -71,11 +58,15 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^2.2.26",
-    "@budibase/client": "^2.2.26",
-    "@budibase/frontend-core": "^2.2.26",
-    "@budibase/string-templates": "^2.2.26",
+    "@budibase/bbui": "2.2.27-alpha.0",
+    "@budibase/client": "2.2.27-alpha.0",
+    "@budibase/frontend-core": "2.2.27-alpha.0",
+    "@budibase/string-templates": "2.2.27-alpha.0",
+    "@fortawesome/fontawesome-svg-core": "^6.2.1",
+    "@fortawesome/free-brands-svg-icons": "^6.2.1",
+    "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@sentry/browser": "5.19.1",
+    "@spectrum-css/accordion": "^3.0.24",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
     "codemirror": "^5.59.0",
@@ -87,7 +78,7 @@
     "shortid": "2.2.15",
     "svelte-dnd-action": "^0.9.8",
     "svelte-loading-spinners": "^0.1.1",
-    "svelte-portal": "0.1.0",
+    "svelte-portal": "1.0.0",
     "uuid": "8.3.1",
     "yup": "0.29.2"
   },

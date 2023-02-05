@@ -38,6 +38,13 @@ function buildInviteMultipleValidation() {
   ))
 }
 
+function buildInviteLookupValidation() {
+  // prettier-ignore
+  return auth.joiValidator.params(Joi.object({
+    code: Joi.string().required()
+  }).unknown(true))
+}
+
 const createUserAdminOnly = (ctx: any, next: any) => {
   if (!ctx.request.body._id) {
     return auth.adminOnly(ctx, next)
@@ -51,6 +58,8 @@ function buildInviteAcceptValidation() {
   return auth.joiValidator.body(Joi.object({
     inviteCode: Joi.string().required(),
     password: Joi.string().required(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().optional(),
   }).required().unknown(true))
 }
 
@@ -91,6 +100,11 @@ router
   )
 
   // non-global endpoints
+  .get(
+    "/api/global/users/invite/:code",
+    buildInviteLookupValidation(),
+    controller.checkInvite
+  )
   .post(
     "/api/global/users/invite/accept",
     buildInviteAcceptValidation(),
@@ -113,4 +127,4 @@ router
     selfController.updateSelf
   )
 
-export = router
+export default router

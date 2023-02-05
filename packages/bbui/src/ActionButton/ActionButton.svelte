@@ -9,7 +9,6 @@
   export let longPressable = false
   export let disabled = false
   export let icon = ""
-  export let dataCy = null
   export let size = "M"
   export let active = false
   export let fullWidth = false
@@ -37,7 +36,6 @@
 </script>
 
 <button
-  data-cy={dataCy}
   use:longPress
   class:spectrum-ActionButton--quiet={quiet}
   class:spectrum-ActionButton--emphasized={emphasized}
@@ -86,8 +84,9 @@
     margin-left: 0;
     transition: color ease-out 130ms;
   }
-  .is-selected:not(.spectrum-ActionButton--emphasized) {
+  .is-selected:not(.spectrum-ActionButton--emphasized):not(.spectrum-ActionButton--quiet) {
     background: var(--spectrum-global-color-gray-300);
+    border-color: var(--spectrum-global-color-gray-500);
   }
   .noPadding {
     padding: 0;

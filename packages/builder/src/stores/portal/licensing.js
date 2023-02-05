@@ -60,6 +60,9 @@ export const createLicensingStore = () => {
       const backupsEnabled = license.features.includes(
         Constants.Features.BACKUPS
       )
+      const environmentVariablesEnabled = license.features.includes(
+        Constants.Features.ENVIRONMENT_VARIABLES
+      )
 
       store.update(state => {
         return {
@@ -68,6 +71,7 @@ export const createLicensingStore = () => {
           isFreePlan,
           groupsEnabled,
           backupsEnabled,
+          environmentVariablesEnabled,
         }
       })
     },
