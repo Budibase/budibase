@@ -15,4 +15,4 @@ router
   .post("/api/cloud/import", controller.importApps)
   .get("/api/cloud/import/complete", controller.hasBeenImported)
 
-export = router
+export default router

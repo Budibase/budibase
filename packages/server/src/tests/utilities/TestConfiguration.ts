@@ -1,3 +1,12 @@
+import { mocks } from "@budibase/backend-core/tests"
+
+// init the licensing mock
+import * as pro from "@budibase/pro"
+mocks.licenses.init(pro)
+
+// use unlimited license by default
+mocks.licenses.useUnlimited()
+
 import { init as dbInit } from "../../db"
 dbInit()
 import env from "../../environment"
@@ -58,7 +67,7 @@ class TestConfiguration {
     if (openServer) {
       // use a random port because it doesn't matter
       env.PORT = "0"
-      this.server = require("../../app")
+      this.server = require("../../app").default
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
       this.started = true
@@ -351,29 +360,31 @@ class TestConfiguration {
   }
 
   // APP
-
   async createApp(appName: string) {
     // create dev app
     // clear any old app
     this.appId = null
-    // @ts-ignore
-    await context.updateAppId(null)
-    this.app = await this._req({ name: appName }, null, controllers.app.create)
-    this.appId = this.app.appId
-    // @ts-ignore
-    await context.updateAppId(this.appId)
+    await context.doInAppContext(null, async () => {
+      this.app = await this._req(
+        { name: appName },
+        null,
+        controllers.app.create
+      )
+      this.appId = this.app.appId
+    })
+    return await context.doInAppContext(this.appId, async () => {
+      // create production app
+      this.prodApp = await this.publish()
 
-    // create production app
-    this.prodApp = await this.deploy()
+      this.allApps.push(this.prodApp)
+      this.allApps.push(this.app)
 
-    this.allApps.push(this.prodApp)
-    this.allApps.push(this.app)
-
-    return this.app
+      return this.app
+    })
   }
 
-  async deploy() {
-    await this._req(null, null, controllers.deploy.deployApp)
+  async publish() {
+    await this._req(null, null, controllers.deploy.publishApp)
     // @ts-ignore
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
@@ -382,6 +393,17 @@ class TestConfiguration {
       const db = context.getProdAppDB()
       return await db.get(dbCore.DocumentType.APP_METADATA)
     })
+  }
+
+  async unpublish() {
+    const response = await this._req(
+      null,
+      { appId: this.appId },
+      controllers.app.unpublish
+    )
+    this.prodAppId = null
+    this.prodApp = null
+    return response
   }
 
   // TABLE

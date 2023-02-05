@@ -14,7 +14,7 @@ import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { auth, logging, events, pinoSettings } from "@budibase/backend-core"
+import { auth, logging, events, middleware } from "@budibase/backend-core"
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"
@@ -24,7 +24,7 @@ import * as redis from "./utilities/redis"
 const Sentry = require("@sentry/node")
 const koaSession = require("koa-session")
 const logger = require("koa-pino-logger")
-const destroyable = require("server-destroy")
+import destroyable from "server-destroy"
 
 // this will setup http and https proxies form env variables
 bootstrap()
@@ -36,7 +36,8 @@ app.keys = ["secret", "key"]
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
-app.use(logger(pinoSettings()))
+app.use(middleware.logging)
+app.use(logger(logging.pinoSettings()))
 
 // authentication
 app.use(auth.passport.initialize())
@@ -79,11 +80,10 @@ server.on("close", async () => {
 
 const shutdown = () => {
   server.close()
-  // @ts-ignore
   server.destroy()
 }
 
-export = server.listen(parseInt(env.PORT || "4002"), async () => {
+export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await redis.init()
 })

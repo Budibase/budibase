@@ -4,9 +4,6 @@ metadata:
   annotations:
     kompose.cmd: kompose convert
     kompose.version: 1.21.0 (992df58d8)
-{{ if .Values.globals.logAnnotations }}
-{{ toYaml .Values.globals.logAnnotations | indent 4 }}
-{{ end }}
   creationTimestamp: null
   labels:
     io.kompose.service: app-service
@@ -23,6 +20,9 @@ spec:
       annotations:
         kompose.cmd: kompose convert
         kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.apps.annotations }}
+{{- toYaml .Values.services.apps.annotations | indent 8 -}}
+{{ end }}
       creationTimestamp: null
       labels:
         io.kompose.service: app-service
@@ -67,6 +67,8 @@ spec:
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}
         {{ end }}
+        - name: MINIO_ENABLED
+          value: {{ .Values.services.objectStore.minio | quote }}
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:
@@ -77,13 +79,19 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
+        - name: CLOUDFRONT_CDN
+          value: {{ .Values.services.objectStore.cloudfront.cdn | quote }}
+        - name: CLOUDFRONT_PUBLIC_KEY_ID
+          value: {{ .Values.services.objectStore.cloudfront.publicKeyId | quote }}
+        - name: CLOUDFRONT_PRIVATE_KEY_64
+          value: {{ .Values.services.objectStore.cloudfront.privateKey64 | quote }}
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
         - name: PLUGIN_BUCKET_NAME
           value: {{ .Values.services.objectStore.pluginBucketName | quote }}
         - name: APPS_BUCKET_NAME
           value: {{ .Values.services.objectStore.appsBucketName | quote }}
-        - name: GLOBAL_CLOUD_BUCKET_NAME
+        - name: GLOBAL_BUCKET_NAME
           value: {{ .Values.services.objectStore.globalBucketName | quote }}
         - name: BACKUPS_BUCKET_NAME
           value: {{ .Values.services.objectStore.backupsBucketName | quote }}
@@ -131,6 +139,8 @@ spec:
           value: {{ .Values.globals.automationMaxIterations | quote }}
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        - name: ENCRYPTION_KEY
+          value: {{ .Values.globals.bbEncryptionKey | quote }}
         {{ if .Values.globals.bbAdminUserEmail }}
         - name: BB_ADMIN_USER_EMAIL
           value: {{ .Values.globals.bbAdminUserEmail | quote }}

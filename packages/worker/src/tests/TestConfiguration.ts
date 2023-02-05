@@ -1,4 +1,12 @@
-import "./mocks"
+import mocks from "./mocks"
+
+// init the licensing mock
+import * as pro from "@budibase/pro"
+mocks.licenses.init(pro)
+
+// use unlimited license by default
+mocks.licenses.useUnlimited()
+
 import * as dbConfig from "../db"
 dbConfig.init()
 import env from "../environment"
@@ -43,7 +51,7 @@ class TestConfiguration {
 
     if (opts.openServer) {
       env.PORT = "0" // random port
-      this.server = require("../index")
+      this.server = require("../index").default
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
     }
@@ -319,4 +327,4 @@ class TestConfiguration {
   }
 }
 
-export = TestConfiguration
+export default TestConfiguration

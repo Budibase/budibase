@@ -6,6 +6,9 @@ export enum Event {
   USER_UPDATED = "user:updated",
   USER_DELETED = "user:deleted",
 
+  // USER / ONBOARDING
+  USER_ONBOARDING_COMPLETE = "user:onboarding:complete",
+
   // USER / PERMISSIONS
   USER_PERMISSION_ADMIN_ASSIGNED = "user:admin:assigned",
   USER_PERMISSION_ADMIN_REMOVED = "user:admin:removed",
@@ -172,6 +175,11 @@ export enum Event {
   // BACKUP
   APP_BACKUP_RESTORED = "app:backup:restored",
   APP_BACKUP_TRIGGERED = "app:backup:triggered",
+
+  // ENVIRONMENT VARIABLE
+  ENVIRONMENT_VARIABLE_CREATED = "environment_variable:created",
+  ENVIRONMENT_VARIABLE_DELETED = "environment_variable:deleted",
+  ENVIRONMENT_VARIABLE_UPGRADE_PANEL_OPENED = "environment_variable:upgrade_panel_opened",
 }
 
 // properties added at the final stage of the event pipeline
@@ -185,6 +193,4 @@ export interface BaseEvent {
   hosting?: Hosting
 }
 
-export type RowImportFormat = "csv"
 export type TableExportFormat = "json" | "csv"
-export type TableImportFormat = "csv"

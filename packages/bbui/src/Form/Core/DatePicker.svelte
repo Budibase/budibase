@@ -257,7 +257,7 @@
     max-height: 100%;
   }
   :global(.flatpickr-calendar) {
-    font-family: "Source Sans Pro", sans-serif;
+    font-family: var(--font-sans);
   }
   .is-disabled {
     pointer-events: none !important;

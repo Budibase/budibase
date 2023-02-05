@@ -4,12 +4,18 @@
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { tables, datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
+  import { DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
+  import { onMount } from "svelte"
 
   let modal
   $: internalTablesBySourceId = $tables.list.filter(
     table =>
-      table.type !== "external" && $datasources.selected === table.sourceId
+      table.type !== "external" && table.sourceId === DEFAULT_BB_DATASOURCE_ID
   )
+
+  onMount(() => {
+    datasources.select(DEFAULT_BB_DATASOURCE_ID)
+  })
 </script>
 
 <Modal bind:this={modal}>
@@ -23,10 +29,11 @@
         <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
         <Heading size="M">Sample Data</Heading>
       </header>
-      <Body size="M">A little something to get you up and running!</Body>
-      <Body size="M"
-        >If you have no need for this datasource, feel free to delete it.</Body
-      >
+      <Body size="M">
+        A little something to get you up and running!
+        <br />
+        If you have no need for this datasource, feel free to delete it.
+      </Body>
     </Layout>
     <Divider />
     <Heading size="S">Tables</Heading>
@@ -73,7 +80,7 @@
     background: var(--background);
     border: var(--border-dark);
     display: grid;
-    grid-template-columns: 2fr 0.75fr 20px;
+    grid-template-columns: 1fr auto;
     align-items: center;
     padding: var(--spacing-m);
     gap: var(--layout-xs);

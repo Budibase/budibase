@@ -1,6 +1,6 @@
 const TestConfig = require("../../tests/utilities/TestConfiguration")
 const { basicRow, basicLinkedRow, basicTable } = require("../../tests/utilities/structures")
-const LinkController = require("../linkedRows/LinkController")
+const LinkController = require("../linkedRows/LinkController").default
 const { context } = require("@budibase/backend-core")
 const { RelationshipTypes } = require("../../constants")
 const { cloneDeep } = require("lodash/fp")

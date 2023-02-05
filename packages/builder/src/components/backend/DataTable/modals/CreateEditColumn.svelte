@@ -149,7 +149,7 @@
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
     opt =>
-      opt._id !== $tables.draft._id &&
+      opt._id !== $tables.selected._id &&
       opt.type === table.type &&
       table.sourceId === opt.sourceId
   )
@@ -383,7 +383,7 @@
       newError.name = `${PROHIBITED_COLUMN_NAMES.join(
         ", "
       )} are not allowed as column names`
-    } else if (inUse($tables.draft, fieldInfo.name, originalName)) {
+    } else if (inUse($tables.selected, fieldInfo.name, originalName)) {
       newError.name = `Column name already in use.`
     }
 
@@ -634,9 +634,5 @@
     Your data will be deleted and this action cannot be undone - enter the column
     name to confirm.
   </p>
-  <Input
-    dataCy="delete-column-confirm"
-    bind:value={deleteColName}
-    placeholder={originalName}
-  />
+  <Input bind:value={deleteColName} placeholder={originalName} />
 </ConfirmDialog>

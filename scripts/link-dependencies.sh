@@ -1,25 +1,30 @@
 echo "Linking backend-core"
 cd packages/backend-core
+yarn unlink
 yarn link
 cd -
 
 echo "Linking string-templates"
-cd packages/string-templates 
+cd packages/string-templates
+yarn unlink
 yarn link
 cd -
 
 echo "Linking types"
-cd packages/types 
+cd packages/types
+yarn unlink
 yarn link
 cd -
 
 echo "Linking bbui"
-cd packages/bbui 
+cd packages/bbui
+yarn unlink
 yarn link
 cd -
 
 echo "Linking frontend-core"
 cd packages/frontend-core
+yarn unlink
 yarn link
 cd -
 
@@ -30,6 +35,7 @@ if [ -d "../budibase-pro" ]; then
 
   cd packages/pro
   echo "Linking pro"
+  yarn unlink
   yarn link
 
   echo "Linking backend-core to pro"

@@ -4,12 +4,14 @@ import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
 import { invalidateDynamicVariables } from "../../../threads/utils"
-import { QUERY_THREAD_TIMEOUT } from "../../../environment"
+import env from "../../../environment"
 import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
+import sdk from "../../../sdk"
+import { QueryEvent } from "../../../threads/definitions"
 
 const Runner = new Thread(ThreadType.QUERY, {
-  timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
+  timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
 })
 
 // simple function to append "readable" to all read queries
@@ -81,7 +83,7 @@ export async function save(ctx: any) {
   const db = context.getAppDB()
   const query = ctx.request.body
 
-  const datasource = await db.get(query.datasourceId)
+  const datasource = await sdk.datasources.get(query.datasourceId)
 
   let eventFn
   if (!query._id) {
@@ -126,9 +128,9 @@ function getAuthConfig(ctx: any) {
 }
 
 export async function preview(ctx: any) {
-  const db = context.getAppDB()
-
-  const datasource = await db.get(ctx.request.body.datasourceId)
+  const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
+    ctx.request.body.datasourceId
+  )
   const query = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
@@ -137,20 +139,22 @@ export async function preview(ctx: any) {
   const authConfigCtx: any = getAuthConfig(ctx)
 
   try {
-    const runFn = () =>
-      Runner.run({
-        appId: ctx.appId,
-        datasource,
-        queryVerb,
-        fields,
-        parameters,
-        transformer,
-        queryId,
-        ctx: {
-          user: ctx.user,
-          auth: { ...authConfigCtx },
-        },
-      })
+    const inputs: QueryEvent = {
+      appId: ctx.appId,
+      datasource,
+      queryVerb,
+      fields,
+      parameters,
+      transformer,
+      queryId,
+      // have to pass down to the thread runner - can't put into context now
+      environmentVariables: envVars,
+      ctx: {
+        user: ctx.user,
+        auth: { ...authConfigCtx },
+      },
+    }
+    const runFn = () => Runner.run(inputs)
 
     const { rows, keys, info, extra } = await quotas.addQuery(runFn, {
       datasourceId: datasource._id,
@@ -201,7 +205,9 @@ async function execute(
   const db = context.getAppDB()
 
   const query = await db.get(ctx.params.queryId)
-  const datasource = await db.get(query.datasourceId)
+  const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
+    query.datasourceId
+  )
 
   let authConfigCtx: any = {}
   if (!opts.isAutomation) {
@@ -219,21 +225,23 @@ async function execute(
 
   // call the relevant CRUD method on the integration class
   try {
-    const runFn = () =>
-      Runner.run({
-        appId: ctx.appId,
-        datasource,
-        queryVerb: query.queryVerb,
-        fields: query.fields,
-        pagination: ctx.request.body.pagination,
-        parameters: enrichedParameters,
-        transformer: query.transformer,
-        queryId: ctx.params.queryId,
-        ctx: {
-          user: ctx.user,
-          auth: { ...authConfigCtx },
-        },
-      })
+    const inputs: QueryEvent = {
+      appId: ctx.appId,
+      datasource,
+      queryVerb: query.queryVerb,
+      fields: query.fields,
+      pagination: ctx.request.body.pagination,
+      parameters: enrichedParameters,
+      transformer: query.transformer,
+      queryId: ctx.params.queryId,
+      // have to pass down to the thread runner - can't put into context now
+      environmentVariables: envVars,
+      ctx: {
+        user: ctx.user,
+        auth: { ...authConfigCtx },
+      },
+    }
+    const runFn = () => Runner.run(inputs)
 
     const { rows, pagination, extra } = await quotas.addQuery(runFn, {
       datasourceId: datasource._id,
@@ -266,18 +274,18 @@ export async function executeV2(
 const removeDynamicVariables = async (queryId: any) => {
   const db = context.getAppDB()
   const query = await db.get(queryId)
-  const datasource = await db.get(query.datasourceId)
-  const dynamicVariables = datasource.config.dynamicVariables
+  const datasource = await sdk.datasources.get(query.datasourceId)
+  const dynamicVariables = datasource.config?.dynamicVariables as any[]
 
   if (dynamicVariables) {
     // delete dynamic variables from the datasource
-    datasource.config.dynamicVariables = dynamicVariables.filter(
+    datasource.config!.dynamicVariables = dynamicVariables!.filter(
       (dv: any) => dv.queryId !== queryId
     )
     await db.put(datasource)
 
     // invalidate the deleted variables
-    const variablesToDelete = dynamicVariables.filter(
+    const variablesToDelete = dynamicVariables!.filter(
       (dv: any) => dv.queryId === queryId
     )
     await invalidateDynamicVariables(variablesToDelete)
@@ -289,7 +297,7 @@ export async function destroy(ctx: any) {
   const queryId = ctx.params.queryId
   await removeDynamicVariables(queryId)
   const query = await db.get(queryId)
-  const datasource = await db.get(query.datasourceId)
+  const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200

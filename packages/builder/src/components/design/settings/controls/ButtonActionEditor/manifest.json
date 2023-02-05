@@ -118,6 +118,11 @@
       "dependsOnFeature": "showNotificationAction"
     },
     {
+      "name": "Prompt User",
+      "type": "application",
+      "component": "PromptUser"
+    },
+    {
       "name": "Open Side Panel",
       "type": "application",
       "component": "OpenSidePanel",

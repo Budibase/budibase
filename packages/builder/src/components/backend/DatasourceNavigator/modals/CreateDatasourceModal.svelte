@@ -11,7 +11,7 @@
   import { onMount } from "svelte"
   import ICONS from "../icons"
   import { API } from "api"
-  import { IntegrationTypes } from "constants/backend"
+  import { IntegrationTypes, DatasourceTypes } from "constants/backend"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import GoogleDatasourceConfigModal from "components/backend/DatasourceNavigator/modals/GoogleDatasourceConfigModal.svelte"
@@ -31,6 +31,7 @@
   $: customIntegrations = Object.entries(integrations).filter(
     entry => entry[1].custom
   )
+  $: sortedIntegrations = sortIntegrations(integrations)
 
   checkShowImport()
 
@@ -99,6 +100,29 @@
     }
     integrations = newIntegrations
   }
+
+  function sortIntegrations(integrations) {
+    let integrationsArray = Object.entries(integrations)
+    function getTypeOrder(schema) {
+      if (schema.type === DatasourceTypes.API) {
+        return 1
+      }
+      if (schema.type === DatasourceTypes.RELATIONAL) {
+        return 2
+      }
+      return schema.type?.charCodeAt(0)
+    }
+
+    integrationsArray.sort((a, b) => {
+      let typeOrderA = getTypeOrder(a[1])
+      let typeOrderB = getTypeOrder(b[1])
+      if (typeOrderA === typeOrderB) {
+        return a[1].friendlyName?.localeCompare(b[1].friendlyName)
+      }
+      return typeOrderA < typeOrderB ? -1 : 1
+    })
+    return integrationsArray
+  }
 </script>
 
 <Modal bind:this={internalTableModal}>
@@ -157,7 +181,7 @@
     <Layout noPadding gap="XS">
       <Body size="S">Connect to an external datasource</Body>
       <div class="item-list">
-        {#each Object.entries(integrations).filter(([key, val]) => key !== IntegrationTypes.INTERNAL && !val.custom) as [integrationType, schema]}
+        {#each sortedIntegrations.filter(([key, val]) => key !== IntegrationTypes.INTERNAL && !val.custom) as [integrationType, schema]}
           <DatasourceCard
             on:selected={evt => selectIntegration(evt.detail)}
             {schema}

@@ -54,9 +54,13 @@ function processQueries(ctx: any) {
 }
 
 export default async (ctx: any, next: any) => {
+  if (!ctx.body) {
+    return await next()
+  }
   let urlParts = ctx.url.split("/")
   urlParts = urlParts.slice(4, urlParts.length)
   let body = {}
+
   switch (urlParts[0]) {
     case Resources.APPLICATION:
       body = processApplications(ctx)

@@ -47,6 +47,7 @@ export interface User extends ThirdPartyUser {
   account?: {
     authType: string
   }
+  onboardedAt?: string
 }
 
 export interface UserRoles {
@@ -68,4 +69,8 @@ export interface AdminUser extends User {
   builder: {
     global: boolean
   }
+}
+
+export function isUser(user: object): user is User {
+  return !!(user as User).roles
 }

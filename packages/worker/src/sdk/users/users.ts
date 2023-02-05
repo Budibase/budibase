@@ -25,11 +25,13 @@ import {
   InviteUsersRequest,
   InviteUsersResponse,
   MigrationType,
+  PlatformUser,
   PlatformUserByEmail,
   RowResponse,
   SearchUsersRequest,
   User,
   ThirdPartyUser,
+  isUser,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
@@ -153,10 +155,26 @@ const buildUser = async (
   return fullUser
 }
 
+// lookup, could be email or userId, either will return a doc
+export const getPlatformUser = async (
+  identifier: string
+): Promise<PlatformUser | null> => {
+  // use the view here and allow to find anyone regardless of casing
+  // Use lowercase to ensure email login is case insensitive
+  const response = dbUtils.queryPlatformView(
+    ViewName.PLATFORM_USERS_LOWERCASE,
+    {
+      keys: [identifier.toLowerCase()],
+      include_docs: true,
+    }
+  ) as Promise<PlatformUser>
+  return response
+}
+
 const validateUniqueUser = async (email: string, tenantId: string) => {
   // check budibase users in other tenants
   if (env.MULTI_TENANCY) {
-    const tenantUser = await tenancy.getTenantUser(email)
+    const tenantUser = await getPlatformUser(email)
     if (tenantUser != null && tenantUser.tenantId !== tenantId) {
       throw `Unavailable`
     }
@@ -248,8 +266,9 @@ export const save = async (
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
     await addTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
+
     // let server know to sync user
-    await apps.syncUserInApps(_id)
+    await apps.syncUserInApps(_id, dbUser)
 
     await Promise.all(groupPromises)
 
@@ -555,7 +574,7 @@ export const destroy = async (id: string, currentUser: any) => {
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(userId)
+  await apps.syncUserInApps(userId, dbUser)
 }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
@@ -565,7 +584,7 @@ const bulkDeleteProcessing = async (dbUser: User) => {
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(userId)
+  await apps.syncUserInApps(userId, dbUser)
 }
 
 export const invite = async (

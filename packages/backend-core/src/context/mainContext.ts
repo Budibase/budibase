@@ -2,7 +2,7 @@
 // store an app ID to pretend there is a context
 import env from "../environment"
 import Context from "./Context"
-import { getDevelopmentAppID, getProdAppID } from "../db/conversions"
+import * as conversions from "../db/conversions"
 import { getDB } from "../db/db"
 import {
   DocumentType,
@@ -16,6 +16,7 @@ export type ContextMap = {
   tenantId?: string
   appId?: string
   identity?: IdentityContext
+  environmentVariables?: Record<string, string>
 }
 
 let TEST_APP_ID: string | null = null
@@ -75,7 +76,7 @@ export function getTenantIDFromAppID(appId: string) {
   }
 }
 
-function updateContext(updates: ContextMap) {
+function updateContext(updates: ContextMap): ContextMap {
   let context: ContextMap
   try {
     context = Context.get()
@@ -120,15 +121,23 @@ export async function doInTenant(
   return newContext(updates, task)
 }
 
-export async function doInAppContext(appId: string, task: any): Promise<any> {
-  if (!appId) {
+export async function doInAppContext(
+  appId: string | null,
+  task: any
+): Promise<any> {
+  if (!appId && !env.isTest()) {
     throw new Error("appId is required")
   }
 
-  const tenantId = getTenantIDFromAppID(appId)
-  const updates: ContextMap = { appId }
-  if (tenantId) {
-    updates.tenantId = tenantId
+  let updates: ContextMap
+  if (!appId) {
+    updates = { appId: "" }
+  } else {
+    const tenantId = getTenantIDFromAppID(appId)
+    updates = { appId }
+    if (tenantId) {
+      updates.tenantId = tenantId
+    }
   }
   return newContext(updates, task)
 }
@@ -181,25 +190,33 @@ export function getAppId(): string | undefined {
   }
 }
 
-export function updateTenantId(tenantId?: string) {
-  let context: ContextMap = updateContext({
-    tenantId,
-  })
-  Context.set(context)
+export const getProdAppId = () => {
+  const appId = getAppId()
+  if (!appId) {
+    throw new Error("Could not get appId")
+  }
+  return conversions.getProdAppID(appId)
 }
 
-export function updateAppId(appId: string) {
-  let context: ContextMap = updateContext({
-    appId,
-  })
-  try {
-    Context.set(context)
-  } catch (err) {
-    if (env.isTest()) {
-      TEST_APP_ID = appId
-    } else {
-      throw err
-    }
+export function doInEnvironmentContext(
+  values: Record<string, string>,
+  task: any
+) {
+  if (!values) {
+    throw new Error("Must supply environment variables.")
+  }
+  const updates = {
+    environmentVariables: values,
+  }
+  return newContext(updates, task)
+}
+
+export function getEnvironmentVariables() {
+  const context = Context.get()
+  if (!context.environmentVariables) {
+    return null
+  } else {
+    return context.environmentVariables
   }
 }
 
@@ -229,7 +246,7 @@ export function getProdAppDB(opts?: any): Database {
   if (!appId) {
     throw new Error("Unable to retrieve prod DB - no app ID.")
   }
-  return getDB(getProdAppID(appId), opts)
+  return getDB(conversions.getProdAppID(appId), opts)
 }
 
 /**
@@ -241,5 +258,5 @@ export function getDevAppDB(opts?: any): Database {
   if (!appId) {
     throw new Error("Unable to retrieve dev DB - no app ID.")
   }
-  return getDB(getDevelopmentAppID(appId), opts)
+  return getDB(conversions.getDevelopmentAppID(appId), opts)
 }

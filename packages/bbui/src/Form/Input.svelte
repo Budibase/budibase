@@ -13,7 +13,6 @@
   export let error = null
   export let updateOnChange = true
   export let quiet = false
-  export let dataCy
   export let autofocus
 
   const dispatch = createEventDispatcher()
@@ -25,7 +24,6 @@
 
 <Field {label} {labelPosition} {error}>
   <TextField
-    {dataCy}
     {updateOnChange}
     {error}
     {disabled}

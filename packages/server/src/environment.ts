@@ -79,7 +79,6 @@ const environment = {
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
-  DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   DISABLE_AUTOMATION_LOGS: process.env.DISABLE_AUTOMATION_LOGS,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
@@ -119,6 +118,11 @@ for (let [key, value] of Object.entries(environment)) {
     // @ts-ignore
     environment[key] = 0
   }
+  // handle the edge case of "false" to disable an environment variable
+  if (value === "false") {
+    // @ts-ignore
+    environment[key] = 0
+  }
 }
 
-export = environment
+export default environment

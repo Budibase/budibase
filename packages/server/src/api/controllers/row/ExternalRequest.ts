@@ -21,11 +21,11 @@ import { getDatasourceAndQuery } from "./utils"
 import { FieldTypes, RelationshipTypes } from "../../../constants"
 import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
-// @ts-ignore
 import { cloneDeep } from "lodash/fp"
 import { processFormulas, processDates } from "../../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
 import { removeKeyNumbering } from "./utils"
+import sdk from "../../../sdk"
 
 export interface ManyRelationship {
   tableId?: string
@@ -665,8 +665,7 @@ export class ExternalRequest {
       throw "Unable to run without a table name"
     }
     if (!this.datasource) {
-      const db = context.getAppDB()
-      this.datasource = await db.get(datasourceId)
+      this.datasource = await sdk.datasources.get(datasourceId!)
       if (!this.datasource || !this.datasource.entities) {
         throw "No tables found, fetch tables before query."
       }
@@ -682,6 +681,12 @@ export class ExternalRequest {
       config,
       table
     )
+    //if the sort column is a formula, remove it
+    for (let sortColumn of Object.keys(sort || {})) {
+      if (table.schema[sortColumn]?.type === "formula") {
+        delete sort?.[sortColumn]
+      }
+    }
     filters = buildFilters(id, filters || {}, table)
     const relationships = this.buildRelationships(table)
     // clean up row on ingress using schema

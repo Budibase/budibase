@@ -91,6 +91,11 @@ for (let [key, value] of Object.entries(environment)) {
     // @ts-ignore
     environment[key] = 0
   }
+  // handle the edge case of "false" to disable an environment variable
+  if (value === "false") {
+    // @ts-ignore
+    environment[key] = 0
+  }
 }
 
-export = environment
+export default environment

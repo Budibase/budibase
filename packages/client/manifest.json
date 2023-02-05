@@ -3241,7 +3241,7 @@
     },
     "settings": [
       {
-        "type": "field/barcode/qr",
+        "type": "field/barcodeqr",
         "label": "Field",
         "key": "field",
         "required": true
@@ -3439,6 +3439,12 @@
             "key": "value"
           }
         ]
+      },
+      {
+        "type": "boolean",
+        "label": "Compact",
+        "key": "compact",
+        "defaultValue": false
       },
       {
         "type": "boolean",
@@ -3785,7 +3791,6 @@
         "defaultValue": false,
         "info": "Row selection is only compatible with internal or SQL tables"
       },
-
       {
         "section": true,
         "name": "On Row Click",
@@ -4014,7 +4019,8 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "nested": true
       },
       {
         "type": "field",
@@ -4530,7 +4536,8 @@
           {
             "type": "filter",
             "label": "Filtering",
-            "key": "filter"
+            "key": "filter",
+            "nested": true
           },
           {
             "type": "searchfield",
@@ -4660,7 +4667,8 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "nested": true
       },
       {
         "type": "field/sortable",
@@ -4826,7 +4834,8 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "nested": true
       },
       {
         "type": "field/sortable",
