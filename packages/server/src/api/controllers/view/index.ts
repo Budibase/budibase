@@ -6,8 +6,9 @@ import { fetchView } from "../row"
 import { context, events } from "@budibase/backend-core"
 import { DocumentType } from "../../../db/utils"
 import sdk from "../../../sdk"
+import { FieldTypes } from "../../../constants"
 import {
-  BBContext,
+  Ctx,
   Row,
   Table,
   TableExportFormat,
@@ -18,11 +19,11 @@ import { cleanExportRows } from "../row/utils"
 
 const { cloneDeep, isEqual } = require("lodash")
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: Ctx) {
   ctx.body = await getViews()
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: Ctx) {
   const db = context.getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
 
@@ -117,7 +118,7 @@ async function handleViewEvents(existingView: View, newView: View) {
   await filterEvents(existingView, newView)
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: Ctx) {
   const db = context.getAppDB()
   const viewName = decodeURIComponent(ctx.params.viewName)
   const view = await deleteView(viewName)
@@ -129,7 +130,7 @@ export async function destroy(ctx: BBContext) {
   ctx.body = view
 }
 
-export async function exportView(ctx: BBContext) {
+export async function exportView(ctx: Ctx) {
   const viewName = decodeURIComponent(ctx.query.view as string)
   const view = await getView(viewName)
 
