@@ -16,12 +16,9 @@ describe("/automations", () => {
 
   afterAll(setup.afterAll)
 
-  beforeAll(async () => {
+  // For some reason this cannot be a beforeAll or the test "tests the automation successfully" fail
+  beforeEach(async () => {
     await config.init()
-  })
-
-  beforeEach(() => {
-    jest.clearAllMocks()
   })
 
   describe("get definitions", () => {
@@ -123,10 +120,6 @@ describe("/automations", () => {
   })
 
   describe("test", () => {
-    beforeEach(async () => {
-      await config.init()
-    })
-
     it("tests the automation successfully", async () => {
       let table = await config.createTable()
       let automation = newAutomation()
