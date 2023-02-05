@@ -19,7 +19,7 @@ describe("/automations", () => {
   beforeAll(async () => {
     await config.init()
   })
-  
+
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -123,6 +123,10 @@ describe("/automations", () => {
   })
 
   describe("test", () => {
+    beforeEach(async () => {
+      await config.init()
+    })
+
     it("tests the automation successfully", async () => {
       let table = await config.createTable()
       let automation = newAutomation()
@@ -309,7 +313,7 @@ describe("/automations", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(res.body[0]).toEqual(expect.objectContaining(autoConfig))
+      expect(res.body[0]).toEqual(expect.objectContaining(autoConfig))
     })
 
     it("should apply authorization to endpoint", async () => {
