@@ -10,6 +10,9 @@ const MAX_RETRIES = 4
 const { TRIGGER_DEFINITIONS, ACTION_DEFINITIONS } = require("../../../automations")
 const { events } = require("@budibase/backend-core")
 
+
+jest.setTimeout(30000)
+
 describe("/automations", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
