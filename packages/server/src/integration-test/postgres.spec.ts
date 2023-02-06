@@ -280,6 +280,7 @@ describe("row api - postgres", () => {
       const res = await updateRow(postgresTable._id, updatedRow)
 
       expect(res.status).toBe(200)
+      expect(res.body).toEqual(updatedRow)
 
       const persistedRow = await config.getRow(postgresTable._id!, row.id)
 
