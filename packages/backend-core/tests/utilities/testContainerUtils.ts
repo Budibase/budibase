@@ -10,20 +10,29 @@ function getTestContainerSettings(serverName: string, key: string) {
   return entry[1]
 }
 
-function getCouchConfig() {
-  const port = getTestContainerSettings("COUCHDB-SERVICE", "PORT_5984")
+function getContainerInfo(containerName: string, port: number) {
+  const assignedPort = getTestContainerSettings(
+    containerName.toUpperCase(),
+    `PORT_${port}`
+  )
+  const host = getTestContainerSettings(containerName.toUpperCase(), "IP")
   return {
-    port,
-    url: `http://${getTestContainerSettings("COUCHDB-SERVICE", "IP")}:${port}`,
+    port: assignedPort,
+    host,
+    url: `http://${host}:${assignedPort}`,
   }
 }
 
+function getCouchConfig() {
+  return getContainerInfo("couchdb-service", 5984)
+}
+
 function getMinioConfig() {
-  const port = getTestContainerSettings("MINIO-SERVICE", "PORT_9000")
-  return {
-    port,
-    url: `http://${getTestContainerSettings("MINIO-SERVICE", "IP")}:${port}`,
-  }
+  return getContainerInfo("minio-service", 9000)
+}
+
+function getPostgresConfig() {
+  return getContainerInfo("postgres", 5432)
 }
 
 export function setupEnv(...envs: any[]) {
@@ -32,6 +41,8 @@ export function setupEnv(...envs: any[]) {
     { key: "COUCH_DB_URL", value: getCouchConfig().url },
     { key: "MINIO_PORT", value: getMinioConfig().port },
     { key: "MINIO_URL", value: getMinioConfig().url },
+    { key: "POSTGRES_HOST", value: getPostgresConfig().host },
+    { key: "POSTGRES_PORT", value: getPostgresConfig().port },
   ]
 
   for (const config of configs.filter(x => x.value !== null)) {
