@@ -77,8 +77,18 @@
   }
 
   const deleteAction = index => {
+    // Check if we're deleting the selected action
+    const selectedIndex = actions.indexOf(selectedAction)
+    const isSelected = index === selectedIndex
+
+    // Delete the action
     actions.splice(index, 1)
     actions = actions
+
+    // Select a new action if we deleted the selected one
+    if (isSelected) {
+      selectedAction = actions?.length ? actions[0] : null
+    }
   }
 
   const toggleActionList = () => {
