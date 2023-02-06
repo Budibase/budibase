@@ -1,4 +1,4 @@
-import { generator, mocks } from "@budibase/backend-core/tests"
+import { generator, mocks, structures } from "@budibase/backend-core/tests"
 
 // init the licensing mock
 import * as pro from "@budibase/pro"
@@ -40,7 +40,14 @@ import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
-import { AuthToken, Datasource, Row, SourceName, Table } from "@budibase/types"
+import {
+  AuthToken,
+  Database,
+  Datasource,
+  Row,
+  SourceName,
+  Table,
+} from "@budibase/types"
 
 type DefaultUserValues = {
   globalUserId: string
@@ -149,7 +156,7 @@ class TestConfiguration {
   async init(appName = newid()) {
     this.defaultUserValues = this.populateDefaultUserValues()
     if (context.isMultiTenant()) {
-      this.tenantId = `tenant-${newid()}`
+      this.tenantId = structures.tenant.id()
     }
 
     if (!this.started) {
@@ -230,7 +237,7 @@ class TestConfiguration {
     email = this.defaultUserValues.email,
     roles,
   }: any = {}) {
-    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: any) => {
+    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: Database) => {
       let existing
       try {
         existing = await db.get(id)
@@ -262,7 +269,7 @@ class TestConfiguration {
       }
       const resp = await db.put(user)
       return {
-        _rev: resp._rev,
+        _rev: resp.rev,
         ...user,
       }
     })
@@ -371,9 +378,6 @@ class TestConfiguration {
 
     if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
-    }
-    if (this.tenantId) {
-      headers[constants.Header.TENANT_ID] = this.tenantId
     }
     return headers
   }

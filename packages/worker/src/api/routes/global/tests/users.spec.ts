@@ -3,7 +3,7 @@ import { InviteUsersResponse, User } from "@budibase/types"
 jest.mock("nodemailer")
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
-import { context, events, tenancy, utils } from "@budibase/backend-core"
+import { context, events, tenancy } from "@budibase/backend-core"
 
 describe("/api/global/users", () => {
   const config = new TestConfiguration()
@@ -443,7 +443,7 @@ describe("/api/global/users", () => {
     })
 
     it("should not be able to update email address", async () => {
-      const email = `${utils.newid()}@test.com`
+      const email = structures.email()
       const user = await config.createUser(structures.users.user({ email }))
       user.email = "new@test.com"
 

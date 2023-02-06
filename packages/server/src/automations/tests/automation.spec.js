@@ -21,7 +21,7 @@ const setup = require("./utilities")
 describe("Run through some parts of the automations system", () => {
   let config = setup.getConfig()
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await automation.init()
     await config.init()
   })

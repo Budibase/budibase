@@ -52,7 +52,7 @@
           <span class="back-chev" on:click={() => $goto("../")}>
             <Icon name="ChevronLeft" size="XL" />
           </span>
-          Forgotten your password?
+          Forgot your password?
         </div>
       </Heading>
     </span>
@@ -83,7 +83,12 @@
       </FancyForm>
     </Layout>
     <div>
-      <Button disabled={!email || error || submitted} cta on:click={forgot}>
+      <Button
+        size="L"
+        disabled={!email || error || submitted}
+        cta
+        on:click={forgot}
+      >
         Reset password
       </Button>
     </div>
@@ -92,7 +97,7 @@
 
 <style>
   img {
-    width: 48px;
+    width: 46px;
   }
   .back-chev {
     display: inline-block;
@@ -102,5 +107,6 @@
   .heading-content {
     display: flex;
     align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

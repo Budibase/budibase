@@ -64,7 +64,9 @@ const print = (fn: any, data: any[]) => {
     message = message + ` [identityId=${identityId}]`
   }
 
-  // fn(message, data)
+  if (!process.env.CI) {
+    fn(message, data)
+  }
 }
 
 const logging = (ctx: any, next: any) => {

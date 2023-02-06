@@ -1,6 +1,7 @@
 import TestConfiguration from "../../../config/internal-api/TestConfiguration"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
 import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
+import AccountsAPIClient from "../../../config/internal-api/TestConfiguration/accountsAPIClient"
 import generator from "../../../config/generator"
 import {
   generateTable,
@@ -13,10 +14,11 @@ import {
 
 describe("Internal API - Table Operations", () => {
   const api = new InternalAPIClient()
-  const config = new TestConfiguration<Application>(api)
+  const accountsAPI = new AccountsAPIClient()
+  const config = new TestConfiguration<Application>(api, accountsAPI)
 
   beforeAll(async () => {
-    await config.loginAsAdmin()
+    await config.setupAccountAndTenant()
   })
 
   afterAll(async () => {
