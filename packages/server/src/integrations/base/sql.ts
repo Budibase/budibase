@@ -91,11 +91,15 @@ function generateSelectStatement(
   json: QueryJson,
   knex: Knex,
   excludeJoinColumns = false
-): (string | Knex.Raw)[] {
+): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
   const schema = meta?.table?.schema
 
-  return resource!.fields.reduce<(string | Knex.Raw)[]>((p, field) => {
+  if (!resource) {
+    return "*"
+  }
+
+  return resource.fields.reduce<(string | Knex.Raw)[]>((p, field) => {
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     if (
@@ -406,6 +410,7 @@ class InternalBuilder {
         delete parsedBody[key]
       }
     }
+
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.insert(parsedBody)
