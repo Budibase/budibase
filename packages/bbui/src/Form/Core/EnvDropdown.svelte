@@ -25,7 +25,7 @@
   let open = false
 
   //eslint-disable-next-line
-  const STRIP_NAME_REGEX = /(?<=\.)(.*?)(?=\ })/g
+  const STRIP_NAME_REGEX = /(\w+?)(?=\ })/g
 
   // Strips the name out of the value which is {{ env.Variable }} resulting in an array like ["Variable"]
   $: hbsValue = String(value)?.match(STRIP_NAME_REGEX) || []
