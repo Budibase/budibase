@@ -66,7 +66,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <TestimonialPage>
-  <Layout gap="S" noPadding>
+  <Layout gap="L" noPadding>
     <Layout justifyItems="center" noPadding>
       {#if loaded}
         <img alt="logo" src={$organisation.logoUrl || Logo} />
@@ -124,14 +124,19 @@
       </FancyForm>
     </Layout>
     <Layout gap="XS" noPadding justifyItems="center">
-      <Button cta disabled={Object.keys(errors).length > 0} on:click={login}>
+      <Button
+        size="L"
+        cta
+        disabled={Object.keys(errors).length > 0}
+        on:click={login}
+      >
         Log in to {company}
       </Button>
     </Layout>
     <Layout gap="XS" noPadding justifyItems="center">
       <div class="user-actions">
-        <ActionButton quiet on:click={() => $goto("./forgot")}>
-          Forgot password
+        <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
+          Forgot password?
         </ActionButton>
       </div>
     </Layout>

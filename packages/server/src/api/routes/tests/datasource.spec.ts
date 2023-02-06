@@ -19,11 +19,13 @@ describe("/datasources", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  async function setupTest() {
     await config.init()
     datasource = await config.createDatasource()
     jest.clearAllMocks()
-  })
+  }
+
+  beforeAll(setupTest)
 
   describe("create", () => {
     it("should create a new datasource", async () => {
@@ -102,6 +104,8 @@ describe("/datasources", () => {
   })
 
   describe("fetch", () => {
+    beforeAll(setupTest)
+
     it("returns all the datasources from the server", async () => {
       const res = await request
         .get(`/api/datasources`)
@@ -170,6 +174,8 @@ describe("/datasources", () => {
   })
 
   describe("destroy", () => {
+    beforeAll(setupTest)
+
     it("deletes queries for the datasource after deletion and returns a success message", async () => {
       await config.createQuery()
 

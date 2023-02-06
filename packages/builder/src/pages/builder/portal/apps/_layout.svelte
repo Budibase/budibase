@@ -10,13 +10,11 @@
   onMount(async () => {
     try {
       // Always load latest
-      await apps.load()
-      await licensing.init()
-      await templates.load()
-
-      if ($licensing.groupsEnabled) {
-        await groups.actions.init()
-      }
+      await Promise.all([
+        licensing.init(),
+        templates.load(),
+        groups.actions.init(),
+      ])
 
       if ($templates?.length === 0) {
         notifications.error("There was a problem loading quick start templates")

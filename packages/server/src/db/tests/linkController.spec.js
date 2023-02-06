@@ -9,10 +9,12 @@ describe("test the link controller", () => {
   let config = new TestConfig(false)
   let table1, table2, appId
 
-  beforeEach(async () => {
-    config.modeCloud()
+  beforeAll(async () => {
     const app = await config.init()
     appId = app.appId
+  })
+
+  beforeEach(async () => {
     const { _id } = await config.createTable()
     table2 = await config.createLinkedTable(RelationshipTypes.MANY_TO_MANY, ["link", "link2"])
     // update table after creating link

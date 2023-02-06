@@ -2,9 +2,8 @@ require("../../../tests")
 const { runMigrations, getMigrationsDoc } = require("../index")
 const { getGlobalDBName, getDB } = require("../../db")
 
-const { default: environment } = require("../../environment")
-const { newid } = require("../../newid")
-environment._set("MULTI_TENANCY", 'TRUE')
+const { structures, testEnv } = require("../../../tests")
+testEnv.multiTenant()
 
 let db
 
@@ -21,7 +20,7 @@ describe("migrations", () => {
   let tenantId
 
   beforeEach(() => {
-    tenantId = `tenant_${newid()}`
+    tenantId = structures.tenant.id()
     db = getDB(getGlobalDBName(tenantId))
   })
 

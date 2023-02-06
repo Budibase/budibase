@@ -7,7 +7,7 @@ describe("/integrations", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 

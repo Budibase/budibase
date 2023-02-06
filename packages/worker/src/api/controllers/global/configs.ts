@@ -267,7 +267,7 @@ export async function publicSettings(ctx: Ctx) {
 
     // enrich the logo url
     // empty url means deleted
-    if (config.config.logoUrl !== "") {
+    if (config.config.logoUrl && config.config.logoUrl !== "") {
       config.config.logoUrl = objectStore.getGlobalFileUrl(
         "settings",
         "logoUrl",

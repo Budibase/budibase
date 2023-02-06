@@ -264,11 +264,6 @@ export const save = async (
     builtUser._rev = response.rev
 
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
-    if (!env.isTest()) {
-      // Race conditions (existing in prod already) with multiple tests synchronising the global db
-      // https://github.com/Budibase/budibase/issues/6134
-      await addTenant(tenantId, _id, email)
-    }
     await cache.user.invalidateUser(response.id)
 
     // let server know to sync user

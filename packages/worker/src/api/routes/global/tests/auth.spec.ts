@@ -1,7 +1,8 @@
 jest.mock("nodemailer")
 import { TestConfiguration, mocks } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
-import { events, tenancy, utils } from "@budibase/backend-core"
+import { events, tenancy } from "@budibase/backend-core"
+import { structures } from "@budibase/backend-core/tests"
 
 const expectSetAuthCookie = (res: any) => {
   expect(
@@ -41,7 +42,7 @@ describe("/api/global/auth", () => {
     describe("POST /api/global/auth/:tenantId/reset", () => {
       it("should generate password reset email", async () => {
         await tenancy.doInTenant(config.tenant1User!.tenantId, async () => {
-          const userEmail = `${utils.newid()}@test.com`
+          const userEmail = structures.email()
           const { res, code } = await config.api.auth.requestPasswordReset(
             sendMailMock,
             userEmail
@@ -63,7 +64,7 @@ describe("/api/global/auth", () => {
     describe("POST /api/global/auth/:tenantId/reset/update", () => {
       it("should reset password", async () => {
         await tenancy.doInTenant(config.tenant1User!.tenantId, async () => {
-          const userEmail = `${utils.newid()}@test.com`
+          const userEmail = structures.email()
           const { code } = await config.api.auth.requestPasswordReset(
             sendMailMock,
             userEmail

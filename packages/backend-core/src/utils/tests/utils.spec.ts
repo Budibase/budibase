@@ -4,17 +4,12 @@ import * as events from "../../events"
 import * as db from "../../db"
 import { Header } from "../../constants"
 import { doInTenant } from "../../context"
-import environment from "../../environment"
 import { newid } from "../../utils"
 
 describe("utils", () => {
   describe("platformLogout", () => {
-    beforeEach(() => {
-      environment._set("MULTI_TENANCY", "TRUE")
-    })
-
     it("should call platform logout", async () => {
-      await doInTenant(`tenant-${newid()}`, async () => {
+      await doInTenant(structures.tenant.id(), async () => {
         const ctx = structures.koa.newContext()
         await utils.platformLogout({ ctx, userId: "test" })
         expect(events.auth.logout).toBeCalledTimes(1)
@@ -23,10 +18,6 @@ describe("utils", () => {
   })
 
   describe("getAppIdFromCtx", () => {
-    beforeEach(() => {
-      environment._set("MULTI_TENANCY", undefined)
-    })
-
     it("gets appId from header", async () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateAppID()

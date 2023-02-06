@@ -100,7 +100,7 @@ export class UserAPI extends TestAPI {
       request = {
         email: structures.email(),
         password: generator.string(),
-        tenantId: `tenant-${structures.uuid()}`,
+        tenantId: structures.tenant.id(),
       }
     }
     const res = await this.request

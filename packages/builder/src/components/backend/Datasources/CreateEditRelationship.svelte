@@ -10,17 +10,17 @@
   } from "@budibase/bbui"
   import { tables } from "stores/backend"
   import { Helpers } from "@budibase/bbui"
+  import { RelationshipErrorChecker } from "./relationshipErrors"
+  import { onMount } from "svelte"
 
   export let save
   export let datasource
   export let plusTables = []
   export let fromRelationship = {}
   export let toRelationship = {}
+  export let selectedFromTable
   export let close
 
-  const colNotSet = "Please specify a column name"
-  const relationshipAlreadyExists =
-    "A relationship between these tables already exists."
   const relationshipTypes = [
     {
       label: "One to Many",
@@ -42,63 +42,28 @@
   )
 
   let tableOptions
+  let errorChecker = new RelationshipErrorChecker(
+    invalidThroughTable,
+    relationshipExists
+  )
   let errors = {}
-  let hasClickedSave = !!fromRelationship.relationshipType
-  let fromPrimary,
-    fromForeign,
-    fromTable,
-    toTable,
-    throughTable,
-    fromColumn,
-    toColumn
+  let fromPrimary, fromForeign, fromColumn, toColumn
   let fromId, toId, throughId, throughToKey, throughFromKey
   let isManyToMany, isManyToOne, relationshipType
-
-  $: {
-    if (!fromPrimary) {
-      fromPrimary = fromRelationship.foreignKey
-      fromForeign = toRelationship.foreignKey
-    }
-    if (!fromColumn && !errors.fromColumn) {
-      fromColumn = toRelationship.name
-    }
-    if (!toColumn && !errors.toColumn) {
-      toColumn = fromRelationship.name
-    }
-    if (!fromId) {
-      fromId = toRelationship.tableId
-    }
-    if (!toId) {
-      toId = fromRelationship.tableId
-    }
-    if (!throughId) {
-      throughId = fromRelationship.through
-      throughFromKey = fromRelationship.throughFrom
-      throughToKey = fromRelationship.throughTo
-    }
-    if (!relationshipType) {
-      relationshipType = fromRelationship.relationshipType
-    }
-  }
+  let hasValidated = false
 
   $: tableOptions = plusTables.map(table => ({
     label: table.name,
     value: table._id,
   }))
-  $: valid = getErrorCount(errors) === 0 || !hasClickedSave
-
+  $: valid = getErrorCount(errors) === 0 && allRequiredAttributesSet()
   $: isManyToMany = relationshipType === RelationshipTypes.MANY_TO_MANY
   $: isManyToOne = relationshipType === RelationshipTypes.MANY_TO_ONE
-  $: fromTable = plusTables.find(table => table._id === fromId)
-  $: toTable = plusTables.find(table => table._id === toId)
-  $: throughTable = plusTables.find(table => table._id === throughId)
-
   $: toRelationship.relationshipType = fromRelationship?.relationshipType
 
-  const getErrorCount = errors =>
-    Object.entries(errors)
-      .filter(entry => !!entry[1])
-      .map(entry => entry[0]).length
+  function getTable(id) {
+    return plusTables.find(table => table._id === id)
+  }
 
   function invalidThroughTable() {
     // need to know the foreign key columns to check error
@@ -116,93 +81,103 @@
     }
     return false
   }
-
-  function validate() {
-    const isMany = relationshipType === RelationshipTypes.MANY_TO_MANY
-    const tableNotSet = "Please specify a table"
-    const foreignKeyNotSet = "Please pick a foreign key"
-    const errObj = {}
-    if (!relationshipType) {
-      errObj.relationshipType = "Please specify a relationship type"
-    }
-    if (!fromTable) {
-      errObj.fromTable = tableNotSet
-    }
-    if (!toTable) {
-      errObj.toTable = tableNotSet
-    }
-    if (isMany && !throughTable) {
-      errObj.throughTable = tableNotSet
-    }
-    if (isMany && !throughFromKey) {
-      errObj.throughFromKey = foreignKeyNotSet
-    }
-    if (isMany && !throughToKey) {
-      errObj.throughToKey = foreignKeyNotSet
-    }
-    if (invalidThroughTable()) {
-      errObj.throughTable =
-        "Ensure non-key columns are nullable or auto-generated"
-    }
-    if (!isMany && !fromForeign) {
-      errObj.fromForeign = foreignKeyNotSet
-    }
-    if (!fromColumn) {
-      errObj.fromColumn = colNotSet
-    }
-    if (!toColumn) {
-      errObj.toColumn = colNotSet
-    }
-    if (!isMany && !fromPrimary) {
-      errObj.fromPrimary = "Please pick the primary key"
-    }
-    if (isMany && relationshipExists()) {
-      errObj.fromTable = relationshipAlreadyExists
-      errObj.toTable = relationshipAlreadyExists
-    }
-
-    // currently don't support relationships back onto the table itself, needs to relate out
-    const tableError = "From/to/through tables must be different"
-    if (fromTable && (fromTable === toTable || fromTable === throughTable)) {
-      errObj.fromTable = tableError
-    }
-    if (toTable && (toTable === fromTable || toTable === throughTable)) {
-      errObj.toTable = tableError
-    }
+  function relationshipExists() {
     if (
-      throughTable &&
-      (throughTable === fromTable || throughTable === toTable)
+      originalFromTable &&
+      originalToTable &&
+      originalFromTable === getTable(fromId) &&
+      originalToTable === getTable(toId)
     ) {
-      errObj.throughTable = tableError
-    }
-    const colError = "Column name cannot be an existing column"
-    if (isColumnNameBeingUsed(toTable, fromColumn, originalFromColumnName)) {
-      errObj.fromColumn = colError
-    }
-    if (isColumnNameBeingUsed(fromTable, toColumn, originalToColumnName)) {
-      errObj.toColumn = colError
-    }
-
-    let fromType, toType
-    if (fromPrimary && fromForeign) {
-      fromType = fromTable?.schema[fromPrimary]?.type
-      toType = toTable?.schema[fromForeign]?.type
-    }
-    if (fromType && toType && fromType !== toType) {
-      errObj.fromForeign =
-        "Column type of the foreign key must match the primary key"
-    }
-
-    errors = errObj
-    return getErrorCount(errors) === 0
-  }
-
-  function isColumnNameBeingUsed(table, columnName, originalName) {
-    if (!table || !columnName || columnName === originalName) {
       return false
     }
-    const keys = Object.keys(table.schema).map(key => key.toLowerCase())
-    return keys.indexOf(columnName.toLowerCase()) !== -1
+    let fromThroughLinks = Object.values(
+      datasource.entities[getTable(fromId).name].schema
+    ).filter(value => value.through)
+    let toThroughLinks = Object.values(
+      datasource.entities[getTable(toId).name].schema
+    ).filter(value => value.through)
+
+    const matchAgainstUserInput = (fromTableId, toTableId) =>
+      (fromTableId === fromId && toTableId === toId) ||
+      (fromTableId === toId && toTableId === fromId)
+
+    return !!fromThroughLinks.find(from =>
+      toThroughLinks.find(
+        to =>
+          from.through === to.through &&
+          matchAgainstUserInput(from.tableId, to.tableId)
+      )
+    )
+  }
+
+  function getErrorCount(errors) {
+    return Object.entries(errors).filter(entry => !!entry[1]).length
+  }
+
+  function allRequiredAttributesSet() {
+    const base = getTable(fromId) && getTable(toId) && fromColumn && toColumn
+    if (relationshipType === RelationshipTypes.MANY_TO_ONE) {
+      return base && fromPrimary && fromForeign
+    } else {
+      return base && getTable(throughId) && throughFromKey && throughToKey
+    }
+  }
+
+  function validate() {
+    if (!allRequiredAttributesSet() && !hasValidated) {
+      return
+    }
+    hasValidated = true
+    errorChecker.setType(relationshipType)
+    const fromTable = getTable(fromId),
+      toTable = getTable(toId),
+      throughTable = getTable(throughId)
+    errors = {
+      relationshipType: errorChecker.relationshipTypeSet(relationshipType),
+      fromTable:
+        errorChecker.tableSet(fromTable) ||
+        errorChecker.doesRelationshipExists() ||
+        errorChecker.differentTables(fromId, toId, throughId),
+      toTable:
+        errorChecker.tableSet(toTable) ||
+        errorChecker.doesRelationshipExists() ||
+        errorChecker.differentTables(toId, fromId, throughId),
+      throughTable:
+        errorChecker.throughTableSet(throughTable) ||
+        errorChecker.throughIsNullable() ||
+        errorChecker.differentTables(throughId, fromId, toId),
+      throughFromKey:
+        errorChecker.manyForeignKeySet(throughFromKey) ||
+        errorChecker.manyTypeMismatch(
+          fromTable,
+          throughTable,
+          fromTable.primary[0],
+          throughFromKey
+        ),
+      throughToKey:
+        errorChecker.manyForeignKeySet(throughToKey) ||
+        errorChecker.manyTypeMismatch(
+          toTable,
+          throughTable,
+          toTable.primary[0],
+          throughToKey
+        ),
+      fromForeign:
+        errorChecker.foreignKeySet(fromForeign) ||
+        errorChecker.typeMismatch(fromTable, toTable, fromPrimary, fromForeign),
+      fromPrimary: errorChecker.primaryKeySet(fromPrimary),
+      fromColumn: errorChecker.columnBeingUsed(
+        toTable,
+        fromColumn,
+        originalFromColumnName
+      ),
+      toColumn: errorChecker.columnBeingUsed(
+        fromTable,
+        toColumn,
+        originalToColumnName
+      ),
+    }
+    return getErrorCount(errors) === 0
   }
 
   function buildRelationships() {
@@ -243,13 +218,13 @@
     if (manyToMany) {
       relateFrom = {
         ...relateFrom,
-        through: throughTable._id,
-        fieldName: toTable.primary[0],
+        through: getTable(throughId)._id,
+        fieldName: getTable(toId).primary[0],
       }
       relateTo = {
         ...relateTo,
-        through: throughTable._id,
-        fieldName: fromTable.primary[0],
+        through: getTable(throughId)._id,
+        fieldName: getTable(fromId).primary[0],
         throughFrom: relateFrom.throughTo,
         throughTo: relateFrom.throughFrom,
       }
@@ -277,35 +252,6 @@
     toRelationship = relateTo
   }
 
-  function relationshipExists() {
-    if (
-      originalFromTable &&
-      originalToTable &&
-      originalFromTable === fromTable &&
-      originalToTable === toTable
-    ) {
-      return false
-    }
-    let fromThroughLinks = Object.values(
-      datasource.entities[fromTable.name].schema
-    ).filter(value => value.through)
-    let toThroughLinks = Object.values(
-      datasource.entities[toTable.name].schema
-    ).filter(value => value.through)
-
-    const matchAgainstUserInput = (fromTableId, toTableId) =>
-      (fromTableId === fromId && toTableId === toId) ||
-      (fromTableId === toId && toTableId === fromId)
-
-    return !!fromThroughLinks.find(from =>
-      toThroughLinks.find(
-        to =>
-          from.through === to.through &&
-          matchAgainstUserInput(from.tableId, to.tableId)
-      )
-    )
-  }
-
   function removeExistingRelationship() {
     if (originalFromTable && originalFromColumnName) {
       delete datasource.entities[originalFromTable.name].schema[
@@ -320,7 +266,6 @@
   }
 
   async function saveRelationship() {
-    hasClickedSave = true
     if (!validate()) {
       return false
     }
@@ -328,10 +273,10 @@
     removeExistingRelationship()
 
     // source of relationship
-    datasource.entities[fromTable.name].schema[fromRelationship.name] =
+    datasource.entities[getTable(fromId).name].schema[fromRelationship.name] =
       fromRelationship
     // save other side of relationship in the other schema
-    datasource.entities[toTable.name].schema[toRelationship.name] =
+    datasource.entities[getTable(toId).name].schema[toRelationship.name] =
       toRelationship
 
     await save()
@@ -342,6 +287,36 @@
     await tables.fetch()
     close()
   }
+
+  function changed(fn) {
+    if (typeof fn === "function") {
+      fn()
+    }
+    validate()
+  }
+
+  onMount(() => {
+    if (fromRelationship) {
+      fromPrimary = fromRelationship.foreignKey
+      toId = fromRelationship.tableId
+      throughId = fromRelationship.through
+      throughFromKey = fromRelationship.throughFrom
+      throughToKey = fromRelationship.throughTo
+      toColumn = fromRelationship.name
+    }
+    if (toRelationship) {
+      fromForeign = toRelationship.foreignKey
+      fromId = toRelationship.tableId
+      fromColumn = toRelationship.name
+    }
+    relationshipType =
+      fromRelationship.relationshipType || RelationshipTypes.MANY_TO_ONE
+    if (selectedFromTable) {
+      fromId = selectedFromTable._id
+      fromColumn = selectedFromTable.name
+      fromPrimary = selectedFromTable?.primary[0] || null
+    }
+  })
 </script>
 
 <ModalContent
@@ -355,34 +330,35 @@
     options={relationshipTypes}
     bind:value={relationshipType}
     bind:error={errors.relationshipType}
-    on:change={() => (errors.relationshipType = null)}
+    on:change={() =>
+      changed(() => {
+        hasValidated = false
+      })}
   />
   <div class="headings">
     <Detail>Tables</Detail>
   </div>
-  <Select
-    label="Select from table"
-    options={tableOptions}
-    bind:value={fromId}
-    bind:error={errors.fromTable}
-    on:change={e => {
-      fromColumn = tableOptions.find(opt => opt.value === e.detail)?.label || ""
-      if (errors.fromTable === relationshipAlreadyExists) {
-        errors.toColumn = null
-      }
-      errors.fromTable = null
-      errors.fromColumn = null
-      errors.toTable = null
-      errors.throughTable = null
-    }}
-  />
-  {#if isManyToOne && fromTable}
+  {#if !selectedFromTable}
     <Select
-      label={`Primary Key (${fromTable.name})`}
-      options={Object.keys(fromTable.schema)}
+      label="Select from table"
+      options={tableOptions}
+      bind:value={fromId}
+      bind:error={errors.fromTable}
+      on:change={e =>
+        changed(() => {
+          const table = plusTables.find(tbl => tbl._id === e.detail)
+          fromColumn = table?.name || ""
+          fromPrimary = table?.primary?.[0]
+        })}
+    />
+  {/if}
+  {#if isManyToOne && fromId}
+    <Select
+      label={`Primary Key (${getTable(fromId).name})`}
+      options={Object.keys(getTable(fromId).schema)}
       bind:value={fromPrimary}
       bind:error={errors.fromPrimary}
-      on:change={() => (errors.fromPrimary = null)}
+      on:change={changed}
     />
   {/if}
   <Select
@@ -390,16 +366,12 @@
     options={tableOptions}
     bind:value={toId}
     bind:error={errors.toTable}
-    on:change={e => {
-      toColumn = tableOptions.find(opt => opt.value === e.detail)?.label || ""
-      if (errors.toTable === relationshipAlreadyExists) {
-        errors.fromColumn = null
-      }
-      errors.toTable = null
-      errors.toColumn = null
-      errors.fromTable = null
-      errors.throughTable = null
-    }}
+    on:change={e =>
+      changed(() => {
+        const table = plusTables.find(tbl => tbl._id === e.detail)
+        toColumn = table.name || ""
+        fromForeign = null
+      })}
   />
   {#if isManyToMany}
     <Select
@@ -407,45 +379,45 @@
       options={tableOptions}
       bind:value={throughId}
       bind:error={errors.throughTable}
-      on:change={() => {
-        errors.fromTable = null
-        errors.toTable = null
-        errors.throughTable = null
-      }}
+      on:change={() =>
+        changed(() => {
+          throughToKey = null
+          throughFromKey = null
+        })}
     />
-    {#if fromTable && toTable && throughTable}
+    {#if fromId && toId && throughId}
       <Select
-        label={`Foreign Key (${fromTable?.name})`}
-        options={Object.keys(throughTable?.schema)}
+        label={`Foreign Key (${getTable(fromId)?.name})`}
+        options={Object.keys(getTable(throughId)?.schema)}
         bind:value={throughToKey}
         bind:error={errors.throughToKey}
-        on:change={e => {
-          if (throughFromKey === e.detail) {
-            throughFromKey = null
-          }
-          errors.throughToKey = null
-        }}
+        on:change={e =>
+          changed(() => {
+            if (throughFromKey === e.detail) {
+              throughFromKey = null
+            }
+          })}
       />
       <Select
-        label={`Foreign Key (${toTable?.name})`}
-        options={Object.keys(throughTable?.schema)}
+        label={`Foreign Key (${getTable(toId)?.name})`}
+        options={Object.keys(getTable(throughId)?.schema)}
         bind:value={throughFromKey}
         bind:error={errors.throughFromKey}
-        on:change={e => {
-          if (throughToKey === e.detail) {
-            throughToKey = null
-          }
-          errors.throughFromKey = null
-        }}
+        on:change={e =>
+          changed(() => {
+            if (throughToKey === e.detail) {
+              throughToKey = null
+            }
+          })}
       />
     {/if}
-  {:else if isManyToOne && toTable}
+  {:else if isManyToOne && toId}
     <Select
-      label={`Foreign Key (${toTable?.name})`}
-      options={Object.keys(toTable?.schema)}
+      label={`Foreign Key (${getTable(toId)?.name})`}
+      options={Object.keys(getTable(toId)?.schema)}
       bind:value={fromForeign}
       bind:error={errors.fromForeign}
-      on:change={() => (errors.fromForeign = null)}
+      on:change={changed}
     />
   {/if}
   <div class="headings">
@@ -459,15 +431,13 @@
     label="From table column"
     bind:value={fromColumn}
     bind:error={errors.fromColumn}
-    on:change={e => {
-      errors.fromColumn = e.detail?.length > 0 ? null : colNotSet
-    }}
+    on:change={changed}
   />
   <Input
     label="To table column"
     bind:value={toColumn}
     bind:error={errors.toColumn}
-    on:change={e => (errors.toColumn = e.detail?.length > 0 ? null : colNotSet)}
+    on:change={changed}
   />
   <div slot="footer">
     {#if originalFromColumnName != null}
