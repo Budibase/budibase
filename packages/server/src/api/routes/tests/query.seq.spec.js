@@ -1,3 +1,6 @@
+const tk = require( "timekeeper")
+tk.freeze(Date.now())
+
 // Mock out postgres for this
 jest.mock("pg")
 jest.mock("node-fetch")
@@ -27,10 +30,15 @@ describe("/queries", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  const setupTest = async()=>{
+
     await config.init()
     datasource = await config.createDatasource()
     query = await config.createQuery()
+  }
+
+  beforeAll(async () => {
+    await setupTest()
   })
 
   async function createInvalidIntegration() {
@@ -101,6 +109,10 @@ describe("/queries", () => {
   })
 
   describe("fetch", () => {
+    beforeEach(async() => {
+      await setupTest()
+    })
+
     it("returns all the queries from the server", async () => {
       const res = await request
         .get(`/api/queries`)
@@ -178,6 +190,10 @@ describe("/queries", () => {
   })
 
   describe("destroy", () => {
+    beforeEach(async() => {
+      await setupTest()
+    })
+
     it("deletes a query and returns a success message", async () => {
       await request
         .delete(`/api/queries/${query._id}/${query._rev}`)
@@ -239,6 +255,10 @@ describe("/queries", () => {
   })
 
   describe("execute", () => {
+    beforeEach(async() => {
+      await setupTest()
+    })
+
     it("should be able to execute the query", async () => {
       const res = await request
         .post(`/api/queries/${query._id}`)
