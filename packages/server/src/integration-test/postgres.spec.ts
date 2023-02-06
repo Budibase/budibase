@@ -15,9 +15,11 @@ import {
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { GenericContainer, StartedTestContainer } from "testcontainers"
+import { GenericContainer } from "testcontainers"
 
 const config = setup.getConfig()!
+
+jest.setTimeout(30000)
 
 jest.unmock("pg")
 
@@ -30,16 +32,14 @@ describe("row api - postgres", () => {
   let host: string
   let port: number
 
-  let postgresContainer: StartedTestContainer
-
   beforeAll(async () => {
-    postgresContainer = await new GenericContainer("postgres")
+    const container = await new GenericContainer("postgres")
       .withExposedPorts(5432)
       .withEnv("POSTGRES_PASSWORD", "password")
       .start()
 
-    host = postgresContainer.getContainerIpAddress()
-    port = postgresContainer.getMappedPort(5432)
+    host = container.getContainerIpAddress()
+    port = container.getMappedPort(5432)
 
     await config.init()
     const apiKey = await config.generateApiKey()
@@ -134,7 +134,6 @@ describe("row api - postgres", () => {
   })
 
   afterAll(async () => {
-    await postgresContainer?.stop()
     await config.end()
   })
 
