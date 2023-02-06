@@ -15,7 +15,7 @@ import {
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { GenericContainer } from "testcontainers"
+import { GenericContainer, StartedTestContainer } from "testcontainers"
 
 const config = setup.getConfig()!
 
@@ -30,14 +30,16 @@ describe("row api - postgres", () => {
   let host: string
   let port: number
 
+  let postgresContainer: StartedTestContainer
+
   beforeAll(async () => {
-    const container = await new GenericContainer("postgres")
+    postgresContainer = await new GenericContainer("postgres")
       .withExposedPorts(5432)
       .withEnv("POSTGRES_PASSWORD", "password")
       .start()
 
-    host = container.getContainerIpAddress()
-    port = container.getMappedPort(5432)
+    host = postgresContainer.getContainerIpAddress()
+    port = postgresContainer.getMappedPort(5432)
 
     await config.init()
     const apiKey = await config.generateApiKey()
@@ -132,6 +134,7 @@ describe("row api - postgres", () => {
   })
 
   afterAll(async () => {
+    await postgresContainer?.stop()
     await config.end()
   })
 
