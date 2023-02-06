@@ -18,7 +18,6 @@ import { utils } from "@budibase/backend-core"
 
 const config = setup.getConfig()!
 
-jest.unmock("node-fetch")
 jest.unmock("pg")
 
 describe("row api - postgres", () => {
@@ -127,13 +126,11 @@ describe("row api - postgres", () => {
     await config.end()
   })
 
-  const randomInteger = () => generator.integer({ min: 0, max: 10000 })
-
   function makeRandomRow() {
     return {
       name: generator.name(),
       description: generator.paragraph(),
-      value: randomInteger(),
+      value: generator.age(),
     }
   }
 
@@ -245,8 +242,6 @@ describe("row api - postgres", () => {
         ...newRow,
       }
 
-      // TODO: check why this is being returned from the creation
-      delete expected.linkedField
       expect(persistedRows).toEqual([expect.objectContaining(expected)])
     })
 
@@ -275,15 +270,12 @@ describe("row api - postgres", () => {
       let { row } = _.sample(await populateRows(10))!
 
       const newName = generator.name()
-      const newValue = randomInteger()
+      const newValue = generator.age()
       const updatedRow = {
         ...row,
         name: newName,
         value: newValue,
       }
-
-      // TODO: check why this is being returned from the creation
-      delete (updatedRow as any).linkedField
 
       const res = await updateRow(postgresTable._id, updatedRow)
 
@@ -383,11 +375,8 @@ describe("row api - postgres", () => {
 
       expect(res.status).toBe(200)
 
-      const expected = { ...row }
-      // TODO: check why this is being returned from the creation
-      delete expected.linkedField
       expect(res.body).toEqual({
-        ...expected,
+        ...row,
         _id: expect.any(String),
         _rev: expect.any(String),
       })
@@ -450,12 +439,12 @@ describe("row api - postgres", () => {
         ...Array(2).fill({
           name,
           description: generator.paragraph(),
-          value: randomInteger(),
+          value: generator.age(),
         }),
         ...Array(2).fill({
           name: `${name}${utils.newid()}`,
           description: generator.paragraph(),
-          value: randomInteger(),
+          value: generator.age(),
         }),
       ]
 
