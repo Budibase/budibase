@@ -89,13 +89,22 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
 
 function generateSelectStatement(
   json: QueryJson,
-  knex: Knex
+  knex: Knex,
+  excludeJoinColumns = false
 ): (string | Knex.Raw)[] {
   const { resource, meta } = json
   const schema = meta?.table?.schema
-  return resource!.fields.map(field => {
+
+  return resource!.fields.reduce<(string | Knex.Raw)[]>((p, field) => {
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
+    if (
+      meta?.table?.name &&
+      excludeJoinColumns &&
+      tableName !== meta.table.name
+    ) {
+      return p
+    }
     const columnName = fieldNames[1]
     if (
       columnName &&
@@ -104,13 +113,18 @@ function generateSelectStatement(
     ) {
       const externalType = schema[columnName].externalType
       if (externalType?.includes("money")) {
-        return knex.raw(
-          `"${tableName}"."${columnName}"::money::numeric as "${field}"`
+        p.push(
+          knex.raw(
+            `"${tableName}"."${columnName}"::money::numeric as "${field}"`
+          )
         )
+        return p
       }
     }
-    return `${field} as ${field}`
-  })
+
+    p.push(`${field} as ${field}`)
+    return p
+  }, [])
 }
 
 class InternalBuilder {
@@ -396,7 +410,9 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.insert(parsedBody)
     } else {
-      return query.insert(parsedBody).returning("*")
+      return query
+        .insert(parsedBody)
+        .returning(generateSelectStatement(json, knex, true))
     }
   }
 
