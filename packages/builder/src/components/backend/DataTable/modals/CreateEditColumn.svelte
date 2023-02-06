@@ -169,7 +169,7 @@
 
     if (saveColumn.type === AUTO_TYPE) {
       saveColumn = buildAutoColumn(
-        $tables.draft.name,
+        $tables.selected.name,
         saveColumn.name,
         saveColumn.subtype
       )
