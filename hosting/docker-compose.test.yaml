@@ -45,11 +45,3 @@ services:
       - 6379
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-
-  postgres:
-    image: postgres
-    restart: on-failure
-    ports:
-      - 5432
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

@@ -13,8 +13,9 @@ import {
   Table,
 } from "@budibase/types"
 import _ from "lodash"
-import { generator, structures } from "@budibase/backend-core/tests"
+import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
+import { GenericContainer } from "testcontainers"
 
 const config = setup.getConfig()!
 
@@ -26,10 +27,18 @@ describe("row api - postgres", () => {
     postgresTable: Table,
     auxPostgresTable: Table
 
-  const host = process.env.POSTGRES_HOST!
-  const port = process.env.POSTGRES_PORT!
+  let host: string
+  let port: number
 
   beforeAll(async () => {
+    const container = await new GenericContainer("postgres")
+      .withExposedPorts(5432)
+      .withEnv("POSTGRES_PASSWORD", "password")
+      .start()
+
+    host = container.getContainerIpAddress()
+    port = container.getMappedPort(5432)
+
     await config.init()
     const apiKey = await config.generateApiKey()
 
