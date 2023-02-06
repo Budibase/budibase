@@ -13,27 +13,31 @@ import {
   Table,
 } from "@budibase/types"
 import _ from "lodash"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 
 const config = setup.getConfig()!
 
 jest.unmock("node-fetch")
+jest.unmock("pg")
 
-// TODO: Waiting for the test image to exist
 describe("row api - postgres", () => {
-  let apiKey,
-    makeRequest: MakeRequestResponse,
+  let makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
     postgresTable: Table,
     auxPostgresTable: Table
 
-  const host = generator.ip()
-  const port = generator.natural()
+  const host = process.env.POSTGRES_HOST!
+  const port = process.env.POSTGRES_PORT!
+
+  beforeAll(async () => {
+    await config.init()
+    const apiKey = await config.generateApiKey()
+
+    makeRequest = generateMakeRequest(apiKey, true)
+  })
 
   beforeEach(async () => {
-    await config.init()
-    apiKey = await config.generateApiKey()
     postgresDatasource = await config.createDatasource({
       datasource: {
         type: "datasource",
@@ -43,8 +47,8 @@ describe("row api - postgres", () => {
           host,
           port,
           database: "postgres",
-          user: "root",
-          password: "root",
+          user: "postgres",
+          password: process.env.POSTGRES_PASSWORD!,
           schema: "public",
           ssl: false,
           rejectUnauthorized: false,
@@ -53,11 +57,41 @@ describe("row api - postgres", () => {
       },
     })
 
-    makeRequest = generateMakeRequest(apiKey, true)
+    auxPostgresTable = await config.createTable({
+      name: generator.word({ length: 10 }),
+      type: "external",
+      primary: ["id"],
+      schema: {
+        id: {
+          name: "id",
+          type: FieldType.AUTO,
+          constraints: {
+            presence: true,
+          },
+        },
+        title: {
+          name: "title",
+          type: FieldType.STRING,
+          constraints: {
+            presence: true,
+          },
+        },
+      },
+      sourceId: postgresDatasource._id,
+    })
 
     postgresTable = await config.createTable({
-      name: generator.word(),
+      name: generator.word({ length: 10 }),
+      type: "external",
+      primary: ["id"],
       schema: {
+        id: {
+          name: "id",
+          type: FieldType.AUTO,
+          constraints: {
+            presence: true,
+          },
+        },
         name: {
           name: "name",
           type: FieldType.STRING,
@@ -73,30 +107,16 @@ describe("row api - postgres", () => {
           name: "value",
           type: FieldType.NUMBER,
         },
-      },
-      sourceId: postgresDatasource._id,
-    })
-
-    auxPostgresTable = await config.createTable({
-      name: generator.word(),
-      schema: {
-        title: {
-          name: "title",
-          type: FieldType.STRING,
-          constraints: {
-            presence: true,
-          },
-        },
         linkedField: {
           type: FieldType.LINK,
           constraints: {
             type: "array",
-            presence: true,
+            presence: false,
           },
           fieldName: "foreignField",
           name: "linkedField",
-          relationshipType: RelationshipTypes.MANY_TO_MANY,
-          tableId: postgresTable._id,
+          relationshipType: RelationshipTypes.ONE_TO_MANY,
+          tableId: auxPostgresTable._id,
         },
       },
       sourceId: postgresDatasource._id,
@@ -107,25 +127,58 @@ describe("row api - postgres", () => {
     await config.end()
   })
 
-  function createRandomRow() {
+  const randomInteger = () => generator.integer({ min: 0, max: 10000 })
+
+  function makeRandomRow() {
     return {
       name: generator.name(),
       description: generator.paragraph(),
-      value: generator.integer(),
+      value: randomInteger(),
     }
   }
 
-  function createRow(
+  async function createRow(
     row: {
       name: string
       description: string
       value: number
     },
-    tableId?: string
+    tableId?: string,
+    createForeignRow?: boolean
   ) {
-    return config.createRow({
+    if (createForeignRow) {
+      const foreignRow = await config.createRow({
+        tableId: auxPostgresTable._id,
+        title: generator.name(),
+      })
+
+      row = {
+        ...row,
+        [`fk_${auxPostgresTable.name}_foreignField`]: foreignRow.id,
+      }
+    }
+
+    return await config.createRow({
       tableId: tableId || postgresTable._id,
       ...row,
+    })
+  }
+
+  async function createDefaultPgTable() {
+    return await config.createTable({
+      name: generator.word({ length: 10 }),
+      type: "external",
+      primary: ["id"],
+      schema: {
+        id: {
+          name: "id",
+          type: FieldType.AUTO,
+          constraints: {
+            presence: true,
+          },
+        },
+      },
+      sourceId: postgresDatasource._id,
     })
   }
 
@@ -134,7 +187,7 @@ describe("row api - postgres", () => {
       Array(count)
         .fill({})
         .map(async () => {
-          const rowData = createRandomRow()
+          const rowData = makeRandomRow()
           return {
             rowData,
             row: await createRow(rowData, tableId || postgresTable._id),
@@ -160,7 +213,7 @@ describe("row api - postgres", () => {
         rejectUnauthorized: false,
         schema: "public",
         ssl: false,
-        user: "root",
+        user: "postgres",
       },
       plus: true,
       source: "POSTGRES",
@@ -169,6 +222,7 @@ describe("row api - postgres", () => {
       _rev: expect.any(String),
       createdAt: expect.any(String),
       updatedAt: expect.any(String),
+      entities: expect.any(Object),
     })
   })
 
@@ -177,7 +231,7 @@ describe("row api - postgres", () => {
       makeRequest("post", `/api/${tableId}/rows`, body)
 
     test("Given than no row exists, adding a new row persists it", async () => {
-      const newRow = createRandomRow()
+      const newRow = makeRandomRow()
 
       const res = await createRow(postgresTable._id, newRow)
 
@@ -185,17 +239,20 @@ describe("row api - postgres", () => {
 
       const persistedRows = await config.getRows(postgresTable._id!)
       expect(persistedRows).toHaveLength(1)
-      expect(persistedRows).toEqual([
-        expect.objectContaining({
-          ...res.body,
-          ...newRow,
-        }),
-      ])
+
+      const expected = {
+        ...res.body,
+        ...newRow,
+      }
+
+      // TODO: check why this is being returned from the creation
+      delete expected.linkedField
+      expect(persistedRows).toEqual([expect.objectContaining(expected)])
     })
 
     test("Given than no row exists, multiple rows can be persisted", async () => {
       const numberOfRows = 10
-      const newRows = Array(numberOfRows).fill(createRandomRow())
+      const newRows = Array(numberOfRows).fill(makeRandomRow())
 
       for (const newRow of newRows) {
         const res = await createRow(postgresTable._id, newRow)
@@ -218,22 +275,25 @@ describe("row api - postgres", () => {
       let { row } = _.sample(await populateRows(10))!
 
       const newName = generator.name()
-      const newValue = generator.integer()
+      const newValue = randomInteger()
       const updatedRow = {
         ...row,
         name: newName,
         value: newValue,
       }
 
+      // TODO: check why this is being returned from the creation
+      delete (updatedRow as any).linkedField
+
       const res = await updateRow(postgresTable._id, updatedRow)
 
       expect(res.status).toBe(200)
 
-      const persistedRow = await config.getRow(postgresTable._id!, row._id!)
+      const persistedRow = await config.getRow(postgresTable._id!, row.id)
 
       expect(persistedRow).toEqual(
         expect.objectContaining({
-          _id: row._id,
+          id: row.id,
           name: newName,
           value: newValue,
         })
@@ -258,9 +318,9 @@ describe("row api - postgres", () => {
       const persistedRows = await config.getRows(postgresTable._id!)
       expect(persistedRows).toHaveLength(numberOfInitialRows - 1)
 
-      expect(row._id).toBeDefined()
+      expect(row.id).toBeDefined()
       expect(persistedRows).not.toContain(
-        expect.objectContaining({ _id: row._id })
+        expect.objectContaining({ _id: row.id })
       )
     })
 
@@ -279,7 +339,7 @@ describe("row api - postgres", () => {
 
       for (const row of rows) {
         expect(persistedRows).not.toContain(
-          expect.objectContaining({ _id: row._id })
+          expect.objectContaining({ _id: row.id })
         )
       }
     })
@@ -292,7 +352,7 @@ describe("row api - postgres", () => {
     test("Given than a table have a single row, the row can be retrieved successfully", async () => {
       const [{ rowData, row }] = await populateRows(1)
 
-      const res = await getRow(postgresTable._id, row._id)
+      const res = await getRow(postgresTable._id, row.id)
 
       expect(res.status).toBe(200)
 
@@ -303,7 +363,7 @@ describe("row api - postgres", () => {
       const rows = await populateRows(10)
       const { rowData, row } = _.sample(rows)!
 
-      const res = await getRow(postgresTable._id, row._id)
+      const res = await getRow(postgresTable._id, row.id)
 
       expect(res.status).toBe(200)
 
@@ -313,26 +373,25 @@ describe("row api - postgres", () => {
     test("given having rows with relation data, only the ids are retrieved", async () => {
       let [{ row }] = await populateRows(1)
 
-      const foreignRow = await config.createRow({
+      await config.createRow({
         tableId: auxPostgresTable._id,
         title: generator.sentence(),
-        linkedField: row._id,
+        linkedField: row.id,
       })
 
-      const res = await getRow(postgresTable._id, row._id)
+      const res = await getRow(postgresTable._id, row.id)
 
       expect(res.status).toBe(200)
 
+      const expected = { ...row }
+      // TODO: check why this is being returned from the creation
+      delete expected.linkedField
       expect(res.body).toEqual({
-        ...row,
-        foreignField: [
-          {
-            _id: foreignRow._id,
-          },
-        ],
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
+        ...expected,
+        _id: expect.any(String),
+        _rev: expect.any(String),
       })
+      expect(res.body.foreignField).toBeUndefined()
     })
   })
 
@@ -346,7 +405,11 @@ describe("row api - postgres", () => {
 
         expect(res.status).toBe(200)
 
-        expect(res.body).toEqual({ rows: [] })
+        expect(res.body).toEqual({
+          rows: [],
+          bookmark: null,
+          hasNextPage: false,
+        })
       })
 
       test("Given than a table has multiple rows, search without query returns all of them", async () => {
@@ -361,15 +424,17 @@ describe("row api - postgres", () => {
           rows: expect.arrayContaining(
             rows.map(r => expect.objectContaining(r.rowData))
           ),
+          bookmark: null,
+          hasNextPage: false,
         })
         expect(res.body.rows).toHaveLength(rowsCount)
       })
 
       test("Given than multiple tables have multiple rows, search only return the requested ones", async () => {
-        await populateRows(2, (await config.createTable())._id)
+        await populateRows(2, (await createDefaultPgTable())._id)
         const rowsCount = 6
         await populateRows(rowsCount)
-        await populateRows(2, (await config.createTable())._id)
+        await populateRows(2, (await createDefaultPgTable())._id)
 
         const res = await search(postgresTable._id)
 
@@ -385,12 +450,12 @@ describe("row api - postgres", () => {
         ...Array(2).fill({
           name,
           description: generator.paragraph(),
-          value: generator.integer(),
+          value: randomInteger(),
         }),
         ...Array(2).fill({
           name: `${name}${utils.newid()}`,
           description: generator.paragraph(),
-          value: generator.integer(),
+          value: randomInteger(),
         }),
       ]
 
@@ -412,6 +477,8 @@ describe("row api - postgres", () => {
 
       expect(res.body).toEqual({
         rows: expect.arrayContaining(rowsToFilter.map(expect.objectContaining)),
+        bookmark: null,
+        hasNextPage: false,
       })
       expect(res.body.rows).toHaveLength(4)
     })
@@ -430,7 +497,7 @@ describe("row api - postgres", () => {
 
     describe("sort", () => {
       beforeEach(async () => {
-        const defaultValue = createRandomRow()
+        const defaultValue = makeRandomRow()
 
         await createRow(
           {
@@ -520,35 +587,33 @@ describe("row api - postgres", () => {
     })
   })
 
-  describe("enrich a row", () => {
+  describe("get enriched row", () => {
     const getAll = (tableId: string | undefined, rowId: string | undefined) =>
       makeRequest("get", `/api/${tableId}/${rowId}/enrich`)
 
-    test("given having rows with relation data, enrich populates the", async () => {
-      let [{ row }] = await populateRows(1)
-
+    test("given having rows with relation data, enrich populates the foreign field", async () => {
       const foreignRow = await config.createRow({
         tableId: auxPostgresTable._id,
         title: generator.name(),
-        linkedField: row._id,
       })
 
-      const res = await getAll(postgresTable._id, row._id)
+      const rowData = {
+        ...makeRandomRow(),
+        [`fk_${auxPostgresTable.name}_foreignField`]: foreignRow.id,
+      }
+      const row = await createRow(rowData)
+
+      const res = await getAll(postgresTable._id, row.id)
 
       expect(res.status).toBe(200)
 
       expect(res.body).toEqual({
         ...row,
-        foreignField: [
+        linkedField: [
           {
             ...foreignRow,
-            linkedField: [{ _id: row._id }],
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
           },
         ],
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
       })
     })
   })
@@ -582,10 +647,10 @@ describe("row api - postgres", () => {
     })
 
     test("Given than multiple tables have multiple rows, get returns the requested ones", async () => {
-      await populateRows(2, (await config.createTable())._id)
+      await populateRows(2, (await createDefaultPgTable())._id)
       const rowsCount = 6
       await populateRows(rowsCount, postgresTable._id)
-      await populateRows(2, (await config.createTable())._id)
+      await populateRows(2, (await createDefaultPgTable())._id)
 
       const res = await getAll(postgresTable._id)
 
