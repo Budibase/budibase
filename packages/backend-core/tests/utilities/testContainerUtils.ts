@@ -1,4 +1,7 @@
-function getTestContainerSettings(serverName: string, key: string) {
+function getTestContainerSettings(
+  serverName: string,
+  key: string
+): string | null {
   const entry = Object.entries(global).find(
     ([k]) =>
       k.includes(`_${serverName.toUpperCase()}`) &&
@@ -19,7 +22,7 @@ function getContainerInfo(containerName: string, port: number) {
   return {
     port: assignedPort,
     host,
-    url: `http://${host}:${assignedPort}`,
+    url: host && assignedPort && `http://${host}:${assignedPort}`,
   }
 }
 
@@ -31,21 +34,15 @@ function getMinioConfig() {
   return getContainerInfo("minio-service", 9000)
 }
 
-function getPostgresConfig() {
-  return getContainerInfo("postgres", 5432)
-}
-
 export function setupEnv(...envs: any[]) {
   const configs = [
     { key: "COUCH_DB_PORT", value: getCouchConfig().port },
     { key: "COUCH_DB_URL", value: getCouchConfig().url },
     { key: "MINIO_PORT", value: getMinioConfig().port },
     { key: "MINIO_URL", value: getMinioConfig().url },
-    { key: "POSTGRES_HOST", value: getPostgresConfig().host },
-    { key: "POSTGRES_PORT", value: getPostgresConfig().port },
   ]
 
-  for (const config of configs.filter(x => x.value !== null)) {
+  for (const config of configs.filter(x => !!x.value)) {
     for (const env of envs) {
       env._set(config.key, config.value)
     }
