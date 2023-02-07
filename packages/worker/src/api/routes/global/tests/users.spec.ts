@@ -1,14 +1,9 @@
 import { InviteUsersResponse, User } from "@budibase/types"
 
 jest.mock("nodemailer")
-import {
-  TestConfiguration,
-  mocks,
-  structures,
-  TENANT_1,
-} from "../../../../tests"
+import { TestConfiguration, mocks, structures } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
-import { events, tenancy } from "@budibase/backend-core"
+import { context, events, tenancy } from "@budibase/backend-core"
 
 describe("/api/global/users", () => {
   const config = new TestConfiguration()
@@ -27,16 +22,18 @@ describe("/api/global/users", () => {
 
   describe("invite", () => {
     it("should be able to generate an invitation", async () => {
-      const email = structures.users.newEmail()
-      const { code, res } = await config.api.users.sendUserInvite(
-        sendMailMock,
-        email
-      )
+      await context.doInTenant(config.tenant1User!.tenantId, async () => {
+        const email = structures.users.newEmail()
+        const { code, res } = await config.api.users.sendUserInvite(
+          sendMailMock,
+          email
+        )
 
-      expect(res.body).toEqual({ message: "Invitation has been sent." })
-      expect(sendMailMock).toHaveBeenCalled()
-      expect(code).toBeDefined()
-      expect(events.user.invited).toBeCalledTimes(1)
+        expect(res.body).toEqual({ message: "Invitation has been sent." })
+        expect(sendMailMock).toHaveBeenCalled()
+        expect(code).toBeDefined()
+        expect(events.user.invited).toBeCalledTimes(1)
+      })
     })
 
     it("should not be able to generate an invitation for existing user", async () => {
@@ -53,20 +50,22 @@ describe("/api/global/users", () => {
     })
 
     it("should be able to create new user from invite", async () => {
-      const email = structures.users.newEmail()
-      const { code } = await config.api.users.sendUserInvite(
-        sendMailMock,
-        email
-      )
+      await context.doInTenant(config.tenant1User!.tenantId, async () => {
+        const email = structures.users.newEmail()
+        const { code } = await config.api.users.sendUserInvite(
+          sendMailMock,
+          email
+        )
 
-      const res = await config.api.users.acceptInvite(code)
+        const res = await config.api.users.acceptInvite(code)
 
-      expect(res.body._id).toBeDefined()
-      const user = await config.getUser(email)
-      expect(user).toBeDefined()
-      expect(user._id).toEqual(res.body._id)
-      expect(events.user.inviteAccepted).toBeCalledTimes(1)
-      expect(events.user.inviteAccepted).toBeCalledWith(user)
+        expect(res.body._id).toBeDefined()
+        const user = await config.getUser(email)
+        expect(user).toBeDefined()
+        expect(user._id).toEqual(res.body._id)
+        expect(events.user.inviteAccepted).toBeCalledTimes(1)
+        expect(events.user.inviteAccepted).toBeCalledWith(user)
+      })
     })
   })
 
@@ -118,7 +117,7 @@ describe("/api/global/users", () => {
       const user = await config.createUser()
       jest.clearAllMocks()
 
-      await tenancy.doInTenant(TENANT_1, async () => {
+      await tenancy.doInTenant(config.getTenantId(), async () => {
         const response = await config.api.users.bulkCreateUsers([user])
 
         expect(response.created?.successful.length).toBe(0)
@@ -231,7 +230,7 @@ describe("/api/global/users", () => {
       const user = await config.createUser()
       jest.clearAllMocks()
 
-      await tenancy.doInTenant(TENANT_1, async () => {
+      await tenancy.doInTenant(config.getTenantId(), async () => {
         delete user._id
         const response = await config.api.users.saveUser(user, 400)
 
@@ -444,7 +443,7 @@ describe("/api/global/users", () => {
     })
 
     it("should not be able to update email address", async () => {
-      const email = "email@test.com"
+      const email = structures.email()
       const user = await config.createUser(structures.users.user({ email }))
       user.email = "new@test.com"
 

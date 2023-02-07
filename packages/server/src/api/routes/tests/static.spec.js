@@ -8,7 +8,8 @@ describe("/static", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
+    config.modeSelf()
     app = await config.init()
   })
 

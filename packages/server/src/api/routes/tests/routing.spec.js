@@ -16,7 +16,7 @@ describe("/routing", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
     screen = basicScreen()
     screen.routing.route = route

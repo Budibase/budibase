@@ -3,7 +3,7 @@ const setup = require("./utilities")
 describe("test the execute script action", () => {
     let config = setup.getConfig()
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         await config.init()
     })
     afterAll(setup.afterAll)
