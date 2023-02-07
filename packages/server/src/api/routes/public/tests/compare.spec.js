@@ -13,7 +13,7 @@ beforeAll(async () => {
   app = await config.init()
   table = await config.updateTable()
   apiKey = await config.generateApiKey()
-  makeRequest = generateMakeRequest(apiKey, setup)
+  makeRequest = generateMakeRequest(apiKey)
 })
 
 afterAll(setup.afterAll)
