@@ -169,16 +169,15 @@ class TestConfiguration {
     return this.createApp(appName)
   }
 
-  async end() {
+  end() {
     if (!this) {
       return
     }
-    if (this.allApps) {
-      cleanup(this.allApps.map(app => app.appId))
-    }
-
     if (this.server) {
       this.server.close()
+    }
+    if (this.allApps) {
+      cleanup(this.allApps.map(app => app.appId))
     }
   }
 
@@ -346,7 +345,7 @@ class TestConfiguration {
     })
   }
 
-  defaultHeaders(extras = {}, isInternal: boolean = false) {
+  defaultHeaders(extras = {}) {
     const tenantId = this.getTenantId()
     const authObj: AuthToken = {
       userId: this.defaultUserValues.globalUserId,
@@ -367,13 +366,6 @@ class TestConfiguration {
       ],
       [constants.Header.CSRF_TOKEN]: this.defaultUserValues.csrfToken,
       ...extras,
-    }
-
-    if (!isInternal) {
-      headers.Cookie = [
-        `${constants.Cookie.Auth}=${authToken}`,
-        `${constants.Cookie.CurrentApp}=${appToken}`,
-      ]
     }
 
     if (this.appId) {
