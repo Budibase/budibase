@@ -34,9 +34,7 @@ export function generateMakeRequest(
       ? endpoint
       : checkSlashesInUrl(`/api/public/v1/${endpoint}`)
 
-    const req = request[method](url).set(
-      config.defaultHeaders(extraHeaders, isInternal)
-    )
+    const req = request[method](url).set(config.defaultHeaders(extraHeaders))
     if (body) {
       req.send(body)
     }
