@@ -1,17 +1,8 @@
-jest.mock("@budibase/backend-core", () => {
-  const core = jest.requireActual("@budibase/backend-core")
-  return {
-    ...core,
-    objectStore: {
-      budibaseTempDir: core.objectStore.budibaseTempDir,
-    },
-  }
-})
-
 import * as setup from "./utilities"
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+
 describe("/backups", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -44,9 +35,9 @@ describe("/backups", () => {
 
   describe("calculateBackupStats", () => {
     it("should be able to calculate the backup statistics", async () => {
-      config.createAutomation()
-      config.createScreen()
-      let res = await sdk.backups.calculateBackupStats(config.getAppId())
+      await config.createAutomation()
+      await config.createScreen()
+      let res = await sdk.backups.calculateBackupStats(config.getAppId()!)
       expect(res.automations).toEqual(1)
       expect(res.datasources).toEqual(1)
       expect(res.screens).toEqual(1)

@@ -74,8 +74,19 @@
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
+  $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
 
   const onChange = Utils.sequential(async (e, key) => {
+    if (e.detail?.tableId) {
+      const tableSchema = getSchemaForTable(e.detail.tableId, {
+        searchableSchema: true,
+      }).schema
+      if (isTestModal) {
+        testData.schema = tableSchema
+      } else {
+        block.inputs.schema = tableSchema
+      }
+    }
     try {
       if (isTestModal) {
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
@@ -321,9 +332,17 @@
         <RowSelector
           {block}
           value={inputData[key]}
-          on:change={e => onChange(e, key)}
+          meta={inputData["meta"] || {}}
+          on:change={e => {
+            if (e.detail?.key) {
+              onChange(e, e.detail.key)
+            } else {
+              onChange(e, key)
+            }
+          }}
           {bindings}
           {isTestModal}
+          {isUpdateRow}
         />
       {:else if value.customType === "webhookUrl"}
         <WebhookDisplay

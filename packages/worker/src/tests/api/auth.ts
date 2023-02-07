@@ -1,3 +1,4 @@
+import structures from "../structures"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 
@@ -24,14 +25,17 @@ export class AuthAPI extends TestAPI {
       .expect(200)
   }
 
-  requestPasswordReset = async (sendMailMock: any) => {
+  requestPasswordReset = async (sendMailMock: any, userEmail: string) => {
     await this.config.saveSmtpConfig()
     await this.config.saveSettingsConfig()
-    await this.config.createUser()
+    await this.config.createUser({
+      ...structures.users.user(),
+      email: userEmail,
+    })
     const res = await this.request
       .post(`/api/global/auth/${this.config.getTenantId()}/reset`)
       .send({
-        email: "test@test.com",
+        email: userEmail,
       })
       .expect("Content-Type", /json/)
       .expect(200)

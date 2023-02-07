@@ -1,7 +1,6 @@
 import controller from "../../controllers/public/applications"
 import Endpoint from "./utils/Endpoint"
 const { nameValidator, applicationValidator } = require("../utils/validators")
-import { db } from "@budibase/backend-core"
 
 const read = [],
   write = []

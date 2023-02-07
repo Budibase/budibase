@@ -112,7 +112,7 @@ export default class AppApi {
 
   async delete(appId: string): Promise<Response> {
     const response = await this.api.del(`/applications/${appId}`)
-    expect(response).toHaveStatusCode(204)
+    expect(response).toHaveStatusCode(200)
     return response
   }
 

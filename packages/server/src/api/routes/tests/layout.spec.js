@@ -10,7 +10,7 @@ describe("/layouts", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
     layout = await config.createLayout()
     jest.clearAllMocks()
