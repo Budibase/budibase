@@ -90,10 +90,15 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
 function generateSelectStatement(
   json: QueryJson,
   knex: Knex
-): (string | Knex.Raw)[] {
+): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
+
+  if (!resource) {
+    return "*"
+  }
+
   const schema = meta?.table?.schema
-  return resource!.fields.map(field => {
+  return resource.fields.map(field => {
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     const columnName = fieldNames[1]
