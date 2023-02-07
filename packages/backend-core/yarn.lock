@@ -487,6 +487,19 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
+"@budibase/pouchdb-replication-stream@1.2.10":
+  version "1.2.10"
+  resolved "https://registry.yarnpkg.com/@budibase/pouchdb-replication-stream/-/pouchdb-replication-stream-1.2.10.tgz#4100df2effd7c823edadddcdbdc380f6827eebf5"
+  integrity sha512-1zeorOwbelZ7HF5vFB+pKE8Mnh31om8k1M6T3AZXVULYTHLsyJrMTozSv5CJ1P8ZfOIJab09HDzCXDh2icFekg==
+  dependencies:
+    argsarray "0.0.1"
+    inherits "^2.0.3"
+    lodash.pick "^4.0.0"
+    ndjson "^1.4.3"
+    pouch-stream "^0.4.0"
+    pouchdb-promise "^6.0.4"
+    through2 "^2.0.0"
+
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz#00629c35a688e05a88b1cda684fb9d5e73f000a1"
@@ -5065,19 +5078,6 @@ pouchdb-promise@^6.0.4:
   integrity sha512-ruJaSFXwzsxRHQfwNHjQfsj58LBOY1RzGzde4PM5CWINZwFjCQAhZwfMrch2o/0oZT6d+Xtt0HTWhq35p3b0qw==
   dependencies:
     lie "3.1.1"
-
-pouchdb-replication-stream@1.2.9:
-  version "1.2.9"
-  resolved "https://registry.yarnpkg.com/pouchdb-replication-stream/-/pouchdb-replication-stream-1.2.9.tgz#aa4fa5d8f52df4825392f18e07c7e11acffc650a"
-  integrity sha512-hM8XRBfamTTUwRhKwLS/jSNouBhn9R/4ugdHNRD1EvJzwV8iImh6sDYbCU9PGuznjyOjXz6vpFRzKeI2KYfwnQ==
-  dependencies:
-    argsarray "0.0.1"
-    inherits "^2.0.3"
-    lodash.pick "^4.0.0"
-    ndjson "^1.4.3"
-    pouch-stream "^0.4.0"
-    pouchdb-promise "^6.0.4"
-    through2 "^2.0.0"
 
 pouchdb-selector-core@7.2.2:
   version "7.2.2"
