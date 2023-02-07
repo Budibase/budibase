@@ -1,7 +1,8 @@
 jest.mock("nodemailer")
 import { TestConfiguration, mocks } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
-import { events } from "@budibase/backend-core"
+import { events, tenancy } from "@budibase/backend-core"
+import { structures } from "@budibase/backend-core/tests"
 
 const expectSetAuthCookie = (res: any) => {
   expect(
@@ -40,36 +41,43 @@ describe("/api/global/auth", () => {
 
     describe("POST /api/global/auth/:tenantId/reset", () => {
       it("should generate password reset email", async () => {
-        const { res, code } = await config.api.auth.requestPasswordReset(
-          sendMailMock
-        )
-        const user = await config.getUser("test@test.com")
+        await tenancy.doInTenant(config.tenant1User!.tenantId, async () => {
+          const userEmail = structures.email()
+          const { res, code } = await config.api.auth.requestPasswordReset(
+            sendMailMock,
+            userEmail
+          )
+          const user = await config.getUser(userEmail)
 
-        expect(res.body).toEqual({
-          message: "Please check your email for a reset link.",
+          expect(res.body).toEqual({
+            message: "Please check your email for a reset link.",
+          })
+          expect(sendMailMock).toHaveBeenCalled()
+
+          expect(code).toBeDefined()
+          expect(events.user.passwordResetRequested).toBeCalledTimes(1)
+          expect(events.user.passwordResetRequested).toBeCalledWith(user)
         })
-        expect(sendMailMock).toHaveBeenCalled()
-
-        expect(code).toBeDefined()
-        expect(events.user.passwordResetRequested).toBeCalledTimes(1)
-        expect(events.user.passwordResetRequested).toBeCalledWith(user)
       })
     })
 
     describe("POST /api/global/auth/:tenantId/reset/update", () => {
       it("should reset password", async () => {
-        const { code } = await config.api.auth.requestPasswordReset(
-          sendMailMock
-        )
-        const user = await config.getUser("test@test.com")
-        delete user.password
+        await tenancy.doInTenant(config.tenant1User!.tenantId, async () => {
+          const userEmail = structures.email()
+          const { code } = await config.api.auth.requestPasswordReset(
+            sendMailMock,
+            userEmail
+          )
+          const user = await config.getUser(userEmail)
+          delete user.password
 
-        const res = await config.api.auth.updatePassword(code)
+          const res = await config.api.auth.updatePassword(code)
 
-        expect(res.body).toEqual({ message: "password reset successfully." })
-        expect(events.user.passwordReset).toBeCalledTimes(1)
-        expect(events.user.passwordReset).toBeCalledWith(user)
-
+          expect(res.body).toEqual({ message: "password reset successfully." })
+          expect(events.user.passwordReset).toBeCalledTimes(1)
+          expect(events.user.passwordReset).toBeCalledWith(user)
+        })
         // TODO: Login using new password
       })
     })

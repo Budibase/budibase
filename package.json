@@ -3,6 +3,7 @@
   "private": true,
   "devDependencies": {
     "@rollup/plugin-json": "^4.0.2",
+    "@types/supertest": "^2.0.12",
     "@typescript-eslint/parser": "5.45.0",
     "babel-eslint": "^10.0.3",
     "eslint": "^7.28.0",
@@ -62,6 +63,9 @@
     "build:docker:single:multiarch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/single/Dockerfile -t budibase:latest .",
     "build:docker:single:image": "docker build -f hosting/single/Dockerfile -t budibase:latest .",
     "build:docker:single": "npm run build:docker:pre && npm run build:docker:single:image",
+    "build:docker:dependencies": "docker build -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest ./hosting",
+    "publish:docker:couch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/couchdb/Dockerfile -t budibase/couchdb:latest -t budibase/couchdb:v3.2.1 --push ./hosting/couchdb",
+    "publish:docker:dependencies": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest -t budibase/dependencies:v3.2.1 --push ./hosting",
     "build:docs": "lerna run build:docs",
     "release:helm": "node scripts/releaseHelmChart",
     "env:multi:enable": "lerna run env:multi:enable",

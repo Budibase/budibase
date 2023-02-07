@@ -5,6 +5,10 @@ import { checkCacheForDynamicVariable } from "../../../threads/utils"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
+import tk from "timekeeper"
+import { mocks } from "@budibase/backend-core/tests"
+tk.freeze(mocks.date.MOCK_DATE)
+
 let { basicDatasource } = setup.structures
 const pg = require("pg")
 
@@ -15,11 +19,13 @@ describe("/datasources", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  async function setupTest() {
     await config.init()
     datasource = await config.createDatasource()
     jest.clearAllMocks()
-  })
+  }
+
+  beforeAll(setupTest)
 
   describe("create", () => {
     it("should create a new datasource", async () => {
@@ -56,7 +62,14 @@ describe("/datasources", () => {
         datasource: any,
         fields: { path: string; queryString: string }
       ) {
-        return config.previewQuery(request, config, datasource, fields)
+        return config.previewQuery(
+          request,
+          config,
+          datasource,
+          fields,
+          undefined,
+          ""
+        )
       }
 
       it("should invalidate changed or removed variables", async () => {
@@ -91,6 +104,8 @@ describe("/datasources", () => {
   })
 
   describe("fetch", () => {
+    beforeAll(setupTest)
+
     it("returns all the datasources from the server", async () => {
       const res = await request
         .get(`/api/datasources`)
@@ -159,6 +174,8 @@ describe("/datasources", () => {
   })
 
   describe("destroy", () => {
+    beforeAll(setupTest)
+
     it("deletes queries for the datasource after deletion and returns a success message", async () => {
       await config.createQuery()
 
