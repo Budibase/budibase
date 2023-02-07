@@ -391,7 +391,6 @@
                 bind:value={providers.oidc.config.configs[0][field.name]}
                 readonly={field.readonly}
                 placeholder={field.placeholder}
-                dataCy={field.name}
               />
             </div>
             {#if field.copyButton}
@@ -432,7 +431,6 @@
       <div class="form-row">
         <Label size="L">Activated</Label>
         <Toggle
-          dataCy={"oidc-active"}
           text=""
           bind:value={providers.oidc.config.configs[0].activated}
         />
@@ -448,7 +446,6 @@
           on:click={() => {
             providers.oidc.config.configs[0]["scopes"] = [...defaultScopes]
           }}
-          dataCy={"restore-oidc-default-scopes"}
         >
           Restore Defaults
         </Button>
@@ -463,7 +460,6 @@
       <div class="form-row">
         <Label size="L">Auth Scopes</Label>
         <Input
-          dataCy={"new-scope-input"}
           error={scopesFields[0].error}
           placeholder={"New Scope"}
           bind:value={scopesFields[0].inputText}
@@ -532,7 +528,6 @@
         disabled={oidcSaveButtonDisabled}
         cta
         on:click={() => save([providers.oidc])}
-        dataCy="oidc-save"
       >
         Save
       </Button>

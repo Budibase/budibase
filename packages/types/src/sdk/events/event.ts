@@ -6,6 +6,9 @@ export enum Event {
   USER_UPDATED = "user:updated",
   USER_DELETED = "user:deleted",
 
+  // USER / ONBOARDING
+  USER_ONBOARDING_COMPLETE = "user:onboarding:complete",
+
   // USER / PERMISSIONS
   USER_PERMISSION_ADMIN_ASSIGNED = "user:admin:assigned",
   USER_PERMISSION_ADMIN_REMOVED = "user:admin:removed",

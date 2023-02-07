@@ -91,7 +91,7 @@ class QueryRunner {
     let query
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
-      query = await interpolateSQL(fieldsClone, enrichedParameters, integration)
+      query = await interpolateSQL(fieldsClone, enrichedContext, integration)
     } else {
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }

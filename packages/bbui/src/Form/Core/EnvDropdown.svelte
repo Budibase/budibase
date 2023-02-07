@@ -11,7 +11,6 @@
   export let id = null
   export let readonly = false
   export let updateOnChange = true
-  export let dataCy
   export let align
   export let autofocus = false
   export let variables
@@ -26,7 +25,7 @@
   let open = false
 
   //eslint-disable-next-line
-  const STRIP_NAME_REGEX = /(?<=\.)(.*?)(?=\ })/g
+  const STRIP_NAME_REGEX = /(\w+?)(?=\ })/g
 
   // Strips the name out of the value which is {{ env.Variable }} resulting in an array like ["Variable"]
   $: hbsValue = String(value)?.match(STRIP_NAME_REGEX) || []
@@ -123,7 +122,6 @@
       disabled={hbsValue.length || disabled}
       {readonly}
       {id}
-      data-cy={dataCy}
       value={hbsValue.length ? `{{ ${hbsValue[0]} }}` : value}
       placeholder={placeholder || ""}
       on:click
@@ -245,10 +243,6 @@
 
   .spectrum-Popover.spectrum-Popover--bottom.spectrum-Picker-popover.is-open {
     width: 100%;
-  }
-
-  .no-variables-height {
-    height: 100px;
   }
 
   .no-variables-text {

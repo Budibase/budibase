@@ -11,6 +11,8 @@
   import { store } from "builderStore"
   import { ProgressCircle } from "@budibase/bbui"
   import CopyInput from "components/common/inputs/CopyInput.svelte"
+  import TourWrap from "../portal/onboarding/TourWrap.svelte"
+  import { TOUR_STEP_KEYS } from "../portal/onboarding/tours.js"
 
   let publishModal
   let asyncModal
@@ -54,13 +56,16 @@
   }
 </script>
 
-<Button cta on:click={publishModal.show}>Publish</Button>
+<TourWrap tourStepKey={TOUR_STEP_KEYS.BUILDER_APP_PUBLISH}>
+  <Button cta on:click={publishModal.show} id={"builder-app-publish-button"}>
+    Publish
+  </Button>
+</TourWrap>
 <Modal bind:this={publishModal}>
   <ModalContent
     title="Publish to production"
     confirmText="Publish"
     onConfirm={publishApp}
-    dataCy={"deploy-app-modal"}
   >
     The changes you have made will be published to the production version of the
     application.
@@ -82,12 +87,7 @@
 
 <!-- Publish complete -->
 <Modal bind:this={publishCompleteModal}>
-  <ModalContent
-    confirmText="Done"
-    cancelText="View App"
-    onCancel={viewApp}
-    dataCy="deploy-app-success-modal"
-  >
+  <ModalContent confirmText="Done" cancelText="View App" onCancel={viewApp}>
     <div slot="header" class="app-published-header">
       <svg
         width="26px"
@@ -99,11 +99,7 @@
       </svg>
       <span class="app-published-header-text">App Published!</span>
     </div>
-    <CopyInput
-      value={publishedUrl}
-      label="You can view your app at:"
-      dataCy="deployed-app-url"
-    />
+    <CopyInput value={publishedUrl} label="You can view your app at:" />
   </ModalContent>
 </Modal>
 

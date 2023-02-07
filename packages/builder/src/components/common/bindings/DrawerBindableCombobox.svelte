@@ -22,6 +22,7 @@
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
+  let valid = true
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
@@ -66,11 +67,7 @@
     {error}
   />
   {#if !disabled}
-    <div
-      class="icon"
-      on:click={bindingDrawer.show}
-      data-cy="text-binding-button"
-    >
+    <div class="icon" on:click={bindingDrawer.show}>
       <Icon size="S" name="FlashOn" />
     </div>
   {/if}
@@ -80,12 +77,15 @@
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
+  <Button cta slot="buttons" on:click={handleClose} disabled={!valid}>
+    Save
+  </Button>
   <svelte:component
     this={panel}
     slot="body"
     value={readableValue}
     close={handleClose}
+    bind:valid
     on:change={event => (tempValue = event.detail)}
     {bindings}
     {allowJS}

@@ -62,6 +62,7 @@ initialiseWebsockets(server)
 
 let shuttingDown = false,
   errCode = 0
+
 server.on("close", async () => {
   // already in process
   if (shuttingDown) {
@@ -71,7 +72,7 @@ server.on("close", async () => {
   console.log("Server Closed")
   await automations.shutdown()
   await redis.shutdown()
-  await events.shutdown()
+  events.shutdown()
   await Thread.shutdown()
   api.shutdown()
   if (!env.isTest()) {

@@ -10,7 +10,7 @@ beforeAll(async () => {
   await config.init()
   globalUser = await config.globalUser()
   apiKey = await config.generateApiKey(globalUser._id)
-  makeRequest = generateMakeRequest(apiKey, setup)
+  makeRequest = generateMakeRequest(apiKey)
   workerRequests.readGlobalUser.mockReturnValue(globalUser)
 })
 
