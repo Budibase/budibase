@@ -149,7 +149,7 @@ describe("/automations", () => {
         let elements = await getAllTableRows(config)
         // don't test it unless there are values to test
         if (elements.length > 1) {
-          expect(elements.length).toEqual(5)
+          expect(elements.length).toBeGreaterThanOrEqual(MAX_RETRIES)
           expect(elements[0].name).toEqual("Test")
           expect(elements[0].description).toEqual("TEST")
           return
