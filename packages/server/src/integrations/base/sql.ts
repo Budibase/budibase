@@ -448,7 +448,9 @@ class InternalBuilder {
     if (resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
       // by the resource builder further up
-      selectStatement = generateSelectStatement(json, knex)
+      selectStatement = generateSelectStatement(json, knex, {
+        excludeJoinColumns: false,
+      })
     }
     let foundLimit = limit || BASE_LIMIT
     // handle pagination
