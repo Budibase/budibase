@@ -89,26 +89,13 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
 
 function generateSelectStatement(
   json: QueryJson,
-  knex: Knex,
-  opts?: { excludeJoinColumns: boolean }
-): (string | Knex.Raw)[] | "*" {
+  knex: Knex
+): (string | Knex.Raw)[] {
   const { resource, meta } = json
   const schema = meta?.table?.schema
-
-  if (!resource) {
-    return "*"
-  }
-
-  return resource.fields.reduce<(string | Knex.Raw)[]>((p, field) => {
+  return resource!.fields.map(field => {
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
-    if (
-      meta?.table?.name &&
-      opts?.excludeJoinColumns &&
-      tableName !== meta.table.name
-    ) {
-      return p
-    }
     const columnName = fieldNames[1]
     if (
       columnName &&
@@ -117,18 +104,13 @@ function generateSelectStatement(
     ) {
       const externalType = schema[columnName].externalType
       if (externalType?.includes("money")) {
-        p.push(
-          knex.raw(
-            `"${tableName}"."${columnName}"::money::numeric as "${field}"`
-          )
+        return knex.raw(
+          `"${tableName}"."${columnName}"::money::numeric as "${field}"`
         )
-        return p
       }
     }
-
-    p.push(`${field} as ${field}`)
-    return p
-  }, [])
+    return `${field} as ${field}`
+  })
 }
 
 class InternalBuilder {
@@ -417,9 +399,7 @@ class InternalBuilder {
     } else {
       return query
         .insert(parsedBody)
-        .returning(
-          generateSelectStatement(json, knex, { excludeJoinColumns: true })
-        )
+        .returning(generateSelectStatement(json, knex))
     }
   }
 
@@ -448,9 +428,7 @@ class InternalBuilder {
     if (resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
       // by the resource builder further up
-      selectStatement = generateSelectStatement(json, knex, {
-        excludeJoinColumns: false,
-      })
+      selectStatement = generateSelectStatement(json, knex)
     }
     let foundLimit = limit || BASE_LIMIT
     // handle pagination
@@ -508,9 +486,7 @@ class InternalBuilder {
     } else {
       return query
         .update(parsedBody)
-        .returning(
-          generateSelectStatement(json, knex, { excludeJoinColumns: true })
-        )
+        .returning(generateSelectStatement(json, knex))
     }
   }
 
@@ -525,11 +501,7 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.delete()
     } else {
-      return query
-        .delete()
-        .returning(
-          generateSelectStatement(json, knex, { excludeJoinColumns: true })
-        )
+      return query.delete().returning(generateSelectStatement(json, knex))
     }
   }
 }

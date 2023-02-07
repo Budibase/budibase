@@ -45,6 +45,7 @@ export interface RunConfig {
   row?: Row
   rows?: Row[]
   tables?: Record<string, Table>
+  includeSqlRelationships?: IncludeRelationship
 }
 
 function buildFilters(
@@ -707,7 +708,9 @@ export class ExternalRequest {
       },
       resource: {
         // have to specify the fields to avoid column overlap (for SQL)
-        fields: isSql ? this.buildFields(table) : [],
+        fields: isSql
+          ? this.buildFields(table, config.includeSqlRelationships)
+          : [],
       },
       filters,
       sort,
