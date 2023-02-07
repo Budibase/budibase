@@ -58,7 +58,7 @@ describe("row api - postgres", () => {
           port,
           database: "postgres",
           user: "postgres",
-          password: process.env.POSTGRES_PASSWORD!,
+          password: "password",
           schema: "public",
           ssl: false,
           rejectUnauthorized: false,
