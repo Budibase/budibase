@@ -20,9 +20,7 @@
 
 <!-- routify:options index=3 -->
 <div class="root">
-  <div class="nav">
-    <AutomationPanel {modal} {webhookModal} />
-  </div>
+  <AutomationPanel {modal} {webhookModal} />
   <div class="content">
     {#if automation}
       <slot />
@@ -71,19 +69,6 @@
     grid-template-columns: 260px minmax(510px, 1fr) fit-content(500px);
     overflow: hidden;
   }
-
-  .nav {
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    border-right: var(--border-light);
-    background-color: var(--background);
-    padding-bottom: 60px;
-    overflow: hidden;
-  }
-
   .content {
     position: relative;
     padding-top: var(--spacing-l);
