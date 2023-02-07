@@ -242,6 +242,7 @@ describe("/queries", () => {
       })
       expect(res.body.rows.length).toEqual(1)
       expect(events.query.previewed).toBeCalledTimes(1)
+      delete datasource.config
       expect(events.query.previewed).toBeCalledWith(datasource, query)
     })
 
