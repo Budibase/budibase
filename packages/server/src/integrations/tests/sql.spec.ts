@@ -352,7 +352,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [10, "%20%", "%25%", `%"John"%`, `%"Mary"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER(${TABLE_NAME}.age) LIKE @p1 AND LOWER(${TABLE_NAME}.age) LIKE @p2) and (LOWER(${TABLE_NAME}.name) LIKE @p3 AND LOWER(${TABLE_NAME}.name) LIKE @p4)) as [${TABLE_NAME}]`,
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER([${TABLE_NAME}].[age]) LIKE @p1 AND LOWER([${TABLE_NAME}].[age]) LIKE @p2) and (LOWER([${TABLE_NAME}].[name]) LIKE @p3 AND LOWER([${TABLE_NAME}].[name]) LIKE @p4)) as [${TABLE_NAME}]`,
     })
   })
 
@@ -403,7 +403,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [10, "%20%", `%"John"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where NOT (LOWER(${TABLE_NAME}.age) LIKE @p1) and NOT (LOWER(${TABLE_NAME}.name) LIKE @p2)) as [${TABLE_NAME}]`,
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where NOT (LOWER([${TABLE_NAME}].[age]) LIKE @p1) and NOT (LOWER([${TABLE_NAME}].[name]) LIKE @p2)) as [${TABLE_NAME}]`,
     })
   })
 
@@ -454,7 +454,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [10, "%20%", "%25%", `%"John"%`, `%"Mary"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER(${TABLE_NAME}.age) LIKE @p1 OR LOWER(${TABLE_NAME}.age) LIKE @p2) and (LOWER(${TABLE_NAME}.name) LIKE @p3 OR LOWER(${TABLE_NAME}.name) LIKE @p4)) as [${TABLE_NAME}]`,
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER([${TABLE_NAME}].[age]) LIKE @p1 OR LOWER([${TABLE_NAME}].[age]) LIKE @p2) and (LOWER([${TABLE_NAME}].[name]) LIKE @p3 OR LOWER([${TABLE_NAME}].[name]) LIKE @p4)) as [${TABLE_NAME}]`,
     })
   })
 
@@ -515,6 +515,42 @@ describe("SQL query builder", () => {
     expect(query).toEqual({
       bindings: [500, 5000],
       sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" limit $1) as "stores" left join "production"."stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" on "products"."product_id" = "stocks"."product_id" limit $2`,
+    })
+  })
+
+  it("should handle table names with dashes when performing a LIKE in MySQL", () => {
+    const tableName = "Table-Name-With-Dashes"
+    const query = new Sql(SqlClient.MY_SQL, limit)._query(
+      generateReadJson({
+        table: tableName,
+        filters: {
+          string: {
+            name: "John",
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: ["John%", limit],
+      sql: `select * from (select * from \`${tableName}\` where LOWER(\`${tableName}\`.\`name\`) LIKE ? limit ?) as \`${tableName}\``,
+    })
+  })
+
+  it("should handle table names with dashes when performing a LIKE in SQL Server", () => {
+    const tableName = "Table-Name-With-Dashes"
+    const query = new Sql(SqlClient.MS_SQL, limit)._query(
+      generateReadJson({
+        table: tableName,
+        filters: {
+          string: {
+            name: "John",
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: [limit, "John%"],
+      sql: `select * from (select top (@p0) * from [${tableName}] where LOWER([${tableName}].[name]) LIKE @p1) as [${tableName}]`,
     })
   })
 })

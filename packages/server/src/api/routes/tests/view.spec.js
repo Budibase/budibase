@@ -28,8 +28,11 @@ describe("/views", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+  
+  beforeEach(async() => {
     table = await config.createTable(priceTable())
   })
 

@@ -11,10 +11,13 @@
   export let limit
   export let paginate
 
-  const loading = writable(false)
-
   const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
+
+  // Update loading state
+  const parentLoading = getContext("loading")
+  const loading = writable(true)
+  setContext("loading", loading)
 
   // We need to manage our lucene query manually as we want to allow components
   // to extend it
@@ -22,15 +25,18 @@
   $: defaultQuery = LuceneUtils.buildLuceneQuery(filter)
   $: query = extendQuery(defaultQuery, queryExtensions)
 
-  // Keep our data fetch instance up to date
-  $: fetch = createFetch(dataSource)
-  $: fetch.update({
+  // Fetch data and refresh when needed
+  $: fetch = createFetch(dataSource, $parentLoading)
+  $: updateFetch({
     query,
     sortColumn,
     sortOrder,
     limit,
     paginate,
   })
+
+  // Keep loading context updated
+  $: loading.set($parentLoading || !$fetch.loaded)
 
   // Build our action context
   $: actions = [
@@ -80,14 +86,21 @@
       sortColumn: $fetch.sortColumn,
       sortOrder: $fetch.sortOrder,
     },
-    limit: limit,
+    limit,
   }
 
-  const parentLoading = getContext("loading")
-  setContext("loading", loading)
-  $: loading.set($parentLoading || !$fetch.loaded)
+  const createFetch = (datasource, parentLoading) => {
+    // Return a dummy fetch if parent is still loading. We do this so that we
+    // can still properly subscribe to a valid fetch object and check all
+    // properties, but we want to avoid fetching the real data until all parents
+    // have finished loading.
+    // This logic is only needed due to skeleton loaders, as previously we
+    // simply blocked component rendering until data was ready.
+    if (parentLoading) {
+      return fetchData({ API })
+    }
 
-  const createFetch = datasource => {
+    // Otherwise return the real thing
     return fetchData({
       API,
       datasource,
@@ -99,6 +112,14 @@
         paginate,
       },
     })
+  }
+
+  const updateFetch = opts => {
+    // Only update fetch if parents have stopped loading. Otherwise we will
+    // trigger a fetch of the real data before parents are ready.
+    if (!$parentLoading) {
+      fetch.update(opts)
+    }
   }
 
   const addQueryExtension = (key, extension) => {

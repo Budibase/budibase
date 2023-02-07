@@ -147,6 +147,16 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
+   * Retrieves the invitation associated with a provided code.
+   * @param code The unique code for the target invite
+   */
+  getUserInvite: async code => {
+    return await API.get({
+      url: `/api/global/users/invite/${code}`,
+    })
+  },
+
+  /**
    * Invites multiple users to the current tenant.
    * @param users An array of users to invite
    */
@@ -168,13 +178,17 @@ export const buildUserEndpoints = API => ({
    * Accepts an invite to join the platform and creates a user.
    * @param inviteCode the invite code sent in the email
    * @param password the password for the newly created user
+   * @param firstName the first name of the new user
+   * @param lastName the last name of the new user
    */
-  acceptInvite: async ({ inviteCode, password }) => {
+  acceptInvite: async ({ inviteCode, password, firstName, lastName }) => {
     return await API.post({
       url: "/api/global/users/invite/accept",
       body: {
         inviteCode,
         password,
+        firstName,
+        lastName,
       },
     })
   },
