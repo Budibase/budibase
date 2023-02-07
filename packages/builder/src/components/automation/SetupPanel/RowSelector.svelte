@@ -70,7 +70,7 @@
       return Number(value)
     }
     if (type === "options") {
-      return [value]
+      return value
     }
     if (type === "array") {
       if (Array.isArray(value)) {

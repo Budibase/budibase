@@ -1,6 +1,7 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { API } from "api"
 import { Constants } from "@budibase/frontend-core"
+import { licensing } from "stores/portal"
 
 export function createEnvironmentStore() {
   const { subscribe, update } = writable({
@@ -17,12 +18,14 @@ export function createEnvironmentStore() {
   }
 
   async function loadVariables() {
-    const envVars = await API.fetchEnvironmentVariables()
-    const mappedVars = envVars.variables.map(name => ({ name }))
-    update(store => {
-      store.variables = mappedVars
-      return store
-    })
+    if (get(licensing).environmentVariablesEnabled) {
+      const envVars = await API.fetchEnvironmentVariables()
+      const mappedVars = envVars.variables.map(name => ({ name }))
+      update(store => {
+        store.variables = mappedVars
+        return store
+      })
+    }
   }
 
   async function createVariable(data) {
