@@ -90,7 +90,7 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
 function generateSelectStatement(
   json: QueryJson,
   knex: Knex,
-  excludeJoinColumns = false
+  opts?: { excludeJoinColumns: boolean }
 ): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
   const schema = meta?.table?.schema
@@ -104,7 +104,7 @@ function generateSelectStatement(
     const tableName = fieldNames[0]
     if (
       meta?.table?.name &&
-      excludeJoinColumns &&
+      opts?.excludeJoinColumns &&
       tableName !== meta.table.name
     ) {
       return p
@@ -417,7 +417,9 @@ class InternalBuilder {
     } else {
       return query
         .insert(parsedBody)
-        .returning(generateSelectStatement(json, knex, true))
+        .returning(
+          generateSelectStatement(json, knex, { excludeJoinColumns: true })
+        )
     }
   }
 
@@ -504,7 +506,9 @@ class InternalBuilder {
     } else {
       return query
         .update(parsedBody)
-        .returning(generateSelectStatement(json, knex, true))
+        .returning(
+          generateSelectStatement(json, knex, { excludeJoinColumns: true })
+        )
     }
   }
 
@@ -519,7 +523,11 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.delete()
     } else {
-      return query.delete().returning(generateSelectStatement(json, knex, true))
+      return query
+        .delete()
+        .returning(
+          generateSelectStatement(json, knex, { excludeJoinColumns: true })
+        )
     }
   }
 }
