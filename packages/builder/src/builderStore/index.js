@@ -27,13 +27,23 @@ export const screenHistoryStore = createHistoryStore({
     }
   },
 })
-
-// Patch the save and delete functions to allow history control
 store.actions.screens.save = screenHistoryStore.wrapSaveDoc(
   store.actions.screens.save
 )
 store.actions.screens.delete = screenHistoryStore.wrapDeleteDoc(
   store.actions.screens.delete
+)
+
+// Setup history for automations
+export const automationHistoryStore = createHistoryStore({
+  getDoc: automationStore.actions.getDefinition,
+  selectDoc: automationStore.actions.selectById,
+})
+automationStore.actions.save = automationHistoryStore.wrapSaveDoc(
+  automationStore.actions.save
+)
+automationStore.actions.delete = automationHistoryStore.wrapDeleteDoc(
+  automationStore.actions.delete
 )
 
 export const selectedScreen = derived(store, $store => {

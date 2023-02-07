@@ -1,17 +1,17 @@
 <script>
-  import { screenHistoryStore } from "builderStore"
-  import { isActive } from "@roxi/routify"
   import { Icon } from "@budibase/bbui"
   import { onMount } from "svelte"
+
+  export let store
 
   const handleKeyPress = e => {
     if (!(e.ctrlKey || e.metaKey)) {
       return
     }
     if (e.shiftKey && e.key === "Z") {
-      screenHistoryStore.redo()
+      store.redo()
     } else if (e.key === "z") {
-      screenHistoryStore.undo()
+      store.undo()
     }
   }
 
@@ -24,24 +24,22 @@
   })
 </script>
 
-{#if $isActive("./screens") || $isActive("./components")}
-  <div class="undo-redo">
-    <Icon
-      name="Undo"
-      hoverable
-      on:click={screenHistoryStore.undo}
-      disabled={!$screenHistoryStore.canUndo}
-      tooltip="Undo latest change"
-    />
-    <Icon
-      name="Redo"
-      hoverable
-      on:click={screenHistoryStore.redo}
-      disabled={!$screenHistoryStore.canRedo}
-      tooltip="Redo latest undo"
-    />
-  </div>
-{/if}
+<div class="undo-redo">
+  <Icon
+    name="Undo"
+    hoverable
+    on:click={store.undo}
+    disabled={!$store.canUndo}
+    tooltip="Undo latest change"
+  />
+  <Icon
+    name="Redo"
+    hoverable
+    on:click={store.redo}
+    disabled={!$store.canRedo}
+    tooltip="Redo latest undo"
+  />
+</div>
 
 <style>
   .undo-redo {

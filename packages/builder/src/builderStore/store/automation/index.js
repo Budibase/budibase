@@ -1,4 +1,4 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { API } from "api"
 import Automation from "./Automation"
 import { cloneDeep } from "lodash/fp"
@@ -95,6 +95,7 @@ const automationActions = store => ({
         return state
       }
     })
+    return response.automation
   },
   delete: async automation => {
     await API.deleteAutomation({
@@ -126,7 +127,16 @@ const automationActions = store => ({
       return state
     })
   },
+  getDefinition: id => {
+    return get(store).automations?.find(x => x._id === id)
+  },
+  selectById: id => {
+    store.actions.select(store.actions.getDefinition(id))
+  },
   select: automation => {
+    if (!automation) {
+      return
+    }
     store.update(state => {
       state.selectedAutomation = new Automation(cloneDeep(automation))
       state.selectedBlock = null

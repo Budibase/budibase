@@ -2,9 +2,10 @@
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
   import { store, sortedScreens, screenHistoryStore } from "builderStore"
-  import { Select, Icon } from "@budibase/bbui"
+  import { Select } from "@budibase/bbui"
   import { RoleUtils } from "@budibase/frontend-core"
-  import UndoRedoControl from "./UndoRedoControl.svelte"
+  import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import { isActive } from "@roxi/routify"
 </script>
 
 <div class="app-panel">
@@ -23,7 +24,9 @@
       />
     </div>
     <div class="header-right">
-      <UndoRedoControl />
+      {#if $isActive("./screens") || $isActive("./components")}
+        <UndoRedoControl store={screenHistoryStore} />
+      {/if}
       {#if $store.clientFeatures.devicePreview}
         <DevicePreviewSelect />
       {/if}
