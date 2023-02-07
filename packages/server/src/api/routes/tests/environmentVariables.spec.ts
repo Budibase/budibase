@@ -1,5 +1,15 @@
 const pg = require("pg")
-jest.mock("pg")
+jest.mock("pg", () => {
+  return {
+    Client: jest.fn().mockImplementation(() => ({
+      connect: jest.fn(),
+      query: jest.fn().mockImplementation(() => ({ rows: [] })),
+      end: jest.fn().mockImplementation((fn: any) => fn()),
+    })),
+    queryMock: jest.fn().mockImplementation(() => {}),
+    on: jest.fn(),
+  }
+})
 import * as setup from "./utilities"
 import { mocks } from "@budibase/backend-core/tests"
 import { env, events } from "@budibase/backend-core"
@@ -14,7 +24,7 @@ describe("/api/env/variables", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 
@@ -121,16 +131,14 @@ describe("/api/env/variables", () => {
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
-    expect(res.body.schemaFields).toEqual({
-      a: "string",
-      b: "number",
-    })
-    expect(pg.queryMock).toHaveBeenCalled()
-    expect(res.body.rows.length).toEqual(1)
+    expect(res.body.rows.length).toEqual(0)
     expect(events.query.previewed).toBeCalledTimes(1)
+    // API doesn't include config in response
+    delete response.body.datasource.config
     expect(events.query.previewed).toBeCalledWith(
       response.body.datasource,
       query
     )
+    expect(pg.Client).toHaveBeenCalledWith({ password: "test", ssl: undefined })
   })
 })

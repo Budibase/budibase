@@ -186,6 +186,8 @@ export async function preview(ctx: any) {
         schemaFields[key] = fieldType
       }
     }
+    // remove configuration before sending event
+    delete datasource.config
     await events.query.previewed(datasource, query)
     ctx.body = {
       rows,
