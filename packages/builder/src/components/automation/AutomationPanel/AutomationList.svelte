@@ -42,5 +42,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    margin: 0 calc(-1 * var(--spacing-xl));
   }
 </style>
