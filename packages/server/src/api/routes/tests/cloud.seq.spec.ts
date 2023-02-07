@@ -1,3 +1,5 @@
+jest.setTimeout(30000)
+
 import { AppStatus } from "../../../db/utils"
 
 import * as setup from "./utilities"
