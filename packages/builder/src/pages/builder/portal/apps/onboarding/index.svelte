@@ -110,6 +110,7 @@
       goToApp()
     } catch (e) {
       console.log(e)
+      creationLoading = false
       notifications.error("There was a problem creating your app")
     }
   }
