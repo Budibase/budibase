@@ -91,7 +91,6 @@ describe("/api/env/variables", () => {
   })
 
   it("should run a query preview and check the mocked results", async () => {
-    // TODO: use the preview API
     const datasourceBase = structures.basicDatasource()
     await request
       .post(`/api/env/variables`)
@@ -122,7 +121,6 @@ describe("/api/env/variables", () => {
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
-    // these responses come from the mock
     expect(res.body.schemaFields).toEqual({
       a: "string",
       b: "number",
@@ -134,6 +132,5 @@ describe("/api/env/variables", () => {
       response.body.datasource,
       query
     )
-    //expect(postgres.integration).toHaveBeenCalledWith()
   })
 })
