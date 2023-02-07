@@ -10,6 +10,7 @@
     Layout,
     Body,
     Icon,
+    Label,
   } from "@budibase/bbui"
   import { TriggerStepID } from "constants/backend/automations"
 
@@ -70,9 +71,9 @@
     header="You must publish your app to activate your automations."
     message="To test your automation before publishing, you can use the 'Run Test' functionality on the next screen."
   />
-  <Body size="XS"
-    >Please name your automation, then select a trigger. Every automation must
-    start with a trigger.
+  <Body size="S">
+    Please name your automation, then select a trigger.<br />
+    Every automation must start with a trigger.
   </Body>
   <Input
     bind:value={name}
@@ -81,9 +82,8 @@
     label="Name"
   />
 
-  <Layout noPadding>
-    <Body size="S">Triggers</Body>
-
+  <Layout noPadding gap="XS">
+    <Label size="S">Trigger</Label>
     <div class="item-list">
       {#each triggers as [idx, trigger]}
         <div
