@@ -7,7 +7,7 @@ import * as setup from "./utilities"
 import { wipeDb } from "./utilities/TestFunctions"
 
 describe("/cloud", () => {
-  let request = setup.getRequest()
+  let request = setup.getRequest()!
   let config = setup.getConfig()
 
   afterAll(setup.afterAll)
