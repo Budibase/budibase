@@ -31,12 +31,14 @@
       hoverable
       on:click={screenHistoryStore.undo}
       disabled={!$screenHistoryStore.canUndo}
+      tooltip="Undo latest change"
     />
     <Icon
       name="Redo"
       hoverable
       on:click={screenHistoryStore.redo}
       disabled={!$screenHistoryStore.canRedo}
+      tooltip="Redo latest undo"
     />
   </div>
 {/if}

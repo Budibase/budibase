@@ -54,6 +54,7 @@
     align-items: flex-start;
     gap: var(--spacing-l);
     margin: 0 2px;
+    z-index: 1;
   }
   .header-left,
   .header-right {
