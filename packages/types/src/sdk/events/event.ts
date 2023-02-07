@@ -182,6 +182,10 @@ export enum Event {
   ENVIRONMENT_VARIABLE_UPGRADE_PANEL_OPENED = "environment_variable:upgrade_panel_opened",
 }
 
+export const AuditedEventFriendlyName = {
+  [Event.USER_CREATED]: "user created",
+}
+
 // properties added at the final stage of the event pipeline
 export interface BaseEvent {
   version?: string
