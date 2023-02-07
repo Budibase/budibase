@@ -175,9 +175,6 @@ export const getFrontendStore = () => {
       },
     },
     screens: {
-      get: screenId => {
-        return get(store).screens?.find(x => x._id === screenId)
-      },
       select: screenId => {
         // Check this screen exists
         const state = get(store)
@@ -187,10 +184,7 @@ export const getFrontendStore = () => {
         }
 
         // Check screen isn't already selected
-        if (
-          state.selectedScreenId === screen._id &&
-          state.selectedComponentId === screen.props?._id
-        ) {
+        if (state.selectedScreenId === screen._id) {
           return
         }
 

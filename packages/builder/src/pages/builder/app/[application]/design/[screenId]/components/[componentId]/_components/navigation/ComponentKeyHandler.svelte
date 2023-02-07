@@ -62,12 +62,6 @@
         $goto("./")
       }
     },
-    ["Ctrl+z"]: () => {
-      screenHistoryStore.undo()
-    },
-    ["Ctrl+Shift+Z"]: () => {
-      screenHistoryStore.redo()
-    },
   }
 
   const handleKeyAction = async ({

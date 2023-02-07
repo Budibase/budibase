@@ -15,28 +15,24 @@ export const temporalStore = getTemporalStore()
 
 // Setup history for screens
 export const screenHistoryStore = createHistoryStore({
-  saveMetadata: () => {
-    const state = get(store)
-    return {
-      selectedScreenId: state.selectedScreenId,
-      selectedComponentId: state.selectedComponentId,
+  getDoc: id => get(store).screens?.find(screen => screen._id === id),
+  selectDoc: store.actions.screens.select,
+  afterAction: () => {
+    // Ensure a valid component is selected
+    if (!get(selectedComponent)) {
+      store.update(state => ({
+        ...state,
+        selectedComponentId: get(selectedScreen)?.props._id,
+      }))
     }
   },
-  restoreMetadata: metadata => {
-    store.update(state => {
-      state.selectedScreenId = metadata.selectedScreenId
-      state.selectedComponentId = metadata.selectedComponentId
-      return state
-    })
-  },
 })
-store.actions.screens.get = screenHistoryStore.wrapGet(
-  store.actions.screens.get
-)
-store.actions.screens.save = screenHistoryStore.wrapSave(
+
+// Patch the save and delete functions to allow history control
+store.actions.screens.save = screenHistoryStore.wrapSaveDoc(
   store.actions.screens.save
 )
-store.actions.screens.delete = screenHistoryStore.wrapDelete(
+store.actions.screens.delete = screenHistoryStore.wrapDeleteDoc(
   store.actions.screens.delete
 )
 
