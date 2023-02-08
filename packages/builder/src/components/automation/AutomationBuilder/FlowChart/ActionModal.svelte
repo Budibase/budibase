@@ -66,7 +66,7 @@
 </script>
 
 <ModalContent
-  title="Create Automation"
+  title="Add automation step"
   confirmText="Save"
   size="M"
   disabled={!selectedAction}
@@ -75,11 +75,8 @@
     addBlockToAutomation()
   }}
 >
-  <Body size="XS">Select an app or event.</Body>
-
-  <Layout noPadding>
-    <Body size="S">Apps</Body>
-
+  <Layout noPadding gap="XS">
+    <Detail size="S">Apps</Detail>
     <div class="item-list">
       {#each Object.entries(external) as [idx, action]}
         <div
@@ -95,16 +92,18 @@
               alt="zapier"
             />
             <span class="icon-spacing">
-              <Body size="XS">{idx.charAt(0).toUpperCase() + idx.slice(1)}</Body
-              ></span
-            >
+              <Body size="XS">
+                {idx.charAt(0).toUpperCase() + idx.slice(1)}
+              </Body>
+            </span>
           </div>
         </div>
       {/each}
     </div>
+  </Layout>
 
+  <Layout noPadding gap="XS">
     <Detail size="S">Actions</Detail>
-
     <div class="item-list">
       {#each Object.entries(internal) as [idx, action]}
         {#if disabled[idx] && disabled[idx].disabled}
