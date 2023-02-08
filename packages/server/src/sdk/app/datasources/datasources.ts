@@ -63,7 +63,6 @@ function useEnvVars(str: any) {
 
 export async function removeSecrets(datasources: Datasource[]) {
   const definitions = await getDefinitions()
-  const finalDatasources = []
   for (let datasource of datasources) {
     const schema = definitions[datasource.source]
     if (!schema) {
@@ -97,9 +96,8 @@ export async function removeSecrets(datasources: Datasource[]) {
         }
       }
     }
-    finalDatasources.push(datasource)
   }
-  return finalDatasources
+  return datasources
 }
 
 export async function removeSecretSingle(datasource: Datasource) {
