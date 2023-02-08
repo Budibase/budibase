@@ -1,16 +1,16 @@
 import { getTenantId } from "../../context"
-import redis from "../../redis/init"
-import RedisWrapper from "../../redis"
+import * as redis from "../../redis/init"
+import { Client } from "../../redis"
 
 function generateTenantKey(key: string) {
   const tenantId = getTenantId()
   return `${key}:${tenantId}`
 }
 
-export = class BaseCache {
-  client: RedisWrapper | undefined
+export default class BaseCache {
+  client: Client | undefined
 
-  constructor(client: RedisWrapper | undefined = undefined) {
+  constructor(client: Client | undefined = undefined) {
     this.client = client
   }
 

@@ -1,6 +1,7 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import { store } from "builderStore"
+  import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/backend"
   import {
     ActionMenu,
@@ -18,7 +19,10 @@
   let editorModal
   let confirmDeleteDialog
   let error = ""
-  let originalName = table.name
+
+  let originalName
+  let updatedName
+
   let templateScreens
   let willBeDeleted
   let deleteTableName
@@ -37,17 +41,16 @@
   }
 
   async function deleteTable() {
-    const wasSelectedTable = $tables.selected
+    const isSelected = $params.tableId === table._id
     try {
       await tables.delete(table)
       await store.actions.screens.delete(templateScreens)
-      await tables.fetch()
       if (table.type === "external") {
         await datasources.fetch()
       }
       notifications.success("Table deleted")
-      if (wasSelectedTable && wasSelectedTable._id === table._id) {
-        $goto("./table")
+      if (isSelected) {
+        $goto(`./datasource/${table.datasourceId}`)
       }
     } catch (error) {
       notifications.error("Error deleting table")
@@ -59,7 +62,9 @@
   }
 
   async function save() {
-    await tables.save(table)
+    const updatedTable = cloneDeep(table)
+    updatedTable.name = updatedName
+    await tables.save(updatedTable)
     notifications.success("Table renamed successfully")
   }
 
@@ -69,6 +74,11 @@
       originalName === tableName
         ? `Table with name ${tableName} already exists. Please choose another name.`
         : ""
+  }
+
+  const initForm = () => {
+    originalName = table.name + ""
+    updatedName = table.name + ""
   }
 </script>
 
@@ -84,17 +94,17 @@
   </ActionMenu>
 {/if}
 
-<Modal bind:this={editorModal}>
+<Modal bind:this={editorModal} on:show={initForm}>
   <ModalContent
     title="Edit Table"
     confirmText="Save"
     onConfirm={save}
-    disabled={table.name === originalName || error}
+    disabled={updatedName === originalName || error}
   >
     <Input
       label="Table Name"
       thin
-      bind:value={table.name}
+      bind:value={updatedName}
       on:input={checkValid}
       {error}
     />
@@ -124,11 +134,7 @@
     This action cannot be undone - to continue please enter the table name below
     to confirm.
   </p>
-  <Input
-    bind:value={deleteTableName}
-    placeholder={table.name}
-    dataCy="delete-table-confirm"
-  />
+  <Input bind:value={deleteTableName} placeholder={table.name} />
 </ConfirmDialog>
 
 <style>

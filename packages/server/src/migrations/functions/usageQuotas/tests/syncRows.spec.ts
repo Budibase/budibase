@@ -2,7 +2,7 @@ import TestConfig from "../../../../tests/utilities/TestConfiguration"
 import * as syncRows from "../syncRows"
 import { quotas } from "@budibase/pro"
 import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
-const { getProdAppID } = require("@budibase/backend-core/db")
+import { db as dbCore, context } from "@budibase/backend-core"
 
 describe("syncRows", () => {
   let config = new TestConfig(false)
@@ -24,13 +24,17 @@ describe("syncRows", () => {
 
       // app 1
       const app1 = config.app
-      await config.createTable()
-      await config.createRow()
+      await context.doInAppContext(app1.appId, async () => {
+        await config.createTable()
+        await config.createRow()
+      })
       // app 2
       const app2 = await config.createApp("second-app")
-      await config.createTable()
-      await config.createRow()
-      await config.createRow()
+      await context.doInAppContext(app2.appId, async () => {
+        await config.createTable()
+        await config.createRow()
+        await config.createRow()
+      })
 
       // migrate
       await syncRows.run()
@@ -38,12 +42,12 @@ describe("syncRows", () => {
       // assert the migration worked
       usageDoc = await quotas.getQuotaUsage()
       expect(usageDoc.usageQuota.rows).toEqual(3)
-      expect(usageDoc.apps?.[getProdAppID(app1.appId)].usageQuota.rows).toEqual(
-        1
-      )
-      expect(usageDoc.apps?.[getProdAppID(app2.appId)].usageQuota.rows).toEqual(
-        2
-      )
+      expect(
+        usageDoc.apps?.[dbCore.getProdAppID(app1.appId)].usageQuota.rows
+      ).toEqual(1)
+      expect(
+        usageDoc.apps?.[dbCore.getProdAppID(app2.appId)].usageQuota.rows
+      ).toEqual(2)
     })
   })
 })

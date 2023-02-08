@@ -1,8 +1,16 @@
-import "./mocks"
+import mocks from "./mocks"
+
+// init the licensing mock
+import * as pro from "@budibase/pro"
+mocks.licenses.init(pro)
+
+// use unlimited license by default
+mocks.licenses.useUnlimited()
+
 import * as dbConfig from "../db"
 dbConfig.init()
 import env from "../environment"
-import controllers from "./controllers"
+import * as controllers from "./controllers"
 const supertest = require("supertest")
 import { Config } from "../constants"
 import {
@@ -12,14 +20,35 @@ import {
   auth,
   constants,
   env as coreEnv,
+  DEFAULT_TENANT_ID,
 } from "@budibase/backend-core"
-import structures, { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
+import structures, { TENANT_ID, CSRF_TOKEN } from "./structures"
 import { CreateUserResponse, User, AuthToken } from "@budibase/types"
 import API from "./api"
+import sdk from "../sdk"
 
 enum Mode {
   CLOUD = "cloud",
   SELF = "self",
+}
+
+async function retry<T extends (...arg0: any[]) => any>(
+  fn: T,
+  maxTry: number = 5,
+  retryCount = 1
+): Promise<Awaited<ReturnType<T>>> {
+  const currRetry = typeof retryCount === "number" ? retryCount : 1
+  try {
+    const result = await fn()
+    return result
+  } catch (e) {
+    console.log(`Retry ${currRetry} failed.`)
+    if (currRetry > maxTry) {
+      console.log(`All ${maxTry} retry attempts exhausted`)
+      throw e
+    }
+    return retry(fn, maxTry, currRetry + 1)
+  }
 }
 
 class TestConfiguration {
@@ -28,6 +57,7 @@ class TestConfiguration {
   api: API
   defaultUser?: User
   tenant1User?: User
+  #tenantId?: string
 
   constructor(
     opts: { openServer: boolean; mode: Mode } = {
@@ -43,7 +73,7 @@ class TestConfiguration {
 
     if (opts.openServer) {
       env.PORT = "0" // random port
-      this.server = require("../index")
+      this.server = require("../index").default
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
     }
@@ -104,13 +134,21 @@ class TestConfiguration {
   // SETUP / TEARDOWN
 
   async beforeAll() {
-    await this.createDefaultUser()
-    await this.createSession(this.defaultUser!)
+    try {
+      this.#tenantId = structures.tenant.id()
 
-    await tenancy.doInTenant(TENANT_1, async () => {
-      await this.createTenant1User()
-      await this.createSession(this.tenant1User!)
-    })
+      // Running tests in parallel causes issues creating the globaldb twice. This ensures the db is properly created before starting
+      await retry(async () => await this.createDefaultUser())
+      await this.createSession(this.defaultUser!)
+
+      await tenancy.doInTenant(this.#tenantId, async () => {
+        await this.createTenant1User()
+        await this.createSession(this.tenant1User!)
+      })
+    } catch (e: any) {
+      console.log(e)
+      throw new Error(e.message)
+    }
   }
 
   async afterAll() {
@@ -124,6 +162,8 @@ class TestConfiguration {
   createTenant = async (): Promise<User> => {
     // create user / new tenant
     const res = await this.api.users.createAdminUser()
+
+    await sdk.users.addTenant(res.tenantId, res.userId, res.email)
 
     // return the created user
     const userRes = await this.api.users.getUser(res.userId, {
@@ -144,7 +184,7 @@ class TestConfiguration {
     try {
       return tenancy.getTenantId()
     } catch (e: any) {
-      return TENANT_ID
+      return DEFAULT_TENANT_ID
     }
   }
 
@@ -195,7 +235,7 @@ class TestConfiguration {
     const tenantId = this.getTenantId()
     if (tenantId === TENANT_ID) {
       return this.authHeaders(this.defaultUser!)
-    } else if (tenantId === TENANT_1) {
+    } else if (tenantId === this.getTenantId()) {
       return this.authHeaders(this.tenant1User!)
     } else {
       throw new Error("could not determine auth headers to use")
@@ -214,7 +254,6 @@ class TestConfiguration {
 
   async createDefaultUser() {
     const user = structures.users.adminUser({
-      email: "test@test.com",
       password: "test",
     })
     this.defaultUser = await this.createUser(user)
@@ -222,7 +261,6 @@ class TestConfiguration {
 
   async createTenant1User() {
     const user = structures.users.adminUser({
-      email: "tenant1@test.com",
       password: "test",
     })
     this.tenant1User = await this.createUser(user)
@@ -319,4 +357,4 @@ class TestConfiguration {
   }
 }
 
-export = TestConfiguration
+export default TestConfiguration

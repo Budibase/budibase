@@ -14,14 +14,16 @@ export enum FieldType {
   AUTO = "auto",
   JSON = "json",
   INTERNAL = "internal",
+  BARCODEQR = "barcodeqr",
 }
 
 export interface RowAttachment {
   size: number
   name: string
-  url: string
   extension: string
   key: string
+  // Populated on read
+  url?: string
 }
 
 export interface Row extends Document {

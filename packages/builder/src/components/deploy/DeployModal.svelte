@@ -11,8 +11,9 @@
   import { store } from "builderStore"
   import { ProgressCircle } from "@budibase/bbui"
   import CopyInput from "components/common/inputs/CopyInput.svelte"
+  import TourWrap from "../portal/onboarding/TourWrap.svelte"
+  import { TOUR_STEP_KEYS } from "../portal/onboarding/tours.js"
 
-  let feedbackModal
   let publishModal
   let asyncModal
   let publishCompleteModal
@@ -23,13 +24,13 @@
 
   export let onOk
 
-  async function deployApp() {
+  async function publishApp() {
     try {
       //In Progress
       asyncModal.show()
       publishModal.hide()
 
-      published = await API.deployAppChanges()
+      published = await API.publishAppChanges($store.appId)
 
       if (typeof onOk === "function") {
         await onOk()
@@ -55,27 +56,19 @@
   }
 </script>
 
-<Button cta on:click={publishModal.show}>Publish</Button>
-<Modal bind:this={feedbackModal}>
-  <ModalContent
-    title="Enjoying Budibase?"
-    size="L"
-    showConfirmButton={false}
-    showCancelButton={false}
-  />
-</Modal>
-
+<TourWrap tourStepKey={TOUR_STEP_KEYS.BUILDER_APP_PUBLISH}>
+  <Button cta on:click={publishModal.show} id={"builder-app-publish-button"}>
+    Publish
+  </Button>
+</TourWrap>
 <Modal bind:this={publishModal}>
   <ModalContent
-    title="Publish to Production"
+    title="Publish to production"
     confirmText="Publish"
-    onConfirm={deployApp}
-    dataCy={"deploy-app-modal"}
+    onConfirm={publishApp}
   >
-    <span
-      >The changes you have made will be published to the production version of
-      the application.</span
-    >
+    The changes you have made will be published to the production version of the
+    application.
   </ModalContent>
 </Modal>
 
@@ -94,12 +87,7 @@
 
 <!-- Publish complete -->
 <Modal bind:this={publishCompleteModal}>
-  <ModalContent
-    confirmText="Done"
-    cancelText="View App"
-    onCancel={viewApp}
-    dataCy="deploy-app-success-modal"
-  >
+  <ModalContent confirmText="Done" cancelText="View App" onCancel={viewApp}>
     <div slot="header" class="app-published-header">
       <svg
         width="26px"
@@ -111,11 +99,7 @@
       </svg>
       <span class="app-published-header-text">App Published!</span>
     </div>
-    <CopyInput
-      value={publishedUrl}
-      label="You can view your app at:"
-      dataCy="deployed-app-url"
-    />
+    <CopyInput value={publishedUrl} label="You can view your app at:" />
   </ModalContent>
 </Modal>
 

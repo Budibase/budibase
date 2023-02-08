@@ -1,4 +1,4 @@
-const {  DocumentType, doWithDB } = require("@budibase/backend-core/db")
+const { db: dbCore } = require("@budibase/backend-core")
 const TestConfig = require("../../../tests/utilities/TestConfiguration")
 
 const migration = require("../appUrls")
@@ -6,7 +6,7 @@ const migration = require("../appUrls")
 describe("run", () => {
   let config = new TestConfig(false)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 
@@ -14,12 +14,12 @@ describe("run", () => {
 
   it("runs successfully", async () => {
     const app = await config.createApp("testApp")
-    const metadata = await doWithDB(app.appId, async db => {
-      const metadataDoc = await db.get( DocumentType.APP_METADATA)
+    const metadata = await dbCore.doWithDB(app.appId, async db => {
+      const metadataDoc = await db.get(dbCore.DocumentType.APP_METADATA)
       delete metadataDoc.url
       await db.put(metadataDoc)
       await migration.run(db)
-      return await db.get( DocumentType.APP_METADATA)
+      return await db.get(dbCore.DocumentType.APP_METADATA)
     })
     expect(metadata.url).toEqual("/testapp")
   })

@@ -1,5 +1,4 @@
-import PouchDB from "pouchdb"
-import Nano from "nano"
+import Nano from "@budibase/nano"
 import { AllDocsResponse, AnyDocument, Document } from "../"
 
 export type PouchOptions = {
@@ -57,6 +56,7 @@ export type DatabaseQueryOpts = {
   descending?: boolean
   key?: string
   keys?: string[]
+  group?: boolean
 }
 
 export const isDocument = (doc: any): doc is Document => {

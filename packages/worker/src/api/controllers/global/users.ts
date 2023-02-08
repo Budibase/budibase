@@ -24,7 +24,8 @@ const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
   try {
-    ctx.body = await sdk.users.save(ctx.request.body)
+    const currentUserId = ctx.user._id
+    ctx.body = await sdk.users.save(ctx.request.body, { currentUserId })
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -104,7 +105,7 @@ export const adminUser = async (ctx: any) => {
     try {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
       // stuck in a cycle
-      await cache.bustCache(cache.CacheKeys.CHECKLIST)
+      await cache.bustCache(cache.CacheKey.CHECKLIST)
       const finalUser = await sdk.users.save(user, {
         hashPassword,
         requirePassword,
@@ -177,7 +178,7 @@ export const find = async (ctx: any) => {
 
 export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
-  const user = await tenancy.getTenantUser(id)
+  const user = await sdk.users.getPlatformUser(id)
   if (user) {
     ctx.body = user
   } else {
@@ -207,6 +208,19 @@ export const invite = async (ctx: any) => {
 export const inviteMultiple = async (ctx: any) => {
   const request = ctx.request.body as InviteUsersRequest
   ctx.body = await sdk.users.invite(request)
+}
+
+export const checkInvite = async (ctx: any) => {
+  const { code } = ctx.params
+  let invite
+  try {
+    invite = await checkInviteCode(code, false)
+  } catch (e) {
+    ctx.throw(400, "There was a problem with the invite")
+  }
+  ctx.body = {
+    email: invite.email,
+  }
 }
 
 export const inviteAccept = async (ctx: any) => {

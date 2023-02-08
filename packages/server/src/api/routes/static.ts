@@ -2,15 +2,12 @@ import Router from "@koa/router"
 import * as controller from "../controllers/static"
 import { budibaseTempDir } from "../../utilities/budibaseDir"
 import authorized from "../../middleware/authorized"
-import {
-  BUILDER,
-  PermissionType,
-  PermissionLevel,
-} from "@budibase/backend-core/permissions"
-import * as env from "../../environment"
+import { permissions } from "@budibase/backend-core"
+import env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
+const { BUILDER, PermissionType, PermissionLevel } = permissions
 
-const router = new Router()
+const router: Router = new Router()
 
 /* istanbul ignore next */
 router.param("file", async (file: any, ctx: any, next: any) => {

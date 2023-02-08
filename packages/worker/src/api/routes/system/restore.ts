@@ -1,8 +1,8 @@
 import * as controller from "../../controllers/system/restore"
 import Router from "@koa/router"
 
-const router = new Router()
+const router: Router = new Router()
 
 router.post("/api/system/restored", controller.systemRestored)
 
-export = router
+export default router

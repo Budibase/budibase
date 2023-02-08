@@ -82,7 +82,7 @@
 
     let displayString
     if (throughTableName) {
-      displayString = `${fromTableName} through ${throughTableName} → ${toTableName}`
+      displayString = `${fromTableName} ↔ ${toTableName}`
     } else {
       displayString = `${fromTableName} → ${toTableName}`
     }
@@ -104,7 +104,6 @@
   }
 
   function onClickTable(table) {
-    tables.select(table)
     $goto(`../../table/${table._id}`)
   }
 

@@ -13,7 +13,8 @@
     }
   },
   "ts-node": {
-    "require": ["tsconfig-paths/register"]
+    "require": ["tsconfig-paths/register"],
+    "swc": true
   },
   "references": [
     { "path": "../types" },
@@ -25,7 +26,6 @@
     "package.json"
   ],
   "exclude": [
-    "node_modules",
     "dist"
   ]
 }

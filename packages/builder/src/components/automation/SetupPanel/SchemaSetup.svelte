@@ -58,7 +58,7 @@
       entries = entries.filter(f => f.name !== originalName)
     }
     value = entries.reduce((newVals, current) => {
-      newVals[current.name] = current.type
+      newVals[current.name.trim()] = current.type
       return newVals
     }, {})
     dispatch("change", value)

@@ -266,6 +266,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         this.deleteTable(json?.table?.name),
     }
 
+    // @ts-ignore
     const internalQueryMethod = handlers[json.endpoint.operation]
 
     return await internalQueryMethod()
@@ -283,7 +284,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async createTable(name?: string) {
     try {
       await this.connect()
-      return await this.client.addSheet({ title: name })
+      return await this.client.addSheet({ title: name, headerValues: ["test"] })
     } catch (err) {
       console.error("Error creating new table in google sheets", err)
       throw err

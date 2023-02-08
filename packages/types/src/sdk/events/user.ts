@@ -12,6 +12,11 @@ export interface UserDeletedEvent extends BaseEvent {
   userId: string
 }
 
+export interface UserOnboardingEvent extends BaseEvent {
+  userId: string
+  step?: string
+}
+
 export interface UserPermissionAssignedEvent extends BaseEvent {
   userId: string
 }

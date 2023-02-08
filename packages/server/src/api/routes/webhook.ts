@@ -5,7 +5,7 @@ import { permissions } from "@budibase/backend-core"
 import { webhookValidator } from "./utils/validators"
 
 const BUILDER = permissions.BUILDER
-const router = new Router()
+const router: Router = new Router()
 
 router
   .get("/api/webhooks", authorized(BUILDER), controller.fetch)

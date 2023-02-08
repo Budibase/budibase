@@ -1,6 +1,5 @@
-import { db as dbCore } from "@budibase/backend-core"
+import { db as dbCore, objectStore } from "@budibase/backend-core"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import { retrieveDirectory } from "../../../utilities/fileSystem/utilities"
 import { streamFile, createTempFolder } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
 import {
@@ -46,12 +45,18 @@ function tarFilesToTmp(tmpDir: string, files: string[]) {
  * @return {*} either a readable stream or a string
  */
 export async function exportDB(dbName: string, opts: ExportOpts = {}) {
+  const exportOpts = {
+    filter: opts?.filter,
+    batch_size: 1000,
+    batch_limit: 5,
+    style: "main_only",
+  }
   return dbCore.doWithDB(dbName, async (db: any) => {
     // Write the dump to file if required
     if (opts?.exportPath) {
       const path = opts?.exportPath
       const writeStream = fs.createWriteStream(path)
-      await db.dump(writeStream, { filter: opts?.filter })
+      await db.dump(writeStream, exportOpts)
       return path
     } else {
       // Stringify the dump in memory if required
@@ -60,7 +65,7 @@ export async function exportDB(dbName: string, opts: ExportOpts = {}) {
       memStream.on("data", (chunk: any) => {
         appString += chunk.toString()
       })
-      await db.dump(memStream, { filter: opts?.filter })
+      await db.dump(memStream, exportOpts)
       return appString
     }
   })
@@ -88,7 +93,10 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   // export bucket contents
   let tmpPath
   if (!env.isTest()) {
-    tmpPath = await retrieveDirectory(ObjectStoreBuckets.APPS, appPath)
+    tmpPath = await objectStore.retrieveDirectory(
+      ObjectStoreBuckets.APPS,
+      appPath
+    )
   } else {
     tmpPath = createTempFolder(uuid())
   }

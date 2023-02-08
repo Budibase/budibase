@@ -23,9 +23,6 @@ const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
 const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
 
 function likeKey(client: string, key: string): string {
-  if (!key.includes(" ")) {
-    return key
-  }
   let start: string, end: string
   switch (client) {
     case SqlClient.MY_SQL:
@@ -93,8 +90,13 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
 function generateSelectStatement(
   json: QueryJson,
   knex: Knex
-): (string | Knex.Raw)[] {
+): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
+
+  if (!resource) {
+    return "*"
+  }
+
   const schema = meta?.table?.schema
   return resource.fields.map(field => {
     const fieldNames = field.split(/\./g)
@@ -235,7 +237,9 @@ class InternalBuilder {
         } else {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
-          query = query[rawFnc](`LOWER(${key}) LIKE ?`, [`${value}%`])
+          query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
+            `${value}%`,
+          ])
         }
       })
     }
@@ -313,7 +317,8 @@ class InternalBuilder {
   addRelationships(
     query: KnexQuery,
     fromTable: string,
-    relationships: RelationshipsJson[] | undefined
+    relationships: RelationshipsJson[] | undefined,
+    schema: string | undefined
   ): KnexQuery {
     if (!relationships) {
       return query
@@ -337,9 +342,13 @@ class InternalBuilder {
     }
     for (let [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
+      const toTableWithSchema = schema ? `${schema}.${toTable}` : toTable
+      const throughTableWithSchema = schema
+        ? `${schema}.${throughTable}`
+        : throughTable
       if (!throughTable) {
         // @ts-ignore
-        query = query.leftJoin(toTable, function () {
+        query = query.leftJoin(toTableWithSchema, function () {
           for (let relationship of relationships) {
             const from = relationship.from,
               to = relationship.to
@@ -350,7 +359,7 @@ class InternalBuilder {
       } else {
         query = query
           // @ts-ignore
-          .leftJoin(throughTable, function () {
+          .leftJoin(throughTableWithSchema, function () {
             for (let relationship of relationships) {
               const fromPrimary = relationship.fromPrimary
               const from = relationship.from
@@ -362,7 +371,7 @@ class InternalBuilder {
               )
             }
           })
-          .leftJoin(toTable, function () {
+          .leftJoin(toTableWithSchema, function () {
             for (let relationship of relationships) {
               const toPrimary = relationship.toPrimary
               const to = relationship.to
@@ -388,11 +397,14 @@ class InternalBuilder {
         delete parsedBody[key]
       }
     }
+
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.insert(parsedBody)
     } else {
-      return query.insert(parsedBody).returning("*")
+      return query
+        .insert(parsedBody)
+        .returning(generateSelectStatement(json, knex))
     }
   }
 
@@ -456,7 +468,12 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    query = this.addRelationships(preQuery, tableName, relationships)
+    query = this.addRelationships(
+      preQuery,
+      tableName,
+      relationships,
+      endpoint.schema
+    )
     return this.addFilters(query, filters, { relationship: true })
   }
 
@@ -472,7 +489,9 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.update(parsedBody)
     } else {
-      return query.update(parsedBody).returning("*")
+      return query
+        .update(parsedBody)
+        .returning(generateSelectStatement(json, knex))
     }
   }
 
@@ -487,7 +506,7 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.delete()
     } else {
-      return query.delete().returning("*")
+      return query.delete().returning(generateSelectStatement(json, knex))
     }
   }
 }

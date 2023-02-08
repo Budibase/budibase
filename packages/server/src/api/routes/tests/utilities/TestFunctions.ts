@@ -1,11 +1,11 @@
 import * as rowController from "../../../controllers/row"
 import * as appController from "../../../controllers/application"
 import { AppStatus } from "../../../../db/utils"
-import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/roles"
-import { doInTenant } from "@budibase/backend-core/tenancy"
+import { roles, tenancy, context } from "@budibase/backend-core"
 import { TENANT_ID } from "../../../../tests/utilities/structures"
-import { getAppDB, doInAppContext } from "@budibase/backend-core/context"
-import * as env from "../../../../environment"
+import env from "../../../../environment"
+import { db } from "@budibase/backend-core"
+import Nano from "@budibase/nano"
 
 class Request {
   appId: any
@@ -21,7 +21,7 @@ class Request {
 }
 
 function runRequest(appId: any, controlFunc: any, request?: any) {
-  return doInAppContext(appId, async () => {
+  return context.doInAppContext(appId, async () => {
     return controlFunc(request)
   })
 }
@@ -32,15 +32,18 @@ export const getAllTableRows = async (config: any) => {
   return req.body
 }
 
-export const clearAllApps = async (tenantId = TENANT_ID) => {
-  await doInTenant(tenantId, async () => {
+export const clearAllApps = async (
+  tenantId = TENANT_ID,
+  exceptions: Array<string> = []
+) => {
+  await tenancy.doInTenant(tenantId, async () => {
     const req: any = { query: { status: AppStatus.DEV }, user: { tenantId } }
     await appController.fetch(req)
     const apps = req.body
     if (!apps || apps.length <= 0) {
       return
     }
-    for (let app of apps) {
+    for (let app of apps.filter((x: any) => !exceptions.includes(x.appId))) {
       const { appId } = app
       const req = new Request(null, { appId })
       await runRequest(appId, appController.destroy, req)
@@ -51,10 +54,28 @@ export const clearAllApps = async (tenantId = TENANT_ID) => {
 export const clearAllAutomations = async (config: any) => {
   const automations = await config.getAllAutomations()
   for (let auto of automations) {
-    await doInAppContext(config.appId, async () => {
+    await context.doInAppContext(config.appId, async () => {
       await config.deleteAutomation(auto)
     })
   }
+}
+
+export const wipeDb = async () => {
+  const couchInfo = db.getCouchInfo()
+  const nano = Nano({
+    url: couchInfo.url,
+    requestDefaults: {
+      headers: {
+        Authorization: couchInfo.cookie,
+      },
+    },
+    parseUrl: false,
+  })
+  let dbs
+  do {
+    dbs = await nano.db.list()
+    await Promise.all(dbs.map(x => nano.db.destroy(x)))
+  } while (dbs.length)
 }
 
 export const createRequest = (
@@ -110,7 +131,7 @@ export const checkPermissionsEndpoint = async ({
     .expect(200)
 
   let failHeader
-  if (failRole === BUILTIN_ROLE_IDS.PUBLIC) {
+  if (failRole === roles.BUILTIN_ROLE_IDS.PUBLIC) {
     failHeader = config.publicHeaders({ prodApp: true })
   } else {
     failHeader = await config.login({
@@ -127,7 +148,7 @@ export const checkPermissionsEndpoint = async ({
 }
 
 export const getDB = () => {
-  return getAppDB()
+  return context.getAppDB()
 }
 
 export const testAutomation = async (config: any, automation: any) => {

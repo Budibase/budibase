@@ -2,13 +2,11 @@ import Router from "@koa/router"
 import * as rowController from "../controllers/row"
 import authorized from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
-const {
-  PermissionLevel,
-  PermissionType,
-} = require("@budibase/backend-core/permissions")
-const { internalSearchValidator } = require("./utils/validators")
+import { permissions } from "@budibase/backend-core"
+import { internalSearchValidator } from "./utils/validators"
+const { PermissionType, PermissionLevel } = permissions
 
-const router = new Router()
+const router: Router = new Router()
 
 router
   /**
