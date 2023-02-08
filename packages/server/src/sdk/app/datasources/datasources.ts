@@ -63,8 +63,12 @@ function useEnvVars(str: any) {
 
 export async function removeSecrets(datasources: Datasource[]) {
   const definitions = await getDefinitions()
+  const finalDatasources = []
   for (let datasource of datasources) {
     const schema = definitions[datasource.source]
+    if (!schema) {
+      continue
+    }
     if (datasource.config) {
       // strip secrets from response, so they don't show in the network request
       if (datasource.config.auth) {
@@ -93,8 +97,9 @@ export async function removeSecrets(datasources: Datasource[]) {
         }
       }
     }
+    finalDatasources.push(datasource)
   }
-  return datasources
+  return finalDatasources
 }
 
 export async function removeSecretSingle(datasource: Datasource) {
