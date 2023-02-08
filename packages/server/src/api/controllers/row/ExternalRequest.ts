@@ -337,13 +337,20 @@ export class ExternalRequest {
       if (!linkedTable || !row[relationship.column]) {
         continue
       }
+
       const display = linkedTable.primaryDisplay
       for (let key of Object.keys(row[relationship.column])) {
         const related: Row = row[relationship.column][key]
-        row[relationship.column][key] = {
+        const squashed: Record<string, any> = {
           primaryDisplay: display ? related[display] : undefined,
           _id: related._id,
         }
+        for (let key of linkedTable.primary!) {
+          if (related[key]) {
+            squashed['data'] = related
+          }
+        }
+        row[relationship.column][key] = squashed
       }
     }
     return row
