@@ -29,18 +29,39 @@
     : BUDIBASE_INTERNAL_DB_ID
 
   export let name
-  let dataImport
+  export let beforeSave = async () => {}
+  export let afterSave = async table => {
+    notifications.success(`Table ${name} created successfully.`)
+
+    // Navigate to new table
+    const currentUrl = $url()
+    const path = currentUrl.endsWith("data")
+      ? `./table/${table._id}`
+      : `../../table/${table._id}`
+    $goto(path)
+  }
+
   let error = ""
   let autoColumns = getAutoColumnInformation()
+  let schema = {}
+  let rows = []
+  let allValid = true
+  let displayColumn = null
 
-  function addAutoColumns(tableName, schema) {
-    for (let [subtype, col] of Object.entries(autoColumns)) {
-      if (!col.enabled) {
-        continue
+  function getAutoColumns() {
+    const selectedAutoColumns = {}
+
+    Object.entries(autoColumns).forEach(([subtype, column]) => {
+      if (column.enabled) {
+        selectedAutoColumns[column.name] = buildAutoColumn(
+          name,
+          column.name,
+          subtype
+        )
       }
-      schema[col.name] = buildAutoColumn(tableName, col.name, subtype)
-    }
-    return schema
+    })
+
+    return selectedAutoColumns
   }
 
   function checkValid(evt) {
@@ -55,29 +76,23 @@
   async function saveTable() {
     let newTable = {
       name,
-      schema: addAutoColumns(name, dataImport.schema || {}),
-      dataImport,
+      schema: { ...schema, ...getAutoColumns() },
+      rows,
       type: "internal",
       sourceId: targetDatasourceId,
     }
 
     // Only set primary display if defined
-    if (dataImport.primaryDisplay && dataImport.primaryDisplay.length) {
-      newTable.primaryDisplay = dataImport.primaryDisplay
+    if (displayColumn && displayColumn.length) {
+      newTable.primaryDisplay = displayColumn
     }
 
     // Create table
     let table
     try {
+      await beforeSave()
       table = await tables.save(newTable)
-      notifications.success(`Table ${name} created successfully.`)
-
-      // Navigate to new table
-      const currentUrl = $url()
-      const path = currentUrl.endsWith("data")
-        ? `./table/${table._id}`
-        : `../../table/${table._id}`
-      $goto(path)
+      await afterSave(table)
     } catch (e) {
       notifications.error(e)
       // reload in case the table was created
@@ -90,10 +105,9 @@
   title="Create Table"
   confirmText="Create"
   onConfirm={saveTable}
-  disabled={error || !name || (dataImport && !dataImport.valid)}
+  disabled={error || !name || (rows.length && !allValid)}
 >
   <Input
-    data-cy="table-name-input"
     thin
     label="Table Name"
     on:input={checkValid}
@@ -117,8 +131,10 @@
   </div>
   <div>
     <Layout gap="XS" noPadding>
-      <Label grey extraSmall>Create Table from CSV (Optional)</Label>
-      <TableDataImport bind:dataImport />
+      <Label grey extraSmall
+        >Create a Table from a CSV or JSON file (Optional)</Label
+      >
+      <TableDataImport bind:rows bind:schema bind:allValid bind:displayColumn />
     </Layout>
   </div>
 </ModalContent>

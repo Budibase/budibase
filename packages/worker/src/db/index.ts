@@ -1,4 +1,4 @@
-import core from "@budibase/backend-core"
+import * as core from "@budibase/backend-core"
 import env from "../environment"
 
 export const init = () => {

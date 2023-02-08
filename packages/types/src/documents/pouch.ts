@@ -7,7 +7,7 @@ export interface RowResponse<T> {
   id: string
   key: string
   error: string
-  value: RowValue
+  value: T | RowValue
   doc?: T | any
 }
 

@@ -9,7 +9,8 @@ describe("/webhooks", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  const setupTest = async () => {
+    config.modeSelf()
     await config.init()
     const autoConfig = basicAutomation()
     autoConfig.definition.trigger = {
@@ -18,7 +19,9 @@ describe("/webhooks", () => {
     }
     await config.createAutomation(autoConfig)
     webhook = await config.createWebhook()
-  })
+  }
+
+  beforeAll(setupTest)
 
   describe("create", () => {
     it("should create a webhook successfully", async () => {
@@ -44,6 +47,8 @@ describe("/webhooks", () => {
   })
 
   describe("fetch", () => {
+    beforeAll(setupTest)
+
     it("returns the correct routing for basic user", async () => {
       const res = await request
         .get(`/api/webhooks`)
@@ -64,6 +69,8 @@ describe("/webhooks", () => {
   })
 
   describe("delete", () => {
+    beforeAll(setupTest)
+    
     it("should successfully delete", async () => {
       const res = await request
         .delete(`/api/webhooks/${webhook._id}/${webhook._rev}`)
@@ -84,6 +91,8 @@ describe("/webhooks", () => {
   })
 
   describe("build schema", () => {
+    beforeAll(setupTest)
+
     it("should allow building a schema", async () => {
       const res = await request
         .post(`/api/webhooks/schema/${config.getAppId()}/${webhook._id}`)
@@ -113,7 +122,7 @@ describe("/webhooks", () => {
   describe("trigger", () => {
     it("should allow triggering from public", async () => {
       // replicate changes before checking webhook
-      await config.deploy()
+      await config.publish()
 
       const res = await request
         .post(`/api/webhooks/trigger/${config.prodAppId}/${webhook._id}`)

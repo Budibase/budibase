@@ -1,13 +1,13 @@
 const setup = require("./utilities")
 const { basicScreen } = setup.structures
 const { checkBuilderEndpoint, runInProd } = require("./utilities/TestFunctions")
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const { roles } = require("@budibase/backend-core")
+const { BUILTIN_ROLE_IDS } = roles
 
 const route = "/test"
 
 // there are checks which are disabled in test env,
 // these checks need to be enabled for this test
-
 
 describe("/routing", () => {
   let request = setup.getRequest()
@@ -16,7 +16,7 @@ describe("/routing", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
     screen = basicScreen()
     screen.routing.route = route
@@ -25,7 +25,7 @@ describe("/routing", () => {
     screen2.routing.roleId = BUILTIN_ROLE_IDS.POWER
     screen2.routing.route = route
     screen2 = await config.createScreen(screen2)
-    await config.deploy()
+    await config.publish()
   })
 
   describe("fetch", () => {

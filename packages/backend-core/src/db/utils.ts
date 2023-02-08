@@ -1,26 +1,20 @@
-import { newid } from "../hashing"
-import { DEFAULT_TENANT_ID, Config } from "../constants"
+import { newid } from "../newid"
 import env from "../environment"
 import {
+  DEFAULT_TENANT_ID,
   SEPARATOR,
   DocumentType,
   UNICODE_MAX,
   ViewName,
   InternalTable,
-} from "./constants"
-import { getTenantId, getGlobalDB } from "../context"
-import { getGlobalDBName } from "./tenancy"
-import { doWithDB, allDbs, directCouchAllDbs } from "./db"
+  APP_PREFIX,
+} from "../constants"
+import { getTenantId, getGlobalDB, getGlobalDBName } from "../context"
+import { doWithDB, directCouchAllDbs } from "./db"
 import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
-import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-import { App, Database } from "@budibase/types"
-
-export * from "./constants"
-export * from "./conversions"
-export { default as Replication } from "./Replication"
-export * from "./tenancy"
+import { App, Database, ConfigType, isSettingsConfig } from "@budibase/types"
 
 /**
  * Generates a new app ID.
@@ -171,7 +165,7 @@ export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-export function getUserMetadataParams(userId?: string, otherProps = {}) {
+export function getUserMetadataParams(userId?: string | null, otherProps = {}) {
   return getRowParams(InternalTable.USER_METADATA, userId, otherProps)
 }
 
@@ -244,7 +238,7 @@ export function getTemplateParams(
  * Generates a new role ID.
  * @returns {string} The new role ID which the role doc can be stored under.
  */
-export function generateRoleID(id: any) {
+export function generateRoleID(id?: any) {
   return `${DocumentType.ROLE}${SEPARATOR}${id || newid()}`
 }
 
@@ -268,10 +262,7 @@ export function getStartEndKeyURL(baseKey: any, tenantId?: string) {
  */
 export async function getAllDbs(opts = { efficient: false }) {
   const efficient = opts && opts.efficient
-  // specifically for testing we use the pouch package for this
-  if (env.isTest()) {
-    return allDbs()
-  }
+
   let dbs: any[] = []
   async function addDbs(queryString?: string) {
     const json = await directCouchAllDbs(queryString)
@@ -494,25 +485,29 @@ export const getScopedFullConfig = async function (
   )[0]
 
   // custom logic for settings doc
-  if (type === Config.SETTINGS) {
-    if (scopedConfig && scopedConfig.doc) {
-      // overrides affected by environment variables
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
-        tenantAware: true,
-      })
-      scopedConfig.doc.config.analyticsEnabled =
-        await events.analytics.enabled()
-    } else {
+  if (type === ConfigType.SETTINGS) {
+    if (!scopedConfig || !scopedConfig.doc) {
       // defaults
       scopedConfig = {
         doc: {
           _id: generateConfigID({ type, user, workspace }),
+          type: ConfigType.SETTINGS,
           config: {
             platformUrl: await getPlatformUrl({ tenantAware: true }),
             analyticsEnabled: await events.analytics.enabled(),
           },
         },
       }
+    }
+
+    // will always be true - use assertion function to get type access
+    if (isSettingsConfig(scopedConfig.doc)) {
+      // overrides affected by environment
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
+        tenantAware: true,
+      })
+      scopedConfig.doc.config.analyticsEnabled =
+        await events.analytics.enabled()
     }
   }
 
@@ -533,7 +528,7 @@ export const getPlatformUrl = async (opts = { tenantAware: true }) => {
     // get the doc directly instead of with getScopedConfig to prevent loop
     let settings
     try {
-      settings = await db.get(generateConfigID({ type: Config.SETTINGS }))
+      settings = await db.get(generateConfigID({ type: ConfigType.SETTINGS }))
     } catch (e: any) {
       if (e.status !== 404) {
         throw e

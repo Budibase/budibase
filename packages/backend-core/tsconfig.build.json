@@ -3,7 +3,6 @@
     "target": "es6",
     "module": "commonjs",
     "lib": ["es2020"],
-    "allowJs": true,
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
@@ -13,6 +12,7 @@
     "declaration": true,
     "types": [ "node", "jest" ],
     "outDir": "dist",
+    "skipLibCheck": true
   },
   "include": [
     "**/*.js",
@@ -23,6 +23,7 @@
     "node_modules",
     "dist",
     "**/*.spec.ts",
-    "**/*.spec.js"
+    "**/*.spec.js",
+    "__mocks__"
   ]
 }

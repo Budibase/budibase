@@ -1,5 +1,5 @@
 const setup = require("./utilities")
-const { events, constants, db } = require("@budibase/backend-core")
+const { events, constants } = require("@budibase/backend-core")
 
 describe("/static", () => {
   let request = setup.getRequest()
@@ -10,8 +10,11 @@ describe("/static", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await config.init()
+  })
+  
+  beforeEach(()=>{
     jest.clearAllMocks()
   })
 

@@ -96,6 +96,49 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
 
 /**
  * @openapi
+ * /applications/{appId}/unpublish:
+ *   post:
+ *     operationId: unpublish
+ *     summary: Unpublish an application
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     responses:
+ *       204:
+ *         description: The app was published successfully.
+ */
+write.push(
+  new Endpoint("post", "/applications/:appId/unpublish", controller.unpublish)
+)
+
+/**
+ * @openapi
+ * /applications/{appId}/publish:
+ *   post:
+ *     operationId: publish
+ *     summary: Unpublish an application
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     responses:
+ *       200:
+ *         description: Returns the deployment object.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/deploymentOutput'
+ *             examples:
+ *               deployment:
+ *                 $ref: '#/components/examples/deploymentOutput'
+ */
+write.push(
+  new Endpoint("post", "/applications/:appId/publish", controller.publish)
+)
+
+/**
+ * @openapi
  * /applications/{appId}:
  *   get:
  *     operationId: getById

@@ -67,16 +67,24 @@ jobs:
         uses: azure/setup-helm@v1
         id: helm-install
 
+      # due to helm repo index issue: https://github.com/helm/helm/issues/7363
+      # we need to create new package in a different dir, merge the index and move the package back
       - name: Build and release helm chart
         run: | 
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git reset --hard
           git pull
-          helm package charts/budibase
+          mkdir sync
+          echo "Packaging chart to sync dir"
+          helm package charts/budibase --version "$RELEASE_VERSION" --app-version "$RELEASE_VERSION" --destination sync
+          echo "Packaging successful"
           git checkout gh-pages
-          mv *.tgz docs
-          helm repo index docs
+          echo "Indexing helm repo"
+          helm repo index --merge docs/index.yaml sync
+          mv -f sync/* docs
+          rm -rf sync
+          echo "Pushing new helm release"
           git add -A
           git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
           git push

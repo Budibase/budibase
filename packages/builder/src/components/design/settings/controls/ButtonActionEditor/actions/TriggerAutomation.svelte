@@ -36,7 +36,13 @@
   $: selectedSchema = selectedAutomation?.schema
 
   const onFieldsChanged = e => {
-    parameters.fields = e.detail
+    parameters.fields = Object.entries(e.detail || {}).reduce(
+      (acc, [key, value]) => {
+        acc[key.trim()] = value
+        return acc
+      },
+      {}
+    )
   }
 
   const setNew = () => {
@@ -93,6 +99,11 @@
     {/if}
 
     <Label small />
+    <Checkbox
+      text="Do not display default notification"
+      bind:value={parameters.notificationOverride}
+    />
+    <br />
     <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
     {#if parameters.confirm}

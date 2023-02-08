@@ -128,7 +128,7 @@ export function getLinkParams(otherProps: any = {}) {
  * Generates a new layout ID.
  * @returns {string} The new layout ID which the layout doc can be stored under.
  */
-export function generateLayoutID(id: string) {
+export function generateLayoutID(id?: string) {
   return `${DocumentType.LAYOUT}${SEPARATOR}${id || newid()}`
 }
 

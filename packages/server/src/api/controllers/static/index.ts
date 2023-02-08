@@ -1,32 +1,24 @@
-import { enrichPluginURLs } from "../../../utilities/plugins"
-
 require("svelte/register")
 
-const send = require("koa-send")
-const { resolve, join } = require("../../../utilities/centralPath")
+import { resolve, join } from "../../../utilities/centralPath"
 const uuid = require("uuid")
-const { ObjectStoreBuckets } = require("../../../constants")
-const { processString } = require("@budibase/string-templates")
-const {
+import { ObjectStoreBuckets } from "../../../constants"
+import { processString } from "@budibase/string-templates"
+import {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
   TOP_LEVEL_PATH,
-} = require("../../../utilities/fileSystem")
-const env = require("../../../environment")
-const { clientLibraryPath } = require("../../../utilities")
-const { upload, deleteFiles } = require("../../../utilities/fileSystem")
-const { attachmentsRelativeURL } = require("../../../utilities")
-const { DocumentType } = require("../../../db/utils")
-const { getAppDB, getAppId } = require("@budibase/backend-core/context")
-const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
-const AWS = require("aws-sdk")
-const fs = require("fs")
-const {
-  downloadTarballDirect,
-} = require("../../../utilities/fileSystem/utilities")
+} from "../../../utilities/fileSystem"
+import env from "../../../environment"
+import { DocumentType } from "../../../db/utils"
+import { context, objectStore, utils } from "@budibase/backend-core"
+import AWS from "aws-sdk"
+import fs from "fs"
+import sdk from "../../../sdk"
+const send = require("koa-send")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
-  const response = await upload({
+  const response = await objectStore.upload({
     bucket,
     metadata,
     filename: s3Key,
@@ -38,7 +30,7 @@ async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   return {
     size: file.size,
     name: file.name,
-    url: attachmentsRelativeURL(response.Key),
+    url: objectStore.getAppFileUrl(s3Key),
     extension: [...file.name.split(".")].pop(),
     key: response.Key,
   }
@@ -48,7 +40,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
   const cookieName = `beta:${ctx.params.feature}`
 
   if (ctx.cookies.get(cookieName)) {
-    clearCookie(ctx, cookieName)
+    utils.clearCookie(ctx, cookieName)
     ctx.body = {
       message: `${ctx.params.feature} disabled`,
     }
@@ -61,11 +53,11 @@ export const toggleBetaUiFeature = async function (ctx: any) {
   if (!fs.existsSync(builderPath)) {
     fs.mkdirSync(builderPath)
   }
-  await downloadTarballDirect(
+  await objectStore.downloadTarballDirect(
     "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
     builderPath
   )
-  setCookie(ctx, {}, cookieName)
+  utils.setCookie(ctx, {}, cookieName)
 
   ctx.body = {
     message: `${ctx.params.feature} enabled`,
@@ -90,7 +82,7 @@ export const uploadFile = async function (ctx: any) {
 
     return prepareUpload({
       file,
-      s3Key: `${ctx.appId}/attachments/${processedFileName}`,
+      s3Key: `${context.getProdAppId()}/attachments/${processedFileName}`,
       bucket: ObjectStoreBuckets.APPS,
     })
   })
@@ -99,24 +91,27 @@ export const uploadFile = async function (ctx: any) {
 }
 
 export const deleteObjects = async function (ctx: any) {
-  ctx.body = await deleteFiles(ObjectStoreBuckets.APPS, ctx.request.body.keys)
+  ctx.body = await objectStore.deleteFiles(
+    ObjectStoreBuckets.APPS,
+    ctx.request.body.keys
+  )
 }
 
 export const serveApp = async function (ctx: any) {
-  const db = getAppDB({ skip_setup: true })
+  const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
-  let appId = getAppId()
+  let appId = context.getAppId()
 
   if (!env.isJest()) {
     const App = require("./templates/BudibaseApp.svelte").default
-    const plugins = enrichPluginURLs(appInfo.usedPlugins)
+    const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
     const { head, html, css } = App.render({
       metaImage:
         "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
       title: appInfo.name,
       production: env.isProd(),
       appId,
-      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+      clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
       usedPlugins: plugins,
     })
 
@@ -134,14 +129,14 @@ export const serveApp = async function (ctx: any) {
 }
 
 export const serveBuilderPreview = async function (ctx: any) {
-  const db = getAppDB({ skip_setup: true })
+  const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
-    let appId = getAppId()
+    let appId = context.getAppId()
     const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
     ctx.body = await processString(previewHbs, {
-      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+      clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
     })
   } else {
     // just return the app info for jest to assert on
@@ -156,13 +151,11 @@ export const serveClientLibrary = async function (ctx: any) {
 }
 
 export const getSignedUploadURL = async function (ctx: any) {
-  const database = getAppDB()
-
   // Ensure datasource is valid
   let datasource
   try {
     const { datasourceId } = ctx.params
-    datasource = await database.get(datasourceId)
+    datasource = await sdk.datasources.get(datasourceId, { enriched: true })
     if (!datasource) {
       ctx.throw(400, "The specified datasource could not be found")
     }
@@ -178,8 +171,8 @@ export const getSignedUploadURL = async function (ctx: any) {
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
-  const awsRegion = datasource?.config?.region || "eu-west-1"
-  if (datasource.source === "S3") {
+  const awsRegion = (datasource?.config?.region || "eu-west-1") as string
+  if (datasource?.source === "S3") {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
       ctx.throw(400, "bucket and key values are required")
@@ -188,8 +181,8 @@ export const getSignedUploadURL = async function (ctx: any) {
     try {
       const s3 = new AWS.S3({
         region: awsRegion,
-        accessKeyId: datasource?.config?.accessKeyId,
-        secretAccessKey: datasource?.config?.secretAccessKey,
+        accessKeyId: datasource?.config?.accessKeyId as string,
+        secretAccessKey: datasource?.config?.secretAccessKey as string,
         apiVersion: "2006-03-01",
         signatureVersion: "v4",
       })
