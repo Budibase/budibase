@@ -63,7 +63,7 @@
     if (!widths?.length) {
       return "--grid: 1fr;"
     }
-    return `--grid: 50px ${widths.map(x => `${x}px`).join(" ")};`
+    return `--grid: 50px ${widths.map(x => `${x}px`).join(" ")} 180px;`
   }
 
   const handleScroll = e => {
@@ -231,6 +231,8 @@
           {field}
         </div>
       {/each}
+      <!-- Horizontal spacer -->
+      <div />
 
       <!-- All real rows -->
       {#each rows as row, rowIdx (row._id)}
@@ -275,6 +277,8 @@
             />
           </div>
         {/each}
+        <!-- Horizontal spacer -->
+        <div />
       {/each}
 
       <!-- New row placeholder -->
@@ -298,6 +302,11 @@
           on:mouseover={() => (hoveredRow = "new")}
         />
       {/each}
+      <!-- Horizontal spacer -->
+      <div />
+
+      <!-- Vertical spacer -->
+      <div class="vertical-spacer" />
     </div>
   </div>
 </div>
@@ -314,14 +323,16 @@
   .spreadsheet {
     display: grid;
     grid-template-columns: var(--grid);
-    flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     overflow: auto;
-    max-height: 1014px;
+    max-height: 800px;
     position: relative;
-    padding-bottom: 180px;
-    padding-right: 100px;
+    cursor: default;
+  }
+  .vertical-spacer {
+    grid-column: 1/-1;
+    height: 180px;
   }
 
   .wrapper ::-webkit-scrollbar-track {
