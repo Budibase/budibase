@@ -181,7 +181,7 @@ export async function validate(ctx: BBContext) {
 }
 
 export async function exportRows(ctx: BBContext) {
-  const { datasourceId } = breakExternalTableId(ctx.params.tableId)
+  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
   const format = ctx.query.format
   const { columns } = ctx.request.body
   const datasource = await sdk.datasources.get(datasourceId!)
@@ -217,7 +217,9 @@ export async function exportRows(ctx: BBContext) {
     rows = result.rows
   }
 
-  // @ts-ignore
+  if (!tableName) {
+    ctx.throw(400, "Could not find table name.")
+  }
   let schema = datasource.entities[tableName].schema
   let exportRows = cleanExportRows(rows, schema, format, columns)
 
