@@ -553,4 +553,42 @@ describe("SQL query builder", () => {
       sql: `select * from (select top (@p0) * from [${tableName}] where LOWER([${tableName}].[name]) LIKE @p1) as [${tableName}]`,
     })
   })
+
+  it("should ignore high range value if it is an empty object", () => {
+    const query = sql._query(
+      generateReadJson({
+        filters: {
+          range: {
+            dob: {
+              low: "2000-01-01 00:00:00",
+              high: {},
+            },
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: ["2000-01-01 00:00:00", 500],
+      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"dob\" > $1 limit $2) as \"${TABLE_NAME}\"`,
+    })
+  })
+
+  it("should ignore low range value if it is an empty object", () => {
+    const query = sql._query(
+      generateReadJson({
+        filters: {
+          range: {
+            dob: {
+              low: {},
+              high: "2010-01-01 00:00:00",
+            },
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: ["2010-01-01 00:00:00", 500],
+      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"dob\" < $1 limit $2) as \"${TABLE_NAME}\"`,
+    })
+  })
 })
