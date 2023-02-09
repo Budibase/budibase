@@ -75,15 +75,19 @@
     editableColumn.constraints.presence = { allowEmpty: false }
   }
 
-  $: if (field && !savingColumn) {
-    editableColumn = cloneDeep(field)
-    originalName = editableColumn.name ? editableColumn.name + "" : null
-    linkEditDisabled = originalName != null
-    isCreating = originalName == null
-    primaryDisplay =
-      $tables.selected.primaryDisplay == null ||
-      $tables.selected.primaryDisplay === editableColumn.name
+  const initialiseField = (field, savingColumn) => {
+    if (field && !savingColumn) {
+      editableColumn = cloneDeep(field)
+      originalName = editableColumn.name ? editableColumn.name + "" : null
+      linkEditDisabled = originalName != null
+      isCreating = originalName == null
+      primaryDisplay =
+        $tables.selected.primaryDisplay == null ||
+        $tables.selected.primaryDisplay === editableColumn.name
+    }
   }
+
+  $: initialiseField(field, savingColumn)
 
   $: checkConstraints(editableColumn)
   $: required = !!editableColumn?.constraints?.presence || primaryDisplay
@@ -583,7 +587,12 @@
       title="Formula"
       label="Formula"
       value={editableColumn.formula}
-      on:change={e => (editableColumn.formula = e.detail)}
+      on:change={e => {
+        editableColumn = {
+          ...editableColumn,
+          formula: e.detail,
+        }
+      }}
       bindings={getBindings({ table })}
       allowJS
     />
