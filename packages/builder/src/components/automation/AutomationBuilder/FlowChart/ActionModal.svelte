@@ -106,52 +106,31 @@
     <Detail size="S">Actions</Detail>
     <div class="item-list">
       {#each Object.entries(internal) as [idx, action]}
-        {#if disabled[idx] && disabled[idx].disabled}
-          <Tooltip text={disabled[idx].message} direction="bottom">
-            <div
-              class="item"
-              class:selected={selectedAction === action.name}
-              class:disabled={true}
-              on:click={() => selectAction(action)}
-            >
-              <div class="item-body">
-                <Icon name={action.icon} />
-                <span class="icon-spacing">
-                  <Body size="XS">{action.name}</Body></span
-                >
-              </div>
-            </div>
-          </Tooltip>
-        {:else}
-          <div
-            class="item"
-            class:selected={selectedAction === action.name}
-            on:click={() => selectAction(action)}
-          >
-            <div class="item-body">
-              <Icon name={action.icon} />
-              <span class="icon-spacing">
-                <Body size="XS">{action.name}</Body></span
-              >
-            </div>
+        {@const isDisabled = disabled[idx] && disabled[idx].disabled}
+        <div
+          class="item"
+          class:disabled={isDisabled}
+          class:selected={selectedAction === action.name}
+          on:click={disabled ? null : () => selectAction(action)}
+        >
+          <div class="item-body">
+            <Icon name={action.icon} />
+            <Body size="XS">{action.name}</Body>
+            {#if isDisabled}
+              <Icon name="Help" tooltip={disabled[idx].message} />
+            {/if}
           </div>
-        {/if}
+        </div>
       {/each}
     </div>
   </Layout>
 </ModalContent>
 
 <style>
-  .disabled {
-    opacity: 0.3;
-    pointer-events: none;
-  }
-  .icon-spacing {
-    margin-left: var(--spacing-m);
-  }
   .item-body {
     display: flex;
     margin-left: var(--spacing-m);
+    gap: var(--spacing-m);
   }
   .item-list {
     display: grid;
@@ -170,8 +149,15 @@
     box-sizing: border-box;
     border-width: 2px;
   }
-  .item:hover,
+  .item:not(.disabled):hover,
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
+  }
+  .disabled {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-500);
+  }
+  .disabled :global(.spectrum-Body) {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
