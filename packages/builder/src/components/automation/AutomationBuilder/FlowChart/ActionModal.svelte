@@ -111,7 +111,7 @@
           class="item"
           class:disabled={isDisabled}
           class:selected={selectedAction === action.name}
-          on:click={disabled ? null : () => selectAction(action)}
+          on:click={isDisabled ? null : () => selectAction(action)}
         >
           <div class="item-body">
             <Icon name={action.icon} />
