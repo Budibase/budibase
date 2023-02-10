@@ -104,7 +104,6 @@ export function importToRows(data: any, table: any, user: any = {}) {
     const processed: any = inputProcessing(user, table, row, {
       noAutoRelationships: true,
     })
-    table = processed.table
     row = processed.row
 
     let fieldName: any
@@ -113,6 +112,7 @@ export function importToRows(data: any, table: any, user: any = {}) {
       // check whether the options need to be updated for inclusion as part of the data import
       if (
         schema.type === FieldTypes.OPTIONS &&
+        row[fieldName] &&
         (!schema.constraints.inclusion ||
           schema.constraints.inclusion.indexOf(row[fieldName]) === -1)
       ) {
@@ -120,6 +120,7 @@ export function importToRows(data: any, table: any, user: any = {}) {
           ...schema.constraints.inclusion,
           row[fieldName],
         ]
+        schema.constraints.inclusion.sort()
       }
     }
 
