@@ -95,27 +95,6 @@ export function makeSureTableUpToDate(table: any, tableToSave: any) {
   return tableToSave
 }
 
-function createOptionsSchema(table: any, rows: any[]) {
-  if (!table || !rows?.length) {
-    return table
-  }
-  let field: any
-  let column: any
-  for ([field, column] of Object.entries(table.schema)) {
-    if (column.type === FieldTypes.OPTIONS) {
-      table.schema[field].constraints.inclusion = [
-        ...new Set(
-          rows
-            .map(row => row[field])
-            .filter(value => value != null && value !== "")
-        ),
-      ]
-      table.schema[field].constraints.inclusion.sort()
-    }
-  }
-  return table
-}
-
 export function importToRows(data: any, table: any, user: any = {}) {
   let finalData: any = []
   for (let i = 0; i < data.length; i++) {
@@ -125,7 +104,6 @@ export function importToRows(data: any, table: any, user: any = {}) {
     const processed: any = inputProcessing(user, table, row, {
       noAutoRelationships: true,
     })
-    table = processed.table
     row = processed.row
 
     let fieldName: any
@@ -134,6 +112,7 @@ export function importToRows(data: any, table: any, user: any = {}) {
       // check whether the options need to be updated for inclusion as part of the data import
       if (
         schema.type === FieldTypes.OPTIONS &&
+        row[fieldName] &&
         (!schema.constraints.inclusion ||
           schema.constraints.inclusion.indexOf(row[fieldName]) === -1)
       ) {
@@ -141,6 +120,7 @@ export function importToRows(data: any, table: any, user: any = {}) {
           ...schema.constraints.inclusion,
           row[fieldName],
         ]
+        schema.constraints.inclusion.sort()
       }
     }
 
@@ -246,8 +226,6 @@ class TableSaveFunctions {
   async before(table: any) {
     if (this.oldTable) {
       table = makeSureTableUpToDate(this.oldTable, table)
-    } else {
-      table = createOptionsSchema(table, this.importRows)
     }
     table = checkStaticTables(table)
     return table
