@@ -95,6 +95,26 @@ export function makeSureTableUpToDate(table: any, tableToSave: any) {
   return tableToSave
 }
 
+function createOptionsSchema(table: any, rows: any[]) {
+  if (!table || !rows?.length) {
+    return table
+  }
+  let field: any
+  let column: any
+  for ([field, column] of Object.entries(table.schema)) {
+    if (column.type === FieldTypes.OPTIONS) {
+      table.schema[field].constraints.inclusion = [
+        ...new Set(
+          rows
+            .map(row => row[field])
+            .filter(value => value != null && value !== "")
+        ),
+      ]
+    }
+  }
+  return table
+}
+
 export function importToRows(data: any, table: any, user: any = {}) {
   let finalData: any = []
   for (let i = 0; i < data.length; i++) {
@@ -225,6 +245,8 @@ class TableSaveFunctions {
   async before(table: any) {
     if (this.oldTable) {
       table = makeSureTableUpToDate(this.oldTable, table)
+    } else {
+      table = createOptionsSchema(table, this.importRows)
     }
     table = checkStaticTables(table)
     return table
