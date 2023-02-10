@@ -4,6 +4,7 @@ import {
   selectedScreen,
   selectedComponent,
   screenHistoryStore,
+  automationHistoryStore,
 } from "builderStore"
 import {
   datasources,
@@ -127,6 +128,7 @@ export const getFrontendStore = () => {
         usedPlugins: application.usedPlugins || [],
       }))
       screenHistoryStore.reset()
+      automationHistoryStore.reset()
 
       // Initialise backend stores
       database.set(application.instance)
