@@ -7,17 +7,6 @@
   export let onChange
 
   const options = schema?.constraints?.inclusion || []
-  const colors = [
-    "rgb(207, 223, 255)",
-    "rgb(208, 240, 253)",
-    "rgb(194, 245, 233)",
-    "rgb(209, 247, 196)",
-    "rgb(255, 234, 182)",
-    "rgb(254, 226, 213)",
-    "rgb(255, 220, 229)",
-    "rgb(255, 218, 246)",
-    "rgb(237, 226, 254)",
-  ]
 
   let open = false
 
@@ -34,7 +23,7 @@
     if (!value || index === -1) {
       return null
     }
-    return colors[index % colors.length]
+    return `hsla(${((index + 1) * 222) % 360}, 90%, 75%, 0.3)`
   }
 
   const toggle = () => {
@@ -107,7 +96,6 @@
     padding: 2px 8px;
     background: var(--color);
     border-radius: 8px;
-    color: #2c2c2c;
     user-select: none;
   }
   .options {
