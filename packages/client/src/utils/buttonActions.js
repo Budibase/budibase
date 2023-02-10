@@ -87,6 +87,24 @@ const duplicateRowHandler = async (action, context) => {
   }
 }
 
+const fetchRowHandler = async (action) => {
+  const { tableId, rowId } = action.parameters
+
+  if (tableId && rowId) {
+    try {
+      const row = await API.fetchRow({ tableId, rowId })
+      console.log(row)
+      await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+        invalidateRelationships: true,
+      })
+
+      return { row }
+    } catch (error) {
+      return false
+    }
+  }
+}
+
 const deleteRowHandler = async action => {
   const { tableId, revId, rowId, notificationOverride } = action.parameters
   if (tableId && rowId) {
@@ -341,6 +359,7 @@ const CloseSidePanelHandler = () => {
 }
 
 const handlerMap = {
+  ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
   ["Delete Row"]: deleteRowHandler,
