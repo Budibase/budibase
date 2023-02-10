@@ -16,6 +16,7 @@
   const component = getContext("component")
   const limit = 100
   const defaultWidth = 200
+  const minWidth = 100
 
   let widths
   let hoveredRow
@@ -35,6 +36,7 @@
   })
   $: fields = Object.keys($fetch.schema || {})
   $: initWidths(fields)
+  $: sliderPositions = getSliderPositions(widths)
   $: gridStyles = getGridStyles(widths)
   $: schema = $fetch.schema
   $: rowCount = $fetch.rows?.length || 0
@@ -64,6 +66,13 @@
       return "--grid: 1fr;"
     }
     return `--grid: 50px ${widths.map(x => `${x}px`).join(" ")} 180px;`
+  }
+
+  const getSliderPositions = widths => {
+    let offset = 50
+    return widths.map(width => {
+      return (offset += width)
+    })
   }
 
   const handleScroll = e => {
@@ -182,6 +191,28 @@
     })
     return sortedRows
   }
+
+  let resizeInitialX
+  let resizeInitialWidth
+  let resizeFieldIndex
+
+  const startResizing = (fieldIdx, e) => {
+    resizeInitialX = e.clientX
+    resizeInitialWidth = widths[fieldIdx]
+    resizeFieldIndex = fieldIdx
+    document.addEventListener("mousemove", onResize)
+    document.addEventListener("mouseup", stopResizing)
+  }
+
+  const onResize = e => {
+    const dx = e.clientX - resizeInitialX
+    widths[resizeFieldIndex] = Math.max(minWidth, resizeInitialWidth + dx)
+  }
+
+  const stopResizing = () => {
+    document.removeEventListener("mousemove", onResize)
+    document.removeEventListener("mouseup", stopResizing)
+  }
 </script>
 
 <div use:styleable={$component.styles}>
@@ -228,11 +259,22 @@
             name={getIconForField(field)}
             color="var(--spectrum-global-color-gray-600)"
           />
-          {field}
+          <span>
+            {field}
+          </span>
         </div>
       {/each}
       <!-- Horizontal spacer -->
       <div />
+
+      <!-- Sliders for resizing columns -->
+      {#each sliderPositions as left, idx}
+        <div
+          class="slider"
+          on:mousedown={e => startResizing(idx, e)}
+          style="--left: {left}px"
+        />
+      {/each}
 
       <!-- All real rows -->
       {#each rows as row, rowIdx (row._id)}
@@ -423,8 +465,38 @@
     z-index: 3;
     border-color: var(--spectrum-global-color-gray-400);
   }
+  .header span {
+    flex: 1 1 auto;
+    width: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
   .header.sticky {
     z-index: 4;
+  }
+
+  /* Column resizing */
+  .slider {
+    position: absolute;
+    z-index: 5;
+    left: var(--left);
+    top: 0;
+    width: 16px;
+    height: 32px;
+    transform: translateX(-50%);
+  }
+  .slider:hover:after {
+    content: " ";
+    position: absolute;
+    width: 2px;
+    left: 50%;
+    height: 100%;
+    background: var(--spectrum-global-color-blue-400);
+    transform: translateX(-50%);
+  }
+  .slider:hover {
+    cursor: col-resize;
   }
 
   .sticky.shadow:after {
