@@ -74,6 +74,10 @@ export const useGroups = () => {
   return useFeature(Feature.USER_GROUPS)
 }
 
+export const useEnvironmentVariables = () => {
+  return useFeature(Feature.ENVIRONMENT_VARIABLES)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {

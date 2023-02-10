@@ -2,7 +2,7 @@
 name: Feature Request
 about: Request a new budibase feature or enhancement
 title: ''
-labels: ["enhancement", "linear"]
+labels: enhancement
 assignees: ''
 
 ---
