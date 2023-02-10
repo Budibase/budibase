@@ -110,6 +110,7 @@ function createOptionsSchema(table: any, rows: any[]) {
             .filter(value => value != null && value !== "")
         ),
       ]
+      table.schema[field].constraints.inclusion.sort()
     }
   }
   return table
