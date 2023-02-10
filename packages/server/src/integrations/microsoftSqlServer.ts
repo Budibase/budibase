@@ -26,7 +26,7 @@ interface MSSQLConfig {
   user: string
   password: string
   server: string
-  port: number
+  port: number | string
   database: string
   schema: string
   encrypt?: boolean
@@ -108,6 +108,9 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   constructor(config: MSSQLConfig) {
     super(SqlClient.MS_SQL)
     this.config = config
+    if (typeof this.config?.port === "string") {
+      this.config.port = parseInt(this.config.port)
+    }
     const clientCfg = {
       ...this.config,
       options: {
