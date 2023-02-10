@@ -71,6 +71,7 @@
         }
       }}
       value={productionValue}
+      autocomplete="new-password"
     />
   </div>
   <div>
@@ -83,6 +84,7 @@
       disabled={useProductionValue}
       label="Value"
       value={useProductionValue ? productionValue : developmentValue}
+      autocomplete="new-password"
     />
     <Checkbox bind:value={useProductionValue} text="Use production value" />
   </div>

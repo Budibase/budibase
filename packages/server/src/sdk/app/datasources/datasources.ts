@@ -3,6 +3,7 @@ import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
 import {
   Datasource,
   DatasourceFieldType,
+  Integration,
   PASSWORD_REPLACEMENT,
   RestAuthConfig,
   RestAuthType,
@@ -11,16 +12,38 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
-import { getDefinitions } from "../../../integrations"
+import { getDefinitions, getDefinition } from "../../../integrations"
 
 const ENV_VAR_PREFIX = "env."
+
+export function checkDatasourceTypes(schema: Integration, config: any) {
+  for (let key of Object.keys(config)) {
+    if (!schema.datasource[key]) {
+      continue
+    }
+    const type = schema.datasource[key].type
+    if (
+      type === DatasourceFieldType.NUMBER &&
+      typeof config[key] === "string"
+    ) {
+      config[key] = parseFloat(config[key])
+    }
+  }
+  return config
+}
 
 async function enrichDatasourceWithValues(datasource: Datasource) {
   const cloned = cloneDeep(datasource)
   const env = await getEnvironmentVariables()
-  const processed = processObjectSync(cloned, { env }, { onlyFound: true })
+  const processed = processObjectSync(
+    cloned,
+    { env },
+    { onlyFound: true }
+  ) as Datasource
+  const definition = await getDefinition(processed.source)
+  processed.config = checkDatasourceTypes(definition, processed.config)
   return {
-    datasource: processed as Datasource,
+    datasource: processed,
     envVars: env as Record<string, string>,
   }
 }
