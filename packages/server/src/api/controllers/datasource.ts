@@ -14,7 +14,6 @@ import { invalidateDynamicVariables } from "../../threads/utils"
 import { db as dbCore, context, events } from "@budibase/backend-core"
 import { UserCtx, Datasource, Row } from "@budibase/types"
 import sdk from "../../sdk"
-import { mergeConfigs } from "../../sdk/app/datasources/datasources"
 
 export async function fetch(ctx: UserCtx) {
   // Get internal tables

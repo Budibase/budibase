@@ -94,6 +94,11 @@
 
     validateHash = newValidateHash
   }
+
+  const handleChange = (name, e) => {
+    schema[name].type = e.detail
+    schema[name].constraints = FIELDS[e.detail.toUpperCase()].constraints
+  }
 </script>
 
 <div class="dropzone">
@@ -118,12 +123,12 @@
 </div>
 {#if rows.length > 0 && !error}
   <div class="schema-fields">
-    {#each Object.values(schema) as column}
+    {#each Object.entries(schema) as [name, column]}
       <div class="field">
         <span>{column.name}</span>
         <Select
           bind:value={column.type}
-          on:change={e => (column.type = e.detail)}
+          on:change={e => handleChange(name, e)}
           options={typeOptions}
           placeholder={null}
           getOptionLabel={option => option.label}
