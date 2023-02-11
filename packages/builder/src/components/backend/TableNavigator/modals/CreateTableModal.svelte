@@ -107,8 +107,7 @@
   onConfirm={saveTable}
   disabled={error ||
     !name ||
-    (rows.length && !allValid) ||
-    displayColumn == null}
+    (rows.length && (!allValid || displayColumn == null))}
 >
   <Input
     thin
