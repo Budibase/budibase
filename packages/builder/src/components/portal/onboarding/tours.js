@@ -62,6 +62,7 @@ const getTours = () => {
         id: TOUR_STEP_KEYS.BUILDER_APP_PUBLISH,
         title: "Publish",
         layout: OnboardingPublish,
+        route: "/builder/app/:application/design",
         query: ".toprightnav #builder-app-publish-button",
         onLoad: () => {
           tourEvent(TOUR_STEP_KEYS.BUILDER_APP_PUBLISH)
