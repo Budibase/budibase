@@ -85,7 +85,7 @@
         </Skeleton>
       {:else if !fieldState}
         <Placeholder />
-      {:else if schemaType && schemaType !== type && type !== "options"}
+      {:else if schemaType && schemaType !== type && !["options", "longform"].includes(type)}
         <Placeholder
           text="This Field setting is the wrong data type for this component"
         />
