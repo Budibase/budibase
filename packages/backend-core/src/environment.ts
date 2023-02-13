@@ -83,7 +83,7 @@ const environment = {
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
-  LOG_4XX: process.env.LOG_4XX,
+  ENABLE_4XX_HTTP_LOGGING: process.env.ENABLE_4XX_HTTP_LOGGING || true,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore

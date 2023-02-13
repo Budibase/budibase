@@ -9,7 +9,7 @@ export async function errorHandling(ctx: any, next: any) {
     const status = err.status || err.statusCode || 500
     ctx.status = status
 
-    if (status > 499 || env.LOG_4XX) {
+    if (status > 499 || env.ENABLE_4XX_HTTP_LOGGING) {
       ctx.log.error(err)
     }
 
