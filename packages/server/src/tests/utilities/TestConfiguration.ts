@@ -274,14 +274,24 @@ class TestConfiguration {
   }
 
   async createUser(
-    id = null,
-    firstName = this.defaultUserValues.firstName,
-    lastName = this.defaultUserValues.lastName,
-    email = this.defaultUserValues.email,
-    builder = true,
-    admin = false,
-    roles = {}
+    user: {
+      id?: string
+      firstName?: string
+      lastName?: string
+      email?: string
+      builder?: boolean
+      admin?: boolean
+      roles?: any
+    } = {}
   ) {
+    let { id, firstName, lastName, email, builder, admin, roles } = user
+    firstName = firstName || this.defaultUserValues.firstName
+    lastName = lastName || this.defaultUserValues.lastName
+    email = email || this.defaultUserValues.email
+    roles = roles || {}
+    if (builder == null) {
+      builder = true
+    }
     const globalId = !id ? `us_${Math.random()}` : `us_${id}`
     const resp = await this.globalUser({
       id: globalId,
