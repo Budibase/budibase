@@ -25,6 +25,8 @@ export * as utils from "./utils"
 export * as errors from "./errors"
 export { default as env } from "./environment"
 
+export { SearchParams } from "./db"
+
 // expose error classes directly
 export * from "./errors"
 

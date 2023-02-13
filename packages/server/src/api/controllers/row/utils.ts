@@ -3,8 +3,7 @@ import * as userController from "../user"
 import { FieldTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import { BBContext, Row, Table } from "@budibase/types"
-export { removeKeyNumbering } from "../../../integrations/base/utils"
+import { Row, Table } from "@budibase/types"
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
 import { Format } from "../view/exporters"
