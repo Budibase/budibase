@@ -1,7 +1,7 @@
 import { Event, AuditedEventFriendlyName } from "../../../sdk"
 import { PaginationResponse, PaginationRequest } from "../"
 
-export interface DownloadAuditLogsRequest {
+export interface AuditLogSearchParams {
   userId?: string[]
   appId?: string[]
   event?: Event[]
@@ -10,9 +10,11 @@ export interface DownloadAuditLogsRequest {
   metadataSearch?: string
 }
 
+export interface DownloadAuditLogsRequest extends AuditLogSearchParams {}
+
 export interface SearchAuditLogsRequest
   extends PaginationRequest,
-    DownloadAuditLogsRequest {}
+    AuditLogSearchParams {}
 
 export interface SearchAuditLogsResponse extends PaginationResponse {
   data: {
