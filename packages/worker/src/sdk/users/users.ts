@@ -6,12 +6,11 @@ import {
   cache,
   constants,
   db as dbUtils,
-  deprovisioning,
   events,
   HTTPError,
-  migrations,
   sessions,
   tenancy,
+  platform,
   users as usersCore,
   utils,
   ViewName,
@@ -24,14 +23,11 @@ import {
   CreateUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
-  MigrationType,
   PlatformUser,
   PlatformUserByEmail,
   RowResponse,
   SearchUsersRequest,
   User,
-  ThirdPartyUser,
-  isUser,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
@@ -94,6 +90,16 @@ export const paginatedUsers = async ({
   })
 }
 
+export async function update(user: User) {
+  const db = tenancy.getGlobalDB()
+  await db.put(user)
+  return user
+}
+
+export async function getUserByEmail(email: string) {
+  return usersCore.getGlobalUserByEmail(email)
+}
+
 /**
  * Gets a user by ID from the global database, based on the current tenancy.
  */
@@ -113,7 +119,7 @@ export interface SaveUserOpts {
 }
 
 const buildUser = async (
-  user: User | ThirdPartyUser,
+  user: User,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
@@ -190,7 +196,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
 }
 
 export const save = async (
-  user: User | ThirdPartyUser,
+  user: User,
   opts: SaveUserOpts = {}
 ): Promise<CreateUserResponse> => {
   // default booleans to true
@@ -282,21 +288,6 @@ export const save = async (
     } else {
       throw err
     }
-  }
-}
-
-export const addTenant = async (
-  tenantId: string,
-  _id: string,
-  email: string
-) => {
-  if (env.MULTI_TENANCY) {
-    const afterCreateTenant = () =>
-      migrations.backPopulateMigrations({
-        type: MigrationType.GLOBAL,
-        tenantId,
-      })
-    await tenancy.tryAddTenant(tenantId, _id, email, afterCreateTenant)
   }
 }
 
@@ -431,7 +422,7 @@ export const bulkCreate = async (
   for (const user of usersToBulkSave) {
     // TODO: Refactor to bulk insert users into the info db
     // instead of relying on looping tenant creation
-    await addTenant(tenantId, user._id, user.email)
+    await platform.users.addUser(tenantId, user._id, user.email)
     await eventHelpers.handleSaveEvents(user, undefined)
     await apps.syncUserInApps(user._id)
   }
@@ -565,7 +556,7 @@ export const destroy = async (id: string, currentUser: any) => {
     }
   }
 
-  await deprovisioning.removeUserFromInfoDB(dbUser)
+  await platform.users.removeUser(dbUser)
 
   await db.remove(userId, dbUser._rev)
 
@@ -578,7 +569,7 @@ export const destroy = async (id: string, currentUser: any) => {
 
 const bulkDeleteProcessing = async (dbUser: User) => {
   const userId = dbUser._id as string
-  await deprovisioning.removeUserFromInfoDB(dbUser)
+  await platform.users.removeUser(dbUser)
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })

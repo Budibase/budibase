@@ -1,10 +1,11 @@
 const _passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
-import { getGlobalDB } from "../tenancy"
+import { getGlobalDB } from "../context"
 const refresh = require("passport-oauth2-refresh")
-import { Config } from "../constants"
+import { Config, Cookie } from "../constants"
 import { getScopedConfig } from "../db"
+import { getSessionsForUser, invalidateSessions } from "../security/sessions"
 import {
   jwt as jwtPassport,
   local,
@@ -15,8 +16,11 @@ import {
   google,
 } from "../middleware"
 import { invalidateUser } from "../cache/user"
-import { User } from "@budibase/types"
+import { PlatformLogoutOpts, User } from "@budibase/types"
 import { logAlert } from "../logging"
+import * as events from "../events"
+import * as userCache from "../cache/user"
+import { clearCookie, getCookie } from "../utils"
 export {
   auditLog,
   authError,
@@ -187,4 +191,33 @@ export async function updateUserOAuth(userId: string, oAuthConfig: any) {
   } catch (e) {
     console.error("Could not update OAuth details for current user", e)
   }
+}
+
+/**
+ * Logs a user out from budibase. Re-used across account portal and builder.
+ */
+export async function platformLogout(opts: PlatformLogoutOpts) {
+  const ctx = opts.ctx
+  const userId = opts.userId
+  const keepActiveSession = opts.keepActiveSession
+
+  if (!ctx) throw new Error("Koa context must be supplied to logout.")
+
+  const currentSession = getCookie(ctx, Cookie.Auth)
+  let sessions = await getSessionsForUser(userId)
+
+  if (keepActiveSession) {
+    sessions = sessions.filter(
+      session => session.sessionId !== currentSession.sessionId
+    )
+  } else {
+    // clear cookies
+    clearCookie(ctx, Cookie.Auth)
+    clearCookie(ctx, Cookie.CurrentApp)
+  }
+
+  const sessionIds = sessions.map(({ sessionId }) => sessionId)
+  await invalidateSessions(userId, { sessionIds, reason: "logout" })
+  await events.auth.logout()
+  await userCache.invalidateUser(userId)
 }

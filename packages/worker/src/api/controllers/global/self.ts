@@ -8,10 +8,11 @@ import {
   utils,
   cache,
   encryption,
+  auth as authCore,
 } from "@budibase/backend-core"
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
-const { hash, platformLogout, getCookie, clearCookie, newid } = utils
+const { hash, getCookie, clearCookie, newid } = utils
 const { user: userCache } = cache
 
 function newTestApiKey() {
@@ -137,7 +138,7 @@ export async function updateSelf(ctx: any) {
     passwordChange = true
     userUpdateObj.password = await hash(userUpdateObj.password)
     // Log all other sessions out apart from the current one
-    await platformLogout({
+    await authCore.platformLogout({
       ctx,
       userId: ctx.user._id,
       keepActiveSession: true,

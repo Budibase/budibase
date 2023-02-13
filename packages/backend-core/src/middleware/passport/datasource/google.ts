@@ -1,9 +1,9 @@
-import * as google from "../google"
+import * as google from "../sso/google"
 import { Cookie, Config } from "../../../constants"
 import { clearCookie, getCookie } from "../../../utils"
 import { getScopedConfig, getPlatformUrl, doWithDB } from "../../../db"
 import environment from "../../../environment"
-import { getGlobalDB } from "../../../tenancy"
+import { getGlobalDB } from "../../../context"
 import { BBContext, Database, SSOProfile } from "@budibase/types"
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 

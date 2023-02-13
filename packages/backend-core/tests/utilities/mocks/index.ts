@@ -1,4 +1,5 @@
-export * as accounts from "./accounts"
+jest.mock("../../../src/accounts")
+
 export * as date from "./date"
 export * as licenses from "./licenses"
 export { default as fetch } from "./fetch"

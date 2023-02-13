@@ -5,9 +5,14 @@ import { CloudAccount } from "@budibase/types"
 
 const api = new API(env.ACCOUNT_PORTAL_URL)
 
+const EXIT_EARLY = env.SELF_HOSTED || env.DISABLE_ACCOUNT_PORTAL
+
 export const getAccount = async (
   email: string
 ): Promise<CloudAccount | undefined> => {
+  if (EXIT_EARLY) {
+    return
+  }
   const payload = {
     email,
   }
@@ -29,6 +34,9 @@ export const getAccount = async (
 export const getAccountByTenantId = async (
   tenantId: string
 ): Promise<CloudAccount | undefined> => {
+  if (EXIT_EARLY) {
+    return
+  }
   const payload = {
     tenantId,
   }
@@ -48,6 +56,9 @@ export const getAccountByTenantId = async (
 }
 
 export const getStatus = async () => {
+  if (EXIT_EARLY) {
+    return
+  }
   const response = await api.get(`/api/status`, {
     headers: {
       [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
