@@ -20,9 +20,10 @@ import {
   AllDocsResponse,
   BulkUserResponse,
   CloudAccount,
-  CreateUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
+  isSSOAccount,
+  isSSOUser,
   PlatformUser,
   PlatformUserByEmail,
   RowResponse,
@@ -32,6 +33,7 @@ import {
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
 import { groups as groupsSdk } from "@budibase/pro"
+import * as accountSdk from "../accounts"
 
 const PAGE_LIMIT = 8
 
@@ -90,44 +92,6 @@ export const paginatedUsers = async ({
   })
 }
 
-/**
- * User a dedicated function for passwords for additional safety.
- */
-export async function updatePassword(user: User, password: string) {
-  const db = tenancy.getGlobalDB()
-  user.password = await utils.hash(password)
-
-  // perform update
-  const res = await db.put(user)
-  user._rev = res.rev
-
-  // events
-  delete user.password
-  await events.user.passwordUpdated(user)
-
-  return user
-}
-
-/**
- * Generic update user function.
- */
-export async function update(user: User) {
-  const db = tenancy.getGlobalDB()
-
-  // perform update
-  const res = await db.put(user)
-  user._rev = res.rev
-
-  // events
-  delete user.password
-  await events.user.updated(user)
-
-  // invalidation
-  await cache.user.invalidateUser(user._id!)
-
-  return user
-}
-
 export async function getUserByEmail(email: string) {
   return usersCore.getGlobalUserByEmail(email)
 }
@@ -159,11 +123,13 @@ const buildUser = async (
   tenantId: string,
   dbUser?: any
 ): Promise<User> => {
-  let fullUser = user as User
-  let { password, _id } = fullUser
+  let { password, _id } = user
 
   let hashedPassword
   if (password) {
+    if (await preventSSOPasswords(user)) {
+      throw new HTTPError("SSO user cannot set password", 400)
+    }
     hashedPassword = opts.hashPassword ? await utils.hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
@@ -173,10 +139,10 @@ const buildUser = async (
 
   _id = _id || dbUtils.generateGlobalUserID()
 
-  fullUser = {
+  const fullUser = {
     createdAt: Date.now(),
     ...dbUser,
-    ...fullUser,
+    ...user,
     _id,
     password: hashedPassword,
     tenantId,
@@ -227,10 +193,27 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   }
 }
 
+export async function preventSSOPasswords(user: User) {
+  // when in maintenance mode we allow sso users
+  // to perform any password action - this prevents lockout
+  if (env.ENABLE_SSO_MAINTENANCE_MODE) {
+    return false
+  }
+
+  // Check local sso
+  if (isSSOUser(user)) {
+    return true
+  }
+
+  // Check account sso
+  const account = await accountSdk.api.getAccount(user.email)
+  return !!(account && isSSOAccount(account))
+}
+
 export const save = async (
   user: User,
   opts: SaveUserOpts = {}
-): Promise<CreateUserResponse> => {
+): Promise<User> => {
   // default booleans to true
   if (opts.hashPassword == null) {
     opts.hashPassword = true
@@ -302,6 +285,7 @@ export const save = async (
     builtUser._rev = response.rev
 
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
+    await platform.users.addUser(tenantId, builtUser._id!, builtUser.email)
     await cache.user.invalidateUser(response.id)
 
     // let server know to sync user
@@ -309,11 +293,7 @@ export const save = async (
 
     await Promise.all(groupPromises)
 
-    return {
-      _id: response.id,
-      _rev: response.rev,
-      email,
-    }
+    return builtUser
   } catch (err: any) {
     if (err.status === 409) {
       throw "User exists already"

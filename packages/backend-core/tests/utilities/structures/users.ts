@@ -50,6 +50,7 @@ export function ssoUser(
   opts: { user?: any; details?: SSOAuthDetails } = {}
 ): SSOUser {
   const base = user(opts.user)
+  delete base.password
 
   if (!opts.details) {
     opts.details = sso.authDetails(base)

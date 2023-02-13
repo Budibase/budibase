@@ -6,15 +6,9 @@ import {
   events,
   HTTPError,
 } from "@budibase/backend-core"
-import {
-  isSSOAccount,
-  isSSOUser,
-  PlatformLogoutOpts,
-  User,
-} from "@budibase/types"
+import { PlatformLogoutOpts, User } from "@budibase/types"
 import jwt from "jsonwebtoken"
 import env from "../../environment"
-import * as accountSdk from "../accounts"
 import * as userSdk from "../users"
 import * as emails from "../../utilities/email"
 import * as redis from "../../utilities/redis"
@@ -43,25 +37,6 @@ export async function logout(opts: PlatformLogoutOpts) {
   return authCore.platformLogout(opts)
 }
 
-// SSO
-
-export async function preventSSOPasswords(user: User) {
-  // when in maintenance mode we allow sso users
-  // to perform any password action - this prevents lockout
-  if (env.ENABLE_SSO_MAINTENANCE_MODE) {
-    return false
-  }
-
-  // Check local sso
-  if (isSSOUser(user)) {
-    return true
-  }
-
-  // Check account sso
-  const account = await accountSdk.api.getAccount(user.email)
-  return !!(account && isSSOAccount(account))
-}
-
 // PASSWORD MANAGEMENT
 
 /**
@@ -83,7 +58,7 @@ export const reset = async (email: string) => {
   }
 
   // exit if user has sso
-  if (await preventSSOPasswords(user)) {
+  if (await userSdk.preventSSOPasswords(user)) {
     throw new HTTPError("SSO user cannot reset password", 400)
   }
 
@@ -100,15 +75,10 @@ export const reset = async (email: string) => {
  */
 export const resetUpdate = async (resetCode: string, password: string) => {
   const { userId } = await redis.checkResetPasswordCode(resetCode)
-  const user = await userSdk.getUser(userId)
 
-  // exit if user has sso
-  if (await preventSSOPasswords(user)) {
-    throw new HTTPError("SSO user cannot reset password", 400)
-  }
-
-  user.password = await coreUtils.hash(password)
-  await userSdk.update(user)
+  let user = await userSdk.getUser(userId)
+  user.password = password
+  user = await userSdk.save(user)
 
   // remove password from the user before sending events
   delete user.password

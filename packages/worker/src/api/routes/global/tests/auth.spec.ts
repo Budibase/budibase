@@ -45,6 +45,14 @@ describe("/api/global/auth", () => {
     jest.clearAllMocks()
   })
 
+  async function createSSOUser() {
+    return config.doInTenant(async () => {
+      return userSdk.save(structures.users.ssoUser(), {
+        requirePassword: false,
+      })
+    })
+  }
+
   describe("password", () => {
     describe("POST /api/global/auth/:tenantId/login", () => {
       it("logs in with correct credentials", async () => {
@@ -115,8 +123,7 @@ describe("/api/global/auth", () => {
 
         describe("budibase sso user", () => {
           it("should prevent user from logging in", async () => {
-            user = await config.createUser(structures.users.ssoUser())
-
+            user = await createSSOUser()
             await testSSOUser()
           })
         })
@@ -184,8 +191,7 @@ describe("/api/global/auth", () => {
 
         describe("budibase sso user", () => {
           it("should prevent user from generating password reset email", async () => {
-            user = await config.createUser(structures.users.ssoUser())
-
+            user = await createSSOUser()
             await testSSOUser()
           })
         })
@@ -252,7 +258,8 @@ describe("/api/global/auth", () => {
             // convert to sso now that password reset has been requested
             const ssoUser = user as SSOUser
             ssoUser.providerType = structures.sso.providerType()
-            await config.doInTenant(() => userSdk.update(ssoUser))
+            delete ssoUser.password
+            await config.doInTenant(() => userSdk.save(ssoUser))
 
             await testSSOUser(code!)
           })

@@ -140,10 +140,10 @@ export async function updateSelf(
     ...user,
     ...update,
   }
-  user = await userSdk.update(user)
+
+  user = await userSdk.save(user)
 
   if (update.password) {
-    user = await userSdk.updatePassword(user, update.password)
     // Log all other sessions out apart from the current one
     await authCore.platformLogout({
       ctx,
