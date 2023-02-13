@@ -1,5 +1,6 @@
-import { mocks, testContainerUtils } from "@budibase/backend-core/tests"
+import "./logging"
 
+import { mocks, testContainerUtils } from "@budibase/backend-core/tests"
 import env from "../environment"
 import { env as coreEnv } from "@budibase/backend-core"
 
@@ -10,10 +11,6 @@ mocks.fetch.enable()
 // use tk.reset() to use real dates in individual tests
 const tk = require("timekeeper")
 tk.freeze(mocks.date.MOCK_DATE)
-
-if (!process.env.DEBUG) {
-  global.console.log = jest.fn() // console.log are ignored in tests
-}
 
 if (!process.env.CI) {
   // set a longer timeout in dev for debugging
