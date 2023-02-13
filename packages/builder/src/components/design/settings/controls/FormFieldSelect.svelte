@@ -25,8 +25,8 @@
   const getOptions = (schema, type) => {
     let entries = Object.entries(schema ?? {})
     let types = []
-    if (type === "field/options") {
-      // allow options to be used on both options and string fields
+    if (type === "field/options" || type === "field/longform") {
+      // allow options and longform to be used on string fields as well
       types = [type, "field/string"]
     } else {
       types = [type]
