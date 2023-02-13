@@ -24,7 +24,7 @@ describe("tenancy middleware", () => {
   })
 
   it("should get tenant id from header", async () => {
-    const tenantId = structures.uuid()
+    const tenantId = structures.tenant.id()
     const headers = {
       [constants.Header.TENANT_ID]: tenantId,
     }
@@ -35,7 +35,7 @@ describe("tenancy middleware", () => {
   })
 
   it("should get tenant id from query param", async () => {
-    const tenantId = structures.uuid()
+    const tenantId = structures.tenant.id()
     const res = await config.request.get(
       `/api/global/configs/checklist?tenantId=${tenantId}`
     )
@@ -43,7 +43,7 @@ describe("tenancy middleware", () => {
   })
 
   it("should get tenant id from subdomain", async () => {
-    const tenantId = structures.uuid()
+    const tenantId = structures.tenant.id()
     const headers = {
       host: `${tenantId}.localhost:10000`,
     }
@@ -67,7 +67,7 @@ describe("tenancy middleware", () => {
   it("should throw when no tenant id is found", async () => {
     const res = await config.request.get(`/api/global/configs/checklist`)
     expect(res.status).toBe(403)
-    expect(res.text).toBe("Tenant id not set")
+    expect(res.body).toEqual({ message: "Tenant id not set", status: 403 })
     expect(res.headers[constants.Header.TENANT_ID]).toBe(undefined)
   })
 })
