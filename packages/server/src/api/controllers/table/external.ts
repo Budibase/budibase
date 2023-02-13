@@ -8,7 +8,7 @@ import {
   foreignKeyStructure,
   hasTypeChanged,
 } from "./utils"
-import { FieldTypes, RelationshipTypes } from "../../../constants"
+import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { handleRequest } from "../row/external"
 import { events, context } from "@budibase/backend-core"
@@ -22,6 +22,7 @@ import {
   FieldSchema,
   BBContext,
   TableRequest,
+  RelationshipTypes,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 const { cloneDeep } = require("lodash/fp")
@@ -146,7 +147,7 @@ function generateLinkSchema(
   column: FieldSchema,
   table: Table,
   relatedTable: Table,
-  type: string
+  type: RelationshipTypes
 ) {
   if (!table.primary || !relatedTable.primary) {
     throw new Error("Unable to generate link schema, no primary keys")

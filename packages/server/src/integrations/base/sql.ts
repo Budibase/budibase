@@ -90,10 +90,15 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
 function generateSelectStatement(
   json: QueryJson,
   knex: Knex
-): (string | Knex.Raw)[] {
+): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
+
+  if (!resource) {
+    return "*"
+  }
+
   const schema = meta?.table?.schema
-  return resource!.fields.map(field => {
+  return resource.fields.map(field => {
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     const columnName = fieldNames[1]
@@ -392,11 +397,14 @@ class InternalBuilder {
         delete parsedBody[key]
       }
     }
+
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.insert(parsedBody)
     } else {
-      return query.insert(parsedBody).returning("*")
+      return query
+        .insert(parsedBody)
+        .returning(generateSelectStatement(json, knex))
     }
   }
 
@@ -481,7 +489,9 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.update(parsedBody)
     } else {
-      return query.update(parsedBody).returning("*")
+      return query
+        .update(parsedBody)
+        .returning(generateSelectStatement(json, knex))
     }
   }
 
@@ -496,7 +506,7 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.delete()
     } else {
-      return query.delete().returning("*")
+      return query.delete().returning(generateSelectStatement(json, knex))
     }
   }
 }

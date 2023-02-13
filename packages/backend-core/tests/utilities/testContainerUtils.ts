@@ -1,4 +1,7 @@
-function getTestContainerSettings(serverName: string, key: string) {
+function getTestContainerSettings(
+  serverName: string,
+  key: string
+): string | null {
   const entry = Object.entries(global).find(
     ([k]) =>
       k.includes(`_${serverName.toUpperCase()}`) &&
@@ -10,20 +13,25 @@ function getTestContainerSettings(serverName: string, key: string) {
   return entry[1]
 }
 
-function getCouchConfig() {
-  const port = getTestContainerSettings("COUCHDB-SERVICE", "PORT_5984")
+function getContainerInfo(containerName: string, port: number) {
+  const assignedPort = getTestContainerSettings(
+    containerName.toUpperCase(),
+    `PORT_${port}`
+  )
+  const host = getTestContainerSettings(containerName.toUpperCase(), "IP")
   return {
-    port,
-    url: `http://${getTestContainerSettings("COUCHDB-SERVICE", "IP")}:${port}`,
+    port: assignedPort,
+    host,
+    url: host && assignedPort && `http://${host}:${assignedPort}`,
   }
 }
 
+function getCouchConfig() {
+  return getContainerInfo("couchdb-service", 5984)
+}
+
 function getMinioConfig() {
-  const port = getTestContainerSettings("MINIO-SERVICE", "PORT_9000")
-  return {
-    port,
-    url: `http://${getTestContainerSettings("MINIO-SERVICE", "IP")}:${port}`,
-  }
+  return getContainerInfo("minio-service", 9000)
 }
 
 export function setupEnv(...envs: any[]) {
@@ -34,7 +42,7 @@ export function setupEnv(...envs: any[]) {
     { key: "MINIO_URL", value: getMinioConfig().url },
   ]
 
-  for (const config of configs.filter(x => x.value !== null)) {
+  for (const config of configs.filter(x => !!x.value)) {
     for (const env of envs) {
       env._set(config.key, config.value)
     }

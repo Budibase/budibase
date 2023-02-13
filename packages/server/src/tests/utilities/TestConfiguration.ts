@@ -39,8 +39,15 @@ import { cleanup } from "../../utilities/fileSystem"
 import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
-import { AuthToken, Database } from "@budibase/types"
-const supertest = require("supertest")
+import supertest from "supertest"
+import {
+  AuthToken,
+  Database,
+  Datasource,
+  Row,
+  SourceName,
+  Table,
+} from "@budibase/types"
 
 type DefaultUserValues = {
   globalUserId: string
@@ -52,7 +59,7 @@ type DefaultUserValues = {
 
 class TestConfiguration {
   server: any
-  request: any
+  request: supertest.SuperTest<supertest.Test> | undefined
   started: boolean
   appId: string | null
   allApps: any[]
@@ -197,7 +204,7 @@ class TestConfiguration {
 
   // UTILS
 
-  async _req(body: any, params: any, controlFunc: any) {
+  _req(body: any, params: any, controlFunc: any) {
     // create a fake request ctx
     const request: any = {}
     const appId = this.appId
@@ -268,14 +275,24 @@ class TestConfiguration {
   }
 
   async createUser(
-    id = null,
-    firstName = this.defaultUserValues.firstName,
-    lastName = this.defaultUserValues.lastName,
-    email = this.defaultUserValues.email,
-    builder = true,
-    admin = false,
-    roles = {}
+    user: {
+      id?: string
+      firstName?: string
+      lastName?: string
+      email?: string
+      builder?: boolean
+      admin?: boolean
+      roles?: any
+    } = {}
   ) {
+    let { id, firstName, lastName, email, builder, admin, roles } = user
+    firstName = firstName || this.defaultUserValues.firstName
+    lastName = lastName || this.defaultUserValues.lastName
+    email = email || this.defaultUserValues.email
+    roles = roles || {}
+    if (builder == null) {
+      builder = true
+    }
     const globalId = !id ? `us_${Math.random()}` : `us_${id}`
     const resp = await this.globalUser({
       id: globalId,
@@ -360,6 +377,7 @@ class TestConfiguration {
       [constants.Header.CSRF_TOKEN]: this.defaultUserValues.csrfToken,
       ...extras,
     }
+
     if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
@@ -464,13 +482,13 @@ class TestConfiguration {
 
   // TABLE
 
-  async updateTable(config?: any) {
+  async updateTable(config?: any): Promise<Table> {
     config = config || basicTable()
     this.table = await this._req(config, null, controllers.table.save)
     return this.table
   }
 
-  async createTable(config?: any) {
+  async createTable(config?: Table) {
     if (config != null && config._id) {
       delete config._id
     }
@@ -514,7 +532,7 @@ class TestConfiguration {
 
   // ROW
 
-  async createRow(config: any = null) {
+  async createRow(config?: Row): Promise<Row> {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
@@ -523,7 +541,7 @@ class TestConfiguration {
     return this._req(config, { tableId }, controllers.row.save)
   }
 
-  async getRow(tableId: string, rowId: string) {
+  async getRow(tableId: string, rowId: string): Promise<Row> {
     return this._req(null, { tableId, rowId }, controllers.row.find)
   }
 
@@ -605,7 +623,9 @@ class TestConfiguration {
 
   // DATASOURCE
 
-  async createDatasource(config?: any) {
+  async createDatasource(config?: {
+    datasource: Datasource
+  }): Promise<Datasource> {
     config = config || basicDatasource()
     const response = await this._req(config, null, controllers.datasource.save)
     this.datasource = response.datasource
@@ -626,7 +646,7 @@ class TestConfiguration {
     return this.createDatasource({
       datasource: {
         ...basicDatasource().datasource,
-        source: "REST",
+        source: SourceName.REST,
         config: cfg || {},
       },
     })
@@ -635,7 +655,7 @@ class TestConfiguration {
   async dynamicVariableDatasource() {
     let datasource = await this.restDatasource()
     const basedOnQuery = await this.createQuery({
-      ...basicQuery(datasource._id),
+      ...basicQuery(datasource._id!),
       fields: {
         path: "www.google.com",
       },
@@ -663,7 +683,7 @@ class TestConfiguration {
     datasource: any,
     fields: any,
     params: any,
-    verb: string
+    verb?: string
   ) {
     return request
       .post(`/api/queries/preview`)
