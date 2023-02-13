@@ -55,6 +55,7 @@
       notifications.error(`Error saving variable: ${err.message}`)
     }
   }
+  $: console.log($environment.variables)
 </script>
 
 <LockedFeature
