@@ -45,7 +45,13 @@ export async function logout(opts: PlatformLogoutOpts) {
 
 // SSO
 
-export async function isSSO(user: User) {
+export async function preventSSOPasswords(user: User) {
+  // when in maintenance mode we allow sso users
+  // to perform any password action - this prevents lockout
+  if (env.ENABLE_SSO_MAINTENANCE_MODE) {
+    return false
+  }
+
   // Check local sso
   if (isSSOUser(user)) {
     return true
@@ -77,7 +83,7 @@ export const reset = async (email: string) => {
   }
 
   // exit if user has sso
-  if (await isSSO(user)) {
+  if (await preventSSOPasswords(user)) {
     throw new HTTPError("SSO user cannot reset password", 400)
   }
 
@@ -97,7 +103,7 @@ export const resetUpdate = async (resetCode: string, password: string) => {
   const user = await userSdk.getUser(userId)
 
   // exit if user has sso
-  if (await isSSO(user)) {
+  if (await preventSSOPasswords(user)) {
     throw new HTTPError("SSO user cannot reset password", 400)
   }
 

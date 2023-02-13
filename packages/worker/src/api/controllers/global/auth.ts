@@ -58,7 +58,7 @@ export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
   const email = ctx.request.body.username
 
   const user = await userSdk.getUserByEmail(email)
-  if (user && (await authSdk.isSSO(user))) {
+  if (user && (await authSdk.preventSSOPasswords(user))) {
     ctx.throw(400, "SSO user cannot login using password")
   }
 
