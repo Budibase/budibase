@@ -87,16 +87,12 @@ const duplicateRowHandler = async (action, context) => {
   }
 }
 
-const fetchRowHandler = async (action) => {
+const fetchRowHandler = async action => {
   const { tableId, rowId } = action.parameters
 
   if (tableId && rowId) {
     try {
       const row = await API.fetchRow({ tableId, rowId })
-      console.log(row)
-      await dataSourceStore.actions.invalidateDataSource(row.tableId, {
-        invalidateRelationships: true,
-      })
 
       return { row }
     } catch (error) {
