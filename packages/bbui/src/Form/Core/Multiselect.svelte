@@ -14,6 +14,7 @@
   export let autocomplete = false
   export let sort = false
   export let autoWidth = false
+  export let fetchTerm = null
 
   const dispatch = createEventDispatcher()
 
@@ -83,6 +84,7 @@
   {options}
   isPlaceholder={!value?.length}
   {autocomplete}
+  bind:fetchTerm
   {isOptionSelected}
   {getOptionLabel}
   {getOptionValue}
