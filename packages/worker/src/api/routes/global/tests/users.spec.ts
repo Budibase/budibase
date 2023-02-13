@@ -3,7 +3,9 @@ import { InviteUsersResponse, User } from "@budibase/types"
 jest.mock("nodemailer")
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
-import { context, events, tenancy } from "@budibase/backend-core"
+import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"
+
+const accounts = jest.mocked(_accounts)
 
 describe("/api/global/users", () => {
   const config = new TestConfiguration()
@@ -20,26 +22,24 @@ describe("/api/global/users", () => {
     jest.clearAllMocks()
   })
 
-  describe("invite", () => {
+  describe("POST /api/global/users/invite", () => {
     it("should be able to generate an invitation", async () => {
-      await context.doInTenant(config.tenant1User!.tenantId, async () => {
-        const email = structures.users.newEmail()
-        const { code, res } = await config.api.users.sendUserInvite(
-          sendMailMock,
-          email
-        )
+      const email = structures.users.newEmail()
+      const { code, res } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email
+      )
 
-        expect(res.body).toEqual({ message: "Invitation has been sent." })
-        expect(sendMailMock).toHaveBeenCalled()
-        expect(code).toBeDefined()
-        expect(events.user.invited).toBeCalledTimes(1)
-      })
+      expect(res.body).toEqual({ message: "Invitation has been sent." })
+      expect(sendMailMock).toHaveBeenCalled()
+      expect(code).toBeDefined()
+      expect(events.user.invited).toBeCalledTimes(1)
     })
 
     it("should not be able to generate an invitation for existing user", async () => {
       const { code, res } = await config.api.users.sendUserInvite(
         sendMailMock,
-        config.defaultUser!.email,
+        config.user!.email,
         400
       )
 
@@ -50,26 +50,24 @@ describe("/api/global/users", () => {
     })
 
     it("should be able to create new user from invite", async () => {
-      await context.doInTenant(config.tenant1User!.tenantId, async () => {
-        const email = structures.users.newEmail()
-        const { code } = await config.api.users.sendUserInvite(
-          sendMailMock,
-          email
-        )
+      const email = structures.users.newEmail()
+      const { code } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email
+      )
 
-        const res = await config.api.users.acceptInvite(code)
+      const res = await config.api.users.acceptInvite(code)
 
-        expect(res.body._id).toBeDefined()
-        const user = await config.getUser(email)
-        expect(user).toBeDefined()
-        expect(user._id).toEqual(res.body._id)
-        expect(events.user.inviteAccepted).toBeCalledTimes(1)
-        expect(events.user.inviteAccepted).toBeCalledWith(user)
-      })
+      expect(res.body._id).toBeDefined()
+      const user = await config.getUser(email)
+      expect(user).toBeDefined()
+      expect(user._id).toEqual(res.body._id)
+      expect(events.user.inviteAccepted).toBeCalledTimes(1)
+      expect(events.user.inviteAccepted).toBeCalledWith(user)
     })
   })
 
-  describe("inviteMultiple", () => {
+  describe("POST /api/global/users/multi/invite", () => {
     it("should be able to generate an invitation", async () => {
       const newUserInvite = () => ({
         email: structures.users.newEmail(),
@@ -87,7 +85,7 @@ describe("/api/global/users", () => {
     })
 
     it("should not be able to generate an invitation for existing user", async () => {
-      const request = [{ email: config.defaultUser!.email, userInfo: {} }]
+      const request = [{ email: config.user!.email, userInfo: {} }]
 
       const res = await config.api.users.sendMultiUserInvite(request)
 
@@ -100,7 +98,7 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("bulk (create)", () => {
+  describe("POST /api/global/users/bulk", () => {
     it("should ignore users existing in the same tenant", async () => {
       const user = await config.createUser()
       jest.clearAllMocks()
@@ -163,7 +161,7 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("create", () => {
+  describe("POST /api/global/users", () => {
     it("should be able to create a basic user", async () => {
       const user = structures.users.user()
 
@@ -242,7 +240,7 @@ describe("/api/global/users", () => {
     it("should not be able to create user with the same email as an account", async () => {
       const user = structures.users.user()
       const account = structures.accounts.cloudAccount()
-      mocks.accounts.getAccount.mockReturnValueOnce(account)
+      accounts.getAccount.mockReturnValueOnce(Promise.resolve(account))
 
       const response = await config.api.users.saveUser(user, 400)
 
@@ -283,7 +281,7 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("update", () => {
+  describe("POST /api/global/users (update)", () => {
     it("should be able to update a basic user", async () => {
       const user = await config.createUser()
       jest.clearAllMocks()
@@ -298,7 +296,7 @@ describe("/api/global/users", () => {
     })
 
     it("should not allow a user to update their own admin/builder status", async () => {
-      const user = (await config.api.users.getUser(config.defaultUser?._id!))
+      const user = (await config.api.users.getUser(config.user?._id!))
         .body as User
       await config.api.users.saveUser({
         ...user,
@@ -468,9 +466,9 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("bulk (delete)", () => {
+  describe("POST /api/global/users/bulk (delete)", () => {
     it("should not be able to bulk delete current user", async () => {
-      const user = await config.defaultUser!
+      const user = await config.user!
 
       const response = await config.api.users.bulkDeleteUsers([user._id!], 400)
 
@@ -482,7 +480,7 @@ describe("/api/global/users", () => {
       const user = await config.createUser()
       const account = structures.accounts.cloudAccount()
       account.budibaseUserId = user._id!
-      mocks.accounts.getAccountByTenantId.mockReturnValue(account)
+      accounts.getAccountByTenantId.mockReturnValue(Promise.resolve(account))
 
       const response = await config.api.users.bulkDeleteUsers([user._id!])
 
@@ -497,7 +495,7 @@ describe("/api/global/users", () => {
 
     it("should be able to bulk delete users", async () => {
       const account = structures.accounts.cloudAccount()
-      mocks.accounts.getAccountByTenantId.mockReturnValue(account)
+      accounts.getAccountByTenantId.mockReturnValue(Promise.resolve(account))
 
       const builder = structures.users.builderUser()
       const admin = structures.users.adminUser()
@@ -521,7 +519,7 @@ describe("/api/global/users", () => {
     })
   })
 
-  describe("destroy", () => {
+  describe("DELETE /api/global/users/:userId", () => {
     it("should be able to destroy a basic user", async () => {
       const user = await config.createUser()
       jest.clearAllMocks()
@@ -558,7 +556,7 @@ describe("/api/global/users", () => {
     it("should not be able to destroy account owner", async () => {
       const user = await config.createUser()
       const account = structures.accounts.cloudAccount()
-      mocks.accounts.getAccount.mockReturnValueOnce(account)
+      accounts.getAccount.mockReturnValueOnce(Promise.resolve(account))
 
       const response = await config.api.users.deleteUser(user._id!, 400)
 
@@ -566,10 +564,10 @@ describe("/api/global/users", () => {
     })
 
     it("should not be able to destroy account owner as account owner", async () => {
-      const user = await config.defaultUser!
+      const user = await config.user!
       const account = structures.accounts.cloudAccount()
       account.email = user.email
-      mocks.accounts.getAccount.mockReturnValueOnce(account)
+      accounts.getAccount.mockReturnValueOnce(Promise.resolve(account))
 
       const response = await config.api.users.deleteUser(user._id!, 400)
 

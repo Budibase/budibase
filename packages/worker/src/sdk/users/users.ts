@@ -549,7 +549,7 @@ export const bulkDelete = async (
 
 export const destroy = async (id: string, currentUser: any) => {
   const db = tenancy.getGlobalDB()
-  const dbUser = await db.get(id)
+  const dbUser = (await db.get(id)) as User
   const userId = dbUser._id as string
 
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {

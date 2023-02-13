@@ -7,7 +7,7 @@ import {
   doWithDB,
 } from "../db"
 import environment from "../environment"
-import { doInTenant, getTenantIds, getTenantId } from "../tenancy"
+import * as platform from "../platform"
 import * as context from "../context"
 import { DEFINITIONS } from "."
 import {
@@ -47,7 +47,7 @@ export const runMigration = async (
   const migrationType = migration.type
   let tenantId: string | undefined
   if (migrationType !== MigrationType.INSTALLATION) {
-    tenantId = getTenantId()
+    tenantId = context.getTenantId()
   }
   const migrationName = migration.name
   const silent = migration.silent
@@ -160,7 +160,7 @@ export const runMigrations = async (
       tenantIds = [options.noOp.tenantId]
     } else if (!options.tenantIds || !options.tenantIds.length) {
       // run for all tenants
-      tenantIds = await getTenantIds()
+      tenantIds = await platform.tenants.getTenantIds()
     } else {
       tenantIds = options.tenantIds
     }
@@ -185,7 +185,7 @@ export const runMigrations = async (
     // for all migrations
     for (const migration of migrations) {
       // run the migration
-      await doInTenant(tenantId, () => runMigration(migration, options))
+      await context.doInTenant(tenantId, () => runMigration(migration, options))
     }
   }
   console.log("Migrations complete")
