@@ -31,7 +31,8 @@
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
-
+  export let fetchTerm = null
+  $: console.log(fieldText)
   const dispatch = createEventDispatcher()
 
   let searchTerm = null
@@ -71,7 +72,7 @@
   }
 
   const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term) {
+    if (autocomplete && term && !fetchTerm) {
       const lowerCaseTerm = term.toLowerCase()
       return options.filter(option => {
         return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
@@ -144,8 +145,8 @@
   >
     {#if autocomplete}
       <Search
-        value={searchTerm}
-        on:change={event => (searchTerm = event.detail)}
+        value={fetchTerm ? fetchTerm : searchTerm}
+        on:change={event => (fetchTerm = event.detail)}
         {disabled}
         placeholder="Search"
       />
@@ -247,7 +248,7 @@
   }
   .popover-content.auto-width .spectrum-Menu-itemLabel {
     white-space: nowrap;
-    overflow: hidden;
+    overflow: none;
     text-overflow: ellipsis;
   }
   .popover-content:not(.auto-width) .spectrum-Menu-itemLabel {
