@@ -15,6 +15,9 @@
   export let getOptionValue = option => option
   export let sort = false
   export let autoWidth = false
+  export let autocomplete = false
+  export let fetchTerm = null
+
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
@@ -34,6 +37,8 @@
     {getOptionLabel}
     {getOptionValue}
     {autoWidth}
+    {autocomplete}
+    bind:fetchTerm
     on:change={onChange}
     on:click
   />

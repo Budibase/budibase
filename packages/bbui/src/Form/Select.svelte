@@ -20,6 +20,7 @@
   export let autoWidth = false
   export let sort = false
   export let tooltip = ""
+  export let autocomplete = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -51,6 +52,7 @@
     {getOptionIcon}
     {getOptionColour}
     {isOptionEnabled}
+    {autocomplete}
     on:change={onChange}
     on:click
   />

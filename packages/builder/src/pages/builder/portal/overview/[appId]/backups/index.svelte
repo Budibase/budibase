@@ -184,7 +184,7 @@
   <Divider />
 
   {#if !$licensing.backupsEnabled}
-    {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
+    {#if !$auth.accountPortalAccess && $admin.cloud}
       <Body>Contact your account holder to upgrade your plan.</Body>
     {/if}
     <div class="pro-buttons">
