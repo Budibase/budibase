@@ -90,9 +90,41 @@ export const paginatedUsers = async ({
   })
 }
 
+/**
+ * User a dedicated function for passwords for additional safety.
+ */
+export async function updatePassword(user: User, password: string) {
+  const db = tenancy.getGlobalDB()
+  user.password = await utils.hash(password)
+
+  // perform update
+  const res = await db.put(user)
+  user._rev = res.rev
+
+  // events
+  delete user.password
+  await events.user.passwordUpdated(user)
+
+  return user
+}
+
+/**
+ * Generic update user function.
+ */
 export async function update(user: User) {
   const db = tenancy.getGlobalDB()
-  await db.put(user)
+
+  // perform update
+  const res = await db.put(user)
+  user._rev = res.rev
+
+  // events
+  delete user.password
+  await events.user.updated(user)
+
+  // invalidation
+  await cache.user.invalidateUser(user._id!)
+
   return user
 }
 

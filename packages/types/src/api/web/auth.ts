@@ -11,3 +11,15 @@ export interface PasswordResetUpdateRequest {
   resetCode: string
   password: string
 }
+
+export interface UpdateSelfRequest {
+  firstName?: string
+  lastName?: string
+  password?: string
+  forceResetPassword?: boolean
+}
+
+export interface UpdateSelfResponse {
+  _id: string
+  _rev: string
+}

@@ -204,7 +204,7 @@ describe("/api/global/auth", () => {
 
     describe("POST /api/global/auth/:tenantId/reset/update", () => {
       it("should reset password", async () => {
-        const user = await config.createUser()
+        let user = await config.createUser()
         const { code } = await config.api.auth.requestPasswordReset(
           sendMailMock,
           user.email
@@ -213,6 +213,9 @@ describe("/api/global/auth", () => {
 
         const newPassword = "newpassword"
         const res = await config.api.auth.updatePassword(code!, newPassword)
+
+        user = await config.getUser(user.email)
+        delete user.password
 
         expect(res.body).toEqual({ message: "password reset successfully." })
         expect(events.user.passwordReset).toBeCalledTimes(1)
