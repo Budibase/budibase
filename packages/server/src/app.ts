@@ -27,13 +27,17 @@ const destroyable = require("server-destroy")
 
 const app = new Koa()
 
+let mbNumber = parseInt(env.HTTP_MB_LIMIT || "10")
+if (!mbNumber || isNaN(mbNumber)) {
+  mbNumber = 10
+}
 // set up top level koa middleware
 app.use(
   koaBody({
     multipart: true,
-    formLimit: "10mb",
-    jsonLimit: "10mb",
-    textLimit: "10mb",
+    formLimit: `${mbNumber}mb`,
+    jsonLimit: `${mbNumber}mb`,
+    textLimit: `${mbNumber}mb`,
     // @ts-ignore
     enableTypes: ["json", "form", "text"],
     parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
