@@ -18,7 +18,7 @@ spec:
   replicas: {{ .Values.services.apps.replicaCount }}
   selector:
     matchLabels:
-      io.kompose.service: app-service
+      io.kompose.service: app-service 
   strategy:
     type: RollingUpdate
   template:
