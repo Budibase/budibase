@@ -3,7 +3,7 @@ import env from "./environment"
 
 // enable APM if configured
 if (process.env.DATADOG_APM_ENABLED) {
-  const tracer = require("dd-trace").start()
+  const tracer = require("dd-trace").init()
 }
 
 // enable APM if configured
