@@ -2,6 +2,11 @@
 import env from "./environment"
 
 // enable APM if configured
+if (process.env.DATADOG_APM_ENABLED) {
+  const tracer = require("dd-trace").start()
+}
+
+// enable APM if configured
 if (process.env.ELASTIC_APM_ENABLED) {
   const apm = require("elastic-apm-node").start({
     serviceName: process.env.SERVICE,
