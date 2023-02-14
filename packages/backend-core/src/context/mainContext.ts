@@ -30,6 +30,13 @@ export function getGlobalDBName(tenantId?: string) {
   return baseGlobalDBName(tenantId)
 }
 
+export function getAuditLogDBName(tenantId?: string) {
+  if (!tenantId) {
+    tenantId = getTenantId()
+  }
+  return `${tenantId}${SEPARATOR}${StaticDatabases.AUDIT_LOGS.name}`
+}
+
 export function baseGlobalDBName(tenantId: string | undefined | null) {
   let dbName
   if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
@@ -226,6 +233,13 @@ export function getGlobalDB(): Database {
     throw new Error("Global DB not found")
   }
   return getDB(baseGlobalDBName(context?.tenantId))
+}
+
+export function getAuditLogsDB(): Database {
+  if (!getTenantId()) {
+    throw new Error("Audit log DB not found")
+  }
+  return getDB(getAuditLogDBName())
 }
 
 /**
