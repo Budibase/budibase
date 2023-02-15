@@ -243,6 +243,19 @@ class InternalBuilder {
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
+        const isEmptyObject = (val: any) => {
+          return (
+            val &&
+            Object.keys(val).length === 0 &&
+            Object.getPrototypeOf(val) === Object.prototype
+          )
+        }
+        if (isEmptyObject(value.low)) {
+          value.low = ""
+        }
+        if (isEmptyObject(value.high)) {
+          value.high = ""
+        }
         if (value.low && value.high) {
           // Use a between operator if we have 2 valid range values
           const fnc = allOr ? "orWhereBetween" : "whereBetween"
