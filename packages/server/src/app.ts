@@ -1,10 +1,13 @@
+if (process.env.DATADOG_APM_ENABLED) {
+  require("./ddApm")
+}
+
+if (process.env.ELASTIC_APM_ENABLED) {
+  require("./elasticApm")
+}
+
 // need to load environment first
 import env from "./environment"
-
-// enable APM if configured
-if (process.env.DATADOG_APM_ENABLED) {
-  const tracer = require("dd-trace").init()
-}
 
 // enable APM if configured
 if (process.env.ELASTIC_APM_ENABLED) {
