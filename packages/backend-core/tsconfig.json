@@ -4,11 +4,13 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@budibase/types": ["../types/src"]
+      "@budibase/types": ["../types/src"],
+      "@budibase/pro": ["../../../budibase-pro/packages/pro/src"]
     }
   },
   "references": [
-    { "path": "../types" }
+    { "path": "../types" },
+    { "path": "../../../budibase-pro/packages/pro" }
   ],
   "exclude": [
     "node_modules",

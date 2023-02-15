@@ -1,6 +1,8 @@
-import { Event } from "@budibase/types"
+import { Event, IdentityType } from "@budibase/types"
+import { sdk } from "@budibase/pro"
 import { processors } from "./processors"
 import identification from "./identification"
+import { getAppId } from "../context"
 import * as backfill from "./backfill"
 
 export const publishEvent = async (
@@ -14,6 +16,13 @@ export const publishEvent = async (
   const backfilling = await backfill.isBackfillingEvent(event)
   // no backfill - send the event and exit
   if (!backfilling) {
+    // only audit log actual events, don't include backfills
+    const userId = identity.type === IdentityType.USER ? identity.id : undefined
+    await sdk.auditLogs.write(event, properties, {
+      userId,
+      timestamp,
+      appId: getAppId(),
+    })
     await processors.processEvent(event, identity, properties, timestamp)
     return
   }

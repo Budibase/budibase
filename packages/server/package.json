@@ -141,6 +141,7 @@
     "@types/pouchdb": "6.4.0",
     "@types/redis": "4.0.11",
     "@types/server-destroy": "1.0.1",
+    "@types/supertest": "^2.0.12",
     "@types/tar": "6.1.3",
     "@typescript-eslint/parser": "5.45.0",
     "apidoc": "0.50.4",
