@@ -1,9 +1,14 @@
-import { Event, IdentityType } from "@budibase/types"
-import { sdk } from "@budibase/pro"
+import { Event, IdentityType, AuditLogFn } from "@budibase/types"
 import { processors } from "./processors"
 import identification from "./identification"
 import { getAppId } from "../context"
 import * as backfill from "./backfill"
+
+let writeAuditLogs: AuditLogFn | undefined
+
+export const initAuditLogs = (fn: AuditLogFn) => {
+  writeAuditLogs = fn
+}
 
 export const publishEvent = async (
   event: Event,
@@ -18,11 +23,13 @@ export const publishEvent = async (
   if (!backfilling) {
     // only audit log actual events, don't include backfills
     const userId = identity.type === IdentityType.USER ? identity.id : undefined
-    await sdk.auditLogs.write(event, properties, {
-      userId,
-      timestamp,
-      appId: getAppId(),
-    })
+    if (writeAuditLogs) {
+      await writeAuditLogs(event, properties, {
+        userId,
+        timestamp,
+        appId: getAppId(),
+      })
+    }
     await processors.processEvent(event, identity, properties, timestamp)
     return
   }

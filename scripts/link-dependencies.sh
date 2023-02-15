@@ -53,10 +53,6 @@ if [ -d "../budibase-pro" ]; then
   echo "Linking pro to server"
   cd packages/server && yarn link '@budibase/pro'
   cd -
-
-  echo "Linking pro to backend-core"
-  cd packages/backend-core && yarn link '@budibase/pro'
-  cd -
 fi
 
 if [ -d "../account-portal" ]; then
