@@ -9,7 +9,7 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "test": "env-cmd jest --runInBand",
+    "test": "env-cmd jest --runInBand --json --outputFile=testResults.json",
     "test:watch": "env-cmd jest --watch",
     "test:debug": "DEBUG=1 jest",
     "docker:up": "docker-compose up -d",
