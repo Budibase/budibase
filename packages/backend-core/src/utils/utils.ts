@@ -227,6 +227,7 @@ export async function getBuildersCount() {
  */
 export async function platformLogout(opts: PlatformLogoutOpts) {
   const ctx = opts.ctx
+  const email = ctx.user?.email!
   const userId = opts.userId
   const keepActiveSession = opts.keepActiveSession
 
@@ -247,7 +248,7 @@ export async function platformLogout(opts: PlatformLogoutOpts) {
 
   const sessionIds = sessions.map(({ sessionId }) => sessionId)
   await invalidateSessions(userId, { sessionIds, reason: "logout" })
-  await events.auth.logout()
+  await events.auth.logout(email)
   await userCache.invalidateUser(userId)
 }
 
