@@ -94,7 +94,7 @@ export async function authenticateThirdParty(
   try {
     await saveUserFn(dbUser, { hashPassword: false, requirePassword: false })
   } catch (err: any) {
-    return authError(done, err)
+    return authError(done, "Error saving user", err)
   }
 
   // now that we're sure user exists, load them from the db
