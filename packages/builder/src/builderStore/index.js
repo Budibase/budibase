@@ -7,6 +7,7 @@ import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
 import { createHistoryStore } from "builderStore/store/history"
 import { get } from "svelte/store"
+import Automation from "builderStore/store/automation/Automation"
 
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
@@ -38,6 +39,16 @@ store.actions.screens.delete = screenHistoryStore.wrapDeleteDoc(
 export const automationHistoryStore = createHistoryStore({
   getDoc: automationStore.actions.getDefinition,
   selectDoc: automationStore.actions.selectById,
+  beforeAction: async operation => {
+    // Automations uses a unique creation endpoint.
+    // Before we do any undo/redo operation we need to check if the automation
+    // exists, and create it if not, in order to support undoing deletions
+    const id = operation.doc?._id
+    if (id && !automationStore.actions.getDefinition(id)) {
+      // console.log(id, "does not exist, needs created")
+      // await automationStore.actions.create({ name: operation.doc.name })
+    }
+  },
 })
 automationStore.actions.save = automationHistoryStore.wrapSaveDoc(
   automationStore.actions.save
@@ -104,5 +115,30 @@ export const selectedComponentPath = derived(
       $selectedScreen?.props,
       $store.selectedComponentId
     ).map(component => component._id)
+  }
+)
+
+// Derived automation state
+export const selectedAutomation = derived(automationStore, $automationStore => {
+  if (!$automationStore.selectedAutomationId) {
+    return null
+  }
+  const automation = $automationStore.automations?.find(
+    x => x._id === $automationStore.selectedAutomationId
+  )
+  if (!automation) {
+    return null
+  }
+  return new Automation(automation)
+})
+export const selectedBlock = derived(
+  [automationStore, selectedAutomation],
+  ([$automationStore, $selectedAutomation]) => {
+    if (!$automationStore.selectedBlockId) {
+      return null
+    }
+    return $selectedAutomation?.definition?.steps?.find(
+      x => x.id === $automationStore.selectedBlockId
+    )
   }
 )

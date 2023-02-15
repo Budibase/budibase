@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "builderStore"
+  import { automationStore, selectedAutomation } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import FlowItem from "./FlowItem.svelte"
   import TestDataModal from "./TestDataModal.svelte"
@@ -35,9 +35,7 @@
 
   async function deleteAutomation() {
     try {
-      await automationStore.actions.delete(
-        $automationStore.selectedAutomation?.automation
-      )
+      await automationStore.actions.delete($selectedAutomation)
     } catch (error) {
       notifications.error("Error deleting automation")
     }

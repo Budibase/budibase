@@ -17,19 +17,6 @@ export default class Automation {
     this.automation.testData = { ...this.automation.testData, ...data }
   }
 
-  addBlock(block, idx) {
-    // Make sure to add trigger if doesn't exist
-    if (!this.hasTrigger() && block.type === "TRIGGER") {
-      const trigger = { id: generate(), ...block }
-      this.automation.definition.trigger = trigger
-      return trigger
-    }
-
-    const newBlock = { id: generate(), ...block }
-    this.automation.definition.steps.splice(idx, 0, newBlock)
-    return newBlock
-  }
-
   updateBlock(updatedBlock, id) {
     const { steps, trigger } = this.automation.definition
 

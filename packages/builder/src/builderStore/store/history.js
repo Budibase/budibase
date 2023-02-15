@@ -185,7 +185,7 @@ export const createHistoryStore = ({
     startLoading()
 
     // Before hook
-    beforeAction?.(operation)
+    await beforeAction?.(operation)
 
     // Update state immediately to prevent further clicks and to prevent bad
     // history in the event of an update failing
@@ -231,7 +231,7 @@ export const createHistoryStore = ({
     }
 
     // After hook
-    afterAction?.(operation)
+    await afterAction?.(operation)
   }
 
   /**
@@ -252,7 +252,7 @@ export const createHistoryStore = ({
     startLoading()
 
     // Before hook
-    beforeAction?.(operation)
+    await beforeAction?.(operation)
 
     // Update state immediately to prevent further clicks and to prevent bad
     // history in the event of an update failing
@@ -298,7 +298,7 @@ export const createHistoryStore = ({
     }
 
     // After hook
-    afterAction?.(operation)
+    await afterAction?.(operation)
   }
 
   return {

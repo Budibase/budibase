@@ -126,6 +126,12 @@ export async function update(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
+
+  // Call through to create if it doesn't exist
+  if (!automation._id || !automation._rev) {
+    return create(ctx)
+  }
+
   const oldAutomation = await db.get(automation._id)
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({

@@ -1,16 +1,19 @@
-import { writable, get } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 import { API } from "api"
-import Automation from "./Automation"
 import { cloneDeep } from "lodash/fp"
+import { generate } from "shortid"
+import { selectedAutomation } from "builderStore"
 
 const initialAutomationState = {
   automations: [],
+  testResults: null,
   showTestPanel: false,
   blockDefinitions: {
     TRIGGER: [],
     ACTION: [],
   },
-  selectedAutomation: null,
+  selectedAutomationId: null,
+  selectedBlockId: null,
 }
 
 export const getAutomationStore = () => {
@@ -37,18 +40,10 @@ const automationActions = store => ({
       API.getAutomationDefinitions(),
     ])
     store.update(state => {
-      let selected = state.selectedAutomation?.automation
       state.automations = responses[0]
       state.blockDefinitions = {
         TRIGGER: responses[1].trigger,
         ACTION: responses[1].action,
-      }
-      // If previously selected find the new obj and select it
-      if (selected) {
-        selected = responses[0].filter(
-          automation => automation._id === selected._id
-        )
-        state.selectedAutomation = new Automation(selected[0])
       }
       return state
     })
@@ -61,15 +56,15 @@ const automationActions = store => ({
         steps: [],
       },
     }
-    const response = await API.createAutomation(automation)
+    const response = await store.actions.save(automation)
     store.update(state => {
       state.automations = [...state.automations, response.automation]
-      store.actions.select(response.automation)
       return state
     })
+    store.actions.select(response.automation)
   },
   duplicate: async automation => {
-    const response = await API.createAutomation({
+    const response = await store.actions.save({
       ...automation,
       name: `${automation.name} - copy`,
       _id: undefined,
@@ -77,9 +72,9 @@ const automationActions = store => ({
     })
     store.update(state => {
       state.automations = [...state.automations, response.automation]
-      store.actions.select(response.automation)
       return state
     })
+    store.actions.select(response.automation)
   },
   save: async automation => {
     const response = await API.updateAutomation(automation)
@@ -90,10 +85,11 @@ const automationActions = store => ({
       )
       if (existingIdx !== -1) {
         state.automations.splice(existingIdx, 1, updatedAutomation)
-        state.automations = [...state.automations]
-        store.actions.select(updatedAutomation)
         return state
+      } else {
+        state.automations = [...state.automations, updatedAutomation]
       }
+      return state
     })
     return response.automation
   },
@@ -108,38 +104,31 @@ const automationActions = store => ({
       )
       state.automations.splice(existingIdx, 1)
       state.automations = [...state.automations]
-      state.selectedAutomation = null
-      state.selectedBlock = null
+      state.selectedAutomationId = state.automations[0]?._id
+      state.selectedBlockId = null
       return state
     })
   },
   test: async (automation, testData) => {
-    store.update(state => {
-      state.selectedAutomation.testResults = null
-      return state
-    })
     const result = await API.testAutomation({
       automationId: automation?._id,
       testData,
     })
     store.update(state => {
-      state.selectedAutomation.testResults = result
+      state.testResults = result
       return state
     })
   },
   getDefinition: id => {
     return get(store).automations?.find(x => x._id === id)
   },
-  selectById: id => {
-    store.actions.select(store.actions.getDefinition(id))
-  },
-  select: automation => {
-    if (!automation) {
+  select: id => {
+    if (!id) {
       return
     }
     store.update(state => {
-      state.selectedAutomation = new Automation(cloneDeep(automation))
-      state.selectedBlock = null
+      state.selectedAutomationId = id
+      state.selectedBlockId = null
       return state
     })
   },
@@ -164,6 +153,19 @@ const automationActions = store => ({
     })
   },
   addBlockToAutomation: (block, blockIdx) => {
+    const hasTrigger = $selectedAutomation.definition.trigger
+
+    // Make sure to add trigger if doesn't exist
+    if (!this.hasTrigger() && block.type === "TRIGGER") {
+      const trigger = { id: generate(), ...block }
+      this.automation.definition.trigger = trigger
+      return trigger
+    }
+
+    const newBlock = { id: generate(), ...block }
+    this.automation.definition.steps.splice(idx, 0, newBlock)
+    return newBlock
+
     store.update(state => {
       state.selectedBlock = state.selectedAutomation.addBlock(
         cloneDeep(block),
