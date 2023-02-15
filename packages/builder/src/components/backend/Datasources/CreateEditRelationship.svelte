@@ -152,7 +152,7 @@
           fromTable,
           throughTable,
           fromTable.primary[0],
-          throughFromKey
+          throughToKey
         ),
       throughToKey:
         errorChecker.manyForeignKeySet(throughToKey) ||
@@ -160,7 +160,7 @@
           toTable,
           throughTable,
           toTable.primary[0],
-          throughToKey
+          throughFromKey
         ),
       fromForeign:
         errorChecker.foreignKeySet(fromForeign) ||
@@ -391,24 +391,14 @@
         options={Object.keys(getTable(throughId)?.schema)}
         bind:value={throughToKey}
         bind:error={errors.throughToKey}
-        on:change={e =>
-          changed(() => {
-            if (throughFromKey === e.detail) {
-              throughFromKey = null
-            }
-          })}
+        on:change={changed}
       />
       <Select
         label={`Foreign Key (${getTable(toId)?.name})`}
         options={Object.keys(getTable(throughId)?.schema)}
         bind:value={throughFromKey}
         bind:error={errors.throughFromKey}
-        on:change={e =>
-          changed(() => {
-            if (throughToKey === e.detail) {
-              throughToKey = null
-            }
-          })}
+        on:change={changed}
       />
     {/if}
   {:else if isManyToOne && toId}
