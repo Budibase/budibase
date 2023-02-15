@@ -22,7 +22,6 @@
   let confirmDeleteDialog
 
   $: blocks = getBlocks(automation)
-  $: console.log(blocks)
 
   const getBlocks = automation => {
     let blocks = []

@@ -40,7 +40,7 @@
   $: blockIdx = steps.findIndex(step => step.id === block.id)
   $: lastStep = !isTrigger && blockIdx + 1 === steps.length
   $: totalBlocks = $selectedAutomation?.definition?.steps.length + 1
-  $: loopingSelected = $selectedAutomation?.definition.steps.find(
+  $: loopBlock = $selectedAutomation?.definition.steps.find(
     x => x.blockToLoop === block.id
   )
   $: isAppAction = block?.stepId === TriggerStepID.APP
@@ -71,7 +71,6 @@
   }
 
   async function removeLooping() {
-    loopingSelected = false
     let loopBlock = $selectedAutomation?.definition.steps.find(
       x => x.blockToLoop === block.id
     )
@@ -112,7 +111,6 @@
   }
 
   async function addLooping() {
-    loopingSelected = true
     const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
     const loopBlock = automationStore.actions.constructBlock(
       "ACTION",
@@ -125,7 +123,7 @@
 </script>
 
 <div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
-  {#if loopingSelected}
+  {#if loopBlock}
     <div class="blockSection">
       <div
         on:click={() => {
@@ -168,9 +166,7 @@
               $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
                 .properties
             )}
-            block={$selectedAutomation?.definition.steps.find(
-              x => x.blockToLoop === block.id
-            )}
+            block={loopBlock}
             {webhookModal}
           />
         </Layout>
@@ -187,10 +183,10 @@
         {#if !isTrigger}
           <div>
             <div class="block-options">
-              {#if !loopingSelected}
-                <ActionButton on:click={() => addLooping()} icon="Reuse"
-                  >Add Looping</ActionButton
-                >
+              {#if !loopBlock}
+                <ActionButton on:click={() => addLooping()} icon="Reuse">
+                  Add Looping
+                </ActionButton>
               {/if}
               {#if showBindingPicker}
                 <Select

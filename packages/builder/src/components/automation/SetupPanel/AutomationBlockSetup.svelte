@@ -70,19 +70,19 @@
   }
 
   const onChange = Utils.sequential(async (e, key) => {
+    // We need to cache the schema as part of the definition because it is
+    // used in the server to detect relationships. It would be far better to
+    // instead fetch the schema in the backend at runtime.
+    let schema
     if (e.detail?.tableId) {
-      const tableSchema = getSchemaForTable(e.detail.tableId, {
+      schema = getSchemaForTable(e.detail.tableId, {
         searchableSchema: true,
       }).schema
-      if (isTestModal) {
-        testData.schema = tableSchema
-      } else {
-        block.inputs.schema = tableSchema
-      }
     }
+
     try {
       if (isTestModal) {
-        let newTestData = {}
+        let newTestData = { schema }
 
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
         if (stepId === TriggerStepID.WEBHOOK) {
@@ -90,18 +90,18 @@
             ...newTestData,
             body: {
               [key]: e.detail,
-              ...$automationStore.selectedAutomation.automation.testData?.body,
+              ...$selectedAutomation.testData?.body,
             },
           }
         }
-
         newTestData = {
           ...newTestData,
           [key]: e.detail,
         }
         await automationStore.actions.addTestDataToAutomation(newTestData)
       } else {
-        await automationStore.actions.updateBlockInput(block, key, e.detail)
+        const data = { schema, [key]: e.detail }
+        await automationStore.actions.updateBlockInputs(block, data)
       }
     } catch (error) {
       notifications.error("Error saving automation")

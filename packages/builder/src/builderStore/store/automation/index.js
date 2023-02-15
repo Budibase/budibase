@@ -58,6 +58,7 @@ const automationActions = store => ({
     }
     const response = await store.actions.save(automation)
     store.actions.select(response._id)
+    return response
   },
   duplicate: async automation => {
     const response = await store.actions.save({
@@ -67,6 +68,7 @@ const automationActions = store => ({
       _ref: undefined,
     })
     store.actions.select(response._id)
+    return response
   },
   save: async automation => {
     const response = await API.updateAutomation(automation)
@@ -102,12 +104,17 @@ const automationActions = store => ({
       return state
     })
   },
-  updateBlockInput: async (block, input, value) => {
-    let newBlock = cloneDeep(block)
-    newBlock.inputs[input] = value
+  updateBlockInputs: async (block, data) => {
+    let newBlock = {
+      ...block,
+      inputs: {
+        ...block.inputs,
+        ...data,
+      },
+    }
     const automation = get(selectedAutomation)
     let newAutomation = cloneDeep(automation)
-    if (automation.trigger?.id === block.id) {
+    if (automation.definition.trigger?.id === block.id) {
       newAutomation.definition.trigger = newBlock
     } else {
       const idx = automation.definition.steps.findIndex(x => x.id === block.id)
