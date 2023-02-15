@@ -159,6 +159,10 @@ spec:
         {{ if .Values.globals.datadogApmEnabled }}
         - name: DD_LOGS_INJECTION
           value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_ENABLED
+          value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_DD_URL
+          value: https://trace.agent.datadoghq.eu
         {{ end }}
         {{ if .Values.globals.elasticApmEnabled }}
         - name: ELASTIC_APM_ENABLED
