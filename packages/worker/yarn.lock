@@ -475,14 +475,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.3.11-alpha.0":
-  version "2.3.11-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.3.11-alpha.0.tgz#361e30139a1a26d023902c6bdb4fdcac2610b69f"
-  integrity sha512-hlaeTkYsSJJYIwwqL3LJ7Pxzq0tOgSjQ38+nFiBPIzjkDSaV0UPwi0rZAZq/kPvaT7AKdTEcf8tn1wiui/VkYA==
+"@budibase/backend-core@2.3.15":
+  version "2.3.15"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.3.15.tgz#ede3a14c9741054d9f07caf2eddbf6c4326181fb"
+  integrity sha512-8hMUVK9oYZDv4vdlvRIAliFEUdWvYkQHSS4W3bHC+Lun3mKASZ8X02tBoyx8uRwXNYEZcKqDXNBOogjROjA2fw==
   dependencies:
     "@budibase/nano" "10.1.1"
-    "@budibase/pouchdb-replication-stream" "1.2.10"
-    "@budibase/types" "2.3.11-alpha.0"
+    "@budibase/types" "^2.3.15"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -507,6 +506,7 @@
     posthog-node "1.3.0"
     pouchdb "7.3.0"
     pouchdb-find "7.2.2"
+    pouchdb-replication-stream "1.2.9"
     redlock "4.2.0"
     sanitize-s3-objectkey "0.0.1"
     semver "7.3.7"
@@ -526,26 +526,13 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
-"@budibase/pouchdb-replication-stream@1.2.10":
-  version "1.2.10"
-  resolved "https://registry.yarnpkg.com/@budibase/pouchdb-replication-stream/-/pouchdb-replication-stream-1.2.10.tgz#4100df2effd7c823edadddcdbdc380f6827eebf5"
-  integrity sha512-1zeorOwbelZ7HF5vFB+pKE8Mnh31om8k1M6T3AZXVULYTHLsyJrMTozSv5CJ1P8ZfOIJab09HDzCXDh2icFekg==
+"@budibase/pro@2.3.15":
+  version "2.3.15"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.3.15.tgz#d5c069effe0826aca9f09a1ee70cfd04f13517fc"
+  integrity sha512-2NJGGZ0xR1F/XdT5MAiZCYUv6QfMFEr2vgPowoOOZV59nvdzGCYLYZ1/4oW6/D8Fn4bxkevJ4EfS3ivN9tDHkw==
   dependencies:
-    argsarray "0.0.1"
-    inherits "^2.0.3"
-    lodash.pick "^4.0.0"
-    ndjson "^1.4.3"
-    pouch-stream "^0.4.0"
-    pouchdb-promise "^6.0.4"
-    through2 "^2.0.0"
-
-"@budibase/pro@2.3.11-alpha.0":
-  version "2.3.11-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.3.11-alpha.0.tgz#b59edba2c04e2a490f3d9246cd328d8dd3213295"
-  integrity sha512-z7tLgRKYKm1psNZGdRErQT8tV+vSj9hXJkD/H/uFxsJ3IQkjWbcFP5FUBPads5RnvCtqOfYu8OpRHCJfNNBoCA==
-  dependencies:
-    "@budibase/backend-core" "2.3.11-alpha.0"
-    "@budibase/types" "2.3.11-alpha.0"
+    "@budibase/backend-core" "2.3.15"
+    "@budibase/types" "2.3.15"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -553,10 +540,10 @@
     lru-cache "^7.14.1"
     node-fetch "^2.6.1"
 
-"@budibase/types@2.3.11-alpha.0":
-  version "2.3.11-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.3.11-alpha.0.tgz#55cdcef6fb30c79e9d7d90ae8789e4f0cc6a2b63"
-  integrity sha512-SFW9vManFRJ45bgMW7wkDiNxiQQfAME8HOmSqCHKDC0OPzsDydygIl7BNeF/domFvCXxDD3NPu7HC2JXMlV6cw==
+"@budibase/types@2.3.15", "@budibase/types@^2.3.15":
+  version "2.3.15"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.3.15.tgz#32562b64153a2e41d93d756a090c28fbc8b814aa"
+  integrity sha512-LxPxZ+UzUJGXUQ9xLP4svkWdjLoyYW1MBjVe57sjQnFRw0SvI97brNvTiD74XY9yW47CDfSYx7Cd4ywpmWTM5w==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
@@ -6560,6 +6547,19 @@ pouchdb-promise@6.4.3, pouchdb-promise@^6.0.4:
   integrity sha512-ruJaSFXwzsxRHQfwNHjQfsj58LBOY1RzGzde4PM5CWINZwFjCQAhZwfMrch2o/0oZT6d+Xtt0HTWhq35p3b0qw==
   dependencies:
     lie "3.1.1"
+
+pouchdb-replication-stream@1.2.9:
+  version "1.2.9"
+  resolved "https://registry.yarnpkg.com/pouchdb-replication-stream/-/pouchdb-replication-stream-1.2.9.tgz#aa4fa5d8f52df4825392f18e07c7e11acffc650a"
+  integrity sha512-hM8XRBfamTTUwRhKwLS/jSNouBhn9R/4ugdHNRD1EvJzwV8iImh6sDYbCU9PGuznjyOjXz6vpFRzKeI2KYfwnQ==
+  dependencies:
+    argsarray "0.0.1"
+    inherits "^2.0.3"
+    lodash.pick "^4.0.0"
+    ndjson "^1.4.3"
+    pouch-stream "^0.4.0"
+    pouchdb-promise "^6.0.4"
+    through2 "^2.0.0"
 
 pouchdb-selector-core@7.2.2:
   version "7.2.2"
