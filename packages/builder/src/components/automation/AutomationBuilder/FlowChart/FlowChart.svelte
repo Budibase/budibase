@@ -11,7 +11,6 @@
     ActionButton,
     notifications,
     Modal,
-    ButtonGroup,
   } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
@@ -20,17 +19,18 @@
   export let automation
 
   let testDataModal
-  let blocks
   let confirmDeleteDialog
 
-  $: {
-    blocks = []
-    if (automation) {
-      if (automation.definition.trigger) {
-        blocks.push(automation.definition.trigger)
-      }
-      blocks = blocks.concat(automation.definition.steps || [])
+  $: blocks = getBlocks(automation)
+  $: console.log(blocks)
+
+  const getBlocks = automation => {
+    let blocks = []
+    if (automation.definition.trigger) {
+      blocks.push(automation.definition.trigger)
     }
+    blocks = blocks.concat(automation.definition.steps || [])
+    return blocks
   }
 
   async function deleteAutomation() {
@@ -62,7 +62,7 @@
           size="M">Run test</ActionButton
         >
         <ActionButton
-          disabled={!$automationStore.selectedAutomation?.testResults}
+          disabled={!$automationStore.testResults}
           on:click={() => {
             $automationStore.showTestPanel = true
           }}

@@ -13,10 +13,9 @@
 
   $: {
     if (!testResult) {
-      testResult =
-        $automationStore.selectedAutomation?.testResults?.steps.filter(step =>
-          block.id ? step.id === block.id : step.stepId === block.stepId
-        )[0]
+      testResult = $automationStore.testResults?.steps.filter(step =>
+        block.id ? step.id === block.id : step.stepId === block.stepId
+      )[0]
     }
   }
   $: isTrigger = isTrigger || block.type === "TRIGGER"

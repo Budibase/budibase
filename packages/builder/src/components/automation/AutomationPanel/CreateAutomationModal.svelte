@@ -14,45 +14,33 @@
   } from "@budibase/bbui"
   import { TriggerStepID } from "constants/backend/automations"
 
+  export let webhookModal
+
   let name
   let selectedTrigger
   let nameTouched = false
   let triggerVal
-  export let webhookModal
 
-  $: instanceId = $database._id
   $: nameError =
     nameTouched && !name ? "Please specify a name for the automation." : null
+  $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
 
   async function createAutomation() {
     try {
-      await automationStore.actions.create({
-        name,
-        instanceId,
-      })
-      const newBlock = $automationStore.selectedAutomation.constructBlock(
+      const trigger = automationStore.actions.constructBlock(
         "TRIGGER",
         triggerVal.stepId,
         triggerVal
       )
-
-      automationStore.actions.addBlockToAutomation(newBlock)
+      await automationStore.actions.create(name, trigger)
       if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
-        webhookModal.show
+        webhookModal.show()
       }
-
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
-
       notifications.success(`Automation ${name} created`)
-
-      $goto(`./${$automationStore.selectedAutomation.automation._id}`)
     } catch (error) {
       notifications.error("Error creating automation")
     }
   }
-  $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
 
   const selectTrigger = trigger => {
     triggerVal = trigger

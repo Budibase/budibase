@@ -15,8 +15,7 @@
     notifications,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-
-  import { automationStore } from "builderStore"
+  import { automationStore, selectedAutomation } from "builderStore"
   import { tables } from "stores/backend"
   import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
@@ -50,22 +49,8 @@
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
   $: stepId = block.stepId
-  $: bindings = getAvailableBindings(
-    block || $automationStore.selectedBlock,
-    $automationStore.selectedAutomation?.automation?.definition
-  )
-
+  $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
   $: getInputData(testData, block.inputs)
-  const getInputData = (testData, blockInputs) => {
-    let newInputData = testData || blockInputs
-
-    if (block.event === "app:trigger" && !newInputData?.fields) {
-      newInputData = cloneDeep(blockInputs)
-    }
-
-    inputData = newInputData
-  }
-
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
@@ -75,6 +60,14 @@
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
+
+  const getInputData = (testData, blockInputs) => {
+    let newInputData = testData || blockInputs
+    if (block.event === "app:trigger" && !newInputData?.fields) {
+      newInputData = cloneDeep(blockInputs)
+    }
+    inputData = newInputData
+  }
 
   const onChange = Utils.sequential(async (e, key) => {
     if (e.detail?.tableId) {
@@ -89,26 +82,27 @@
     }
     try {
       if (isTestModal) {
+        let newTestData = {}
+
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
         if (stepId === TriggerStepID.WEBHOOK) {
-          automationStore.actions.addTestDataToAutomation({
+          newTestData = {
+            ...newTestData,
             body: {
               [key]: e.detail,
               ...$automationStore.selectedAutomation.automation.testData?.body,
             },
-          })
+          }
         }
-        automationStore.actions.addTestDataToAutomation({
-          [key]: e.detail,
-        })
-        testData[key] = e.detail
-      } else {
-        block.inputs[key] = e.detail
-      }
 
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
+        newTestData = {
+          ...newTestData,
+          [key]: e.detail,
+        }
+        await automationStore.actions.addTestDataToAutomation(newTestData)
+      } else {
+        await automationStore.actions.updateBlockInput(block, key, e.detail)
+      }
     } catch (error) {
       notifications.error("Error saving automation")
     }

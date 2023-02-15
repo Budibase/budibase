@@ -5,7 +5,6 @@
     Detail,
     Body,
     Icon,
-    Tooltip,
     notifications,
   } from "@budibase/bbui"
   import { automationStore } from "builderStore"
@@ -50,15 +49,12 @@
 
   async function addBlockToAutomation() {
     try {
-      const newBlock = $automationStore.selectedAutomation.constructBlock(
+      const newBlock = automationStore.actions.constructBlock(
         "ACTION",
         actionVal.stepId,
         actionVal
       )
-      automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
+      await automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
     } catch (error) {
       notifications.error("Error saving automation")
     }

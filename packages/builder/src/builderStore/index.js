@@ -7,7 +7,6 @@ import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
 import { createHistoryStore } from "builderStore/store/history"
 import { get } from "svelte/store"
-import Automation from "builderStore/store/automation/Automation"
 
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
@@ -123,22 +122,7 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
   if (!$automationStore.selectedAutomationId) {
     return null
   }
-  const automation = $automationStore.automations?.find(
+  return $automationStore.automations?.find(
     x => x._id === $automationStore.selectedAutomationId
   )
-  if (!automation) {
-    return null
-  }
-  return new Automation(automation)
 })
-export const selectedBlock = derived(
-  [automationStore, selectedAutomation],
-  ([$automationStore, $selectedAutomation]) => {
-    if (!$automationStore.selectedBlockId) {
-      return null
-    }
-    return $selectedAutomation?.definition?.steps?.find(
-      x => x.id === $automationStore.selectedBlockId
-    )
-  }
-)

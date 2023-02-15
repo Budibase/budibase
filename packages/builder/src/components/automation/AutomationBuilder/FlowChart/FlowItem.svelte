@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "builderStore"
+  import { automationStore, selectedAutomation } from "builderStore"
   import {
     Icon,
     Divider,
@@ -23,6 +23,7 @@
   export let block
   export let testDataModal
   export let idx
+
   let selected
   let webhookModal
   let actionModal
@@ -30,29 +31,18 @@
   let showLooping = false
   let role
 
-  $: automationId = $automationStore.selectedAutomation?.automation._id
+  $: automationId = $selectedAutomation?._id
   $: showBindingPicker =
     block.stepId === ActionStepID.CREATE_ROW ||
     block.stepId === ActionStepID.UPDATE_ROW
-
   $: isTrigger = block.type === "TRIGGER"
-
-  $: selected = $automationStore.selectedBlock?.id === block.id
-  $: steps =
-    $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
-
+  $: steps = $selectedAutomation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
   $: lastStep = !isTrigger && blockIdx + 1 === steps.length
-
-  $: totalBlocks =
-    $automationStore.selectedAutomation?.automation?.definition?.steps.length +
-    1
-
-  $: loopingSelected =
-    $automationStore.selectedAutomation?.automation.definition.steps.find(
-      x => x.blockToLoop === block.id
-    )
-
+  $: totalBlocks = $selectedAutomation?.definition?.steps.length + 1
+  $: loopingSelected = $selectedAutomation?.definition.steps.find(
+    x => x.blockToLoop === block.id
+  )
   $: isAppAction = block?.stepId === TriggerStepID.APP
   $: isAppAction && setPermissions(role)
   $: isAppAction && getPermissions(automationId)
@@ -82,70 +72,55 @@
 
   async function removeLooping() {
     loopingSelected = false
-    let loopBlock =
-      $automationStore.selectedAutomation?.automation.definition.steps.find(
-        x => x.blockToLoop === block.id
-      )
-    automationStore.actions.deleteAutomationBlock(loopBlock)
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
+    let loopBlock = $selectedAutomation?.definition.steps.find(
+      x => x.blockToLoop === block.id
     )
+    try {
+      await automationStore.actions.deleteAutomationBlock(loopBlock)
+    } catch (error) {
+      notifications.error("Error saving automation")
+    }
   }
 
   async function deleteStep() {
-    let loopBlock =
-      $automationStore.selectedAutomation?.automation.definition.steps.find(
-        x => x.blockToLoop === block.id
-      )
+    let loopBlock = $selectedAutomation?.definition.steps.find(
+      x => x.blockToLoop === block.id
+    )
 
     try {
       if (loopBlock) {
-        automationStore.actions.deleteAutomationBlock(loopBlock)
+        await automationStore.actions.deleteAutomationBlock(loopBlock)
       }
-      automationStore.actions.deleteAutomationBlock(block)
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
+      await automationStore.actions.deleteAutomationBlock(block)
     } catch (error) {
-      notifications.error("Error saving notification")
+      notifications.error("Error saving automation")
     }
   }
+
   function toggleFieldControl(evt) {
-    onSelect(block)
-    let rowControl
-    if (evt.detail === "Use values") {
-      rowControl = false
-    } else {
-      rowControl = true
-    }
-    automationStore.actions.toggleFieldControl(rowControl)
-    automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
+    // onSelect(block)
+    // let rowControl
+    // if (evt.detail === "Use values") {
+    //   rowControl = false
+    // } else {
+    //   rowControl = true
+    // }
+    // automationStore.actions.toggleFieldControl(rowControl)
+    // automationStore.actions.save(
+    //   $automationStore.selectedAutomation?.automation
+    // )
   }
 
   async function addLooping() {
     loopingSelected = true
     const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
-
-    const loopBlock = $automationStore.selectedAutomation.constructBlock(
+    const loopBlock = automationStore.actions.constructBlock(
       "ACTION",
       "LOOP",
       loopDefinition
     )
     loopBlock.blockToLoop = block.id
-    block.loopBlock = loopBlock.id
-    automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
-  }
-
-  async function onSelect(block) {
-    await automationStore.update(state => {
-      state.selectedBlock = block
-      return state
-    })
+    await automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
   }
 </script>
 
@@ -174,12 +149,7 @@
         </div>
 
         <div class="blockTitle">
-          <div
-            style="margin-left: 10px;"
-            on:click={() => {
-              onSelect(block)
-            }}
-          >
+          <div style="margin-left: 10px;" on:click={() => {}}>
             <Icon name={showLooping ? "ChevronUp" : "ChevronDown"} />
           </div>
         </div>
@@ -198,7 +168,7 @@
               $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
                 .properties
             )}
-            block={$automationStore.selectedAutomation?.automation.definition.steps.find(
+            block={$selectedAutomation?.definition.steps.find(
               x => x.blockToLoop === block.id
             )}
             {webhookModal}
