@@ -6,7 +6,7 @@ import * as backfill from "./backfill"
 
 let writeAuditLogs: AuditLogFn | undefined
 
-export const initAuditLogs = (fn: AuditLogFn) => {
+export const configure = (fn: AuditLogFn) => {
   writeAuditLogs = fn
 }
 
