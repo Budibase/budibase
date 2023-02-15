@@ -1,4 +1,4 @@
-if (process.env.DATADOG_APM_ENABLED) {
+if (process.env.DD_APM_ENABLED) {
   require("./ddApm")
 }
 
