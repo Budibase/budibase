@@ -4,13 +4,18 @@ metadata:
   annotations:
     kompose.cmd: kompose convert
     kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.worker.deploymentAnnotations }}
+{{- toYaml .Values.services.worker.deploymentAnnotations | indent 4 -}}
+{{ end }}
   creationTimestamp: null
   labels:
     io.kompose.service: worker-service
+{{ if .Values.services.worker.deploymentLabels }}
+{{- toYaml .Values.services.worker.deploymentLabels | indent 4 -}}
+{{ end }}
   name: worker-service
 spec:
   replicas: {{ .Values.services.worker.replicaCount }}
-
   selector:
     matchLabels:
       io.kompose.service: worker-service
@@ -21,12 +26,15 @@ spec:
       annotations:
         kompose.cmd: kompose convert
         kompose.version: 1.21.0 (992df58d8)
-{{ if .Values.services.worker.annotations }}
-{{- toYaml .Values.services.worker.annotations | indent 8 -}}
+{{ if .Values.services.worker.templateAnnotations }}
+{{- toYaml .Values.services.worker.templateAnnotations | indent 8 -}}
 {{ end }}
       creationTimestamp: null
       labels:
         io.kompose.service: worker-service
+{{ if .Values.services.worker.templateLabels }}
+{{- toYaml .Values.services.worker.templateLabels | indent 8 -}}
+{{ end }}
     spec:
       containers:
       - env:
@@ -148,6 +156,14 @@ spec:
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         - name: ENCRYPTION_KEY
           value: {{ .Values.globals.bbEncryptionKey | quote }}
+        {{ if .Values.globals.datadogApmEnabled }}
+        - name: DD_LOGS_INJECTION
+          value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_ENABLED
+          value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_DD_URL
+          value: https://trace.agent.datadoghq.eu
+        {{ end }}
         {{ if .Values.globals.elasticApmEnabled }}
         - name: ELASTIC_APM_ENABLED
           value: {{ .Values.globals.elasticApmEnabled | quote }}

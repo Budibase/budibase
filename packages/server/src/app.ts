@@ -1,3 +1,11 @@
+if (process.env.DD_APM_ENABLED) {
+  require("./ddApm")
+}
+
+if (process.env.ELASTIC_APM_ENABLED) {
+  require("./elasticApm")
+}
+
 // need to load environment first
 import env from "./environment"
 
