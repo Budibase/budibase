@@ -23,3 +23,9 @@ jobs:
         env:
           BUDIBASE_HOST: budicloud.qa.budibase.net
           BUDIBASE_ACCOUNTS_URL: https://account-portal.budicloud.qa.budibase.net
+
+      - name: Cypress Discord Notify
+        run: yarn test:notify
+        env:
+          WEBHOOK_URL: ${{ secrets.BUDI_QA_WEBHOOK }}
+          GITHUB_RUN_URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
