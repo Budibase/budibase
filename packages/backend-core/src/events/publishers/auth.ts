@@ -12,19 +12,21 @@ import {
 } from "@budibase/types"
 import { identification } from ".."
 
-async function login(source: LoginSource) {
+async function login(source: LoginSource, email: string) {
   const identity = await identification.getCurrentIdentity()
   const properties: LoginEvent = {
     userId: identity.id,
     source,
+    email,
   }
   await publishEvent(Event.AUTH_LOGIN, properties)
 }
 
-async function logout() {
+async function logout(email: string) {
   const identity = await identification.getCurrentIdentity()
   const properties: LogoutEvent = {
     userId: identity.id,
+    email,
   }
   await publishEvent(Event.AUTH_LOGOUT, properties)
 }

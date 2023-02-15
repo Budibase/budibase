@@ -182,8 +182,102 @@ export enum Event {
   ENVIRONMENT_VARIABLE_UPGRADE_PANEL_OPENED = "environment_variable:upgrade_panel_opened",
 }
 
-export const AuditedEventFriendlyName = {
-  [Event.USER_CREATED]: "user created",
+export class AuditedEventFriendlyName {
+  // USER
+  static USER_CREATED = "User {{ email }} created"
+  static USER_UPDATED = "User {{ email }} updated"
+  static USER_DELETED = "User {{ email }} deleted"
+  static USER_PERMISSION_ADMIN_ASSIGNED = "User {{ email }} admin role assigned"
+  static USER_PERMISSION_ADMIN_REMOVED = "User {{ email }} admin role removed"
+  static USER_PERMISSION_BUILDER_ASSIGNED =
+    "User {{ email }} builder role assigned"
+  static USER_PERMISSION_BUILDER_REMOVED =
+    "User {{ email }} builder role removed"
+  static USER_INVITED = "User {{ email }} invited"
+  static USER_INVITED_ACCEPTED = "User {{ email }} accepted invite"
+  static USER_PASSWORD_UPDATED = "User {{ email }} password updated"
+  static USER_PASSWORD_RESET_REQUESTED =
+    "User {{ email }} password reset requested"
+  static USER_PASSWORD_RESET = "User {{ email }} password reset"
+  static USER_GROUP_CREATED = "User group {{ name }} created"
+  static USER_GROUP_UPDATED = "User group {{ name }} updated"
+  static USER_GROUP_DELETED = "User group {{ name }} deleted"
+  static USER_GROUP_USERS_ADDED =
+    "User group {{ name }} {{ count }} users added"
+  static USER_GROUP_USERS_REMOVED =
+    "User group {{ name }} {{ count }} users removed"
+  static USER_GROUP_PERMISSIONS_EDITED =
+    "User group {{ name }} permissions edited"
+
+  // EMAIL
+  static EMAIL_SMTP_CREATED = "Email configuration created"
+  static EMAIL_SMTP_UPDATED = "Email configuration updated"
+
+  // AUTH
+  static AUTH_SSO_CREATED = "SSO configuration created"
+  static AUTH_SSO_UPDATED = "SSO configuration updated"
+  static AUTH_SSO_ACTIVATED = "SSO configuration activated"
+  static AUTH_SSO_DEACTIVATED = "SSO configuration deactivated"
+  static AUTH_LOGIN = "User {{ email }} logged in"
+  static AUTH_LOGOUT = "User {{ email }} logged out"
+
+  // ORG
+  static ORG_NAME_UPDATED = "Organisation name updated"
+  static ORG_LOGO_UPDATED = "Organisation logo updated"
+  static ORG_PLATFORM_URL_UPDATED = "Organisation platform URL updated"
+
+  // APP
+  static APP_CREATED = "App {{ name }} created"
+  static APP_UPDATED = "App {{ name }} updated"
+  static APP_DELETED = "App {{ name }} deleted"
+  static APP_PUBLISHED = "App {{ name }} published"
+  static APP_UNPUBLISHED = "App {{ name }} unpublished"
+  static APP_TEMPLATE_IMPORTED = "App {{ name }} template imported"
+  static APP_FILE_IMPORTED = "App {{ name }} file imported"
+  static APP_VERSION_UPDATED = "App {{ name }} version updated"
+  static APP_VERSION_REVERTED = "App {{ name }} version reverted"
+  static APP_REVERTED = "App {{ name }} reverted"
+  static APP_EXPORTED = "App {{ name }} exported"
+  static APP_BACKUP_RESTORED = "App backup {{ name }} restored"
+  static APP_BACKUP_TRIGGERED = "App backup {{ name }} triggered"
+
+  // DATASOURCE
+  static DATASOURCE_CREATED = "Datasource created"
+  static DATASOURCE_UPDATED = "Datasource updated"
+  static DATASOURCE_DELETED = "Datasource deleted"
+
+  // QUERY
+  static QUERY_CREATED = "Query created"
+  static QUERY_UPDATED = "Query updated"
+  static QUERY_DELETED = "Query deleted"
+  static QUERY_IMPORT = "Query import"
+
+  // TABLE
+  static TABLE_CREATED = "Table created"
+  static TABLE_UPDATED = "Table updated"
+  static TABLE_DELETED = "Table deleted"
+  static TABLE_EXPORTED = "Table exported"
+  static TABLE_IMPORTED = "Table imported"
+  static TABLE_DATA_IMPORTED = "Data imported to table"
+
+  // ROWS
+  static ROWS_CREATED = "Rows created"
+  static ROWS_IMPORTED = "Rows imported"
+
+  // AUTOMATION
+  static AUTOMATION_CREATED = "Automation created"
+  static AUTOMATION_DELETED = "Automation deleted"
+
+  // SCREEN
+  static SCREEN_CREATED = "Screen created"
+  static SCREEN_DELETED = "Screen deleted"
+
+  // COMPONENT
+  static COMPONENT_CREATED = "Component created"
+  static COMPONENT_DELETED = "Component deleted"
+
+  static ENVIRONMENT_VARIABLE_CREATED = "Environment variable created"
+  static ENVIRONMENT_VARIABLE_DELETED = "Environment variable deleted"
 }
 
 // properties added at the final stage of the event pipeline

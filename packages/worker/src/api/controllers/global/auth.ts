@@ -54,7 +54,7 @@ export const authenticate = async (ctx: any, next: any) => {
     async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
       await context.identity.doInUserContext(user, async () => {
-        await events.auth.login("local")
+        await events.auth.login("local", user.email)
       })
       ctx.status = 200
     }
@@ -208,7 +208,7 @@ export const googleAuth = async (ctx: any, next: any) => {
     async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
       await context.identity.doInUserContext(user, async () => {
-        await events.auth.login("google-internal")
+        await events.auth.login("google-internal", user.email)
       })
       ctx.redirect("/")
     }
@@ -272,7 +272,7 @@ export const oidcAuth = async (ctx: any, next: any) => {
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
       await context.identity.doInUserContext(user, async () => {
-        await events.auth.login("oidc")
+        await events.auth.login("oidc", user.email)
       })
       ctx.redirect("/")
     }

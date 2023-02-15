@@ -623,7 +623,7 @@ export const invite = async (
       }
       await sendEmail(user.email, EmailTemplatePurpose.INVITATION, opts)
       response.successful.push({ email: user.email })
-      await events.user.invited()
+      await events.user.invited(user.email)
     } catch (e) {
       console.error(`Failed to send email invitation email=${user.email}`, e)
       response.unsuccessful.push({
