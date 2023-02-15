@@ -4,7 +4,7 @@ const fetch = require("node-fetch")
 const path = require("path")
 const fs = require("fs")
 
-const WEBHOOK_URL = process.env.CYPRESS_WEBHOOK_URL
+const WEBHOOK_URL = process.env.WEBHOOK_URL
 const GIT_SHA = process.env.GITHUB_SHA
 const GITHUB_ACTIONS_RUN_URL = process.env.GITHUB_ACTIONS_RUN_URL
 
