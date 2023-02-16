@@ -12,13 +12,17 @@
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
   export let getOptionColour = () => null
+  export let isOptionEnabled
   export let readonly = false
   export let quiet = false
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
+
   const dispatch = createEventDispatcher()
+
   let open = false
+
   $: fieldText = getFieldText(value, options, placeholder)
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
@@ -66,6 +70,7 @@
   {getOptionValue}
   {getOptionIcon}
   {getOptionColour}
+  {isOptionEnabled}
   {autocomplete}
   {sort}
   isPlaceholder={value == null || value === ""}

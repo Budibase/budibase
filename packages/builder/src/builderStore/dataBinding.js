@@ -21,6 +21,7 @@ import {
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
+import { environment, licensing } from "stores/portal"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -53,8 +54,13 @@ export const getBindableProperties = (asset, componentId) => {
  * Gets all rest bindable data fields
  */
 export const getRestBindings = () => {
+  const environmentVariablesEnabled = get(licensing).environmentVariablesEnabled
   const userBindings = getUserBindings()
-  return [...userBindings, ...getAuthBindings()]
+  return [
+    ...userBindings,
+    ...getAuthBindings(),
+    ...(environmentVariablesEnabled ? getEnvironmentBindings() : []),
+  ]
 }
 
 /**
@@ -87,6 +93,20 @@ export const getAuthBindings = () => {
     }
   })
   return bindings
+}
+
+export const getEnvironmentBindings = () => {
+  let envVars = get(environment).variables
+  return envVars.map(variable => {
+    return {
+      type: "context",
+      runtimeBinding: `env.${makePropSafe(variable.name)}`,
+      readableBinding: `env.${variable.name}`,
+      category: "Environment",
+      icon: "Key",
+      display: { type: "string", name: variable.name },
+    }
+  })
 }
 
 /**
@@ -169,7 +189,12 @@ export const getComponentBindableProperties = (asset, componentId) => {
 /**
  * Gets all data provider components above a component.
  */
-export const getContextProviderComponents = (asset, componentId, type) => {
+export const getContextProviderComponents = (
+  asset,
+  componentId,
+  type,
+  options = { includeSelf: false }
+) => {
   if (!asset || !componentId) {
     return []
   }
@@ -177,7 +202,9 @@ export const getContextProviderComponents = (asset, componentId, type) => {
   // Get the component tree leading up to this component, ignoring the component
   // itself
   const path = findComponentPath(asset.props, componentId)
-  path.pop()
+  if (!options?.includeSelf) {
+    path.pop()
+  }
 
   // Filter by only data provider components
   return path.filter(component => {
@@ -371,6 +398,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
           providerId,
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
+          component: component._component,
           category: component._instanceName,
           icon: def.icon,
           display: {
@@ -474,10 +502,22 @@ const getSelectedRowsBindings = asset => {
           block._id + "-table"
         )}.${makePropSafe("selectedRows")}`,
         readableBinding: `${block._instanceName}.Selected rows`,
+        category: "Selected rows",
       }))
     )
   }
   return bindings
+}
+
+export const makeStateBinding = key => {
+  return {
+    type: "context",
+    runtimeBinding: `${makePropSafe("state")}.${makePropSafe(key)}`,
+    readableBinding: `State.${key}`,
+    category: "State",
+    icon: "AutomatedSegment",
+    display: { name: key },
+  }
 }
 
 /**
@@ -486,15 +526,7 @@ const getSelectedRowsBindings = asset => {
 const getStateBindings = () => {
   let bindings = []
   if (get(store).clientFeatures?.state) {
-    const safeState = makePropSafe("state")
-    bindings = getAllStateVariables().map(key => ({
-      type: "context",
-      runtimeBinding: `${safeState}.${makePropSafe(key)}`,
-      readableBinding: `State.${key}`,
-      category: "State",
-      icon: "AutomatedSegment",
-      display: { name: key },
-    }))
+    bindings = getAllStateVariables().map(makeStateBinding)
   }
   return bindings
 }
@@ -798,6 +830,17 @@ export const buildFormSchema = component => {
   if (!component) {
     return schema
   }
+
+  // If this is a form block, simply use the fields setting
+  if (component._component.endsWith("formblock")) {
+    let schema = {}
+    component.fields?.forEach(field => {
+      schema[field] = { type: "string" }
+    })
+    return schema
+  }
+
+  // Otherwise find all field component children
   const settings = getComponentSettings(component._component)
   const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")
@@ -986,7 +1029,10 @@ const bindingReplacement = (
  * {{ literal [componentId] }}
  */
 const extractLiteralHandlebarsID = value => {
-  return value?.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
+  if (!value || typeof value !== "string") {
+    return null
+  }
+  return value.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
 }
 
 /**

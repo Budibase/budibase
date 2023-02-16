@@ -1,9 +1,9 @@
-import "../../../../../tests/utilities/TestConfiguration"
+import "../../../../../tests"
 import PosthogProcessor from "../PosthogProcessor"
 import { Event, IdentityType, Hosting } from "@budibase/types"
 const tk = require("timekeeper")
 import * as cache from "../../../../cache/generic"
-import { CacheKeys } from "../../../../cache/generic"
+import { CacheKey } from "../../../../cache/generic"
 import * as context from "../../../../context"
 
 const newIdentity = () => {
@@ -19,7 +19,7 @@ describe("PosthogProcessor", () => {
   beforeEach(async () => {
     jest.clearAllMocks()
     await cache.bustCache(
-      `${CacheKeys.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
+      `${CacheKey.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
     )
   })
 
@@ -89,7 +89,7 @@ describe("PosthogProcessor", () => {
         await processor.processEvent(Event.SERVED_BUILDER, identity, properties)
 
         await cache.bustCache(
-          `${CacheKeys.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
+          `${CacheKey.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
         )
 
         tk.freeze(new Date(2022, 0, 1, 14, 0))

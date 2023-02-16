@@ -5,8 +5,10 @@ import {
   BulkUserRequest,
   BulkUserResponse,
   CloudAccount,
+  CreateAdminUserRequest,
   InviteUserRequest,
   InviteUsersRequest,
+  SearchUsersRequest,
   User,
 } from "@budibase/types"
 import {
@@ -22,7 +24,8 @@ const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
   try {
-    ctx.body = await sdk.users.save(ctx.request.body)
+    const currentUserId = ctx.user._id
+    ctx.body = await sdk.users.save(ctx.request.body, { currentUserId })
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -66,7 +69,8 @@ const parseBooleanParam = (param: any) => {
 }
 
 export const adminUser = async (ctx: any) => {
-  const { email, password, tenantId } = ctx.request.body
+  const { email, password, tenantId } = ctx.request
+    .body as CreateAdminUserRequest
   await tenancy.doInTenant(tenantId, async () => {
     // account portal sends a pre-hashed password - honour param to prevent double hashing
     const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
@@ -101,7 +105,7 @@ export const adminUser = async (ctx: any) => {
     try {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
       // stuck in a cycle
-      await cache.bustCache(cache.CacheKeys.CHECKLIST)
+      await cache.bustCache(cache.CacheKey.CHECKLIST)
       const finalUser = await sdk.users.save(user, {
         hashPassword,
         requirePassword,
@@ -144,7 +148,8 @@ export const destroy = async (ctx: any) => {
 }
 
 export const search = async (ctx: any) => {
-  const paginated = await sdk.users.paginatedUsers(ctx.request.body)
+  const body = ctx.request.body as SearchUsersRequest
+  const paginated = await sdk.users.paginatedUsers(body)
   // user hashed password shouldn't ever be returned
   for (let user of paginated.data) {
     if (user) {
@@ -173,7 +178,7 @@ export const find = async (ctx: any) => {
 
 export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
-  const user = await tenancy.getTenantUser(id)
+  const user = await sdk.users.getPlatformUser(id)
   if (user) {
     ctx.body = user
   } else {
@@ -203,6 +208,19 @@ export const invite = async (ctx: any) => {
 export const inviteMultiple = async (ctx: any) => {
   const request = ctx.request.body as InviteUsersRequest
   ctx.body = await sdk.users.invite(request)
+}
+
+export const checkInvite = async (ctx: any) => {
+  const { code } = ctx.params
+  let invite
+  try {
+    invite = await checkInviteCode(code, false)
+  } catch (e) {
+    ctx.throw(400, "There was a problem with the invite")
+  }
+  ctx.body = {
+    email: invite.email,
+  }
 }
 
 export const inviteAccept = async (ctx: any) => {

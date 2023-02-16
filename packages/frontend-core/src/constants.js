@@ -28,11 +28,11 @@ export const OperatorOptions = {
   },
   MoreThan: {
     value: "rangeLow",
-    label: "More than",
+    label: "More than or equal to",
   },
   LessThan: {
     value: "rangeHigh",
-    label: "Less than",
+    label: "Less than or equal to",
   },
   Contains: {
     value: "contains",
@@ -98,6 +98,7 @@ export const BuilderRoleDescriptions = [
 export const PlanType = {
   FREE: "free",
   TEAM: "team",
+  PRO: "pro",
   BUSINESS: "business",
   ENTERPRISE: "enterprise",
 }
@@ -112,6 +113,8 @@ export const ApiVersion = "1"
 
 export const Features = {
   USER_GROUPS: "userGroups",
+  BACKUPS: "appBackups",
+  ENVIRONMENT_VARIABLES: "environmentVariables",
 }
 
 // Role IDs
@@ -172,3 +175,7 @@ export const Themes = [
     base: "darkest",
   },
 ]
+
+export const EventPublishType = {
+  ENV_VAR_UPGRADE_PANEL_OPENED: "environment_variable_upgrade_panel_opened",
+}

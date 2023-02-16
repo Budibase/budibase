@@ -4,7 +4,7 @@ import {
   Row,
   Table,
 } from "@budibase/server/api/controllers/public/mapping/types"
-import generator from "../TestConfiguration/generator"
+import generator from "../../generator"
 
 export const generateTable = (
   overrides: Partial<Table> = {}

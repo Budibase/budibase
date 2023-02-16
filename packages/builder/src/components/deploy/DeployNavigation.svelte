@@ -124,37 +124,37 @@
         bind:this={publishPopover}
         align="right"
         disabled={!isPublished}
-        dataCy="publish-popover-menu"
-        showTip={true}
         anchor={publishPopoverAnchor}
+        offset={10}
       >
-        <Layout gap="M">
-          <Heading size="XS">Your published app</Heading>
-          <Body size="S">
-            <span class="publish-popover-message">
-              {processStringSync(
-                "Last published {{ duration time 'millisecond' }} ago",
-                {
-                  time:
-                    new Date().getTime() -
-                    new Date(latestDeployments[0].updatedAt).getTime(),
-                }
-              )}
-            </span>
-          </Body>
-          <div class="publish-popover-actions">
-            <Button
-              warning={true}
-              icon="GlobeStrike"
-              disabled={!isPublished}
-              on:click={unpublishApp}
-              dataCy="publish-popover-action"
-            >
-              Unpublish
-            </Button>
-            <Button cta on:click={viewApp}>View app</Button>
-          </div>
-        </Layout>
+        <div class="popover-content">
+          <Layout noPadding gap="M">
+            <Heading size="XS">Your published app</Heading>
+            <Body size="S">
+              <span class="publish-popover-message">
+                {processStringSync(
+                  "Last published {{ duration time 'millisecond' }} ago",
+                  {
+                    time:
+                      new Date().getTime() -
+                      new Date(latestDeployments[0].updatedAt).getTime(),
+                  }
+                )}
+              </span>
+            </Body>
+            <div class="buttons">
+              <Button
+                warning={true}
+                icon="GlobeStrike"
+                disabled={!isPublished}
+                on:click={unpublishApp}
+              >
+                Unpublish
+              </Button>
+              <Button cta on:click={viewApp}>View app</Button>
+            </div>
+          </Layout>
+        </div>
       </Popover>
     </div>
   {/if}
@@ -173,22 +173,18 @@
   title="Confirm unpublish"
   okText="Unpublish app"
   onOk={confirmUnpublishApp}
-  dataCy={"unpublish-modal"}
 >
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
 <div class="buttons">
-  <Button on:click={previewApp} newStyles secondary>Preview</Button>
+  <Button on:click={previewApp} secondary>Preview</Button>
   <DeployModal onOk={completePublish} />
 </div>
 
 <style>
-  .publish-popover-actions :global([data-cy="publish-popover-action"]) {
-    margin-right: var(--spacing-s);
-  }
-  :global([data-cy="publish-popover-menu"]) {
-    padding: 10px;
+  .popover-content {
+    padding: var(--spacing-xl);
   }
   .buttons {
     display: flex;

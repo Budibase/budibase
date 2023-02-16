@@ -8,7 +8,7 @@ import {
   accounts,
   db as dbUtils,
 } from "@budibase/backend-core"
-import { QuotaUsage } from "@budibase/pro"
+import { QuotaUsage } from "@budibase/types"
 import {
   CloudAccount,
   App,
@@ -149,7 +149,7 @@ export const run = async (db: any) => {
     }
 
     try {
-      const allApps: App[] = await dbUtils.getAllApps({ dev: true })
+      const allApps = (await dbUtils.getAllApps({ dev: true })) as App[]
       totals.apps = allApps.length
 
       totals.usage = await quotas.backfill(allApps)

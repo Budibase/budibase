@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 require("./prebuilds")
 require("./environment")
+const json = require("../package.json")
 const { getCommands } = require("./options")
 const { Command } = require("commander")
 const { getHelpDescription } = require("./utils")
@@ -10,7 +11,7 @@ async function init() {
   const program = new Command()
     .addHelpCommand("help", getHelpDescription("Help with Budibase commands."))
     .helpOption(false)
-  program.helpOption()
+    .version(json.version)
   // add commands
   for (let command of getCommands()) {
     command.configure(program)

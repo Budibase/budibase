@@ -1,6 +1,6 @@
 import API from "./api"
 import env from "../environment"
-import { Headers } from "../constants"
+import { Header } from "../constants"
 import { CloudAccount } from "@budibase/types"
 
 const api = new API(env.ACCOUNT_PORTAL_URL)
@@ -14,7 +14,7 @@ export const getAccount = async (
   const response = await api.post(`/api/accounts/search`, {
     body: payload,
     headers: {
-      [Headers.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
+      [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
     },
   })
 
@@ -35,7 +35,7 @@ export const getAccountByTenantId = async (
   const response = await api.post(`/api/accounts/search`, {
     body: payload,
     headers: {
-      [Headers.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
+      [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
     },
   })
 
@@ -50,7 +50,7 @@ export const getAccountByTenantId = async (
 export const getStatus = async () => {
   const response = await api.get(`/api/status`, {
     headers: {
-      [Headers.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
+      [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
     },
   })
   const json = await response.json()

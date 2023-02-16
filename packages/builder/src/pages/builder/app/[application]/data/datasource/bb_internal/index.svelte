@@ -2,10 +2,21 @@
   import { Button, Heading, Body, Layout, Modal, Divider } from "@budibase/bbui"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { tables } from "stores/backend"
+  import { tables, datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
+  import { onMount } from "svelte"
+  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
 
   let modal
+
+  $: internalTablesBySourceId = $tables.list.filter(
+    table =>
+      table.type !== "external" && table.sourceId === BUDIBASE_INTERNAL_DB_ID
+  )
+
+  onMount(() => {
+    datasources.select(BUDIBASE_INTERNAL_DB_ID)
+  })
 </script>
 
 <Modal bind:this={modal}>
@@ -27,7 +38,7 @@
     <Divider />
     <Heading size="S">Tables</Heading>
     <div class="table-list">
-      {#each $tables.list.filter(table => table.type !== "external") as table}
+      {#each internalTablesBySourceId as table}
         <div
           class="table-list-item"
           on:click={$goto(`../../table/${table._id}`)}
@@ -68,7 +79,7 @@
     background: var(--background);
     border: var(--border-dark);
     display: grid;
-    grid-template-columns: 2fr 0.75fr 20px;
+    grid-template-columns: 1fr auto;
     align-items: center;
     padding: var(--spacing-m);
     gap: var(--layout-xs);

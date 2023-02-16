@@ -26,7 +26,7 @@ env:
   FEATURE_PREVIEW_URL: https://budirelease.live
       
 jobs:
-  release:
+  release-images:
     runs-on: ubuntu-latest 
 
     steps:
@@ -44,18 +44,11 @@ jobs:
         run: yarn install:pro develop
 
       - run: yarn 
-      - run: yarn bootstrap 
+      - run: yarn bootstrap
       - run: yarn lint 
       - run: yarn build
       - run: yarn build:sdk
       - run: yarn test
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
 
       - name: Publish budibase packages to NPM
         env:
@@ -76,22 +69,25 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
 
-      - name: Get the latest budibase release version
+  deploy-to-release-env:
+    needs: [release-images]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get the current budibase release version
         id: version
-        run: | 
+        run: |
           release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
-      - name: Tag and release Proxy service docker image
-        run: | 
-          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker:proxy:release
-          docker tag proxy-service budibase/proxy:$RELEASE_TAG
-          docker push budibase/proxy:$RELEASE_TAG
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          RELEASE_TAG: k8s-release
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
 
       - name: Pull values.yaml from budibase-infra
         run: | 
@@ -149,3 +145,54 @@ jobs:
           webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
           content: "Release Env Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Release Env."
           embed-title: ${{ env.RELEASE_VERSION }}
+
+  release-helm-chart:
+    needs: [release-images]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Helm
+        uses: azure/setup-helm@v1
+        id: helm-install
+
+      # due to helm repo index issue: https://github.com/helm/helm/issues/7363
+      # we need to create new package in a different dir, merge the index and move the package back
+      - name: Build and release helm chart
+        run: |
+          git config user.name "Budibase Helm Bot"
+          git config user.email "<>"
+          git reset --hard
+          git pull
+          mkdir sync
+          echo "Packaging chart to sync dir"
+          helm package charts/budibase --version 0.0.0-develop --app-version develop --destination sync
+          echo "Packaging successful"
+          git checkout gh-pages
+          echo "Indexing helm repo"         
+          helm repo index --merge docs/index.yaml sync
+          mv -f sync/* docs
+          rm -rf sync
+          echo "Pushing new helm release"
+          git add -A
+          git commit -m "Helm Release: develop"
+          git push
+
+  trigger-deploy-to-qa-env:
+    needs: [release-helm-chart]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get the current budibase release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+
+      - uses: passeidireto/trigger-external-workflow-action@main
+        env:
+          PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
+        with:
+          repository: budibase/budibase-deploys
+          event: deploy-budibase-develop-to-qa
+          github_pat: ${{ secrets.GH_ACCESS_TOKEN }}

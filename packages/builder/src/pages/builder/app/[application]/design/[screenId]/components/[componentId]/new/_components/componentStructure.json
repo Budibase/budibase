@@ -5,7 +5,10 @@
     "children": [
       "tableblock",
       "cardsblock",
-      "repeaterblock"
+      "repeaterblock",
+      "formblock",
+      "chartblock",
+      "rowexplorer"
     ]
   },
   {
@@ -13,7 +16,9 @@
     "icon": "ClassicGridView",
     "children": [
       "container",
-      "section"
+      "section",
+      "grid",
+      "sidepanel"
     ]
   },
   {
@@ -65,7 +70,8 @@
       "relationshipfield",
       "datetimefield",
       "multifieldselect",
-      "s3upload"
+      "s3upload",
+      "codescanner"
     ]
   },
   {

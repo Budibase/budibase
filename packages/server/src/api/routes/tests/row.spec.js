@@ -1,8 +1,7 @@
 const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
-const { doInAppContext } = require("@budibase/backend-core/context")
-const { doInTenant } = require("@budibase/backend-core/tenancy")
+const { context, tenancy } = require("@budibase/backend-core")
 const {
   quotas,
 } = require("@budibase/pro")
@@ -11,6 +10,7 @@ const {
   StaticQuotaName,
   MonthlyQuotaName,
 } = require("@budibase/types")
+const { structures } = require("@budibase/backend-core/tests");
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -34,18 +34,13 @@ describe("/rows", () => {
       .expect(status)
 
   const getRowUsage = async () => {
-    return config.doInContext(null, () =>
-      quotas.getCurrentUsageValue(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
-    )
+    const { total } = await config.doInContext(null, () => quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS))
+    return total
   }
 
   const getQueryUsage = async () => {
-    return config.doInContext(null, () =>
-      quotas.getCurrentUsageValue(
-        QuotaUsageType.MONTHLY,
-        MonthlyQuotaName.QUERIES
-      )
-    )
+    const { total } = await config.doInContext(null, () => quotas.getCurrentUsageValues(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
+    return total
   }
 
   const assertRowUsage = async expected => {
@@ -60,26 +55,26 @@ describe("/rows", () => {
 
   describe("save, load, update", () => {
     it("returns a success message when the row is created", async () => {
-      // const rowUsage = await getRowUsage()
-      // const queryUsage = await getQueryUsage()
-      //
-      // const res = await request
-      //   .post(`/api/${row.tableId}/rows`)
-      //   .send(row)
-      //   .set(config.defaultHeaders())
-      //   .expect('Content-Type', /json/)
-      //   .expect(200)
-      // expect(res.res.statusMessage).toEqual(`${table.name} saved successfully`)
-      // expect(res.body.name).toEqual("Test Contact")
-      // expect(res.body._rev).toBeDefined()
-      // await assertRowUsage(rowUsage + 1)
-      // await assertQueryUsage(queryUsage + 1)
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const res = await request
+        .post(`/api/${row.tableId}/rows`)
+        .send(row)
+        .set(config.defaultHeaders())
+        .expect('Content-Type', /json/)
+        .expect(200)
+      expect(res.res.statusMessage).toEqual(`${table.name} saved successfully`)
+      expect(res.body.name).toEqual("Test Contact")
+      expect(res.body._rev).toBeDefined()
+      await assertRowUsage(rowUsage + 1)
+      await assertQueryUsage(queryUsage + 1)
     })
 
     it("updates a row successfully", async () => {
       const existing = await config.createRow()
-      // const rowUsage = await getRowUsage()
-      // const queryUsage = await getQueryUsage()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
 
       const res = await request
         .post(`/api/${table._id}/rows`)
@@ -97,8 +92,8 @@ describe("/rows", () => {
         `${table.name} updated successfully.`
       )
       expect(res.body.name).toEqual("Updated Name")
-      // await assertRowUsage(rowUsage)
-      // await assertQueryUsage(queryUsage + 1)
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage + 1)
     })
 
     it("should load a row", async () => {
@@ -452,7 +447,7 @@ describe("/rows", () => {
 
   describe("fetchEnrichedRows", () => {
     it("should allow enriching some linked rows", async () => {
-      const { table, firstRow, secondRow } = await doInTenant(
+      const { table, firstRow, secondRow } = await tenancy.doInTenant(
         setup.structures.TENANT_ID,
         async () => {
           const table = await config.createLinkedTable()
@@ -500,22 +495,23 @@ describe("/rows", () => {
   describe("attachments", () => {
     it("should allow enriching attachment rows", async () => {
       const table = await config.createAttachmentTable()
+      const attachmentId = `${structures.uuid()}.csv`
       const row = await config.createRow({
         name: "test",
         description: "test",
         attachment: [
           {
-            key: `${config.getAppId()}/attachments/test/thing.csv`,
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
           },
         ],
         tableId: table._id,
       })
       // the environment needs configured for this
       await setup.switchToSelfHosted(async () => {
-        doInAppContext(config.getAppId(), async () => {
+        context.doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
           expect(enriched[0].attachment[0].url).toBe(
-            `/prod-budi-app-assets/${config.getAppId()}/attachments/test/thing.csv`
+            `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
           )
         })
       })

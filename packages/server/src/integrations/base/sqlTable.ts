@@ -3,7 +3,7 @@ import { Operation, QueryJson, RenameColumn, Table } from "@budibase/types"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-const { FieldTypes, RelationshipTypes } = require("../../constants")
+import { FieldTypes, RelationshipTypes } from "../../constants"
 
 function generateSchema(
   schema: CreateTableBuilder,
@@ -40,6 +40,7 @@ function generateSchema(
       case FieldTypes.STRING:
       case FieldTypes.OPTIONS:
       case FieldTypes.LONGFORM:
+      case FieldTypes.BARCODEQR:
         schema.text(key)
         break
       case FieldTypes.NUMBER:
@@ -184,7 +185,7 @@ class SqlTableQueryBuilder {
           json.table,
           json.meta.tables,
           json.meta.table,
-          json.meta.renamed
+          json.meta.renamed!
         )
         break
       case Operation.DELETE_TABLE:

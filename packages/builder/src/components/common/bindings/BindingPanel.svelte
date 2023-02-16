@@ -39,6 +39,7 @@
   export let value = ""
   export let valid
   export let allowJS = false
+  export let allowHelpers = true
 
   let helpers = handlebarsCompletions()
   let getCaretPosition
@@ -85,7 +86,7 @@
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })
 
-  $: categoryNames = [...categories.map(cat => cat[0]), "Helpers"]
+  $: categoryNames = getCategoryNames(categories)
 
   $: codeMirrorHints = bindings?.map(x => `$("${x.readableBinding}")`)
 
@@ -94,6 +95,14 @@
     if (valid) {
       dispatch("change", val)
     }
+  }
+
+  const getCategoryNames = categories => {
+    let names = [...categories.map(cat => cat[0])]
+    if (allowHelpers) {
+      names.push("Helpers")
+    }
+    return names
   }
 
   // Adds a JS/HBS helper to the expression
@@ -170,7 +179,7 @@
 
 <span class="detailPopover">
   <Popover
-    align="right-side"
+    align="right-outside"
     bind:this={popover}
     anchor={popoverAnchor}
     maxWidth={300}
@@ -247,7 +256,7 @@
                       return
                     }
                     hoverTarget = {
-                      title: binding.display?.name || binding.fieldSchema.name,
+                      title: binding.display?.name || binding.fieldSchema?.name,
                       description: binding.description,
                     }
                     popover.show()
@@ -343,7 +352,7 @@
               for more details.
             </p>
           {/if}
-          {#if $admin.isDev}
+          {#if $admin.isDev && allowJS}
             <div class="convert">
               <Button secondary on:click={convert}>Convert to JS</Button>
             </div>
@@ -460,7 +469,7 @@
   }
 
   .binding__type {
-    font-family: monospace;
+    font-family: var(--font-mono);
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: var(--border-radius-s);
     padding: 2px 4px;

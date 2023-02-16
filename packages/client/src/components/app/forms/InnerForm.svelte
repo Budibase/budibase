@@ -128,6 +128,17 @@
     return fields.find(field => get(field).name === name)
   }
 
+  // Sanitises a value by ensuring it doesn't contain any invalid data
+  const sanitiseValue = (value, schema, type) => {
+    // Check arrays - remove any values not present in the field schema and
+    // convert any values supplied to strings
+    if (Array.isArray(value) && type === "array" && schema) {
+      const options = schema?.constraints.inclusion || []
+      return value.map(opt => String(opt)).filter(opt => options.includes(opt))
+    }
+    return value
+  }
+
   const formApi = {
     registerField: (
       field,
@@ -152,6 +163,9 @@
             table
           )
 
+      // Sanitise the default value to ensure it doesn't contain invalid data
+      defaultValue = sanitiseValue(defaultValue, schema?.[field], type)
+
       // If we've already registered this field then keep some existing state
       let initialValue = Helpers.deepGet(initialValues, field) ?? defaultValue
       let initialError = null
@@ -163,7 +177,9 @@
 
         // Determine the initial value for this field, reusing the current
         // value if one exists
-        initialValue = fieldState.value ?? initialValue
+        if (fieldState.value != null && fieldState.value !== "") {
+          initialValue = fieldState.value
+        }
 
         // If this field has already been registered and we previously had an
         // error set, then re-run the validator to see if we can unset it
@@ -190,7 +206,7 @@
           validator,
           lastUpdate: Date.now(),
         },
-        fieldApi: makeFieldApi(field, defaultValue),
+        fieldApi: makeFieldApi(field),
         fieldSchema: schema?.[field] ?? {},
       })
 
@@ -205,18 +221,9 @@
       return fieldInfo
     },
     validate: () => {
-      let valid = true
-      let validationFields = fields
-
-      validationFields = fields.filter(f => get(f).step === get(currentStep))
-
-      // Validate fields and check if any are invalid
-      validationFields.forEach(field => {
-        if (!get(field).fieldApi.validate()) {
-          valid = false
-        }
-      })
-      return valid
+      return fields
+        .filter(field => get(field).step === get(currentStep))
+        .every(field => get(field).fieldApi.validate())
     },
     reset: () => {
       // Reset the form by resetting each individual field

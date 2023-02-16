@@ -1,7 +1,13 @@
-export const getAccount = jest.fn()
-export const getAccountByTenantId = jest.fn()
+const mockGetAccount = jest.fn()
+const mockGetAccountByTenantId = jest.fn()
+const mockGetStatus = jest.fn()
 
 jest.mock("../../../src/cloud/accounts", () => ({
-  getAccount,
-  getAccountByTenantId,
+  getAccount: mockGetAccount,
+  getAccountByTenantId: mockGetAccountByTenantId,
+  getStatus: mockGetStatus,
 }))
+
+export const getAccount = mockGetAccount
+export const getAccountByTenantId = mockGetAccountByTenantId
+export const getStatus = mockGetStatus

@@ -1,7 +1,8 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, setContext } from "svelte"
   import InnerForm from "./InnerForm.svelte"
   import { Helpers } from "@budibase/bbui"
+  import { writable } from "svelte/store"
 
   export let dataSource
   export let theme
@@ -20,12 +21,22 @@
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
+  // Forms also use loading context as they require loading a schema
+  const parentLoading = getContext("loading")
+  const loading = writable(true)
+  setContext("loading", loading)
+
   let loaded = false
   let schema
   let table
 
   $: fetchSchema(dataSource)
-  $: fetchTable(dataSource)
+  $: schemaKey = generateSchemaKey(schema)
+  $: initialValues = getInitialValues(actionType, dataSource, $context)
+  $: resetKey = Helpers.hashString(
+    schemaKey + JSON.stringify(initialValues) + disabled
+  )
+  $: loading.set($parentLoading || !loaded)
 
   // Returns the closes data context which isn't a built in context
   const getInitialValues = (type, dataSource, context) => {
@@ -48,42 +59,6 @@
 
   // Fetches the form schema from this form's dataSource
   const fetchSchema = async dataSource => {
-    if (!dataSource) {
-      schema = {}
-    }
-
-    // If the datasource is a query, then we instead use a schema of the query
-    // parameters rather than the output schema
-    else if (
-      dataSource.type === "query" &&
-      dataSource._id &&
-      actionType === "Create"
-    ) {
-      try {
-        const query = await API.fetchQueryDefinition(dataSource._id)
-        let paramSchema = {}
-        const params = query.parameters || []
-        params.forEach(param => {
-          paramSchema[param.name] = { ...param, type: "string" }
-        })
-        schema = paramSchema
-      } catch (error) {
-        schema = {}
-      }
-    }
-
-    // For all other cases, just grab the normal schema
-    else {
-      const dataSourceSchema = await fetchDatasourceSchema(dataSource)
-      schema = dataSourceSchema || {}
-    }
-
-    if (!loaded) {
-      loaded = true
-    }
-  }
-
-  const fetchTable = async dataSource => {
     if (dataSource?.tableId && dataSource?.type !== "query") {
       try {
         table = await API.fetchTableDefinition(dataSource.tableId)
@@ -91,29 +66,39 @@
         table = null
       }
     }
+    const res = await fetchDatasourceSchema(dataSource)
+    schema = res || {}
+    if (!loaded) {
+      loaded = true
+    }
   }
 
-  $: initialValues = getInitialValues(actionType, dataSource, $context)
-  $: resetKey = Helpers.hashString(
-    JSON.stringify(initialValues) + JSON.stringify(schema)
-  )
+  // Generates a predictable string that uniquely identifies a schema. We can't
+  // simply stringify the whole schema as there are array fields which have
+  // random order.
+  const generateSchemaKey = schema => {
+    if (!schema) {
+      return null
+    }
+    const fields = Object.keys(schema)
+    fields.sort()
+    return fields.map(field => `${field}:${schema[field].type}`).join("-")
+  }
 </script>
 
-{#if loaded}
-  {#key resetKey}
-    <InnerForm
-      {dataSource}
-      {theme}
-      {size}
-      {disabled}
-      {actionType}
-      {schema}
-      {table}
-      {initialValues}
-      {disableValidation}
-      {editAutoColumns}
-    >
-      <slot />
-    </InnerForm>
-  {/key}
-{/if}
+{#key resetKey}
+  <InnerForm
+    {dataSource}
+    {theme}
+    {size}
+    {disabled}
+    {actionType}
+    {schema}
+    {table}
+    {initialValues}
+    {disableValidation}
+    {editAutoColumns}
+  >
+    <slot />
+  </InnerForm>
+{/key}

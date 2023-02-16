@@ -1,11 +1,11 @@
-require("../../../tests/utilities/TestConfiguration")
-const { dangerousGetDB } = require("../")
+require("../../../tests")
+const { getDB } = require("../")
 
 describe("db", () => { 
   
   describe("getDB", () => {
     it("returns a db", async () => {
-      const db = dangerousGetDB("test")
+      const db = getDB("test")
       expect(db).toBeDefined()
       expect(db._adapter).toBe("memory")
       expect(db.prefix).toBe("_pouch_")
@@ -13,7 +13,7 @@ describe("db", () => {
     })
 
     it("uses the custom put function", async () => {
-      const db = dangerousGetDB("test")
+      const db = getDB("test")
       let doc = { _id: "test" }
       await db.put(doc)
       doc = await db.get(doc._id)

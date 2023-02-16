@@ -1,23 +1,16 @@
 import { default as threadUtils } from "./utils"
 threadUtils.threadSetup()
 import { WorkerCallback, QueryEvent, QueryVariable } from "./definitions"
-const ScriptRunner = require("../utilities/scriptRunner")
-const { getIntegration } = require("../integrations")
-const { processStringSync } = require("@budibase/string-templates")
-const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
-const {
-  refreshOAuthToken,
-  updateUserOAuth,
-} = require("@budibase/backend-core/auth")
-const { user: userCache } = require("@budibase/backend-core/cache")
-const { getGlobalIDFromUserMetadataID } = require("../db/utils")
-const { cloneDeep } = require("lodash/fp")
+import ScriptRunner from "../utilities/scriptRunner"
+import { getIntegration } from "../integrations"
+import { processStringSync } from "@budibase/string-templates"
+import { context, cache, auth } from "@budibase/backend-core"
+import { getGlobalIDFromUserMetadataID } from "../db/utils"
+import sdk from "../sdk"
+import { cloneDeep } from "lodash/fp"
 
-const { isSQL } = require("../integrations/utils")
-const {
-  enrichQueryFields,
-  interpolateSQL,
-} = require("../integrations/queries/sql")
+import { isSQL } from "../integrations/utils"
+import { interpolateSQL } from "../integrations/queries/sql"
 
 class QueryRunner {
   datasource: any
@@ -58,7 +51,6 @@ class QueryRunner {
 
   async execute(): Promise<any> {
     let { datasource, fields, queryVerb, transformer } = this
-
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
 
@@ -68,10 +60,11 @@ class QueryRunner {
     }
 
     if (datasourceClone.config.authConfigs) {
-      datasourceClone.config.authConfigs =
-        datasourceClone.config.authConfigs.map((config: any) => {
-          return enrichQueryFields(config, this.ctx)
-        })
+      const updatedConfigs = []
+      for (let config of datasourceClone.config.authConfigs) {
+        updatedConfigs.push(await sdk.queries.enrichContext(config, this.ctx))
+      }
+      datasourceClone.config.authConfigs = updatedConfigs
     }
 
     const integration = new Integration(datasourceClone.config)
@@ -81,12 +74,15 @@ class QueryRunner {
 
     // Enrich the parameters with the addition context items.
     // 'user' is now a reserved variable key in mapping parameters
-    const enrichedParameters = enrichQueryFields(parameters, this.ctx)
+    const enrichedParameters = await sdk.queries.enrichContext(
+      parameters,
+      this.ctx
+    )
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 
     // Parse global headers
     if (datasourceClone.config.defaultHeaders) {
-      datasourceClone.config.defaultHeaders = enrichQueryFields(
+      datasourceClone.config.defaultHeaders = await sdk.queries.enrichContext(
         datasourceClone.config.defaultHeaders,
         enrichedContext
       )
@@ -95,9 +91,9 @@ class QueryRunner {
     let query
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
-      query = interpolateSQL(fieldsClone, enrichedParameters, integration)
+      query = await interpolateSQL(fieldsClone, enrichedContext, integration)
     } else {
-      query = enrichQueryFields(fieldsClone, enrichedContext)
+      query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }
 
     // Add pagination values for REST queries
@@ -170,9 +166,11 @@ class QueryRunner {
   }
 
   async runAnotherQuery(queryId: string, parameters: any) {
-    const db = getAppDB()
+    const db = context.getAppDB()
     const query = await db.get(queryId)
-    const datasource = await db.get(query.datasourceId)
+    const datasource = await sdk.datasources.get(query.datasourceId, {
+      enriched: true,
+    })
     return new QueryRunner(
       {
         datasource,
@@ -181,6 +179,7 @@ class QueryRunner {
         parameters,
         transformer: query.transformer,
         queryId,
+        ctx: this.ctx,
       },
       { noRecursiveQuery: true }
     ).execute()
@@ -194,7 +193,7 @@ class QueryRunner {
       throw new Error("No refresh token found for authenticated user")
     }
 
-    const resp = await refreshOAuthToken(
+    const resp: any = await auth.refreshOAuthToken(
       oauth2.refreshToken,
       providerType,
       configId
@@ -204,8 +203,8 @@ class QueryRunner {
     // There are several other properties available in 'resp'
     if (!resp.err) {
       const globalUserId = getGlobalIDFromUserMetadataID(_id)
-      await updateUserOAuth(globalUserId, resp)
-      this.ctx.user = await userCache.getUser(globalUserId)
+      await auth.updateUserOAuth(globalUserId, resp)
+      this.ctx.user = await cache.user.getUser(globalUserId)
     } else {
       // In this event the user may have oAuth issues that
       // could require re-authenticating with their provider.
@@ -285,13 +284,22 @@ class QueryRunner {
 }
 
 export function execute(input: QueryEvent, callback: WorkerCallback) {
-  doInAppContext(input.appId, async () => {
+  const run = async () => {
     const Runner = new QueryRunner(input)
     try {
       const response = await Runner.execute()
       callback(null, response)
     } catch (err) {
       callback(err)
+    }
+  }
+  context.doInAppContext(input.appId!, async () => {
+    if (input.environmentVariables) {
+      return context.doInEnvironmentContext(input.environmentVariables, () => {
+        return run()
+      })
+    } else {
+      return run()
     }
   })
 }

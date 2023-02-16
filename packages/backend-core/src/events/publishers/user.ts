@@ -13,32 +13,40 @@ import {
   UserPermissionAssignedEvent,
   UserPermissionRemovedEvent,
   UserUpdatedEvent,
+  UserOnboardingEvent,
 } from "@budibase/types"
 
-export async function created(user: User, timestamp?: number) {
+async function created(user: User, timestamp?: number) {
   const properties: UserCreatedEvent = {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_CREATED, properties, timestamp)
 }
 
-export async function updated(user: User) {
+async function updated(user: User) {
   const properties: UserUpdatedEvent = {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_UPDATED, properties)
 }
 
-export async function deleted(user: User) {
+async function deleted(user: User) {
   const properties: UserDeletedEvent = {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_DELETED, properties)
 }
 
+export async function onboardingComplete(user: User) {
+  const properties: UserOnboardingEvent = {
+    userId: user._id as string,
+  }
+  await publishEvent(Event.USER_ONBOARDING_COMPLETE, properties)
+}
+
 // PERMISSIONS
 
-export async function permissionAdminAssigned(user: User, timestamp?: number) {
+async function permissionAdminAssigned(user: User, timestamp?: number) {
   const properties: UserPermissionAssignedEvent = {
     userId: user._id as string,
   }
@@ -49,17 +57,14 @@ export async function permissionAdminAssigned(user: User, timestamp?: number) {
   )
 }
 
-export async function permissionAdminRemoved(user: User) {
+async function permissionAdminRemoved(user: User) {
   const properties: UserPermissionRemovedEvent = {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_PERMISSION_ADMIN_REMOVED, properties)
 }
 
-export async function permissionBuilderAssigned(
-  user: User,
-  timestamp?: number
-) {
+async function permissionBuilderAssigned(user: User, timestamp?: number) {
   const properties: UserPermissionAssignedEvent = {
     userId: user._id as string,
   }
@@ -70,7 +75,7 @@ export async function permissionBuilderAssigned(
   )
 }
 
-export async function permissionBuilderRemoved(user: User) {
+async function permissionBuilderRemoved(user: User) {
   const properties: UserPermissionRemovedEvent = {
     userId: user._id as string,
   }
@@ -79,12 +84,12 @@ export async function permissionBuilderRemoved(user: User) {
 
 // INVITE
 
-export async function invited() {
+async function invited() {
   const properties: UserInvitedEvent = {}
   await publishEvent(Event.USER_INVITED, properties)
 }
 
-export async function inviteAccepted(user: User) {
+async function inviteAccepted(user: User) {
   const properties: UserInviteAcceptedEvent = {
     userId: user._id as string,
   }
@@ -93,30 +98,47 @@ export async function inviteAccepted(user: User) {
 
 // PASSWORD
 
-export async function passwordForceReset(user: User) {
+async function passwordForceReset(user: User) {
   const properties: UserPasswordForceResetEvent = {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_PASSWORD_FORCE_RESET, properties)
 }
 
-export async function passwordUpdated(user: User) {
+async function passwordUpdated(user: User) {
   const properties: UserPasswordUpdatedEvent = {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_PASSWORD_UPDATED, properties)
 }
 
-export async function passwordResetRequested(user: User) {
+async function passwordResetRequested(user: User) {
   const properties: UserPasswordResetRequestedEvent = {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_PASSWORD_RESET_REQUESTED, properties)
 }
 
-export async function passwordReset(user: User) {
+async function passwordReset(user: User) {
   const properties: UserPasswordResetEvent = {
     userId: user._id as string,
   }
   await publishEvent(Event.USER_PASSWORD_RESET, properties)
+}
+
+export default {
+  created,
+  updated,
+  deleted,
+  permissionAdminAssigned,
+  permissionAdminRemoved,
+  permissionBuilderAssigned,
+  permissionBuilderRemoved,
+  onboardingComplete,
+  invited,
+  inviteAccepted,
+  passwordForceReset,
+  passwordUpdated,
+  passwordResetRequested,
+  passwordReset,
 }
