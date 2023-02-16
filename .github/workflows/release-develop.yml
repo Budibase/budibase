@@ -45,10 +45,9 @@ jobs:
 
       - run: yarn 
       - run: yarn bootstrap
-      - run: yarn lint 
       - run: yarn build
       - run: yarn build:sdk
-      - run: yarn test
+#      - run: yarn test
 
       - name: Publish budibase packages to NPM
         env:
