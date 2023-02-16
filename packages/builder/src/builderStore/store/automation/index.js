@@ -130,13 +130,10 @@ const automationActions = store => ({
 
     // Create new modified automation
     const automation = get(selectedAutomation)
-    let newAutomation = cloneDeep(automation)
-    if (automation.definition.trigger?.id === block.id) {
-      newAutomation.definition.trigger = newBlock
-    } else {
-      const idx = automation.definition.steps.findIndex(x => x.id === block.id)
-      newAutomation.definition.steps.splice(idx, 1, newBlock)
-    }
+    const newAutomation = store.actions.getUpdatedDefinition(
+      automation,
+      newBlock
+    )
 
     // Don't save if no changes were made
     if (JSON.stringify(newAutomation) === JSON.stringify(automation)) {
@@ -156,6 +153,16 @@ const automationActions = store => ({
   },
   getDefinition: id => {
     return get(store).automations?.find(x => x._id === id)
+  },
+  getUpdatedDefinition: (automation, block) => {
+    let newAutomation = cloneDeep(automation)
+    if (automation.definition.trigger?.id === block.id) {
+      newAutomation.definition.trigger = block
+    } else {
+      const idx = automation.definition.steps.findIndex(x => x.id === block.id)
+      newAutomation.definition.steps.splice(idx, 1, block)
+    }
+    return newAutomation
   },
   select: id => {
     if (!id || id === get(store).selectedAutomationId) {
@@ -208,11 +215,17 @@ const automationActions = store => ({
     newAutomation.definition.steps.splice(blockIdx, 0, block)
     await store.actions.save(newAutomation)
   },
-  toggleFieldControl: value => {
-    store.update(state => {
-      state.selectedBlock.rowControl = value
-      return state
-    })
+  /**
+   * "rowControl" appears to be the name of the flag used to determine whether
+   * a certain automation block uses values or bindings as inputs
+   */
+  toggleRowControl: async (block, rowControl) => {
+    const newBlock = { ...block, rowControl }
+    const newAutomation = store.actions.getUpdatedDefinition(
+      get(selectedAutomation),
+      newBlock
+    )
+    await store.actions.save(newAutomation)
   },
   deleteAutomationBlock: async block => {
     const automation = get(selectedAutomation)

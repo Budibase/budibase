@@ -96,18 +96,13 @@
     }
   }
 
-  function toggleFieldControl(evt) {
-    // onSelect(block)
-    // let rowControl
-    // if (evt.detail === "Use values") {
-    //   rowControl = false
-    // } else {
-    //   rowControl = true
-    // }
-    // automationStore.actions.toggleFieldControl(rowControl)
-    // automationStore.actions.save(
-    //   $automationStore.selectedAutomation?.automation
-    // )
+  /**
+   * "rowControl" appears to be the name of the flag used to determine whether
+   * a certain automation block uses values or bindings as inputs
+   */
+  function toggleRowControl(evt) {
+    const rowControl = evt.detail !== "Use values"
+    automationStore.actions.toggleRowControl(block, rowControl)
   }
 
   async function addLooping() {
@@ -190,7 +185,7 @@
               {/if}
               {#if showBindingPicker}
                 <Select
-                  on:change={toggleFieldControl}
+                  on:change={toggleRowControl}
                   defaultValue="Use values"
                   autoWidth
                   value={block.rowControl ? "Use bindings" : "Use values"}
