@@ -216,9 +216,9 @@
           {webhookModal}
         />
         {#if lastStep}
-          <Button on:click={() => testDataModal.show()} cta
-            >Finish and test automation</Button
-          >
+          <Button on:click={() => testDataModal.show()} cta>
+            Finish and test automation
+          </Button>
         {/if}
       </Layout>
     </div>
