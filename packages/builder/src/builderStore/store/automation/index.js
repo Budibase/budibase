@@ -146,7 +146,7 @@ const automationActions = store => ({
       automationId: automation?._id,
       testData,
     })
-    if (result.err) {
+    if (!result?.trigger && !result?.steps?.length) {
       throw "Something went wrong testing your automation"
     }
     store.update(state => {
