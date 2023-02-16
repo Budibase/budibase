@@ -5,6 +5,9 @@
 </script>
 
 <ScreenListPanel />
-{#key $selectedScreen?._id}
-  <ScreenSettingsPanel />
-{/key}
+{#if $selectedScreen}
+  {#key $selectedScreen._id}
+    <ScreenSettingsPanel />
+  {/key}
+{/if}
+
