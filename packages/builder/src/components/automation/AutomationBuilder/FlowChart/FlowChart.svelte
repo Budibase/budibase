@@ -76,7 +76,7 @@
     <div
       class="block"
       animate:flip={{ duration: 500 }}
-      in:fly|local={{ x: 500, duration: 500 }}
+      in:fly={{ x: 500, duration: 500 }}
       out:fly|local={{ x: 500, duration: 500 }}
     >
       {#if block.stepId !== ActionStepID.LOOP}

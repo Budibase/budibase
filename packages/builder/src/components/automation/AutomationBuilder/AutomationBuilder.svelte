@@ -4,5 +4,7 @@
 </script>
 
 {#if $selectedAutomation}
-  <Flowchart automation={$selectedAutomation} />
+  {#key $selectedAutomation._id}
+    <Flowchart automation={$selectedAutomation} />
+  {/key}
 {/if}
