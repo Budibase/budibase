@@ -10,4 +10,3 @@
     <ScreenSettingsPanel />
   {/key}
 {/if}
-

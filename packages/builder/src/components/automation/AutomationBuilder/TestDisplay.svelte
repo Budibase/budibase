@@ -49,7 +49,7 @@
       {#if block.stepId !== ActionStepID.LOOP}
         <FlowItemHeader
           open={!!openBlocks[block.id]}
-          on:toggle={() => openBlocks[block.id] = !openBlocks[block.id]}
+          on:toggle={() => (openBlocks[block.id] = !openBlocks[block.id])}
           isTrigger={idx === 0}
           testResult={filteredResults?.[idx]}
           showTestStatus

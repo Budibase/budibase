@@ -46,10 +46,7 @@
 </script>
 
 <div class="blockSection">
-  <div
-    on:click={() => dispatch("toggle")}
-    class="splitHeader"
-  >
+  <div on:click={() => dispatch("toggle")} class="splitHeader">
     <div class="center-items">
       {#if externalActions[block.stepId]}
         <img
