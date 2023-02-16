@@ -105,6 +105,7 @@ const automationActions = store => ({
     })
   },
   updateBlockInputs: async (block, data) => {
+    // Create new modified block
     let newBlock = {
       ...block,
       inputs: {
@@ -112,6 +113,16 @@ const automationActions = store => ({
         ...data,
       },
     }
+
+    // Remove any nullish or empty string values
+    Object.keys(newBlock.inputs).forEach(key => {
+      const val = newBlock.inputs[key]
+      if (val == null || val === "") {
+        delete newBlock.inputs[key]
+      }
+    })
+
+    // Create new modified automation
     const automation = get(selectedAutomation)
     let newAutomation = cloneDeep(automation)
     if (automation.definition.trigger?.id === block.id) {
@@ -119,6 +130,11 @@ const automationActions = store => ({
     } else {
       const idx = automation.definition.steps.findIndex(x => x.id === block.id)
       newAutomation.definition.steps.splice(idx, 1, newBlock)
+    }
+
+    // Don't save if no changes were made
+    if (JSON.stringify(newAutomation) === JSON.stringify(automation)) {
+      return
     }
     await store.actions.save(newAutomation)
   },
@@ -136,8 +152,7 @@ const automationActions = store => ({
     return get(store).automations?.find(x => x._id === id)
   },
   select: id => {
-    console.log("select", id)
-    if (!id) {
+    if (!id || id === get(store).selectedAutomationId) {
       return
     }
     store.update(state => {

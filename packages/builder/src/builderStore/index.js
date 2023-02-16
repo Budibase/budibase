@@ -38,16 +38,6 @@ store.actions.screens.delete = screenHistoryStore.wrapDeleteDoc(
 export const automationHistoryStore = createHistoryStore({
   getDoc: automationStore.actions.getDefinition,
   selectDoc: automationStore.actions.select,
-  beforeAction: async operation => {
-    // Automations uses a unique creation endpoint.
-    // Before we do any undo/redo operation we need to check if the automation
-    // exists, and create it if not, in order to support undoing deletions
-    const id = operation.doc?._id
-    if (id && !automationStore.actions.getDefinition(id)) {
-      // console.log(id, "does not exist, needs created")
-      // await automationStore.actions.create({ name: operation.doc.name })
-    }
-  },
 })
 automationStore.actions.save = automationHistoryStore.wrapSaveDoc(
   automationStore.actions.save
