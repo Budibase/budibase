@@ -40,6 +40,9 @@ const automationActions = store => ({
     ])
     store.update(state => {
       state.automations = responses[0]
+      state.automations.sort((a, b) => {
+        return a.name < b.name ? -1 : 1
+      })
       state.blockDefinitions = {
         TRIGGER: responses[1].trigger,
         ACTION: responses[1].action,
@@ -57,6 +60,7 @@ const automationActions = store => ({
       },
     }
     const response = await store.actions.save(automation)
+    await store.actions.fetch()
     store.actions.select(response._id)
     return response
   },
@@ -67,6 +71,7 @@ const automationActions = store => ({
       _id: undefined,
       _ref: undefined,
     })
+    await store.actions.fetch()
     store.actions.select(response._id)
     return response
   },
@@ -103,6 +108,7 @@ const automationActions = store => ({
       }
       return state
     })
+    await store.actions.fetch()
   },
   updateBlockInputs: async (block, data) => {
     // Create new modified block
