@@ -1,5 +1,4 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { automationStore } from "builderStore"
   import { ActionMenu, MenuItem, notifications, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"

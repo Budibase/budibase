@@ -1,6 +1,5 @@
 <script>
   import { onMount } from "svelte"
-  import { goto } from "@roxi/routify"
   import { automationStore, selectedAutomation } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"

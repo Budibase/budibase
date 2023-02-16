@@ -1,6 +1,4 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { database } from "stores/backend"
   import { automationStore } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import {

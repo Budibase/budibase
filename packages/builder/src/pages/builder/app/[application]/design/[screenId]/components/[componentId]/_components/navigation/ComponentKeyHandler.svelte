@@ -4,7 +4,6 @@
     selectedComponent,
     selectedScreen,
     store,
-    screenHistoryStore,
   } from "builderStore"
   import { findComponent } from "builderStore/componentUtils"
   import { goto, isActive } from "@roxi/routify"
