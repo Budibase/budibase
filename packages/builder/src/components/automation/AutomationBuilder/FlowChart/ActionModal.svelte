@@ -12,7 +12,6 @@
   import { externalActions } from "./ExternalActions"
 
   export let blockIdx
-  export let blockComplete
 
   const disabled = {
     SEND_EMAIL_SMTP: {
@@ -66,10 +65,7 @@
   confirmText="Save"
   size="M"
   disabled={!selectedAction}
-  onConfirm={() => {
-    blockComplete = true
-    addBlockToAutomation()
-  }}
+  onConfirm={addBlockToAutomation}
 >
   <Layout noPadding gap="XS">
     <Detail size="S">Apps</Detail>

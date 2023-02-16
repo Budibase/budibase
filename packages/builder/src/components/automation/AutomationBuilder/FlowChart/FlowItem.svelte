@@ -27,7 +27,7 @@
   let selected
   let webhookModal
   let actionModal
-  let blockComplete
+  let open = true
   let showLooping = false
   let role
 
@@ -143,7 +143,7 @@
 
         <div class="blockTitle">
           <div style="margin-left: 10px;" on:click={() => {}}>
-            <Icon name={showLooping ? "ChevronUp" : "ChevronDown"} />
+            <Icon hoverable name={showLooping ? "ChevronDown" : "ChevronUp"} />
           </div>
         </div>
       </div>
@@ -170,8 +170,14 @@
     {/if}
   {/if}
 
-  <FlowItemHeader bind:blockComplete {block} {testDataModal} {idx} />
-  {#if !blockComplete}
+  <FlowItemHeader
+    {open}
+    {block}
+    {testDataModal}
+    {idx}
+    on:toggle={() => (open = !open)}
+  />
+  {#if open}
     <Divider noMargin />
     <div class="blockSection">
       <Layout noPadding gap="S">
@@ -220,7 +226,7 @@
   {/if}
 
   <Modal bind:this={actionModal} width="30%">
-    <ActionModal {blockIdx} bind:blockComplete />
+    <ActionModal {blockIdx} />
   </Modal>
 
   <Modal bind:this={webhookModal} width="30%">
