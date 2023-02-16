@@ -37,7 +37,7 @@ store.actions.screens.delete = screenHistoryStore.wrapDeleteDoc(
 // Setup history for automations
 export const automationHistoryStore = createHistoryStore({
   getDoc: automationStore.actions.getDefinition,
-  selectDoc: automationStore.actions.selectById,
+  selectDoc: automationStore.actions.select,
   beforeAction: async operation => {
     // Automations uses a unique creation endpoint.
     // Before we do any undo/redo operation we need to check if the automation

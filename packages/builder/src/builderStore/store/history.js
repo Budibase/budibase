@@ -212,8 +212,8 @@ export const createHistoryStore = ({
         // doc again without conflicts
         let doc = jsonpatch.deepClone(operation.doc)
         delete doc._rev
-        await saveFn(doc, operation.id)
-        selectDoc?.(doc._id)
+        const created = await saveFn(doc, operation.id)
+        selectDoc?.(created?._id || doc._id)
       }
 
       // Undo CHANGE
@@ -271,8 +271,8 @@ export const createHistoryStore = ({
         // doc again without conflicts
         let doc = jsonpatch.deepClone(operation.doc)
         delete doc._rev
-        await saveFn(doc, operation.id)
-        selectDoc?.(doc._id)
+        const created = await saveFn(doc, operation.id)
+        selectDoc?.(created?._id || doc._id)
       }
 
       // Redo DELETE

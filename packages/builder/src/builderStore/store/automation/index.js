@@ -99,7 +99,7 @@ const automationActions = store => ({
       )
       // Select a new automation if required
       if (automation._id === state.selectedAutomationId) {
-        state.selectedAutomationId = state.automations[0]?._id
+        store.actions.select(state.automations[0]?._id)
       }
       return state
     })
@@ -136,11 +136,14 @@ const automationActions = store => ({
     return get(store).automations?.find(x => x._id === id)
   },
   select: id => {
+    console.log("select", id)
     if (!id) {
       return
     }
     store.update(state => {
       state.selectedAutomationId = id
+      state.testResults = null
+      state.showTestPanel = false
       return state
     })
   },
