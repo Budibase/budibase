@@ -1,10 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import {
-    selectedComponent,
-    selectedScreen,
-    store,
-  } from "builderStore"
+  import { selectedComponent, selectedScreen, store } from "builderStore"
   import { findComponent } from "builderStore/componentUtils"
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
