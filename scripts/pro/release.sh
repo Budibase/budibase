@@ -53,7 +53,7 @@ yarn clean -y && yarn bootstrap
 
 # Commit and push
 git add packages/pro/yarn.lock
-git commit -m "Update dependency versions to $VERSION"
+git commit -m "Update dependency versions to $VERSION" -n
 git push
 
 #############################################
