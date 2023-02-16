@@ -10,17 +10,30 @@
   export let icon
   export let color
   export let zIndex
+  export let componentId
   export let transition = false
   export let line = false
   export let alignRight = false
+  export let showResizeAnchors = false
+
+  const AnchorSides = [
+    "right",
+    "left",
+    "top",
+    "bottom",
+    "bottom-right",
+    "bottom-left",
+    "top-right",
+    "top-left",
+  ]
 
   $: flipped = top < 24
 </script>
 
 <div
   in:fade={{
-    delay: transition ? 130 : 0,
-    duration: transition ? 130 : 0,
+    delay: transition ? 100 : 0,
+    duration: transition ? 100 : 0,
   }}
   class="indicator"
   class:flipped
@@ -39,6 +52,18 @@
         </div>
       {/if}
     </div>
+  {/if}
+  {#if showResizeAnchors}
+    {#each AnchorSides as side}
+      <div
+        draggable="true"
+        class="anchor {side}"
+        data-side={side}
+        data-id={componentId}
+      >
+        <div class="anchor-inner" />
+      </div>
+    {/each}
   {/if}
 </div>
 
@@ -104,5 +129,65 @@
 
   /* Icon styles */
   .label :global(.spectrum-Icon + .text) {
+  }
+
+  /* Anchor */
+  .anchor {
+    --size: 24px;
+    position: absolute;
+    width: var(--size);
+    height: var(--size);
+    pointer-events: all;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+  }
+  .anchor-inner {
+    width: 12px;
+    height: 12px;
+    background: white;
+    border: 2px solid var(--color);
+    pointer-events: none;
+  }
+  .anchor.right {
+    right: calc(var(--size) / -2 - 1px);
+    top: calc(50% - var(--size) / 2);
+    cursor: e-resize;
+  }
+  .anchor.left {
+    left: calc(var(--size) / -2 - 1px);
+    top: calc(50% - var(--size) / 2);
+    cursor: w-resize;
+  }
+  .anchor.bottom {
+    left: calc(50% - var(--size) / 2 + 1px);
+    bottom: calc(var(--size) / -2 - 1px);
+    cursor: s-resize;
+  }
+  .anchor.top {
+    left: calc(50% - var(--size) / 2 + 1px);
+    top: calc(var(--size) / -2 - 1px);
+    cursor: n-resize;
+  }
+
+  .anchor.bottom-right {
+    right: calc(var(--size) / -2 - 1px);
+    bottom: calc(var(--size) / -2 - 1px);
+    cursor: se-resize;
+  }
+  .anchor.bottom-left {
+    left: calc(var(--size) / -2 - 1px);
+    bottom: calc(var(--size) / -2 - 1px);
+    cursor: sw-resize;
+  }
+  .anchor.top-right {
+    right: calc(var(--size) / -2 - 1px);
+    top: calc(var(--size) / -2 - 1px);
+    cursor: ne-resize;
+  }
+  .anchor.top-left {
+    left: calc(var(--size) / -2 - 1px);
+    top: calc(var(--size) / -2 - 1px);
+    cursor: nw-resize;
   }
 </style>

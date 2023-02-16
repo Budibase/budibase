@@ -6,20 +6,19 @@ import {
   IntegrationBase,
   PaginationValues,
   RestQueryFields as RestQuery,
-} from "@budibase/types"
-import {
   RestConfig,
-  AuthType,
-  BasicAuthConfig,
-  BearerAuthConfig,
-} from "../definitions/datasource"
+  RestAuthType,
+  RestBasicAuthConfig,
+  RestBearerAuthConfig,
+} from "@budibase/types"
 import { get } from "lodash"
+import * as https from "https"
 import qs from "querystring"
-const fetch = require("node-fetch")
-const { formatBytes } = require("../utilities")
-const { performance } = require("perf_hooks")
-const FormData = require("form-data")
-const { URLSearchParams } = require("url")
+import fetch from "node-fetch"
+import { formatBytes } from "../utilities"
+import { performance } from "perf_hooks"
+import FormData from "form-data"
+import { URLSearchParams } from "url"
 
 const BodyTypes = {
   NONE: "none",
@@ -76,11 +75,11 @@ const SCHEMA: Integration = {
       required: false,
       default: {},
     },
-    legacyHttpParser: {
-      display: "Legacy HTTP Support",
+    rejectUnauthorized: {
+      display: "Reject Unauthorized",
       type: DatasourceFieldType.BOOLEAN,
+      default: true,
       required: false,
-      default: false,
     },
   },
   query: {
@@ -203,12 +202,12 @@ class RestIntegration implements IntegrationBase {
 
       // Append page number or cursor param if configured
       if (pageParam && paginationValues.page != null) {
-        params.append(pageParam, paginationValues.page)
+        params.append(pageParam, paginationValues.page as string)
       }
 
       // Append page size param if configured
       if (sizeParam && paginationValues.limit != null) {
-        params.append(sizeParam, paginationValues.limit)
+        params.append(sizeParam, String(paginationValues.limit))
       }
 
       // Prepend query string with pagination params
@@ -218,8 +217,12 @@ class RestIntegration implements IntegrationBase {
       }
     }
 
-    // make sure the query string is fully encoded
-    const main = `${path}?${qs.encode(qs.decode(queryString))}`
+    if (queryString) {
+      // make sure the query string is fully encoded
+      queryString = "?" + qs.encode(qs.decode(queryString))
+    }
+    const main = `${path}${queryString}`
+
     let complete = main
     if (this.config.url && !main.startsWith("http")) {
       complete = !this.config.url ? main : `${this.config.url}/${main}`
@@ -275,7 +278,7 @@ class RestIntegration implements IntegrationBase {
       case BodyTypes.ENCODED:
         const params = new URLSearchParams()
         for (let [key, value] of Object.entries(object)) {
-          params.append(key, value)
+          params.append(key, value as string)
         }
         addPaginationToBody((key: string, value: any) => {
           params.append(key, value)
@@ -326,14 +329,14 @@ class RestIntegration implements IntegrationBase {
       if (authConfig) {
         let config
         switch (authConfig.type) {
-          case AuthType.BASIC:
-            config = authConfig.config as BasicAuthConfig
+          case RestAuthType.BASIC:
+            config = authConfig.config as RestBasicAuthConfig
             headers.Authorization = `Basic ${Buffer.from(
               `${config.username}:${config.password}`
             ).toString("base64")}`
             break
-          case AuthType.BEARER:
-            config = authConfig.config as BearerAuthConfig
+          case RestAuthType.BEARER:
+            config = authConfig.config as RestBearerAuthConfig
             headers.Authorization = `Bearer ${config.token}`
             break
         }
@@ -381,6 +384,13 @@ class RestIntegration implements IntegrationBase {
       paginationValues
     )
 
+    if (this.config.rejectUnauthorized == false) {
+      input.agent = new https.Agent({
+        rejectUnauthorized: false,
+      })
+    }
+
+    // Deprecated by rejectUnauthorized
     if (this.config.legacyHttpParser) {
       // https://github.com/nodejs/node/issues/43798
       input.extraHttpOptions = { insecureHTTPParser: true }
@@ -416,5 +426,4 @@ class RestIntegration implements IntegrationBase {
 export default {
   schema: SCHEMA,
   integration: RestIntegration,
-  AuthType,
 }

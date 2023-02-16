@@ -184,6 +184,9 @@ export class ApexOptionsBuilder {
   }
 
   palette(palette) {
+    if (!palette) {
+      return this
+    }
     return this.setOption(
       ["theme", "palette"],
       palette.toLowerCase().replace(/[\W]/g, "")

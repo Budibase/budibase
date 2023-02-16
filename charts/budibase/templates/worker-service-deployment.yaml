@@ -21,6 +21,9 @@ spec:
       annotations:
         kompose.cmd: kompose convert
         kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.worker.annotations }}
+{{- toYaml .Values.services.worker.annotations | indent 8 -}}
+{{ end }}
       creationTimestamp: null
       labels:
         io.kompose.service: worker-service
@@ -65,6 +68,8 @@ spec:
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}
         {{ end }}
+        - name: MINIO_ENABLED
+          value: {{ .Values.services.objectStore.minio | quote }}
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:
@@ -77,8 +82,20 @@ spec:
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: CLOUDFRONT_CDN
+          value: {{ .Values.services.objectStore.cloudfront.cdn | quote }}
+        - name: CLOUDFRONT_PUBLIC_KEY_ID
+          value: {{ .Values.services.objectStore.cloudfront.publicKeyId | quote }}
+        - name: CLOUDFRONT_PRIVATE_KEY_64
+          value: {{ .Values.services.objectStore.cloudfront.privateKey64 | quote }}
         - name: PLUGIN_BUCKET_NAME
-          value: {{ .Values.services.objectStore.pluginBucketName | default "plugins" | quote }}
+          value: {{ .Values.services.objectStore.pluginBucketName | quote }}
+        - name: APPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.appsBucketName | quote }}
+        - name: GLOBAL_BUCKET_NAME
+          value: {{ .Values.services.objectStore.globalBucketName | quote }}
+        - name: BACKUPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.backupsBucketName | quote }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
@@ -129,6 +146,8 @@ spec:
           value: {{ .Values.globals.google.secret | quote }}
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        - name: ENCRYPTION_KEY
+          value: {{ .Values.globals.bbEncryptionKey | quote }}
         {{ if .Values.globals.elasticApmEnabled }}
         - name: ELASTIC_APM_ENABLED
           value: {{ .Values.globals.elasticApmEnabled | quote }}
@@ -140,6 +159,24 @@ spec:
         {{ if .Values.globals.elasticApmServerUrl }}
         - name: ELASTIC_APM_SERVER_URL
           value: {{ .Values.globals.elasticApmServerUrl | quote }}
+        {{ end }}
+        {{ if .Values.globals.globalAgentHttpProxy }}
+        - name: GLOBAL_AGENT_HTTP_PROXY
+          value: {{ .Values.globals.globalAgentHttpProxy | quote }}
+        {{ end }}
+        {{ if .Values.globals.globalAgentHttpsProxy }}
+        - name: GLOBAL_AGENT_HTTPS_PROXY
+          value: {{ .Values.globals.globalAgentHttpsProxy | quote }}
+        {{ end }}
+        {{ if .Values.globals.globalAgentNoProxy }}
+        - name: GLOBAL_AGENT_NO_PROXY
+          value: {{ .Values.globals.globalAgentNoProxy | quote }}
+        {{ end }}
+        - name: CDN_URL
+          value: {{ .Values.globals.cdnUrl }}
+        {{ if .Values.services.tlsRejectUnauthorized }}
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
 
         image: budibase/worker:{{ .Values.globals.appVersion }}

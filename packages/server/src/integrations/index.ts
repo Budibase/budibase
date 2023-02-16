@@ -17,8 +17,8 @@ import oracle from "./oracle"
 import { getPlugins } from "../api/controllers/plugin"
 import { SourceName, Integration, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
-const environment = require("../environment")
-const { cloneDeep } = require("lodash")
+import env from "../environment"
+import { cloneDeep } from "lodash"
 
 const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.POSTGRES]: postgres.schema,
@@ -33,6 +33,7 @@ const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.ARANGODB]: arangodb.schema,
   [SourceName.REST]: rest.schema,
   [SourceName.FIRESTORE]: firebase.schema,
+  [SourceName.GOOGLE_SHEETS]: googlesheets.schema,
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
 }
@@ -66,54 +67,59 @@ if (
   INTEGRATIONS[SourceName.ORACLE] = oracle.integration
 }
 
-if (environment.SELF_HOSTED) {
-  DEFINITIONS[SourceName.GOOGLE_SHEETS] = googlesheets.schema
+export async function getDefinition(source: SourceName): Promise<Integration> {
+  // check if its integrated, faster
+  if (DEFINITIONS[source]) {
+    return DEFINITIONS[source]
+  }
+  const allDefinitions = await getDefinitions()
+  return allDefinitions[source]
 }
 
-module.exports = {
-  getDefinitions: async () => {
-    const pluginSchemas: { [key: string]: Integration } = {}
-    if (environment.SELF_HOSTED) {
-      const plugins = await getPlugins(PluginType.DATASOURCE)
-      // extract the actual schema from each custom
-      for (let plugin of plugins) {
-        const sourceId = plugin.name
-        pluginSchemas[sourceId] = {
-          ...plugin.schema["schema"],
-          custom: true,
-        }
-        if (plugin.iconUrl) {
-          pluginSchemas[sourceId].iconUrl = plugin.iconUrl
+export async function getDefinitions() {
+  const pluginSchemas: { [key: string]: Integration } = {}
+  if (env.SELF_HOSTED) {
+    const plugins = await getPlugins(PluginType.DATASOURCE)
+    // extract the actual schema from each custom
+    for (let plugin of plugins) {
+      const sourceId = plugin.name
+      pluginSchemas[sourceId] = {
+        ...plugin.schema["schema"],
+        custom: true,
+      }
+      if (plugin.iconUrl) {
+        pluginSchemas[sourceId].iconUrl = plugin.iconUrl
+      }
+    }
+  }
+  return {
+    ...cloneDeep(DEFINITIONS),
+    ...pluginSchemas,
+  }
+}
+
+export async function getIntegration(integration: string) {
+  if (INTEGRATIONS[integration]) {
+    return INTEGRATIONS[integration]
+  }
+  if (env.SELF_HOSTED) {
+    const plugins = await getPlugins(PluginType.DATASOURCE)
+    for (let plugin of plugins) {
+      if (plugin.name === integration) {
+        // need to use commonJS require due to its dynamic runtime nature
+        const retrieved: any = await getDatasourcePlugin(plugin)
+        if (retrieved.integration) {
+          return retrieved.integration
+        } else {
+          return retrieved
         }
       }
     }
-    return {
-      ...cloneDeep(DEFINITIONS),
-      ...pluginSchemas,
-    }
-  },
-  getIntegration: async (integration: string) => {
-    if (INTEGRATIONS[integration]) {
-      return INTEGRATIONS[integration]
-    }
-    if (environment.SELF_HOSTED) {
-      const plugins = await getPlugins(PluginType.DATASOURCE)
-      for (let plugin of plugins) {
-        if (plugin.name === integration) {
-          // need to use commonJS require due to its dynamic runtime nature
-          const retrieved: any = await getDatasourcePlugin(
-            plugin.name,
-            plugin.jsUrl,
-            plugin.schema?.hash
-          )
-          if (retrieved.integration) {
-            return retrieved.integration
-          } else {
-            return retrieved
-          }
-        }
-      }
-    }
-    throw new Error("No datasource implementation found.")
-  },
+  }
+  throw new Error("No datasource implementation found.")
+}
+
+export default {
+  getDefinitions,
+  getIntegration,
 }

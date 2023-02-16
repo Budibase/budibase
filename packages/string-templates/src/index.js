@@ -146,16 +146,31 @@ module.exports.processStringSync = (string, context, opts) => {
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
-  try {
-    const template = createTemplate(string, opts)
+  function process(stringPart) {
+    const template = createTemplate(stringPart, opts)
     const now = Math.floor(Date.now() / 1000) * 1000
     return processors.postprocess(
       template({
         now: new Date(now).toISOString(),
-        __opts: opts,
+        __opts: {
+          ...opts,
+          input: stringPart,
+        },
         ...context,
       })
     )
+  }
+  try {
+    if (opts && opts.onlyFound) {
+      const blocks = exports.findHBSBlocks(string)
+      for (let block of blocks) {
+        const outcome = process(block)
+        string = string.replace(block, outcome)
+      }
+      return string
+    } else {
+      return process(string)
+    }
   } catch (err) {
     return input
   }
@@ -323,6 +338,9 @@ module.exports.doesContainStrings = (template, strings) => {
  * @return {string[]} The found HBS blocks.
  */
 module.exports.findHBSBlocks = string => {
+  if (!string || typeof string !== "string") {
+    return []
+  }
   let regexp = new RegExp(FIND_ANY_HBS_REGEX)
   let matches = string.match(regexp)
   if (matches == null) {

@@ -11,7 +11,7 @@ export const DEFINITIONS: MigrationDefinition[] = [
   },
   {
     type: MigrationType.GLOBAL,
-    name: MigrationName.QUOTAS_1,
+    name: MigrationName.SYNC_QUOTAS,
   },
   {
     type: MigrationType.APP,
@@ -20,6 +20,10 @@ export const DEFINITIONS: MigrationDefinition[] = [
   {
     type: MigrationType.APP,
     name: MigrationName.EVENT_APP_BACKFILL,
+  },
+  {
+    type: MigrationType.APP,
+    name: MigrationName.TABLE_SETTINGS_LINKS_TO_ACTIONS,
   },
   {
     type: MigrationType.GLOBAL,
@@ -32,9 +36,5 @@ export const DEFINITIONS: MigrationDefinition[] = [
   {
     type: MigrationType.GLOBAL,
     name: MigrationName.GLOBAL_INFO_SYNC_USERS,
-  },
-  {
-    type: MigrationType.GLOBAL,
-    name: MigrationName.PLUGIN_COUNT,
   },
 ]

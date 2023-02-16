@@ -1,8 +1,38 @@
 import { Document } from "../document"
 
-export interface User extends Document {
+export interface SSOProfile {
+  id: string
+  name?: {
+    givenName?: string
+    familyName?: string
+  }
+  _json: {
+    email: string
+    picture: string
+  }
+  provider?: string
+}
+
+export interface ThirdPartyUser extends Document {
+  thirdPartyProfile?: SSOProfile["_json"]
+  firstName?: string
+  lastName?: string
+  pictureUrl?: string
+  profile?: SSOProfile
+  oauth2?: any
+  provider?: string
+  providerType?: string
+  email: string
+  userId?: string
+  forceResetPassword?: boolean
+  userGroups?: string[]
+}
+
+export interface User extends ThirdPartyUser {
   tenantId: string
   email: string
+  userId?: string
+  forceResetPassword?: boolean
   roles: UserRoles
   builder?: {
     global: boolean
@@ -10,13 +40,14 @@ export interface User extends Document {
   admin?: {
     global: boolean
   }
-  providerType?: string
   password?: string
   status?: string
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
-  userGroups?: string[]
-  forceResetPassword?: boolean
   dayPassRecordedAt?: string
+  account?: {
+    authType: string
+  }
+  onboardedAt?: string
 }
 
 export interface UserRoles {
@@ -38,4 +69,8 @@ export interface AdminUser extends User {
   builder: {
     global: boolean
   }
+}
+
+export function isUser(user: object): user is User {
+  return !!(user as User).roles
 }

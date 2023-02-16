@@ -1,4 +1,14 @@
-import { Feature, Hosting, PlanType, Quotas } from "../../sdk"
+import {
+  Feature,
+  Hosting,
+  License,
+  MonthlyQuotaName,
+  PlanType,
+  PriceDuration,
+  Quotas,
+  StaticQuotaName,
+} from "../../sdk"
+import { MonthlyUsage, QuotaUsage, StaticUsage } from "../global"
 
 export interface CreateAccount {
   email: string
@@ -38,10 +48,12 @@ export interface Account extends CreateAccount {
   tier: string // deprecated
   planType?: PlanType
   planTier?: number
+  license?: License
   stripeCustomerId?: string
   licenseKey?: string
   licenseKeyActivatedAt?: number
   licenseOverrides?: LicenseOverrides
+  quotaUsage?: QuotaUsage
 }
 
 export interface PasswordAccount extends Account {

@@ -1,4 +1,4 @@
-import { Checkbox, Select, Stepper } from "@budibase/bbui"
+import { Checkbox, Select, RadioGroup, Stepper } from "@budibase/bbui"
 import DataSourceSelect from "./controls/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
@@ -7,6 +7,7 @@ import TableSelect from "./controls/TableSelect.svelte"
 import ColorPicker from "./controls/ColorPicker.svelte"
 import { IconSelect } from "./controls/IconSelect"
 import FieldSelect from "./controls/FieldSelect.svelte"
+import SortableFieldSelect from "./controls/SortableFieldSelect.svelte"
 import MultiFieldSelect from "./controls/MultiFieldSelect.svelte"
 import SearchFieldSelect from "./controls/SearchFieldSelect.svelte"
 import SchemaSelect from "./controls/SchemaSelect.svelte"
@@ -18,11 +19,13 @@ import FormFieldSelect from "./controls/FormFieldSelect.svelte"
 import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelte"
 import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
+import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 
 const componentMap = {
   text: DrawerBindableCombobox,
   select: Select,
+  radio: RadioGroup,
   dataSource: DataSourceSelect,
   "dataSource/s3": S3DataSourceSelect,
   dataProvider: DataProviderSelect,
@@ -41,6 +44,8 @@ const componentMap = {
   filter: FilterEditor,
   url: URLSelect,
   columns: ColumnEditor,
+  "columns/basic": BasicColumnEditor,
+  "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
   "field/options": FormFieldSelect,
@@ -51,6 +56,7 @@ const componentMap = {
   "field/link": FormFieldSelect,
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,
+  "field/barcodeqr": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,

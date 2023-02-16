@@ -3,6 +3,7 @@ import { InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
 import { roles, context } from "@budibase/backend-core"
 import { groups } from "@budibase/pro"
+import { ContextUser, User, Row, UserCtx } from "@budibase/types"
 
 const PUBLIC_ROLE = roles.BUILTIN_ROLE_IDS.PUBLIC
 
@@ -15,7 +16,7 @@ const addSessionAttributesToUser = (ctx: any) => {
   }
 }
 
-export async function fetchSelf(ctx: any) {
+export async function fetchSelf(ctx: UserCtx) {
   let userId = ctx.user.userId || ctx.user._id
   /* istanbul ignore next */
   if (!userId || !ctx.isAuthenticated) {
@@ -24,7 +25,7 @@ export async function fetchSelf(ctx: any) {
   }
 
   const appId = context.getAppId()
-  const user = await getFullUser(ctx, userId)
+  const user: ContextUser = await getFullUser(ctx, userId)
   // this shouldn't be returned by the app self
   delete user.roles
   // forward the csrf token from the session
@@ -34,7 +35,7 @@ export async function fetchSelf(ctx: any) {
     const db = context.getAppDB()
     // check for group permissions
     if (!user.roleId || user.roleId === PUBLIC_ROLE) {
-      const groupRoleId = await groups.getGroupRoleId(user, appId)
+      const groupRoleId = await groups.getGroupRoleId(user as User, appId)
       user.roleId = groupRoleId || user.roleId
     }
     // remove the full roles structure
@@ -42,7 +43,7 @@ export async function fetchSelf(ctx: any) {
     try {
       const userTable = await db.get(InternalTables.USER_METADATA)
       // specifically needs to make sure is enriched
-      ctx.body = await outputProcessing(userTable, user)
+      ctx.body = await outputProcessing(userTable, user as Row)
     } catch (err: any) {
       let response
       // user didn't exist in app, don't pretend they do

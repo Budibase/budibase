@@ -1,7 +1,7 @@
 const redis = require("../redis/init")
 const { v4: uuidv4 } = require("uuid")
 const { logWarn } = require("../logging")
-const env = require("../environment")
+import env from "../environment"
 import {
   Session,
   ScannedSession,
@@ -89,6 +89,7 @@ export async function createASession(
     userId,
   }
   await client.store(key, session, EXPIRY_SECONDS)
+  return session
 }
 
 export async function updateSessionTTL(session: Session) {

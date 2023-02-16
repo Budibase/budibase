@@ -62,6 +62,8 @@ class ArangoDBIntegration implements IntegrationBase {
 
   constructor(config: ArangodbConfig) {
     const newConfig = {
+      url: config.url,
+      databaseName: config.databaseName,
       auth: {
         username: config.username,
         password: config.password,

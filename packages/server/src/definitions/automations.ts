@@ -1,9 +1,4 @@
-import {
-  Automation,
-  AutomationResults,
-  AutomationStep,
-  Document,
-} from "@budibase/types"
+import { AutomationResults, AutomationStep, Document } from "@budibase/types"
 
 export enum LoopStepType {
   ARRAY = "Array",
@@ -27,20 +22,9 @@ export interface TriggerOutput {
   timestamp?: number
 }
 
-export interface AutomationEvent {
-  data: {
-    automation: Automation
-    event: any
-  }
-  opts?: {
-    repeat?: {
-      jobId: string
-    }
-  }
-}
-
 export interface AutomationContext extends AutomationResults {
   steps: any[]
+  env?: Record<string, string>
   trigger: any
 }
 

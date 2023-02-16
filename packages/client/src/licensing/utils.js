@@ -1,6 +1,6 @@
 import { authStore } from "../stores/auth.js"
 import { get } from "svelte/store"
-import { PlanType } from "./constants"
+import { Constants } from "@budibase/frontend-core"
 
 const getLicense = () => {
   const user = get(authStore)
@@ -12,7 +12,7 @@ const getLicense = () => {
 export const isFreePlan = () => {
   const license = getLicense()
   if (license) {
-    return license.plan.type === PlanType.FREE
+    return license.plan.type === Constants.PlanType.FREE
   } else {
     // safety net - no license means free plan
     return true

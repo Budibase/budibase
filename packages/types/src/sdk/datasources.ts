@@ -1,5 +1,7 @@
 import { Table } from "../documents"
 
+export const PASSWORD_REPLACEMENT = "--secret-value--"
+
 export enum Operation {
   CREATE = "CREATE",
   READ = "READ",
@@ -24,6 +26,7 @@ export enum QueryType {
 
 export enum DatasourceFieldType {
   STRING = "string",
+  CODE = "code",
   LONGFORM = "longForm",
   BOOLEAN = "boolean",
   NUMBER = "number",
@@ -32,6 +35,7 @@ export enum DatasourceFieldType {
   OBJECT = "object",
   JSON = "json",
   FILE = "file",
+  FIELD_GROUP = "fieldGroup",
 }
 
 export enum SourceName {
@@ -70,6 +74,11 @@ export enum FilterType {
   ONE_OF = "oneOf",
 }
 
+export interface StepDefinition {
+  key: string
+  template: string
+}
+
 export interface QueryDefinition {
   type: QueryType
   displayName?: string
@@ -77,6 +86,7 @@ export interface QueryDefinition {
   customisable?: boolean
   fields?: object
   urlDisplay?: boolean
+  steps?: Array<StepDefinition>
 }
 
 export interface ExtraQueryConfig {
@@ -85,6 +95,16 @@ export interface ExtraQueryConfig {
     type: string
     required: boolean
     data?: object
+  }
+}
+
+export interface DatasourceConfig {
+  [key: string]: {
+    type: string
+    display?: string
+    required?: boolean
+    default?: any
+    deprecated?: boolean
   }
 }
 
@@ -97,7 +117,7 @@ export interface Integration {
   friendlyName: string
   type?: string
   iconUrl?: string
-  datasource: {}
+  datasource: DatasourceConfig
   query: {
     [key: string]: QueryDefinition
   }

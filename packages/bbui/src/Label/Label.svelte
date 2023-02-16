@@ -21,6 +21,7 @@
   label {
     padding: 0;
     white-space: nowrap;
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .muted {

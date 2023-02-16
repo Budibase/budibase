@@ -76,7 +76,7 @@ affinity: {}
 globals:
   appVersion: "latest"
   budibaseEnv: PRODUCTION
-  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS"
+  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
   enableAnalytics: "1"
   sentryDSN: ""
   posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
@@ -98,6 +98,7 @@ globals:
   # if createSecrets is set to false, you can hard-code your secrets here
   internalApiKey: ""
   jwtSecret: ""
+  cdnUrl: ""
 
   smtp:
     enabled: false
@@ -105,15 +106,28 @@ globals:
 #  elasticApmEnabled:
 #  elasticApmSecretToken:
 #  elasticApmServerUrl:
+#  globalAgentHttpProxy:
+#  globalAgentHttpsProxy:
+#  globalAgentNoProxy:
 
 services:
   budibaseVersion: latest
   dns: cluster.local
+  # tlsRejectUnauthorized: 0
 
   proxy:
     port: 10000
     replicaCount: 1
+    upstreams:
+      apps: 'http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}'
+      worker: 'http://worker-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.worker.port }}'
+      minio: 'http://minio-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.objectStore.port }}'
+      couchdb: 'http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}'
     resources: {}
+#    annotations:
+#      co.elastic.logs/module: nginx
+#      co.elastic.logs/fileset.stdout: access
+#      co.elastic.logs/fileset.stderr: error
 
   apps:
     port: 4002
@@ -121,11 +135,20 @@ services:
     logLevel: info
     resources: {}
 #    nodeDebug: "" # set the value of NODE_DEBUG
-
+#    annotations:
+#      co.elastic.logs/multiline.type: pattern
+#      co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#      co.elastic.logs/multiline.negate: false
+#      co.elastic.logs/multiline.match: after
   worker:
     port: 4003
     replicaCount: 1
     resources: {}
+#    annotations:
+#      co.elastic.logs/multiline.type: pattern
+#      co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#      co.elastic.logs/multiline.negate: false
+#      co.elastic.logs/multiline.match: after
 
   couchdb:
     enabled: true
@@ -156,6 +179,7 @@ services:
     resources: {}
 
   objectStore:
+    # Set to false if using another object store such as S3
     minio: true
     browser: true
     port: 9000
@@ -171,6 +195,13 @@ services:
     ##   set, choosing the default provisioner.
     storageClass: ""
     resources: {}
+    cloudfront:
+      # Set the url of a distribution to enable cloudfront
+      cdn: ""
+      # ID of public key stored in cloudfront
+      publicKeyId: ""
+      # Base64 encoded private key for the above public key
+      privateKey64: ""
 
 # Override values in couchDB subchart
 couchdb:

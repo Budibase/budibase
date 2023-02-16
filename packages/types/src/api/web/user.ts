@@ -44,3 +44,20 @@ export interface InviteUsersResponse {
   successful: { email: string }[]
   unsuccessful: { email: string; reason: string }[]
 }
+
+export interface SearchUsersRequest {
+  page?: string
+  email?: string
+  appId?: string
+  userIds?: string[]
+}
+
+export interface CreateAdminUserRequest {
+  email: string
+  password: string
+  tenantId: string
+}
+
+export interface SyncUserRequest {
+  previousUser?: User
+}

@@ -20,6 +20,7 @@
   export let componentBindings = []
   export let nested = false
   export let highlighted = false
+  export let info = null
 
   $: nullishValue = value == null || value === ""
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
@@ -73,17 +74,13 @@
   })
 </script>
 
-<div
-  class="property-control"
-  class:highlighted={highlighted && nullishValue}
-  data-cy={`setting-${key}`}
->
+<div class="property-control" class:highlighted={highlighted && nullishValue}>
   {#if type !== "boolean" && label}
     <div class="label">
       <Label>{label}</Label>
     </div>
   {/if}
-  <div data-cy={`${key}-prop-control`} class="control">
+  <div id={`${key}-prop-control`} class="control">
     <svelte:component
       this={control}
       {componentInstance}
@@ -94,11 +91,15 @@
       bindings={allBindings}
       name={key}
       text={label}
+      {nested}
       {key}
       {type}
       {...props}
     />
   </div>
+  {#if info}
+    <div class="text">{@html info}</div>
+  {/if}
 </div>
 
 <style>
@@ -122,5 +123,10 @@
   }
   .control {
     position: relative;
+  }
+  .text {
+    margin-top: var(--spectrum-global-dimension-size-65);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--grey-6);
   }
 </style>

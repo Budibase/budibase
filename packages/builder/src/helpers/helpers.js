@@ -17,7 +17,12 @@ export const convertCamel = str => {
 
 export const pipe = (arg, funcs) => flow(funcs)(arg)
 
-export const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
+export const capitalise = s => {
+  if (!s) {
+    return s
+  }
+  return s.substring(0, 1).toUpperCase() + s.substring(1)
+}
 
 export const lowercase = s => s.substring(0, 1).toLowerCase() + s.substring(1)
 

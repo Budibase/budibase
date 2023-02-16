@@ -23,14 +23,14 @@
   export let secondaryButtonText = undefined
   export let secondaryAction = undefined
   export let secondaryButtonWarning = false
-  export let dataCy = null
+
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
   $: confirmDisabled = disabled || loading
 
-  async function secondary() {
+  async function secondary(e) {
     loading = true
-    if (!secondaryAction || (await secondaryAction()) !== false) {
+    if (!secondaryAction || (await secondaryAction(e)) !== false) {
       hide()
     }
     loading = false
@@ -63,7 +63,6 @@
   role="dialog"
   tabindex="-1"
   aria-modal="true"
-  data-cy={dataCy}
 >
   <div class="spectrum-Dialog-grid">
     {#if title || $$slots.header}
@@ -104,7 +103,7 @@
         {/if}
 
         {#if showCancelButton}
-          <Button group secondary newStyles on:click={close}>
+          <Button group secondary on:click={close}>
             {cancelText}
           </Button>
         {/if}
@@ -151,7 +150,8 @@
     overflow: visible;
   }
   .spectrum-Dialog-heading {
-    font-family: var(--font-sans);
+    font-family: var(--font-accent);
+    font-weight: 600;
   }
   .spectrum-Dialog-heading.noDivider {
     margin-bottom: 12px;

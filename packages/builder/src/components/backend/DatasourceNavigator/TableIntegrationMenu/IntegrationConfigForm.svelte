@@ -6,14 +6,28 @@
     Toggle,
     Button,
     TextArea,
+    Modal,
+    EnvDropdown,
+    Accordion,
+    notifications,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
   import { IntegrationTypes } from "constants/backend"
+  import { createValidationStore } from "helpers/validation/yup"
+  import { createEventDispatcher, onMount } from "svelte"
+  import { environment, licensing, auth } from "stores/portal"
+  import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
 
   export let datasource
   export let schema
   export let creating
+
+  let createVariableModal
+  let selectedKey
+
+  const validation = createValidationStore()
+  const dispatch = createEventDispatcher()
 
   function filter([key, value]) {
     if (!value) {
@@ -31,17 +45,71 @@
     .filter(el => filter(el))
     .map(([key]) => key)
 
+  // setup the validation for each required field
+  $: configKeys.forEach(key => {
+    if (schema[key].required) {
+      validation.addValidatorType(key, schema[key].type, schema[key].required)
+    }
+  })
+  // run the validation whenever the config changes
+  $: validation.check(config)
+  // dispatch the validation result
+  $: dispatch(
+    "valid",
+    Object.values($validation.errors).filter(val => val != null).length === 0
+  )
+
   let addButton
 
-  function getDisplayName(key) {
+  function getDisplayName(key, fieldKey) {
     let name
-    if (schema[key]?.display) {
+    if (fieldKey && schema[key]["fields"][fieldKey]?.display) {
+      name = schema[key]["fields"][fieldKey].display
+    } else if (fieldKey) {
+      name = fieldKey
+    } else if (schema[key]?.display) {
       name = schema[key].display
     } else {
       name = key
     }
     return capitalise(name)
   }
+  function getFieldGroupKeys(fieldGroup) {
+    return Object.entries(schema[fieldGroup].fields || {})
+      .filter(el => filter(el))
+      .map(([key]) => key)
+  }
+
+  async function save(data) {
+    try {
+      await environment.createVariable(data)
+      config[selectedKey] = `{{ env.${data.name} }}`
+      createVariableModal.hide()
+    } catch (err) {
+      notifications.error(`Failed to create variable: ${err.message}`)
+    }
+  }
+
+  function showModal(configKey) {
+    selectedKey = configKey
+    createVariableModal.show()
+  }
+
+  async function handleUpgradePanel() {
+    await environment.upgradePanelOpened()
+    $licensing.goToUpgradePage()
+  }
+
+  onMount(async () => {
+    try {
+      await environment.loadVariables()
+      if ($auth.user) {
+        await licensing.init()
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  })
 </script>
 
 <form>
@@ -79,21 +147,52 @@
             type={schema[configKey].type}
             on:change
             bind:value={config[configKey]}
+            error={$validation.errors[configKey]}
           />
         </div>
+      {:else if schema[configKey].type === "fieldGroup"}
+        <Accordion
+          itemName={configKey}
+          initialOpen={getFieldGroupKeys(configKey).some(
+            fieldKey => !!config[fieldKey]
+          )}
+          header={getDisplayName(configKey)}
+        >
+          <Layout gap="S">
+            {#each getFieldGroupKeys(configKey) as fieldKey}
+              <div class="form-row">
+                <Label>{getDisplayName(configKey, fieldKey)}</Label>
+                <Input
+                  type={schema[configKey]["fields"][fieldKey]?.type}
+                  on:change
+                  bind:value={config[fieldKey]}
+                />
+              </div>
+            {/each}
+          </Layout>
+        </Accordion>
       {:else}
         <div class="form-row">
           <Label>{getDisplayName(configKey)}</Label>
-          <Input
-            type={schema[configKey].type}
+          <EnvDropdown
+            showModal={() => showModal(configKey)}
+            variables={$environment.variables}
+            type={configKey === "port" ? "string" : schema[configKey].type}
             on:change
             bind:value={config[configKey]}
+            error={$validation.errors[configKey]}
+            environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
+            {handleUpgradePanel}
           />
         </div>
       {/if}
     {/each}
   </Layout>
 </form>
+
+<Modal bind:this={createVariableModal}>
+  <CreateEditVariableModal {save} />
+</Modal>
 
 <style>
   .form-row {

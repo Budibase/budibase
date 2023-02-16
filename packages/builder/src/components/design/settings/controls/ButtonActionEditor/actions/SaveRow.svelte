@@ -10,11 +10,13 @@
 
   export let parameters
   export let bindings = []
+  export let nested
 
   $: formComponents = getContextProviderComponents(
     $currentAsset,
     $store.selectedComponentId,
-    "form"
+    "form",
+    { includeSelf: nested }
   )
   $: schemaComponents = getContextProviderComponents(
     $currentAsset,
@@ -93,6 +95,11 @@
     />
 
     <Label small />
+    <Checkbox
+      text="Do not display default notification"
+      bind:value={parameters.notificationOverride}
+    />
+    <br />
     <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
     {#if parameters.confirm}

@@ -30,6 +30,7 @@
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import DNDHandler from "components/preview/DNDHandler.svelte"
+  import GridDNDHandler from "components/preview/GridDNDHandler.svelte"
   import KeyboardManager from "components/preview/KeyboardManager.svelte"
   import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
   import DevTools from "components/devtools/DevTools.svelte"
@@ -91,8 +92,8 @@
 
 <svelte:head>
   {#if $builderStore.usedPlugins?.length}
-    {#each $builderStore.usedPlugins as plugin (plugin.hash)}
-      <script src={`${plugin.jsUrl}?r=${plugin.hash || ""}`}></script>
+    {#each $builderStore.usedPlugins as plugin}
+      <script src={`${plugin.jsUrl}`}></script>
     {/each}
   {/if}
 </svelte:head>
@@ -196,6 +197,7 @@
                 {/if}
                 {#if $builderStore.inBuilder}
                   <DNDHandler />
+                  <GridDNDHandler />
                 {/if}
               </div>
             </QueryParamsProvider>

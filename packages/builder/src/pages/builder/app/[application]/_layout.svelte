@@ -1,7 +1,18 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { Icon, Tabs, Tab, Heading, notifications } from "@budibase/bbui"
+  import { auth } from "stores/portal"
+  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+  import {
+    ActionMenu,
+    MenuItem,
+    Icon,
+    Tabs,
+    Tab,
+    Heading,
+    notifications,
+  } from "@budibase/bbui"
+
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import DeployNavigation from "components/deploy/DeployNavigation.svelte"
@@ -9,6 +20,9 @@
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
+  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
+  import TourPopover from "components/portal/onboarding/TourPopover.svelte"
+  import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
 
   export let application
 
@@ -54,6 +68,26 @@
     })
   }
 
+  const initTour = async () => {
+    if (
+      !$auth.user?.onboardedAt &&
+      isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)
+    ) {
+      // Determine the correct step
+      const activeNav = $layout.children.find(c => $isActive(c.path))
+      const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
+      const targetStep = activeNav
+        ? onboardingTour.find(step => step.route === activeNav?.path)
+        : null
+      await store.update(state => ({
+        ...state,
+        onboarding: true,
+        tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
+        tourStepKey: targetStep?.id,
+      }))
+    }
+  }
+
   onMount(async () => {
     if (!hasSynced && application) {
       try {
@@ -61,6 +95,7 @@
         // check if user has beta access
         // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
         // betaAccess = betaResponse.access
+        initTour()
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }
@@ -80,26 +115,68 @@
   <!-- This should probably be some kind of loading state? -->
   <div class="loading" />
 {:then _}
+  <TourPopover />
   <div class="root">
     <div class="top-nav">
       <div class="topleftnav">
-        <Icon
-          size="M"
-          name="ArrowLeft"
-          hoverable
-          on:click={() => $goto("../../portal/apps")}
-        />
+        <ActionMenu>
+          <div slot="control">
+            <Icon size="M" hoverable name="ShowMenu" />
+          </div>
+          <MenuItem on:click={() => $goto("../../portal/apps")}>
+            Exit to portal
+          </MenuItem>
+          <MenuItem
+            on:click={() => $goto(`../../portal/overview/${application}`)}
+          >
+            Overview
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/access`)}
+          >
+            Access
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/automation-history`)}
+          >
+            Automation history
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/backups`)}
+          >
+            Backups
+          </MenuItem>
+
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/name-and-url`)}
+          >
+            Name and URL
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/version`)}
+          >
+            Version
+          </MenuItem>
+        </ActionMenu>
         <Heading size="XS">{$store.name || "App"}</Heading>
       </div>
       <div class="topcenternav">
         <Tabs {selected} size="M">
           {#each $layout.children as { path, title }}
-            <Tab
-              quiet
-              selected={$isActive(path)}
-              on:click={topItemNavigate(path)}
-              title={capitalise(title)}
-            />
+            <TourWrap tourStepKey={`builder-${title}-section`}>
+              <Tab
+                quiet
+                selected={$isActive(path)}
+                on:click={topItemNavigate(path)}
+                title={capitalise(title)}
+                id={`builder-${title}-tab`}
+              />
+            </TourWrap>
           {/each}
         </Tabs>
       </div>

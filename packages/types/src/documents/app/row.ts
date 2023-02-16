@@ -16,6 +16,15 @@ export enum FieldType {
   INTERNAL = "internal",
 }
 
+export interface RowAttachment {
+  size: number
+  name: string
+  extension: string
+  key: string
+  // Populated on read
+  url?: string
+}
+
 export interface Row extends Document {
   type?: string
   tableId?: string

@@ -8,6 +8,15 @@ export const FIELDS = {
       presence: false,
     },
   },
+  BARCODEQR: {
+    name: "Barcode/QR",
+    type: "barcodeqr",
+    constraints: {
+      type: "string",
+      length: {},
+      presence: false,
+    },
+  },
   LONGFORM: {
     name: "Long Form Text",
     type: "longform",
@@ -148,6 +157,7 @@ export const ALLOWABLE_STRING_OPTIONS = [
   FIELDS.STRING,
   FIELDS.OPTIONS,
   FIELDS.LONGFORM,
+  FIELDS.BARCODEQR,
 ]
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type
@@ -163,7 +173,11 @@ export const SWITCHABLE_TYPES = [
   ...ALLOWABLE_NUMBER_TYPES,
 ]
 
-export const BUDIBASE_DATASOURCE_ID = "bb_internal"
+export const BUDIBASE_INTERNAL_DB_ID = "bb_internal"
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
+export const BUDIBASE_DATASOURCE_TYPE = "budibase"
+export const DB_TYPE_INTERNAL = "internal"
+export const DB_TYPE_EXTERNAL = "external"
 
 export const IntegrationTypes = {
   POSTGRES: "POSTGRES",
@@ -247,3 +261,12 @@ export const BannedSearchTypes = [
   "json",
   "jsonarray",
 ]
+
+export const DatasourceTypes = {
+  RELATIONAL: "Relational",
+  NON_RELATIONAL: "Non-relational",
+  SPREADSHEET: "Spreadsheet",
+  OBJECT_STORE: "Object store",
+  GRAPH: "Graph",
+  API: "API",
+}

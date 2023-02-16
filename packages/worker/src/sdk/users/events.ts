@@ -1,7 +1,6 @@
 import env from "../../environment"
 import { events, accounts, tenancy } from "@budibase/backend-core"
 import { User, UserRoles, CloudAccount } from "@budibase/types"
-import { users as pro } from "@budibase/pro"
 
 export const handleDeleteEvents = async (user: any) => {
   await events.user.deleted(user)
@@ -74,6 +73,10 @@ export const handleSaveEvents = async (
       await events.user.permissionAdminRemoved(user)
     }
 
+    if (isOnboardingComplete(user, existingUser)) {
+      await events.user.onboardingComplete(user)
+    }
+
     if (
       !existingUser.forceResetPassword &&
       user.forceResetPassword &&
@@ -113,6 +116,10 @@ const isAddingAdmin = (user: any, existingUser: any) => {
 
 const isRemovingAdmin = (user: any, existingUser: any) => {
   return isRemovingPermission(user, existingUser, isAdmin)
+}
+
+const isOnboardingComplete = (user: any, existingUser: any) => {
+  return !existingUser?.onboardedAt && typeof user.onboardedAt === "string"
 }
 
 /**

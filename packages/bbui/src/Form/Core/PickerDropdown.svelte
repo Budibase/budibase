@@ -61,6 +61,7 @@
   const onPickPrimary = newValue => {
     dispatch("pickprimary", newValue)
     primaryOpen = false
+    dispatch("closed")
   }
 
   const onClearPrimary = () => {
@@ -85,6 +86,21 @@
   const updateValueOnEnter = event => {
     if (event.key === "Enter") {
       updateValue(event.target.value)
+    }
+  }
+
+  const handlePrimaryOutsideClick = event => {
+    if (primaryOpen) {
+      event.stopPropagation()
+      primaryOpen = false
+      dispatch("closed")
+    }
+  }
+
+  const handleSecondaryOutsideClick = event => {
+    if (secondaryOpen) {
+      event.stopPropagation()
+      secondaryOpen = false
     }
   }
 </script>
@@ -148,7 +164,7 @@
   </div>
   {#if primaryOpen}
     <div
-      use:clickOutside={() => (primaryOpen = false)}
+      use:clickOutside={handlePrimaryOutsideClick}
       transition:fly|local={{ y: -20, duration: 200 }}
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
       class:auto-width={autoWidth}
@@ -256,7 +272,7 @@
         {disabled}
         class:is-open={secondaryOpen}
         aria-haspopup="listbox"
-        on:mousedown={onClickSecondary}
+        on:click={onClickSecondary}
       >
         {#if secondaryFieldIcon}
           <span class="option-left">
@@ -281,7 +297,7 @@
       </button>
       {#if secondaryOpen}
         <div
-          use:clickOutside={() => (secondaryOpen = false)}
+          use:clickOutside={handleSecondaryOutsideClick}
           transition:fly|local={{ y: -20, duration: 200 }}
           class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
           style="width: 30%"

@@ -16,8 +16,9 @@ import {
   finaliseExternalTables,
 } from "./utils"
 import dayjs from "dayjs"
-const { NUMBER_REGEX } = require("../utilities")
+import { NUMBER_REGEX } from "../utilities"
 import Sql from "./base/sql"
+import { MySQLColumn } from "./base/types"
 
 const mysql = require("mysql2/promise")
 
@@ -106,7 +107,11 @@ function bindingTypeCoerce(bindings: any[]) {
     }
     // if not a number, see if it is a date - important to do in this order as any
     // integer will be considered a valid date
-    else if (/^\d/.test(binding) && dayjs(binding).isValid()) {
+    else if (
+      /^\d/.test(binding) &&
+      dayjs(binding).isValid() &&
+      !binding.includes(",")
+    ) {
       bindings[i] = dayjs(binding).toDate()
     }
   }
@@ -142,9 +147,13 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         if (
           field.type == "DATETIME" ||
           field.type === "DATE" ||
-          field.type === "TIMESTAMP"
+          field.type === "TIMESTAMP" ||
+          field.type === "LONGLONG"
         ) {
           return field.string()
+        }
+        if (field.type === "BIT" && field.length === 1) {
+          return field.buffer()?.[0]
         }
         return next()
       },
@@ -199,11 +208,11 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
     try {
       // get the tables first
-      const tablesResp = await this.internalQuery(
+      const tablesResp: Record<string, string>[] = await this.internalQuery(
         { sql: "SHOW TABLES;" },
         { connect: false }
       )
-      const tableNames = tablesResp.map(
+      const tableNames: string[] = tablesResp.map(
         (obj: any) =>
           obj[`Tables_in_${database}`] ||
           obj[`Tables_in_${database.toLowerCase()}`]
@@ -211,7 +220,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       for (let tableName of tableNames) {
         const primaryKeys = []
         const schema: TableSchema = {}
-        const descResp = await this.internalQuery(
+        const descResp: MySQLColumn[] = await this.internalQuery(
           { sql: `DESCRIBE \`${tableName}\`;` },
           { connect: false }
         )

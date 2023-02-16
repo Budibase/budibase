@@ -22,6 +22,6 @@ exports.runPkgCommand = async (command, dir = "./") => {
     throw new Error("Must have yarn or npm installed to run build.")
   }
   const npmCmd = command === "install" ? `npm ${command}` : `npm run ${command}`
-  const cmd = yarn ? `yarn ${command}` : npmCmd
+  const cmd = yarn ? `yarn ${command} --ignore-engines` : npmCmd
   await exports.exec(cmd, dir)
 }

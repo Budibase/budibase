@@ -70,7 +70,10 @@
       type: "provider",
     }))
   $: links = bindings
+    // Get only link bindings
     .filter(x => x.fieldSchema?.type === "link")
+    // Filter out bindings provided by forms
+    .filter(x => !x.component?.endsWith("/form"))
     .map(binding => {
       const { providerId, readableBinding, fieldSchema } = binding || {}
       const { name, tableId } = fieldSchema || {}
@@ -144,6 +147,11 @@
     drawer.show()
   }
 
+  const getQueryValue = queries => {
+    value = queries.find(q => q._id === value._id) || value
+    return value
+  }
+
   const saveQueryParams = () => {
     handleSelected({
       ...value,
@@ -175,7 +183,7 @@
           {/if}
           <IntegrationQueryEditor
             height={200}
-            query={value}
+            query={getQueryValue(queries)}
             schema={fetchQueryDefinition(value)}
             datasource={getQueryDatasource(value)}
             editable={false}
@@ -185,11 +193,7 @@
     </Drawer>
   {/if}
 </div>
-<Popover
-  bind:this={dropdownRight}
-  anchor={anchorRight}
-  dataCy={`dataSource-popover-${$store.selectedComponentId}`}
->
+<Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
       <Heading size="XS">Tables</Heading>
