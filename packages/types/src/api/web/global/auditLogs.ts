@@ -1,5 +1,6 @@
 import { Event, AuditedEventFriendlyName } from "../../../sdk"
 import { PaginationResponse, PaginationRequest } from "../"
+import { User, App } from "../../../"
 
 export interface AuditLogSearchParams {
   userId?: string[]
@@ -16,15 +17,13 @@ export interface SearchAuditLogsRequest
   extends PaginationRequest,
     AuditLogSearchParams {}
 
+export enum AuditLogResourceStatus {
+  DELETED = "deleted",
+}
+
 export interface AuditLogEnriched {
-  app: {
-    _id: string
-    name: string
-  }
-  user: {
-    _id: string
-    name: string
-  }
+  app?: App | { _id: string; status: AuditLogResourceStatus }
+  user: User | { _id: string; status: AuditLogResourceStatus }
   event: Event
   timestamp: string
   name: string
