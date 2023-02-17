@@ -182,102 +182,180 @@ export enum Event {
   ENVIRONMENT_VARIABLE_UPGRADE_PANEL_OPENED = "environment_variable:upgrade_panel_opened",
 }
 
-export class AuditedEventFriendlyName {
+// all events that are not audited have been added to this record as undefined, this means
+// that Typescript can protect us against new events being added and auditing of those
+// events not being considered. This might be a little ugly, but provides a level of
+// Typescript build protection for the audit log feature, any new event also needs to be
+// added to this map, during which the developer will need to consider if it should be
+// a user facing event or not.
+export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   // USER
-  static USER_CREATED = "User {{ email }} created"
-  static USER_UPDATED = "User {{ email }} updated"
-  static USER_DELETED = "User {{ email }} deleted"
-  static USER_PERMISSION_ADMIN_ASSIGNED = "User {{ email }} admin role assigned"
-  static USER_PERMISSION_ADMIN_REMOVED = "User {{ email }} admin role removed"
-  static USER_PERMISSION_BUILDER_ASSIGNED =
-    "User {{ email }} builder role assigned"
-  static USER_PERMISSION_BUILDER_REMOVED =
-    "User {{ email }} builder role removed"
-  static USER_INVITED = "User {{ email }} invited"
-  static USER_INVITED_ACCEPTED = "User {{ email }} accepted invite"
-  static USER_PASSWORD_UPDATED = "User {{ email }} password updated"
-  static USER_PASSWORD_RESET_REQUESTED =
-    "User {{ email }} password reset requested"
-  static USER_PASSWORD_RESET = "User {{ email }} password reset"
-  static USER_GROUP_CREATED = "User group {{ name }} created"
-  static USER_GROUP_UPDATED = "User group {{ name }} updated"
-  static USER_GROUP_DELETED = "User group {{ name }} deleted"
-  static USER_GROUP_USERS_ADDED =
-    "User group {{ name }} {{ count }} users added"
-  static USER_GROUP_USERS_REMOVED =
-    "User group {{ name }} {{ count }} users removed"
-  static USER_GROUP_PERMISSIONS_EDITED =
-    "User group {{ name }} permissions edited"
+  [Event.USER_CREATED]: `User "{{ email }}" created`,
+  [Event.USER_UPDATED]: `User "{{ email }}" updated`,
+  [Event.USER_DELETED]: `User "{{ email }}" deleted`,
+  [Event.USER_PERMISSION_ADMIN_ASSIGNED]: `User "{{ email }}" admin role assigned`,
+  [Event.USER_PERMISSION_ADMIN_REMOVED]: `User "{{ email }}" admin role removed`,
+  [Event.USER_PERMISSION_BUILDER_ASSIGNED]: `User "{{ email }}" builder role assigned`,
+  [Event.USER_PERMISSION_BUILDER_REMOVED]: `User "{{ email }}" builder role removed`,
+  [Event.USER_INVITED]: `User "{{ email }} invited`,
+  [Event.USER_INVITED_ACCEPTED]: `User "{{ email }}" accepted invite`,
+  [Event.USER_PASSWORD_UPDATED]: `User "{{ email }}" password updated`,
+  [Event.USER_PASSWORD_RESET_REQUESTED]: `User "{{ email }}" password reset requested`,
+  [Event.USER_PASSWORD_RESET]: `User "{{ email }}" password reset`,
+  [Event.USER_GROUP_CREATED]: `User group "{{ name }}" created`,
+  [Event.USER_GROUP_UPDATED]: `User group "{{ name }}" updated`,
+  [Event.USER_GROUP_DELETED]: `User group "{{ name }}" deleted`,
+  [Event.USER_GROUP_USERS_ADDED]: `User group "{{ name }}" {{ count }} users added`,
+  [Event.USER_GROUP_USERS_REMOVED]: `User group "{{ name }}" {{ count }} users removed`,
+  [Event.USER_GROUP_PERMISSIONS_EDITED]: `User group "{{ name }}" permissions edited`,
+  [Event.USER_PASSWORD_FORCE_RESET]: undefined,
+  [Event.USER_GROUP_ONBOARDING]: undefined,
+  [Event.USER_ONBOARDING_COMPLETE]: undefined,
 
   // EMAIL
-  static EMAIL_SMTP_CREATED = "Email configuration created"
-  static EMAIL_SMTP_UPDATED = "Email configuration updated"
+  [Event.EMAIL_SMTP_CREATED]: `Email configuration created`,
+  [Event.EMAIL_SMTP_UPDATED]: `Email configuration updated`,
 
   // AUTH
-  static AUTH_SSO_CREATED = "SSO configuration created"
-  static AUTH_SSO_UPDATED = "SSO configuration updated"
-  static AUTH_SSO_ACTIVATED = "SSO configuration activated"
-  static AUTH_SSO_DEACTIVATED = "SSO configuration deactivated"
-  static AUTH_LOGIN = "User {{ email }} logged in"
-  static AUTH_LOGOUT = "User {{ email }} logged out"
+  [Event.AUTH_SSO_CREATED]: `SSO configuration created`,
+  [Event.AUTH_SSO_UPDATED]: `SSO configuration updated`,
+  [Event.AUTH_SSO_ACTIVATED]: `SSO configuration activated`,
+  [Event.AUTH_SSO_DEACTIVATED]: `SSO configuration deactivated`,
+  [Event.AUTH_LOGIN]: `User "{{ email }}" logged in`,
+  [Event.AUTH_LOGOUT]: `User "{{ email }}" logged out`,
 
   // ORG
-  static ORG_NAME_UPDATED = "Organisation name updated"
-  static ORG_LOGO_UPDATED = "Organisation logo updated"
-  static ORG_PLATFORM_URL_UPDATED = "Organisation platform URL updated"
+  [Event.ORG_NAME_UPDATED]: `Organisation name updated`,
+  [Event.ORG_LOGO_UPDATED]: `Organisation logo updated`,
+  [Event.ORG_PLATFORM_URL_UPDATED]: `Organisation platform URL updated`,
 
   // APP
-  static APP_CREATED = "App {{ name }} created"
-  static APP_UPDATED = "App {{ name }} updated"
-  static APP_DELETED = "App {{ name }} deleted"
-  static APP_PUBLISHED = "App {{ name }} published"
-  static APP_UNPUBLISHED = "App {{ name }} unpublished"
-  static APP_TEMPLATE_IMPORTED = "App {{ name }} template imported"
-  static APP_FILE_IMPORTED = "App {{ name }} file imported"
-  static APP_VERSION_UPDATED = "App {{ name }} version updated"
-  static APP_VERSION_REVERTED = "App {{ name }} version reverted"
-  static APP_REVERTED = "App {{ name }} reverted"
-  static APP_EXPORTED = "App {{ name }} exported"
-  static APP_BACKUP_RESTORED = "App backup {{ name }} restored"
-  static APP_BACKUP_TRIGGERED = "App backup {{ name }} triggered"
+  [Event.APP_CREATED]: `App "{{ name }}" created`,
+  [Event.APP_UPDATED]: `App "{{ name }}" updated`,
+  [Event.APP_DELETED]: `App "{{ name }}" deleted`,
+  [Event.APP_PUBLISHED]: `App "{{ name }}" published`,
+  [Event.APP_UNPUBLISHED]: `App "{{ name }}" unpublished`,
+  [Event.APP_TEMPLATE_IMPORTED]: `App "{{ name }}" template imported`,
+  [Event.APP_FILE_IMPORTED]: `App "{{ name }}" file imported`,
+  [Event.APP_VERSION_UPDATED]: `App "{{ name }}" version updated`,
+  [Event.APP_VERSION_REVERTED]: `App "{{ name }}" version reverted`,
+  [Event.APP_REVERTED]: `App "{{ name }}" reverted`,
+  [Event.APP_EXPORTED]: `App "{{ name }}" exported`,
+  [Event.APP_BACKUP_RESTORED]: `App backup "{{ name }}" restored`,
+  [Event.APP_BACKUP_TRIGGERED]: `App backup "{{ name }}" triggered`,
 
   // DATASOURCE
-  static DATASOURCE_CREATED = "Datasource created"
-  static DATASOURCE_UPDATED = "Datasource updated"
-  static DATASOURCE_DELETED = "Datasource deleted"
+  [Event.DATASOURCE_CREATED]: `Datasource created`,
+  [Event.DATASOURCE_UPDATED]: `Datasource updated`,
+  [Event.DATASOURCE_DELETED]: `Datasource deleted`,
 
   // QUERY
-  static QUERY_CREATED = "Query created"
-  static QUERY_UPDATED = "Query updated"
-  static QUERY_DELETED = "Query deleted"
-  static QUERY_IMPORT = "Query import"
+  [Event.QUERY_CREATED]: `Query created`,
+  [Event.QUERY_UPDATED]: `Query updated`,
+  [Event.QUERY_DELETED]: `Query deleted`,
+  [Event.QUERY_IMPORT]: `Query import`,
+  [Event.QUERIES_RUN]: undefined,
+  [Event.QUERY_PREVIEWED]: undefined,
 
   // TABLE
-  static TABLE_CREATED = "Table created"
-  static TABLE_UPDATED = "Table updated"
-  static TABLE_DELETED = "Table deleted"
-  static TABLE_EXPORTED = "Table exported"
-  static TABLE_IMPORTED = "Table imported"
-  static TABLE_DATA_IMPORTED = "Data imported to table"
+  [Event.TABLE_CREATED]: `Table created`,
+  [Event.TABLE_UPDATED]: `Table updated`,
+  [Event.TABLE_DELETED]: `Table deleted`,
+  [Event.TABLE_EXPORTED]: `Table exported`,
+  [Event.TABLE_IMPORTED]: `Table imported`,
+  [Event.TABLE_DATA_IMPORTED]: `Data imported to table`,
 
   // ROWS
-  static ROWS_CREATED = "Rows created"
-  static ROWS_IMPORTED = "Rows imported"
+  [Event.ROWS_CREATED]: `Rows created`,
+  [Event.ROWS_IMPORTED]: `Rows imported`,
 
   // AUTOMATION
-  static AUTOMATION_CREATED = "Automation created"
-  static AUTOMATION_DELETED = "Automation deleted"
+  [Event.AUTOMATION_CREATED]: `Automation created`,
+  [Event.AUTOMATION_DELETED]: `Automation deleted`,
+  [Event.AUTOMATION_TESTED]: undefined,
+  [Event.AUTOMATIONS_RUN]: undefined,
+  [Event.AUTOMATION_STEP_CREATED]: undefined,
+  [Event.AUTOMATION_STEP_DELETED]: undefined,
+  [Event.AUTOMATION_TRIGGER_UPDATED]: undefined,
 
   // SCREEN
-  static SCREEN_CREATED = "Screen created"
-  static SCREEN_DELETED = "Screen deleted"
+  [Event.SCREEN_CREATED]: `Screen created`,
+  [Event.SCREEN_DELETED]: `Screen deleted`,
 
   // COMPONENT
-  static COMPONENT_CREATED = "Component created"
-  static COMPONENT_DELETED = "Component deleted"
+  [Event.COMPONENT_CREATED]: `Component created`,
+  [Event.COMPONENT_DELETED]: `Component deleted`,
 
-  static ENVIRONMENT_VARIABLE_CREATED = "Environment variable created"
-  static ENVIRONMENT_VARIABLE_DELETED = "Environment variable deleted"
+  // ENVIRONMENT VARIABLE
+  [Event.ENVIRONMENT_VARIABLE_CREATED]: `Environment variable created`,
+  [Event.ENVIRONMENT_VARIABLE_DELETED]: `Environment variable deleted`,
+  [Event.ENVIRONMENT_VARIABLE_UPGRADE_PANEL_OPENED]: undefined,
+
+  // PLUGIN
+  [Event.PLUGIN_IMPORTED]: `Plugin imported`,
+  [Event.PLUGIN_DELETED]: `Plugin deleted`,
+  [Event.PLUGIN_INIT]: undefined,
+
+  // ROLE - NOT AUDITED
+  [Event.ROLE_CREATED]: undefined,
+  [Event.ROLE_UPDATED]: undefined,
+  [Event.ROLE_DELETED]: undefined,
+  [Event.ROLE_ASSIGNED]: undefined,
+  [Event.ROLE_UNASSIGNED]: undefined,
+
+  // LICENSE - NOT AUDITED
+  [Event.LICENSE_PLAN_CHANGED]: undefined,
+  [Event.LICENSE_TIER_CHANGED]: undefined,
+  [Event.LICENSE_ACTIVATED]: undefined,
+  [Event.LICENSE_PAYMENT_FAILED]: undefined,
+  [Event.LICENSE_PAYMENT_RECOVERED]: undefined,
+  [Event.LICENSE_CHECKOUT_OPENED]: undefined,
+  [Event.LICENSE_CHECKOUT_SUCCESS]: undefined,
+  [Event.LICENSE_PORTAL_OPENED]: undefined,
+
+  // ACCOUNT - NOT AUDITED
+  [Event.ACCOUNT_CREATED]: undefined,
+  [Event.ACCOUNT_DELETED]: undefined,
+  [Event.ACCOUNT_VERIFIED]: undefined,
+
+  // BACKFILL - NOT AUDITED
+  [Event.APP_BACKFILL_SUCCEEDED]: undefined,
+  [Event.APP_BACKFILL_FAILED]: undefined,
+  [Event.TENANT_BACKFILL_SUCCEEDED]: undefined,
+  [Event.TENANT_BACKFILL_FAILED]: undefined,
+  [Event.INSTALLATION_BACKFILL_SUCCEEDED]: undefined,
+  [Event.INSTALLATION_BACKFILL_FAILED]: undefined,
+
+  // LAYOUT - NOT AUDITED
+  [Event.LAYOUT_CREATED]: undefined,
+  [Event.LAYOUT_DELETED]: undefined,
+
+  // VIEW - NOT AUDITED
+  [Event.VIEW_CREATED]: undefined,
+  [Event.VIEW_UPDATED]: undefined,
+  [Event.VIEW_DELETED]: undefined,
+  [Event.VIEW_EXPORTED]: undefined,
+  [Event.VIEW_FILTER_CREATED]: undefined,
+  [Event.VIEW_FILTER_UPDATED]: undefined,
+  [Event.VIEW_FILTER_DELETED]: undefined,
+  [Event.VIEW_CALCULATION_CREATED]: undefined,
+  [Event.VIEW_CALCULATION_UPDATED]: undefined,
+  [Event.VIEW_CALCULATION_DELETED]: undefined,
+
+  // SERVED - NOT AUDITED
+  [Event.SERVED_BUILDER]: undefined,
+  [Event.SERVED_APP]: undefined,
+  [Event.SERVED_APP_PREVIEW]: undefined,
+
+  // ANALYTICS - NOT AUDITED
+  [Event.ANALYTICS_OPT_OUT]: undefined,
+  [Event.ANALYTICS_OPT_IN]: undefined,
+
+  // INSTALLATION - NOT AUDITED
+  [Event.INSTALLATION_VERSION_CHECKED]: undefined,
+  [Event.INSTALLATION_VERSION_UPGRADED]: undefined,
+  [Event.INSTALLATION_VERSION_DOWNGRADED]: undefined,
+  [Event.INSTALLATION_FIRST_STARTUP]: undefined,
 }
 
 // properties added at the final stage of the event pipeline

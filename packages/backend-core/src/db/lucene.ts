@@ -41,6 +41,8 @@ export class QueryBuilder {
   sortType: string
   includeDocs: boolean
   version?: string
+  indexBuilder?: () => Promise<any>
+  noEscaping = false
 
   constructor(dbName: string, index: string, base?: SearchFilters) {
     this.dbName = dbName
@@ -64,6 +66,14 @@ export class QueryBuilder {
     this.sortOrder = "ascending"
     this.sortType = "string"
     this.includeDocs = true
+  }
+
+  disableEscaping() {
+    this.noEscaping = true
+  }
+
+  setIndexBuilder(builderFn: () => Promise<any>) {
+    this.indexBuilder = builderFn
   }
 
   setVersion(version?: string) {
@@ -176,6 +186,14 @@ export class QueryBuilder {
     return this
   }
 
+  handleSpaces(input: string) {
+    if (this.noEscaping) {
+      return input
+    } else {
+      return input.replace(/ /g, "_")
+    }
+  }
+
   /**
    * Preprocesses a value before going into a lucene search.
    * Transforms strings to lowercase and wraps strings and bools in quotes.
@@ -192,7 +210,7 @@ export class QueryBuilder {
       value = value.toLowerCase ? value.toLowerCase() : value
     }
     // Escape characters
-    if (escape && originalType === "string") {
+    if (!this.noEscaping && escape && originalType === "string") {
       value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
     }
 
@@ -272,7 +290,7 @@ export class QueryBuilder {
       for (let [key, value] of Object.entries(structure)) {
         // check for new format - remove numbering if needed
         key = removeKeyNumbering(key)
-        key = builder.preprocess(key.replace(/ /g, "_"), {
+        key = builder.preprocess(builder.handleSpaces(key), {
           escape: true,
         })
         const expression = queryFn(key, value)
@@ -379,7 +397,7 @@ export class QueryBuilder {
     if (this.sort) {
       const order = this.sortOrder === "descending" ? "-" : ""
       const type = `<${this.sortType}>`
-      body.sort = `${order}${this.sort.replace(/ /g, "_")}${type}`
+      body.sort = `${order}${this.handleSpaces(this.sort)}${type}`
     }
     return body
   }
@@ -388,7 +406,16 @@ export class QueryBuilder {
     const { url, cookie } = dbCore.getCouchInfo()
     const fullPath = `${url}/${this.dbName}/_design/database/_search/${this.index}`
     const body = this.buildSearchBody()
-    return await runQuery(fullPath, body, cookie)
+    try {
+      return await runQuery(fullPath, body, cookie)
+    } catch (err: any) {
+      if (err.status === 404 && this.indexBuilder) {
+        await this.indexBuilder()
+        return await runQuery(fullPath, body, cookie)
+      } else {
+        throw err
+      }
+    }
   }
 }
 
@@ -407,6 +434,10 @@ const runQuery = async (url: string, body: any, cookie: string) => {
       Authorization: cookie,
     },
   })
+
+  if (response.status === 404) {
+    throw response
+  }
   const json = await response.json()
 
   let output: any = {

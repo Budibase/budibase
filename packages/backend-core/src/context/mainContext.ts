@@ -34,17 +34,19 @@ export function getAuditLogDBName(tenantId?: string) {
   if (!tenantId) {
     tenantId = getTenantId()
   }
-  return `${tenantId}${SEPARATOR}${StaticDatabases.AUDIT_LOGS.name}`
+  if (tenantId === DEFAULT_TENANT_ID) {
+    return StaticDatabases.AUDIT_LOGS.name
+  } else {
+    return `${tenantId}${SEPARATOR}${StaticDatabases.AUDIT_LOGS.name}`
+  }
 }
 
 export function baseGlobalDBName(tenantId: string | undefined | null) {
-  let dbName
   if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
-    dbName = StaticDatabases.GLOBAL.name
+    return StaticDatabases.GLOBAL.name
   } else {
-    dbName = `${tenantId}${SEPARATOR}${StaticDatabases.GLOBAL.name}`
+    return `${tenantId}${SEPARATOR}${StaticDatabases.GLOBAL.name}`
   }
-  return dbName
 }
 
 export function isMultiTenant() {
