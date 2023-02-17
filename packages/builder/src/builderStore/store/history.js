@@ -220,9 +220,11 @@ export const createHistoryStore = ({
       else {
         // Get the current doc and apply the backwards patch on top of it
         let doc = jsonpatch.deepClone(getDoc(operation.doc._id))
-        jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.backwardsPatch))
-        await saveFn(doc, operation.id)
-        selectDoc?.(doc._id)
+        if (doc) {
+          jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.backwardsPatch))
+          await saveFn(doc, operation.id)
+          selectDoc?.(doc._id)
+        }
       }
       stopLoading()
     } catch (error) {
@@ -287,9 +289,11 @@ export const createHistoryStore = ({
       else {
         // Get the current doc and apply the forwards patch on top of it
         let doc = jsonpatch.deepClone(getDoc(operation.doc._id))
-        jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.forwardPatch))
-        await saveFn(doc, operation.id)
-        selectDoc?.(doc._id)
+        if (doc) {
+          jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.forwardPatch))
+          await saveFn(doc, operation.id)
+          selectDoc?.(doc._id)
+        }
       }
       stopLoading()
     } catch (error) {
