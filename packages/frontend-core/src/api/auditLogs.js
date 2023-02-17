@@ -38,20 +38,20 @@ export const buildAuditLogsEndpoints = API => ({
    */
   searchAuditLogs: async opts => {
     return await API.post({
-      url: `/api/auditlogs/search`,
+      url: `/api/global/auditlogs/search`,
       body: buildOpts(opts),
     })
   },
 
   getEventDefinitions: async () => {
     return await API.get({
-      url: `/api/auditlogs/definitions`,
+      url: `/api/global/auditlogs/definitions`,
     })
   },
 
   downloadLogs: async opts => {
     return await API.post({
-      url: `/api/auditlogs/definitions`,
+      url: `/api/global/auditlogs/definitions`,
       body: buildOpts(opts),
     })
   },

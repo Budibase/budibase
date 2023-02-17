@@ -32,7 +32,6 @@
   export let autocomplete = false
   export let sort = false
   export let fetchTerm = null
-  $: console.log(fieldText)
   const dispatch = createEventDispatcher()
 
   let searchTerm = null
