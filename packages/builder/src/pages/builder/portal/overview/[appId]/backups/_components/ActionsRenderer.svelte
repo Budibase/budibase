@@ -3,7 +3,6 @@
     ActionMenu,
     MenuItem,
     Icon,
-    Input,
     Heading,
     Body,
     Modal,
@@ -16,7 +15,6 @@
 
   let deleteDialog
   let restoreDialog
-  let updateDialog
   let name
   let restoreBackupModal
 
@@ -35,14 +33,6 @@
     dispatch("buttonclick", {
       type: "backupDelete",
       backupId: row._id,
-    })
-  }
-
-  const onClickUpdate = () => {
-    dispatch("buttonclick", {
-      type: "backupUpdate",
-      backupId: row._id,
-      name,
     })
   }
 
@@ -66,7 +56,6 @@
       <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
       <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
     {/if}
-    <MenuItem on:click={updateDialog.show} icon="Edit">Rename</MenuItem>
   </ActionMenu>
 </div>
 
@@ -94,17 +83,6 @@
 >
   <Heading size="S">{row.name || "Backup"}</Heading>
   <Body size="S">{new Date(row.timestamp).toLocaleString()}</Body>
-</ConfirmDialog>
-
-<ConfirmDialog
-  bind:this={updateDialog}
-  disabled={!name}
-  okText="Confirm"
-  onOk={onClickUpdate}
-  title="Update Backup"
-  warning={false}
->
-  <Input onlabel="Backup name" bind:value={name} />
 </ConfirmDialog>
 
 <style>
