@@ -16,21 +16,23 @@ export interface SearchAuditLogsRequest
   extends PaginationRequest,
     AuditLogSearchParams {}
 
-export interface SearchAuditLogsResponse extends PaginationResponse {
-  data: {
-    app: {
-      _id: string
-      name: string
-    }
-    user: {
-      _id: string
-      name: string
-    }
-    event: Event
-    timestamp: string
+export interface AuditLogEnriched {
+  app: {
+    _id: string
     name: string
-    metadata: any
-  }[]
+  }
+  user: {
+    _id: string
+    name: string
+  }
+  event: Event
+  timestamp: string
+  name: string
+  metadata: any
+}
+
+export interface SearchAuditLogsResponse extends PaginationResponse {
+  data: AuditLogEnriched[]
 }
 
 export interface DefinitionsAuditLogsResponse {

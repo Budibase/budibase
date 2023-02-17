@@ -4,14 +4,25 @@ import { SearchFilters, Row } from "@budibase/types"
 
 const QUERY_START_REGEX = /\d[0-9]*:/g
 
+interface SearchResponse<T> {
+  rows: T[] | any[]
+  bookmark: string
+}
+
+interface PaginatedSearchResponse<T> extends SearchResponse<T> {
+  hasNextPage: boolean
+}
+
 export type SearchParams = {
-  tableId: string
+  tableId?: string
   sort?: string
   sortOrder?: string
   sortType?: string
   limit?: number
   bookmark?: string
   version?: string
+  indexer?: () => Promise<any>
+  disableEscaping?: boolean
   rows?: Row[]
 }
 
@@ -30,7 +41,7 @@ export function removeKeyNumbering(key: any): string {
  * Class to build lucene query URLs.
  * Optionally takes a base lucene query object.
  */
-export class QueryBuilder {
+export class QueryBuilder<T> {
   dbName: string
   index: string
   query: SearchFilters
@@ -70,10 +81,12 @@ export class QueryBuilder {
 
   disableEscaping() {
     this.noEscaping = true
+    return this
   }
 
   setIndexBuilder(builderFn: () => Promise<any>) {
     this.indexBuilder = builderFn
+    return this
   }
 
   setVersion(version?: string) {
@@ -407,11 +420,11 @@ export class QueryBuilder {
     const fullPath = `${url}/${this.dbName}/_design/database/_search/${this.index}`
     const body = this.buildSearchBody()
     try {
-      return await runQuery(fullPath, body, cookie)
+      return await runQuery<T>(fullPath, body, cookie)
     } catch (err: any) {
       if (err.status === 404 && this.indexBuilder) {
         await this.indexBuilder()
-        return await runQuery(fullPath, body, cookie)
+        return await runQuery<T>(fullPath, body, cookie)
       } else {
         throw err
       }
@@ -426,7 +439,11 @@ export class QueryBuilder {
  * @param cookie The auth cookie for CouchDB
  * @returns {Promise<{rows: []}>}
  */
-const runQuery = async (url: string, body: any, cookie: string) => {
+async function runQuery<T>(
+  url: string,
+  body: any,
+  cookie: string
+): Promise<SearchResponse<T>> {
   const response = await fetch(url, {
     body: JSON.stringify(body),
     method: "POST",
@@ -470,7 +487,7 @@ const runQuery = async (url: string, body: any, cookie: string) => {
  *   rows {array|null} Current results in the recursive search
  * @returns {Promise<*[]|*>}
  */
-async function recursiveSearch(
+async function recursiveSearch<T>(
   dbName: string,
   index: string,
   query: any,
@@ -485,7 +502,7 @@ async function recursiveSearch(
   if (rows.length > params.limit - 200) {
     pageSize = params.limit - rows.length
   }
-  const page = await new QueryBuilder(dbName, index, query)
+  const page = await new QueryBuilder<T | Row>(dbName, index, query)
     .setVersion(params.version)
     .setTable(params.tableId)
     .setBookmark(bookmark)
@@ -525,7 +542,7 @@ async function recursiveSearch(
  *   bookmark {string} The bookmark to resume from
  * @returns {Promise<{hasNextPage: boolean, rows: *[]}>}
  */
-export async function paginatedSearch(
+export async function paginatedSearch<T>(
   dbName: string,
   index: string,
   query: SearchFilters,
@@ -536,12 +553,25 @@ export async function paginatedSearch(
     limit = 50
   }
   limit = Math.min(limit, 200)
-  const search = new QueryBuilder(dbName, index, query)
-    .setVersion(params.version)
-    .setTable(params.tableId)
-    .setSort(params.sort)
-    .setSortOrder(params.sortOrder)
-    .setSortType(params.sortType)
+  const search = new QueryBuilder<T | Row>(dbName, index, query)
+  if (params.version) {
+    search.setVersion(params.version)
+  }
+  if (params.tableId) {
+    search.setTable(params.tableId)
+  }
+  if (params.sort) {
+    search
+      .setSort(params.sort)
+      .setSortOrder(params.sortOrder)
+      .setSortType(params.sortType)
+  }
+  if (params.indexer) {
+    search.setIndexBuilder(params.indexer)
+  }
+  if (params.disableEscaping) {
+    search.disableEscaping()
+  }
   const searchResults = await search
     .setBookmark(params.bookmark)
     .setLimit(limit)
@@ -549,11 +579,11 @@ export async function paginatedSearch(
 
   // Try fetching 1 row in the next page to see if another page of results
   // exists or not
-  const nextResults = await search
-    .setTable(params.tableId)
-    .setBookmark(searchResults.bookmark)
-    .setLimit(1)
-    .run()
+  search.setBookmark(searchResults.bookmark).setLimit(1)
+  if (params.tableId) {
+    search.setTable(params.tableId)
+  }
+  const nextResults = await search.run()
 
   return {
     ...searchResults,
@@ -578,7 +608,7 @@ export async function paginatedSearch(
  *   limit {number} The desired number of results
  * @returns {Promise<{rows: *}>}
  */
-export async function fullSearch(
+export async function fullSearch<T>(
   dbName: string,
   index: string,
   query: SearchFilters,
@@ -589,6 +619,6 @@ export async function fullSearch(
     limit = 1000
   }
   params.limit = Math.min(limit, 1000)
-  const rows = await recursiveSearch(dbName, index, query, params)
+  const rows = await recursiveSearch<T | Row>(dbName, index, query, params)
   return { rows }
 }
