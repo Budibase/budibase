@@ -69,7 +69,10 @@ export async function create(ctx: BBContext) {
     return
   }
 
-  automation._id = generateAutomationID()
+  // Respect existing IDs if recreating a deleted automation
+  if (!automation._id) {
+    automation._id = generateAutomationID()
+  }
 
   automation.type = "automation"
   automation = cleanAutomationInputs(automation)
