@@ -13,7 +13,7 @@ interface PaginatedSearchResponse<T> extends SearchResponse<T> {
   hasNextPage: boolean
 }
 
-export type SearchParams = {
+export type SearchParams<T> = {
   tableId?: string
   sort?: string
   sortOrder?: string
@@ -23,7 +23,7 @@ export type SearchParams = {
   version?: string
   indexer?: () => Promise<any>
   disableEscaping?: boolean
-  rows?: Row[]
+  rows?: T | Row[]
 }
 
 export function removeKeyNumbering(key: any): string {
@@ -502,7 +502,7 @@ async function recursiveSearch<T>(
   if (rows.length > params.limit - 200) {
     pageSize = params.limit - rows.length
   }
-  const page = await new QueryBuilder<T | Row>(dbName, index, query)
+  const page = await new QueryBuilder<T>(dbName, index, query)
     .setVersion(params.version)
     .setTable(params.tableId)
     .setBookmark(bookmark)
@@ -546,14 +546,14 @@ export async function paginatedSearch<T>(
   dbName: string,
   index: string,
   query: SearchFilters,
-  params: SearchParams
+  params: SearchParams<T>
 ) {
   let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 50
   }
   limit = Math.min(limit, 200)
-  const search = new QueryBuilder<T | Row>(dbName, index, query)
+  const search = new QueryBuilder<T>(dbName, index, query)
   if (params.version) {
     search.setVersion(params.version)
   }
@@ -612,13 +612,13 @@ export async function fullSearch<T>(
   dbName: string,
   index: string,
   query: SearchFilters,
-  params: SearchParams
+  params: SearchParams<T>
 ) {
   let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 1000
   }
   params.limit = Math.min(limit, 1000)
-  const rows = await recursiveSearch<T | Row>(dbName, index, query, params)
+  const rows = await recursiveSearch<T>(dbName, index, query, params)
   return { rows }
 }
