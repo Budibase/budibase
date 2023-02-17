@@ -2,26 +2,28 @@
   import {
     Layout,
     Table,
-    Select,
     Search,
     Multiselect,
     notifications,
+    Icon,
+    clickOutside,
+    CoreTextArea,
+    DatePicker,
   } from "@budibase/bbui"
-  import { licensing, users, apps } from "stores/portal"
+  import { licensing, users, apps, auditLogs } from "stores/portal"
   import LockedFeature from "../../_components/LockedFeature.svelte"
   import { createPaginationStore } from "helpers/pagination"
-  import { getContext, setContext } from "svelte"
-  import Portal from "svelte-portal"
+  import { setContext } from "svelte"
   import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
   import UserRenderer from "./_components/UserRenderer.svelte"
+  import TimeRenderer from "./_components/TimeRenderer.svelte"
 
-  const sidePanel = getContext("side-panel")
   const schema = {
-    name: {},
-    date: {},
-    user: { width: "auto" },
-    app: {},
-    event: {},
+    name: { width: "1fr" },
+    date: { width: "1.5fr" },
+    user: { width: "0.5fr" },
+    app: { width: "1fr" },
+    event: { width: "1fr" },
     view: { width: "auto", borderLeft: true, displayName: "" },
   }
 
@@ -34,18 +36,29 @@
       column: "user",
       component: UserRenderer,
     },
+    {
+      column: "date",
+      component: TimeRenderer,
+    },
   ]
 
-  let searchTerm = ""
-  let pageInfo = createPaginationStore()
-  let prevSearch = undefined
+  let userSearchTerm = ""
+  let logSearchTerm = ""
+  let userPageInfo = createPaginationStore()
+  let logsPageInfo = createPaginationStore()
+
+  let prevUserSearch = undefined
+  let prevLogSearch = undefined
   let selectedUsers = []
+  let selectedApps = []
   let selectedLog
+  let sidePanelVisible = false
+  let startDate, endDate
 
   let data = [
     {
       name: "User created",
-      date: "2021-03-01 12:00:00",
+      date: "2023-02-14T10:19:52.021Z",
       user: "Peter Clement",
       app: "School Admin Panel",
       event: "User added",
@@ -56,27 +69,58 @@
     },
   ]
 
-  $: fetchUsers(page, searchTerm)
-  $: page = $pageInfo.page
+  $: fetchUsers(userPage, userSearchTerm)
+  $: fetchLogs(logsPage, logSearchTerm)
+
+  $: userPage = $userPageInfo.page
+  $: logsPage = $logsPageInfo.page
+
   $: enrichedList = enrich($users.data || [], selectedUsers)
   $: sortedList = sort(enrichedList)
 
-  const fetchUsers = async (page, search) => {
-    if ($pageInfo.loading) {
+  const fetchUsers = async (userPage, search) => {
+    if ($userPageInfo.loading) {
       return
     }
     // need to remove the page if they've started searching
-    if (search && !prevSearch) {
-      pageInfo.reset()
-      page = undefined
+    if (search && !prevUserSearch) {
+      userPageInfo.reset()
+      userPage = undefined
     }
-    prevSearch = search
+    prevUserSearch = search
     try {
-      pageInfo.loading()
-      await users.search({ page, email: search })
-      pageInfo.fetched($users.hasNextPage, $users.nextPage)
+      userPageInfo.loading()
+      await users.search({ userPage, email: search })
+      userPageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
+    }
+  }
+
+  const fetchLogs = async (logsPage, search) => {
+    if ($logsPageInfo.loading) {
+      return
+    }
+    // need to remove the page if they've started searching
+    if (search && !prevLogSearch) {
+      logsPageInfo.reset()
+      logsPage = undefined
+    }
+    prevLogSearch = search
+    try {
+      logsPageInfo.loading()
+      await auditLogs.search({
+        logsPage,
+        startDate,
+        endDate,
+        metadataSearch: search,
+        userIds: selectedUsers,
+        appIds: selectedApps,
+      })
+      logsPageInfo.fetched($auditLogs.hasNextPage, $auditLogs.nextPage)
+    } catch (error) {
+      console.log(error)
+      notifications.error("Error getting audit logs")
     }
   }
 
@@ -106,7 +150,21 @@
 
   const viewDetails = detail => {
     selectedLog = detail
-    sidePanel.open()
+    sidePanelVisible = true
+  }
+
+  const downloadLogs = async () => {
+    try {
+      await auditLogs.download({
+        startDate,
+        endDate,
+        metadataSearch: logSearchTerm,
+        userIds: selectedUsers,
+        appIds: selectedApps,
+      })
+    } catch (error) {
+      notifications.error(`Error downloading logs: ` + error.message)
+    }
   }
 
   setContext("auditLogs", {
@@ -123,14 +181,25 @@
     $licensing.goToUpgradePage()
   }}
 >
+  <div class="datepicker" />
+
   <div class="controls">
     <div class="search">
-      <div class="select">
-        <Select placeholder="All" label="Activity" />
+      <div>
+        <DatePicker
+          range={true}
+          label="Date Range"
+          on:change={e => {
+            if (e.detail[0].length > 1) {
+              startDate = e.detail[0][0].toISOString()
+              endDate = e.detail[0][1].toISOString()
+            }
+          }}
+        />
       </div>
       <div class="select">
         <Multiselect
-          bind:fetchTerm={searchTerm}
+          bind:fetchTerm={userSearchTerm}
           placeholder="All users"
           label="Users"
           autocomplete
@@ -147,13 +216,18 @@
           getOptionValue={app => app.appId}
           getOptionLabel={app => app.name}
           options={$apps}
+          bind:value={selectedApps}
         />
       </div>
       <div class="select">
         <Multiselect placeholder="All events" label="Event" />
       </div>
     </div>
-    <div style="width: 200px;">
+    <div style="padding-bottom: var(--spacing-s)">
+      <Icon on:click={() => downloadLogs()} name="Download" />
+    </div>
+
+    <div style="max-width: 150px; ">
       <Search placeholder="Search" value={""} />
     </div>
   </div>
@@ -171,30 +245,83 @@
 </LockedFeature>
 
 {#if selectedLog}
-  <Portal target="#side-panel">
-    <div>hello</div>
-  </Portal>
+  <div
+    id="side-panel"
+    class:visible={sidePanelVisible}
+    use:clickOutside={() => {
+      sidePanelVisible = false
+    }}
+  >
+    <div class="side-panel-header">
+      Audit Logs
+      <Icon
+        icon="Close"
+        on:click={() => {
+          sidePanelVisible = false
+        }}
+      />
+    </div>
+    <div style="padding-top: 10px; height: 95%">
+      <CoreTextArea
+        disabled={true}
+        minHeight={"300px"}
+        height={"100%"}
+        value={JSON.stringify(selectedLog.metadata, null, 2)}
+      />
+    </div>
+  </div>
 {/if}
 
 <style>
+  .side-panel-header {
+    display: flex;
+    gap: var(--spacing-s);
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #side-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 24px;
+    background: var(--background);
+    border-left: var(--border-light);
+    width: 320px;
+    max-width: calc(100vw - 48px - 48px);
+    overflow: auto;
+    overflow-x: hidden;
+    transform: translateX(100%);
+    transition: transform 130ms ease-in-out;
+    height: calc(100% - 48px);
+    z-index: 2;
+  }
+  #side-panel.visible {
+    transform: translateX(0);
+  }
+
+  .search :global(.spectrum-InputGroup) {
+    width: 100px;
+  }
+
   .controls {
     display: flex;
     flex-direction: row;
     gap: var(--spacing-l);
-    align-items: flex-end;
     flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .select {
+    flex-basis: 130px;
+    width: 0;
+    min-width: 100px;
   }
 
   .search {
-    display: flex;
-    gap: var(--spacing-m);
-    align-items: flex-start;
     flex: 1 1 auto;
-    max-width: 100%;
-  }
-  .select {
-    flex: 1 1 0;
-    max-width: 200px;
-    min-width: 80px;
+    display: flex;
+    gap: var(--spacing-xl);
+    align-items: flex-end;
   }
 </style>

@@ -34,4 +34,4 @@ export function createAuditLogsStore() {
   }
 }
 
-export const environment = createAuditLogsStore()
+export const auditLogs = createAuditLogsStore()
