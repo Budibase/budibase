@@ -65,7 +65,8 @@ export async function create(ctx: BBContext) {
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
-    return update(ctx)
+    await update(ctx)
+    return
   }
 
   automation._id = generateAutomationID()
@@ -129,7 +130,8 @@ export async function update(ctx: BBContext) {
 
   // Call through to create if it doesn't exist
   if (!automation._id || !automation._rev) {
-    return create(ctx)
+    await create(ctx)
+    return
   }
 
   const oldAutomation = await db.get(automation._id)
