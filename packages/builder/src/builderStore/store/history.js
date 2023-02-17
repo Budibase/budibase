@@ -221,7 +221,10 @@ export const createHistoryStore = ({
         // Get the current doc and apply the backwards patch on top of it
         let doc = jsonpatch.deepClone(getDoc(operation.doc._id))
         if (doc) {
-          jsonpatch.applyPatch(doc, jsonpatch.deepClone(operation.backwardsPatch))
+          jsonpatch.applyPatch(
+            doc,
+            jsonpatch.deepClone(operation.backwardsPatch)
+          )
           await saveFn(doc, operation.id)
           selectDoc?.(doc._id)
         }
