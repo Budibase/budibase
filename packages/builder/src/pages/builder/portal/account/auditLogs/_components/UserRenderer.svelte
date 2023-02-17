@@ -3,4 +3,4 @@
   export let row
 </script>
 
-<Avatar size="M" initials={"PC"} />
+<Avatar size="M" initials={row.user[0]} />
