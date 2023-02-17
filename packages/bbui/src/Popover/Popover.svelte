@@ -18,7 +18,6 @@
   export let useAnchorWidth = false
   export let dismissible = true
   export let offset = 5
-  export let noDismiss = false
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -33,7 +32,6 @@
   }
 
   const handleOutsideClick = e => {
-    if (noDismiss) return
     if (open) {
       // Stop propagation if the source is the anchor
       let node = e.target

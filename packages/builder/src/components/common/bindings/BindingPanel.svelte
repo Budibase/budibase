@@ -183,7 +183,7 @@
     bind:this={popover}
     anchor={popoverAnchor}
     maxWidth={300}
-    noDismiss
+    dismissible={false}
   >
     <Layout gap="S">
       <div class="helper">
