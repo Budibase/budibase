@@ -197,7 +197,7 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.USER_PERMISSION_ADMIN_REMOVED]: `User "{{ email }}" admin role removed`,
   [Event.USER_PERMISSION_BUILDER_ASSIGNED]: `User "{{ email }}" builder role assigned`,
   [Event.USER_PERMISSION_BUILDER_REMOVED]: `User "{{ email }}" builder role removed`,
-  [Event.USER_INVITED]: `User "{{ email }} invited`,
+  [Event.USER_INVITED]: `User "{{ email }}" invited`,
   [Event.USER_INVITED_ACCEPTED]: `User "{{ email }}" accepted invite`,
   [Event.USER_PASSWORD_UPDATED]: `User "{{ email }}" password updated`,
   [Event.USER_PASSWORD_RESET_REQUESTED]: `User "{{ email }}" password reset requested`,

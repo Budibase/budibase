@@ -392,6 +392,16 @@ export async function getDevAppIDs() {
   return apps.filter((id: any) => isDevAppID(id))
 }
 
+export function isSameAppID(
+  appId1: string | undefined,
+  appId2: string | undefined
+) {
+  if (appId1 == undefined || appId2 == undefined) {
+    return false
+  }
+  return getProdAppID(appId1) === getProdAppID(appId2)
+}
+
 export async function dbExists(dbName: any) {
   return doWithDB(
     dbName,
