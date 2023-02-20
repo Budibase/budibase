@@ -28,6 +28,7 @@ import {
   PlatformUserByEmail,
   RowResponse,
   SearchUsersRequest,
+  UpdateSelf,
   User,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
@@ -100,12 +101,7 @@ export async function getUserByEmail(email: string) {
  * Gets a user by ID from the global database, based on the current tenancy.
  */
 export const getUser = async (userId: string) => {
-  const db = tenancy.getGlobalDB()
-  let user = await db.get(userId)
-  if (user) {
-    delete user.password
-  }
-  return user
+  return usersCore.getById(userId)
 }
 
 export interface SaveUserOpts {
@@ -208,6 +204,15 @@ export async function isPreventSSOPasswords(user: User) {
   // Check account sso
   const account = await accountSdk.api.getAccount(user.email)
   return !!(account && isSSOAccount(account))
+}
+
+export async function updateSelf(id: string, data: UpdateSelf) {
+  let user = await getUser(id)
+  user = {
+    ...user,
+    ...data,
+  }
+  return save(user)
 }
 
 export const save = async (

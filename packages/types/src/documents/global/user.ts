@@ -59,13 +59,6 @@ export interface UserRoles {
   [key: string]: string
 }
 
-export interface UpdateUser {
-  firstName?: string
-  lastName?: string
-  password?: string
-  forceResetPassword?: boolean
-}
-
 // UTILITY TYPES
 
 export interface BuilderUser extends User {

@@ -13,7 +13,7 @@ import { groups } from "@budibase/pro"
 import {
   UpdateSelfRequest,
   UpdateSelfResponse,
-  UpdateUser,
+  UpdateSelf,
   UserCtx,
 } from "@budibase/types"
 const { getCookie, clearCookie, newid } = utils
@@ -119,29 +119,18 @@ export async function getSelf(ctx: any) {
   addSessionAttributesToUser(ctx)
 }
 
-const mapUpdateSelfRequest = (ctx: UserCtx<UpdateSelfRequest>): UpdateUser => {
+export async function updateSelf(
+  ctx: UserCtx<UpdateSelfRequest, UpdateSelfResponse>
+) {
   const body = ctx.request.body
-  return {
+  const update: UpdateSelf = {
     firstName: body.firstName,
     lastName: body.lastName,
     password: body.password,
     forceResetPassword: body.forceResetPassword,
   }
-}
 
-export async function updateSelf(
-  ctx: UserCtx<UpdateSelfRequest, UpdateSelfResponse>
-) {
-  let user = await userSdk.getUser(ctx.user._id!)
-
-  // perform update
-  const update = mapUpdateSelfRequest(ctx)
-  user = {
-    ...user,
-    ...update,
-  }
-
-  user = await userSdk.save(user)
+  const user = await userSdk.updateSelf(ctx.user._id!, update)
 
   if (update.password) {
     // Log all other sessions out apart from the current one
@@ -153,7 +142,7 @@ export async function updateSelf(
   }
 
   ctx.body = {
-    _id: user._id,
-    _rev: user._rev,
+    _id: user._id!,
+    _rev: user._rev!,
   }
 }
