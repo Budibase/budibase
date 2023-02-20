@@ -346,10 +346,8 @@
       return
     }
     conditions = enrichedSettings._conditions.map(condition => {
-      // For nested settings, we want the to enrich the condition expression
-      // as a whole, but use the raw un-enriched setting value
-      if (settingsDefinitionMap[condition.setting]?.nested) {
-        const raw = instance._conditions?.find(x => x.id === condition.id)
+      const raw = instance._conditions?.find(x => x.id === condition.id)
+      if (settingsDefinitionMap[condition.setting]?.nested && raw) {
         return { ...condition, settingValue: raw.settingValue }
       } else {
         return condition
