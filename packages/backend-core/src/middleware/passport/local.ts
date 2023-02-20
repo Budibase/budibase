@@ -28,31 +28,27 @@ export async function authenticate(
   if (!email) return authError(done, "Email Required")
   if (!password) return authError(done, "Password Required")
 
-  // EXISTS
   const dbUser = await users.getGlobalUserByEmail(email)
   if (dbUser == null) {
     console.info(`user=${email} could not be found`)
     return authError(done, INVALID_ERR)
   }
 
-  // ACTIVE
   if (dbUser.status === UserStatus.INACTIVE) {
     console.info(`user=${email} is inactive`, dbUser)
     return authError(done, INVALID_ERR)
   }
 
-  // HAS PASSWORD
   if (!dbUser.password) {
     console.info(`user=${email} has no password set`, dbUser)
     return authError(done, EXPIRED)
   }
 
-  // PASSWORD CORRECT
   if (!(await compare(password, dbUser.password))) {
     return authError(done, INVALID_ERR)
   }
 
-  // success - remove users password in payload
+  // intentionally remove the users password in payload
   delete dbUser.password
   return done(null, dbUser)
 }
