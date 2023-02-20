@@ -1,4 +1,5 @@
 import appEndpoints from "./applications"
+import metricEndpoints from "./metrics"
 import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
 import rowEndpoints from "./rows"
@@ -120,6 +121,7 @@ function applyRoutes(
 }
 
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
+applyRoutes(metricEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(userEndpoints, PermissionType.USER, "userId")
 applyRoutes(queryEndpoints, PermissionType.QUERY, "queryId")
