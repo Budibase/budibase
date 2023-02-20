@@ -153,8 +153,7 @@
   $: enrichComponentSettings($context, settingsDefinitionMap)
 
   // Evaluate conditional UI settings and store any component setting changes
-  // which need to be made. This is broken into 2 lines to avoid svelte
-  // reactivity re-evaluating conditions more often than necessary.
+  // which need to be made
   $: evaluateConditions(conditions)
 
   // Determine and apply settings to the component
