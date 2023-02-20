@@ -464,13 +464,17 @@ export function execute(job: Job, callback: WorkerCallback) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
   return context.doInAppContext(appId, async () => {
-    const automationOrchestrator = new Orchestrator(job)
-    try {
-      const response = await automationOrchestrator.execute()
-      callback(null, response)
-    } catch (err) {
-      callback(err)
-    }
+    const envVars = await sdkUtils.getEnvironmentVariables()
+    // put into automation thread for whole context
+    await context.doInEnvironmentContext(envVars, async () => {
+      const automationOrchestrator = new Orchestrator(job)
+      try {
+        const response = await automationOrchestrator.execute()
+        callback(null, response)
+      } catch (err) {
+        callback(err)
+      }
+    })
   })
 }
 
@@ -480,11 +484,7 @@ export const removeStalled = async (job: Job) => {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
   await context.doInAppContext(appId, async () => {
-    const envVars = await sdkUtils.getEnvironmentVariables()
-    // put into automation thread for whole context
-    await context.doInEnvironmentContext(envVars, async () => {
-      const automationOrchestrator = new Orchestrator(job)
-      await automationOrchestrator.stopCron("stalled")
-    })
+    const automationOrchestrator = new Orchestrator(job)
+    await automationOrchestrator.stopCron("stalled")
   })
 }

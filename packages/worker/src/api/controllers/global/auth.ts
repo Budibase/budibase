@@ -27,13 +27,16 @@ export async function oidcCallbackUrl(config?: { callbackURL?: string }) {
   return ssoCallbackUrl(tenancy.getGlobalDB(), config, ConfigType.OIDC)
 }
 
-async function authInternal(ctx: any, user: any, err = null, info = null) {
+async function authInternal(ctx: any, user: any, err: any = null, info = null) {
   if (err) {
-    console.error("Authentication error", err)
+    console.error("Authentication error")
+    console.error(err)
+    console.trace(err)
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
   if (!user) {
+    console.error("Authentication error - no user provided")
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
