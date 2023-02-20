@@ -35,5 +35,5 @@ export interface SearchAuditLogsResponse extends PaginationResponse {
 }
 
 export interface DefinitionsAuditLogsResponse {
-  events: typeof AuditedEventFriendlyName
+  events: Record<string, string>
 }
