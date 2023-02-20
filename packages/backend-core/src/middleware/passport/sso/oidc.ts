@@ -1,6 +1,5 @@
 import fetch from "node-fetch"
 import * as sso from "./sso"
-import { SaveUserFunction } from "./sso"
 import { ssoCallbackUrl } from "../utils"
 import {
   ConfigType,
@@ -11,10 +10,11 @@ import {
   SSOAuthDetails,
   SSOProviderType,
   JwtClaims,
+  SaveSSOUserFunction,
 } from "@budibase/types"
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 
-export function buildVerifyFn(saveUserFn?: SaveUserFunction) {
+export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
   /**
    * @param {*} issuer The identity provider base URL
    * @param {*} sub The user ID
@@ -103,7 +103,7 @@ function validEmail(value: string) {
  */
 export async function strategyFactory(
   config: OIDCStrategyConfiguration,
-  saveUserFn?: SaveUserFunction
+  saveUserFn: SaveSSOUserFunction
 ) {
   try {
     const verify = buildVerifyFn(saveUserFn)

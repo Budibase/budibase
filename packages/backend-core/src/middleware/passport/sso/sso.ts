@@ -3,18 +3,21 @@ import { authError } from "../utils"
 import * as users from "../../../users"
 import * as context from "../../../context"
 import fetch from "node-fetch"
-import { SSOAuthDetails, SSOUser, User } from "@budibase/types"
+import {
+  SaveSSOUserFunction,
+  SaveUserOpts,
+  SSOAuthDetails,
+  SSOUser,
+  User,
+} from "@budibase/types"
 
-type SaveUserOpts = {
-  requirePassword?: boolean
-  hashPassword?: boolean
-  currentUserId?: string
-}
-
-export type SaveUserFunction = (
+// no-op function for user save
+// - this allows datasource auth and access token refresh to work correctly
+// - prefer no-op over an optional argument to ensure function is provided to login flows
+export const ssoSaveUserNoOp: SaveSSOUserFunction = (
   user: SSOUser,
   opts: SaveUserOpts
-) => Promise<any>
+) => Promise.resolve(user)
 
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.
@@ -23,7 +26,7 @@ export async function authenticate(
   details: SSOAuthDetails,
   requireLocalAccount: boolean = true,
   done: any,
-  saveUserFn?: SaveUserFunction
+  saveUserFn: SaveSSOUserFunction
 ) {
   if (!saveUserFn) {
     throw new Error("Save user function must be provided")
@@ -81,21 +84,21 @@ export async function authenticate(
     }
   }
 
-  const ssoUser = await syncUser(dbUser, details)
+  let ssoUser = await syncUser(dbUser, details)
   // never prompt for password reset
   ssoUser.forceResetPassword = false
 
   // create or sync the user
   try {
-    await saveUserFn(ssoUser, { hashPassword: false, requirePassword: false })
+    ssoUser = (await saveUserFn(ssoUser, {
+      hashPassword: false,
+      requirePassword: false,
+    })) as SSOUser
   } catch (err: any) {
     return authError(done, "Error saving user", err)
   }
 
-  // now that we're sure user exists, load them from the db
-  dbUser = await users.getById(dbUser._id!)
-
-  return done(null, dbUser)
+  return done(null, ssoUser)
 }
 
 async function syncProfilePicture(user: User, details: SSOAuthDetails) {

@@ -98,12 +98,10 @@ describe("sso", () => {
 
       describe("when a local account isn't required", () => {
         it("creates and authenticates the user", async () => {
-          const doneCalledWith: any = {}
-          users.getById.mockReturnValueOnce(doneCalledWith) // simple mocked response
+          const ssoUser = structures.users.ssoUser({ user, details })
+          mockSaveUser.mockReturnValueOnce(ssoUser)
 
           await sso.authenticate(details, false, mockDone, mockSaveUser)
-
-          const ssoUser = structures.users.ssoUser({ user, details })
 
           // default roles for new user
           ssoUser.roles = {}
@@ -124,7 +122,7 @@ describe("sso", () => {
             hashPassword: false,
             requirePassword: false,
           })
-          expect(mockDone).toBeCalledWith(null, doneCalledWith)
+          expect(mockDone).toBeCalledWith(null, ssoUser)
         })
       })
     })
@@ -151,15 +149,13 @@ describe("sso", () => {
         })
 
         it("syncs and authenticates the user", async () => {
-          const doneCalledWith: any = {}
-          users.getById.mockReturnValueOnce(doneCalledWith)
-
-          await sso.authenticate(details, true, mockDone, mockSaveUser)
-
           const ssoUser = structures.users.ssoUser({
             user: existingUser,
             details,
           })
+          mockSaveUser.mockReturnValueOnce(ssoUser)
+
+          await sso.authenticate(details, true, mockDone, mockSaveUser)
 
           // roles preserved
           ssoUser.roles = existingUser.roles
@@ -174,7 +170,7 @@ describe("sso", () => {
             hashPassword: false,
             requirePassword: false,
           })
-          expect(mockDone).toBeCalledWith(null, doneCalledWith)
+          expect(mockDone).toBeCalledWith(null, ssoUser)
         })
       })
 
@@ -184,15 +180,13 @@ describe("sso", () => {
         })
 
         it("syncs and authenticates the user", async () => {
-          const doneCalledWith: any = {}
-          users.getById.mockReturnValueOnce(doneCalledWith)
-
-          await sso.authenticate(details, true, mockDone, mockSaveUser)
-
           const ssoUser = structures.users.ssoUser({
             user: existingUser,
             details,
           })
+          mockSaveUser.mockReturnValueOnce(ssoUser)
+
+          await sso.authenticate(details, true, mockDone, mockSaveUser)
 
           // roles preserved
           ssoUser.roles = existingUser.roles
@@ -207,7 +201,7 @@ describe("sso", () => {
             hashPassword: false,
             requirePassword: false,
           })
-          expect(mockDone).toBeCalledWith(null, doneCalledWith)
+          expect(mockDone).toBeCalledWith(null, ssoUser)
         })
       })
     })

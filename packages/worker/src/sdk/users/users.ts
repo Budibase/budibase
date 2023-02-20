@@ -30,6 +30,7 @@ import {
   SearchUsersRequest,
   UpdateSelf,
   User,
+  SaveUserOpts,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
@@ -106,12 +107,6 @@ export const getUser = async (userId: string) => {
     delete user.password
   }
   return user
-}
-
-export interface SaveUserOpts {
-  hashPassword?: boolean
-  requirePassword?: boolean
-  currentUserId?: string
 }
 
 const buildUser = async (
@@ -302,7 +297,8 @@ export const save = async (
 
     await Promise.all(groupPromises)
 
-    return builtUser
+    // finally returned the saved user from the db
+    return db.get(builtUser._id!)
   } catch (err: any) {
     if (err.status === 409) {
       throw "User exists already"

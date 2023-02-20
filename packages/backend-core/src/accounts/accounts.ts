@@ -61,7 +61,9 @@ export const getAccountByTenantId = async (
   return json[0]
 }
 
-export const getStatus = async (): Promise<HealthStatusResponse | undefined> => {
+export const getStatus = async (): Promise<
+  HealthStatusResponse | undefined
+> => {
   if (EXIT_EARLY) {
     return
   }

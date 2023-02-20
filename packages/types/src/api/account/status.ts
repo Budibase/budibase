@@ -1,7 +1,7 @@
 export interface HealthStatusResponse {
-  passing: boolean,
+  passing: boolean
   checks: {
-    login: boolean,
+    login: boolean
     search: boolean
   }
 }

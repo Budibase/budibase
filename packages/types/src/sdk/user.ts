@@ -4,3 +4,9 @@ export interface UpdateSelf {
   password?: string
   forceResetPassword?: boolean
 }
+
+export interface SaveUserOpts {
+  hashPassword?: boolean
+  requirePassword?: boolean
+  currentUserId?: string
+}

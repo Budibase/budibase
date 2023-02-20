@@ -33,6 +33,7 @@ export {
   google,
   oidc,
 } from "../middleware"
+import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
 export const buildAuthMiddleware = authenticated
 export const buildTenancyMiddleware = tenancy
 export const buildCsrfMiddleware = csrf
@@ -75,7 +76,7 @@ async function refreshOIDCAccessToken(
     if (!enrichedConfig) {
       throw new Error("OIDC Config contents invalid")
     }
-    strategy = await oidc.strategyFactory(enrichedConfig)
+    strategy = await oidc.strategyFactory(enrichedConfig, ssoSaveUserNoOp)
   } catch (err) {
     console.error(err)
     throw new Error("Could not refresh OAuth Token")
@@ -107,7 +108,11 @@ async function refreshGoogleAccessToken(
 
   let strategy
   try {
-    strategy = await google.strategyFactory(config, callbackUrl)
+    strategy = await google.strategyFactory(
+      config,
+      callbackUrl,
+      ssoSaveUserNoOp
+    )
   } catch (err: any) {
     console.error(err)
     throw new Error(
@@ -165,6 +170,8 @@ export async function refreshOAuthToken(
   return refreshResponse
 }
 
+// TODO: Refactor to use user save function instead to prevent the need for
+// manually saving and invalidating on callback
 export async function updateUserOAuth(userId: string, oAuthConfig: any) {
   const details = {
     accessToken: oAuthConfig.accessToken,
