@@ -31,7 +31,7 @@ export async function authenticate(
   // EXISTS
   const dbUser = await users.getGlobalUserByEmail(email)
   if (dbUser == null) {
-    console.info(`user=${email} is could not be found`)
+    console.info(`user=${email} could not be found`)
     return authError(done, INVALID_ERR)
   }
 
