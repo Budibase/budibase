@@ -4,9 +4,15 @@ metadata:
   annotations:
     kompose.cmd: kompose convert
     kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.apps.deploymentAnnotations }}
+{{- toYaml .Values.services.apps.deploymentAnnotations | indent 4 -}}
+{{ end }}
   creationTimestamp: null
   labels:
     io.kompose.service: app-service
+{{ if .Values.services.apps.deploymentLabels }}
+{{- toYaml .Values.services.apps.deploymentLabels | indent 4 -}}
+{{ end }}
   name: app-service
 spec:
   replicas: {{ .Values.services.apps.replicaCount }}
@@ -20,12 +26,15 @@ spec:
       annotations:
         kompose.cmd: kompose convert
         kompose.version: 1.21.0 (992df58d8)
-{{ if .Values.services.apps.annotations }}
-{{- toYaml .Values.services.apps.annotations | indent 8 -}}
+{{ if .Values.services.apps.templateAnnotations }}
+{{- toYaml .Values.services.apps.templateAnnotations | indent 8 -}}
 {{ end }}
       creationTimestamp: null
       labels:
         io.kompose.service: app-service
+{{ if .Values.services.apps.templateLabels }}
+{{- toYaml .Values.services.apps.templateLabels | indent 8 -}}
+{{ end }}
     spec:
       containers:
       - env:
@@ -156,6 +165,14 @@ spec:
         {{ if .Values.services.apps.nodeDebug }}
         - name: NODE_DEBUG
           value: {{ .Values.services.apps.nodeDebug | quote }}
+        {{ end }}
+        {{ if .Values.globals.datadogApmEnabled }}
+        - name: DD_LOGS_INJECTION
+          value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_ENABLED
+          value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_DD_URL
+          value: https://trace.agent.datadoghq.eu
         {{ end }}
         {{ if .Values.globals.elasticApmEnabled }}
         - name: ELASTIC_APM_ENABLED

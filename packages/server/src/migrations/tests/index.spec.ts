@@ -93,24 +93,16 @@ describe("migrations", () => {
       await clearMigrations()
       const appId = config.prodAppId
       const roles = { [appId]: "role_12345" }
-      await config.createUser(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        false,
-        true,
-        roles
-      ) // admin only
-      await config.createUser(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        false,
-        false,
-        roles
-      ) // non admin non builder
+      await config.createUser({
+        builder: false,
+        admin: true,
+        roles,
+      }) // admin only
+      await config.createUser({
+        builder: false,
+        admin: false,
+        roles,
+      }) // non admin non builder
       await config.createTable()
       await config.createRow()
       await config.createRow()
