@@ -98,7 +98,7 @@ export async function authenticate(
   return done(null, ssoUser)
 }
 
-async function syncProfilePicture(user: User, details: SSOAuthDetails) {
+async function getProfilePictureUrl(user: User, details: SSOAuthDetails) {
   const pictureUrl = details.profile?._json.picture
   if (pictureUrl) {
     const response = await fetch(pictureUrl)
@@ -136,7 +136,7 @@ async function syncUser(user: User, details: SSOAuthDetails): Promise<SSOUser> {
       }
     }
 
-    pictureUrl = await syncProfilePicture(user, details)
+    pictureUrl = await getProfilePictureUrl(user, details)
 
     thirdPartyProfile = {
       ...profile._json,
