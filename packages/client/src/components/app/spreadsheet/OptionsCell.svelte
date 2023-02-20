@@ -5,12 +5,14 @@
   export let schema
   export let selected = false
   export let onChange
+  export let multi = false
 
   const options = schema?.constraints?.inclusion || []
 
   let open = false
 
-  $: color = getColor(value)
+  $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
+  $: unselectedOptions = options.filter(x => !values.includes(x))
   $: {
     // Close when deselected
     if (!selected) {
@@ -26,44 +28,59 @@
     return `hsla(${((index + 1) * 222) % 360}, 90%, 75%, 0.3)`
   }
 
-  const toggle = () => {
-    open = !open
+  const toggleOption = option => {
+    if (!multi) {
+      onChange(option)
+    } else {
+      if (values.includes(option)) {
+        onChange(values.filter(x => x !== option))
+      } else {
+        onChange([...values, option])
+      }
+    }
   }
 </script>
 
 <div
   class="container"
+  class:multi
   class:selected
   class:open
-  on:click={selected ? toggle : null}
+  on:click={selected ? () => (open = true) : null}
 >
-  {#if color}
-    <div class="badge text" style="--color: {color}">
-      {value}
-    </div>
-  {:else}
-    <div class="text">
-      {value || ""}
-    </div>
-  {/if}
+  <div class="values">
+    {#each values as val (val)}
+      {@const color = getColor(val)}
+      {#if color}
+        <div class="badge text" style="--color: {color}">
+          {val}
+        </div>
+      {:else}
+        <div class="text">
+          {val || ""}
+        </div>
+      {/if}
+    {/each}
+  </div>
   {#if selected}
     <Icon name="ChevronDown" />
   {/if}
   {#if open}
     <div class="options">
-      {#if value}
-        <div class="option">
+      {#each values as val (val)}
+        {@const color = getColor(val)}
+        <div class="option" on:click={() => toggleOption(val)}>
           <div class="badge text" style="--color: {color}">
-            {value}
+            {val}
           </div>
           <Icon
             name="Checkmark"
             color="var(--spectrum-global-color-blue-400)"
           />
         </div>
-      {/if}
-      {#each options.filter(x => x !== value) as option}
-        <div class="option" on:click={() => onChange(option)}>
+      {/each}
+      {#each unselectedOptions as option (option)}
+        <div class="option" on:click={() => toggleOption(option)}>
           <div class="badge text" style="--color: {getColor(option)}">
             {option}
           </div>
@@ -87,10 +104,23 @@
   .container.selected:hover {
     cursor: pointer;
   }
+  .values {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    flex: 1 1 auto;
+    width: 0;
+    gap: 4px;
+    overflow: hidden;
+  }
   .text {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .multi .text {
+    flex: 0 0 auto;
   }
   .badge {
     padding: 2px 8px;
