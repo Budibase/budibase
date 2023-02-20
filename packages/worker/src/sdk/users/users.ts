@@ -264,6 +264,7 @@ export const save = async (
     builtUser._rev = response.rev
 
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
+    await addTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
 
     // let server know to sync user

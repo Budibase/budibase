@@ -13,6 +13,7 @@
   export let quiet = false
   export let align
   export let autofocus = false
+  export let autocomplete = null
 
   const dispatch = createEventDispatcher()
 
@@ -103,6 +104,7 @@
     class="spectrum-Textfield-input"
     style={align ? `text-align: ${align};` : ""}
     inputmode={type === "number" ? "decimal" : "text"}
+    {autocomplete}
   />
 </div>
 

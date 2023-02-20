@@ -18,7 +18,6 @@
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
-    AUTO_COLUMN_SUB_TYPES,
     RelationshipTypes,
     ALLOWABLE_STRING_OPTIONS,
     ALLOWABLE_NUMBER_OPTIONS,
@@ -75,15 +74,19 @@
     editableColumn.constraints.presence = { allowEmpty: false }
   }
 
-  $: if (field && !savingColumn) {
-    editableColumn = cloneDeep(field)
-    originalName = editableColumn.name ? editableColumn.name + "" : null
-    linkEditDisabled = originalName != null
-    isCreating = originalName == null
-    primaryDisplay =
-      $tables.selected.primaryDisplay == null ||
-      $tables.selected.primaryDisplay === editableColumn.name
+  const initialiseField = (field, savingColumn) => {
+    if (field && !savingColumn) {
+      editableColumn = cloneDeep(field)
+      originalName = editableColumn.name ? editableColumn.name + "" : null
+      linkEditDisabled = originalName != null
+      isCreating = originalName == null
+      primaryDisplay =
+        $tables.selected.primaryDisplay == null ||
+        $tables.selected.primaryDisplay === editableColumn.name
+    }
   }
+
+  $: initialiseField(field, savingColumn)
 
   $: checkConstraints(editableColumn)
   $: required = !!editableColumn?.constraints?.presence || primaryDisplay
@@ -128,12 +131,6 @@
     : availableAutoColumns
 
   // used to select what different options can be displayed for column type
-  $: canBeSearched =
-    editableColumn?.type !== LINK_TYPE &&
-    editableColumn?.type !== JSON_TYPE &&
-    editableColumn?.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
-    editableColumn?.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY &&
-    editableColumn?.type !== FORMULA_TYPE
   $: canBeDisplay =
     editableColumn?.type !== LINK_TYPE &&
     editableColumn?.type !== AUTO_TYPE &&
@@ -247,18 +244,6 @@
     // primary display is always required
     if (isPrimary) {
       editableColumn.constraints.presence = { allowEmpty: false }
-    }
-  }
-
-  function onChangePrimaryIndex(e) {
-    indexes = e.detail ? [editableColumn.name] : []
-  }
-
-  function onChangeSecondaryIndex(e) {
-    if (e.detail) {
-      indexes[1] = editableColumn.name
-    } else {
-      indexes = indexes.slice(0, 1)
     }
   }
 
@@ -456,24 +441,6 @@
     </div>
   {/if}
 
-  {#if canBeSearched && !external}
-    <div>
-      <Label>Search Indexes</Label>
-      <Toggle
-        value={indexes[0] === editableColumn.name}
-        disabled={indexes[1] === editableColumn.name}
-        on:change={onChangePrimaryIndex}
-        text="Primary"
-      />
-      <Toggle
-        value={indexes[1] === editableColumn.name}
-        disabled={!indexes[0] || indexes[0] === editableColumn.name}
-        on:change={onChangeSecondaryIndex}
-        text="Secondary"
-      />
-    </div>
-  {/if}
-
   {#if editableColumn.type === "string"}
     <Input
       type="number"
@@ -583,7 +550,12 @@
       title="Formula"
       label="Formula"
       value={editableColumn.formula}
-      on:change={e => (editableColumn.formula = e.detail)}
+      on:change={e => {
+        editableColumn = {
+          ...editableColumn,
+          formula: e.detail,
+        }
+      }}
       bindings={getBindings({ table })}
       allowJS
     />

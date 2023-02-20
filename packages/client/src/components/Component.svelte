@@ -174,11 +174,11 @@
   // Determine whether we should render a skeleton loader for this component
   $: showSkeleton =
     $loading &&
-    definition.name !== "Screenslot" &&
+    definition?.name !== "Screenslot" &&
     children.length === 0 &&
     !instance._blockElementHasChildren &&
-    !definition.block &&
-    definition.skeleton !== false
+    !definition?.block &&
+    definition?.skeleton !== false
 
   // Update component context
   $: store.set({
