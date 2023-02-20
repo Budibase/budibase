@@ -4,9 +4,15 @@ metadata:
   annotations:
     kompose.cmd: kompose convert
     kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.proxy.deploymentAnnotations }}
+{{- toYaml .Values.services.proxy.deploymentAnnotations | indent 4 -}}
+{{ end }}
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: budibase-proxy
+{{ if .Values.services.proxy.deploymentLabels }}
+{{- toYaml .Values.services.proxy.deploymentLabels | indent 4 -}}
+{{ end }}
   name: proxy-service
 spec:
   replicas: {{ .Values.services.proxy.replicaCount }}
@@ -20,12 +26,15 @@ spec:
       annotations:
         kompose.cmd: kompose convert
         kompose.version: 1.21.0 (992df58d8)
-{{ if .Values.services.proxy.annotations }}
-{{- toYaml .Values.services.proxy.annotations | indent 8 -}}
+{{ if .Values.services.proxy.templateAnnotations }}
+{{- toYaml .Values.services.proxy.templateAnnotations | indent 8 -}}
 {{ end }}
       creationTimestamp: null
       labels:
         app.kubernetes.io/name: budibase-proxy
+{{ if .Values.services.proxy.templateLabels }}
+{{- toYaml .Values.services.proxy.templateLabels | indent 8 -}}
+{{ end }}
     spec:
       containers:
       - image: budibase/proxy:{{ .Values.globals.appVersion }}

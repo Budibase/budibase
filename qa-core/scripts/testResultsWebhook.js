@@ -4,37 +4,30 @@ const fetch = require("node-fetch")
 const path = require("path")
 const fs = require("fs")
 
-const WEBHOOK_URL = process.env.CYPRESS_WEBHOOK_URL
-const DASHBOARD_URL = process.env.CYPRESS_DASHBOARD_URL
+const WEBHOOK_URL = process.env.WEBHOOK_URL
 const GIT_SHA = process.env.GITHUB_SHA
 const GITHUB_ACTIONS_RUN_URL = process.env.GITHUB_ACTIONS_RUN_URL
 
 async function generateReport() {
   // read the report file
-  const REPORT_PATH = path.resolve(
-    __dirname,
-    "..",
-    "cypress",
-    "reports",
-    "testReport.json"
-  )
+  const REPORT_PATH = path.resolve(__dirname, "..", "testReport.json")
   const report = fs.readFileSync(REPORT_PATH, "utf-8")
   return JSON.parse(report)
 }
 
-async function discordCypressResultsNotification(report) {
+async function discordResultsNotification(report) {
   const {
-    suites,
-    tests,
-    passes,
-    pending,
-    failures,
-    duration,
-    passPercent,
-    skipped,
-  } = report.stats
+    numTotalTestSuites,
+    numTotalTests,
+    numPassedTests,
+    numPendingTests,
+    numFailedTests,
+    success,
+    startTime,
+    endTime,
+  } = report
 
-  const OUTCOME = failures > 0 ? "failure" : "success"
+  const OUTCOME = success ? "success" : "failure"
 
   const options = {
     method: "POST",
@@ -69,50 +62,50 @@ async function discordCypressResultsNotification(report) {
               value: `https://github.com/Budibase/budibase/commit/${GIT_SHA}`,
             },
             {
-              name: "Cypress Dashboard URL",
-              value: DASHBOARD_URL || "None Supplied",
-            },
-            {
               name: "Github Actions Run URL",
               value: GITHUB_ACTIONS_RUN_URL || "None Supplied",
             },
             {
               name: "Test Suites",
-              value: suites,
+              value: numTotalTestSuites,
             },
             {
               name: "Tests",
-              value: tests,
+              value: numTotalTests,
             },
             {
               name: "Passed",
-              value: passes,
+              value: numPassedTests,
             },
             {
               name: "Pending",
-              value: pending,
-            },
-            {
-              name: "Skipped",
-              value: skipped,
+              value: numPendingTests,
             },
             {
               name: "Failures",
-              value: failures,
+              value: numFailedTests,
             },
             {
               name: "Duration",
-              value: `${duration / 1000} Seconds`,
+              value: endTime
+                ? `${(endTime - startTime) / 1000} Seconds`
+                : "DNF",
             },
             {
               name: "Pass Percentage",
-              value: Math.floor(passPercent),
+              value: Math.floor((numPassedTests / numTotalTests) * 100),
             },
           ],
         },
       ],
     }),
   }
+
+  // Only post in discord when tests fail
+  if (success) {
+    return
+  }
+
   const response = await fetch(WEBHOOK_URL, options)
 
   if (response.status >= 201) {
@@ -125,7 +118,7 @@ async function discordCypressResultsNotification(report) {
 
 async function run() {
   const report = await generateReport()
-  await discordCypressResultsNotification(report)
+  await discordResultsNotification(report)
 }
 
 run()

@@ -30,14 +30,17 @@ const { setCookie, getCookie, clearCookie } = utilsCore
 async function passportCallback(
   ctx: Ctx,
   user: User,
-  err?: any,
-  info?: string
+  err: any = null,
+  info: { message: string } | null = null
 ) {
   if (err) {
-    console.error("Authentication error", err)
+    console.error("Authentication error")
+    console.error(err)
+    console.trace(err)
     return ctx.throw(403, info ? info : "Unauthorized")
   }
   if (!user) {
+    console.error("Authentication error - no user provided")
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
