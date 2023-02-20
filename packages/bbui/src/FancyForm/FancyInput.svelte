@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import FancyField from "./FancyField.svelte"
   import FancyFieldLabel from "./FancyFieldLabel.svelte"
   import { fade } from "svelte/transition"
@@ -14,8 +14,11 @@
 
   const dispatch = createEventDispatcher()
 
+  let ref
   let focused = false
-  $: placeholder = !focused && !value
+  let autofilled = false
+
+  $: placeholder = !autofilled && !focused && !value
 
   const onChange = e => {
     const newValue = e.target.value
@@ -25,6 +28,27 @@
       error = validate(newValue)
     }
   }
+
+  onMount(() => {
+    // Start watching for autofill every 100ms
+    const interval = setInterval(() => {
+      autofilled = ref?.matches(":-webkit-autofill")
+      if (autofilled) {
+        clearInterval(interval)
+      }
+    }, 100)
+
+    // Give up after 2 seconds and assume autofill has not been used
+    const timeout = setTimeout(() => {
+      clearInterval(interval)
+    }, 2000)
+
+    // Cleanup
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timeout)
+    }
+  })
 </script>
 
 <FancyField {error} {value} {validate} {disabled} {focused}>
@@ -39,6 +63,7 @@
     on:focus={() => (focused = true)}
     on:blur={() => (focused = false)}
     class:placeholder
+    bind:this={ref}
   />
   {#if suffix && !placeholder}
     <div in:fade|local={{ duration: 130 }} class="suffix">{suffix}</div>
@@ -73,5 +98,12 @@
     font-size: 15px;
     line-height: 17px;
     font-family: var(--font-sans);
+  }
+  input:-webkit-autofill {
+    border-radius: 2px;
+    -webkit-box-shadow: 0 0 0 100px var(--spectrum-global-color-gray-300) inset;
+    -webkit-text-fill-color: var(--spectrum-global-color-gray-900);
+    transition: -webkit-box-shadow 130ms 200ms, background-color 0s 86400s;
+    padding: 3px 8px 4px 8px;
   }
 </style>

@@ -18,6 +18,7 @@
 
   import { automationStore } from "builderStore"
   import { tables } from "stores/backend"
+  import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
@@ -33,6 +34,7 @@
   import { Utils } from "@budibase/frontend-core"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { cloneDeep } from "lodash/fp"
+  import { onMount } from "svelte"
 
   export let block
   export let testData
@@ -72,8 +74,19 @@
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
+  $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
 
   const onChange = Utils.sequential(async (e, key) => {
+    if (e.detail?.tableId) {
+      const tableSchema = getSchemaForTable(e.detail.tableId, {
+        searchableSchema: true,
+      }).schema
+      if (isTestModal) {
+        testData.schema = tableSchema
+      } else {
+        block.inputs.schema = tableSchema
+      }
+    }
     try {
       if (isTestModal) {
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
@@ -166,6 +179,24 @@
       )
     }
 
+    // Environment bindings
+    if ($licensing.environmentVariablesEnabled) {
+      bindings = bindings.concat(
+        $environment.variables.map(variable => {
+          return {
+            label: `env.${variable.name}`,
+            path: `env.${variable.name}`,
+            icon: "Key",
+            category: "Environment",
+            display: {
+              type: "string",
+              name: variable.name,
+            },
+          }
+        })
+      )
+    }
+
     return bindings
   }
 
@@ -196,6 +227,14 @@
     onChange({ detail: tempFilters }, defKey)
     drawer.hide()
   }
+
+  onMount(async () => {
+    try {
+      await environment.loadVariables()
+    } catch (error) {
+      console.error(error)
+    }
+  })
 </script>
 
 <div class="fields">
@@ -293,9 +332,17 @@
         <RowSelector
           {block}
           value={inputData[key]}
-          on:change={e => onChange(e, key)}
+          meta={inputData["meta"] || {}}
+          on:change={e => {
+            if (e.detail?.key) {
+              onChange(e, e.detail.key)
+            } else {
+              onChange(e, key)
+            }
+          }}
           {bindings}
           {isTestModal}
+          {isUpdateRow}
         />
       {:else if value.customType === "webhookUrl"}
         <WebhookDisplay

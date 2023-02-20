@@ -104,7 +104,7 @@
 <div class="overview-tab">
   <Layout noPadding gap="XL">
     <div class="top">
-      <DashCard title={"App Status"} dataCy={"app-status"}>
+      <DashCard title={"App Status"}>
         <div class="status-content">
           <div class="status-display">
             {#if isPublished}
@@ -137,7 +137,7 @@
         </div>
       </DashCard>
       {#if appEditor}
-        <DashCard title={"Last Edited"} dataCy={"edited-by"}>
+        <DashCard title={"Last Edited"}>
           <div class="last-edited-content">
             <div class="updated-by">
               {#if appEditor}
@@ -167,9 +167,8 @@
         action={() => {
           $goto("./version")
         }}
-        dataCy={"app-version"}
       >
-        <div class="version-content" data-cy={$store.version}>
+        <div class="version-content">
           <Heading size="XS">{$store.version}</Heading>
           {#if updateAvailable}
             <div class="version-status">
@@ -195,7 +194,6 @@
           action={() => {
             $goto("./access")
           }}
-          dataCy={"access"}
         >
           {#if appUsers.length || appGroups.length}
             <Layout noPadding gap="S">
@@ -246,7 +244,6 @@
           action={() => {
             $goto("../automation-history")
           }}
-          dataCy={"automation-history"}
         >
           <div class="automation-content">
             <div class="automation-metrics">
@@ -272,7 +269,6 @@
           action={() => {
             $goto("../backups")
           }}
-          dataCy={"backups"}
         >
           <div class="backups-content">test</div>
         </DashCard>
@@ -286,7 +282,6 @@
   title="Confirm unpublish"
   okText="Unpublish app"
   onOk={confirmUnpublishApp}
-  dataCy={"unpublish-modal"}
 >
   Are you sure you want to unpublish the app <b>{app?.name}</b>?
 </ConfirmDialog>

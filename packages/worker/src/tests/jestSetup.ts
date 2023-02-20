@@ -1,4 +1,7 @@
-import { mocks } from "@budibase/backend-core/tests"
+import { mocks, testContainerUtils } from "@budibase/backend-core/tests"
+
+import env from "../environment"
+import { env as coreEnv } from "@budibase/backend-core"
 
 // must explicitly enable fetch mock
 mocks.fetch.enable()
@@ -15,5 +18,9 @@ if (!process.env.DEBUG) {
 if (!process.env.CI) {
   // set a longer timeout in dev for debugging
   // 100 seconds
-  jest.setTimeout(100000)
+  jest.setTimeout(100 * 1000)
+} else {
+  jest.setTimeout(10 * 1000)
 }
+
+testContainerUtils.setupEnv(env, coreEnv)

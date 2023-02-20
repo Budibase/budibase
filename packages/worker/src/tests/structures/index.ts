@@ -5,7 +5,6 @@ import * as groups from "./groups"
 import { v4 as uuid } from "uuid"
 
 export const TENANT_ID = "default"
-export const TENANT_1 = "tenant1"
 export const CSRF_TOKEN = "e3727778-7af0-4226-b5eb-f43cbe60a306"
 
 const pkg = {
@@ -14,7 +13,6 @@ const pkg = {
   configs,
   users,
   TENANT_ID,
-  TENANT_1,
   CSRF_TOKEN,
   groups,
 }

@@ -1,3 +1,8 @@
+const tk = require( "timekeeper")
+const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
+tk.freeze(timestamp)
+
+
 const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
@@ -20,8 +25,11 @@ describe("/rows", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async()=>{
     table = await config.createTable()
     row = basicRow(table._id)
   })
@@ -111,8 +119,8 @@ describe("/rows", () => {
         _id: existing._id,
         _rev: existing._rev,
         type: "row",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
+        createdAt: timestamp,
+        updatedAt: timestamp,
       })
       await assertQueryUsage(queryUsage + 1)
     })

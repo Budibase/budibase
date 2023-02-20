@@ -11,7 +11,10 @@
   } from "@budibase/bbui"
   import { getAvailableActions } from "./index"
   import { generate } from "shortid"
-  import { getEventContextBindings } from "builderStore/dataBinding"
+  import {
+    getEventContextBindings,
+    makeStateBinding,
+  } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
 
   const flipDurationMs = 150
@@ -52,7 +55,7 @@
     actions,
     selectedAction?.id
   )
-  $: allBindings = eventContexBindings.concat(bindings)
+  $: allBindings = getAllBindings(bindings, eventContexBindings, actions)
   $: {
     // Ensure each action has a unique ID
     if (actions) {
@@ -74,8 +77,18 @@
   }
 
   const deleteAction = index => {
+    // Check if we're deleting the selected action
+    const selectedIndex = actions.indexOf(selectedAction)
+    const isSelected = index === selectedIndex
+
+    // Delete the action
     actions.splice(index, 1)
     actions = actions
+
+    // Select a new action if we deleted the selected one
+    if (isSelected) {
+      selectedAction = actions?.length ? actions[0] : null
+    }
   }
 
   const toggleActionList = () => {
@@ -110,6 +123,37 @@
   }
   function handleDndFinalize(e) {
     actions = e.detail.items
+  }
+
+  const getAllBindings = (bindings, eventContextBindings, actions) => {
+    let allBindings = eventContextBindings.concat(bindings)
+
+    if (!actions) {
+      return []
+    }
+
+    // Ensure bindings are generated for all "update state" action keys
+    actions
+      .filter(action => {
+        // Find all "Update State" actions which set values
+        return (
+          action[EVENT_TYPE_KEY] === "Update State" &&
+          action.parameters?.type === "set" &&
+          action.parameters.key
+        )
+      })
+      .forEach(action => {
+        // Check we have a binding for this action, and generate one if not
+        const stateBinding = makeStateBinding(action.parameters.key)
+        const hasKey = allBindings.some(binding => {
+          return binding.runtimeBinding === stateBinding.runtimeBinding
+        })
+        if (!hasKey) {
+          allBindings.push(stateBinding)
+        }
+      })
+
+    return allBindings
   }
 </script>
 
@@ -186,7 +230,7 @@
         <div class="selected-action-container">
           <svelte:component
             this={selectedActionComponent}
-            parameters={selectedAction.parameters}
+            bind:parameters={selectedAction.parameters}
             bindings={allBindings}
             {nested}
           />

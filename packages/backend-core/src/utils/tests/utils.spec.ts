@@ -2,13 +2,14 @@ import { structures } from "../../../tests"
 import * as utils from "../../utils"
 import * as events from "../../events"
 import * as db from "../../db"
-import { DEFAULT_TENANT_ID, Header } from "../../constants"
+import { Header } from "../../constants"
 import { doInTenant } from "../../context"
+import { newid } from "../../utils"
 
 describe("utils", () => {
   describe("platformLogout", () => {
     it("should call platform logout", async () => {
-      await doInTenant(DEFAULT_TENANT_ID, async () => {
+      await doInTenant(structures.tenant.id(), async () => {
         const ctx = structures.koa.newContext()
         await utils.platformLogout({ ctx, userId: "test" })
         expect(events.auth.logout).toBeCalledTimes(1)
@@ -54,7 +55,7 @@ describe("utils", () => {
       const app = structures.apps.app(expected)
 
       // set custom url
-      const appUrl = "custom-url"
+      const appUrl = newid()
       app.url = `/${appUrl}`
       ctx.path = `/app/${appUrl}`
 
