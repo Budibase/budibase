@@ -1,9 +1,9 @@
 import { db as dbCore, context, SearchParams } from "@budibase/backend-core"
-import { SearchFilters } from "@budibase/types"
+import { SearchFilters, Row } from "@budibase/types"
 
 export async function paginatedSearch(
   query: SearchFilters,
-  params: SearchParams
+  params: SearchParams<Row>
 ) {
   const appId = context.getAppId()
   return dbCore.paginatedSearch(
@@ -14,7 +14,10 @@ export async function paginatedSearch(
   )
 }
 
-export async function fullSearch(query: SearchFilters, params: SearchParams) {
+export async function fullSearch(
+  query: SearchFilters,
+  params: SearchParams<Row>
+) {
   const appId = context.getAppId()
   return dbCore.fullSearch(appId!, dbCore.SearchIndexes.ROWS, query, params)
 }

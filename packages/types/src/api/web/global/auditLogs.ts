@@ -8,7 +8,7 @@ export interface AuditLogSearchParams {
   event?: Event[]
   startDate?: string
   endDate?: string
-  metadataSearch?: string
+  fullSearch?: string
 }
 
 export interface DownloadAuditLogsRequest extends AuditLogSearchParams {}
