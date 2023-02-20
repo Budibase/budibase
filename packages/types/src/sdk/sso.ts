@@ -13,12 +13,12 @@ export interface JwtClaims {
 }
 
 export interface SSOAuthDetails {
-  profile?: SSOProfile
   oauth2: OAuth2
   provider: string
   providerType: SSOProviderType
-  email?: string
   userId: string
+  email?: string
+  profile?: SSOProfile
 }
 
 export interface SSOProfile {

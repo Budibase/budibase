@@ -31,9 +31,6 @@ export async function authenticate(
   if (!saveUserFn) {
     throw new Error("Save user function must be provided")
   }
-  if (!details.provider) {
-    return authError(done, "sso user provider required")
-  }
   if (!details.userId) {
     return authError(done, "sso user id required")
   }

@@ -34,13 +34,6 @@ describe("sso", () => {
         expect(getErrorMessage()).toContain(message)
       }
 
-      it("provider fails", async () => {
-        const details = structures.sso.authDetails()
-        details.provider = undefined!
-
-        await testValidation(details, "sso user provider required")
-      })
-
       it("user id fails", async () => {
         const details = structures.sso.authDetails()
         details.userId = undefined!
