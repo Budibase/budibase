@@ -8,14 +8,8 @@ import {
   generator,
 } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
-import {
-  events,
-  constants,
-  accounts as _accounts,
-} from "@budibase/backend-core"
+import { events, constants } from "@budibase/backend-core"
 import { Response } from "superagent"
-
-const accounts = jest.mocked(_accounts)
 
 import * as userSdk from "../../../../sdk/users"
 
@@ -132,7 +126,9 @@ describe("/api/global/auth", () => {
           it("should prevent user from logging in", async () => {
             user = await config.createUser()
             const account = structures.accounts.ssoAccount() as CloudAccount
-            accounts.getAccount.mockReturnValueOnce(Promise.resolve(account))
+            mocks.accounts.getAccount.mockReturnValueOnce(
+              Promise.resolve(account)
+            )
 
             await testSSOUser()
           })
@@ -200,7 +196,9 @@ describe("/api/global/auth", () => {
           it("should prevent user from generating password reset email", async () => {
             user = await config.createUser(structures.users.user())
             const account = structures.accounts.ssoAccount() as CloudAccount
-            accounts.getAccount.mockReturnValueOnce(Promise.resolve(account))
+            mocks.accounts.getAccount.mockReturnValueOnce(
+              Promise.resolve(account)
+            )
 
             await testSSOUser()
           })
@@ -275,7 +273,9 @@ describe("/api/global/auth", () => {
 
             // convert to account owner now that password has been requested
             const account = structures.accounts.ssoAccount() as CloudAccount
-            accounts.getAccount.mockReturnValueOnce(Promise.resolve(account))
+            mocks.accounts.getAccount.mockReturnValueOnce(
+              Promise.resolve(account)
+            )
 
             await testSSOUser(code!)
           })

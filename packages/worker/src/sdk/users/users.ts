@@ -101,7 +101,11 @@ export async function getUserByEmail(email: string) {
  * Gets a user by ID from the global database, based on the current tenancy.
  */
 export const getUser = async (userId: string) => {
-  return usersCore.getById(userId)
+  const user = await usersCore.getById(userId)
+  if (user) {
+    delete user.password
+  }
+  return user
 }
 
 export interface SaveUserOpts {
@@ -190,9 +194,9 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
 }
 
 export async function isPreventSSOPasswords(user: User) {
-  // when in maintenance mode we allow sso users
+  // when in maintenance mode we allow sso users with the admin role
   // to perform any password action - this prevents lockout
-  if (env.ENABLE_SSO_MAINTENANCE_MODE) {
+  if (env.ENABLE_SSO_MAINTENANCE_MODE && user.admin?.global) {
     return false
   }
 
