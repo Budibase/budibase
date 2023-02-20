@@ -156,9 +156,6 @@ describe("sso", () => {
           // existing id preserved
           ssoUser._id = existingUser._id
 
-          // don't remove passwords to prevent lockout
-          ssoUser.password = existingUser.password
-
           expect(mockSaveUser).toBeCalledWith(ssoUser, {
             hashPassword: false,
             requirePassword: false,
@@ -186,9 +183,6 @@ describe("sso", () => {
 
           // existing id preserved
           ssoUser._id = existingUser._id
-
-          // don't remove passwords to prevent lockout
-          ssoUser.password = existingUser.password
 
           expect(mockSaveUser).toBeCalledWith(ssoUser, {
             hashPassword: false,

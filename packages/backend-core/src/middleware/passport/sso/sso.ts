@@ -85,8 +85,10 @@ export async function authenticate(
   // never prompt for password reset
   ssoUser.forceResetPassword = false
 
-  // create or sync the user
   try {
+    // don't try to re-save any existing password
+    delete ssoUser.password
+    // create or sync the user
     ssoUser = (await saveUserFn(ssoUser, {
       hashPassword: false,
       requirePassword: false,
