@@ -5,6 +5,7 @@
   import TextCell from "./TextCell.svelte"
   import OptionsCell from "./OptionsCell.svelte"
   import DateCell from "./DateCell.svelte"
+  import MultiSelectCell from "./MultiSelectCell.svelte"
 
   export let table
   export let filter
@@ -15,7 +16,7 @@
     getContext("sdk")
   const component = getContext("component")
   const limit = 100
-  const defaultWidth = 200
+  const defaultWidth = 160
   const minWidth = 100
 
   let widths
@@ -36,7 +37,6 @@
   })
   $: fields = Object.keys($fetch.schema || {})
   $: initWidths(fields)
-  $: sliderPositions = getSliderPositions(widths)
   $: gridStyles = getGridStyles(widths)
   $: schema = $fetch.schema
   $: rowCount = $fetch.rows?.length || 0
@@ -65,14 +65,7 @@
     if (!widths?.length) {
       return "--grid: 1fr;"
     }
-    return `--grid: 50px ${widths.map(x => `${x}px`).join(" ")} 180px;`
-  }
-
-  const getSliderPositions = widths => {
-    let offset = 50
-    return widths.map(width => {
-      return (offset += width)
-    })
+    return `--grid: 40px ${widths.map(x => `${x}px`).join(" ")} 180px;`
   }
 
   const handleScroll = e => {
@@ -88,6 +81,8 @@
       return OptionsCell
     } else if (type === "datetime") {
       return DateCell
+    } else if (type === "array") {
+      return MultiSelectCell
     }
     return TextCell
   }
@@ -262,19 +257,11 @@
           <span>
             {field}
           </span>
+          <div class="slider" on:mousedown={e => startResizing(fieldIdx, e)} />
         </div>
       {/each}
       <!-- Horizontal spacer -->
       <div />
-
-      <!-- Sliders for resizing columns -->
-      {#each sliderPositions as left, idx}
-        <div
-          class="slider"
-          on:mousedown={e => startResizing(idx, e)}
-          style="--left: {left}px"
-        />
-      {/each}
 
       <!-- All real rows -->
       {#each rows as row, rowIdx (row._id)}
@@ -368,7 +355,7 @@
     justify-content: flex-start;
     align-items: stretch;
     overflow: auto;
-    max-height: 800px;
+    max-height: 600px;
     position: relative;
     cursor: default;
   }
@@ -444,7 +431,7 @@
   }
   .cell.sticky {
     position: sticky;
-    left: 50px;
+    left: 40px;
     z-index: 2;
   }
   .cell.sticky.selected {
@@ -479,24 +466,27 @@
   /* Column resizing */
   .slider {
     position: absolute;
-    z-index: 5;
-    left: var(--left);
     top: 0;
+    right: 0;
     width: 16px;
-    height: 32px;
-    transform: translateX(-50%);
+    height: 100%;
   }
-  .slider:hover:after {
+  .slider:after {
+    opacity: 0;
     content: " ";
     position: absolute;
-    width: 2px;
-    left: 50%;
+    width: 4px;
+    right: 0;
+    top: 0;
     height: 100%;
-    background: var(--spectrum-global-color-blue-400);
-    transform: translateX(-50%);
+    background: var(--spectrum-global-color-gray-600);
+    transition: opacity 130ms ease-out;
   }
   .slider:hover {
     cursor: col-resize;
+  }
+  .slider:hover:after {
+    opacity: 1;
   }
 
   .sticky.shadow:after {
