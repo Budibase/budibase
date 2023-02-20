@@ -127,7 +127,7 @@ const buildUser = async (
 
   let hashedPassword
   if (password) {
-    if (await preventSSOPasswords(user)) {
+    if (await isPreventSSOPasswords(user)) {
       throw new HTTPError("SSO user cannot set password", 400)
     }
     hashedPassword = opts.hashPassword ? await utils.hash(password) : password
@@ -193,7 +193,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   }
 }
 
-export async function preventSSOPasswords(user: User) {
+export async function isPreventSSOPasswords(user: User) {
   // when in maintenance mode we allow sso users
   // to perform any password action - this prevents lockout
   if (env.ENABLE_SSO_MAINTENANCE_MODE) {
