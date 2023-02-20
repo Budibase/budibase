@@ -28,6 +28,17 @@
       "component": "DeleteRow"
     },
     {
+      "name": "Fetch Row",
+      "type": "data",
+      "component": "FetchRow",
+      "context": [
+        {
+          "label": "Fetched row",
+          "value": "row"
+        }
+      ]
+    },
+    {
       "name": "Navigate To",
       "type": "application",
       "component": "NavigateTo"

@@ -105,7 +105,9 @@
   title="Create Table"
   confirmText="Create"
   onConfirm={saveTable}
-  disabled={error || !name || (rows.length && !allValid)}
+  disabled={error ||
+    !name ||
+    (rows.length && (!allValid || displayColumn == null))}
 >
   <Input
     thin

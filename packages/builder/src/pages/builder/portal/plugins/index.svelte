@@ -81,6 +81,17 @@
     <div class="controls">
       <div>
         <Button on:click={modal.show} cta>Add plugin</Button>
+        <div class="secondaryButton">
+          <Button
+            on:click={() =>
+              window
+                .open("https://github.com/Budibase/plugins", "_blank")
+                .focus()}
+            secondary
+          >
+            GitHub repo
+          </Button>
+        </div>
       </div>
       {#if $plugins?.length}
         <div class="filters">
@@ -97,15 +108,17 @@
       {/if}
     </div>
 
-    <Table
-      {schema}
-      data={filteredPlugins}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={false}
-      allowClickRows={false}
-      {customRenderers}
-    />
+    {#if $plugins?.length}
+      <Table
+        {schema}
+        data={filteredPlugins}
+        allowEditColumns={false}
+        allowEditRows={false}
+        allowSelectRows={false}
+        allowClickRows={false}
+        {customRenderers}
+      />
+    {/if}
   </Layout>
 </Page>
 
@@ -136,5 +149,10 @@
     .controls :global(.spectrum-Search) {
       width: auto;
     }
+  }
+
+  .secondaryButton {
+    display: inline-block;
+    margin-left: 6px;
   }
 </style>

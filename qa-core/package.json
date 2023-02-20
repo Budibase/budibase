@@ -12,6 +12,8 @@
     "test": "env-cmd jest --runInBand",
     "test:watch": "env-cmd jest --watch",
     "test:debug": "DEBUG=1 jest",
+    "test:notify": "node scripts/testResultsWebhook",
+    "test:ci": "jest --runInBand --json --outputFile=testResults.json",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "api:server:setup": "npm run docker:up && env-cmd ts-node ../packages/builder/ts/setup.ts",
