@@ -4,8 +4,9 @@
 
   export let value
   export let schema
-  export let selected
   export let onChange
+  export let selected = false
+  export let readonly = false
 
   // adding the 0- will turn a string like 00:00:00 into a valid ISO
   // date, but will make actual ISO dates invalid
@@ -17,18 +18,19 @@
     : dateOnly
     ? "MMM D YYYY"
     : "MMM D YYYY, HH:mm"
+  $: editable = selected && !readonly
 </script>
 
 <div class="container">
   <div class="value">
     {dayjs(timeOnly ? time : value).format(format)}
   </div>
-  {#if selected}
+  {#if editable}
     <Icon name="Calendar" />
   {/if}
 </div>
 
-{#if selected}
+{#if editable}
   <div class="picker">
     <CoreDatePicker
       {value}

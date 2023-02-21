@@ -3,14 +3,16 @@
 
   export let value
   export let schema
-  export let selected = false
   export let onChange
+  export let selected = false
   export let multi = false
+  export let readonly = false
 
   const options = schema?.constraints?.inclusion || []
 
   let open = false
 
+  $: editable = selected && !readonly
   $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
   $: unselectedOptions = options.filter(x => !values.includes(x))
   $: {
@@ -44,9 +46,9 @@
 <div
   class="container"
   class:multi
-  class:selected
+  class:editable
   class:open
-  on:click={selected ? () => (open = true) : null}
+  on:click={editable ? () => (open = true) : null}
 >
   <div class="values">
     {#each values as val (val)}
@@ -62,7 +64,7 @@
       {/if}
     {/each}
   </div>
-  {#if selected}
+  {#if editable}
     <Icon name="ChevronDown" />
   {/if}
   {#if open}
@@ -101,7 +103,7 @@
     overflow: hidden;
     gap: 4px;
   }
-  .container.selected:hover {
+  .container.editable:hover {
     cursor: pointer;
   }
   .values {

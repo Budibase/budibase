@@ -37,7 +37,8 @@
     limit,
   })
   $: fields = Object.keys($fetch.schema || {})
-  $: initWidths(fields)
+  $: fieldCount = fields.length
+  $: fieldCount, initWidths()
   $: gridStyles = getGridStyles(widths)
   $: schema = $fetch.schema
   $: rowCount = $fetch.rows?.length || 0
@@ -58,7 +59,7 @@
     })
   }
 
-  const initWidths = fields => {
+  const initWidths = () => {
     widths = fields.map(() => defaultWidth)
   }
 
@@ -306,6 +307,7 @@
               schema={schema[field]}
               selected={selectedCell === cellIdx}
               onChange={val => handleChange(row._id, field, val)}
+              readonly={schema[field]?.autocolumn}
             />
           </div>
         {/each}

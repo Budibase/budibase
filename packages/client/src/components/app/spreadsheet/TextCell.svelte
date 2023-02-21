@@ -3,13 +3,16 @@
   export let selected = false
   export let onChange
   export let type = "text"
+  export let readonly = false
+
+  $: editable = selected && !readonly
 
   const handleChange = e => {
     onChange(e.target.value)
   }
 </script>
 
-{#if selected}
+{#if editable}
   <input {type} value={value || ""} on:change={handleChange} />
 {:else}
   <div class="text-cell">
