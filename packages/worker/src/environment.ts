@@ -26,6 +26,8 @@ function parseIntSafe(number: any) {
   }
 }
 
+const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
+
 const environment = {
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
@@ -49,7 +51,7 @@ const environment = {
   CLUSTER_PORT: process.env.CLUSTER_PORT,
   // flags
   NODE_ENV: process.env.NODE_ENV,
-  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
+  SELF_HOSTED: selfHosted,
   LOG_LEVEL: process.env.LOG_LEVEL,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
@@ -74,7 +76,9 @@ const environment = {
    * This can be useful to prevent lockout when configuring SSO.
    * However, this should be turned OFF by default for security purposes.
    */
-  ENABLE_SSO_MAINTENANCE_MODE: process.env.ENABLE_SSO_MAINTENANCE_MODE,
+  ENABLE_SSO_MAINTENANCE_MODE: selfHosted
+    ? process.env.ENABLE_SSO_MAINTENANCE_MODE
+    : false,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
