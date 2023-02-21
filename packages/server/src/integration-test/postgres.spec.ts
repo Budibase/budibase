@@ -47,26 +47,9 @@ describe("row api - postgres", () => {
     makeRequest = generateMakeRequest(apiKey, true)
   })
 
-  beforeEach(async () => {
-    postgresDatasource = await config.createDatasource({
-      datasource: {
-        type: "datasource",
-        source: SourceName.POSTGRES,
-        plus: true,
-        config: {
-          host,
-          port,
-          database: "postgres",
-          user: "postgres",
-          password: "password",
-          schema: "public",
-          ssl: false,
-          rejectUnauthorized: false,
-          ca: false,
-        },
-      },
-    })
-
+  const buildTables = async (
+    relationshipType = RelationshipTypes.ONE_TO_MANY
+  ) => {
     auxPostgresTable = await config.createTable({
       name: generator.word({ length: 10 }),
       type: "external",
@@ -125,12 +108,35 @@ describe("row api - postgres", () => {
           },
           fieldName: "foreignField",
           name: auxPostgresTable.name,
-          relationshipType: RelationshipTypes.ONE_TO_MANY,
+          relationshipType,
           tableId: auxPostgresTable._id,
         },
       },
       sourceId: postgresDatasource._id,
     })
+  }
+
+  beforeEach(async () => {
+    postgresDatasource = await config.createDatasource({
+      datasource: {
+        type: "datasource",
+        source: SourceName.POSTGRES,
+        plus: true,
+        config: {
+          host,
+          port,
+          database: "postgres",
+          user: "postgres",
+          password: "password",
+          schema: "public",
+          ssl: false,
+          rejectUnauthorized: false,
+          ca: false,
+        },
+      },
+    })
+
+    await buildTables()
   })
 
   afterAll(async () => {
@@ -683,6 +689,29 @@ describe("row api - postgres", () => {
       })
 
       it("handles an encoded link field (One->Many side)", async () => {
+        const rowsInfo = await createPrimaryRow({
+          rowData: generateRandomPrimaryRowData(),
+          createForeignRow: "%5B'1'%5D",
+        })
+        row = rowsInfo.row
+        foreignRow = rowsInfo.foreignRow
+        const res = await getAll(primaryPostgresTable._id, row.id)
+
+        expect(res.status).toBe(200)
+
+        expect(foreignRow).toBeDefined()
+        expect(res.body).toEqual({
+          ...row,
+          [`${auxPostgresTable.name}`]: [
+            {
+              ...foreignRow,
+            },
+          ],
+        })
+      })
+
+      it("handles an encoded link field (Many->One side)", async () => {
+        await buildTables(RelationshipTypes.MANY_TO_ONE)
         const rowsInfo = await createPrimaryRow({
           rowData: generateRandomPrimaryRowData(),
           createForeignRow: "%5B'1'%5D",
