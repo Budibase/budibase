@@ -438,6 +438,9 @@ describe("row api - postgres", () => {
           _id: expect.any(String),
           _rev: expect.any(String),
         })
+
+        expect(res.body.foreignField).toBeUndefined()
+
         expect(
           res.body[`fk_${auxPostgresTable.name}_foreignField`]
         ).toBeDefined()
