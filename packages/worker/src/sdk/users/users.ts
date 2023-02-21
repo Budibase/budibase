@@ -6,12 +6,11 @@ import {
   cache,
   constants,
   db as dbUtils,
-  deprovisioning,
   events,
   HTTPError,
-  migrations,
   sessions,
   tenancy,
+  platform,
   users as usersCore,
   utils,
   ViewName,
@@ -21,21 +20,22 @@ import {
   AllDocsResponse,
   BulkUserResponse,
   CloudAccount,
-  CreateUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
-  MigrationType,
+  isSSOAccount,
+  isSSOUser,
   PlatformUser,
   PlatformUserByEmail,
   RowResponse,
   SearchUsersRequest,
+  UpdateSelf,
   User,
-  ThirdPartyUser,
-  isUser,
+  SaveUserOpts,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
 import { groups as groupsSdk } from "@budibase/pro"
+import * as accountSdk from "../accounts"
 
 const PAGE_LIMIT = 8
 
@@ -94,26 +94,23 @@ export const paginatedUsers = async ({
   })
 }
 
+export async function getUserByEmail(email: string) {
+  return usersCore.getGlobalUserByEmail(email)
+}
+
 /**
  * Gets a user by ID from the global database, based on the current tenancy.
  */
 export const getUser = async (userId: string) => {
-  const db = tenancy.getGlobalDB()
-  let user = await db.get(userId)
+  const user = await usersCore.getById(userId)
   if (user) {
     delete user.password
   }
   return user
 }
 
-export interface SaveUserOpts {
-  hashPassword?: boolean
-  requirePassword?: boolean
-  currentUserId?: string
-}
-
 const buildUser = async (
-  user: User | ThirdPartyUser,
+  user: User,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
@@ -121,11 +118,13 @@ const buildUser = async (
   tenantId: string,
   dbUser?: any
 ): Promise<User> => {
-  let fullUser = user as User
-  let { password, _id } = fullUser
+  let { password, _id } = user
 
   let hashedPassword
   if (password) {
+    if (await isPreventSSOPasswords(user)) {
+      throw new HTTPError("SSO user cannot set password", 400)
+    }
     hashedPassword = opts.hashPassword ? await utils.hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
@@ -135,10 +134,10 @@ const buildUser = async (
 
   _id = _id || dbUtils.generateGlobalUserID()
 
-  fullUser = {
+  const fullUser = {
     createdAt: Date.now(),
     ...dbUser,
-    ...fullUser,
+    ...user,
     _id,
     password: hashedPassword,
     tenantId,
@@ -189,10 +188,36 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   }
 }
 
+export async function isPreventSSOPasswords(user: User) {
+  // when in maintenance mode we allow sso users with the admin role
+  // to perform any password action - this prevents lockout
+  if (env.ENABLE_SSO_MAINTENANCE_MODE && user.admin?.global) {
+    return false
+  }
+
+  // Check local sso
+  if (isSSOUser(user)) {
+    return true
+  }
+
+  // Check account sso
+  const account = await accountSdk.api.getAccount(user.email)
+  return !!(account && isSSOAccount(account))
+}
+
+export async function updateSelf(id: string, data: UpdateSelf) {
+  let user = await getUser(id)
+  user = {
+    ...user,
+    ...data,
+  }
+  return save(user)
+}
+
 export const save = async (
-  user: User | ThirdPartyUser,
+  user: User,
   opts: SaveUserOpts = {}
-): Promise<CreateUserResponse> => {
+): Promise<User> => {
   // default booleans to true
   if (opts.hashPassword == null) {
     opts.hashPassword = true
@@ -264,6 +289,7 @@ export const save = async (
     builtUser._rev = response.rev
 
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
+    await platform.users.addUser(tenantId, builtUser._id!, builtUser.email)
     await cache.user.invalidateUser(response.id)
 
     // let server know to sync user
@@ -271,32 +297,14 @@ export const save = async (
 
     await Promise.all(groupPromises)
 
-    return {
-      _id: response.id,
-      _rev: response.rev,
-      email,
-    }
+    // finally returned the saved user from the db
+    return db.get(builtUser._id!)
   } catch (err: any) {
     if (err.status === 409) {
       throw "User exists already"
     } else {
       throw err
     }
-  }
-}
-
-export const addTenant = async (
-  tenantId: string,
-  _id: string,
-  email: string
-) => {
-  if (env.MULTI_TENANCY) {
-    const afterCreateTenant = () =>
-      migrations.backPopulateMigrations({
-        type: MigrationType.GLOBAL,
-        tenantId,
-      })
-    await tenancy.tryAddTenant(tenantId, _id, email, afterCreateTenant)
   }
 }
 
@@ -431,7 +439,7 @@ export const bulkCreate = async (
   for (const user of usersToBulkSave) {
     // TODO: Refactor to bulk insert users into the info db
     // instead of relying on looping tenant creation
-    await addTenant(tenantId, user._id, user.email)
+    await platform.users.addUser(tenantId, user._id, user.email)
     await eventHelpers.handleSaveEvents(user, undefined)
     await apps.syncUserInApps(user._id)
   }
@@ -549,7 +557,7 @@ export const bulkDelete = async (
 
 export const destroy = async (id: string, currentUser: any) => {
   const db = tenancy.getGlobalDB()
-  const dbUser = await db.get(id)
+  const dbUser = (await db.get(id)) as User
   const userId = dbUser._id as string
 
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
@@ -565,7 +573,7 @@ export const destroy = async (id: string, currentUser: any) => {
     }
   }
 
-  await deprovisioning.removeUserFromInfoDB(dbUser)
+  await platform.users.removeUser(dbUser)
 
   await db.remove(userId, dbUser._rev)
 
@@ -578,7 +586,7 @@ export const destroy = async (id: string, currentUser: any) => {
 
 const bulkDeleteProcessing = async (dbUser: User) => {
   const userId = dbUser._id as string
-  await deprovisioning.removeUserFromInfoDB(dbUser)
+  await platform.users.removeUser(dbUser)
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })

@@ -2,8 +2,6 @@ import env from "../environment"
 
 const SLOT_REFRESH_MS = 2000
 const CONNECT_TIMEOUT_MS = 10000
-const REDIS_URL = !env.REDIS_URL ? "localhost:6379" : env.REDIS_URL
-const REDIS_PASSWORD = !env.REDIS_PASSWORD ? "budibase" : env.REDIS_PASSWORD
 export const SEPARATOR = "-"
 
 /**
@@ -60,8 +58,8 @@ export enum SelectableDatabase {
 }
 
 export function getRedisOptions(clustered = false) {
-  let password = REDIS_PASSWORD
-  let url: string[] | string = REDIS_URL.split("//")
+  let password = env.REDIS_PASSWORD
+  let url: string[] | string = env.REDIS_URL.split("//")
   // get rid of the protocol
   url = url.length > 1 ? url[1] : url[0]
   // check for a password etc
@@ -78,8 +76,8 @@ export function getRedisOptions(clustered = false) {
   let redisProtocolUrl
 
   // fully qualified redis URL
-  if (/rediss?:\/\//.test(REDIS_URL)) {
-    redisProtocolUrl = REDIS_URL
+  if (/rediss?:\/\//.test(env.REDIS_URL)) {
+    redisProtocolUrl = env.REDIS_URL
   }
 
   const opts: any = {

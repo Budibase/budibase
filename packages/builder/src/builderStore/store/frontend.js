@@ -312,7 +312,7 @@ export const getFrontendStore = () => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
 
         // Build array of promises to speed up bulk deletions
-        const promises = []
+        let promises = []
         let deleteUrls = []
         screensToDelete.forEach(screen => {
           // Delete the screen
@@ -326,8 +326,8 @@ export const getFrontendStore = () => {
           deleteUrls.push(screen.routing.route)
         })
 
-        promises.push(store.actions.links.delete(deleteUrls))
         await Promise.all(promises)
+        await store.actions.links.delete(deleteUrls)
         const deletedIds = screensToDelete.map(screen => screen._id)
         const routesResponse = await API.fetchAppRoutes()
         store.update(state => {

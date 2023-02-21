@@ -20,6 +20,7 @@
     "dist",
     "src/tests",
     "src/api/routes/tests/utilities",
+    "src/api/routes/public/tests/utils.ts",
     "src/automations/tests/utilities",
     "**/*.spec.ts",
     "**/*.spec.js"

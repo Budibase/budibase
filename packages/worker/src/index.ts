@@ -1,14 +1,13 @@
-// need to load environment first
-import env from "./environment"
-
-// enable APM if configured
-if (process.env.ELASTIC_APM_ENABLED) {
-  const apm = require("elastic-apm-node").start({
-    serviceName: process.env.SERVICE,
-    environment: process.env.BUDIBASE_ENVIRONMENT,
-  })
+if (process.env.DD_APM_ENABLED) {
+  require("./ddApm")
 }
 
+if (process.env.ELASTIC_APM_ENABLED) {
+  require("./elasticApm")
+}
+
+// need to load environment first
+import env from "./environment"
 import { Scope } from "@sentry/node"
 import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
@@ -30,6 +29,12 @@ import destroyable from "server-destroy"
 // configure events to use the pro audit log write
 // can't integrate directly into backend-core due to cyclic issues
 events.configure(sdk.auditLogs.write)
+
+if (env.ENABLE_SSO_MAINTENANCE_MODE) {
+  console.warn(
+    "Warning: ENABLE_SSO_MAINTENANCE_MODE is set. It is recommended this flag is disabled if maintenance is not in progress"
+  )
+}
 
 // this will setup http and https proxies form env variables
 bootstrap()
