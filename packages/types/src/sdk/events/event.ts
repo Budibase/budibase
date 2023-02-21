@@ -180,6 +180,10 @@ export enum Event {
   ENVIRONMENT_VARIABLE_CREATED = "environment_variable:created",
   ENVIRONMENT_VARIABLE_DELETED = "environment_variable:deleted",
   ENVIRONMENT_VARIABLE_UPGRADE_PANEL_OPENED = "environment_variable:upgrade_panel_opened",
+
+  // AUDIT LOG
+  AUDIT_LOG_FILTER = "audit_log:filter",
+  AUDIT_LOG_DOWNLOAD = "audit_log:download",
 }
 
 // all events that are not audited have been added to this record as undefined, this means
@@ -356,6 +360,10 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.INSTALLATION_VERSION_UPGRADED]: undefined,
   [Event.INSTALLATION_VERSION_DOWNGRADED]: undefined,
   [Event.INSTALLATION_FIRST_STARTUP]: undefined,
+
+  // AUDIT LOG - NOT AUDITED
+  [Event.AUDIT_LOG_FILTER]: undefined,
+  [Event.AUDIT_LOG_DOWNLOAD]: undefined,
 }
 
 // properties added at the final stage of the event pipeline

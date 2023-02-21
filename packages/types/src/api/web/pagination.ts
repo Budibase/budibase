@@ -8,9 +8,12 @@ export enum SortType {
   number = "number",
 }
 
-export interface PaginationRequest {
-  limit?: number
+export interface BasicPaginationRequest {
   bookmark?: string
+}
+
+export interface PaginationRequest extends BasicPaginationRequest {
+  limit?: number
   sort?: {
     order: SortOrder
     column: string

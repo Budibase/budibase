@@ -1,5 +1,9 @@
 import { Event, AuditedEventFriendlyName } from "../../../sdk"
-import { PaginationResponse, PaginationRequest } from "../"
+import {
+  PaginationResponse,
+  PaginationRequest,
+  BasicPaginationRequest,
+} from "../"
 import { User, App } from "../../../"
 
 export interface AuditLogSearchParams {
@@ -9,12 +13,13 @@ export interface AuditLogSearchParams {
   startDate?: string
   endDate?: string
   fullSearch?: string
+  bookmark?: string
 }
 
 export interface DownloadAuditLogsRequest extends AuditLogSearchParams {}
 
 export interface SearchAuditLogsRequest
-  extends PaginationRequest,
+  extends BasicPaginationRequest,
     AuditLogSearchParams {}
 
 export enum AuditLogResourceStatus {
