@@ -7,6 +7,7 @@
   import DateCell from "./DateCell.svelte"
   import MultiSelectCell from "./MultiSelectCell.svelte"
   import NumberCell from "./NumberCell.svelte"
+  import RelationshipCell from "./RelationshipCell.svelte"
 
   export let table
   export let filter
@@ -96,6 +97,8 @@
       return MultiSelectCell
     } else if (type === "number") {
       return NumberCell
+    } else if (type === "link") {
+      return RelationshipCell
     }
     return TextCell
   }

@@ -73,7 +73,9 @@
     {/each}
   </div>
   {#if editable}
-    <Icon name="ChevronDown" />
+    <div class="arrow">
+      <Icon name="ChevronDown" />
+    </div>
   {/if}
   {#if open}
     <div class="options">
@@ -105,11 +107,9 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: center;
-    padding: 0 8px;
+    align-items: stretch;
+    align-self: stretch;
     flex: 1 1 auto;
-    overflow: hidden;
-    gap: 4px;
   }
   .container.editable:hover {
     cursor: pointer;
@@ -123,6 +123,7 @@
     width: 0;
     gap: 4px;
     overflow: hidden;
+    padding: 0 8px;
   }
   .text {
     overflow: hidden;
@@ -137,6 +138,20 @@
     background: var(--color);
     border-radius: 8px;
     user-select: none;
+  }
+  .arrow {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    bottom: 2px;
+    padding: 0 6px 0 16px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--background) 40%
+    );
   }
   .options {
     min-width: 100%;
