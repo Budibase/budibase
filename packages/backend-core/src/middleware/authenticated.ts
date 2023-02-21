@@ -8,7 +8,7 @@ import { getGlobalDB, doInTenant } from "../context"
 import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
-import { BBContext, EndpointMatcher } from "@budibase/types"
+import { Ctx, EndpointMatcher } from "@budibase/types"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
   ? parseInt(env.SESSION_UPDATE_PERIOD)
@@ -73,7 +73,7 @@ export default function (
   }
 ) {
   const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
-  return async (ctx: BBContext | any, next: any) => {
+  return async (ctx: Ctx | any, next: any) => {
     let publicEndpoint = false
     const version = ctx.request.headers[Header.API_VER]
     // the path is not authenticated
@@ -148,7 +148,7 @@ export default function (
       finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
 
       if (user && user.email) {
-        return identity.doInUserContext(user, next)
+        return identity.doInUserContext(user, ctx, next)
       } else {
         return next()
       }

@@ -24,6 +24,8 @@ import * as redis from "./utilities/redis"
 const Sentry = require("@sentry/node")
 const koaSession = require("koa-session")
 const logger = require("koa-pino-logger")
+const { userAgent } = require("koa-useragent")
+
 import destroyable from "server-destroy"
 
 // configure events to use the pro audit log write
@@ -48,6 +50,7 @@ app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
 app.use(middleware.logging)
 app.use(logger(logging.pinoSettings()))
+app.use(userAgent)
 
 // authentication
 app.use(auth.passport.initialize())
