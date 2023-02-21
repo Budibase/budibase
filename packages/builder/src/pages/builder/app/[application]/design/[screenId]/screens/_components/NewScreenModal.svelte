@@ -36,7 +36,11 @@
         }}
       >
         <div class="content screen-type-wrap">
-          <img alt="blank screen preview" class="preview" src={blankScreenPreview} />
+          <img
+            alt="blank screen preview"
+            class="preview"
+            src={blankScreenPreview}
+          />
           <div class="screen-type-text">
             <Heading size="XS">Blank screen</Heading>
             <Body size="S">Add an empty blank screen</Body>
@@ -69,7 +73,11 @@
           .length}
       >
         <div class="content screen-type-wrap">
-          <img alt="list screen preview" class="preview" src={listScreenPreview} />
+          <img
+            alt="list screen preview"
+            class="preview"
+            src={listScreenPreview}
+          />
           <div class="screen-type-text">
             <Heading size="XS">List view</Heading>
             <Body size="S">
