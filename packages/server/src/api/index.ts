@@ -1,5 +1,5 @@
 import Router from "@koa/router"
-import { errors, auth } from "@budibase/backend-core"
+import { auth, middleware } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
 import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
@@ -13,6 +13,8 @@ export const router: Router = new Router()
 
 router.get("/health", ctx => (ctx.status = 200))
 router.get("/version", ctx => (ctx.body = pkg.version))
+
+router.use(middleware.errorHandling)
 
 router
   .use(
@@ -53,27 +55,6 @@ router
   // @ts-ignore
   .use(currentApp)
   .use(auth.auditLog)
-
-// error handling middleware
-router.use(async (ctx, next) => {
-  try {
-    await next()
-  } catch (err: any) {
-    ctx.status = err.status || err.statusCode || 500
-    const error = errors.getPublicError(err)
-    ctx.body = {
-      message: err.message,
-      status: ctx.status,
-      validationErrors: err.validation,
-      error,
-    }
-    ctx.log.error(err)
-    // unauthorised errors don't provide a useful trace
-    if (!env.isTest()) {
-      console.trace(err)
-    }
-  }
-})
 
 // authenticated routes
 for (let route of mainRoutes) {
