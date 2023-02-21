@@ -1,6 +1,6 @@
 import env from "../environment"
 // ioredis mock is all in memory
-const Redis = env.isTest() ? require("ioredis-mock") : require("ioredis")
+const Redis = env.MOCK_REDIS ? require("ioredis-mock") : require("ioredis")
 import {
   addDbPrefix,
   removeDbPrefix,
@@ -17,8 +17,13 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 // for testing just generate the client once
 let CLOSED = false
 let CLIENTS: { [key: number]: any } = {}
-// if in test always connected
-let CONNECTED = env.isTest()
+
+let CONNECTED = false
+
+// mock redis always connected
+if (env.MOCK_REDIS) {
+  CONNECTED = true
+}
 
 function pickClient(selectDb: number): any {
   return CLIENTS[selectDb]
@@ -57,7 +62,7 @@ function init(selectDb = DEFAULT_SELECT_DB) {
     return
   }
   // testing uses a single in memory client
-  if (env.isTest()) {
+  if (env.MOCK_REDIS) {
     CLIENTS[selectDb] = new Redis(getRedisOptions())
   }
   // start the timer - only allowed 5 seconds to connect

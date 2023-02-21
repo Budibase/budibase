@@ -44,8 +44,9 @@ const environment = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
-  REDIS_URL: process.env.REDIS_URL,
-  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  REDIS_URL: process.env.REDIS_URL || "localhost:6379",
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD || "budibase",
+  MOCK_REDIS: process.env.MOCK_REDIS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -82,6 +83,7 @@ const environment = {
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
+  ENABLE_4XX_HTTP_LOGGING: process.env.ENABLE_4XX_HTTP_LOGGING || true,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
