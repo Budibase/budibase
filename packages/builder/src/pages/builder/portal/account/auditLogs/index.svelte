@@ -13,17 +13,17 @@
   import { licensing, users, apps, auditLogs } from "stores/portal"
   import LockedFeature from "../../_components/LockedFeature.svelte"
   import { createPaginationStore } from "helpers/pagination"
-  import { setContext } from "svelte"
+  import { onMount, setContext } from "svelte"
   import ViewDetailsRenderer from "./_components/ViewDetailsRenderer.svelte"
   import UserRenderer from "./_components/UserRenderer.svelte"
   import TimeRenderer from "./_components/TimeRenderer.svelte"
+  import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
 
   const schema = {
-    name: { width: "1fr" },
-    date: { width: "1.5fr" },
+    date: { width: "0.8fr" },
     user: { width: "0.5fr" },
-    app: { width: "1fr" },
-    event: { width: "1fr" },
+    app: { width: "1fr", fieldName: "name" },
+    name: { width: "1fr" },
     view: { width: "auto", borderLeft: true, displayName: "" },
   }
 
@@ -40,6 +40,10 @@
       column: "date",
       component: TimeRenderer,
     },
+    {
+      column: "app",
+      component: AppColumnRenderer,
+    },
   ]
 
   let userSearchTerm = ""
@@ -55,22 +59,15 @@
   let sidePanelVisible = false
   let startDate, endDate
 
-  let data = [
-    {
-      name: "User created",
-      date: "2023-02-14T10:19:52.021Z",
-      user: "Peter Clement",
-      app: "School Admin Panel",
-      event: "User added",
-      metadata: {
-        name: "Peter Clement",
-        email: "",
-      },
-    },
-  ]
-
   $: fetchUsers(userPage, userSearchTerm)
-  $: fetchLogs(logsPage, logSearchTerm)
+  $: fetchLogs(
+    logsPage,
+    logSearchTerm,
+    startDate,
+    endDate,
+    selectedUsers,
+    selectedApps
+  )
 
   $: userPage = $userPageInfo.page
   $: logsPage = $logsPageInfo.page
@@ -97,7 +94,14 @@
     }
   }
 
-  const fetchLogs = async (logsPage, search) => {
+  const fetchLogs = async (
+    logsPage,
+    search,
+    startDate,
+    endDate,
+    selectedUsers,
+    selectedApps
+  ) => {
     if ($logsPageInfo.loading) {
       return
     }
@@ -117,7 +121,10 @@
         userIds: selectedUsers,
         appIds: selectedApps,
       })
-      logsPageInfo.fetched($auditLogs.hasNextPage, $auditLogs.nextPage)
+      logsPageInfo.fetched(
+        $auditLogs.logs.hasNextPage,
+        $auditLogs.logs.nextPage
+      )
     } catch (error) {
       console.log(error)
       notifications.error("Error getting audit logs")
@@ -170,6 +177,10 @@
   setContext("auditLogs", {
     viewDetails,
   })
+
+  onMount(async () => {
+    await auditLogs.getEventDefinitions()
+  })
 </script>
 
 <LockedFeature
@@ -211,16 +222,24 @@
       </div>
       <div class="select">
         <Multiselect
+          autocomplete
           placeholder="All apps"
           label="App"
-          getOptionValue={app => app.appId}
+          getOptionValue={app => "app_dev_" + app.appId}
           getOptionLabel={app => app.name}
           options={$apps}
           bind:value={selectedApps}
         />
       </div>
       <div class="select">
-        <Multiselect placeholder="All events" label="Event" />
+        <Multiselect
+          autocomplete
+          getOptionValue={event => event[0]}
+          getOptionLabel={event => event[1]}
+          options={Object.entries($auditLogs.events)}
+          placeholder="All events"
+          label="Event"
+        />
       </div>
     </div>
     <div style="padding-bottom: var(--spacing-s)">
@@ -228,14 +247,14 @@
     </div>
 
     <div style="max-width: 150px; ">
-      <Search placeholder="Search" value={""} />
+      <Search placeholder="Search" bind:value={logSearchTerm} />
     </div>
   </div>
   <Layout noPadding>
     <Table
       {customRenderers}
       on:click={viewDetails}
-      {data}
+      data={$auditLogs.logs.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
@@ -255,7 +274,8 @@
     <div class="side-panel-header">
       Audit Logs
       <Icon
-        icon="Close"
+        hoverable
+        name="Close"
         on:click={() => {
           sidePanelVisible = false
         }}
@@ -263,7 +283,6 @@
     </div>
     <div style="padding-top: 10px; height: 95%">
       <CoreTextArea
-        disabled={true}
         minHeight={"300px"}
         height={"100%"}
         value={JSON.stringify(selectedLog.metadata, null, 2)}

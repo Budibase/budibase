@@ -145,7 +145,8 @@
     {#if autocomplete}
       <Search
         value={fetchTerm ? fetchTerm : searchTerm}
-        on:change={event => (fetchTerm = event.detail)}
+        on:change={event =>
+          fetchTerm ? (fetchTerm = event.detail) : (searchTerm = event.detail)}
         {disabled}
         placeholder="Search"
       />
@@ -265,7 +266,6 @@
   .popover-content :global(.spectrum-Search) {
     margin-top: -1px;
     margin-left: -1px;
-    width: calc(100% + 2px);
   }
   .popover-content :global(.spectrum-Search input) {
     height: auto;
