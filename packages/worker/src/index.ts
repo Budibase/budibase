@@ -25,6 +25,12 @@ const koaSession = require("koa-session")
 const logger = require("koa-pino-logger")
 import destroyable from "server-destroy"
 
+if (env.ENABLE_SSO_MAINTENANCE_MODE) {
+  console.warn(
+    "Warning: ENABLE_SSO_MAINTENANCE_MODE is set. It is recommended this flag is disabled if maintenance is not in progress"
+  )
+}
+
 // this will setup http and https proxies form env variables
 bootstrap()
 

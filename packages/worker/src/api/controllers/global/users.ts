@@ -2,15 +2,21 @@ import { checkInviteCode } from "../../../utilities/redis"
 import * as userSdk from "../../../sdk/users"
 import env from "../../../environment"
 import {
+  AcceptUserInviteRequest,
+  AcceptUserInviteResponse,
   BulkUserRequest,
   BulkUserResponse,
   CloudAccount,
   CreateAdminUserRequest,
+  CreateAdminUserResponse,
+  Ctx,
   InviteUserRequest,
   InviteUsersRequest,
   MigrationType,
+  SaveUserResponse,
   SearchUsersRequest,
   User,
+  UserCtx,
 } from "@budibase/types"
 import {
   accounts,
@@ -25,10 +31,18 @@ import { checkAnyUserExists } from "../../../utilities/users"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
-export const save = async (ctx: any) => {
+export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
   try {
     const currentUserId = ctx.user._id
-    ctx.body = await userSdk.save(ctx.request.body, { currentUserId })
+    const requestUser = ctx.request.body
+
+    const user = await userSdk.save(requestUser, { currentUserId })
+
+    ctx.body = {
+      _id: user._id!,
+      _rev: user._rev!,
+      email: user.email,
+    }
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -71,9 +85,10 @@ const parseBooleanParam = (param: any) => {
   return !(param && param === "false")
 }
 
-export const adminUser = async (ctx: any) => {
-  const { email, password, tenantId } = ctx.request
-    .body as CreateAdminUserRequest
+export const adminUser = async (
+  ctx: Ctx<CreateAdminUserRequest, CreateAdminUserResponse>
+) => {
+  const { email, password, tenantId } = ctx.request.body
 
   if (await platform.tenants.exists(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
@@ -131,7 +146,11 @@ export const adminUser = async (ctx: any) => {
       }
       await events.identification.identifyTenantGroup(tenantId, account)
 
-      ctx.body = finalUser
+      ctx.body = {
+        _id: finalUser._id!,
+        _rev: finalUser._rev!,
+        email: finalUser.email,
+      }
     } catch (err: any) {
       ctx.throw(err.status || 400, err)
     }
@@ -236,12 +255,14 @@ export const checkInvite = async (ctx: any) => {
   }
 }
 
-export const inviteAccept = async (ctx: any) => {
+export const inviteAccept = async (
+  ctx: Ctx<AcceptUserInviteRequest, AcceptUserInviteResponse>
+) => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
-    ctx.body = await tenancy.doInTenant(info.tenantId, async () => {
+    const user = await tenancy.doInTenant(info.tenantId, async () => {
       const saved = await userSdk.save({
         firstName,
         lastName,
@@ -254,6 +275,12 @@ export const inviteAccept = async (ctx: any) => {
       await events.user.inviteAccepted(user)
       return saved
     })
+
+    ctx.body = {
+      _id: user._id,
+      _rev: user._rev,
+      email: user.email,
+    }
   } catch (err: any) {
     if (err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
