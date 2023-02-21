@@ -41,6 +41,14 @@
       }
     }
   }
+
+  const toggleOpen = () => {
+    if (multi) {
+      open = true
+    } else {
+      open = !open
+    }
+  }
 </script>
 
 <div
@@ -48,7 +56,7 @@
   class:multi
   class:editable
   class:open
-  on:click={editable ? () => (open = true) : null}
+  on:click={editable ? toggleOpen : null}
 >
   <div class="values">
     {#each values as val (val)}
