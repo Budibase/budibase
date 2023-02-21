@@ -117,14 +117,14 @@ describe("row api - postgres", () => {
           name: "value",
           type: FieldType.NUMBER,
         },
-        linkedField: {
+        [`${auxPostgresTable.name}`]: {
           type: FieldType.LINK,
           constraints: {
             type: "array",
             presence: false,
           },
           fieldName: "foreignField",
-          name: "linkedField",
+          name: auxPostgresTable.name,
           relationshipType: RelationshipTypes.ONE_TO_MANY,
           tableId: auxPostgresTable._id,
         },
@@ -153,7 +153,7 @@ describe("row api - postgres", () => {
 
   async function createPrimaryRow(opts: {
     rowData: PrimaryRowData
-    createForeignRow?: boolean
+    createForeignRow?: Array<string> | string
   }) {
     let { rowData } = opts
     let foreignRow: Row | undefined
@@ -166,6 +166,7 @@ describe("row api - postgres", () => {
       rowData = {
         ...rowData,
         [`fk_${auxPostgresTable.name}_foreignField`]: foreignRow.id,
+        [`${auxPostgresTable.name}`]: opts.createForeignRow,
       }
     }
 
@@ -198,7 +199,7 @@ describe("row api - postgres", () => {
   async function populatePrimaryRows(
     count: number,
     opts?: {
-      createForeignRow?: boolean
+      createForeignRow?: Array<string>
     }
   ) {
     return await Promise.all(
@@ -251,7 +252,7 @@ describe("row api - postgres", () => {
     const createRow = (tableId: string | undefined, body: object) =>
       makeRequest("post", `/api/${tableId}/rows`, body)
 
-    describe("given than no row exists", () => {
+    describe("given that no row exists", () => {
       it("adding a new one persists it", async () => {
         const newRow = generateRandomPrimaryRowData()
 
@@ -292,7 +293,7 @@ describe("row api - postgres", () => {
     const updateRow = (tableId: string | undefined, body: Row) =>
       makeRequest("patch", `/api/${tableId}/rows`, body)
 
-    describe("given than a row exists", () => {
+    describe("given that a row exists", () => {
       let row: Row
       beforeEach(async () => {
         let rowResponse = _.sample(await populatePrimaryRows(10))!
@@ -335,7 +336,7 @@ describe("row api - postgres", () => {
       body: Row | { rows: Row[] }
     ) => makeRequest("delete", `/api/${tableId}/rows`, body)
 
-    describe("given than multiple row exist", () => {
+    describe("given that multiple rows exist", () => {
       const numberOfInitialRows = 5
       let rows: Row[]
       beforeEach(async () => {
@@ -421,7 +422,7 @@ describe("row api - postgres", () => {
       let row: Row
       beforeEach(async () => {
         let [createdRow] = await populatePrimaryRows(1, {
-          createForeignRow: true,
+          createForeignRow: ["1"],
         })
         row = createdRow.row
       })
@@ -659,17 +660,13 @@ describe("row api - postgres", () => {
     describe("given a row with relation data", () => {
       let row: Row, foreignRow: Row | undefined
 
-      beforeEach(async () => {
+      it("enrich populates the foreign field", async () => {
         const rowsInfo = await createPrimaryRow({
           rowData: generateRandomPrimaryRowData(),
-          createForeignRow: true,
+          createForeignRow: ["1"],
         })
-
         row = rowsInfo.row
         foreignRow = rowsInfo.foreignRow
-      })
-
-      it("enrich populates the foreign field", async () => {
         const res = await getAll(primaryPostgresTable._id, row.id)
 
         expect(res.status).toBe(200)
@@ -677,7 +674,29 @@ describe("row api - postgres", () => {
         expect(foreignRow).toBeDefined()
         expect(res.body).toEqual({
           ...row,
-          linkedField: [
+          [`${auxPostgresTable.name}`]: [
+            {
+              ...foreignRow,
+            },
+          ],
+        })
+      })
+
+      it("handles an encoded link field (One->Many side)", async () => {
+        const rowsInfo = await createPrimaryRow({
+          rowData: generateRandomPrimaryRowData(),
+          createForeignRow: "%5B'1'%5D",
+        })
+        row = rowsInfo.row
+        foreignRow = rowsInfo.foreignRow
+        const res = await getAll(primaryPostgresTable._id, row.id)
+
+        expect(res.status).toBe(200)
+
+        expect(foreignRow).toBeDefined()
+        expect(res.body).toEqual({
+          ...row,
+          [`${auxPostgresTable.name}`]: [
             {
               ...foreignRow,
             },
