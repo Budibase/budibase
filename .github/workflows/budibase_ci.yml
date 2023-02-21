@@ -85,6 +85,7 @@ jobs:
         run: yarn install:pro $BRANCH $BASE_BRANCH
       - run: yarn
       - run: yarn bootstrap
+      - run: yarn build
       - run: |
           cd qa-core
           yarn
