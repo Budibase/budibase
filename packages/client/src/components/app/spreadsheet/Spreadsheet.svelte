@@ -36,11 +36,12 @@
     query,
     limit,
   })
-  $: fields = Object.keys($fetch.schema || {})
+  $: schema = $fetch.schema
+  $: primaryDisplay = $fetch.definition?.primaryDisplay
+  $: fields = getFields(schema, primaryDisplay)
   $: fieldCount = fields.length
   $: fieldCount, initWidths()
   $: gridStyles = getGridStyles(widths)
-  $: schema = $fetch.schema
   $: rowCount = $fetch.rows?.length || 0
   $: selectedRowCount = Object.values(selectedRows).filter(x => !!x).length
   $: rows = getSortedRows($fetch.rows, newRows)
@@ -57,6 +58,14 @@
         paginate: true,
       },
     })
+  }
+
+  const getFields = (schema, primaryDisplay) => {
+    let fields = Object.keys(schema || {})
+    if (primaryDisplay) {
+      fields = [primaryDisplay, ...fields.filter(x => x !== primaryDisplay)]
+    }
+    return fields
   }
 
   const initWidths = () => {
@@ -293,7 +302,7 @@
           <div
             class="cell"
             class:row-selected={rowSelected}
-            class:sticky={fieldIdx === 0}
+            class:sticky={field === primaryDisplay}
             class:hovered={rowHovered}
             class:selected={selectedCell === cellIdx}
             class:shadow={horizontallyScrolled}
@@ -328,7 +337,7 @@
       {#each fields as field, fieldIdx}
         <div
           class="cell new"
-          class:sticky={fieldIdx === 0}
+          class:sticky={field === primaryDisplay}
           class:shadow={horizontallyScrolled}
           class:hovered={hoveredRow === "new"}
           on:click={() => addRow(field)}
