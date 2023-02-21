@@ -12,6 +12,10 @@ class DBTestConfiguration {
     this.tenantId = structures.tenant.id()
   }
 
+  newTenant() {
+    this.tenantId = structures.tenant.id()
+  }
+
   // TENANCY
 
   doInTenant(task: any) {
