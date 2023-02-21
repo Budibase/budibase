@@ -22,7 +22,7 @@
 
 <style>
   .text-cell {
-    padding: 0 8px;
+    padding: 0 var(--cell-padding);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -30,12 +30,12 @@
   input {
     border: none;
     padding: 0;
-    margin: 0 8px;
+    margin: 0 var(--cell-padding);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     background: none;
-    font-size: 14px;
+    font-size: var(--cell-font-size);
     font-family: var(--font-sans);
     color: inherit;
   }

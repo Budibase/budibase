@@ -48,13 +48,13 @@
 
 <style>
   .container {
-    padding: 0 8px;
+    padding: 0 var(--cell-padding);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     flex: 1 1 auto;
-    gap: 4px;
+    gap: var(--cell-spacing);
   }
   .value {
     flex: 1 1 auto;
