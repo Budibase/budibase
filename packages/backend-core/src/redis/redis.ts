@@ -91,6 +91,11 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   }
   // attach handlers
   client.on("end", (err: Error) => {
+    if (env.isTest()) {
+      // don't try to re-connect in test env
+      // allow the process to exit
+      return
+    }
     connectionError(selectDb, timeout, err)
   })
   client.on("error", (err: Error) => {

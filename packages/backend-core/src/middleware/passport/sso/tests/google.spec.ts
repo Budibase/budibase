@@ -19,7 +19,7 @@ describe("google", () => {
     const callbackUrl = generator.url()
 
     it("should create successfully create a google strategy", async () => {
-      await google.strategyFactory(googleConfig, callbackUrl)
+      await google.strategyFactory(googleConfig, callbackUrl, mockSaveUserFn)
 
       const expectedOptions = {
         clientID: googleConfig.clientID,
