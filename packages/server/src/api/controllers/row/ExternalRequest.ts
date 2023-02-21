@@ -293,7 +293,7 @@ export class ExternalRequest {
         // we're not inserting a doc, will be a bunch of update calls
         const otherKey: string = field.throughFrom || linkTablePrimary
         const thisKey: string = field.throughTo || tablePrimary
-        row[key].map((relationship: any) => {
+        row[key].forEach((relationship: any) => {
           manyRelationships.push({
             tableId: field.through || field.tableId,
             isUpdate: false,
@@ -309,7 +309,7 @@ export class ExternalRequest {
         const thisKey: string = "id"
         // @ts-ignore
         const otherKey: string = field.fieldName
-        row[key].map((relationship: any) => {
+        row[key].forEach((relationship: any) => {
           manyRelationships.push({
             tableId: field.tableId,
             isUpdate: true,
