@@ -3,9 +3,9 @@ import { PaginationResponse, PaginationRequest } from "../"
 import { User, App } from "../../../"
 
 export interface AuditLogSearchParams {
-  userId?: string[]
-  appId?: string[]
-  event?: Event[]
+  userIds?: string[]
+  appIds?: string[]
+  events?: Event[]
   startDate?: string
   endDate?: string
   fullSearch?: string
