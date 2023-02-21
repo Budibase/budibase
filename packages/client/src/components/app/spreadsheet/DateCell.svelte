@@ -1,20 +1,72 @@
 <script>
   import dayjs from "dayjs"
+  import { CoreDatePicker, Icon } from "@budibase/bbui"
 
   export let value
+  export let schema
+  export let selected
+  export let onChange
 
-  $: parsedValue = !value ? "" : dayjs(value).format("D/M/YYYY")
+  // adding the 0- will turn a string like 00:00:00 into a valid ISO
+  // date, but will make actual ISO dates invalid
+  $: time = new Date(`0-${value}`)
+  $: timeOnly = !isNaN(time) || schema?.timeOnly
+  $: dateOnly = schema?.dateOnly
+  $: format = timeOnly
+    ? "HH:mm:ss"
+    : dateOnly
+    ? "MMM D YYYY"
+    : "MMM D YYYY, HH:mm"
 </script>
 
-<div>
-  {parsedValue}
+<div class="container">
+  <div class="value">
+    {dayjs(timeOnly ? time : value).format(format)}
+  </div>
+  {#if selected}
+    <Icon name="Calendar" />
+  {/if}
 </div>
 
+{#if selected}
+  <div class="picker">
+    <CoreDatePicker
+      {value}
+      on:change={e => onChange(e.detail)}
+      appendTo={document.getElementById("flatpickr-root")}
+      enableTime={!dateOnly}
+      {timeOnly}
+      time24hr
+      ignoreTimezones={schema.ignoreTimezones}
+    />
+  </div>
+{/if}
+
 <style>
-  div {
+  .container {
     padding: 0 8px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1 1 auto;
+    gap: 4px;
+  }
+  .value {
+    flex: 1 1 auto;
+    width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .picker {
+    position: absolute;
+    opacity: 0;
+  }
+  .picker :global(.flatpickr) {
+    min-width: 0;
+  }
+  .picker :global(.spectrum-Textfield-input) {
+    width: 100%;
   }
 </style>
