@@ -2,6 +2,7 @@
   export let value
   export let selected = false
   export let onChange
+  export let type = "text"
 
   const handleChange = e => {
     onChange(e.target.value)
@@ -9,7 +10,7 @@
 </script>
 
 {#if selected}
-  <input type="text" value={value || ""} on:change={handleChange} />
+  <input {type} value={value || ""} on:change={handleChange} />
 {:else}
   <div class="text-cell">
     {value || ""}

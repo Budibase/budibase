@@ -6,6 +6,7 @@
   import OptionsCell from "./OptionsCell.svelte"
   import DateCell from "./DateCell.svelte"
   import MultiSelectCell from "./MultiSelectCell.svelte"
+  import NumberCell from "./NumberCell.svelte"
 
   export let table
   export let filter
@@ -83,6 +84,8 @@
       return DateCell
     } else if (type === "array") {
       return MultiSelectCell
+    } else if (type === "number") {
+      return NumberCell
     }
     return TextCell
   }
