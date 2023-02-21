@@ -2,7 +2,7 @@
 jest.mock("nodemailer")
 import { TestConfiguration, structures, mocks } from "../../../../tests"
 mocks.email.mock()
-import { Config, context, events } from "@budibase/backend-core"
+import { Config, events } from "@budibase/backend-core"
 
 describe("configs", () => {
   const config = new TestConfiguration()
@@ -113,64 +113,56 @@ describe("configs", () => {
 
       describe("create", () => {
         it("should create activated OIDC config", async () => {
-          await context.doInTenant(config.tenant1User!.tenantId, async () => {
-            await saveOIDCConfig()
-            expect(events.auth.SSOCreated).toBeCalledTimes(1)
-            expect(events.auth.SSOCreated).toBeCalledWith(Config.OIDC)
-            expect(events.auth.SSODeactivated).not.toBeCalled()
-            expect(events.auth.SSOActivated).toBeCalledTimes(1)
-            expect(events.auth.SSOActivated).toBeCalledWith(Config.OIDC)
-            await config.deleteConfig(Config.OIDC)
-          })
+          await saveOIDCConfig()
+          expect(events.auth.SSOCreated).toBeCalledTimes(1)
+          expect(events.auth.SSOCreated).toBeCalledWith(Config.OIDC)
+          expect(events.auth.SSODeactivated).not.toBeCalled()
+          expect(events.auth.SSOActivated).toBeCalledTimes(1)
+          expect(events.auth.SSOActivated).toBeCalledWith(Config.OIDC)
+          await config.deleteConfig(Config.OIDC)
         })
 
         it("should create deactivated OIDC config", async () => {
-          await context.doInTenant(config.tenant1User!.tenantId, async () => {
-            await saveOIDCConfig({ activated: false })
-            expect(events.auth.SSOCreated).toBeCalledTimes(1)
-            expect(events.auth.SSOCreated).toBeCalledWith(Config.OIDC)
-            expect(events.auth.SSOActivated).not.toBeCalled()
-            expect(events.auth.SSODeactivated).not.toBeCalled()
-            await config.deleteConfig(Config.OIDC)
-          })
+          await saveOIDCConfig({ activated: false })
+          expect(events.auth.SSOCreated).toBeCalledTimes(1)
+          expect(events.auth.SSOCreated).toBeCalledWith(Config.OIDC)
+          expect(events.auth.SSOActivated).not.toBeCalled()
+          expect(events.auth.SSODeactivated).not.toBeCalled()
+          await config.deleteConfig(Config.OIDC)
         })
       })
 
       describe("update", () => {
         it("should update OIDC config to deactivated", async () => {
-          await context.doInTenant(config.tenant1User!.tenantId, async () => {
-            const oidcConf = await saveOIDCConfig()
-            jest.clearAllMocks()
-            await saveOIDCConfig(
-              { ...oidcConf.config.configs[0], activated: false },
-              oidcConf._id,
-              oidcConf._rev
-            )
-            expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-            expect(events.auth.SSOUpdated).toBeCalledWith(Config.OIDC)
-            expect(events.auth.SSOActivated).not.toBeCalled()
-            expect(events.auth.SSODeactivated).toBeCalledTimes(1)
-            expect(events.auth.SSODeactivated).toBeCalledWith(Config.OIDC)
-            await config.deleteConfig(Config.OIDC)
-          })
+          const oidcConf = await saveOIDCConfig()
+          jest.clearAllMocks()
+          await saveOIDCConfig(
+            { ...oidcConf.config.configs[0], activated: false },
+            oidcConf._id,
+            oidcConf._rev
+          )
+          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Config.OIDC)
+          expect(events.auth.SSOActivated).not.toBeCalled()
+          expect(events.auth.SSODeactivated).toBeCalledTimes(1)
+          expect(events.auth.SSODeactivated).toBeCalledWith(Config.OIDC)
+          await config.deleteConfig(Config.OIDC)
         })
 
         it("should update OIDC config to activated", async () => {
-          await context.doInTenant(config.tenant1User!.tenantId, async () => {
-            const oidcConf = await saveOIDCConfig({ activated: false })
-            jest.clearAllMocks()
-            await saveOIDCConfig(
-              { ...oidcConf.config.configs[0], activated: true },
-              oidcConf._id,
-              oidcConf._rev
-            )
-            expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-            expect(events.auth.SSOUpdated).toBeCalledWith(Config.OIDC)
-            expect(events.auth.SSODeactivated).not.toBeCalled()
-            expect(events.auth.SSOActivated).toBeCalledTimes(1)
-            expect(events.auth.SSOActivated).toBeCalledWith(Config.OIDC)
-            await config.deleteConfig(Config.OIDC)
-          })
+          const oidcConf = await saveOIDCConfig({ activated: false })
+          jest.clearAllMocks()
+          await saveOIDCConfig(
+            { ...oidcConf.config.configs[0], activated: true },
+            oidcConf._id,
+            oidcConf._rev
+          )
+          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Config.OIDC)
+          expect(events.auth.SSODeactivated).not.toBeCalled()
+          expect(events.auth.SSOActivated).toBeCalledTimes(1)
+          expect(events.auth.SSOActivated).toBeCalledWith(Config.OIDC)
+          await config.deleteConfig(Config.OIDC)
         })
       })
     })
@@ -187,26 +179,22 @@ describe("configs", () => {
 
       describe("create", () => {
         it("should create SMTP config", async () => {
-          await context.doInTenant(config.tenant1User!.tenantId, async () => {
-            await config.deleteConfig(Config.SMTP)
-            await saveSMTPConfig()
-            expect(events.email.SMTPUpdated).not.toBeCalled()
-            expect(events.email.SMTPCreated).toBeCalledTimes(1)
-            await config.deleteConfig(Config.SMTP)
-          })
+          await config.deleteConfig(Config.SMTP)
+          await saveSMTPConfig()
+          expect(events.email.SMTPUpdated).not.toBeCalled()
+          expect(events.email.SMTPCreated).toBeCalledTimes(1)
+          await config.deleteConfig(Config.SMTP)
         })
       })
 
       describe("update", () => {
         it("should update SMTP config", async () => {
-          await context.doInTenant(config.tenant1User!.tenantId, async () => {
-            const smtpConf = await saveSMTPConfig()
-            jest.clearAllMocks()
-            await saveSMTPConfig(smtpConf.config, smtpConf._id, smtpConf._rev)
-            expect(events.email.SMTPCreated).not.toBeCalled()
-            expect(events.email.SMTPUpdated).toBeCalledTimes(1)
-            await config.deleteConfig(Config.SMTP)
-          })
+          const smtpConf = await saveSMTPConfig()
+          jest.clearAllMocks()
+          await saveSMTPConfig(smtpConf.config, smtpConf._id, smtpConf._rev)
+          expect(events.email.SMTPCreated).not.toBeCalled()
+          expect(events.email.SMTPUpdated).toBeCalledTimes(1)
+          await config.deleteConfig(Config.SMTP)
         })
       })
     })
@@ -223,73 +211,65 @@ describe("configs", () => {
 
       describe("create", () => {
         it("should create settings config with default settings", async () => {
-          await context.doInTenant(config.tenant1User!.tenantId, async () => {
-            await config.deleteConfig(Config.SETTINGS)
+          await config.deleteConfig(Config.SETTINGS)
 
-            await saveSettingsConfig()
+          await saveSettingsConfig()
 
-            expect(events.org.nameUpdated).not.toBeCalled()
-            expect(events.org.logoUpdated).not.toBeCalled()
-            expect(events.org.platformURLUpdated).not.toBeCalled()
-          })
+          expect(events.org.nameUpdated).not.toBeCalled()
+          expect(events.org.logoUpdated).not.toBeCalled()
+          expect(events.org.platformURLUpdated).not.toBeCalled()
         })
 
         it("should create settings config with non-default settings", async () => {
-          await context.doInTenant(config.tenant1User!.tenantId, async () => {
-            config.modeSelf()
-            await config.deleteConfig(Config.SETTINGS)
-            const conf = {
-              company: "acme",
-              logoUrl: "http://example.com",
-              platformUrl: "http://example.com",
-            }
+          config.selfHosted()
+          await config.deleteConfig(Config.SETTINGS)
+          const conf = {
+            company: "acme",
+            logoUrl: "http://example.com",
+            platformUrl: "http://example.com",
+          }
 
-            await saveSettingsConfig(conf)
+          await saveSettingsConfig(conf)
 
-            expect(events.org.nameUpdated).toBeCalledTimes(1)
-            expect(events.org.logoUpdated).toBeCalledTimes(1)
-            expect(events.org.platformURLUpdated).toBeCalledTimes(1)
-            config.modeCloud()
-          })
+          expect(events.org.nameUpdated).toBeCalledTimes(1)
+          expect(events.org.logoUpdated).toBeCalledTimes(1)
+          expect(events.org.platformURLUpdated).toBeCalledTimes(1)
+          config.cloudHosted()
         })
       })
 
       describe("update", () => {
         it("should update settings config", async () => {
-          await context.doInTenant(config.tenant1User!.tenantId, async () => {
-            config.modeSelf()
-            await config.deleteConfig(Config.SETTINGS)
-            const settingsConfig = await saveSettingsConfig()
-            settingsConfig.config.company = "acme"
-            settingsConfig.config.logoUrl = "http://example.com"
-            settingsConfig.config.platformUrl = "http://example.com"
+          config.selfHosted()
+          await config.deleteConfig(Config.SETTINGS)
+          const settingsConfig = await saveSettingsConfig()
+          settingsConfig.config.company = "acme"
+          settingsConfig.config.logoUrl = "http://example.com"
+          settingsConfig.config.platformUrl = "http://example.com"
 
-            await saveSettingsConfig(
-              settingsConfig.config,
-              settingsConfig._id,
-              settingsConfig._rev
-            )
+          await saveSettingsConfig(
+            settingsConfig.config,
+            settingsConfig._id,
+            settingsConfig._rev
+          )
 
-            expect(events.org.nameUpdated).toBeCalledTimes(1)
-            expect(events.org.logoUpdated).toBeCalledTimes(1)
-            expect(events.org.platformURLUpdated).toBeCalledTimes(1)
-            config.modeCloud()
-          })
+          expect(events.org.nameUpdated).toBeCalledTimes(1)
+          expect(events.org.logoUpdated).toBeCalledTimes(1)
+          expect(events.org.platformURLUpdated).toBeCalledTimes(1)
+          config.cloudHosted()
         })
       })
     })
   })
 
   it("should return the correct checklist status based on the state of the budibase installation", async () => {
-    await context.doInTenant(config.tenant1User!.tenantId, async () => {
-      await config.saveSmtpConfig()
+    await config.saveSmtpConfig()
 
-      const res = await config.api.configs.getConfigChecklist()
-      const checklist = res.body
+    const res = await config.api.configs.getConfigChecklist()
+    const checklist = res.body
 
-      expect(checklist.apps.checked).toBeFalsy()
-      expect(checklist.smtp.checked).toBeTruthy()
-      expect(checklist.adminUser.checked).toBeTruthy()
-    })
+    expect(checklist.apps.checked).toBeFalsy()
+    expect(checklist.smtp.checked).toBeTruthy()
+    expect(checklist.adminUser.checked).toBeTruthy()
   })
 })
