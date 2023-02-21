@@ -14,7 +14,7 @@
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
-    "test": "jest --coverage --maxWorkers=2",
+    "test": "jest --coverage --runInBand",
     "test:watch": "jest --watch",
     "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client",
     "build:docker": "yarn run predocker && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION",
