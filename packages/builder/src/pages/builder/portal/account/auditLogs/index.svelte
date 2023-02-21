@@ -55,8 +55,10 @@
   let prevLogSearch = undefined
   let selectedUsers = []
   let selectedApps = []
+  let selectedEvents = []
   let selectedLog
   let sidePanelVisible = false
+  let wideSidePanel = false
   let startDate, endDate
 
   $: fetchUsers(userPage, userSearchTerm)
@@ -66,7 +68,8 @@
     startDate,
     endDate,
     selectedUsers,
-    selectedApps
+    selectedApps,
+    selectedEvents
   )
 
   $: userPage = $userPageInfo.page
@@ -100,7 +103,8 @@
     startDate,
     endDate,
     selectedUsers,
-    selectedApps
+    selectedApps,
+    selectedEvents
   ) => {
     if ($logsPageInfo.loading) {
       return
@@ -120,6 +124,7 @@
         metadataSearch: search,
         userIds: selectedUsers,
         appIds: selectedApps,
+        events: selectedEvents,
       })
       logsPageInfo.fetched(
         $auditLogs.logs.hasNextPage,
@@ -225,7 +230,7 @@
           autocomplete
           placeholder="All apps"
           label="App"
-          getOptionValue={app => "app_dev_" + app.appId}
+          getOptionValue={app => app.instance._id}
           getOptionLabel={app => app.name}
           options={$apps}
           bind:value={selectedApps}
@@ -239,6 +244,7 @@
           options={Object.entries($auditLogs.events)}
           placeholder="All events"
           label="Event"
+          bind:value={selectedEvents}
         />
       </div>
     </div>
@@ -266,23 +272,35 @@
 {#if selectedLog}
   <div
     id="side-panel"
+    class:wide={wideSidePanel}
     class:visible={sidePanelVisible}
     use:clickOutside={() => {
       sidePanelVisible = false
     }}
   >
     <div class="side-panel-header">
-      Audit Logs
-      <Icon
-        hoverable
-        name="Close"
-        on:click={() => {
-          sidePanelVisible = false
-        }}
-      />
+      Audit Log
+      <div class="side-panel-icons">
+        <Icon
+          size="S"
+          hoverable
+          name={wideSidePanel ? "Minimize" : "Maximize"}
+          on:click={() => {
+            wideSidePanel = !wideSidePanel
+          }}
+        />
+        <Icon
+          hoverable
+          name="Close"
+          on:click={() => {
+            sidePanelVisible = false
+          }}
+        />
+      </div>
     </div>
     <div style="padding-top: 10px; height: 95%">
       <CoreTextArea
+        disabled
         minHeight={"300px"}
         height={"100%"}
         value={JSON.stringify(selectedLog.metadata, null, 2)}
@@ -319,6 +337,22 @@
     transform: translateX(0);
   }
 
+  #side-panel.wide {
+    width: 500px;
+  }
+
+  #side-panel :global(textarea) {
+    min-height: 202px !important;
+    background-color: var(
+      --spectrum-textfield-m-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    color: var(
+      --spectrum-textfield-m-text-color,
+      var(--spectrum-alias-text-color)
+    );
+  }
+
   .search :global(.spectrum-InputGroup) {
     width: 100px;
   }
@@ -329,6 +363,11 @@
     gap: var(--spacing-l);
     flex-wrap: wrap;
     align-items: flex-end;
+  }
+
+  .side-panel-icons {
+    display: flex;
+    gap: var(--spacing-l);
   }
 
   .select {
