@@ -12,7 +12,7 @@ class DBTestConfiguration {
     this.tenantId = structures.tenant.id()
   }
 
-  reset() {
+  newTenant() {
     this.tenantId = structures.tenant.id()
   }
 
