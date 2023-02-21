@@ -23,7 +23,9 @@
 
 <div class="container">
   <div class="value">
-    {dayjs(timeOnly ? time : value).format(format)}
+    {#if value}
+      {dayjs(timeOnly ? time : value).format(format)}
+    {/if}
   </div>
   {#if editable}
     <Icon name="Calendar" />
