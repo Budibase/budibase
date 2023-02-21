@@ -4,7 +4,7 @@ const buildOpts = ({
   startDate,
   endDate,
   metadataSearch,
-  event,
+  events,
 }) => {
   const opts = {}
 
@@ -17,8 +17,8 @@ const buildOpts = ({
     opts.metadataSearch = metadataSearch
   }
 
-  if (event) {
-    opts.event = event
+  if (events) {
+    opts.event = events
   }
 
   if (userIds) {
