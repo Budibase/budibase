@@ -12,6 +12,7 @@ export enum LockName {
   MIGRATIONS = "migrations",
   TRIGGER_QUOTA = "trigger_quota",
   SYNC_ACCOUNT_LICENSE = "sync_account_license",
+  UPDATE_TENANTS_DOC = "update_tenants_doc",
 }
 
 export interface LockOptions {

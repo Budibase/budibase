@@ -101,7 +101,7 @@
   }
 
   const getSchema = filter => {
-    return schemaFields.find(field => field.name === filter.field)
+    return enrichedSchemaFields.find(field => field.name === filter.field)
   }
 
   const santizeTypes = filter => {
