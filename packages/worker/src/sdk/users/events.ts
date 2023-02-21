@@ -84,6 +84,10 @@ export const handleSaveEvents = async (
     ) {
       await events.user.passwordForceReset(user)
     }
+
+    if (user.password !== existingUser.password) {
+      await events.user.passwordUpdated(user)
+    }
   } else {
     await events.user.created(user)
   }

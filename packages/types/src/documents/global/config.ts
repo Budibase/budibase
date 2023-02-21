@@ -27,15 +27,17 @@ export interface SettingsConfig extends Config {
   }
 }
 
-export interface GoogleConfig extends Config {
-  config: {
-    clientID: string
-    clientSecret: string
-    activated: boolean
-  }
+export interface GoogleInnerConfig {
+  clientID: string
+  clientSecret: string
+  activated: boolean
 }
 
-export interface OIDCConfiguration {
+export interface GoogleConfig extends Config {
+  config: GoogleInnerConfig
+}
+
+export interface OIDCStrategyConfiguration {
   issuer: string
   authorizationURL: string
   tokenURL: string
@@ -45,7 +47,7 @@ export interface OIDCConfiguration {
   callbackURL: string
 }
 
-export interface OIDCInnerCfg {
+export interface OIDCInnerConfig {
   configUrl: string
   clientID: string
   clientSecret: string
@@ -57,8 +59,15 @@ export interface OIDCInnerCfg {
 
 export interface OIDCConfig extends Config {
   config: {
-    configs: OIDCInnerCfg[]
+    configs: OIDCInnerConfig[]
   }
+}
+
+export interface OIDCWellKnownConfig {
+  issuer: string
+  authorization_endpoint: string
+  token_endpoint: string
+  userinfo_endpoint: string
 }
 
 export const isSettingsConfig = (config: Config): config is SettingsConfig =>
