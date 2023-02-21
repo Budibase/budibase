@@ -33,6 +33,7 @@ export function createAuthStore() {
       initials,
       isAdmin,
       isBuilder,
+      isSSO: !!$store.user?.provider,
     }
   })
 

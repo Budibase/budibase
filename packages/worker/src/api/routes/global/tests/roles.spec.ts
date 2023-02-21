@@ -32,6 +32,7 @@ async function addAppMetadata() {
 
 describe("/api/global/roles", () => {
   const config = new TestConfiguration()
+
   const role = new roles.Role(
     db.generateRoleID("newRole"),
     roles.BUILTIN_ROLE_IDS.BASIC,
@@ -43,13 +44,13 @@ describe("/api/global/roles", () => {
   })
 
   beforeEach(async () => {
-    appId = db.generateAppID()
+    appId = db.generateAppID(config.tenantId)
     appDb = db.getDB(appId)
     const mockAppDB = context.getAppDB as Mock
     mockAppDB.mockReturnValue(appDb)
 
     await addAppMetadata()
-    appDb.put(role)
+    await appDb.put(role)
   })
 
   afterAll(async () => {

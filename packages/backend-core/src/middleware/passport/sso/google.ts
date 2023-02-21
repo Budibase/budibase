@@ -1,18 +1,26 @@
-import { ssoCallbackUrl } from "./utils"
-import { authenticateThirdParty, SaveUserFunction } from "./third-party-common"
-import { ConfigType, GoogleConfig, Database, SSOProfile } from "@budibase/types"
+import { ssoCallbackUrl } from "../utils"
+import * as sso from "./sso"
+import {
+  ConfigType,
+  GoogleConfig,
+  Database,
+  SSOProfile,
+  SSOAuthDetails,
+  SSOProviderType,
+  SaveSSOUserFunction,
+} from "@budibase/types"
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
-export function buildVerifyFn(saveUserFn?: SaveUserFunction) {
+export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
   return (
     accessToken: string,
     refreshToken: string,
     profile: SSOProfile,
     done: Function
   ) => {
-    const thirdPartyUser = {
-      provider: profile.provider, // should always be 'google'
-      providerType: "google",
+    const details: SSOAuthDetails = {
+      provider: "google",
+      providerType: SSOProviderType.GOOGLE,
       userId: profile.id,
       profile: profile,
       email: profile._json.email,
@@ -22,8 +30,8 @@ export function buildVerifyFn(saveUserFn?: SaveUserFunction) {
       },
     }
 
-    return authenticateThirdParty(
-      thirdPartyUser,
+    return sso.authenticate(
+      details,
       true, // require local accounts to exist
       done,
       saveUserFn
@@ -39,7 +47,7 @@ export function buildVerifyFn(saveUserFn?: SaveUserFunction) {
 export async function strategyFactory(
   config: GoogleConfig["config"],
   callbackUrl: string,
-  saveUserFn?: SaveUserFunction
+  saveUserFn: SaveSSOUserFunction
 ) {
   try {
     const { clientID, clientSecret } = config
