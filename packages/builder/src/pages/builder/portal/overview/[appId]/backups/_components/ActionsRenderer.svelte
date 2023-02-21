@@ -9,23 +9,20 @@
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let row
 
   let deleteDialog
   let restoreDialog
-  let name
   let restoreBackupModal
 
   const dispatch = createEventDispatcher()
 
-  const onClickRestore = name => {
+  const onClickRestore = () => {
     dispatch("buttonclick", {
       type: "backupRestore",
-      name,
       backupId: row._id,
-      restoreBackupName: name,
     })
   }
 
@@ -39,10 +36,6 @@
   async function downloadExport() {
     window.open(`/api/apps/${row.appId}/backups/${row._id}/file`, "_blank")
   }
-
-  onMount(() => {
-    name = row.name
-  })
 </script>
 
 <div class="cell">
@@ -60,7 +53,7 @@
 </div>
 
 <Modal bind:this={restoreBackupModal}>
-  <CreateRestoreModal confirm={name => onClickRestore(name)} />
+  <CreateRestoreModal confirm={onClickRestore} />
 </Modal>
 
 <ConfirmDialog
@@ -69,9 +62,7 @@
   onOk={onClickDelete}
   title="Confirm Deletion"
 >
-  Are you sure you wish to delete the backup
-  <i>{row.name}?</i>
-  This action cannot be undone.
+  Are you sure you wish to delete this backup? This action cannot be undone.
 </ConfirmDialog>
 
 <ConfirmDialog
@@ -81,7 +72,7 @@
   title="Confirm restore"
   warning={false}
 >
-  <Heading size="S">{row.name || "Backup"}</Heading>
+  <Heading size="S">Backup</Heading>
   <Body size="S">{new Date(row.timestamp).toLocaleString()}</Body>
 </ConfirmDialog>
 
