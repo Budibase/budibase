@@ -1,7 +1,6 @@
 import env from "../environment"
-import { directCouchQuery, getPouchDB } from "./couch"
+import { directCouchQuery, DatabaseImpl } from "./couch"
 import { CouchFindOptions, Database } from "@budibase/types"
-import { DatabaseImpl } from "../db"
 
 const dbList = new Set()
 

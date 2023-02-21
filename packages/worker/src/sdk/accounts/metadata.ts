@@ -2,7 +2,6 @@ import { AccountMetadata } from "@budibase/types"
 import {
   db,
   StaticDatabases,
-  HTTPError,
   DocumentType,
   SEPARATOR,
 } from "@budibase/backend-core"

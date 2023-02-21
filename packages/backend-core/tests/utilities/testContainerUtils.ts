@@ -34,12 +34,17 @@ function getMinioConfig() {
   return getContainerInfo("minio-service", 9000)
 }
 
+function getRedisConfig() {
+  return getContainerInfo("redis-service", 6379)
+}
+
 export function setupEnv(...envs: any[]) {
   const configs = [
     { key: "COUCH_DB_PORT", value: getCouchConfig().port },
     { key: "COUCH_DB_URL", value: getCouchConfig().url },
     { key: "MINIO_PORT", value: getMinioConfig().port },
     { key: "MINIO_URL", value: getMinioConfig().url },
+    { key: "REDIS_URL", value: getRedisConfig().url },
   ]
 
   for (const config of configs.filter(x => !!x.value)) {
