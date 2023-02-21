@@ -26,6 +26,8 @@ function parseIntSafe(number: any) {
   }
 }
 
+const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
+
 const environment = {
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
@@ -49,7 +51,7 @@ const environment = {
   CLUSTER_PORT: process.env.CLUSTER_PORT,
   // flags
   NODE_ENV: process.env.NODE_ENV,
-  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
+  SELF_HOSTED: selfHosted,
   LOG_LEVEL: process.env.LOG_LEVEL,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
@@ -65,6 +67,18 @@ const environment = {
   CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   ENCRYPTED_TEST_PUBLIC_API_KEY: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY,
+  /**
+   * Mock the email service in use - links to ethereal hosted emails are logged instead.
+   */
+  ENABLE_EMAIL_TEST_MODE: process.env.ENABLE_EMAIL_TEST_MODE,
+  /**
+   * Enable to allow an admin user to login using a password.
+   * This can be useful to prevent lockout when configuring SSO.
+   * However, this should be turned OFF by default for security purposes.
+   */
+  ENABLE_SSO_MAINTENANCE_MODE: selfHosted
+    ? process.env.ENABLE_SSO_MAINTENANCE_MODE
+    : false,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
