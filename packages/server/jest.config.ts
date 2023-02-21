@@ -11,22 +11,17 @@ const baseConfig: Config.InitialProjectOptions = {
   transform: {
     "^.+\\.ts?$": "@swc/jest",
   },
-}
-
-if (!process.env.CI) {
-  // use sources when not in CI
-  baseConfig.moduleNameMapper = {
+  moduleNameMapper: {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
     "@budibase/types": "<rootDir>/../types/src",
-  }
-  // add pro sources if they exist
-  if (fs.existsSync("../../../budibase-pro")) {
-    baseConfig.moduleNameMapper["@budibase/pro"] =
-      "<rootDir>/../../../budibase-pro/packages/pro/src"
-  }
-} else {
-  console.log("Running tests with compiled dependency sources")
+  },
+}
+
+// add pro sources if they exist
+if (fs.existsSync("../../../budibase-pro")) {
+  baseConfig.moduleNameMapper["@budibase/pro"] =
+    "<rootDir>/../../../budibase-pro/packages/pro/src"
 }
 
 const config: Config.InitialOptions = {
