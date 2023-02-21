@@ -1,22 +1,20 @@
 import fetch from "node-fetch"
-import { authenticateThirdParty, SaveUserFunction } from "./third-party-common"
-import { ssoCallbackUrl } from "./utils"
+import * as sso from "./sso"
+import { ssoCallbackUrl } from "../utils"
 import {
   ConfigType,
-  OIDCInnerCfg,
+  OIDCInnerConfig,
   Database,
   SSOProfile,
-  ThirdPartyUser,
-  OIDCConfiguration,
+  OIDCStrategyConfiguration,
+  SSOAuthDetails,
+  SSOProviderType,
+  JwtClaims,
+  SaveSSOUserFunction,
 } from "@budibase/types"
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 
-type JwtClaims = {
-  preferred_username: string
-  email: string
-}
-
-export function buildVerifyFn(saveUserFn?: SaveUserFunction) {
+export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
   /**
    * @param {*} issuer The identity provider base URL
    * @param {*} sub The user ID
@@ -39,10 +37,10 @@ export function buildVerifyFn(saveUserFn?: SaveUserFunction) {
     params: any,
     done: Function
   ) => {
-    const thirdPartyUser: ThirdPartyUser = {
+    const details: SSOAuthDetails = {
       // store the issuer info to enable sync in future
       provider: issuer,
-      providerType: "oidc",
+      providerType: SSOProviderType.OIDC,
       userId: profile.id,
       profile: profile,
       email: getEmail(profile, jwtClaims),
@@ -52,8 +50,8 @@ export function buildVerifyFn(saveUserFn?: SaveUserFunction) {
       },
     }
 
-    return authenticateThirdParty(
-      thirdPartyUser,
+    return sso.authenticate(
+      details,
       false, // don't require local accounts to exist
       done,
       saveUserFn
@@ -104,8 +102,8 @@ function validEmail(value: string) {
  * @returns Dynamically configured Passport OIDC Strategy
  */
 export async function strategyFactory(
-  config: OIDCConfiguration,
-  saveUserFn?: SaveUserFunction
+  config: OIDCStrategyConfiguration,
+  saveUserFn: SaveSSOUserFunction
 ) {
   try {
     const verify = buildVerifyFn(saveUserFn)
@@ -119,14 +117,14 @@ export async function strategyFactory(
 }
 
 export async function fetchStrategyConfig(
-  enrichedConfig: OIDCInnerCfg,
+  oidcConfig: OIDCInnerConfig,
   callbackUrl?: string
-): Promise<OIDCConfiguration> {
+): Promise<OIDCStrategyConfiguration> {
   try {
-    const { clientID, clientSecret, configUrl } = enrichedConfig
+    const { clientID, clientSecret, configUrl } = oidcConfig
 
     if (!clientID || !clientSecret || !callbackUrl || !configUrl) {
-      //check for remote config and all required elements
+      // check for remote config and all required elements
       throw new Error(
         "Configuration invalid. Must contain clientID, clientSecret, callbackUrl and configUrl"
       )

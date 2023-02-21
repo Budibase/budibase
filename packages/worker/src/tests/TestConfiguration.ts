@@ -22,7 +22,7 @@ import {
   env as coreEnv,
 } from "@budibase/backend-core"
 import structures, { CSRF_TOKEN } from "./structures"
-import { CreateUserResponse, User, AuthToken } from "@budibase/types"
+import { SaveUserResponse, User, AuthToken } from "@budibase/types"
 import API from "./api"
 
 class TestConfiguration {
@@ -226,7 +226,7 @@ class TestConfiguration {
       user = structures.users.user()
     }
     const response = await this._req(user, null, controllers.users.save)
-    const body = response as CreateUserResponse
+    const body = response as SaveUserResponse
     return this.getUser(body.email)
   }
 
