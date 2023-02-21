@@ -316,7 +316,7 @@ export class ExternalRequest {
             key: otherKey,
             [thisKey]: breakRowIdField(relationship)[0],
             // leave the ID for enrichment later
-            [otherKey]: `{{ literal ${tablePrimary} }}`,
+            [otherKey]: `{{ literal [${table.name}.${tablePrimary}] }}`,
           })
         })
       }
