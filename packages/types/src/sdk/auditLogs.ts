@@ -1,9 +1,10 @@
-import { Event } from "./events"
+import { Event, HostInfo } from "./events"
 
 export type AuditWriteOpts = {
   appId?: string
   timestamp?: string | number
   userId?: string
+  hostInfo?: HostInfo
 }
 
 export type AuditLogFn = (

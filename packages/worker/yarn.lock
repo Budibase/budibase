@@ -3653,6 +3653,11 @@ expect@^28.1.3:
     jest-message-util "^28.1.3"
     jest-util "^28.1.3"
 
+express-useragent@^1.0.15:
+  version "1.0.15"
+  resolved "https://registry.yarnpkg.com/express-useragent/-/express-useragent-1.0.15.tgz#cefda5fa4904345d51d3368b117a8dd4124985d9"
+  integrity sha512-eq5xMiYCYwFPoekffMjvEIk+NWdlQY9Y38OsTyl13IvA728vKT+q/CSERYWzcw93HGBJcIqMIsZC5CZGARPVdg==
+
 extend@~3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/extend/-/extend-3.0.2.tgz#f8b1136b4071fbd8eb140aff858b1019ec2915fa"
@@ -5466,6 +5471,13 @@ koa-static@5.0.0:
   dependencies:
     debug "^3.1.0"
     koa-send "^5.0.0"
+
+koa-useragent@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/koa-useragent/-/koa-useragent-4.1.0.tgz#d3f128b552c6da3e5e9e9e9c887b2922b16e4468"
+  integrity sha512-x/HUDZ1zAmNNh5hA9hHbPm9p3UVg2prlpHzxCXQCzbibrNS0kmj7MkCResCbAbG7ZT6FVxNSMjR94ZGamdMwxA==
+  dependencies:
+    express-useragent "^1.0.15"
 
 koa@2.13.4, koa@^2.13.4:
   version "2.13.4"

@@ -33,6 +33,7 @@ import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")
+const { userAgent } = require("koa-useragent")
 
 // configure events to use the pro audit log write
 // can't integrate directly into backend-core due to cyclic issues
@@ -58,6 +59,7 @@ app.use(
 )
 
 app.use(middleware.logging)
+app.use(userAgent)
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")

@@ -18,15 +18,15 @@ const buildOpts = ({
   }
 
   if (events) {
-    opts.event = events
+    opts.events = events
   }
 
   if (userIds) {
-    opts.userId = userIds
+    opts.userIds = userIds
   }
 
   if (appIds) {
-    opts.appId = appIds
+    opts.appIds = appIds
   }
 
   return opts
