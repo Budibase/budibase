@@ -1,13 +1,24 @@
 import API from "./api"
 import env from "../environment"
 import { Header } from "../constants"
-import { CloudAccount } from "@budibase/types"
+import { CloudAccount, HealthStatusResponse } from "@budibase/types"
 
 const api = new API(env.ACCOUNT_PORTAL_URL)
+
+/**
+ * This client is intended to be used in a cloud hosted deploy only.
+ * Rather than relying on each consumer to perform the necessary environmental checks
+ * we use the following check to exit early with a undefined response which should be
+ * handled by the caller.
+ */
+const EXIT_EARLY = env.SELF_HOSTED || env.DISABLE_ACCOUNT_PORTAL
 
 export const getAccount = async (
   email: string
 ): Promise<CloudAccount | undefined> => {
+  if (EXIT_EARLY) {
+    return
+  }
   const payload = {
     email,
   }
@@ -29,6 +40,9 @@ export const getAccount = async (
 export const getAccountByTenantId = async (
   tenantId: string
 ): Promise<CloudAccount | undefined> => {
+  if (EXIT_EARLY) {
+    return
+  }
   const payload = {
     tenantId,
   }
@@ -47,7 +61,12 @@ export const getAccountByTenantId = async (
   return json[0]
 }
 
-export const getStatus = async () => {
+export const getStatus = async (): Promise<
+  HealthStatusResponse | undefined
+> => {
+  if (EXIT_EARLY) {
+    return
+  }
   const response = await api.get(`/api/status`, {
     headers: {
       [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
