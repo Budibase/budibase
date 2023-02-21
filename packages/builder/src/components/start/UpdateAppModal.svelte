@@ -23,14 +23,25 @@
   })
   const validation = createValidationStore()
 
-  $: validation.check($values)
+  $: {
+    const { name, url } = $values
+
+    validation.check({
+      name,
+      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+    })
+  }
 
   const setupValidation = async () => {
     const applications = svelteGet(apps)
     appValidation.name(validation, { apps: applications, currentApp: app })
     appValidation.url(validation, { apps: applications, currentApp: app })
     // init validation
-    validation.check($values)
+    const { name, url } = $values
+    validation.check({
+      name,
+      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+    })
   }
 
   async function updateApp() {
