@@ -1,12 +1,11 @@
 <script>
   import dayjs from "dayjs"
-
-  export let row
-
   import relativeTime from "dayjs/plugin/relativeTime"
   dayjs.extend(relativeTime)
+
+  export let row
 </script>
 
 <div>
-  {dayjs(row.date).fromNow()}
+  {dayjs(row.timestamp).fromNow()}
 </div>
