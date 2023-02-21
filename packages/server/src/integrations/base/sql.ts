@@ -502,9 +502,7 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.update(parsedBody)
     } else {
-      return query
-        .update(parsedBody)
-        .returning(generateSelectStatement(json, knex))
+      return query.update(parsedBody).returning("*")
     }
   }
 
