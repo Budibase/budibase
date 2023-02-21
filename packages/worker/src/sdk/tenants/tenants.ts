@@ -5,9 +5,9 @@ import { quotas } from "@budibase/pro"
 export async function deleteTenant(tenantId: string) {
   await quotas.bustCache()
   await platform.tenants.removeTenant(tenantId)
-  await removeGlobalDB(tenantId)
   await removeTenantUsers(tenantId)
   await removeTenantApps(tenantId)
+  await removeGlobalDB(tenantId)
 }
 
 async function removeGlobalDB(tenantId: string) {

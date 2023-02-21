@@ -4,7 +4,7 @@ import {
   StaticDatabases,
   getAllApps,
   getGlobalDBName,
-  doWithDB,
+  getDB,
 } from "../db"
 import environment from "../environment"
 import * as platform from "../platform"
@@ -86,66 +86,65 @@ export const runMigration = async (
     count++
     const lengthStatement = length > 1 ? `[${count}/${length}]` : ""
 
-    await doWithDB(dbName, async (db: any) => {
-      try {
-        const doc = await getMigrationsDoc(db)
+    const db = getDB(dbName)
+    try {
+      const doc = await getMigrationsDoc(db)
 
-        // the migration has already been run
-        if (doc[migrationName]) {
-          // check for force
-          if (
-            options.force &&
-            options.force[migrationType] &&
-            options.force[migrationType].includes(migrationName)
-          ) {
-            log(
-              `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Forcing`
-            )
-          } else {
-            // no force, exit
-            return
-          }
-        }
-
-        // check if the migration is not a no-op
-        if (!options.noOp) {
+      // the migration has already been run
+      if (doc[migrationName]) {
+        // check for force
+        if (
+          options.force &&
+          options.force[migrationType] &&
+          options.force[migrationType].includes(migrationName)
+        ) {
           log(
-            `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running ${lengthStatement}`
+            `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Forcing`
           )
-
-          if (migration.preventRetry) {
-            // eagerly set the completion date
-            // so that we never run this migration twice even upon failure
-            doc[migrationName] = Date.now()
-            const response = await db.put(doc)
-            doc._rev = response.rev
-          }
-
-          // run the migration
-          if (migrationType === MigrationType.APP) {
-            await context.doInAppContext(db.name, async () => {
-              await migration.fn(db)
-            })
-          } else {
-            await migration.fn(db)
-          }
-
-          log(
-            `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Complete`
-          )
+        } else {
+          // no force, exit
+          return
         }
-
-        // mark as complete
-        doc[migrationName] = Date.now()
-        await db.put(doc)
-      } catch (err) {
-        console.error(
-          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Error: `,
-          err
-        )
-        throw err
       }
-    })
+
+      // check if the migration is not a no-op
+      if (!options.noOp) {
+        log(
+          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running ${lengthStatement}`
+        )
+
+        if (migration.preventRetry) {
+          // eagerly set the completion date
+          // so that we never run this migration twice even upon failure
+          doc[migrationName] = Date.now()
+          const response = await db.put(doc)
+          doc._rev = response.rev
+        }
+
+        // run the migration
+        if (migrationType === MigrationType.APP) {
+          await context.doInAppContext(db.name, async () => {
+            await migration.fn(db)
+          })
+        } else {
+          await migration.fn(db)
+        }
+
+        log(
+          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Complete`
+        )
+      }
+
+      // mark as complete
+      doc[migrationName] = Date.now()
+      await db.put(doc)
+    } catch (err) {
+      console.error(
+        `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Error: `,
+        err
+      )
+      throw err
+    }
   }
 }
 
@@ -185,7 +184,10 @@ export const runMigrations = async (
     // for all migrations
     for (const migration of migrations) {
       // run the migration
-      await context.doInTenant(tenantId, () => runMigration(migration, options))
+      await context.doInTenant(
+        tenantId,
+        async () => await runMigration(migration, options)
+      )
     }
   }
   console.log("Migrations complete")
