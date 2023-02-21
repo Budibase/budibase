@@ -1,29 +1,22 @@
 import Redlock, { Options } from "redlock"
 import { getLockClient } from "./init"
 import { LockOptions, LockType } from "@budibase/types"
-import * as tenancy from "../tenancy"
-
-let noRetryRedlock: Redlock | undefined
+import * as context from "../context"
+import env from "../environment"
 
 const getClient = async (type: LockType): Promise<Redlock> => {
+  if (env.isTest() && type !== LockType.TRY_ONCE) {
+    return newRedlock(OPTIONS.TEST)
+  }
   switch (type) {
     case LockType.TRY_ONCE: {
-      if (!noRetryRedlock) {
-        noRetryRedlock = await newRedlock(OPTIONS.TRY_ONCE)
-      }
-      return noRetryRedlock
+      return newRedlock(OPTIONS.TRY_ONCE)
     }
     case LockType.DEFAULT: {
-      if (!noRetryRedlock) {
-        noRetryRedlock = await newRedlock(OPTIONS.DEFAULT)
-      }
-      return noRetryRedlock
+      return newRedlock(OPTIONS.DEFAULT)
     }
     case LockType.DELAY_500: {
-      if (!noRetryRedlock) {
-        noRetryRedlock = await newRedlock(OPTIONS.DELAY_500)
-      }
-      return noRetryRedlock
+      return newRedlock(OPTIONS.DELAY_500)
     }
     default: {
       throw new Error(`Could not get redlock client: ${type}`)
@@ -35,6 +28,11 @@ export const OPTIONS = {
   TRY_ONCE: {
     // immediately throws an error if the lock is already held
     retryCount: 0,
+  },
+  TEST: {
+    // higher retry count in unit tests
+    // due to high contention.
+    retryCount: 100,
   },
   DEFAULT: {
     // the expected clock drift; for more details
@@ -69,12 +67,19 @@ export const doWithLock = async (opts: LockOptions, task: any) => {
   const redlock = await getClient(opts.type)
   let lock
   try {
-    // aquire lock
-    let name: string = `lock:${tenancy.getTenantId()}_${opts.name}`
+    // determine lock name
+    // by default use the tenantId for uniqueness, unless using a system lock
+    const prefix = opts.systemLock ? "system" : context.getTenantId()
+    let name: string = `lock:${prefix}_${opts.name}`
+
+    // add additional unique name if required
     if (opts.nameSuffix) {
       name = name + `_${opts.nameSuffix}`
     }
+
+    // create the lock
     lock = await redlock.lock(name, opts.ttl)
+
     // perform locked task
     // need to await to ensure completion before unlocking
     const result = await task()

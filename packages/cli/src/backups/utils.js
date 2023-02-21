@@ -74,17 +74,17 @@ exports.getConfig = async (envFile = true) => {
   return config
 }
 
-exports.replication = (from, to) => {
-  return new Promise((resolve, reject) => {
-    from.replicate
-      .to(to)
-      .on("complete", () => {
-        resolve()
-      })
-      .on("error", err => {
-        reject(err)
-      })
-  })
+exports.replication = async (from, to) => {
+  const pouch = getPouch()
+  try {
+    await pouch.replicate(from, to, {
+      batch_size: 1000,
+      batch_limit: 5,
+      style: "main_only",
+    })
+  } catch (err) {
+    throw new Error(`Replication failed - ${JSON.stringify(err)}`)
+  }
 }
 
 exports.getPouches = config => {

@@ -110,14 +110,13 @@ export default class AppApi {
     return [response, json]
   }
 
-  async delete(appId: string): Promise<[Response, any]> {
+  async delete(appId: string): Promise<Response> {
     const response = await this.api.del(`/applications/${appId}`)
-    const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    return [response, json]
+    return response
   }
 
-  async update(
+  async rename(
     appId: string,
     oldName: string,
     body: any
@@ -152,5 +151,28 @@ export default class AppApi {
     const response = await this.api.post(`/applications/${appId}/unpublish`)
     expect(response).toHaveStatusCode(204)
     return [response]
+  }
+
+  async unlock(appId: string): Promise<[Response, responseMessage]> {
+    const response = await this.api.del(`/dev/${appId}/lock`)
+    const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json.message).toEqual("Lock released successfully.")
+    return [response, json]
+  }
+
+  async updateIcon(appId: string): Promise<[Response, Application]> {
+    const body = {
+      icon: {
+        name: "ConversionFunnel",
+        color: "var(--spectrum-global-color-red-400)",
+      },
+    }
+    const response = await this.api.put(`/applications/${appId}`, { body })
+    const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json.icon.name).toEqual(body.icon.name)
+    expect(json.icon.color).toEqual(body.icon.color)
+    return [response, json]
   }
 }

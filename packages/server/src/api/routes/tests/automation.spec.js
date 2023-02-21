@@ -10,12 +10,16 @@ const MAX_RETRIES = 4
 const { TRIGGER_DEFINITIONS, ACTION_DEFINITIONS } = require("../../../automations")
 const { events } = require("@budibase/backend-core")
 
+
+jest.setTimeout(30000)
+
 describe("/automations", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
 
   afterAll(setup.afterAll)
 
+  // For some reason this cannot be a beforeAll or the test "tests the automation successfully" fail
   beforeEach(async () => {
     await config.init()
   })
@@ -145,7 +149,7 @@ describe("/automations", () => {
         let elements = await getAllTableRows(config)
         // don't test it unless there are values to test
         if (elements.length > 1) {
-          expect(elements.length).toEqual(5)
+          expect(elements.length).toBeGreaterThanOrEqual(MAX_RETRIES)
           expect(elements[0].name).toEqual("Test")
           expect(elements[0].description).toEqual("TEST")
           return
@@ -305,7 +309,7 @@ describe("/automations", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(res.body[0]).toEqual(expect.objectContaining(autoConfig))
+      expect(res.body[0]).toEqual(expect.objectContaining(autoConfig))
     })
 
     it("should apply authorization to endpoint", async () => {

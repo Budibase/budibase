@@ -2,28 +2,23 @@ import { getAllApps, queryGlobalView } from "../db"
 import { options } from "../middleware/passport/jwt"
 import {
   Header,
-  Cookie,
   MAX_VALID_DATE,
   DocumentType,
   SEPARATOR,
   ViewName,
 } from "../constants"
 import env from "../environment"
-import * as userCache from "../cache/user"
-import { getSessionsForUser, invalidateSessions } from "../security/sessions"
-import * as events from "../events"
 import * as tenancy from "../tenancy"
-import {
-  App,
-  Ctx,
-  PlatformLogoutOpts,
-  TenantResolutionStrategy,
-} from "@budibase/types"
+import * as context from "../context"
+import { App, Ctx, TenantResolutionStrategy } from "@budibase/types"
 import { SetOption } from "cookies"
 const jwt = require("jsonwebtoken")
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
+
+const BUILDER_PREVIEW_PATH = "/app/preview"
+const BUILDER_REFERER_PREFIX = "/builder/app/"
 
 function confirmAppId(possibleAppId: string | undefined) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
@@ -31,11 +26,11 @@ function confirmAppId(possibleAppId: string | undefined) {
     : undefined
 }
 
-async function resolveAppUrl(ctx: Ctx) {
+export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
-  let tenantId: string | null = tenancy.getTenantId()
+  let tenantId: string | null = context.getTenantId()
   if (env.MULTI_TENANCY) {
     // always use the tenant id from the subdomain in multi tenancy
     // this ensures the logged-in user tenant id doesn't overwrite
@@ -46,7 +41,7 @@ async function resolveAppUrl(ctx: Ctx) {
   }
 
   // search prod apps for a url that matches
-  const apps: App[] = await tenancy.doInTenant(tenantId, () =>
+  const apps: App[] = await context.doInTenant(tenantId, () =>
     getAllApps({ dev: false })
   )
   const app = apps.filter(
@@ -75,7 +70,7 @@ export function isServingApp(ctx: Ctx) {
  */
 export async function getAppIdFromCtx(ctx: Ctx) {
   // look in headers
-  const options = [ctx.headers[Header.APP_ID]]
+  const options = [ctx.request.headers[Header.APP_ID]]
   let appId
   for (let option of options) {
     appId = confirmAppId(option as string)
@@ -95,15 +90,23 @@ export async function getAppIdFromCtx(ctx: Ctx) {
     appId = confirmAppId(pathId)
   }
 
-  // look in the referer
-  const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
-  if (!appId && refererId) {
-    appId = confirmAppId(refererId)
+  // lookup using custom url - prod apps only
+  // filter out the builder preview path which collides with the prod app path
+  // to ensure we don't load all apps excessively
+  const isBuilderPreview = ctx.path.startsWith(BUILDER_PREVIEW_PATH)
+  const isViewingProdApp =
+    ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
+  if (!appId && isViewingProdApp) {
+    appId = confirmAppId(await resolveAppUrl(ctx))
   }
 
-  // look in the url - prod app
-  if (!appId && ctx.path.startsWith(PROD_APP_PREFIX)) {
-    appId = confirmAppId(await resolveAppUrl(ctx))
+  // look in the referer - builder only
+  // make sure this is performed after prod app url resolution, in case the
+  // referer header is present from a builder redirect
+  const referer = ctx.request.headers.referer
+  if (!appId && referer?.includes(BUILDER_REFERER_PREFIX)) {
+    const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
+    appId = confirmAppId(refererId)
   }
 
   return appId
@@ -209,35 +212,6 @@ async function getBuilders() {
 export async function getBuildersCount() {
   const builders = await getBuilders()
   return builders.length
-}
-
-/**
- * Logs a user out from budibase. Re-used across account portal and builder.
- */
-export async function platformLogout(opts: PlatformLogoutOpts) {
-  const ctx = opts.ctx
-  const userId = opts.userId
-  const keepActiveSession = opts.keepActiveSession
-
-  if (!ctx) throw new Error("Koa context must be supplied to logout.")
-
-  const currentSession = getCookie(ctx, Cookie.Auth)
-  let sessions = await getSessionsForUser(userId)
-
-  if (keepActiveSession) {
-    sessions = sessions.filter(
-      session => session.sessionId !== currentSession.sessionId
-    )
-  } else {
-    // clear cookies
-    clearCookie(ctx, Cookie.Auth)
-    clearCookie(ctx, Cookie.CurrentApp)
-  }
-
-  const sessionIds = sessions.map(({ sessionId }) => sessionId)
-  await invalidateSessions(userId, { sessionIds, reason: "logout" })
-  await events.auth.logout()
-  await userCache.invalidateUser(userId)
 }
 
 export function timeout(timeMs: number) {

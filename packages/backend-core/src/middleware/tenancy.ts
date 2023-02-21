@@ -1,4 +1,5 @@
-import { doInTenant, getTenantIDFromCtx } from "../tenancy"
+import { doInTenant } from "../context"
+import { getTenantIDFromCtx } from "../tenancy"
 import { buildMatcherRegex, matches } from "./matchers"
 import { Header } from "../constants"
 import {
@@ -8,7 +9,7 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 
-export = function (
+export default function (
   allowQueryStringPatterns: EndpointMatcher[],
   noTenancyPatterns: EndpointMatcher[],
   opts: { noTenancyRequired?: boolean } = { noTenancyRequired: false }

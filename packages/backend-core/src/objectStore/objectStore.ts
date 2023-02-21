@@ -361,8 +361,8 @@ export const deleteFolder = async (
     Prefix: folder,
   }
 
-  let response: any = await client.listObjects(listParams).promise()
-  if (response.Contents.length === 0) {
+  const existingObjectsResponse = await client.listObjects(listParams).promise()
+  if (existingObjectsResponse.Contents?.length === 0) {
     return
   }
   const deleteParams: any = {
@@ -372,13 +372,13 @@ export const deleteFolder = async (
     },
   }
 
-  response.Contents.forEach((content: any) => {
+  existingObjectsResponse.Contents?.forEach((content: any) => {
     deleteParams.Delete.Objects.push({ Key: content.Key })
   })
 
-  response = await client.deleteObjects(deleteParams).promise()
+  const deleteResponse = await client.deleteObjects(deleteParams).promise()
   // can only empty 1000 items at once
-  if (response.Deleted.length === 1000) {
+  if (deleteResponse.Deleted?.length === 1000) {
     return deleteFolder(bucketName, folder)
   }
 }

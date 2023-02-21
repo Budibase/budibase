@@ -4,7 +4,7 @@ import { getUser } from "../cache/user"
 import { getSession, updateSessionTTL } from "../security/sessions"
 import { buildMatcherRegex, matches } from "./matchers"
 import { SEPARATOR, queryGlobalView, ViewName } from "../db"
-import { getGlobalDB, doInTenant } from "../tenancy"
+import { getGlobalDB, doInTenant } from "../context"
 import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
@@ -66,7 +66,7 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
  * The tenancy modules should not be used here and it should be assumed that the tenancy context
  * has not yet been populated.
  */
-export = function (
+export default function (
   noAuthPatterns: EndpointMatcher[] = [],
   opts: { publicAllowed?: boolean; populateUser?: Function } = {
     publicAllowed: false,

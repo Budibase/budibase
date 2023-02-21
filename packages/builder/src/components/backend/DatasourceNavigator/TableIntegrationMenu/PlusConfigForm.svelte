@@ -82,7 +82,7 @@
 
     let displayString
     if (throughTableName) {
-      displayString = `${fromTableName} through ${throughTableName} → ${toTableName}`
+      displayString = `${fromTableName} ↔ ${toTableName}`
     } else {
       displayString = `${fromTableName} → ${toTableName}`
     }

@@ -18,8 +18,11 @@
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
+
   const dispatch = createEventDispatcher()
+
   let open = false
+
   $: fieldText = getFieldText(value, options, placeholder)
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)

@@ -1,20 +1,19 @@
-// need to load environment first
-import env from "./environment"
-
-// enable APM if configured
-if (process.env.ELASTIC_APM_ENABLED) {
-  const apm = require("elastic-apm-node").start({
-    serviceName: process.env.SERVICE,
-    environment: process.env.BUDIBASE_ENVIRONMENT,
-  })
+if (process.env.DD_APM_ENABLED) {
+  require("./ddApm")
 }
 
+if (process.env.ELASTIC_APM_ENABLED) {
+  require("./elasticApm")
+}
+
+// need to load environment first
+import env from "./environment"
 import { Scope } from "@sentry/node"
 import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { auth, logging, events, pinoSettings } from "@budibase/backend-core"
+import { auth, logging, events, middleware } from "@budibase/backend-core"
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"
@@ -26,6 +25,12 @@ const koaSession = require("koa-session")
 const logger = require("koa-pino-logger")
 import destroyable from "server-destroy"
 
+if (env.ENABLE_SSO_MAINTENANCE_MODE) {
+  console.warn(
+    "Warning: ENABLE_SSO_MAINTENANCE_MODE is set. It is recommended this flag is disabled if maintenance is not in progress"
+  )
+}
+
 // this will setup http and https proxies form env variables
 bootstrap()
 
@@ -36,7 +41,8 @@ app.keys = ["secret", "key"]
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
-app.use(logger(pinoSettings()))
+app.use(middleware.logging)
+app.use(logger(logging.pinoSettings()))
 
 // authentication
 app.use(auth.passport.initialize())
@@ -82,7 +88,7 @@ const shutdown = () => {
   server.destroy()
 }
 
-export = server.listen(parseInt(env.PORT || "4002"), async () => {
+export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await redis.init()
 })

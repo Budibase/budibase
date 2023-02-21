@@ -1,4 +1,4 @@
-import "../../../../../tests"
+import { testEnv } from "../../../../../tests"
 import PosthogProcessor from "../PosthogProcessor"
 import { Event, IdentityType, Hosting } from "@budibase/types"
 const tk = require("timekeeper")
@@ -16,6 +16,10 @@ const newIdentity = () => {
 }
 
 describe("PosthogProcessor", () => {
+  beforeAll(() => {
+    testEnv.singleTenant()
+  })
+
   beforeEach(async () => {
     jest.clearAllMocks()
     await cache.bustCache(

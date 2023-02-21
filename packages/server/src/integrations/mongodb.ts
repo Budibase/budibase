@@ -12,11 +12,16 @@ import {
   FindOneAndUpdateOptions,
   UpdateOptions,
   OperationOptions,
+  MongoClientOptions,
 } from "mongodb"
+import environment from "../environment"
 
 interface MongoDBConfig {
   connectionString: string
   db: string
+  tlsCertificateFile: string
+  tlsCertificateKeyFile: string
+  tlsCAFile: string
 }
 
 interface MongoDBQuery {
@@ -26,284 +31,318 @@ interface MongoDBQuery {
   }
 }
 
-const SCHEMA: Integration = {
-  docs: "https://github.com/mongodb/node-mongodb-native",
-  friendlyName: "MongoDB",
-  type: "Non-relational",
-  description:
-    "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
-  datasource: {
-    connectionString: {
-      type: DatasourceFieldType.STRING,
-      required: true,
-      default: "mongodb://localhost:27017",
-    },
-    db: {
-      type: DatasourceFieldType.STRING,
-      required: true,
-    },
-  },
-  query: {
-    create: {
-      type: QueryType.JSON,
-    },
-    read: {
-      type: QueryType.JSON,
-    },
-    update: {
-      type: QueryType.JSON,
-    },
-    delete: {
-      type: QueryType.JSON,
-    },
-    aggregate: {
-      type: QueryType.JSON,
-      readable: true,
-      steps: [
-        {
-          key: "$addFields",
-          template: "{\n\t\n}",
-        },
-        {
-          key: "$bucket",
-          template: `{
-  "groupBy": "",
-  "boundaries": [],
-  "default": "",
-  "output": {}
-}`,
-        },
-        {
-          key: "$bucketAuto",
-          template: `{
-  "groupBy": "",
-  "buckets": 1,
-  "output": {},
-  "granularity": "R5"
-}`,
-        },
-        {
-          key: "$changeStream",
-          template: `{
-  "allChangesForCluster": true,
-  "fullDocument": "",
-  "fullDocumentBeforeChange": "",
-  "resumeAfter": 1,
-  "showExpandedEvents": true,
-  "startAfter": {},
-  "startAtOperationTime": ""
-}`,
-        },
-        {
-          key: "$collStats",
-          template: `{
-  "latencyStats": { "histograms": true } },
-  "storageStats": { "scale": 1 } },
-  "count": {},
-  "queryExecStats": {}
-}`,
-        },
-        {
-          key: "$count",
-          template: ``,
-        },
-        {
-          key: "$densify",
-          template: `{
-  "field": "",
-  "partitionByFields": [],
-  "range": {
-    "step": 1,
-    "unit": 1,
-    "bounds": "full"
-  }
-}`,
-        },
-        {
-          key: "$documents",
-          template: `[]`,
-        },
-        {
-          key: "$facet",
-          template: `{\n\t\n}`,
-        },
-        {
-          key: "$fill",
-          template: `{
-  "partitionBy": "",
-  "partitionByFields": [],
-  "sortBy": {},
-  "output": {}
-}`,
-        },
-        {
-          key: "$geoNear",
-          template: `{
-  "near": { 
-    "type": "Point", 
-    "coordinates": [ 
-      -73.98142, 40.71782
-    ] 
-  },
-  "key": "location",
-  "distanceField": "dist.calculated",
-  "query": { "category": "Parks" }
-}`,
-        },
-        {
-          key: "$graphLookup",
-          template: `{
-  "from": "",
-  "startWith": "",
-  "connectFromField": "",
-  "connectToField": "",
-  "as": "",
-  "maxDepth": 1,
-  "depthField": "",
-  "restrictSearchWithMatch": {}
-}`,
-        },
-        {
-          key: "$group",
-          template: `{
-  "_id": ""
-}`,
-        },
-        {
-          key: "$indexStats",
-          template: "{\n\t\n}",
-        },
-        {
-          key: "$limit",
-          template: `1`,
-        },
-        {
-          key: "$listLocalSessions",
-          template: `{\n\t\n}`,
-        },
-        {
-          key: "$listSessions",
-          template: `{\n\t\n}`,
-        },
-        {
-          key: "$lookup",
-          template: `{
-  "from": "",
-  "localField": "",
-  "foreignField": "",
-  "as": ""
-}`,
-        },
-        {
-          key: "$match",
-          template: "{\n\t\n}",
-        },
-        {
-          key: "$merge",
-          template: `{
-  "into": {},
-  "on": "_id",
-  "whenMatched": "replace",
-  "whenNotMatched": "insert"
-}`,
-        },
-        {
-          key: "$out",
-          template: `{
-  "db": "",
-  "coll": ""
-}`,
-        },
-        {
-          key: "$planCacheStats",
-          template: "{\n\t\n}",
-        },
-        {
-          key: "$project",
-          template: "{\n\t\n}",
-        },
-        {
-          key: "$redact",
-          template: "",
-        },
-        {
-          key: "$replaceRoot",
-          template: `{ "newRoot": "" }`,
-        },
-        {
-          key: "$replaceWith",
-          template: ``,
-        },
-        {
-          key: "$sample",
-          template: `{ "size": 3 }`,
-        },
-        {
-          key: "$set",
-          template: "{\n\t\n}",
-        },
-        {
-          key: "$setWindowFields",
-          template: `{
-  "partitionBy": "",
-  "sortBy": {},
-  "output": {}
-}`,
-        },
-        {
-          key: "$skip",
-          template: `1`,
-        },
-        {
-          key: "$sort",
-          template: "{\n\t\n}",
-        },
-        {
-          key: "$sortByCount",
-          template: "",
-        },
-        {
-          key: "$unionWith",
-          template: `{
-  "coll": "",
-  "pipeline": []
-}`,
-        },
-        {
-          key: "$unset",
-          template: "",
-        },
-        {
-          key: "$unwind",
-          template: `{
-  "path": "",
-  "includeArrayIndex": "",
-  "preserveNullAndEmptyArrays": true
-}`,
-        },
-      ],
-    },
-  },
-  extra: {
-    collection: {
-      displayName: "Collection",
-      type: DatasourceFieldType.STRING,
-      required: true,
-    },
-    actionType: {
-      displayName: "Query Type",
-      type: DatasourceFieldType.LIST,
-      required: true,
-      data: {
-        read: ["find", "findOne", "findOneAndUpdate", "count", "distinct"],
-        create: ["insertOne", "insertMany"],
-        update: ["updateOne", "updateMany"],
-        delete: ["deleteOne", "deleteMany"],
-        aggregate: ["json", "pipeline"],
+const getSchema = () => {
+  let schema = {
+    docs: "https://github.com/mongodb/node-mongodb-native",
+    friendlyName: "MongoDB",
+    type: "Non-relational",
+    description:
+      "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
+    datasource: {
+      connectionString: {
+        type: DatasourceFieldType.STRING,
+        required: true,
+        default: "mongodb://localhost:27017",
+        display: "Connection string",
+      },
+      db: {
+        type: DatasourceFieldType.STRING,
+        required: true,
+        display: "DB",
       },
     },
-  },
+    query: {
+      create: {
+        type: QueryType.JSON,
+      },
+      read: {
+        type: QueryType.JSON,
+      },
+      update: {
+        type: QueryType.JSON,
+      },
+      delete: {
+        type: QueryType.JSON,
+      },
+      aggregate: {
+        type: QueryType.JSON,
+        readable: true,
+        steps: [
+          {
+            key: "$addFields",
+            template: "{\n\t\n}",
+          },
+          {
+            key: "$bucket",
+            template: `{
+    "groupBy": "",
+    "boundaries": [],
+    "default": "",
+    "output": {}
+  }`,
+          },
+          {
+            key: "$bucketAuto",
+            template: `{
+    "groupBy": "",
+    "buckets": 1,
+    "output": {},
+    "granularity": "R5"
+  }`,
+          },
+          {
+            key: "$changeStream",
+            template: `{
+    "allChangesForCluster": true,
+    "fullDocument": "",
+    "fullDocumentBeforeChange": "",
+    "resumeAfter": 1,
+    "showExpandedEvents": true,
+    "startAfter": {},
+    "startAtOperationTime": ""
+  }`,
+          },
+          {
+            key: "$collStats",
+            template: `{
+    "latencyStats": { "histograms": true } },
+    "storageStats": { "scale": 1 } },
+    "count": {},
+    "queryExecStats": {}
+  }`,
+          },
+          {
+            key: "$count",
+            template: ``,
+          },
+          {
+            key: "$densify",
+            template: `{
+    "field": "",
+    "partitionByFields": [],
+    "range": {
+      "step": 1,
+      "unit": 1,
+      "bounds": "full"
+    }
+  }`,
+          },
+          {
+            key: "$documents",
+            template: `[]`,
+          },
+          {
+            key: "$facet",
+            template: `{\n\t\n}`,
+          },
+          {
+            key: "$fill",
+            template: `{
+    "partitionBy": "",
+    "partitionByFields": [],
+    "sortBy": {},
+    "output": {}
+  }`,
+          },
+          {
+            key: "$geoNear",
+            template: `{
+    "near": { 
+      "type": "Point", 
+      "coordinates": [ 
+        -73.98142, 40.71782
+      ] 
+    },
+    "key": "location",
+    "distanceField": "dist.calculated",
+    "query": { "category": "Parks" }
+  }`,
+          },
+          {
+            key: "$graphLookup",
+            template: `{
+    "from": "",
+    "startWith": "",
+    "connectFromField": "",
+    "connectToField": "",
+    "as": "",
+    "maxDepth": 1,
+    "depthField": "",
+    "restrictSearchWithMatch": {}
+  }`,
+          },
+          {
+            key: "$group",
+            template: `{
+    "_id": ""
+  }`,
+          },
+          {
+            key: "$indexStats",
+            template: "{\n\t\n}",
+          },
+          {
+            key: "$limit",
+            template: `1`,
+          },
+          {
+            key: "$listLocalSessions",
+            template: `{\n\t\n}`,
+          },
+          {
+            key: "$listSessions",
+            template: `{\n\t\n}`,
+          },
+          {
+            key: "$lookup",
+            template: `{
+    "from": "",
+    "localField": "",
+    "foreignField": "",
+    "as": ""
+  }`,
+          },
+          {
+            key: "$match",
+            template: "{\n\t\n}",
+          },
+          {
+            key: "$merge",
+            template: `{
+    "into": {},
+    "on": "_id",
+    "whenMatched": "replace",
+    "whenNotMatched": "insert"
+  }`,
+          },
+          {
+            key: "$out",
+            template: `{
+    "db": "",
+    "coll": ""
+  }`,
+          },
+          {
+            key: "$planCacheStats",
+            template: "{\n\t\n}",
+          },
+          {
+            key: "$project",
+            template: "{\n\t\n}",
+          },
+          {
+            key: "$redact",
+            template: "",
+          },
+          {
+            key: "$replaceRoot",
+            template: `{ "newRoot": "" }`,
+          },
+          {
+            key: "$replaceWith",
+            template: ``,
+          },
+          {
+            key: "$sample",
+            template: `{ "size": 3 }`,
+          },
+          {
+            key: "$set",
+            template: "{\n\t\n}",
+          },
+          {
+            key: "$setWindowFields",
+            template: `{
+    "partitionBy": "",
+    "sortBy": {},
+    "output": {}
+  }`,
+          },
+          {
+            key: "$skip",
+            template: `1`,
+          },
+          {
+            key: "$sort",
+            template: "{\n\t\n}",
+          },
+          {
+            key: "$sortByCount",
+            template: "",
+          },
+          {
+            key: "$unionWith",
+            template: `{
+    "coll": "",
+    "pipeline": []
+  }`,
+          },
+          {
+            key: "$unset",
+            template: "",
+          },
+          {
+            key: "$unwind",
+            template: `{
+    "path": "",
+    "includeArrayIndex": "",
+    "preserveNullAndEmptyArrays": true
+  }`,
+          },
+        ],
+      },
+    },
+    extra: {
+      collection: {
+        displayName: "Collection",
+        type: DatasourceFieldType.STRING,
+        required: true,
+      },
+      actionType: {
+        displayName: "Query Type",
+        type: DatasourceFieldType.LIST,
+        required: true,
+        data: {
+          read: ["find", "findOne", "findOneAndUpdate", "count", "distinct"],
+          create: ["insertOne", "insertMany"],
+          update: ["updateOne", "updateMany"],
+          delete: ["deleteOne", "deleteMany"],
+          aggregate: ["json", "pipeline"],
+        },
+      },
+    },
+  }
+  if (environment.SELF_HOSTED) {
+    schema.datasource = {
+      ...schema.datasource,
+      //@ts-ignore
+      tls: {
+        type: DatasourceFieldType.FIELD_GROUP,
+        display: "Configure SSL",
+        fields: {
+          tlsCertificateFile: {
+            type: DatasourceFieldType.STRING,
+            required: false,
+            display: "Certificate file path",
+          },
+          tlsCertificateKeyFile: {
+            type: DatasourceFieldType.STRING,
+            required: false,
+            display: "Certificate Key file path",
+          },
+          tlsCAFile: {
+            type: DatasourceFieldType.STRING,
+            required: false,
+            display: "CA file path",
+          },
+        },
+      },
+    }
+  }
+  return schema
 }
+
+const SCHEMA: Integration = getSchema()
 
 class MongoIntegration implements IntegrationBase {
   private config: MongoDBConfig
@@ -311,7 +350,12 @@ class MongoIntegration implements IntegrationBase {
 
   constructor(config: MongoDBConfig) {
     this.config = config
-    this.client = new MongoClient(config.connectionString)
+    const options: MongoClientOptions = {
+      tlsCertificateFile: config.tlsCertificateFile || undefined,
+      tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
+      tlsCAFile: config.tlsCAFile || undefined,
+    }
+    this.client = new MongoClient(config.connectionString, options)
   }
 
   async connect() {

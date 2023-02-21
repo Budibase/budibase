@@ -7,7 +7,7 @@ const router: Router = new Router()
 router.delete(
   "/api/system/tenants/:tenantId",
   middleware.adminOnly,
-  controller.delete
+  controller.destroy
 )
 
-export = router
+export default router

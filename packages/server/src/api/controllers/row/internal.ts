@@ -27,7 +27,7 @@ import {
 import { cloneDeep } from "lodash/fp"
 import { context, db as dbCore } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
-import * as exporters from "../view/exporters"
+import { csv, json, jsonWithSchema, Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
   Ctx,
@@ -37,6 +37,8 @@ import {
   Row,
   Table,
 } from "@budibase/types"
+
+const { cleanExportRows } = require("./utils")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -357,6 +359,14 @@ export async function search(ctx: Ctx) {
   params.version = ctx.version
   params.tableId = tableId
 
+  let table
+  if (params.sort && !params.sortType) {
+    table = await db.get(tableId)
+    const schema = table.schema
+    const sortField = schema[params.sort]
+    params.sortType = sortField.type == "number" ? "number" : "string"
+  }
+
   let response
   if (paginate) {
     response = await paginatedSearch(query, params)
@@ -370,7 +380,7 @@ export async function search(ctx: Ctx) {
     if (tableId === InternalTables.USER_METADATA) {
       response.rows = await getGlobalUsersFromMetadata(response.rows)
     }
-    const table = await db.get(tableId)
+    table = table || (await db.get(tableId))
     response.rows = await outputProcessing(table, response.rows)
   }
 
@@ -389,16 +399,25 @@ export async function exportRows(ctx: Ctx) {
   const table = await db.get(ctx.params.tableId)
   const rowIds = ctx.request.body.rows
   let format = ctx.query.format
-  const { columns } = ctx.request.body
-  let response = (
-    await db.allDocs({
-      include_docs: true,
-      keys: rowIds,
-    })
-  ).rows.map(row => row.doc)
+  const { columns, query } = ctx.request.body
 
-  let result = (await outputProcessing(table, response)) as Row[]
+  let result
+  if (rowIds) {
+    let response = (
+      await db.allDocs({
+        include_docs: true,
+        keys: rowIds,
+      })
+    ).rows.map(row => row.doc)
+
+    result = await outputProcessing(table, response)
+  } else if (query) {
+    let searchResponse = await exports.search(ctx)
+    result = searchResponse.rows
+  }
+
   let rows: Row[] = []
+  let schema = table.schema
 
   // Filter data to only specified columns if required
   if (columns && columns.length) {
@@ -412,14 +431,19 @@ export async function exportRows(ctx: Ctx) {
     rows = result
   }
 
-  let headers = Object.keys(rows[0])
-  // @ts-ignore
-  const exporter = exporters[format]
-  const filename = `export.${format}`
-
-  // send down the file
-  ctx.attachment(filename)
-  return apiFileReturn(exporter(headers, rows))
+  let exportRows = cleanExportRows(rows, schema, format, columns)
+  if (format === Format.CSV) {
+    ctx.attachment("export.csv")
+    return apiFileReturn(csv(Object.keys(rows[0]), exportRows))
+  } else if (format === Format.JSON) {
+    ctx.attachment("export.json")
+    return apiFileReturn(json(exportRows))
+  } else if (format === Format.JSON_WITH_SCHEMA) {
+    ctx.attachment("export.json")
+    return apiFileReturn(jsonWithSchema(schema, exportRows))
+  } else {
+    throw "Format not recognised"
+  }
 }
 
 export async function fetchEnrichedRow(ctx: Ctx) {
