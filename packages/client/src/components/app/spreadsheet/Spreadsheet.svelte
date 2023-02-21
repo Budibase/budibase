@@ -365,6 +365,10 @@
     align-items: stretch;
     border: 1px solid var(--spectrum-global-color-gray-400);
     border-radius: 4px;
+
+    /* Variables */
+    --cell-background: var(--spectrum-global-color-gray-50);
+    --cell-background-hover: var(--spectrum-global-color-gray-100);
   }
   .spreadsheet {
     display: grid;
@@ -382,7 +386,7 @@
   }
 
   .wrapper ::-webkit-scrollbar-track {
-    background: var(--spectrum-global-color-gray-50);
+    background: var(--cell-background);
   }
 
   .controls {
@@ -430,11 +434,12 @@
     color: var(--spectrum-global-color-gray-900);
     font-size: 14px;
     gap: 4px;
-    background: var(--spectrum-global-color-gray-50);
+    background: var(--cell-background);
     position: relative;
   }
   .cell.hovered {
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--cell-background-hover);
+    --cell-background: var(--cell-background-hover);
   }
   .cell.selected {
     box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);

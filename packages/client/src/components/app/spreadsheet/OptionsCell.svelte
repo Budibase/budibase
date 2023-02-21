@@ -150,7 +150,7 @@
     background: linear-gradient(
       to right,
       transparent 0%,
-      var(--background) 40%
+      var(--cell-background) 40%
     );
   }
   .options {
