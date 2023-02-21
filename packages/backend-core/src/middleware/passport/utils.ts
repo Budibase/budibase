@@ -1,6 +1,6 @@
-import { isMultiTenant, getTenantId } from "../../tenancy"
+import { isMultiTenant, getTenantId } from "../../context"
 import { getScopedConfig } from "../../db"
-import { ConfigType, Database, Config } from "@budibase/types"
+import { ConfigType, Database } from "@budibase/types"
 
 /**
  * Utility to handle authentication errors.
