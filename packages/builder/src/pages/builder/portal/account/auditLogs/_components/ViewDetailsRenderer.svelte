@@ -10,4 +10,4 @@
   }
 </script>
 
-<ActionButton size="S" on:click={onClick}>Edit</ActionButton>
+<ActionButton size="S" on:click={onClick}>Details</ActionButton>
