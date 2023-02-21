@@ -236,42 +236,41 @@ class TestConfiguration {
     email = this.defaultUserValues.email,
     roles,
   }: any = {}) {
-    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: Database) => {
-      let existing
-      try {
-        existing = await db.get(id)
-      } catch (err) {
-        existing = { email }
-      }
-      const user = {
-        _id: id,
-        ...existing,
-        roles: roles || {},
-        tenantId: this.getTenantId(),
-        firstName,
-        lastName,
-      }
-      await sessions.createASession(id, {
-        sessionId: "sessionid",
-        tenantId: this.getTenantId(),
-        csrfToken: this.defaultUserValues.csrfToken,
-      })
-      if (builder) {
-        user.builder = { global: true }
-      } else {
-        user.builder = { global: false }
-      }
-      if (admin) {
-        user.admin = { global: true }
-      } else {
-        user.admin = { global: false }
-      }
-      const resp = await db.put(user)
-      return {
-        _rev: resp.rev,
-        ...user,
-      }
+    const db = tenancy.getTenantDB(this.getTenantId())
+    let existing
+    try {
+      existing = await db.get(id)
+    } catch (err) {
+      existing = { email }
+    }
+    const user = {
+      _id: id,
+      ...existing,
+      roles: roles || {},
+      tenantId: this.getTenantId(),
+      firstName,
+      lastName,
+    }
+    await sessions.createASession(id, {
+      sessionId: "sessionid",
+      tenantId: this.getTenantId(),
+      csrfToken: this.defaultUserValues.csrfToken,
     })
+    if (builder) {
+      user.builder = { global: true }
+    } else {
+      user.builder = { global: false }
+    }
+    if (admin) {
+      user.admin = { global: true }
+    } else {
+      user.admin = { global: false }
+    }
+    const resp = await db.put(user)
+    return {
+      _rev: resp.rev,
+      ...user,
+    }
   }
 
   async createUser(
@@ -417,20 +416,19 @@ class TestConfiguration {
   // API
 
   async generateApiKey(userId = this.defaultUserValues.globalUserId) {
-    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: any) => {
-      const id = dbCore.generateDevInfoID(userId)
-      let devInfo
-      try {
-        devInfo = await db.get(id)
-      } catch (err) {
-        devInfo = { _id: id, userId }
-      }
-      devInfo.apiKey = encryption.encrypt(
-        `${this.getTenantId()}${dbCore.SEPARATOR}${newid()}`
-      )
-      await db.put(devInfo)
-      return devInfo.apiKey
-    })
+    const db = tenancy.getTenantDB(this.getTenantId())
+    const id = dbCore.generateDevInfoID(userId)
+    let devInfo
+    try {
+      devInfo = await db.get(id)
+    } catch (err) {
+      devInfo = { _id: id, userId }
+    }
+    devInfo.apiKey = encryption.encrypt(
+      `${this.getTenantId()}${dbCore.SEPARATOR}${newid()}`
+    )
+    await db.put(devInfo)
+    return devInfo.apiKey
   }
 
   // APP
