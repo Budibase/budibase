@@ -1,14 +1,7 @@
 <script>
+  import { getColor } from "./utils"
+
   export let value
-
-  $: console.log(value)
-
-  const getColor = idx => {
-    if (!value || idx === -1) {
-      return null
-    }
-    return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, 0.3)`
-  }
 </script>
 
 <div class="container">
@@ -24,17 +17,17 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 0 8px;
+    padding: 0 var(--cell-padding);
     flex: 1 1 auto;
     width: 0;
-    gap: 4px;
+    gap: var(--cell-spacing);
     overflow: hidden;
   }
   .badge {
     flex: 0 0 auto;
-    padding: 2px 8px;
+    padding: 2px var(--cell-padding);
     background: var(--color);
-    border-radius: 8px;
+    border-radius: var(--cell-padding);
     user-select: none;
   }
 </style>

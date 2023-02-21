@@ -369,6 +369,10 @@
     /* Variables */
     --cell-background: var(--spectrum-global-color-gray-50);
     --cell-background-hover: var(--spectrum-global-color-gray-100);
+    --cell-padding: 8px;
+    --cell-spacing: 4px;
+    --cell-height: 32px;
+    --cell-font-size: 14px;
   }
   .spreadsheet {
     display: grid;
@@ -407,7 +411,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: 4px;
+    gap: var(--cell-spacing);
   }
   .delete {
     display: flex;
@@ -424,7 +428,7 @@
   }
 
   .cell {
-    height: 32px;
+    height: var(--cell-height);
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     border-right: 1px solid var(--spectrum-global-color-gray-300);
     display: flex;
@@ -432,14 +436,13 @@
     justify-content: flex-start;
     align-items: center;
     color: var(--spectrum-global-color-gray-900);
-    font-size: 14px;
-    gap: 4px;
+    font-size: var(--cell-font-size);
+    gap: var(--cell-spacing);
     background: var(--cell-background);
     position: relative;
   }
   .cell.hovered {
     background: var(--cell-background-hover);
-    --cell-background: var(--cell-background-hover);
   }
   .cell.selected {
     box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
@@ -470,7 +473,7 @@
     background: var(--spectrum-global-color-gray-200);
     position: sticky;
     top: 0;
-    padding: 0 8px;
+    padding: 0 var(--cell-padding);
     z-index: 3;
     border-color: var(--spectrum-global-color-gray-400);
   }

@@ -1,5 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
+  import { getColor } from "./utils"
 
   export let value
   export let schema
@@ -22,12 +23,9 @@
     }
   }
 
-  const getColor = value => {
-    const index = options.indexOf(value)
-    if (!value || index === -1) {
-      return null
-    }
-    return `hsla(${((index + 1) * 222) % 360}, 90%, 75%, 0.3)`
+  const getOptionColor = value => {
+    const index = value ? options.indexOf(value) : null
+    return getColor(index)
   }
 
   const toggleOption = option => {
@@ -60,7 +58,7 @@
 >
   <div class="values">
     {#each values as val (val)}
-      {@const color = getColor(val)}
+      {@const color = getOptionColor(val)}
       {#if color}
         <div class="badge text" style="--color: {color}">
           {val}
@@ -80,7 +78,7 @@
   {#if open}
     <div class="options">
       {#each values as val (val)}
-        {@const color = getColor(val)}
+        {@const color = getOptionColor(val)}
         <div class="option" on:click={() => toggleOption(val)}>
           <div class="badge text" style="--color: {color}">
             {val}
@@ -93,7 +91,7 @@
       {/each}
       {#each unselectedOptions as option (option)}
         <div class="option" on:click={() => toggleOption(option)}>
-          <div class="badge text" style="--color: {getColor(option)}">
+          <div class="badge text" style="--color: {getOptionColor(option)}">
             {option}
           </div>
         </div>
@@ -121,9 +119,9 @@
     align-items: center;
     flex: 1 1 auto;
     width: 0;
-    gap: 4px;
+    gap: var(--cell-spacing);
     overflow: hidden;
-    padding: 0 8px;
+    padding: 0 var(--cell-padding);
   }
   .text {
     overflow: hidden;
@@ -134,9 +132,9 @@
     flex: 0 0 auto;
   }
   .badge {
-    padding: 2px 8px;
+    padding: 2px var(--cell-padding);
     background: var(--color);
-    border-radius: 8px;
+    border-radius: var(--cell-padding);
     user-select: none;
   }
   .arrow {
@@ -151,6 +149,13 @@
       to right,
       transparent 0%,
       var(--cell-background) 40%
+    );
+  }
+  :global(.cell.hovered) .arrow {
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--cell-background-hover) 40%
     );
   }
   .options {
@@ -168,19 +173,19 @@
     z-index: 1;
   }
   .option {
-    flex: 0 0 32px;
-    padding: 0 8px;
+    flex: 0 0 var(--cell-height);
+    padding: 0 var(--cell-padding);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 4px;
-    background-color: var(--spectrum-global-color-gray-50);
+    gap: var(--cell-spacing);
+    background-color: var(--cell-background);
   }
   .option:first-child {
-    flex: 0 0 31px;
+    flex: 0 0 calc(var(--cell-height) - 1px);
   }
   .option:hover {
-    background-color: var(--spectrum-global-color-gray-100);
+    background-color: var(--cell-background-hover);
   }
 </style>
