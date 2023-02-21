@@ -23,22 +23,22 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: Use Node.js 14.x
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    - uses: actions/checkout@v2
     - run: yarn
     - run: yarn lint
 
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - uses: actions/checkout@v2
       - name: Install Pro
         run: yarn install:pro $BRANCH $BASE_BRANCH
       - run: yarn
@@ -48,11 +48,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - uses: actions/checkout@v2
       - name: Install Pro
         run: yarn install:pro $BRANCH $BASE_BRANCH
       - run: yarn
@@ -76,11 +76,11 @@ jobs:
         ports:
           - 4567:5984
     steps:
+      - uses: actions/checkout@v2
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - uses: actions/checkout@v2
       - name: Install Pro
         run: yarn install:pro $BRANCH $BASE_BRANCH
       - run: yarn
