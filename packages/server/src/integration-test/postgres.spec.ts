@@ -419,14 +419,16 @@ describe("row api - postgres", () => {
 
     describe("given a row with relation data", () => {
       let row: Row
+      let foreignRow: Row
       beforeEach(async () => {
         let [createdRow] = await populatePrimaryRows(1, {
           createForeignRow: true,
         })
         row = createdRow.row
+        foreignRow = createdRow.foreignRow!
       })
 
-      it("foreign key fields are not retrieved", async () => {
+      it("only foreign keys are retrieved", async () => {
         const res = await getRow(primaryPostgresTable._id, row.id)
 
         expect(res.status).toBe(200)
@@ -436,7 +438,12 @@ describe("row api - postgres", () => {
           _id: expect.any(String),
           _rev: expect.any(String),
         })
-        expect(res.body.foreignField).toBeUndefined()
+        expect(
+          res.body[`fk_${auxPostgresTable.name}_foreignField`]
+        ).toBeDefined()
+        expect(res.body[`fk_${auxPostgresTable.name}_foreignField`]).toBe(
+          foreignRow.id
+        )
       })
     })
   })
