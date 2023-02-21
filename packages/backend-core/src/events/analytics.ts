@@ -1,5 +1,5 @@
 import env from "../environment"
-import * as tenancy from "../tenancy"
+import * as context from "../context"
 import * as dbUtils from "../db/utils"
 import { Config } from "../constants"
 import { withCache, TTL, CacheKey } from "../cache"
@@ -42,7 +42,7 @@ export const enabled = async () => {
 }
 
 const getSettingsDoc = async () => {
-  const db = tenancy.getGlobalDB()
+  const db = context.getGlobalDB()
   let settings
   try {
     settings = await db.get(dbUtils.generateConfigID({ type: Config.SETTINGS }))

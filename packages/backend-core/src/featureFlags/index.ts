@@ -1,5 +1,5 @@
 import env from "../environment"
-import * as tenancy from "../tenancy"
+import * as context from "../context"
 
 /**
  * Read the TENANT_FEATURE_FLAGS env var and return an array of features flags for each tenant.
@@ -28,7 +28,7 @@ export function buildFeatureFlags() {
 }
 
 export function isEnabled(featureFlag: string) {
-  const tenantId = tenancy.getTenantId()
+  const tenantId = context.getTenantId()
   const flags = getTenantFeatureFlags(tenantId)
   return flags.includes(featureFlag)
 }

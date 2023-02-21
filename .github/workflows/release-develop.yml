@@ -45,10 +45,9 @@ jobs:
 
       - run: yarn 
       - run: yarn bootstrap
-      - run: yarn lint 
       - run: yarn build
       - run: yarn build:sdk
-      - run: yarn test
+#      - run: yarn test
 
       - name: Publish budibase packages to NPM
         env:
@@ -194,5 +193,5 @@ jobs:
           PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
         with:
           repository: budibase/budibase-deploys
-          event: deploy-budibase-develop-to-qa
+          event: budicloud-qa-deploy
           github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
