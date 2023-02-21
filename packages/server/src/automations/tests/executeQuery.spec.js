@@ -1,10 +1,9 @@
 const setup = require("./utilities")
 
 describe("test the execute query action", () => {
-    let datasource
     let config = setup.getConfig()
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         await config.init()
 
         await config.createDatasource()
@@ -41,7 +40,7 @@ describe("test the execute query action", () => {
                 query: { queryId: "wrong_id" }
             }
         )
-        expect(res.response).toEqual('{"status":404,"name":"not_found","message":"missing","reason":"missing"}')
+        expect(res.response).toEqual('Error: missing')
         expect(res.success).toEqual(false)
     })
 

@@ -29,6 +29,18 @@
     : BUDIBASE_INTERNAL_DB_ID
 
   export let name
+  export let beforeSave = async () => {}
+  export let afterSave = async table => {
+    notifications.success(`Table ${name} created successfully.`)
+
+    // Navigate to new table
+    const currentUrl = $url()
+    const path = currentUrl.endsWith("data")
+      ? `./table/${table._id}`
+      : `../../table/${table._id}`
+    $goto(path)
+  }
+
   let error = ""
   let autoColumns = getAutoColumnInformation()
   let schema = {}
@@ -78,15 +90,9 @@
     // Create table
     let table
     try {
+      await beforeSave()
       table = await tables.save(newTable)
-      notifications.success(`Table ${name} created successfully.`)
-
-      // Navigate to new table
-      const currentUrl = $url()
-      const path = currentUrl.endsWith("data")
-        ? `./table/${table._id}`
-        : `../../table/${table._id}`
-      $goto(path)
+      await afterSave(table)
     } catch (e) {
       notifications.error(e)
       // reload in case the table was created
@@ -99,10 +105,11 @@
   title="Create Table"
   confirmText="Create"
   onConfirm={saveTable}
-  disabled={error || !name || (rows.length && !allValid)}
+  disabled={error ||
+    !name ||
+    (rows.length && (!allValid || displayColumn == null))}
 >
   <Input
-    data-cy="table-name-input"
     thin
     label="Table Name"
     on:input={checkValid}

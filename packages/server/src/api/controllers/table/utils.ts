@@ -104,7 +104,6 @@ export function importToRows(data: any, table: any, user: any = {}) {
     const processed: any = inputProcessing(user, table, row, {
       noAutoRelationships: true,
     })
-    table = processed.table
     row = processed.row
 
     let fieldName: any
@@ -113,6 +112,7 @@ export function importToRows(data: any, table: any, user: any = {}) {
       // check whether the options need to be updated for inclusion as part of the data import
       if (
         schema.type === FieldTypes.OPTIONS &&
+        row[fieldName] &&
         (!schema.constraints.inclusion ||
           schema.constraints.inclusion.indexOf(row[fieldName]) === -1)
       ) {
@@ -120,6 +120,7 @@ export function importToRows(data: any, table: any, user: any = {}) {
           ...schema.constraints.inclusion,
           row[fieldName],
         ]
+        schema.constraints.inclusion.sort()
       }
     }
 
@@ -315,7 +316,13 @@ export async function checkForViewUpdates(
 
     // Update view if required
     if (needsUpdated) {
-      const newViewTemplate = viewTemplate(view.meta)
+      const groupByField: any = Object.values(table.schema).find(
+        (field: any) => field.name == view.groupBy
+      )
+      const newViewTemplate = viewTemplate(
+        view.meta,
+        groupByField?.type === FieldTypes.ARRAY
+      )
       await saveView(null, view.name, newViewTemplate)
       if (!newViewTemplate.meta.schema) {
         newViewTemplate.meta.schema = table.schema

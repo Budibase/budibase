@@ -1,5 +1,7 @@
 import { Table } from "../documents"
 
+export const PASSWORD_REPLACEMENT = "--secret-value--"
+
 export enum Operation {
   CREATE = "CREATE",
   READ = "READ",

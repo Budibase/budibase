@@ -3,6 +3,8 @@ const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { BUILTIN_ROLE_IDS } = roles
 
+jest.setTimeout(30000)
+
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
     return {}
@@ -19,14 +21,14 @@ describe("/users", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 
   describe("fetch", () => {
     it("returns a list of users from an instance db", async () => {
-      await config.createUser("uuidx")
-      await config.createUser("uuidy")
+      await config.createUser({ id: "uuidx" })
+      await config.createUser({ id: "uuidy" })
       const res = await request
         .get(`/api/users/metadata`)
         .set(config.defaultHeaders())
@@ -53,7 +55,7 @@ describe("/users", () => {
 
   describe("update", () => {
     it("should be able to update the user", async () => {
-      const user = await config.createUser()
+      const user = await config.createUser({ id: `us_update${Math.random()}` })
       user.roleId = BUILTIN_ROLE_IDS.BASIC
       const res = await request
         .put(`/api/users/metadata`)
@@ -177,14 +179,11 @@ describe("/users", () => {
       const app1 = await config.createApp('App 1')
       const app2 = await config.createApp('App 2')
 
-      let user = await config.createUser(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        false,
-        true,
-        { [app1.appId]: 'ADMIN' })
+      let user = await config.createUser({
+        builder: false,
+        admin: true,
+      roles: { [app1.appId]: 'ADMIN' }
+    })
       let res = await request
         .post(`/api/users/metadata/sync/${user._id}`)
         .set(config.defaultHeaders())

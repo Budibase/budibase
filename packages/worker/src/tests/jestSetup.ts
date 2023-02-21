@@ -1,4 +1,8 @@
-import { mocks } from "@budibase/backend-core/tests"
+import "./logging"
+
+import { mocks, testContainerUtils } from "@budibase/backend-core/tests"
+import env from "../environment"
+import { env as coreEnv } from "@budibase/backend-core"
 
 // must explicitly enable fetch mock
 mocks.fetch.enable()
@@ -8,12 +12,12 @@ mocks.fetch.enable()
 const tk = require("timekeeper")
 tk.freeze(mocks.date.MOCK_DATE)
 
-if (!process.env.DEBUG) {
-  global.console.log = jest.fn() // console.log are ignored in tests
-}
-
 if (!process.env.CI) {
   // set a longer timeout in dev for debugging
   // 100 seconds
-  jest.setTimeout(100000)
+  jest.setTimeout(100 * 1000)
+} else {
+  jest.setTimeout(10 * 1000)
 }
+
+testContainerUtils.setupEnv(env, coreEnv)

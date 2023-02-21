@@ -81,6 +81,7 @@
   let user
   let loaded = false
 
+  $: isSSO = !!user?.provider
   $: readonly = !$auth.isAdmin
   $: fullName = user?.firstName ? user?.firstName + " " + user?.lastName : ""
   $: privileged = user?.admin?.global || user?.builder?.global
@@ -215,12 +216,7 @@
 
   onMount(async () => {
     try {
-      await Promise.all([
-        fetchUser(),
-        groups.actions.init(),
-        apps.load(),
-        roles.fetch(),
-      ])
+      await Promise.all([fetchUser(), groups.actions.init(), roles.fetch()])
       loaded = true
     } catch (error) {
       notifications.error("Error getting user groups")
@@ -251,9 +247,11 @@
             <span slot="control">
               <Icon hoverable name="More" />
             </span>
-            <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
-              Force password reset
-            </MenuItem>
+            {#if !isSSO}
+              <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
+                Force password reset
+              </MenuItem>
+            {/if}
             <MenuItem on:click={deleteModal.show} icon="Delete">
               Delete
             </MenuItem>

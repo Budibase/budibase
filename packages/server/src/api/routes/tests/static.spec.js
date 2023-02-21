@@ -8,20 +8,9 @@ describe("/static", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
+    config.modeSelf()
     app = await config.init()
-  })
-
-  describe("/builder", () => {
-    it("should serve the builder", async () => {
-      const res = await request
-        .get("/builder/portal")
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /text\/html/)
-        .expect(200)
-
-      expect(res.text).toContain("<title>Budibase</title>")
-    })
   })
 
   describe("/app", () => {

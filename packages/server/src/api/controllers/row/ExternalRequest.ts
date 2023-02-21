@@ -10,6 +10,7 @@ import {
   FieldSchema,
   Row,
   Table,
+  RelationshipTypes,
 } from "@budibase/types"
 import {
   breakRowIdField,
@@ -18,13 +19,14 @@ import {
   convertRowId,
 } from "../../../integrations/utils"
 import { getDatasourceAndQuery } from "./utils"
-import { FieldTypes, RelationshipTypes } from "../../../constants"
+import { FieldTypes } from "../../../constants"
 import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { processFormulas, processDates } from "../../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
 import { removeKeyNumbering } from "./utils"
+import sdk from "../../../sdk"
 
 export interface ManyRelationship {
   tableId?: string
@@ -43,6 +45,7 @@ export interface RunConfig {
   row?: Row
   rows?: Row[]
   tables?: Record<string, Table>
+  includeSqlRelationships?: IncludeRelationship
 }
 
 function buildFilters(
@@ -664,8 +667,7 @@ export class ExternalRequest {
       throw "Unable to run without a table name"
     }
     if (!this.datasource) {
-      const db = context.getAppDB()
-      this.datasource = await db.get(datasourceId)
+      this.datasource = await sdk.datasources.get(datasourceId!)
       if (!this.datasource || !this.datasource.entities) {
         throw "No tables found, fetch tables before query."
       }
@@ -706,7 +708,9 @@ export class ExternalRequest {
       },
       resource: {
         // have to specify the fields to avoid column overlap (for SQL)
-        fields: isSql ? this.buildFields(table) : [],
+        fields: isSql
+          ? this.buildFields(table, config.includeSqlRelationships)
+          : [],
       },
       filters,
       sort,

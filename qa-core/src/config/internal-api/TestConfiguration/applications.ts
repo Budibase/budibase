@@ -110,11 +110,10 @@ export default class AppApi {
     return [response, json]
   }
 
-  async delete(appId: string): Promise<[Response, any]> {
+  async delete(appId: string): Promise<Response> {
     const response = await this.api.del(`/applications/${appId}`)
-    const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    return [response, json]
+    return response
   }
 
   async rename(

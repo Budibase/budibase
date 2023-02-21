@@ -37,14 +37,16 @@ const environment = {
   },
   JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET,
+  ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
-  REDIS_URL: process.env.REDIS_URL,
-  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  REDIS_URL: process.env.REDIS_URL || "localhost:6379",
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD || "budibase",
+  MOCK_REDIS: process.env.MOCK_REDIS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -81,6 +83,7 @@ const environment = {
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
+  ENABLE_4XX_HTTP_LOGGING: process.env.ENABLE_4XX_HTTP_LOGGING || true,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore

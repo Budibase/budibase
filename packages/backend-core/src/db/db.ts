@@ -1,17 +1,10 @@
 import env from "../environment"
-import { directCouchQuery, getPouchDB } from "./couch"
+import { directCouchQuery, DatabaseImpl } from "./couch"
 import { CouchFindOptions, Database } from "@budibase/types"
-import { DatabaseImpl } from "../db"
 
 const dbList = new Set()
 
 export function getDB(dbName?: string, opts?: any): Database {
-  // TODO: once using the test image, need to remove this
-  if (env.isTest()) {
-    dbList.add(dbName)
-    // @ts-ignore
-    return getPouchDB(dbName, opts)
-  }
   return new DatabaseImpl(dbName, opts)
 }
 

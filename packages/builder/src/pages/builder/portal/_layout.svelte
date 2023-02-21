@@ -1,18 +1,20 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
   import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
-  import { organisation, auth, menu } from "stores/portal"
+  import { organisation, auth, menu, apps } from "stores/portal"
   import { onMount } from "svelte"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
   import MobileMenu from "./_components/MobileMenu.svelte"
   import Logo from "./_components/Logo.svelte"
   import UserDropdown from "./_components/UserDropdown.svelte"
+  import HelpMenu from "components/common/HelpMenu.svelte"
 
   let loaded = false
   let mobileMenuVisible = false
   let activeTab = "Apps"
 
   $: $url(), updateActiveTab($menu)
+  $: fullscreen = !$apps.length
 
   const updateActiveTab = menu => {
     for (let entry of menu) {
@@ -35,7 +37,8 @@
         $redirect("../")
       } else {
         try {
-          await organisation.init()
+          // We need to load apps to know if we need to show onboarding fullscreen
+          await Promise.all([apps.load(), organisation.init()])
         } catch (error) {
           notifications.error("Error getting org config")
         }
@@ -46,33 +49,38 @@
 </script>
 
 {#if $auth.user && loaded}
-  <div class="container">
-    <div class="nav">
-      <div class="branding">
-        <Logo />
+  {#if fullscreen}
+    <slot />
+  {:else}
+    <HelpMenu />
+    <div class="container">
+      <div class="nav">
+        <div class="branding">
+          <Logo />
+        </div>
+        <div class="desktop">
+          <Tabs selected={activeTab}>
+            {#each $menu as { title, href }}
+              <Tab {title} on:click={() => $goto(href)} />
+            {/each}
+          </Tabs>
+        </div>
+        <div class="mobile">
+          <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
+        </div>
+        <div class="desktop">
+          <UpgradeButton />
+        </div>
+        <div class="dropdown">
+          <UserDropdown />
+        </div>
       </div>
-      <div class="desktop">
-        <Tabs selected={activeTab}>
-          {#each $menu as { title, href }}
-            <Tab {title} on:click={() => $goto(href)} />
-          {/each}
-        </Tabs>
+      <div class="main">
+        <slot />
       </div>
-      <div class="mobile">
-        <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
-      </div>
-      <div class="desktop">
-        <UpgradeButton />
-      </div>
-      <div class="dropdown">
-        <UserDropdown />
-      </div>
+      <MobileMenu visible={mobileMenuVisible} on:close={hideMobileMenu} />
     </div>
-    <div class="main">
-      <slot />
-    </div>
-    <MobileMenu visible={mobileMenuVisible} on:close={hideMobileMenu} />
-  </div>
+  {/if}
 {/if}
 
 <style>

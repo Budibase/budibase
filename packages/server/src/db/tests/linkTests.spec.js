@@ -9,7 +9,7 @@ describe("test link functionality", () => {
 
   describe("getLinkedTable", () => {
     let table
-    beforeEach(async () => {
+    beforeAll(async () => {
       const app = await config.init()
       appId = app.appId
       table = await config.createTable()

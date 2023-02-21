@@ -7,7 +7,7 @@ import { Config, events } from "@budibase/backend-core"
 describe("configs", () => {
   const config = new TestConfiguration()
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await config.beforeAll()
   })
 
@@ -221,7 +221,7 @@ describe("configs", () => {
         })
 
         it("should create settings config with non-default settings", async () => {
-          config.modeSelf()
+          config.selfHosted()
           await config.deleteConfig(Config.SETTINGS)
           const conf = {
             company: "acme",
@@ -234,13 +234,13 @@ describe("configs", () => {
           expect(events.org.nameUpdated).toBeCalledTimes(1)
           expect(events.org.logoUpdated).toBeCalledTimes(1)
           expect(events.org.platformURLUpdated).toBeCalledTimes(1)
-          config.modeCloud()
+          config.cloudHosted()
         })
       })
 
       describe("update", () => {
         it("should update settings config", async () => {
-          config.modeSelf()
+          config.selfHosted()
           await config.deleteConfig(Config.SETTINGS)
           const settingsConfig = await saveSettingsConfig()
           settingsConfig.config.company = "acme"
@@ -256,7 +256,7 @@ describe("configs", () => {
           expect(events.org.nameUpdated).toBeCalledTimes(1)
           expect(events.org.logoUpdated).toBeCalledTimes(1)
           expect(events.org.platformURLUpdated).toBeCalledTimes(1)
-          config.modeCloud()
+          config.cloudHosted()
         })
       })
     })

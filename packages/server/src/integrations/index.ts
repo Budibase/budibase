@@ -67,6 +67,15 @@ if (
   INTEGRATIONS[SourceName.ORACLE] = oracle.integration
 }
 
+export async function getDefinition(source: SourceName): Promise<Integration> {
+  // check if its integrated, faster
+  if (DEFINITIONS[source]) {
+    return DEFINITIONS[source]
+  }
+  const allDefinitions = await getDefinitions()
+  return allDefinitions[source]
+}
+
 export async function getDefinitions() {
   const pluginSchemas: { [key: string]: Integration } = {}
   if (env.SELF_HOSTED) {
