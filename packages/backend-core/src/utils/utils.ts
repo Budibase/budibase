@@ -2,23 +2,15 @@ import { getAllApps, queryGlobalView } from "../db"
 import { options } from "../middleware/passport/jwt"
 import {
   Header,
-  Cookie,
   MAX_VALID_DATE,
   DocumentType,
   SEPARATOR,
   ViewName,
 } from "../constants"
 import env from "../environment"
-import * as userCache from "../cache/user"
-import { getSessionsForUser, invalidateSessions } from "../security/sessions"
-import * as events from "../events"
 import * as tenancy from "../tenancy"
-import {
-  App,
-  Ctx,
-  PlatformLogoutOpts,
-  TenantResolutionStrategy,
-} from "@budibase/types"
+import * as context from "../context"
+import { App, Ctx, TenantResolutionStrategy } from "@budibase/types"
 import { SetOption } from "cookies"
 const jwt = require("jsonwebtoken")
 
@@ -38,7 +30,7 @@ export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
-  let tenantId: string | null = tenancy.getTenantId()
+  let tenantId: string | null = context.getTenantId()
   if (env.MULTI_TENANCY) {
     // always use the tenant id from the subdomain in multi tenancy
     // this ensures the logged-in user tenant id doesn't overwrite
@@ -49,7 +41,7 @@ export async function resolveAppUrl(ctx: Ctx) {
   }
 
   // search prod apps for a url that matches
-  const apps: App[] = await tenancy.doInTenant(tenantId, () =>
+  const apps: App[] = await context.doInTenant(tenantId, () =>
     getAllApps({ dev: false })
   )
   const app = apps.filter(

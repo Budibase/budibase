@@ -101,7 +101,7 @@
   }
 
   const getSchema = filter => {
-    return schemaFields.find(field => field.name === filter.field)
+    return enrichedSchemaFields.find(field => field.name === filter.field)
   }
 
   const santizeTypes = filter => {
@@ -254,8 +254,8 @@
               {:else if filter.type === "datetime"}
                 <DatePicker
                   disabled={filter.noValue}
-                  enableTime={!getSchema(filter).dateOnly}
-                  timeOnly={getSchema(filter).timeOnly}
+                  enableTime={!getSchema(filter)?.dateOnly}
+                  timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
                 />
               {:else}

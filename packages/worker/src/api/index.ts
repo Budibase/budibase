@@ -3,8 +3,7 @@ const compress = require("koa-compress")
 const zlib = require("zlib")
 import { routes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
-import { errors, auth, middleware } from "@budibase/backend-core"
-import { APIError } from "@budibase/types"
+import { auth, middleware } from "@budibase/backend-core"
 
 const PUBLIC_ENDPOINTS = [
   // deprecated single tenant sso callback
@@ -109,7 +108,9 @@ const NO_TENANCY_ENDPOINTS = [
 const NO_CSRF_ENDPOINTS = [...PUBLIC_ENDPOINTS]
 
 const router: Router = new Router()
+
 router
+  .use(middleware.errorHandling)
   .use(
     compress({
       threshold: 2048,
@@ -136,28 +137,11 @@ router
       (!ctx.isAuthenticated || (ctx.user && !ctx.user.budibaseAccess)) &&
       !ctx.internal
     ) {
-      ctx.throw(403, "Unauthorized - no public worker access")
+      ctx.throw(403, "Unauthorized")
     }
     return next()
   })
   .use(middleware.auditLog)
-
-// error handling middleware - TODO: This could be moved to backend-core
-router.use(async (ctx, next) => {
-  try {
-    await next()
-  } catch (err: any) {
-    ctx.log.error(err)
-    ctx.status = err.status || err.statusCode || 500
-    const error = errors.getPublicError(err)
-    const body: APIError = {
-      message: err.message,
-      status: ctx.status,
-      error,
-    }
-    ctx.body = body
-  }
-})
 
 router.get("/health", ctx => (ctx.status = 200))
 
