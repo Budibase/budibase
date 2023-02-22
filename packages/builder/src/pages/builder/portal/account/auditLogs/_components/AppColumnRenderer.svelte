@@ -2,4 +2,4 @@
   export let value
 </script>
 
-<div>{value?.name || "N/A"}</div>
+<div>{value?.name || ""}</div>

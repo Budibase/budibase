@@ -15,6 +15,7 @@
   export let sort = false
   export let autoWidth = false
   export let fetchTerm = null
+  export let customPopoverHeight
 
   const dispatch = createEventDispatcher()
 
@@ -91,4 +92,5 @@
   onSelectOption={toggleOption}
   {sort}
   {autoWidth}
+  {customPopoverHeight}
 />
