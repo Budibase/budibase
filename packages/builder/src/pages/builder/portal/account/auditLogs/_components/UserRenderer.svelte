@@ -1,7 +1,8 @@
 <script>
-  import { Avatar } from "@budibase/bbui"
+  import { Avatar, Tooltip } from "@budibase/bbui"
   export let row
 
+  let showTooltip
   const getInitials = user => {
     let initials = ""
     initials += user.firstName ? user.firstName[0] : ""
@@ -11,4 +12,34 @@
   }
 </script>
 
-<Avatar size="M" initials={getInitials(row.user)} />
+<div
+  class="container"
+  on:mouseover={() => (showTooltip = true)}
+  on:focus={() => (showTooltip = true)}
+  on:mouseleave={() => (showTooltip = false)}
+>
+  <Avatar size="M" initials={getInitials(row.user)} />
+</div>
+{#if showTooltip}
+  <div class="tooltip">
+    <Tooltip textWrapping text={row.user.email} direction="bottom" />
+  </div>
+{/if}
+
+<style>
+  .container {
+    position: relative;
+  }
+  .tooltip {
+    z-index: 1;
+    position: absolute;
+    top: 85%;
+    left: calc(90% - 8px);
+    transform: translateX(-100%) translateY(-50%);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    width: 130px;
+    pointer-events: none;
+  }
+</style>

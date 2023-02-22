@@ -9,6 +9,8 @@
     clickOutside,
     CoreTextArea,
     DatePicker,
+    Pagination,
+    Divider,
   } from "@budibase/bbui"
   import { licensing, users, apps, auditLogs } from "stores/portal"
   import LockedFeature from "../../_components/LockedFeature.svelte"
@@ -62,16 +64,15 @@
   let startDate, endDate
 
   $: fetchUsers(userPage, userSearchTerm)
-  $: fetchLogs(
+  $: fetchLogs({
     logsPage,
     logSearchTerm,
     startDate,
     endDate,
     selectedUsers,
     selectedApps,
-    selectedEvents
-  )
-
+    selectedEvents,
+  })
   $: userPage = $userPageInfo.page
   $: logsPage = $logsPageInfo.page
 
@@ -97,38 +98,38 @@
     }
   }
 
-  const fetchLogs = async (
+  const fetchLogs = async ({
     logsPage,
-    search,
+    logSearchTerm,
     startDate,
     endDate,
     selectedUsers,
     selectedApps,
-    selectedEvents
-  ) => {
+    selectedEvents,
+  }) => {
     if ($logsPageInfo.loading) {
       return
     }
     // need to remove the page if they've started searching
-    if (search && !prevLogSearch) {
+    if (logSearchTerm && !prevLogSearch) {
       logsPageInfo.reset()
       logsPage = undefined
     }
-    prevLogSearch = search
+    prevLogSearch = logSearchTerm
     try {
       logsPageInfo.loading()
       await auditLogs.search({
-        logsPage,
+        bookmark: logsPage,
         startDate,
         endDate,
-        metadataSearch: search,
+        fullSearch: logSearchTerm,
         userIds: selectedUsers,
         appIds: selectedApps,
         events: selectedEvents,
       })
       logsPageInfo.fetched(
         $auditLogs.logs.hasNextPage,
-        $auditLogs.logs.nextPage
+        $auditLogs.logs.bookmark
       )
     } catch (error) {
       console.log(error)
@@ -161,6 +162,7 @@
   }
 
   const viewDetails = detail => {
+    console.log(detail)
     selectedLog = detail
     sidePanelVisible = true
   }
@@ -206,9 +208,15 @@
           range={true}
           label="Date Range"
           on:change={e => {
-            if (e.detail[0].length > 1) {
+            console.log(e)
+            if (e.detail[0]?.length === 1) {
+              startDate = e.detail[0][0].toISOString()
+            } else if (e.detail[0]?.length > 1) {
               startDate = e.detail[0][0].toISOString()
               endDate = e.detail[0][1].toISOString()
+            } else {
+              startDate = null
+              endDate = null
             }
           }}
         />
@@ -258,14 +266,23 @@
   </div>
   <Layout noPadding>
     <Table
+      on:click={({ detail }) => viewDetails(detail)}
       {customRenderers}
-      on:click={viewDetails}
       data={$auditLogs.logs.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
       {schema}
     />
+    <div class="pagination">
+      <Pagination
+        page={$logsPageInfo.pageNumber}
+        hasPrevPage={$logsPageInfo.loading ? false : $logsPageInfo.hasPrevPage}
+        hasNextPage={$logsPageInfo.loading ? false : $logsPageInfo.hasNextPage}
+        goToPrevPage={logsPageInfo.prevPage}
+        goToNextPage={logsPageInfo.nextPage}
+      />
+    </div>
   </Layout>
 </LockedFeature>
 
@@ -298,7 +315,9 @@
         />
       </div>
     </div>
-    <div style="padding-top: 10px; height: 95%">
+    <Divider />
+
+    <div class="side-panel-body">
       <CoreTextArea
         disabled
         minHeight={"300px"}
@@ -312,16 +331,28 @@
 <style>
   .side-panel-header {
     display: flex;
+    padding: 20px 10px 10px 10px;
     gap: var(--spacing-s);
     justify-content: space-between;
     align-items: center;
   }
 
+  .pagination {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: var(--spacing-xl);
+  }
+
+  .side-panel-body {
+    padding: 10px;
+    height: 95%;
+  }
   #side-panel {
     position: absolute;
     right: 0;
     top: 0;
-    padding: 24px;
+    padding-bottom: 24px;
     background: var(--background);
     border-left: var(--border-light);
     width: 320px;
@@ -330,7 +361,7 @@
     overflow-x: hidden;
     transform: translateX(100%);
     transition: transform 130ms ease-in-out;
-    height: calc(100% - 48px);
+    height: calc(100% - 25px);
     z-index: 2;
   }
   #side-panel.visible {
