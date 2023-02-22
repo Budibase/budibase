@@ -22,10 +22,11 @@
     Tags,
     Icon,
     Helpers,
+    Link
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
-  import { organisation, admin } from "stores/portal"
+  import { organisation, admin, licensing } from "stores/portal"
 
   const ConfigTypes = {
     Google: "google",
@@ -33,6 +34,8 @@
   }
 
   const HasSpacesRegex = /[\\"\s]/
+
+  $: enforcedSSO = false
 
   // Some older google configs contain a manually specified value - retain the functionality to edit the field
   // When there is no value or we are in the cloud - prohibit editing the field, must use platform url to change
@@ -316,6 +319,42 @@
     <Heading size="M">Authentication</Heading>
     <Body>Add additional authentication methods from the options below</Body>
   </Layout>
+  <Divider />
+  <Layout noPadding gap="XS">
+    <Heading size="S">Single Sign-On URL</Heading>
+    <Body size="S">
+      Use the following link to access your configured identity provider.
+    </Body>
+    <Body size="S">
+      <div class="sso-link">
+        <Link href="https://rpowell.budibase.app/builder/auth/login" target="_blank">https://rpowell.budibase.app/builder/auth/login</Link>
+        <div class="sso-link-icon">
+          <Icon size="XS" name="LinkOutLight"></Icon>
+        </div>
+      </div>
+    </Body>
+  </Layout>
+  <Divider />
+  <Layout noPadding gap="XS" >
+      <div class="provider-title">
+          <div class="enforce-sso-heading-container">
+            <div class="enforce-sso-title">
+              <Heading size="S">Enforce Single Sign-On</Heading>
+            </div>
+            {#if !$licensing.enforceableSSO}
+              <Tags>
+                <Tag icon="LockClosed">Business plan</Tag>
+              </Tags>
+            {/if}
+          </div>
+        {#if $licensing.enforceableSSO}
+          <Toggle text="" bind:value={enforcedSSO} />
+        {/if}
+      </div>
+    <Body size="S">
+      Require SSO authentication for all users. It is recommended to read the help <Link size="M" href={"http://test.com"}>documentation</Link> before enabling this feature.
+    </Body>
+  </Layout>
   {#if providers.google}
     <Divider />
     <Layout gap="XS" noPadding>
@@ -546,7 +585,23 @@
   input[type="file"] {
     display: none;
   }
-
+  .sso-link-icon {
+    padding-top: 4px;
+    margin-left: 3px;
+  }
+  .sso-link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  .enforce-sso-title {
+    margin-right: 10px;
+  }
+  .enforce-sso-heading-container {
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+  }
   .provider-title {
     display: flex;
     flex-direction: row;
