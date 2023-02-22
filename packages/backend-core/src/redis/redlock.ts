@@ -85,17 +85,20 @@ export const doWithLock = async (opts: LockOptions, task: any) => {
     const result = await task()
     return result
   } catch (e: any) {
-    console.log("lock error")
+    console.warn("lock error")
     // lock limit exceeded
     if (e.name === "LockError") {
       if (opts.type === LockType.TRY_ONCE) {
         // don't throw for try-once locks, they will always error
         // due to retry count (0) exceeded
+        console.warn(e)
         return
       } else {
+        console.error(e)
         throw e
       }
     } else {
+      console.error(e)
       throw e
     }
   } finally {
