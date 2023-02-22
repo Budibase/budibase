@@ -46,7 +46,7 @@ export interface Identity {
   environment: string
   installationId?: string
   tenantId?: string
-  hostInfo: HostInfo
+  hostInfo?: HostInfo
 }
 
 export interface UserIdentity extends Identity {

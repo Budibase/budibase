@@ -12,3 +12,9 @@ export type AuditLogFn = (
   metadata: any,
   opts: AuditWriteOpts
 ) => Promise<any>
+
+export type AuditLogQueueEvent = {
+  event: Event
+  properties: any
+  opts: AuditWriteOpts
+}
