@@ -1,32 +1,39 @@
 const buildOpts = ({
+  bookmark,
   userIds,
   appIds,
   startDate,
   endDate,
-  metadataSearch,
+  fullSearch,
   events,
 }) => {
   const opts = {}
 
+  if (bookmark) {
+    opts.bookmark = bookmark
+  }
+
   if (startDate && endDate) {
     opts.startDate = startDate
     opts.endDate = endDate
+  } else if (startDate && !endDate) {
+    opts.startDate = startDate
   }
 
-  if (metadataSearch) {
-    opts.metadataSearch = metadataSearch
+  if (fullSearch) {
+    opts.fullSearch = fullSearch
   }
 
-  if (events) {
-    opts.event = events
+  if (events.length) {
+    opts.events = events
   }
 
-  if (userIds) {
-    opts.userId = userIds
+  if (userIds.length) {
+    opts.userIds = userIds
   }
 
-  if (appIds) {
-    opts.appId = appIds
+  if (appIds.length) {
+    opts.appIds = appIds
   }
 
   return opts

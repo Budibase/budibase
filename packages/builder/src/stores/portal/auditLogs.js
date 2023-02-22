@@ -26,8 +26,6 @@ export function createAuditLogsStore() {
     update(state => {
       return { ...state, ...events }
     })
-
-    console.log(events)
   }
 
   async function downloadLogs(opts = {}) {
