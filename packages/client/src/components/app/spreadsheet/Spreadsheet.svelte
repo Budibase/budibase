@@ -1,32 +1,55 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, setContext } from "svelte"
+  import { writable } from "svelte/store"
   import { fetchData, LuceneUtils } from "@budibase/frontend-core"
   import { Icon, ActionButton } from "@budibase/bbui"
-  import TextCell from "./TextCell.svelte"
-  import OptionsCell from "./OptionsCell.svelte"
-  import DateCell from "./DateCell.svelte"
-  import MultiSelectCell from "./MultiSelectCell.svelte"
-  import NumberCell from "./NumberCell.svelte"
-  import RelationshipCell from "./RelationshipCell.svelte"
+  import TextCell from "./cells/TextCell.svelte"
+  import OptionsCell from "./cells/OptionsCell.svelte"
+  import DateCell from "./cells/DateCell.svelte"
+  import MultiSelectCell from "./cells/MultiSelectCell.svelte"
+  import NumberCell from "./cells/NumberCell.svelte"
+  import RelationshipCell from "./cells/RelationshipCell.svelte"
   import { getColor } from "./utils.js"
+  import { createReorderingStores } from "./stores/reordering"
+  import ReorderingPlaceholder from "./ReorderingPlaceholder.svelte"
 
   export let table
   export let filter
   export let sortColumn
   export let sortOrder
 
-  const { styleable, API, confirmationStore, notificationStore } =
-    getContext("sdk")
+  const { styleable, API, confirmationStore } = getContext("sdk")
   const component = getContext("component")
+
+  // Sheet constants
   const limit = 100
   const defaultWidth = 160
   const minWidth = 100
   const rand = Math.random()
 
-  let fieldConfigs = []
-  let hoveredRow
-  let selectedCell
-  let selectedRows = {}
+  // State stores
+  const columns = writable([])
+  const hoveredRowId = writable(null)
+  const selectedCellId = writable(null)
+  const selectedRows = writable({})
+  const rows = writable([])
+
+  // Build up spreadsheet context and additional stores
+  const context = {
+    rand,
+    rows,
+    columns,
+    hoveredRowId,
+    selectedCellId,
+    selectedRows,
+  }
+  const { reordering, reorderingPlaceholder } = createReorderingStores(context)
+  setContext("spreadsheet", {
+    ...context,
+    reordering,
+    reorderingPlaceholder,
+  })
+
   let horizontallyScrolled = false
   let changeCache = {}
   let newRows = []
@@ -36,17 +59,6 @@
   let resizeInitialWidth
   let resizeFieldIndex
 
-  // State for reordering columns
-  let isReordering = false
-  let reorderFieldIndex
-  let reorderBreakpoints
-  let reorderPlaceholderX
-  let reorderPlaceholderInitialX
-  let reorderPlaceholderWidth
-  let reorderInitialX
-  let reorderPlaceholderHeight
-  let reorderCandidateFieldIdx
-
   $: query = LuceneUtils.buildLuceneQuery(filter)
   $: fetch = createFetch(table)
   $: fetch.update({
@@ -55,11 +67,11 @@
     query,
     limit,
   })
-  $: updateFieldConfig($fetch)
-  $: gridStyles = getGridStyles(fieldConfigs)
-  $: rowCount = $fetch.rows?.length || 0
-  $: selectedRowCount = Object.values(selectedRows).filter(x => !!x).length
-  $: rows = getSortedRows($fetch.rows, newRows)
+  $: generateColumns($fetch)
+  $: gridStyles = getGridStyles($columns)
+  $: rowCount = $rows.length
+  $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
+  $: updateSortedRows($fetch.rows, newRows)
 
   const createFetch = datasource => {
     return fetchData({
@@ -75,15 +87,15 @@
     })
   }
 
-  const updateFieldConfig = ({ schema, definition }) => {
-    // Generate first time config if required
-    if (!fieldConfigs.length && schema) {
+  // Generates the column array the first time the schema loads
+  const generateColumns = ({ schema, definition }) => {
+    if (!$columns.length && schema) {
       let fields = Object.keys(schema || {})
       const primaryDisplay = definition?.primaryDisplay
       if (primaryDisplay) {
         fields = [primaryDisplay, ...fields.filter(x => x !== primaryDisplay)]
       }
-      fieldConfigs = fields.map(field => ({
+      $columns = fields.map(field => ({
         name: field,
         width: defaultWidth,
         schema: schema[field],
@@ -92,8 +104,8 @@
     }
   }
 
-  const getGridStyles = fieldConfig => {
-    const widths = fieldConfig?.map(x => x.width)
+  const getGridStyles = columns => {
+    const widths = columns?.map(x => x.width)
     if (!widths?.length) {
       return "--grid: 1fr;"
     }
@@ -134,22 +146,28 @@
   }
 
   const selectRow = id => {
-    selectedRows[id] = !selectedRows[id]
+    selectedRows.update(state => {
+      state[id] = !state[id]
+      return state
+    })
   }
 
   const selectAll = () => {
     const allSelected = selectedRowCount === rowCount
     if (allSelected) {
-      selectedRows = {}
+      $selectedRows = {}
     } else {
-      rows.forEach(row => {
-        selectedRows[row._id] = true
+      selectedRows.update(state => {
+        $rows.forEach(row => {
+          state[row._id] = true
+        })
+        return state
       })
     }
   }
 
   const handleChange = async (rowId, field, value) => {
-    let row = rows.find(x => x._id === rowId)
+    let row = $rows.find(x => x._id === rowId)
     if (!row) {
       return
     }
@@ -167,10 +185,10 @@
 
   const deleteRows = () => {
     // Fetch full row objects to be deleted
-    const rowsToDelete = Object.entries(selectedRows)
+    const rowsToDelete = Object.entries($selectedRows)
       .map(entry => {
         if (entry[1] === true) {
-          return rows.find(x => x._id === entry[0])
+          return $rows.find(x => x._id === entry[0])
         } else {
           return null
         }
@@ -186,9 +204,9 @@
       await fetch.refresh()
 
       // Refresh state
-      selectedCell = null
-      hoveredRow = null
-      selectedRows = {}
+      $selectedCellId = null
+      $hoveredRowId = null
+      $selectedRows = {}
     }
 
     // Show confirmation
@@ -203,95 +221,25 @@
 
   const addRow = async field => {
     const res = await API.saveRow({ tableId: table.tableId })
-    selectedCell = `${res._id}-${field.name}`
+    $selectedCellId = `${res._id}-${field.name}`
     newRows.push(res._id)
     await fetch.refresh()
   }
 
-  const getSortedRows = (rows, newRows) => {
-    let sortedRows = rows.slice()
+  const updateSortedRows = (unsortedRows, newRows) => {
+    let sortedRows = unsortedRows.slice()
     sortedRows.sort((a, b) => {
       const aIndex = newRows.indexOf(a._id)
       const bIndex = newRows.indexOf(b._id)
       return aIndex < bIndex ? -1 : 1
     })
-    return sortedRows
-  }
-
-  const startReordering = (fieldIdx, e) => {
-    isReordering = true
-    reorderFieldIndex = fieldIdx
-
-    let breakpoints = []
-    fieldConfigs.forEach((config, idx) => {
-      const header = document.getElementById(`sheet-${rand}-header-${idx}`)
-      const bounds = header.getBoundingClientRect()
-      breakpoints.push(bounds.x)
-      if (idx === fieldConfigs.length - 1) {
-        breakpoints.push(bounds.x + bounds.width)
-      }
-    })
-    reorderBreakpoints = breakpoints
-    const self = document.getElementById(`sheet-${rand}-header-${fieldIdx}`)
-    const selfBounds = self.getBoundingClientRect()
-    const body = document.getElementById(`sheet-${rand}-body`)
-    const bodyBounds = body.getBoundingClientRect()
-    reorderPlaceholderInitialX = selfBounds.x - bodyBounds.x
-    reorderPlaceholderX = reorderPlaceholderInitialX
-    reorderPlaceholderWidth = selfBounds.width
-    reorderInitialX = e.clientX
-    reorderPlaceholderHeight = (rows.length + 2) * 32
-    onReorderMove(e)
-    document.addEventListener("mousemove", onReorderMove)
-    document.addEventListener("mouseup", stopReordering)
-  }
-
-  const onReorderMove = e => {
-    if (!isReordering) {
-      return
-    }
-    reorderPlaceholderX =
-      e.clientX - reorderInitialX + reorderPlaceholderInitialX
-    reorderPlaceholderX = Math.max(0, reorderPlaceholderX)
-    let candidateFieldIdx
-    let minDistance = Number.MAX_SAFE_INTEGER
-    reorderBreakpoints.forEach((point, idx) => {
-      const distance = Math.abs(point - e.clientX)
-      if (distance < minDistance) {
-        minDistance = distance
-        candidateFieldIdx = idx
-      }
-    })
-    reorderCandidateFieldIdx = candidateFieldIdx
-  }
-
-  const stopReordering = () => {
-    const newConfigs = fieldConfigs.slice()
-    const removed = newConfigs.splice(reorderFieldIndex, 1)
-    if (--reorderCandidateFieldIdx < reorderFieldIndex) {
-      reorderCandidateFieldIdx++
-    }
-    newConfigs.splice(reorderCandidateFieldIdx, 0, removed[0])
-    fieldConfigs = newConfigs
-
-    isReordering = false
-    reorderFieldIndex = null
-    reorderBreakpoints = null
-    reorderPlaceholderX = null
-    reorderPlaceholderInitialX = null
-    reorderPlaceholderWidth = null
-    reorderInitialX = null
-    reorderPlaceholderHeight = null
-    reorderCandidateFieldIdx = null
-
-    document.removeEventListener("mousemove", onReorderMove)
-    document.removeEventListener("mouseup", stopReordering)
+    $rows = sortedRows
   }
 
   const startResizing = (fieldIdx, e) => {
     e.stopPropagation()
     resizeInitialX = e.clientX
-    resizeInitialWidth = fieldConfigs[fieldIdx].width
+    resizeInitialWidth = $columns[fieldIdx].width
     resizeFieldIndex = fieldIdx
     document.addEventListener("mousemove", onResizeMove)
     document.addEventListener("mouseup", stopResizing)
@@ -299,10 +247,13 @@
 
   const onResizeMove = e => {
     const dx = e.clientX - resizeInitialX
-    fieldConfigs[resizeFieldIndex].width = Math.max(
-      minWidth,
-      resizeInitialWidth + dx
-    )
+    columns.update(state => {
+      state[resizeFieldIndex].width = Math.max(
+        minWidth,
+        resizeInitialWidth + dx
+      )
+      return state
+    })
   }
 
   const stopResizing = () => {
@@ -335,7 +286,7 @@
       class="spreadsheet"
       on:scroll={handleScroll}
       style={gridStyles}
-      on:click|self={() => (selectedCell = null)}
+      on:click|self={() => ($selectedCellId = null)}
       id={`sheet-${rand}-body`}
     >
       <!-- Field headers -->
@@ -345,14 +296,14 @@
           checked={rowCount && selectedRowCount === rowCount}
         />
       </div>
-      {#each fieldConfigs as field, fieldIdx}
+      {#each $columns as field, fieldIdx}
         <div
           class="header cell"
           class:sticky={fieldIdx === 0}
           class:shadow={horizontallyScrolled}
-          class:reordering={reorderFieldIndex === fieldIdx}
-          class:reorder-candidate={reorderCandidateFieldIdx === fieldIdx}
-          on:mousedown={e => startReordering(fieldIdx, e)}
+          class:reordering-source={$reordering.columnIdx === fieldIdx}
+          class:reordering-target={$reordering.swapColumnIdx === fieldIdx}
+          on:mousedown={e => reordering.actions.startReordering(fieldIdx, e)}
           id={`sheet-${rand}-header-${fieldIdx}`}
         >
           <Icon
@@ -369,21 +320,20 @@
       <!-- Horizontal spacer -->
       <div
         class="header cell spacer"
-        class:reorder-candidate={reorderCandidateFieldIdx ===
-          fieldConfigs.length}
+        class:reordering-target={$reordering.swapColumnIdx === $columns.length}
       />
 
       <!-- All real rows -->
-      {#each rows as row, rowIdx (row._id)}
-        {@const rowSelected = !!selectedRows[row._id]}
-        {@const rowHovered = hoveredRow === row._id}
+      {#each $rows as row, rowIdx (row._id)}
+        {@const rowSelected = !!$selectedRows[row._id]}
+        {@const rowHovered = $hoveredRowId === row._id}
         {@const data = { ...row, ...changeCache[row._id] }}
         <div
           class="cell label"
           class:row-selected={rowSelected}
           class:hovered={rowHovered}
           on:focus
-          on:mouseover={() => (hoveredRow = row._id)}
+          on:mouseover={() => ($hoveredRowId = row._id)}
           on:click={() => selectRow(row._id)}
         >
           {#if rowSelected || rowHovered}
@@ -394,7 +344,7 @@
             </span>
           {/if}
         </div>
-        {#each fieldConfigs as field, fieldIdx}
+        {#each $columns as field, fieldIdx}
           {@const cellIdx = `${row._id}-${field.name}`}
           {#key cellIdx}
             <div
@@ -402,19 +352,19 @@
               class:row-selected={rowSelected}
               class:sticky={fieldIdx === 0}
               class:hovered={rowHovered}
-              class:selected={selectedCell === cellIdx}
+              class:selected={$selectedCellId === cellIdx}
               class:shadow={horizontallyScrolled}
-              class:reordering={reorderFieldIndex === fieldIdx}
-              class:reorder-candidate={reorderCandidateFieldIdx === fieldIdx}
+              class:reordering-source={$reordering.columnIdx === fieldIdx}
+              class:reordering-target={$reordering.swapColumnIdx === fieldIdx}
               on:focus
-              on:mouseover={() => (hoveredRow = row._id)}
-              on:click={() => (selectedCell = cellIdx)}
+              on:mouseover={() => ($hoveredRowId = row._id)}
+              on:click={() => ($selectedCellId = cellIdx)}
             >
               <svelte:component
                 this={getCellForField(field)}
                 value={data[field.name]}
                 schema={field.schema}
-                selected={selectedCell === cellIdx}
+                selected={$selectedCellId === cellIdx}
                 onChange={val => handleChange(row._id, field, val)}
                 readonly={field.schema.autocolumn}
               />
@@ -424,8 +374,8 @@
         <!-- Horizontal spacer -->
         <div
           class="cell spacer"
-          class:reorder-candidate={reorderCandidateFieldIdx ===
-            fieldConfigs.length}
+          class:reordering-target={$reordering.swapColumnIdx ===
+            $columns.length}
         />
       {/each}
 
@@ -434,29 +384,28 @@
         class="cell label new"
         on:click={addRow}
         on:focus
-        on:mouseover={() => (hoveredRow = "new")}
-        class:hovered={hoveredRow === "new"}
+        on:mouseover={() => ($hoveredRowId = "new")}
+        class:hovered={$hoveredRowId === "new"}
       >
         <Icon hoverable name="Add" size="S" />
       </div>
-      {#each fieldConfigs as field, fieldIdx}
+      {#each $columns as field, fieldIdx}
         <div
           class="cell new"
           class:sticky={fieldIdx === 0}
           class:shadow={horizontallyScrolled}
-          class:hovered={hoveredRow === "new"}
-          class:reordering={reorderFieldIndex === fieldIdx}
-          class:reorder-candidate={reorderCandidateFieldIdx === fieldIdx}
+          class:hovered={$hoveredRowId === "new"}
+          class:reordering-source={$reordering.columnIdx === fieldIdx}
+          class:reordering-target={$reordering.swapColumnIdx === fieldIdx}
           on:click={() => addRow(field)}
           on:focus
-          on:mouseover={() => (hoveredRow = "new")}
+          on:mouseover={() => ($hoveredRowId = "new")}
         />
       {/each}
       <!-- Horizontal spacer -->
       <div
         class="cell spacer"
-        class:reorder-candidate={reorderCandidateFieldIdx ===
-          fieldConfigs.length}
+        class:reordering-target={$reordering.swapColumnIdx === $columns.length}
       />
 
       <!-- Vertical spacer -->
@@ -464,12 +413,7 @@
     </div>
 
     <!-- Reorder placeholder -->
-    {#if isReordering}
-      <div
-        class="reorder-placeholder"
-        style="--x:{reorderPlaceholderX}px;--width:{reorderPlaceholderWidth}px;--height:{reorderPlaceholderHeight}px;"
-      />
-    {/if}
+    <ReorderingPlaceholder />
   </div>
 </div>
 
@@ -630,10 +574,10 @@
   }
 
   /* Reordering styles */
-  .cell.reordering {
+  .cell.reordering-source {
     background: var(--spectrum-global-color-gray-200);
   }
-  .cell.reorder-candidate {
+  .cell.reordering-target {
     border-left-color: var(--spectrum-global-color-blue-400);
   }
 
@@ -681,15 +625,5 @@
 
   input[type="checkbox"] {
     margin: 0;
-  }
-  .reorder-placeholder {
-    height: min(calc(100% - 36px), var(--height));
-    width: var(--width);
-    left: var(--x);
-    position: absolute;
-    top: 36px;
-    background: var(--spectrum-global-color-blue-400);
-    opacity: 0.2;
-    z-index: 7;
   }
 </style>
