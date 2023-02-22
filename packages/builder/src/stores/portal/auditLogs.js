@@ -28,15 +28,15 @@ export function createAuditLogsStore() {
     })
   }
 
-  async function downloadLogs(opts = {}) {
-    return await API.downloadLogs(opts)
+  function getDownloadUrl(opts = {}) {
+    return API.getDownloadUrl(opts)
   }
 
   return {
     subscribe,
     search,
     getEventDefinitions,
-    downloadLogs,
+    getDownloadUrl,
   }
 }
 
