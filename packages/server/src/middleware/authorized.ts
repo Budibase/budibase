@@ -110,8 +110,7 @@ export default (
 
     // check general builder stuff, this middleware is a good way
     // to find API endpoints which are builder focused
-    const isBuilderApi = permType === permissions.PermissionType.BUILDER
-    if (isBuilderApi) {
+    if (permType === permissions.PermissionType.BUILDER) {
       await builderMiddleware(ctx)
     }
 
