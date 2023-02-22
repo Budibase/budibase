@@ -629,10 +629,7 @@ export class ExternalRequest {
    * Creating the specific list of fields that we desire, and excluding the ones that are no use to us
    * is more performant and has the added benefit of protecting against this scenario.
    */
-  buildFields(
-    table: Table,
-    includeRelations: IncludeRelationship = IncludeRelationship.INCLUDE
-  ) {
+  buildFields(table: Table, includeRelations: boolean) {
     function extractRealFields(table: Table, existing: string[] = []) {
       return Object.entries(table.schema)
         .filter(
@@ -691,6 +688,10 @@ export class ExternalRequest {
     }
     filters = buildFilters(id, filters || {}, table)
     const relationships = this.buildRelationships(table)
+
+    const includeSqlRelationships =
+      config.includeSqlRelationships === IncludeRelationship.INCLUDE
+
     // clean up row on ingress using schema
     const processed = this.inputProcessing(row, table)
     row = processed.row
@@ -708,9 +709,7 @@ export class ExternalRequest {
       },
       resource: {
         // have to specify the fields to avoid column overlap (for SQL)
-        fields: isSql
-          ? this.buildFields(table, config.includeSqlRelationships)
-          : [],
+        fields: isSql ? this.buildFields(table, includeSqlRelationships) : [],
       },
       filters,
       sort,
