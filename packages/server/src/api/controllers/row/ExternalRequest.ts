@@ -384,6 +384,15 @@ export class ExternalRequest {
       ) {
         continue
       }
+
+      if (
+        relationship.from &&
+        row[fromColumn] === undefined &&
+        row[relationship.from] === null
+      ) {
+        continue
+      }
+
       let linked = basicProcessing(row, linkedTable)
       if (!linked._id) {
         continue
