@@ -85,6 +85,7 @@ export const doWithLock = async (opts: LockOptions, task: any) => {
     const result = await task()
     return result
   } catch (e: any) {
+    console.warn("lock error")
     // lock limit exceeded
     if (e.name === "LockError") {
       if (opts.type === LockType.TRY_ONCE) {
