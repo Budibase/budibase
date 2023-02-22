@@ -16,6 +16,7 @@ import {
   InstallationGroup,
   UserContext,
   Group,
+  isSSOUser,
 } from "@budibase/types"
 import { processors } from "./processors"
 import * as dbUtils from "../db/utils"
@@ -88,6 +89,7 @@ const getCurrentIdentity = async (): Promise<Identity> => {
       installationId,
       tenantId,
       environment,
+      hostInfo: userContext.host,
     }
   } else {
     throw new Error("Unknown identity type")
@@ -166,7 +168,10 @@ const identifyUser = async (
   const type = IdentityType.USER
   let builder = user.builder?.global || false
   let admin = user.admin?.global || false
-  let providerType = user.providerType
+  let providerType
+  if (isSSOUser(user)) {
+    providerType = user.providerType
+  }
   const accountHolder = account?.budibaseUserId === user._id || false
   const verified =
     account && account?.budibaseUserId === user._id ? account.verified : false
