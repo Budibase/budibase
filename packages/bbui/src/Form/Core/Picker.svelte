@@ -32,6 +32,7 @@
   export let autocomplete = false
   export let sort = false
   export let fetchTerm = null
+  export let customPopoverHeight
   const dispatch = createEventDispatcher()
 
   let searchTerm = null
@@ -136,6 +137,7 @@
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
   maxWidth={autoWidth ? 400 : null}
+  customHeight={customPopoverHeight}
 >
   <div
     class="popover-content"
@@ -266,6 +268,7 @@
   .popover-content :global(.spectrum-Search) {
     margin-top: -1px;
     margin-left: -1px;
+    width: calc(100% + 2px);
   }
   .popover-content :global(.spectrum-Search input) {
     height: auto;
