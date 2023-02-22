@@ -4,7 +4,6 @@
     DatePicker,
     Divider,
     Layout,
-    Modal,
     notifications,
     Pagination,
     Select,
@@ -16,25 +15,22 @@
   } from "@budibase/bbui"
   import { backups, licensing, auth, admin, overview } from "stores/portal"
   import { createPaginationStore } from "helpers/pagination"
-  import DateRenderer from "components/common/renderers/DateTimeRenderer.svelte"
+  import TimeAgoRenderer from "./_components/TimeAgoRenderer.svelte"
   import AppSizeRenderer from "./_components/AppSizeRenderer.svelte"
-  import CreateBackupModal from "./_components/CreateBackupModal.svelte"
   import ActionsRenderer from "./_components/ActionsRenderer.svelte"
   import UserRenderer from "./_components/UserRenderer.svelte"
   import StatusRenderer from "./_components/StatusRenderer.svelte"
   import TypeRenderer from "./_components/TypeRenderer.svelte"
-  import NameRenderer from "./_components/NameRenderer.svelte"
   import BackupsDefault from "assets/backups-default.png"
   import { BackupTrigger, BackupType } from "constants/backend/backups"
   import { onMount } from "svelte"
 
+  let loading = true
   let backupData = null
-  let modal
   let pageInfo = createPaginationStore()
   let filterOpt = null
   let startDate = null
   let endDate = null
-  let loaded = false
   let filters = [
     {
       label: "Manual backup",
@@ -43,10 +39,6 @@
     {
       label: "Published backup",
       value: { type: BackupType.BACKUP, trigger: BackupTrigger.PUBLISH },
-    },
-    {
-      label: "Scheduled backup",
-      value: { type: BackupType.BACKUP, trigger: BackupTrigger.SCHEDULED },
     },
     {
       label: "Pre-restore backup",
@@ -71,10 +63,6 @@
       displayName: "Date",
       width: "auto",
     },
-    name: {
-      displayName: "Name",
-      width: "auto",
-    },
     appSize: {
       displayName: "App size",
       width: "auto",
@@ -96,11 +84,10 @@
   const customRenderers = [
     { column: "appSize", component: AppSizeRenderer },
     { column: "actions", component: ActionsRenderer },
-    { column: "createdAt", component: DateRenderer },
+    { column: "createdAt", component: TimeAgoRenderer },
     { column: "createdBy", component: UserRenderer },
     { column: "status", component: StatusRenderer },
     { column: "type", component: TypeRenderer },
-    { column: "name", component: NameRenderer },
   ]
 
   function flattenBackups(backups) {
@@ -126,11 +113,11 @@
     backupData = flattenBackups(response.data)
   }
 
-  async function createManualBackup(name) {
+  async function createManualBackup() {
     try {
+      loading = true
       let response = await backups.createManualBackup({
         appId: app.instance._id,
-        name,
       })
       await fetchBackups(filterOpt, page)
       notifications.success(response.message)
@@ -138,6 +125,20 @@
       notifications.error("Unable to create backup")
     }
   }
+
+  const poll = backupData => {
+    if (backupData === null) {
+      return
+    }
+
+    if (backupData.some(datum => datum.status === "started")) {
+      setTimeout(() => fetchBackups(filterOpt, page), 2000)
+    } else {
+      loading = false
+    }
+  }
+
+  $: poll(backupData)
 
   async function handleButtonClick({ detail }) {
     if (detail.type === "backupDelete") {
@@ -165,7 +166,7 @@
 
   onMount(async () => {
     await fetchBackups(filterOpt, page, startDate, endDate)
-    loaded = true
+    loading = false
   })
 </script>
 
@@ -206,7 +207,7 @@
         View plans
       </Button>
     </div>
-  {:else if !backupData?.length && loaded && !filterOpt && !startDate}
+  {:else if !backupData?.length && !loading && !filterOpt && !startDate}
     <div class="center">
       <Layout noPadding gap="S" justifyItems="center">
         <img height="130px" src={BackupsDefault} alt="BackupsDefault" />
@@ -215,11 +216,13 @@
           <Body>You can manually back up your app any time</Body>
         </Layout>
         <div>
-          <Button on:click={modal.show} cta>Create backup</Button>
+          <Button cta disabled={loading} on:click={createManualBackup}>
+            Create backup
+          </Button>
         </div>
       </Layout>
     </div>
-  {:else if loaded}
+  {:else}
     <Layout noPadding gap="M" alignContent="start">
       <div class="controls">
         <div class="search">
@@ -245,7 +248,9 @@
           />
         </div>
         <div>
-          <Button cta on:click={modal.show}>Create new backup</Button>
+          <Button cta disabled={loading} on:click={createManualBackup}
+            >Create new backup</Button
+          >
         </div>
       </div>
       <div class="table">
@@ -274,10 +279,6 @@
     </Layout>
   {/if}
 </Layout>
-
-<Modal bind:this={modal}>
-  <CreateBackupModal {createManualBackup} />
-</Modal>
 
 <style>
   .title {
