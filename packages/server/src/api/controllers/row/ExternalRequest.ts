@@ -142,7 +142,11 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   return config
 }
 
-function generateIdForRow(row: Row | undefined, table: Table): string {
+function generateIdForRow(
+  row: Row | undefined,
+  table: Table,
+  isLinked: boolean = false
+): string {
   const primary = table.primary
   if (!row || !primary) {
     return ""
@@ -151,7 +155,10 @@ function generateIdForRow(row: Row | undefined, table: Table): string {
   let idParts = []
   for (let field of primary) {
     // need to handle table name + field or just field, depending on if relationships used
-    const fieldValue = row[`${table.name}.${field}`] || row[field]
+    let fieldValue = row[`${table.name}.${field}`]
+    if (!fieldValue && !isLinked) {
+      fieldValue = row[field]
+    }
     if (fieldValue) {
       idParts.push(fieldValue)
     }
@@ -174,23 +181,20 @@ function getEndpoint(tableId: string | undefined, operation: string) {
   }
 }
 
-function basicProcessing(row: Row, table: Table): Row {
+function basicProcessing(row: Row, table: Table, isLinked: boolean): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
   for (let field of Object.values(table.schema)) {
     const fieldName = field.name
 
     const pathValue = row[`${table.name}.${fieldName}`]
-    const value =
-      pathValue != null || field.type === FieldTypes.LINK
-        ? pathValue
-        : row[fieldName]
+    const value = pathValue != null || isLinked ? pathValue : row[fieldName]
     // all responses include "select col as table.col" so that overlaps are handled
     if (value != null) {
       thisRow[fieldName] = value
     }
   }
-  thisRow._id = generateIdForRow(row, table)
+  thisRow._id = generateIdForRow(row, table, isLinked)
   thisRow.tableId = table._id
   thisRow._rev = "rev"
   return processFormulas(table, thisRow)
@@ -385,15 +389,7 @@ export class ExternalRequest {
         continue
       }
 
-      if (
-        relationship.from &&
-        row[fromColumn] === undefined &&
-        row[relationship.from] === null
-      ) {
-        continue
-      }
-
-      let linked = basicProcessing(row, linkedTable)
+      let linked = basicProcessing(row, linkedTable, true)
       if (!linked._id) {
         continue
       }
@@ -441,7 +437,7 @@ export class ExternalRequest {
         )
         continue
       }
-      const thisRow = fixArrayTypes(basicProcessing(row, table), table)
+      const thisRow = fixArrayTypes(basicProcessing(row, table, false), table)
       if (thisRow._id == null) {
         throw "Unable to generate row ID for SQL rows"
       }
