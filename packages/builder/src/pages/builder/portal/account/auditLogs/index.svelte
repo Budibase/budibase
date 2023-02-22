@@ -21,6 +21,7 @@
   import UserRenderer from "./_components/UserRenderer.svelte"
   import TimeRenderer from "./_components/TimeRenderer.svelte"
   import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
+  import download from "downloadjs"
 
   const schema = {
     date: { width: "0.8fr" },
@@ -167,16 +168,29 @@
     selectedLog = detail
     sidePanelVisible = true
   }
+  async function exportView() {
+    try {
+      const data = await API.exportView({
+        viewName: view,
+        format: exportFormat,
+      })
+    } catch (error) {
+      notifications.error(`Unable to export ${exportFormat.toUpperCase()} data`)
+    }
+  }
 
   const downloadLogs = async () => {
     try {
-      await auditLogs.download({
+      let response = await auditLogs.downloadLogs({
         startDate,
         endDate,
-        metadataSearch: logSearchTerm,
+        fullSearch: logSearchTerm,
         userIds: selectedUsers,
         appIds: selectedApps,
+        events: selectedEvents,
       })
+
+      // DO SOMETHING HERE???????????
     } catch (error) {
       notifications.error(`Error downloading logs: ` + error.message)
     }
@@ -193,6 +207,7 @@
 
   onMount(async () => {
     await auditLogs.getEventDefinitions()
+    await licensing.init()
   })
 </script>
 
@@ -214,7 +229,6 @@
           range={true}
           label="Date Range"
           on:change={e => {
-            console.log(e)
             if (e.detail[0]?.length === 1) {
               startDate = e.detail[0][0].toISOString()
             } else if (e.detail[0]?.length > 1) {
@@ -263,8 +277,11 @@
         />
       </div>
     </div>
-    <div style="padding-bottom: var(--spacing-s)">
-      <Icon on:click={() => downloadLogs()} name="Download" />
+    <div
+      on:click={() => downloadLogs()}
+      style="padding-bottom: var(--spacing-s)"
+    >
+      <Icon name="Download" />
     </div>
 
     <div style="max-width: 150px; ">
