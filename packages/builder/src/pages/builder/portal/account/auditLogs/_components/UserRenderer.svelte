@@ -18,11 +18,11 @@
   on:focus={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
 >
-  <Avatar size="M" initials={getInitials(row.user)} />
+  <Avatar size="M" initials={getInitials(row?.user)} />
 </div>
 {#if showTooltip}
   <div class="tooltip">
-    <Tooltip textWrapping text={row.user.email} direction="bottom" />
+    <Tooltip textWrapping text={row?.user.email} direction="bottom" />
   </div>
 {/if}
 

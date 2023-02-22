@@ -10,6 +10,7 @@
     CoreTextArea,
     DatePicker,
     Pagination,
+    Helpers,
     Divider,
   } from "@budibase/bbui"
   import { licensing, users, apps, auditLogs } from "stores/portal"
@@ -185,6 +186,11 @@
     viewDetails,
   })
 
+  const copyToClipboard = async value => {
+    await Helpers.copyToClipboard(value)
+    notifications.success("Copied")
+  }
+
   onMount(async () => {
     await auditLogs.getEventDefinitions()
   })
@@ -246,6 +252,7 @@
       </div>
       <div class="select">
         <Multiselect
+          customPopoverHeight="500px"
           autocomplete
           getOptionValue={event => event[0]}
           getOptionLabel={event => event[1]}
@@ -318,6 +325,12 @@
     <Divider />
 
     <div class="side-panel-body">
+      <div
+        on:click={() => copyToClipboard(JSON.stringify(selectedLog.metadata))}
+        class="copy-icon"
+      >
+        <Icon name="Copy" size="S" />
+      </div>
       <CoreTextArea
         disabled
         minHeight={"300px"}
@@ -329,6 +342,34 @@
 {/if}
 
 <style>
+  .copy-icon {
+    right: 16px;
+    top: 80px;
+    z-index: 10;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+
+    border: 1px solid var(--spectrum-alias-border-color);
+    border-radius: var(--spectrum-alias-border-radius-regular);
+    width: 31px;
+    color: var(--spectrum-alias-text-color);
+    background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color
+        var(--spectrum-global-animation-duration-100, 130ms),
+      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
+      border-color var(--spectrum-global-animation-duration-100, 130ms);
+    height: calc(var(--spectrum-alias-item-height-m) - 2px);
+    position: absolute;
+  }
+  .copy-icon:hover {
+    cursor: pointer;
+    color: var(--spectrum-alias-text-color-hover);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-alias-border-color-hover);
+  }
   .side-panel-header {
     display: flex;
     padding: 20px 10px 10px 10px;
@@ -346,7 +387,7 @@
 
   .side-panel-body {
     padding: 10px;
-    height: 95%;
+    height: calc(100% - 67px);
   }
   #side-panel {
     position: absolute;
@@ -357,11 +398,11 @@
     border-left: var(--border-light);
     width: 320px;
     max-width: calc(100vw - 48px - 48px);
-    overflow: auto;
-    overflow-x: hidden;
     transform: translateX(100%);
     transition: transform 130ms ease-in-out;
-    height: calc(100% - 25px);
+    height: calc(100% - 24px);
+    overflow-y: hidden;
+    overflow-x: hidden;
     z-index: 2;
   }
   #side-panel.visible {
@@ -373,15 +414,14 @@
   }
 
   #side-panel :global(textarea) {
-    min-height: 202px !important;
+    min-height: 100% !important;
     background-color: var(
       --spectrum-textfield-m-background-color,
       var(--spectrum-global-color-gray-50)
     );
-    color: var(
-      --spectrum-textfield-m-text-color,
-      var(--spectrum-alias-text-color)
-    );
+    padding-top: var(--spacing-l);
+    padding-left: var(--spacing-l);
+    font-size: 13px;
   }
 
   .search :global(.spectrum-InputGroup) {
