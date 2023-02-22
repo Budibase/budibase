@@ -18,7 +18,7 @@
     "build:pro": "../../scripts/pro/build.sh",
     "postbuild": "yarn run build:pro",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "test": "jest --coverage --runInBand",
+    "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
