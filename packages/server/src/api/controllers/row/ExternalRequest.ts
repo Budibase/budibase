@@ -177,9 +177,14 @@ function getEndpoint(tableId: string | undefined, operation: string) {
 function basicProcessing(row: Row, table: Table): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
-  for (let fieldName of Object.keys(table.schema)) {
+  for (let field of Object.values(table.schema)) {
+    const fieldName = field.name
+
     const pathValue = row[`${table.name}.${fieldName}`]
-    const value = pathValue != null ? pathValue : row[fieldName]
+    const value =
+      pathValue != null || field.type === FieldTypes.LINK
+        ? pathValue
+        : row[fieldName]
     // all responses include "select col as table.col" so that overlaps are handled
     if (value != null) {
       thisRow[fieldName] = value
@@ -572,11 +577,18 @@ export class ExternalRequest {
       if (!linkTable || !linkPrimary) {
         return
       }
+
+      const linkSecondary =
+        linkTable?.primary &&
+        linkTable?.primary?.length > 1 &&
+        linkTable?.primary[1]
+
       const rows = related[key]?.rows || []
       const found = rows.find(
         (row: { [key: string]: any }) =>
           row[linkPrimary] === relationship.id ||
-          row[linkPrimary] === body?.[linkPrimary]
+          (row[linkPrimary] === body?.[linkPrimary] &&
+            (!linkSecondary || row[linkSecondary] === body?.[linkSecondary]))
       )
       const operation = isUpdate ? Operation.UPDATE : Operation.CREATE
       if (!found) {
