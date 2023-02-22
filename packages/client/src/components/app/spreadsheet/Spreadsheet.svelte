@@ -10,8 +10,8 @@
   import NumberCell from "./cells/NumberCell.svelte"
   import RelationshipCell from "./cells/RelationshipCell.svelte"
   import { getColor } from "./utils.js"
-  import { createReorderingStores } from "./stores/reordering"
-  import ReorderingPlaceholder from "./ReorderingPlaceholder.svelte"
+  import { createReorderStores } from "./stores/reorder"
+  import ReorderPlaceholder from "./ReorderPlaceholder.svelte"
 
   export let table
   export let filter
@@ -43,11 +43,11 @@
     selectedCellId,
     selectedRows,
   }
-  const { reordering, reorderingPlaceholder } = createReorderingStores(context)
+  const { reorder, reorderPlaceholder } = createReorderStores(context)
   setContext("spreadsheet", {
     ...context,
-    reordering,
-    reorderingPlaceholder,
+    reorder,
+    reorderPlaceholder,
   })
 
   let horizontallyScrolled = false
@@ -301,9 +301,9 @@
           class="header cell"
           class:sticky={fieldIdx === 0}
           class:shadow={horizontallyScrolled}
-          class:reordering-source={$reordering.columnIdx === fieldIdx}
-          class:reordering-target={$reordering.swapColumnIdx === fieldIdx}
-          on:mousedown={e => reordering.actions.startReordering(fieldIdx, e)}
+          class:reorder-source={$reorder.columnIdx === fieldIdx}
+          class:reorder-target={$reorder.swapColumnIdx === fieldIdx}
+          on:mousedown={e => reorder.actions.startReordering(fieldIdx, e)}
           id={`sheet-${rand}-header-${fieldIdx}`}
         >
           <Icon
@@ -320,7 +320,7 @@
       <!-- Horizontal spacer -->
       <div
         class="header cell spacer"
-        class:reordering-target={$reordering.swapColumnIdx === $columns.length}
+        class:reorder-target={$reorder.swapColumnIdx === $columns.length}
       />
 
       <!-- All real rows -->
@@ -354,8 +354,8 @@
               class:hovered={rowHovered}
               class:selected={$selectedCellId === cellIdx}
               class:shadow={horizontallyScrolled}
-              class:reordering-source={$reordering.columnIdx === fieldIdx}
-              class:reordering-target={$reordering.swapColumnIdx === fieldIdx}
+              class:reorder-source={$reorder.columnIdx === fieldIdx}
+              class:reorder-target={$reorder.swapColumnIdx === fieldIdx}
               on:focus
               on:mouseover={() => ($hoveredRowId = row._id)}
               on:click={() => ($selectedCellId = cellIdx)}
@@ -374,8 +374,7 @@
         <!-- Horizontal spacer -->
         <div
           class="cell spacer"
-          class:reordering-target={$reordering.swapColumnIdx ===
-            $columns.length}
+          class:reorder-target={$reorder.swapColumnIdx === $columns.length}
         />
       {/each}
 
@@ -395,8 +394,8 @@
           class:sticky={fieldIdx === 0}
           class:shadow={horizontallyScrolled}
           class:hovered={$hoveredRowId === "new"}
-          class:reordering-source={$reordering.columnIdx === fieldIdx}
-          class:reordering-target={$reordering.swapColumnIdx === fieldIdx}
+          class:reorder-source={$reorder.columnIdx === fieldIdx}
+          class:reorder-target={$reorder.swapColumnIdx === fieldIdx}
           on:click={() => addRow(field)}
           on:focus
           on:mouseover={() => ($hoveredRowId = "new")}
@@ -405,7 +404,7 @@
       <!-- Horizontal spacer -->
       <div
         class="cell spacer"
-        class:reordering-target={$reordering.swapColumnIdx === $columns.length}
+        class:reorder-target={$reorder.swapColumnIdx === $columns.length}
       />
 
       <!-- Vertical spacer -->
@@ -413,7 +412,7 @@
     </div>
 
     <!-- Reorder placeholder -->
-    <ReorderingPlaceholder />
+    <ReorderPlaceholder />
   </div>
 </div>
 
@@ -573,11 +572,11 @@
     background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);
   }
 
-  /* Reordering styles */
-  .cell.reordering-source {
+  /* Reorder styles */
+  .cell.reorder-source {
     background: var(--spectrum-global-color-gray-200);
   }
-  .cell.reordering-target {
+  .cell.reorder-target {
     border-left-color: var(--spectrum-global-color-blue-400);
   }
 
