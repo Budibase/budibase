@@ -1,14 +1,14 @@
 import { get, writable } from "svelte/store"
 
-export const createReorderingStores = context => {
+export const createReorderStores = context => {
   const { columns, rand, rows } = context
-  const reorderingInitialState = {
+  const reorderInitialState = {
     columnIdx: null,
     swapColumnIdx: null,
     breakpoints: [],
     initialMouseX: null,
   }
-  const reordering = writable(reorderingInitialState)
+  const reorder = writable(reorderInitialState)
 
   // This is broken into its own store as it is rapidly updated, and we want to
   // ensure good performance by avoiding updating other components which depend
@@ -26,7 +26,6 @@ export const createReorderingStores = context => {
     // Generate new breakpoints for the current columns
     let breakpoints = []
     const cols = get(columns)
-    console.log(cols)
     cols.forEach((col, idx) => {
       const header = document.getElementById(`sheet-${rand}-header-${idx}`)
       const bounds = header.getBoundingClientRect()
@@ -43,7 +42,7 @@ export const createReorderingStores = context => {
     const bodyBounds = body.getBoundingClientRect()
 
     // Update state
-    reordering.set({
+    reorder.set({
       columnIdx,
       breakpoints,
       swapColumnIdx: null,
@@ -66,20 +65,20 @@ export const createReorderingStores = context => {
 
   // Callback when moving the mouse when reordering columns
   const onReorderMouseMove = e => {
-    const $reordering = get(reordering)
-    if ($reordering.columnIdx == null) {
+    const $reorder = get(reorder)
+    if ($reorder.columnIdx == null) {
       return
     }
 
     // Compute new placeholder position
     const $placeholder = get(placeholder)
-    let newX = e.clientX - $reordering.initialMouseX + $placeholder.initialX
+    let newX = e.clientX - $reorder.initialMouseX + $placeholder.initialX
     newX = Math.max(0, newX)
 
     // Compute the closest breakpoint to the current position
     let swapColumnIdx
     let minDistance = Number.MAX_SAFE_INTEGER
-    $reordering.breakpoints.forEach((point, idx) => {
+    $reorder.breakpoints.forEach((point, idx) => {
       const distance = Math.abs(point - e.clientX)
       if (distance < minDistance) {
         minDistance = distance
@@ -92,8 +91,8 @@ export const createReorderingStores = context => {
       state.x = newX
       return state
     })
-    if (swapColumnIdx !== $reordering.swapColumnIdx) {
-      reordering.update(state => {
+    if (swapColumnIdx !== $reorder.swapColumnIdx) {
+      reorder.update(state => {
         state.swapColumnIdx = swapColumnIdx
         return state
       })
@@ -103,7 +102,7 @@ export const createReorderingStores = context => {
   // Callback when stopping reordering columns
   const stopReordering = () => {
     // Swap position of columns
-    let { columnIdx, swapColumnIdx } = get(reordering)
+    let { columnIdx, swapColumnIdx } = get(reorder)
     const newColumns = get(columns).slice()
     const removed = newColumns.splice(columnIdx, 1)
     if (--swapColumnIdx < columnIdx) {
@@ -113,7 +112,7 @@ export const createReorderingStores = context => {
     columns.set(newColumns)
 
     // Reset state
-    reordering.set(reorderingInitialState)
+    reorder.set(reorderInitialState)
     placeholder.set(placeholderInitialState)
 
     // Remove event handlers
@@ -122,13 +121,13 @@ export const createReorderingStores = context => {
   }
 
   return {
-    reordering: {
-      ...reordering,
+    reorder: {
+      ...reorder,
       actions: {
         startReordering,
         stopReordering,
       },
     },
-    reorderingPlaceholder: placeholder,
+    reorderPlaceholder: placeholder,
   }
 }

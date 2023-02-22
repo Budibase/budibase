@@ -1,9 +1,9 @@
 <script>
   import { getContext } from "svelte"
 
-  const { reorderingPlaceholder } = getContext("spreadsheet")
+  const { reorderPlaceholder } = getContext("spreadsheet")
 
-  $: style = getStyle($reorderingPlaceholder)
+  $: style = getStyle($reorderPlaceholder)
 
   const getStyle = state => {
     return (
@@ -14,7 +14,7 @@
   }
 </script>
 
-{#if $reorderingPlaceholder.x != null}
+{#if $reorderPlaceholder.x != null}
   <div {style} />
 {/if}
 
