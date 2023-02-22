@@ -26,7 +26,15 @@
 
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
-  $: validation.check($values)
+
+  $: {
+    const { name, url } = $values
+
+    validation.check({
+      name,
+      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+    })
+  }
 
   onMount(async () => {
     const lastChar = $auth.user?.firstName
@@ -87,7 +95,11 @@
     appValidation.url(validation, { apps: applications })
     appValidation.file(validation, { template })
     // init validation
-    validation.check($values)
+    const { name, url } = $values
+    validation.check({
+      name,
+      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+    })
   }
 
   async function createNewApp() {

@@ -19,7 +19,7 @@ describe("migrations", () => {
   ]
 
   beforeEach(() => {
-    config.reset()
+    config.newTenant()
   })
 
   afterEach(async () => {

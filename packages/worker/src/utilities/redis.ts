@@ -54,6 +54,8 @@ export async function init() {
 export async function shutdown() {
   if (pwResetClient) await pwResetClient.finish()
   if (invitationClient) await invitationClient.finish()
+  // shutdown core clients
+  await redis.clients.shutdown()
   console.log("Redis shutdown")
 }
 
