@@ -21,6 +21,7 @@
   export let sort = false
   export let tooltip = ""
   export let autocomplete = false
+  export let customPopoverHeight
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -53,6 +54,7 @@
     {getOptionColour}
     {isOptionEnabled}
     {autocomplete}
+    {customPopoverHeight}
     on:change={onChange}
     on:click
   />
