@@ -8,7 +8,7 @@ const buildOpts = ({
   events,
 }) => {
   const opts = {}
-
+  
   if (bookmark) {
     opts.bookmark = bookmark
   }
@@ -35,7 +35,7 @@ const buildOpts = ({
   if (appIds.length) {
     opts.appIds = appIds
   }
-
+  console.log(opts)
   return opts
 }
 
@@ -58,7 +58,7 @@ export const buildAuditLogsEndpoints = API => ({
 
   downloadLogs: async opts => {
     return await API.post({
-      url: `/api/global/auditlogs/definitions`,
+      url: `/api/global/auditlogs/download`,
       body: buildOpts(opts),
     })
   },
