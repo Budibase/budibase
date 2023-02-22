@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { getColor } from "./utils"
+  import { getColor } from "../utils"
 
   export let value
   export let schema
