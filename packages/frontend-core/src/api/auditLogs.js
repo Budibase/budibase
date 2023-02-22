@@ -8,7 +8,7 @@ const buildOpts = ({
   events,
 }) => {
   const opts = {}
-  
+
   if (bookmark) {
     opts.bookmark = bookmark
   }
@@ -56,10 +56,8 @@ export const buildAuditLogsEndpoints = API => ({
     })
   },
 
-  downloadLogs: async opts => {
-    return await API.post({
-      url: `/api/global/auditlogs/download`,
-      body: buildOpts(opts),
-    })
+  getDownloadUrl: opts => {
+    const query = encodeURIComponent(JSON.stringify(opts))
+    return `/api/global/auditlogs/download?query=${query}`
   },
 })

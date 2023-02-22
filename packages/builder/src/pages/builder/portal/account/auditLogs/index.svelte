@@ -21,13 +21,13 @@
   import UserRenderer from "./_components/UserRenderer.svelte"
   import TimeRenderer from "./_components/TimeRenderer.svelte"
   import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
-  import download from "downloadjs"
+  import { cloneDeep } from "lodash"
 
   const schema = {
     date: { width: "0.8fr" },
     user: { width: "0.5fr" },
-    app: { width: "1fr", fieldName: "name" },
-    name: { width: "1fr" },
+    app: { width: "0.75fr", fieldName: "name" },
+    name: { width: "1.5fr" },
     view: { width: "auto", borderLeft: true, displayName: "" },
   }
 
@@ -134,8 +134,7 @@
         $auditLogs.logs.bookmark
       )
     } catch (error) {
-      console.log(error)
-      notifications.error("Error getting audit logs")
+      notifications.error(`Error getting audit logs - ${error}`)
     }
   }
 
@@ -164,24 +163,13 @@
   }
 
   const viewDetails = detail => {
-    console.log(detail)
     selectedLog = detail
     sidePanelVisible = true
-  }
-  async function exportView() {
-    try {
-      const data = await API.exportView({
-        viewName: view,
-        format: exportFormat,
-      })
-    } catch (error) {
-      notifications.error(`Unable to export ${exportFormat.toUpperCase()} data`)
-    }
   }
 
   const downloadLogs = async () => {
     try {
-      let response = await auditLogs.downloadLogs({
+      window.location = auditLogs.getDownloadUrl({
         startDate,
         endDate,
         fullSearch: logSearchTerm,
@@ -189,8 +177,6 @@
         appIds: selectedApps,
         events: selectedEvents,
       })
-
-      // DO SOMETHING HERE???????????
     } catch (error) {
       notifications.error(`Error downloading logs: ` + error.message)
     }
@@ -203,6 +189,20 @@
   const copyToClipboard = async value => {
     await Helpers.copyToClipboard(value)
     notifications.success("Copied")
+  }
+
+  function cleanupMetadata(log) {
+    const cloned = cloneDeep(log)
+    cloned.userId = cloned.user._id
+    if (cloned.app) {
+      cloned.appId = cloned.app.appId
+    }
+    // remove props that are confused/not returned in download
+    delete cloned._id
+    delete cloned._rev
+    delete cloned.app
+    delete cloned.user
+    return cloned
   }
 
   onMount(async () => {
@@ -277,15 +277,15 @@
         />
       </div>
     </div>
+    <div style="max-width: 150px; ">
+      <Search placeholder="Search" bind:value={logSearchTerm} />
+    </div>
+
     <div
       on:click={() => downloadLogs()}
       style="padding-bottom: var(--spacing-s)"
     >
-      <Icon name="Download" />
-    </div>
-
-    <div style="max-width: 150px; ">
-      <Search placeholder="Search" bind:value={logSearchTerm} />
+      <Icon name="Download" hoverable />
     </div>
   </div>
   <Layout noPadding>
@@ -352,7 +352,7 @@
         disabled
         minHeight={"300px"}
         height={"100%"}
-        value={JSON.stringify(selectedLog.metadata, null, 2)}
+        value={JSON.stringify(cleanupMetadata(selectedLog), null, 2)}
       />
     </div>
   </div>
