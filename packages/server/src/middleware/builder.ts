@@ -64,13 +64,18 @@ async function updateAppUpdatedAt(ctx: BBContext) {
   })
 }
 
-export default async function builder(ctx: BBContext, permType: string) {
+export default async function builder(ctx: BBContext) {
   const appId = ctx.appId
   // this only functions within an app context
   if (!appId) {
     return
   }
-  const isBuilderApi = permType === permissions.PermissionType.BUILDER
+
+  // check authenticated
+  if (!ctx.isAuthenticated) {
+    return ctx.throw(403, "Session not authenticated")
+  }
+
   const referer = ctx.headers["referer"]
 
   const overviewPath = "/builder/portal/overview/"
@@ -82,7 +87,7 @@ export default async function builder(ctx: BBContext, permType: string) {
   const hasAppId = !referer ? false : referer.includes(appId)
   const editingApp = referer ? hasAppId : false
   // check this is a builder call and editing
-  if (!isBuilderApi || !editingApp) {
+  if (!editingApp) {
     return
   }
   // check locks
