@@ -35,7 +35,7 @@ const buildOpts = ({
   if (appIds.length) {
     opts.appIds = appIds
   }
-  console.log(opts)
+
   return opts
 }
 

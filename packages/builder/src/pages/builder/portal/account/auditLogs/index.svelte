@@ -29,10 +29,10 @@
   import { cloneDeep } from "lodash"
 
   const schema = {
-    date: { width: "auto" },
-    user: { width: "auto" },
-    app: { width: "auto" },
-    name: { width: "0.8fr" },
+    date: { width: "0.8fr" },
+    user: { width: "0.5fr" },
+    app: { width: "1.5fr" },
+    name: { width: "2fr" },
     view: { width: "0.1fr", borderLeft: true, displayName: "" },
   }
 
@@ -68,7 +68,7 @@
   let selectedLog
   let sidePanelVisible = false
   let wideSidePanel = false
-
+  let timer
   let startDate = new Date()
   startDate.setDate(startDate.getDate() - 30)
   let endDate = new Date()
@@ -86,8 +86,22 @@
   $: userPage = $userPageInfo.page
   $: logsPage = $logsPageInfo.page
 
-  $: enrichedList = enrich($users.data || [], selectedUsers)
-  $: sortedList = sort(enrichedList)
+  $: enrichedList = enrich($users.data || [], selectedUsers, "_id")
+  $: sortedList = sort(enrichedList, "email")
+
+  $: sortedEvents = sort(
+    enrich(parseEventObject($auditLogs.events), selectedEvents, "id"),
+    "id"
+  )
+  // below is not sorting yet
+  $: sortedApps = enrich($apps, selectedApps, "appId")
+
+  const debounce = value => {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      logSearchTerm = value
+    }, 400)
+  }
 
   const fetchUsers = async (userPage, search) => {
     if ($userPageInfo.loading) {
@@ -146,20 +160,20 @@
     }
   }
 
-  const enrich = (list, selected) => {
+  const enrich = (list, selected, key) => {
     return list.map(item => {
       return {
         ...item,
-        selected: selected.find(x => x === item._id) != null,
+        selected: selected.find(x => x === item[key]) != null,
       }
     })
   }
 
-  const sort = list => {
+  const sort = (list, key) => {
     let sortedList = list.slice()
     sortedList?.sort((a, b) => {
       if (a.selected === b.selected) {
-        return a["email"] < b["email"] ? -1 : 1
+        return a[key] < b[key] ? -1 : 1
       } else if (a.selected) {
         return -1
       } else if (b.selected) {
@@ -168,6 +182,16 @@
       return 0
     })
     return sortedList
+  }
+
+  const parseEventObject = obj => {
+    // convert obj which is an object of key value pairs to an array of objects
+    // with the key as the id and the value as the name
+    if (obj) {
+      return Object.entries(obj).map(([id, label]) => {
+        return { id, label }
+      })
+    }
   }
 
   const viewDetails = detail => {
@@ -250,7 +274,7 @@
         label="App"
         getOptionValue={app => app.instance._id}
         getOptionLabel={app => app.name}
-        options={$apps}
+        options={sortedApps}
         bind:value={selectedApps}
       />
     </div>
@@ -258,9 +282,9 @@
       <Multiselect
         customPopoverHeight="500px"
         autocomplete
-        getOptionValue={event => event[0]}
-        getOptionLabel={event => event[1]}
-        options={Object.entries($auditLogs.events)}
+        getOptionValue={event => event.id}
+        getOptionLabel={event => event.label}
+        options={sortedEvents}
         placeholder="All events"
         label="Event"
         bind:value={selectedEvents}
@@ -286,7 +310,7 @@
       />
     </div>
     <div class="freeSearch">
-      <Search placeholder="Search" bind:value={logSearchTerm} />
+      <Search placeholder="Search" on:change={e => debounce(e.detail)} />
     </div>
 
     <div class="">
