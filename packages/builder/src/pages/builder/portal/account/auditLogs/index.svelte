@@ -29,10 +29,10 @@
   import { cloneDeep } from "lodash"
 
   const schema = {
-    date: { width: "auto" },
-    user: { width: "auto" },
-    app: { width: "auto" },
-    name: { width: "0.8fr" },
+    date: { width: "0.8fr" },
+    user: { width: "0.5fr" },
+    app: { width: "1.5fr" },
+    name: { width: "2fr" },
     view: { width: "0.1fr", borderLeft: true, displayName: "" },
   }
 
