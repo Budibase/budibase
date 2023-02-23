@@ -84,43 +84,43 @@
         <Divider />
         <FancyForm bind:this={form}>
           <FancyInput
-                  label="Your work email"
-                  value={formData.username}
-                  on:change={e => {
-            formData = {
-              ...formData,
-              username: e.detail,
-            }
-          }}
-                  validate={() => {
-            let fieldError = {
-              username: !formData.username
-                ? "Please enter a valid email"
-                : undefined,
-            }
-            errors = handleError({ ...errors, ...fieldError })
-          }}
-                  error={errors.username}
+            label="Your work email"
+            value={formData.username}
+            on:change={e => {
+              formData = {
+                ...formData,
+                username: e.detail,
+              }
+            }}
+            validate={() => {
+              let fieldError = {
+                username: !formData.username
+                  ? "Please enter a valid email"
+                  : undefined,
+              }
+              errors = handleError({ ...errors, ...fieldError })
+            }}
+            error={errors.username}
           />
           <FancyInput
-                  label="Password"
-                  value={formData.password}
-                  type="password"
-                  on:change={e => {
-            formData = {
-              ...formData,
-              password: e.detail,
-            }
-          }}
-                  validate={() => {
-            let fieldError = {
-              password: !formData.password
-                ? "Please enter your password"
-                : undefined,
-            }
-            errors = handleError({ ...errors, ...fieldError })
-          }}
-                  error={errors.password}
+            label="Password"
+            value={formData.password}
+            type="password"
+            on:change={e => {
+              formData = {
+                ...formData,
+                password: e.detail,
+              }
+            }}
+            validate={() => {
+              let fieldError = {
+                password: !formData.password
+                  ? "Please enter your password"
+                  : undefined,
+              }
+              errors = handleError({ ...errors, ...fieldError })
+            }}
+            error={errors.password}
           />
         </FancyForm>
       {/if}
@@ -128,10 +128,10 @@
     {#if !$organisation.isSSOEnforced}
       <Layout gap="XS" noPadding justifyItems="center">
         <Button
-                size="L"
-                cta
-                disabled={Object.keys(errors).length > 0}
-                on:click={login}
+          size="L"
+          cta
+          disabled={Object.keys(errors).length > 0}
+          on:click={login}
         >
           Log in to {company}
         </Button>

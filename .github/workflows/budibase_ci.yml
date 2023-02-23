@@ -10,7 +10,8 @@ on:
  pull_request:
     branches:
       - master
-      - develop 
+      - develop
+      - budi-4821-enforceable-sso-on-business-and
  workflow_dispatch:
 
 env:

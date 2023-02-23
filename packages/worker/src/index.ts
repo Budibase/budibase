@@ -13,7 +13,13 @@ import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { auth, logging, events, middleware, env as coreEnv } from "@budibase/backend-core"
+import {
+  auth,
+  logging,
+  events,
+  middleware,
+  env as coreEnv,
+} from "@budibase/backend-core"
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"

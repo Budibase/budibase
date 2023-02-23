@@ -14,7 +14,7 @@ import {
   users as usersCore,
   utils,
   ViewName,
-  env as coreEnv
+  env as coreEnv,
 } from "@budibase/backend-core"
 import {
   AccountMetadata,
@@ -31,7 +31,7 @@ import {
   SearchUsersRequest,
   UpdateSelf,
   User,
-  SaveUserOpts
+  SaveUserOpts,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"

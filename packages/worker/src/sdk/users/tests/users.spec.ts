@@ -3,7 +3,7 @@ import { mocks } from "@budibase/backend-core/tests"
 import { env } from "@budibase/backend-core"
 import * as users from "../users"
 import { CloudAccount } from "@budibase/types"
-import { isPreventPasswordActions } from "../users";
+import { isPreventPasswordActions } from "../users"
 
 describe("users", () => {
   describe("isPreventPasswordActions", () => {

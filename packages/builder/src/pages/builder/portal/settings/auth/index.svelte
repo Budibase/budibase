@@ -159,7 +159,7 @@
 
   async function toggleIsSSOEnforced() {
     const value = $organisation.isSSOEnforced
-    await organisation.save({ isSSOEnforced: !value } )
+    await organisation.save({ isSSOEnforced: !value })
   }
 
   async function save(docs) {
