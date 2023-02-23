@@ -23,18 +23,6 @@ jest.setTimeout(30000)
 
 jest.unmock("pg")
 
-interface ForeignTableInfo {
-  table: Table
-  fieldName: string
-  relationshipType: RelationshipTypes
-}
-
-interface ForeignRowsInfo {
-  row: Row
-  foreignKey: string
-  relationshipType: RelationshipTypes
-}
-
 describe("row api - postgres", () => {
   let makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
@@ -86,10 +74,12 @@ describe("row api - postgres", () => {
         name: `${prefix}_${generator.word({ length: 6 })}`,
         type: "external",
         primary: ["id"],
+        primaryDisplay: "title",
         schema: {
           id: {
             name: "id",
             type: FieldType.AUTO,
+            autocolumn: true,
             constraints: {
               presence: true,
             },
@@ -130,6 +120,7 @@ describe("row api - postgres", () => {
         id: {
           name: "id",
           type: FieldType.AUTO,
+          autocolumn: true,
           constraints: {
             presence: true,
           },
@@ -159,6 +150,7 @@ describe("row api - postgres", () => {
           name: "oneToManyRelation",
           relationshipType: RelationshipTypes.ONE_TO_MANY,
           tableId: o2mInfo.table._id,
+          main: true,
         },
         manyToOneRelation: {
           type: FieldType.LINK,
@@ -170,6 +162,7 @@ describe("row api - postgres", () => {
           name: "manyToOneRelation",
           relationshipType: RelationshipTypes.MANY_TO_ONE,
           tableId: m2oInfo.table._id,
+          main: true,
         },
         manyToManyRelation: {
           type: FieldType.LINK,
@@ -181,6 +174,7 @@ describe("row api - postgres", () => {
           name: "manyToManyRelation",
           relationshipType: RelationshipTypes.MANY_TO_MANY,
           tableId: m2mInfo.table._id,
+          main: true,
         },
       },
       sourceId: postgresDatasource._id,
@@ -203,6 +197,17 @@ describe("row api - postgres", () => {
     value: number
   }
 
+  type ForeignTableInfo = {
+    table: Table
+    fieldName: string
+    relationshipType: RelationshipTypes
+  }
+
+  type ForeignRowsInfo = {
+    row: Row
+    relationshipType: RelationshipTypes
+  }
+
   async function createPrimaryRow(opts: {
     rowData: PrimaryRowData
     createForeignRows?: {
@@ -211,33 +216,61 @@ describe("row api - postgres", () => {
       createMany2Many?: number
     }
   }) {
-    let { rowData } = opts
+    let { rowData } = opts as any
     let foreignRows: ForeignRowsInfo[] = []
 
     async function createForeignRow(tableInfo: ForeignTableInfo) {
+      const foreignKey = `fk_${tableInfo.table.name}_${tableInfo.fieldName}`
+
       const foreignRow = await config.createRow({
         tableId: tableInfo.table._id,
         title: generator.name(),
       })
 
-      const foreignKey = `fk_${tableInfo.table.name}_${tableInfo.fieldName}`
       rowData = {
         ...rowData,
         [foreignKey]: foreignRow.id,
       }
       foreignRows.push({
         row: foreignRow,
-        foreignKey,
+
         relationshipType: tableInfo.relationshipType,
       })
     }
 
     if (opts?.createForeignRows?.createOne2Many) {
-      await createForeignRow(o2mInfo)
+      const foreignKey = `fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`
+
+      const foreignRow = await config.createRow({
+        tableId: o2mInfo.table._id,
+        title: generator.name(),
+      })
+
+      rowData = {
+        ...rowData,
+        [foreignKey]: foreignRow.id,
+      }
+      foreignRows.push({
+        row: foreignRow,
+        relationshipType: o2mInfo.relationshipType,
+      })
     }
 
     for (let i = 0; i < (opts?.createForeignRows?.createMany2One || 0); i++) {
-      await createForeignRow(m2oInfo)
+      const foreignRow = await config.createRow({
+        tableId: m2oInfo.table._id,
+        title: generator.name(),
+      })
+
+      rowData = {
+        ...rowData,
+        [m2oInfo.fieldName]: rowData[m2oInfo.fieldName] || [],
+      }
+      rowData[m2oInfo.fieldName].push(foreignRow._id)
+      foreignRows.push({
+        row: foreignRow,
+        relationshipType: RelationshipTypes.MANY_TO_ONE,
+      })
     }
 
     for (let i = 0; i < (opts?.createForeignRows?.createMany2Many || 0); i++) {
@@ -531,7 +564,8 @@ describe("row api - postgres", () => {
             tableId: row.tableId,
             _id: expect.any(String),
             _rev: expect.any(String),
-            [one2ManyForeignRows[0].foreignKey]: one2ManyForeignRows[0].row.id,
+            [`fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`]:
+              one2ManyForeignRows[0].row.id,
           })
 
           expect(res.body[o2mInfo.fieldName]).toBeUndefined()
@@ -561,7 +595,8 @@ describe("row api - postgres", () => {
             tableId: row.tableId,
             _id: expect.any(String),
             _rev: expect.any(String),
-            [foreignRows[0].foreignKey]: foreignRows[0].row.id,
+            [`fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`]:
+              foreignRows[0].row.id,
           })
 
           expect(res.body[o2mInfo.fieldName]).toBeUndefined()
@@ -866,12 +901,52 @@ describe("row api - postgres", () => {
           expect(foreignRows).toHaveLength(1)
           expect(res.body).toEqual({
             ...rowData,
-            [foreignRows[0].foreignKey]: foreignRows[0].row.id,
+            [`fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`]:
+              foreignRows[0].row.id,
             [o2mInfo.fieldName]: [
               {
                 ...foreignRows[0].row,
                 _id: expect.any(String),
                 _rev: expect.any(String),
+              },
+            ],
+            id: row.id,
+            tableId: row.tableId,
+            _id: expect.any(String),
+            _rev: expect.any(String),
+          })
+        })
+      })
+
+      describe("only with many to one data", () => {
+        beforeEach(async () => {
+          rowData = generateRandomPrimaryRowData()
+          const rowsInfo = await createPrimaryRow({
+            rowData,
+            createForeignRows: {
+              createMany2One: 2,
+            },
+          })
+
+          row = rowsInfo.row
+          foreignRows = rowsInfo.foreignRows
+        })
+
+        it("enrich populates the foreign field", async () => {
+          const res = await getAll(primaryPostgresTable._id, row.id)
+
+          expect(res.status).toBe(200)
+
+          expect(res.body).toEqual({
+            ...rowData,
+            [m2oInfo.fieldName]: [
+              {
+                ...foreignRows[0].row,
+                [`fk_${m2oInfo.table.name}_${m2oInfo.fieldName}`]: row.id,
+              },
+              {
+                ...foreignRows[1].row,
+                [`fk_${m2oInfo.table.name}_${m2oInfo.fieldName}`]: row.id,
               },
             ],
             id: row.id,
