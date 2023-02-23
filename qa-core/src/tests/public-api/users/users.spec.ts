@@ -2,10 +2,12 @@ import TestConfiguration from "../../../config/public-api/TestConfiguration"
 import PublicAPIClient from "../../../config/public-api/TestConfiguration/PublicAPIClient"
 import generateUser from "../../../config/public-api/fixtures/users"
 import { User } from "@budibase/server/api/controllers/public/mapping/types"
+import AccountsAPIClient from "../../../config/public-api/TestConfiguration/accountsAPIClient"
 
 describe("Public API - /users endpoints", () => {
   const api = new PublicAPIClient()
-  const config = new TestConfiguration<User>(api)
+  const accountsAPI = new AccountsAPIClient()
+  const config = new TestConfiguration<User>(api, accountsAPI)
 
   beforeAll(async () => {
     await config.beforeAll()

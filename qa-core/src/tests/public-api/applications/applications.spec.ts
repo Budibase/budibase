@@ -1,12 +1,14 @@
 import TestConfiguration from "../../../config/public-api/TestConfiguration"
 import PublicAPIClient from "../../../config/public-api/TestConfiguration/PublicAPIClient"
+import AccountsAPIClient from "../../../config/public-api/TestConfiguration/accountsAPIClient"
 import generateApp from "../../../config/public-api/fixtures/applications"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
 import { db as dbCore } from "@budibase/backend-core"
 
 describe("Public API - /applications endpoints", () => {
   const api = new PublicAPIClient()
-  const config = new TestConfiguration<Application>(api)
+  const accountsAPI = new AccountsAPIClient()
+  const config = new TestConfiguration<Application>(api, accountsAPI)
 
   beforeAll(async () => {
     await config.beforeAll()

@@ -2,11 +2,12 @@ import { Row } from "@budibase/server/api/controllers/public/mapping/types"
 import { generateRow } from "../../../config/public-api/fixtures/tables"
 import TestConfiguration from "../../../config/public-api/TestConfiguration"
 import PublicAPIClient from "../../../config/public-api/TestConfiguration/PublicAPIClient"
+import AccountsAPIClient from "../../../config/public-api/TestConfiguration/accountsAPIClient"
 
 describe("Public API - /rows endpoints", () => {
-  let api = new PublicAPIClient()
-
-  const config = new TestConfiguration<Row>(api)
+  const api = new PublicAPIClient()
+  const accountsAPI = new AccountsAPIClient()
+  const config = new TestConfiguration<Row>(api, accountsAPI)
 
   beforeAll(async () => {
     await config.beforeAll()

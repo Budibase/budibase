@@ -55,8 +55,6 @@ class InternalAPIClient {
         console.error(response)
         console.error("Response body:")
         console.error(response.body)
-        console.error("Request body:")
-        console.error(requestOptions.body)
       }
       return response
     }
