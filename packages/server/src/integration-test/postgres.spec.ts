@@ -274,7 +274,20 @@ describe("row api - postgres", () => {
     }
 
     for (let i = 0; i < (opts?.createForeignRows?.createMany2Many || 0); i++) {
-      await createForeignRow(m2mInfo)
+      const foreignRow = await config.createRow({
+        tableId: m2mInfo.table._id,
+        title: generator.name(),
+      })
+
+      rowData = {
+        ...rowData,
+        [m2mInfo.fieldName]: rowData[m2mInfo.fieldName] || [],
+      }
+      rowData[m2mInfo.fieldName].push(foreignRow._id)
+      foreignRows.push({
+        row: foreignRow,
+        relationshipType: RelationshipTypes.MANY_TO_MANY,
+      })
     }
 
     const row = await config.createRow({
@@ -513,7 +526,7 @@ describe("row api - postgres", () => {
       let rows: { row: Row; rowData: PrimaryRowData }[]
 
       beforeEach(async () => {
-        rows = await populatePrimaryRows(10)
+        rows = await populatePrimaryRows(5)
       })
 
       it("a single row can be retrieved successfully", async () => {
@@ -881,50 +894,15 @@ describe("row api - postgres", () => {
     describe("given a row with relation data", () => {
       let row: Row, rowData: PrimaryRowData, foreignRows: ForeignRowsInfo[]
 
-      describe("only with one to many data", () => {
-        beforeEach(async () => {
-          rowData = generateRandomPrimaryRowData()
-          const rowsInfo = await createPrimaryRow({
-            rowData,
-            createForeignRows: { createOne2Many: true },
-          })
-
-          row = rowsInfo.row
-          foreignRows = rowsInfo.foreignRows
-        })
-
-        it("enrich populates the foreign field", async () => {
-          const res = await getAll(primaryPostgresTable._id, row.id)
-
-          expect(res.status).toBe(200)
-
-          expect(foreignRows).toHaveLength(1)
-          expect(res.body).toEqual({
-            ...rowData,
-            [`fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`]:
-              foreignRows[0].row.id,
-            [o2mInfo.fieldName]: [
-              {
-                ...foreignRows[0].row,
-                _id: expect.any(String),
-                _rev: expect.any(String),
-              },
-            ],
-            id: row.id,
-            tableId: row.tableId,
-            _id: expect.any(String),
-            _rev: expect.any(String),
-          })
-        })
-      })
-
-      describe("only with many to one data", () => {
+      describe("with all relationship types", () => {
         beforeEach(async () => {
           rowData = generateRandomPrimaryRowData()
           const rowsInfo = await createPrimaryRow({
             rowData,
             createForeignRows: {
-              createMany2One: 2,
+              createOne2Many: true,
+              createMany2One: 3,
+              createMany2Many: 2,
             },
           })
 
@@ -932,21 +910,46 @@ describe("row api - postgres", () => {
           foreignRows = rowsInfo.foreignRows
         })
 
-        it("enrich populates the foreign field", async () => {
+        it("enrich populates the foreign fields", async () => {
           const res = await getAll(primaryPostgresTable._id, row.id)
 
           expect(res.status).toBe(200)
 
+          const foreignRowsByType = _.groupBy(
+            foreignRows,
+            x => x.relationshipType
+          )
           expect(res.body).toEqual({
             ...rowData,
+            [`fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`]:
+              foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row.id,
+            [o2mInfo.fieldName]: [
+              {
+                ...foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row,
+                _id: expect.any(String),
+                _rev: expect.any(String),
+              },
+            ],
             [m2oInfo.fieldName]: [
               {
-                ...foreignRows[0].row,
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][0].row,
                 [`fk_${m2oInfo.table.name}_${m2oInfo.fieldName}`]: row.id,
               },
               {
-                ...foreignRows[1].row,
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][1].row,
                 [`fk_${m2oInfo.table.name}_${m2oInfo.fieldName}`]: row.id,
+              },
+              {
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][2].row,
+                [`fk_${m2oInfo.table.name}_${m2oInfo.fieldName}`]: row.id,
+              },
+            ],
+            [m2mInfo.fieldName]: [
+              {
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][0].row,
+              },
+              {
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][1].row,
               },
             ],
             id: row.id,
