@@ -34,7 +34,7 @@ export const createResizeStore = context => {
     const newWidth = Math.max(MinColumnWidth, $resize.initialWidth + dx)
 
     // Skip small updates
-    if (Math.abs(width - newWidth) < 10) {
+    if (Math.abs(width - newWidth) < 20) {
       return
     }
 
