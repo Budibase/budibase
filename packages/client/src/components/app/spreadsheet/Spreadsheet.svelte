@@ -2,16 +2,18 @@
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
   import { fetchData, LuceneUtils } from "@budibase/frontend-core"
-  import { Icon, ActionButton } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
   import TextCell from "./cells/TextCell.svelte"
   import OptionsCell from "./cells/OptionsCell.svelte"
   import DateCell from "./cells/DateCell.svelte"
   import MultiSelectCell from "./cells/MultiSelectCell.svelte"
   import NumberCell from "./cells/NumberCell.svelte"
   import RelationshipCell from "./cells/RelationshipCell.svelte"
-  import { getColor } from "./utils.js"
   import { createReorderStores } from "./stores/reorder"
+  import { createResizeStore } from "./stores/resize"
   import ReorderPlaceholder from "./ReorderPlaceholder.svelte"
+  import ResizeSlider from "./ResizeSlider.svelte"
+  import Header from "./Header.svelte"
 
   export let table
   export let filter
@@ -24,15 +26,15 @@
   // Sheet constants
   const limit = 100
   const defaultWidth = 160
-  const minWidth = 100
   const rand = Math.random()
 
   // State stores
+  const rows = writable([])
   const columns = writable([])
   const hoveredRowId = writable(null)
   const selectedCellId = writable(null)
   const selectedRows = writable({})
-  const rows = writable([])
+  const tableId = writable(table?.tableId)
 
   // Build up spreadsheet context and additional stores
   const context = {
@@ -42,23 +44,30 @@
     hoveredRowId,
     selectedCellId,
     selectedRows,
+    tableId,
   }
   const { reorder, reorderPlaceholder } = createReorderStores(context)
+  const resize = createResizeStore(context)
+
+  // API for children to consume
+  const spreadsheetAPI = {
+    refreshData: () => fetch?.refresh(),
+  }
+
+  // Set context for children to consume
   setContext("spreadsheet", {
     ...context,
     reorder,
     reorderPlaceholder,
+    resize,
+    spreadsheetAPI,
   })
 
   let horizontallyScrolled = false
   let changeCache = {}
   let newRows = []
 
-  // State for resizing columns
-  let resizeInitialX
-  let resizeInitialWidth
-  let resizeFieldIndex
-
+  $: tableId.set(table?.tableId)
   $: query = LuceneUtils.buildLuceneQuery(filter)
   $: fetch = createFetch(table)
   $: fetch.update({
@@ -183,42 +192,6 @@
     delete changeCache[rowId]
   }
 
-  const deleteRows = () => {
-    // Fetch full row objects to be deleted
-    const rowsToDelete = Object.entries($selectedRows)
-      .map(entry => {
-        if (entry[1] === true) {
-          return $rows.find(x => x._id === entry[0])
-        } else {
-          return null
-        }
-      })
-      .filter(x => x != null)
-
-    // Deletion callback when confirmed
-    const performDeletion = async () => {
-      await API.deleteRows({
-        tableId: table.tableId,
-        rows: rowsToDelete,
-      })
-      await fetch.refresh()
-
-      // Refresh state
-      $selectedCellId = null
-      $hoveredRowId = null
-      $selectedRows = {}
-    }
-
-    // Show confirmation
-    confirmationStore.actions.showConfirmation(
-      "Delete rows",
-      `Are you sure you want to delete ${selectedRowCount} row${
-        selectedRowCount === 1 ? "" : "s"
-      }?`,
-      performDeletion
-    )
-  }
-
   const addRow = async field => {
     const res = await API.saveRow({ tableId: table.tableId })
     $selectedCellId = `${res._id}-${field.name}`
@@ -235,53 +208,11 @@
     })
     $rows = sortedRows
   }
-
-  const startResizing = (fieldIdx, e) => {
-    e.stopPropagation()
-    resizeInitialX = e.clientX
-    resizeInitialWidth = $columns[fieldIdx].width
-    resizeFieldIndex = fieldIdx
-    document.addEventListener("mousemove", onResizeMove)
-    document.addEventListener("mouseup", stopResizing)
-  }
-
-  const onResizeMove = e => {
-    const dx = e.clientX - resizeInitialX
-    columns.update(state => {
-      state[resizeFieldIndex].width = Math.max(
-        minWidth,
-        resizeInitialWidth + dx
-      )
-      return state
-    })
-  }
-
-  const stopResizing = () => {
-    document.removeEventListener("mousemove", onResizeMove)
-    document.removeEventListener("mouseup", stopResizing)
-  }
 </script>
 
 <div use:styleable={$component.styles}>
-  <div class="wrapper" style="--highlight-color:{getColor(0)}">
-    <div class="controls">
-      <div class="buttons">
-        <ActionButton icon="Filter" size="S">Filter</ActionButton>
-        <ActionButton icon="Group" size="S">Group</ActionButton>
-        <ActionButton icon="SortOrderDown" size="S">Sort</ActionButton>
-        <ActionButton icon="VisibilityOff" size="S">Hide fields</ActionButton>
-      </div>
-      <div class="title">Sales Records</div>
-      <div class="delete">
-        {#if selectedRowCount}
-          <ActionButton icon="Delete" size="S" on:click={deleteRows}>
-            Delete {selectedRowCount} row{selectedRowCount === 1 ? "" : "s"}
-          </ActionButton>
-        {:else}
-          {rowCount} row{rowCount === 1 ? "" : "s"}
-        {/if}
-      </div>
-    </div>
+  <div class="wrapper" class:resize={$resize.columnIdx != null}>
+    <Header />
     <div
       class="spreadsheet"
       on:scroll={handleScroll}
@@ -314,7 +245,7 @@
           <span>
             {field.name}
           </span>
-          <div class="slider" on:mousedown={e => startResizing(fieldIdx, e)} />
+          <ResizeSlider columnIdx={fieldIdx} />
         </div>
       {/each}
       <!-- Horizontal spacer -->
@@ -434,6 +365,9 @@
     --cell-height: 32px;
     --cell-font-size: 14px;
   }
+  .wrapper.resize *:hover {
+    cursor: col-resize;
+  }
   .spreadsheet {
     display: grid;
     grid-template-columns: var(--grid);
@@ -451,40 +385,6 @@
 
   .wrapper ::-webkit-scrollbar-track {
     background: var(--cell-background);
-  }
-
-  .controls {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    height: 36px;
-    padding: 0 12px;
-    background: var(--spectrum-global-color-gray-200);
-    gap: 8px;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-400);
-  }
-  .title {
-    font-weight: 600;
-  }
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--cell-spacing);
-  }
-  .delete {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    color: var(--spectrum-global-color-gray-700);
-  }
-  .delete :global(.spectrum-ActionButton) {
-    color: var(--spectrum-global-color-red-600);
-  }
-  .delete :global(.spectrum-Icon) {
-    fill: var(--spectrum-global-color-red-600);
   }
 
   /* Cells */
@@ -578,32 +478,6 @@
   }
   .cell.reorder-target {
     border-left-color: var(--spectrum-global-color-blue-400);
-  }
-
-  /* Column resizing */
-  .slider {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 16px;
-    height: 100%;
-  }
-  .slider:after {
-    opacity: 0;
-    content: " ";
-    position: absolute;
-    width: 4px;
-    right: 0;
-    top: 0;
-    height: 100%;
-    background: var(--spectrum-global-color-gray-600);
-    transition: opacity 130ms ease-out;
-  }
-  .slider:hover {
-    cursor: col-resize;
-  }
-  .slider:hover:after {
-    opacity: 1;
   }
 
   .label {
