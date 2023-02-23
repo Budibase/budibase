@@ -104,6 +104,9 @@ export const deepSet = (obj, key, value) => {
  * @param obj the object to clone
  */
 export const cloneDeep = obj => {
+  if (!obj) {
+    return obj
+  }
   return JSON.parse(JSON.stringify(obj))
 }
 

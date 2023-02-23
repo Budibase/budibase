@@ -26,7 +26,7 @@ type SendEmailOpts = {
   automation?: boolean
 }
 
-const TEST_MODE = false
+const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
 const TYPE = TemplateType.EMAIL
 
 const FULL_EMAIL_PURPOSES = [
@@ -62,8 +62,8 @@ function createSMTPTransport(config: any) {
       host: "smtp.ethereal.email",
       secure: false,
       auth: {
-        user: "don.bahringer@ethereal.email",
-        pass: "yCKSH8rWyUPbnhGYk9",
+        user: "wyatt.zulauf29@ethereal.email",
+        pass: "tEwDtHBWWxusVWAPfa",
       },
     }
   }
