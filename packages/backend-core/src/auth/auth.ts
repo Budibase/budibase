@@ -2,25 +2,33 @@ const _passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
 import { getGlobalDB } from "../context"
-const refresh = require("passport-oauth2-refresh")
-import { Config, Cookie } from "../constants"
-import { getScopedConfig } from "../db"
+import { Cookie } from "../constants"
 import { getSessionsForUser, invalidateSessions } from "../security/sessions"
 import {
+  authenticated,
+  csrf,
+  google,
   jwt as jwtPassport,
   local,
-  authenticated,
-  tenancy,
-  csrf,
   oidc,
-  google,
+  tenancy,
 } from "../middleware"
+import * as userCache from "../cache/user"
 import { invalidateUser } from "../cache/user"
-import { PlatformLogoutOpts, User } from "@budibase/types"
+import {
+  ConfigType,
+  GoogleInnerConfig,
+  OIDCInnerConfig,
+  PlatformLogoutOpts,
+  User,
+} from "@budibase/types"
 import { logAlert } from "../logging"
 import * as events from "../events"
-import * as userCache from "../cache/user"
+import * as configs from "../configs"
 import { clearCookie, getCookie } from "../utils"
+import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
+
+const refresh = require("passport-oauth2-refresh")
 export {
   auditLog,
   authError,
@@ -33,7 +41,6 @@ export {
   google,
   oidc,
 } from "../middleware"
-import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
 export const buildAuthMiddleware = authenticated
 export const buildTenancyMiddleware = tenancy
 export const buildCsrfMiddleware = csrf
@@ -63,11 +70,10 @@ _passport.deserializeUser(async (user: User, done: any) => {
 })
 
 async function refreshOIDCAccessToken(
-  db: any,
-  chosenConfig: any,
+  chosenConfig: OIDCInnerConfig,
   refreshToken: string
-) {
-  const callbackUrl = await oidc.getCallbackUrl(db, chosenConfig)
+): Promise<RefreshResponse> {
+  const callbackUrl = await oidc.getCallbackUrl()
   let enrichedConfig: any
   let strategy: any
 
@@ -90,7 +96,7 @@ async function refreshOIDCAccessToken(
 
   return new Promise(resolve => {
     refresh.requestNewAccessToken(
-      Config.OIDC,
+      ConfigType.OIDC,
       refreshToken,
       (err: any, accessToken: string, refreshToken: any, params: any) => {
         resolve({ err, accessToken, refreshToken, params })
@@ -100,11 +106,10 @@ async function refreshOIDCAccessToken(
 }
 
 async function refreshGoogleAccessToken(
-  db: any,
-  config: any,
+  config: GoogleInnerConfig,
   refreshToken: any
-) {
-  let callbackUrl = await google.getCallbackUrl(db, config)
+): Promise<RefreshResponse> {
+  let callbackUrl = await google.getCallbackUrl(config)
 
   let strategy
   try {
@@ -124,7 +129,7 @@ async function refreshGoogleAccessToken(
 
   return new Promise(resolve => {
     refresh.requestNewAccessToken(
-      Config.GOOGLE,
+      ConfigType.GOOGLE,
       refreshToken,
       (err: any, accessToken: string, refreshToken: string, params: any) => {
         resolve({ err, accessToken, refreshToken, params })
@@ -133,41 +138,37 @@ async function refreshGoogleAccessToken(
   })
 }
 
+interface RefreshResponse {
+  err?: {
+    data?: string
+  }
+  accessToken?: string
+  refreshToken?: string
+  params?: any
+}
+
 export async function refreshOAuthToken(
   refreshToken: string,
-  configType: string,
-  configId: string
-) {
-  const db = getGlobalDB()
-
-  const config = await getScopedConfig(db, {
-    type: configType,
-    group: {},
-  })
-
-  let chosenConfig = {}
-  let refreshResponse
-  if (configType === Config.OIDC) {
-    // configId - retrieved from cookie.
-    chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
-    if (!chosenConfig) {
-      throw new Error("Invalid OIDC configuration")
+  configType: ConfigType,
+  configId?: string
+): Promise<RefreshResponse> {
+  if (configType === ConfigType.OIDC && configId) {
+    const config = await configs.getOIDCConfigById(configId)
+    if (!config) {
+      return { err: { data: "OIDC configuration not found" } }
     }
-    refreshResponse = await refreshOIDCAccessToken(
-      db,
-      chosenConfig,
-      refreshToken
-    )
-  } else {
-    chosenConfig = config
-    refreshResponse = await refreshGoogleAccessToken(
-      db,
-      chosenConfig,
-      refreshToken
-    )
+    return refreshOIDCAccessToken(config, refreshToken)
   }
 
-  return refreshResponse
+  if (configType === ConfigType.GOOGLE) {
+    const config = await configs.getGoogleConfig()
+    if (!config) {
+      return { err: { data: "Google configuration not found" } }
+    }
+    return refreshGoogleAccessToken(config, refreshToken)
+  }
+
+  throw new Error(`Unsupported configType=${configType}`)
 }
 
 // TODO: Refactor to use user save function instead to prevent the need for

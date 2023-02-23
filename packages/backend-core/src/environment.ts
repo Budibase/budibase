@@ -84,6 +84,13 @@ const environment = {
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
   ENABLE_4XX_HTTP_LOGGING: process.env.ENABLE_4XX_HTTP_LOGGING || true,
+  // smtp
+  SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: parseInt(process.env.SMTP_PORT || ""),
+  SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore

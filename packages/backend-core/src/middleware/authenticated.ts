@@ -115,7 +115,8 @@ export default function (
           authenticated = true
         } catch (err: any) {
           authenticated = false
-          console.error("Auth Error", err?.message || err)
+          console.error(`Auth Error: ${err.message}`)
+          console.error(err)
           // remove the cookie as the user does not exist anymore
           clearCookie(ctx, Cookie.Auth)
         }

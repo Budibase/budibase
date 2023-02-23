@@ -5,32 +5,42 @@ export interface Config extends Document {
   config: any
 }
 
-export interface SMTPConfig extends Config {
-  config: {
-    port: number
-    host: string
-    from: string
-    subject: string
-    secure: boolean
+export interface SMTPInnerConfig {
+  port: number
+  host: string
+  from: string
+  subject?: string
+  secure: boolean
+  auth?: {
+    user: string
+    pass: string
   }
+  connectionTimeout?: any
+}
+
+export interface SMTPConfig extends Config {
+  config: SMTPInnerConfig
+}
+
+export interface SettingsInnerConfig {
+  platformUrl?: string
+  company?: string
+  logoUrl?: string // Populated on read
+  logoUrlEtag?: string
+  uniqueTenantId?: string
+  analyticsEnabled?: boolean
 }
 
 export interface SettingsConfig extends Config {
-  config: {
-    company: string
-    // Populated on read
-    logoUrl?: string
-    logoUrlEtag?: boolean
-    platformUrl: string
-    uniqueTenantId?: string
-    analyticsEnabled?: boolean
-  }
+  config: SettingsInnerConfig
 }
 
 export interface GoogleInnerConfig {
   clientID: string
   clientSecret: string
   activated: boolean
+  // deprecated / read only
+  callbackURL?: string
 }
 
 export interface GoogleConfig extends Config {
@@ -55,6 +65,7 @@ export interface OIDCInnerConfig {
   name: string
   uuid: string
   activated: boolean
+  scopes: string[]
 }
 
 export interface OIDCConfig extends Config {
