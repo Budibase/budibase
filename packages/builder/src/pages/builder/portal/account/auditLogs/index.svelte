@@ -16,6 +16,7 @@
     Pagination,
     Helpers,
     Divider,
+    ActionButton,
   } from "@budibase/bbui"
   import { licensing, users, apps, auditLogs } from "stores/portal"
   import LockedFeature from "../../_components/LockedFeature.svelte"
@@ -32,7 +33,7 @@
     user: { width: "auto" },
     app: { width: "auto" },
     name: { width: "0.8fr" },
-    view: { width: "auto", borderLeft: true, displayName: "" },
+    view: { width: "0.1fr", borderLeft: true, displayName: "" },
   }
 
   const customRenderers = [
@@ -227,69 +228,65 @@
   <div class="datepicker" />
 
   <div class="controls">
-    <div class="search">
-      <div>
-        <DatePicker
-          range={true}
-          label="Date Range"
-          on:change={e => {
-            if (e.detail[0]?.length === 1) {
-              startDate = e.detail[0][0].toISOString()
-            } else if (e.detail[0]?.length > 1) {
-              startDate = e.detail[0][0].toISOString()
-              endDate = e.detail[0][1].toISOString()
-            } else {
-              startDate = null
-              endDate = null
-            }
-          }}
-        />
-      </div>
-      <div class="select">
-        <Multiselect
-          bind:fetchTerm={userSearchTerm}
-          placeholder="All users"
-          label="Users"
-          autocomplete
-          bind:value={selectedUsers}
-          getOptionValue={user => user._id}
-          getOptionLabel={user => user.email}
-          options={sortedList}
-        />
-      </div>
-      <div class="select">
-        <Multiselect
-          autocomplete
-          placeholder="All apps"
-          label="App"
-          getOptionValue={app => app.instance._id}
-          getOptionLabel={app => app.name}
-          options={$apps}
-          bind:value={selectedApps}
-        />
-      </div>
-      <div class="select">
-        <Multiselect
-          customPopoverHeight="500px"
-          autocomplete
-          getOptionValue={event => event[0]}
-          getOptionLabel={event => event[1]}
-          options={Object.entries($auditLogs.events)}
-          placeholder="All events"
-          label="Event"
-          bind:value={selectedEvents}
-        />
-      </div>
+    <div class="select">
+      <Multiselect
+        bind:fetchTerm={userSearchTerm}
+        placeholder="All users"
+        label="Users"
+        autocomplete
+        bind:value={selectedUsers}
+        getOptionValue={user => user._id}
+        getOptionLabel={user => user.email}
+        options={sortedList}
+      />
     </div>
-    <div style="max-width: 150px; ">
+    <div class="select">
+      <Multiselect
+        autocomplete
+        placeholder="All apps"
+        label="App"
+        getOptionValue={app => app.instance._id}
+        getOptionLabel={app => app.name}
+        options={$apps}
+        bind:value={selectedApps}
+      />
+    </div>
+    <div class="select">
+      <Multiselect
+        customPopoverHeight="500px"
+        autocomplete
+        getOptionValue={event => event[0]}
+        getOptionLabel={event => event[1]}
+        options={Object.entries($auditLogs.events)}
+        placeholder="All events"
+        label="Event"
+        bind:value={selectedEvents}
+      />
+    </div>
+
+    <div class="date-picker">
+      <DatePicker
+        placeholder="Choose date range"
+        range={true}
+        on:change={e => {
+          if (e.detail[0]?.length === 1) {
+            startDate = e.detail[0][0].toISOString()
+          } else if (e.detail[0]?.length > 1) {
+            startDate = e.detail[0][0].toISOString()
+            endDate = e.detail[0][1].toISOString()
+          } else {
+            startDate = null
+            endDate = null
+          }
+        }}
+      />
+    </div>
+    <div class="freeSearch">
       <Search placeholder="Search" bind:value={logSearchTerm} />
     </div>
 
-    <div
-      on:click={() => downloadLogs()}
-      style="padding-bottom: var(--spacing-s)"
-    >
-      <Icon name="Download" hoverable />
+    <div class="">
+      <ActionButton size="M" icon="Download" on:click={() => downloadLogs()} />
     </div>
   </div>
   <Layout noPadding>
@@ -445,16 +442,12 @@
     font-size: 13px;
   }
 
-  .search :global(.spectrum-InputGroup) {
-    width: 100px;
-  }
-
   .controls {
     display: flex;
     flex-direction: row;
     gap: var(--spacing-l);
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: center;
   }
 
   .side-panel-icons {
@@ -463,15 +456,18 @@
   }
 
   .select {
-    flex-basis: 130px;
+    flex-basis: calc(33.33% - 10px);
     width: 0;
     min-width: 100px;
   }
 
-  .search {
-    flex: 1 1 auto;
-    display: flex;
-    gap: var(--spacing-xl);
-    align-items: flex-end;
+  .date-picker {
+    flex-basis: calc(70% - 32px);
+    min-width: 100px;
+  }
+
+  .freeSearch {
+    flex-basis: 25%;
+    min-width: 100px;
   }
 </style>
