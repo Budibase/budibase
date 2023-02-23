@@ -38,7 +38,13 @@ export async function updateRelatedFormula(
         if (!relatedRows[relatedTableId]) {
           relatedRows[relatedTableId] = []
         }
-        relatedRows[relatedTableId] = relatedRows[relatedTableId].concat(field)
+        // filter down to the rows which are not already included in related
+        const currentIds = relatedRows[relatedTableId].map(row => row._id)
+        const uniqueRelatedRows = field.filter(
+          (row: Row) => !currentIds.includes(row._id)
+        )
+        relatedRows[relatedTableId] =
+          relatedRows[relatedTableId].concat(uniqueRelatedRows)
       }
     }
     for (let tableId of table.relatedFormula) {

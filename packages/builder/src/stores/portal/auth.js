@@ -2,6 +2,7 @@ import { derived, writable, get } from "svelte/store"
 import { API } from "api"
 import { admin } from "stores/portal"
 import analytics from "analytics"
+import getUserInitials from "helpers/userInitials.js"
 
 export function createAuthStore() {
   const auth = writable({
@@ -18,16 +19,7 @@ export function createAuthStore() {
     let isBuilder = false
     if ($store.user) {
       const user = $store.user
-      if (user.firstName) {
-        initials = user.firstName[0]
-        if (user.lastName) {
-          initials += user.lastName[0]
-        }
-      } else if (user.email) {
-        initials = user.email[0]
-      } else {
-        initials = "Unknown"
-      }
+      initials = getUserInitials(user)
       isAdmin = !!user.admin?.global
       isBuilder = !!user.builder?.global
     }
@@ -41,6 +33,7 @@ export function createAuthStore() {
       initials,
       isAdmin,
       isBuilder,
+      isSSO: !!$store.user?.provider,
     }
   })
 

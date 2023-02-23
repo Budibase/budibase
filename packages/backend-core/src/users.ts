@@ -8,6 +8,7 @@ import {
 } from "./db"
 import { BulkDocsResponse, User } from "@budibase/types"
 import { getGlobalDB } from "./context"
+import * as context from "./context"
 
 export const bulkGetGlobalUsersById = async (userIds: string[]) => {
   const db = getGlobalDB()
@@ -22,6 +23,11 @@ export const bulkGetGlobalUsersById = async (userIds: string[]) => {
 export const bulkUpdateGlobalUsers = async (users: User[]) => {
   const db = getGlobalDB()
   return (await db.bulkDocs(users)) as BulkDocsResponse
+}
+
+export async function getById(id: string): Promise<User> {
+  const db = context.getGlobalDB()
+  return db.get(id)
 }
 
 /**
