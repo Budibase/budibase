@@ -68,7 +68,10 @@
   let selectedLog
   let sidePanelVisible = false
   let wideSidePanel = false
-  let startDate, endDate
+
+  let startDate = new Date()
+  startDate.setDate(startDate.getDate() - 30)
+  let endDate = new Date()
 
   $: fetchUsers(userPage, userSearchTerm)
   $: fetchLogs({
@@ -266,6 +269,7 @@
 
     <div class="date-picker">
       <DatePicker
+        value={[startDate, endDate]}
         placeholder="Choose date range"
         range={true}
         on:change={e => {
