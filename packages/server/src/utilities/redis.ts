@@ -21,6 +21,8 @@ export async function shutdown() {
   if (devAppClient) await devAppClient.finish()
   if (debounceClient) await debounceClient.finish()
   if (flagClient) await flagClient.finish()
+  // shutdown core clients
+  await redis.clients.shutdown()
   console.log("Redis shutdown")
 }
 

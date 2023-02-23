@@ -30,7 +30,7 @@ describe("/api/global/self", () => {
       user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
       expect(res.body._id).toBe(user._id)
       expect(events.user.updated).toBeCalledTimes(1)
-      expect(events.user.updated).toBeCalledWith(user)
+      expect(events.user.updated).toBeCalledWith(dbUser)
       expect(events.user.passwordUpdated).not.toBeCalled()
     })
 
@@ -44,12 +44,11 @@ describe("/api/global/self", () => {
       const dbUser = await config.getUser(user.email)
       user._rev = dbUser._rev
       user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
-      delete user.password
       expect(res.body._id).toBe(user._id)
       expect(events.user.updated).toBeCalledTimes(1)
-      expect(events.user.updated).toBeCalledWith(user)
+      expect(events.user.updated).toBeCalledWith(dbUser)
       expect(events.user.passwordUpdated).toBeCalledTimes(1)
-      expect(events.user.passwordUpdated).toBeCalledWith(user)
+      expect(events.user.passwordUpdated).toBeCalledWith(dbUser)
     })
   })
 })

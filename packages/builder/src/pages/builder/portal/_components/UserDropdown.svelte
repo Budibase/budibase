@@ -30,9 +30,11 @@
     My profile
   </MenuItem>
   <MenuItem icon="Moon" on:click={() => themeModal.show()}>Theme</MenuItem>
-  <MenuItem icon="LockClosed" on:click={() => updatePasswordModal.show()}>
-    Update password
-  </MenuItem>
+  {#if !$auth.isSSO}
+    <MenuItem icon="LockClosed" on:click={() => updatePasswordModal.show()}>
+      Update password
+    </MenuItem>
+  {/if}
   <MenuItem icon="Key" on:click={() => apiKeyModal.show()}>
     View API key
   </MenuItem>
