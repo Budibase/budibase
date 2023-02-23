@@ -1,6 +1,11 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { selectedScreen, selectedComponent } from "builderStore"
+import {
+  selectedScreen,
+  selectedComponent,
+  screenHistoryStore,
+  automationHistoryStore,
+} from "builderStore"
 import {
   datasources,
   integrations,
@@ -122,6 +127,8 @@ export const getFrontendStore = () => {
         navigation: application.navigation || {},
         usedPlugins: application.usedPlugins || [],
       }))
+      screenHistoryStore.reset()
+      automationHistoryStore.reset()
 
       // Initialise backend stores
       database.set(application.instance)
@@ -179,10 +186,7 @@ export const getFrontendStore = () => {
         }
 
         // Check screen isn't already selected
-        if (
-          state.selectedScreenId === screen._id &&
-          state.selectedComponentId === screen.props?._id
-        ) {
+        if (state.selectedScreenId === screen._id) {
           return
         }
 
@@ -256,7 +260,7 @@ export const getFrontendStore = () => {
         }
       },
       save: async screen => {
-        /* 
+        /*
           Temporarily disabled to accomodate migration issues.
           store.actions.screens.validate(screen)
         */
@@ -347,6 +351,7 @@ export const getFrontendStore = () => {
 
           return state
         })
+        return null
       },
       updateSetting: async (screen, name, value) => {
         if (!screen || !name) {

@@ -1,6 +1,6 @@
 import env from "../../environment"
 import * as objectStore from "../objectStore"
-import * as tenancy from "../../tenancy"
+import * as context from "../../context"
 import * as cloudfront from "../cloudfront"
 import { Plugin } from "@budibase/types"
 
@@ -61,7 +61,7 @@ const getPluginS3Key = (plugin: Plugin, fileName: string) => {
 export const getPluginS3Dir = (pluginName: string) => {
   let s3Key = `${pluginName}`
   if (env.MULTI_TENANCY) {
-    const tenantId = tenancy.getTenantId()
+    const tenantId = context.getTenantId()
     s3Key = `${tenantId}/${s3Key}`
   }
   if (env.CLOUDFRONT_CDN) {

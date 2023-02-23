@@ -1,10 +1,11 @@
-import * as google from "../google"
+import * as google from "../sso/google"
 import { Cookie, Config } from "../../../constants"
 import { clearCookie, getCookie } from "../../../utils"
 import { getScopedConfig, getPlatformUrl, doWithDB } from "../../../db"
 import environment from "../../../environment"
-import { getGlobalDB } from "../../../tenancy"
+import { getGlobalDB } from "../../../context"
 import { BBContext, Database, SSOProfile } from "@budibase/types"
+import { ssoSaveUserNoOp } from "../sso/sso"
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
 type Passport = {
@@ -36,7 +37,11 @@ export async function preAuth(
   const platformUrl = await getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
-  const strategy = await google.strategyFactory(googleConfig, callbackUrl)
+  const strategy = await google.strategyFactory(
+    googleConfig,
+    callbackUrl,
+    ssoSaveUserNoOp
+  )
 
   if (!ctx.query.appId || !ctx.query.datasourceId) {
     ctx.throw(400, "appId and datasourceId query params not present.")

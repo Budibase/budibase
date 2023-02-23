@@ -5,7 +5,6 @@
     Detail,
     Body,
     Icon,
-    Tooltip,
     notifications,
   } from "@budibase/bbui"
   import { automationStore } from "builderStore"
@@ -13,7 +12,6 @@
   import { externalActions } from "./ExternalActions"
 
   export let blockIdx
-  export let blockComplete
 
   const disabled = {
     SEND_EMAIL_SMTP: {
@@ -50,15 +48,12 @@
 
   async function addBlockToAutomation() {
     try {
-      const newBlock = $automationStore.selectedAutomation.constructBlock(
+      const newBlock = automationStore.actions.constructBlock(
         "ACTION",
         actionVal.stepId,
         actionVal
       )
-      automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
+      await automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
     } catch (error) {
       notifications.error("Error saving automation")
     }
@@ -66,20 +61,14 @@
 </script>
 
 <ModalContent
-  title="Create Automation"
+  title="Add automation step"
   confirmText="Save"
   size="M"
   disabled={!selectedAction}
-  onConfirm={() => {
-    blockComplete = true
-    addBlockToAutomation()
-  }}
+  onConfirm={addBlockToAutomation}
 >
-  <Body size="XS">Select an app or event.</Body>
-
-  <Layout noPadding>
-    <Body size="S">Apps</Body>
-
+  <Layout noPadding gap="XS">
+    <Detail size="S">Apps</Detail>
     <div class="item-list">
       {#each Object.entries(external) as [idx, action]}
         <div
@@ -95,64 +84,45 @@
               alt="zapier"
             />
             <span class="icon-spacing">
-              <Body size="XS">{idx.charAt(0).toUpperCase() + idx.slice(1)}</Body
-              ></span
-            >
+              <Body size="XS">
+                {idx.charAt(0).toUpperCase() + idx.slice(1)}
+              </Body>
+            </span>
           </div>
         </div>
       {/each}
     </div>
+  </Layout>
 
+  <Layout noPadding gap="XS">
     <Detail size="S">Actions</Detail>
-
     <div class="item-list">
       {#each Object.entries(internal) as [idx, action]}
-        {#if disabled[idx] && disabled[idx].disabled}
-          <Tooltip text={disabled[idx].message} direction="bottom">
-            <div
-              class="item"
-              class:selected={selectedAction === action.name}
-              class:disabled={true}
-              on:click={() => selectAction(action)}
-            >
-              <div class="item-body">
-                <Icon name={action.icon} />
-                <span class="icon-spacing">
-                  <Body size="XS">{action.name}</Body></span
-                >
-              </div>
-            </div>
-          </Tooltip>
-        {:else}
-          <div
-            class="item"
-            class:selected={selectedAction === action.name}
-            on:click={() => selectAction(action)}
-          >
-            <div class="item-body">
-              <Icon name={action.icon} />
-              <span class="icon-spacing">
-                <Body size="XS">{action.name}</Body></span
-              >
-            </div>
+        {@const isDisabled = disabled[idx] && disabled[idx].disabled}
+        <div
+          class="item"
+          class:disabled={isDisabled}
+          class:selected={selectedAction === action.name}
+          on:click={isDisabled ? null : () => selectAction(action)}
+        >
+          <div class="item-body">
+            <Icon name={action.icon} />
+            <Body size="XS">{action.name}</Body>
+            {#if isDisabled}
+              <Icon name="Help" tooltip={disabled[idx].message} />
+            {/if}
           </div>
-        {/if}
+        </div>
       {/each}
     </div>
   </Layout>
 </ModalContent>
 
 <style>
-  .disabled {
-    opacity: 0.3;
-    pointer-events: none;
-  }
-  .icon-spacing {
-    margin-left: var(--spacing-m);
-  }
   .item-body {
     display: flex;
     margin-left: var(--spacing-m);
+    gap: var(--spacing-m);
   }
   .item-list {
     display: grid;
@@ -171,8 +141,15 @@
     box-sizing: border-box;
     border-width: 2px;
   }
-  .item:hover,
+  .item:not(.disabled):hover,
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
+  }
+  .disabled {
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-500);
+  }
+  .disabled :global(.spectrum-Body) {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
