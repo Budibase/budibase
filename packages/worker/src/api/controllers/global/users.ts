@@ -1,4 +1,8 @@
-import { checkInviteCode } from "../../../utilities/redis"
+import {
+  checkInviteCode,
+  getInviteCodes,
+  updateInviteCode,
+} from "../../../utilities/redis"
 import sdk from "../../../sdk"
 import env from "../../../environment"
 import {
@@ -6,7 +10,6 @@ import {
   BulkUserResponse,
   CloudAccount,
   CreateAdminUserRequest,
-  InviteUserRequest,
   InviteUsersRequest,
   SearchUsersRequest,
   User,
@@ -19,6 +22,7 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
+import { isEmailConfigured } from "src/utilities/email"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -186,9 +190,54 @@ export const tenantUserLookup = async (ctx: any) => {
   }
 }
 
+/* 
+  Encapsulate the app user onboarding flows here.
+*/
+export const onboardUsers = async (ctx: any) => {
+  const request = ctx.request.body as InviteUsersRequest | BulkUserRequest
+  const isBulkCreate = "create" in request
+
+  const emailConfigured = await isEmailConfigured()
+
+  let onboardingResponse
+
+  if (isBulkCreate) {
+    // @ts-ignore
+    const { users, groups, roles } = request.create
+    const assignUsers = users.map((user: User) => (user.roles = roles))
+    onboardingResponse = await sdk.users.bulkCreate(assignUsers, groups)
+    ctx.body = onboardingResponse
+  } else if (emailConfigured) {
+    onboardingResponse = await invite(ctx)
+  } else if (!emailConfigured) {
+    const inviteRequest = ctx.request.body as InviteUsersRequest
+    const users: User[] = inviteRequest.map(invite => {
+      let password = Math.random().toString(36).substring(2, 22)
+
+      return {
+        email: invite.email,
+        password,
+        forceResetPassword: true,
+        roles: invite.userInfo.apps,
+        admin: { global: false },
+        builder: { global: false },
+        tenantId: tenancy.getTenantId(),
+      }
+    })
+    let bulkCreateReponse = await sdk.users.bulkCreate(users, [])
+    onboardingResponse = {
+      ...bulkCreateReponse,
+      created: true,
+    }
+    ctx.body = onboardingResponse
+  } else {
+    ctx.throw(400, "User onboarding failed")
+  }
+}
+
 export const invite = async (ctx: any) => {
-  const request = ctx.request.body as InviteUserRequest
-  const response = await sdk.users.invite([request])
+  const request = ctx.request.body as InviteUsersRequest
+  const response = await sdk.users.invite(request)
 
   // explicitly throw for single user invite
   if (response.unsuccessful.length) {
@@ -202,6 +251,8 @@ export const invite = async (ctx: any) => {
 
   ctx.body = {
     message: "Invitation has been sent.",
+    successful: response.successful,
+    unsuccessful: response.unsuccessful,
   }
 }
 
@@ -223,19 +274,75 @@ export const checkInvite = async (ctx: any) => {
   }
 }
 
+export const getUserInvites = async (ctx: any) => {
+  let invites
+  try {
+    // Restricted to the currently authenticated tenant
+    invites = await getInviteCodes([ctx.user.tenantId])
+  } catch (e) {
+    ctx.throw(400, "There was a problem fetching invites")
+  }
+  ctx.body = invites
+}
+
+export const updateInvite = async (ctx: any) => {
+  const { code } = ctx.params
+  let updateBody = { ...ctx.request.body }
+
+  delete updateBody.email
+
+  let invite
+  try {
+    invite = await checkInviteCode(code, false)
+    if (!invite) {
+      throw new Error("The invite could not be retrieved")
+    }
+  } catch (e) {
+    ctx.throw(400, "There was a problem with the invite")
+  }
+
+  let updated = {
+    ...invite,
+  }
+
+  if (!updateBody?.apps || !Object.keys(updateBody?.apps).length) {
+    updated.info.apps = []
+  } else {
+    updated.info = {
+      ...invite.info,
+      apps: {
+        ...invite.info.apps,
+        ...updateBody.apps,
+      },
+    }
+  }
+
+  await updateInviteCode(code, updated)
+  ctx.body = { ...invite }
+}
+
 export const inviteAccept = async (ctx: any) => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
     ctx.body = await tenancy.doInTenant(info.tenantId, async () => {
-      const saved = await sdk.users.save({
+      let request = {
         firstName,
         lastName,
         password,
         email,
+        roles: info.apps,
+      }
+
+      delete info.apps
+
+      request = {
+        ...request,
         ...info,
-      })
+      }
+
+      const saved = await sdk.users.save(request)
       const db = tenancy.getGlobalDB()
       const user = await db.get(saved._id)
       await events.user.inviteAccepted(user)

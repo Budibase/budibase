@@ -16,6 +16,7 @@ export interface BulkUserRequest {
     userIds: string[]
   }
   create?: {
+    roles?: any[]
     users: User[]
     groups: any[]
   }
