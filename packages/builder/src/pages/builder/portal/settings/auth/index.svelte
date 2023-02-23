@@ -22,7 +22,7 @@
     Tags,
     Icon,
     Helpers,
-    Link
+    Link,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
@@ -35,7 +35,7 @@
 
   const HasSpacesRegex = /[\\"\s]/
 
-  $: enforcedSSO = false
+  $: enforcedSSO = $organisation.isSSOEnforced
 
   // Some older google configs contain a manually specified value - retain the functionality to edit the field
   // When there is no value or we are in the cloud - prohibit editing the field, must use platform url to change
@@ -155,6 +155,11 @@
     image = e.target.files[0]
     providers.oidc.config.configs[0].logo = fileName
     iconDropdownOptions.unshift({ label: fileName, value: fileName })
+  }
+
+  async function toggleIsSSOEnforced() {
+    const value = $organisation.isSSOEnforced
+    await organisation.save({ isSSOEnforced: !value } )
   }
 
   async function save(docs) {
@@ -327,32 +332,37 @@
     </Body>
     <Body size="S">
       <div class="sso-link">
-        <Link href="https://rpowell.budibase.app/builder/auth/login" target="_blank">https://rpowell.budibase.app/builder/auth/login</Link>
+        <Link
+          href="https://rpowell.budibase.app/builder/auth/login"
+          target="_blank">https://rpowell.budibase.app/builder/auth/login</Link
+        >
         <div class="sso-link-icon">
-          <Icon size="XS" name="LinkOutLight"></Icon>
+          <Icon size="XS" name="LinkOutLight" />
         </div>
       </div>
     </Body>
   </Layout>
   <Divider />
-  <Layout noPadding gap="XS" >
-      <div class="provider-title">
-          <div class="enforce-sso-heading-container">
-            <div class="enforce-sso-title">
-              <Heading size="S">Enforce Single Sign-On</Heading>
-            </div>
-            {#if !$licensing.enforceableSSO}
-              <Tags>
-                <Tag icon="LockClosed">Business plan</Tag>
-              </Tags>
-            {/if}
-          </div>
-        {#if $licensing.enforceableSSO}
-          <Toggle text="" bind:value={enforcedSSO} />
+  <Layout noPadding gap="XS">
+    <div class="provider-title">
+      <div class="enforce-sso-heading-container">
+        <div class="enforce-sso-title">
+          <Heading size="S">Enforce Single Sign-On</Heading>
+        </div>
+        {#if !$licensing.enforceableSSO}
+          <Tags>
+            <Tag icon="LockClosed">Business plan</Tag>
+          </Tags>
         {/if}
       </div>
+      {#if $licensing.enforceableSSO}
+        <Toggle on:change={toggleIsSSOEnforced} bind:value={enforcedSSO} />
+      {/if}
+    </div>
     <Body size="S">
-      Require SSO authentication for all users. It is recommended to read the help <Link size="M" href={"http://test.com"}>documentation</Link> before enabling this feature.
+      Require SSO authentication for all users. It is recommended to read the
+      help <Link size="M" href={"http://test.com"}>documentation</Link> before enabling
+      this feature.
     </Body>
   </Layout>
   {#if providers.google}

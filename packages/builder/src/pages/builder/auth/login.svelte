@@ -79,19 +79,20 @@
           <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
           <GoogleButton />
         </FancyForm>
-        <Divider />
       {/if}
-      <FancyForm bind:this={form}>
-        <FancyInput
-          label="Your work email"
-          value={formData.username}
-          on:change={e => {
+      {#if !$organisation.isSSOEnforced}
+        <Divider />
+        <FancyForm bind:this={form}>
+          <FancyInput
+                  label="Your work email"
+                  value={formData.username}
+                  on:change={e => {
             formData = {
               ...formData,
               username: e.detail,
             }
           }}
-          validate={() => {
+                  validate={() => {
             let fieldError = {
               username: !formData.username
                 ? "Please enter a valid email"
@@ -99,19 +100,19 @@
             }
             errors = handleError({ ...errors, ...fieldError })
           }}
-          error={errors.username}
-        />
-        <FancyInput
-          label="Password"
-          value={formData.password}
-          type="password"
-          on:change={e => {
+                  error={errors.username}
+          />
+          <FancyInput
+                  label="Password"
+                  value={formData.password}
+                  type="password"
+                  on:change={e => {
             formData = {
               ...formData,
               password: e.detail,
             }
           }}
-          validate={() => {
+                  validate={() => {
             let fieldError = {
               password: !formData.password
                 ? "Please enter your password"
@@ -119,27 +120,30 @@
             }
             errors = handleError({ ...errors, ...fieldError })
           }}
-          error={errors.password}
-        />
-      </FancyForm>
+                  error={errors.password}
+          />
+        </FancyForm>
+      {/if}
     </Layout>
-    <Layout gap="XS" noPadding justifyItems="center">
-      <Button
-        size="L"
-        cta
-        disabled={Object.keys(errors).length > 0}
-        on:click={login}
-      >
-        Log in to {company}
-      </Button>
-    </Layout>
-    <Layout gap="XS" noPadding justifyItems="center">
-      <div class="user-actions">
-        <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
-          Forgot password?
-        </ActionButton>
-      </div>
-    </Layout>
+    {#if !$organisation.isSSOEnforced}
+      <Layout gap="XS" noPadding justifyItems="center">
+        <Button
+                size="L"
+                cta
+                disabled={Object.keys(errors).length > 0}
+                on:click={login}
+        >
+          Log in to {company}
+        </Button>
+      </Layout>
+      <Layout gap="XS" noPadding justifyItems="center">
+        <div class="user-actions">
+          <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
+            Forgot password?
+          </ActionButton>
+        </div>
+      </Layout>
+    {/if}
 
     {#if cloud}
       <Body size="xs" textAlign="center">
