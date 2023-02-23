@@ -228,7 +228,7 @@ export async function publicSettings(
     const _oidcCallbackUrl = await oidcCallbackUrl()
 
     // sso enforced
-    const isSSOEnforced = await pro.licensing.features.isSSOEnforced({ config })
+    const isSSOEnforced = await pro.features.isSSOEnforced({ config })
 
     ctx.body = {
       type: ConfigType.SETTINGS,

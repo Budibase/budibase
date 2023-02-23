@@ -197,8 +197,7 @@ export async function isPreventPasswordActions(user: User) {
   }
 
   // SSO is enforced for all users
-  const ssoEnforced = await pro.licensing.features.isSSOEnforced()
-  if (ssoEnforced) {
+  if (await pro.features.isSSOEnforced()) {
     return true
   }
 
