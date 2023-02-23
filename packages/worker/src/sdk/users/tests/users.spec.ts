@@ -10,7 +10,6 @@ import * as _pro from "@budibase/pro"
 const pro = jest.mocked(_pro, true)
 
 describe("users", () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
   })

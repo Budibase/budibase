@@ -3,7 +3,7 @@ jest.mock("nodemailer")
 import { TestConfiguration, structures, mocks } from "../../../../tests"
 mocks.email.mock()
 import { events } from "@budibase/backend-core"
-import { GetPublicSettingsResponse, Config, ConfigType } from "@budibase/types";
+import { GetPublicSettingsResponse, Config, ConfigType } from "@budibase/types"
 
 describe("configs", () => {
   const config = new TestConfiguration()
@@ -32,7 +32,7 @@ describe("configs", () => {
       ...res.body,
     }
   }
-  
+
   const saveSettingsConfig = async (
     conf?: any,
     _id?: string,
@@ -293,7 +293,7 @@ describe("configs", () => {
           isSSOEnforced: false,
           oidc: false,
           oidcCallbackUrl: `http://localhost:10000/api/global/auth/${config.tenantId}/oidc/callback`,
-          platformUrl: "http://localhost:10000"
+          platformUrl: "http://localhost:10000",
         },
       }
       delete body._rev

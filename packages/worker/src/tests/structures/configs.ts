@@ -1,5 +1,11 @@
 import { utils } from "@budibase/backend-core"
-import { SettingsConfig, ConfigType, SMTPConfig, GoogleConfig, OIDCConfig } from "@budibase/types";
+import {
+  SettingsConfig,
+  ConfigType,
+  SMTPConfig,
+  GoogleConfig,
+  OIDCConfig,
+} from "@budibase/types"
 
 export function oidc(conf?: any): OIDCConfig {
   return {
