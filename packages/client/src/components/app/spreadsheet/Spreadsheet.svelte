@@ -13,14 +13,15 @@
   import { createResizeStore } from "./stores/resize"
   import ReorderPlaceholder from "./ReorderPlaceholder.svelte"
   import ResizeSlider from "./ResizeSlider.svelte"
-  import Header from "./Header.svelte"
+  import SpreadsheetHeader from "./SpreadsheetHeader.svelte"
+  import SpreadsheetBody from "./SpreadsheetBody.svelte"
 
   export let table
   export let filter
   export let sortColumn
   export let sortOrder
 
-  const { styleable, API, confirmationStore } = getContext("sdk")
+  const { styleable, API } = getContext("sdk")
   const component = getContext("component")
 
   // Sheet constants
@@ -63,7 +64,6 @@
     spreadsheetAPI,
   })
 
-  let horizontallyScrolled = false
   let changeCache = {}
   let newRows = []
 
@@ -77,7 +77,6 @@
     limit,
   })
   $: generateColumns($fetch)
-  $: gridStyles = getGridStyles($columns)
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
   $: updateSortedRows($fetch.rows, newRows)
@@ -110,21 +109,6 @@
         schema: schema[field],
         primaryDisplay: field === primaryDisplay,
       }))
-    }
-  }
-
-  const getGridStyles = columns => {
-    const widths = columns?.map(x => x.width)
-    if (!widths?.length) {
-      return "--grid: 1fr;"
-    }
-    return `--grid: 40px ${widths.map(x => `${x}px`).join(" ")} 180px;`
-  }
-
-  const handleScroll = e => {
-    const nextHorizontallyScrolled = e.target.scrollLeft > 0
-    if (nextHorizontallyScrolled !== horizontallyScrolled) {
-      horizontallyScrolled = nextHorizontallyScrolled
     }
   }
 
@@ -212,14 +196,8 @@
 
 <div use:styleable={$component.styles}>
   <div class="wrapper" class:resize={$resize.columnIdx != null}>
-    <Header />
-    <div
-      class="spreadsheet"
-      on:scroll={handleScroll}
-      style={gridStyles}
-      on:click|self={() => ($selectedCellId = null)}
-      id={`sheet-${rand}-body`}
-    >
+    <SpreadsheetHeader />
+    <SpreadsheetBody>
       <!-- Field headers -->
       <div class="header cell label" on:click={selectAll}>
         <input
@@ -231,7 +209,6 @@
         <div
           class="header cell"
           class:sticky={fieldIdx === 0}
-          class:shadow={horizontallyScrolled}
           class:reorder-source={$reorder.columnIdx === fieldIdx}
           class:reorder-target={$reorder.swapColumnIdx === fieldIdx}
           on:mousedown={e => reorder.actions.startReordering(fieldIdx, e)}
@@ -284,7 +261,6 @@
               class:sticky={fieldIdx === 0}
               class:hovered={rowHovered}
               class:selected={$selectedCellId === cellIdx}
-              class:shadow={horizontallyScrolled}
               class:reorder-source={$reorder.columnIdx === fieldIdx}
               class:reorder-target={$reorder.swapColumnIdx === fieldIdx}
               on:focus
@@ -323,7 +299,6 @@
         <div
           class="cell new"
           class:sticky={fieldIdx === 0}
-          class:shadow={horizontallyScrolled}
           class:hovered={$hoveredRowId === "new"}
           class:reorder-source={$reorder.columnIdx === fieldIdx}
           class:reorder-target={$reorder.swapColumnIdx === fieldIdx}
@@ -340,7 +315,7 @@
 
       <!-- Vertical spacer -->
       <div class="vertical-spacer" />
-    </div>
+    </SpreadsheetBody>
 
     <!-- Reorder placeholder -->
     <ReorderPlaceholder />
@@ -368,21 +343,6 @@
   .wrapper.resize *:hover {
     cursor: col-resize;
   }
-  .spreadsheet {
-    display: grid;
-    grid-template-columns: var(--grid);
-    justify-content: flex-start;
-    align-items: stretch;
-    overflow: auto;
-    max-height: 600px;
-    position: relative;
-    cursor: default;
-  }
-  .vertical-spacer {
-    grid-column: 1/-1;
-    height: 180px;
-  }
-
   .wrapper ::-webkit-scrollbar-track {
     background: var(--cell-background);
   }
@@ -425,10 +385,6 @@
   .cell.new:hover {
     cursor: pointer;
   }
-  .cell.spacer {
-    background: none;
-    border-bottom: none;
-  }
 
   /* Header cells */
   .header {
@@ -460,16 +416,15 @@
   .sticky.selected {
     z-index: 3;
   }
-  .sticky.shadow {
-    border-right-width: 1px;
+
+  /* Spacer cells */
+  .spacer {
+    background: none;
+    border-bottom: none;
   }
-  .sticky.shadow:after {
-    content: " ";
-    position: absolute;
-    width: 10px;
-    left: 100%;
-    height: 100%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);
+  .vertical-spacer {
+    grid-column: 1/-1;
+    height: 180px;
   }
 
   /* Reorder styles */
