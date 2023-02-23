@@ -415,9 +415,7 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.insert(parsedBody)
     } else {
-      return query
-        .insert(parsedBody)
-        .returning(generateSelectStatement(json, knex))
+      return query.insert(parsedBody).returning("*")
     }
   }
 
