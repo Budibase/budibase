@@ -1,3 +1,7 @@
+<!-- If working on this file, you may notice that if you click the download button in the UI
+     hot reload will stop working due to the use of window.location. You'll need to reload the pag
+     to get it working again.
+-->
 <script>
   import {
     Layout,
@@ -24,10 +28,10 @@
   import { cloneDeep } from "lodash"
 
   const schema = {
-    date: { width: "0.8fr" },
-    user: { width: "0.5fr" },
-    app: { width: "0.75fr", fieldName: "name" },
-    name: { width: "1.5fr" },
+    date: { width: "auto" },
+    user: { width: "auto" },
+    app: { width: "auto" },
+    name: { width: "0.8fr" },
     view: { width: "auto", borderLeft: true, displayName: "" },
   }
 
