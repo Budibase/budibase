@@ -27,6 +27,7 @@
   import TimeRenderer from "./_components/TimeRenderer.svelte"
   import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
   import { cloneDeep } from "lodash"
+  import { Utils } from "@budibase/frontend-core"
 
   const schema = {
     date: { width: "0.8fr" },
@@ -68,7 +69,7 @@
   let selectedLog
   let sidePanelVisible = false
   let wideSidePanel = false
-
+  let timer
   let startDate = new Date()
   startDate.setDate(startDate.getDate() - 30)
   let endDate = new Date()
@@ -88,6 +89,14 @@
 
   $: enrichedList = enrich($users.data || [], selectedUsers)
   $: sortedList = sort(enrichedList)
+
+  const debounce = value => {
+    console.log(value)
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      logSearchTerm = value
+    }, 400)
+  }
 
   const fetchUsers = async (userPage, search) => {
     if ($userPageInfo.loading) {
@@ -286,7 +295,7 @@
       />
     </div>
     <div class="freeSearch">
-      <Search placeholder="Search" bind:value={logSearchTerm} />
+      <Search placeholder="Search" on:change={e => debounce(e.detail)} />
     </div>
 
     <div class="">
