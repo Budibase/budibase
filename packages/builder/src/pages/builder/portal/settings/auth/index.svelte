@@ -332,9 +332,8 @@
     </Body>
     <Body size="S">
       <div class="sso-link">
-        <Link
-          href={$organisation.platformUrl}
-          target="_blank">{$organisation.platformUrl}</Link
+        <Link href={$organisation.platformUrl} target="_blank"
+          >{$organisation.platformUrl}</Link
         >
         <div class="sso-link-icon">
           <Icon size="XS" name="LinkOutLight" />
@@ -361,8 +360,11 @@
     </div>
     <Body size="S">
       Require SSO authentication for all users. It is recommended to read the
-      help <Link size="M" href={"https://docs.budibase.com/docs/authentication-and-sso"}>documentation</Link> before enabling
-      this feature.
+      help <Link
+        size="M"
+        href={"https://docs.budibase.com/docs/authentication-and-sso"}
+        >documentation</Link
+      > before enabling this feature.
     </Body>
   </Layout>
   {#if providers.google}
