@@ -10,7 +10,6 @@ import {
   isCloudAccount,
   isSSOAccount,
   TenantGroup,
-  SettingsConfig,
   CloudAccount,
   UserIdentity,
   InstallationGroup,

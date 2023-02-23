@@ -13,8 +13,6 @@ import {
 
 const { v4: uuidv4 } = require("uuid")
 
-export const TENANT_ID = "default"
-
 export function basicTable() {
   return {
     name: "TestTable",
