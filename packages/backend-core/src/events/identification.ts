@@ -19,10 +19,9 @@ import {
   isSSOUser,
 } from "@budibase/types"
 import { processors } from "./processors"
-import * as dbUtils from "../db/utils"
-import { Config } from "../constants"
 import { newid } from "../utils"
 import * as installation from "../installation"
+import * as configs from "../configs"
 import { withCache, TTL, CacheKey } from "../cache/generic"
 
 const pkg = require("../../package.json")
@@ -270,9 +269,7 @@ const getUniqueTenantId = async (tenantId: string): Promise<string> => {
   return context.doInTenant(tenantId, () => {
     return withCache(CacheKey.UNIQUE_TENANT_ID, TTL.ONE_DAY, async () => {
       const db = context.getGlobalDB()
-      const config: SettingsConfig = await dbUtils.getScopedFullConfig(db, {
-        type: Config.SETTINGS,
-      })
+      const config = await configs.getSettingsConfigDoc()
 
       let uniqueTenantId: string
       if (config.config.uniqueTenantId) {

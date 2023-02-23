@@ -1,9 +1,8 @@
 import * as google from "../sso/google"
-import { Cookie, Config } from "../../../constants"
+import { Cookie } from "../../../constants"
 import { clearCookie, getCookie } from "../../../utils"
-import { getScopedConfig, getPlatformUrl, doWithDB } from "../../../db"
-import environment from "../../../environment"
-import { getGlobalDB } from "../../../context"
+import { doWithDB } from "../../../db"
+import * as configs from "../../../configs"
 import { BBContext, Database, SSOProfile } from "@budibase/types"
 import { ssoSaveUserNoOp } from "../sso/sso"
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
@@ -13,18 +12,11 @@ type Passport = {
 }
 
 async function fetchGoogleCreds() {
-  // try and get the config from the tenant
-  const db = getGlobalDB()
-  const googleConfig = await getScopedConfig(db, {
-    type: Config.GOOGLE,
-  })
-  // or fall back to env variables
-  return (
-    googleConfig || {
-      clientID: environment.GOOGLE_CLIENT_ID,
-      clientSecret: environment.GOOGLE_CLIENT_SECRET,
-    }
-  )
+  const config = await configs.getGoogleConfig()
+  if (!config) {
+    throw new Error("No google configuration found")
+  }
+  return config
 }
 
 export async function preAuth(
@@ -34,7 +26,7 @@ export async function preAuth(
 ) {
   // get the relevant config
   const googleConfig = await fetchGoogleCreds()
-  const platformUrl = await getPlatformUrl({ tenantAware: false })
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(
@@ -61,7 +53,7 @@ export async function postAuth(
 ) {
   // get the relevant config
   const config = await fetchGoogleCreds()
-  const platformUrl = await getPlatformUrl({ tenantAware: false })
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const authStateCookie = getCookie(ctx, Cookie.DatasourceAuth)
