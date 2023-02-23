@@ -15,13 +15,16 @@ type GetOpts = { cleanup?: boolean }
 function cleanupUsers(users: User | User[]) {
   if (Array.isArray(users)) {
     return users.map(user => {
-      delete user.password
-      return user
+      if (user) {
+        delete user.password
+        return user
+      }
     })
-  } else {
+  } else if (users) {
     delete users.password
     return users
   }
+  return users
 }
 
 export const bulkGetGlobalUsersById = async (
