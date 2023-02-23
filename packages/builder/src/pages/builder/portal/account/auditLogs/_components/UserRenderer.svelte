@@ -33,8 +33,8 @@
   .tooltip {
     z-index: 1;
     position: absolute;
-    top: 85%;
-    left: calc(90% - 8px);
+    top: 75%;
+    left: 120%;
     transform: translateX(-100%) translateY(-50%);
     display: flex;
     flex-direction: row;
