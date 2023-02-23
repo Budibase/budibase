@@ -72,6 +72,7 @@
     "codemirror": "^5.59.0",
     "dayjs": "^1.11.2",
     "downloadjs": "1.4.7",
+    "fast-json-patch": "^3.1.1",
     "lodash": "4.17.21",
     "posthog-js": "^1.36.0",
     "remixicon": "2.5.0",
