@@ -24,11 +24,6 @@ export enum ViewName {
   APP_BACKUP_BY_TRIGGER = "by_trigger",
 }
 
-export const SearchIndexes = {
-  ROWS: "rows",
-  AUDIT: "audit",
-}
-
 export const DeprecatedViews = {
   [ViewName.USER_BY_EMAIL]: [
     // removed due to inaccuracy in view doc filter logic

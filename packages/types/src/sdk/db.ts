@@ -2,6 +2,11 @@ import Nano from "@budibase/nano"
 import { AllDocsResponse, AnyDocument, Document } from "../"
 import { Writable } from "stream"
 
+export enum SearchIndex {
+  ROWS = "rows",
+  AUDIT = "audit",
+}
+
 export type PouchOptions = {
   inMemory?: boolean
   replication?: boolean
