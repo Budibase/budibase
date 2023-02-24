@@ -25,7 +25,7 @@
   let errors = {}
 
   const routeTaken = url => {
-    const roleId = get(selectedScreen)?.routing.roleId || "BASIC"
+    const roleId = get(selectedScreen).routing.roleId || "BASIC"
     return get(store).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
@@ -34,7 +34,7 @@
   }
 
   const roleTaken = roleId => {
-    const url = get(selectedScreen)?.routing.route
+    const url = get(selectedScreen).routing.route
     return get(store).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
@@ -95,7 +95,7 @@
         return sanitizeUrl(val)
       },
       validate: route => {
-        const existingRoute = get(selectedScreen)?.routing.route
+        const existingRoute = get(selectedScreen).routing.route
         if (route !== existingRoute && routeTaken(route)) {
           return "That URL is already in use for this role"
         }
@@ -107,7 +107,7 @@
       label: "Access",
       control: RoleSelect,
       validate: role => {
-        const existingRole = get(selectedScreen)?.routing.roleId
+        const existingRole = get(selectedScreen).routing.roleId
         if (role !== existingRole && roleTaken(role)) {
           return "That role is already in use for this URL"
         }
@@ -146,7 +146,7 @@
 </script>
 
 <Panel
-  title={$selectedScreen?.routing.route}
+  title={$selectedScreen.routing.route}
   icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
   borderLeft
 >

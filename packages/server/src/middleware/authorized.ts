@@ -79,10 +79,6 @@ export default (
       return ctx.throw(403, "No user info found")
     }
 
-    // check general builder stuff, this middleware is a good way
-    // to find API endpoints which are builder focused
-    await builderMiddleware(ctx, permType)
-
     // get the resource roles
     let resourceRoles: any = []
     let otherLevelRoles: any = []
@@ -110,6 +106,12 @@ export default (
     // check authenticated
     if (!ctx.isAuthenticated) {
       return ctx.throw(403, "Session not authenticated")
+    }
+
+    // check general builder stuff, this middleware is a good way
+    // to find API endpoints which are builder focused
+    if (permType === permissions.PermissionType.BUILDER) {
+      await builderMiddleware(ctx)
     }
 
     try {

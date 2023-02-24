@@ -27,7 +27,9 @@ describe("row api - postgres", () => {
   let makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
     primaryPostgresTable: Table,
-    auxPostgresTable: Table
+    oneToManyRelationshipInfo: ForeignTableInfo,
+    manyToOneRelationshipInfo: ForeignTableInfo,
+    manyToManyRelationshipInfo: ForeignTableInfo
 
   let host: string
   let port: number
@@ -67,37 +69,58 @@ describe("row api - postgres", () => {
       },
     })
 
-    auxPostgresTable = await config.createTable({
-      name: generator.word({ length: 10 }),
-      type: "external",
-      primary: ["id"],
-      schema: {
-        id: {
-          name: "id",
-          type: FieldType.AUTO,
-          constraints: {
-            presence: true,
+    async function createAuxTable(prefix: string) {
+      return await config.createTable({
+        name: `${prefix}_${generator.word({ length: 6 })}`,
+        type: "external",
+        primary: ["id"],
+        primaryDisplay: "title",
+        schema: {
+          id: {
+            name: "id",
+            type: FieldType.AUTO,
+            autocolumn: true,
+            constraints: {
+              presence: true,
+            },
+          },
+          title: {
+            name: "title",
+            type: FieldType.STRING,
+            constraints: {
+              presence: true,
+            },
           },
         },
-        title: {
-          name: "title",
-          type: FieldType.STRING,
-          constraints: {
-            presence: true,
-          },
-        },
-      },
-      sourceId: postgresDatasource._id,
-    })
+        sourceId: postgresDatasource._id,
+      })
+    }
+
+    oneToManyRelationshipInfo = {
+      table: await createAuxTable("o2m"),
+      fieldName: "oneToManyRelation",
+      relationshipType: RelationshipTypes.ONE_TO_MANY,
+    }
+    manyToOneRelationshipInfo = {
+      table: await createAuxTable("m2o"),
+      fieldName: "manyToOneRelation",
+      relationshipType: RelationshipTypes.MANY_TO_ONE,
+    }
+    manyToManyRelationshipInfo = {
+      table: await createAuxTable("m2m"),
+      fieldName: "manyToManyRelation",
+      relationshipType: RelationshipTypes.MANY_TO_MANY,
+    }
 
     primaryPostgresTable = await config.createTable({
-      name: generator.word({ length: 10 }),
+      name: `p_${generator.word({ length: 6 })}`,
       type: "external",
       primary: ["id"],
       schema: {
         id: {
           name: "id",
           type: FieldType.AUTO,
+          autocolumn: true,
           constraints: {
             presence: true,
           },
@@ -117,25 +140,48 @@ describe("row api - postgres", () => {
           name: "value",
           type: FieldType.NUMBER,
         },
-        linkedField: {
+        oneToManyRelation: {
           type: FieldType.LINK,
           constraints: {
             type: "array",
             presence: false,
           },
-          fieldName: "foreignField",
-          name: "linkedField",
+          fieldName: oneToManyRelationshipInfo.fieldName,
+          name: "oneToManyRelation",
           relationshipType: RelationshipTypes.ONE_TO_MANY,
-          tableId: auxPostgresTable._id,
+          tableId: oneToManyRelationshipInfo.table._id,
+          main: true,
+        },
+        manyToOneRelation: {
+          type: FieldType.LINK,
+          constraints: {
+            type: "array",
+            presence: false,
+          },
+          fieldName: manyToOneRelationshipInfo.fieldName,
+          name: "manyToOneRelation",
+          relationshipType: RelationshipTypes.MANY_TO_ONE,
+          tableId: manyToOneRelationshipInfo.table._id,
+          main: true,
+        },
+        manyToManyRelation: {
+          type: FieldType.LINK,
+          constraints: {
+            type: "array",
+            presence: false,
+          },
+          fieldName: manyToManyRelationshipInfo.fieldName,
+          name: "manyToManyRelation",
+          relationshipType: RelationshipTypes.MANY_TO_MANY,
+          tableId: manyToManyRelationshipInfo.table._id,
+          main: true,
         },
       },
       sourceId: postgresDatasource._id,
     })
   })
 
-  afterAll(async () => {
-    await config.end()
-  })
+  afterAll(config.end)
 
   function generateRandomPrimaryRowData() {
     return {
@@ -151,22 +197,99 @@ describe("row api - postgres", () => {
     value: number
   }
 
+  type ForeignTableInfo = {
+    table: Table
+    fieldName: string
+    relationshipType: RelationshipTypes
+  }
+
+  type ForeignRowsInfo = {
+    row: Row
+    relationshipType: RelationshipTypes
+  }
+
   async function createPrimaryRow(opts: {
     rowData: PrimaryRowData
-    createForeignRow?: boolean
+    createForeignRows?: {
+      createOneToMany?: boolean
+      createManyToOne?: number
+      createManyToMany?: number
+    }
   }) {
-    let { rowData } = opts
-    let foreignRow: Row | undefined
-    if (opts?.createForeignRow) {
-      foreignRow = await config.createRow({
-        tableId: auxPostgresTable._id,
+    let { rowData } = opts as any
+    let foreignRows: ForeignRowsInfo[] = []
+
+    async function createForeignRow(tableInfo: ForeignTableInfo) {
+      const foreignKey = `fk_${tableInfo.table.name}_${tableInfo.fieldName}`
+
+      const foreignRow = await config.createRow({
+        tableId: tableInfo.table._id,
         title: generator.name(),
       })
 
       rowData = {
         ...rowData,
-        [`fk_${auxPostgresTable.name}_foreignField`]: foreignRow.id,
+        [foreignKey]: foreignRow.id,
       }
+      foreignRows.push({
+        row: foreignRow,
+
+        relationshipType: tableInfo.relationshipType,
+      })
+    }
+
+    if (opts?.createForeignRows?.createOneToMany) {
+      const foreignKey = `fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`
+
+      const foreignRow = await config.createRow({
+        tableId: oneToManyRelationshipInfo.table._id,
+        title: generator.name(),
+      })
+
+      rowData = {
+        ...rowData,
+        [foreignKey]: foreignRow.id,
+      }
+      foreignRows.push({
+        row: foreignRow,
+        relationshipType: oneToManyRelationshipInfo.relationshipType,
+      })
+    }
+
+    for (let i = 0; i < (opts?.createForeignRows?.createManyToOne || 0); i++) {
+      const foreignRow = await config.createRow({
+        tableId: manyToOneRelationshipInfo.table._id,
+        title: generator.name(),
+      })
+
+      rowData = {
+        ...rowData,
+        [manyToOneRelationshipInfo.fieldName]:
+          rowData[manyToOneRelationshipInfo.fieldName] || [],
+      }
+      rowData[manyToOneRelationshipInfo.fieldName].push(foreignRow._id)
+      foreignRows.push({
+        row: foreignRow,
+        relationshipType: RelationshipTypes.MANY_TO_ONE,
+      })
+    }
+
+    for (let i = 0; i < (opts?.createForeignRows?.createManyToMany || 0); i++) {
+      const foreignRow = await config.createRow({
+        tableId: manyToManyRelationshipInfo.table._id,
+        title: generator.name(),
+      })
+
+      rowData = {
+        ...rowData,
+        [manyToManyRelationshipInfo.fieldName]:
+          rowData[manyToManyRelationshipInfo.fieldName] || [],
+      }
+      rowData[manyToManyRelationshipInfo.fieldName].push(foreignRow._id)
+      foreignRows.push({
+        row: foreignRow,
+        relationshipType: RelationshipTypes.MANY_TO_MANY,
+      })
     }
 
     const row = await config.createRow({
@@ -174,7 +297,7 @@ describe("row api - postgres", () => {
       ...rowData,
     })
 
-    return { row, foreignRow }
+    return { row, foreignRows }
   }
 
   async function createDefaultPgTable() {
@@ -198,7 +321,9 @@ describe("row api - postgres", () => {
   async function populatePrimaryRows(
     count: number,
     opts?: {
-      createForeignRow?: boolean
+      createOneToMany?: boolean
+      createManyToOne?: number
+      createManyToMany?: number
     }
   ) {
     return await Promise.all(
@@ -210,7 +335,7 @@ describe("row api - postgres", () => {
             rowData,
             ...(await createPrimaryRow({
               rowData,
-              createForeignRow: opts?.createForeignRow,
+              createForeignRows: opts,
             })),
           }
         })
@@ -295,7 +420,7 @@ describe("row api - postgres", () => {
     describe("given than a row exists", () => {
       let row: Row
       beforeEach(async () => {
-        let rowResponse = _.sample(await populatePrimaryRows(10))!
+        let rowResponse = _.sample(await populatePrimaryRows(1))!
         row = rowResponse.row
       })
 
@@ -403,7 +528,7 @@ describe("row api - postgres", () => {
       let rows: { row: Row; rowData: PrimaryRowData }[]
 
       beforeEach(async () => {
-        rows = await populatePrimaryRows(10)
+        rows = await populatePrimaryRows(5)
       })
 
       it("a single row can be retrieved successfully", async () => {
@@ -419,34 +544,136 @@ describe("row api - postgres", () => {
 
     describe("given a row with relation data", () => {
       let row: Row
-      let foreignRow: Row
-      beforeEach(async () => {
-        let [createdRow] = await populatePrimaryRows(1, {
-          createForeignRow: true,
+      let rowData: {
+        name: string
+        description: string
+        value: number
+      }
+      let foreignRows: ForeignRowsInfo[]
+
+      describe("with all relationship types", () => {
+        beforeEach(async () => {
+          let [createdRow] = await populatePrimaryRows(1, {
+            createOneToMany: true,
+            createManyToOne: 3,
+            createManyToMany: 2,
+          })
+          row = createdRow.row
+          rowData = createdRow.rowData
+          foreignRows = createdRow.foreignRows
         })
-        row = createdRow.row
-        foreignRow = createdRow.foreignRow!
+
+        it("only one to many foreign keys are retrieved", async () => {
+          const res = await getRow(primaryPostgresTable._id, row.id)
+
+          expect(res.status).toBe(200)
+
+          const one2ManyForeignRows = foreignRows.filter(
+            x => x.relationshipType === RelationshipTypes.ONE_TO_MANY
+          )
+          expect(one2ManyForeignRows).toHaveLength(1)
+
+          expect(res.body).toEqual({
+            ...rowData,
+            id: row.id,
+            tableId: row.tableId,
+            _id: expect.any(String),
+            _rev: expect.any(String),
+            [`fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`]:
+              one2ManyForeignRows[0].row.id,
+          })
+
+          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
+        })
       })
 
-      it("only foreign keys are retrieved", async () => {
-        const res = await getRow(primaryPostgresTable._id, row.id)
-
-        expect(res.status).toBe(200)
-
-        expect(res.body).toEqual({
-          ...row,
-          _id: expect.any(String),
-          _rev: expect.any(String),
+      describe("with only one to many", () => {
+        beforeEach(async () => {
+          let [createdRow] = await populatePrimaryRows(1, {
+            createOneToMany: true,
+          })
+          row = createdRow.row
+          rowData = createdRow.rowData
+          foreignRows = createdRow.foreignRows
         })
 
-        expect(res.body.foreignField).toBeUndefined()
+        it("only one to many foreign keys are retrieved", async () => {
+          const res = await getRow(primaryPostgresTable._id, row.id)
 
-        expect(
-          res.body[`fk_${auxPostgresTable.name}_foreignField`]
-        ).toBeDefined()
-        expect(res.body[`fk_${auxPostgresTable.name}_foreignField`]).toBe(
-          foreignRow.id
-        )
+          expect(res.status).toBe(200)
+
+          expect(foreignRows).toHaveLength(1)
+
+          expect(res.body).toEqual({
+            ...rowData,
+            id: row.id,
+            tableId: row.tableId,
+            _id: expect.any(String),
+            _rev: expect.any(String),
+            [`fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`]:
+              foreignRows[0].row.id,
+          })
+
+          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
+        })
+      })
+
+      describe("with only many to one", () => {
+        beforeEach(async () => {
+          let [createdRow] = await populatePrimaryRows(1, {
+            createManyToOne: 3,
+          })
+          row = createdRow.row
+          rowData = createdRow.rowData
+          foreignRows = createdRow.foreignRows
+        })
+
+        it("only one to many foreign keys are retrieved", async () => {
+          const res = await getRow(primaryPostgresTable._id, row.id)
+
+          expect(res.status).toBe(200)
+
+          expect(foreignRows).toHaveLength(3)
+
+          expect(res.body).toEqual({
+            ...rowData,
+            id: row.id,
+            tableId: row.tableId,
+            _id: expect.any(String),
+            _rev: expect.any(String),
+          })
+
+          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
+        })
+      })
+
+      describe("with only many to many", () => {
+        beforeEach(async () => {
+          let [createdRow] = await populatePrimaryRows(1, {
+            createManyToMany: 2,
+          })
+          row = createdRow.row
+          rowData = createdRow.rowData
+          foreignRows = createdRow.foreignRows
+        })
+
+        it("only one to many foreign keys are retrieved", async () => {
+          const res = await getRow(primaryPostgresTable._id, row.id)
+
+          expect(res.status).toBe(200)
+
+          expect(foreignRows).toHaveLength(2)
+
+          expect(res.body).toEqual({
+            ...rowData,
+            id: row.id,
+            tableId: row.tableId,
+            _id: expect.any(String),
+            _rev: expect.any(String),
+          })
+
+          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
+        })
       })
     })
   })
@@ -667,31 +894,74 @@ describe("row api - postgres", () => {
     const getAll = (tableId: string | undefined, rowId: string | undefined) =>
       makeRequest("get", `/api/${tableId}/${rowId}/enrich`)
     describe("given a row with relation data", () => {
-      let row: Row, foreignRow: Row | undefined
+      let row: Row, rowData: PrimaryRowData, foreignRows: ForeignRowsInfo[]
 
-      beforeEach(async () => {
-        const rowsInfo = await createPrimaryRow({
-          rowData: generateRandomPrimaryRowData(),
-          createForeignRow: true,
+      describe("with all relationship types", () => {
+        beforeEach(async () => {
+          rowData = generateRandomPrimaryRowData()
+          const rowsInfo = await createPrimaryRow({
+            rowData,
+            createForeignRows: {
+              createOneToMany: true,
+              createManyToOne: 3,
+              createManyToMany: 2,
+            },
+          })
+
+          row = rowsInfo.row
+          foreignRows = rowsInfo.foreignRows
         })
 
-        row = rowsInfo.row
-        foreignRow = rowsInfo.foreignRow
-      })
+        it("enrich populates the foreign fields", async () => {
+          const res = await getAll(primaryPostgresTable._id, row.id)
 
-      it("enrich populates the foreign field", async () => {
-        const res = await getAll(primaryPostgresTable._id, row.id)
+          expect(res.status).toBe(200)
 
-        expect(res.status).toBe(200)
-
-        expect(foreignRow).toBeDefined()
-        expect(res.body).toEqual({
-          ...row,
-          linkedField: [
-            {
-              ...foreignRow,
-            },
-          ],
+          const foreignRowsByType = _.groupBy(
+            foreignRows,
+            x => x.relationshipType
+          )
+          expect(res.body).toEqual({
+            ...rowData,
+            [`fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`]:
+              foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row.id,
+            [oneToManyRelationshipInfo.fieldName]: [
+              {
+                ...foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row,
+                _id: expect.any(String),
+                _rev: expect.any(String),
+              },
+            ],
+            [manyToOneRelationshipInfo.fieldName]: [
+              {
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][0].row,
+                [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
+                  row.id,
+              },
+              {
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][1].row,
+                [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
+                  row.id,
+              },
+              {
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][2].row,
+                [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
+                  row.id,
+              },
+            ],
+            [manyToManyRelationshipInfo.fieldName]: [
+              {
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][0].row,
+              },
+              {
+                ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][1].row,
+              },
+            ],
+            id: row.id,
+            tableId: row.tableId,
+            _id: expect.any(String),
+            _rev: expect.any(String),
+          })
         })
       })
     })
@@ -714,7 +984,7 @@ describe("row api - postgres", () => {
       const rowsCount = 6
       let rows: {
         row: Row
-        foreignRow: Row | undefined
+        foreignRows: ForeignRowsInfo[]
         rowData: PrimaryRowData
       }[]
       beforeEach(async () => {
