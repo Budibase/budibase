@@ -11,13 +11,7 @@ import {
   DEFAULT_TENANT_ID,
 } from "../constants"
 import { Database, IdentityContext } from "@budibase/types"
-
-export type ContextMap = {
-  tenantId?: string
-  appId?: string
-  identity?: IdentityContext
-  environmentVariables?: Record<string, string>
-}
+import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
 
