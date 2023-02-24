@@ -8,8 +8,8 @@
   export let selected = false
   export let reorderSource = false
   export let reorderTarget = false
-  export let id = null
-  export let column
+  export let left
+  export let width
 </script>
 
 <div
@@ -27,8 +27,7 @@
   on:mouseenter
   on:click
   on:mousedown
-  {id}
-  style={`width:var(--col-${column}-width); left:var(--col-${column}-left);`}
+  style="--left: {left}px; --width:{width}px;"
 >
   <slot />
 </div>
@@ -52,6 +51,8 @@
     background: var(--cell-background);
     position: absolute;
     transition: border-color 130ms ease-out;
+    width: var(--width);
+    transform: translateX(var(--left));
   }
   .cell.row-hovered {
     background: var(--cell-background-hover);
@@ -88,9 +89,10 @@
   /* Sticky styles */
   .cell.sticky {
     position: sticky;
-    left: 40px;
     z-index: 2;
     border-left-color: transparent;
+    transform: none;
+    left: 40px;
   }
   .cell.sticky.selected {
     z-index: 3;
@@ -112,6 +114,7 @@
 
   /* Label cells */
   .cell.label {
+    width: 40px;
     padding: 0 12px;
     border-left-width: 0;
     position: sticky;
