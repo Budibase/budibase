@@ -1,10 +1,10 @@
 <script>
-  import { automationStore } from "builderStore"
+  import { selectedAutomation } from "builderStore"
   import Flowchart from "./FlowChart/FlowChart.svelte"
-
-  $: automation = $automationStore.selectedAutomation?.automation
 </script>
 
-{#if automation}
-  <Flowchart {automation} />
+{#if $selectedAutomation}
+  {#key $selectedAutomation._id}
+    <Flowchart automation={$selectedAutomation} />
+  {/key}
 {/if}
