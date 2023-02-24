@@ -86,7 +86,10 @@
   $: userPage = $userPageInfo.page
   $: logsPage = $logsPageInfo.page
 
-  $: sortedUsers = sort(enrich($users.data, selectedUsers, "_id"), "email")
+  $: sortedUsers = sort(
+    enrich($users.data || [], selectedUsers, "_id"),
+    "email"
+  )
   $: sortedEvents = sort(
     enrich(parseEventObject($auditLogs.events), selectedEvents, "id"),
     "id"
@@ -250,8 +253,6 @@
     $licensing.goToUpgradePage()
   }}
 >
-  <div class="datepicker" />
-
   <div class="controls">
     <div class="select">
       <Multiselect
@@ -297,6 +298,7 @@
         on:change={e => {
           if (e.detail[0]?.length === 1) {
             startDate = e.detail[0][0].toISOString()
+            endDate = null
           } else if (e.detail[0]?.length > 1) {
             startDate = e.detail[0][0].toISOString()
             endDate = e.detail[0][1].toISOString()
