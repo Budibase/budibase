@@ -28,10 +28,10 @@
   const validation = createValidationStore()
 
   $: {
-    const { name, url } = $values
+    const { url } = $values
 
     validation.check({
-      name,
+      ...$values,
       url: url?.[0] === "/" ? url.substring(1, url.length) : url,
     })
   }
@@ -95,9 +95,9 @@
     appValidation.url(validation, { apps: applications })
     appValidation.file(validation, { template })
     // init validation
-    const { name, url } = $values
+    const { url } = $values
     validation.check({
-      name,
+      ...$values,
       url: url?.[0] === "/" ? url.substring(1, url.length) : url,
     })
   }
