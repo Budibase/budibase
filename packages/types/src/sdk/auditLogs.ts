@@ -1,4 +1,5 @@
 import { Event, HostInfo } from "./events"
+import { AuditLogDoc } from "../documents"
 
 export type AuditWriteOpts = {
   appId?: string
@@ -11,7 +12,7 @@ export type AuditLogFn = (
   event: Event,
   metadata: any,
   opts: AuditWriteOpts
-) => Promise<void>
+) => Promise<AuditLogDoc | undefined>
 
 export type AuditLogQueueEvent = {
   event: Event

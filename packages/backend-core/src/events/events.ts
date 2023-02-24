@@ -1,36 +1,10 @@
-import {
-  AuditLogFn,
-  Event,
-  IdentityType,
-  AuditedEventFriendlyName,
-  AuditLogQueueEvent,
-} from "@budibase/types"
+import { Event, AuditedEventFriendlyName } from "@budibase/types"
 import { processors } from "./processors"
 import identification from "./identification"
-import { getAppId } from "../context"
 import * as backfill from "./backfill"
-import { createQueue, JobQueue } from "../queue"
-import BullQueue from "bull"
 
 export function isAudited(event: Event) {
   return !!AuditedEventFriendlyName[event]
-}
-
-let auditLogsEnabled = false
-let auditLogQueue: BullQueue.Queue<AuditLogQueueEvent>
-
-export const configure = (fn: AuditLogFn) => {
-  auditLogsEnabled = true
-  const writeAuditLogs = fn
-  auditLogQueue = createQueue<AuditLogQueueEvent>(JobQueue.AUDIT_LOG)
-  return auditLogQueue.process(async job => {
-    await writeAuditLogs(job.data.event, job.data.properties, {
-      userId: job.data.opts.userId,
-      timestamp: job.data.opts.timestamp,
-      appId: job.data.opts.appId,
-      hostInfo: job.data.opts.hostInfo,
-    })
-  })
 }
 
 export const publishEvent = async (
@@ -45,22 +19,6 @@ export const publishEvent = async (
   // no backfill - send the event and exit
   if (!backfilling) {
     await processors.processEvent(event, identity, properties, timestamp)
-    if (auditLogsEnabled && isAudited(event)) {
-      // only audit log actual events, don't include backfills
-      const userId =
-        identity.type === IdentityType.USER ? identity.id : undefined
-      // add to the event queue, rather than just writing immediately
-      await auditLogQueue.add({
-        event,
-        properties,
-        opts: {
-          userId,
-          timestamp,
-          appId: getAppId(),
-          hostInfo: identity.hostInfo,
-        },
-      })
-    }
     return
   }
 
