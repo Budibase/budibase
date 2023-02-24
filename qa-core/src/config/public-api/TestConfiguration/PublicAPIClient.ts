@@ -23,6 +23,7 @@ class PublicAPIClient {
       )
     }
     this.host = `${env.BUDIBASE_HOST}/api/public/v1`
+
     this.appId = appId
   }
 
@@ -32,6 +33,8 @@ class PublicAPIClient {
 
   setApiKey(apiKey: string) {
     this.apiKey = apiKey
+    process.env.BUDIBASE_PUBLIC_API_KEY = apiKey
+    this.host = `${env.BUDIBASE_HOST}/api/public/v1`
   }
 
   apiCall =
