@@ -613,14 +613,13 @@ export class ExternalRequest {
       const { key, tableId, isUpdate, id, ...rest } = relationship
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
       const linkTable = this.getTable(tableId)
-      // @ts-ignore
-      const linkPrimary = linkTable?.primary[0]
+      const relationshipPrimary = linkTable?.primary || []
+      const linkPrimary = relationshipPrimary[0]
       if (!linkTable || !linkPrimary) {
         return
       }
 
-      // @ts-ignore
-      const linkSecondary = linkTable?.primary[1]
+      const linkSecondary = relationshipPrimary[1]
 
       const rows = related[key]?.rows || []
 
