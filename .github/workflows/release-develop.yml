@@ -98,7 +98,7 @@ jobs:
           wc -l values.release.yaml
 
       - name: Deploy to Release Environment
-        uses: glopezep/helm@v1.7.0
+        uses: glopezep/helm@v1.6.1
         with:
           release: budibase-release
           namespace: budibase
