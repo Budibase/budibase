@@ -15,7 +15,7 @@ export interface LoginEvent extends BaseEvent {
 export interface LogoutEvent extends BaseEvent {
   userId: string
   audited: {
-    email: string
+    email?: string
   }
 }
 

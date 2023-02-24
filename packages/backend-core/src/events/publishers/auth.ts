@@ -24,7 +24,7 @@ async function login(source: LoginSource, email: string) {
   await publishEvent(Event.AUTH_LOGIN, properties)
 }
 
-async function logout(email: string) {
+async function logout(email?: string) {
   const identity = await identification.getCurrentIdentity()
   const properties: LogoutEvent = {
     userId: identity.id,
