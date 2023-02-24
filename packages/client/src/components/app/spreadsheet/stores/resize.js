@@ -1,26 +1,39 @@
 import { writable, get } from "svelte/store"
+import { domDebounce } from "../../../../utils/domDebounce.js"
 
 const MinColumnWidth = 100
 
 export const createResizeStore = context => {
-  const { columns } = context
+  const { columns, rand } = context
   const initialState = {
     initialMouseX: null,
     initialWidth: null,
     columnIdx: null,
   }
+
+  let initialWidth = 0
+  let width = 0
+  let left = 0
+  let initialMouseX = null
+  let sheet
+  let columnIdx = 0
+  let columnCount = 0
+  let styles
+
   const resize = writable(initialState)
 
-  const startResizing = (columnIdx, e) => {
+  const startResizing = (idx, e) => {
     // Prevent propagation to stop reordering triggering
     e.stopPropagation()
 
-    // Update state
-    resize.set({
-      columnIdx,
-      initialWidth: get(columns)[columnIdx].width,
-      initialMouseX: e.clientX,
-    })
+    sheet = document.getElementById(`sheet-${rand}`)
+    styles = getComputedStyle(sheet)
+    width = parseInt(styles.getPropertyValue(`--col-${idx}-width`))
+    left = parseInt(styles.getPropertyValue(`--col-${idx}-left`))
+    initialWidth = width
+    initialMouseX = e.clientX
+    columnIdx = idx
+    columnCount = get(columns).length
 
     // Add mouse event listeners to handle resizing
     document.addEventListener("mousemove", onResizeMouseMove)
@@ -28,21 +41,39 @@ export const createResizeStore = context => {
   }
 
   const onResizeMouseMove = e => {
-    const $resize = get(resize)
-    const dx = e.clientX - $resize.initialMouseX
-    const width = get(columns)[$resize.columnIdx].width
-    const newWidth = Math.max(MinColumnWidth, $resize.initialWidth + dx)
+    const dx = e.clientX - initialMouseX
+    const newWidth = Math.round(Math.max(MinColumnWidth, initialWidth + dx))
 
-    // Skip small updates
-    if (Math.abs(width - newWidth) < 20) {
+    if (Math.abs(width - newWidth) < 10) {
       return
     }
 
+
+    let newStyle = `--col-${columnIdx}-width:${newWidth}px;`
+
+    let offset = left + newWidth
+    for (let i = columnIdx + 1; i < columnCount; i++) {
+      const colWidth = 160//parseInt(styles.getPropertyValue(`--col-${i}-width`))
+      newStyle += `--col-${i}-left:${offset}px;`
+      offset += colWidth
+    }
+
+    sheet.style.cssText += newStyle
+    width = newWidth
+
     // Update width of column
-    columns.update(state => {
-      state[$resize.columnIdx].width = newWidth
-      return state
-    })
+    // columns.update(state => {
+    //   state[$resize.columnIdx].width = Math.round(newWidth)
+    //
+    //   // Update left offset of other columns
+    //   let offset = 40
+    //   state.forEach(col => {
+    //     col.left = offset
+    //     offset += col.width
+    //   })
+    //
+    //   return state
+    // })
   }
 
   const stopResizing = () => {

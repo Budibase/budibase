@@ -9,6 +9,7 @@
   export let reorderSource = false
   export let reorderTarget = false
   export let id = null
+  export let column
 </script>
 
 <div
@@ -27,6 +28,7 @@
   on:click
   on:mousedown
   {id}
+  style={`width:var(--col-${column}-width); left:var(--col-${column}-left);`}
 >
   <slot />
 </div>
@@ -48,7 +50,7 @@
     font-size: var(--cell-font-size);
     gap: var(--cell-spacing);
     background: var(--cell-background);
-    position: relative;
+    position: absolute;
     transition: border-color 130ms ease-out;
   }
   .cell.row-hovered {
@@ -71,8 +73,6 @@
   /* Header cells */
   .cell.header {
     background: var(--spectrum-global-color-gray-200);
-    position: sticky;
-    top: 0;
     padding: 0 var(--cell-padding);
     z-index: 3;
     border-color: var(--spectrum-global-color-gray-400);

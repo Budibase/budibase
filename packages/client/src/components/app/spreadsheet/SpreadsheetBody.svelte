@@ -2,18 +2,31 @@
   import { getContext, onMount } from "svelte"
   import { Utils } from "@budibase/frontend-core"
 
-  const { columns, selectedCellId, rand, visibleRows, cellHeight } =
+  const { columns, selectedCellId, rand, visibleRows, cellHeight, rows } =
     getContext("spreadsheet")
 
   let ref
-  let height = 0
+  let height = 600
   let horizontallyScrolled = false
   let scrollTop = 0
 
   $: gridStyles = getGridStyles($columns)
   $: computeVisibleRows(scrollTop, height)
+  $: contentHeight = ($rows.length + 2) * cellHeight + 180
+  $: contentWidth = computeWidth($columns)
+  $: console.log("new height")
+
+  const computeWidth = columns => {
+    console.log("width")
+    let width = 220
+    columns.forEach(col => {
+      width += col.width
+    })
+    return width
+  }
 
   const getGridStyles = columns => {
+    console.log("grid")
     const widths = columns?.map(x => x.width)
     if (!widths?.length) {
       return "--grid: 1fr;"
@@ -30,11 +43,11 @@
     scrollTop = e.target.scrollTop
   }
 
-  const computeVisibleRows = Utils.debounce((scrollTop, height) => {
-    const rows = Math.ceil(height / cellHeight) + 16
-    const firstRow = Math.max(0, Math.floor(scrollTop / cellHeight) - 8)
+  const computeVisibleRows = (scrollTop, height) => {
+    const rows = Math.ceil(height / cellHeight) + 8
+    const firstRow = Math.max(0, Math.floor(scrollTop / cellHeight) - 4)
     visibleRows.set([firstRow, firstRow + rows])
-  }, 50)
+  }
 
   // Observe and record the height of the body
   onMount(() => {
@@ -53,35 +66,28 @@
   class="spreadsheet"
   class:horizontally-scrolled={horizontallyScrolled}
   on:scroll={handleScroll}
-  style={gridStyles}
   on:click|self={() => ($selectedCellId = null)}
   id={`sheet-${rand}-body`}
 >
-  <slot />
+  <div
+    class="content"
+    style="height:{contentHeight}px; width:{contentWidth}px;"
+  >
+    <slot />
+  </div>
 </div>
 
 <style>
   .spreadsheet {
-    display: grid;
-    grid-template-columns: var(--grid);
-    justify-content: flex-start;
-    align-items: stretch;
+    display: block;
     overflow: auto;
-    max-height: 600px;
+    height: 800px;
     position: relative;
     cursor: default;
   }
+  .content {
+    background: rgba(255, 0, 0, 0.1);
+  }
 
-  /* Add shadow to sticky cells when horizontally scrolled */
-  .horizontally-scrolled :global(.cell.sticky) {
-    border-right-width: 1px;
-  }
-  .horizontally-scrolled :global(.cell.sticky:after) {
-    content: " ";
-    position: absolute;
-    width: 10px;
-    left: 100%;
-    height: 100%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);
-  }
+
 </style>

@@ -21,6 +21,7 @@
     changeCache,
     spreadsheetAPI,
     visibleRows,
+    cellHeight,
   } = getContext("spreadsheet")
 
   $: rowSelected = !!$selectedRows[row._id]
@@ -52,27 +53,27 @@
   }
 </script>
 
-{#if !visible}
-  <div class="row-placeholder" />
-{:else}
-  <SpreadsheetCell
-    label
-    {rowSelected}
-    {rowHovered}
-    on:mouseenter={() => ($hoveredRowId = row._id)}
-    on:click={() => selectRow(row._id)}
-  >
-    {#if rowSelected || rowHovered}
-      <input type="checkbox" checked={rowSelected} />
-    {:else}
-      <span>
-        {rowIdx + 1}
-      </span>
-    {/if}
-  </SpreadsheetCell>
-  {#each $columns as field, fieldIdx}
-    {@const cellIdx = `${row._id}-${field.name}`}
-    {#key cellIdx}
+{#if visible}
+  <div class="row" style="--top:{(rowIdx + 1) * cellHeight}px;">
+    <SpreadsheetCell
+      label
+      {rowSelected}
+      {rowHovered}
+      on:mouseenter={() => ($hoveredRowId = row._id)}
+      on:click={() => selectRow(row._id)}
+      width="40"
+      left="0"
+    >
+      {#if rowSelected || rowHovered}
+        <input type="checkbox" checked={rowSelected} />
+      {:else}
+        <span>
+          {rowIdx + 1}
+        </span>
+      {/if}
+    </SpreadsheetCell>
+    {#each $columns as field, fieldIdx}
+      {@const cellIdx = `${row._id}-${field.name}`}
       <SpreadsheetCell
         {rowSelected}
         {rowHovered}
@@ -82,6 +83,9 @@
         reorderTarget={$reorder.swapColumnIdx === fieldIdx}
         on:mouseenter={() => ($hoveredRowId = row._id)}
         on:click={() => ($selectedCellId = cellIdx)}
+        width={field.width}
+        left={field.left}
+        column={fieldIdx}
       >
         <svelte:component
           this={getCellForField(field)}
@@ -92,9 +96,8 @@
           readonly={field.schema.autocolumn}
         />
       </SpreadsheetCell>
-    {/key}
-  {/each}
-  <SpacerCell reorderTarget={$reorder.swapColumnIdx === $columns.length} />
+    {/each}
+  </div>
 {/if}
 
 <style>
@@ -103,5 +106,11 @@
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     background: var(--cell-background);
     grid-column: 1/-1;
+  }
+  .row {
+    display: flex;
+    position: absolute;
+    top: var(--top);
+    width: 100%;
   }
 </style>

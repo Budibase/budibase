@@ -92,9 +92,10 @@
       if (primaryDisplay) {
         fields = [primaryDisplay, ...fields.filter(x => x !== primaryDisplay)]
       }
-      $columns = fields.map(field => ({
+      $columns = fields.map((field, idx) => ({
         name: field,
         width: defaultWidth,
+        left: 40 + idx * defaultWidth,
         schema: schema[field],
         primaryDisplay: field === primaryDisplay,
       }))
@@ -179,47 +180,56 @@
     resize,
     spreadsheetAPI,
   })
+
+  let sheetStyles = ""
+  let left = 40
+  for (let i = 0; i < 20; i++) {
+    sheetStyles += `--col-${i}-width:${160}px; --col-${i}-left:${left}px;`
+    left += 160
+  }
 </script>
 
 <div use:styleable={$component.styles}>
   <div
     class="wrapper"
     class:resize={$resize.columnIdx != null}
-    style="--cell-height:{cellHeight}px;"
+    style="--cell-height:{cellHeight}px;{sheetStyles}"
+    id="sheet-{rand}"
   >
     <SpreadsheetHeader />
     <SpreadsheetBody>
-      <!-- Field headers -->
-      <SpreadsheetCell header label on:click={selectAll}>
-        <input
-          type="checkbox"
-          checked={rowCount && selectedRowCount === rowCount}
-        />
-      </SpreadsheetCell>
-      {#each $columns as field, fieldIdx}
-        <SpreadsheetCell
-          header
-          sticky={fieldIdx === 0}
-          reorderSource={$reorder.columnIdx === fieldIdx}
-          reorderTarget={$reorder.swapColumnIdx === fieldIdx}
-          on:mousedown={e => reorder.actions.startReordering(fieldIdx, e)}
-          id={`sheet-${rand}-header-${fieldIdx}`}
-        >
-          <Icon
-            size="S"
-            name={getIconForField(field)}
-            color="var(--spectrum-global-color-gray-600)"
+      <div class="row" style="top: 0;">
+        <!-- Field headers -->
+        <SpreadsheetCell header label on:click={selectAll} width="40" left="0">
+          <input
+            type="checkbox"
+            checked={rowCount && selectedRowCount === rowCount}
           />
-          <span>
-            {field.name}
-          </span>
-          <ResizeSlider columnIdx={fieldIdx} />
         </SpreadsheetCell>
-      {/each}
-      <SpacerCell
-        header
-        reorderTarget={$reorder.swapColumnIdx === $columns.length}
-      />
+        {#each $columns as field, fieldIdx}
+          <SpreadsheetCell
+            header
+            sticky={fieldIdx === 0}
+            reorderSource={$reorder.columnIdx === fieldIdx}
+            reorderTarget={$reorder.swapColumnIdx === fieldIdx}
+            on:mousedown={e => reorder.actions.startReordering(fieldIdx, e)}
+            id={`sheet-${rand}-header-${fieldIdx}`}
+            width={field.width}
+            left={field.left}
+            column={fieldIdx}
+          >
+            <Icon
+              size="S"
+              name={getIconForField(field)}
+              color="var(--spectrum-global-color-gray-600)"
+            />
+            <span>
+              {field.name}
+            </span>
+            <ResizeSlider columnIdx={fieldIdx} />
+          </SpreadsheetCell>
+        {/each}
+      </div>
 
       <!-- All real rows -->
       {#each $rows as row, rowIdx (row._id)}
@@ -227,28 +237,30 @@
       {/each}
 
       <!-- New row placeholder -->
-      <SpreadsheetCell
-        label
-        on:click={addRow}
-        on:mouseenter={() => ($hoveredRowId = "new")}
-        rowHovered={$hoveredRowId === "new"}
-      >
-        <Icon hoverable name="Add" size="S" />
-      </SpreadsheetCell>
-      {#each $columns as field, fieldIdx}
+      <div class="row" style="top:{($rows.length + 1) * cellHeight}px;">
         <SpreadsheetCell
-          sticky={fieldIdx === 0}
-          rowHovered={$hoveredRowId === "new"}
-          reorderSource={$reorder.columnIdx === fieldIdx}
-          reorderTarget={$reorder.swapColumnIdx === fieldIdx}
-          on:click={() => addRow(field)}
+          label
+          on:click={addRow}
           on:mouseenter={() => ($hoveredRowId = "new")}
-        />
-      {/each}
-      <SpacerCell reorderTarget={$reorder.swapColumnIdx === $columns.length} />
-
-      <!-- Vertical spacer to pad bottom of sheet -->
-      <VerticalSpacer />
+          rowHovered={$hoveredRowId === "new"}
+          width="40"
+          left="0"
+        >
+          <Icon hoverable name="Add" size="S" />
+        </SpreadsheetCell>
+        {#each $columns as field, fieldIdx}
+          <SpreadsheetCell
+            sticky={fieldIdx === 0}
+            rowHovered={$hoveredRowId === "new"}
+            reorderSource={$reorder.columnIdx === fieldIdx}
+            reorderTarget={$reorder.swapColumnIdx === fieldIdx}
+            on:click={() => addRow(field)}
+            on:mouseenter={() => ($hoveredRowId = "new")}
+            width={field.width}
+            left={field.left}
+          />
+        {/each}
+      </div>
     </SpreadsheetBody>
 
     <!-- Placeholder overlay for new column position -->
@@ -278,5 +290,11 @@
   }
   .wrapper::-webkit-scrollbar-track {
     background: var(--cell-background);
+  }
+
+  .row {
+    display: flex;
+    position: sticky;
+    width: 100%;
   }
 </style>
