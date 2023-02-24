@@ -74,6 +74,6 @@ export default class AuditLogsProcessor implements EventProcessor {
   }
 
   shutdown(): void {
-    AuditLogsProcessor.auditLogQueue.close()
+    AuditLogsProcessor.auditLogQueue?.close()
   }
 }
