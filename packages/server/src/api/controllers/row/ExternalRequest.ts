@@ -154,11 +154,12 @@ function generateIdForRow(
   // build id array
   let idParts = []
   for (let field of primary) {
-    // need to handle table name + field or just field, depending on if relationships used
-    let fieldValue = row[`${table.name}.${field}`]
-    if (!fieldValue && !isLinked) {
-      fieldValue = row[field]
-    }
+    let fieldValue = extractFieldValue({
+      row,
+      tableName: table.name,
+      fieldName: field,
+      isLinked,
+    })
     if (fieldValue) {
       idParts.push(fieldValue)
     }
@@ -181,6 +182,25 @@ function getEndpoint(tableId: string | undefined, operation: string) {
   }
 }
 
+// need to handle table name + field or just field, depending on if relationships used
+function extractFieldValue({
+  row,
+  tableName,
+  fieldName,
+  isLinked,
+}: {
+  row: Row
+  tableName: string
+  fieldName: string
+  isLinked: boolean
+}) {
+  let value = row[`${tableName}.${fieldName}`]
+  if (value == null && !isLinked) {
+    value = row[fieldName]
+  }
+  return value
+}
+
 function basicProcessing({
   row,
   table,
@@ -195,8 +215,13 @@ function basicProcessing({
   for (let field of Object.values(table.schema)) {
     const fieldName = field.name
 
-    const pathValue = row[`${table.name}.${fieldName}`]
-    const value = pathValue != null || isLinked ? pathValue : row[fieldName]
+    const value = extractFieldValue({
+      row,
+      tableName: table.name,
+      fieldName,
+      isLinked,
+    })
+
     // all responses include "select col as table.col" so that overlaps are handled
     if (value != null) {
       thisRow[fieldName] = value
