@@ -214,36 +214,6 @@ export async function getBuildersCount() {
   return builders.length
 }
 
-/**
- * Logs a user out from budibase. Re-used across account portal and builder.
- */
-export async function platformLogout(opts: PlatformLogoutOpts) {
-  const ctx = opts.ctx
-  const email = ctx.user?.email!
-  const userId = opts.userId
-  const keepActiveSession = opts.keepActiveSession
-
-  if (!ctx) throw new Error("Koa context must be supplied to logout.")
-
-  const currentSession = getCookie(ctx, Cookie.Auth)
-  let sessions = await getSessionsForUser(userId)
-
-  if (keepActiveSession) {
-    sessions = sessions.filter(
-      session => session.sessionId !== currentSession.sessionId
-    )
-  } else {
-    // clear cookies
-    clearCookie(ctx, Cookie.Auth)
-    clearCookie(ctx, Cookie.CurrentApp)
-  }
-
-  const sessionIds = sessions.map(({ sessionId }) => sessionId)
-  await invalidateSessions(userId, { sessionIds, reason: "logout" })
-  await events.auth.logout(email)
-  await userCache.invalidateUser(userId)
-}
-
 export function timeout(timeMs: number) {
   return new Promise(resolve => setTimeout(resolve, timeMs))
 }

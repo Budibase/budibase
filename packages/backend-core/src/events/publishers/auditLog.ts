@@ -1,26 +1,26 @@
 import {
   Event,
   AuditLogSearchParams,
-  AuditLogFilterEvent,
-  AuditLogDownloadEvent,
+  AuditLogFilteredEvent,
+  AuditLogDownloadedEvent,
 } from "@budibase/types"
 import { publishEvent } from "../events"
 
 async function filtered(search: AuditLogSearchParams) {
-  const properties: AuditLogFilterEvent = {
+  const properties: AuditLogFilteredEvent = {
     filters: search,
   }
-  await publishEvent(Event.AUDIT_LOG_FILTER, properties)
+  await publishEvent(Event.AUDIT_LOGS_FILTERED, properties)
 }
 
-async function download(search: AuditLogSearchParams) {
-  const properties: AuditLogDownloadEvent = {
+async function downloaded(search: AuditLogSearchParams) {
+  const properties: AuditLogDownloadedEvent = {
     filters: search,
   }
-  await publishEvent(Event.AUDIT_LOG_DOWNLOAD, properties)
+  await publishEvent(Event.AUDIT_LOGS_DOWNLOADED, properties)
 }
 
 export default {
   filtered,
-  download,
+  downloaded,
 }

@@ -5,7 +5,7 @@ import {
   generateApiKey,
   getChecklist,
 } from "./utilities/workerRequests"
-import { installation, tenancy, logging } from "@budibase/backend-core"
+import { installation, tenancy, logging, events } from "@budibase/backend-core"
 import fs from "fs"
 import { watch } from "./watch"
 import * as automations from "./automations"
@@ -17,6 +17,7 @@ import * as pro from "@budibase/pro"
 import * as api from "./api"
 import sdk from "./sdk"
 const pino = require("koa-pino-logger")
+import { sdk as proSdk } from "@budibase/pro"
 
 let STARTUP_RAN = false
 
@@ -124,6 +125,9 @@ export async function startup(app?: any, server?: any) {
   // get the references to the queue promises, don't await as
   // they will never end, unless the processing stops
   let queuePromises = []
+  // configure events to use the pro audit log write
+  // can't integrate directly into backend-core due to cyclic issues
+  queuePromises.push(events.configure(proSdk.auditLogs.write))
   queuePromises.push(automations.init())
   queuePromises.push(initPro())
   if (app) {

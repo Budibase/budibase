@@ -239,7 +239,7 @@ export function getGlobalDB(): Database {
 
 export function getAuditLogsDB(): Database {
   if (!getTenantId()) {
-    throw new Error("Audit log DB not found")
+    throw new Error("No tenant ID found - cannot open audit log DB")
   }
   return getDB(getAuditLogDBName())
 }

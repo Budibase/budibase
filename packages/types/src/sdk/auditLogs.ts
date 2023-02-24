@@ -11,7 +11,7 @@ export type AuditLogFn = (
   event: Event,
   metadata: any,
   opts: AuditWriteOpts
-) => Promise<any>
+) => Promise<void>
 
 export type AuditLogQueueEvent = {
   event: Event
