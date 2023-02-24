@@ -1,16 +1,16 @@
 import { Response } from "node-fetch"
-import PublicAPIClient from "./PublicAPIClient"
+import AccountsAPIClient from "./accountsAPIClient"
 import { ApiKeyResponse } from "../fixtures/types/apiKeyResponse"
 
 export default class AuthApi {
-  api: PublicAPIClient
+  api: AccountsAPIClient
 
-  constructor(apiClient: PublicAPIClient) {
+  constructor(apiClient: AccountsAPIClient) {
     this.api = apiClient
   }
 
   async loginAsAdmin(): Promise<[Response, any]> {
-    const response = await this.api.post(`/global/auth/default/login`, {
+    const response = await this.api.post(`/auth/login`, {
       body: {
         username: process.env.BB_ADMIN_USER_EMAIL,
         password: process.env.BB_ADMIN_USER_PASSWORD,
@@ -22,7 +22,7 @@ export default class AuthApi {
   }
 
   async login(email: String, password: String): Promise<[Response, any]> {
-    const response = await this.api.post(`/global/auth/default/login`, {
+    const response = await this.api.post(`/auth/login`, {
       body: {
         username: email,
         password: password,
