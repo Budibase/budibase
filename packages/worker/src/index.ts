@@ -14,7 +14,7 @@ import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
 import { auth, logging, events, middleware } from "@budibase/backend-core"
-import { sdk } from "@budibase/pro"
+import { sdk as proSdk, sdk } from "@budibase/pro"
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"
@@ -30,7 +30,7 @@ import destroyable from "server-destroy"
 
 // configure events to use the pro audit log write
 // can't integrate directly into backend-core due to cyclic issues
-events.configure(sdk.auditLogs.write)
+events.processors.init(proSdk.auditLogs.write)
 
 if (env.ENABLE_SSO_MAINTENANCE_MODE) {
   console.warn(

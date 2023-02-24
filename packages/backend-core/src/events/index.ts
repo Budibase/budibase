@@ -3,7 +3,7 @@ export * as processors from "./processors"
 export * as analytics from "./analytics"
 export { default as identification } from "./identification"
 export * as backfillCache from "./backfill"
-export { configure, isAudited } from "./events"
+export { isAudited } from "./events"
 
 import { processors } from "./processors"
 

@@ -127,7 +127,7 @@ export async function startup(app?: any, server?: any) {
   let queuePromises = []
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
-  queuePromises.push(events.configure(proSdk.auditLogs.write))
+  queuePromises.push(events.processors.init(proSdk.auditLogs.write))
   queuePromises.push(automations.init())
   queuePromises.push(initPro())
   if (app) {
