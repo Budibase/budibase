@@ -17,7 +17,9 @@ async function login(source: LoginSource, email: string) {
   const properties: LoginEvent = {
     userId: identity.id,
     source,
-    email,
+    audited: {
+      email,
+    },
   }
   await publishEvent(Event.AUTH_LOGIN, properties)
 }
@@ -26,7 +28,9 @@ async function logout(email: string) {
   const identity = await identification.getCurrentIdentity()
   const properties: LogoutEvent = {
     userId: identity.id,
-    email,
+    audited: {
+      email,
+    },
   }
   await publishEvent(Event.AUTH_LOGOUT, properties)
 }

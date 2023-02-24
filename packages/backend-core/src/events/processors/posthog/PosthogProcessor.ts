@@ -85,6 +85,9 @@ export default class PosthogProcessor implements EventProcessor {
     if (properties.email) {
       delete properties.email
     }
+    if (properties.audited) {
+      delete properties.audited
+    }
     return properties
   }
 

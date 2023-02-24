@@ -24,7 +24,15 @@ export default class AuditLogsProcessor implements EventProcessor {
       JobQueue.AUDIT_LOG
     )
     return AuditLogsProcessor.auditLogQueue.process(async job => {
-      await writeAuditLogs(job.data.event, job.data.properties, {
+      let properties = job.data.properties
+      if (properties.audited) {
+        properties = {
+          ...properties,
+          ...properties.audited,
+        }
+        delete properties.audited
+      }
+      await writeAuditLogs(job.data.event, properties, {
         userId: job.data.opts.userId,
         timestamp: job.data.opts.timestamp,
         appId: job.data.opts.appId,
