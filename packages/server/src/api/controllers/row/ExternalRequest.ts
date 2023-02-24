@@ -181,7 +181,15 @@ function getEndpoint(tableId: string | undefined, operation: string) {
   }
 }
 
-function basicProcessing(row: Row, table: Table, isLinked: boolean): Row {
+function basicProcessing({
+  row,
+  table,
+  isLinked,
+}: {
+  row: Row
+  table: Table
+  isLinked: boolean
+}): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
   for (let field of Object.values(table.schema)) {
@@ -389,7 +397,7 @@ export class ExternalRequest {
         continue
       }
 
-      let linked = basicProcessing(row, linkedTable, true)
+      let linked = basicProcessing({ row, table: linkedTable, isLinked: true })
       if (!linked._id) {
         continue
       }
@@ -437,7 +445,10 @@ export class ExternalRequest {
         )
         continue
       }
-      const thisRow = fixArrayTypes(basicProcessing(row, table, false), table)
+      const thisRow = fixArrayTypes(
+        basicProcessing({ row, table, isLinked: false }),
+        table
+      )
       if (thisRow._id == null) {
         throw "Unable to generate row ID for SQL rows"
       }
@@ -583,20 +594,36 @@ export class ExternalRequest {
         return
       }
 
-      const linkSecondary =
-        linkTable?.primary &&
-        linkTable?.primary?.length > 1 &&
-        linkTable?.primary[1]
+      // @ts-ignore
+      const linkSecondary = linkTable?.primary[1]
 
       const rows = related[key]?.rows || []
-      const found = rows.find(
-        (row: { [key: string]: any }) =>
+
+      function relationshipMatchPredicate({
+        row,
+        linkPrimary,
+        linkSecondary,
+      }: {
+        row: { [key: string]: any }
+        linkPrimary: string
+        linkSecondary?: string
+      }) {
+        const matchesPrimaryLink =
           row[linkPrimary] === relationship.id ||
-          (row[linkPrimary] === body?.[linkPrimary] &&
-            (!linkSecondary || row[linkSecondary] === body?.[linkSecondary]))
+          row[linkPrimary] === body?.[linkPrimary]
+        if (!matchesPrimaryLink || !linkSecondary) {
+          return matchesPrimaryLink
+        }
+
+        const matchesSecondayLink = row[linkSecondary] === body?.[linkSecondary]
+        return matchesPrimaryLink && matchesSecondayLink
+      }
+
+      const existingRelationship = rows.find((row: { [key: string]: any }) =>
+        relationshipMatchPredicate({ row, linkPrimary, linkSecondary })
       )
       const operation = isUpdate ? Operation.UPDATE : Operation.CREATE
-      if (!found) {
+      if (!existingRelationship) {
         promises.push(
           getDatasourceAndQuery({
             endpoint: getEndpoint(tableId, operation),
@@ -607,7 +634,7 @@ export class ExternalRequest {
         )
       } else {
         // remove the relationship from cache so it isn't adjusted again
-        rows.splice(rows.indexOf(found), 1)
+        rows.splice(rows.indexOf(existingRelationship), 1)
       }
     }
     // finally cleanup anything that needs to be removed

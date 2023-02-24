@@ -27,9 +27,9 @@ describe("row api - postgres", () => {
   let makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
     primaryPostgresTable: Table,
-    o2mInfo: ForeignTableInfo,
-    m2oInfo: ForeignTableInfo,
-    m2mInfo: ForeignTableInfo
+    oneToManyRelationshipInfo: ForeignTableInfo,
+    manyToOneRelationshipInfo: ForeignTableInfo,
+    manyToManyRelationshipInfo: ForeignTableInfo
 
   let host: string
   let port: number
@@ -96,17 +96,17 @@ describe("row api - postgres", () => {
       })
     }
 
-    o2mInfo = {
+    oneToManyRelationshipInfo = {
       table: await createAuxTable("o2m"),
       fieldName: "oneToManyRelation",
       relationshipType: RelationshipTypes.ONE_TO_MANY,
     }
-    m2oInfo = {
+    manyToOneRelationshipInfo = {
       table: await createAuxTable("m2o"),
       fieldName: "manyToOneRelation",
       relationshipType: RelationshipTypes.MANY_TO_ONE,
     }
-    m2mInfo = {
+    manyToManyRelationshipInfo = {
       table: await createAuxTable("m2m"),
       fieldName: "manyToManyRelation",
       relationshipType: RelationshipTypes.MANY_TO_MANY,
@@ -146,10 +146,10 @@ describe("row api - postgres", () => {
             type: "array",
             presence: false,
           },
-          fieldName: o2mInfo.fieldName,
+          fieldName: oneToManyRelationshipInfo.fieldName,
           name: "oneToManyRelation",
           relationshipType: RelationshipTypes.ONE_TO_MANY,
-          tableId: o2mInfo.table._id,
+          tableId: oneToManyRelationshipInfo.table._id,
           main: true,
         },
         manyToOneRelation: {
@@ -158,10 +158,10 @@ describe("row api - postgres", () => {
             type: "array",
             presence: false,
           },
-          fieldName: m2oInfo.fieldName,
+          fieldName: manyToOneRelationshipInfo.fieldName,
           name: "manyToOneRelation",
           relationshipType: RelationshipTypes.MANY_TO_ONE,
-          tableId: m2oInfo.table._id,
+          tableId: manyToOneRelationshipInfo.table._id,
           main: true,
         },
         manyToManyRelation: {
@@ -170,10 +170,10 @@ describe("row api - postgres", () => {
             type: "array",
             presence: false,
           },
-          fieldName: m2mInfo.fieldName,
+          fieldName: manyToManyRelationshipInfo.fieldName,
           name: "manyToManyRelation",
           relationshipType: RelationshipTypes.MANY_TO_MANY,
-          tableId: m2mInfo.table._id,
+          tableId: manyToManyRelationshipInfo.table._id,
           main: true,
         },
       },
@@ -239,10 +239,10 @@ describe("row api - postgres", () => {
     }
 
     if (opts?.createForeignRows?.createOne2Many) {
-      const foreignKey = `fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`
+      const foreignKey = `fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`
 
       const foreignRow = await config.createRow({
-        tableId: o2mInfo.table._id,
+        tableId: oneToManyRelationshipInfo.table._id,
         title: generator.name(),
       })
 
@@ -252,21 +252,22 @@ describe("row api - postgres", () => {
       }
       foreignRows.push({
         row: foreignRow,
-        relationshipType: o2mInfo.relationshipType,
+        relationshipType: oneToManyRelationshipInfo.relationshipType,
       })
     }
 
     for (let i = 0; i < (opts?.createForeignRows?.createMany2One || 0); i++) {
       const foreignRow = await config.createRow({
-        tableId: m2oInfo.table._id,
+        tableId: manyToOneRelationshipInfo.table._id,
         title: generator.name(),
       })
 
       rowData = {
         ...rowData,
-        [m2oInfo.fieldName]: rowData[m2oInfo.fieldName] || [],
+        [manyToOneRelationshipInfo.fieldName]:
+          rowData[manyToOneRelationshipInfo.fieldName] || [],
       }
-      rowData[m2oInfo.fieldName].push(foreignRow._id)
+      rowData[manyToOneRelationshipInfo.fieldName].push(foreignRow._id)
       foreignRows.push({
         row: foreignRow,
         relationshipType: RelationshipTypes.MANY_TO_ONE,
@@ -275,15 +276,16 @@ describe("row api - postgres", () => {
 
     for (let i = 0; i < (opts?.createForeignRows?.createMany2Many || 0); i++) {
       const foreignRow = await config.createRow({
-        tableId: m2mInfo.table._id,
+        tableId: manyToManyRelationshipInfo.table._id,
         title: generator.name(),
       })
 
       rowData = {
         ...rowData,
-        [m2mInfo.fieldName]: rowData[m2mInfo.fieldName] || [],
+        [manyToManyRelationshipInfo.fieldName]:
+          rowData[manyToManyRelationshipInfo.fieldName] || [],
       }
-      rowData[m2mInfo.fieldName].push(foreignRow._id)
+      rowData[manyToManyRelationshipInfo.fieldName].push(foreignRow._id)
       foreignRows.push({
         row: foreignRow,
         relationshipType: RelationshipTypes.MANY_TO_MANY,
@@ -577,11 +579,11 @@ describe("row api - postgres", () => {
             tableId: row.tableId,
             _id: expect.any(String),
             _rev: expect.any(String),
-            [`fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`]:
+            [`fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`]:
               one2ManyForeignRows[0].row.id,
           })
 
-          expect(res.body[o2mInfo.fieldName]).toBeUndefined()
+          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
         })
       })
 
@@ -608,11 +610,11 @@ describe("row api - postgres", () => {
             tableId: row.tableId,
             _id: expect.any(String),
             _rev: expect.any(String),
-            [`fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`]:
+            [`fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`]:
               foreignRows[0].row.id,
           })
 
-          expect(res.body[o2mInfo.fieldName]).toBeUndefined()
+          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
         })
       })
 
@@ -641,7 +643,7 @@ describe("row api - postgres", () => {
             _rev: expect.any(String),
           })
 
-          expect(res.body[o2mInfo.fieldName]).toBeUndefined()
+          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
         })
       })
 
@@ -670,7 +672,7 @@ describe("row api - postgres", () => {
             _rev: expect.any(String),
           })
 
-          expect(res.body[o2mInfo.fieldName]).toBeUndefined()
+          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
         })
       })
     })
@@ -921,30 +923,33 @@ describe("row api - postgres", () => {
           )
           expect(res.body).toEqual({
             ...rowData,
-            [`fk_${o2mInfo.table.name}_${o2mInfo.fieldName}`]:
+            [`fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`]:
               foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row.id,
-            [o2mInfo.fieldName]: [
+            [oneToManyRelationshipInfo.fieldName]: [
               {
                 ...foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row,
                 _id: expect.any(String),
                 _rev: expect.any(String),
               },
             ],
-            [m2oInfo.fieldName]: [
+            [manyToOneRelationshipInfo.fieldName]: [
               {
                 ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][0].row,
-                [`fk_${m2oInfo.table.name}_${m2oInfo.fieldName}`]: row.id,
+                [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
+                  row.id,
               },
               {
                 ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][1].row,
-                [`fk_${m2oInfo.table.name}_${m2oInfo.fieldName}`]: row.id,
+                [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
+                  row.id,
               },
               {
                 ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][2].row,
-                [`fk_${m2oInfo.table.name}_${m2oInfo.fieldName}`]: row.id,
+                [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
+                  row.id,
               },
             ],
-            [m2mInfo.fieldName]: [
+            [manyToManyRelationshipInfo.fieldName]: [
               {
                 ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][0].row,
               },
