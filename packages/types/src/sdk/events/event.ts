@@ -262,11 +262,11 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.QUERY_PREVIEWED]: undefined,
 
   // TABLE
-  [Event.TABLE_CREATED]: `Table created`,
-  [Event.TABLE_UPDATED]: `Table updated`,
-  [Event.TABLE_DELETED]: `Table deleted`,
-  [Event.TABLE_EXPORTED]: `Table exported`,
-  [Event.TABLE_IMPORTED]: `Table imported`,
+  [Event.TABLE_CREATED]: `Table "{{ name }}" created`,
+  [Event.TABLE_UPDATED]: `Table "{{ name }}" updated`,
+  [Event.TABLE_DELETED]: `Table "{{ name }}" deleted`,
+  [Event.TABLE_EXPORTED]: `Table "{{ name }}" exported`,
+  [Event.TABLE_IMPORTED]: `Table "{{ name }}" imported`,
   [Event.TABLE_DATA_IMPORTED]: `Data imported to table`,
 
   // ROWS
@@ -274,17 +274,17 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.ROWS_IMPORTED]: `Rows imported`,
 
   // AUTOMATION
-  [Event.AUTOMATION_CREATED]: `Automation created`,
-  [Event.AUTOMATION_DELETED]: `Automation deleted`,
+  [Event.AUTOMATION_CREATED]: `Automation "{{ name }}" created`,
+  [Event.AUTOMATION_DELETED]: `Automation "{{ name }}" deleted`,
+  [Event.AUTOMATION_STEP_CREATED]: `Automation "{{ name }}" step added`,
+  [Event.AUTOMATION_STEP_DELETED]: `Automation "{{ name }}" step removed`,
   [Event.AUTOMATION_TESTED]: undefined,
   [Event.AUTOMATIONS_RUN]: undefined,
-  [Event.AUTOMATION_STEP_CREATED]: undefined,
-  [Event.AUTOMATION_STEP_DELETED]: undefined,
   [Event.AUTOMATION_TRIGGER_UPDATED]: undefined,
 
   // SCREEN
-  [Event.SCREEN_CREATED]: `Screen created`,
-  [Event.SCREEN_DELETED]: `Screen deleted`,
+  [Event.SCREEN_CREATED]: `Screen "{{ name }}" created`,
+  [Event.SCREEN_DELETED]: `Screen "{{ name }}" deleted`,
 
   // COMPONENT
   [Event.COMPONENT_CREATED]: `Component created`,
@@ -375,6 +375,11 @@ export interface BaseEvent {
   installationId?: string
   tenantId?: string
   hosting?: Hosting
+  // any props in the audited section will be removed before passing events
+  // up out of system (purely for use with auditing)
+  audited?: {
+    [key: string]: any
+  }
 }
 
 export type TableExportFormat = "json" | "csv"
