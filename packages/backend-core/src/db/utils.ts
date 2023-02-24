@@ -366,7 +366,7 @@ export async function getAllApps({
   }
 }
 
-export async function getAppsById(appIds: string[]) {
+export async function getAppsByIDs(appIds: string[]) {
   const settled = await Promise.allSettled(
     appIds.map(appId => getAppMetadata(appId))
   )

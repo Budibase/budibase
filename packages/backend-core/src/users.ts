@@ -12,7 +12,7 @@ import * as context from "./context"
 
 type GetOpts = { cleanup?: boolean }
 
-function cleanupUsers(users: User | User[]) {
+function removeUserPassword(users: User | User[]) {
   if (Array.isArray(users)) {
     return users.map(user => {
       if (user) {
@@ -39,7 +39,7 @@ export const bulkGetGlobalUsersById = async (
     })
   ).rows.map(row => row.doc) as User[]
   if (opts?.cleanup) {
-    users = cleanupUsers(users) as User[]
+    users = removeUserPassword(users) as User[]
   }
   return users
 }
@@ -53,7 +53,7 @@ export async function getById(id: string, opts?: GetOpts): Promise<User> {
   const db = context.getGlobalDB()
   let user = await db.get(id)
   if (opts?.cleanup) {
-    user = cleanupUsers(user)
+    user = removeUserPassword(user)
   }
   return user
 }
@@ -61,7 +61,6 @@ export async function getById(id: string, opts?: GetOpts): Promise<User> {
 /**
  * Given an email address this will use a view to search through
  * all the users to find one with this email address.
- * @param {string} email the email to lookup the user by.
  */
 export const getGlobalUserByEmail = async (
   email: String,
@@ -83,7 +82,7 @@ export const getGlobalUserByEmail = async (
 
   let user = response as User
   if (opts?.cleanup) {
-    user = cleanupUsers(user) as User
+    user = removeUserPassword(user) as User
   }
 
   return user
@@ -107,7 +106,7 @@ export const searchGlobalUsersByApp = async (
   }
   let users: User[] = Array.isArray(response) ? response : [response]
   if (getOpts?.cleanup) {
-    users = cleanupUsers(users) as User[]
+    users = removeUserPassword(users) as User[]
   }
   return users
 }
@@ -143,7 +142,7 @@ export const searchGlobalUsersByEmail = async (
   }
   let users: User[] = Array.isArray(response) ? response : [response]
   if (getOpts?.cleanup) {
-    users = cleanupUsers(users) as User[]
+    users = removeUserPassword(users) as User[]
   }
   return users
 }

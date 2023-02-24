@@ -28,16 +28,11 @@ import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
 import { events, logging, middleware } from "@budibase/backend-core"
-import { sdk } from "@budibase/pro"
 import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")
 const { userAgent } = require("koa-useragent")
-
-// configure events to use the pro audit log write
-// can't integrate directly into backend-core due to cyclic issues
-events.configure(sdk.auditLogs.write)
 
 const app = new Koa()
 

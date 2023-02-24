@@ -7,6 +7,12 @@ import { Ctx } from "@budibase/types"
  */
 export default function (ctx: Ctx, next: any) {
   const queryString = ctx.request.query?.query as string | undefined
+  if (ctx.request.method.toLowerCase() !== "get") {
+    ctx.throw(
+      500,
+      "Query to download middleware can only be used for get requests."
+    )
+  }
   if (!queryString) {
     return next()
   }
