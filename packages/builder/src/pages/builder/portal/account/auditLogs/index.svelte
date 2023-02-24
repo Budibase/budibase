@@ -86,15 +86,12 @@
   $: userPage = $userPageInfo.page
   $: logsPage = $logsPageInfo.page
 
-  $: enrichedList = enrich($users.data || [], selectedUsers, "_id")
-  $: sortedList = sort(enrichedList, "email")
-
+  $: sortedUsers = sort(enrich($users.data, selectedUsers, "_id"), "email")
   $: sortedEvents = sort(
     enrich(parseEventObject($auditLogs.events), selectedEvents, "id"),
     "id"
   )
-  // below is not sorting yet
-  $: sortedApps = enrich($apps, selectedApps, "appId")
+  $: sortedApps = sort(enrich($apps, selectedApps, "appId"), "name")
 
   const debounce = value => {
     clearTimeout(timer)
@@ -164,7 +161,8 @@
     return list.map(item => {
       return {
         ...item,
-        selected: selected.find(x => x === item[key]) != null,
+        selected:
+          selected.find(x => x === item[key] || x.includes(item[key])) != null,
       }
     })
   }
@@ -264,7 +262,7 @@
         bind:value={selectedUsers}
         getOptionValue={user => user._id}
         getOptionLabel={user => user.email}
-        options={sortedList}
+        options={sortedUsers}
       />
     </div>
     <div class="select">
