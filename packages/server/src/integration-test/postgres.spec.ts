@@ -211,9 +211,9 @@ describe("row api - postgres", () => {
   async function createPrimaryRow(opts: {
     rowData: PrimaryRowData
     createForeignRows?: {
-      createOne2Many?: boolean
-      createMany2One?: number
-      createMany2Many?: number
+      createOneToMany?: boolean
+      createManyToOne?: number
+      createManyToMany?: number
     }
   }) {
     let { rowData } = opts as any
@@ -238,7 +238,7 @@ describe("row api - postgres", () => {
       })
     }
 
-    if (opts?.createForeignRows?.createOne2Many) {
+    if (opts?.createForeignRows?.createOneToMany) {
       const foreignKey = `fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`
 
       const foreignRow = await config.createRow({
@@ -256,7 +256,7 @@ describe("row api - postgres", () => {
       })
     }
 
-    for (let i = 0; i < (opts?.createForeignRows?.createMany2One || 0); i++) {
+    for (let i = 0; i < (opts?.createForeignRows?.createManyToOne || 0); i++) {
       const foreignRow = await config.createRow({
         tableId: manyToOneRelationshipInfo.table._id,
         title: generator.name(),
@@ -274,7 +274,7 @@ describe("row api - postgres", () => {
       })
     }
 
-    for (let i = 0; i < (opts?.createForeignRows?.createMany2Many || 0); i++) {
+    for (let i = 0; i < (opts?.createForeignRows?.createManyToMany || 0); i++) {
       const foreignRow = await config.createRow({
         tableId: manyToManyRelationshipInfo.table._id,
         title: generator.name(),
@@ -321,9 +321,9 @@ describe("row api - postgres", () => {
   async function populatePrimaryRows(
     count: number,
     opts?: {
-      createOne2Many?: boolean
-      createMany2One?: number
-      createMany2Many?: number
+      createOneToMany?: boolean
+      createManyToOne?: number
+      createManyToMany?: number
     }
   ) {
     return await Promise.all(
@@ -554,9 +554,9 @@ describe("row api - postgres", () => {
       describe("with all relationship types", () => {
         beforeEach(async () => {
           let [createdRow] = await populatePrimaryRows(1, {
-            createOne2Many: true,
-            createMany2One: 3,
-            createMany2Many: 2,
+            createOneToMany: true,
+            createManyToOne: 3,
+            createManyToMany: 2,
           })
           row = createdRow.row
           rowData = createdRow.rowData
@@ -590,7 +590,7 @@ describe("row api - postgres", () => {
       describe("with only one to many", () => {
         beforeEach(async () => {
           let [createdRow] = await populatePrimaryRows(1, {
-            createOne2Many: true,
+            createOneToMany: true,
           })
           row = createdRow.row
           rowData = createdRow.rowData
@@ -621,7 +621,7 @@ describe("row api - postgres", () => {
       describe("with only many to one", () => {
         beforeEach(async () => {
           let [createdRow] = await populatePrimaryRows(1, {
-            createMany2One: 3,
+            createManyToOne: 3,
           })
           row = createdRow.row
           rowData = createdRow.rowData
@@ -650,7 +650,7 @@ describe("row api - postgres", () => {
       describe("with only many to many", () => {
         beforeEach(async () => {
           let [createdRow] = await populatePrimaryRows(1, {
-            createMany2Many: 2,
+            createManyToMany: 2,
           })
           row = createdRow.row
           rowData = createdRow.rowData
@@ -902,9 +902,9 @@ describe("row api - postgres", () => {
           const rowsInfo = await createPrimaryRow({
             rowData,
             createForeignRows: {
-              createOne2Many: true,
-              createMany2One: 3,
-              createMany2Many: 2,
+              createOneToMany: true,
+              createManyToOne: 3,
+              createManyToMany: 2,
             },
           })
 
