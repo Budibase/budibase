@@ -23,17 +23,16 @@ export const createResizeStore = context => {
   const resize = writable(initialState)
 
   const startResizing = (idx, e) => {
+    const $columns = get(columns)
     // Prevent propagation to stop reordering triggering
     e.stopPropagation()
 
-    sheet = document.getElementById(`sheet-${rand}`)
-    styles = getComputedStyle(sheet)
-    width = parseInt(styles.getPropertyValue(`--col-${idx}-width`))
-    left = parseInt(styles.getPropertyValue(`--col-${idx}-left`))
+    width = $columns[idx].width
+    left = $columns[idx].left
     initialWidth = width
     initialMouseX = e.clientX
     columnIdx = idx
-    columnCount = get(columns).length
+    columnCount = $columns.length
 
     // Add mouse event listeners to handle resizing
     document.addEventListener("mousemove", onResizeMouseMove)
@@ -48,17 +47,54 @@ export const createResizeStore = context => {
       return
     }
 
+    columns.update(state => {
+      state[columnIdx].width = newWidth
+      let offset = state[columnIdx].left + newWidth
+      for (let i = columnIdx + 1; i < state.length; i++) {
+        state[i].left = offset
+        offset += state[i].width
+      }
+      return state
+    })
 
-    let newStyle = `--col-${columnIdx}-width:${newWidth}px;`
+    // let newStyle = `--col-${columnIdx}-width:${newWidth}px;`
+    //
+    // let offset = left + newWidth
+    // for (let i = columnIdx + 1; i < columnCount; i++) {
+    //   const colWidth = parseInt(styles.getPropertyValue(`--col-${i}-width`))
+    //   newStyle += `--col-${i}-left:${offset}px;`
+    //   offset += colWidth
+    // }
+    //
+    // sheet.style.cssText += newStyle
 
-    let offset = left + newWidth
-    for (let i = columnIdx + 1; i < columnCount; i++) {
-      const colWidth = 160//parseInt(styles.getPropertyValue(`--col-${i}-width`))
-      newStyle += `--col-${i}-left:${offset}px;`
-      offset += colWidth
-    }
 
-    sheet.style.cssText += newStyle
+    // let cells = sheet.querySelectorAll(`[data-col="${columnIdx}"]`)
+    // let left
+    // cells.forEach(cell => {
+    //   cell.style.width = `${newWidth}px`
+    //   cell.dataset.width = newWidth
+    //   if (!left) {
+    //     left = parseInt(cell.dataset.left)
+    //   }
+    // })
+    //
+    // let offset = left + newWidth
+    // for (let i = columnIdx + 1; i < columnCount; i++) {
+    //   cells = sheet.querySelectorAll(`[data-col="${i}"]`)
+    //   let colWidth
+    //   cells.forEach(cell => {
+    //     cell.style.transform = `translateX(${offset}px)`
+    //     cell.dataset.left = offset
+    //     if (!colWidth) {
+    //       colWidth = parseInt(cell.dataset.width)
+    //     }
+    //   })
+    //   offset += colWidth
+    // }
+
+
+
     width = newWidth
 
     // Update width of column

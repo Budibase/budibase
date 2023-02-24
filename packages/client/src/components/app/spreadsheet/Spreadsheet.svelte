@@ -10,8 +10,6 @@
   import SpreadsheetHeader from "./SpreadsheetHeader.svelte"
   import SpreadsheetBody from "./SpreadsheetBody.svelte"
   import SpreadsheetCell from "./SpreadsheetCell.svelte"
-  import SpacerCell from "./SpacerCell.svelte"
-  import VerticalSpacer from "./VerticalSpacer.svelte"
   import SpreadsheetRow from "./SpreadsheetRow.svelte"
 
   export let table
@@ -37,7 +35,7 @@
   const tableId = writable(table?.tableId)
   const changeCache = writable({})
   const newRows = writable([])
-  const visibleRows = writable([0, 0])
+  const visibleCells = writable({ y: [0, 0], x: [0, 0] })
 
   // Build up spreadsheet context and additional stores
   const context = {
@@ -51,7 +49,7 @@
     changeCache,
     newRows,
     cellHeight,
-    visibleRows,
+    visibleCells,
   }
   const { reorder, reorderPlaceholder } = createReorderStores(context)
   const resize = createResizeStore(context)
@@ -68,7 +66,8 @@
   $: generateColumns($fetch)
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
-  $: updateSortedRows($fetch.rows, $newRows)
+  $: updateSortedRows($fetch, $newRows)
+  $: visibleRows = $rows.slice($visibleCells.y[0], $visibleCells.y[1])
 
   const createFetch = datasource => {
     return fetchData({
@@ -92,13 +91,16 @@
       if (primaryDisplay) {
         fields = [primaryDisplay, ...fields.filter(x => x !== primaryDisplay)]
       }
-      $columns = fields.map((field, idx) => ({
-        name: field,
-        width: defaultWidth,
-        left: 40 + idx * defaultWidth,
-        schema: schema[field],
-        primaryDisplay: field === primaryDisplay,
-      }))
+      $columns = fields.map((field, idx) => {
+        return {
+          idx,
+          name: field,
+          width: defaultWidth,
+          left: 40 + idx * defaultWidth,
+          schema: schema[field],
+          primaryDisplay: field === primaryDisplay,
+        }
+      })
     }
   }
 
@@ -157,13 +159,17 @@
   }
 
   const updateSortedRows = (unsortedRows, newRows) => {
-    let sortedRows = unsortedRows.slice()
-    sortedRows.sort((a, b) => {
-      const aIndex = newRows.indexOf(a._id)
-      const bIndex = newRows.indexOf(b._id)
-      return aIndex < bIndex ? -1 : 1
-    })
-    $rows = sortedRows
+    let foo = unsortedRows.rows
+    for (let i = 0; i < 10; i++) {
+      foo = foo.concat(foo.map(x => ({ ...x, _id: x._id + "x" })))
+    }
+    // let sortedRows = foo.slice()
+    // sortedRows.sort((a, b) => {
+    //   const aIndex = newRows.indexOf(a._id)
+    //   const bIndex = newRows.indexOf(b._id)
+    //   return aIndex < bIndex ? -1 : 1
+    // })
+    $rows = foo.slice()
   }
 
   // API for children to consume
@@ -180,25 +186,18 @@
     resize,
     spreadsheetAPI,
   })
-
-  let sheetStyles = ""
-  let left = 40
-  for (let i = 0; i < 20; i++) {
-    sheetStyles += `--col-${i}-width:${160}px; --col-${i}-left:${left}px;`
-    left += 160
-  }
 </script>
 
 <div use:styleable={$component.styles}>
   <div
     class="wrapper"
     class:resize={$resize.columnIdx != null}
-    style="--cell-height:{cellHeight}px;{sheetStyles}"
+    style="--cell-height:{cellHeight}px;"
     id="sheet-{rand}"
   >
     <SpreadsheetHeader />
     <SpreadsheetBody>
-      <div class="row" style="top: 0;">
+      <div class="row">
         <!-- Field headers -->
         <SpreadsheetCell header label on:click={selectAll} width="40" left="0">
           <input
@@ -213,10 +212,8 @@
             reorderSource={$reorder.columnIdx === fieldIdx}
             reorderTarget={$reorder.swapColumnIdx === fieldIdx}
             on:mousedown={e => reorder.actions.startReordering(fieldIdx, e)}
-            id={`sheet-${rand}-header-${fieldIdx}`}
             width={field.width}
             left={field.left}
-            column={fieldIdx}
           >
             <Icon
               size="S"
@@ -232,12 +229,12 @@
       </div>
 
       <!-- All real rows -->
-      {#each $rows as row, rowIdx (row._id)}
-        <SpreadsheetRow {row} {rowIdx} />
+      {#each visibleRows as row, rowIdx (row._id)}
+        <SpreadsheetRow {row} rowIdx={rowIdx + $visibleCells.y[0]} />
       {/each}
 
       <!-- New row placeholder -->
-      <div class="row" style="top:{($rows.length + 1) * cellHeight}px;">
+      <div class="row new" style="--top:{($rows.length + 1) * cellHeight}px;">
         <SpreadsheetCell
           label
           on:click={addRow}
@@ -295,6 +292,12 @@
   .row {
     display: flex;
     position: sticky;
-    width: 100%;
+    top: 0;
+    width: inherit;
+    z-index: 4;
+  }
+  .row.new {
+    position: absolute;
+    transform: translateY(var(--top));
   }
 </style>

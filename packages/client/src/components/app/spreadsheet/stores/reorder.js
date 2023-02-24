@@ -27,17 +27,16 @@ export const createReorderStores = context => {
     let breakpoints = []
     const cols = get(columns)
     cols.forEach((col, idx) => {
-      const header = document.getElementById(`sheet-${rand}-header-${idx}`)
-      const bounds = header.getBoundingClientRect()
-      breakpoints.push(bounds.x)
+      breakpoints.push(col.left)
       if (idx === cols.length - 1) {
-        breakpoints.push(bounds.x + bounds.width)
+        breakpoints.push(col.left + col.width)
       }
     })
+    console.log(breakpoints, e.clientX)
 
     // Get bounds of the selected header and sheet body
-    const self = document.getElementById(`sheet-${rand}-header-${columnIdx}`)
-    const selfBounds = self.getBoundingClientRect()
+
+    const self = cols[columnIdx]
     const body = document.getElementById(`sheet-${rand}-body`)
     const bodyBounds = body.getBoundingClientRect()
 
@@ -49,9 +48,9 @@ export const createReorderStores = context => {
       initialMouseX: e.clientX,
     })
     placeholder.set({
-      initialX: selfBounds.x - bodyBounds.x,
-      x: selfBounds.x - bodyBounds.x,
-      width: selfBounds.width,
+      initialX: self.left - bodyBounds.x,
+      x: self.left - bodyBounds.x,
+      width: self.width,
       height: (get(rows).length + 2) * 32,
     })
 
@@ -103,13 +102,15 @@ export const createReorderStores = context => {
   const stopReordering = () => {
     // Swap position of columns
     let { columnIdx, swapColumnIdx } = get(reorder)
-    const newColumns = get(columns).slice()
-    const removed = newColumns.splice(columnIdx, 1)
-    if (--swapColumnIdx < columnIdx) {
-      swapColumnIdx++
-    }
-    newColumns.splice(swapColumnIdx, 0, removed[0])
-    columns.set(newColumns)
+    columns.update(state => {
+      const removed = state.splice(columnIdx, 1)
+      if (--swapColumnIdx < columnIdx) {
+        swapColumnIdx++
+      }
+      state.splice(swapColumnIdx, 0, removed[0])
+      state = state.map((col, idx) => ({ ...col, idx }))
+      return state
+    })
 
     // Reset state
     reorder.set(reorderInitialState)

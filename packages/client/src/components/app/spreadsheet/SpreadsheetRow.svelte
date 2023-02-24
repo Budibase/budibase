@@ -20,14 +20,18 @@
     selectedRows,
     changeCache,
     spreadsheetAPI,
-    visibleRows,
+    visibleCells,
     cellHeight,
   } = getContext("spreadsheet")
 
   $: rowSelected = !!$selectedRows[row._id]
   $: rowHovered = $hoveredRowId === row._id
   $: data = { ...row, ...$changeCache[row._id] }
-  $: visible = rowIdx >= $visibleRows[0] && rowIdx <= $visibleRows[1]
+  $: visibleColumns = [
+    $columns[0],
+    ...$columns.slice($visibleCells.x[0], $visibleCells.x[1]),
+  ]
+  $: containsSelectedCell = $selectedCellId?.split("-")[0] === row._id
 
   const getCellForField = field => {
     const type = field.schema.type
@@ -53,64 +57,66 @@
   }
 </script>
 
-{#if visible}
-  <div class="row" style="--top:{(rowIdx + 1) * cellHeight}px;">
+<div
+  class="row"
+  style="--top:{(rowIdx + 1) * cellHeight}px;"
+  class:contains-selected-cell={containsSelectedCell}
+>
+  <SpreadsheetCell
+    label
+    {rowSelected}
+    {rowHovered}
+    on:mouseenter={() => ($hoveredRowId = row._id)}
+    on:click={() => selectRow(row._id)}
+  >
+    {#if rowSelected || rowHovered}
+      <input type="checkbox" checked={rowSelected} />
+    {:else}
+      <span>
+        {rowIdx + 1}
+      </span>
+    {/if}
+  </SpreadsheetCell>
+  {#each visibleColumns as column (column.name)}
+    {@const cellIdx = `${row._id}-${column.name}`}
     <SpreadsheetCell
-      label
       {rowSelected}
       {rowHovered}
+      sticky={column.idx === 0}
+      selected={$selectedCellId === cellIdx}
+      reorderSource={$reorder.columnIdx === column.idx}
+      reorderTarget={$reorder.swapColumnIdx === column.idx}
       on:mouseenter={() => ($hoveredRowId = row._id)}
-      on:click={() => selectRow(row._id)}
-      width="40"
-      left="0"
+      on:click={() => ($selectedCellId = cellIdx)}
+      width={column.width}
+      left={column.left}
+      column={column.idx}
     >
-      {#if rowSelected || rowHovered}
-        <input type="checkbox" checked={rowSelected} />
-      {:else}
-        <span>
-          {rowIdx + 1}
-        </span>
-      {/if}
-    </SpreadsheetCell>
-    {#each $columns as field, fieldIdx}
-      {@const cellIdx = `${row._id}-${field.name}`}
-      <SpreadsheetCell
-        {rowSelected}
-        {rowHovered}
-        sticky={fieldIdx === 0}
+      <svelte:component
+        this={getCellForField(column)}
+        value={data[column.name]}
+        schema={column.schema}
         selected={$selectedCellId === cellIdx}
-        reorderSource={$reorder.columnIdx === fieldIdx}
-        reorderTarget={$reorder.swapColumnIdx === fieldIdx}
-        on:mouseenter={() => ($hoveredRowId = row._id)}
-        on:click={() => ($selectedCellId = cellIdx)}
-        width={field.width}
-        left={field.left}
-        column={fieldIdx}
-      >
-        <svelte:component
-          this={getCellForField(field)}
-          value={data[field.name]}
-          schema={field.schema}
-          selected={$selectedCellId === cellIdx}
-          onChange={val => spreadsheetAPI.updateValue(row._id, field, val)}
-          readonly={field.schema.autocolumn}
-        />
-      </SpreadsheetCell>
-    {/each}
-  </div>
-{/if}
+        onChange={val => spreadsheetAPI.updateValue(row._id, column, val)}
+        readonly={column.schema.autocolumn}
+      />
+    </SpreadsheetCell>
+  {/each}
+</div>
 
 <style>
-  .row-placeholder {
-    height: var(--cell-height);
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    background: var(--cell-background);
-    grid-column: 1/-1;
-  }
   .row {
     display: flex;
     position: absolute;
-    top: var(--top);
-    width: 100%;
+    top: 0;
+    transform: translateY(var(--top));
+    width: inherit;
+  }
+  .row.contains-selected-cell {
+    z-index: 1;
+  }
+
+  .row :global(>:last-child) {
+      border-right-width: 1px;
   }
 </style>
