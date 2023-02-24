@@ -1,5 +1,5 @@
 import fetch from "node-fetch"
-import { db as dbCore } from "../"
+import { getCouchInfo } from "./couch"
 import { SearchFilters, Row } from "@budibase/types"
 
 const QUERY_START_REGEX = /\d[0-9]*:/g
@@ -416,7 +416,7 @@ export class QueryBuilder<T> {
   }
 
   async run() {
-    const { url, cookie } = dbCore.getCouchInfo()
+    const { url, cookie } = getCouchInfo()
     const fullPath = `${url}/${this.dbName}/_design/database/_search/${this.index}`
     const body = this.buildSearchBody()
     try {
