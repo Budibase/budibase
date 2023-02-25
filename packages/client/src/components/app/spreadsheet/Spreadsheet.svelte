@@ -35,7 +35,8 @@
   const tableId = writable(table?.tableId)
   const changeCache = writable({})
   const newRows = writable([])
-  const visibleCells = writable({ y: [0, 0], x: [0, 0] })
+  const visibleRows = writable([0, 0])
+  const visibleColumns = writable([0, 0])
 
   // Build up spreadsheet context and additional stores
   const context = {
@@ -49,7 +50,8 @@
     changeCache,
     newRows,
     cellHeight,
-    visibleCells,
+    visibleRows,
+    visibleColumns,
   }
   const { reorder, reorderPlaceholder } = createReorderStores(context)
   const resize = createResizeStore(context)
@@ -67,7 +69,7 @@
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
   $: updateSortedRows($fetch, $newRows)
-  $: visibleRows = $rows.slice($visibleCells.y[0], $visibleCells.y[1])
+  $: renderedRows = $rows.slice($visibleRows[0], $visibleRows[1])
 
   const createFetch = datasource => {
     return fetchData({
@@ -160,16 +162,16 @@
 
   const updateSortedRows = (unsortedRows, newRows) => {
     let foo = unsortedRows.rows
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 3; i++) {
       foo = foo.concat(foo.map(x => ({ ...x, _id: x._id + "x" })))
     }
-    // let sortedRows = foo.slice()
-    // sortedRows.sort((a, b) => {
-    //   const aIndex = newRows.indexOf(a._id)
-    //   const bIndex = newRows.indexOf(b._id)
-    //   return aIndex < bIndex ? -1 : 1
-    // })
-    $rows = foo.slice()
+    let sortedRows = foo.slice()
+    sortedRows.sort((a, b) => {
+      const aIndex = newRows.indexOf(a._id)
+      const bIndex = newRows.indexOf(b._id)
+      return aIndex < bIndex ? -1 : 1
+    })
+    $rows = sortedRows
   }
 
   // API for children to consume
@@ -229,8 +231,8 @@
       </div>
 
       <!-- All real rows -->
-      {#each visibleRows as row, rowIdx (row._id)}
-        <SpreadsheetRow {row} rowIdx={rowIdx + $visibleCells.y[0]} />
+      {#each renderedRows as row, rowIdx (row._id)}
+        <SpreadsheetRow {row} rowIdx={rowIdx + $visibleRows[0]} />
       {/each}
 
       <!-- New row placeholder -->

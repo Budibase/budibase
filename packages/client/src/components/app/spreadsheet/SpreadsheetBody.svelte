@@ -1,8 +1,16 @@
 <script>
   import { getContext, onMount } from "svelte"
+  import { domDebounce } from "../../../utils/domDebounce"
 
-  const { columns, selectedCellId, rand, visibleCells, cellHeight, rows } =
-    getContext("spreadsheet")
+  const {
+    columns,
+    selectedCellId,
+    rand,
+    visibleRows,
+    visibleColumns,
+    cellHeight,
+    rows,
+  } = getContext("spreadsheet")
 
   const padding = 180
 
@@ -12,7 +20,8 @@
   let scrollLeft = 0
   let scrollTop = 0
 
-  $: computeVisibleCells($columns, scrollLeft, scrollTop, width, height)
+  $: updateVisibleRows($columns, scrollTop, height)
+  $: updateVisibleColumns($columns, scrollLeft, width)
   $: contentHeight = ($rows.length + 2) * cellHeight + padding
   $: contentWidth = computeContentWidth($columns)
   $: horizontallyScrolled = scrollLeft > 0
@@ -26,35 +35,52 @@
   }
 
   // Store the current scroll position
-  const handleScroll = e => {
-    // Only update scroll offsets when a sizable change happens
-    if (Math.abs(scrollTop - e.target.scrollTop) > 10) {
-      scrollTop = e.target.scrollTop
-    }
-    if (Math.abs(scrollLeft - e.target.scrollLeft) > 10) {
-      scrollLeft = e.target.scrollLeft
-    }
-    if (e.target.scrollLeft === 0) {
-      scrollLeft = 0
-    }
-  }
+  // let lastTop
+  // let lastLeft
+  // let ticking = false
+  // const handleScroll = e => {
+  //   lastTop = e.target.scrollTop
+  //   lastLeft = e.target.scrollLeft
+  //   if (!ticking) {
+  //     ticking = true
+  //     requestAnimationFrame(() => {
+  //       if (Math.abs(lastTop - scrollTop) > 100) {
+  //         scrollTop = lastTop
+  //       }
+  //       if (lastLeft === 0 || Math.abs(lastLeft - scrollLeft) > 100) {
+  //         scrollLeft = lastLeft
+  //       }
+  //       ticking = false
+  //     })
+  //   }
+  // }
 
-  const computeVisibleCells = (
-    columns,
-    scrollLeft,
-    scrollTop,
-    width,
-    height
-  ) => {
+  const handleScroll = domDebounce(
+    ({ left, top }) => {
+      if (Math.abs(top - scrollTop) > 100) {
+        scrollTop = top
+      }
+      if (left === 0 || Math.abs(left - scrollLeft) > 100) {
+        scrollLeft = left
+      }
+    },
+    e => ({ left: e.target.scrollLeft, top: e.target.scrollTop })
+  )
+
+  const updateVisibleRows = (columns, scrollTop, height) => {
     if (!columns.length) {
       return
     }
-
     // Compute row visibility
     const rows = Math.ceil(height / cellHeight) + 8
     const firstRow = Math.max(0, Math.floor(scrollTop / cellHeight) - 4)
-    const visibleRows = [firstRow, firstRow + rows]
+    visibleRows.set([firstRow, firstRow + rows])
+  }
 
+  const updateVisibleColumns = (columns, scrollLeft, width) => {
+    if (!columns.length) {
+      return
+    }
     // Compute column visibility
     let startColIdx = 1
     let rightEdge = columns[1].width
@@ -68,12 +94,7 @@
       leftEdge += columns[endColIdx]?.width
       endColIdx++
     }
-    const visibleColumns = [Math.max(1, startColIdx - 2), endColIdx + 2]
-
-    visibleCells.set({
-      x: visibleColumns,
-      y: visibleRows,
-    })
+    visibleColumns.set([Math.max(1, startColIdx - 2), endColIdx + 2])
   }
 
   onMount(() => {
@@ -87,26 +108,15 @@
       observer.disconnect()
     }
   })
-
-  let sheetStyles = ""
-  let left = 0
-  for (let i = 0; i < 20; i++) {
-    if (i === 1) {
-      left += 40
-    }
-    sheetStyles += `--col-${i}-width:${160}px; --col-${i}-left:${left}px;`
-    left += 160
-  }
 </script>
 
 <div
   bind:this={ref}
   class="spreadsheet"
   class:horizontally-scrolled={horizontallyScrolled}
-  on:scroll={handleScroll}
   on:click|self={() => ($selectedCellId = null)}
   id={`sheet-${rand}-body`}
-  style={sheetStyles}
+  on:scroll={handleScroll}
 >
   <div
     class="content"
@@ -119,10 +129,10 @@
 <style>
   .spreadsheet {
     display: block;
-    overflow: auto;
     height: 800px;
     position: relative;
     cursor: default;
+    overflow: auto;
   }
   .content {
     min-width: 100%;
