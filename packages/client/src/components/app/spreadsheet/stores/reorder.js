@@ -1,7 +1,7 @@
 import { get, writable } from "svelte/store"
 
 export const createReorderStores = context => {
-  const { columns, rand, rows } = context
+  const { columns, bounds, rows, scroll } = context
   const reorderInitialState = {
     columnIdx: null,
     swapColumnIdx: null,
@@ -23,22 +23,20 @@ export const createReorderStores = context => {
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (columnIdx, e) => {
+    const $columns = get(columns)
+    const $bounds = get(bounds)
+    const $rows = get(rows)
+    const $scroll = get(scroll)
+
     // Generate new breakpoints for the current columns
     let breakpoints = []
-    const cols = get(columns)
-    cols.forEach((col, idx) => {
+    $columns.forEach((col, idx) => {
       breakpoints.push(col.left)
-      if (idx === cols.length - 1) {
+      if (idx === $columns.length - 1) {
         breakpoints.push(col.left + col.width)
       }
     })
-    console.log(breakpoints, e.clientX)
-
-    // Get bounds of the selected header and sheet body
-
-    const self = cols[columnIdx]
-    const body = document.getElementById(`sheet-${rand}-body`)
-    const bodyBounds = body.getBoundingClientRect()
+    const self = $columns[columnIdx]
 
     // Update state
     reorder.set({
@@ -48,10 +46,13 @@ export const createReorderStores = context => {
       initialMouseX: e.clientX,
     })
     placeholder.set({
-      initialX: self.left - bodyBounds.x,
-      x: self.left - bodyBounds.x,
+      initialX: self.left,
+      x: self.left,
       width: self.width,
-      height: (get(rows).length + 2) * 32,
+      height: ($rows.length + 2) * 32,
+      sheetLeft: $bounds.left,
+      maxX: $bounds.width - self.width,
+      scrollLeft: $scroll.left,
     })
 
     // Add listeners to handle mouse movement
@@ -71,14 +72,21 @@ export const createReorderStores = context => {
 
     // Compute new placeholder position
     const $placeholder = get(placeholder)
-    let newX = e.clientX - $reorder.initialMouseX + $placeholder.initialX
+    let newX =
+      e.clientX -
+      $reorder.initialMouseX +
+      $placeholder.initialX -
+      $placeholder.scrollLeft
     newX = Math.max(0, newX)
+    newX = Math.min($placeholder.maxX, newX)
 
     // Compute the closest breakpoint to the current position
     let swapColumnIdx
     let minDistance = Number.MAX_SAFE_INTEGER
     $reorder.breakpoints.forEach((point, idx) => {
-      const distance = Math.abs(point - e.clientX)
+      const distance = Math.abs(
+        point - e.clientX + $placeholder.sheetLeft - $placeholder.scrollLeft
+      )
       if (distance < minDistance) {
         minDistance = distance
         swapColumnIdx = idx
@@ -108,8 +116,16 @@ export const createReorderStores = context => {
         swapColumnIdx++
       }
       state.splice(swapColumnIdx, 0, removed[0])
-      state = state.map((col, idx) => ({ ...col, idx }))
-      return state
+      let offset = 40
+      return state.map((col, idx) => {
+        const newCol = {
+          ...col,
+          idx,
+          left: offset,
+        }
+        offset += col.width
+        return newCol
+      })
     })
 
     // Reset state
