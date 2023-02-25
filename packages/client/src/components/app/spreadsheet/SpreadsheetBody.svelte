@@ -10,18 +10,18 @@
     visibleColumns,
     cellHeight,
     rows,
+    bounds,
+    scroll,
   } = getContext("spreadsheet")
 
   const padding = 180
 
   let ref
-  let width
-  let height
   let scrollLeft = 0
   let scrollTop = 0
 
-  $: updateVisibleRows($columns, scrollTop, height)
-  $: updateVisibleColumns($columns, scrollLeft, width)
+  $: updateVisibleRows($columns, scrollTop, $bounds.height)
+  $: updateVisibleColumns($columns, scrollLeft, $bounds.width)
   $: contentHeight = ($rows.length + 2) * cellHeight + padding
   $: contentWidth = computeContentWidth($columns)
   $: horizontallyScrolled = scrollLeft > 0
@@ -57,12 +57,16 @@
 
   const handleScroll = domDebounce(
     ({ left, top }) => {
+      // Only update local state when big changes occur
       if (Math.abs(top - scrollTop) > 100) {
         scrollTop = top
       }
       if (left === 0 || Math.abs(left - scrollLeft) > 100) {
         scrollLeft = left
       }
+
+      // Always update store
+      scroll.set({ left, top })
     },
     e => ({ left: e.target.scrollLeft, top: e.target.scrollTop })
   )
@@ -81,6 +85,7 @@
     if (!columns.length) {
       return
     }
+
     // Compute column visibility
     let startColIdx = 1
     let rightEdge = columns[1].width
@@ -99,9 +104,8 @@
 
   onMount(() => {
     // Observe and record the height of the body
-    const observer = new ResizeObserver(entries => {
-      width = entries[0].contentRect.width
-      height = entries[0].contentRect.height
+    const observer = new ResizeObserver(() => {
+      bounds.set(ref.getBoundingClientRect())
     })
     observer.observe(ref)
     return () => {

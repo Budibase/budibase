@@ -37,6 +37,16 @@
   const newRows = writable([])
   const visibleRows = writable([0, 0])
   const visibleColumns = writable([0, 0])
+  const scroll = writable({
+    left: 0,
+    top: 0,
+  })
+  const bounds = writable({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  })
 
   // Build up spreadsheet context and additional stores
   const context = {
@@ -52,6 +62,8 @@
     cellHeight,
     visibleRows,
     visibleColumns,
+    bounds,
+    scroll,
   }
   const { reorder, reorderPlaceholder } = createReorderStores(context)
   const resize = createResizeStore(context)
