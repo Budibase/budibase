@@ -1,7 +1,6 @@
 <script>
   import { getContext } from "svelte"
   import SpreadsheetCell from "./SpreadsheetCell.svelte"
-  import SpacerCell from "./SpacerCell.svelte"
   import OptionsCell from "./cells/OptionsCell.svelte"
   import DateCell from "./cells/DateCell.svelte"
   import MultiSelectCell from "./cells/MultiSelectCell.svelte"
@@ -20,16 +19,16 @@
     selectedRows,
     changeCache,
     spreadsheetAPI,
-    visibleCells,
+    visibleColumns,
     cellHeight,
   } = getContext("spreadsheet")
 
   $: rowSelected = !!$selectedRows[row._id]
   $: rowHovered = $hoveredRowId === row._id
   $: data = { ...row, ...$changeCache[row._id] }
-  $: visibleColumns = [
+  $: renderedColumns = [
     $columns[0],
-    ...$columns.slice($visibleCells.x[0], $visibleCells.x[1]),
+    ...$columns.slice($visibleColumns[0], $visibleColumns[1]),
   ]
   $: containsSelectedCell = $selectedCellId?.split("-")[0] === row._id
 
@@ -77,7 +76,7 @@
       </span>
     {/if}
   </SpreadsheetCell>
-  {#each visibleColumns as column (column.name)}
+  {#each renderedColumns as column (column.name)}
     {@const cellIdx = `${row._id}-${column.name}`}
     <SpreadsheetCell
       {rowSelected}
@@ -116,7 +115,7 @@
     z-index: 1;
   }
 
-  .row :global(>:last-child) {
-      border-right-width: 1px;
+  .row :global(> :last-child) {
+    border-right-width: 1px;
   }
 </style>
