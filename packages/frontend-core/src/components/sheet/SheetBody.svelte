@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from "svelte"
-  import { domDebounce } from "../../../utils/domDebounce"
+  import { Utils } from "../../utils"
 
   const {
     columns,
@@ -55,7 +55,7 @@
   //   }
   // }
 
-  const handleScroll = domDebounce(
+  const handleScroll = Utils.domDebounce(
     ({ left, top }) => {
       // Only update local state when big changes occur
       if (Math.abs(top - scrollTop) > 100) {
@@ -116,7 +116,7 @@
 
 <div
   bind:this={ref}
-  class="spreadsheet"
+  class="sheet-body"
   class:horizontally-scrolled={horizontallyScrolled}
   on:click|self={() => ($selectedCellId = null)}
   id={`sheet-${rand}-body`}
@@ -131,12 +131,16 @@
 </div>
 
 <style>
-  .spreadsheet {
+  .sheet-body {
     display: block;
-    height: 800px;
     position: relative;
     cursor: default;
     overflow: auto;
+    flex: 1 1 auto;
+    height: 0;
+  }
+  .sheet-body::-webkit-scrollbar-track {
+    background: var(--cell-background);
   }
   .content {
     min-width: 100%;

@@ -10,10 +10,11 @@
   export let reorderTarget = false
   export let left
   export let width
+  export let column
 </script>
 
 <div
-  class="cell"
+  class="cell col-{column}"
   class:header
   class:label
   class:spacer
@@ -37,7 +38,7 @@
   .cell {
     height: var(--cell-height);
     border-style: solid;
-    border-color: var(--spectrum-global-color-gray-300);
+    border-color: var(--spectrum-global-color-gray-200);
     border-width: 0;
     border-bottom-width: 1px;
     border-left-width: 1px;
@@ -67,16 +68,26 @@
   .cell:hover {
     cursor: default;
   }
-  .cell.row-selected {
-    background-color: rgb(224, 242, 255);
+  .cell.row-selected:after {
+    pointer-events: none;
+    content: " ";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0.2;
+    background-color: var(--spectrum-global-color-blue-600);
   }
 
   /* Header cells */
   .cell.header {
-    background: var(--spectrum-global-color-gray-200);
+    background: var(--background);
     padding: 0 var(--cell-padding);
     z-index: 3;
-    border-color: var(--spectrum-global-color-gray-400);
+    border-color: var(--spectrum-global-color-gray-200);
+    font-weight: 600;
+    gap: calc(2 * var(--cell-spacing));
   }
   .cell.header :global(span) {
     flex: 1 1 auto;
@@ -90,7 +101,7 @@
   .cell.sticky {
     position: sticky;
     z-index: 2;
-    border-left-color: transparent;
+    border-left-width: 0;
     transform: none;
     left: 40px;
   }
@@ -109,7 +120,16 @@
     background: var(--spectrum-global-color-gray-200);
   }
   .cell.reorder-target {
-    border-left-color: var(--spectrum-global-color-blue-400);
+    z-index: 100;
+  }
+  .cell.reorder-target:before {
+    content: " ";
+    position: absolute;
+    left: -2px;
+    background: var(--spectrum-global-color-blue-400);
+    width: 2px;
+    z-index: 100;
+    height: calc(var(--cell-height) + 1px);
   }
 
   /* Label cells */

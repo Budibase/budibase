@@ -165,10 +165,10 @@
     left: 0;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
     justify-content: flex-start;
     align-items: stretch;
-    box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
-    max-height: 191px;
+    max-height: calc(6 * var(--cell-height) - 1px);
     overflow-y: auto;
     z-index: 1;
   }
@@ -180,12 +180,12 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--cell-spacing);
-    background-color: var(--cell-background);
+    background-color: var(--cell-background-hover);
   }
   .option:first-child {
     flex: 0 0 calc(var(--cell-height) - 1px);
   }
   .option:hover {
-    background-color: var(--cell-background-hover);
+    background-color: var(--spectrum-global-color-gray-200);
   }
 </style>

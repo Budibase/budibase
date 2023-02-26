@@ -21,7 +21,7 @@
     Layout,
     notifications,
   } from "@budibase/bbui"
-  import { fetchData } from "@budibase/frontend-core"
+  import { fetchData, Sheet } from "@budibase/frontend-core"
   import { API } from "api"
 
   let hideAutocolumns = true
@@ -153,112 +153,122 @@
 </script>
 
 <div>
-  <Table
-    title={$tables.selected?.name}
-    schema={enrichedSchema}
-    {type}
-    tableId={id}
-    data={$fetch.rows}
-    bind:hideAutocolumns
-    loading={!$fetch.loaded}
-    on:sort={onSort}
-    allowEditing
-    disableSorting
-    on:updatecolumns={onUpdateColumns}
-    on:updaterows={onUpdateRows}
-    on:selectionUpdated={e => {
-      selectedRows = e.detail
-    }}
-    customPlaceholder
-  >
-    <div class="buttons">
-      <div class="left-buttons">
-        <CreateColumnButton
-          highlighted={$fetch.loaded && (!hasCols || !hasRows)}
-          on:updatecolumns={onUpdateColumns}
-        />
-        {#if !isUsersTable}
-          <CreateRowButton
-            on:updaterows={onUpdateRows}
-            title={"Create row"}
-            modalContentComponent={CreateEditRow}
-            disabled={!hasCols}
-            highlighted={$fetch.loaded && hasCols && !hasRows}
-          />
-        {/if}
-        {#if isInternal}
-          <CreateViewButton disabled={!hasCols || !hasRows} />
-        {/if}
-      </div>
-      <div class="right-buttons">
-        <ManageAccessButton resourceId={$tables.selected?._id} />
-        {#if isUsersTable}
-          <EditRolesButton />
-        {/if}
-        {#if !isInternal}
-          <ExistingRelationshipButton
-            table={$tables.selected}
-            on:updatecolumns={onUpdateColumns}
-          />
-        {/if}
-        <HideAutocolumnButton bind:hideAutocolumns />
-        <ImportButton
-          disabled={$tables.selected?._id === "ta_users"}
-          tableId={$tables.selected?._id}
-          on:importrows={onImportData}
-        />
-        <ExportButton
-          disabled={!hasRows || !hasCols}
-          view={$tables.selected?._id}
-          filters={appliedFilter}
-          sorting={appliedSort}
-          {selectedRows}
-        />
-        {#key id}
-          <TableFilterButton
-            {schema}
-            {filters}
-            on:change={onFilter}
-            disabled={!hasCols}
-            tableId={id}
-          />
-        {/key}
-      </div>
-    </div>
-    <div slot="placeholder">
-      <Layout gap="S">
-        {#if !hasCols}
-          <Heading>Let's create some columns</Heading>
-          <Body>
-            Start building out your table structure<br />
-            by adding some columns
-          </Body>
-        {:else}
-          <Heading>Now let's add a row</Heading>
-          <Body>
-            Add some data to your table<br />
-            by adding some rows
-          </Body>
-        {/if}
-      </Layout>
-    </div>
-  </Table>
-  {#key id}
-    <div in:fade={{ delay: 200, duration: 100 }}>
-      <div class="pagination">
-        <Pagination
-          page={$fetch.pageNumber + 1}
-          hasPrevPage={$fetch.hasPrevPage}
-          hasNextPage={$fetch.hasNextPage}
-          goToPrevPage={$fetch.loading ? null : fetch.prevPage}
-          goToNextPage={$fetch.loading ? null : fetch.nextPage}
-        />
-      </div>
-    </div>
-  {/key}
+  <Sheet tableId={$tables.selected?._id} {API} />
 </div>
 
+<!--<div>-->
+<!--  <Table-->
+<!--    title={$tables.selected?.name}-->
+<!--    schema={enrichedSchema}-->
+<!--    {type}-->
+<!--    tableId={id}-->
+<!--    data={$fetch.rows}-->
+<!--    bind:hideAutocolumns-->
+<!--    loading={!$fetch.loaded}-->
+<!--    on:sort={onSort}-->
+<!--    allowEditing-->
+<!--    disableSorting-->
+<!--    on:updatecolumns={onUpdateColumns}-->
+<!--    on:updaterows={onUpdateRows}-->
+<!--    on:selectionUpdated={e => {-->
+<!--      selectedRows = e.detail-->
+<!--    }}-->
+<!--    customPlaceholder-->
+<!--  >-->
+<!--    <div class="buttons">-->
+<!--      <div class="left-buttons">-->
+<!--        <CreateColumnButton-->
+<!--          highlighted={$fetch.loaded && (!hasCols || !hasRows)}-->
+<!--          on:updatecolumns={onUpdateColumns}-->
+<!--        />-->
+<!--        {#if !isUsersTable}-->
+<!--          <CreateRowButton-->
+<!--            on:updaterows={onUpdateRows}-->
+<!--            title={"Create row"}-->
+<!--            modalContentComponent={CreateEditRow}-->
+<!--            disabled={!hasCols}-->
+<!--            highlighted={$fetch.loaded && hasCols && !hasRows}-->
+<!--          />-->
+<!--        {/if}-->
+<!--        {#if isInternal}-->
+<!--          <CreateViewButton disabled={!hasCols || !hasRows} />-->
+<!--        {/if}-->
+<!--      </div>-->
+<!--      <div class="right-buttons">-->
+<!--        <ManageAccessButton resourceId={$tables.selected?._id} />-->
+<!--        {#if isUsersTable}-->
+<!--          <EditRolesButton />-->
+<!--        {/if}-->
+<!--        {#if !isInternal}-->
+<!--          <ExistingRelationshipButton-->
+<!--            table={$tables.selected}-->
+<!--            on:updatecolumns={onUpdateColumns}-->
+<!--          />-->
+<!--        {/if}-->
+<!--        <HideAutocolumnButton bind:hideAutocolumns />-->
+<!--        <ImportButton-->
+<!--          disabled={$tables.selected?._id === "ta_users"}-->
+<!--          tableId={$tables.selected?._id}-->
+<!--          on:importrows={onImportData}-->
+<!--        />-->
+<!--        <ExportButton-->
+<!--          disabled={!hasRows || !hasCols}-->
+<!--          view={$tables.selected?._id}-->
+<!--          filters={appliedFilter}-->
+<!--          sorting={appliedSort}-->
+<!--          {selectedRows}-->
+<!--        />-->
+<!--        {#key id}-->
+<!--          <TableFilterButton-->
+<!--            {schema}-->
+<!--            {filters}-->
+<!--            on:change={onFilter}-->
+<!--            disabled={!hasCols}-->
+<!--            tableId={id}-->
+<!--          />-->
+<!--        {/key}-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    <div slot="placeholder">-->
+<!--      <Layout gap="S">-->
+<!--        {#if !hasCols}-->
+<!--          <Heading>Let's create some columns</Heading>-->
+<!--          <Body>-->
+<!--            Start building out your table structure<br />-->
+<!--            by adding some columns-->
+<!--          </Body>-->
+<!--        {:else}-->
+<!--          <Heading>Now let's add a row</Heading>-->
+<!--          <Body>-->
+<!--            Add some data to your table<br />-->
+<!--            by adding some rows-->
+<!--          </Body>-->
+<!--        {/if}-->
+<!--      </Layout>-->
+<!--    </div>-->
+<!--  </Table>-->
+<!--  {#key id}-->
+<!--    <div in:fade={{ delay: 200, duration: 100 }}>-->
+<!--      <div class="pagination">-->
+<!--        <Pagination-->
+<!--          page={$fetch.pageNumber + 1}-->
+<!--          hasPrevPage={$fetch.hasPrevPage}-->
+<!--          hasNextPage={$fetch.hasNextPage}-->
+<!--          goToPrevPage={$fetch.loading ? null : fetch.prevPage}-->
+<!--          goToNextPage={$fetch.loading ? null : fetch.nextPage}-->
+<!--        />-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  {/key}-->
+
+<!--</div>-->
 <style>
+  div {
+    flex: 1 1 auto;
+    margin: -28px -40px -40px -40px;
+    display: flex;
+    flex-direction: column;
+  }
   .pagination {
     display: flex;
     flex-direction: row;
