@@ -39,7 +39,9 @@ export interface GoogleInnerConfig {
   clientID: string
   clientSecret: string
   activated: boolean
-  // deprecated / read only
+  /**
+   * @deprecated read only
+   */
   callbackURL?: string
 }
 
