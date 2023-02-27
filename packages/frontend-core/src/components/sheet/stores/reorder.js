@@ -1,7 +1,7 @@
 import { get, writable } from "svelte/store"
 
 export const createReorderStores = context => {
-  const { columns, bounds, rows, scroll, rand } = context
+  const { columns, visibleColumns, rand, scroll, bounds } = context
   const reorderInitialState = {
     columnIdx: null,
     swapColumnIdx: null,
@@ -10,33 +10,14 @@ export const createReorderStores = context => {
   }
   const reorder = writable(reorderInitialState)
 
-  // This is broken into its own store as it is rapidly updated, and we want to
-  // ensure good performance by avoiding updating other components which depend
-  // on other reordering state
-  const placeholderInitialState = {
-    x: null,
-    initialX: null,
-    width: null,
-    height: null,
-  }
-  const placeholder = writable(placeholderInitialState)
-
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (columnIdx, e) => {
     const $columns = get(columns)
     const $bounds = get(bounds)
-    const $rows = get(rows)
     const $scroll = get(scroll)
 
     // Generate new breakpoints for the current columns
-    let breakpoints = []
-    $columns.forEach((col, idx) => {
-      breakpoints.push(col.left)
-      if (idx === $columns.length - 1) {
-        breakpoints.push(col.left + col.width)
-      }
-    })
-    const self = $columns[columnIdx]
+    let breakpoints = $columns.map(col => col.left + col.width)
 
     // Update state
     reorder.set({
@@ -44,15 +25,8 @@ export const createReorderStores = context => {
       breakpoints,
       swapColumnIdx: null,
       initialMouseX: e.clientX,
-    })
-    placeholder.set({
-      initialX: self.left,
-      x: self.left,
-      width: self.width,
-      height: ($rows.length + 2) * 32,
-      sheetLeft: $bounds.left,
-      maxX: $bounds.width - self.width,
       scrollLeft: $scroll.left,
+      sheetLeft: $bounds.left,
     })
 
     // Add listeners to handle mouse movement
@@ -71,34 +45,18 @@ export const createReorderStores = context => {
       return
     }
 
-    // Compute new placeholder position
-    const $placeholder = get(placeholder)
-    let newX =
-      e.clientX -
-      $reorder.initialMouseX +
-      $placeholder.initialX -
-      $placeholder.scrollLeft
-    newX = Math.max(0, newX)
-    newX = Math.min($placeholder.maxX, newX)
-
     // Compute the closest breakpoint to the current position
     let swapColumnIdx
     let minDistance = Number.MAX_SAFE_INTEGER
+    const mouseX = e.clientX - $reorder.sheetLeft + $reorder.scrollLeft
     $reorder.breakpoints.forEach((point, idx) => {
-      const distance = Math.abs(
-        point - e.clientX + $placeholder.sheetLeft - $placeholder.scrollLeft
-      )
+      const distance = Math.abs(point - mouseX)
       if (distance < minDistance) {
         minDistance = distance
         swapColumnIdx = idx
       }
     })
 
-    // Update state
-    placeholder.update(state => {
-      state.x = newX
-      return state
-    })
     if (swapColumnIdx !== $reorder.swapColumnIdx) {
       reorder.update(state => {
         state.swapColumnIdx = swapColumnIdx
@@ -111,6 +69,7 @@ export const createReorderStores = context => {
   const stopReordering = () => {
     // Swap position of columns
     let { columnIdx, swapColumnIdx } = get(reorder)
+    swapColumnIdx++
     columns.update(state => {
       const removed = state.splice(columnIdx, 1)
       if (--swapColumnIdx < columnIdx) {
@@ -131,7 +90,6 @@ export const createReorderStores = context => {
 
     // Reset state
     reorder.set(reorderInitialState)
-    placeholder.set(placeholderInitialState)
 
     // Remove event handlers
     document.removeEventListener("mousemove", onReorderMouseMove)
@@ -147,6 +105,5 @@ export const createReorderStores = context => {
         stopReordering,
       },
     },
-    reorderPlaceholder: placeholder,
   }
 }

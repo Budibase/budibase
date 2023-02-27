@@ -13,7 +13,6 @@
   const {
     selectedCellId,
     reorder,
-    hoveredRowId,
     selectedRows,
     changeCache,
     spreadsheetAPI,
@@ -22,9 +21,7 @@
   } = getContext("spreadsheet")
 
   $: rowSelected = !!$selectedRows[row._id]
-  $: rowHovered = $hoveredRowId === row._id
   $: data = { ...row, ...$changeCache[row._id] }
-  $: containsSelectedCell = $selectedCellId?.split("-")[0] === row._id
 
   const getCellForField = field => {
     const type = field.schema.type
@@ -50,36 +47,23 @@
   }
 </script>
 
-<div
-  class="row"
-  style="--top:{(row.__idx + 1) * cellHeight}px;"
-  class:contains-selected-cell={containsSelectedCell}
->
-  <SpreadsheetCell
-    label
-    {rowSelected}
-    {rowHovered}
-    on:mouseenter={() => ($hoveredRowId = row._id)}
-    on:click={() => selectRow(row._id)}
-  >
-    {#if rowSelected || rowHovered}
+<div class="row" style="--top:{(row.__idx + 1) * cellHeight}px;">
+  <SpreadsheetCell label {rowSelected} on:click={() => selectRow(row._id)}>
+    <div class="checkbox" class:visible={rowSelected}>
       <input type="checkbox" checked={rowSelected} />
-    {:else}
-      <span>
-        {row.__idx + 1}
-      </span>
-    {/if}
+    </div>
+    <div class="number" class:visible={!rowSelected}>
+      {row.__idx + 1}
+    </div>
   </SpreadsheetCell>
   {#each $visibleColumns as column (column.name)}
     {@const cellIdx = `${row._id}-${column.name}`}
     <SpreadsheetCell
       {rowSelected}
-      {rowHovered}
       sticky={column.idx === 0}
       selected={$selectedCellId === cellIdx}
       reorderSource={$reorder.columnIdx === column.idx}
       reorderTarget={$reorder.swapColumnIdx === column.idx}
-      on:mouseenter={() => ($hoveredRowId = row._id)}
       on:click={() => ($selectedCellId = cellIdx)}
       width={column.width}
       left={column.left}
@@ -101,14 +85,36 @@
   .row {
     display: flex;
     position: absolute;
-    top: 0;
-    transform: translateY(var(--top));
+    top: var(--top);
     width: inherit;
   }
-  .row.contains-selected-cell {
-    z-index: 1;
+  .row:hover :global(.cell) {
+    background: var(--cell-background-hover);
   }
 
+  /* Styles for label cell */
+  .checkbox {
+    display: none;
+  }
+  input[type="checkbox"] {
+    margin: 0;
+  }
+  .number {
+    display: none;
+    min-width: 14px;
+    text-align: center;
+    color: var(--spectrum-global-color-gray-500);
+  }
+  .row:hover .checkbox,
+  .checkbox.visible,
+  .number.visible {
+    display: block;
+  }
+  .row:hover .number {
+    display: none;
+  }
+
+  /* Add right border to last cell */
   .row :global(> :last-child) {
     border-right-width: 1px;
   }
