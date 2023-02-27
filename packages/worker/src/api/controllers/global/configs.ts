@@ -23,6 +23,7 @@ import {
   isSMTPConfig,
   UserCtx,
 } from "@budibase/types"
+import * as pro from "@budibase/pro"
 
 const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
@@ -126,10 +127,10 @@ export async function save(ctx: UserCtx<Config>) {
   const existingConfig = await configs.getConfig(type)
   let eventFns = await getEventFns(ctx.request.body, existingConfig)
 
-  // Config does not exist yet
-  if (!existingConfig) {
-    body._id = configs.generateConfigID(type)
+  if (existingConfig) {
+    body._rev = existingConfig._rev
   }
+
   try {
     // verify the configuration
     switch (config.type) {
@@ -142,6 +143,7 @@ export async function save(ctx: UserCtx<Config>) {
   }
 
   try {
+    body._id = configs.generateConfigID(type)
     const response = await configs.save(body)
     await cache.bustCache(cache.CacheKey.CHECKLIST)
     await cache.bustCache(cache.CacheKey.ANALYTICS_ENABLED)
@@ -203,7 +205,8 @@ export async function publicSettings(
 ) {
   try {
     // settings
-    const config = await configs.getSettingsConfig()
+    const configDoc = await configs.getSettingsConfigDoc()
+    const config = configDoc.config
     // enrich the logo url - empty url means deleted
     if (config.logoUrl && config.logoUrl !== "") {
       config.logoUrl = objectStore.getGlobalFileUrl(
@@ -224,13 +227,18 @@ export async function publicSettings(
     const oidc = oidcConfig?.activated || false
     const _oidcCallbackUrl = await oidcCallbackUrl()
 
+    // sso enforced
+    const isSSOEnforced = await pro.features.isSSOEnforced({ config })
+
     ctx.body = {
       type: ConfigType.SETTINGS,
-      _id: configs.generateConfigID(ConfigType.SETTINGS),
+      _id: configDoc._id,
+      _rev: configDoc._rev,
       config: {
         ...config,
         google,
         oidc,
+        isSSOEnforced,
         oidcCallbackUrl: _oidcCallbackUrl,
         googleCallbackUrl: _googleCallbackUrl,
       },

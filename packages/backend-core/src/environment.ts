@@ -28,6 +28,8 @@ const DefaultBucketName = {
   PLUGINS: "plugins",
 }
 
+const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
+
 const environment = {
   isTest,
   isJest,
@@ -58,7 +60,7 @@ const environment = {
     process.env.ACCOUNT_PORTAL_URL || "https://account.budibase.app",
   ACCOUNT_PORTAL_API_KEY: process.env.ACCOUNT_PORTAL_API_KEY || "",
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
-  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
+  SELF_HOSTED: selfHosted,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL || "",
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
@@ -91,6 +93,14 @@ const environment = {
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: parseInt(process.env.SMTP_PORT || ""),
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
+  /**
+   * Enable to allow an admin user to login using a password.
+   * This can be useful to prevent lockout when configuring SSO.
+   * However, this should be turned OFF by default for security purposes.
+   */
+  ENABLE_SSO_MAINTENANCE_MODE: selfHosted
+    ? process.env.ENABLE_SSO_MAINTENANCE_MODE
+    : false,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
