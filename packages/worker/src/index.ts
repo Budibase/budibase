@@ -13,8 +13,8 @@ import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { auth, logging, events, middleware } from "@budibase/backend-core"
-import { sdk as proSdk, sdk } from "@budibase/pro"
+import { auth, logging, events, middleware, queue } from "@budibase/backend-core"
+import { sdk as proSdk } from "@budibase/pro"
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"
@@ -86,6 +86,7 @@ server.on("close", async () => {
   console.log("Server Closed")
   await redis.shutdown()
   await events.shutdown()
+  await queue.shutdown()
   if (!env.isTest()) {
     process.exit(errCode)
   }
