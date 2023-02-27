@@ -82,6 +82,10 @@ export const useEnvironmentVariables = () => {
   return useFeature(Feature.ENVIRONMENT_VARIABLES)
 }
 
+export const useAuditLogs = () => {
+  return useFeature(Feature.AUDIT_LOGS)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {
