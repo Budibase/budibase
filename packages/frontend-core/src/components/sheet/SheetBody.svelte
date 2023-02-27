@@ -2,104 +2,30 @@
   import { getContext, onMount } from "svelte"
   import { Utils } from "../../utils"
 
-  const {
-    columns,
-    selectedCellId,
-    rand,
-    visibleRows,
-    visibleColumns,
-    cellHeight,
-    rows,
-    bounds,
-    scroll,
-  } = getContext("spreadsheet")
+  const { columns, selectedCellId, rand, cellHeight, rows, bounds, scroll } =
+    getContext("spreadsheet")
 
   const padding = 180
 
   let ref
-  let scrollLeft = 0
-  let scrollTop = 0
 
-  $: updateVisibleRows($columns, scrollTop, $bounds.height)
-  $: updateVisibleColumns($columns, scrollLeft, $bounds.width)
-  $: contentHeight = ($rows.length + 2) * cellHeight + padding
+  $: contentHeight = ($rows.length + 2) * cellHeight
   $: contentWidth = computeContentWidth($columns)
-  $: horizontallyScrolled = scrollLeft > 0
 
   const computeContentWidth = columns => {
-    let total = 40 + padding
-    columns.forEach(col => {
-      total += col.width
-    })
-    return total
+    if (!columns.length) {
+      return 0
+    }
+    const last = columns[columns.length - 1]
+    return last.left + last.width
   }
 
-  // Store the current scroll position
-  // let lastTop
-  // let lastLeft
-  // let ticking = false
-  // const handleScroll = e => {
-  //   lastTop = e.target.scrollTop
-  //   lastLeft = e.target.scrollLeft
-  //   if (!ticking) {
-  //     ticking = true
-  //     requestAnimationFrame(() => {
-  //       if (Math.abs(lastTop - scrollTop) > 100) {
-  //         scrollTop = lastTop
-  //       }
-  //       if (lastLeft === 0 || Math.abs(lastLeft - scrollLeft) > 100) {
-  //         scrollLeft = lastLeft
-  //       }
-  //       ticking = false
-  //     })
-  //   }
-  // }
+  const updateScrollStore = Utils.domDebounce((left, top) => {
+    scroll.set({ left, top })
+  })
 
-  const handleScroll = Utils.domDebounce(
-    ({ left, top }) => {
-      // Only update local state when big changes occur
-      if (Math.abs(top - scrollTop) > 100) {
-        scrollTop = top
-      }
-      if (left === 0 || Math.abs(left - scrollLeft) > 100) {
-        scrollLeft = left
-      }
-
-      // Always update store
-      scroll.set({ left, top })
-    },
-    e => ({ left: e.target.scrollLeft, top: e.target.scrollTop })
-  )
-
-  const updateVisibleRows = (columns, scrollTop, height) => {
-    if (!columns.length) {
-      return
-    }
-    // Compute row visibility
-    const rows = Math.ceil(height / cellHeight) + 8
-    const firstRow = Math.max(0, Math.floor(scrollTop / cellHeight) - 4)
-    visibleRows.set([firstRow, firstRow + rows])
-  }
-
-  const updateVisibleColumns = (columns, scrollLeft, width) => {
-    if (!columns.length) {
-      return
-    }
-
-    // Compute column visibility
-    let startColIdx = 1
-    let rightEdge = columns[1].width
-    while (rightEdge < scrollLeft) {
-      startColIdx++
-      rightEdge += columns[startColIdx].width
-    }
-    let endColIdx = startColIdx + 1
-    let leftEdge = columns[0].width + 40 + rightEdge
-    while (leftEdge < width + scrollLeft) {
-      leftEdge += columns[endColIdx]?.width
-      endColIdx++
-    }
-    visibleColumns.set([Math.max(1, startColIdx - 2), endColIdx + 2])
+  const handleScroll = e => {
+    updateScrollStore(e.target.scrollLeft, e.target.scrollTop)
   }
 
   onMount(() => {
@@ -117,16 +43,22 @@
 <div
   bind:this={ref}
   class="sheet-body"
-  class:horizontally-scrolled={horizontallyScrolled}
+  class:horizontally-scrolled={$scroll.left > 0}
   on:click|self={() => ($selectedCellId = null)}
   id={`sheet-${rand}-body`}
   on:scroll={handleScroll}
 >
   <div
     class="content"
-    style="height:{contentHeight}px; width:{contentWidth}px;"
+    style="height:{contentHeight + padding}px; width:{contentWidth +
+      padding}px;"
   >
-    <slot />
+    <div
+      class="data-content"
+      style="height:{contentHeight}px; width:{contentWidth}px;"
+    >
+      <slot />
+    </div>
   </div>
 </div>
 
@@ -140,11 +72,19 @@
     height: 0;
   }
   .sheet-body::-webkit-scrollbar-track {
-    background: var(--cell-background);
+    background: transparent;
+  }
+  .content,
+  .data-content {
+    position: absolute;
   }
   .content {
     min-width: 100%;
     min-height: 100%;
+    background: var(--background-alt);
+  }
+  .data-content {
+    background: var(--cell-background);
   }
 
   /* Add shadow to sticky cells when horizontally scrolled */

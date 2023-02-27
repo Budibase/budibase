@@ -5,6 +5,7 @@
   import { LuceneUtils } from "../../utils"
   import { Icon } from "@budibase/bbui"
   import { createReorderStores } from "./stores/reorder"
+  import { createViewportStores } from "./stores/viewport"
   import SpreadsheetHeader from "./SheetHeader.svelte"
   import SpreadsheetBody from "./SheetBody.svelte"
   import SpreadsheetCell from "./SheetCell.svelte"
@@ -31,8 +32,6 @@
   const selectedRows = writable({})
   const changeCache = writable({})
   const newRows = writable([])
-  const visibleRows = writable([0, 0])
-  const visibleColumns = writable([0, 0])
   const scroll = writable({
     left: 0,
     top: 0,
@@ -57,12 +56,11 @@
     changeCache,
     newRows,
     cellHeight,
-    visibleRows,
-    visibleColumns,
     bounds,
     scroll,
   }
   const { reorder, reorderPlaceholder } = createReorderStores(context)
+  const { visibleRows, visibleColumns } = createViewportStores(context)
 
   $: query = LuceneUtils.buildLuceneQuery(filter)
   $: fetch = createFetch(tableId)
@@ -76,7 +74,6 @@
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
   $: updateSortedRows($fetch, $newRows)
-  $: renderedRows = $rows.slice($visibleRows[0], $visibleRows[1])
 
   const createFetch = tableId => {
     return fetchData({
@@ -192,7 +189,7 @@
       const bIndex = newRows.indexOf(b._id)
       return aIndex < bIndex ? -1 : 1
     })
-    $rows = sortedRows
+    $rows = sortedRows.map((x, idx) => ({ ...x, __idx: idx }))
   }
 
   // API for children to consume
@@ -206,6 +203,8 @@
     ...context,
     reorder,
     reorderPlaceholder,
+    visibleRows,
+    visibleColumns,
     spreadsheetAPI,
   })
 </script>
@@ -221,31 +220,31 @@
           checked={rowCount && selectedRowCount === rowCount}
         />
       </SpreadsheetCell>
-      {#each $columns as field, fieldIdx}
+      {#each $visibleColumns as column}
         <SpreadsheetCell
           header
-          sticky={fieldIdx === 0}
-          reorderSource={$reorder.columnIdx === fieldIdx}
-          reorderTarget={$reorder.swapColumnIdx === fieldIdx}
-          on:mousedown={e => reorder.actions.startReordering(fieldIdx, e)}
-          width={field.width}
-          left={field.left}
+          sticky={column.idx === 0}
+          reorderSource={$reorder.columnIdx === column.idx}
+          reorderTarget={$reorder.swapColumnIdx === column.idx}
+          on:mousedown={e => reorder.actions.startReordering(column.idx, e)}
+          width={column.width}
+          left={column.left}
         >
           <Icon
             size="S"
-            name={getIconForField(field)}
+            name={getIconForField(column)}
             color="var(--spectrum-global-color-gray-600)"
           />
           <span>
-            {field.name}
+            {column.name}
           </span>
         </SpreadsheetCell>
       {/each}
     </div>
 
     <!-- All real rows -->
-    {#each renderedRows as row, rowIdx (row._id)}
-      <SpreadsheetRow {row} rowIdx={rowIdx + $visibleRows[0]} />
+    {#each $visibleRows as row (row._id)}
+      <SpreadsheetRow {row} />
     {/each}
 
     <!-- New row placeholder -->
@@ -260,16 +259,16 @@
       >
         <Icon hoverable name="Add" size="S" />
       </SpreadsheetCell>
-      {#each $columns as field, fieldIdx}
+      {#each $visibleColumns as column}
         <SpreadsheetCell
-          sticky={fieldIdx === 0}
+          sticky={column.idx === 0}
           rowHovered={$hoveredRowId === "new"}
-          reorderSource={$reorder.columnIdx === fieldIdx}
-          reorderTarget={$reorder.swapColumnIdx === fieldIdx}
-          on:click={() => addRow(field)}
+          reorderSource={$reorder.columnIdx === column.idx}
+          reorderTarget={$reorder.swapColumnIdx === column.idx}
+          on:click={() => addRow(column)}
           on:mouseenter={() => ($hoveredRowId = "new")}
-          width={field.width}
-          left={field.left}
+          width={column.width}
+          left={column.left}
         />
       {/each}
     </div>
