@@ -21,13 +21,12 @@
   // Sheet constants
   const cellHeight = 36
   const limit = 100
-  const defaultWidth = 160
+  const defaultWidth = 200
   const rand = Math.random()
 
   // State stores
   const rows = writable([])
   const columns = writable([])
-  const hoveredRowId = writable(null)
   const selectedCellId = writable(null)
   const selectedRows = writable({})
   const changeCache = writable({})
@@ -44,12 +43,11 @@
   })
 
   // Build up spreadsheet context and additional stores
-  const context = {
+  let context = {
     API,
     rand,
     rows,
     columns,
-    hoveredRowId,
     selectedCellId,
     selectedRows,
     tableId,
@@ -59,8 +57,9 @@
     bounds,
     scroll,
   }
-  const { reorder, reorderPlaceholder } = createReorderStores(context)
   const { visibleRows, visibleColumns } = createViewportStores(context)
+  context = { ...context, visibleRows, visibleColumns }
+  const { reorder } = createReorderStores(context)
 
   $: query = LuceneUtils.buildLuceneQuery(filter)
   $: fetch = createFetch(tableId)
@@ -202,7 +201,6 @@
   setContext("spreadsheet", {
     ...context,
     reorder,
-    reorderPlaceholder,
     visibleRows,
     visibleColumns,
     spreadsheetAPI,
@@ -226,7 +224,9 @@
           sticky={column.idx === 0}
           reorderSource={$reorder.columnIdx === column.idx}
           reorderTarget={$reorder.swapColumnIdx === column.idx}
-          on:mousedown={e => reorder.actions.startReordering(column.idx, e)}
+          on:mousedown={column.idx === 123
+            ? null
+            : e => reorder.actions.startReordering(column.idx, e)}
           width={column.width}
           left={column.left}
         >
@@ -249,24 +249,15 @@
 
     <!-- New row placeholder -->
     <div class="row new" style="--top:{($rows.length + 1) * cellHeight}px;">
-      <SpreadsheetCell
-        label
-        on:click={addRow}
-        on:mouseenter={() => ($hoveredRowId = "new")}
-        rowHovered={$hoveredRowId === "new"}
-        width="40"
-        left="0"
-      >
+      <SpreadsheetCell label on:click={addRow} width="40" left="0">
         <Icon hoverable name="Add" size="S" />
       </SpreadsheetCell>
       {#each $visibleColumns as column}
         <SpreadsheetCell
           sticky={column.idx === 0}
-          rowHovered={$hoveredRowId === "new"}
           reorderSource={$reorder.columnIdx === column.idx}
           reorderTarget={$reorder.swapColumnIdx === column.idx}
           on:click={() => addRow(column)}
-          on:mouseenter={() => ($hoveredRowId = "new")}
           width={column.width}
           left={column.left}
         />
@@ -304,7 +295,7 @@
     position: sticky;
     top: 0;
     width: inherit;
-    z-index: 4;
+    z-index: 10;
   }
   .row.new {
     position: absolute;
@@ -312,5 +303,8 @@
   }
   .row :global(> :last-child) {
     border-right-width: 1px;
+  }
+  input[type="checkbox"] {
+    margin: 0;
   }
 </style>

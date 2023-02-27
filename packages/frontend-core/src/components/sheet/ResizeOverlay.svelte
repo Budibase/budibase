@@ -1,5 +1,4 @@
 <script>
-  import { get } from "svelte/store"
   import { getContext } from "svelte"
 
   const { columns, rand, scroll, visibleColumns } = getContext("spreadsheet")
@@ -12,8 +11,9 @@
   let left = 0
   let columnCount = 0
 
+  $: cutoff = $scroll.left + 40 + $columns[0]?.width || 0
+
   const startResizing = (idx, e) => {
-    const $columns = get(columns)
     // Prevent propagation to stop reordering triggering
     e.stopPropagation()
 
@@ -60,23 +60,25 @@
 </script>
 
 {#each $visibleColumns as col}
-  <div
-    class="resize-slider"
-    class:visible={columnIdx === col.idx}
-    on:mousedown={e => startResizing(col.idx, e)}
-    style="--left:{col.left +
-      col.width -
-      (col.idx === 0 ? 0 : $scroll.left)}px;"
-  >
-    <div class="resize-indicator" />
-  </div>
+  {#if col.idx === 0 || col.left + col.width > cutoff}
+    <div
+      class="resize-slider"
+      class:visible={columnIdx === col.idx}
+      on:mousedown={e => startResizing(col.idx, e)}
+      style="--left:{col.left +
+        col.width -
+        (col.idx === 0 ? 0 : $scroll.left)}px;"
+    >
+      <div class="resize-indicator" />
+    </div>
+  {/if}
 {/each}
 
 <style>
   .resize-slider {
     position: absolute;
     top: var(--controls-height);
-    z-index: 6;
+    z-index: 10;
     height: var(--cell-height);
     left: var(--left);
     opacity: 0;

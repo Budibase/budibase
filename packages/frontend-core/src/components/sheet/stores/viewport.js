@@ -1,4 +1,5 @@
 import { writable, derived } from "svelte/store"
+import { Utils } from "../../../utils"
 
 export const createViewportStores = context => {
   const { cellHeight, columns, rows, scroll, bounds } = context
@@ -16,15 +17,17 @@ export const createViewportStores = context => {
 
   // Debounce scroll updates so we can slow down visible row computation
   scroll.subscribe(({ left, top }) => {
-    // Only update local state when big changes occur
-    if (Math.abs(top - scrollTop) > cellHeight * 2) {
-      scrollTop = top
-      scrollTopStore.set(top)
-    }
-    if (Math.abs(left - scrollLeft) > 100) {
-      scrollLeft = left
-      scrollLeftStore.set(left)
-    }
+    window.requestAnimationFrame(() => {
+      // Only update local state when big changes occur
+      if (Math.abs(top - scrollTop) > cellHeight * 2) {
+        scrollTop = top
+        scrollTopStore.set(top)
+      }
+      if (Math.abs(left - scrollLeft) > 100) {
+        scrollLeft = left
+        scrollLeftStore.set(left)
+      }
+    })
   })
 
   // Derive visible rows
@@ -32,8 +35,8 @@ export const createViewportStores = context => {
     [rows, scrollTopStore, height],
     ([$rows, $scrollTop, $height]) => {
       console.log("new rows")
-      const maxRows = Math.ceil($height / cellHeight) + 8
-      const firstRow = Math.max(0, Math.floor($scrollTop / cellHeight) - 4)
+      const maxRows = Math.ceil($height / cellHeight) + 16
+      const firstRow = Math.max(0, Math.floor($scrollTop / cellHeight) - 8)
       return $rows.slice(firstRow, firstRow + maxRows)
     }
   )

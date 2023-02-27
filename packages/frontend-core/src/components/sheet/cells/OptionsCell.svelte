@@ -151,13 +151,6 @@
       var(--cell-background) 40%
     );
   }
-  :global(.cell.hovered) .arrow {
-    background: linear-gradient(
-      to right,
-      transparent 0%,
-      var(--cell-background-hover) 40%
-    );
-  }
   .options {
     min-width: 100%;
     position: absolute;
@@ -170,7 +163,6 @@
     align-items: stretch;
     max-height: calc(6 * var(--cell-height) - 1px);
     overflow-y: auto;
-    z-index: 1;
   }
   .option {
     flex: 0 0 var(--cell-height);

@@ -1,8 +1,6 @@
 <script>
   export let header = false
   export let label = false
-  export let spacer = false
-  export let rowHovered = false
   export let rowSelected = false
   export let sticky = false
   export let selected = false
@@ -17,9 +15,7 @@
   class="cell col-{column}"
   class:header
   class:label
-  class:spacer
   class:row-selected={rowSelected}
-  class:row-hovered={rowHovered}
   class:sticky
   class:selected
   class:reorder-source={reorderSource}
@@ -53,10 +49,7 @@
     position: absolute;
     transition: border-color 130ms ease-out;
     width: var(--width);
-    transform: translateX(var(--left));
-  }
-  .cell.row-hovered {
-    background: var(--cell-background-hover);
+    left: var(--left);
   }
   .cell.selected {
     box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
@@ -68,26 +61,18 @@
   .cell:hover {
     cursor: default;
   }
-  .cell.row-selected:after {
-    pointer-events: none;
-    content: " ";
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 100%;
-    opacity: 0.2;
-    background-color: var(--spectrum-global-color-blue-600);
+  .cell.row-selected {
+    background-color: var(--spectrum-global-color-gray-100);
   }
 
   /* Header cells */
   .cell.header {
     background: var(--background);
     padding: 0 var(--cell-padding);
-    z-index: 3;
     border-color: var(--spectrum-global-color-gray-200);
     font-weight: 600;
     gap: calc(2 * var(--cell-spacing));
+    z-index: 10;
   }
   .cell.header :global(span) {
     flex: 1 1 auto;
@@ -96,20 +81,24 @@
     text-overflow: ellipsis;
     overflow: hidden;
   }
+  .cell.header:hover {
+    cursor: pointer;
+  }
+  .cell.header.sticky,
+  .cell.header.label {
+    z-index: 11;
+  }
 
   /* Sticky styles */
   .cell.sticky {
     position: sticky;
-    z-index: 2;
     border-left-width: 0;
     transform: none;
     left: 40px;
+    z-index: 5;
   }
-  .cell.sticky.selected {
-    z-index: 3;
-  }
-  .cell.header.sticky {
-    z-index: 4;
+  .cell.selected.sticky {
+    z-index: 6;
   }
 
   /* Reorder styles */
@@ -119,43 +108,22 @@
   .cell.header.reorder-source {
     background: var(--spectrum-global-color-gray-200);
   }
-  .cell.reorder-target {
-    z-index: 100;
-  }
-  .cell.reorder-target:before {
+  .cell.reorder-target:after {
     content: " ";
     position: absolute;
-    left: -2px;
+    right: 0;
     background: var(--spectrum-global-color-blue-400);
     width: 2px;
-    z-index: 100;
     height: calc(var(--cell-height) + 1px);
   }
 
   /* Label cells */
   .cell.label {
+    padding: var(--cell-padding);
     width: 40px;
-    padding: 0 12px;
     border-left-width: 0;
     position: sticky;
     left: 0;
-    z-index: 2;
-  }
-  .cell.label.header {
-    z-index: 4;
-  }
-  .cell.label :global(span) {
-    min-width: 14px;
-    text-align: center;
-    color: var(--spectrum-global-color-gray-500);
-  }
-  .cell.label :global(input[type="checkbox"]) {
-    margin: 0;
-  }
-
-  /* Spacer cells */
-  .cell.spacer {
-    background: none;
-    border-bottom: none;
+    z-index: 5;
   }
 </style>
