@@ -10,7 +10,7 @@
   import analytics, { Events, EventSource } from "analytics"
   import { store } from "builderStore"
   import { ProgressCircle } from "@budibase/bbui"
-  import CopyInput from "components/common/inputs/CopyInput.svelte"
+  import CopyInput from "@budibase/bbui/src/Input/CopyInput.svelte"
   import TourWrap from "../portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "../portal/onboarding/tours.js"
 

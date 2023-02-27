@@ -1,5 +1,5 @@
 <script>
-  import CopyInput from "components/common/inputs/CopyInput.svelte"
+  import CopyInput from "@budibase/bbui/src/Input/CopyInput.svelte"
 
   export let value
 
