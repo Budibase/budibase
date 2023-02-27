@@ -35,8 +35,8 @@ export enum IdentityType {
 }
 
 export interface HostInfo {
-  ipAddress: string
-  userAgent: string
+  ipAddress?: string
+  userAgent?: string
 }
 
 export interface Identity {

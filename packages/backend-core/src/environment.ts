@@ -84,6 +84,7 @@ const environment = {
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
   ENABLE_4XX_HTTP_LOGGING: process.env.ENABLE_4XX_HTTP_LOGGING || true,
+  ENABLE_AUDIT_LOG_IP_ADDR: process.env.ENABLE_AUDIT_LOG_IP_ADDR,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
