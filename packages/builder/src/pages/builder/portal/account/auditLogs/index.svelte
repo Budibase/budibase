@@ -31,8 +31,8 @@
   const schema = {
     date: { width: "0.8fr" },
     user: { width: "0.5fr" },
+    name: { width: "2fr", displayName: "Event" },
     app: { width: "1.5fr" },
-    name: { width: "2fr" },
     view: { width: "0.1fr", borderLeft: true, displayName: "" },
   }
 
@@ -270,7 +270,7 @@
       <Multiselect
         autocomplete
         placeholder="All apps"
-        label="App"
+        label="Apps"
         getOptionValue={app => app.instance._id}
         getOptionLabel={app => app.name}
         options={sortedApps}
@@ -285,7 +285,7 @@
         getOptionLabel={event => event.label}
         options={sortedEvents}
         placeholder="All events"
-        label="Event"
+        label="Events"
         bind:value={selectedEvents}
       />
     </div>
