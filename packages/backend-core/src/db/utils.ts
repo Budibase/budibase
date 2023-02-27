@@ -365,6 +365,16 @@ export async function getAllApps({
   }
 }
 
+export async function getAppsByIDs(appIds: string[]) {
+  const settled = await Promise.allSettled(
+    appIds.map(appId => getAppMetadata(appId))
+  )
+  // have to list the apps which exist, some may have been deleted
+  return settled
+    .filter(promise => promise.status === "fulfilled")
+    .map(promise => (promise as PromiseFulfilledResult<App>).value)
+}
+
 /**
  * Utility function for getAllApps but filters to production apps only.
  */
@@ -379,6 +389,16 @@ export async function getProdAppIDs() {
 export async function getDevAppIDs() {
   const apps = (await getAllApps({ idsOnly: true })) as string[]
   return apps.filter((id: any) => isDevAppID(id))
+}
+
+export function isSameAppID(
+  appId1: string | undefined,
+  appId2: string | undefined
+) {
+  if (appId1 == undefined || appId2 == undefined) {
+    return false
+  }
+  return getProdAppID(appId1) === getProdAppID(appId2)
 }
 
 export async function dbExists(dbName: any) {

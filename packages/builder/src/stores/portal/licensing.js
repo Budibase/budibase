@@ -67,6 +67,9 @@ export const createLicensingStore = () => {
         Constants.Features.ENFORCEABLE_SSO
       )
 
+      const auditLogsEnabled = license.features.includes(
+        Constants.Features.AUDIT_LOGS
+      )
       store.update(state => {
         return {
           ...state,
@@ -75,6 +78,7 @@ export const createLicensingStore = () => {
           groupsEnabled,
           backupsEnabled,
           environmentVariablesEnabled,
+          auditLogsEnabled,
           enforceableSSO,
         }
       })

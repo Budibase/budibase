@@ -69,8 +69,8 @@ export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
     "local",
     async (err: any, user: User, info: any) => {
       await passportCallback(ctx, user, err, info)
-      await context.identity.doInUserContext(user, async () => {
-        await events.auth.login("local")
+      await context.identity.doInUserContext(user, ctx, async () => {
+        await events.auth.login("local", user.email)
       })
       ctx.status = 200
     }
@@ -207,8 +207,8 @@ export const googleCallback = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: SSOUser, info: any) => {
       await passportCallback(ctx, user, err, info)
-      await context.identity.doInUserContext(user, async () => {
-        await events.auth.login("google-internal")
+      await context.identity.doInUserContext(user, ctx, async () => {
+        await events.auth.login("google-internal", user.email)
       })
       ctx.redirect("/")
     }
@@ -272,8 +272,8 @@ export const oidcCallback = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: SSOUser, info: any) => {
       await passportCallback(ctx, user, err, info)
-      await context.identity.doInUserContext(user, async () => {
-        await events.auth.login("oidc")
+      await context.identity.doInUserContext(user, ctx, async () => {
+        await events.auth.login("oidc", user.email)
       })
       ctx.redirect("/")
     }

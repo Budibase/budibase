@@ -87,6 +87,7 @@ const getCurrentIdentity = async (): Promise<Identity> => {
       installationId,
       tenantId,
       environment,
+      hostInfo: userContext.hostInfo,
     }
   } else {
     throw new Error("Unknown identity type")

@@ -13,11 +13,13 @@ import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
+import { sdk as proSdk } from "@budibase/pro"
 import {
   auth,
   logging,
   events,
   middleware,
+  queue,
   env as coreEnv,
 } from "@budibase/backend-core"
 db.init()
@@ -29,7 +31,13 @@ import * as redis from "./utilities/redis"
 const Sentry = require("@sentry/node")
 const koaSession = require("koa-session")
 const logger = require("koa-pino-logger")
+const { userAgent } = require("koa-useragent")
+
 import destroyable from "server-destroy"
+
+// configure events to use the pro audit log write
+// can't integrate directly into backend-core due to cyclic issues
+events.processors.init(proSdk.auditLogs.write)
 
 if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
   console.warn(
@@ -49,6 +57,7 @@ app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
 app.use(middleware.logging)
 app.use(logger(logging.pinoSettings()))
+app.use(userAgent)
 
 // authentication
 app.use(auth.passport.initialize())
@@ -84,6 +93,7 @@ server.on("close", async () => {
   console.log("Server Closed")
   await redis.shutdown()
   await events.shutdown()
+  await queue.shutdown()
   if (!env.isTest()) {
     process.exit(errCode)
   }
