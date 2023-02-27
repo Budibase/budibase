@@ -37,7 +37,7 @@
     <CoreDatePicker
       {value}
       on:change={e => onChange(e.detail)}
-      appendTo={document.getElementById("flatpickr-root")}
+      appendTo={document.documentElement}
       enableTime={!dateOnly}
       {timeOnly}
       time24hr

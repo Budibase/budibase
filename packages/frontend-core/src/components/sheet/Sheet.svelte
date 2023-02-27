@@ -224,7 +224,7 @@
           sticky={column.idx === 0}
           reorderSource={$reorder.columnIdx === column.idx}
           reorderTarget={$reorder.swapColumnIdx === column.idx}
-          on:mousedown={column.idx === 123
+          on:mousedown={column.idx === 0
             ? null
             : e => reorder.actions.startReordering(column.idx, e)}
           width={column.width}
