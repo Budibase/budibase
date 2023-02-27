@@ -298,13 +298,13 @@
         on:change={e => {
           if (e.detail[0]?.length === 1) {
             startDate = e.detail[0][0].toISOString()
-            endDate = null
+            endDate = ""
           } else if (e.detail[0]?.length > 1) {
             startDate = e.detail[0][0].toISOString()
             endDate = e.detail[0][1].toISOString()
           } else {
-            startDate = null
-            endDate = null
+            startDate = ""
+            endDate = ""
           }
         }}
       />
