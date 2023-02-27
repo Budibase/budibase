@@ -11,7 +11,6 @@ on:
     branches:
       - master
       - develop
-      - configs-refactor-and-server-test-fixes
  workflow_dispatch:
 
 env:
