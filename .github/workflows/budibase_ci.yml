@@ -10,7 +10,7 @@ on:
  pull_request:
     branches:
       - master
-      - develop 
+      - develop
  workflow_dispatch:
 
 env:

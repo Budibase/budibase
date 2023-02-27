@@ -5,12 +5,14 @@ import {
   IdentityType,
   AuditLogQueueEvent,
   AuditLogFn,
+  HostInfo,
 } from "@budibase/types"
 import { EventProcessor } from "./types"
 import { getAppId } from "../../context"
-import { isAudited } from "../events"
 import BullQueue from "bull"
 import { createQueue, JobQueue } from "../../queue"
+import { isAudited } from "../../utils"
+import env from "../../environment"
 
 export default class AuditLogsProcessor implements EventProcessor {
   static auditLogsEnabled = false
@@ -32,11 +34,20 @@ export default class AuditLogsProcessor implements EventProcessor {
         }
         delete properties.audited
       }
+
+      // this feature is disabled by default due to privacy requirements
+      // in some countries - available as env var in-case it is desired
+      // in self host deployments
+      let hostInfo: HostInfo | undefined = {}
+      if (env.ENABLE_AUDIT_LOG_IP_ADDR) {
+        hostInfo = job.data.opts.hostInfo
+      }
+
       await writeAuditLogs(job.data.event, properties, {
         userId: job.data.opts.userId,
         timestamp: job.data.opts.timestamp,
         appId: job.data.opts.appId,
-        hostInfo: job.data.opts.hostInfo,
+        hostInfo,
       })
     })
   }

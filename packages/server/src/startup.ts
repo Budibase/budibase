@@ -17,7 +17,6 @@ import * as pro from "@budibase/pro"
 import * as api from "./api"
 import sdk from "./sdk"
 const pino = require("koa-pino-logger")
-import { sdk as proSdk } from "@budibase/pro"
 
 let STARTUP_RAN = false
 
@@ -127,7 +126,7 @@ export async function startup(app?: any, server?: any) {
   let queuePromises = []
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
-  queuePromises.push(events.processors.init(proSdk.auditLogs.write))
+  queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
   queuePromises.push(automations.init())
   queuePromises.push(initPro())
   if (app) {
