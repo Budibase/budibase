@@ -113,6 +113,9 @@ describe("Google Sheets Integration", () => {
           "description",
           "location",
         ])
+
+        // No undefineds are sent
+        expect((sheet.setHeaderRow as any).mock.calls[0][0]).toHaveLength(3)
       })
     })
   })
