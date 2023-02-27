@@ -9,13 +9,11 @@
   import TextCell from "./cells/TextCell.svelte"
 
   export let row
-  export let rowIdx
 
   const {
     selectedCellId,
     reorder,
     hoveredRowId,
-    columns,
     selectedRows,
     changeCache,
     spreadsheetAPI,
@@ -26,10 +24,6 @@
   $: rowSelected = !!$selectedRows[row._id]
   $: rowHovered = $hoveredRowId === row._id
   $: data = { ...row, ...$changeCache[row._id] }
-  $: renderedColumns = [
-    $columns[0],
-    ...$columns.slice($visibleColumns[0], $visibleColumns[1]),
-  ]
   $: containsSelectedCell = $selectedCellId?.split("-")[0] === row._id
 
   const getCellForField = field => {
@@ -58,7 +52,7 @@
 
 <div
   class="row"
-  style="--top:{(rowIdx + 1) * cellHeight}px;"
+  style="--top:{(row.__idx + 1) * cellHeight}px;"
   class:contains-selected-cell={containsSelectedCell}
 >
   <SpreadsheetCell
@@ -72,11 +66,11 @@
       <input type="checkbox" checked={rowSelected} />
     {:else}
       <span>
-        {rowIdx + 1}
+        {row.__idx + 1}
       </span>
     {/if}
   </SpreadsheetCell>
-  {#each renderedColumns as column (column.name)}
+  {#each $visibleColumns as column (column.name)}
     {@const cellIdx = `${row._id}-${column.name}`}
     <SpreadsheetCell
       {rowSelected}
