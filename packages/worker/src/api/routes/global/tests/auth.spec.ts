@@ -110,7 +110,7 @@ describe("/api/global/auth", () => {
           )
 
           expect(response.body).toEqual({
-            message: "SSO user cannot login using password",
+            message: "Password login is disabled for this user",
             status: 400,
           })
         }
@@ -175,7 +175,7 @@ describe("/api/global/auth", () => {
           )
 
           expect(res.body).toEqual({
-            message: "SSO user cannot reset password",
+            message: "Password reset is disabled for this user",
             status: 400,
             error: {
               code: "http",

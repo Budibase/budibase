@@ -1,11 +1,11 @@
 import env from "../environment"
-import { EmailTemplatePurpose, TemplateType, Config } from "../constants"
+import { EmailTemplatePurpose, TemplateType } from "../constants"
 import { getTemplateByPurpose } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { getResetPasswordCode, getInviteCode } from "./redis"
-import { User, Database } from "@budibase/types"
-import { tenancy, db as dbCore } from "@budibase/backend-core"
+import { User, SMTPInnerConfig } from "@budibase/types"
+import { configs } from "@budibase/backend-core"
 const nodemailer = require("nodemailer")
 
 type SendEmailOpts = {
@@ -36,24 +36,24 @@ const FULL_EMAIL_PURPOSES = [
   EmailTemplatePurpose.CUSTOM,
 ]
 
-function createSMTPTransport(config: any) {
+function createSMTPTransport(config?: SMTPInnerConfig) {
   let options: any
-  let secure = config.secure
+  let secure = config?.secure
   // default it if not specified
   if (secure == null) {
-    secure = config.port === 465
+    secure = config?.port === 465
   }
   if (!TEST_MODE) {
     options = {
-      port: config.port,
-      host: config.host,
+      port: config?.port,
+      host: config?.host,
       secure: secure,
-      auth: config.auth,
+      auth: config?.auth,
     }
     options.tls = {
       rejectUnauthorized: false,
     }
-    if (config.connectionTimeout) {
+    if (config?.connectionTimeout) {
       options.connectionTimeout = config.connectionTimeout
     }
   } else {
@@ -135,56 +135,15 @@ async function buildEmail(
 }
 
 /**
- * Utility function for finding most valid SMTP configuration.
- * @param {object} db The CouchDB database which is to be looked up within.
- * @param {string|null} workspaceId If using finer grain control of configs a workspace can be used.
- * @param {boolean|null} automation Whether or not the configuration is being fetched for an email automation.
- * @return {Promise<object|null>} returns the SMTP configuration if it exists
- */
-async function getSmtpConfiguration(
-  db: Database,
-  workspaceId?: string,
-  automation?: boolean
-) {
-  const params: any = {
-    type: Config.SMTP,
-  }
-  if (workspaceId) {
-    params.workspace = workspaceId
-  }
-
-  const customConfig = await dbCore.getScopedConfig(db, params)
-
-  if (customConfig) {
-    return customConfig
-  }
-
-  // Use an SMTP fallback configuration from env variables
-  if (!automation && env.SMTP_FALLBACK_ENABLED) {
-    return {
-      port: env.SMTP_PORT,
-      host: env.SMTP_HOST,
-      secure: false,
-      from: env.SMTP_FROM_ADDRESS,
-      auth: {
-        user: env.SMTP_USER,
-        pass: env.SMTP_PASSWORD,
-      },
-    }
-  }
-}
-
-/**
  * Checks if a SMTP config exists based on passed in parameters.
  * @return {Promise<boolean>} returns true if there is a configuration that can be used.
  */
-export async function isEmailConfigured(workspaceId?: string) {
+export async function isEmailConfigured() {
   // when "testing" or smtp fallback is enabled simply return true
   if (TEST_MODE || env.SMTP_FALLBACK_ENABLED) {
     return true
   }
-  const db = tenancy.getGlobalDB()
-  const config = await getSmtpConfiguration(db, workspaceId)
+  const config = await configs.getSMTPConfig()
   return config != null
 }
 
@@ -202,22 +161,17 @@ export async function sendEmail(
   purpose: EmailTemplatePurpose,
   opts: SendEmailOpts
 ) {
-  const db = tenancy.getGlobalDB()
-  let config =
-    (await getSmtpConfiguration(db, opts?.workspaceId, opts?.automation)) || {}
-  if (Object.keys(config).length === 0 && !TEST_MODE) {
+  const config = await configs.getSMTPConfig(opts?.automation)
+  if (!config && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
   }
   const transport = createSMTPTransport(config)
   // if there is a link code needed this will retrieve it
   const code = await getLinkCode(purpose, email, opts.user, opts?.info)
-  let context
-  if (code) {
-    context = await getSettingsTemplateContext(purpose, code)
-  }
+  let context = await getSettingsTemplateContext(purpose, code)
 
   let message: any = {
-    from: opts?.from || config.from,
+    from: opts?.from || config?.from,
     html: await buildEmail(purpose, email, context, {
       user: opts?.user,
       contents: opts?.contents,
@@ -231,9 +185,9 @@ export async function sendEmail(
     bcc: opts?.bcc,
   }
 
-  if (opts?.subject || config.subject) {
+  if (opts?.subject || config?.subject) {
     message.subject = await processString(
-      opts?.subject || config.subject,
+      (opts?.subject || config?.subject) as string,
       context
     )
   }
