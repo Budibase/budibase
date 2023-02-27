@@ -308,10 +308,17 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         }
         await sheet.setHeaderRow(headers)
       } else {
-        let newField = Object.keys(table.schema).find(
+        const updatedHeaderValues = [...sheet.headerValues]
+
+        const newField = Object.keys(table.schema).find(
           key => !sheet.headerValues.includes(key)
         )
-        await sheet.setHeaderRow([...sheet.headerValues, newField])
+
+        if (newField) {
+          updatedHeaderValues.push(newField)
+        }
+
+        await sheet.setHeaderRow(updatedHeaderValues)
       }
     } catch (err) {
       console.error("Error updating table in google sheets", err)
