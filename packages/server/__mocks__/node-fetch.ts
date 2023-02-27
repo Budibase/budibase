@@ -172,6 +172,9 @@ module FetchMock {
         ),
         ok: true,
       })
+    } else if (url === "https://www.googleapis.com/oauth2/v4/token") {
+      // any valid response
+      return json({})
     } else if (url.includes("failonce.com")) {
       failCount++
       if (failCount === 1) {
