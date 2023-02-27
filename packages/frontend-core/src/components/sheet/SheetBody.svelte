@@ -2,7 +2,7 @@
   import { getContext, onMount } from "svelte"
   import { Utils } from "../../utils"
 
-  const { columns, selectedCellId, rand, cellHeight, rows, bounds, scroll } =
+  const { columns, selectedCellId, cellHeight, rows, bounds, scroll } =
     getContext("spreadsheet")
 
   const padding = 180
@@ -45,7 +45,6 @@
   class="sheet-body"
   class:horizontally-scrolled={$scroll.left > 0}
   on:click|self={() => ($selectedCellId = null)}
-  id={`sheet-${rand}-body`}
   on:scroll={handleScroll}
 >
   <div

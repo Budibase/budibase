@@ -2,15 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Modal, ModalContent } from "@budibase/bbui"
 
-  const {
-    selectedRows,
-    rows,
-    selectedCellId,
-    hoveredRowId,
-    tableId,
-    spreadsheetAPI,
-    API,
-  } = getContext("spreadsheet")
+  const { selectedRows, rows, selectedCellId } = getContext("spreadsheet")
 
   let modal
 
@@ -28,15 +20,10 @@
 
   // Deletion callback when confirmed
   const performDeletion = async () => {
-    await API.deleteRows({
-      tableId,
-      rows: rowsToDelete,
-    })
-    await spreadsheetAPI.refreshData()
+    await rows.actions.deleteRows(rowsToDelete)
 
     // Refresh state
     $selectedCellId = null
-    $hoveredRowId = null
     $selectedRows = {}
   }
 </script>
