@@ -39,6 +39,7 @@ const config: Config.InitialOptions = {
   ],
   collectCoverageFrom: [
     "src/**/*.{js,ts}",
+    "../backend-core/src/**/*.{js,ts}",
     // The use of coverage with couchdb view functions breaks tests
     "!src/db/views/staticViews.*",
   ],
