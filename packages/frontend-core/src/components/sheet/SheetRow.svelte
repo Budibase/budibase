@@ -14,14 +14,12 @@
     selectedCellId,
     reorder,
     selectedRows,
-    changeCache,
-    spreadsheetAPI,
+    rows,
     visibleColumns,
     cellHeight,
   } = getContext("spreadsheet")
 
   $: rowSelected = !!$selectedRows[row._id]
-  $: data = { ...row, ...$changeCache[row._id] }
 
   const getCellForField = field => {
     const type = field.schema.type
@@ -71,10 +69,10 @@
     >
       <svelte:component
         this={getCellForField(column)}
-        value={data[column.name]}
+        value={row[column.name]}
         schema={column.schema}
         selected={$selectedCellId === cellIdx}
-        onChange={val => spreadsheetAPI.updateValue(row._id, column, val)}
+        onChange={val => rows.actions.updateRow(row._id, column, val)}
         readonly={column.schema.autocolumn}
       />
     </SpreadsheetCell>

@@ -1,5 +1,4 @@
 import { writable, derived } from "svelte/store"
-import { Utils } from "../../../utils"
 
 export const createViewportStores = context => {
   const { cellHeight, columns, rows, scroll, bounds } = context
