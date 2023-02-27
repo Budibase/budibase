@@ -116,6 +116,7 @@ export const Features = {
   BACKUPS: "appBackups",
   ENVIRONMENT_VARIABLES: "environmentVariables",
   AUDIT_LOGS: "auditLogs",
+  ENFORCEABLE_SSO: "enforceableSSO",
 }
 
 // Role IDs

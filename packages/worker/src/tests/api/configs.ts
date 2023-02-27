@@ -14,6 +14,14 @@ export class ConfigAPI extends TestAPI {
       .expect("Content-Type", /json/)
   }
 
+  getPublicSettings = () => {
+    return this.request
+      .get(`/api/global/configs/public`)
+      .set(this.config.defaultHeaders())
+      .expect(200)
+      .expect("Content-Type", /json/)
+  }
+
   saveConfig = (data: any) => {
     return this.request
       .post(`/api/global/configs`)

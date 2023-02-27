@@ -63,6 +63,9 @@ export const createLicensingStore = () => {
       const environmentVariablesEnabled = license.features.includes(
         Constants.Features.ENVIRONMENT_VARIABLES
       )
+      const enforceableSSO = license.features.includes(
+        Constants.Features.ENFORCEABLE_SSO
+      )
 
       const auditLogsEnabled = license.features.includes(
         Constants.Features.AUDIT_LOGS
@@ -76,6 +79,7 @@ export const createLicensingStore = () => {
           backupsEnabled,
           environmentVariablesEnabled,
           auditLogsEnabled,
+          enforceableSSO,
         }
       })
     },
