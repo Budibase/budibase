@@ -225,12 +225,6 @@ export async function platformLogout(opts: PlatformLogoutOpts) {
 
   const sessionIds = sessions.map(({ sessionId }) => sessionId)
   await invalidateSessions(userId, { sessionIds, reason: "logout" })
-  let user: User | undefined
-  try {
-    user = await userCache.getUser(userId)
-  } catch {
-    user = undefined
-  }
-  await events.auth.logout(user?.email)
+  await events.auth.logout(ctx.user?.email)
   await userCache.invalidateUser(userId)
 }

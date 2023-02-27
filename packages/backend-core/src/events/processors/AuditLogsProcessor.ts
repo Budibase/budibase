@@ -4,11 +4,10 @@ import {
   Group,
   IdentityType,
   AuditLogQueueEvent,
-  AuditLogFn,
+  AuditLogFn, AuditedEventFriendlyName,
 } from "@budibase/types"
 import { EventProcessor } from "./types"
 import { getAppId } from "../../context"
-import { isAudited } from "../events"
 import BullQueue from "bull"
 import { createQueue, JobQueue } from "../../queue"
 
@@ -41,13 +40,17 @@ export default class AuditLogsProcessor implements EventProcessor {
     })
   }
 
+  isAudited(event: Event) {
+    return !!AuditedEventFriendlyName[event]
+  }
+
   async processEvent(
     event: Event,
     identity: Identity,
     properties: any,
     timestamp?: string
   ): Promise<void> {
-    if (AuditLogsProcessor.auditLogsEnabled && isAudited(event)) {
+    if (AuditLogsProcessor.auditLogsEnabled && this.isAudited(event)) {
       // only audit log actual events, don't include backfills
       const userId =
         identity.type === IdentityType.USER ? identity.id : undefined
