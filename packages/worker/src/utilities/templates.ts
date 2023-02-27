@@ -1,6 +1,5 @@
-import { db as dbCore, tenancy } from "@budibase/backend-core"
+import { tenancy, configs } from "@budibase/backend-core"
 import {
-  Config,
   InternalTemplateBinding,
   LOGO_URL,
   EmailTemplatePurpose,
@@ -10,20 +9,16 @@ const BASE_COMPANY = "Budibase"
 
 export async function getSettingsTemplateContext(
   purpose: EmailTemplatePurpose,
-  code?: string
+  code?: string | null
 ) {
-  const db = tenancy.getGlobalDB()
-  // TODO: use more granular settings in the future if required
-  let settings =
-    (await dbCore.getScopedConfig(db, { type: Config.SETTINGS })) || {}
+  let settings = await configs.getSettingsConfig()
   const URL = settings.platformUrl
   const context: any = {
     [InternalTemplateBinding.LOGO_URL]:
       checkSlashesInUrl(`${URL}/${settings.logoUrl}`) || LOGO_URL,
     [InternalTemplateBinding.PLATFORM_URL]: URL,
     [InternalTemplateBinding.COMPANY]: settings.company || BASE_COMPANY,
-    [InternalTemplateBinding.DOCS_URL]:
-      settings.docsUrl || "https://docs.budibase.com/",
+    [InternalTemplateBinding.DOCS_URL]: "https://docs.budibase.com/",
     [InternalTemplateBinding.LOGIN_URL]: checkSlashesInUrl(
       tenancy.addTenantToUrl(`${URL}/login`)
     ),

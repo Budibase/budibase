@@ -40,8 +40,10 @@ export function createQueue<T>(
 }
 
 export async function shutdown() {
-  if (QUEUES.length) {
+  if (cleanupInterval) {
     clearInterval(cleanupInterval)
+  }
+  if (QUEUES.length) {
     for (let queue of QUEUES) {
       await queue.close()
     }

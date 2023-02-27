@@ -13,8 +13,15 @@ import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { auth, logging, events, middleware } from "@budibase/backend-core"
-import { sdk as proSdk, sdk } from "@budibase/pro"
+import { sdk as proSdk } from "@budibase/pro"
+import {
+  auth,
+  logging,
+  events,
+  middleware,
+  queue,
+  env as coreEnv,
+} from "@budibase/backend-core"
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"
@@ -32,7 +39,7 @@ import destroyable from "server-destroy"
 // can't integrate directly into backend-core due to cyclic issues
 events.processors.init(proSdk.auditLogs.write)
 
-if (env.ENABLE_SSO_MAINTENANCE_MODE) {
+if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
   console.warn(
     "Warning: ENABLE_SSO_MAINTENANCE_MODE is set. It is recommended this flag is disabled if maintenance is not in progress"
   )
@@ -86,6 +93,7 @@ server.on("close", async () => {
   console.log("Server Closed")
   await redis.shutdown()
   await events.shutdown()
+  await queue.shutdown()
   if (!env.isTest()) {
     process.exit(errCode)
   }

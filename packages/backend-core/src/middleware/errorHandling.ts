@@ -11,6 +11,7 @@ export async function errorHandling(ctx: any, next: any) {
 
     if (status > 499 || env.ENABLE_4XX_HTTP_LOGGING) {
       ctx.log.error(err)
+      console.trace(err)
     }
 
     const error = errors.getPublicError(err)

@@ -3,10 +3,6 @@ import { processors } from "./processors"
 import identification from "./identification"
 import * as backfill from "./backfill"
 
-export function isAudited(event: Event) {
-  return !!AuditedEventFriendlyName[event]
-}
-
 export const publishEvent = async (
   event: Event,
   properties: any,
