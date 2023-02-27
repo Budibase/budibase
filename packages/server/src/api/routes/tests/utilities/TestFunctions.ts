@@ -2,7 +2,6 @@ import * as rowController from "../../../controllers/row"
 import * as appController from "../../../controllers/application"
 import { AppStatus } from "../../../../db/utils"
 import { roles, tenancy, context } from "@budibase/backend-core"
-import { TENANT_ID } from "../../../../tests/utilities/structures"
 import env from "../../../../environment"
 import { db } from "@budibase/backend-core"
 import Nano from "@budibase/nano"
@@ -33,7 +32,7 @@ export const getAllTableRows = async (config: any) => {
 }
 
 export const clearAllApps = async (
-  tenantId = TENANT_ID,
+  tenantId: string,
   exceptions: Array<string> = []
 ) => {
   await tenancy.doInTenant(tenantId, async () => {

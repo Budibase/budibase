@@ -13,7 +13,13 @@ import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
-import { auth, logging, events, middleware } from "@budibase/backend-core"
+import {
+  auth,
+  logging,
+  events,
+  middleware,
+  env as coreEnv,
+} from "@budibase/backend-core"
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"
@@ -25,7 +31,7 @@ const koaSession = require("koa-session")
 const logger = require("koa-pino-logger")
 import destroyable from "server-destroy"
 
-if (env.ENABLE_SSO_MAINTENANCE_MODE) {
+if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
   console.warn(
     "Warning: ENABLE_SSO_MAINTENANCE_MODE is set. It is recommended this flag is disabled if maintenance is not in progress"
   )

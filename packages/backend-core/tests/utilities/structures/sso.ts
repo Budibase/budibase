@@ -69,6 +69,7 @@ export function oidcConfig(): OIDCInnerConfig {
     configUrl: "http://someconfigurl",
     clientID: generator.string(),
     clientSecret: generator.string(),
+    scopes: [],
   }
 }
 

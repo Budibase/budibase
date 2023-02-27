@@ -9,12 +9,11 @@ import {
   InternalTable,
   APP_PREFIX,
 } from "../constants"
-import { getTenantId, getGlobalDB, getGlobalDBName } from "../context"
+import { getTenantId, getGlobalDBName } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
 import { getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
-import * as events from "../events"
-import { App, Database, ConfigType, isSettingsConfig } from "@budibase/types"
+import { App, Database } from "@budibase/types"
 
 /**
  * Generates a new app ID.
@@ -393,32 +392,6 @@ export async function dbExists(dbName: any) {
 }
 
 /**
- * Generates a new configuration ID.
- * @returns {string} The new configuration ID which the config doc can be stored under.
- */
-export const generateConfigID = ({ type, workspace, user }: any) => {
-  const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
-
-  return `${DocumentType.CONFIG}${SEPARATOR}${scope}`
-}
-
-/**
- * Gets parameters for retrieving configurations.
- */
-export const getConfigParams = (
-  { type, workspace, user }: any,
-  otherProps = {}
-) => {
-  const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
-
-  return {
-    ...otherProps,
-    startkey: `${DocumentType.CONFIG}${SEPARATOR}${scope}`,
-    endkey: `${DocumentType.CONFIG}${SEPARATOR}${scope}${UNICODE_MAX}`,
-  }
-}
-
-/**
  * Generates a new dev info document ID - this is scoped to a user.
  * @returns {string} The new dev info ID which info for dev (like api key) can be stored under.
  */
@@ -439,109 +412,6 @@ export const generatePluginID = (name: string) => {
  */
 export const getPluginParams = (pluginId?: string | null, otherProps = {}) => {
   return getDocParams(DocumentType.PLUGIN, pluginId, otherProps)
-}
-
-/**
- * Returns the most granular configuration document from the DB based on the type, workspace and userID passed.
- * @param {Object} db - db instance to query
- * @param {Object} scopes - the type, workspace and userID scopes of the configuration.
- * @returns The most granular configuration document based on the scope.
- */
-export const getScopedFullConfig = async function (
-  db: any,
-  { type, user, workspace }: any
-) {
-  const response = await db.allDocs(
-    getConfigParams(
-      { type, user, workspace },
-      {
-        include_docs: true,
-      }
-    )
-  )
-
-  function determineScore(row: any) {
-    const config = row.doc
-
-    // Config is specific to a user and a workspace
-    if (config._id.includes(generateConfigID({ type, user, workspace }))) {
-      return 4
-    } else if (config._id.includes(generateConfigID({ type, user }))) {
-      // Config is specific to a user only
-      return 3
-    } else if (config._id.includes(generateConfigID({ type, workspace }))) {
-      // Config is specific to a workspace only
-      return 2
-    } else if (config._id.includes(generateConfigID({ type }))) {
-      // Config is specific to a type only
-      return 1
-    }
-    return 0
-  }
-
-  // Find the config with the most granular scope based on context
-  let scopedConfig = response.rows.sort(
-    (a: any, b: any) => determineScore(a) - determineScore(b)
-  )[0]
-
-  // custom logic for settings doc
-  if (type === ConfigType.SETTINGS) {
-    if (!scopedConfig || !scopedConfig.doc) {
-      // defaults
-      scopedConfig = {
-        doc: {
-          _id: generateConfigID({ type, user, workspace }),
-          type: ConfigType.SETTINGS,
-          config: {
-            platformUrl: await getPlatformUrl({ tenantAware: true }),
-            analyticsEnabled: await events.analytics.enabled(),
-          },
-        },
-      }
-    }
-
-    // will always be true - use assertion function to get type access
-    if (isSettingsConfig(scopedConfig.doc)) {
-      // overrides affected by environment
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
-        tenantAware: true,
-      })
-      scopedConfig.doc.config.analyticsEnabled =
-        await events.analytics.enabled()
-    }
-  }
-
-  return scopedConfig && scopedConfig.doc
-}
-
-export const getPlatformUrl = async (opts = { tenantAware: true }) => {
-  let platformUrl = env.PLATFORM_URL || "http://localhost:10000"
-
-  if (!env.SELF_HOSTED && env.MULTI_TENANCY && opts.tenantAware) {
-    // cloud and multi tenant - add the tenant to the default platform url
-    const tenantId = getTenantId()
-    if (!platformUrl.includes("localhost:")) {
-      platformUrl = platformUrl.replace("://", `://${tenantId}.`)
-    }
-  } else if (env.SELF_HOSTED) {
-    const db = getGlobalDB()
-    // get the doc directly instead of with getScopedConfig to prevent loop
-    let settings
-    try {
-      settings = await db.get(generateConfigID({ type: ConfigType.SETTINGS }))
-    } catch (e: any) {
-      if (e.status !== 404) {
-        throw e
-      }
-    }
-
-    // self hosted - check for platform url override
-    if (settings && settings.config && settings.config.platformUrl) {
-      platformUrl = settings.config.platformUrl
-    }
-  }
-
-  return platformUrl
 }
 
 export function pagination(
@@ -576,9 +446,4 @@ export function pagination(
     hasNextPage,
     nextPage,
   }
-}
-
-export async function getScopedConfig(db: any, params: any) {
-  const configDoc = await getScopedFullConfig(db, params)
-  return configDoc && configDoc.config ? configDoc.config : configDoc
 }

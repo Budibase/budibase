@@ -10,7 +10,7 @@ on:
  pull_request:
     branches:
       - master
-      - develop 
+      - develop
  workflow_dispatch:
 
 env:
@@ -63,6 +63,20 @@ jobs:
           files: ./packages/server/coverage/clover.xml,./packages/worker/coverage/clover.xml,./packages/backend-core/coverage/clover.xml
           name: codecov-umbrella
           verbose: true
+
+  test-pro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Install Pro
+        run: yarn install:pro $BRANCH $BASE_BRANCH
+      - run: yarn
+      - run: yarn bootstrap
+      - run: yarn test:pro
 
   integration-test:
     runs-on: ubuntu-latest

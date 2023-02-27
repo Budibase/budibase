@@ -1,3 +1,4 @@
+export * as configs from "./configs"
 export * as events from "./events"
 export * as migrations from "./migrations"
 export * as users from "./users"
