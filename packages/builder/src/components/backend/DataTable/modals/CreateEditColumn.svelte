@@ -192,13 +192,13 @@
     editableColumn.name = originalName
   }
 
-  function deleteColumn() {
+  async function deleteColumn() {
     try {
       editableColumn.name = deleteColName
       if (editableColumn.name === $tables.selected.primaryDisplay) {
         notifications.error("You cannot delete the display column")
       } else {
-        tables.deleteField(editableColumn)
+        await tables.deleteField(editableColumn)
         notifications.success(`Column ${editableColumn.name} deleted.`)
         confirmDeleteDialog.hide()
         hide()
