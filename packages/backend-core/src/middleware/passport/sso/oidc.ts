@@ -4,7 +4,6 @@ import { ssoCallbackUrl } from "../utils"
 import {
   ConfigType,
   OIDCInnerConfig,
-  Database,
   SSOProfile,
   OIDCStrategyConfiguration,
   SSOAuthDetails,
@@ -157,9 +156,6 @@ export async function fetchStrategyConfig(
   }
 }
 
-export async function getCallbackUrl(
-  db: Database,
-  config: { callbackURL?: string }
-) {
-  return ssoCallbackUrl(db, config, ConfigType.OIDC)
+export async function getCallbackUrl() {
+  return ssoCallbackUrl(ConfigType.OIDC)
 }

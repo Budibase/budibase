@@ -11,9 +11,8 @@ import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
-import env from "../environment"
-import { tenancy, db as dbCore, constants } from "@budibase/backend-core"
 import fetch from "node-fetch"
+import { configs, HTTPError } from "@budibase/backend-core"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -173,16 +172,9 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async connect() {
     try {
       // Initialise oAuth client
-      const db = tenancy.getGlobalDB()
-      let googleConfig = await dbCore.getScopedConfig(db, {
-        type: constants.Config.GOOGLE,
-      })
-
+      let googleConfig = await configs.getGoogleConfig()
       if (!googleConfig) {
-        googleConfig = {
-          clientID: env.GOOGLE_CLIENT_ID,
-          clientSecret: env.GOOGLE_CLIENT_SECRET,
-        }
+        throw new HTTPError("Google config not found", 400)
       }
 
       const oauthClient = new OAuth2Client({
