@@ -24,6 +24,7 @@
   }
 
   const values = writable({
+    isSSOEnforced: $organisation.isSSOEnforced,
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
     analyticsEnabled: $organisation.analyticsEnabled,
@@ -54,6 +55,7 @@
       }
 
       const config = {
+        isSSOEnforced: $values.isSSOEnforced,
         company: $values.company ?? "",
         platformUrl: $values.platformUrl ?? "",
         analyticsEnabled: $values.analyticsEnabled,

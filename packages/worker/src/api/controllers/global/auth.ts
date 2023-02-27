@@ -2,10 +2,9 @@ import {
   auth as authCore,
   constants,
   context,
-  db as dbCore,
   events,
-  tenancy,
   utils as utilsCore,
+  configs,
 } from "@budibase/backend-core"
 import {
   ConfigType,
@@ -15,6 +14,7 @@ import {
   SSOUser,
   PasswordResetRequest,
   PasswordResetUpdateRequest,
+  GoogleInnerConfig,
 } from "@budibase/types"
 import env from "../../../environment"
 
@@ -61,8 +61,8 @@ export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
   const email = ctx.request.body.username
 
   const user = await userSdk.getUserByEmail(email)
-  if (user && (await userSdk.isPreventSSOPasswords(user))) {
-    ctx.throw(400, "SSO user cannot login using password")
+  if (user && (await userSdk.isPreventPasswordActions(user))) {
+    ctx.throw(400, "Password login is disabled for this user")
   }
 
   return passport.authenticate(
@@ -163,8 +163,8 @@ export const datasourceAuth = async (ctx: any, next: any) => {
 
 // GOOGLE SSO
 
-export async function googleCallbackUrl(config?: { callbackURL?: string }) {
-  return ssoCallbackUrl(tenancy.getGlobalDB(), config, ConfigType.GOOGLE)
+export async function googleCallbackUrl(config?: GoogleInnerConfig) {
+  return ssoCallbackUrl(ConfigType.GOOGLE, config)
 }
 
 /**
@@ -172,12 +172,10 @@ export async function googleCallbackUrl(config?: { callbackURL?: string }) {
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 export const googlePreAuth = async (ctx: any, next: any) => {
-  const db = tenancy.getGlobalDB()
-
-  const config = await dbCore.getScopedConfig(db, {
-    type: ConfigType.GOOGLE,
-    workspace: ctx.query.workspace,
-  })
+  const config = await configs.getGoogleConfig()
+  if (!config) {
+    return ctx.throw(400, "Google config not found")
+  }
   let callbackUrl = await googleCallbackUrl(config)
   const strategy = await google.strategyFactory(
     config,
@@ -193,12 +191,10 @@ export const googlePreAuth = async (ctx: any, next: any) => {
 }
 
 export const googleCallback = async (ctx: any, next: any) => {
-  const db = tenancy.getGlobalDB()
-
-  const config = await dbCore.getScopedConfig(db, {
-    type: ConfigType.GOOGLE,
-    workspace: ctx.query.workspace,
-  })
+  const config = await configs.getGoogleConfig()
+  if (!config) {
+    return ctx.throw(400, "Google config not found")
+  }
   const callbackUrl = await googleCallbackUrl(config)
   const strategy = await google.strategyFactory(
     config,
@@ -221,25 +217,20 @@ export const googleCallback = async (ctx: any, next: any) => {
 
 // OIDC SSO
 
-export async function oidcCallbackUrl(config?: { callbackURL?: string }) {
-  return ssoCallbackUrl(tenancy.getGlobalDB(), config, ConfigType.OIDC)
+export async function oidcCallbackUrl() {
+  return ssoCallbackUrl(ConfigType.OIDC)
 }
 
 export const oidcStrategyFactory = async (ctx: any, configId: any) => {
-  const db = tenancy.getGlobalDB()
-  const config = await dbCore.getScopedConfig(db, {
-    type: ConfigType.OIDC,
-    group: ctx.query.group,
-  })
+  const config = await configs.getOIDCConfig()
+  if (!config) {
+    return ctx.throw(400, "OIDC config not found")
+  }
 
-  const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
-  let callbackUrl = await oidcCallbackUrl(chosenConfig)
+  let callbackUrl = await oidcCallbackUrl()
 
   //Remote Config
-  const enrichedConfig = await oidc.fetchStrategyConfig(
-    chosenConfig,
-    callbackUrl
-  )
+  const enrichedConfig = await oidc.fetchStrategyConfig(config, callbackUrl)
   return oidc.strategyFactory(enrichedConfig, userSdk.save)
 }
 
@@ -247,23 +238,23 @@ export const oidcStrategyFactory = async (ctx: any, configId: any) => {
  * The initial call that OIDC authentication makes to take you to the configured OIDC login screen.
  * On a successful login, you will be redirected to the oidcAuth callback route.
  */
-export const oidcPreAuth = async (ctx: any, next: any) => {
+export const oidcPreAuth = async (ctx: Ctx, next: any) => {
   const { configId } = ctx.params
+  if (!configId) {
+    ctx.throw(400, "OIDC config id is required")
+  }
   const strategy = await oidcStrategyFactory(ctx, configId)
 
   setCookie(ctx, configId, Cookie.OIDC_CONFIG)
 
-  const db = tenancy.getGlobalDB()
-  const config = await dbCore.getScopedConfig(db, {
-    type: ConfigType.OIDC,
-    group: ctx.query.group,
-  })
-
-  const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
+  const config = await configs.getOIDCConfigById(configId)
+  if (!config) {
+    return ctx.throw(400, "OIDC config not found")
+  }
 
   let authScopes =
-    chosenConfig.scopes?.length > 0
-      ? chosenConfig.scopes
+    config.scopes?.length > 0
+      ? config.scopes
       : ["profile", "email", "offline_access"]
 
   return passport.authenticate(strategy, {
