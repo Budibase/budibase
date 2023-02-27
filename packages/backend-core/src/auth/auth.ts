@@ -20,6 +20,7 @@ import {
   GoogleInnerConfig,
   OIDCInnerConfig,
   PlatformLogoutOpts,
+  SSOProviderType,
   User,
 } from "@budibase/types"
 import { logAlert } from "../logging"
@@ -149,26 +150,26 @@ interface RefreshResponse {
 
 export async function refreshOAuthToken(
   refreshToken: string,
-  configType: ConfigType,
+  providerType: SSOProviderType,
   configId?: string
 ): Promise<RefreshResponse> {
-  if (configType === ConfigType.OIDC && configId) {
-    const config = await configs.getOIDCConfigById(configId)
-    if (!config) {
-      return { err: { data: "OIDC configuration not found" } }
-    }
-    return refreshOIDCAccessToken(config, refreshToken)
+  switch (providerType) {
+    case SSOProviderType.OIDC:
+      if (!configId) {
+        return { err: { data: "OIDC config id not provided" } }
+      }
+      const oidcConfig = await configs.getOIDCConfigById(configId)
+      if (!oidcConfig) {
+        return { err: { data: "OIDC configuration not found" } }
+      }
+      return refreshOIDCAccessToken(oidcConfig, refreshToken)
+    case SSOProviderType.GOOGLE:
+      let googleConfig = await configs.getGoogleConfig()
+      if (!googleConfig) {
+        return { err: { data: "Google configuration not found" } }
+      }
+      return refreshGoogleAccessToken(googleConfig, refreshToken)
   }
-
-  if (configType === ConfigType.GOOGLE) {
-    const config = await configs.getGoogleConfig()
-    if (!config) {
-      return { err: { data: "Google configuration not found" } }
-    }
-    return refreshGoogleAccessToken(config, refreshToken)
-  }
-
-  throw new Error(`Unsupported configType=${configType}`)
 }
 
 // TODO: Refactor to use user save function instead to prevent the need for
