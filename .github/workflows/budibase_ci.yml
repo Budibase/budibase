@@ -10,7 +10,8 @@ on:
  pull_request:
     branches:
       - master
-      - develop 
+      - develop
+      - configs-refactor-and-server-test-fixes
  workflow_dispatch:
 
 env:

@@ -1,9 +1,15 @@
-import { Config } from "../../constants"
 import { utils } from "@budibase/backend-core"
+import {
+  SettingsConfig,
+  ConfigType,
+  SMTPConfig,
+  GoogleConfig,
+  OIDCConfig,
+} from "@budibase/types"
 
-export function oidc(conf?: any) {
+export function oidc(conf?: any): OIDCConfig {
   return {
-    type: Config.OIDC,
+    type: ConfigType.OIDC,
     config: {
       configs: [
         {
@@ -21,9 +27,9 @@ export function oidc(conf?: any) {
   }
 }
 
-export function google(conf?: any) {
+export function google(conf?: any): GoogleConfig {
   return {
-    type: Config.GOOGLE,
+    type: ConfigType.GOOGLE,
     config: {
       clientID: "clientId",
       clientSecret: "clientSecret",
@@ -33,9 +39,9 @@ export function google(conf?: any) {
   }
 }
 
-export function smtp(conf?: any) {
+export function smtp(conf?: any): SMTPConfig {
   return {
-    type: Config.SMTP,
+    type: ConfigType.SMTP,
     config: {
       port: 12345,
       host: "smtptesthost.com",
@@ -47,12 +53,13 @@ export function smtp(conf?: any) {
   }
 }
 
-export function smtpEthereal() {
+export function smtpEthereal(): SMTPConfig {
   return {
-    type: Config.SMTP,
+    type: ConfigType.SMTP,
     config: {
       port: 587,
       host: "smtp.ethereal.email",
+      from: "testfrom@test.com",
       secure: false,
       auth: {
         user: "wyatt.zulauf29@ethereal.email",
@@ -63,9 +70,9 @@ export function smtpEthereal() {
   }
 }
 
-export function settings(conf?: any) {
+export function settings(conf?: any): SettingsConfig {
   return {
-    type: Config.SETTINGS,
+    type: ConfigType.SETTINGS,
     config: {
       platformUrl: "http://localhost:10000",
       logoUrl: "",

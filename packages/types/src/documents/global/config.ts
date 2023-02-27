@@ -29,6 +29,7 @@ export interface SettingsInnerConfig {
   logoUrlEtag?: string
   uniqueTenantId?: string
   analyticsEnabled?: boolean
+  isSSOEnforced?: boolean
 }
 
 export interface SettingsConfig extends Config {
