@@ -185,16 +185,28 @@ export const destroy = async (ctx: any) => {
   }
 }
 
+export const getAppUsers = async (ctx: any) => {
+  const body = ctx.request.body as SearchUsersRequest
+  const users = await userSdk.getUsersByAppAccess(body?.appId)
+
+  ctx.body = { data: users }
+}
+
 export const search = async (ctx: any) => {
   const body = ctx.request.body as SearchUsersRequest
-  const paginated = await userSdk.paginatedUsers(body)
-  // user hashed password shouldn't ever be returned
-  for (let user of paginated.data) {
-    if (user) {
-      delete user.password
+
+  if (body.paginated === false) {
+    await getAppUsers(ctx)
+  } else {
+    const paginated = await userSdk.paginatedUsers(body)
+    // user hashed password shouldn't ever be returned
+    for (let user of paginated.data) {
+      if (user) {
+        delete user.password
+      }
     }
+    ctx.body = paginated
   }
-  ctx.body = paginated
 }
 
 // called internally by app server user fetch
@@ -242,11 +254,17 @@ export const onboardUsers = async (ctx: any) => {
     onboardingResponse = await userSdk.bulkCreate(assignUsers, groups)
     ctx.body = onboardingResponse
   } else if (emailConfigured) {
-    onboardingResponse = await inviteMultiple(ctx)
+    onboardingResponse = await invite(ctx)
   } else if (!emailConfigured) {
     const inviteRequest = ctx.request.body as InviteUsersRequest
+
+    let createdPasswords: any = {}
+
     const users: User[] = inviteRequest.map(invite => {
       let password = Math.random().toString(36).substring(2, 22)
+
+      // Temp password to be passed to the user.
+      createdPasswords[invite.email] = password
 
       return {
         email: invite.email,
@@ -259,19 +277,28 @@ export const onboardUsers = async (ctx: any) => {
       }
     })
     let bulkCreateReponse = await userSdk.bulkCreate(users, [])
-    onboardingResponse = {
+
+    // Apply temporary credentials
+    let createWithCredentials = {
       ...bulkCreateReponse,
+      successful: bulkCreateReponse?.successful.map(user => {
+        return {
+          ...user,
+          password: createdPasswords[user.email],
+        }
+      }),
       created: true,
     }
-    ctx.body = onboardingResponse
+
+    ctx.body = createWithCredentials
   } else {
     ctx.throw(400, "User onboarding failed")
   }
 }
 
 export const invite = async (ctx: any) => {
-  const request = ctx.request.body as InviteUserRequest
-  const response = await userSdk.invite([request])
+  const request = ctx.request.body as InviteUsersRequest
+  const response = await userSdk.invite(request)
 
   // explicitly throw for single user invite
   if (response.unsuccessful.length) {

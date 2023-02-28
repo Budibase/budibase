@@ -50,7 +50,7 @@ export interface SearchUsersRequest {
   page?: string
   email?: string
   appId?: string
-  userIds?: string[]
+  paginated?: boolean
 }
 
 export interface CreateAdminUserRequest {

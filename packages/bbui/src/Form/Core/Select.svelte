@@ -41,7 +41,7 @@
   const getFieldText = (value, options, placeholder) => {
     // Always use placeholder if no value
     if (value == null || value === "") {
-      return placeholder || "Choose an option"
+      return placeholder !== false ? "Choose an option" : ""
     }
 
     return getFieldAttribute(getOptionLabel, value, options)
@@ -74,7 +74,7 @@
   {autocomplete}
   {sort}
   isPlaceholder={value == null || value === ""}
-  placeholderOption={placeholder}
+  placeholderOption={placeholder === false ? null : placeholder}
   isOptionSelected={option => option === value}
   onSelectOption={selectOption}
 />
