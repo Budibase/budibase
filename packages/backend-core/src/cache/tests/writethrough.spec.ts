@@ -81,6 +81,10 @@ describe("writethrough", () => {
           2,
           "bb-warn: Ignoring redlock conflict in write-through cache"
         )
+
+        const output = await db.get(current._id)
+        expect(output.value).toBe(4)
+        expect(output._rev).toBe(newRev)
       })
     })
   })
