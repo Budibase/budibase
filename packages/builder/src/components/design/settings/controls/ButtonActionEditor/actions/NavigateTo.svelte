@@ -36,7 +36,7 @@
     placeholder={null}
     bind:value={parameters.type}
     options={typeOptions}
-    on:change={value => (parameters.url = "")}
+    on:change={() => (parameters.url = "")}
   />
   {#if parameters.type === "screen"}
     <Label small>Screen</Label>
