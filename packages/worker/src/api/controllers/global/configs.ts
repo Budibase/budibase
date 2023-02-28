@@ -17,10 +17,15 @@ import {
   Ctx,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
+  GoogleInnerConfig,
   isGoogleConfig,
   isOIDCConfig,
   isSettingsConfig,
   isSMTPConfig,
+  OIDCConfigs,
+  SettingsInnerConfig,
+  SSOConfig,
+  SSOConfigType,
   UserCtx,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
@@ -119,6 +124,61 @@ const getEventFns = async (config: Config, existing?: Config) => {
   return fns
 }
 
+type SSOConfigs = { [key in SSOConfigType]: SSOConfig | undefined }
+
+async function getSSOConfigs(): Promise<SSOConfigs> {
+  const google = await configs.getGoogleConfig()
+  const oidc = await configs.getOIDCConfig()
+  return {
+    [ConfigType.GOOGLE]: google,
+    [ConfigType.OIDC]: oidc,
+  }
+}
+
+async function hasActivatedConfig(ssoConfigs?: SSOConfigs) {
+  if (!ssoConfigs) {
+    ssoConfigs = await getSSOConfigs()
+  }
+  return !!Object.values(ssoConfigs).find(c => c?.activated)
+}
+
+async function verifySettingsConfig(config: SettingsInnerConfig) {
+  if (config.isSSOEnforced) {
+    const valid = await hasActivatedConfig()
+    if (!valid) {
+      throw new Error("Cannot enforce SSO without an activated configuration")
+    }
+  }
+}
+
+async function verifySSOConfig(type: SSOConfigType, config: SSOConfig) {
+  const settings = await configs.getSettingsConfig()
+  if (settings.isSSOEnforced && !config.activated) {
+    // config is being saved as deactivated
+    // ensure there is at least one other activated sso config
+    const ssoConfigs = await getSSOConfigs()
+
+    // overwrite the config being updated
+    // to reflect the desired state
+    ssoConfigs[type] = config
+
+    const activated = await hasActivatedConfig(ssoConfigs)
+    if (!activated) {
+      throw new Error(
+        "Configuration cannot be deactivated while SSO is enforced"
+      )
+    }
+  }
+}
+
+async function verifyGoogleConfig(config: GoogleInnerConfig) {
+  await verifySSOConfig(ConfigType.GOOGLE, config)
+}
+
+async function verifyOIDCConfig(config: OIDCConfigs) {
+  await verifySSOConfig(ConfigType.OIDC, config.configs[0])
+}
+
 export async function save(ctx: UserCtx<Config>) {
   const body = ctx.request.body
   const type = body.type
@@ -133,9 +193,18 @@ export async function save(ctx: UserCtx<Config>) {
 
   try {
     // verify the configuration
-    switch (config.type) {
+    switch (type) {
       case ConfigType.SMTP:
         await email.verifyConfig(config)
+        break
+      case ConfigType.SETTINGS:
+        await verifySettingsConfig(config)
+        break
+      case ConfigType.GOOGLE:
+        await verifyGoogleConfig(config)
+        break
+      case ConfigType.OIDC:
+        await verifyOIDCConfig(config)
         break
     }
   } catch (err: any) {
