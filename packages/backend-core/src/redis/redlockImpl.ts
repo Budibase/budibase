@@ -24,7 +24,7 @@ const getClient = async (type: LockType): Promise<Redlock> => {
   }
 }
 
-export const OPTIONS = {
+const OPTIONS = {
   TRY_ONCE: {
     // immediately throws an error if the lock is already held
     retryCount: 0,
@@ -56,7 +56,7 @@ export const OPTIONS = {
   },
 }
 
-export const newRedlock = async (opts: Options = {}) => {
+const newRedlock = async (opts: Options = {}) => {
   let options = { ...OPTIONS.DEFAULT, ...opts }
   const redisWrapper = await getLockClient()
   const client = redisWrapper.getClient()
