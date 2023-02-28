@@ -297,7 +297,7 @@
   .footer {
     padding: 4px 12px 12px 12px;
     font-style: italic;
-    max-width: 160px;
+    max-width: 170px;
     font-size: 12px;
   }
 </style>
