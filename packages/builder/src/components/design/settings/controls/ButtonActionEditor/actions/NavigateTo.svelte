@@ -1,26 +1,68 @@
 <script>
-  import { Label, Checkbox } from "@budibase/bbui"
+  import { store } from "builderStore"
+  import { onMount } from "svelte"
+  import { Label, Checkbox, Select } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 
   export let parameters
   export let bindings = []
+
+  $: urlOptions = $store.screens
+    .map(screen => screen.routing?.route)
+    .filter(x => x != null)
+
+  const typeOptions = [
+    {
+      label: "Screen",
+      value: "screen",
+    },
+    {
+      label: "URL",
+      value: "url",
+    },
+  ]
+
+  onMount(() => {
+    if (!parameters.type) {
+      parameters.type = "screen"
+    }
+  })
 </script>
 
 <div class="root">
-  <Label small>Screen or URL</Label>
-  <DrawerBindableInput
-    title="Destination URL"
-    placeholder="/route"
-    value={parameters.url}
-    on:change={value => (parameters.url = value.detail)}
-    {bindings}
+  <Label small>Destination</Label>
+  <Select
+    placeholder={null}
+    bind:value={parameters.type}
+    options={typeOptions}
+    on:change={value => (parameters.url = "")}
   />
-  <div />
-  <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
-  <Checkbox
-    text="Open external link in new tab"
-    bind:value={parameters.externalNewTab}
-  />
+  {#if parameters.type === "screen"}
+    <Label small>Screen</Label>
+    <DrawerBindableCombobox
+      title="Destination"
+      placeholder="/screen"
+      value={parameters.url}
+      on:change={value => (parameters.url = value.detail)}
+      {bindings}
+      options={urlOptions}
+      appendBindingsAsOptions={false}
+    />
+    <div />
+    <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
+  {:else}
+    <Label small>URL</Label>
+    <DrawerBindableInput
+      title="Destination"
+      placeholder="/url"
+      value={parameters.url}
+      on:change={value => (parameters.url = value.detail)}
+      {bindings}
+    />
+    <div />
+    <Checkbox text="New Tab" bind:value={parameters.externalNewTab} />
+  {/if}
 </div>
 
 <style>
