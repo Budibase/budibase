@@ -1,7 +1,8 @@
 <script>
   import { getContext } from "svelte"
 
-  const { columns, rand, scroll, visibleColumns } = getContext("spreadsheet")
+  const { visibleRows, columns, rand, scroll, visibleColumns, cellHeight } =
+    getContext("spreadsheet")
   const MinColumnWidth = 100
 
   let initialMouseX = null
@@ -12,6 +13,8 @@
   let columnCount = 0
 
   $: cutoff = $scroll.left + 40 + $columns[0]?.width || 0
+  $: scrollLeft = $scroll.left
+  $: rowCount = $visibleRows.length
 
   const startResizing = (idx, e) => {
     // Prevent propagation to stop reordering triggering
@@ -45,7 +48,7 @@
         state[i].left = offset
         offset += state[i].width
       }
-      return state
+      return [...state]
     })
 
     width = newWidth
@@ -57,6 +60,13 @@
     document.removeEventListener("mouseup", stopResizing)
     document.getElementById(`sheet-${rand}`).classList.remove("is-resizing")
   }
+
+  const getStyle = (col, scrollLeft, rowCount) => {
+    console.log("stye")
+    const left = col.left + col.width - (col.idx === 0 ? 0 : scrollLeft)
+    const contentHeight = (rowCount + 2) * cellHeight
+    return `--left:${left}px; --content-height:${contentHeight}px;`
+  }
 </script>
 
 {#each $visibleColumns as col}
@@ -65,9 +75,7 @@
       class="resize-slider"
       class:visible={columnIdx === col.idx}
       on:mousedown={e => startResizing(col.idx, e)}
-      style="--left:{col.left +
-        col.width -
-        (col.idx === 0 ? 0 : $scroll.left)}px;"
+      style={getStyle(col, scrollLeft, rowCount)}
     >
       <div class="resize-indicator" />
     </div>
@@ -90,7 +98,7 @@
   .resize-slider.visible {
     cursor: col-resize;
     opacity: 1;
-    height: calc(100% - var(--controls-height));
+    height: min(var(--content-height), calc(100% - var(--controls-height)));
   }
   .resize-indicator {
     margin-left: -1px;
