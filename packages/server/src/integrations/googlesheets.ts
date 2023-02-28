@@ -11,8 +11,8 @@ import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
+import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
-const fetch = require("node-fetch")
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -111,7 +111,7 @@ const SCHEMA: Integration = {
 
 class GoogleSheetsIntegration implements DatasourcePlus {
   private readonly config: GoogleSheetsConfig
-  private client: any
+  private client: GoogleSpreadsheet
   public tables: Record<string, Table> = {}
   public schemaErrors: Record<string, string> = {}
 
@@ -172,7 +172,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async connect() {
     try {
       // Initialise oAuth client
-      let googleConfig = await configs.getGoogleConfig()
+      let googleConfig = await configs.getGoogleDatasourceConfig()
       if (!googleConfig) {
         throw new HTTPError("Google config not found", 400)
       }
@@ -203,7 +203,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async buildSchema(datasourceId: string) {
     await this.connect()
-    const sheets = await this.client.sheetsByIndex
+    const sheets = this.client.sheetsByIndex
     const tables: Record<string, Table> = {}
     for (let sheet of sheets) {
       // must fetch rows to determine schema
@@ -286,7 +286,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async updateTable(table?: any) {
     try {
       await this.connect()
-      const sheet = await this.client.sheetsByTitle[table.name]
+      const sheet = this.client.sheetsByTitle[table.name]
       await sheet.loadHeaderRow()
 
       if (table._rename) {
@@ -300,10 +300,17 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         }
         await sheet.setHeaderRow(headers)
       } else {
-        let newField = Object.keys(table.schema).find(
+        const updatedHeaderValues = [...sheet.headerValues]
+
+        const newField = Object.keys(table.schema).find(
           key => !sheet.headerValues.includes(key)
         )
-        await sheet.setHeaderRow([...sheet.headerValues, newField])
+
+        if (newField) {
+          updatedHeaderValues.push(newField)
+        }
+
+        await sheet.setHeaderRow(updatedHeaderValues)
       }
     } catch (err) {
       console.error("Error updating table in google sheets", err)
@@ -314,7 +321,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async deleteTable(sheet: any) {
     try {
       await this.connect()
-      const sheetToDelete = await this.client.sheetsByTitle[sheet]
+      const sheetToDelete = this.client.sheetsByTitle[sheet]
       return await sheetToDelete.delete()
     } catch (err) {
       console.error("Error deleting table in google sheets", err)
@@ -325,7 +332,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async create(query: { sheet: string; row: any }) {
     try {
       await this.connect()
-      const sheet = await this.client.sheetsByTitle[query.sheet]
+      const sheet = this.client.sheetsByTitle[query.sheet]
       const rowToInsert =
         typeof query.row === "string" ? JSON.parse(query.row) : query.row
       const row = await sheet.addRow(rowToInsert)
@@ -341,7 +348,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async read(query: { sheet: string }) {
     try {
       await this.connect()
-      const sheet = await this.client.sheetsByTitle[query.sheet]
+      const sheet = this.client.sheetsByTitle[query.sheet]
       const rows = await sheet.getRows()
       const headerValues = sheet.headerValues
       const response = []
@@ -360,7 +367,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async update(query: { sheet: string; rowIndex: number; row: any }) {
     try {
       await this.connect()
-      const sheet = await this.client.sheetsByTitle[query.sheet]
+      const sheet = this.client.sheetsByTitle[query.sheet]
       const rows = await sheet.getRows()
       const row = rows[query.rowIndex]
       if (row) {
@@ -384,7 +391,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async delete(query: { sheet: string; rowIndex: number }) {
     await this.connect()
-    const sheet = await this.client.sheetsByTitle[query.sheet]
+    const sheet = this.client.sheetsByTitle[query.sheet]
     const rows = await sheet.getRows()
     const row = rows[query.rowIndex]
     if (row) {
