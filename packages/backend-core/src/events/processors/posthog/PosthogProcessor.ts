@@ -47,6 +47,8 @@ export default class PosthogProcessor implements EventProcessor {
       return
     }
 
+    properties = this.clearPIIProperties(properties)
+
     properties.version = pkg.version
     properties.service = env.SERVICE
     properties.environment = identity.environment
@@ -77,6 +79,16 @@ export default class PosthogProcessor implements EventProcessor {
     }
 
     this.posthog.capture(payload)
+  }
+
+  clearPIIProperties(properties: any) {
+    if (properties.email) {
+      delete properties.email
+    }
+    if (properties.audited) {
+      delete properties.audited
+    }
+    return properties
   }
 
   async identify(identity: Identity, timestamp?: string | number) {

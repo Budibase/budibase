@@ -49,6 +49,25 @@ describe("PosthogProcessor", () => {
       expect(processor.posthog.capture).toHaveBeenCalledTimes(0)
     })
 
+    it("removes audited information", async () => {
+      const processor = new PosthogProcessor("test")
+
+      const identity = newIdentity()
+      const properties = {
+        email: "test",
+        audited: {
+          name: "test",
+        },
+      }
+
+      await processor.processEvent(Event.USER_CREATED, identity, properties)
+      expect(processor.posthog.capture).toHaveBeenCalled()
+      // @ts-ignore
+      const call = processor.posthog.capture.mock.calls[0][0]
+      expect(call.properties.audited).toBeUndefined()
+      expect(call.properties.email).toBeUndefined()
+    })
+
     describe("rate limiting", () => {
       it("sends daily event once in same day", async () => {
         const processor = new PosthogProcessor("test")
