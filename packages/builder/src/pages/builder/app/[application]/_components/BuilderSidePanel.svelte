@@ -78,7 +78,6 @@
         paginated: query ? null : false,
       },
     })
-    await usersFetch.refresh()
 
     filteredUsers = $usersFetch.rows.map(user => {
       const isBuilderOrAdmin = user.admin?.global || user.builder?.global
