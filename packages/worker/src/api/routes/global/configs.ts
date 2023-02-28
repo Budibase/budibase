@@ -34,8 +34,8 @@ function settingValidation() {
 function googleValidation() {
   // prettier-ignore
   return Joi.object({
-    clientID: Joi.when('activated', { is: true, then: Joi.string().required() }),
-    clientSecret: Joi.when('activated', { is: true, then: Joi.string().required() }),
+    clientID: Joi.string().required(),
+    clientSecret: Joi.string().required(),
     activated: Joi.boolean().required(),
   }).unknown(true)
 }
@@ -45,12 +45,12 @@ function oidcValidation() {
   return Joi.object({
     configs: Joi.array().items(
       Joi.object({
-        clientID: Joi.when('activated', { is: true, then: Joi.string().required() }),
-        clientSecret: Joi.when('activated', { is: true, then: Joi.string().required() }),
-        configUrl: Joi.when('activated', { is: true, then: Joi.string().required() }),
+        clientID: Joi.string().required(),
+        clientSecret: Joi.string().required(),
+        configUrl: Joi.string().required(),
         logo: Joi.string().allow("", null),
         name: Joi.string().allow("", null),
-        uuid: Joi.when('activated', { is: true, then: Joi.string().required() }),
+        uuid: Joi.string().required(),
         activated: Joi.boolean().required(),
         scopes: Joi.array().optional()
       })
