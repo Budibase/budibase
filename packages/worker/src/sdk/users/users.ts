@@ -14,6 +14,7 @@ import {
   users as usersCore,
   utils,
   ViewName,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import {
   AccountMetadata,
@@ -34,7 +35,7 @@ import {
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
-import { groups as groupsSdk } from "@budibase/pro"
+import * as pro from "@budibase/pro"
 import * as accountSdk from "../accounts"
 
 const PAGE_LIMIT = 8
@@ -133,8 +134,8 @@ const buildUser = async (
 
   let hashedPassword
   if (password) {
-    if (await isPreventSSOPasswords(user)) {
-      throw new HTTPError("SSO user cannot set password", 400)
+    if (await isPreventPasswordActions(user)) {
+      throw new HTTPError("Password change is disabled for this user", 400)
     }
     hashedPassword = opts.hashPassword ? await utils.hash(password) : password
   } else if (dbUser) {
@@ -199,11 +200,16 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   }
 }
 
-export async function isPreventSSOPasswords(user: User) {
+export async function isPreventPasswordActions(user: User) {
   // when in maintenance mode we allow sso users with the admin role
   // to perform any password action - this prevents lockout
-  if (env.ENABLE_SSO_MAINTENANCE_MODE && user.admin?.global) {
+  if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE && user.admin?.global) {
     return false
+  }
+
+  // SSO is enforced for all users
+  if (await pro.features.isSSOEnforced()) {
+    return true
   }
 
   // Check local sso
@@ -293,7 +299,7 @@ export const save = async (
 
     if (userGroups.length > 0) {
       for (let groupId of userGroups) {
-        groupPromises.push(groupsSdk.addUsers(groupId, [_id]))
+        groupPromises.push(pro.groups.addUsers(groupId, [_id]))
       }
     }
   }
@@ -471,7 +477,7 @@ export const bulkCreate = async (
     const groupPromises = []
     const createdUserIds = saved.map(user => user._id)
     for (let groupId of groups) {
-      groupPromises.push(groupsSdk.addUsers(groupId, createdUserIds))
+      groupPromises.push(pro.groups.addUsers(groupId, createdUserIds))
     }
     await Promise.all(groupPromises)
   }
@@ -646,7 +652,7 @@ export const invite = async (
       }
       await sendEmail(user.email, EmailTemplatePurpose.INVITATION, opts)
       response.successful.push({ email: user.email })
-      await events.user.invited()
+      await events.user.invited(user.email)
     } catch (e) {
       console.error(`Failed to send email invitation email=${user.email}`, e)
       response.unsuccessful.push({

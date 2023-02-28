@@ -41,5 +41,6 @@ export enum Config {
   OIDC_LOGOS = "logos_oidc",
 }
 
+export const MIN_VALID_DATE = new Date(-2147483647000)
 export const MAX_VALID_DATE = new Date(2147483647000)
 export const DEFAULT_TENANT_ID = "default"

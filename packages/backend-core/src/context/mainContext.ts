@@ -11,13 +11,7 @@ import {
   DEFAULT_TENANT_ID,
 } from "../constants"
 import { Database, IdentityContext } from "@budibase/types"
-
-export type ContextMap = {
-  tenantId?: string
-  appId?: string
-  identity?: IdentityContext
-  environmentVariables?: Record<string, string>
-}
+import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
 
@@ -30,14 +24,23 @@ export function getGlobalDBName(tenantId?: string) {
   return baseGlobalDBName(tenantId)
 }
 
-export function baseGlobalDBName(tenantId: string | undefined | null) {
-  let dbName
-  if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
-    dbName = StaticDatabases.GLOBAL.name
-  } else {
-    dbName = `${tenantId}${SEPARATOR}${StaticDatabases.GLOBAL.name}`
+export function getAuditLogDBName(tenantId?: string) {
+  if (!tenantId) {
+    tenantId = getTenantId()
   }
-  return dbName
+  if (tenantId === DEFAULT_TENANT_ID) {
+    return StaticDatabases.AUDIT_LOGS.name
+  } else {
+    return `${tenantId}${SEPARATOR}${StaticDatabases.AUDIT_LOGS.name}`
+  }
+}
+
+export function baseGlobalDBName(tenantId: string | undefined | null) {
+  if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
+    return StaticDatabases.GLOBAL.name
+  } else {
+    return `${tenantId}${SEPARATOR}${StaticDatabases.GLOBAL.name}`
+  }
 }
 
 export function isMultiTenant() {
@@ -226,6 +229,13 @@ export function getGlobalDB(): Database {
     throw new Error("Global DB not found")
   }
   return getDB(baseGlobalDBName(context?.tenantId))
+}
+
+export function getAuditLogsDB(): Database {
+  if (!getTenantId()) {
+    throw new Error("No tenant ID found - cannot open audit log DB")
+  }
+  return getDB(getAuditLogDBName())
 }
 
 /**
