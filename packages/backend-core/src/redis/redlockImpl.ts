@@ -63,7 +63,10 @@ export const newRedlock = async (opts: Options = {}) => {
   return new Redlock([client], options)
 }
 
-export const doWithLock = async (opts: LockOptions, task: any) => {
+export const doWithLock = async <T>(
+  opts: LockOptions,
+  task: () => Promise<T>
+) => {
   const redlock = await getClient(opts.type)
   let lock
   try {
