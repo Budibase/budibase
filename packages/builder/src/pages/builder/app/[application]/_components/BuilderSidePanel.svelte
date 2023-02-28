@@ -725,6 +725,7 @@
     border-bottom: var(--border-light);
     border-left: 2px solid transparent;
     border-right: 2px solid transparent;
+    margin-right: 1px;
   }
 
   #builder-side-panel-container .search :global(input) {
