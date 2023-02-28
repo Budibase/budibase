@@ -19,6 +19,7 @@
   export let autocomplete = false
   export let sort = false
   export let align
+  export let footer = null
 
   const dispatch = createEventDispatcher()
 
@@ -68,6 +69,7 @@
   {options}
   {autoWidth}
   {align}
+  {footer}
   {getOptionLabel}
   {getOptionValue}
   {getOptionIcon}

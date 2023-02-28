@@ -84,7 +84,7 @@
       const isBuilderOrAdmin = user.admin?.global || user.builder?.global
       let role = undefined
       if (isBuilderOrAdmin) {
-        role = "ADMIN"
+        role = Constants.Roles.ADMIN
       } else {
         const appRole = Object.keys(user.roles).find(x => x === prodAppId)
         if (appRole) {
@@ -134,6 +134,9 @@
       return
     }
     try {
+      if (user.role === role) {
+        return
+      }
       await updateAppUser(user, role)
     } catch (error) {
       console.error(error)
@@ -369,9 +372,12 @@
     }
   }
 
-  const roleNote = user => {
-    if (user.group) {
-      return "Part of a group"
+  const getRoleFooter = user => {
+    if (!user.role && user.group) {
+      return "This user has been given access via their group"
+    }
+    if (user.isBuilderOrAdmin) {
+      return "This user's role grants admin access to all apps"
     }
     return null
   }
@@ -557,7 +563,7 @@
                 </div>
                 <div class="auth-entity-access" class:muted={user.group}>
                   <RoleSelect
-                    note={roleNote(user)}
+                    footer={getRoleFooter(user)}
                     placeholder={false}
                     value={user.role}
                     allowRemove={user.role && !user.group}
@@ -569,9 +575,11 @@
                     on:remove={() => {
                       onUpdateUser(user)
                     }}
-                    disabled={user.isBuilderOrAdmin}
                     autoWidth
                     align="right"
+                    allowedRoles={user.isBuilderOrAdmin
+                      ? [Constants.Roles.ADMIN]
+                      : null}
                   />
                 </div>
               </div>

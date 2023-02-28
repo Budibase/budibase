@@ -34,6 +34,7 @@
   export let fetchTerm = null
   export let customPopoverHeight
   export let align = "left"
+  export let footer = null
 
   const dispatch = createEventDispatcher()
 
@@ -210,6 +211,12 @@
         {/each}
       {/if}
     </ul>
+
+    {#if footer}
+      <div class="footer">
+        {footer}
+      </div>
+    {/if}
   </div>
 </Popover>
 
@@ -285,5 +292,12 @@
   }
   .popover-content :global(.spectrum-Search .spectrum-Textfield-icon) {
     top: 9px;
+  }
+
+  .footer {
+    padding: 4px 12px 12px 12px;
+    font-style: italic;
+    max-width: 160px;
+    font-size: 12px;
   }
 </style>

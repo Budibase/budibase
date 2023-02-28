@@ -13,16 +13,24 @@
   export let allowRemove = false
   export let disabled = false
   export let align
+  export let footer = null
+  export let allowedRoles = null
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
 
-  $: options = getOptions($roles, allowPublic, allowRemove)
+  $: options = getOptions($roles, allowPublic, allowRemove, allowedRoles)
 
-  const getOptions = (roles, allowPublic) => {
+  const getOptions = (roles, allowPublic, allowRemove, allowedRoles) => {
+    if (allowedRoles?.length) {
+      console.log(allowedRoles)
+      console.log(roles)
+      return roles.filter(role => allowedRoles.includes(role._id))
+    }
+    let newRoles = [...roles]
     if (allowRemove) {
-      roles = [
-        ...roles,
+      newRoles = [
+        ...newRoles,
         {
           _id: RemoveID,
           name: "Remove",
@@ -30,9 +38,9 @@
       ]
     }
     if (allowPublic) {
-      return roles
+      return newRoles
     }
-    return roles.filter(role => role._id !== Constants.Roles.PUBLIC)
+    return newRoles.filter(role => role._id !== Constants.Roles.PUBLIC)
   }
 
   const getColor = role => {
@@ -63,6 +71,7 @@
   {quiet}
   {disabled}
   {align}
+  {footer}
   bind:value
   on:change={onChange}
   {options}
