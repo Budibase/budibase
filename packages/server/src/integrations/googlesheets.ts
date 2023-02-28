@@ -172,7 +172,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async connect() {
     try {
       // Initialise oAuth client
-      let googleConfig = await configs.getGoogleConfig()
+      let googleConfig = await configs.getGoogleDatasourceConfig()
       if (!googleConfig) {
         throw new HTTPError("Google config not found", 400)
       }
