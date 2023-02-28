@@ -68,22 +68,32 @@
   }
 
   const initTour = async () => {
-    if (
-      !$auth.user?.onboardedAt &&
-      isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)
-    ) {
-      // Determine the correct step
-      const activeNav = $layout.children.find(c => $isActive(c.path))
-      const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
-      const targetStep = activeNav
-        ? onboardingTour.find(step => step.route === activeNav?.path)
-        : null
-      await store.update(state => ({
-        ...state,
-        onboarding: true,
-        tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
-        tourStepKey: targetStep?.id,
-      }))
+    // Check if onboarding is enabled.
+    if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
+      if (!$auth.user?.onboardedAt) {
+        // Determine the correct step
+        const activeNav = $layout.children.find(c => $isActive(c.path))
+        const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
+        const targetStep = activeNav
+          ? onboardingTour.find(step => step.route === activeNav?.path)
+          : null
+        await store.update(state => ({
+          ...state,
+          onboarding: true,
+          tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
+          tourStepKey: targetStep?.id,
+        }))
+      } else {
+        // Feature tour date
+        const release_date = new Date("2023-03-01T00:00:00.000Z")
+        const onboarded = new Date($auth.user?.onboardedAt)
+        if (onboarded < release_date) {
+          await store.update(state => ({
+            ...state,
+            tourKey: TOUR_KEYS.FEATURE_ONBOARDING,
+          }))
+        }
+      }
     }
   }
 

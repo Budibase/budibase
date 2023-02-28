@@ -65,7 +65,7 @@ const getTours = () => {
         id: TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT,
         title: "Users",
         query: ".toprightnav #builder-app-users-button",
-        body: "Choose which users you want to see to have access to your app and control what level of access they have.",
+        body: "Add users to your app and control what level of access they have.",
         onLoad: () => {
           tourEvent(TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT)
         },
@@ -107,11 +107,30 @@ const getTours = () => {
         id: TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT,
         title: "Users",
         query: ".toprightnav #builder-app-users-button",
-        body: "Choose which users you want to have access to your app and control what level of access they have.",
+        body: "Add users to your app and control what level of access they have.",
         onLoad: () => {
           tourEvent(TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT)
         },
-        align: "left",
+        onComplete: async () => {
+          // Push the onboarding forward
+          if (get(auth).user) {
+            await users.save({
+              ...get(auth).user,
+              onboardedAt: new Date().toISOString(),
+            })
+
+            // Update the cached user
+            await auth.getSelf()
+
+            store.update(state => ({
+              ...state,
+              tourNodes: undefined,
+              tourKey: undefined,
+              tourKeyStep: undefined,
+              onboarding: false,
+            }))
+          }
+        },
       },
     ],
   }
