@@ -305,14 +305,17 @@
     }
     if (oidcLogos?.config) {
       const logoKeys = Object.keys(oidcLogos.config)
-      logoKeys.map(logoKey => {
-        const logoUrl = oidcLogos.config[logoKey]
-        iconDropdownOptions.unshift({
-          label: logoKey,
-          value: logoKey,
-          icon: logoUrl,
+      logoKeys
+        // don't include the etag entry in the logo config
+        .filter(key => !key.toLowerCase().includes("etag"))
+        .map(logoKey => {
+          const logoUrl = oidcLogos.config[logoKey]
+          iconDropdownOptions.unshift({
+            label: logoKey,
+            value: logoKey,
+            icon: logoUrl,
+          })
         })
-      })
     }
 
     // Fetch OIDC config
@@ -484,6 +487,7 @@
         <Select
           label=""
           bind:value={providers.oidc.config.configs[0].logo}
+          useOptionIconImage
           options={iconDropdownOptions}
           on:change={e => e.detail === "Upload" && fileinput.click()}
         />
