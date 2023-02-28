@@ -154,11 +154,29 @@ export async function getGoogleConfig(): Promise<
   GoogleInnerConfig | undefined
 > {
   const config = await getGoogleConfigDoc()
-  if (config) {
-    return config.config
+  return config?.config
+}
+
+export async function getGoogleDatasourceConfig(): Promise<
+  GoogleInnerConfig | undefined
+> {
+  if (!env.SELF_HOSTED) {
+    // always use the env vars in cloud
+    return getDefaultGoogleConfig()
   }
 
-  // Use google fallback configuration from env variables
+  // prefer the config in self-host
+  let config = await getGoogleConfig()
+
+  // fallback to env vars
+  if (!config || !config.activated) {
+    config = getDefaultGoogleConfig()
+  }
+
+  return config
+}
+
+export function getDefaultGoogleConfig(): GoogleInnerConfig | undefined {
   if (environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET) {
     return {
       clientID: environment.GOOGLE_CLIENT_ID!,
