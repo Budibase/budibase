@@ -18,6 +18,7 @@
   import { Constants, Utils } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
   import CopyInput from "components/common/inputs/CopyInput.svelte"
+  import { roles } from "stores/backend"
 
   let query = null
   let loaded = false
@@ -206,7 +207,7 @@
   const enrichGroupRole = group => {
     return {
       ...group,
-      role: group.roles[
+      role: group.roles?.[
         groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
       ],
     }
@@ -373,8 +374,9 @@
   }
 
   const getRoleFooter = user => {
-    if (!user.role && user.group) {
-      return "This user has been given access via their group"
+    if (user.group) {
+      const role = $roles.find(role => role._id === user.role)
+      return `This user has been given ${role?.name} access from the ${user.group} group`
     }
     if (user.isBuilderOrAdmin) {
       return "This user's role grants admin access to all apps"
@@ -489,6 +491,8 @@
                     on:remove={() => {
                       onUninviteAppUser(invite)
                     }}
+                    autoWidth
+                    align="right"
                   />
                 </div>
               </div>
@@ -538,6 +542,8 @@
                     on:remove={() => {
                       onUpdateGroup(group)
                     }}
+                    autoWidth
+                    align="right"
                   />
                 </div>
               </div>
@@ -645,7 +651,7 @@
   }
   .auth-entity-access.muted :global(.spectrum-Picker-label),
   .auth-entity-access.muted :global(.spectrum-StatusLight) {
-    opacity: 0.7;
+    opacity: 0.5;
   }
 
   .auth-entity-header {
@@ -660,7 +666,7 @@
   .auth-entity,
   .auth-entity-header {
     display: grid;
-    grid-template-columns: 1fr 100px;
+    grid-template-columns: 1fr 110px;
     align-items: center;
     gap: var(--spacing-xl);
   }
