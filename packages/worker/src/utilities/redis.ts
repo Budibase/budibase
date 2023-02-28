@@ -130,11 +130,9 @@ export async function checkInviteCode(
 
 /** 
   Get all currently available user invitations.
-  @return {Object[]} A
+  @return {Object[]} A list of all objects containing invite metadata
 **/
-export async function getInviteCodes(
-  tenantIds?: string[] //should default to the current tenant of the user session.
-) {
+export async function getInviteCodes(tenantIds?: string[]) {
   const client = await getClient(redis.utils.Databases.INVITATIONS)
   const invites: any[] = await client.scan()
 

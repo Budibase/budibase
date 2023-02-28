@@ -13,15 +13,14 @@
     notifications,
   } from "@budibase/bbui"
 
-  import RevertModal from "components/deploy/RevertModal.svelte"
-  import VersionModal from "components/deploy/VersionModal.svelte"
-  import DeployNavigation from "components/deploy/DeployNavigation.svelte"
+  import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
+  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
 
   export let application
@@ -116,6 +115,11 @@
   <div class="loading" />
 {:then _}
   <TourPopover />
+
+  {#if $store.builderSidePanel}
+    <BuilderSidePanel />
+  {/if}
+
   <div class="root">
     <div class="top-nav">
       <div class="topleftnav">
@@ -181,11 +185,7 @@
         </Tabs>
       </div>
       <div class="toprightnav">
-        <div class="version">
-          <VersionModal />
-        </div>
-        <RevertModal />
-        <DeployNavigation {application} />
+        <AppActions {application} />
       </div>
     </div>
     <slot />
@@ -250,10 +250,6 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-xl);
-  }
-
-  .version {
-    margin-right: var(--spacing-s);
+    gap: var(--spacing-l);
   }
 </style>

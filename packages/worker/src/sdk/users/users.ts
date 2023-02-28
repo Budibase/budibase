@@ -56,11 +56,22 @@ export const countUsersByApp = async (appId: string) => {
   }
 }
 
+export const getUsersByAppAccess = async (appId?: string) => {
+  const opts: any = {
+    include_docs: true,
+    limit: 50,
+  }
+  let response: User[] = await usersCore.searchGlobalUsersByAppAccess(
+    appId,
+    opts
+  )
+  return response
+}
+
 export const paginatedUsers = async ({
   page,
   email,
   appId,
-  userIds,
 }: SearchUsersRequest = {}) => {
   const db = tenancy.getGlobalDB()
   // get one extra document, to have the next page
