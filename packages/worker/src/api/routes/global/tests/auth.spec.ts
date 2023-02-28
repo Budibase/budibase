@@ -110,7 +110,7 @@ describe("/api/global/auth", () => {
           )
 
           expect(response.body).toEqual({
-            message: "SSO user cannot login using password",
+            message: "Password login is disabled for this user",
             status: 400,
           })
         }
@@ -175,7 +175,7 @@ describe("/api/global/auth", () => {
           )
 
           expect(res.body).toEqual({
-            message: "SSO user cannot reset password",
+            message: "Password reset is disabled for this user",
             status: 400,
             error: {
               code: "http",
@@ -367,7 +367,7 @@ describe("/api/global/auth", () => {
 
         const res = await config.api.configs.OIDCCallback(configId, preAuthRes)
 
-        expect(events.auth.login).toBeCalledWith("oidc")
+        expect(events.auth.login).toBeCalledWith("oidc", "oauth@example.com")
         expect(events.auth.login).toBeCalledTimes(1)
         expect(res.status).toBe(302)
         const location: string = res.get("location")
