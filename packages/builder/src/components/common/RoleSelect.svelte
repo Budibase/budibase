@@ -23,8 +23,6 @@
 
   const getOptions = (roles, allowPublic, allowRemove, allowedRoles) => {
     if (allowedRoles?.length) {
-      console.log(allowedRoles)
-      console.log(roles)
       return roles.filter(role => allowedRoles.includes(role._id))
     }
     let newRoles = [...roles]
