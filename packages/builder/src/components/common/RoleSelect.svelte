@@ -11,6 +11,8 @@
   export let quiet = false
   export let allowPublic = true
   export let allowRemove = false
+  export let disabled = false
+  export let align
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
@@ -59,6 +61,8 @@
 <Select
   {autoWidth}
   {quiet}
+  {disabled}
+  {align}
   bind:value
   on:change={onChange}
   {options}

@@ -33,6 +33,8 @@
   export let sort = false
   export let fetchTerm = null
   export let customPopoverHeight
+  export let align = "left"
+
   const dispatch = createEventDispatcher()
 
   let searchTerm = null
@@ -131,7 +133,7 @@
 
 <Popover
   anchor={button}
-  align="left"
+  align={align || "left"}
   bind:this={popover}
   {open}
   on:close={() => (open = false)}

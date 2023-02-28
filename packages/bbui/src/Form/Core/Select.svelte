@@ -18,6 +18,7 @@
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
+  export let align
 
   const dispatch = createEventDispatcher()
 
@@ -66,6 +67,7 @@
   {fieldColour}
   {options}
   {autoWidth}
+  {align}
   {getOptionLabel}
   {getOptionValue}
   {getOptionIcon}
