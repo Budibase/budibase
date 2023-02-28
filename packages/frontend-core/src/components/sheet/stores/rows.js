@@ -100,7 +100,26 @@ export const createRowsStore = context => {
   // Adds a new empty row
   const addRow = async () => {
     try {
-      const newRow = await API.saveRow({ tableId: get(tableId) })
+      // Create row
+      let newRow = await API.saveRow({ tableId: get(tableId) })
+
+      // Use search endpoint to fetch the row again, ensuring relationships are
+      // properly enriched
+      const res = await API.searchTable({
+        tableId: get(tableId),
+        limit: 1,
+        query: {
+          equal: {
+            _id: newRow._id,
+          },
+        },
+        paginate: false,
+      })
+      if (res?.rows?.[0]) {
+        newRow = res.rows[0]
+      }
+
+      // Update state
       handleNewRows([newRow])
       return newRow
     } catch (error) {
