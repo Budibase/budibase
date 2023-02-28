@@ -12,7 +12,8 @@ type Passport = {
 }
 
 async function fetchGoogleCreds() {
-  const config = await configs.getGoogleConfig()
+  let config = await configs.getGoogleDatasourceConfig()
+
   if (!config) {
     throw new Error("No google configuration found")
   }
