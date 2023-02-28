@@ -33,7 +33,7 @@ import {
   platform,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
-import { isEmailConfigured } from "src/utilities/email"
+import { isEmailConfigured } from "../../../utilities/email"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
