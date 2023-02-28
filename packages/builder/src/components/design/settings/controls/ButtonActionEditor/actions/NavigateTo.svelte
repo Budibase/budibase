@@ -39,7 +39,6 @@
     on:change={() => (parameters.url = "")}
   />
   {#if parameters.type === "screen"}
-    <Label small>Screen</Label>
     <DrawerBindableCombobox
       title="Destination"
       placeholder="/screen"
@@ -52,7 +51,6 @@
     <div />
     <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
   {:else}
-    <Label small>URL</Label>
     <DrawerBindableInput
       title="Destination"
       placeholder="/url"
