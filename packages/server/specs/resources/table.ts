@@ -1,10 +1,10 @@
-const {
+import {
   FieldTypes,
   RelationshipTypes,
   FormulaTypes,
-} = require("../../src/constants")
-const { object } = require("./utils")
-const Resource = require("./utils/Resource")
+} from "../../src/constants"
+import { object } from "./utils"
+import Resource from "./utils/Resource"
 
 const table = {
   _id: "ta_5b1649e42a5b41dea4ef7742a36a7a70",
@@ -170,7 +170,7 @@ const tableOutputSchema = {
   required: [...tableSchema.required, "_id"],
 }
 
-module.exports = new Resource()
+export default new Resource()
   .setExamples({
     table: {
       value: {

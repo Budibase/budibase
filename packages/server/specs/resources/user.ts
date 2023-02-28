@@ -1,5 +1,5 @@
-const { object } = require("./utils")
-const Resource = require("./utils/Resource")
+import { object } from "./utils"
+import Resource from "./utils/Resource"
 
 const user = {
   _id: "us_693a73206518477283a8d5ae31103252",
@@ -105,7 +105,7 @@ const userOutputSchema = {
   required: [...userSchema.required, "_id"],
 }
 
-module.exports = new Resource()
+export default new Resource()
   .setExamples({
     user: {
       value: {

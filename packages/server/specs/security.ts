@@ -1,4 +1,4 @@
-exports.ApiKeyAuth = {
+export const ApiKeyAuth = {
   type: "apiKey",
   in: "header",
   name: "x-budibase-api-key",
