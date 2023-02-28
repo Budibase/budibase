@@ -24,12 +24,11 @@
     if (allSelected) {
       $selectedRows = {}
     } else {
-      selectedRows.update(state => {
-        $rows.forEach(row => {
-          state[row._id] = true
-        })
-        return state
+      let allRows = {}
+      $rows.forEach(row => {
+        allRows[row._id] = true
       })
+      $selectedRows = allRows
     }
   }
 </script>

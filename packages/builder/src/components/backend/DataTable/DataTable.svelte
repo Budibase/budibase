@@ -24,132 +24,132 @@
   import { fetchData, Sheet } from "@budibase/frontend-core"
   import { API } from "api"
 
-  let hideAutocolumns = true
-  let filters
-
-  $: isUsersTable = $tables.selected?._id === TableNames.USERS
-  $: type = $tables.selected?.type
-  $: isInternal = type !== "external"
-  $: schema = $tables.selected?.schema
-  $: enrichedSchema = enrichSchema($tables.selected?.schema)
-  $: id = $tables.selected?._id
-  $: fetch = createFetch(id)
-  $: hasCols = checkHasCols(schema)
-  $: hasRows = !!$fetch.rows?.length
-  $: showError($fetch.error)
-  $: id, (filters = null)
-
-  let appliedFilter
-  let rawFilter
-  let appliedSort
-  let selectedRows = []
-
-  $: enrichedSchema,
-    () => {
-      appliedFilter = null
-      rawFilter = null
-      appliedSort = null
-      selectedRows = []
-    }
-
-  $: if (Number.isInteger($fetch.pageNumber)) {
-    selectedRows = []
-  }
-
-  const showError = error => {
-    if (error) {
-      notifications.error(error?.message || "Unable to fetch data.")
-    }
-  }
-
-  const enrichSchema = schema => {
-    let tempSchema = { ...schema }
-    tempSchema._id = {
-      type: "internal",
-      editable: false,
-      displayName: "ID",
-      autocolumn: true,
-    }
-    if (isInternal) {
-      tempSchema._rev = {
-        type: "internal",
-        editable: false,
-        displayName: "Revision",
-        autocolumn: true,
-      }
-    }
-
-    return tempSchema
-  }
-
-  const checkHasCols = schema => {
-    if (!schema || Object.keys(schema).length === 0) {
-      return false
-    }
-    let fields = Object.values(schema)
-    for (let field of fields) {
-      if (!field.autocolumn) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Fetches new data whenever the table changes
-  const createFetch = tableId => {
-    return fetchData({
-      API,
-      datasource: {
-        tableId,
-        type: "table",
-      },
-      options: {
-        schema,
-        limit: 10,
-        paginate: true,
-      },
-    })
-  }
-
-  // Fetch data whenever sorting option changes
-  const onSort = async e => {
-    const sort = {
-      sortColumn: e.detail.column,
-      sortOrder: e.detail.order,
-    }
-    await fetch.update(sort)
-    appliedSort = { ...sort }
-    appliedSort.sortOrder = appliedSort.sortOrder.toLowerCase()
-    selectedRows = []
-  }
-
-  // Fetch data whenever filters change
-  const onFilter = e => {
-    filters = e.detail
-    fetch.update({
-      filter: filters,
-    })
-    appliedFilter = e.detail
-  }
-
-  // Fetch data whenever schema changes
-  const onUpdateColumns = () => {
-    selectedRows = []
-    fetch.refresh()
-  }
-
-  // Fetch data whenever rows are modified. Unfortunately we have to lose
-  // our pagination place, as our bookmarks will have shifted.
-  const onUpdateRows = () => {
-    selectedRows = []
-    fetch.refresh()
-  }
-
-  // When importing new rows it is better to reinitialise request/paging data.
-  // Not doing so causes inconsistency in paging behaviour and content.
-  const onImportData = () => {
-    fetch.getInitialData()
-  }
+  // let hideAutocolumns = true
+  // let filters
+  //
+  // $: isUsersTable = $tables.selected?._id === TableNames.USERS
+  // $: type = $tables.selected?.type
+  // $: isInternal = type !== "external"
+  // $: schema = $tables.selected?.schema
+  // $: enrichedSchema = enrichSchema($tables.selected?.schema)
+  // $: id = $tables.selected?._id
+  // $: fetch = createFetch(id)
+  // $: hasCols = checkHasCols(schema)
+  // $: hasRows = !!$fetch.rows?.length
+  // $: showError($fetch.error)
+  // $: id, (filters = null)
+  //
+  // let appliedFilter
+  // let rawFilter
+  // let appliedSort
+  // let selectedRows = []
+  //
+  // $: enrichedSchema,
+  //   () => {
+  //     appliedFilter = null
+  //     rawFilter = null
+  //     appliedSort = null
+  //     selectedRows = []
+  //   }
+  //
+  // $: if (Number.isInteger($fetch.pageNumber)) {
+  //   selectedRows = []
+  // }
+  //
+  // const showError = error => {
+  //   if (error) {
+  //     notifications.error(error?.message || "Unable to fetch data.")
+  //   }
+  // }
+  //
+  // const enrichSchema = schema => {
+  //   let tempSchema = { ...schema }
+  //   tempSchema._id = {
+  //     type: "internal",
+  //     editable: false,
+  //     displayName: "ID",
+  //     autocolumn: true,
+  //   }
+  //   if (isInternal) {
+  //     tempSchema._rev = {
+  //       type: "internal",
+  //       editable: false,
+  //       displayName: "Revision",
+  //       autocolumn: true,
+  //     }
+  //   }
+  //
+  //   return tempSchema
+  // }
+  //
+  // const checkHasCols = schema => {
+  //   if (!schema || Object.keys(schema).length === 0) {
+  //     return false
+  //   }
+  //   let fields = Object.values(schema)
+  //   for (let field of fields) {
+  //     if (!field.autocolumn) {
+  //       return true
+  //     }
+  //   }
+  //   return false
+  // }
+  //
+  // // Fetches new data whenever the table changes
+  // const createFetch = tableId => {
+  //   return fetchData({
+  //     API,
+  //     datasource: {
+  //       tableId,
+  //       type: "table",
+  //     },
+  //     options: {
+  //       schema,
+  //       limit: 10,
+  //       paginate: true,
+  //     },
+  //   })
+  // }
+  //
+  // // Fetch data whenever sorting option changes
+  // const onSort = async e => {
+  //   const sort = {
+  //     sortColumn: e.detail.column,
+  //     sortOrder: e.detail.order,
+  //   }
+  //   await fetch.update(sort)
+  //   appliedSort = { ...sort }
+  //   appliedSort.sortOrder = appliedSort.sortOrder.toLowerCase()
+  //   selectedRows = []
+  // }
+  //
+  // // Fetch data whenever filters change
+  // const onFilter = e => {
+  //   filters = e.detail
+  //   fetch.update({
+  //     filter: filters,
+  //   })
+  //   appliedFilter = e.detail
+  // }
+  //
+  // // Fetch data whenever schema changes
+  // const onUpdateColumns = () => {
+  //   selectedRows = []
+  //   fetch.refresh()
+  // }
+  //
+  // // Fetch data whenever rows are modified. Unfortunately we have to lose
+  // // our pagination place, as our bookmarks will have shifted.
+  // const onUpdateRows = () => {
+  //   selectedRows = []
+  //   fetch.refresh()
+  // }
+  //
+  // // When importing new rows it is better to reinitialise request/paging data.
+  // // Not doing so causes inconsistency in paging behaviour and content.
+  // const onImportData = () => {
+  //   fetch.getInitialData()
+  // }
 </script>
 
 <div>

@@ -58,10 +58,10 @@ export const createReorderStores = context => {
     })
 
     if (swapColumnIdx !== $reorder.swapColumnIdx) {
-      reorder.update(state => {
-        state.swapColumnIdx = swapColumnIdx
-        return state
-      })
+      reorder.update(state => ({
+        ...state,
+        swapColumnIdx: swapColumnIdx,
+      }))
     }
   }
 

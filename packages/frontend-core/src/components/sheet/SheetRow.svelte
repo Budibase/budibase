@@ -1,3 +1,5 @@
+<svelte:options immutable={true} />
+
 <script>
   import { getContext } from "svelte"
   import SpreadsheetCell from "./SheetCell.svelte"
@@ -38,10 +40,10 @@
   }
 
   const selectRow = id => {
-    selectedRows.update(state => {
-      state[id] = !state[id]
-      return state
-    })
+    selectedRows.update(state => ({
+      ...state,
+      [id]: !state[id],
+    }))
   }
 </script>
 
@@ -104,7 +106,9 @@
     color: var(--spectrum-global-color-gray-500);
   }
   .row:hover .checkbox,
-  .checkbox.visible,
+  .checkbox.visible {
+    display: flex;
+  }
   .number.visible {
     display: block;
   }

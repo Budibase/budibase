@@ -8,7 +8,9 @@
 
   const addRow = async field => {
     const newRow = await rows.actions.addRow()
-    $selectedCellId = `${newRow._id}-${field.name}`
+    if (newRow) {
+      $selectedCellId = `${newRow._id}-${field.name}`
+    }
   }
 </script>
 
