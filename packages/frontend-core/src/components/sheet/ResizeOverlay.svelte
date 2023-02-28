@@ -62,7 +62,6 @@
   }
 
   const getStyle = (col, scrollLeft, rowCount) => {
-    console.log("stye")
     const left = col.left + col.width - (col.idx === 0 ? 0 : scrollLeft)
     const contentHeight = (rowCount + 2) * cellHeight
     return `--left:${left}px; --content-height:${contentHeight}px;`

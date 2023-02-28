@@ -11,6 +11,7 @@
 
   $: contentHeight = ($rows.length + 2) * cellHeight
   $: contentWidth = computeContentWidth($columns)
+  $: scrollLeft = $scroll.left
 
   const computeContentWidth = columns => {
     if (!columns.length) {
@@ -43,7 +44,7 @@
 <div
   bind:this={ref}
   class="sheet-body"
-  class:horizontally-scrolled={$scroll.left > 0}
+  class:horizontally-scrolled={scrollLeft > 0}
   on:click|self={() => ($selectedCellId = null)}
   on:scroll={handleScroll}
 >

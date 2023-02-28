@@ -62,7 +62,6 @@ export const createRowsStore = context => {
         if (!loaded) {
           // Hydrate initial data
           loaded = true
-          console.log("instantiate new fetch data")
           schema.set($$fetch.schema)
           primaryDisplay.set($$fetch.definition?.primaryDisplay)
         }
@@ -179,9 +178,7 @@ export const createRowsStore = context => {
 
   // Loads the next page of data if available
   const loadNextPage = () => {
-    const $fetch = get(fetch)
-    console.log("fetch next page")
-    $fetch?.nextPage()
+    get(fetch)?.nextPage()
   }
 
   return {

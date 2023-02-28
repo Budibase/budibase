@@ -33,7 +33,6 @@ export const createViewportStores = context => {
   const visibleRows = derived(
     [rows, scrollTopStore, height],
     ([$rows, $scrollTop, $height]) => {
-      console.log("new rows")
       const maxRows = Math.ceil($height / cellHeight) + 16
       const firstRow = Math.max(0, Math.floor($scrollTop / cellHeight) - 8)
       return $rows.slice(firstRow, firstRow + maxRows)
@@ -44,7 +43,6 @@ export const createViewportStores = context => {
   const visibleColumns = derived(
     [columns, scrollLeftStore, width],
     ([$columns, $scrollLeft, $width]) => {
-      console.log("new columns")
       if (!$columns.length) {
         return []
       }
