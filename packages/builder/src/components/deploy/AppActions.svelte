@@ -20,6 +20,7 @@
   import { apps } from "stores/portal"
   import { store } from "builderStore"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
+  import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
 
   export let application
 
@@ -179,7 +180,11 @@
       />
     {/if}
 
-    <TourWrap tourStepKey={`builder-user-management`}>
+    <TourWrap
+      tourStepKey={$store.onboarding
+        ? TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT
+        : TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT}
+    >
       <span id="builder-app-users-button">
         <ActionButton
           quiet
