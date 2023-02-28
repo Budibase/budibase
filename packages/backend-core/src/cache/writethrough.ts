@@ -28,7 +28,7 @@ function makeCacheItem(doc: any, lastWrite: number | null = null): CacheItem {
   return { doc, lastWrite: lastWrite || Date.now() }
 }
 
-export async function put(
+async function put(
   db: Database,
   doc: Document,
   writeRateMs: number = DEFAULT_WRITE_RATE_MS
@@ -82,7 +82,7 @@ export async function put(
   return { ok: true, id: output._id, rev: output._rev }
 }
 
-export async function get(db: Database, id: string): Promise<any> {
+async function get(db: Database, id: string): Promise<any> {
   const cache = await getCache()
   const cacheKey = makeCacheKey(db, id)
   let cacheItem: CacheItem = await cache.get(cacheKey)
@@ -94,11 +94,7 @@ export async function get(db: Database, id: string): Promise<any> {
   return cacheItem.doc
 }
 
-export async function remove(
-  db: Database,
-  docOrId: any,
-  rev?: any
-): Promise<void> {
+async function remove(db: Database, docOrId: any, rev?: any): Promise<void> {
   const cache = await getCache()
   if (!docOrId) {
     throw new Error("No ID/Rev provided.")
