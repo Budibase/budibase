@@ -81,7 +81,16 @@
     await usersFetch.refresh()
 
     filteredUsers = $usersFetch.rows.map(user => {
-      const appRole = Object.keys(user.roles).find(x => x === prodAppId)
+      const isBuilderOrAdmin = user.admin?.global || user.builder?.global
+      let role = undefined
+      if (isBuilderOrAdmin) {
+        role = "ADMIN"
+      } else {
+        const appRole = Object.keys(user.roles).find(x => x === prodAppId)
+        if (appRole) {
+          role = user.roles[appRole]
+        }
+      }
 
       // if (
       //   !appRole &&
@@ -94,7 +103,8 @@
 
       return {
         ...user,
-        role: !appRole ? undefined : user.roles[appRole],
+        role,
+        isBuilderOrAdmin,
       }
     })
   }
@@ -423,167 +433,172 @@
     </span>
   </div>
 
-  {#if promptInvite && !userOnboardResponse}
-    <Layout gap="S" paddingX="XL">
-      <div class="invite-header">
-        <Heading size="XS">No user found</Heading>
-        <div class="invite-directions">
-          Add a valid email to invite a new user
-        </div>
-      </div>
-      <div class="invite-form">
-        <span>{query || ""}</span>
-        <ActionButton
-          icon="UserAdd"
-          disabled={!queryIsEmail || inviting}
-          on:click={onInviteUser}
-        >
-          Add user
-        </ActionButton>
-      </div>
-    </Layout>
-  {/if}
-
-  {#if !promptInvite}
-    <Layout gap="L" noPadding>
-      {#if filteredInvites?.length}
-        <Layout noPadding gap="XS">
-          <div class="auth-entity-header">
-            <div class="auth-entity-title">Pending invites</div>
-            <div class="auth-entity-access-title">Access</div>
+  <div class="body">
+    {#if promptInvite && !userOnboardResponse}
+      <Layout gap="S" paddingX="XL">
+        <div class="invite-header">
+          <Heading size="XS">No user found</Heading>
+          <div class="invite-directions">
+            Add a valid email to invite a new user
           </div>
-          {#each filteredInvites as invite}
-            <div class="auth-entity">
-              <div class="details">
-                <div class="user-email" title={invite.email}>
-                  {invite.email}
-                </div>
-              </div>
-              <div class="auth-entity-access">
-                <RoleSelect
-                  placeholder={false}
-                  value={invite.info.apps?.[prodAppId]}
-                  allowRemove={invite.info.apps?.[prodAppId]}
-                  allowPublic={false}
-                  quiet={true}
-                  on:change={e => {
-                    onUpdateUserInvite(invite, e.detail)
-                  }}
-                  on:remove={() => {
-                    onUninviteAppUser(invite)
-                  }}
-                />
-              </div>
-            </div>
-          {/each}
-        </Layout>
-      {/if}
-
-      {#if $licensing.groupsEnabled && filteredGroups?.length}
-        <Layout noPadding gap="XS">
-          <div class="auth-entity-header">
-            <div class="auth-entity-title">Groups</div>
-            <div class="auth-entity-access-title">Access</div>
-          </div>
-          {#each filteredGroups as group}
-            <div
-              class="auth-entity group"
-              on:click={() => {
-                if (selectedGroup != group._id) {
-                  selectedGroup = group._id
-                } else {
-                  selectedGroup = null
-                }
-              }}
-              on:keydown={() => {}}
-            >
-              <div class="details">
-                <GroupIcon {group} size="S" />
-                <div>
-                  {group.name}
-                </div>
-                <div class="auth-entity-meta">
-                  {`${group.users?.length} user${
-                    group.users?.length != 1 ? "s" : ""
-                  }`}
-                </div>
-              </div>
-              <div class="auth-entity-access">
-                <RoleSelect
-                  placeholder={false}
-                  value={group.role}
-                  allowRemove={group.role}
-                  allowPublic={false}
-                  quiet={true}
-                  on:change={e => {
-                    onUpdateGroup(group, e.detail)
-                  }}
-                  on:remove={() => {
-                    onUpdateGroup(group)
-                  }}
-                />
-              </div>
-            </div>
-          {/each}
-        </Layout>
-      {/if}
-
-      {#if filteredUsers?.length}
-        <div class="auth-entity-section">
-          <div class="auth-entity-header ">
-            <div class="auth-entity-title">Users</div>
-            <div class="auth-entity-access-title">Access</div>
-          </div>
-          {#each allUsers as user}
-            <div class="auth-entity">
-              <div class="details">
-                <div class="user-email" title={user.email}>
-                  {user.email}
-                </div>
-                <div class="auth-entity-meta">
-                  {userTitle(user)}
-                </div>
-              </div>
-              <div class="auth-entity-access" class:muted={user.group}>
-                <RoleSelect
-                  note={roleNote(user)}
-                  placeholder={false}
-                  value={user.role}
-                  allowRemove={user.role && !user.group}
-                  allowPublic={false}
-                  quiet={true}
-                  on:change={e => {
-                    onUpdateUser(user, e.detail)
-                  }}
-                  on:remove={() => {
-                    onUpdateUser(user)
-                  }}
-                />
-              </div>
-            </div>
-          {/each}
         </div>
-      {/if}
-    </Layout>
-  {/if}
-
-  {#if userOnboardResponse?.created}
-    <Layout gap="S" paddingX="XL">
-      <div class="invite-header">
-        <Heading size="XS">User added!</Heading>
-        <div class="invite-directions">
-          Email invites are not available without SMTP configuration. Here is
-          the password that has been generated for this user.
+        <div class="invite-form">
+          <span>{query || ""}</span>
+          <ActionButton
+            icon="UserAdd"
+            disabled={!queryIsEmail || inviting}
+            on:click={onInviteUser}
+          >
+            Add user
+          </ActionButton>
         </div>
-      </div>
-      <div>
-        <CopyInput
-          value={userOnboardResponse.successful[0]?.password}
-          label="Password"
-        />
-      </div>
-    </Layout>
-  {/if}
+      </Layout>
+    {/if}
+
+    {#if !promptInvite}
+      <Layout gap="L" noPadding>
+        {#if filteredInvites?.length}
+          <Layout noPadding gap="XS">
+            <div class="auth-entity-header">
+              <div class="auth-entity-title">Pending invites</div>
+              <div class="auth-entity-access-title">Access</div>
+            </div>
+            {#each filteredInvites as invite}
+              <div class="auth-entity">
+                <div class="details">
+                  <div class="user-email" title={invite.email}>
+                    {invite.email}
+                  </div>
+                </div>
+                <div class="auth-entity-access">
+                  <RoleSelect
+                    placeholder={false}
+                    value={invite.info.apps?.[prodAppId]}
+                    allowRemove={invite.info.apps?.[prodAppId]}
+                    allowPublic={false}
+                    quiet={true}
+                    on:change={e => {
+                      onUpdateUserInvite(invite, e.detail)
+                    }}
+                    on:remove={() => {
+                      onUninviteAppUser(invite)
+                    }}
+                  />
+                </div>
+              </div>
+            {/each}
+          </Layout>
+        {/if}
+
+        {#if $licensing.groupsEnabled && filteredGroups?.length}
+          <Layout noPadding gap="XS">
+            <div class="auth-entity-header">
+              <div class="auth-entity-title">Groups</div>
+              <div class="auth-entity-access-title">Access</div>
+            </div>
+            {#each filteredGroups as group}
+              <div
+                class="auth-entity group"
+                on:click={() => {
+                  if (selectedGroup != group._id) {
+                    selectedGroup = group._id
+                  } else {
+                    selectedGroup = null
+                  }
+                }}
+                on:keydown={() => {}}
+              >
+                <div class="details">
+                  <GroupIcon {group} size="S" />
+                  <div>
+                    {group.name}
+                  </div>
+                  <div class="auth-entity-meta">
+                    {`${group.users?.length} user${
+                      group.users?.length != 1 ? "s" : ""
+                    }`}
+                  </div>
+                </div>
+                <div class="auth-entity-access">
+                  <RoleSelect
+                    placeholder={false}
+                    value={group.role}
+                    allowRemove={group.role}
+                    allowPublic={false}
+                    quiet={true}
+                    on:change={e => {
+                      onUpdateGroup(group, e.detail)
+                    }}
+                    on:remove={() => {
+                      onUpdateGroup(group)
+                    }}
+                  />
+                </div>
+              </div>
+            {/each}
+          </Layout>
+        {/if}
+
+        {#if filteredUsers?.length}
+          <div class="auth-entity-section">
+            <div class="auth-entity-header ">
+              <div class="auth-entity-title">Users</div>
+              <div class="auth-entity-access-title">Access</div>
+            </div>
+            {#each allUsers as user}
+              <div class="auth-entity">
+                <div class="details">
+                  <div class="user-email" title={user.email}>
+                    {user.email}
+                  </div>
+                  <div class="auth-entity-meta">
+                    {userTitle(user)}
+                  </div>
+                </div>
+                <div class="auth-entity-access" class:muted={user.group}>
+                  <RoleSelect
+                    note={roleNote(user)}
+                    placeholder={false}
+                    value={user.role}
+                    allowRemove={user.role && !user.group}
+                    allowPublic={false}
+                    quiet={true}
+                    on:change={e => {
+                      onUpdateUser(user, e.detail)
+                    }}
+                    on:remove={() => {
+                      onUpdateUser(user)
+                    }}
+                    disabled={user.isBuilderOrAdmin}
+                    autoWidth
+                    align="right"
+                  />
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </Layout>
+    {/if}
+
+    {#if userOnboardResponse?.created}
+      <Layout gap="S" paddingX="XL">
+        <div class="invite-header">
+          <Heading size="XS">User added!</Heading>
+          <div class="invite-directions">
+            Email invites are not available without SMTP configuration. Here is
+            the password that has been generated for this user.
+          </div>
+        </div>
+        <div>
+          <CopyInput
+            value={userOnboardResponse.successful[0]?.password}
+            label="Password"
+          />
+        </div>
+      </Layout>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -617,6 +632,9 @@
     white-space: nowrap;
   }
 
+  .auth-entity-access {
+    margin-right: var(--spacing-m);
+  }
   .auth-entity-access.muted :global(.spectrum-Picker-label),
   .auth-entity-access.muted :global(.spectrum-StatusLight) {
     opacity: 0.7;
@@ -634,7 +652,7 @@
   .auth-entity,
   .auth-entity-header {
     display: grid;
-    grid-template-columns: 65% auto;
+    grid-template-columns: 1fr 100px;
     align-items: center;
     gap: var(--spacing-xl);
   }
@@ -657,10 +675,8 @@
     background: var(--background);
     border-left: var(--border-light);
     z-index: 3;
-    padding: var(--spacing-xl) 0px;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
     overflow-y: auto;
     overflow-x: hidden;
     transition: transform 130ms ease-out;
@@ -689,8 +705,10 @@
   #builder-side-panel-container .search {
     padding-top: var(--spacing-m);
     padding-bottom: var(--spacing-m);
-    border-top: 1px solid var(--spectrum-alias-border-color-mid);
-    border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
+    border-top: var(--border-light);
+    border-bottom: var(--border-light);
+    border-left: 2px solid transparent;
+    border-right: 2px solid transparent;
   }
 
   #builder-side-panel-container .search :global(input) {
@@ -721,6 +739,7 @@
   }
 
   .builder-side-panel-header {
+    height: 58px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -731,5 +750,12 @@
     display: flex;
     gap: var(--spacing-s);
     flex-direction: column;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    padding: var(--spacing-xl) 0;
   }
 </style>

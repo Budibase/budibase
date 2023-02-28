@@ -22,6 +22,7 @@
   export let tooltip = ""
   export let autocomplete = false
   export let customPopoverHeight
+  export let align
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -48,6 +49,7 @@
     {placeholder}
     {autoWidth}
     {sort}
+    {align}
     {getOptionLabel}
     {getOptionValue}
     {getOptionIcon}
