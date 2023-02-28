@@ -76,7 +76,7 @@
     gap: calc(2 * var(--cell-spacing));
     z-index: 10;
   }
-  .cell.header :global(span) {
+  .cell.header :global(> span) {
     flex: 1 1 auto;
     width: 0;
     white-space: nowrap;
@@ -127,5 +127,9 @@
     position: sticky;
     left: 0;
     z-index: 5;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
   }
 </style>

@@ -35,7 +35,7 @@
     width: inherit;
     position: absolute;
   }
-  .row:hover :global(.cell) {
+  :global(.sheet:not(.is-resizing):not(.is-reordering) .row:hover .cell) {
     background: var(--cell-background-hover);
     cursor: pointer;
   }
