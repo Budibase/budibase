@@ -2,6 +2,7 @@
   import SheetCell from "./SheetCell.svelte"
   import { getContext } from "svelte"
   import { Icon } from "@budibase/bbui"
+  import { Checkbox } from "@budibase/bbui"
 
   const { visibleColumns, reorder, selectedRows, rows } =
     getContext("spreadsheet")
@@ -36,10 +37,7 @@
 <div class="row">
   <!-- Field headers -->
   <SheetCell header label on:click={selectAll} width="40" left="0">
-    <input
-      type="checkbox"
-      checked={rowCount && selectedRowCount === rowCount}
-    />
+    <Checkbox value={rowCount && selectedRowCount === rowCount} />
   </SheetCell>
   {#each $visibleColumns as column}
     <SheetCell
@@ -73,14 +71,7 @@
     width: inherit;
     z-index: 10;
   }
-  .row.new {
-    position: absolute;
-    transform: translateY(var(--top));
-  }
   .row :global(> :last-child) {
     border-right-width: 1px;
-  }
-  input[type="checkbox"] {
-    margin: 0;
   }
 </style>

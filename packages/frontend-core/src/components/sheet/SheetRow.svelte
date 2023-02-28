@@ -9,6 +9,7 @@
   import NumberCell from "./cells/NumberCell.svelte"
   import RelationshipCell from "./cells/RelationshipCell.svelte"
   import TextCell from "./cells/TextCell.svelte"
+  import { Checkbox } from "@budibase/bbui"
 
   export let row
 
@@ -20,24 +21,15 @@
     visibleColumns,
     cellHeight,
   } = getContext("spreadsheet")
+  const TypeComponentMap = {
+    options: OptionsCell,
+    datetime: DateCell,
+    array: MultiSelectCell,
+    number: NumberCell,
+    link: RelationshipCell,
+  }
 
   $: rowSelected = !!$selectedRows[row._id]
-
-  const getCellForField = field => {
-    const type = field.schema.type
-    if (type === "options") {
-      return OptionsCell
-    } else if (type === "datetime") {
-      return DateCell
-    } else if (type === "array") {
-      return MultiSelectCell
-    } else if (type === "number") {
-      return NumberCell
-    } else if (type === "link") {
-      return RelationshipCell
-    }
-    return TextCell
-  }
 
   const selectRow = id => {
     selectedRows.update(state => ({
@@ -50,7 +42,7 @@
 <div class="row" style="--top:{(row.__idx + 1) * cellHeight}px;">
   <SpreadsheetCell label {rowSelected} on:click={() => selectRow(row._id)}>
     <div class="checkbox" class:visible={rowSelected}>
-      <input type="checkbox" checked={rowSelected} />
+      <Checkbox value={rowSelected} />
     </div>
     <div class="number" class:visible={!rowSelected}>
       {row.__idx + 1}
@@ -70,7 +62,7 @@
       column={column.idx}
     >
       <svelte:component
-        this={getCellForField(column)}
+        this={TypeComponentMap[column.schema.type] || TextCell}
         value={row[column.name]}
         schema={column.schema}
         selected={$selectedCellId === cellIdx}
@@ -88,7 +80,7 @@
     top: var(--top);
     width: inherit;
   }
-  .row:hover :global(.cell) {
+  :global(.sheet:not(.is-resizing):not(.is-reordering) .row:hover .cell) {
     background: var(--cell-background-hover);
   }
 
@@ -96,13 +88,8 @@
   .checkbox {
     display: none;
   }
-  input[type="checkbox"] {
-    margin: 0;
-  }
   .number {
     display: none;
-    min-width: 14px;
-    text-align: center;
     color: var(--spectrum-global-color-gray-500);
   }
   .row:hover .checkbox,
