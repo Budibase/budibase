@@ -139,16 +139,14 @@ async function hasActivatedConfig(ssoConfigs?: SSOConfigs) {
   if (!ssoConfigs) {
     ssoConfigs = await getSSOConfigs()
   }
- return !!Object.values(ssoConfigs).find(c => c?.activated)
+  return !!Object.values(ssoConfigs).find(c => c?.activated)
 }
 
 async function verifySettingsConfig(config: SettingsInnerConfig) {
   if (config.isSSOEnforced) {
     const valid = await hasActivatedConfig()
     if (!valid) {
-      throw new Error(
-        "Cannot enforce SSO without an activated configuration"
-      )
+      throw new Error("Cannot enforce SSO without an activated configuration")
     }
   }
 }
