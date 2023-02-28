@@ -3,7 +3,7 @@
   import { Icon } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { visibleColumns, cellHeight, rows, selectedCellId } =
+  const { visibleColumns, cellHeight, rows, selectedCellId, reorder } =
     getContext("spreadsheet")
 
   const addRow = async field => {
@@ -24,6 +24,8 @@
       on:click={() => addRow(column)}
       width={column.width}
       left={column.left}
+      reorderSource={$reorder.columnIdx === column.idx}
+      reorderTarget={$reorder.swapColumnIdx === column.idx}
     />
   {/each}
 </div>
