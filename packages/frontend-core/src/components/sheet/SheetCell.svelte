@@ -1,3 +1,5 @@
+<svelte:options immutable={true} />
+
 <script>
   export let header = false
   export let label = false

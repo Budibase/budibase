@@ -1,3 +1,5 @@
+<svelte:options immutable={true} />
+
 <script>
   import { setContext } from "svelte"
   import { writable } from "svelte/store"
@@ -24,9 +26,9 @@
   const rand = Math.random()
 
   // State stores
-  const tableIdStore = writable(tableId)
+  const tableIdStore = writable()
   const columns = writable([])
-  const selectedCellId = writable(null)
+  const selectedCellId = writable()
   const selectedRows = writable({})
   const scroll = writable({
     left: 0,

@@ -1,14 +1,34 @@
 import { writable, derived, get } from "svelte/store"
 import { buildLuceneQuery } from "../../../utils/lucene"
 import { fetchData } from "../../../fetch/fetchData"
+import { notifications } from "@budibase/bbui"
 
 export const createRowsStore = context => {
   const { tableId, filter, API } = context
+
+  // Flag for whether this is the first time loading our fetch
+  let loaded = false
+
+  // Local cache of row IDs to speed up checking if a row exists
+  let rowCacheMap = {}
+
+  // Exported stores
   const rows = writable([])
   const schema = writable({})
   const primaryDisplay = writable(null)
+
+  // Local stores for managing fetching data
   const query = derived(filter, $filter => buildLuceneQuery($filter))
   const fetch = derived(tableId, $tableId => {
+    if (!$tableId) {
+      return null
+    }
+    // Wipe state and fully hydrate next time our fetch returns data
+    loaded = false
+    rowCacheMap = {}
+    rows.set([])
+
+    // Create fetch and load initial data
     return fetchData({
       API,
       datasource: {
@@ -27,30 +47,66 @@ export const createRowsStore = context => {
 
   // Update fetch when query changes
   query.subscribe($query => {
-    get(fetch).update({
+    get(fetch)?.update({
       query: $query,
     })
   })
 
   // Observe each data fetch and extract some data
   fetch.subscribe($fetch => {
+    if (!$fetch) {
+      return
+    }
     $fetch.subscribe($$fetch => {
-      console.log("new fetch")
-      rows.set($$fetch.rows.map((row, idx) => ({ ...row, __idx: idx })))
-      schema.set($$fetch.schema)
-      primaryDisplay.set($$fetch.definition?.primaryDisplay)
+      if ($$fetch.loaded) {
+        if (!loaded) {
+          // Hydrate initial data
+          loaded = true
+          console.log("instantiate new fetch data")
+          schema.set($$fetch.schema)
+          primaryDisplay.set($$fetch.definition?.primaryDisplay)
+        }
+
+        // Process new rows
+        handleNewRows($$fetch.rows)
+      }
     })
   })
 
+  // Local handler to process new rows inside the fetch, and append any new
+  // rows to state that we haven't encountered before
+  const handleNewRows = newRows => {
+    let rowsToAppend = []
+    let newRow
+    for (let i = 0; i < newRows.length; i++) {
+      newRow = newRows[i]
+      if (!rowCacheMap[newRow._id]) {
+        rowCacheMap[newRow._id] = true
+        rowsToAppend.push(newRow)
+      }
+    }
+    if (rowsToAppend.length) {
+      rows.update($rows => {
+        return [
+          ...$rows,
+          ...rowsToAppend.map((row, idx) => ({
+            ...row,
+            __idx: $rows.length + idx,
+          })),
+        ]
+      })
+    }
+  }
+
   // Adds a new empty row
   const addRow = async () => {
-    let newRow = await API.saveRow({ tableId: get(tableId) })
-    newRow.__idx = get(rows).length
-    rows.update(state => {
-      state.push(newRow)
-      return state
-    })
-    return newRow
+    try {
+      const newRow = await API.saveRow({ tableId: get(tableId) })
+      handleNewRows([newRow])
+      return newRow
+    } catch (error) {
+      notifications.error(`Error adding row: ${error?.message}`)
+    }
   }
 
   // Updates a value of a row
@@ -71,7 +127,11 @@ export const createRowsStore = context => {
 
     // Save change
     delete newRow.__idx
-    await API.saveRow(newRow)
+    try {
+      await API.saveRow(newRow)
+    } catch (error) {
+      notifications.error(`Error saving row: ${error?.message}`)
+    }
 
     // Fetch row from the server again
     newRow = await API.fetchRow({
@@ -103,11 +163,25 @@ export const createRowsStore = context => {
     })
 
     // Update state
+    // We deliberately do not remove IDs from the cache map as the data may
+    // still exist inside the fetch, but we don't want to add it again
     rows.update(state => {
       return state
         .filter(row => !deletedIds.includes(row._id))
         .map((row, idx) => ({ ...row, __idx: idx }))
     })
+
+    // If we ended up with no rows, try getting the next page
+    if (!get(rows).length) {
+      loadNextPage()
+    }
+  }
+
+  // Loads the next page of data if available
+  const loadNextPage = () => {
+    const $fetch = get(fetch)
+    console.log("fetch next page")
+    $fetch?.nextPage()
   }
 
   return {
@@ -117,6 +191,7 @@ export const createRowsStore = context => {
         addRow,
         updateRow,
         deleteRows,
+        loadNextPage,
       },
     },
     schema,

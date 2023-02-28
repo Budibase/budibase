@@ -1,4 +1,4 @@
-import { writable, derived } from "svelte/store"
+import { writable, derived, get } from "svelte/store"
 
 export const createViewportStores = context => {
   const { cellHeight, columns, rows, scroll, bounds } = context
@@ -18,7 +18,7 @@ export const createViewportStores = context => {
   scroll.subscribe(({ left, top }) => {
     window.requestAnimationFrame(() => {
       // Only update local state when big changes occur
-      if (Math.abs(top - scrollTop) > cellHeight * 2) {
+      if (Math.abs(top - scrollTop) > cellHeight * 4) {
         scrollTop = top
         scrollTopStore.set(top)
       }
@@ -66,6 +66,16 @@ export const createViewportStores = context => {
       ]
     }
   )
+
+  // Fetch next page when approaching end of data
+  visibleRows.subscribe($visibleRows => {
+    const lastVisible = $visibleRows[$visibleRows.length - 1]
+    const $rows = get(rows)
+    const lastRow = $rows[$rows.length - 1]
+    if (lastVisible && lastRow && lastVisible._id === lastRow._id) {
+      rows.actions.loadNextPage()
+    }
+  })
 
   return { visibleRows, visibleColumns }
 }
