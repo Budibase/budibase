@@ -661,12 +661,14 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
+    color: var(--spectrum-global-color-gray-900);
   }
 
   .auth-entity .user-email {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    color: var(--spectrum-global-color-gray-900);
   }
 
   #builder-side-panel-container {
