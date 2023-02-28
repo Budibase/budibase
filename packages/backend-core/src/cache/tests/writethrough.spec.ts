@@ -1,10 +1,13 @@
-import { structures, DBTestConfiguration } from "../../../tests"
+import {
+  structures,
+  DBTestConfiguration,
+  expectFunctionWasCalledTimesWith,
+} from "../../../tests"
 import { Writethrough } from "../writethrough"
 import { getDB } from "../../db"
 import tk from "timekeeper"
 
-const START_DATE = Date.now()
-tk.freeze(START_DATE)
+tk.freeze(Date.now())
 
 const DELAY = 5000
 
@@ -17,34 +20,67 @@ describe("writethrough", () => {
   const writethrough = new Writethrough(db, DELAY)
   const writethrough2 = new Writethrough(db2, DELAY)
 
+  const docId = structures.uuid()
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   describe("put", () => {
-    let first: any
+    let current: any
 
     it("should be able to store, will go to DB", async () => {
       await config.doInTenant(async () => {
-        const response = await writethrough.put({ _id: "test", value: 1 })
+        const response = await writethrough.put({
+          _id: docId,
+          value: 1,
+        })
         const output = await db.get(response.id)
-        first = output
+        current = output
         expect(output.value).toBe(1)
       })
     })
 
     it("second put shouldn't update DB", async () => {
       await config.doInTenant(async () => {
-        const response = await writethrough.put({ ...first, value: 2 })
+        const response = await writethrough.put({ ...current, value: 2 })
         const output = await db.get(response.id)
-        expect(first._rev).toBe(output._rev)
+        expect(current._rev).toBe(output._rev)
         expect(output.value).toBe(1)
       })
     })
 
     it("should put it again after delay period", async () => {
       await config.doInTenant(async () => {
-        tk.freeze(START_DATE + DELAY + 1)
-        const response = await writethrough.put({ ...first, value: 3 })
+        tk.freeze(Date.now() + DELAY + 1)
+        const response = await writethrough.put({ ...current, value: 3 })
         const output = await db.get(response.id)
-        expect(response.rev).not.toBe(first._rev)
+        expect(response.rev).not.toBe(current._rev)
         expect(output.value).toBe(3)
+
+        current = output
+      })
+    })
+
+    it("should handle parallel DB updates ignoring conflicts", async () => {
+      await config.doInTenant(async () => {
+        tk.freeze(Date.now() + DELAY + 1)
+        const responses = await Promise.all([
+          writethrough.put({ ...current, value: 4 }),
+          writethrough.put({ ...current, value: 4 }),
+          writethrough.put({ ...current, value: 4 }),
+        ])
+
+        const newRev = responses.map(x => x.rev).find(x => x !== current._rev)
+        expect(newRev).toBeDefined()
+        expect(responses.map(x => x.rev)).toEqual(
+          expect.arrayContaining([current._rev, current._rev, newRev])
+        )
+        expectFunctionWasCalledTimesWith(
+          console.warn,
+          2,
+          "bb-warn: Ignoring redlock conflict in write-through cache"
+        )
       })
     })
   })
@@ -52,8 +88,8 @@ describe("writethrough", () => {
   describe("get", () => {
     it("should be able to retrieve", async () => {
       await config.doInTenant(async () => {
-        const response = await writethrough.get("test")
-        expect(response.value).toBe(3)
+        const response = await writethrough.get(docId)
+        expect(response.value).toBe(4)
       })
     })
   })
