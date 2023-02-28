@@ -254,7 +254,7 @@ export const onboardUsers = async (ctx: any) => {
     onboardingResponse = await userSdk.bulkCreate(assignUsers, groups)
     ctx.body = onboardingResponse
   } else if (emailConfigured) {
-    onboardingResponse = await invite(ctx)
+    onboardingResponse = await inviteMultiple(ctx)
   } else if (!emailConfigured) {
     const inviteRequest = ctx.request.body as InviteUsersRequest
 
@@ -297,8 +297,10 @@ export const onboardUsers = async (ctx: any) => {
 }
 
 export const invite = async (ctx: any) => {
-  const request = ctx.request.body as InviteUsersRequest
-  const response = await userSdk.invite(request)
+  const request = ctx.request.body as InviteUserRequest
+
+  let multiRequest = [request] as InviteUsersRequest
+  const response = await userSdk.invite(multiRequest)
 
   // explicitly throw for single user invite
   if (response.unsuccessful.length) {
