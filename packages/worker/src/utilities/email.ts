@@ -203,7 +203,7 @@ export async function sendEmail(
  * @param {object} config an SMTP configuration - this is based on the nodemailer API.
  * @return {Promise<boolean>} returns true if the configuration is valid.
  */
-export async function verifyConfig(config: any) {
+export async function verifyConfig(config: SMTPInnerConfig) {
   const transport = createSMTPTransport(config)
   await transport.verify()
 }
