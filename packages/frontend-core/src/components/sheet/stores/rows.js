@@ -25,8 +25,6 @@ export const createRowsStore = context => {
     }
     // Wipe state and fully hydrate next time our fetch returns data
     loaded = false
-    rowCacheMap = {}
-    rows.set([])
 
     // Create fetch and load initial data
     return fetchData({
@@ -62,6 +60,8 @@ export const createRowsStore = context => {
         if (!loaded) {
           // Hydrate initial data
           loaded = true
+          rowCacheMap = {}
+          rows.set([])
           schema.set($$fetch.schema)
           primaryDisplay.set($$fetch.definition?.primaryDisplay)
         }
