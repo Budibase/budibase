@@ -133,10 +133,19 @@ export const createRowsStore = context => {
     }
 
     // Fetch row from the server again
-    newRow = await API.fetchRow({
+    const res = await API.searchTable({
       tableId: get(tableId),
-      rowId: row._id,
+      limit: 1,
+      query: {
+        equal: {
+          _id: row._id,
+        },
+      },
+      paginate: false,
     })
+    if (res?.rows?.[0]) {
+      newRow = res?.rows?.[0]
+    }
 
     // Update state again with this row
     newRow = { ...newRow, __idx: row.__idx }
