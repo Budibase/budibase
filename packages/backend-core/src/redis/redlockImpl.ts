@@ -63,10 +63,22 @@ export const newRedlock = async (opts: Options = {}) => {
   return new Redlock([client], options)
 }
 
+type SuccessfulRedlockExecution<T> = {
+  executed: true
+  result: T
+}
+type UnsuccessfulRedlockExecution = {
+  executed: false
+}
+
+type RedlockExecution<T> =
+  | SuccessfulRedlockExecution<T>
+  | UnsuccessfulRedlockExecution
+
 export const doWithLock = async <T>(
   opts: LockOptions,
   task: () => Promise<T>
-) => {
+): Promise<RedlockExecution<T>> => {
   const redlock = await getClient(opts.type)
   let lock
   try {
@@ -86,7 +98,7 @@ export const doWithLock = async <T>(
     // perform locked task
     // need to await to ensure completion before unlocking
     const result = await task()
-    return result
+    return { executed: true, result }
   } catch (e: any) {
     console.warn("lock error")
     // lock limit exceeded
@@ -95,7 +107,7 @@ export const doWithLock = async <T>(
         // don't throw for try-once locks, they will always error
         // due to retry count (0) exceeded
         console.warn(e)
-        return
+        return { executed: false }
       } else {
         console.error(e)
         throw e
