@@ -23,6 +23,7 @@
   export let autocomplete = false
   export let customPopoverHeight
   export let align
+  export let footer = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -50,6 +51,7 @@
     {autoWidth}
     {sort}
     {align}
+    {footer}
     {getOptionLabel}
     {getOptionValue}
     {getOptionIcon}
