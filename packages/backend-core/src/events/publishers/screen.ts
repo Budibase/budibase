@@ -11,6 +11,9 @@ async function created(screen: Screen, timestamp?: string | number) {
     layoutId: screen.layoutId,
     screenId: screen._id as string,
     roleId: screen.routing.roleId,
+    audited: {
+      name: screen.routing?.route,
+    },
   }
   await publishEvent(Event.SCREEN_CREATED, properties, timestamp)
 }
@@ -20,6 +23,9 @@ async function deleted(screen: Screen) {
     layoutId: screen.layoutId,
     screenId: screen._id as string,
     roleId: screen.routing.roleId,
+    audited: {
+      name: screen.routing?.route,
+    },
   }
   await publishEvent(Event.SCREEN_DELETED, properties)
 }
