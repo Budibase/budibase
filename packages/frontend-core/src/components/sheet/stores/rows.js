@@ -144,7 +144,7 @@ export const createRowsStore = context => {
       paginate: false,
     })
     if (res?.rows?.[0]) {
-      newRow = res?.rows?.[0]
+      newRow = res.rows[0]
     }
 
     // Update state again with this row
