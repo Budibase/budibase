@@ -1,7 +1,7 @@
-const { object } = require("./utils")
-const Resource = require("./utils/Resource")
+import { object } from "./utils"
+import Resource from "./utils/Resource"
 
-module.exports = new Resource().setSchemas({
+export default new Resource().setSchemas({
   rowSearch: object(
     {
       query: {

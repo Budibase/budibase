@@ -1,6 +1,6 @@
-const Resource = require("./utils/Resource")
-const { object } = require("./utils")
-const { BaseQueryVerbs } = require("../../src/constants")
+import Resource from "./utils/Resource"
+import { object } from "./utils"
+import { BaseQueryVerbs } from "../../src/constants"
 
 const query = {
   _id: "query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e",
@@ -189,7 +189,7 @@ const executeQueryOutputSchema = object(
   { required: ["data"] }
 )
 
-module.exports = new Resource()
+export default new Resource()
   .setExamples({
     query: {
       value: {

@@ -1,5 +1,5 @@
-const { object } = require("./utils")
-const Resource = require("./utils/Resource")
+import { object } from "./utils"
+import Resource from "./utils/Resource"
 
 const baseRow = {
   _id: "ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4",
@@ -56,7 +56,6 @@ const rowSchema = {
 const rowOutputSchema = {
   ...rowSchema,
   properties: {
-    ...rowSchema.properties,
     _id: {
       description: "The ID of the row.",
       type: "string",
@@ -93,7 +92,7 @@ const searchOutputSchema = {
   },
 }
 
-module.exports = new Resource()
+export default new Resource()
   .setExamples({
     inputRow: {
       value: inputRow,
