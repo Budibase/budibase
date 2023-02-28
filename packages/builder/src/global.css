@@ -70,7 +70,6 @@ a {
   background: var(--spectrum-alias-background-color-default);
 }
 html * {
-  scrollbar-width: thin;
   scrollbar-color: var(--spectrum-global-color-gray-400)
     var(--spectrum-alias-background-color-default);
 }
