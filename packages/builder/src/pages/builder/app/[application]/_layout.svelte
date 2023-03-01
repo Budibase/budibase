@@ -120,89 +120,86 @@
   })
 </script>
 
-{#await promise}
-  <!-- This should probably be some kind of loading state? -->
-  <div class="loading" />
-{:then _}
-  <TourPopover />
+<TourPopover />
 
-  {#if $store.builderSidePanel}
-    <BuilderSidePanel />
-  {/if}
+{#if $store.builderSidePanel}
+  <BuilderSidePanel />
+{/if}
 
-  <div class="root">
-    <div class="top-nav">
-      <div class="topleftnav">
-        <ActionMenu>
-          <div slot="control">
-            <Icon size="M" hoverable name="ShowMenu" />
-          </div>
-          <MenuItem on:click={() => $goto("../../portal/apps")}>
-            Exit to portal
-          </MenuItem>
-          <MenuItem
-            on:click={() => $goto(`../../portal/overview/${application}`)}
-          >
-            Overview
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/access`)}
-          >
-            Access
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/automation-history`)}
-          >
-            Automation history
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/backups`)}
-          >
-            Backups
-          </MenuItem>
+<div class="root">
+  <div class="top-nav">
+    <div class="topleftnav">
+      <ActionMenu>
+        <div slot="control">
+          <Icon size="M" hoverable name="ShowMenu" />
+        </div>
+        <MenuItem on:click={() => $goto("../../portal/apps")}>
+          Exit to portal
+        </MenuItem>
+        <MenuItem
+          on:click={() => $goto(`../../portal/overview/${application}`)}
+        >
+          Overview
+        </MenuItem>
+        <MenuItem
+          on:click={() => $goto(`../../portal/overview/${application}/access`)}
+        >
+          Access
+        </MenuItem>
+        <MenuItem
+          on:click={() =>
+            $goto(`../../portal/overview/${application}/automation-history`)}
+        >
+          Automation history
+        </MenuItem>
+        <MenuItem
+          on:click={() => $goto(`../../portal/overview/${application}/backups`)}
+        >
+          Backups
+        </MenuItem>
 
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/name-and-url`)}
-          >
-            Name and URL
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/version`)}
-          >
-            Version
-          </MenuItem>
-        </ActionMenu>
-        <Heading size="XS">{$store.name || "App"}</Heading>
-      </div>
-      <div class="topcenternav">
-        <Tabs {selected} size="M">
-          {#each $layout.children as { path, title }}
-            <TourWrap tourStepKey={`builder-${title}-section`}>
-              <Tab
-                quiet
-                selected={$isActive(path)}
-                on:click={topItemNavigate(path)}
-                title={capitalise(title)}
-                id={`builder-${title}-tab`}
-              />
-            </TourWrap>
-          {/each}
-        </Tabs>
-      </div>
-      <div class="toprightnav">
-        <AppActions {application} />
-      </div>
+        <MenuItem
+          on:click={() =>
+            $goto(`../../portal/overview/${application}/name-and-url`)}
+        >
+          Name and URL
+        </MenuItem>
+        <MenuItem
+          on:click={() => $goto(`../../portal/overview/${application}/version`)}
+        >
+          Version
+        </MenuItem>
+      </ActionMenu>
+      <Heading size="XS">{$store.name}</Heading>
     </div>
-    <slot />
+    <div class="topcenternav">
+      <Tabs {selected} size="M">
+        {#each $layout.children as { path, title }}
+          <TourWrap tourStepKey={`builder-${title}-section`}>
+            <Tab
+              quiet
+              selected={$isActive(path)}
+              on:click={topItemNavigate(path)}
+              title={capitalise(title)}
+              id={`builder-${title}-tab`}
+            />
+          </TourWrap>
+        {/each}
+      </Tabs>
+    </div>
+    <div class="toprightnav">
+      <AppActions {application} />
+    </div>
   </div>
-{:catch error}
-  <p>Something went wrong: {error.message}</p>
-{/await}
+  {#await promise}
+    <!-- This should probably be some kind of loading state? -->
+    <div class="loading" />
+  {:then _}
+    <slot />
+  {:catch error}
+    <p>Something went wrong: {error.message}</p>
+  {/await}
+</div>
 
 <style>
   .loading {
