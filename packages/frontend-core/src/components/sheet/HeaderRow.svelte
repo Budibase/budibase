@@ -14,9 +14,9 @@
       {#each $visibleColumns as column}
         <SheetCell
           header
-          reorderSource={$reorder.columnIdx === column.idx}
-          reorderTarget={$reorder.swapColumnIdx === column.idx}
-          on:mousedown={e => reorder.actions.startReordering(column.idx, e)}
+          reorderSource={$reorder.sourceColumn === column.name}
+          reorderTarget={$reorder.targetColumn === column.name}
+          on:mousedown={e => reorder.actions.startReordering(column.name, e)}
           width={column.width}
           left={column.left}
         >

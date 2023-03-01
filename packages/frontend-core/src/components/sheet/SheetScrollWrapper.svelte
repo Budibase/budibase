@@ -89,7 +89,6 @@
 
 <style>
   div {
-    overflow: hidden;
     min-width: 100%;
     min-height: 100%;
   }

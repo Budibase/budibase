@@ -25,8 +25,8 @@
       {rowSelected}
       {rowHovered}
       selected={$selectedCellId === cellIdx}
-      reorderSource={$reorder.columnIdx === column.idx}
-      reorderTarget={$reorder.swapColumnIdx === column.idx}
+      reorderSource={$reorder.sourceColumn === column.name}
+      reorderTarget={$reorder.targetColumn === column.name}
       on:click={() => ($selectedCellId = cellIdx)}
       width={column.width}
       left={column.left}
