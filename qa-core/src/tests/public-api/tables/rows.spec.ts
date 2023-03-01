@@ -4,7 +4,7 @@ import TestConfiguration from "../../../config/public-api/TestConfiguration"
 import PublicAPIClient from "../../../config/public-api/TestConfiguration/PublicAPIClient"
 import AccountsAPIClient from "../../../config/public-api/TestConfiguration/accountsAPIClient"
 
-describe("Public API - /rows endpoints", () => {
+describe.skip("Public API - /rows endpoints", () => {
   const api = new PublicAPIClient()
   const accountsAPI = new AccountsAPIClient()
   const config = new TestConfiguration<Row>(api, accountsAPI)

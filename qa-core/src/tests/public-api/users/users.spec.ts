@@ -10,7 +10,6 @@ describe("Public API - /users endpoints", () => {
   const config = new TestConfiguration<User>(api, accountsAPI)
 
   beforeAll(async () => {
-    await config.beforeAll()
     await config.setupAccountAndTenant()
     await config.setApiKey()
     const [_, user] = await config.users.seed()

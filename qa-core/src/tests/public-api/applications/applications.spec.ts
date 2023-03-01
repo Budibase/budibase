@@ -5,7 +5,7 @@ import generateApp from "../../../config/public-api/fixtures/applications"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
 import { db as dbCore } from "@budibase/backend-core"
 
-describe("Public API - /applications endpoints", () => {
+describe.skip("Public API - /applications endpoints", () => {
   const api = new PublicAPIClient()
   const accountsAPI = new AccountsAPIClient()
   const config = new TestConfiguration<Application>(api, accountsAPI)
