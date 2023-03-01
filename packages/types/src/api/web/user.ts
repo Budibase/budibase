@@ -16,6 +16,7 @@ export interface BulkUserRequest {
     userIds: string[]
   }
   create?: {
+    roles?: any[]
     users: User[]
     groups: any[]
   }
@@ -49,7 +50,7 @@ export interface SearchUsersRequest {
   page?: string
   email?: string
   appId?: string
-  userIds?: string[]
+  paginated?: boolean
 }
 
 export interface CreateAdminUserRequest {
