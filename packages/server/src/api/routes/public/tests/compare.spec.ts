@@ -1,13 +1,14 @@
-const jestOpenAPI = require("jest-openapi").default
-const generateSchema = require("../../../../../specs/generate")
-const setup = require("../../tests/utilities")
-const { generateMakeRequest } = require("./utils")
+import jestOpenAPI from "jest-openapi"
+import { run as generateSchema } from "../../../../../specs/generate"
+import * as setup from "../../tests/utilities"
+import { generateMakeRequest } from "./utils"
+import { Table, App, Row, User } from "@budibase/types"
 
 const yamlPath = generateSchema()
-jestOpenAPI(yamlPath)
+jestOpenAPI(yamlPath!)
 
 let config = setup.getConfig()
-let apiKey, table, app, makeRequest
+let apiKey: string, table: Table, app: App, makeRequest: any
 
 beforeAll(async () => {
   app = await config.init()
@@ -25,19 +26,29 @@ describe("check the applications endpoints", () => {
   })
 
   it("should allow creating an application", async () => {
-    const res = await makeRequest("post", "/applications", {
-      name: "new App"
-    }, null)
+    const res = await makeRequest(
+      "post",
+      "/applications",
+      {
+        name: "new App",
+      },
+      null
+    )
     expect(res).toSatisfyApiSpec()
   })
 
   it("should allow updating an application", async () => {
     const app = config.getApp()
     const appId = config.getAppId()
-    const res = await makeRequest("put", `/applications/${appId}`, {
-      ...app,
-      name: "updated app name",
-    }, appId)
+    const res = await makeRequest(
+      "put",
+      `/applications/${appId}`,
+      {
+        ...app,
+        name: "updated app name",
+      },
+      appId
+    )
     expect(res).toSatisfyApiSpec()
   })
 
@@ -47,7 +58,10 @@ describe("check the applications endpoints", () => {
   })
 
   it("should allow deleting an application", async () => {
-    const res = await makeRequest("delete", `/applications/${config.getAppId()}`)
+    const res = await makeRequest(
+      "delete",
+      `/applications/${config.getAppId()}`
+    )
     expect(res).toSatisfyApiSpec()
   })
 })
@@ -68,8 +82,8 @@ describe("check the tables endpoints", () => {
         column1: {
           type: "string",
           constraints: {},
-        }
-      }
+        },
+      },
     })
     expect(res).toSatisfyApiSpec()
   })
@@ -92,12 +106,11 @@ describe("check the tables endpoints", () => {
 })
 
 describe("check the rows endpoints", () => {
-  let row
+  let row: Row
   it("should allow retrieving rows through search", async () => {
     table = await config.updateTable()
     const res = await makeRequest("post", `/tables/${table._id}/rows/search`, {
-      query: {
-      },
+      query: {},
     })
     expect(res).toSatisfyApiSpec()
   })
@@ -111,9 +124,13 @@ describe("check the rows endpoints", () => {
   })
 
   it("should allow updating a row", async () => {
-    const res = await makeRequest("put", `/tables/${table._id}/rows/${row._id}`, {
-      name: "test row updated",
-    })
+    const res = await makeRequest(
+      "put",
+      `/tables/${table._id}/rows/${row._id}`,
+      {
+        name: "test row updated",
+      }
+    )
     expect(res).toSatisfyApiSpec()
   })
 
@@ -123,13 +140,16 @@ describe("check the rows endpoints", () => {
   })
 
   it("should allow deleting a row", async () => {
-    const res = await makeRequest("delete", `/tables/${table._id}/rows/${row._id}`)
+    const res = await makeRequest(
+      "delete",
+      `/tables/${table._id}/rows/${row._id}`
+    )
     expect(res).toSatisfyApiSpec()
   })
 })
 
 describe("check the users endpoints", () => {
-  let user
+  let user: User
   it("should allow retrieving users through search", async () => {
     user = await config.createUser()
     const res = await makeRequest("post", "/users/search")
@@ -163,4 +183,3 @@ describe("check the queries endpoints", () => {
     expect(res).toSatisfyApiSpec()
   })
 })
-

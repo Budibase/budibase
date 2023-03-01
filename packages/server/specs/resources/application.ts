@@ -1,6 +1,6 @@
-const userResource = require("./user")
-const { object } = require("./utils")
-const Resource = require("./utils/Resource")
+import userResource from "./user"
+import { object } from "./utils"
+import Resource from "./utils/Resource"
 
 const application = {
   _id: "app_metadata",
@@ -96,7 +96,7 @@ const deploymentOutputSchema = object({
   },
 })
 
-module.exports = new Resource()
+export default new Resource()
   .setExamples({
     application: {
       value: {
