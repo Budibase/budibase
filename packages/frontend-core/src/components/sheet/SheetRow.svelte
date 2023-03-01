@@ -18,7 +18,11 @@
   $: rowHovered = $hoveredRowId === row._id
 </script>
 
-<div class="row" on:mouseover={() => ($hoveredRowId = row._id)}>
+<div
+  class="row"
+  on:mouseover={() => ($hoveredRowId = row._id)}
+  on:mouseleave={() => ($hoveredRowId = null)}
+>
   {#each $visibleColumns as column (column.name)}
     {@const cellIdx = `${row._id}-${column.name}`}
     <SheetCell
@@ -45,6 +49,7 @@
 
 <style>
   .row {
+    width: 0;
     display: flex;
   }
 </style>

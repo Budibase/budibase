@@ -15,7 +15,11 @@
   }
 </script>
 
-<div class="row" on:mouseover={() => ($hoveredRowId = "new")}>
+<div
+  class="row"
+  on:mouseover={() => ($hoveredRowId = "new")}
+  on:mouseleave={() => ($hoveredRowId = null)}
+>
   {#each $visibleColumns as column}
     <SheetCell
       {rowHovered}
@@ -30,6 +34,7 @@
 
 <style>
   .row {
+    width: 0;
     display: flex;
   }
   .row:hover :global(.cell) {

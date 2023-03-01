@@ -2,7 +2,7 @@
   import { getContext, onMount } from "svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
 
-  const { selectedCellId, hoveredRowId, bounds } = getContext("spreadsheet")
+  const { selectedCellId, bounds } = getContext("spreadsheet")
 
   let ref
 
@@ -22,7 +22,6 @@
   bind:this={ref}
   class="sheet-body"
   on:click|self={() => ($selectedCellId = null)}
-  on:mouseleave={() => ($hoveredRowId = null)}
 >
   <SheetScrollWrapper>
     <slot />

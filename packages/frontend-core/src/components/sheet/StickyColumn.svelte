@@ -155,7 +155,7 @@
     flex: 0 0 var(--width);
     z-index: 20;
     overflow: visible;
-    border-right: 1px solid var(--spectrum-global-color-gray-200);
+    border-right: var(--cell-border);
   }
   .sticky-column.scrolled {
     box-shadow: 1px -4px 8px rgba(0, 0, 0, 0.1);
