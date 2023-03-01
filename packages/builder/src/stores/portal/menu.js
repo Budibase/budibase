@@ -75,11 +75,15 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         title: "Usage",
         href: "/builder/portal/account/usage",
       },
-      {
-        title: "Audit Logs",
-        href: "/builder/portal/account/auditLogs",
-      },
+
     ]
+    if ($auth.isAdmin) {
+      accountSubPages.push(
+        {
+          title: "Audit Logs",
+          href: "/builder/portal/account/auditLogs",
+        })
+    }
     if ($admin.cloud && $auth?.user?.accountPortalAccess) {
       accountSubPages.push({
         title: "Upgrade",
