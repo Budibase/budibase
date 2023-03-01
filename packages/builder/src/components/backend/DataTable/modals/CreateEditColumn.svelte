@@ -337,7 +337,6 @@
         FIELDS.BOOLEAN,
         FIELDS.ARRAY,
         FIELDS.FORMULA,
-        FIELDS.LINK,
       ]
     }
   }
