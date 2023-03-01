@@ -24,7 +24,7 @@
   export let API
 
   // Sheet constants
-  const cellHeight = 36
+  const cellHeight = 40
   const rand = Math.random()
 
   // State stores

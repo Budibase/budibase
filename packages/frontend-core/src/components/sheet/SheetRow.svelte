@@ -7,16 +7,8 @@
 
   export let row
 
-  const {
-    selectedCellId,
-    reorder,
-    selectedRows,
-    rows,
-    visibleColumns,
-    cellHeight,
-  } = getContext("spreadsheet")
-
-  console.log("mount")
+  const { selectedCellId, reorder, selectedRows, rows, visibleColumns } =
+    getContext("spreadsheet")
 
   $: rowSelected = !!$selectedRows[row._id]
 </script>
