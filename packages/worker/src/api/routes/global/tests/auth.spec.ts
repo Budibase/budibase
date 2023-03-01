@@ -170,7 +170,7 @@ describe("/api/global/auth", () => {
         async function testSSOUser() {
           const { res } = await config.api.auth.requestPasswordReset(
             sendMailMock,
-            user.email,
+            user.email
           )
           expect(sendMailMock).not.toHaveBeenCalled()
         }
