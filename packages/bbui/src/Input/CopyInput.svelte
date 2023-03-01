@@ -1,7 +1,7 @@
 <script>
-  import { Input } from "../Input"
-  import { Icon } from "../Icon"
-  import { notifications } from "../Notification"
+  import Input from "../Form/Input.svelte"
+  import Icon from "../Icon/Icon.svelte"
+  import { notifications } from "../Stores/notifications"
 
   export let label = null
   export let value
