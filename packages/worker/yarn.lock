@@ -470,13 +470,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.3.19":
-  version "2.3.19"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.3.19.tgz#af84b20e4c53d2b98fe33192726ddab717fc4aa5"
-  integrity sha512-Wl41ecGwZy0SVpMaKxiGDBiXN1cJWUKACmTlImsFr291Pc+ZgNQZWDM8DXyV+RPD05Pd0pI8PfJcD2hVe3L9fA==
+"@budibase/backend-core@2.3.20":
+  version "2.3.20"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.3.20.tgz#085f3763cc3e821a276f025fea04980ff2c7c87c"
+  integrity sha512-nD73QHQk0mvRjscyTuWg1S97GVeexJc8xNqrzKSNvBOk0btaLCYgTukYOUCMHzw+sNLnRKFumL98qZDNVcmFgA==
   dependencies:
     "@budibase/nano" "10.1.1"
-    "@budibase/types" "^2.3.19"
+    "@budibase/types" "^2.3.20"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -521,13 +521,13 @@
     qs "^6.11.0"
     tough-cookie "^4.1.2"
 
-"@budibase/pro@2.3.19":
-  version "2.3.19"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.3.19.tgz#da67da8985c334d51b0fdc40aeb21b8d9a60aed4"
-  integrity sha512-Qu6LQWpiGWkSgad17xLyED9II8kCVAyO7P5h5qYmK6X1qMuVmOcY1TFMYouZ9ssxX09u3psKlGqLe1K2JCT3Gw==
+"@budibase/pro@2.3.20":
+  version "2.3.20"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.3.20.tgz#d71e3bebd4e03ded95e2397a06ef5d00c603f25e"
+  integrity sha512-1M0dJOXl1fu+R1BcGS2t4QV1jabTGh+wwe0bTHSqkK4UaJfIP52OnRgtswzduV+fB2B3UraF3N+Mtq2x2+Bmqw==
   dependencies:
-    "@budibase/backend-core" "2.3.19"
-    "@budibase/types" "2.3.19"
+    "@budibase/backend-core" "2.3.20"
+    "@budibase/types" "2.3.20"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -535,10 +535,10 @@
     lru-cache "^7.14.1"
     node-fetch "^2.6.1"
 
-"@budibase/types@2.3.19", "@budibase/types@^2.3.19":
-  version "2.3.19"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.3.19.tgz#98f11df4eff3bece824a64162c2d801c2c19df7a"
-  integrity sha512-8IfsEhPIG8nIeaku67JXUaPqnH9wTLgpclV9EPOfnFpAy6z08ezfWIa5fmjtrIab+B60nljgGZputKhUQtYJ9w==
+"@budibase/types@2.3.20", "@budibase/types@^2.3.20":
+  version "2.3.20"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.3.20.tgz#fc81a28623eb47a7790da40efb032119f8db5126"
+  integrity sha512-aHuAEEiJxX9sP9heu4vQQoAqmzvC8MLM5dH3OATVBxeJz0D79NnEwLVRHGk5fqxaiIlRpCaVSkatwkHXxf/h8w==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
