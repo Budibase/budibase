@@ -11,6 +11,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
+  export let useOptionIconImage = false
   export let getOptionColour = () => null
   export let isOptionEnabled
   export let readonly = false
@@ -73,6 +74,7 @@
   {getOptionLabel}
   {getOptionValue}
   {getOptionIcon}
+  {useOptionIconImage}
   {getOptionColour}
   {isOptionEnabled}
   {autocomplete}
