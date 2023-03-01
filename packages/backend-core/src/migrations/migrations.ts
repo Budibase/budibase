@@ -86,7 +86,11 @@ export const runMigration = async (
     count++
     const lengthStatement = length > 1 ? `[${count}/${length}]` : ""
 
-    const db = getDB(dbName)
+    const db = getDB(dbName, { skip_setup: true })
+    // DB doesn't exist - no-op required
+    if (!(await db.exists())) {
+      continue
+    }
     try {
       const doc = await getMigrationsDoc(db)
 
