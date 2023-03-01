@@ -93,15 +93,6 @@
         }
       }
 
-      // if (
-      //   !appRole &&
-      //   user.userGroups &&
-      //   !user.builder?.global &&
-      //   !user.admin.global
-      // ) {
-      //   console.log("Hi, I don't have groups > ", user.email)
-      // }
-
       return {
         ...user,
         role,
@@ -220,12 +211,6 @@
   // Adds the 'role' attribute and sets it to the current app.
   $: enrichedGroups = getEnrichedGroups($groups)
   $: filteredGroups = searchGroups(enrichedGroups, query)
-
-  // $: enrichedAppGroupsById = getAppGroups(enrichedGroups, prodAppId).map(
-  //   group => group._id
-  // )
-  // $: console.log("ALL GROUP IDS ", enrichedAppGroupsById)
-
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
 
