@@ -15,7 +15,6 @@ export const createRowsStore = context => {
   // Exported stores
   const rows = writable([])
   const schema = writable({})
-  const primaryDisplay = writable(null)
 
   // Local stores for managing fetching data
   const query = derived(filter, $filter => buildLuceneQuery($filter))
@@ -62,8 +61,12 @@ export const createRowsStore = context => {
           loaded = true
           rowCacheMap = {}
           rows.set([])
-          schema.set($$fetch.schema)
-          primaryDisplay.set($$fetch.definition?.primaryDisplay)
+          let newSchema = $$fetch.schema
+          const primaryDisplay = $$fetch.definition?.primaryDisplay
+          if (primaryDisplay && newSchema[primaryDisplay]) {
+            newSchema[primaryDisplay].primaryDisplay = true
+          }
+          schema.set(newSchema)
         }
 
         // Process new rows
@@ -220,6 +223,5 @@ export const createRowsStore = context => {
       },
     },
     schema,
-    primaryDisplay,
   }
 }

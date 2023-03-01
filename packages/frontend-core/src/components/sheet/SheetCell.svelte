@@ -10,11 +10,10 @@
   export let reorderTarget = false
   export let left
   export let width
-  export let column
 </script>
 
 <div
-  class="cell col-{column}"
+  class="cell"
   class:header
   class:label
   class:row-selected={rowSelected}
@@ -26,7 +25,7 @@
   on:mouseenter
   on:click
   on:mousedown
-  style="--left: {left}px; --width:{width}px;"
+  style="--width:{width}px; --left:{left}px;"
 >
   <slot />
 </div>
@@ -39,7 +38,7 @@
     border-color: var(--spectrum-global-color-gray-200);
     border-width: 0;
     border-bottom-width: 1px;
-    border-left-width: 1px;
+    border-right-width: 1px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
@@ -48,10 +47,11 @@
     font-size: var(--cell-font-size);
     gap: var(--cell-spacing);
     background: var(--cell-background);
-    position: absolute;
     transition: border-color 130ms ease-out;
-    width: var(--width);
+    flex: 0 0 var(--width);
+    position: absolute;
     left: var(--left);
+    width: var(--width);
   }
   .cell.selected {
     box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
@@ -91,18 +91,6 @@
     z-index: 11;
   }
 
-  /* Sticky styles */
-  .cell.sticky {
-    position: sticky;
-    border-left-width: 0;
-    transform: none;
-    left: 40px;
-    z-index: 5;
-  }
-  .cell.selected.sticky {
-    z-index: 6;
-  }
-
   /* Reorder styles */
   .cell.reorder-source {
     background: var(--spectrum-global-color-gray-100);
@@ -122,8 +110,8 @@
   /* Label cells */
   .cell.label {
     padding: var(--cell-padding);
-    width: 40px;
-    border-left-width: 0;
+    flex: 0 0 40px;
+    border-right-width: 0;
     position: sticky;
     left: 0;
     z-index: 5;
