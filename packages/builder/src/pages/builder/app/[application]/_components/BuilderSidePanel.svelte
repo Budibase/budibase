@@ -25,7 +25,6 @@
   let rendered = false
   let inviting = false
   let searchFocus = false
-  let userSearchInput
 
   let appInvites = []
   let filteredInvites = []
