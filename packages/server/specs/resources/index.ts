@@ -1,11 +1,11 @@
-const application = require("./application")
-const row = require("./row")
-const table = require("./table")
-const query = require("./query")
-const user = require("./user")
-const misc = require("./misc")
+import application from "./application"
+import row from "./row"
+import table from "./table"
+import query from "./query"
+import user from "./user"
+import misc from "./misc"
 
-exports.examples = {
+export const examples = {
   ...application.getExamples(),
   ...row.getExamples(),
   ...table.getExamples(),
@@ -14,7 +14,7 @@ exports.examples = {
   ...misc.getExamples(),
 }
 
-exports.schemas = {
+export const schemas = {
   ...application.getSchemas(),
   ...row.getSchemas(),
   ...table.getSchemas(),

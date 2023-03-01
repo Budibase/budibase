@@ -1,4 +1,4 @@
-exports.tableId = {
+export const tableId = {
   in: "path",
   name: "tableId",
   required: true,
@@ -8,7 +8,7 @@ exports.tableId = {
   },
 }
 
-exports.rowId = {
+export const rowId = {
   in: "path",
   name: "rowId",
   required: true,
@@ -18,7 +18,7 @@ exports.rowId = {
   },
 }
 
-exports.appId = {
+export const appId = {
   in: "header",
   name: "x-budibase-app-id",
   required: true,
@@ -28,7 +28,7 @@ exports.appId = {
   },
 }
 
-exports.appIdUrl = {
+export const appIdUrl = {
   in: "path",
   name: "appId",
   required: true,
@@ -38,7 +38,7 @@ exports.appIdUrl = {
   },
 }
 
-exports.queryId = {
+export const queryId = {
   in: "path",
   name: "queryId",
   required: true,
@@ -48,7 +48,7 @@ exports.queryId = {
   },
 }
 
-exports.userId = {
+export const userId = {
   in: "path",
   name: "userId",
   required: true,

@@ -1,9 +1,9 @@
+import { join } from "path"
+import { writeFileSync } from "fs"
+import { examples, schemas } from "./resources"
+import * as parameters from "./parameters"
+import * as security from "./security"
 const swaggerJsdoc = require("swagger-jsdoc")
-const { join } = require("path")
-const { writeFileSync } = require("fs")
-const { examples, schemas } = require("./resources")
-const parameters = require("./parameters")
-const security = require("./security")
 
 const VARIABLES = {}
 
@@ -60,7 +60,7 @@ const options = {
   apis: [join(__dirname, "..", "src", "api", "routes", "public", "*.ts")],
 }
 
-function writeFile(output, filename) {
+function writeFile(output: any, filename: string) {
   try {
     const path = join(__dirname, filename)
     let spec = output
@@ -79,7 +79,7 @@ function writeFile(output, filename) {
   }
 }
 
-function run() {
+export function run() {
   const outputJSON = swaggerJsdoc(options)
   options.format = ".yaml"
   const outputYAML = swaggerJsdoc(options)
@@ -90,5 +90,3 @@ function run() {
 if (require.main === module) {
   run()
 }
-
-module.exports = run

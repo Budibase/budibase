@@ -1,4 +1,4 @@
-exports.object = (props, opts) => {
+export const object = (props: any, opts?: any) => {
   const base = {
     type: "object",
     properties: props,
