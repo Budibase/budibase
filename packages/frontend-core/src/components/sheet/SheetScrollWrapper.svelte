@@ -69,11 +69,11 @@
     const offset = deltaY * step
     let newScrollTop = scrollTop
     newScrollTop += offset
-    newScrollTop = Math.max(0, newScrollTop)
     newScrollTop = Math.min(
       newScrollTop,
       ($rows.length + 1) * cellHeight - $bounds.height
     )
+    newScrollTop = Math.max(0, newScrollTop)
     scroll.update(state => ({
       ...state,
       top: newScrollTop,
@@ -91,6 +91,8 @@
 
 <style>
   .scroll-wrapper {
+    min-width: 100%;
+    min-height: 100%;
     background: var(--background-alt);
     transform: translate3d(var(--offset-x), var(--offset-y), 0);
     overflow: hidden;

@@ -1,9 +1,8 @@
-<svelte:options immutable={true} />
-
 <script>
   export let header = false
   export let label = false
   export let rowSelected = false
+  export let rowHovered = false
   export let sticky = false
   export let selected = false
   export let reorderSource = false
@@ -16,12 +15,12 @@
   class:header
   class:label
   class:row-selected={rowSelected}
+  class:row-hovered={rowHovered}
   class:sticky
   class:selected
   class:reorder-source={reorderSource}
   class:reorder-target={reorderTarget}
   on:focus
-  on:mouseenter
   on:click
   on:mousedown
   style="--width:{width}px;"
@@ -63,6 +62,9 @@
   }
   .cell.row-selected {
     background-color: var(--spectrum-global-color-gray-100);
+  }
+  .cell.row-hovered {
+    background: var(--cell-background-hover);
   }
 
   /* Header cells */

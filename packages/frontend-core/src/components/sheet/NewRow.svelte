@@ -1,10 +1,11 @@
 <script>
   import SheetCell from "./SheetCell.svelte"
-  import { Icon } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { visibleColumns, cellHeight, rows, selectedCellId, reorder } =
+  const { visibleColumns, hoveredRowId, rows, selectedCellId, reorder } =
     getContext("spreadsheet")
+
+  $: rowHovered = $hoveredRowId === "new"
 
   const addRow = async field => {
     const newRow = await rows.actions.addRow()
@@ -14,9 +15,10 @@
   }
 </script>
 
-<div class="row new">
+<div class="row" on:mouseover={() => ($hoveredRowId = "new")}>
   {#each $visibleColumns as column}
     <SheetCell
+      {rowHovered}
       on:click={() => addRow(column)}
       width={column.width}
       left={column.left}
@@ -30,8 +32,7 @@
   .row {
     display: flex;
   }
-  :global(.sheet:not(.is-resizing):not(.is-reordering) .row:hover .cell) {
-    background: var(--cell-background-hover);
+  .row:hover :global(.cell) {
     cursor: pointer;
   }
 </style>
