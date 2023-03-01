@@ -131,24 +131,25 @@
     isEqual(providers.google?.config, originalGoogleDoc?.config)
       ? (googleSaveButtonDisabled = true)
       : (googleSaveButtonDisabled = false)
+
+    // delete the callback url which is never saved to the oidc
+    // config doc, to ensure an accurate comparison
+    delete providers.oidc?.config.configs[0].callbackURL
+
     isEqual(providers.oidc?.config, originalOidcDoc?.config)
       ? (oidcSaveButtonDisabled = true)
       : (oidcSaveButtonDisabled = false)
   }
 
-  // Create a flag so that it will only try to save completed forms
-  $: partialGoogle =
-    providers.google?.config?.clientID || providers.google?.config?.clientSecret
-  $: partialOidc =
-    providers.oidc?.config?.configs[0].configUrl ||
-    providers.oidc?.config?.configs[0].clientID ||
-    providers.oidc?.config?.configs[0].clientSecret
-  $: googleComplete =
+  $: googleComplete = !!(
     providers.google?.config?.clientID && providers.google?.config?.clientSecret
-  $: oidcComplete =
+  )
+
+  $: oidcComplete = !!(
     providers.oidc?.config?.configs[0].configUrl &&
     providers.oidc?.config?.configs[0].clientID &&
     providers.oidc?.config?.configs[0].clientSecret
+  )
 
   const onFileSelected = e => {
     let fileName = e.target.files[0].name
@@ -159,74 +160,88 @@
 
   async function toggleIsSSOEnforced() {
     const value = $organisation.isSSOEnforced
-    await organisation.save({ isSSOEnforced: !value })
+    try {
+      await organisation.save({ isSSOEnforced: !value })
+    } catch (e) {
+      notifications.error(e.message)
+    }
   }
 
-  async function save(docs) {
-    let calls = []
-    // Only if the user has provided an image, upload it
+  async function saveConfig(config) {
+    // Delete unsupported fields
+    delete config.createdAt
+    delete config.updatedAt
+    return API.saveConfig(config)
+  }
+
+  async function saveOIDCLogo() {
     if (image) {
       let data = new FormData()
       data.append("file", image)
-      calls.push(
-        API.uploadOIDCLogo({
-          name: image.name,
-          data,
-        })
+      await API.uploadOIDCLogo({
+        name: image.name,
+        data,
+      })
+    }
+  }
+
+  async function saveOIDC() {
+    if (!oidcComplete) {
+      notifications.error(
+        `Please fill in all required ${ConfigTypes.OIDC} fields`
       )
+      return
     }
-    docs.forEach(element => {
-      // Delete unsupported fields
-      delete element.createdAt
-      delete element.updatedAt
 
-      const { activated } = element.config
+    const oidc = providers.oidc
 
-      if (element.type === ConfigTypes.OIDC) {
-        // Add a UUID here so each config is distinguishable when it arrives at the login page
-        for (let config of element.config.configs) {
-          if (!config.uuid) {
-            config.uuid = Helpers.uuid()
-          }
-          // Callback urls shouldn't be included
-          delete config.callbackURL
-        }
-        if ((partialOidc || activated) && !oidcComplete) {
-          notifications.error(
-            `Please fill in all required ${ConfigTypes.OIDC} fields`
-          )
-        } else if (oidcComplete || !activated) {
-          calls.push(API.saveConfig(element))
-          // Turn the save button grey when clicked
-          oidcSaveButtonDisabled = true
-          originalOidcDoc = cloneDeep(providers.oidc)
-        }
+    // Add a UUID here so each config is distinguishable when it arrives at the login page
+    for (let config of oidc.config.configs) {
+      if (!config.uuid) {
+        config.uuid = Helpers.uuid()
       }
-      if (element.type === ConfigTypes.Google) {
-        if ((partialGoogle || activated) && !googleComplete) {
-          notifications.error(
-            `Please fill in all required ${ConfigTypes.Google} fields`
-          )
-        } else if (googleComplete || !activated) {
-          calls.push(API.saveConfig(element))
-          googleSaveButtonDisabled = true
-          originalGoogleDoc = cloneDeep(providers.google)
-        }
-      }
-    })
-    if (calls.length) {
-      Promise.all(calls)
-        .then(data => {
-          data.forEach(res => {
-            providers[res.type]._rev = res._rev
-            providers[res.type]._id = res._id
-          })
-          notifications.success(`Settings saved`)
-        })
-        .catch(() => {
-          notifications.error("Failed to update auth settings")
-        })
+      // Callback urls shouldn't be included
+      delete config.callbackURL
     }
+
+    try {
+      const res = await saveConfig(oidc)
+      providers[res.type]._rev = res._rev
+      providers[res.type]._id = res._id
+      await saveOIDCLogo()
+      notifications.success(`Settings saved`)
+    } catch (e) {
+      notifications.error(e.message)
+      return
+    }
+
+    // Turn the save button grey when clicked
+    oidcSaveButtonDisabled = true
+    originalOidcDoc = cloneDeep(providers.oidc)
+  }
+
+  async function saveGoogle() {
+    if (!googleComplete) {
+      notifications.error(
+        `Please fill in all required ${ConfigTypes.Google} fields`
+      )
+      return
+    }
+
+    const google = providers.google
+
+    try {
+      const res = await saveConfig(google)
+      providers[res.type]._rev = res._rev
+      providers[res.type]._id = res._id
+      notifications.success(`Settings saved`)
+    } catch (e) {
+      notifications.error(e.message)
+      return
+    }
+
+    googleSaveButtonDisabled = true
+    originalGoogleDoc = cloneDeep(providers.google)
   }
 
   let defaultScopes = ["profile", "email", "offline_access"]
@@ -266,7 +281,7 @@
     if (!googleDoc?._id) {
       providers.google = {
         type: ConfigTypes.Google,
-        config: { activated: true },
+        config: { activated: false },
       }
       originalGoogleDoc = cloneDeep(googleDoc)
     } else {
@@ -290,14 +305,17 @@
     }
     if (oidcLogos?.config) {
       const logoKeys = Object.keys(oidcLogos.config)
-      logoKeys.map(logoKey => {
-        const logoUrl = oidcLogos.config[logoKey]
-        iconDropdownOptions.unshift({
-          label: logoKey,
-          value: logoKey,
-          icon: logoUrl,
+      logoKeys
+        // don't include the etag entry in the logo config
+        .filter(key => !key.toLowerCase().includes("etag"))
+        .map(logoKey => {
+          const logoUrl = oidcLogos.config[logoKey]
+          iconDropdownOptions.unshift({
+            label: logoKey,
+            value: logoKey,
+            icon: logoUrl,
+          })
         })
-      })
     }
 
     // Fetch OIDC config
@@ -310,7 +328,7 @@
     if (!oidcDoc?._id) {
       providers.oidc = {
         type: ConfigTypes.OIDC,
-        config: { configs: [{ activated: true, scopes: defaultScopes }] },
+        config: { configs: [{ activated: false, scopes: defaultScopes }] },
       }
     } else {
       originalOidcDoc = cloneDeep(oidcDoc)
@@ -413,7 +431,7 @@
       <Button
         disabled={googleSaveButtonDisabled}
         cta
-        on:click={() => save([providers.google])}
+        on:click={() => saveGoogle()}
       >
         Save
       </Button>
@@ -469,6 +487,7 @@
         <Select
           label=""
           bind:value={providers.oidc.config.configs[0].logo}
+          useOptionIconImage
           options={iconDropdownOptions}
           on:change={e => e.detail === "Upload" && fileinput.click()}
         />
@@ -575,11 +594,7 @@
       </div>
     </Layout>
     <div>
-      <Button
-        disabled={oidcSaveButtonDisabled}
-        cta
-        on:click={() => save([providers.oidc])}
-      >
+      <Button disabled={oidcSaveButtonDisabled} cta on:click={() => saveOIDC()}>
         Save
       </Button>
     </div>

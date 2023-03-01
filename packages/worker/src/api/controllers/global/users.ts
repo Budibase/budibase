@@ -1,4 +1,9 @@
-import { checkInviteCode } from "../../../utilities/redis"
+import {
+  checkInviteCode,
+  getInviteCodes,
+  updateInviteCode,
+} from "../../../utilities/redis"
+// import sdk from "../../../sdk"
 import * as userSdk from "../../../sdk/users"
 import env from "../../../environment"
 import {
@@ -28,6 +33,7 @@ import {
   platform,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
+import { isEmailConfigured } from "../../../utilities/email"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -179,16 +185,28 @@ export const destroy = async (ctx: any) => {
   }
 }
 
+export const getAppUsers = async (ctx: any) => {
+  const body = ctx.request.body as SearchUsersRequest
+  const users = await userSdk.getUsersByAppAccess(body?.appId)
+
+  ctx.body = { data: users }
+}
+
 export const search = async (ctx: any) => {
   const body = ctx.request.body as SearchUsersRequest
-  const paginated = await userSdk.paginatedUsers(body)
-  // user hashed password shouldn't ever be returned
-  for (let user of paginated.data) {
-    if (user) {
-      delete user.password
+
+  if (body.paginated === false) {
+    await getAppUsers(ctx)
+  } else {
+    const paginated = await userSdk.paginatedUsers(body)
+    // user hashed password shouldn't ever be returned
+    for (let user of paginated.data) {
+      if (user) {
+        delete user.password
+      }
     }
+    ctx.body = paginated
   }
-  ctx.body = paginated
 }
 
 // called internally by app server user fetch
@@ -218,9 +236,71 @@ export const tenantUserLookup = async (ctx: any) => {
   }
 }
 
+/* 
+  Encapsulate the app user onboarding flows here.
+*/
+export const onboardUsers = async (ctx: any) => {
+  const request = ctx.request.body as InviteUsersRequest | BulkUserRequest
+  const isBulkCreate = "create" in request
+
+  const emailConfigured = await isEmailConfigured()
+
+  let onboardingResponse
+
+  if (isBulkCreate) {
+    // @ts-ignore
+    const { users, groups, roles } = request.create
+    const assignUsers = users.map((user: User) => (user.roles = roles))
+    onboardingResponse = await userSdk.bulkCreate(assignUsers, groups)
+    ctx.body = onboardingResponse
+  } else if (emailConfigured) {
+    onboardingResponse = await inviteMultiple(ctx)
+  } else if (!emailConfigured) {
+    const inviteRequest = ctx.request.body as InviteUsersRequest
+
+    let createdPasswords: any = {}
+
+    const users: User[] = inviteRequest.map(invite => {
+      let password = Math.random().toString(36).substring(2, 22)
+
+      // Temp password to be passed to the user.
+      createdPasswords[invite.email] = password
+
+      return {
+        email: invite.email,
+        password,
+        forceResetPassword: true,
+        roles: invite.userInfo.apps,
+        admin: { global: false },
+        builder: { global: false },
+        tenantId: tenancy.getTenantId(),
+      }
+    })
+    let bulkCreateReponse = await userSdk.bulkCreate(users, [])
+
+    // Apply temporary credentials
+    let createWithCredentials = {
+      ...bulkCreateReponse,
+      successful: bulkCreateReponse?.successful.map(user => {
+        return {
+          ...user,
+          password: createdPasswords[user.email],
+        }
+      }),
+      created: true,
+    }
+
+    ctx.body = createWithCredentials
+  } else {
+    ctx.throw(400, "User onboarding failed")
+  }
+}
+
 export const invite = async (ctx: any) => {
   const request = ctx.request.body as InviteUserRequest
-  const response = await userSdk.invite([request])
+
+  let multiRequest = [request] as InviteUsersRequest
+  const response = await userSdk.invite(multiRequest)
 
   // explicitly throw for single user invite
   if (response.unsuccessful.length) {
@@ -234,6 +314,8 @@ export const invite = async (ctx: any) => {
 
   ctx.body = {
     message: "Invitation has been sent.",
+    successful: response.successful,
+    unsuccessful: response.unsuccessful,
   }
 }
 
@@ -255,6 +337,53 @@ export const checkInvite = async (ctx: any) => {
   }
 }
 
+export const getUserInvites = async (ctx: any) => {
+  let invites
+  try {
+    // Restricted to the currently authenticated tenant
+    invites = await getInviteCodes([ctx.user.tenantId])
+  } catch (e) {
+    ctx.throw(400, "There was a problem fetching invites")
+  }
+  ctx.body = invites
+}
+
+export const updateInvite = async (ctx: any) => {
+  const { code } = ctx.params
+  let updateBody = { ...ctx.request.body }
+
+  delete updateBody.email
+
+  let invite
+  try {
+    invite = await checkInviteCode(code, false)
+    if (!invite) {
+      throw new Error("The invite could not be retrieved")
+    }
+  } catch (e) {
+    ctx.throw(400, "There was a problem with the invite")
+  }
+
+  let updated = {
+    ...invite,
+  }
+
+  if (!updateBody?.apps || !Object.keys(updateBody?.apps).length) {
+    updated.info.apps = []
+  } else {
+    updated.info = {
+      ...invite.info,
+      apps: {
+        ...invite.info.apps,
+        ...updateBody.apps,
+      },
+    }
+  }
+
+  await updateInviteCode(code, updated)
+  ctx.body = { ...invite }
+}
+
 export const inviteAccept = async (
   ctx: Ctx<AcceptUserInviteRequest, AcceptUserInviteResponse>
 ) => {
@@ -263,13 +392,23 @@ export const inviteAccept = async (
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
     const user = await tenancy.doInTenant(info.tenantId, async () => {
-      const saved = await userSdk.save({
+      let request = {
         firstName,
         lastName,
         password,
         email,
+        roles: info.apps,
+        tenantId: info.tenantId,
+      }
+
+      delete info.apps
+
+      request = {
+        ...request,
         ...info,
-      })
+      }
+
+      const saved = await userSdk.save(request)
       const db = tenancy.getGlobalDB()
       const user = await db.get(saved._id)
       await events.user.inviteAccepted(user)

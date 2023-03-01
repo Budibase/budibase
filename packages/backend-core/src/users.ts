@@ -5,6 +5,7 @@ import {
   generateAppUserID,
   queryGlobalView,
   UNICODE_MAX,
+  directCouchFind,
 } from "./db"
 import { BulkDocsResponse, User } from "@budibase/types"
 import { getGlobalDB } from "./context"
@@ -101,6 +102,7 @@ export const searchGlobalUsersByApp = async (
   })
   params.startkey = opts && opts.startkey ? opts.startkey : params.startkey
   let response = await queryGlobalView(ViewName.USER_BY_APP, params)
+
   if (!response) {
     response = []
   }
@@ -109,6 +111,45 @@ export const searchGlobalUsersByApp = async (
     users = removeUserPassword(users) as User[]
   }
   return users
+}
+
+/*
+  Return any user who potentially has access to the application
+  Admins, developers and app users with the explicitly role.
+*/
+export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
+  const roleSelector = `roles.${appId}`
+
+  let orQuery: any[] = [
+    {
+      "builder.global": true,
+    },
+    {
+      "admin.global": true,
+    },
+  ]
+
+  if (appId) {
+    const roleCheck = {
+      [roleSelector]: {
+        $exists: true,
+      },
+    }
+    orQuery.push(roleCheck)
+  }
+
+  let searchOptions = {
+    selector: {
+      $or: orQuery,
+      _id: {
+        $regex: "^us_",
+      },
+    },
+    limit: opts?.limit || 50,
+  }
+
+  const resp = await directCouchFind(context.getGlobalDBName(), searchOptions)
+  return resp?.rows
 }
 
 export const getGlobalUserByAppPage = (appId: string, user: User) => {
