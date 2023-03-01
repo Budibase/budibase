@@ -32,11 +32,8 @@
   /* Cells */
   .cell {
     height: var(--cell-height);
-    border-style: solid;
-    border-color: var(--spectrum-global-color-gray-200);
-    border-width: 0;
-    border-bottom-width: 1px;
-    border-right-width: 1px;
+    border-bottom: var(--cell-border);
+    border-right: var(--cell-border);
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
@@ -45,7 +42,6 @@
     font-size: var(--cell-font-size);
     gap: var(--cell-spacing);
     background: var(--cell-background);
-    transition: border-color 130ms ease-out;
     flex: 0 0 var(--width);
     position: relative;
     width: 0;
@@ -71,9 +67,9 @@
   .cell.header {
     background: var(--background);
     padding: 0 var(--cell-padding);
-    border-color: var(--spectrum-global-color-gray-200);
     gap: calc(2 * var(--cell-spacing));
     z-index: 10;
+    border-bottom: none;
   }
   .cell.header :global(> span) {
     flex: 1 1 auto;
@@ -106,7 +102,7 @@
   .cell.label {
     padding: var(--cell-padding);
     flex: 0 0 40px;
-    border-right-width: 0;
+    border-right: none;
     position: sticky;
     left: 0;
     z-index: 5;
