@@ -54,7 +54,7 @@ export async function getSettingsConfigDoc(): Promise<SettingsConfig> {
 
   if (!config) {
     config = {
-      _id: generateConfigID(ConfigType.GOOGLE),
+      _id: generateConfigID(ConfigType.SETTINGS),
       type: ConfigType.SETTINGS,
       config: {},
     }
