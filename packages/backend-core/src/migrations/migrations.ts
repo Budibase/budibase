@@ -17,6 +17,7 @@ import {
   MigrationNoOpOptions,
   App,
 } from "@budibase/types"
+import env from "../environment"
 
 export const getMigrationsDoc = async (db: any) => {
   // get the migrations doc
@@ -88,7 +89,8 @@ export const runMigration = async (
 
     const db = getDB(dbName, { skip_setup: true })
     // DB doesn't exist - no-op required
-    if (!(await db.exists())) {
+    const dbExists = await db.exists()
+    if (!env.isTest() && !dbExists) {
       continue
     }
     try {
