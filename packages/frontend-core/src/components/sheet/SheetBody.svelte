@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { Utils } from "../../utils"
+  import ScrollOverlay from "./ScrollOverlay.svelte"
 
   const { columns, selectedCellId, cellHeight, rows, bounds, scroll } =
     getContext("spreadsheet")
@@ -12,6 +13,7 @@
   $: contentHeight = ($rows.length + 2) * cellHeight
   $: contentWidth = computeContentWidth($columns)
   $: scrollLeft = $scroll.left
+  $: scrollTop = $scroll.top
 
   const computeContentWidth = columns => {
     if (!columns.length) {
@@ -28,6 +30,26 @@
   const handleScroll = e => {
     updateScrollStore(e.target.scrollLeft, e.target.scrollTop)
   }
+
+  const handleWheel = e => {
+    const step = cellHeight * 3
+    const deltaY = e.deltaY < 0 ? -1 : 1
+    const offset = deltaY * step
+    let newScrollTop = scrollTop
+    newScrollTop += offset
+    newScrollTop = Math.max(0, newScrollTop)
+    newScrollTop = Math.min(
+      newScrollTop,
+      $rows.length * cellHeight - $bounds.height
+    )
+    scroll.update(state => ({
+      ...state,
+      top: newScrollTop,
+    }))
+  }
+
+  $: fakeOffsetY = -1 * (scrollTop % cellHeight)
+  $: fakeOffsetX = -1 * scrollLeft
 
   onMount(() => {
     // Observe and record the height of the body
@@ -46,20 +68,15 @@
   class="sheet-body"
   class:horizontally-scrolled={scrollLeft > 0}
   on:click|self={() => ($selectedCellId = null)}
-  on:scroll={handleScroll}
+  on:wheel|passive={handleWheel}
 >
   <div
     class="content"
-    style="height:{contentHeight + padding}px; width:{contentWidth +
-      padding}px;"
+    style="width:{contentWidth}px; --offset-y:{fakeOffsetY}px; --offset-x:{fakeOffsetX}px;"
   >
-    <div
-      class="data-content"
-      style="height:{contentHeight}px; width:{contentWidth}px;"
-    >
-      <slot />
-    </div>
+    <slot />
   </div>
+  <ScrollOverlay />
 </div>
 
 <style>
@@ -67,24 +84,19 @@
     display: block;
     position: relative;
     cursor: default;
-    overflow: auto;
+    overflow: hidden;
     flex: 1 1 auto;
     height: 0;
   }
   .sheet-body::-webkit-scrollbar-track {
     background: transparent;
   }
-  .content,
-  .data-content {
-    position: absolute;
-  }
   .content {
     min-width: 100%;
     min-height: 100%;
     background: var(--background-alt);
-  }
-  .data-content {
-    background: var(--cell-background);
+    transform: translate3d(var(--offset-x), var(--offset-y), 0);
+    overflow: hidden;
   }
 
   /* Add shadow to sticky cells when horizontally scrolled */

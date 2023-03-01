@@ -100,9 +100,10 @@
 
 <div class="sheet" style="--cell-height:{cellHeight}px;" id="sheet-{rand}">
   <SheetHeader />
+  <HeaderRow />
+
   <SheetBody>
-    <HeaderRow />
-    {#each $visibleRows as row (row._id)}
+    {#each $visibleRows as row}
       <SheetRow {row} />
     {/each}
     <NewRow />
