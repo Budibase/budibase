@@ -19,7 +19,7 @@
   $: scrollLeft = $scroll.left
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
-  $: width = 40 + $stickyColumn?.width || 0
+  $: width = 40 + ($stickyColumn?.width || 0)
 
   const selectAll = () => {
     const allSelected = selectedRowCount === rowCount
