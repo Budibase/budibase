@@ -42,7 +42,11 @@ class AccountsAPIClient {
 
       // @ts-ignore
       const response = await fetch(`${this.host}${url}`, requestOptions)
-      if (response.status == 404 || response.status == 500) {
+      if (
+        response.status == 404 ||
+        response.status == 500 ||
+        response.status == 400
+      ) {
         console.error("Error in apiCall")
         console.error("Response:")
         console.error(response)

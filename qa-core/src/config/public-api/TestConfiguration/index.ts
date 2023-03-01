@@ -26,7 +26,7 @@ export default class TestConfiguration<T> {
     this.apiClient = apiClient
     this.accountsApiClient = accountsApiClient
 
-    this.auth = new AuthApi(this.apiClient)
+    this.auth = new AuthApi(this.accountsApiClient)
     this.accounts = new AccountsApi(this.accountsApiClient)
     this.applications = new ApplicationApi(apiClient)
     this.users = new UserApi(apiClient)
@@ -53,7 +53,6 @@ export default class TestConfiguration<T> {
     this.apiClient.setTenantName(tenantName)
     this.applications = new ApplicationApi(this.apiClient)
     this.rows = new RowApi(this.apiClient)
-    this.auth = new AuthApi(this.apiClient)
 
     this.context = <T>{}
   }
