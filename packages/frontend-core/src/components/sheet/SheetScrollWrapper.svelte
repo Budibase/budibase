@@ -9,6 +9,7 @@
     columns,
     visibleRows,
     visibleColumns,
+    hoveredRowId,
   } = getContext("spreadsheet")
 
   export let scrollVertically = true
@@ -78,6 +79,11 @@
       ...state,
       top: newScrollTop,
     }))
+
+    // Hover row under cursor
+    const y = e.clientY - $bounds.top + (newScrollTop % cellHeight)
+    const hoveredRow = $visibleRows[Math.floor(y / cellHeight)]
+    $hoveredRowId = hoveredRow?._id
   }
 </script>
 
