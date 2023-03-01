@@ -1,8 +1,15 @@
 <script>
   import { getContext } from "svelte"
 
-  const { cellHeight, scroll, bounds, rows, columns, visibleRows } =
-    getContext("spreadsheet")
+  const {
+    cellHeight,
+    scroll,
+    bounds,
+    rows,
+    columns,
+    visibleRows,
+    visibleColumns,
+  } = getContext("spreadsheet")
 
   export let scrollVertically = true
   export let scrollHorizontally = true
@@ -11,9 +18,10 @@
   $: scrollTop = $scroll.top
   $: scrollLeft = $scroll.left
   $: offsetY = scrollVertically ? -1 * (scrollTop % cellHeight) : 0
-  $: offsetX = scrollHorizontally ? -1 * scrollLeft : 0
+  $: hiddenWidths = calculateHiddenWidths($visibleColumns)
+  $: offsetX = scrollHorizontally ? -1 * scrollLeft + hiddenWidths : 0
   $: rowCount = $visibleRows.length
-  $: contentWidth = calculateContentWidth($columns, scrollHorizontally)
+  $: contentWidth = calculateContentWidth($visibleColumns, scrollHorizontally)
   $: contentHeight = calculateContentHeight(rowCount, scrollVertically)
   $: style = getStyle(offsetX, offsetY, contentWidth, contentHeight)
 
@@ -26,6 +34,17 @@
       style += `--height:${contentHeight}px;`
     }
     return style
+  }
+
+  const calculateHiddenWidths = visibleColumns => {
+    const idx = visibleColumns[0]?.idx
+    let width = 0
+    if (idx > 0) {
+      for (let i = 0; i < idx; i++) {
+        width += $columns[i].width
+      }
+    }
+    return width
   }
 
   const calculateContentWidth = (columns, scroll) => {
@@ -77,6 +96,5 @@
     overflow: hidden;
     width: var(--width);
     height: var(--height);
-    position: relative;
   }
 </style>

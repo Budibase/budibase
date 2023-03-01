@@ -1,63 +1,52 @@
-import { writable, derived, get } from "svelte/store"
+import { derived, get } from "svelte/store"
 
 export const createViewportStores = context => {
   const { cellHeight, columns, rows, scroll, bounds } = context
-
-  // Use local variables to avoid needing to invoke 2 svelte getters each time
-  // scroll state changes, but also use stores to allow use of derived stores
-  let scrollTop = 0
-  let scrollLeft = 0
-  const scrollTopStore = writable(0)
-  const scrollLeftStore = writable(0)
+  const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
+  const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
 
   // Derive height and width as primitives to avoid wasted computation
   const width = derived(bounds, $bounds => $bounds.width)
   const height = derived(bounds, $bounds => $bounds.height)
 
-  // Debounce scroll updates so we can slow down visible row computation
-  scroll.subscribe(({ left, top }) => {
-    scrollTop = top
-    scrollTopStore.set(top)
-    scrollLeft = left
-    scrollLeftStore.set(left)
-  })
-
   // Derive visible rows
+  // Split into multiple stores containing primitives to optimise invalidation
+  // as mich as possible
+  const firstRowIdx = derived(scrollTop, $scrollTop => {
+    return Math.floor($scrollTop / cellHeight)
+  })
+  const visibleRowCount = derived(height, $height => {
+    return Math.ceil($height / cellHeight)
+  })
   const visibleRows = derived(
-    [rows, scrollTopStore, height],
-    ([$rows, $scrollTop, $height]) => {
-      const maxRows = Math.ceil($height / cellHeight) + 1
-      const firstRow = Math.max(0, Math.floor($scrollTop / cellHeight))
-      return $rows.slice(firstRow, firstRow + maxRows)
+    [rows, firstRowIdx, visibleRowCount],
+    ([$rows, $firstRowIdx, $visibleRowCount]) => {
+      return $rows.slice($firstRowIdx, $firstRowIdx + $visibleRowCount)
     }
   )
 
   // Derive visible columns
   const visibleColumns = derived(
-    [columns, scrollLeftStore, width],
+    [columns, scrollLeft, width],
     ([$columns, $scrollLeft, $width]) => {
       if (!$columns.length) {
         return []
       }
       let startColIdx = 0
       let rightEdge = $columns[0].width
-      while (rightEdge < $scrollLeft) {
+      while (rightEdge < $scrollLeft && startColIdx < $columns.length - 1) {
         startColIdx++
         rightEdge += $columns[startColIdx].width
       }
       let endColIdx = startColIdx + 1
       let leftEdge = rightEdge
-      while (leftEdge < $width + $scrollLeft) {
-        leftEdge += $columns[endColIdx]?.width
+      while (leftEdge < $width + $scrollLeft && endColIdx < $columns.length) {
+        leftEdge += $columns[endColIdx].width
         endColIdx++
       }
-      return $columns.slice(Math.max(0, startColIdx - 1), endColIdx + 1)
+      return $columns.slice(startColIdx, endColIdx)
     }
   )
-
-  // visibleColumns.subscribe(state => {
-  //   console.log(state)
-  // })
 
   // Fetch next page when approaching end of data
   visibleRows.subscribe($visibleRows => {

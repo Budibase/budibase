@@ -29,8 +29,6 @@
 <style>
   .row {
     display: flex;
-    width: inherit;
-    height: var(--cell-height);
   }
   :global(.sheet:not(.is-resizing):not(.is-reordering) .row:hover .cell) {
     background: var(--cell-background-hover);

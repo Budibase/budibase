@@ -38,13 +38,5 @@
 <style>
   .row {
     display: flex;
-    position: sticky;
-    top: 0;
-    width: inherit;
-    z-index: 10;
-    height: var(--cell-height);
-  }
-  .row :global(> :last-child) {
-    border-right-width: 1px;
   }
 </style>
