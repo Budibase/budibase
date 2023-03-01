@@ -12,8 +12,8 @@
   let left = 0
   let columnCount = 0
 
-  $: cutoff = $scroll.left + 40 + $columns[0]?.width || 0
   $: scrollLeft = $scroll.left
+  $: cutoff = scrollLeft + 40 + $columns[0]?.width || 0
   $: rowCount = $visibleRows.length
 
   const startResizing = (idx, e) => {

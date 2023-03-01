@@ -16,25 +16,18 @@ export const createViewportStores = context => {
 
   // Debounce scroll updates so we can slow down visible row computation
   scroll.subscribe(({ left, top }) => {
-    window.requestAnimationFrame(() => {
-      // Only update local state when big changes occur
-      if (Math.abs(top - scrollTop) > cellHeight * 4) {
-        scrollTop = top
-        scrollTopStore.set(top)
-      }
-      if (Math.abs(left - scrollLeft) > 100) {
-        scrollLeft = left
-        scrollLeftStore.set(left)
-      }
-    })
+    scrollTop = top
+    scrollTopStore.set(top)
+    scrollLeft = left
+    scrollLeftStore.set(left)
   })
 
   // Derive visible rows
   const visibleRows = derived(
     [rows, scrollTopStore, height],
     ([$rows, $scrollTop, $height]) => {
-      const maxRows = Math.ceil($height / cellHeight) + 16
-      const firstRow = Math.max(0, Math.floor($scrollTop / cellHeight) - 8)
+      const maxRows = Math.ceil($height / cellHeight) + 1
+      const firstRow = Math.max(0, Math.floor($scrollTop / cellHeight))
       return $rows.slice(firstRow, firstRow + maxRows)
     }
   )

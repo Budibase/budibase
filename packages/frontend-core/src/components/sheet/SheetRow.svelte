@@ -29,6 +29,8 @@
     link: RelationshipCell,
   }
 
+  console.log("mount")
+
   $: rowSelected = !!$selectedRows[row._id]
 
   const selectRow = id => {
@@ -39,7 +41,7 @@
   }
 </script>
 
-<div class="row" style="--top:{(row.__idx + 1) * cellHeight}px;">
+<div class="row">
   <SpreadsheetCell label {rowSelected} on:click={() => selectRow(row._id)}>
     <div class="checkbox" class:visible={rowSelected}>
       <Checkbox value={rowSelected} />
@@ -76,8 +78,7 @@
 <style>
   .row {
     display: flex;
-    position: absolute;
-    top: var(--top);
+    position: relative;
     width: inherit;
   }
   :global(.sheet:not(.is-resizing):not(.is-reordering) .row:hover .cell) {

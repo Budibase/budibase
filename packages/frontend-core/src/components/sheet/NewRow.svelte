@@ -14,7 +14,7 @@
   }
 </script>
 
-<div class="row new" style="--top:{($rows.length + 1) * cellHeight}px;">
+<div class="row new">
   <SheetCell label on:click={addRow} width="40" left="0">
     <Icon hoverable name="Add" size="S" />
   </SheetCell>
@@ -33,9 +33,7 @@
 <style>
   .row {
     display: flex;
-    top: var(--top);
     width: inherit;
-    position: absolute;
   }
   :global(.sheet:not(.is-resizing):not(.is-reordering) .row:hover .cell) {
     background: var(--cell-background-hover);
