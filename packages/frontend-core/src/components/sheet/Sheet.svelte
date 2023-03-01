@@ -31,6 +31,7 @@
   const tableIdStore = writable()
   const selectedCellId = writable()
   const selectedRows = writable({})
+  const hoveredRowId = writable()
   const scroll = writable({
     left: 0,
     top: 0,
@@ -51,6 +52,7 @@
     cellHeight,
     bounds,
     scroll,
+    hoveredRowId,
     tableId: tableIdStore,
   }
   const { rows, schema } = createRowsStore(context)
@@ -114,7 +116,7 @@
     display: flex;
     flex-direction: row;
     justify-items: flex-start;
-    align-items: stretch;
+    align-items: flex-start;
     overflow: hidden;
     height: 0;
     position: relative;
@@ -124,5 +126,6 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    align-self: stretch;
   }
 </style>

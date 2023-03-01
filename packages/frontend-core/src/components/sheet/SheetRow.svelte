@@ -7,17 +7,25 @@
 
   export let row
 
-  const { selectedCellId, reorder, selectedRows, rows, visibleColumns } =
-    getContext("spreadsheet")
+  const {
+    selectedCellId,
+    reorder,
+    selectedRows,
+    rows,
+    visibleColumns,
+    hoveredRowId,
+  } = getContext("spreadsheet")
 
   $: rowSelected = !!$selectedRows[row._id]
+  $: rowHovered = $hoveredRowId === row._id
 </script>
 
-<div class="row">
+<div class="row" on:mouseover={() => ($hoveredRowId = row._id)}>
   {#each $visibleColumns as column (column.name)}
     {@const cellIdx = `${row._id}-${column.name}`}
     <SheetCell
       {rowSelected}
+      {rowHovered}
       selected={$selectedCellId === cellIdx}
       reorderSource={$reorder.columnIdx === column.idx}
       reorderTarget={$reorder.swapColumnIdx === column.idx}
@@ -40,8 +48,5 @@
 <style>
   .row {
     display: flex;
-  }
-  :global(.sheet:not(.is-resizing):not(.is-reordering) .row:hover .cell) {
-    background: var(--cell-background-hover);
   }
 </style>

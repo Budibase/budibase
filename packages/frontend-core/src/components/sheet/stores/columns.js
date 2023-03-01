@@ -6,6 +6,7 @@ export const createColumnsStores = context => {
   const columns = writable([])
   const stickyColumn = writable(null)
 
+  // Merge new schema fields with existing schema in order to preserve widths
   schema.subscribe($schema => {
     const currentColumns = get(columns)
     if (!$schema) {

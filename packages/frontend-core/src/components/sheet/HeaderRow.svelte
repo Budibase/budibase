@@ -5,8 +5,7 @@
   import { getIconForField } from "./utils"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
 
-  const { visibleColumns, reorder, selectedRows, rows } =
-    getContext("spreadsheet")
+  const { visibleColumns, reorder } = getContext("spreadsheet")
 </script>
 
 <div>

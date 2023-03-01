@@ -6,9 +6,17 @@
   import { getCellComponent } from "./utils"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
 
-  const { rows, selectedRows, stickyColumn, visibleRows, selectedCellId } =
-    getContext("spreadsheet")
+  const {
+    rows,
+    selectedRows,
+    stickyColumn,
+    visibleRows,
+    selectedCellId,
+    hoveredRowId,
+    scroll,
+  } = getContext("spreadsheet")
 
+  $: scrollLeft = $scroll.left
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
   $: width = 40 + $stickyColumn?.width || 0
@@ -41,7 +49,11 @@
   }
 </script>
 
-<div class="sticky-column" style="--width:{width}px;">
+<div
+  class="sticky-column"
+  style="--width:{width}px;"
+  class:scrolled={scrollLeft > 0}
+>
   <div class="row">
     <!-- Field headers -->
     <SheetCell header label on:click={selectAll} width="40" left="0">
@@ -67,69 +79,95 @@
     {/if}
   </div>
 
-  <SheetScrollWrapper scrollHorizontally={false}>
-    {#each $visibleRows as row}
-      {@const rowSelected = !!$selectedRows[row._id]}
-      <div class="row">
+  <div on:mouseleave={() => ($hoveredRowId = null)}>
+    <SheetScrollWrapper scrollHorizontally={false}>
+      {#each $visibleRows as row}
+        {@const rowSelected = !!$selectedRows[row._id]}
+        {@const rowHovered = $hoveredRowId === row._id}
+        <div class="row" on:mouseenter={() => ($hoveredRowId = row._id)}>
+          <SheetCell
+            label
+            {rowSelected}
+            {rowHovered}
+            on:click={() => selectRow(row._id)}
+            width="40"
+          >
+            <div class="checkbox" class:visible={rowSelected || rowHovered}>
+              <Checkbox value={rowSelected} />
+            </div>
+            <div class="number" class:visible={!(rowSelected || rowHovered)}>
+              {row.__idx + 1}
+            </div>
+          </SheetCell>
+
+          {#if $stickyColumn}
+            {@const cellIdx = `${row._id}-${$stickyColumn.name}`}
+            <SheetCell
+              {rowSelected}
+              {rowHovered}
+              sticky
+              selected={$selectedCellId === cellIdx}
+              on:click={() => ($selectedCellId = cellIdx)}
+              width={$stickyColumn.width}
+              left="40"
+            >
+              <svelte:component
+                this={getCellComponent($stickyColumn)}
+                value={row[$stickyColumn.name]}
+                schema={$stickyColumn.schema}
+                selected={$selectedCellId === cellIdx}
+                onChange={val =>
+                  rows.actions.updateRow(row._id, $stickyColumn, val)}
+                readonly={$stickyColumn.schema.autocolumn}
+              />
+            </SheetCell>
+          {/if}
+        </div>
+      {/each}
+
+      <div class="row new" on:mouseover={() => ($hoveredRowId = "new")}>
         <SheetCell
+          rowHovered={$hoveredRowId === "new"}
           label
-          {rowSelected}
-          on:click={() => selectRow(row._id)}
+          on:click={addRow}
           width="40"
         >
-          <div class="checkbox" class:visible={rowSelected}>
-            <Checkbox value={rowSelected} />
-          </div>
-          <div class="number" class:visible={!rowSelected}>
-            {row.__idx + 1}
-          </div>
+          <Icon hoverable name="Add" size="S" />
         </SheetCell>
-
         {#if $stickyColumn}
-          {@const cellIdx = `${row._id}-${$stickyColumn.name}`}
           <SheetCell
-            {rowSelected}
-            sticky
-            selected={$selectedCellId === cellIdx}
-            on:click={() => ($selectedCellId = cellIdx)}
+            on:click={addRow}
             width={$stickyColumn.width}
-            left="40"
-          >
-            <svelte:component
-              this={getCellComponent($stickyColumn)}
-              value={row[$stickyColumn.name]}
-              schema={$stickyColumn.schema}
-              selected={$selectedCellId === cellIdx}
-              onChange={val =>
-                rows.actions.updateRow(row._id, $stickyColumn, val)}
-              readonly={$stickyColumn.schema.autocolumn}
-            />
-          </SheetCell>
+            rowHovered={$hoveredRowId === "new"}
+          />
         {/if}
       </div>
-    {/each}
-
-    <div class="row">
-      <SheetCell label on:click={addRow} width="40">
-        <Icon hoverable name="Add" size="S" />
-      </SheetCell>
-      {#if $stickyColumn}
-        <SheetCell on:click={addRow} width={$stickyColumn.width} left="40" />
-      {/if}
-    </div>
-  </SheetScrollWrapper>
+    </SheetScrollWrapper>
+  </div>
 </div>
 
 <style>
   .sticky-column {
     flex: 0 0 var(--width);
     z-index: 20;
+    overflow: visible;
+    border-right: 1px solid var(--spectrum-global-color-gray-200);
   }
+  .sticky-column.scrolled {
+    box-shadow: 1px -4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .sticky-column :global(.cell) {
+    border-right-width: 0;
+  }
+
   .row {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+  }
+  .row.new:hover :global(.cell) {
+    cursor: pointer;
   }
 
   /* Styles for label cell */
@@ -140,12 +178,9 @@
     display: none;
     color: var(--spectrum-global-color-gray-500);
   }
-  .row:hover .checkbox,
-  .checkbox.visible {
-    display: flex;
-  }
+  .checkbox.visible,
   .number.visible {
-    display: block;
+    display: flex;
   }
   .row:hover .number {
     display: none;
