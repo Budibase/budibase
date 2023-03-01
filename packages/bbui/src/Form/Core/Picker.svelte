@@ -24,6 +24,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
+  export let useOptionIconImage = false
   export let getOptionColour = () => null
   export let open = false
   export let readonly = false
@@ -189,7 +190,16 @@
           >
             {#if getOptionIcon(option, idx)}
               <span class="option-extra icon">
-                <Icon size="S" name={getOptionIcon(option, idx)} />
+                {#if useOptionIconImage}
+                  <img
+                    src={getOptionIcon(option, idx)}
+                    alt="icon"
+                    width="15"
+                    height="15"
+                  />
+                {:else}
+                  <Icon size="S" name={getOptionIcon(option, idx)} />
+                {/if}
               </span>
             {/if}
             {#if getOptionColour(option, idx)}
