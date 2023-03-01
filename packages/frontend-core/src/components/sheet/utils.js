@@ -1,10 +1,3 @@
-import OptionsCell from "./cells/OptionsCell.svelte"
-import DateCell from "./cells/DateCell.svelte"
-import MultiSelectCell from "./cells/MultiSelectCell.svelte"
-import NumberCell from "./cells/NumberCell.svelte"
-import RelationshipCell from "./cells/RelationshipCell.svelte"
-import TextCell from "./cells/TextCell.svelte"
-
 export const getColor = idx => {
   if (idx == null || idx === -1) {
     return null
@@ -20,15 +13,4 @@ export const getIconForField = field => {
     return "Date"
   }
   return "Text"
-}
-
-const TypeComponentMap = {
-  options: OptionsCell,
-  datetime: DateCell,
-  array: MultiSelectCell,
-  number: NumberCell,
-  link: RelationshipCell,
-}
-export const getCellComponent = column => {
-  return TypeComponentMap[column?.schema?.type] || TextCell
 }

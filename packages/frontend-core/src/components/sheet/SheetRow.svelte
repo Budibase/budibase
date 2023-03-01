@@ -1,9 +1,7 @@
-<svelte:options immutable={true} />
-
 <script>
   import { getContext } from "svelte"
   import SheetCell from "./SheetCell.svelte"
-  import { getCellComponent } from "./utils"
+  import { getCellRenderer } from "./renderers"
 
   export let row
 
@@ -34,7 +32,7 @@
       left={column.left}
     >
       <svelte:component
-        this={getCellComponent(column)}
+        this={getCellRenderer(column)}
         value={row[column.name]}
         schema={column.schema}
         selected={$selectedCellId === cellIdx}

@@ -19,11 +19,17 @@
   $: width = $bounds.width
 
   // Calculate V scrollbar size and offset
+  // Terminology is the same for both axes:
+  //   contentX - the size of the rendered content
+  //   renderX - the space available to render the bar in, edge to edge
+  //   barX - the length of the bar
+  //   availX - the space available to render the bar in, until the edge
+  //   barX - the offset of the bar
   $: contentHeight = ($rows.length + 1) * cellHeight
   $: renderHeight = height - 2 * barOffset
   $: barHeight = Math.max(50, (height / contentHeight) * renderHeight)
   $: availHeight = renderHeight - barHeight
-  $: maxScrollTop = Math.max(contentHeight - height, 0)
+  $: maxScrollTop = Math.max(contentHeight - height + 180, 0)
   $: barTop = barOffset + cellHeight + availHeight * (scrollTop / maxScrollTop)
 
   // Calculate H scrollbar size and offset
@@ -32,7 +38,7 @@
   $: renderWidth = totalWidth - 2 * barOffset
   $: barWidth = Math.max(50, (totalWidth / contentWidth) * renderWidth)
   $: availWidth = renderWidth - barWidth
-  $: maxScrollLeft = Math.max(contentWidth - totalWidth, 0)
+  $: maxScrollLeft = Math.max(contentWidth - totalWidth + 180, 0)
   $: barLeft = barOffset + availWidth * (scrollLeft / maxScrollLeft)
 
   // Calculate whether to show scrollbars or not
@@ -43,18 +49,22 @@
   // rows or tables
   $: {
     if (scrollTop > maxScrollTop) {
-      scroll.update(state => ({
-        ...state,
-        top: maxScrollTop,
-      }))
+      setTimeout(() => {
+        scroll.update(state => ({
+          ...state,
+          top: maxScrollTop,
+        }))
+      })
     }
   }
   $: {
     if (scrollLeft > maxScrollLeft) {
-      scroll.update(state => ({
-        ...state,
-        left: maxScrollLeft,
-      }))
+      setTimeout(() => {
+        scroll.update(state => ({
+          ...state,
+          left: maxScrollLeft,
+        }))
+      })
     }
   }
 
