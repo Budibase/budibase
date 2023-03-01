@@ -2,65 +2,37 @@
   import SheetCell from "./SheetCell.svelte"
   import { getContext } from "svelte"
   import { Icon } from "@budibase/bbui"
-  import { Checkbox } from "@budibase/bbui"
+  import { getIconForField } from "./utils"
+  import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
 
   const { visibleColumns, reorder, selectedRows, rows } =
     getContext("spreadsheet")
-
-  $: rowCount = $rows.length
-  $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
-
-  const getIconForField = field => {
-    const type = field.schema.type
-    if (type === "options") {
-      return "ChevronDown"
-    } else if (type === "datetime") {
-      return "Date"
-    }
-    return "Text"
-  }
-
-  const selectAll = () => {
-    const allSelected = selectedRowCount === rowCount
-    if (allSelected) {
-      $selectedRows = {}
-    } else {
-      let allRows = {}
-      $rows.forEach(row => {
-        allRows[row._id] = true
-      })
-      $selectedRows = allRows
-    }
-  }
 </script>
 
-<div class="row">
-  <!-- Field headers -->
-  <SheetCell header label on:click={selectAll} width="40" left="0">
-    <Checkbox value={rowCount && selectedRowCount === rowCount} />
-  </SheetCell>
-  {#each $visibleColumns as column}
-    <SheetCell
-      header
-      sticky={column.idx === 0}
-      reorderSource={$reorder.columnIdx === column.idx}
-      reorderTarget={$reorder.swapColumnIdx === column.idx}
-      on:mousedown={column.idx === 0
-        ? null
-        : e => reorder.actions.startReordering(column.idx, e)}
-      width={column.width}
-      left={column.left}
-    >
-      <Icon
-        size="S"
-        name={getIconForField(column)}
-        color="var(--spectrum-global-color-gray-600)"
-      />
-      <span>
-        {column.name}
-      </span>
-    </SheetCell>
-  {/each}
+<div>
+  <SheetScrollWrapper scrollVertically={false} wheelInteractive={false}>
+    <div class="row">
+      {#each $visibleColumns as column}
+        <SheetCell
+          header
+          reorderSource={$reorder.columnIdx === column.idx}
+          reorderTarget={$reorder.swapColumnIdx === column.idx}
+          on:mousedown={e => reorder.actions.startReordering(column.idx, e)}
+          width={column.width}
+          left={column.left}
+        >
+          <Icon
+            size="S"
+            name={getIconForField(column)}
+            color="var(--spectrum-global-color-gray-600)"
+          />
+          <span>
+            {column.name}
+          </span>
+        </SheetCell>
+      {/each}
+    </div>
+  </SheetScrollWrapper>
 </div>
 
 <style>
@@ -70,6 +42,7 @@
     top: 0;
     width: inherit;
     z-index: 10;
+    height: var(--cell-height);
   }
   .row :global(> :last-child) {
     border-right-width: 1px;

@@ -6,13 +6,17 @@
   import { createReorderStores } from "./stores/reorder"
   import { createViewportStores } from "./stores/viewport"
   import { createRowsStore } from "./stores/rows"
-  import SheetHeader from "./SheetHeader.svelte"
+  import { createColumnsStores } from "./stores/columns"
+  import SheetControls from "./SheetControls.svelte"
   import SheetBody from "./SheetBody.svelte"
   import SheetRow from "./SheetRow.svelte"
   import ResizeOverlay from "./ResizeOverlay.svelte"
   import HeaderRow from "./HeaderRow.svelte"
   import NewRow from "./NewRow.svelte"
   import { createAPIClient } from "../../api"
+  import ScrollOverlay from "./ScrollOverlay.svelte"
+  import StickyColumn from "./StickyColumn.svelte"
+  import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
 
   export let tableId
   export let filter
@@ -22,12 +26,10 @@
 
   // Sheet constants
   const cellHeight = 36
-  const defaultWidth = 200
   const rand = Math.random()
 
   // State stores
   const tableIdStore = writable()
-  const columns = writable([])
   const selectedCellId = writable()
   const selectedRows = writable({})
   const scroll = writable({
@@ -45,70 +47,45 @@
   let context = {
     API: API || createAPIClient(),
     rand,
-    columns,
     selectedCellId,
     selectedRows,
+
     cellHeight,
     bounds,
     scroll,
     tableId: tableIdStore,
   }
-  const { rows, schema, primaryDisplay } = createRowsStore(context)
-  context = { ...context, rows }
+  const { rows, schema } = createRowsStore(context)
+  context = { ...context, rows, schema }
+  const { columns, stickyColumn } = createColumnsStores(context)
+  context = { ...context, columns, stickyColumn }
   const { visibleRows, visibleColumns } = createViewportStores(context)
   context = { ...context, visibleRows, visibleColumns }
   const { reorder } = createReorderStores(context)
   context = { ...context, reorder }
 
   $: tableIdStore.set(tableId)
-  $: generateColumns($schema, $primaryDisplay)
-
-  // Generates the column array the first time the schema loads
-  const generateColumns = (schema, primaryDisplay) => {
-    if (!schema) {
-      $columns = []
-      return
-    }
-    const currentColumns = $columns
-
-    // Get fields in new schema
-    let fields = Object.keys(schema || {})
-    if (primaryDisplay) {
-      fields = [primaryDisplay, ...fields.filter(x => x !== primaryDisplay)]
-    }
-
-    // Update columns, removing extraneous columns and adding missing ones
-    let offset = 40
-    $columns = fields.map((field, idx) => {
-      const existing = currentColumns.find(x => x.name === field)
-      const newCol = {
-        idx,
-        name: field,
-        width: existing?.width || defaultWidth,
-        left: offset,
-        schema: schema[field],
-        primaryDisplay: field === primaryDisplay,
-      }
-      offset += newCol.width
-      return newCol
-    })
-  }
 
   // Set context for children to consume
   setContext("spreadsheet", context)
 </script>
 
 <div class="sheet" style="--cell-height:{cellHeight}px;" id="sheet-{rand}">
-  <SheetHeader />
-  <HeaderRow />
-
-  <SheetBody>
-    {#each $visibleRows as row}
-      <SheetRow {row} />
-    {/each}
-    <NewRow />
-  </SheetBody>
-  <ResizeOverlay />
+  <SheetControls />
+  <div class="sheet-data">
+    <StickyColumn />
+    <div class="sheet-main">
+      <HeaderRow />
+      <SheetBody>
+        {#each $visibleRows as row}
+          <SheetRow {row} />
+        {/each}
+        <NewRow />
+      </SheetBody>
+    </div>
+    <ResizeOverlay />
+    <ScrollOverlay />
+  </div>
 </div>
 
 <style>
@@ -132,5 +109,22 @@
   .sheet,
   .sheet :global(*) {
     box-sizing: border-box;
+  }
+
+  .sheet-data {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-items: flex-start;
+    align-items: stretch;
+    overflow: hidden;
+    height: 0;
+    position: relative;
+  }
+  .sheet-main {
+    flex: 1 1 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 </style>

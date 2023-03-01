@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { domDebounce, debounce, throttle } from "../../utils/utils"
 
-  const { scroll, bounds, rows, cellHeight, columns } =
+  const { scroll, bounds, rows, cellHeight, columns, stickyColumn } =
     getContext("spreadsheet")
 
   // Bar config
@@ -23,19 +23,27 @@
   $: barHeight = Math.max(50, (height / contentHeight) * height)
   $: availHeight = height - barHeight - 2 * barOffset
   $: maxScrollTop = contentHeight - height
-  $: barTop = barOffset + availHeight * (scrollTop / maxScrollTop)
+  $: barTop = barOffset + cellHeight + availHeight * (scrollTop / maxScrollTop)
 
   // Calculate H scrollbar size and offset
-  $: lastCol = $columns[$columns.length - 1]
-  $: contentWidth = lastCol ? lastCol?.left + lastCol?.width : 0
-  $: barWidth = Math.max(50, (width / contentWidth) * width)
-  $: availWidth = width - barWidth - 8
-  $: maxScrollLeft = contentWidth - width
-  $: barLeft = 4 + availWidth * (scrollLeft / maxScrollLeft)
+  $: contentWidth = calculateContentWidth($columns, $stickyColumn)
+  $: totalWidth = width + 40 + $stickyColumn?.width || 0
+  $: barWidth = Math.max(50, (totalWidth / contentWidth) * totalWidth)
+  $: availWidth = totalWidth - barWidth - 2 * barOffset
+  $: maxScrollLeft = contentWidth - totalWidth
+  $: barLeft = barOffset + availWidth * (scrollLeft / maxScrollLeft)
 
   // Calculate whether to show scrollbars or not
   $: showVScrollbar = contentHeight > height
   $: showHScrollbar = contentWidth > width
+
+  const calculateContentWidth = (columns, stickyColumn) => {
+    let width = 40 + stickyColumn?.width
+    columns.forEach(col => {
+      width += col.width
+    })
+    return width
+  }
 
   // V scrollbar drag handlers
   const startVDragging = e => {

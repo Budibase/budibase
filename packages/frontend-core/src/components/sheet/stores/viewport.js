@@ -39,24 +39,25 @@ export const createViewportStores = context => {
       if (!$columns.length) {
         return []
       }
-      let startColIdx = 1
-      let rightEdge = $columns[1].width
+      let startColIdx = 0
+      let rightEdge = $columns[0].width
       while (rightEdge < $scrollLeft) {
         startColIdx++
         rightEdge += $columns[startColIdx].width
       }
       let endColIdx = startColIdx + 1
-      let leftEdge = $columns[0].width + 40 + rightEdge
+      let leftEdge = rightEdge
       while (leftEdge < $width + $scrollLeft) {
         leftEdge += $columns[endColIdx]?.width
         endColIdx++
       }
-      return [
-        $columns[0],
-        ...$columns.slice(Math.max(1, startColIdx - 2), endColIdx + 2),
-      ]
+      return $columns.slice(Math.max(0, startColIdx - 1), endColIdx + 1)
     }
   )
+
+  // visibleColumns.subscribe(state => {
+  //   console.log(state)
+  // })
 
   // Fetch next page when approaching end of data
   visibleRows.subscribe($visibleRows => {

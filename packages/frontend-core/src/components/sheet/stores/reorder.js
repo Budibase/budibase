@@ -76,7 +76,7 @@ export const createReorderStores = context => {
         swapColumnIdx++
       }
       state.splice(swapColumnIdx, 0, removed[0])
-      let offset = 40
+      let offset = 0
       return state.map((col, idx) => {
         const newCol = {
           ...col,

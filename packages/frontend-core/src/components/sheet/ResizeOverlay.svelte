@@ -1,8 +1,15 @@
 <script>
   import { getContext } from "svelte"
 
-  const { visibleRows, columns, rand, scroll, visibleColumns, cellHeight } =
-    getContext("spreadsheet")
+  const {
+    visibleRows,
+    columns,
+    rand,
+    scroll,
+    visibleColumns,
+    cellHeight,
+    stickyColumn,
+  } = getContext("spreadsheet")
   const MinColumnWidth = 100
 
   let initialMouseX = null
@@ -14,14 +21,17 @@
 
   $: scrollLeft = $scroll.left
   $: cutoff = scrollLeft + 40 + $columns[0]?.width || 0
+  $: offset = 40 + $stickyColumn?.width || 0
   $: rowCount = $visibleRows.length
+  $: contentHeight = (rowCount + 2) * cellHeight
 
   const startResizing = (idx, e) => {
     // Prevent propagation to stop reordering triggering
     e.stopPropagation()
 
-    width = $columns[idx].width
-    left = $columns[idx].left
+    const col = idx === "sticky" ? $stickyColumn : $columns[idx]
+    width = col.width
+    left = col.left
     initialWidth = width
     initialMouseX = e.clientX
     columnIdx = idx
@@ -41,15 +51,22 @@
       return
     }
 
-    columns.update(state => {
-      state[columnIdx].width = newWidth
-      let offset = state[columnIdx].left + newWidth
-      for (let i = columnIdx + 1; i < state.length; i++) {
-        state[i].left = offset
-        offset += state[i].width
-      }
-      return [...state]
-    })
+    if (columnIdx === "sticky") {
+      stickyColumn.update(state => ({
+        ...state,
+        width: newWidth,
+      }))
+    } else {
+      columns.update(state => {
+        state[columnIdx].width = newWidth
+        let offset = state[columnIdx].left + newWidth
+        for (let i = columnIdx + 1; i < state.length; i++) {
+          state[i].left = offset
+          offset += state[i].width
+        }
+        return [...state]
+      })
+    }
 
     width = newWidth
   }
@@ -61,30 +78,38 @@
     document.getElementById(`sheet-${rand}`).classList.remove("is-resizing")
   }
 
-  const getStyle = (col, scrollLeft, rowCount) => {
-    const left = col.left + col.width - (col.idx === 0 ? 0 : scrollLeft)
-    const contentHeight = (rowCount + 2) * cellHeight
+  const getStyle = (col, offset, scrollLeft, contentHeight) => {
+    const left = offset + col.left + col.width - scrollLeft
     return `--left:${left}px; --content-height:${contentHeight}px;`
   }
 </script>
 
+{#if $stickyColumn}
+  <div
+    class="resize-slider sticky"
+    class:visible={columnIdx === "sticky"}
+    on:mousedown={e => startResizing("sticky", e)}
+    style="--left:{40 +
+      $stickyColumn.width}px; --content-height:{contentHeight}px;"
+  >
+    <div class="resize-indicator" />
+  </div>
+{/if}
 {#each $visibleColumns as col}
-  {#if col.idx === 0 || col.left + col.width > cutoff}
-    <div
-      class="resize-slider"
-      class:visible={columnIdx === col.idx}
-      on:mousedown={e => startResizing(col.idx, e)}
-      style={getStyle(col, scrollLeft, rowCount)}
-    >
-      <div class="resize-indicator" />
-    </div>
-  {/if}
+  <div
+    class="resize-slider"
+    class:visible={columnIdx === col.idx}
+    on:mousedown={e => startResizing(col.idx, e)}
+    style={getStyle(col, offset, scrollLeft, contentHeight)}
+  >
+    <div class="resize-indicator" />
+  </div>
 {/each}
 
 <style>
   .resize-slider {
     position: absolute;
-    top: var(--controls-height);
+    top: 0;
     z-index: 10;
     height: var(--cell-height);
     left: var(--left);
@@ -97,7 +122,10 @@
   .resize-slider.visible {
     cursor: col-resize;
     opacity: 1;
-    height: min(var(--content-height), calc(100% - var(--controls-height)));
+    height: min(var(--content-height), 100%);
+  }
+  .resize-slider.sticky {
+    z-index: 25;
   }
   .resize-indicator {
     margin-left: -1px;

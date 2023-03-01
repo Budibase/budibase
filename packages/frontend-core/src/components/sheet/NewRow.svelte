@@ -15,12 +15,8 @@
 </script>
 
 <div class="row new">
-  <SheetCell label on:click={addRow} width="40" left="0">
-    <Icon hoverable name="Add" size="S" />
-  </SheetCell>
   {#each $visibleColumns as column}
     <SheetCell
-      sticky={column.idx === 0}
       on:click={() => addRow(column)}
       width={column.width}
       left={column.left}
@@ -34,12 +30,10 @@
   .row {
     display: flex;
     width: inherit;
+    height: var(--cell-height);
   }
   :global(.sheet:not(.is-resizing):not(.is-reordering) .row:hover .cell) {
     background: var(--cell-background-hover);
     cursor: pointer;
-  }
-  .row :global(> :last-child) {
-    border-right-width: 1px;
   }
 </style>
