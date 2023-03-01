@@ -1,29 +1,39 @@
 import { get, writable } from "svelte/store"
 
 export const createReorderStores = context => {
-  const { columns, rand, scroll, bounds } = context
+  const { columns, rand, scroll, bounds, stickyColumn } = context
   const reorderInitialState = {
-    columnIdx: null,
-    swapColumnIdx: null,
+    sourceColumn: null,
+    targetColumn: null,
     breakpoints: [],
     initialMouseX: null,
   }
   const reorder = writable(reorderInitialState)
 
   // Callback when dragging on a colum header and starting reordering
-  const startReordering = (columnIdx, e) => {
+  const startReordering = (column, e) => {
     const $columns = get(columns)
     const $bounds = get(bounds)
     const $scroll = get(scroll)
+    const $stickyColumn = get(stickyColumn)
 
     // Generate new breakpoints for the current columns
-    let breakpoints = $columns.map(col => col.left + col.width)
+    let breakpoints = $columns.map(col => ({
+      x: col.left + col.width,
+      column: col.name,
+    }))
+    if ($stickyColumn) {
+      breakpoints.unshift({
+        x: 0,
+        column: $stickyColumn.name,
+      })
+    }
 
     // Update state
     reorder.set({
-      columnIdx,
+      sourceColumn: column,
+      targetColumn: null,
       breakpoints,
-      swapColumnIdx: null,
       initialMouseX: e.clientX,
       scrollLeft: $scroll.left,
       sheetLeft: $bounds.left,
@@ -41,26 +51,23 @@ export const createReorderStores = context => {
   // Callback when moving the mouse when reordering columns
   const onReorderMouseMove = e => {
     const $reorder = get(reorder)
-    if ($reorder.columnIdx == null) {
-      return
-    }
 
     // Compute the closest breakpoint to the current position
-    let swapColumnIdx
+    let targetColumn
     let minDistance = Number.MAX_SAFE_INTEGER
     const mouseX = e.clientX - $reorder.sheetLeft + $reorder.scrollLeft
-    $reorder.breakpoints.forEach((point, idx) => {
-      const distance = Math.abs(point - mouseX)
+    $reorder.breakpoints.forEach(point => {
+      const distance = Math.abs(point.x - mouseX)
       if (distance < minDistance) {
         minDistance = distance
-        swapColumnIdx = idx
+        targetColumn = point.column
       }
     })
 
-    if (swapColumnIdx !== $reorder.swapColumnIdx) {
+    if (targetColumn !== $reorder.targetColumn) {
       reorder.update(state => ({
         ...state,
-        swapColumnIdx: swapColumnIdx,
+        targetColumn,
       }))
     }
   }
@@ -68,14 +75,17 @@ export const createReorderStores = context => {
   // Callback when stopping reordering columns
   const stopReordering = () => {
     // Swap position of columns
-    let { columnIdx, swapColumnIdx } = get(reorder)
-    swapColumnIdx++
+    const $columns = get(columns)
+    let { sourceColumn, targetColumn } = get(reorder)
+    let sourceIdx = $columns.findIndex(x => x.name === sourceColumn)
+    let targetIdx = $columns.findIndex(x => x.name === targetColumn)
+    targetIdx++
     columns.update(state => {
-      const removed = state.splice(columnIdx, 1)
-      if (--swapColumnIdx < columnIdx) {
-        swapColumnIdx++
+      const removed = state.splice(sourceIdx, 1)
+      if (--targetIdx < sourceIdx) {
+        targetIdx++
       }
-      state.splice(swapColumnIdx, 0, removed[0])
+      state.splice(targetIdx, 0, removed[0])
       let offset = 0
       return state.map((col, idx) => {
         const newCol = {

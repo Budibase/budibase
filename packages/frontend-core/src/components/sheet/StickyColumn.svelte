@@ -14,6 +14,7 @@
     selectedCellId,
     hoveredRowId,
     scroll,
+    reorder,
   } = getContext("spreadsheet")
 
   $: scrollLeft = $scroll.left
@@ -66,6 +67,7 @@
         sticky
         width={$stickyColumn.width}
         left={$stickyColumn.left}
+        reorderTarget={$reorder.targetColumn === $stickyColumn.name}
       >
         <Icon
           size="S"
@@ -110,6 +112,7 @@
               on:click={() => ($selectedCellId = cellIdx)}
               width={$stickyColumn.width}
               left="40"
+              reorderTarget={$reorder.targetColumn === $stickyColumn.name}
             >
               <svelte:component
                 this={getCellRenderer($stickyColumn)}
@@ -139,6 +142,7 @@
             on:click={addRow}
             width={$stickyColumn.width}
             rowHovered={$hoveredRowId === "new"}
+            reorderTarget={$reorder.targetColumn === $stickyColumn.name}
           />
         {/if}
       </div>

@@ -22,8 +22,8 @@
       on:click={() => addRow(column)}
       width={column.width}
       left={column.left}
-      reorderSource={$reorder.columnIdx === column.idx}
-      reorderTarget={$reorder.swapColumnIdx === column.idx}
+      reorderSource={$reorder.sourceColumn === column.name}
+      reorderTarget={$reorder.targetColumn === column.name}
     />
   {/each}
 </div>
