@@ -57,11 +57,22 @@ export const countUsersByApp = async (appId: string) => {
   }
 }
 
+export const getUsersByAppAccess = async (appId?: string) => {
+  const opts: any = {
+    include_docs: true,
+    limit: 50,
+  }
+  let response: User[] = await usersCore.searchGlobalUsersByAppAccess(
+    appId,
+    opts
+  )
+  return response
+}
+
 export const paginatedUsers = async ({
   page,
   email,
   appId,
-  userIds,
 }: SearchUsersRequest = {}) => {
   const db = tenancy.getGlobalDB()
   // get one extra document, to have the next page
@@ -234,7 +245,7 @@ export const save = async (
   const tenantId = tenancy.getTenantId()
   const db = tenancy.getGlobalDB()
 
-  let { email, _id, userGroups = [] } = user
+  let { email, _id, userGroups = [], roles } = user
 
   if (!email && !_id) {
     throw new Error("_id or email is required")
@@ -274,6 +285,10 @@ export const save = async (
     builtUser.builder = dbUser.builder
     builtUser.admin = dbUser.admin
     builtUser.roles = dbUser.roles
+  }
+
+  if (!dbUser && roles?.length) {
+    builtUser.roles = { ...roles }
   }
 
   // make sure we set the _id field for a new user

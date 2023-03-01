@@ -7,7 +7,7 @@ function getExpirySecondsForDB(db: string) {
       return 3600
     case redis.utils.Databases.INVITATIONS:
       // a day
-      return 86400
+      return 604800
   }
 }
 
@@ -27,6 +27,20 @@ async function writeACode(db: string, value: any) {
   const code = utils.newid()
   await client.store(code, value, getExpirySecondsForDB(db))
   return code
+}
+
+async function updateACode(db: string, code: string, value: any) {
+  const client = await getClient(db)
+  await client.store(code, value, getExpirySecondsForDB(db))
+}
+
+/**
+ * Given an invite code and invite body, allow the update an existing/valid invite in redis
+ * @param {string} inviteCode The invite code for an invite in redis
+ * @param {object} value The body of the updated user invitation
+ */
+export async function updateInviteCode(inviteCode: string, value: string) {
+  await updateACode(redis.utils.Databases.INVITATIONS, inviteCode, value)
 }
 
 async function getACode(db: string, code: string, deleteCode = true) {
@@ -112,4 +126,28 @@ export async function checkInviteCode(
   } catch (err) {
     throw "Invitation is not valid or has expired, please request a new one."
   }
+}
+
+/** 
+  Get all currently available user invitations.
+  @return {Object[]} A list of all objects containing invite metadata
+**/
+export async function getInviteCodes(tenantIds?: string[]) {
+  const client = await getClient(redis.utils.Databases.INVITATIONS)
+  const invites: any[] = await client.scan()
+
+  const results = invites.map(invite => {
+    return {
+      ...invite.value,
+      code: invite.key,
+    }
+  })
+  return results.reduce((acc, invite) => {
+    if (tenantIds?.length && tenantIds.includes(invite.info.tenantId)) {
+      acc.push(invite)
+    } else {
+      acc.push(invite)
+    }
+    return acc
+  }, [])
 }

@@ -72,6 +72,8 @@ const INITIAL_FRONTEND_STATE = {
   // onboarding
   onboarding: false,
   tourNodes: null,
+
+  builderSidePanel: false,
 }
 
 export const getFrontendStore = () => {
