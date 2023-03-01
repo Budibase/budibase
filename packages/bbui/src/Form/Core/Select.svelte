@@ -18,6 +18,8 @@
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
+  export let align
+  export let footer = null
 
   const dispatch = createEventDispatcher()
 
@@ -41,7 +43,7 @@
   const getFieldText = (value, options, placeholder) => {
     // Always use placeholder if no value
     if (value == null || value === "") {
-      return placeholder || "Choose an option"
+      return placeholder !== false ? "Choose an option" : ""
     }
 
     return getFieldAttribute(getOptionLabel, value, options)
@@ -66,6 +68,8 @@
   {fieldColour}
   {options}
   {autoWidth}
+  {align}
+  {footer}
   {getOptionLabel}
   {getOptionValue}
   {getOptionIcon}
@@ -74,7 +78,7 @@
   {autocomplete}
   {sort}
   isPlaceholder={value == null || value === ""}
-  placeholderOption={placeholder}
+  placeholderOption={placeholder === false ? null : placeholder}
   isOptionSelected={option => option === value}
   onSelectOption={selectOption}
 />

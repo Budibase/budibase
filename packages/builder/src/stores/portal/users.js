@@ -26,9 +26,15 @@ export function createUsersStore() {
     return await API.getUsers()
   }
 
+  // One or more users.
+  async function onboard(payload) {
+    return await API.onboardUsers(payload)
+  }
+
   async function invite(payload) {
     return API.inviteUsers(payload)
   }
+
   async function acceptInvite(inviteCode, password, firstName, lastName) {
     return API.acceptInvite({
       inviteCode,
@@ -40,6 +46,14 @@ export function createUsersStore() {
 
   async function fetchInvite(inviteCode) {
     return API.getUserInvite(inviteCode)
+  }
+
+  async function getInvites() {
+    return API.getUserInvites()
+  }
+
+  async function updateInvite(invite) {
+    return API.updateUserInvite(invite)
   }
 
   async function create(data) {
@@ -106,8 +120,11 @@ export function createUsersStore() {
     getUserRole,
     fetch,
     invite,
+    onboard,
     acceptInvite,
     fetchInvite,
+    getInvites,
+    updateInvite,
     create,
     save,
     bulkDelete,
