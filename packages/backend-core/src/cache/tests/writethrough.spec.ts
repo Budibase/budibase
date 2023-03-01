@@ -85,6 +85,34 @@ describe("writethrough", () => {
         const output = await db.get(current._id)
         expect(output.value).toBe(4)
         expect(output._rev).toBe(newRev)
+
+        current = output
+      })
+    })
+
+    it("should handle updates with documents falling behind", async () => {
+      await config.doInTenant(async () => {
+        tk.freeze(Date.now() + DELAY + 1)
+
+        const id = structures.uuid()
+        await writethrough.put({ _id: id, value: 1 })
+        const doc = await writethrough.get(id)
+
+        // Updating document
+        tk.freeze(Date.now() + DELAY + 1)
+        await writethrough.put({ ...doc, value: 2 })
+
+        // Update with the old rev value
+        tk.freeze(Date.now() + DELAY + 1)
+        const res = await writethrough.put({
+          ...doc,
+          value: 3,
+        })
+        expect(res.ok).toBe(true)
+
+        const output = await db.get(id)
+        expect(output.value).toBe(3)
+        expect(output._rev).toBe(res.rev)
       })
     })
   })
