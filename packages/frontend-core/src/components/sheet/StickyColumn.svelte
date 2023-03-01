@@ -54,7 +54,7 @@
   style="--width:{width}px;"
   class:scrolled={scrollLeft > 0}
 >
-  <div class="row">
+  <div class="header row">
     <!-- Field headers -->
     <SheetCell header label on:click={selectAll} width="40" left="0">
       <Checkbox value={rowCount && selectedRowCount === rowCount} />
@@ -160,6 +160,9 @@
     border-right-width: 0;
   }
 
+  .header {
+    border-bottom: var(--cell-border);
+  }
   .row {
     display: flex;
     flex-direction: row;

@@ -105,6 +105,7 @@
     --cell-spacing: 4px;
     --cell-font-size: 14px;
     --controls-height: 50px;
+    --cell-border: 1px solid var(--spectrum-global-color-gray-200);
   }
   .sheet,
   .sheet :global(*) {

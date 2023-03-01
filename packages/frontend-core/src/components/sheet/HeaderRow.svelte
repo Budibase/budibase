@@ -8,7 +8,7 @@
   const { visibleColumns, reorder } = getContext("spreadsheet")
 </script>
 
-<div>
+<div class="header">
   <SheetScrollWrapper scrollVertically={false} wheelInteractive={false}>
     <div class="row">
       {#each $visibleColumns as column}
@@ -35,6 +35,10 @@
 </div>
 
 <style>
+  .header {
+    background: var(--background);
+    border-bottom: var(--cell-border);
+  }
   .row {
     display: flex;
   }
