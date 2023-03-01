@@ -20,22 +20,43 @@
 
   // Calculate V scrollbar size and offset
   $: contentHeight = ($rows.length + 1) * cellHeight
-  $: barHeight = Math.max(50, (height / contentHeight) * height)
-  $: availHeight = height - barHeight - 2 * barOffset
-  $: maxScrollTop = contentHeight - height
+  $: renderHeight = height - 2 * barOffset
+  $: barHeight = Math.max(50, (height / contentHeight) * renderHeight)
+  $: availHeight = renderHeight - barHeight
+  $: maxScrollTop = Math.max(contentHeight - height, 0)
   $: barTop = barOffset + cellHeight + availHeight * (scrollTop / maxScrollTop)
 
   // Calculate H scrollbar size and offset
   $: contentWidth = calculateContentWidth($columns, $stickyColumn)
   $: totalWidth = width + 40 + $stickyColumn?.width || 0
-  $: barWidth = Math.max(50, (totalWidth / contentWidth) * totalWidth)
-  $: availWidth = totalWidth - barWidth - 2 * barOffset
-  $: maxScrollLeft = contentWidth - totalWidth
+  $: renderWidth = totalWidth - 2 * barOffset
+  $: barWidth = Math.max(50, (totalWidth / contentWidth) * renderWidth)
+  $: availWidth = renderWidth - barWidth
+  $: maxScrollLeft = Math.max(contentWidth - totalWidth, 0)
   $: barLeft = barOffset + availWidth * (scrollLeft / maxScrollLeft)
 
   // Calculate whether to show scrollbars or not
   $: showVScrollbar = contentHeight > height
-  $: showHScrollbar = contentWidth > width
+  $: showHScrollbar = contentWidth > totalWidth
+
+  // Ensure scroll state never goes invalid, which can happen when changing
+  // rows or tables
+  $: {
+    if (scrollTop > maxScrollTop) {
+      scroll.update(state => ({
+        ...state,
+        top: maxScrollTop,
+      }))
+    }
+  }
+  $: {
+    if (scrollLeft > maxScrollLeft) {
+      scroll.update(state => ({
+        ...state,
+        left: maxScrollLeft,
+      }))
+    }
+  }
 
   const calculateContentWidth = (columns, stickyColumn) => {
     let width = 40 + stickyColumn?.width

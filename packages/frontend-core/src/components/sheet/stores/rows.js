@@ -4,7 +4,7 @@ import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
 export const createRowsStore = context => {
-  const { tableId, filter, API } = context
+  const { tableId, filter, API, scroll } = context
 
   // Flag for whether this is the first time loading our fetch
   let loaded = false
@@ -61,12 +61,17 @@ export const createRowsStore = context => {
           loaded = true
           rowCacheMap = {}
           rows.set([])
+
+          // Enrich primary display into schema
           let newSchema = $$fetch.schema
           const primaryDisplay = $$fetch.definition?.primaryDisplay
           if (primaryDisplay && newSchema[primaryDisplay]) {
             newSchema[primaryDisplay].primaryDisplay = true
           }
           schema.set(newSchema)
+
+          // Reset scroll state for fresh dataset
+          scroll.set({ left: 0, top: 0 })
         }
 
         // Process new rows

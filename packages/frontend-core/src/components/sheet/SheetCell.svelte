@@ -8,7 +8,6 @@
   export let selected = false
   export let reorderSource = false
   export let reorderTarget = false
-  export let left
   export let width
 </script>
 
@@ -25,7 +24,7 @@
   on:mouseenter
   on:click
   on:mousedown
-  style="--width:{width}px; --left:{left}px;"
+  style="--width:{width}px;"
 >
   <slot />
 </div>
@@ -49,9 +48,8 @@
     background: var(--cell-background);
     transition: border-color 130ms ease-out;
     flex: 0 0 var(--width);
-    position: absolute;
-    left: var(--left);
-    width: var(--width);
+    position: relative;
+    width: 0;
   }
   .cell.selected {
     box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
@@ -72,7 +70,6 @@
     background: var(--background);
     padding: 0 var(--cell-padding);
     border-color: var(--spectrum-global-color-gray-200);
-    font-weight: 600;
     gap: calc(2 * var(--cell-spacing));
     z-index: 10;
   }
@@ -85,10 +82,6 @@
   }
   .cell.header:hover {
     cursor: pointer;
-  }
-  .cell.header.sticky,
-  .cell.header.label {
-    z-index: 11;
   }
 
   /* Reorder styles */

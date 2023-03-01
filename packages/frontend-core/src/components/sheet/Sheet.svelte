@@ -16,7 +16,6 @@
   import { createAPIClient } from "../../api"
   import ScrollOverlay from "./ScrollOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
-  import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
 
   export let tableId
   export let filter
@@ -49,7 +48,6 @@
     rand,
     selectedCellId,
     selectedRows,
-
     cellHeight,
     bounds,
     scroll,
