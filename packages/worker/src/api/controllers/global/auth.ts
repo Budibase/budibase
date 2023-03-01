@@ -62,7 +62,7 @@ export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
 
   const user = await userSdk.getUserByEmail(email)
   if (user && (await userSdk.isPreventPasswordActions(user))) {
-    ctx.throw(400, "Password login is disabled for this user")
+    ctx.throw(403, "Invalid credentials")
   }
 
   return passport.authenticate(
