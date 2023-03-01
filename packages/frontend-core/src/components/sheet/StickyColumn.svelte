@@ -3,7 +3,7 @@
   import { Checkbox, Icon } from "@budibase/bbui"
   import { getIconForField } from "./utils"
   import SheetCell from "./SheetCell.svelte"
-  import { getCellComponent } from "./utils"
+  import { getCellRenderer } from "./renderers"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
 
   const {
@@ -112,7 +112,7 @@
               left="40"
             >
               <svelte:component
-                this={getCellComponent($stickyColumn)}
+                this={getCellRenderer($stickyColumn)}
                 value={row[$stickyColumn.name]}
                 schema={$stickyColumn.schema}
                 selected={$selectedCellId === cellIdx}

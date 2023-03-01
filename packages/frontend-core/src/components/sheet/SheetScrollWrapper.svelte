@@ -71,7 +71,7 @@
     newScrollTop += offset
     newScrollTop = Math.min(
       newScrollTop,
-      ($rows.length + 1) * cellHeight - $bounds.height
+      ($rows.length + 1) * cellHeight - $bounds.height + 180
     )
     newScrollTop = Math.max(0, newScrollTop)
     scroll.update(state => ({
@@ -81,21 +81,20 @@
   }
 </script>
 
-<div
-  class="scroll-wrapper"
-  {style}
-  on:wheel|passive={wheelInteractive ? handleWheel : null}
->
-  <slot />
+<div on:wheel|passive={wheelInteractive ? handleWheel : null}>
+  <div class="scroll-wrapper" {style}>
+    <slot />
+  </div>
 </div>
 
 <style>
-  .scroll-wrapper {
+  div {
+    overflow: hidden;
     min-width: 100%;
     min-height: 100%;
-    background: var(--background-alt);
+  }
+  .scroll-wrapper {
     transform: translate3d(var(--offset-x), var(--offset-y), 0);
-    overflow: hidden;
     width: var(--width);
     height: var(--height);
   }
