@@ -86,7 +86,7 @@ export const runMigration = async (
     count++
     const lengthStatement = length > 1 ? `[${count}/${length}]` : ""
 
-    const db = getDB(dbName, { skip_setup: true })
+    const db = getDB(dbName)
 
     try {
       const doc = await getMigrationsDoc(db)
