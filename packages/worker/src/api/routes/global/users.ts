@@ -50,8 +50,8 @@ function buildInviteAcceptValidation() {
   // prettier-ignore
   return auth.joiValidator.body(Joi.object({
     inviteCode: Joi.string().required(),
-    password: Joi.string().required(),
-    firstName: Joi.string().required(),
+    password: Joi.string().optional(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
   }).required().unknown(true))
 }
