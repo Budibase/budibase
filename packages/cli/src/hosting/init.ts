@@ -1,24 +1,25 @@
-const { InitTypes, AnalyticsEvents } = require("../constants")
-const { confirmation } = require("../questions")
-const { captureEvent } = require("../events")
-const makeFiles = require("./makeFiles")
-const axios = require("axios")
-const { parseEnv } = require("../utils")
-const { checkDockerConfigured, downloadFiles } = require("./utils")
-const { watchPlugins } = require("./watch")
-const { generateUser } = require("./genUser")
+import { InitType, AnalyticsEvent } from "../constants"
+import { confirmation } from "../questions"
+import { captureEvent } from "../events"
+import * as makeFiles from "./makeFiles"
+import { parseEnv } from "../utils"
+import { checkDockerConfigured, downloadFiles } from "./utils"
+import { watchPlugins } from "./watch"
+import { generateUser } from "./genUser"
+import fetch from "node-fetch"
 
 const DO_USER_DATA_URL = "http://169.254.169.254/metadata/v1/user-data"
 
-async function getInitConfig(type, isQuick, port) {
-  const config = isQuick ? makeFiles.QUICK_CONFIG : {}
-  if (type === InitTypes.DIGITAL_OCEAN) {
+async function getInitConfig(type: string, isQuick: boolean, port: number) {
+  const config: any = isQuick ? makeFiles.QUICK_CONFIG : {}
+  if (type === InitType.DIGITAL_OCEAN) {
     try {
-      const output = await axios.get(DO_USER_DATA_URL)
-      const response = parseEnv(output.data)
+      const output = await fetch(DO_USER_DATA_URL)
+      const data = await output.text()
+      const response = parseEnv(data)
       for (let [key, value] of Object.entries(makeFiles.ConfigMap)) {
         if (response[key]) {
-          config[value] = response[key]
+          config[value as string] = response[key]
         }
       }
     } catch (err) {
@@ -32,7 +33,7 @@ async function getInitConfig(type, isQuick, port) {
   return config
 }
 
-exports.init = async opts => {
+export async function init(opts: any) {
   let type, isSingle, watchDir, genUser, port, silent
   if (typeof opts === "string") {
     type = opts
@@ -44,7 +45,7 @@ exports.init = async opts => {
     port = opts["port"]
     silent = opts["silent"]
   }
-  const isQuick = type === InitTypes.QUICK || type === InitTypes.DIGITAL_OCEAN
+  const isQuick = type === InitType.QUICK || type === InitType.DIGITAL_OCEAN
   await checkDockerConfigured()
   if (!isQuick) {
     const shouldContinue = await confirmation(
@@ -55,7 +56,7 @@ exports.init = async opts => {
       return
     }
   }
-  captureEvent(AnalyticsEvents.SelfHostInit, {
+  captureEvent(AnalyticsEvent.SelfHostInit, {
     type,
   })
   const config = await getInitConfig(type, isQuick, port)

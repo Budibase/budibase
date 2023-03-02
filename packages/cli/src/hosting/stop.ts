@@ -1,12 +1,8 @@
-const {
-  checkDockerConfigured,
-  checkInitComplete,
-  handleError,
-} = require("./utils")
-const { info, success } = require("../utils")
-const compose = require("docker-compose")
+import { checkDockerConfigured, checkInitComplete, handleError } from "./utils"
+import { info, success } from "../utils"
+import compose from "docker-compose"
 
-exports.stop = async () => {
+export async function stop() {
   await checkDockerConfigured()
   checkInitComplete()
   console.log(info("Stopping services, this may take a moment."))

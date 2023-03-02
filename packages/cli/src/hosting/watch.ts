@@ -1,9 +1,10 @@
-const { resolve } = require("path")
-const fs = require("fs")
-const { error, success } = require("../utils")
-const { updateDockerComposeService } = require("./utils")
+import { resolve } from "path"
+import fs from "fs"
+import { error, success } from "../utils"
+import { updateDockerComposeService } from "./utils"
+import { DockerCompose } from "./types"
 
-exports.watchPlugins = async (pluginPath, silent) => {
+export async function watchPlugins(pluginPath: string, silent: boolean) {
   const PLUGIN_PATH = "/plugins"
   // get absolute path
   pluginPath = resolve(pluginPath)
@@ -15,7 +16,7 @@ exports.watchPlugins = async (pluginPath, silent) => {
     )
     return
   }
-  updateDockerComposeService(service => {
+  updateDockerComposeService((service: DockerCompose) => {
     // set environment variable
     service.environment["PLUGINS_DIR"] = PLUGIN_PATH
     // add volumes to parsed yaml

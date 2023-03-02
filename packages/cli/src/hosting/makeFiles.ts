@@ -1,15 +1,15 @@
-const { number } = require("../questions")
-const { success, stringifyToDotEnv } = require("../utils")
-const fs = require("fs")
-const path = require("path")
+import { number } from "../questions"
+import { success, stringifyToDotEnv } from "../utils"
+import fs from "fs"
+import path from "path"
+import yaml from "yaml"
+import { getAppService } from "./utils"
 const randomString = require("randomstring")
-const yaml = require("yaml")
-const { getAppService } = require("./utils")
 
 const SINGLE_IMAGE = "budibase/budibase:latest"
 const VOL_NAME = "budibase_data"
-const COMPOSE_PATH = path.resolve("./docker-compose.yaml")
-const ENV_PATH = path.resolve("./.env")
+export const COMPOSE_PATH = path.resolve("./docker-compose.yaml")
+export const ENV_PATH = path.resolve("./.env")
 
 function getSecrets(opts = { single: false }) {
   const secrets = [
@@ -19,7 +19,7 @@ function getSecrets(opts = { single: false }) {
     "REDIS_PASSWORD",
     "INTERNAL_API_KEY",
   ]
-  const obj = {}
+  const obj: Record<string, string> = {}
   secrets.forEach(secret => (obj[secret] = randomString.generate()))
   // setup couch creds separately
   if (opts && opts.single) {
@@ -32,7 +32,7 @@ function getSecrets(opts = { single: false }) {
   return obj
 }
 
-function getSingleCompose(port) {
+function getSingleCompose(port: number) {
   const singleComposeObj = {
     version: "3",
     services: {
@@ -53,7 +53,7 @@ function getSingleCompose(port) {
   return yaml.stringify(singleComposeObj)
 }
 
-function getEnv(port) {
+function getEnv(port: number) {
   const partOne = stringifyToDotEnv({
     MAIN_PORT: port,
   })
@@ -77,19 +77,21 @@ function getEnv(port) {
   ].join("\n")
 }
 
-exports.ENV_PATH = ENV_PATH
-exports.COMPOSE_PATH = COMPOSE_PATH
-
-module.exports.ConfigMap = {
+export const ConfigMap = {
   MAIN_PORT: "port",
 }
 
-module.exports.QUICK_CONFIG = {
+export const QUICK_CONFIG = {
   key: "budibase",
   port: 10000,
 }
 
-async function make(path, contentsFn, inputs = {}, silent) {
+async function make(
+  path: string,
+  contentsFn: Function,
+  inputs: any = {},
+  silent: boolean
+) {
   const port =
     inputs.port ||
     (await number(
@@ -107,15 +109,15 @@ async function make(path, contentsFn, inputs = {}, silent) {
   }
 }
 
-module.exports.makeEnv = async (inputs = {}, silent) => {
+export async function makeEnv(inputs: any = {}, silent: boolean) {
   return make(ENV_PATH, getEnv, inputs, silent)
 }
 
-module.exports.makeSingleCompose = async (inputs = {}, silent) => {
+export async function makeSingleCompose(inputs: any = {}, silent: boolean) {
   return make(COMPOSE_PATH, getSingleCompose, inputs, silent)
 }
 
-module.exports.getEnvProperty = property => {
+export function getEnvProperty(property: string) {
   const props = fs.readFileSync(ENV_PATH, "utf8").split(property)
   if (props[0].charAt(0) === "=") {
     property = props[0]
@@ -125,7 +127,7 @@ module.exports.getEnvProperty = property => {
   return property.split("=")[1].split("\n")[0]
 }
 
-module.exports.getComposeProperty = property => {
+export function getComposeProperty(property: string) {
   const { service } = getAppService(COMPOSE_PATH)
   if (property === "port" && Array.isArray(service.ports)) {
     const port = service.ports[0]

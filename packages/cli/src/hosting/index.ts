@@ -1,14 +1,14 @@
-const Command = require("../structures/Command")
-const { CommandWords } = require("../constants")
-const { init } = require("./init")
-const { start } = require("./start")
-const { stop } = require("./stop")
-const { status } = require("./status")
-const { update } = require("./update")
-const { generateUser } = require("./genUser")
-const { watchPlugins } = require("./watch")
+import { Command } from "../structures/Command"
+import { CommandWord } from "../constants"
+import { init } from "./init"
+import { start } from "./start"
+import { stop } from "./stop"
+import { status } from "./status"
+import { update } from "./update"
+import { generateUser } from "./genUser"
+import { watchPlugins } from "./watch"
 
-const command = new Command(`${CommandWords.HOSTING}`)
+export default new Command(`${CommandWord.HOSTING}`)
   .addHelp("Controls self hosting on the Budibase platform.")
   .addSubOption(
     "--init [type]",
@@ -46,5 +46,3 @@ const command = new Command(`${CommandWords.HOSTING}`)
     generateUser
   )
   .addSubOption("--single", "Specify this with init to use the single image.")
-
-exports.command = command

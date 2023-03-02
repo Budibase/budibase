@@ -1,21 +1,21 @@
-const fetch = require("node-fetch")
+import fetch from "node-fetch"
+import fs from "fs"
+import os from "os"
+import { join } from "path"
+import { processStringSync } from "@budibase/string-templates"
 const download = require("download")
-const fs = require("fs")
-const os = require("os")
-const { join } = require("path")
 const tar = require("tar")
-const { processStringSync } = require("@budibase/string-templates")
 
 const HBS_FILES = ["package.json.hbs", "schema.json.hbs", "README.md.hbs"]
 
-async function getSkeletonUrl(type) {
+async function getSkeletonUrl(type: string) {
   const resp = await fetch(
     "https://api.github.com/repos/budibase/budibase-skeleton/releases/latest"
   )
   if (resp.status >= 300) {
     throw new Error("Failed to retrieve skeleton metadata")
   }
-  const json = await resp.json()
+  const json = (await resp.json()) as { assets: any[] }
   for (let asset of json["assets"]) {
     if (asset.name && asset.name.includes(type)) {
       return asset["browser_download_url"]
@@ -24,7 +24,7 @@ async function getSkeletonUrl(type) {
   throw new Error("No skeleton found in latest release.")
 }
 
-exports.getSkeleton = async (type, name) => {
+export async function getSkeleton(type: string, name: string) {
   const url = await getSkeletonUrl(type)
   const tarballFile = join(os.tmpdir(), "skeleton.tar.gz")
 
@@ -40,7 +40,12 @@ exports.getSkeleton = async (type, name) => {
   fs.rmSync(tarballFile)
 }
 
-exports.fleshOutSkeleton = async (type, name, description, version) => {
+export async function fleshOutSkeleton(
+  type: string,
+  name: string,
+  description: string,
+  version: string
+) {
   for (let file of HBS_FILES) {
     const oldFile = join(name, file),
       newFile = join(name, file.substring(0, file.length - 4))

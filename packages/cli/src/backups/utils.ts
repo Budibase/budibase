@@ -1,12 +1,13 @@
-const dotenv = require("dotenv")
-const fs = require("fs")
-const { string } = require("../questions")
-const { getPouch } = require("../core/db")
-const { env: environment } = require("@budibase/backend-core")
+import dotenv from "dotenv"
+import fs from "fs"
+import { string } from "../questions"
+import { getPouch } from "../core/db"
+import { env as environment } from "@budibase/backend-core"
+import PouchDB from "pouchdb"
 
-exports.TEMP_DIR = ".temp"
-exports.COUCH_DIR = "couchdb"
-exports.MINIO_DIR = "minio"
+export const TEMP_DIR = ".temp"
+export const COUCH_DIR = "couchdb"
+export const MINIO_DIR = "minio"
 
 const REQUIRED = [
   { value: "MAIN_PORT", default: "10000" },
@@ -19,7 +20,7 @@ const REQUIRED = [
   { value: "MINIO_SECRET_KEY" },
 ]
 
-exports.checkURLs = config => {
+export function checkURLs(config: Record<string, string>) {
   const mainPort = config["MAIN_PORT"],
     username = config["COUCH_DB_USER"],
     password = config["COUCH_DB_PASSWORD"]
@@ -34,23 +35,23 @@ exports.checkURLs = config => {
   return config
 }
 
-exports.askQuestions = async () => {
+export async function askQuestions() {
   console.log(
     "*** NOTE: use a .env file to load these parameters repeatedly ***"
   )
-  let config = {}
+  let config: Record<string, string> = {}
   for (let property of REQUIRED) {
     config[property.value] = await string(property.value, property.default)
   }
   return config
 }
 
-exports.loadEnvironment = path => {
+export function loadEnvironment(path: string) {
   if (!fs.existsSync(path)) {
     throw "Unable to file specified .env file"
   }
   const env = fs.readFileSync(path, "utf8")
-  const config = exports.checkURLs(dotenv.parse(env))
+  const config = checkURLs(dotenv.parse(env))
   for (let required of REQUIRED) {
     if (!config[required.value]) {
       throw `Cannot find "${required.value}" property in .env file`
@@ -60,12 +61,12 @@ exports.loadEnvironment = path => {
 }
 
 // true is the default value passed by commander
-exports.getConfig = async (envFile = true) => {
+export async function getConfig(envFile: boolean | string = true) {
   let config
   if (envFile !== true) {
-    config = exports.loadEnvironment(envFile)
+    config = loadEnvironment(envFile as string)
   } else {
-    config = await exports.askQuestions()
+    config = await askQuestions()
   }
   // fill out environment
   for (let key of Object.keys(config)) {
@@ -74,12 +75,16 @@ exports.getConfig = async (envFile = true) => {
   return config
 }
 
-exports.replication = async (from, to) => {
+export async function replication(
+  from: PouchDB.Database,
+  to: PouchDB.Database
+) {
   const pouch = getPouch()
   try {
     await pouch.replicate(from, to, {
       batch_size: 1000,
-      batch_limit: 5,
+      batches_limit: 5,
+      // @ts-ignore
       style: "main_only",
     })
   } catch (err) {
@@ -87,7 +92,7 @@ exports.replication = async (from, to) => {
   }
 }
 
-exports.getPouches = config => {
+export function getPouches(config: Record<string, string>) {
   const Remote = getPouch(config["COUCH_DB_URL"])
   const Local = getPouch()
   return { Remote, Local }

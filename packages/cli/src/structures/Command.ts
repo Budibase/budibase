@@ -1,19 +1,31 @@
-const {
+import {
   getSubHelpDescription,
   getHelpDescription,
   error,
   capitaliseFirstLetter,
-} = require("../utils")
+} from "../utils"
 
-class Command {
-  constructor(command, func = null) {
+type CommandOpt = {
+  command: string
+  help: string
+  func?: Function
+  extras: any[]
+}
+
+export class Command {
+  command: string
+  opts: CommandOpt[]
+  func?: Function
+  help?: string
+
+  constructor(command: string, func?: Function) {
     // if there are options, need to just get the command name
     this.command = command
     this.opts = []
     this.func = func
   }
 
-  convertToCommander(lookup) {
+  convertToCommander(lookup: string) {
     const parts = lookup.toLowerCase().split("-")
     // camel case, separate out first
     const first = parts.shift()
@@ -22,21 +34,26 @@ class Command {
       .join("")
   }
 
-  addHelp(help) {
+  addHelp(help: string) {
     this.help = help
     return this
   }
 
-  addSubOption(command, help, func, extras = []) {
+  addSubOption(
+    command: string,
+    help: string,
+    func?: Function,
+    extras: any[] = []
+  ) {
     this.opts.push({ command, help, func, extras })
     return this
   }
 
-  configure(program) {
+  configure(program: any) {
     const thisCmd = this
     let command = program.command(thisCmd.command)
     if (this.help) {
-      command = command.description(getHelpDescription(thisCmd.help))
+      command = command.description(getHelpDescription(thisCmd.help!))
     }
     for (let opt of thisCmd.opts) {
       command = command.option(opt.command, getSubHelpDescription(opt.help))
@@ -45,7 +62,7 @@ class Command {
       "--help",
       getSubHelpDescription(`Get help with ${this.command} options`)
     )
-    command.action(async options => {
+    command.action(async (options: Record<string, string>) => {
       try {
         let executed = false,
           found = false
@@ -53,7 +70,7 @@ class Command {
           let lookup = opt.command.split(" ")[0].replace("--", "")
           // need to handle how commander converts watch-plugin-dir to watchPluginDir
           lookup = this.convertToCommander(lookup)
-          found = !executed && options[lookup]
+          found = !executed && !!options[lookup]
           if (found && opt.func) {
             const input =
               Object.keys(options).length > 1 ? options : options[lookup]
@@ -69,11 +86,9 @@ class Command {
           console.log(error(`Unknown ${this.command} option.`))
           command.help()
         }
-      } catch (err) {
+      } catch (err: any) {
         console.log(error(err))
       }
     })
   }
 }
-
-module.exports = Command

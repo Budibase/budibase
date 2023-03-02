@@ -1,28 +1,30 @@
-const Command = require("../structures/Command")
-const { CommandWords } = require("../constants")
-const fs = require("fs")
-const { join } = require("path")
-const { getAllDbs } = require("../core/db")
-const tar = require("tar")
-const { progressBar, httpCall } = require("../utils")
-const {
+import { Command } from "../structures/Command"
+import { CommandWord } from "../constants"
+import fs from "fs"
+import { join } from "path"
+import { getAllDbs } from "../core/db"
+import { progressBar, httpCall } from "../utils"
+import {
   TEMP_DIR,
   COUCH_DIR,
   MINIO_DIR,
   getConfig,
   replication,
   getPouches,
-} = require("./utils")
-const { exportObjects, importObjects } = require("./objectStore")
+} from "./utils"
+import { exportObjects, importObjects } from "./objectStore"
+const tar = require("tar")
 
-async function exportBackup(opts) {
+type BackupOpts = { env?: string; import?: string; export?: string }
+
+async function exportBackup(opts: BackupOpts) {
   const envFile = opts.env || undefined
-  let filename = opts["export"] || opts
+  let filename = opts["export"] || (opts as string)
   if (typeof filename !== "string") {
     filename = `backup-${new Date().toISOString()}.tar.gz`
   }
   const config = await getConfig(envFile)
-  const dbList = await getAllDbs(config["COUCH_DB_URL"])
+  const dbList = (await getAllDbs(config["COUCH_DB_URL"])) as string[]
   const { Remote, Local } = getPouches(config)
   if (fs.existsSync(TEMP_DIR)) {
     fs.rmSync(TEMP_DIR, { recursive: true })
@@ -55,9 +57,9 @@ async function exportBackup(opts) {
   console.log(`Generated export file - ${filename}`)
 }
 
-async function importBackup(opts) {
+async function importBackup(opts: BackupOpts) {
   const envFile = opts.env || undefined
-  const filename = opts["import"] || opts
+  const filename = opts["import"] || (opts as string)
   const config = await getConfig(envFile)
   if (!filename || !fs.existsSync(filename)) {
     console.error("Cannot import without specifying a valid file to import")
@@ -99,7 +101,7 @@ async function importBackup(opts) {
   fs.rmSync(TEMP_DIR, { recursive: true })
 }
 
-async function pickOne(opts) {
+async function pickOne(opts: BackupOpts) {
   if (opts["import"]) {
     return importBackup(opts)
   } else if (opts["export"]) {
@@ -107,7 +109,7 @@ async function pickOne(opts) {
   }
 }
 
-const command = new Command(`${CommandWords.BACKUPS}`)
+export default new Command(`${CommandWord.BACKUPS}`)
   .addHelp(
     "Allows building backups of Budibase, as well as importing a backup to a new instance."
   )
@@ -126,5 +128,3 @@ const command = new Command(`${CommandWords.BACKUPS}`)
     "Provide an environment variable file to configure the CLI.",
     pickOne
   )
-
-exports.command = command

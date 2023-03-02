@@ -1,7 +1,8 @@
-const os = require("os")
-const { join } = require("path")
-const fs = require("fs")
-const { error } = require("./utils")
+import os from "os"
+import { join } from "path"
+import fs from "fs"
+import { error } from "./utils"
+
 const PREBUILDS = "prebuilds"
 const ARCH = `${os.platform()}-${os.arch()}`
 const PREBUILD_DIR = join(process.execPath, "..", PREBUILDS, ARCH)
@@ -26,8 +27,8 @@ function checkForBinaries() {
   }
 }
 
-function cleanup(evt) {
-  if (!isNaN(evt)) {
+function cleanup(evt?: number) {
+  if (evt && !isNaN(evt)) {
     return
   }
   if (evt) {

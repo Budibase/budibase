@@ -1,12 +1,8 @@
-const {
-  checkDockerConfigured,
-  checkInitComplete,
-  handleError,
-} = require("./utils")
-const { info } = require("../utils")
-const compose = require("docker-compose")
+import { checkDockerConfigured, checkInitComplete, handleError } from "./utils"
+import { info } from "../utils"
+import compose from "docker-compose"
 
-exports.status = async () => {
+export async function status() {
   await checkDockerConfigured()
   checkInitComplete()
   console.log(info("Budibase status"))
