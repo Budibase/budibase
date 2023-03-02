@@ -16,18 +16,20 @@
   import ScrollOverlay from "./ScrollOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
 
-  export let tableId
-  export let filter
-  export let sortColumn
-  export let sortOrder
   export let API
+  export let tableId
+  export let allowAddColumns
+  export let allowAddRows
+  // export let filter
+  // export let sortColumn
+  // export let sortOrder
 
   // Sheet constants
   const cellHeight = 40
   const rand = Math.random()
 
   // State stores
-  const tableIdStore = writable()
+  const config = writable({ tableId, allowAddRows, allowAddColumns })
   const selectedCellId = writable()
   const selectedRows = writable({})
   const hoveredRowId = writable()
@@ -52,7 +54,7 @@
     bounds,
     scroll,
     hoveredRowId,
-    tableId: tableIdStore,
+    config,
   }
   const { rows, schema } = createRowsStore(context)
   context = { ...context, rows, schema }
@@ -64,7 +66,12 @@
   const { reorder } = createReorderStores(context)
   context = { ...context, reorder }
 
-  $: tableIdStore.set(tableId)
+  // Keep config store up to date
+  $: config.set({
+    tableId,
+    allowAddColumns,
+    allowAddRows,
+  })
 
   // Set context for children to consume
   setContext("spreadsheet", context)

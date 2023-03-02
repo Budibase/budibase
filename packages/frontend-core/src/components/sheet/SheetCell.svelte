@@ -38,7 +38,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--spectrum-global-color-gray-800);
     font-size: var(--cell-font-size);
     gap: var(--cell-spacing);
     background: var(--cell-background);
