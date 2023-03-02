@@ -48,11 +48,8 @@ class AccountsAPIClient {
         response.status == 400
       ) {
         console.error("Error in apiCall")
-        console.error("Response:")
         console.error(response)
-        console.error("Response body:")
         console.error(response.body)
-        console.error("Request body:")
         console.error(requestOptions.body)
       }
       return response
