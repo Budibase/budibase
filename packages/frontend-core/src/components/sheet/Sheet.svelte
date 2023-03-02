@@ -1,5 +1,5 @@
 <script>
-  import { setContext } from "svelte"
+  import { setContext, createEventDispatcher } from "svelte"
   import { writable } from "svelte/store"
   import { createReorderStores } from "./stores/reorder"
   import { createViewportStores } from "./stores/viewport"
@@ -21,7 +21,7 @@
   export let allowAddColumns = true
   export let allowAddRows = true
   export let allowSelectRows = true
-  // export let filter
+  export let filter
   // export let sortColumn
   // export let sortOrder
 
@@ -30,8 +30,10 @@
   const rand = Math.random()
 
   // State stores
+  const dispatch = createEventDispatcher()
   const config = writable({
     tableId,
+    filter,
     allowAddRows,
     allowAddColumns,
     allowSelectRows,
@@ -61,6 +63,7 @@
     scroll,
     hoveredRowId,
     config,
+    dispatch,
   }
   const { rows, schema } = createRowsStore(context)
   context = { ...context, rows, schema }
@@ -75,6 +78,7 @@
   // Keep config store up to date
   $: config.set({
     tableId,
+    filter,
     allowAddColumns,
     allowAddRows,
     allowSelectRows,
@@ -85,7 +89,7 @@
 </script>
 
 <div class="sheet" style="--cell-height:{cellHeight}px;" id="sheet-{rand}">
-  <SheetControls />
+  <!--<SheetControls />-->
   <div class="sheet-data">
     <StickyColumn />
     <div class="sheet-main">

@@ -5,7 +5,7 @@
   import { getIconForField } from "./utils"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
 
-  const { visibleColumns, reorder } = getContext("spreadsheet")
+  const { visibleColumns, reorder, dispatch } = getContext("spreadsheet")
 </script>
 
 <div class="header">
@@ -32,6 +32,11 @@
       {/each}
     </div>
   </SheetScrollWrapper>
+  <div class="add-column" on:click={() => dispatch("add-column")}>
+    <SheetCell header width={40} center>
+      <Icon name="Add" size="S" />
+    </SheetCell>
+  </div>
 </div>
 
 <style>
@@ -43,5 +48,14 @@
   }
   .row {
     display: flex;
+  }
+  .add-column {
+    width: 40px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    border-left: 2px solid var(--spectrum-global-color-gray-200);
   }
 </style>
