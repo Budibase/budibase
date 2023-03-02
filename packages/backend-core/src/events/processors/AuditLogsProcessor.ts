@@ -8,7 +8,7 @@ import {
   HostInfo,
 } from "@budibase/types"
 import { EventProcessor } from "./types"
-import { getAppId, doInTenant } from "../../context"
+import { getAppId, doInTenant, getTenantId } from "../../context"
 import BullQueue from "bull"
 import { createQueue, JobQueue } from "../../queue"
 import { isAudited } from "../../utils"
@@ -74,7 +74,7 @@ export default class AuditLogsProcessor implements EventProcessor {
           appId: getAppId(),
           hostInfo: identity.hostInfo,
         },
-        tenantId: identity.tenantId!,
+        tenantId: getTenantId(),
       })
     }
   }
