@@ -21,7 +21,7 @@
     "run:docker:cluster": "pm2-runtime start pm2.config.js",
     "build:docker": "docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
-    "dev:builder": "npm run dev:stack:init && nodemon",
+    "dev:builder": "npm run dev:stack:init && rimraf dist/ && nodemon",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watch",
     "env:multi:enable": "node scripts/multiTenancy.js enable",

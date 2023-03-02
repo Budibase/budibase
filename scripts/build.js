@@ -1,5 +1,9 @@
 const start = Date.now()
 
+const glob = require("glob")
+const fs = require("fs")
+var path = require("path")
+
 const { build } = require("esbuild")
 const sveltePlugin = require("esbuild-svelte")
 
@@ -33,8 +37,14 @@ build({
   platform: "node",
   outfile: "dist/index.js",
 }).then(() => {
-  console.log(
-    "\x1b[32m%s\x1b[0m",
-    `Build successfully in ${(Date.now() - start) / 1000} seconds`
-  )
+  glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
+    for (const file of files) {
+      fs.copyFileSync(file, `${process.cwd()}/dist/${path.basename(file)}`)
+    }
+
+    console.log(
+      "\x1b[32m%s\x1b[0m",
+      `Build successfully in ${(Date.now() - start) / 1000} seconds`
+    )
+  })
 })
