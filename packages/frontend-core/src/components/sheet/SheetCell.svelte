@@ -101,9 +101,6 @@
   .cell.label {
     padding: var(--cell-padding);
     flex: 0 0 40px;
-    border-right: none;
-    position: sticky;
-    left: 0;
     display: flex;
     flex-direction: row;
     justify-content: center;
