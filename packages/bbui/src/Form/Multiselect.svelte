@@ -17,6 +17,7 @@
   export let autoWidth = false
   export let autocomplete = false
   export let fetchTerm = null
+  export let useFetch = false
   export let customPopoverHeight
 
   const dispatch = createEventDispatcher()
@@ -41,6 +42,7 @@
     {autocomplete}
     {customPopoverHeight}
     bind:fetchTerm
+    {useFetch}
     on:change={onChange}
     on:click
   />
