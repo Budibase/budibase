@@ -117,7 +117,7 @@
     display: flex;
     flex-direction: row;
     justify-items: flex-start;
-    align-items: stretch;
+    align-items: flex-start;
     overflow: hidden;
     height: 0;
     position: relative;
@@ -127,5 +127,6 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    align-self: stretch;
   }
 </style>

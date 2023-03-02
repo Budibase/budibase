@@ -18,22 +18,68 @@
 
   $: scrollTop = $scroll.top
   $: scrollLeft = $scroll.left
-  $: offsetY = scrollVertically ? -1 * (scrollTop % cellHeight) : 0
+  $: offsetY = -1 * (scrollTop % cellHeight)
   $: hiddenWidths = calculateHiddenWidths($visibleColumns)
-  $: offsetX = scrollHorizontally ? -1 * scrollLeft + hiddenWidths : 0
+  $: offsetX = -1 * scrollLeft + hiddenWidths
   $: rowCount = $visibleRows.length
   $: contentWidth = calculateContentWidth($visibleColumns, scrollHorizontally)
   $: contentHeight = calculateContentHeight(rowCount, scrollVertically)
-  $: style = getStyle(offsetX, offsetY, contentWidth, contentHeight)
+  $: innerStyle = getInnerStyle(
+    offsetX,
+    offsetY,
+    contentWidth,
+    contentHeight,
+    scrollHorizontally,
+    scrollVertically
+  )
+  $: outerStyle = getOuterStyle(
+    offsetX,
+    offsetY,
+    contentWidth,
+    contentHeight,
+    scrollHorizontally,
+    scrollVertically
+  )
 
-  const getStyle = (offsetX, offsetY, contentWidth, contentHeight) => {
-    let style = `--offset-y:${offsetY}px; --offset-x:${offsetX}px;`
-    if (contentWidth) {
-      style += `--width:${contentWidth}px;`
+  const getInnerStyle = (
+    offsetX,
+    offsetY,
+    contentWidth,
+    contentHeight,
+    scrollH,
+    scrollV
+  ) => {
+    if (!scrollH) {
+      offsetX = 0
     }
-    if (contentHeight) {
-      style += `--height:${contentHeight}px;`
+    if (!scrollV) {
+      offsetY = 0
     }
+    let style = `--offset-x:${offsetX}px;--offset-y:${offsetY}px;`
+    // if (scrollH && contentWidth) {
+    //   style += `width:${contentWidth}px;`
+    // }
+    // if (scrollV && contentHeight) {
+    //   style += `height:${contentHeight}px;`
+    // }
+    return style
+  }
+
+  const getOuterStyle = (
+    offsetX,
+    offsetY,
+    contentWidth,
+    contentHeight,
+    scrollH,
+    scrollV
+  ) => {
+    let style = ""
+    // if (scrollV) {
+    //   style += `height:${contentHeight + offsetY}px;`
+    // }
+    // if (scrollH) {
+    //   style += `width:${contentWidth + offsetX}px;`
+    // }
     return style
   }
 
@@ -87,20 +133,20 @@
   }
 </script>
 
-<div on:wheel|passive={wheelInteractive ? handleWheel : null}>
-  <div class="scroll-wrapper" {style}>
+<div class="outer" on:wheel|passive={wheelInteractive ? handleWheel : null}>
+  <div class="inner" style={innerStyle}>
     <slot />
   </div>
 </div>
 
 <style>
   div {
+  }
+  .outer {
     min-width: 100%;
     min-height: 100%;
   }
-  .scroll-wrapper {
+  .inner {
     transform: translate3d(var(--offset-x), var(--offset-y), 0);
-    width: var(--width);
-    height: var(--height);
   }
 </style>

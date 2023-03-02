@@ -7,6 +7,7 @@
 
   // Bar config
   const barOffset = 4
+  const padding = 180
 
   // State for dragging bars
   let initialMouse
@@ -20,25 +21,25 @@
 
   // Calculate V scrollbar size and offset
   // Terminology is the same for both axes:
-  //   contentX - the size of the rendered content
+  //   contentX - the size of the rendered content, including padding
   //   renderX - the space available to render the bar in, edge to edge
   //   barX - the length of the bar
   //   availX - the space available to render the bar in, until the edge
   //   barX - the offset of the bar
-  $: contentHeight = ($rows.length + 1) * cellHeight
+  $: contentHeight = ($rows.length + 1) * cellHeight + padding
   $: renderHeight = height - 2 * barOffset
   $: barHeight = Math.max(50, (height / contentHeight) * renderHeight)
   $: availHeight = renderHeight - barHeight
-  $: maxScrollTop = Math.max(contentHeight - height + 180, 0)
+  $: maxScrollTop = Math.max(contentHeight - height, 0)
   $: barTop = barOffset + cellHeight + availHeight * (scrollTop / maxScrollTop)
 
   // Calculate H scrollbar size and offset
-  $: contentWidth = calculateContentWidth($columns, $stickyColumn)
+  $: contentWidth = calculateContentWidth($columns, $stickyColumn) + padding
   $: totalWidth = width + 40 + $stickyColumn?.width || 0
   $: renderWidth = totalWidth - 2 * barOffset
   $: barWidth = Math.max(50, (totalWidth / contentWidth) * renderWidth)
   $: availWidth = renderWidth - barWidth
-  $: maxScrollLeft = Math.max(contentWidth - totalWidth + 180, 0)
+  $: maxScrollLeft = Math.max(contentWidth - totalWidth, 0)
   $: barLeft = barOffset + availWidth * (scrollLeft / maxScrollLeft)
 
   // Calculate whether to show scrollbars or not

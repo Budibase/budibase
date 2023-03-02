@@ -152,20 +152,26 @@
 
 <style>
   .sticky-column {
-    flex: 0 0 var(--width);
-    z-index: 20;
-    overflow: visible;
-    border-right: var(--cell-border);
-  }
-  .sticky-column.scrolled {
-    box-shadow: 1px -4px 8px rgba(0, 0, 0, 0.1);
+    flex: 0 0 calc(var(--width) + 0px);
   }
   .sticky-column :global(.cell) {
-    border-right-width: 0;
+    z-index: 26;
+  }
+  .sticky-column.scrolled {
+  }
+  .sticky-column.scrolled :global(.cell:not(.label):after) {
+    content: " ";
+    position: absolute;
+    width: 10px;
+    height: 100%;
+    left: 100%;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);
   }
 
   .header {
     border-bottom: var(--cell-border);
+    position: relative;
+    z-index: 1;
   }
   .row {
     display: flex;
