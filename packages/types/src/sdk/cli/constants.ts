@@ -5,7 +5,7 @@ export enum CommandWord {
   HOSTING = "hosting",
   ANALYTICS = "analytics",
   HELP = "help",
-  PLUGIN = "plugins"
+  PLUGIN = "plugins",
 }
 
 export enum InitType {
