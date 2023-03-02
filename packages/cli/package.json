@@ -10,8 +10,10 @@
   "license": "GPL-3.0",
   "scripts": {
     "prebuild": "rm -rf prebuilds 2> /dev/null && cp -r node_modules/leveldown/prebuilds prebuilds",
+    "rename": "renamer --find .node --replace .fake 'prebuilds/**'",
     "tsc": "tsc -p tsconfig.build.json",
-    "build": "npx prebuild && renamer --find .node --replace .fake 'prebuilds/**' && npx tsc && pkg . --out-path build && npx postbuild",
+    "pkg": "pkg . --out-path build --no-bytecode --public --public-packages \"*\" -C GZip",
+    "build": "yarn prebuild && yarn rename && yarn tsc && yarn pkg && yarn postbuild",
     "postbuild": "rm -rf prebuilds 2> /dev/null"
   },
   "pkg": {
