@@ -68,7 +68,6 @@
     background: var(--background);
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
-    z-index: 25;
     border-bottom: none;
   }
   .cell.header :global(> span) {
@@ -105,7 +104,6 @@
     border-right: none;
     position: sticky;
     left: 0;
-    z-index: 5;
     display: flex;
     flex-direction: row;
     justify-content: center;

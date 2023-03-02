@@ -38,6 +38,8 @@
   .header {
     background: var(--background);
     border-bottom: var(--cell-border);
+    position: relative;
+    z-index: 1;
   }
   .row {
     display: flex;

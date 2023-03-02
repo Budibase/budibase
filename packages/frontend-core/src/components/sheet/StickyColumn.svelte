@@ -81,7 +81,7 @@
     {/if}
   </div>
 
-  <div on:mouseleave={() => ($hoveredRowId = null)}>
+  <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
     <SheetScrollWrapper scrollHorizontally={false}>
       {#each $visibleRows as row}
         {@const rowSelected = !!$selectedRows[row._id]}
@@ -154,11 +154,6 @@
   .sticky-column {
     flex: 0 0 calc(var(--width) + 0px);
   }
-  .sticky-column :global(.cell) {
-    z-index: 26;
-  }
-  .sticky-column.scrolled {
-  }
   .sticky-column.scrolled :global(.cell:not(.label):after) {
     content: " ";
     position: absolute;
@@ -171,13 +166,17 @@
   .header {
     border-bottom: var(--cell-border);
     position: relative;
-    z-index: 1;
+    z-index: 2;
   }
   .row {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+  }
+  .content {
+    position: relative;
+    z-index: 1;
   }
   .row.new:hover :global(.cell) {
     cursor: pointer;
