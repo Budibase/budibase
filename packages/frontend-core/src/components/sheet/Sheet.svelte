@@ -18,8 +18,9 @@
 
   export let API
   export let tableId
-  export let allowAddColumns
-  export let allowAddRows
+  export let allowAddColumns = true
+  export let allowAddRows = true
+  export let allowSelectRows = true
   // export let filter
   // export let sortColumn
   // export let sortOrder
@@ -29,7 +30,12 @@
   const rand = Math.random()
 
   // State stores
-  const config = writable({ tableId, allowAddRows, allowAddColumns })
+  const config = writable({
+    tableId,
+    allowAddRows,
+    allowAddColumns,
+    allowSelectRows,
+  })
   const selectedCellId = writable()
   const selectedRows = writable({})
   const hoveredRowId = writable()
@@ -71,6 +77,7 @@
     tableId,
     allowAddColumns,
     allowAddRows,
+    allowSelectRows,
   })
 
   // Set context for children to consume
@@ -87,7 +94,9 @@
         {#each $visibleRows as row}
           <SheetRow {row} />
         {/each}
-        <NewRow />
+        {#if allowAddRows}
+          <NewRow />
+        {/if}
       </SheetBody>
     </div>
     <ResizeOverlay />

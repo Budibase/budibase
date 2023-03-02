@@ -15,6 +15,7 @@
     hoveredRowId,
     scroll,
     reorder,
+    config,
   } = getContext("spreadsheet")
 
   $: scrollLeft = $scroll.left
@@ -57,8 +58,15 @@
 >
   <div class="header row">
     <!-- Field headers -->
-    <SheetCell header label on:click={selectAll} width="40">
-      <Checkbox value={rowCount && selectedRowCount === rowCount} />
+    <SheetCell
+      header
+      label
+      width="40"
+      on:click={$config.allowSelectRows && selectAll}
+    >
+      {#if $config.allowSelectRows}
+        <Checkbox value={rowCount && selectedRowCount === rowCount} />
+      {/if}
     </SheetCell>
 
     {#if $stickyColumn}
@@ -86,17 +94,20 @@
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
         <div class="row" on:mouseenter={() => ($hoveredRowId = row._id)}>
-          <SheetCell
-            label
-            {rowSelected}
-            {rowHovered}
-            on:click={() => selectRow(row._id)}
-            width="40"
-          >
-            <div class="checkbox" class:visible={rowSelected || rowHovered}>
+          <SheetCell label {rowSelected} {rowHovered} width="40">
+            <div
+              on:click={() => selectRow(row._id)}
+              class="checkbox"
+              class:visible={$config.allowSelectRows &&
+                (rowSelected || rowHovered)}
+            >
               <Checkbox value={rowSelected} />
             </div>
-            <div class="number" class:visible={!(rowSelected || rowHovered)}>
+            <div
+              class="number"
+              class:visible={!$config.allowSelectRows ||
+                !(rowSelected || rowHovered)}
+            >
               {row.__idx + 1}
             </div>
           </SheetCell>
@@ -126,24 +137,26 @@
         </div>
       {/each}
 
-      <div class="row new" on:mouseover={() => ($hoveredRowId = "new")}>
-        <SheetCell
-          rowHovered={$hoveredRowId === "new"}
-          label
-          on:click={addRow}
-          width="40"
-        >
-          <Icon hoverable name="Add" size="S" />
-        </SheetCell>
-        {#if $stickyColumn}
+      {#if $config.allowAddRows}
+        <div class="row new" on:mouseover={() => ($hoveredRowId = "new")}>
           <SheetCell
-            on:click={addRow}
-            width={$stickyColumn.width}
             rowHovered={$hoveredRowId === "new"}
-            reorderTarget={$reorder.targetColumn === $stickyColumn.name}
-          />
-        {/if}
-      </div>
+            label
+            on:click={addRow}
+            width="40"
+          >
+            <Icon hoverable name="Add" size="S" />
+          </SheetCell>
+          {#if $stickyColumn}
+            <SheetCell
+              on:click={addRow}
+              width={$stickyColumn.width}
+              rowHovered={$hoveredRowId === "new"}
+              reorderTarget={$reorder.targetColumn === $stickyColumn.name}
+            />
+          {/if}
+        </div>
+      {/if}
     </SheetScrollWrapper>
   </div>
 </div>
@@ -194,8 +207,5 @@
   .checkbox.visible,
   .number.visible {
     display: flex;
-  }
-  .row:hover .number {
-    display: none;
   }
 </style>
