@@ -43,6 +43,7 @@ export default class TestConfiguration<T> {
     await this.accounts.create(account)
     await this.updateApiClients(<string>account.tenantName)
     await this.auth.login(<string>account.email, <string>account.password)
+    await this.applications.createFirstApp()
   }
 
   async setApiKey() {

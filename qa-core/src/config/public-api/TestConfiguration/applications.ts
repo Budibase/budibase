@@ -63,4 +63,15 @@ export default class AppApi {
     const response = await this.api.post(`/applications/${id}/unpublish`)
     return [response]
   }
+
+  async createFirstApp() {
+    const body = {
+      name: "My first app",
+      url: "my-first-app",
+      useTemplate: false,
+      sampleData: true,
+    }
+    const response = await this.api.post("/applications", { body })
+    expect(response).toHaveStatusCode(200)
+  }
 }

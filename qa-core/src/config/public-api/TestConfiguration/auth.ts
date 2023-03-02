@@ -24,7 +24,7 @@ export default class AuthApi {
   async login(email: String, password: String): Promise<[Response, any]> {
     const response = await this.api.post(`/auth/login`, {
       body: {
-        username: email,
+        email: email,
         password: password,
       },
     })
