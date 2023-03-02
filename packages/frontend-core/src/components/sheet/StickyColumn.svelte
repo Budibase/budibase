@@ -154,13 +154,16 @@
   .sticky-column {
     flex: 0 0 calc(var(--width) + 0px);
   }
-  .sticky-column.scrolled :global(.cell:not(.label):after) {
+  .sticky-column.scrolled :global(.cell:last-child:after) {
     content: " ";
     position: absolute;
     width: 10px;
     height: 100%;
     left: 100%;
     background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);
+  }
+  .sticky-column :global(.cell:not(:last-child)) {
+    border-right: none;
   }
 
   .header {
