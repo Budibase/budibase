@@ -2,12 +2,12 @@
   "name": "root",
   "private": true,
   "devDependencies": {
+    "@esbuild-plugins/node-resolve": "^0.2.2",
     "@rollup/plugin-json": "^4.0.2",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/parser": "5.45.0",
     "babel-eslint": "^10.0.3",
     "esbuild": "^0.17.10",
-    "esbuild-node-externals": "^1.6.0",
     "esbuild-svelte": "^0.7.3",
     "eslint": "^7.28.0",
     "eslint-plugin-cypress": "^2.11.3",

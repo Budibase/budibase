@@ -25,7 +25,7 @@
     "dev:stack:up": "node scripts/dev/manage.js up",
     "dev:stack:down": "node scripts/dev/manage.js down",
     "dev:stack:nuke": "node scripts/dev/manage.js nuke",
-    "dev:builder": "yarn run dev:stack:up && nodemon",
+    "dev:builder": "yarn run dev:stack:up && rimraf dist/ && nodemon",
     "specs": "ts-node specs/generate.ts && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts",
     "initialise": "node scripts/initialise.js",
     "env:multi:enable": "node scripts/multiTenancy.js enable",
