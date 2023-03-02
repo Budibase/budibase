@@ -5,6 +5,7 @@
   import FilterModal from "./FilterModal.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
   import Button from "../Button.svelte"
+  import { getFields } from "helpers/searchFields"
 
   export let dataProvider
   export let allowedFields
@@ -32,6 +33,7 @@
   )
   $: fetchSchema(datasource)
   $: schemaFields = getSchemaFields(schema, allowedFields)
+  $: enrichedSchemaFields = getFields(schemaFields || [], { allowLinks: true })
 
   // Add query extension to data provider
   $: {
@@ -102,7 +104,11 @@
 
   <Modal bind:this={modal}>
     <ModalContent title="Edit filters" size="XL" onConfirm={updateQuery}>
-      <FilterModal bind:filters={tmpFilters} {schemaFields} {datasource} />
+      <FilterModal
+        bind:filters={tmpFilters}
+        {enrichedSchemaFields}
+        {datasource}
+      />
     </ModalContent>
   </Modal>
 {/if}
