@@ -94,14 +94,14 @@
 {#if showVScrollbar}
   <div
     class="v-scrollbar"
-    style="--top:{barTop}px; height:{barHeight}px;"
+    style="top:{barTop}px; height:{barHeight}px;"
     on:mousedown={startVDragging}
   />
 {/if}
 {#if showHScrollbar}
   <div
     class="h-scrollbar"
-    style="--left:{barLeft}px; width:{barWidth}px;"
+    style="left:{barLeft}px; width:{barWidth}px;"
     on:mousedown={startHDragging}
   />
 {/if}
@@ -119,15 +119,11 @@
     opacity: 0.9;
   }
   .v-scrollbar {
-    top: var(--top);
-    height: var(--height);
     right: 4px;
     width: 8px;
   }
   .h-scrollbar {
     bottom: 4px;
     height: 8px;
-    width: var(--width);
-    left: var(--left);
   }
 </style>

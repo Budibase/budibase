@@ -7,7 +7,7 @@
   export let selected = false
   export let reorderSource = false
   export let reorderTarget = false
-  export let width
+  export let width = ""
 </script>
 
 <div
@@ -23,7 +23,7 @@
   on:focus
   on:click
   on:mousedown
-  style="--width:{width}px;"
+  style="flex: 0 0 {width}px;"
 >
   <slot />
 </div>
@@ -42,7 +42,6 @@
     font-size: var(--cell-font-size);
     gap: var(--cell-spacing);
     background: var(--cell-background);
-    flex: 0 0 var(--width);
     position: relative;
     width: 0;
   }

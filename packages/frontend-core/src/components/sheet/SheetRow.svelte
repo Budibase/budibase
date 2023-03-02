@@ -33,7 +33,6 @@
       reorderTarget={$reorder.targetColumn === column.name}
       on:click={() => ($selectedCellId = cellIdx)}
       width={column.width}
-      left={column.left}
     >
       <svelte:component
         this={getCellRenderer(column)}

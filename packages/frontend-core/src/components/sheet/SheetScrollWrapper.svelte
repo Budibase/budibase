@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import { domDebounce } from "../../utils/utils"
 
   const {
     cellHeight,
@@ -20,8 +21,13 @@
   $: hiddenWidths = calculateHiddenWidths($visibleColumns)
   $: scrollLeft = $scroll.left
   $: scrollTop = $scroll.top
-  $: offsetX = scrollHorizontally ? -1 * scrollLeft + hiddenWidths : 0
-  $: offsetY = scrollVertically ? -1 * (scrollTop % cellHeight) : 0
+  $: style = generateStyle($scroll, hiddenWidths)
+
+  const generateStyle = (scroll, hiddenWidths) => {
+    const offsetX = scrollHorizontally ? -1 * scroll.left + hiddenWidths : 0
+    const offsetY = scrollVertically ? -1 * (scroll.top % cellHeight) : 0
+    return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
+  }
 
   // Calculates with total width of all columns currently not rendered
   const calculateHiddenWidths = visibleColumns => {
@@ -38,13 +44,15 @@
   // Handles a wheel even and updates the scroll offsets
   const handleWheel = e => {
     e.preventDefault()
-
+    debouncedHandleWheel(e.deltaX, e.deltaY, e.clientY)
+  }
+  const debouncedHandleWheel = domDebounce((deltaX, deltaY, clientY) => {
     // Calculate new scroll top
-    let newScrollTop = scrollTop + e.deltaY
+    let newScrollTop = scrollTop + deltaY
     newScrollTop = Math.max(0, Math.min(newScrollTop, $maxScrollTop))
 
     // Calculate new scroll left
-    let newScrollLeft = scrollLeft + e.deltaX
+    let newScrollLeft = scrollLeft + deltaX
     newScrollLeft = Math.max(0, Math.min(newScrollLeft, $maxScrollLeft))
 
     // Update state
@@ -54,14 +62,14 @@
     })
 
     // Hover row under cursor
-    const y = e.clientY - $bounds.top + (newScrollTop % cellHeight)
+    const y = clientY - $bounds.top + (newScrollTop % cellHeight)
     const hoveredRow = $visibleRows[Math.floor(y / cellHeight)]
     $hoveredRowId = hoveredRow?._id
-  }
+  })
 </script>
 
 <div class="outer" on:wheel={wheelInteractive ? handleWheel : null}>
-  <div class="inner" style="--offset-x:{offsetX}px;--offset-y:{offsetY}px;">
+  <div {style}>
     <slot />
   </div>
 </div>
@@ -70,8 +78,5 @@
   .outer {
     min-width: 100%;
     min-height: 100%;
-  }
-  .inner {
-    transform: translate3d(var(--offset-x), var(--offset-y), 0);
   }
 </style>
