@@ -57,7 +57,7 @@
 >
   <div class="header row">
     <!-- Field headers -->
-    <SheetCell header label on:click={selectAll} width="40" left="0">
+    <SheetCell header label on:click={selectAll} width="40">
       <Checkbox value={rowCount && selectedRowCount === rowCount} />
     </SheetCell>
 
@@ -66,7 +66,6 @@
         header
         sticky
         width={$stickyColumn.width}
-        left={$stickyColumn.left}
         reorderTarget={$reorder.targetColumn === $stickyColumn.name}
       >
         <Icon
@@ -111,7 +110,6 @@
               selected={$selectedCellId === cellIdx}
               on:click={() => ($selectedCellId = cellIdx)}
               width={$stickyColumn.width}
-              left="40"
               reorderTarget={$reorder.targetColumn === $stickyColumn.name}
             >
               <svelte:component
