@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-require("./prebuilds")
-require("./environment")
+import "./prebuilds"
+import "./environment"
+import { getCommands } from "./options"
+import { Command } from "commander"
+import { getHelpDescription } from "./utils"
 const json = require("../package.json")
-const { getCommands } = require("./options")
-const { Command } = require("commander")
-const { getHelpDescription } = require("./utils")
 
 // add hosting config
 async function init() {

@@ -1,21 +1,21 @@
-const util = require("util")
-const exec = util.promisify(require("child_process").exec)
+import util from "util"
+const runCommand = util.promisify(require("child_process").exec)
 
-exports.exec = async (command, dir = "./") => {
-  const { stdout } = await exec(command, { cwd: dir })
+export async function exec(command: string, dir = "./") {
+  const { stdout } = await runCommand(command, { cwd: dir })
   return stdout
 }
 
-exports.utilityInstalled = async utilName => {
+export async function utilityInstalled(utilName: string) {
   try {
-    await exports.exec(`${utilName} --version`)
+    await exec(`${utilName} --version`)
     return true
   } catch (err) {
     return false
   }
 }
 
-exports.runPkgCommand = async (command, dir = "./") => {
+export async function runPkgCommand(command: string, dir = "./") {
   const yarn = await exports.utilityInstalled("yarn")
   const npm = await exports.utilityInstalled("npm")
   if (!yarn && !npm) {

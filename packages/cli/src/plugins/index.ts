@@ -1,18 +1,22 @@
-const Command = require("../structures/Command")
-const { CommandWords, AnalyticsEvents, InitTypes } = require("../constants")
-const { getSkeleton, fleshOutSkeleton } = require("./skeleton")
-const questions = require("../questions")
-const fs = require("fs")
-const { PLUGIN_TYPE_ARR } = require("@budibase/types")
-const { plugins } = require("@budibase/backend-core")
-const { runPkgCommand } = require("../exec")
-const { join } = require("path")
-const { success, error, info, moveDirectory } = require("../utils")
-const { captureEvent } = require("../events")
+import { Command } from "../structures/Command"
+import { CommandWord, AnalyticsEvent, InitType } from "../constants"
+import { getSkeleton, fleshOutSkeleton } from "./skeleton"
+import * as questions from "../questions"
+import fs from "fs"
+import { PluginType, PLUGIN_TYPE_ARR } from "@budibase/types"
+import { plugins } from "@budibase/backend-core"
+import { runPkgCommand } from "../exec"
+import { join } from "path"
+import { success, error, info, moveDirectory } from "../utils"
+import { captureEvent } from "../events"
+import { GENERATED_USER_EMAIL } from "../constants"
+import { init as hostingInit } from "../hosting/init"
+import { start as hostingStart } from "../hosting/start"
 const fp = require("find-free-port")
-const { GENERATED_USER_EMAIL } = require("../constants")
-const { init: hostingInit } = require("../hosting/init")
-const { start: hostingStart } = require("../hosting/start")
+
+type PluginOpts = {
+  init?: PluginType
+}
 
 function checkInPlugin() {
   if (!fs.existsSync("package.json")) {
@@ -27,7 +31,7 @@ function checkInPlugin() {
   }
 }
 
-async function askAboutTopLevel(name) {
+async function askAboutTopLevel(name: string) {
   const files = fs.readdirSync(process.cwd())
   // we are in an empty git repo, don't ask
   if (files.find(file => file === ".git")) {
@@ -45,8 +49,8 @@ async function askAboutTopLevel(name) {
   }
 }
 
-async function init(opts) {
-  const type = opts["init"] || opts
+async function init(opts: PluginOpts) {
+  const type = opts["init"] || (opts as PluginType)
   if (!type || !PLUGIN_TYPE_ARR.includes(type)) {
     console.log(
       error(
@@ -82,7 +86,7 @@ async function init(opts) {
   } else {
     console.log(info(`Plugin created in directory "${name}"`))
   }
-  captureEvent(AnalyticsEvents.PluginInit, {
+  captureEvent(AnalyticsEvent.PluginInit, {
     type,
     name,
     description,
@@ -109,7 +113,7 @@ async function verify() {
     version = pkgJson.version
     plugins.validate(schemaJson)
     return { name, version }
-  } catch (err) {
+  } catch (err: any) {
     if (err && err.message && err.message.includes("not valid JSON")) {
       console.log(error(`schema.json is not valid JSON: ${err.message}`))
     } else {
@@ -120,7 +124,7 @@ async function verify() {
 
 async function build() {
   const verified = await verify()
-  if (!verified.name) {
+  if (!verified?.name) {
     return
   }
   console.log(success("Verified!"))
@@ -132,7 +136,7 @@ async function build() {
 
 async function watch() {
   const verified = await verify()
-  if (!verified.name) {
+  if (!verified?.name) {
     return
   }
   const output = join("dist", `${verified.name}-${verified.version}.tar.gz`)
@@ -150,7 +154,7 @@ async function dev() {
   const [port] = await fp(10000)
   const password = "admin"
   await hostingInit({
-    init: InitTypes.QUICK,
+    init: InitType.QUICK,
     single: true,
     watchPluginDir: pluginDir,
     genUser: password,
@@ -168,7 +172,7 @@ async function dev() {
   console.log(success("Password: ") + info(password))
 }
 
-const command = new Command(`${CommandWords.PLUGIN}`)
+export default new Command(`${CommandWord.PLUGIN}`)
   .addHelp(
     "Custom plugins for Budibase, init, build and verify your components and datasources with this tool."
   )
@@ -192,5 +196,3 @@ const command = new Command(`${CommandWords.PLUGIN}`)
     "Run a development environment which automatically watches the current directory.",
     dev
   )
-
-exports.command = command

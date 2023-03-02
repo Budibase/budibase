@@ -1,21 +1,18 @@
-const chalk = require("chalk")
-const fs = require("fs")
-const axios = require("axios")
-const path = require("path")
+import chalk from "chalk"
+import fs from "fs"
+import path from "path"
+import { join } from "path"
+import fetch from "node-fetch"
 const progress = require("cli-progress")
-const { join } = require("path")
 
-exports.downloadFile = async (url, filePath) => {
+export async function downloadFile(url: string, filePath: string) {
   filePath = path.resolve(filePath)
   const writer = fs.createWriteStream(filePath)
 
-  const response = await axios({
-    url,
+  const response = await fetch(url, {
     method: "GET",
-    responseType: "stream",
   })
-
-  response.data.pipe(writer)
+  response.body?.pipe(writer)
 
   return new Promise((resolve, reject) => {
     writer.on("finish", resolve)
@@ -23,41 +20,41 @@ exports.downloadFile = async (url, filePath) => {
   })
 }
 
-exports.httpCall = async (url, method) => {
-  const response = await axios({
-    url,
+export async function httpCall(url: string, method: string) {
+  const response = await fetch(url, {
     method,
   })
-  return response.data
+  return response.body
 }
 
-exports.getHelpDescription = string => {
-  return chalk.cyan(string)
+export function getHelpDescription(str: string) {
+  return chalk.cyan(str)
 }
 
-exports.getSubHelpDescription = string => {
-  return chalk.green(string)
+export function getSubHelpDescription(str: string) {
+  return chalk.green(str)
 }
 
-exports.error = error => {
-  return chalk.red(`Error - ${error}`)
+export function error(err: string | number) {
+  process.exitCode = -1
+  return chalk.red(`Error - ${err}`)
 }
 
-exports.success = success => {
-  return chalk.green(success)
+export function success(str: string) {
+  return chalk.green(str)
 }
 
-exports.info = info => {
-  return chalk.cyan(info)
+export function info(str: string) {
+  return chalk.cyan(str)
 }
 
-exports.logErrorToFile = (file, error) => {
+export function logErrorToFile(file: string, error: string) {
   fs.writeFileSync(path.resolve(`./${file}`), `Budibase Error\n${error}`)
 }
 
-exports.parseEnv = env => {
+export function parseEnv(env: string) {
   const lines = env.toString().split("\n")
-  let result = {}
+  let result: Record<string, string> = {}
   for (const line of lines) {
     const match = line.match(/^([^=:#]+?)[=:](.*)/)
     if (match) {
@@ -67,17 +64,17 @@ exports.parseEnv = env => {
   return result
 }
 
-exports.progressBar = total => {
+export function progressBar(total: number) {
   const bar = new progress.SingleBar({}, progress.Presets.shades_classic)
   bar.start(total, 0)
   return bar
 }
 
-exports.checkSlashesInUrl = url => {
+export function checkSlashesInUrl(url: string) {
   return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
 }
 
-exports.moveDirectory = (oldPath, newPath) => {
+export function moveDirectory(oldPath: string, newPath: string) {
   const files = fs.readdirSync(oldPath)
   // check any file exists already
   for (let file of files) {
@@ -93,11 +90,11 @@ exports.moveDirectory = (oldPath, newPath) => {
   fs.rmdirSync(oldPath)
 }
 
-exports.capitaliseFirstLetter = str => {
+export function capitaliseFirstLetter(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-exports.stringifyToDotEnv = json => {
+export function stringifyToDotEnv(json: Record<string, string | number>) {
   let str = ""
   for (let [key, value] of Object.entries(json)) {
     str += `${key}=${value}\n`

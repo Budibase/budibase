@@ -3,7 +3,9 @@ const path = require("path")
 const os = require("os")
 const { error } = require("../utils")
 
-class ConfigManager {
+export class ConfigManager {
+  path: string
+
   constructor() {
     this.path = path.join(os.homedir(), ".budibase.json")
     if (!fs.existsSync(this.path)) {
@@ -24,26 +26,24 @@ class ConfigManager {
     }
   }
 
-  set config(json) {
+  set config(json: any) {
     fs.writeFileSync(this.path, JSON.stringify(json))
   }
 
-  getValue(key) {
+  getValue(key: string) {
     return this.config[key]
   }
 
-  setValue(key, value) {
+  setValue(key: string, value: any) {
     this.config = {
       ...this.config,
       [key]: value,
     }
   }
 
-  removeKey(key) {
+  removeKey(key: string) {
     const updated = { ...this.config }
     delete updated[key]
     this.config = updated
   }
 }
-
-module.exports = ConfigManager

@@ -1,6 +1,6 @@
 const inquirer = require("inquirer")
 
-exports.confirmation = async question => {
+export async function confirmation(question: string) {
   const config = {
     type: "confirm",
     message: question,
@@ -10,8 +10,8 @@ exports.confirmation = async question => {
   return (await inquirer.prompt(config)).confirmation
 }
 
-exports.string = async (question, defaultString = null) => {
-  const config = {
+export async function string(question: string, defaultString?: string) {
+  const config: any = {
     type: "input",
     name: "string",
     message: question,
@@ -22,12 +22,12 @@ exports.string = async (question, defaultString = null) => {
   return (await inquirer.prompt(config)).string
 }
 
-exports.number = async (question, defaultNumber) => {
-  const config = {
+export async function number(question: string, defaultNumber?: number) {
+  const config: any = {
     type: "input",
     name: "number",
     message: question,
-    validate: value => {
+    validate: (value: string) => {
       let valid = !isNaN(parseFloat(value))
       return valid || "Please enter a number"
     },

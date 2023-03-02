@@ -1,15 +1,16 @@
-const { lookpath } = require("lookpath")
-const fs = require("fs")
-const makeFiles = require("./makeFiles")
-const { logErrorToFile, downloadFile, error } = require("../utils")
-const yaml = require("yaml")
+import { lookpath } from "lookpath"
+import fs from "fs"
+import * as makeFiles from "./makeFiles"
+import { logErrorToFile, downloadFile, error } from "../utils"
+import yaml from "yaml"
+import { DockerCompose } from "./types"
 
 const ERROR_FILE = "docker-error.log"
 const FILE_URLS = [
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
 ]
 
-exports.downloadFiles = async () => {
+export async function downloadFiles() {
   const promises = []
   for (let url of FILE_URLS) {
     const fileName = url.split("/").slice(-1)[0]
@@ -18,7 +19,7 @@ exports.downloadFiles = async () => {
   await Promise.all(promises)
 }
 
-exports.checkDockerConfigured = async () => {
+export async function checkDockerConfigured() {
   const error =
     "docker/docker-compose has not been installed, please follow instructions at: https://docs.budibase.com/docs/docker-compose"
   const docker = await lookpath("docker")
@@ -28,7 +29,7 @@ exports.checkDockerConfigured = async () => {
   }
 }
 
-exports.checkInitComplete = () => {
+export function checkInitComplete() {
   if (
     !fs.existsSync(makeFiles.ENV_PATH) &&
     !fs.existsSync(makeFiles.COMPOSE_PATH)
@@ -37,10 +38,10 @@ exports.checkInitComplete = () => {
   }
 }
 
-exports.handleError = async func => {
+export async function handleError(func: Function) {
   try {
     await func()
-  } catch (err) {
+  } catch (err: any) {
     if (err && err.err) {
       logErrorToFile(ERROR_FILE, err.err)
     }
@@ -48,14 +49,14 @@ exports.handleError = async func => {
   }
 }
 
-exports.getServices = path => {
+export function getServices(path: string) {
   const dockerYaml = fs.readFileSync(path, "utf8")
   const parsedYaml = yaml.parse(dockerYaml)
   return { yaml: parsedYaml, services: parsedYaml.services }
 }
 
-exports.getAppService = path => {
-  const { yaml, services } = exports.getServices(path),
+export function getAppService(path: string) {
+  const { yaml, services } = getServices(path),
     serviceList = Object.keys(services)
   let service
   if (services["app-service"]) {
@@ -66,14 +67,16 @@ exports.getAppService = path => {
   return { yaml, service }
 }
 
-exports.updateDockerComposeService = updateFn => {
+export function updateDockerComposeService(
+  updateFn: (service: DockerCompose) => void
+) {
   const opts = ["docker-compose.yaml", "docker-compose.yml"]
   const dockerFilePath = opts.find(name => fs.existsSync(name))
   if (!dockerFilePath) {
     console.log(error("Unable to locate docker-compose YAML."))
     return
   }
-  const { yaml: parsedYaml, service } = exports.getAppService(dockerFilePath)
+  const { yaml: parsedYaml, service } = getAppService(dockerFilePath)
   if (!service) {
     console.log(
       error(

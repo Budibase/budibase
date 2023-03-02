@@ -1,12 +1,12 @@
-const PouchDB = require("pouchdb")
-const { checkSlashesInUrl } = require("../utils")
-const fetch = require("node-fetch")
+import PouchDB from "pouchdb"
+import { checkSlashesInUrl } from "../utils"
+import fetch from "node-fetch"
 
 /**
  * Fully qualified URL including username and password, or nothing for local
  */
-exports.getPouch = (url = undefined) => {
-  let POUCH_DB_DEFAULTS = {}
+export function getPouch(url?: string) {
+  let POUCH_DB_DEFAULTS
   if (!url) {
     POUCH_DB_DEFAULTS = {
       prefix: undefined,
@@ -19,11 +19,12 @@ exports.getPouch = (url = undefined) => {
   }
   const replicationStream = require("pouchdb-replication-stream")
   PouchDB.plugin(replicationStream.plugin)
+  // @ts-ignore
   PouchDB.adapter("writableStream", replicationStream.adapters.writableStream)
-  return PouchDB.defaults(POUCH_DB_DEFAULTS)
+  return PouchDB.defaults(POUCH_DB_DEFAULTS) as PouchDB.Static
 }
 
-exports.getAllDbs = async url => {
+export async function getAllDbs(url: string) {
   const response = await fetch(
     checkSlashesInUrl(encodeURI(`${url}/_all_dbs`)),
     {

@@ -1,7 +1,7 @@
-const Command = require("../structures/Command")
-const { CommandWords } = require("../constants")
-const { success, error } = require("../utils")
-const AnalyticsClient = require("./Client")
+import { Command } from "../structures/Command"
+import { CommandWord } from "../constants"
+import { success, error } from "../utils"
+import { AnalyticsClient } from "./Client"
 
 const client = new AnalyticsClient()
 
@@ -14,11 +14,10 @@ async function optOut() {
         "Successfully opted out of Budibase analytics. You can opt in at any time by running 'budi analytics opt-in'"
       )
     )
-  } catch (err) {
+  } catch (err: any) {
     console.log(
       error(
-        "Error opting out of Budibase analytics. Please try again later.",
-        err
+        `Error opting out of Budibase analytics. Please try again later - ${err}`
       )
     )
   }
@@ -50,7 +49,7 @@ async function status() {
   }
 }
 
-const command = new Command(`${CommandWords.ANALYTICS}`)
+export default new Command(`${CommandWord.ANALYTICS}`)
   .addHelp("Control the analytics you send to Budibase.")
   .addSubOption("--optin", "Opt in to sending analytics to Budibase", optIn)
   .addSubOption("--optout", "Opt out of sending analytics to Budibase.", optOut)
@@ -59,5 +58,3 @@ const command = new Command(`${CommandWords.ANALYTICS}`)
     "Check whether you are currently opted in to Budibase analytics.",
     status
   )
-
-exports.command = command

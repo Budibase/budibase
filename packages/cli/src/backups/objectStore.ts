@@ -1,8 +1,8 @@
-const { objectStore } = require("@budibase/backend-core")
-const fs = require("fs")
-const { join } = require("path")
-const { TEMP_DIR, MINIO_DIR } = require("./utils")
-const { progressBar } = require("../utils")
+import { objectStore } from "@budibase/backend-core"
+import fs from "fs"
+import { join } from "path"
+import { TEMP_DIR, MINIO_DIR } from "./utils"
+import { progressBar } from "../utils"
 const {
   ObjectStoreBuckets,
   ObjectStore,
@@ -13,10 +13,10 @@ const {
 
 const bucketList = Object.values(ObjectStoreBuckets)
 
-exports.exportObjects = async () => {
+export async function exportObjects() {
   const path = join(TEMP_DIR, MINIO_DIR)
   fs.mkdirSync(path)
-  let fullList = []
+  let fullList: any[] = []
   let errorCount = 0
   for (let bucket of bucketList) {
     const client = ObjectStore(bucket)
@@ -26,7 +26,7 @@ exports.exportObjects = async () => {
       errorCount++
       continue
     }
-    const list = await client.listObjectsV2().promise()
+    const list = (await client.listObjectsV2().promise()) as { Contents: any[] }
     fullList = fullList.concat(list.Contents.map(el => ({ ...el, bucket })))
   }
   if (errorCount === bucketList.length) {
@@ -48,7 +48,7 @@ exports.exportObjects = async () => {
   bar.stop()
 }
 
-exports.importObjects = async () => {
+export async function importObjects() {
   const path = join(TEMP_DIR, MINIO_DIR)
   const buckets = fs.readdirSync(path)
   let total = 0

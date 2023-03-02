@@ -1,14 +1,10 @@
-const {
-  checkDockerConfigured,
-  checkInitComplete,
-  handleError,
-} = require("./utils")
-const { info, success } = require("../utils")
-const makeFiles = require("./makeFiles")
-const compose = require("docker-compose")
-const fs = require("fs")
+import { checkDockerConfigured, checkInitComplete, handleError } from "./utils"
+import { info, success } from "../utils"
+import * as makeFiles from "./makeFiles"
+import compose from "docker-compose"
+import fs from "fs"
 
-exports.start = async () => {
+export async function start() {
   await checkDockerConfigured()
   checkInitComplete()
   console.log(

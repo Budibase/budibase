@@ -1,20 +1,20 @@
-const {
+import {
   checkDockerConfigured,
   checkInitComplete,
   downloadFiles,
   handleError,
   getServices,
-} = require("./utils")
-const { confirmation } = require("../questions")
-const compose = require("docker-compose")
-const { COMPOSE_PATH } = require("./makeFiles")
-const { info, success } = require("../utils")
-const { start } = require("./start")
+} from "./utils"
+import { confirmation } from "../questions"
+import compose from "docker-compose"
+import { COMPOSE_PATH } from "./makeFiles"
+import { info, success } from "../utils"
+import { start } from "./start"
 
 const BB_COMPOSE_SERVICES = ["app-service", "worker-service", "proxy-service"]
 const BB_SINGLE_SERVICE = ["budibase"]
 
-exports.update = async () => {
+export async function update() {
   const { services } = getServices(COMPOSE_PATH)
   const isSingle = Object.keys(services).length === 1
   await checkDockerConfigured()
