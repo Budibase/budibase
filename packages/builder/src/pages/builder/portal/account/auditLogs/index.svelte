@@ -257,6 +257,7 @@
     <div class="select">
       <Multiselect
         bind:fetchTerm={userSearchTerm}
+        useFetch
         placeholder="All users"
         label="Users"
         autocomplete
