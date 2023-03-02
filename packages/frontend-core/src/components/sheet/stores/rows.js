@@ -4,7 +4,8 @@ import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
 export const createRowsStore = context => {
-  const { tableId, filter, API, scroll } = context
+  const { config, filter, API, scroll } = context
+  const tableId = derived(config, $config => $config.tableId)
 
   // Flag for whether this is the first time loading our fetch
   let loaded = false

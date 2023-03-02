@@ -1,4 +1,4 @@
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 
 export const createScrollStores = context => {
   const { scroll, rows, columns, stickyColumn, bounds, cellHeight } = context
@@ -49,25 +49,32 @@ export const createScrollStores = context => {
 
   // Ensure scroll state never goes invalid, which can happen when changing
   // rows or tables
-  derived([scrollTop, maxScrollTop], ([$scrollTop, $maxScrollTop]) => {
-    console.log($scrollTop, $maxScrollTop, "check")
-    if ($scrollTop > $maxScrollTop) {
+  const overscrollTop = derived(
+    [scrollTop, maxScrollTop],
+    ([$scrollTop, $maxScrollTop]) => $scrollTop > $maxScrollTop,
+    false
+  )
+  const overscrollLeft = derived(
+    [scrollLeft, maxScrollLeft],
+    ([$scrollLeft, $maxScrollLeft]) => $scrollLeft > $maxScrollLeft,
+    false
+  )
+  overscrollTop.subscribe(overscroll => {
+    if (overscroll) {
       scroll.update(state => ({
         ...state,
-        top: $maxScrollTop,
+        top: get(maxScrollTop),
       }))
     }
   })
-  // $: {
-  //   if (scrollLeft > maxScrollLeft) {
-  //     setTimeout(() => {
-  //       scroll.update(state => ({
-  //         ...state,
-  //         left: maxScrollLeft,
-  //       }))
-  //     })
-  //   }
-  // }
+  overscrollLeft.subscribe(overscroll => {
+    if (overscroll) {
+      scroll.update(state => ({
+        ...state,
+        left: get(maxScrollLeft),
+      }))
+    }
+  })
 
   return {
     contentHeight,
