@@ -93,7 +93,7 @@
     right: 0;
     background: var(--spectrum-global-color-blue-400);
     width: 2px;
-    height: calc(var(--cell-height) + 1px);
+    height: calc(var(--cell-height) + 2px);
   }
 
   /* Label cells */

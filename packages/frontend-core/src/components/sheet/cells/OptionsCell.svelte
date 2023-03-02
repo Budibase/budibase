@@ -57,7 +57,7 @@
   on:click={editable ? toggleOpen : null}
 >
   <div class="values">
-    {#each values as val (val)}
+    {#each values as val}
       {@const color = getOptionColor(val)}
       {#if color}
         <div class="badge text" style="--color: {color}">
@@ -77,7 +77,7 @@
   {/if}
   {#if open}
     <div class="options">
-      {#each values as val (val)}
+      {#each values as val}
         {@const color = getOptionColor(val)}
         <div class="option" on:click={() => toggleOption(val)}>
           <div class="badge text" style="--color: {color}">
@@ -89,7 +89,7 @@
           />
         </div>
       {/each}
-      {#each unselectedOptions as option (option)}
+      {#each unselectedOptions as option}
         <div class="option" on:click={() => toggleOption(option)}>
           <div class="badge text" style="--color: {getOptionColor(option)}">
             {option}
