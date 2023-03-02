@@ -8,6 +8,7 @@
   export let reorderSource = false
   export let reorderTarget = false
   export let width = ""
+  export let center = false
 </script>
 
 <div
@@ -20,6 +21,7 @@
   class:selected
   class:reorder-source={reorderSource}
   class:reorder-target={reorderTarget}
+  class:center
   on:focus
   on:click
   on:mousedown
@@ -60,6 +62,9 @@
   }
   .cell.row-hovered {
     background: var(--cell-background-hover);
+  }
+  .cell.center {
+    justify-content: center;
   }
 
   /* Header cells */

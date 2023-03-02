@@ -4,8 +4,9 @@ import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
 export const createRowsStore = context => {
-  const { config, filter, API, scroll } = context
+  const { config, API, scroll } = context
   const tableId = derived(config, $config => $config.tableId)
+  const filter = derived(config, $config => $config.filter)
 
   // Flag for whether this is the first time loading our fetch
   let loaded = false
@@ -19,7 +20,7 @@ export const createRowsStore = context => {
 
   // Local stores for managing fetching data
   const query = derived(filter, $filter => buildLuceneQuery($filter))
-  const fetch = derived(tableId, $tableId => {
+  const fetch = derived([tableId, filter], ([$tableId, $filter]) => {
     if (!$tableId) {
       return null
     }
@@ -40,13 +41,6 @@ export const createRowsStore = context => {
         limit: 100,
         paginate: true,
       },
-    })
-  })
-
-  // Update fetch when query changes
-  query.subscribe($query => {
-    get(fetch)?.update({
-      query: $query,
     })
   })
 

@@ -145,7 +145,7 @@
             on:click={addRow}
             width="40"
           >
-            <Icon hoverable name="Add" size="S" />
+            <Icon name="Add" size="S" />
           </SheetCell>
           {#if $stickyColumn}
             <SheetCell

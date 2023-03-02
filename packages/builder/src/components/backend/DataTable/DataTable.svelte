@@ -18,142 +18,146 @@
     Pagination,
     Heading,
     Body,
+    Modal,
     Layout,
     notifications,
   } from "@budibase/bbui"
   import { fetchData, Sheet } from "@budibase/frontend-core"
   import { API } from "api"
+  import CreateEditColumn from "components/backend/DataTable/modals/CreateEditColumn.svelte"
 
-  // let hideAutocolumns = true
-  // let filters
-  //
-  // $: isUsersTable = $tables.selected?._id === TableNames.USERS
-  // $: type = $tables.selected?.type
-  // $: isInternal = type !== "external"
-  // $: schema = $tables.selected?.schema
-  // $: enrichedSchema = enrichSchema($tables.selected?.schema)
-  // $: id = $tables.selected?._id
-  // $: fetch = createFetch(id)
-  // $: hasCols = checkHasCols(schema)
-  // $: hasRows = !!$fetch.rows?.length
-  // $: showError($fetch.error)
-  // $: id, (filters = null)
-  //
-  // let appliedFilter
-  // let rawFilter
-  // let appliedSort
-  // let selectedRows = []
-  //
-  // $: enrichedSchema,
-  //   () => {
-  //     appliedFilter = null
-  //     rawFilter = null
-  //     appliedSort = null
-  //     selectedRows = []
-  //   }
-  //
-  // $: if (Number.isInteger($fetch.pageNumber)) {
-  //   selectedRows = []
-  // }
-  //
-  // const showError = error => {
-  //   if (error) {
-  //     notifications.error(error?.message || "Unable to fetch data.")
-  //   }
-  // }
-  //
-  // const enrichSchema = schema => {
-  //   let tempSchema = { ...schema }
-  //   tempSchema._id = {
-  //     type: "internal",
-  //     editable: false,
-  //     displayName: "ID",
-  //     autocolumn: true,
-  //   }
-  //   if (isInternal) {
-  //     tempSchema._rev = {
-  //       type: "internal",
-  //       editable: false,
-  //       displayName: "Revision",
-  //       autocolumn: true,
-  //     }
-  //   }
-  //
-  //   return tempSchema
-  // }
-  //
-  // const checkHasCols = schema => {
-  //   if (!schema || Object.keys(schema).length === 0) {
-  //     return false
-  //   }
-  //   let fields = Object.values(schema)
-  //   for (let field of fields) {
-  //     if (!field.autocolumn) {
-  //       return true
-  //     }
-  //   }
-  //   return false
-  // }
-  //
-  // // Fetches new data whenever the table changes
-  // const createFetch = tableId => {
-  //   return fetchData({
-  //     API,
-  //     datasource: {
-  //       tableId,
-  //       type: "table",
-  //     },
-  //     options: {
-  //       schema,
-  //       limit: 10,
-  //       paginate: true,
-  //     },
-  //   })
-  // }
-  //
-  // // Fetch data whenever sorting option changes
-  // const onSort = async e => {
-  //   const sort = {
-  //     sortColumn: e.detail.column,
-  //     sortOrder: e.detail.order,
-  //   }
-  //   await fetch.update(sort)
-  //   appliedSort = { ...sort }
-  //   appliedSort.sortOrder = appliedSort.sortOrder.toLowerCase()
-  //   selectedRows = []
-  // }
-  //
-  // // Fetch data whenever filters change
-  // const onFilter = e => {
-  //   filters = e.detail
-  //   fetch.update({
-  //     filter: filters,
-  //   })
-  //   appliedFilter = e.detail
-  // }
-  //
-  // // Fetch data whenever schema changes
-  // const onUpdateColumns = () => {
-  //   selectedRows = []
-  //   fetch.refresh()
-  // }
-  //
-  // // Fetch data whenever rows are modified. Unfortunately we have to lose
-  // // our pagination place, as our bookmarks will have shifted.
-  // const onUpdateRows = () => {
-  //   selectedRows = []
-  //   fetch.refresh()
-  // }
-  //
-  // // When importing new rows it is better to reinitialise request/paging data.
-  // // Not doing so causes inconsistency in paging behaviour and content.
-  // const onImportData = () => {
-  //   fetch.getInitialData()
-  // }
+  let createColumnModal
+
+  let hideAutocolumns = true
+  let filters
+  let hasRows = true
+
+  $: isUsersTable = $tables.selected?._id === TableNames.USERS
+  $: type = $tables.selected?.type
+  $: isInternal = type !== "external"
+  $: schema = $tables.selected?.schema
+  $: enrichedSchema = enrichSchema($tables.selected?.schema)
+  $: id = $tables.selected?._id
+  $: hasCols = checkHasCols(schema)
+  $: id, (filters = null)
+
+  let appliedFilter
+  let rawFilter
+  let appliedSort
+  let selectedRows = []
+
+  $: enrichedSchema,
+    () => {
+      appliedFilter = null
+      rawFilter = null
+      appliedSort = null
+      selectedRows = []
+    }
+
+  const enrichSchema = schema => {
+    let tempSchema = { ...schema }
+    tempSchema._id = {
+      type: "internal",
+      editable: false,
+      displayName: "ID",
+      autocolumn: true,
+    }
+    if (isInternal) {
+      tempSchema._rev = {
+        type: "internal",
+        editable: false,
+        displayName: "Revision",
+        autocolumn: true,
+      }
+    }
+
+    return tempSchema
+  }
+
+  const checkHasCols = schema => {
+    if (!schema || Object.keys(schema).length === 0) {
+      return false
+    }
+    let fields = Object.values(schema)
+    for (let field of fields) {
+      if (!field.autocolumn) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // Fetch data whenever sorting option changes
+  const onSort = async e => {
+    const sort = {
+      sortColumn: e.detail.column,
+      sortOrder: e.detail.order,
+    }
+    appliedSort = { ...sort }
+    appliedSort.sortOrder = appliedSort.sortOrder.toLowerCase()
+    selectedRows = []
+  }
+
+  // Fetch data whenever filters change
+  const onFilter = e => {
+    filters = e.detail
+    appliedFilter = e.detail
+  }
 </script>
 
-<div>
-  <Sheet tableId={$tables.selected?._id} {API} />
+<div class="wrapper">
+  <div class="buttons">
+    <div class="left-buttons">
+      <CreateColumnButton
+        highlighted={!hasCols || !hasRows}
+        on:updatecolumns={null}
+      />
+      {#if isInternal}
+        <CreateViewButton disabled={!hasCols || !hasRows} />
+      {/if}
+    </div>
+    <div class="right-buttons">
+      <ManageAccessButton resourceId={$tables.selected?._id} />
+      {#if isUsersTable}
+        <EditRolesButton />
+      {/if}
+      {#if !isInternal}
+        <ExistingRelationshipButton
+          table={$tables.selected}
+          on:updatecolumns={null}
+        />
+      {/if}
+      <ImportButton
+        disabled={$tables.selected?._id === "ta_users"}
+        tableId={$tables.selected?._id}
+        on:importrows={null}
+      />
+      <ExportButton
+        disabled={!hasRows || !hasCols}
+        view={$tables.selected?._id}
+        filters={appliedFilter}
+        sorting={appliedSort}
+        {selectedRows}
+      />
+      {#key id}
+        <TableFilterButton
+          {schema}
+          {filters}
+          on:change={onFilter}
+          disabled={!hasCols}
+          tableId={id}
+        />
+      {/key}
+    </div>
+  </div>
+  <div class="sheet">
+    <Sheet
+      tableId={$tables.selected?._id}
+      {API}
+      filter={filters}
+      on:add-column={createColumnModal.show}
+    />
+  </div>
 </div>
 
 <!--<div>-->
@@ -175,60 +179,6 @@
 <!--    }}-->
 <!--    customPlaceholder-->
 <!--  >-->
-<!--    <div class="buttons">-->
-<!--      <div class="left-buttons">-->
-<!--        <CreateColumnButton-->
-<!--          highlighted={$fetch.loaded && (!hasCols || !hasRows)}-->
-<!--          on:updatecolumns={onUpdateColumns}-->
-<!--        />-->
-<!--        {#if !isUsersTable}-->
-<!--          <CreateRowButton-->
-<!--            on:updaterows={onUpdateRows}-->
-<!--            title={"Create row"}-->
-<!--            modalContentComponent={CreateEditRow}-->
-<!--            disabled={!hasCols}-->
-<!--            highlighted={$fetch.loaded && hasCols && !hasRows}-->
-<!--          />-->
-<!--        {/if}-->
-<!--        {#if isInternal}-->
-<!--          <CreateViewButton disabled={!hasCols || !hasRows} />-->
-<!--        {/if}-->
-<!--      </div>-->
-<!--      <div class="right-buttons">-->
-<!--        <ManageAccessButton resourceId={$tables.selected?._id} />-->
-<!--        {#if isUsersTable}-->
-<!--          <EditRolesButton />-->
-<!--        {/if}-->
-<!--        {#if !isInternal}-->
-<!--          <ExistingRelationshipButton-->
-<!--            table={$tables.selected}-->
-<!--            on:updatecolumns={onUpdateColumns}-->
-<!--          />-->
-<!--        {/if}-->
-<!--        <HideAutocolumnButton bind:hideAutocolumns />-->
-<!--        <ImportButton-->
-<!--          disabled={$tables.selected?._id === "ta_users"}-->
-<!--          tableId={$tables.selected?._id}-->
-<!--          on:importrows={onImportData}-->
-<!--        />-->
-<!--        <ExportButton-->
-<!--          disabled={!hasRows || !hasCols}-->
-<!--          view={$tables.selected?._id}-->
-<!--          filters={appliedFilter}-->
-<!--          sorting={appliedSort}-->
-<!--          {selectedRows}-->
-<!--        />-->
-<!--        {#key id}-->
-<!--          <TableFilterButton-->
-<!--            {schema}-->
-<!--            {filters}-->
-<!--            on:change={onFilter}-->
-<!--            disabled={!hasCols}-->
-<!--            tableId={id}-->
-<!--          />-->
-<!--        {/key}-->
-<!--      </div>-->
-<!--    </div>-->
 <!--    <div slot="placeholder">-->
 <!--      <Layout gap="S">-->
 <!--        {#if !hasCols}-->
@@ -262,10 +212,21 @@
 <!--  {/key}-->
 
 <!--</div>-->
+
+<Modal bind:this={createColumnModal}>
+  <CreateEditColumn on:updatecolumns />
+</Modal>
+
 <style>
-  div {
+  .wrapper {
     flex: 1 1 auto;
     margin: -28px -40px -40px -40px;
+    display: flex;
+    flex-direction: column;
+    background: var(--background);
+  }
+  .sheet {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
   }
@@ -277,12 +238,14 @@
     margin-top: var(--spacing-xl);
   }
   .buttons {
-    flex: 1 1 auto;
+    flex: 0 0 48px;
+    border-bottom: 2px solid var(--spectrum-global-color-gray-200);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
+    padding: 0 8px;
   }
   .left-buttons,
   .right-buttons {
