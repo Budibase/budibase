@@ -1,6 +1,7 @@
 import {
   GoogleInnerConfig,
-  JwtClaims, OAuth2,
+  JwtClaims,
+  OAuth2,
   OIDCInnerConfig,
   OIDCWellKnownConfig,
   SSOAuthDetails,
