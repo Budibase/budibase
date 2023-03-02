@@ -1,5 +1,3 @@
-<svelte:options immutable={true} />
-
 <script>
   import { setContext } from "svelte"
   import { writable } from "svelte/store"
@@ -7,6 +5,7 @@
   import { createViewportStores } from "./stores/viewport"
   import { createRowsStore } from "./stores/rows"
   import { createColumnsStores } from "./stores/columns"
+  import { createScrollStores } from "./stores/scroll"
   import SheetControls from "./SheetControls.svelte"
   import SheetBody from "./SheetBody.svelte"
   import SheetRow from "./SheetRow.svelte"
@@ -59,6 +58,7 @@
   context = { ...context, rows, schema }
   const { columns, stickyColumn } = createColumnsStores(context)
   context = { ...context, columns, stickyColumn }
+  context = { ...context, ...createScrollStores(context) }
   const { visibleRows, visibleColumns } = createViewportStores(context)
   context = { ...context, visibleRows, visibleColumns }
   const { reorder } = createReorderStores(context)

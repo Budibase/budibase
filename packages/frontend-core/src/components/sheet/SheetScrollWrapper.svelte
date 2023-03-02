@@ -5,84 +5,25 @@
     cellHeight,
     scroll,
     bounds,
-    rows,
     columns,
     visibleRows,
     visibleColumns,
     hoveredRowId,
+    maxScrollTop,
+    maxScrollLeft,
   } = getContext("spreadsheet")
 
   export let scrollVertically = true
   export let scrollHorizontally = true
   export let wheelInteractive = true
 
-  $: scrollTop = $scroll.top
-  $: scrollLeft = $scroll.left
-  $: offsetY = -1 * (scrollTop % cellHeight)
   $: hiddenWidths = calculateHiddenWidths($visibleColumns)
-  $: offsetX = -1 * scrollLeft + hiddenWidths
-  $: rowCount = $visibleRows.length
-  $: contentWidth = calculateContentWidth($visibleColumns, scrollHorizontally)
-  $: contentHeight = calculateContentHeight(rowCount, scrollVertically)
-  $: innerStyle = getInnerStyle(
-    offsetX,
-    offsetY,
-    contentWidth,
-    contentHeight,
-    scrollHorizontally,
-    scrollVertically
-  )
-  $: outerStyle = getOuterStyle(
-    offsetX,
-    offsetY,
-    contentWidth,
-    contentHeight,
-    scrollHorizontally,
-    scrollVertically
-  )
+  $: scrollLeft = $scroll.left
+  $: scrollTop = $scroll.top
+  $: offsetX = scrollHorizontally ? -1 * scrollLeft + hiddenWidths : 0
+  $: offsetY = scrollVertically ? -1 * (scrollTop % cellHeight) : 0
 
-  const getInnerStyle = (
-    offsetX,
-    offsetY,
-    contentWidth,
-    contentHeight,
-    scrollH,
-    scrollV
-  ) => {
-    if (!scrollH) {
-      offsetX = 0
-    }
-    if (!scrollV) {
-      offsetY = 0
-    }
-    let style = `--offset-x:${offsetX}px;--offset-y:${offsetY}px;`
-    // if (scrollH && contentWidth) {
-    //   style += `width:${contentWidth}px;`
-    // }
-    // if (scrollV && contentHeight) {
-    //   style += `height:${contentHeight}px;`
-    // }
-    return style
-  }
-
-  const getOuterStyle = (
-    offsetX,
-    offsetY,
-    contentWidth,
-    contentHeight,
-    scrollH,
-    scrollV
-  ) => {
-    let style = ""
-    // if (scrollV) {
-    //   style += `height:${contentHeight + offsetY}px;`
-    // }
-    // if (scrollH) {
-    //   style += `width:${contentWidth + offsetX}px;`
-    // }
-    return style
-  }
-
+  // Calculates with total width of all columns currently not rendered
   const calculateHiddenWidths = visibleColumns => {
     const idx = visibleColumns[0]?.idx
     let width = 0
@@ -94,37 +35,23 @@
     return width
   }
 
-  const calculateContentWidth = (columns, scroll) => {
-    if (!scroll) {
-      return null
-    }
-    let width = 0
-    columns.forEach(col => (width += col.width))
-    return width
-  }
-
-  const calculateContentHeight = (rowCount, scroll) => {
-    if (!scroll) {
-      return null
-    }
-    return (rowCount + 1) * cellHeight
-  }
-
+  // Handles a wheel even and updates the scroll offsets
   const handleWheel = e => {
-    const step = cellHeight * 3
-    const deltaY = e.deltaY < 0 ? -1 : 1
-    const offset = deltaY * step
-    let newScrollTop = scrollTop
-    newScrollTop += offset
-    newScrollTop = Math.min(
-      newScrollTop,
-      ($rows.length + 1) * cellHeight - $bounds.height + 180
-    )
-    newScrollTop = Math.max(0, newScrollTop)
-    scroll.update(state => ({
-      ...state,
+    e.preventDefault()
+
+    // Calculate new scroll top
+    let newScrollTop = scrollTop + e.deltaY
+    newScrollTop = Math.max(0, Math.min(newScrollTop, $maxScrollTop))
+
+    // Calculate new scroll left
+    let newScrollLeft = scrollLeft + e.deltaX
+    newScrollLeft = Math.max(0, Math.min(newScrollLeft, $maxScrollLeft))
+
+    // Update state
+    scroll.set({
+      left: newScrollLeft,
       top: newScrollTop,
-    }))
+    })
 
     // Hover row under cursor
     const y = e.clientY - $bounds.top + (newScrollTop % cellHeight)
@@ -133,15 +60,13 @@
   }
 </script>
 
-<div class="outer" on:wheel|passive={wheelInteractive ? handleWheel : null}>
-  <div class="inner" style={innerStyle}>
+<div class="outer" on:wheel={wheelInteractive ? handleWheel : null}>
+  <div class="inner" style="--offset-x:{offsetX}px;--offset-y:{offsetY}px;">
     <slot />
   </div>
 </div>
 
 <style>
-  div {
-  }
   .outer {
     min-width: 100%;
     min-height: 100%;

@@ -1,13 +1,20 @@
 <script>
   import { getContext } from "svelte"
-  import { domDebounce, debounce, throttle } from "../../utils/utils"
+  import { domDebounce } from "../../utils/utils"
 
-  const { scroll, bounds, rows, cellHeight, columns, stickyColumn } =
-    getContext("spreadsheet")
+  const {
+    scroll,
+    bounds,
+    cellHeight,
+    stickyColumn,
+    contentHeight,
+    maxScrollTop,
+    contentWidth,
+    maxScrollLeft,
+  } = getContext("spreadsheet")
 
   // Bar config
   const barOffset = 4
-  const padding = 180
 
   // State for dragging bars
   let initialMouse
@@ -21,61 +28,23 @@
 
   // Calculate V scrollbar size and offset
   // Terminology is the same for both axes:
-  //   contentX - the size of the rendered content, including padding
   //   renderX - the space available to render the bar in, edge to edge
-  //   barX - the length of the bar
   //   availX - the space available to render the bar in, until the edge
-  //   barX - the offset of the bar
-  $: contentHeight = ($rows.length + 1) * cellHeight + padding
   $: renderHeight = height - 2 * barOffset
-  $: barHeight = Math.max(50, (height / contentHeight) * renderHeight)
+  $: barHeight = Math.max(50, (height / $contentHeight) * renderHeight)
   $: availHeight = renderHeight - barHeight
-  $: maxScrollTop = Math.max(contentHeight - height, 0)
-  $: barTop = barOffset + cellHeight + availHeight * (scrollTop / maxScrollTop)
+  $: barTop = barOffset + cellHeight + availHeight * (scrollTop / $maxScrollTop)
 
   // Calculate H scrollbar size and offset
-  $: contentWidth = calculateContentWidth($columns, $stickyColumn) + padding
-  $: totalWidth = width + 40 + $stickyColumn?.width || 0
+  $: totalWidth = width + 40 + ($stickyColumn?.width || 0)
   $: renderWidth = totalWidth - 2 * barOffset
-  $: barWidth = Math.max(50, (totalWidth / contentWidth) * renderWidth)
+  $: barWidth = Math.max(50, (totalWidth / $contentWidth) * renderWidth)
   $: availWidth = renderWidth - barWidth
-  $: maxScrollLeft = Math.max(contentWidth - totalWidth, 0)
-  $: barLeft = barOffset + availWidth * (scrollLeft / maxScrollLeft)
+  $: barLeft = barOffset + availWidth * (scrollLeft / $maxScrollLeft)
 
   // Calculate whether to show scrollbars or not
-  $: showVScrollbar = contentHeight > height
-  $: showHScrollbar = contentWidth > totalWidth
-
-  // Ensure scroll state never goes invalid, which can happen when changing
-  // rows or tables
-  $: {
-    if (scrollTop > maxScrollTop) {
-      setTimeout(() => {
-        scroll.update(state => ({
-          ...state,
-          top: maxScrollTop,
-        }))
-      })
-    }
-  }
-  $: {
-    if (scrollLeft > maxScrollLeft) {
-      setTimeout(() => {
-        scroll.update(state => ({
-          ...state,
-          left: maxScrollLeft,
-        }))
-      })
-    }
-  }
-
-  const calculateContentWidth = (columns, stickyColumn) => {
-    let width = 40 + stickyColumn?.width
-    columns.forEach(col => {
-      width += col.width
-    })
-    return width
-  }
+  $: showVScrollbar = $contentHeight > height
+  $: showHScrollbar = $contentWidth > totalWidth
 
   // V scrollbar drag handlers
   const startVDragging = e => {
@@ -88,10 +57,10 @@
   const moveVDragging = domDebounce(e => {
     const delta = e.clientY - initialMouse
     const weight = delta / availHeight
-    const newScrollTop = initialScroll + weight * maxScrollTop
+    const newScrollTop = initialScroll + weight * $maxScrollTop
     scroll.update(state => ({
       ...state,
-      top: Math.max(0, Math.min(newScrollTop, maxScrollTop)),
+      top: Math.max(0, Math.min(newScrollTop, $maxScrollTop)),
     }))
   })
   const stopVDragging = () => {
@@ -110,10 +79,10 @@
   const moveHDragging = domDebounce(e => {
     const delta = e.clientX - initialMouse
     const weight = delta / availWidth
-    const newScrollLeft = initialScroll + weight * maxScrollLeft
+    const newScrollLeft = initialScroll + weight * $maxScrollLeft
     scroll.update(state => ({
       ...state,
-      left: Math.max(0, Math.min(newScrollLeft, maxScrollLeft)),
+      left: Math.max(0, Math.min(newScrollLeft, $maxScrollLeft)),
     }))
   })
   const stopHDragging = () => {
