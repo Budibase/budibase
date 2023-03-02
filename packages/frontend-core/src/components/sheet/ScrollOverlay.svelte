@@ -112,7 +112,7 @@
     background: var(--spectrum-global-color-gray-600);
     opacity: 0.6;
     border-radius: 4px;
-    z-index: 20;
+    z-index: 999;
     transition: opacity 130ms ease-out;
   }
   div:hover {

@@ -20,8 +20,8 @@
   let columnCount = 0
 
   $: scrollLeft = $scroll.left
-  $: cutoff = scrollLeft + 40 + $columns[0]?.width || 0
-  $: offset = 40 + $stickyColumn?.width || 0
+  $: cutoff = scrollLeft + 40 + ($columns[0]?.width || 0)
+  $: offset = 40 + ($stickyColumn?.width || 0)
   $: rowCount = $visibleRows.length
   $: contentHeight = (rowCount + 2) * cellHeight
 
@@ -110,7 +110,7 @@
   .resize-slider {
     position: absolute;
     top: 0;
-    z-index: 10;
+    z-index: 1;
     height: var(--cell-height);
     left: var(--left);
     opacity: 0;
@@ -125,7 +125,7 @@
     height: min(var(--content-height), 100%);
   }
   .resize-slider.sticky {
-    z-index: 25;
+    z-index: 2;
   }
   .resize-indicator {
     margin-left: -1px;
