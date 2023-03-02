@@ -26,9 +26,16 @@ export enum AuditLogResourceStatus {
   DELETED = "deleted",
 }
 
+export type DeletedResourceInfo = {
+  _id: string
+  status: AuditLogResourceStatus
+  email?: string
+  name?: string
+}
+
 export interface AuditLogEnriched {
-  app?: App | { _id: string; status: AuditLogResourceStatus }
-  user: User | { _id: string; status: AuditLogResourceStatus }
+  app?: App | DeletedResourceInfo
+  user: User | DeletedResourceInfo
   event: Event
   timestamp: string
   name: string
