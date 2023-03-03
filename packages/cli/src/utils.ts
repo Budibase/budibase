@@ -5,18 +5,27 @@ import { join } from "path"
 import fetch from "node-fetch"
 const progress = require("cli-progress")
 
-export async function downloadFile(url: string, filePath: string) {
-  filePath = path.resolve(filePath)
-  const writer = fs.createWriteStream(filePath)
-
-  const response = await fetch(url, {
-    method: "GET",
-  })
-  response.body?.pipe(writer)
-
+export function downloadFile(url: string, filePath: string) {
   return new Promise((resolve, reject) => {
-    writer.on("finish", resolve)
-    writer.on("error", reject)
+    filePath = path.resolve(filePath)
+    fetch(url, {
+      method: "GET",
+    })
+      .then(response => {
+        const writer = fs.createWriteStream(filePath)
+        if (response.body) {
+          response.body.pipe(writer)
+          response.body.on("end", resolve)
+          response.body.on("error", reject)
+        } else {
+          throw new Error(
+            `Unable to retrieve docker-compose file - ${response.status}`
+          )
+        }
+      })
+      .catch(err => {
+        throw err
+      })
   })
 }
 
