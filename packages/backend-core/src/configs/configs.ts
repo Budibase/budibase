@@ -42,7 +42,9 @@ export async function getConfig<T extends Config>(
   }
 }
 
-export async function save(config: Config) {
+export async function save(
+  config: Config
+): Promise<{ id: string; rev: string }> {
   const db = context.getGlobalDB()
   return db.put(config)
 }
