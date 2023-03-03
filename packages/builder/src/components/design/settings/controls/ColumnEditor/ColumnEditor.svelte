@@ -22,7 +22,9 @@
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: schema = getSchema($currentAsset, datasource)
-  $: options = enrichedSchemaFields?.map(field => field.name)
+  $: options = allowCellEditing
+    ? Object.keys(schema || {})
+    : enrichedSchemaFields?.map(field => field.name)
   $: sanitisedValue = getValidColumns(value, options)
   $: updateBoundValue(sanitisedValue)
   $: enrichedSchemaFields = getFields(Object.values(schema) || [], {
