@@ -1,8 +1,3 @@
 {
-  "extends": "./tsconfig.build.json",
-  "compilerOptions": {
-    "composite": true,
-    "baseUrl": "."
-  },
-  "exclude": ["node_modules", "dist"]
+  "extends": "./tsconfig.build.json"
 }

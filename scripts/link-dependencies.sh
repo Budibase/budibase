@@ -28,6 +28,12 @@ yarn unlink
 yarn link
 cd -
 
+echo "Linking data-utils"
+cd packages/data-utils
+yarn unlink
+yarn link
+cd -
+
 if [ -d "../budibase-pro" ]; then
   cd ../budibase-pro
   echo "Bootstrapping budibase-pro"

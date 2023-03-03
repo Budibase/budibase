@@ -109,12 +109,35 @@ const removeKeyNumbering = (key: string) => {
   }
 }
 
+type Filter = {
+  operator: keyof Query
+  field: string
+  type: any
+  value: any
+  externalType: keyof typeof SqlNumberTypeRangeMap
+}
+
+type Query = {
+  string: Record<string, any>
+  fuzzy: Record<string, any>
+  range: Record<string, { low: string | number; high: string | number }>
+  equal: Record<string, true>
+  notEqual: Record<string, true>
+  empty: Record<string, any>
+  notEmpty: Record<string, any>
+  contains: Record<string, any>
+  notContains: Record<string, any>
+  oneOf: Record<string, any>
+  containsAny: Record<string, any>
+  allOr?: boolean
+}
+
 /**
  * Builds a lucene JSON query from the filter structure generated in the builder
  * @param filter the builder filter structure
  */
-export const buildLuceneQuery = (filter: any[]) => {
-  let query = {
+export const buildLuceneQuery = (filter: Filter[]) => {
+  let query: Query = {
     string: {},
     fuzzy: {},
     range: {},
@@ -131,7 +154,7 @@ export const buildLuceneQuery = (filter: any[]) => {
     filter.forEach(expression => {
       let { operator, field, type, value, externalType } = expression
       const isHbs =
-        typeof value === "string" && value.match(HBS_REGEX)?.length > 0
+        typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
       // Parse all values into correct types
       if (operator === "allOr") {
         query.allOr = true
@@ -181,9 +204,13 @@ export const buildLuceneQuery = (filter: any[]) => {
             high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
           }
         }
-        if (operator === "rangeLow" && value != null && value !== "") {
+        if ((operator as any) === "rangeLow" && value != null && value !== "") {
           query.range[field].low = value
-        } else if (operator === "rangeHigh" && value != null && value !== "") {
+        } else if (
+          (operator as any) === "rangeHigh" &&
+          value != null &&
+          value !== ""
+        ) {
           query.range[field].high = value
         }
       } else if (query[operator]) {
@@ -242,25 +269,9 @@ export const runLuceneQuery = (
 
   // Iterates over a set of filters and evaluates a fail function against a doc
   const match =
-    (
-      type: string,
-      failFn: {
-        (docValue: any, testValue: any): boolean
-        (docValue: any, testValue: any): boolean
-        (docValue: any, testValue: any): boolean
-        (docValue: any, testValue: any): boolean
-        (docValue: any, testValue: any): boolean
-        (docValue: any): boolean
-        (docValue: any): boolean
-        (docValue: any, testValue: any): boolean
-        (docValue: any, testValue: any): boolean
-        (docValue: any, testValue: any): boolean
-        (docValue: any, testValue: any): any
-        (arg0: any, arg1: unknown): any
-      }
-    ) =>
+    (type: string, failFn: (docValue: any, testValue: any) => boolean) =>
     (doc: any) => {
-      const filters = Object.entries(query[type] || {})
+      const filters = Object.entries(query![type] || {})
       for (let i = 0; i < filters.length; i++) {
         const [key, testValue] = filters[i]
         const docValue = deepGet(doc, removeKeyNumbering(key))
@@ -328,7 +339,7 @@ export const runLuceneQuery = (
   })
 
   // Process an includes match (fails if the value is not included)
-  const oneOf = match("oneOf", (docValue: any, testValue: string[]) => {
+  const oneOf = match("oneOf", (docValue: any, testValue: any) => {
     if (typeof testValue === "string") {
       testValue = testValue.split(",")
       if (typeof docValue === "number") {
@@ -338,12 +349,9 @@ export const runLuceneQuery = (
     return !testValue?.includes(docValue)
   })
 
-  const containsAny = match(
-    "containsAny",
-    (docValue: string | any[], testValue: any) => {
-      return !docValue?.includes(...testValue)
-    }
-  )
+  const containsAny = match("containsAny", (docValue: any, testValue: any) => {
+    return !docValue?.includes(...testValue)
+  })
 
   const contains = match(
     "contains",

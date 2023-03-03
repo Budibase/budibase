@@ -10,15 +10,11 @@
     "incremental": true,
     "sourceMap": true,
     "declaration": true,
-    "types": [ "node", "jest" ],
+    "types": ["node"],
     "outDir": "dist",
     "skipLibCheck": true
   },
-  "include": [
-    "**/*.js",
-    "**/*.ts",
-    "package.json"
-  ],
+  "include": ["**/*.js", "**/*.ts", "package.json"],
   "exclude": [
     "node_modules",
     "dist",
