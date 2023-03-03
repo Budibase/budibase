@@ -2,8 +2,11 @@ import {
   DatasourceFieldType,
   DatasourcePlus,
   Integration,
+  PaginationJson,
   QueryJson,
   QueryType,
+  SearchFilters,
+  SortJson,
   Table,
   TableSchema,
 } from "@budibase/types"
@@ -13,6 +16,7 @@ import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
+import { runLuceneQuery } from "@budibase/data-utils"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -237,7 +241,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     const handlers = {
       [DataSourceOperation.CREATE]: () =>
         this.create({ sheet, row: json.body }),
-      [DataSourceOperation.READ]: () => this.read({ sheet }),
+      [DataSourceOperation.READ]: () => this.read({ ...json, sheet }),
       [DataSourceOperation.UPDATE]: () =>
         this.update({
           // exclude the header row and zero index
@@ -345,14 +349,20 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  async read(query: { sheet: string }) {
+  async read(query: {
+    sheet: string
+    filters?: SearchFilters
+    sort?: SortJson
+    paginate?: PaginationJson
+  }) {
     try {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
       const rows = await sheet.getRows()
+      const filtered = runLuceneQuery(rows, query.filters)
       const headerValues = sheet.headerValues
       const response = []
-      for (let row of rows) {
+      for (let row of filtered) {
         response.push(
           this.buildRowObject(headerValues, row._rawData, row._rowNumber)
         )

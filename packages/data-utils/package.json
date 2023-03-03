@@ -1,0 +1,12 @@
+{
+  "name": "@budibase/data-utils",
+  "version": "0.0.1",
+  "description": "Shared data utils",
+  "main": "src/index.ts",
+  "author": "Budibase",
+  "license": "GPL-3.0",
+  "private": true,
+  "devDependencies": {
+    "typescript": "4.7.3"
+  }
+}
