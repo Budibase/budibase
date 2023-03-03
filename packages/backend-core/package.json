@@ -22,7 +22,7 @@
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
-    "@budibase/nano": "10.1.1",
+    "@budibase/nano": "10.1.2",
     "@budibase/pouchdb-replication-stream": "1.2.10",
     "@budibase/types": "2.3.18-alpha.29",
     "@shopify/jest-koa-mocks": "5.0.1",
