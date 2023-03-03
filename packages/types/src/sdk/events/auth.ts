@@ -7,10 +7,16 @@ export type SSOType = ConfigType.OIDC | ConfigType.GOOGLE
 export interface LoginEvent extends BaseEvent {
   userId: string
   source: LoginSource
+  audited: {
+    email: string
+  }
 }
 
 export interface LogoutEvent extends BaseEvent {
   userId: string
+  audited: {
+    email?: string
+  }
 }
 
 export interface SSOCreatedEvent extends BaseEvent {

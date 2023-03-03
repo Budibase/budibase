@@ -30,7 +30,11 @@ describe("/api/global/users", () => {
         email
       )
 
-      expect(res.body).toEqual({ message: "Invitation has been sent." })
+      expect(res.body?.message).toBe("Invitation has been sent.")
+      expect(res.body?.unsuccessful.length).toBe(0)
+      expect(res.body?.successful.length).toBe(1)
+      expect(res.body?.successful[0].email).toBe(email)
+
       expect(sendMailMock).toHaveBeenCalled()
       expect(code).toBeDefined()
       expect(events.user.invited).toBeCalledTimes(1)

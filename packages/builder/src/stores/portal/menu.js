@@ -76,6 +76,12 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         href: "/builder/portal/account/usage",
       },
     ]
+    if ($auth.isAdmin) {
+      accountSubPages.push({
+        title: "Audit Logs",
+        href: "/builder/portal/account/auditLogs",
+      })
+    }
     if ($admin.cloud && $auth?.user?.accountPortalAccess) {
       accountSubPages.push({
         title: "Upgrade",
@@ -87,6 +93,7 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         href: "/builder/portal/account/upgrade",
       })
     }
+    // add license check here
     if (
       $auth?.user?.accountPortalAccess &&
       $auth.user.account.stripeCustomerId
