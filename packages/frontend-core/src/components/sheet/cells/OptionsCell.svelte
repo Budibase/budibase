@@ -76,7 +76,7 @@
     </div>
   {/if}
   {#if open}
-    <div class="options">
+    <div class="options" on:wheel={e => e.stopPropagation()}>
       {#each values as val}
         {@const color = getOptionColor(val)}
         <div class="option" on:click={() => toggleOption(val)}>
