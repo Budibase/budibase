@@ -81,6 +81,7 @@ export const getRelationshipSchemaAdditions = async schema => {
       Object.keys(linkSchema || {}).forEach(linkKey => {
         relationshipAdditions[`${fieldKey}.${linkKey}`] = {
           type: linkSchema[linkKey].type,
+          externalType: linkSchema[linkKey].externalType,
         }
       })
     }

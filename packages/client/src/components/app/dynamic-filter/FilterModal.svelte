@@ -57,6 +57,9 @@
   const onFieldChange = (expression, field) => {
     // Update the field type
     expression.type = schemaFields.find(x => x.name === field)?.type
+    expression.externalType = schemaFields.find(
+      x => x.name === field
+    )?.externalType
 
     // Ensure a valid operator is set
     const validOperators = LuceneUtils.getValidOperatorsForType(
