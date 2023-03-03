@@ -20,10 +20,6 @@
   // Deletion callback when confirmed
   const performDeletion = async () => {
     await rows.actions.deleteRows(rowsToDelete)
-
-    // Refresh state
-    $selectedCellId = null
-    $selectedRows = {}
   }
 </script>
 

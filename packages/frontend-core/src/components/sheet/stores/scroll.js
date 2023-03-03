@@ -1,8 +1,12 @@
-import { derived, get } from "svelte/store"
+import { derived, get, writable } from "svelte/store"
 
 export const createScrollStores = context => {
-  const { scroll, rows, columns, stickyColumn, bounds, cellHeight } = context
+  const { rows, columns, stickyColumn, bounds, cellHeight } = context
   const padding = 180
+  const scroll = writable({
+    left: 0,
+    top: 0,
+  })
 
   // Memoize store primitives
   const scrollTop = derived(scroll, $scroll => $scroll.top)
@@ -77,6 +81,7 @@ export const createScrollStores = context => {
   })
 
   return {
+    scroll,
     contentHeight,
     contentWidth,
     maxScrollTop,

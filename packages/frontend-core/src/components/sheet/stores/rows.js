@@ -4,7 +4,7 @@ import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
 export const createRowsStore = context => {
-  const { config, API, scroll } = context
+  const { config, API } = context
   const tableId = derived(config, $config => $config.tableId)
   const filter = derived(config, $config => $config.filter)
 
@@ -64,9 +64,6 @@ export const createRowsStore = context => {
             newSchema[primaryDisplay].primaryDisplay = true
           }
           schema.set(newSchema)
-
-          // Reset scroll state for fresh dataset
-          scroll.set({ left: 0, top: 0 })
         }
 
         // Process new rows
