@@ -37,10 +37,16 @@
   }
 
   const selectRow = id => {
-    selectedRows.update(state => ({
-      ...state,
-      [id]: !state[id],
-    }))
+    selectedRows.update(state => {
+      let newState = {
+        ...state,
+        [id]: !state[id],
+      }
+      if (!newState[id]) {
+        delete newState[id]
+      }
+      return newState
+    })
   }
 
   const addRow = async field => {

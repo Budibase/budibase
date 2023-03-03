@@ -1,8 +1,11 @@
 <script>
   import { getContext, onMount } from "svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
+  import NewRow from "./NewRow.svelte"
+  import SheetRow from "./SheetRow.svelte"
 
-  const { selectedCellId, bounds } = getContext("spreadsheet")
+  const { selectedCellId, bounds, visibleRows, config } =
+    getContext("spreadsheet")
 
   let ref
 
@@ -24,7 +27,12 @@
   on:click|self={() => ($selectedCellId = null)}
 >
   <SheetScrollWrapper>
-    <slot />
+    {#each $visibleRows as row}
+      <SheetRow {row} />
+    {/each}
+    {#if $config.allowAddRows}
+      <NewRow />
+    {/if}
   </SheetScrollWrapper>
 </div>
 

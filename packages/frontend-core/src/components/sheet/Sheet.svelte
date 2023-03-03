@@ -6,6 +6,8 @@
   import { createRowsStore } from "./stores/rows"
   import { createColumnsStores } from "./stores/columns"
   import { createScrollStores } from "./stores/scroll"
+  import { createBoundsStores } from "./stores/bounds"
+  import { createInterfaceStores } from "./stores/interface"
   import DeleteButton from "./DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import SheetRow from "./SheetRow.svelte"
@@ -38,42 +40,23 @@
     allowAddColumns,
     allowSelectRows,
   })
-  const selectedCellId = writable()
-  const selectedRows = writable({})
-  const hoveredRowId = writable()
-  const scroll = writable({
-    left: 0,
-    top: 0,
-  })
-  const bounds = writable({
-    left: 0,
-    top: 0,
-    width: 0,
-    height: 0,
-  })
 
-  // Build up spreadsheet context and additional stores
+  // Build up spreadsheet context
+  // Stores are listed in order of dependency on each other
   let context = {
     API: API || createAPIClient(),
     rand,
-    selectedCellId,
-    selectedRows,
     cellHeight,
-    bounds,
-    scroll,
-    hoveredRowId,
     config,
     dispatch,
   }
-  const { rows, schema } = createRowsStore(context)
-  context = { ...context, rows, schema }
-  const { columns, stickyColumn } = createColumnsStores(context)
-  context = { ...context, columns, stickyColumn }
+  context = { ...context, ...createRowsStore(context) }
+  context = { ...context, ...createColumnsStores(context) }
+  context = { ...context, ...createBoundsStores(context) }
   context = { ...context, ...createScrollStores(context) }
-  const { visibleRows, visibleColumns } = createViewportStores(context)
-  context = { ...context, visibleRows, visibleColumns }
-  const { reorder } = createReorderStores(context)
-  context = { ...context, reorder }
+  context = { ...context, ...createViewportStores(context) }
+  context = { ...context, ...createReorderStores(context) }
+  context = { ...context, ...createInterfaceStores(context) }
 
   // Keep config store up to date
   $: config.set({
@@ -94,14 +77,7 @@
     <StickyColumn />
     <div class="sheet-main">
       <HeaderRow />
-      <SheetBody>
-        {#each $visibleRows as row}
-          <SheetRow {row} />
-        {/each}
-        {#if allowAddRows}
-          <NewRow />
-        {/if}
-      </SheetBody>
+      <SheetBody />
     </div>
     <DeleteButton />
     <ResizeOverlay />
