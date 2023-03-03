@@ -70,12 +70,20 @@ export const useBackups = () => {
   return useFeature(Feature.APP_BACKUPS)
 }
 
+export const useEnforceableSSO = () => {
+  return useFeature(Feature.ENFORCEABLE_SSO)
+}
+
 export const useGroups = () => {
   return useFeature(Feature.USER_GROUPS)
 }
 
 export const useEnvironmentVariables = () => {
   return useFeature(Feature.ENVIRONMENT_VARIABLES)
+}
+
+export const useAuditLogs = () => {
+  return useFeature(Feature.AUDIT_LOGS)
 }
 
 // QUOTAS

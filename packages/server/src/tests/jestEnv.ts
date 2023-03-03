@@ -8,3 +8,4 @@ process.env.BUDIBASE_DIR = tmpdir("budibase-unittests")
 process.env.LOG_LEVEL = process.env.LOG_LEVEL || "error"
 process.env.ENABLE_4XX_HTTP_LOGGING = "0"
 process.env.MOCK_REDIS = "1"
+process.env.PLATFORM_URL = "http://localhost:10000"

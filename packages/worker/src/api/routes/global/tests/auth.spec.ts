@@ -106,12 +106,12 @@ describe("/api/global/auth", () => {
             tenantId,
             email,
             password,
-            { status: 400 }
+            { status: 403 }
           )
 
           expect(response.body).toEqual({
-            message: "SSO user cannot login using password",
-            status: 400,
+            message: "Invalid credentials",
+            status: 403,
           })
         }
 
@@ -170,18 +170,8 @@ describe("/api/global/auth", () => {
         async function testSSOUser() {
           const { res } = await config.api.auth.requestPasswordReset(
             sendMailMock,
-            user.email,
-            { status: 400 }
+            user.email
           )
-
-          expect(res.body).toEqual({
-            message: "SSO user cannot reset password",
-            status: 400,
-            error: {
-              code: "http",
-              type: "generic",
-            },
-          })
           expect(sendMailMock).not.toHaveBeenCalled()
         }
 
@@ -367,7 +357,7 @@ describe("/api/global/auth", () => {
 
         const res = await config.api.configs.OIDCCallback(configId, preAuthRes)
 
-        expect(events.auth.login).toBeCalledWith("oidc")
+        expect(events.auth.login).toBeCalledWith("oidc", "oauth@example.com")
         expect(events.auth.login).toBeCalledTimes(1)
         expect(res.status).toBe(302)
         const location: string = res.get("location")

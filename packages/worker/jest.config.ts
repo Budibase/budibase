@@ -7,7 +7,7 @@ const config: Config.InitialOptions = {
   preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./src/tests/jestEnv.ts"],
   setupFilesAfterEnv: ["./src/tests/jestSetup.ts"],
-  collectCoverageFrom: ["src/**/*.{js,ts}"],
+  collectCoverageFrom: ["src/**/*.{js,ts}", "../backend-core/src/**/*.{js,ts}"],
   coverageReporters: ["lcov", "json", "clover"],
   transform: {
     "^.+\\.ts?$": "@swc/jest",

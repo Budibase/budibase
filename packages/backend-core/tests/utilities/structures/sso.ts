@@ -1,6 +1,7 @@
 import {
   GoogleInnerConfig,
   JwtClaims,
+  OAuth2,
   OIDCInnerConfig,
   OIDCWellKnownConfig,
   SSOAuthDetails,
@@ -8,8 +9,40 @@ import {
   SSOProviderType,
   User,
 } from "@budibase/types"
-import { uuid, generator, users, email } from "./index"
+import { generator } from "./generator"
+import { uuid, email } from "./common"
+import * as shared from "./shared"
 import _ from "lodash"
+import { user } from "./shared"
+
+export function OAuth(): OAuth2 {
+  return {
+    refreshToken: generator.string(),
+    accessToken: generator.string(),
+  }
+}
+
+export function authDetails(userDoc?: User): SSOAuthDetails {
+  if (!userDoc) {
+    userDoc = user()
+  }
+
+  const userId = userDoc._id || uuid()
+  const provider = generator.string()
+
+  const profile = ssoProfile(userDoc)
+  profile.provider = provider
+  profile.id = userId
+
+  return {
+    email: userDoc.email,
+    oauth2: OAuth(),
+    profile,
+    provider,
+    providerType: providerType(),
+    userId,
+  }
+}
 
 export function providerType(): SSOProviderType {
   return _.sample(Object.values(SSOProviderType)) as SSOProviderType
@@ -17,7 +50,7 @@ export function providerType(): SSOProviderType {
 
 export function ssoProfile(user?: User): SSOProfile {
   if (!user) {
-    user = users.user()
+    user = shared.user()
   }
   return {
     id: user._id!,
@@ -33,31 +66,6 @@ export function ssoProfile(user?: User): SSOProfile {
   }
 }
 
-export function authDetails(user?: User): SSOAuthDetails {
-  if (!user) {
-    user = users.user()
-  }
-
-  const userId = user._id || uuid()
-  const provider = generator.string()
-
-  const profile = ssoProfile(user)
-  profile.provider = provider
-  profile.id = userId
-
-  return {
-    email: user.email,
-    oauth2: {
-      refreshToken: generator.string(),
-      accessToken: generator.string(),
-    },
-    profile,
-    provider,
-    providerType: providerType(),
-    userId,
-  }
-}
-
 // OIDC
 
 export function oidcConfig(): OIDCInnerConfig {
@@ -69,6 +77,7 @@ export function oidcConfig(): OIDCInnerConfig {
     configUrl: "http://someconfigurl",
     clientID: generator.string(),
     clientSecret: generator.string(),
+    scopes: [],
   }
 }
 

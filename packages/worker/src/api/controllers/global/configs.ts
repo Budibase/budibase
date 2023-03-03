@@ -2,37 +2,36 @@ import * as email from "../../../utilities/email"
 import env from "../../../environment"
 import { googleCallbackUrl, oidcCallbackUrl } from "./auth"
 import {
-  events,
   cache,
-  objectStore,
-  tenancy,
+  configs,
   db as dbCore,
   env as coreEnv,
+  events,
+  objectStore,
+  tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
-  Database,
-  Config as ConfigDoc,
+  Config,
   ConfigType,
-  SSOType,
-  GoogleConfig,
-  OIDCConfig,
-  SettingsConfig,
+  Ctx,
+  GetPublicOIDCConfigResponse,
+  GetPublicSettingsResponse,
+  GoogleInnerConfig,
   isGoogleConfig,
   isOIDCConfig,
   isSettingsConfig,
   isSMTPConfig,
-  Ctx,
+  OIDCConfigs,
+  SettingsInnerConfig,
+  SSOConfig,
+  SSOConfigType,
   UserCtx,
 } from "@budibase/types"
+import * as pro from "@budibase/pro"
 
-const getEventFns = async (db: Database, config: ConfigDoc) => {
+const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
-
-  let existing
-  if (config._id) {
-    existing = await db.get(config._id)
-  }
 
   if (!existing) {
     if (isSMTPConfig(config)) {
@@ -125,23 +124,87 @@ const getEventFns = async (db: Database, config: ConfigDoc) => {
   return fns
 }
 
-export async function save(ctx: UserCtx) {
-  const db = tenancy.getGlobalDB()
-  const { type, workspace, user, config } = ctx.request.body
-  let eventFns = await getEventFns(db, ctx.request.body)
-  // Config does not exist yet
-  if (!ctx.request.body._id) {
-    ctx.request.body._id = dbCore.generateConfigID({
-      type,
-      workspace,
-      user,
-    })
+type SSOConfigs = { [key in SSOConfigType]: SSOConfig | undefined }
+
+async function getSSOConfigs(): Promise<SSOConfigs> {
+  const google = await configs.getGoogleConfig()
+  const oidc = await configs.getOIDCConfig()
+  return {
+    [ConfigType.GOOGLE]: google,
+    [ConfigType.OIDC]: oidc,
   }
+}
+
+async function hasActivatedConfig(ssoConfigs?: SSOConfigs) {
+  if (!ssoConfigs) {
+    ssoConfigs = await getSSOConfigs()
+  }
+  return !!Object.values(ssoConfigs).find(c => c?.activated)
+}
+
+async function verifySettingsConfig(config: SettingsInnerConfig) {
+  if (config.isSSOEnforced) {
+    const valid = await hasActivatedConfig()
+    if (!valid) {
+      throw new Error("Cannot enforce SSO without an activated configuration")
+    }
+  }
+}
+
+async function verifySSOConfig(type: SSOConfigType, config: SSOConfig) {
+  const settings = await configs.getSettingsConfig()
+  if (settings.isSSOEnforced && !config.activated) {
+    // config is being saved as deactivated
+    // ensure there is at least one other activated sso config
+    const ssoConfigs = await getSSOConfigs()
+
+    // overwrite the config being updated
+    // to reflect the desired state
+    ssoConfigs[type] = config
+
+    const activated = await hasActivatedConfig(ssoConfigs)
+    if (!activated) {
+      throw new Error(
+        "Configuration cannot be deactivated while SSO is enforced"
+      )
+    }
+  }
+}
+
+async function verifyGoogleConfig(config: GoogleInnerConfig) {
+  await verifySSOConfig(ConfigType.GOOGLE, config)
+}
+
+async function verifyOIDCConfig(config: OIDCConfigs) {
+  await verifySSOConfig(ConfigType.OIDC, config.configs[0])
+}
+
+export async function save(ctx: UserCtx<Config>) {
+  const body = ctx.request.body
+  const type = body.type
+  const config = body.config
+
+  const existingConfig = await configs.getConfig(type)
+  let eventFns = await getEventFns(ctx.request.body, existingConfig)
+
+  if (existingConfig) {
+    body._rev = existingConfig._rev
+  }
+
   try {
     // verify the configuration
     switch (type) {
       case ConfigType.SMTP:
         await email.verifyConfig(config)
+        break
+      case ConfigType.SETTINGS:
+        await verifySettingsConfig(config)
+        break
+      case ConfigType.GOOGLE:
+        await verifyGoogleConfig(config)
+        break
+      case ConfigType.OIDC:
+        await verifyOIDCConfig(config)
         break
     }
   } catch (err: any) {
@@ -149,7 +212,8 @@ export async function save(ctx: UserCtx) {
   }
 
   try {
-    const response = await db.put(ctx.request.body)
+    body._id = configs.generateConfigID(type)
+    const response = await configs.save(body)
     await cache.bustCache(cache.CacheKey.CHECKLIST)
     await cache.bustCache(cache.CacheKey.ANALYTICS_ENABLED)
 
@@ -167,44 +231,11 @@ export async function save(ctx: UserCtx) {
   }
 }
 
-export async function fetch(ctx: UserCtx) {
-  const db = tenancy.getGlobalDB()
-  const response = await db.allDocs(
-    dbCore.getConfigParams(
-      { type: ctx.params.type },
-      {
-        include_docs: true,
-      }
-    )
-  )
-  ctx.body = response.rows.map(row => row.doc)
-}
-
-/**
- * Gets the most granular config for a particular configuration type.
- * The hierarchy is type -> workspace -> user.
- */
 export async function find(ctx: UserCtx) {
-  const db = tenancy.getGlobalDB()
-
-  const { userId, workspaceId } = ctx.query
-  if (workspaceId && userId) {
-    const workspace = await db.get(workspaceId as string)
-    const userInWorkspace = workspace.users.some(
-      (workspaceUser: any) => workspaceUser === userId
-    )
-    if (!ctx.user!.admin && !userInWorkspace) {
-      ctx.throw(400, `User is not in specified workspace: ${workspace}.`)
-    }
-  }
-
   try {
     // Find the config with the most granular scope based on context
-    const scopedConfig = await dbCore.getScopedFullConfig(db, {
-      type: ctx.params.type,
-      user: userId,
-      workspace: workspaceId,
-    })
+    const type = ctx.params.type
+    const scopedConfig = await configs.getConfig(type)
 
     if (scopedConfig) {
       ctx.body = scopedConfig
@@ -217,85 +248,70 @@ export async function find(ctx: UserCtx) {
   }
 }
 
-export async function publicOidc(ctx: Ctx) {
-  const db = tenancy.getGlobalDB()
+export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
   try {
     // Find the config with the most granular scope based on context
-    const oidcConfig: OIDCConfig = await dbCore.getScopedFullConfig(db, {
-      type: ConfigType.OIDC,
-    })
+    const config = await configs.getOIDCConfig()
 
-    if (!oidcConfig) {
-      ctx.body = {}
+    if (!config) {
+      ctx.body = []
     } else {
-      ctx.body = oidcConfig.config.configs.map(config => ({
-        logo: config.logo,
-        name: config.name,
-        uuid: config.uuid,
-      }))
+      ctx.body = [
+        {
+          logo: config.logo,
+          name: config.name,
+          uuid: config.uuid,
+        },
+      ]
     }
   } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-export async function publicSettings(ctx: Ctx) {
-  const db = tenancy.getGlobalDB()
-
+export async function publicSettings(
+  ctx: Ctx<void, GetPublicSettingsResponse>
+) {
   try {
-    // Find the config with the most granular scope based on context
-    const publicConfig = await dbCore.getScopedFullConfig(db, {
-      type: ConfigType.SETTINGS,
-    })
-
-    const googleConfig = await dbCore.getScopedFullConfig(db, {
-      type: ConfigType.GOOGLE,
-    })
-
-    const oidcConfig = await dbCore.getScopedFullConfig(db, {
-      type: ConfigType.OIDC,
-    })
-
-    let config
-    if (!publicConfig) {
-      config = {
-        config: {},
-      }
-    } else {
-      config = publicConfig
-    }
-
-    // enrich the logo url
-    // empty url means deleted
-    if (config.config.logoUrl && config.config.logoUrl !== "") {
-      config.config.logoUrl = objectStore.getGlobalFileUrl(
+    // settings
+    const configDoc = await configs.getSettingsConfigDoc()
+    const config = configDoc.config
+    // enrich the logo url - empty url means deleted
+    if (config.logoUrl && config.logoUrl !== "") {
+      config.logoUrl = objectStore.getGlobalFileUrl(
         "settings",
         "logoUrl",
-        config.config.logoUrlEtag
+        config.logoUrlEtag
       )
     }
 
-    // google button flag
-    if (googleConfig && googleConfig.config) {
-      // activated by default for configs pre-activated flag
-      config.config.google =
-        googleConfig.config.activated == null || googleConfig.config.activated
-    } else {
-      config.config.google = false
+    // google
+    const googleConfig = await configs.getGoogleConfig()
+    const preActivated = googleConfig?.activated == null
+    const google = preActivated || !!googleConfig?.activated
+    const _googleCallbackUrl = await googleCallbackUrl(googleConfig)
+
+    // oidc
+    const oidcConfig = await configs.getOIDCConfig()
+    const oidc = oidcConfig?.activated || false
+    const _oidcCallbackUrl = await oidcCallbackUrl()
+
+    // sso enforced
+    const isSSOEnforced = await pro.features.isSSOEnforced({ config })
+
+    ctx.body = {
+      type: ConfigType.SETTINGS,
+      _id: configDoc._id,
+      _rev: configDoc._rev,
+      config: {
+        ...config,
+        google,
+        oidc,
+        isSSOEnforced,
+        oidcCallbackUrl: _oidcCallbackUrl,
+        googleCallbackUrl: _googleCallbackUrl,
+      },
     }
-
-    // callback urls
-    config.config.oidcCallbackUrl = await oidcCallbackUrl()
-    config.config.googleCallbackUrl = await googleCallbackUrl()
-
-    // oidc button flag
-    if (oidcConfig && oidcConfig.config) {
-      config.config.oidc = oidcConfig.config.configs[0].activated
-    } else {
-      config.config.oidc = false
-    }
-
-    ctx.body = config
   } catch (err: any) {
     ctx.throw(err.status, err)
   }
@@ -319,12 +335,11 @@ export async function upload(ctx: UserCtx) {
   })
 
   // add to configuration structure
-  // TODO: right now this only does a global level
-  const db = tenancy.getGlobalDB()
-  let cfgStructure = await dbCore.getScopedFullConfig(db, { type })
-  if (!cfgStructure) {
-    cfgStructure = {
-      _id: dbCore.generateConfigID({ type }),
+  let config = await configs.getConfig(type)
+  if (!config) {
+    config = {
+      _id: configs.generateConfigID(type),
+      type,
       config: {},
     }
   }
@@ -332,14 +347,14 @@ export async function upload(ctx: UserCtx) {
   // save the Etag for cache bursting
   const etag = result.ETag
   if (etag) {
-    cfgStructure.config[`${name}Etag`] = etag.replace(/"/g, "")
+    config.config[`${name}Etag`] = etag.replace(/"/g, "")
   }
 
   // save the file key
-  cfgStructure.config[`${name}`] = key
+  config.config[`${name}`] = key
 
   // write back to db
-  await db.put(cfgStructure)
+  await configs.save(config)
 
   ctx.body = {
     message: "File has been uploaded and url stored to config.",
@@ -360,7 +375,6 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function configChecklist(ctx: Ctx) {
-  const db = tenancy.getGlobalDB()
   const tenantId = tenancy.getTenantId()
 
   try {
@@ -375,19 +389,13 @@ export async function configChecklist(ctx: Ctx) {
         }
 
         // They have set up SMTP
-        const smtpConfig = await dbCore.getScopedFullConfig(db, {
-          type: ConfigType.SMTP,
-        })
+        const smtpConfig = await configs.getSMTPConfig()
 
         // They have set up Google Auth
-        const googleConfig = await dbCore.getScopedFullConfig(db, {
-          type: ConfigType.GOOGLE,
-        })
+        const googleConfig = await configs.getGoogleConfig()
 
         // They have set up OIDC
-        const oidcConfig = await dbCore.getScopedFullConfig(db, {
-          type: ConfigType.OIDC,
-        })
+        const oidcConfig = await configs.getOIDCConfig()
 
         // They have set up a global user
         const userExists = await checkAnyUserExists()

@@ -1829,7 +1829,7 @@
   "paths": {
     "/applications": {
       "post": {
-        "operationId": "create",
+        "operationId": "appCreate",
         "summary": "Create an application",
         "tags": [
           "applications"
@@ -1870,7 +1870,7 @@
     },
     "/applications/{appId}": {
       "put": {
-        "operationId": "update",
+        "operationId": "appUpdate",
         "summary": "Update an application",
         "tags": [
           "applications"
@@ -1909,7 +1909,7 @@
         }
       },
       "delete": {
-        "operationId": "destroy",
+        "operationId": "appDestroy",
         "summary": "Delete an application",
         "tags": [
           "applications"
@@ -1938,7 +1938,7 @@
         }
       },
       "get": {
-        "operationId": "getById",
+        "operationId": "appGetById",
         "summary": "Retrieve an application",
         "tags": [
           "applications"
@@ -1969,7 +1969,7 @@
     },
     "/applications/{appId}/unpublish": {
       "post": {
-        "operationId": "unpublish",
+        "operationId": "appUnpublish",
         "summary": "Unpublish an application",
         "tags": [
           "applications"
@@ -1988,7 +1988,7 @@
     },
     "/applications/{appId}/publish": {
       "post": {
-        "operationId": "publish",
+        "operationId": "appPublish",
         "summary": "Unpublish an application",
         "tags": [
           "applications"
@@ -2019,7 +2019,7 @@
     },
     "/applications/search": {
       "post": {
-        "operationId": "search",
+        "operationId": "appSearch",
         "summary": "Search for applications",
         "description": "Based on application properties (currently only name) search for applications.",
         "tags": [
@@ -2056,7 +2056,7 @@
     },
     "/queries/{queryId}": {
       "post": {
-        "operationId": "execute",
+        "operationId": "queryExecute",
         "summary": "Execute a query",
         "description": "Queries which have been created within a Budibase app can be executed using this,",
         "tags": [
@@ -2104,7 +2104,7 @@
     },
     "/queries/search": {
       "post": {
-        "operationId": "search",
+        "operationId": "querySearch",
         "summary": "Search for queries",
         "description": "Based on query properties (currently only name) search for queries.",
         "tags": [
@@ -2146,7 +2146,7 @@
     },
     "/tables/{tableId}/rows": {
       "post": {
-        "operationId": "create",
+        "operationId": "rowCreate",
         "summary": "Create a row",
         "description": "Creates a row within the specified table.",
         "tags": [
@@ -2196,7 +2196,7 @@
     },
     "/tables/{tableId}/rows/{rowId}": {
       "put": {
-        "operationId": "update",
+        "operationId": "rowUpdate",
         "summary": "Update a row",
         "description": "Updates a row within the specified table.",
         "tags": [
@@ -2247,7 +2247,7 @@
         }
       },
       "delete": {
-        "operationId": "destroy",
+        "operationId": "rowDestroy",
         "summary": "Delete a row",
         "description": "Deletes a row within the specified table.",
         "tags": [
@@ -2283,7 +2283,7 @@
         }
       },
       "get": {
-        "operationId": "getById",
+        "operationId": "rowGetById",
         "summary": "Retrieve a row",
         "description": "This gets a single row, it will be enriched with the full related rows, rather than the squashed \"primaryDisplay\" format returned by the search endpoint.",
         "tags": [
@@ -2321,7 +2321,7 @@
     },
     "/tables/{tableId}/rows/search": {
       "post": {
-        "operationId": "search",
+        "operationId": "rowSearch",
         "summary": "Search for rows",
         "tags": [
           "rows"
@@ -2365,7 +2365,7 @@
     },
     "/tables": {
       "post": {
-        "operationId": "create",
+        "operationId": "tableCreate",
         "summary": "Create a table",
         "description": "Create a table, this could be internal or external.",
         "tags": [
@@ -2411,7 +2411,7 @@
     },
     "/tables/{tableId}": {
       "put": {
-        "operationId": "update",
+        "operationId": "tableUpdate",
         "summary": "Update a table",
         "description": "Update a table, this could be internal or external.",
         "tags": [
@@ -2458,7 +2458,7 @@
         }
       },
       "delete": {
-        "operationId": "destroy",
+        "operationId": "tableDestroy",
         "summary": "Delete a table",
         "description": "Delete a table, this could be internal or external.",
         "tags": [
@@ -2491,7 +2491,7 @@
         }
       },
       "get": {
-        "operationId": "getById",
+        "operationId": "tableGetById",
         "summary": "Retrieve a table",
         "description": "Lookup a table, this could be internal or external.",
         "tags": [
@@ -2526,7 +2526,7 @@
     },
     "/tables/search": {
       "post": {
-        "operationId": "search",
+        "operationId": "tableSearch",
         "summary": "Search for tables",
         "description": "Based on table properties (currently only name) search for tables. This could be an internal or an external table.",
         "tags": [
@@ -2568,7 +2568,7 @@
     },
     "/users": {
       "post": {
-        "operationId": "create",
+        "operationId": "userCreate",
         "summary": "Create a user",
         "tags": [
           "users"
@@ -2604,7 +2604,7 @@
     },
     "/users/{userId}": {
       "put": {
-        "operationId": "update",
+        "operationId": "userUpdate",
         "summary": "Update a user",
         "tags": [
           "users"
@@ -2643,7 +2643,7 @@
         }
       },
       "delete": {
-        "operationId": "destroy",
+        "operationId": "userDestroy",
         "summary": "Delete a user",
         "tags": [
           "users"
@@ -2672,7 +2672,7 @@
         }
       },
       "get": {
-        "operationId": "getById",
+        "operationId": "userGetById",
         "summary": "Retrieve a user",
         "tags": [
           "users"
@@ -2703,7 +2703,7 @@
     },
     "/users/search": {
       "post": {
-        "operationId": "search",
+        "operationId": "userSearch",
         "summary": "Search for users",
         "description": "Based on user properties (currently only name) search for users.",
         "tags": [

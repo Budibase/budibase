@@ -1,4 +1,9 @@
-import { events, db as dbUtils } from "@budibase/backend-core"
+import {
+  events,
+  DocumentType,
+  SEPARATOR,
+  UNICODE_MAX,
+} from "@budibase/backend-core"
 import {
   Config,
   isSMTPConfig,
@@ -9,15 +14,16 @@ import {
 } from "@budibase/types"
 import env from "./../../../../environment"
 
+export const getConfigParams = () => {
+  return {
+    include_docs: true,
+    startkey: `${DocumentType.CONFIG}${SEPARATOR}`,
+    endkey: `${DocumentType.CONFIG}${SEPARATOR}${UNICODE_MAX}`,
+  }
+}
+
 const getConfigs = async (globalDb: any): Promise<Config[]> => {
-  const response = await globalDb.allDocs(
-    dbUtils.getConfigParams(
-      {},
-      {
-        include_docs: true,
-      }
-    )
-  )
+  const response = await globalDb.allDocs(getConfigParams())
   return response.rows.map((row: any) => row.doc)
 }
 

@@ -13,15 +13,14 @@
     notifications,
   } from "@budibase/bbui"
 
-  import RevertModal from "components/deploy/RevertModal.svelte"
-  import VersionModal from "components/deploy/VersionModal.svelte"
-  import DeployNavigation from "components/deploy/DeployNavigation.svelte"
+  import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
+  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
 
   export let application
@@ -69,22 +68,32 @@
   }
 
   const initTour = async () => {
-    if (
-      !$auth.user?.onboardedAt &&
-      isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)
-    ) {
-      // Determine the correct step
-      const activeNav = $layout.children.find(c => $isActive(c.path))
-      const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
-      const targetStep = activeNav
-        ? onboardingTour.find(step => step.route === activeNav?.path)
-        : null
-      await store.update(state => ({
-        ...state,
-        onboarding: true,
-        tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
-        tourStepKey: targetStep?.id,
-      }))
+    // Check if onboarding is enabled.
+    if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
+      if (!$auth.user?.onboardedAt) {
+        // Determine the correct step
+        const activeNav = $layout.children.find(c => $isActive(c.path))
+        const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
+        const targetStep = activeNav
+          ? onboardingTour.find(step => step.route === activeNav?.path)
+          : null
+        await store.update(state => ({
+          ...state,
+          onboarding: true,
+          tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
+          tourStepKey: targetStep?.id,
+        }))
+      } else {
+        // Feature tour date
+        const release_date = new Date("2023-03-01T00:00:00.000Z")
+        const onboarded = new Date($auth.user?.onboardedAt)
+        if (onboarded < release_date) {
+          await store.update(state => ({
+            ...state,
+            tourKey: TOUR_KEYS.FEATURE_ONBOARDING,
+          }))
+        }
+      }
     }
   }
 
@@ -116,6 +125,11 @@
   <div class="loading" />
 {:then _}
   <TourPopover />
+
+  {#if $store.builderSidePanel}
+    <BuilderSidePanel />
+  {/if}
+
   <div class="root">
     <div class="top-nav">
       <div class="topleftnav">
@@ -181,11 +195,7 @@
         </Tabs>
       </div>
       <div class="toprightnav">
-        <div class="version">
-          <VersionModal />
-        </div>
-        <RevertModal />
-        <DeployNavigation {application} />
+        <AppActions {application} />
       </div>
     </div>
     <slot />
@@ -250,10 +260,6 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-xl);
-  }
-
-  .version {
-    margin-right: var(--spacing-s);
+    gap: var(--spacing-l);
   }
 </style>
