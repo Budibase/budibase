@@ -1,31 +1,10 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Modal, ModalContent } from "@budibase/bbui"
+  import { ActionButton } from "@budibase/bbui"
 
-  const { selectedRows, rows, selectedCellId } = getContext("spreadsheet")
+  const { rows } = getContext("spreadsheet")
 
-  let modal
-
-  $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
   $: rowCount = $rows.length
-  $: rowsToDelete = Object.entries($selectedRows)
-    .map(entry => {
-      if (entry[1] === true) {
-        return $rows.find(x => x._id === entry[0])
-      } else {
-        return null
-      }
-    })
-    .filter(x => x != null)
-
-  // Deletion callback when confirmed
-  const performDeletion = async () => {
-    await rows.actions.deleteRows(rowsToDelete)
-
-    // Refresh state
-    $selectedCellId = null
-    $selectedRows = {}
-  }
 </script>
 
 <div class="controls">
@@ -37,28 +16,9 @@
   </div>
   <div class="title" />
   <div class="delete">
-    {#if selectedRowCount}
-      <ActionButton icon="Delete" size="S" on:click={modal.show}>
-        Delete {selectedRowCount} row{selectedRowCount === 1 ? "" : "s"}
-      </ActionButton>
-    {:else}
-      {rowCount} row{rowCount === 1 ? "" : "s"}
-    {/if}
+    {rowCount} row{rowCount === 1 ? "" : "s"}
   </div>
 </div>
-
-<Modal bind:this={modal}>
-  <ModalContent
-    title="Add screens"
-    confirmText="Continue"
-    cancelText="Cancel"
-    onConfirm={performDeletion}
-    size="M"
-  >
-    Are you sure you want to delete {selectedRowCount}
-    row{selectedRowCount === 1 ? "" : "s"}?
-  </ModalContent>
-</Modal>
 
 <style>
   .controls {
@@ -81,19 +41,5 @@
     align-items: center;
     gap: calc(1 * var(--cell-spacing));
     margin-left: -8px;
-  }
-  .delete {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    color: var(--spectrum-global-color-gray-900);
-    font-size: 14px;
-  }
-  .delete :global(.spectrum-ActionButton) {
-    color: var(--spectrum-global-color-red-600);
-  }
-  .delete :global(.spectrum-Icon) {
-    fill: var(--spectrum-global-color-red-600);
   }
 </style>
