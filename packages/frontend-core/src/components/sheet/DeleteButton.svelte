@@ -2,7 +2,7 @@
   import { Modal, ModalContent, Button } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { selectedRows, rows, selectedCellId } = getContext("spreadsheet")
+  const { selectedRows, rows } = getContext("spreadsheet")
 
   let modal
 
