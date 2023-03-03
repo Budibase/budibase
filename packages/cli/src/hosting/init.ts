@@ -3,7 +3,7 @@ import { confirmation } from "../questions"
 import { captureEvent } from "../events"
 import * as makeFiles from "./makeFiles"
 import { parseEnv } from "../utils"
-import { checkDockerConfigured, downloadFiles } from "./utils"
+import { checkDockerConfigured, downloadDockerCompose } from "./utils"
 import { watchPlugins } from "./watch"
 import { generateUser } from "./genUser"
 import fetch from "node-fetch"
@@ -61,7 +61,7 @@ export async function init(opts: any) {
   })
   const config = await getInitConfig(type, isQuick, port)
   if (!isSingle) {
-    await downloadFiles()
+    await downloadDockerCompose()
     await makeFiles.makeEnv(config, silent)
   } else {
     await makeFiles.makeSingleCompose(config, silent)

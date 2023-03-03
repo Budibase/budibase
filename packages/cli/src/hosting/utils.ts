@@ -6,17 +6,16 @@ import yaml from "yaml"
 import { DockerCompose } from "./types"
 
 const ERROR_FILE = "docker-error.log"
-const FILE_URLS = [
-  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
-]
+const COMPOSE_URL =
+  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml"
 
-export async function downloadFiles() {
-  const promises = []
-  for (let url of FILE_URLS) {
-    const fileName = url.split("/").slice(-1)[0]
-    promises.push(downloadFile(url, `./${fileName}`))
+export async function downloadDockerCompose() {
+  const fileName = COMPOSE_URL.split("/").slice(-1)[0]
+  try {
+    await downloadFile(COMPOSE_URL, `./${fileName}`)
+  } catch (err) {
+    console.error(error(`Failed to retrieve compose file - ${err}`))
   }
-  await Promise.all(promises)
 }
 
 export async function checkDockerConfigured() {

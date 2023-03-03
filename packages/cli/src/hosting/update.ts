@@ -1,7 +1,7 @@
 import {
   checkDockerConfigured,
   checkInitComplete,
-  downloadFiles,
+  downloadDockerCompose,
   handleError,
   getServices,
 } from "./utils"
@@ -23,7 +23,7 @@ export async function update() {
     !isSingle &&
     (await confirmation("Do you wish to update you docker-compose.yaml?"))
   ) {
-    await downloadFiles()
+    await downloadDockerCompose()
   }
   await handleError(async () => {
     const status = await compose.ps()
