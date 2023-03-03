@@ -144,7 +144,11 @@
       {/each}
 
       {#if $config.allowAddRows}
-        <div class="row new" on:mouseover={() => ($hoveredRowId = "new")}>
+        <div
+          class="row new"
+          on:focus
+          on:mouseover={() => ($hoveredRowId = "new")}
+        >
           <SheetCell
             rowHovered={$hoveredRowId === "new"}
             label

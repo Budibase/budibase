@@ -20,7 +20,7 @@ export const createRowsStore = context => {
 
   // Local stores for managing fetching data
   const query = derived(filter, $filter => buildLuceneQuery($filter))
-  const fetch = derived([tableId, filter], ([$tableId, $filter]) => {
+  const fetch = derived([tableId, query], ([$tableId, $query]) => {
     if (!$tableId) {
       return null
     }
@@ -37,7 +37,7 @@ export const createRowsStore = context => {
       options: {
         sortColumn: null,
         sortOrder: null,
-        query: get(query),
+        query: $query,
         limit: 100,
         paginate: true,
       },

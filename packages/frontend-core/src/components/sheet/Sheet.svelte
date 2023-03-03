@@ -10,10 +10,8 @@
   import { createInterfaceStores } from "./stores/interface"
   import DeleteButton from "./DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
-  import SheetRow from "./SheetRow.svelte"
   import ResizeOverlay from "./ResizeOverlay.svelte"
   import HeaderRow from "./HeaderRow.svelte"
-  import NewRow from "./NewRow.svelte"
   import { createAPIClient } from "../../api"
   import ScrollOverlay from "./ScrollOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
@@ -24,8 +22,6 @@
   export let allowAddRows = true
   export let allowSelectRows = true
   export let filter
-  // export let sortColumn
-  // export let sortOrder
 
   // Sheet constants
   const cellHeight = 40

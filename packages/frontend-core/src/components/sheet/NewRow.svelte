@@ -17,6 +17,7 @@
 
 <div
   class="row"
+  on:focus
   on:mouseover={() => ($hoveredRowId = "new")}
   on:mouseleave={() => ($hoveredRowId = null)}
 >
