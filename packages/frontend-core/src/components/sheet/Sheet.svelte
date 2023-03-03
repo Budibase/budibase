@@ -6,7 +6,7 @@
   import { createRowsStore } from "./stores/rows"
   import { createColumnsStores } from "./stores/columns"
   import { createScrollStores } from "./stores/scroll"
-  import SheetControls from "./SheetControls.svelte"
+  import DeleteButton from "./DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import SheetRow from "./SheetRow.svelte"
   import ResizeOverlay from "./ResizeOverlay.svelte"
@@ -103,6 +103,7 @@
         {/if}
       </SheetBody>
     </div>
+    <DeleteButton />
     <ResizeOverlay />
     <ScrollOverlay />
   </div>

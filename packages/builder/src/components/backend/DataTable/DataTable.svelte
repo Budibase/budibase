@@ -112,6 +112,15 @@
         highlighted={!hasCols || !hasRows}
         on:updatecolumns={null}
       />
+      {#if !isUsersTable}
+        <CreateRowButton
+          on:updaterows={null}
+          title="Create row"
+          modalContentComponent={CreateEditRow}
+          disabled={!hasCols}
+          highlighted={hasCols && !hasRows}
+        />
+      {/if}
       {#if isInternal}
         <CreateViewButton disabled={!hasCols || !hasRows} />
       {/if}
