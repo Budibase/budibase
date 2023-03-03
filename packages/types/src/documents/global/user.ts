@@ -48,11 +48,16 @@ export interface User extends Document {
     global: boolean
   }
   password?: string
-  status?: string
+  status?: UserStatus
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
   dayPassRecordedAt?: string
   userGroups?: string[]
   onboardedAt?: string
+}
+
+export enum UserStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
 }
 
 export interface UserRoles {

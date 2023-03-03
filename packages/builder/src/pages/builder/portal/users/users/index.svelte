@@ -13,7 +13,7 @@
     Divider,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import { users, groups, auth, licensing } from "stores/portal"
+  import { users, groups, auth, licensing, organisation } from "stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
@@ -27,6 +27,7 @@
   import { get } from "svelte/store"
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "api"
+  import { OnboardingType } from "../../../../../constants"
 
   const fetch = fetchData({
     API,
@@ -105,10 +106,18 @@
   const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
 
   const showOnboardingTypeModal = async addUsersData => {
+    // no-op if users already exist
     userData = await removingDuplicities(addUsersData)
-    if (!userData?.users?.length) return
+    if (!userData?.users?.length) {
+      return
+    }
 
-    onboardingTypeModal.show()
+    if ($organisation.isSSOEnforced) {
+      // bypass the onboarding type selection of sso is enforced
+      await chooseCreationType(OnboardingType.EMAIL)
+    } else {
+      onboardingTypeModal.show()
+    }
   }
 
   async function createUserFlow() {
@@ -181,7 +190,7 @@
   }
 
   async function chooseCreationType(onboardingType) {
-    if (onboardingType === "emailOnboarding") {
+    if (onboardingType === OnboardingType.EMAIL) {
       await createUserFlow()
     } else {
       await createUsers()

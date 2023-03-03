@@ -1,6 +1,6 @@
 import { getAppClient } from "../redis/init"
 import { doWithDB, DocumentType } from "../db"
-import { Database } from "@budibase/types"
+import { Database, App } from "@budibase/types"
 
 const AppState = {
   INVALID: "invalid",
@@ -65,7 +65,7 @@ export async function getAppMetadata(appId: string) {
   if (isInvalid(metadata)) {
     throw { status: 404, message: "No app metadata found" }
   }
-  return metadata
+  return metadata as App
 }
 
 /**

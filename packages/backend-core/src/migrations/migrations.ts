@@ -87,6 +87,7 @@ export const runMigration = async (
     const lengthStatement = length > 1 ? `[${count}/${length}]` : ""
 
     const db = getDB(dbName)
+
     try {
       const doc = await getMigrationsDoc(db)
 

@@ -140,7 +140,12 @@ const buildUser = async (
     hashedPassword = opts.hashPassword ? await utils.hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
-  } else if (opts.requirePassword) {
+  }
+
+  // passwords are never required if sso is enforced
+  const requirePasswords =
+    opts.requirePassword && !(await pro.features.isSSOEnforced())
+  if (!hashedPassword && requirePasswords) {
     throw "Password must be specified."
   }
 

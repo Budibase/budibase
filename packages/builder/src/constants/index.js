@@ -62,3 +62,8 @@ export const PluginSource = {
   GITHUB: "Github",
   FILE: "File Upload",
 }
+
+export const OnboardingType = {
+  EMAIL: "email",
+  PASSWORD: "password",
+}
