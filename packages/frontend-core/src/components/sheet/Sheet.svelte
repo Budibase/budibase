@@ -18,7 +18,6 @@
 
   export let API
   export let tableId
-  export let allowAddColumns = true
   export let allowAddRows = true
   export let allowSelectRows = true
   export let filter
@@ -33,7 +32,6 @@
     tableId,
     filter,
     allowAddRows,
-    allowAddColumns,
     allowSelectRows,
   })
 
@@ -58,7 +56,6 @@
   $: config.set({
     tableId,
     filter,
-    allowAddColumns,
     allowAddRows,
     allowSelectRows,
   })
