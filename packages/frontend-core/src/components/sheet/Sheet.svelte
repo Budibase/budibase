@@ -1,5 +1,5 @@
 <script>
-  import { setContext, createEventDispatcher } from "svelte"
+  import { setContext, createEventDispatcher, onMount } from "svelte"
   import { writable } from "svelte/store"
   import { createReorderStores } from "./stores/reorder"
   import { createViewportStores } from "./stores/viewport"
@@ -15,6 +15,7 @@
   import { createAPIClient } from "../../api"
   import ScrollOverlay from "./ScrollOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
+  import { createWebsocket } from "./websocket"
 
   export let API
   export let tableId
@@ -62,6 +63,11 @@
 
   // Set context for children to consume
   setContext("spreadsheet", context)
+
+  // Initialise websocket for multi-user
+  onMount(() => {
+    return createWebsocket(context)
+  })
 </script>
 
 <div class="sheet" style="--cell-height:{cellHeight}px;" id="sheet-{rand}">

@@ -72,31 +72,6 @@ export const createRowsStore = context => {
     })
   })
 
-  // Local handler to process new rows inside the fetch, and append any new
-  // rows to state that we haven't encountered before
-  const handleNewRows = newRows => {
-    let rowsToAppend = []
-    let newRow
-    for (let i = 0; i < newRows.length; i++) {
-      newRow = newRows[i]
-      if (!rowCacheMap[newRow._id]) {
-        rowCacheMap[newRow._id] = true
-        rowsToAppend.push(newRow)
-      }
-    }
-    if (rowsToAppend.length) {
-      rows.update($rows => {
-        return [
-          ...$rows,
-          ...rowsToAppend.map((row, idx) => ({
-            ...row,
-            __idx: $rows.length + idx,
-          })),
-        ]
-      })
-    }
-  }
-
   // Adds a new empty row
   const addRow = async () => {
     try {
@@ -127,6 +102,43 @@ export const createRowsStore = context => {
     }
   }
 
+  // Refreshes a specific row, handling updates, addition or deletion
+  const refreshRow = async id => {
+    // Get index of row to check if it exists
+    const $rows = get(rows)
+    const index = $rows.findIndex(row => row._id === id)
+
+    // Fetch row from the server again
+    const res = await API.searchTable({
+      tableId: get(tableId),
+      limit: 1,
+      query: {
+        equal: {
+          _id: id,
+        },
+      },
+      paginate: false,
+    })
+    let newRow = res?.rows?.[0]
+
+    // Process as either an update, addition or deletion
+    if (newRow) {
+      if (index !== -1) {
+        // An existing row was updated
+        rows.update(state => {
+          state[index] = { ...newRow, __idx: index }
+          return state
+        })
+      } else {
+        // A new row was created
+        handleNewRows([newRow])
+      }
+    } else if (index !== -1) {
+      // A row was removed
+      handleRemoveRows([$rows[index]])
+    }
+  }
+
   // Updates a value of a row
   const updateRow = async (rowId, column, value) => {
     const $rows = get(rows)
@@ -151,35 +163,11 @@ export const createRowsStore = context => {
       notifications.error(`Error saving row: ${error?.message}`)
     }
 
-    // Fetch row from the server again
-    const res = await API.searchTable({
-      tableId: get(tableId),
-      limit: 1,
-      query: {
-        equal: {
-          _id: row._id,
-        },
-      },
-      paginate: false,
-    })
-    if (res?.rows?.[0]) {
-      newRow = res.rows[0]
-    }
-
-    // Update state again with this row
-    newRow = { ...newRow, __idx: row.__idx }
-    rows.update(state => {
-      state[index] = newRow
-      return state
-    })
-
-    return newRow
+    return await refreshRow(row._id)
   }
 
   // Deletes an array of rows
   const deleteRows = async rowsToDelete => {
-    const deletedIds = rowsToDelete.map(row => row._id)
-
     // Actually delete rows
     rowsToDelete.forEach(row => {
       delete row.__idx
@@ -190,6 +178,38 @@ export const createRowsStore = context => {
     })
 
     // Update state
+    handleRemoveRows(rowsToDelete)
+  }
+
+  // Local handler to process new rows inside the fetch, and append any new
+  // rows to state that we haven't encountered before
+  const handleNewRows = newRows => {
+    let rowsToAppend = []
+    let newRow
+    for (let i = 0; i < newRows.length; i++) {
+      newRow = newRows[i]
+      if (!rowCacheMap[newRow._id]) {
+        rowCacheMap[newRow._id] = true
+        rowsToAppend.push(newRow)
+      }
+    }
+    if (rowsToAppend.length) {
+      rows.update($rows => {
+        return [
+          ...$rows,
+          ...rowsToAppend.map((row, idx) => ({
+            ...row,
+            __idx: $rows.length + idx,
+          })),
+        ]
+      })
+    }
+  }
+
+  // Local handler to remove rows from state
+  const handleRemoveRows = rowsToRemove => {
+    const deletedIds = rowsToRemove.map(row => row._id)
+
     // We deliberately do not remove IDs from the cache map as the data may
     // still exist inside the fetch, but we don't want to add it again
     rows.update(state => {
@@ -217,6 +237,7 @@ export const createRowsStore = context => {
         updateRow,
         deleteRows,
         loadNextPage,
+        refreshRow,
       },
     },
     schema,
