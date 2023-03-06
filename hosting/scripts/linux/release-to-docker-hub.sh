@@ -9,10 +9,10 @@ fi
 
 echo "Tagging images with tag: $tag"
 
-docker tag proxy-service budibase/proxy:$tag
-docker tag app-service budibase/apps:$tag
-docker tag worker-service budibase/worker:$tag
+docker tag proxy-service starzeus/budibase-proxy:$tag
+docker tag app-service starzeus/budibase-apps:$tag
+docker tag worker-service starzeus/budibase-worker:$tag
 
-docker push --all-tags budibase/apps 
-docker push --all-tags budibase/worker
-docker push --all-tags budibase/proxy
+docker push starzeus/budibase-apps:$tag 
+docker push starzeus/budibase-worker:$tag
+docker push starzeus/budibase-proxy:$tag
