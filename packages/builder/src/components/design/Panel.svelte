@@ -17,32 +17,36 @@
 </script>
 
 <div class="panel" class:wide class:borderLeft class:borderRight>
-  <div class="header">
-    {#if showBackButton}
-      <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
-    {/if}
-    {#if icon}
-      <Icon name={icon} />
-    {/if}
-    <div class="title">
-      <Heading size="XXS">{title || ""}</Heading>
-    </div>
-    {#if expandable}
-      <Icon
-        name={wide ? "Minimize" : "Maximize"}
-        hoverable
-        on:click={() => (wide = !wide)}
-      />
-    {/if}
-    {#if showAddButton}
-      <div class="add-button" on:click={onClickAddButton}>
-        <Icon name="Add" />
+  <div class="header-wrap">
+    <div class="header">
+      {#if showBackButton}
+        <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
+      {/if}
+      {#if icon}
+        <Icon name={icon} />
+      {/if}
+      <div class="title">
+        <Heading size="XXS">{title || ""}</Heading>
       </div>
-    {/if}
-    {#if showCloseButton}
-      <Icon name="Close" hoverable on:click={onClickCloseButton} />
-    {/if}
+      {#if expandable}
+        <Icon
+          name={wide ? "Minimize" : "Maximize"}
+          hoverable
+          on:click={() => (wide = !wide)}
+        />
+      {/if}
+      {#if showAddButton}
+        <div class="add-button" on:click={onClickAddButton}>
+          <Icon name="Add" />
+        </div>
+      {/if}
+      {#if showCloseButton}
+        <Icon name="Close" hoverable on:click={onClickCloseButton} />
+      {/if}
+    </div>
+    <slot name="panel-header-content" />
   </div>
+
   <div class="body">
     <slot />
   </div>
@@ -76,8 +80,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 var(--spacing-l);
-    border-bottom: var(--border-light);
     gap: var(--spacing-l);
+  }
+  .header-wrap {
+    border-bottom: var(--border-light);
+    padding: var(--spacing-l) 0px;
   }
   .title {
     flex: 1 1 auto;
