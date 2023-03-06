@@ -1,13 +1,14 @@
 import {
-  DocumentType,
-  ViewName,
   DeprecatedViews,
+  DocumentType,
   SEPARATOR,
   StaticDatabases,
+  ViewName,
 } from "../constants"
 import { getGlobalDB } from "../context"
 import { doWithDB } from "./"
 import { Database, DatabaseQueryOpts } from "@budibase/types"
+import env from "../environment"
 
 const DESIGN_DB = "_design/database"
 
@@ -69,17 +70,6 @@ export const createNewUserEmailView = async () => {
   await createView(db, viewJs, ViewName.USER_BY_EMAIL)
 }
 
-export const createAccountEmailView = async () => {
-  const viewJs = `function(doc) {
-    if (doc._id.startsWith("${DocumentType.ACCOUNT_METADATA}${SEPARATOR}")) {
-      emit(doc.email.toLowerCase(), doc._id)
-    }
-  }`
-  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
-    await createView(db, viewJs, ViewName.ACCOUNT_BY_EMAIL)
-  })
-}
-
 export const createUserAppView = async () => {
   const db = getGlobalDB()
   const viewJs = `function(doc) {
@@ -111,17 +101,6 @@ export const createUserBuildersView = async () => {
     }
   }`
   await createView(db, viewJs, ViewName.USER_BY_BUILDERS)
-}
-
-export const createPlatformUserView = async () => {
-  const viewJs = `function(doc) {
-    if (doc.tenantId) {
-      emit(doc._id.toLowerCase(), doc._id)
-    }
-  }`
-  await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
-    await createView(db, viewJs, ViewName.PLATFORM_USERS_LOWERCASE)
-  })
 }
 
 export interface QueryViewOptions {
@@ -162,13 +141,48 @@ export const queryView = async <T>(
   }
 }
 
+// PLATFORM
+
+async function createPlatformView(viewJs: string, viewName: ViewName) {
+  try {
+    await doWithDB(StaticDatabases.PLATFORM_INFO.name, async (db: Database) => {
+      await createView(db, viewJs, viewName)
+    })
+  } catch (e: any) {
+    if (e.status === 409 && env.isTest()) {
+      // multiple tests can try to initialise platforms views
+      // at once - safe to exit on conflict
+      return
+    }
+    throw e
+  }
+}
+
+export const createPlatformAccountEmailView = async () => {
+  const viewJs = `function(doc) {
+    if (doc._id.startsWith("${DocumentType.ACCOUNT_METADATA}${SEPARATOR}")) {
+      emit(doc.email.toLowerCase(), doc._id)
+    }
+  }`
+  await createPlatformView(viewJs, ViewName.ACCOUNT_BY_EMAIL)
+}
+
+export const createPlatformUserView = async () => {
+  const viewJs = `function(doc) {
+    if (doc.tenantId) {
+      emit(doc._id.toLowerCase(), doc._id)
+    }
+  }`
+  await createPlatformView(viewJs, ViewName.PLATFORM_USERS_LOWERCASE)
+}
+
 export const queryPlatformView = async <T>(
   viewName: ViewName,
   params: DatabaseQueryOpts,
   opts?: QueryViewOptions
 ): Promise<T[] | T | undefined> => {
   const CreateFuncByName: any = {
-    [ViewName.ACCOUNT_BY_EMAIL]: createAccountEmailView,
+    [ViewName.ACCOUNT_BY_EMAIL]: createPlatformAccountEmailView,
     [ViewName.PLATFORM_USERS_LOWERCASE]: createPlatformUserView,
   }
 

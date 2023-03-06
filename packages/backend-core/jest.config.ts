@@ -9,15 +9,9 @@ const baseConfig: Config.InitialProjectOptions = {
   transform: {
     "^.+\\.ts?$": "@swc/jest",
   },
-}
-
-if (!process.env.CI) {
-  // use sources when not in CI
-  baseConfig.moduleNameMapper = {
+  moduleNameMapper: {
     "@budibase/types": "<rootDir>/../types/src",
-  }
-} else {
-  console.log("Running tests with compiled dependency sources")
+  },
 }
 
 const config: Config.InitialOptions = {

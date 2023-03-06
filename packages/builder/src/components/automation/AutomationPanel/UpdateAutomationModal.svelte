@@ -3,12 +3,12 @@
   import { notifications } from "@budibase/bbui"
   import { Icon, Input, ModalContent, Modal } from "@budibase/bbui"
 
+  export let automation
+  export let onCancel = undefined
+
   let name
   let error = ""
   let modal
-
-  export let automation
-  export let onCancel = undefined
 
   export const show = () => {
     name = automation?.name

@@ -18,6 +18,7 @@
   export let useAnchorWidth = false
   export let dismissible = true
   export let offset = 5
+  export let customHeight
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -74,6 +75,7 @@
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
       role="presentation"
+      style="height: {customHeight}"
       transition:fly|local={{ y: -20, duration: 200 }}
     >
       <slot />

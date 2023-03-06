@@ -1,9 +1,11 @@
 <script>
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { store, sortedScreens } from "builderStore"
+  import { store, sortedScreens, screenHistoryStore } from "builderStore"
   import { Select } from "@budibase/bbui"
   import { RoleUtils } from "@budibase/frontend-core"
+  import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import { isActive } from "@roxi/routify"
 </script>
 
 <div class="app-panel">
@@ -22,6 +24,9 @@
       />
     </div>
     <div class="header-right">
+      {#if $isActive("./screens") || $isActive("./components")}
+        <UndoRedoControl store={screenHistoryStore} />
+      {/if}
       {#if $store.clientFeatures.devicePreview}
         <DevicePreviewSelect />
       {/if}
@@ -52,6 +57,7 @@
     align-items: flex-start;
     gap: var(--spacing-l);
     margin: 0 2px;
+    z-index: 1;
   }
   .header-left,
   .header-right {
@@ -59,7 +65,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-l);
+    gap: var(--spacing-xl);
   }
   .header-left {
     flex: 1 1 auto;

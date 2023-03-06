@@ -107,7 +107,7 @@ jobs:
           wc -l values.preprod.yaml
 
       - name: Deploy to Preprod Environment
-        uses: glopezep/helm@v1.7.1
+        uses: budibase/helm@v1.8.0
         with:
           release: budibase-preprod
           namespace: budibase

@@ -1,6 +1,5 @@
 import { structures } from "@budibase/backend-core/tests"
 import * as configs from "./configs"
-import * as users from "./users"
 import * as groups from "./groups"
 import { v4 as uuid } from "uuid"
 
@@ -11,7 +10,6 @@ const pkg = {
   ...structures,
   uuid,
   configs,
-  users,
   TENANT_ID,
   CSRF_TOKEN,
   groups,

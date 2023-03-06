@@ -1,11 +1,14 @@
-require("../../../tests")
+import { testEnv } from "../../../tests"
 const context = require("../")
 const { DEFAULT_TENANT_ID } = require("../../constants")
-import env from "../../environment"
 
 describe("context", () => {
   describe("doInTenant", () => {
     describe("single-tenancy", () => {
+      beforeAll(() => {
+        testEnv.singleTenant()
+      })
+
       it("defaults to the default tenant", () => {
         const tenantId = context.getTenantId()
         expect(tenantId).toBe(DEFAULT_TENANT_ID)
@@ -20,8 +23,8 @@ describe("context", () => {
     })
 
     describe("multi-tenancy", () => {
-      beforeEach(() => {
-        env._set("MULTI_TENANCY", 1)
+      beforeAll(() => {
+        testEnv.multiTenant()
       })
 
       it("fails when no tenant id is set", () => {

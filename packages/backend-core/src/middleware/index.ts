@@ -1,7 +1,7 @@
 export * as jwt from "./passport/jwt"
 export * as local from "./passport/local"
-export * as google from "./passport/google"
-export * as oidc from "./passport/oidc"
+export * as google from "./passport/sso/google"
+export * as oidc from "./passport/sso/oidc"
 import * as datasourceGoogle from "./passport/datasource/google"
 export const datasource = {
   google: datasourceGoogle,
@@ -16,4 +16,6 @@ export { default as adminOnly } from "./adminOnly"
 export { default as builderOrAdmin } from "./builderOrAdmin"
 export { default as builderOnly } from "./builderOnly"
 export { default as logging } from "./logging"
+export { default as errorHandling } from "./errorHandling"
+export { default as querystringToBody } from "./querystringToBody"
 export * as joiValidator from "./joi-validator"

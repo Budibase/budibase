@@ -57,5 +57,7 @@
     --spectrum-semantic-negative-icon-color: #e34850;
     min-width: 100px;
     margin: 0;
+    border-color: var(--spectrum-global-color-gray-400);
+    border-width: 1px;
   }
 </style>

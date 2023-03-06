@@ -44,6 +44,9 @@ if [ -d "../budibase-pro" ]; then
   echo "Linking types to pro"
   yarn link '@budibase/types'
 
+  echo "Linking string-templates to pro"
+  yarn link '@budibase/string-templates'
+
   cd ../../../budibase
 
   echo "Linking pro to worker"

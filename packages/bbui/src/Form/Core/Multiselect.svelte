@@ -14,6 +14,9 @@
   export let autocomplete = false
   export let sort = false
   export let autoWidth = false
+  export let fetchTerm = null
+  export let useFetch = false
+  export let customPopoverHeight
 
   const dispatch = createEventDispatcher()
 
@@ -83,10 +86,13 @@
   {options}
   isPlaceholder={!value?.length}
   {autocomplete}
+  bind:fetchTerm
+  {useFetch}
   {isOptionSelected}
   {getOptionLabel}
   {getOptionValue}
   onSelectOption={toggleOption}
   {sort}
   {autoWidth}
+  {customPopoverHeight}
 />

@@ -1,9 +1,8 @@
 <script>
   import { ModalContent, Body, Layout, Icon } from "@budibase/bbui"
+  import { OnboardingType } from "../../../../../../constants"
 
   export let chooseCreationType
-  let emailOnboardingKey = "emailOnboarding"
-  let basicOnboaridngKey = "basicOnboarding"
 
   let selectedOnboardingType
 </script>
@@ -20,9 +19,9 @@
   <Layout noPadding gap="S">
     <div
       class="onboarding-type item"
-      class:selected={selectedOnboardingType == emailOnboardingKey}
+      class:selected={selectedOnboardingType == OnboardingType.EMAIL}
       on:click={() => {
-        selectedOnboardingType = emailOnboardingKey
+        selectedOnboardingType = OnboardingType.EMAIL
       }}
     >
       <div class="content onboarding-type-wrap">
@@ -32,7 +31,7 @@
         </div>
       </div>
       <div style="color: var(--spectrum-global-color-green-600); float: right">
-        {#if selectedOnboardingType == emailOnboardingKey}
+        {#if selectedOnboardingType == OnboardingType.EMAIL}
           <div class="checkmark-spacing">
             <Icon size="S" name="CheckmarkCircle" />
           </div>
@@ -42,9 +41,9 @@
 
     <div
       class="onboarding-type item"
-      class:selected={selectedOnboardingType == basicOnboaridngKey}
+      class:selected={selectedOnboardingType == OnboardingType.PASSWORD}
       on:click={() => {
-        selectedOnboardingType = basicOnboaridngKey
+        selectedOnboardingType = OnboardingType.PASSWORD
       }}
     >
       <div class="content onboarding-type-wrap">
@@ -54,7 +53,7 @@
         </div>
       </div>
       <div style="color: var(--spectrum-global-color-green-600); float: right">
-        {#if selectedOnboardingType == basicOnboaridngKey}
+        {#if selectedOnboardingType == OnboardingType.PASSWORD}
           <div class="checkmark-spacing">
             <Icon size="S" name="CheckmarkCircle" />
           </div>

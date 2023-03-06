@@ -254,8 +254,8 @@
               {:else if filter.type === "datetime"}
                 <DatePicker
                   disabled={filter.noValue}
-                  enableTime={!getSchema(filter).dateOnly}
-                  timeOnly={getSchema(filter).timeOnly}
+                  enableTime={!getSchema(filter)?.dateOnly}
+                  timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
                 />
               {:else}
