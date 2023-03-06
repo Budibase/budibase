@@ -44,7 +44,7 @@
     "dev": "yarn run kill-all && lerna link && lerna run --parallel dev:builder --concurrency 1",
     "dev:noserver": "yarn run kill-builder && lerna link && lerna run dev:stack:up && lerna run --parallel dev:builder --concurrency 1 --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
     "dev:server": "yarn run kill-server && lerna run --parallel dev:builder --concurrency 1 --scope @budibase/backend-core --scope @budibase/worker --scope @budibase/server",
-    "test": "NODE_OPTIONS=--max-old-space-size=8192 lerna run test",
+    "test": "lerna run test",
     "test:pro": "bash scripts/pro/test.sh",
     "lint:eslint": "eslint packages && eslint qa-core",
     "lint:prettier": "prettier --check \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\" && prettier --check \"qa-core/**/*.{js,ts,svelte}\"",
