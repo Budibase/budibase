@@ -19,7 +19,6 @@
   const getStyle = (width, selectedUser) => {
     let style = `flex: 0 0 ${width}px;`
     if (selectedUser) {
-      console.log(selectedUser)
       style += `--user-color:${selectedUser.color};`
     }
     return style
@@ -47,7 +46,7 @@
   <slot />
   {#if selectedUser && !selected}
     <div class="user">
-      {selectedUser.label} wwwwwwwwwwwwwwwwwwwwaaaaaa
+      {selectedUser.label}
     </div>
   {/if}
 </div>
