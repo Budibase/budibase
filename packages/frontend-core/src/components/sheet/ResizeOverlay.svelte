@@ -1,15 +1,8 @@
 <script>
   import { getContext } from "svelte"
 
-  const {
-    visibleRows,
-    columns,
-    rand,
-    scroll,
-    visibleColumns,
-    cellHeight,
-    stickyColumn,
-  } = getContext("sheet")
+  const { columns, rand, scroll, visibleColumns, stickyColumn } =
+    getContext("sheet")
   const MinColumnWidth = 100
 
   let initialMouseX = null
@@ -22,8 +15,6 @@
   $: scrollLeft = $scroll.left
   $: cutoff = scrollLeft + 40 + ($columns[0]?.width || 0)
   $: offset = 40 + ($stickyColumn?.width || 0)
-  $: rowCount = $visibleRows.length
-  $: contentHeight = (rowCount + 2) * cellHeight
 
   const startResizing = (idx, e) => {
     // Prevent propagation to stop reordering triggering
@@ -78,9 +69,9 @@
     document.getElementById(`sheet-${rand}`).classList.remove("is-resizing")
   }
 
-  const getStyle = (col, offset, scrollLeft, contentHeight) => {
+  const getStyle = (col, offset, scrollLeft) => {
     const left = offset + col.left + col.width - scrollLeft
-    return `--left:${left}px; --content-height:${contentHeight}px;`
+    return `--left:${left}px;`
   }
 </script>
 
@@ -89,8 +80,7 @@
     class="resize-slider sticky"
     class:visible={columnIdx === "sticky"}
     on:mousedown={e => startResizing("sticky", e)}
-    style="--left:{40 +
-      $stickyColumn.width}px; --content-height:{contentHeight}px;"
+    style="--left:{40 + $stickyColumn.width}px;"
   >
     <div class="resize-indicator" />
   </div>
@@ -100,7 +90,7 @@
     class="resize-slider"
     class:visible={columnIdx === col.idx}
     on:mousedown={e => startResizing(col.idx, e)}
-    style={getStyle(col, offset, scrollLeft, contentHeight)}
+    style={getStyle(col, offset, scrollLeft)}
   >
     <div class="resize-indicator" />
   </div>
@@ -114,7 +104,7 @@
     height: var(--cell-height);
     left: var(--left);
     opacity: 0;
-    padding: 0 16px;
+    padding: 0 8px;
     transform: translateX(-50%);
     user-select: none;
   }
@@ -122,7 +112,6 @@
   .resize-slider.visible {
     cursor: col-resize;
     opacity: 1;
-    height: min(var(--content-height), 100%);
   }
   .resize-slider.sticky {
     z-index: 2;

@@ -4,6 +4,7 @@ import Koa from "koa"
 import Cookies from "cookies"
 import { userAgent } from "koa-useragent"
 import { auth } from "@budibase/backend-core"
+import currentApp from "../middleware/currentapp"
 
 export default class Socket {
   io: Server
@@ -25,6 +26,7 @@ export default class Socket {
     const middlewares = [
       userAgent,
       authenticate,
+      // currentApp,
       ...(additionalMiddlewares || []),
     ]
 

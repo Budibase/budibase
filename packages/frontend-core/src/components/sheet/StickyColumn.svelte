@@ -5,6 +5,7 @@
   import SheetCell from "./cells/SheetCell.svelte"
   import { getCellRenderer } from "./renderers"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
+  import HeaderCell from "./cells/HeaderCell.svelte"
 
   const {
     rows,
@@ -67,6 +68,7 @@
     <!-- Field headers -->
     <SheetCell
       header
+      foo
       label
       width="40"
       on:click={$config.allowSelectRows && selectAll}
@@ -77,21 +79,7 @@
     </SheetCell>
 
     {#if $stickyColumn}
-      <SheetCell
-        header
-        sticky
-        width={$stickyColumn.width}
-        reorderTarget={$reorder.targetColumn === $stickyColumn.name}
-      >
-        <Icon
-          size="S"
-          name={getIconForField($stickyColumn)}
-          color="var(--spectrum-global-color-gray-600)"
-        />
-        <span>
-          {$stickyColumn.name}
-        </span>
-      </SheetCell>
+      <HeaderCell column={$stickyColumn} />
     {/if}
   </div>
 
