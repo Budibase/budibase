@@ -9,10 +9,6 @@ export const AppStatus = {
   DEPLOYED: "published",
 }
 
-export const SearchIndexes = {
-  ROWS: "rows",
-}
-
 export const BudibaseInternalDB = {
   _id: "bb_internal",
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,

@@ -1,17 +1,14 @@
 <script>
+  import getUserInitials from "helpers/userInitials.js"
+  import { Avatar } from "@budibase/bbui"
+
   export let value
 
-  let firstName = value?.firstName
-  let lastName = value?.lastName || ""
-
-  $: username =
-    firstName && lastName ? `${firstName} ${lastName}` : value?.email
+  $: initials = getUserInitials(value)
 </script>
 
-<div class="cell">
-  {#if value != null}
-    <div>{username}</div>
-  {/if}
+<div title={value.email} class="cell">
+  <Avatar size="M" {initials} />
 </div>
 
 <style>

@@ -149,6 +149,7 @@
     <Layout gap="XS" noPadding justifyItems="center">
       <Button
         cta
+        size="L"
         disabled={Object.keys(errors).length > 0 || submitted}
         on:click={save}
       >

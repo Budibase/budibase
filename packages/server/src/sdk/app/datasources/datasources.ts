@@ -88,6 +88,9 @@ export async function removeSecrets(datasources: Datasource[]) {
   const definitions = await getDefinitions()
   for (let datasource of datasources) {
     const schema = definitions[datasource.source]
+    if (!schema) {
+      continue
+    }
     if (datasource.config) {
       // strip secrets from response, so they don't show in the network request
       if (datasource.config.auth) {

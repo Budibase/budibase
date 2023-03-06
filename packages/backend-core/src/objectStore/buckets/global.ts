@@ -1,5 +1,5 @@
 import env from "../../environment"
-import * as tenancy from "../../tenancy"
+import * as context from "../../context"
 import * as objectStore from "../objectStore"
 import * as cloudfront from "../cloudfront"
 
@@ -22,7 +22,7 @@ export const getGlobalFileUrl = (type: string, name: string, etag?: string) => {
 export const getGlobalFileS3Key = (type: string, name: string) => {
   let file = `${type}/${name}`
   if (env.MULTI_TENANCY) {
-    const tenantId = tenancy.getTenantId()
+    const tenantId = context.getTenantId()
     file = `${tenantId}/${file}`
   }
   return file

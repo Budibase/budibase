@@ -65,10 +65,14 @@ export async function create(ctx: BBContext) {
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
-    return update(ctx)
+    await update(ctx)
+    return
   }
 
-  automation._id = generateAutomationID()
+  // Respect existing IDs if recreating a deleted automation
+  if (!automation._id) {
+    automation._id = generateAutomationID()
+  }
 
   automation.type = "automation"
   automation = cleanAutomationInputs(automation)
@@ -126,6 +130,13 @@ export async function update(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
+
+  // Call through to create if it doesn't exist
+  if (!automation._id || !automation._rev) {
+    await create(ctx)
+    return
+  }
+
   const oldAutomation = await db.get(automation._id)
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({

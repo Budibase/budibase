@@ -1,12 +1,12 @@
 import env from "../../src/environment"
-import * as tenancy from "../../src/tenancy"
-import { newid } from "../../src/utils"
+import * as context from "../../src/context"
+import * as structures from "./structures"
 
 // TENANCY
 
 export async function withTenant(task: (tenantId: string) => any) {
-  const tenantId = newid()
-  return tenancy.doInTenant(tenantId, async () => {
+  const tenantId = structures.tenant.id()
+  return context.doInTenant(tenantId, async () => {
     await task(tenantId)
   })
 }
@@ -17,6 +17,14 @@ export function singleTenant() {
 
 export function multiTenant() {
   env._set("MULTI_TENANCY", 1)
+}
+
+export function selfHosted() {
+  env._set("SELF_HOSTED", 1)
+}
+
+export function cloudHosted() {
+  env._set("SELF_HOSTED", 0)
 }
 
 // NODE

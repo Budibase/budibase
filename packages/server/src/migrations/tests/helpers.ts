@@ -1,7 +1,7 @@
 // Mimic configs test configuration from worker, creation configs directly in database
 
 import * as structures from "./structures"
-import { db } from "@budibase/backend-core"
+import { configs } from "@budibase/backend-core"
 import { Config } from "@budibase/types"
 
 export const saveSettingsConfig = async (globalDb: any) => {
@@ -25,7 +25,7 @@ export const saveSmtpConfig = async (globalDb: any) => {
 }
 
 const saveConfig = async (config: Config, globalDb: any) => {
-  config._id = db.generateConfigID({ type: config.type })
+  config._id = configs.generateConfigID(config.type)
 
   let response
   try {

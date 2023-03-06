@@ -10,18 +10,17 @@ import {
   isCloudAccount,
   isSSOAccount,
   TenantGroup,
-  SettingsConfig,
   CloudAccount,
   UserIdentity,
   InstallationGroup,
   UserContext,
   Group,
+  isSSOUser,
 } from "@budibase/types"
 import { processors } from "./processors"
-import * as dbUtils from "../db/utils"
-import { Config } from "../constants"
 import { newid } from "../utils"
 import * as installation from "../installation"
+import * as configs from "../configs"
 import { withCache, TTL, CacheKey } from "../cache/generic"
 
 const pkg = require("../../package.json")
@@ -88,6 +87,7 @@ const getCurrentIdentity = async (): Promise<Identity> => {
       installationId,
       tenantId,
       environment,
+      hostInfo: userContext.hostInfo,
     }
   } else {
     throw new Error("Unknown identity type")
@@ -166,7 +166,10 @@ const identifyUser = async (
   const type = IdentityType.USER
   let builder = user.builder?.global || false
   let admin = user.admin?.global || false
-  let providerType = user.providerType
+  let providerType
+  if (isSSOUser(user)) {
+    providerType = user.providerType
+  }
   const accountHolder = account?.budibaseUserId === user._id || false
   const verified =
     account && account?.budibaseUserId === user._id ? account.verified : false
@@ -266,9 +269,7 @@ const getUniqueTenantId = async (tenantId: string): Promise<string> => {
   return context.doInTenant(tenantId, () => {
     return withCache(CacheKey.UNIQUE_TENANT_ID, TTL.ONE_DAY, async () => {
       const db = context.getGlobalDB()
-      const config: SettingsConfig = await dbUtils.getScopedFullConfig(db, {
-        type: Config.SETTINGS,
-      })
+      const config = await configs.getSettingsConfigDoc()
 
       let uniqueTenantId: string
       if (config.config.uniqueTenantId) {

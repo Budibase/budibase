@@ -10,7 +10,7 @@ describe("/tables", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const app = await config.init()
     appId = app.appId
   })

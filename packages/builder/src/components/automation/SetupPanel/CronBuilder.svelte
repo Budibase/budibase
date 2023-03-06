@@ -5,7 +5,11 @@
   const dispatch = createEventDispatcher()
 
   export let value
+
   const onChange = e => {
+    if (e.detail === value) {
+      return
+    }
     value = e.detail
     dispatch("change", e.detail)
   }
@@ -43,7 +47,12 @@
 </script>
 
 <div class="block-field">
-  <Input on:change={onChange} {value} on:blur={() => (touched = true)} />
+  <Input
+    on:change={onChange}
+    {value}
+    on:blur={() => (touched = true)}
+    updateOnChange={false}
+  />
   {#if touched && !value}
     <Label><div class="error">Please specify a CRON expression</div></Label>
   {/if}

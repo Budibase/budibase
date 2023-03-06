@@ -13,6 +13,7 @@ async function appBackupRestored(backup: AppBackup) {
     appId: backup.appId,
     restoreId: backup._id!,
     backupCreatedAt: backup.timestamp,
+    name: backup.name as string,
   }
 
   await publishEvent(Event.APP_BACKUP_RESTORED, properties)
@@ -22,13 +23,15 @@ async function appBackupTriggered(
   appId: string,
   backupId: string,
   type: AppBackupType,
-  trigger: AppBackupTrigger
+  trigger: AppBackupTrigger,
+  name: string
 ) {
   const properties: AppBackupTriggeredEvent = {
     appId: appId,
     backupId,
     type,
     trigger,
+    name,
   }
   await publishEvent(Event.APP_BACKUP_TRIGGERED, properties)
 }

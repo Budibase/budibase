@@ -87,6 +87,20 @@ const duplicateRowHandler = async (action, context) => {
   }
 }
 
+const fetchRowHandler = async action => {
+  const { tableId, rowId } = action.parameters
+
+  if (tableId && rowId) {
+    try {
+      const row = await API.fetchRow({ tableId, rowId })
+
+      return { row }
+    } catch (error) {
+      return false
+    }
+  }
+}
+
 const deleteRowHandler = async action => {
   const { tableId, revId, rowId, notificationOverride } = action.parameters
   if (tableId && rowId) {
@@ -126,8 +140,8 @@ const triggerAutomationHandler = async action => {
 }
 
 const navigationHandler = action => {
-  const { url, peek } = action.parameters
-  routeStore.actions.navigate(url, peek)
+  const { url, peek, externalNewTab } = action.parameters
+  routeStore.actions.navigate(url, peek, externalNewTab)
 }
 
 const queryExecutionHandler = async action => {
@@ -341,6 +355,7 @@ const CloseSidePanelHandler = () => {
 }
 
 const handlerMap = {
+  ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
   ["Delete Row"]: deleteRowHandler,

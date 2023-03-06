@@ -26,8 +26,8 @@ export class UserAPI extends TestAPI {
         email,
       })
       .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
       .expect(status)
+      .expect("Content-Type", /json/)
 
     if (status !== 200) {
       return { code: undefined, res }
@@ -100,7 +100,7 @@ export class UserAPI extends TestAPI {
       request = {
         email: structures.email(),
         password: generator.string(),
-        tenantId: structures.uuid(),
+        tenantId: structures.tenant.id(),
       }
     }
     const res = await this.request
