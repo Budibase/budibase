@@ -1,10 +1,10 @@
-import { App, BBContext } from "@budibase/types"
+import { Ctx } from "@budibase/types"
 import { users as userCore, db as dbCore } from "@budibase/backend-core"
 import { quotas, licensing } from "@budibase/pro"
 
 import os from "os"
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: Ctx) {
   // *** OPERATING SYSTEM ***
   const freeMem = os.freemem()
   const totalMem = os.totalmem()

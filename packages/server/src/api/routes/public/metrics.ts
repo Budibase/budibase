@@ -7,7 +7,7 @@ const read = []
  * @openapi
  * /metrics:
  *   get:
- *     operationId: getById
+ *     operationId: metricsGet
  *     summary: Retrieve Budibase tenant metrics
  *     description: Output metrics in OpenMetrics format compatible with Prometheus
  *     tags:

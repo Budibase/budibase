@@ -24,7 +24,7 @@ export interface paths {
   };
   "/metrics": {
     /** Output metrics in OpenMetrics format compatible with Prometheus */
-    get: operations["getById"];
+    get: operations["metricsGet"];
   };
   "/queries/{queryId}": {
     /** Queries which have been created within a Budibase app can be executed using this, */
@@ -849,7 +849,7 @@ export interface operations {
     };
   };
   /** Output metrics in OpenMetrics format compatible with Prometheus */
-  getById: {
+  metricsGet: {
     responses: {
       /** Returns tenant metrics. */
       200: {
