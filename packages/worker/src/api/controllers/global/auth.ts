@@ -285,4 +285,3 @@ export const oidcCallback = async (ctx: any, next: any) => {
     }
   )(ctx, next)
 }
-
