@@ -30,7 +30,6 @@ import { structures } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import GoogleSheetsIntegration from "../googlesheets"
 import { FieldType, Table, TableSchema } from "../../../../types/src/documents"
-import environment from "../../environment"
 
 describe("Google Sheets Integration", () => {
   let integration: any,
