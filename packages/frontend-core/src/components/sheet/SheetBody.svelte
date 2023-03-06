@@ -4,8 +4,7 @@
   import NewRow from "./NewRow.svelte"
   import SheetRow from "./SheetRow.svelte"
 
-  const { selectedCellId, bounds, visibleRows, config } =
-    getContext("spreadsheet")
+  const { selectedCellId, bounds, visibleRows, config } = getContext("sheet")
 
   let ref
 
@@ -27,8 +26,8 @@
   on:click|self={() => ($selectedCellId = null)}
 >
   <SheetScrollWrapper>
-    {#each $visibleRows as row}
-      <SheetRow {row} />
+    {#each $visibleRows as row, idx}
+      <SheetRow {row} {idx} />
     {/each}
     {#if $config.allowAddRows}
       <NewRow />

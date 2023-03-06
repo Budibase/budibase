@@ -106,8 +106,13 @@
 </script>
 
 <div class="wrapper">
-  <div class="buttons">
-    <div class="left-buttons">
+  <Sheet
+    tableId={$tables.selected?._id}
+    {API}
+    filter={filters}
+    on:add-column={createColumnModal.show}
+  >
+    <svelte:fragment slot="controls">
       <CreateColumnButton
         highlighted={!hasCols || !hasRows}
         on:updatecolumns={null}
@@ -124,8 +129,6 @@
       {#if isInternal}
         <CreateViewButton disabled={!hasCols || !hasRows} />
       {/if}
-    </div>
-    <div class="right-buttons">
       <ManageAccessButton resourceId={$tables.selected?._id} />
       {#if isUsersTable}
         <EditRolesButton />
@@ -157,16 +160,8 @@
           tableId={id}
         />
       {/key}
-    </div>
-  </div>
-  <div class="sheet">
-    <Sheet
-      tableId={$tables.selected?._id}
-      {API}
-      filter={filters}
-      on:add-column={createColumnModal.show}
-    />
-  </div>
+    </svelte:fragment>
+  </Sheet>
 </div>
 
 <!--<div>-->
@@ -233,35 +228,5 @@
     display: flex;
     flex-direction: column;
     background: var(--background);
-  }
-  .sheet {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-  }
-  .pagination {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    margin-top: var(--spacing-xl);
-  }
-  .buttons {
-    flex: 0 0 48px;
-    border-bottom: 2px solid var(--spectrum-global-color-gray-200);
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    padding: 0 8px;
-  }
-  .left-buttons,
-  .right-buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacing-m);
   }
 </style>

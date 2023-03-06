@@ -4,6 +4,7 @@
   import { getCellRenderer } from "./renderers"
 
   export let row
+  export let idx
 
   const {
     selectedCellId,
@@ -13,7 +14,7 @@
     visibleColumns,
     hoveredRowId,
     selectedCellMap,
-  } = getContext("spreadsheet")
+  } = getContext("sheet")
 
   $: rowSelected = !!$selectedRows[row._id]
   $: rowHovered = $hoveredRowId === row._id
@@ -30,6 +31,7 @@
     <SheetCell
       {rowSelected}
       {rowHovered}
+      rowIdx={idx}
       selected={$selectedCellId === cellIdx}
       selectedUser={$selectedCellMap[cellIdx]}
       reorderSource={$reorder.sourceColumn === column.name}

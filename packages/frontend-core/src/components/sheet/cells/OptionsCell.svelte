@@ -138,8 +138,9 @@
     user-select: none;
   }
   .arrow {
+    border-right: 2px solid var(--spectrum-global-color-blue-400);
     position: absolute;
-    right: 2px;
+    right: 0;
     top: 2px;
     bottom: 2px;
     padding: 0 6px 0 16px;

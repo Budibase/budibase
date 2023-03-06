@@ -1,4 +1,6 @@
 <script>
+  import Avatar from "./Avatar.svelte"
+
   export let header = false
   export let label = false
   export let rowSelected = false
@@ -10,6 +12,18 @@
   export let width = ""
   export let center = false
   export let selectedUser = null
+  export let rowIdx
+
+  $: style = getStyle(width, selectedUser)
+
+  const getStyle = (width, selectedUser) => {
+    let style = `flex: 0 0 ${width}px;`
+    if (selectedUser) {
+      console.log(selectedUser)
+      style += `--user-color:${selectedUser.color};`
+    }
+    return style
+  }
 </script>
 
 <div
@@ -27,14 +41,15 @@
   on:focus
   on:click
   on:mousedown
-  style="flex: 0 0 {width}px;"
+  {style}
+  data-row={rowIdx}
 >
-  {#if selectedUser}
-    <div class="name">
-      {selectedUser.email}
+  <slot />
+  {#if selectedUser && !selected}
+    <div class="user">
+      {selectedUser.label} wwwwwwwwwwwwwwwwwwwwaaaaaa
     </div>
   {/if}
-  <slot />
 </div>
 
 <style>
@@ -56,10 +71,11 @@
   }
   .cell.selected {
     box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
-    z-index: 1;
+    z-index: 2;
   }
-  .cell.selected-other {
-    box-shadow: inset 0 0 0 2px var(--spectrum-global-color-purple-400);
+  .cell.selected-other:not(.selected) {
+    z-index: 1;
+    box-shadow: inset 0 0 0 2px var(--user-color);
   }
   .cell:not(.selected) {
     user-select: none;
@@ -121,13 +137,29 @@
     align-items: center;
   }
 
-  .name {
+  /* Other user email */
+  .user {
     position: absolute;
     bottom: 100%;
-    background: var(--spectrum-global-color-purple-400);
-    padding: 1px 4px 0 4px;
-    border-radius: 2px;
+    padding: 1px 4px;
+    background: var(--user-color);
+    border-radius: 2px 2px 0 0;
+    display: none;
+    color: white;
     font-size: 12px;
     font-weight: 600;
+    max-width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .cell[data-row="0"] .user {
+    bottom: auto;
+    top: 100%;
+    border-radius: 0 0 2px 2px;
+    padding: 0 4px 2px 4px;
+  }
+  .cell:hover .user {
+    display: block;
   }
 </style>

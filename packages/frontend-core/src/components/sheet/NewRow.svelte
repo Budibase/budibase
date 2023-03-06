@@ -3,7 +3,7 @@
   import { getContext } from "svelte"
 
   const { visibleColumns, hoveredRowId, rows, selectedCellId, reorder } =
-    getContext("spreadsheet")
+    getContext("sheet")
 
   $: rowHovered = $hoveredRowId === "new"
 
