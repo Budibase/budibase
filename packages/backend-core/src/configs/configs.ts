@@ -179,7 +179,7 @@ export async function getGoogleDatasourceConfig(): Promise<
 }
 
 export function getDefaultGoogleConfig(): GoogleInnerConfig | undefined {
-  if (env.isTest() || (environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET)) {
+  if (environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET) {
     return {
       clientID: environment.GOOGLE_CLIENT_ID!,
       clientSecret: environment.GOOGLE_CLIENT_SECRET!,
