@@ -1,56 +1,92 @@
 <script>
   import { getContext } from "svelte"
   import SheetCell from "./SheetCell.svelte"
-  import { Icon, Popover } from "@budibase/bbui"
+  import { Icon, Popover, Menu, MenuItem } from "@budibase/bbui"
   import { getIconForField } from "../utils"
 
   export let column
 
-  const { reorder } = getContext("sheet")
+  const { reorder, isReordering, rand } = getContext("sheet")
 
-  let popover
+  let timeout
   let anchor
+  let open = false
+  let isClick = true
 
-  const openPopover = () => {
-    console.log("open")
-    popover.show()
+  const startReordering = e => {
+    isClick = true
+    timeout = setTimeout(() => {
+      isClick = false
+      reorder.actions.startReordering(column.name, e)
+    }, 250)
+  }
+
+  const stopReordering = () => {
+    clearTimeout(timeout)
+  }
+
+  const onClick = () => {
+    if (isClick) {
+      stopReordering()
+      open = true
+    }
   }
 </script>
 
-<div class="header-cell" bind:this={anchor}>
+<div
+  class="header-cell"
+  class:open
+  style="flex: 0 0 {column.width}px;"
+  bind:this={anchor}
+  class:disabled={$isReordering}
+>
   <SheetCell
     reorderSource={$reorder.sourceColumn === column.name}
     reorderTarget={$reorder.targetColumn === column.name}
-    on:mousedown={e => reorder.actions.startReordering(column.name, e)}
-    on:click={openPopover}
+    on:mousedown={startReordering}
+    on:mouseup={stopReordering}
+    on:click={onClick}
     width={column.width}
     left={column.left}
   >
-    <div class="content">
-      <Icon
-        size="S"
-        name={getIconForField(column)}
-        color="var(--spectrum-global-color-gray-600)"
-      />
-      <div class="name">
-        {column.name} asdasdasd asdasdas asdasdasd
-      </div>
-      <div class="more">
-        <Icon size="S" name="MoreVertical" />
-      </div>
+    <Icon
+      size="S"
+      name={getIconForField(column)}
+      color="var(--spectrum-global-color-gray-600)"
+    />
+    <div class="name">
+      {column.name}
+    </div>
+    <div class="more">
+      <Icon size="S" name="MoreVertical" />
     </div>
   </SheetCell>
 </div>
 
-<Popover bind:this={popover} {anchor} align="left"
-  >asdsad asdasd asdasd asasa</Popover
+<Popover
+  bind:open
+  {anchor}
+  align="left"
+  offset={0}
+  popoverTarget={document.getElementById(`sheet-${rand}`)}
+  animate={false}
 >
+  <Menu>
+    <MenuItem icon="Edit">Edit column</MenuItem>
+    <MenuItem icon="SortOrderUp">Sort ascending</MenuItem>
+    <MenuItem icon="SortOrderDown">Sort descending</MenuItem>
+    <MenuItem icon="ArrowLeft">Move left</MenuItem>
+    <MenuItem icon="ArrowRight">Move right</MenuItem>
+    <MenuItem icon="Delete">Delete</MenuItem>
+  </Menu>
+</Popover>
 
 <style>
   .header-cell {
-    display: contents;
+    display: flex;
   }
-  .header-cell:hover :global(.cell) {
+  .header-cell:not(.disabled):hover :global(.cell),
+  .header-cell:not(.disabled).open :global(.cell) {
     cursor: pointer;
     background: var(--spectrum-global-color-gray-200);
   }
@@ -72,7 +108,8 @@
   .more {
     display: none;
   }
-  .header-cell:hover .more {
+  .header-cell:not(.disabled):hover .more,
+  .header-cell:not(.disabled).open .more {
     display: block;
   }
 </style>

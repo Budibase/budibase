@@ -10,6 +10,7 @@
   export let center = false
   export let selectedUser = null
   export let rowIdx
+  export let foo
 
   $: style = getStyle(width, selectedUser)
 
@@ -24,6 +25,7 @@
 
 <div
   class="cell"
+  class:foo
   class:label
   class:row-selected={rowSelected}
   class:row-hovered={rowHovered}
@@ -34,8 +36,9 @@
   class:reorder-target={reorderTarget}
   class:center
   on:focus
-  on:click
   on:mousedown
+  on:mouseup
+  on:click
   {style}
   data-row={rowIdx}
 >
@@ -112,6 +115,9 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+  }
+  .cell.foo {
+    background: var(--spectrum-global-color-gray-100);
   }
 
   /* Other user email */

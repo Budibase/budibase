@@ -1,4 +1,4 @@
-import { get, writable } from "svelte/store"
+import { get, writable, derived } from "svelte/store"
 
 export const createReorderStores = context => {
   const { columns, rand, scroll, bounds, stickyColumn } = context
@@ -7,8 +7,11 @@ export const createReorderStores = context => {
     targetColumn: null,
     breakpoints: [],
     initialMouseX: null,
+    scrollLeft: 0,
+    sheetLeft: 0,
   }
   const reorder = writable(reorderInitialState)
+  const isReordering = derived(reorder, $reorder => !!$reorder.sourceColumn)
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (column, e) => {
@@ -115,5 +118,6 @@ export const createReorderStores = context => {
         stopReordering,
       },
     },
+    isReordering,
   }
 }
