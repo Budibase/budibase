@@ -8,6 +8,7 @@
   import { createScrollStores } from "./stores/scroll"
   import { createBoundsStores } from "./stores/bounds"
   import { createInterfaceStores } from "./stores/interface"
+  export { createUserStores } from "./stores/users"
   import DeleteButton from "./DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "./ResizeOverlay.svelte"
@@ -16,6 +17,7 @@
   import ScrollOverlay from "./ScrollOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
   import { createWebsocket } from "./websocket"
+  import { createUserStores } from "./stores/users"
 
   export let API
   export let tableId
@@ -52,6 +54,7 @@
   context = { ...context, ...createViewportStores(context) }
   context = { ...context, ...createReorderStores(context) }
   context = { ...context, ...createInterfaceStores(context) }
+  context = { ...context, ...createUserStores(context) }
 
   // Keep config store up to date
   $: config.set({

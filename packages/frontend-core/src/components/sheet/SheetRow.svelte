@@ -12,6 +12,7 @@
     rows,
     visibleColumns,
     hoveredRowId,
+    selectedCellMap,
   } = getContext("spreadsheet")
 
   $: rowSelected = !!$selectedRows[row._id]
@@ -30,6 +31,7 @@
       {rowSelected}
       {rowHovered}
       selected={$selectedCellId === cellIdx}
+      selectedUser={$selectedCellMap[cellIdx]}
       reorderSource={$reorder.sourceColumn === column.name}
       reorderTarget={$reorder.targetColumn === column.name}
       on:click={() => ($selectedCellId = cellIdx)}
