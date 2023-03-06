@@ -28,6 +28,7 @@ import * as events from "../events"
 import * as configs from "../configs"
 import { clearCookie, getCookie } from "../utils"
 import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
+import env from "../environment"
 
 const refresh = require("passport-oauth2-refresh")
 export {
@@ -52,7 +53,7 @@ export const jwt = require("jsonwebtoken")
 _passport.use(new LocalStrategy(local.options, local.authenticate))
 if (jwtPassport.options.secretOrKey) {
   _passport.use(new JwtStrategy(jwtPassport.options, jwtPassport.authenticate))
-} else {
+} else if (!env.DISABLE_JWT_WARNING) {
   logAlert("No JWT Secret supplied, cannot configure JWT strategy")
 }
 
