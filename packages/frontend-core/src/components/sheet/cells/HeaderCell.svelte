@@ -7,7 +7,7 @@
   export let column
   export let orderable = true
 
-  const { reorder, isReordering, rand } = getContext("sheet")
+  const { reorder, isReordering, isResizing, rand } = getContext("sheet")
 
   let timeout
   let anchor
@@ -39,7 +39,7 @@
   class:open
   style="flex: 0 0 {column.width}px;"
   bind:this={anchor}
-  class:disabled={$isReordering}
+  class:disabled={$isReordering || $isResizing}
 >
   <SheetCell
     reorderSource={$reorder.sourceColumn === column.name}

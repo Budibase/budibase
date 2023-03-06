@@ -55,6 +55,7 @@ export const createColumnsStores = context => {
       width: same ? existingWidth : defaultWidth,
       left: 40,
       schema: primaryDisplay[1],
+      idx: "sticky",
     })
   })
 
