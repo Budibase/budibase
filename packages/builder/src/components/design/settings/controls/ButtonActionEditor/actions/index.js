@@ -1,3 +1,4 @@
+export { default as FetchRow } from "./FetchRow.svelte"
 export { default as NavigateTo } from "./NavigateTo.svelte"
 export { default as SaveRow } from "./SaveRow.svelte"
 export { default as DeleteRow } from "./DeleteRow.svelte"

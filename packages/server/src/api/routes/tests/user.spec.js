@@ -1,4 +1,4 @@
-const { roles, utils } = require("@budibase/backend-core")
+const { roles } = require("@budibase/backend-core")
 const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { BUILTIN_ROLE_IDS } = roles
@@ -21,8 +21,7 @@ describe("/users", () => {
 
   afterAll(setup.afterAll)
 
-  // For some reason this cannot be a beforeAll or the test "should be able to update the user" fail
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 

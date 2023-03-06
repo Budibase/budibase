@@ -32,6 +32,7 @@ import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")
+const { userAgent } = require("koa-useragent")
 
 const app = new Koa()
 
@@ -53,6 +54,7 @@ app.use(
 )
 
 app.use(middleware.logging)
+app.use(userAgent)
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")

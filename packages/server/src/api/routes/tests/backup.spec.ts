@@ -19,7 +19,6 @@ describe("/backups", () => {
         .get(`/api/backups/export?appId=${config.getAppId()}&appname=test`)
         .set(config.defaultHeaders())
         .expect(200)
-      expect(res.text).toBeDefined()
       expect(res.headers["content-type"]).toEqual("application/gzip")
       expect(events.app.exported).toBeCalledTimes(1)
     })

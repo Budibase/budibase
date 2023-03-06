@@ -58,7 +58,7 @@ export async function patch(ctx: BBContext) {
   return handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(id),
     row: inputs,
-    includeSqlRelationships: IncludeRelationship.EXCLUDE,
+    includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
 }
 

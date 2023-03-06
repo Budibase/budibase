@@ -1,5 +1,6 @@
 import { User } from "@budibase/types"
-import sdk from "../../sdk"
+import * as usersSdk from "../../sdk/users"
+import { platform } from "@budibase/backend-core"
 
 /**
  * Date:
@@ -9,11 +10,11 @@ import sdk from "../../sdk"
  * Re-sync the global-db users to the global-info db users
  */
 export const run = async (globalDb: any) => {
-  const users = (await sdk.users.allUsers()) as User[]
+  const users = (await usersSdk.allUsers()) as User[]
   const promises = []
   for (let user of users) {
     promises.push(
-      sdk.users.addTenant(user.tenantId, user._id as string, user.email)
+      platform.users.addUser(user.tenantId, user._id as string, user.email)
     )
   }
   await Promise.all(promises)

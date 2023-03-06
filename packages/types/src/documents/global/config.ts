@@ -5,37 +5,55 @@ export interface Config extends Document {
   config: any
 }
 
-export interface SMTPConfig extends Config {
-  config: {
-    port: number
-    host: string
-    from: string
-    subject: string
-    secure: boolean
+export interface SMTPInnerConfig {
+  port: number
+  host: string
+  from: string
+  subject?: string
+  secure: boolean
+  auth?: {
+    user: string
+    pass: string
   }
+  connectionTimeout?: any
+}
+
+export interface SMTPConfig extends Config {
+  config: SMTPInnerConfig
+}
+
+export interface SettingsInnerConfig {
+  platformUrl?: string
+  company?: string
+  logoUrl?: string // Populated on read
+  logoUrlEtag?: string
+  uniqueTenantId?: string
+  analyticsEnabled?: boolean
+  isSSOEnforced?: boolean
 }
 
 export interface SettingsConfig extends Config {
-  config: {
-    company: string
-    // Populated on read
-    logoUrl?: string
-    logoUrlEtag?: boolean
-    platformUrl: string
-    uniqueTenantId?: string
-    analyticsEnabled?: boolean
-  }
+  config: SettingsInnerConfig
+}
+
+export type SSOConfigType = ConfigType.GOOGLE | ConfigType.OIDC
+export type SSOConfig = GoogleInnerConfig | OIDCInnerConfig
+
+export interface GoogleInnerConfig {
+  clientID: string
+  clientSecret: string
+  activated: boolean
+  /**
+   * @deprecated read only
+   */
+  callbackURL?: string
 }
 
 export interface GoogleConfig extends Config {
-  config: {
-    clientID: string
-    clientSecret: string
-    activated: boolean
-  }
+  config: GoogleInnerConfig
 }
 
-export interface OIDCConfiguration {
+export interface OIDCStrategyConfiguration {
   issuer: string
   authorizationURL: string
   tokenURL: string
@@ -45,7 +63,11 @@ export interface OIDCConfiguration {
   callbackURL: string
 }
 
-export interface OIDCInnerCfg {
+export interface OIDCConfigs {
+  configs: OIDCInnerConfig[]
+}
+
+export interface OIDCInnerConfig {
   configUrl: string
   clientID: string
   clientSecret: string
@@ -53,12 +75,18 @@ export interface OIDCInnerCfg {
   name: string
   uuid: string
   activated: boolean
+  scopes: string[]
 }
 
 export interface OIDCConfig extends Config {
-  config: {
-    configs: OIDCInnerCfg[]
-  }
+  config: OIDCConfigs
+}
+
+export interface OIDCWellKnownConfig {
+  issuer: string
+  authorization_endpoint: string
+  token_endpoint: string
+  userinfo_endpoint: string
 }
 
 export const isSettingsConfig = (config: Config): config is SettingsConfig =>

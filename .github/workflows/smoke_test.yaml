@@ -7,7 +7,7 @@ on:
 
 jobs:
   nightly:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, qa]
 
     steps:
       - uses: actions/checkout@v2
@@ -15,30 +15,17 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - run: yarn
-      - run: yarn bootstrap
-      - run: yarn build
-      - name: Pull  from budibase-infra
+      - name: QA Core Integration Tests
         run: | 
-          curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
-          -H 'Accept: application/vnd.github.v3.raw' \
-          -o 
-          -L 
-          wc -l 
-      
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Test Reports
-          path: 
+          cd qa-core
+          yarn
+          yarn api:test:ci
+        env:
+          BUDIBASE_HOST: budicloud.qa.budibase.net
+          BUDIBASE_ACCOUNTS_URL: https://account-portal.budicloud.qa.budibase.net
 
-      # TODO: enable once running in QA test env
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: eu-west-1
-      
-      # - name: Upload test results HTML
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   run: aws s3 cp packages/builder/cypress/reports/testReport.html s3://{{ secrets.BUDI_QA_REPORTS_BUCKET_NAME }}/$GITHUB_RUN_ID/index.html
+      - name: Cypress Discord Notify
+        run: yarn test:notify
+        env:
+          WEBHOOK_URL: ${{ secrets.BUDI_QA_WEBHOOK }}
+          GITHUB_RUN_URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID

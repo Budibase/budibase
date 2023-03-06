@@ -51,6 +51,14 @@ spec:
           value: {{ tpl .Values.services.proxy.upstreams.minio . | quote }}
         - name: COUCHDB_UPSTREAM_URL
           value: {{ .Values.services.couchdb.url | default (tpl .Values.services.proxy.upstreams.couchdb .) | quote }}
+        {{ if .Values.services.proxy.proxyRateLimitWebhooksPerSecond }}
+        - name: PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND
+          value: {{ .Values.services.proxy.proxyRateLimitWebhooksPerSecond | quote }}
+        {{ end }}
+        {{ if .Values.services.proxy.proxyRateLimitApiPerSecond }}
+        - name: PROXY_RATE_LIMIT_API_PER_SECOND
+          value: {{ .Values.services.proxy.proxyRateLimitApiPerSecond | quote }}
+        {{ end }}
         - name: RESOLVER
           {{ if .Values.services.proxy.resolver }}
           value: {{ .Values.services.proxy.resolver }}

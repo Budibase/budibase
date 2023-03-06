@@ -4,12 +4,13 @@
   import { Content, SideNav, SideNavItem } from "components/portal/page"
   import { menu } from "stores/portal"
 
+  $: wide = $isActive("./auditLogs")
   $: pages = $menu.find(x => x.title === "Account")?.subPages || []
   $: !pages.length && $goto("../")
 </script>
 
 <Page>
-  <Content narrow>
+  <Content narrow={!wide}>
     <div slot="side-nav">
       <SideNav>
         {#each pages as { title, href }}

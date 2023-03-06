@@ -21,7 +21,6 @@ import {
   basicScreen,
   basicLayout,
   basicWebhook,
-  TENANT_ID,
 } from "./structures"
 import {
   constants,
@@ -41,8 +40,8 @@ import { generateUserMetadataID } from "../../db/utils"
 import { startup } from "../../startup"
 import supertest from "supertest"
 import {
+  App,
   AuthToken,
-  Database,
   Datasource,
   Row,
   SourceName,
@@ -63,7 +62,7 @@ class TestConfiguration {
   started: boolean
   appId: string | null
   allApps: any[]
-  app: any
+  app?: App
   prodApp: any
   prodAppId: any
   user: any
@@ -73,7 +72,7 @@ class TestConfiguration {
   linkedTable: any
   automation: any
   datasource: any
-  tenantId: string | null
+  tenantId?: string
   defaultUserValues: DefaultUserValues
 
   constructor(openServer = true) {
@@ -89,7 +88,6 @@ class TestConfiguration {
     }
     this.appId = null
     this.allApps = []
-    this.tenantId = null
     this.defaultUserValues = this.populateDefaultUserValues()
   }
 
@@ -154,19 +152,10 @@ class TestConfiguration {
 
   // use a new id as the name to avoid name collisions
   async init(appName = newid()) {
-    this.defaultUserValues = this.populateDefaultUserValues()
-    if (context.isMultiTenant()) {
-      this.tenantId = structures.tenant.id()
-    }
-
     if (!this.started) {
       await startup()
     }
-    this.user = await this.globalUser()
-    this.globalUserId = this.user._id
-    this.userMetadataId = generateUserMetadataID(this.globalUserId)
-
-    return this.createApp(appName)
+    return this.newTenant(appName)
   }
 
   end() {
@@ -182,24 +171,22 @@ class TestConfiguration {
   }
 
   // MODES
-  #setMultiTenancy = (value: boolean) => {
+  setMultiTenancy = (value: boolean) => {
     env._set("MULTI_TENANCY", value)
     coreEnv._set("MULTI_TENANCY", value)
   }
 
-  #setSelfHosted = (value: boolean) => {
+  setSelfHosted = (value: boolean) => {
     env._set("SELF_HOSTED", value)
     coreEnv._set("SELF_HOSTED", value)
   }
 
   modeCloud = () => {
-    this.#setSelfHosted(false)
-    this.#setMultiTenancy(true)
+    this.setSelfHosted(false)
   }
 
   modeSelf = () => {
-    this.#setSelfHosted(true)
-    this.#setMultiTenancy(false)
+    this.setSelfHosted(true)
   }
 
   // UTILS
@@ -236,42 +223,41 @@ class TestConfiguration {
     email = this.defaultUserValues.email,
     roles,
   }: any = {}) {
-    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: Database) => {
-      let existing
-      try {
-        existing = await db.get(id)
-      } catch (err) {
-        existing = { email }
-      }
-      const user = {
-        _id: id,
-        ...existing,
-        roles: roles || {},
-        tenantId: this.getTenantId(),
-        firstName,
-        lastName,
-      }
-      await sessions.createASession(id, {
-        sessionId: "sessionid",
-        tenantId: this.getTenantId(),
-        csrfToken: this.defaultUserValues.csrfToken,
-      })
-      if (builder) {
-        user.builder = { global: true }
-      } else {
-        user.builder = { global: false }
-      }
-      if (admin) {
-        user.admin = { global: true }
-      } else {
-        user.admin = { global: false }
-      }
-      const resp = await db.put(user)
-      return {
-        _rev: resp.rev,
-        ...user,
-      }
+    const db = tenancy.getTenantDB(this.getTenantId())
+    let existing
+    try {
+      existing = await db.get(id)
+    } catch (err) {
+      existing = { email }
+    }
+    const user = {
+      _id: id,
+      ...existing,
+      roles: roles || {},
+      tenantId: this.getTenantId(),
+      firstName,
+      lastName,
+    }
+    await sessions.createASession(id, {
+      sessionId: "sessionid",
+      tenantId: this.getTenantId(),
+      csrfToken: this.defaultUserValues.csrfToken,
     })
+    if (builder) {
+      user.builder = { global: true }
+    } else {
+      user.builder = { global: false }
+    }
+    if (admin) {
+      user.admin = { global: true }
+    } else {
+      user.admin = { global: false }
+    }
+    const resp = await db.put(user)
+    return {
+      _rev: resp.rev,
+      ...user,
+    }
   }
 
   async createUser(
@@ -355,6 +341,8 @@ class TestConfiguration {
     })
   }
 
+  // HEADERS
+
   defaultHeaders(extras = {}) {
     const tenantId = this.getTenantId()
     const authObj: AuthToken = {
@@ -375,6 +363,7 @@ class TestConfiguration {
         `${constants.Cookie.CurrentApp}=${appToken}`,
       ],
       [constants.Header.CSRF_TOKEN]: this.defaultUserValues.csrfToken,
+      Host: this.tenantHost(),
       ...extras,
     }
 
@@ -382,10 +371,6 @@ class TestConfiguration {
       headers[constants.Header.APP_ID] = this.appId
     }
     return headers
-  }
-
-  getTenantId() {
-    return this.tenantId || TENANT_ID
   }
 
   publicHeaders({ prodApp = true } = {}) {
@@ -398,9 +383,7 @@ class TestConfiguration {
       headers[constants.Header.APP_ID] = appId
     }
 
-    if (this.tenantId) {
-      headers[constants.Header.TENANT_ID] = this.tenantId
-    }
+    headers[constants.Header.TENANT_ID] = this.getTenantId()
 
     return headers
   }
@@ -414,27 +397,54 @@ class TestConfiguration {
     return this.login({ email, roleId, builder, prodApp })
   }
 
+  // TENANCY
+
+  tenantHost() {
+    const tenantId = this.getTenantId()
+    const platformHost = new URL(coreEnv.PLATFORM_URL).host.split(":")[0]
+    return `${tenantId}.${platformHost}`
+  }
+
+  getTenantId() {
+    if (!this.tenantId) {
+      throw new Error("no test tenant id - init has not been called")
+    }
+    return this.tenantId
+  }
+
+  async newTenant(appName = newid()): Promise<App> {
+    this.defaultUserValues = this.populateDefaultUserValues()
+    this.tenantId = structures.tenant.id()
+    this.user = await this.globalUser()
+    this.globalUserId = this.user._id
+    this.userMetadataId = generateUserMetadataID(this.globalUserId)
+    return this.createApp(appName)
+  }
+
+  doInTenant(task: any) {
+    return context.doInTenant(this.getTenantId(), task)
+  }
+
   // API
 
   async generateApiKey(userId = this.defaultUserValues.globalUserId) {
-    return tenancy.doWithGlobalDB(this.getTenantId(), async (db: any) => {
-      const id = dbCore.generateDevInfoID(userId)
-      let devInfo
-      try {
-        devInfo = await db.get(id)
-      } catch (err) {
-        devInfo = { _id: id, userId }
-      }
-      devInfo.apiKey = encryption.encrypt(
-        `${this.getTenantId()}${dbCore.SEPARATOR}${newid()}`
-      )
-      await db.put(devInfo)
-      return devInfo.apiKey
-    })
+    const db = tenancy.getTenantDB(this.getTenantId())
+    const id = dbCore.generateDevInfoID(userId)
+    let devInfo
+    try {
+      devInfo = await db.get(id)
+    } catch (err) {
+      devInfo = { _id: id, userId }
+    }
+    devInfo.apiKey = encryption.encrypt(
+      `${this.getTenantId()}${dbCore.SEPARATOR}${newid()}`
+    )
+    await db.put(devInfo)
+    return devInfo.apiKey
   }
 
   // APP
-  async createApp(appName: string) {
+  async createApp(appName: string): Promise<App> {
     // create dev app
     // clear any old app
     this.appId = null
@@ -444,7 +454,7 @@ class TestConfiguration {
         null,
         controllers.app.create
       )
-      this.appId = this.app.appId
+      this.appId = this.app?.appId!
     })
     return await context.doInAppContext(this.appId, async () => {
       // create production app
