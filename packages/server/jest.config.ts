@@ -14,7 +14,7 @@ const baseConfig: Config.InitialProjectOptions = {
   moduleNameMapper: {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
-    "@budibase/data-utils": "<rootDir>/../data-utils/src",
+    "@budibase/shared-core": "<rootDir>/../shared-core/src",
     "@budibase/types": "<rootDir>/../types/src",
   },
 }

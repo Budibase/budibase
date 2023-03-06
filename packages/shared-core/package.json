@@ -1,5 +1,5 @@
 {
-  "name": "@budibase/data-utils",
+  "name": "@budibase/shared-core",
   "private": true,
   "version": "0.0.1",
   "description": "Shared data utils",

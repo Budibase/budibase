@@ -60,7 +60,7 @@
   "dependencies": {
     "@budibase/bbui": "2.3.21-alpha.1",
     "@budibase/client": "2.3.21-alpha.1",
-    "@budibase/data-utils": "0.0.1",
+    "@budibase/shared-core": "0.0.1",
     "@budibase/frontend-core": "2.3.21-alpha.1",
     "@budibase/string-templates": "2.3.21-alpha.1",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",

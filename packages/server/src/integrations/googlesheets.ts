@@ -16,7 +16,7 @@ import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
-import { runLuceneQuery } from "@budibase/data-utils"
+import { runLuceneQuery } from "@budibase/shared-core"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string

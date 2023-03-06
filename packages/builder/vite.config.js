@@ -98,8 +98,8 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("./src/helpers"),
         },
         {
-          find: "@budibase/data-utils",
-          replacement: path.resolve("../data-utils/src"),
+          find: "@budibase/shared-core",
+          replacement: path.resolve("../shared-core/src"),
         },
       ],
     },

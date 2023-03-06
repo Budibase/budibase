@@ -28,8 +28,8 @@ yarn unlink
 yarn link
 cd -
 
-echo "Linking data-utils"
-cd packages/data-utils
+echo "Linking shared-core"
+cd packages/shared-core
 yarn unlink
 yarn link
 cd -

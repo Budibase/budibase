@@ -70,8 +70,8 @@ export default {
           replacement: path.resolve("./src/sdk"),
         },
         {
-          find: "@budibase/data-utils",
-          replacement: path.resolve("../data-utils/dist/src"),
+          find: "@budibase/shared-core",
+          replacement: path.resolve("../shared-core/dist/src"),
         },
       ],
     }),

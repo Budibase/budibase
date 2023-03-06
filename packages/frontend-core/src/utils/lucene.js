@@ -1,1 +1,1 @@
-export * from "@budibase/data-utils"
+export * from "@budibase/shared-core"
