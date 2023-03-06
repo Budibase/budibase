@@ -97,6 +97,10 @@ export default defineConfig(({ mode }) => {
           find: "helpers",
           replacement: path.resolve("./src/helpers"),
         },
+        {
+          find: "@budibase/data-utils",
+          replacement: path.resolve("../data-utils/src"),
+        },
       ],
     },
   }

@@ -61,6 +61,7 @@
     "@budibase/bbui": "2.3.18-alpha.29",
     "@budibase/client": "2.3.18-alpha.29",
     "@budibase/frontend-core": "2.3.18-alpha.29",
+    "@budibase/data-utils": "0.0.1",
     "@budibase/string-templates": "2.3.18-alpha.29",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-brands-svg-icons": "^6.2.1",
