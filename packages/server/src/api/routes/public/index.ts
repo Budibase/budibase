@@ -13,7 +13,7 @@ import env from "../../../environment"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
-import { redis, permissions } from "@budibase/backend-core"
+import { middleware, redis, permissions } from "@budibase/backend-core"
 const { PermissionType, PermissionLevel } = permissions
 
 const PREFIX = "/api/public/v1"
@@ -92,6 +92,13 @@ function addToRouter(endpoints: any) {
   }
 }
 
+function applyAdminRoutes(endpoints: any) {
+  addMiddleware(endpoints.read, middleware.builderOrAdmin)
+  addMiddleware(endpoints.write, middleware.builderOrAdmin)
+  addToRouter(endpoints.read)
+  addToRouter(endpoints.write)
+}
+
 function applyRoutes(
   endpoints: any,
   permType: string,
@@ -120,8 +127,8 @@ function applyRoutes(
   addToRouter(endpoints.write)
 }
 
+applyAdminRoutes(metricEndpoints)
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
-applyRoutes(metricEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(userEndpoints, PermissionType.USER, "userId")
 applyRoutes(queryEndpoints, PermissionType.QUERY, "queryId")
