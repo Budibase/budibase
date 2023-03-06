@@ -24,7 +24,10 @@
   let updateModal
 
   $: appId = $store.appId
-  $: updateAvailable = clientPackage.version !== $store.version
+  $: updateAvailable =
+    clientPackage.version &&
+    $store.version &&
+    clientPackage.version !== $store.version
   $: revertAvailable = $store.revertableVersion != null
 
   const refreshAppPackage = async () => {
