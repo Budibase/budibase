@@ -1,34 +1,16 @@
 <script>
-  import SheetCell from "./SheetCell.svelte"
   import { getContext } from "svelte"
-  import { Icon } from "@budibase/bbui"
-  import { getIconForField } from "./utils"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
+  import HeaderCell from "./cells/HeaderCell.svelte"
 
-  const { visibleColumns, reorder } = getContext("sheet")
+  const { visibleColumns } = getContext("sheet")
 </script>
 
 <div class="header">
   <SheetScrollWrapper scrollVertically={false} wheelInteractive={false}>
     <div class="row">
       {#each $visibleColumns as column}
-        <SheetCell
-          header
-          reorderSource={$reorder.sourceColumn === column.name}
-          reorderTarget={$reorder.targetColumn === column.name}
-          on:mousedown={e => reorder.actions.startReordering(column.name, e)}
-          width={column.width}
-          left={column.left}
-        >
-          <Icon
-            size="S"
-            name={getIconForField(column)}
-            color="var(--spectrum-global-color-gray-600)"
-          />
-          <span>
-            {column.name}
-          </span>
-        </SheetCell>
+        <HeaderCell {column} />
       {/each}
     </div>
   </SheetScrollWrapper>

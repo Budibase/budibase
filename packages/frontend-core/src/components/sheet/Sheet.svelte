@@ -19,7 +19,6 @@
   import ScrollOverlay from "./ScrollOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
   import UserAvatars from "./UserAvatars.svelte"
-  import RowCount from "./RowCount.svelte"
 
   export let API
   export let tableId
@@ -28,7 +27,7 @@
   export let filter
 
   // Sheet constants
-  const cellHeight = 40
+  const cellHeight = 36
   const rand = Math.random()
 
   // State stores

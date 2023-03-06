@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { Checkbox, Icon } from "@budibase/bbui"
   import { getIconForField } from "./utils"
-  import SheetCell from "./SheetCell.svelte"
+  import SheetCell from "./cells/SheetCell.svelte"
   import { getCellRenderer } from "./renderers"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
 
