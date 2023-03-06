@@ -55,7 +55,11 @@ export default class Socket {
               // Middlewares are finished.
               // Extract some data from our enriched koa context to persist
               // as metadata for the socket
-              socket.data.user = ctx.user
+              socket.data.user = {
+                id: ctx.user._id,
+                email: ctx.user.email,
+                selectedCellId: null,
+              }
               next()
             }
           })

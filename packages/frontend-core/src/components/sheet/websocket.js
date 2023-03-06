@@ -2,7 +2,7 @@ import { derived, get } from "svelte/store"
 import { io } from "socket.io-client"
 
 export const createWebsocket = context => {
-  const { rows, config } = context
+  const { rows, config, users, userId, selectedCellId } = context
   const tableId = derived(config, $config => $config.tableId)
 
   // Determine connection info
@@ -28,9 +28,11 @@ export const createWebsocket = context => {
     console.log("Idenifying dataspace", tableId)
 
     // Identify which dataspace we are editing
-    socket.emit("identify", tableId, response => {
+    socket.emit("select-dataspace", tableId, response => {
       // handle initial connection info
       console.log("response", response)
+      users.set(response.users)
+      userId.set(response.id)
     })
   }
 
@@ -40,10 +42,15 @@ export const createWebsocket = context => {
   })
 
   socket.on("row-update", data => {
+    console.log("row-update:", data.id)
     if (data.id) {
       rows.actions.refreshRow(data.id)
     }
-    console.log(data)
+  })
+
+  socket.on("user-update", user => {
+    console.log("user-update", user)
+    users.actions.updateUser(user)
   })
 
   socket.on("connect_error", err => {
@@ -52,6 +59,11 @@ export const createWebsocket = context => {
 
   // Change websocket connection when dataspace changes
   tableId.subscribe(connectToDataspace)
+
+  // Notify selected cell changes
+  selectedCellId.subscribe($selectedCellId => {
+    socket.emit("select-cell", $selectedCellId)
+  })
 
   return () => socket?.disconnect()
 }
