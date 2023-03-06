@@ -17,6 +17,11 @@ const read = []
  *         description: Returns tenant metrics.
  *         content:
  *           text/plain:
+ *             schema:
+ *               type: string
+ *             examples:
+ *               metrics:
+ *                 $ref: '#/components/examples/metrics'
  */
 read.push(new Endpoint("get", "/metrics", controller.fetch))
 

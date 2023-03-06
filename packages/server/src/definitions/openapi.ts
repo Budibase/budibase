@@ -22,6 +22,10 @@ export interface paths {
     /** Based on application properties (currently only name) search for applications. */
     post: operations["appSearch"];
   };
+  "/metrics": {
+    /** Output metrics in OpenMetrics format compatible with Prometheus */
+    get: operations["getById"];
+  };
   "/queries/{queryId}": {
     /** Queries which have been created within a Budibase app can be executed using this, */
     post: operations["queryExecute"];
@@ -841,6 +845,17 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["nameSearch"];
+      };
+    };
+  };
+  /** Output metrics in OpenMetrics format compatible with Prometheus */
+  getById: {
+    responses: {
+      /** Returns tenant metrics. */
+      200: {
+        content: {
+          "text/plain": string;
+        };
       };
     };
   };
