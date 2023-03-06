@@ -1,6 +1,7 @@
 <script>
   import { setContext, createEventDispatcher, onMount } from "svelte"
   import { writable } from "svelte/store"
+  import { createAPIClient } from "../../api"
   import { createReorderStores } from "./stores/reorder"
   import { createViewportStores } from "./stores/viewport"
   import { createRowsStore } from "./stores/rows"
@@ -9,15 +10,15 @@
   import { createBoundsStores } from "./stores/bounds"
   import { createInterfaceStores } from "./stores/interface"
   export { createUserStores } from "./stores/users"
+  import { createWebsocket } from "./websocket"
+  import { createUserStores } from "./stores/users"
   import DeleteButton from "./DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "./ResizeOverlay.svelte"
   import HeaderRow from "./HeaderRow.svelte"
-  import { createAPIClient } from "../../api"
   import ScrollOverlay from "./ScrollOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
-  import { createWebsocket } from "./websocket"
-  import { createUserStores } from "./stores/users"
+  import UserAvatars from "./UserAvatars.svelte"
 
   export let API
   export let tableId
@@ -65,16 +66,21 @@
   })
 
   // Set context for children to consume
-  setContext("spreadsheet", context)
+  setContext("sheet", context)
 
   // Initialise websocket for multi-user
-  onMount(() => {
-    return createWebsocket(context)
-  })
+  onMount(() => createWebsocket(context))
 </script>
 
 <div class="sheet" style="--cell-height:{cellHeight}px;" id="sheet-{rand}">
-  <!--<SheetControls />-->
+  <div class="controls">
+    <div class="controls-left">
+      <slot name="controls" />
+    </div>
+    <div class="controls-right">
+      <UserAvatars />
+    </div>
+  </div>
   <div class="sheet-data">
     <StickyColumn />
     <div class="sheet-main">
@@ -127,5 +133,25 @@
     display: flex;
     flex-direction: column;
     align-self: stretch;
+  }
+
+  /* Controls */
+  .controls {
+    height: var(--controls-height);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--spectrum-global-color-gray-200);
+    padding: var(--cell-padding);
+    gap: var(--cell-spacing);
+  }
+  .controls-left,
+  .controls-right {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--cell-spacing);
   }
 </style>

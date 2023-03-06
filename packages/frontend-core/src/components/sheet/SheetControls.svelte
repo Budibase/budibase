@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton } from "@budibase/bbui"
 
-  const { rows } = getContext("spreadsheet")
+  const { rows } = getContext("sheet")
 
   $: rowCount = $rows.length
 </script>

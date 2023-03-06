@@ -25,12 +25,11 @@ export const createWebsocket = context => {
     if (!socket.connected) {
       return
     }
-    console.log("Idenifying dataspace", tableId)
+    console.log("Identifying dataspace", tableId)
 
     // Identify which dataspace we are editing
     socket.emit("select-dataspace", tableId, response => {
       // handle initial connection info
-      console.log("response", response)
       users.set(response.users)
       userId.set(response.id)
     })
@@ -42,15 +41,20 @@ export const createWebsocket = context => {
   })
 
   socket.on("row-update", data => {
-    console.log("row-update:", data.id)
+    console.log("row-update", data.id)
     if (data.id) {
       rows.actions.refreshRow(data.id)
     }
   })
 
   socket.on("user-update", user => {
-    console.log("user-update", user)
+    console.log("user-update", user.id)
     users.actions.updateUser(user)
+  })
+
+  socket.on("user-disconnect", user => {
+    console.log("user-disconnect", user.id)
+    users.actions.removeUser(user)
   })
 
   socket.on("connect_error", err => {

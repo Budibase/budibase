@@ -12,7 +12,7 @@
     hoveredRowId,
     maxScrollTop,
     maxScrollLeft,
-  } = getContext("spreadsheet")
+  } = getContext("sheet")
 
   export let scrollVertically = true
   export let scrollHorizontally = true

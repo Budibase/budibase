@@ -9,7 +9,7 @@
     visibleColumns,
     cellHeight,
     stickyColumn,
-  } = getContext("spreadsheet")
+  } = getContext("sheet")
   const MinColumnWidth = 100
 
   let initialMouseX = null

@@ -11,7 +11,7 @@
     maxScrollTop,
     contentWidth,
     maxScrollLeft,
-  } = getContext("spreadsheet")
+  } = getContext("sheet")
 
   // Bar config
   const barOffset = 4

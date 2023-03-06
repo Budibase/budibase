@@ -16,7 +16,8 @@
     scroll,
     reorder,
     config,
-  } = getContext("spreadsheet")
+    selectedCellMap,
+  } = getContext("sheet")
 
   $: scrollLeft = $scroll.left
   $: rowCount = $rows.length
@@ -96,7 +97,7 @@
 
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
     <SheetScrollWrapper scrollHorizontally={false}>
-      {#each $visibleRows as row}
+      {#each $visibleRows as row, idx}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
         <div class="row" on:mouseenter={() => ($hoveredRowId = row._id)}>
@@ -123,8 +124,10 @@
             <SheetCell
               {rowSelected}
               {rowHovered}
+              rowIdx={idx}
               sticky
               selected={$selectedCellId === cellIdx}
+              selectedUser={$selectedCellMap[cellIdx]}
               on:click={() => ($selectedCellId = cellIdx)}
               width={$stickyColumn.width}
               reorderTarget={$reorder.targetColumn === $stickyColumn.name}
