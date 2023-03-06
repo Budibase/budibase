@@ -69,6 +69,15 @@ const environment = {
    * Mock the email service in use - links to ethereal hosted emails are logged instead.
    */
   ENABLE_EMAIL_TEST_MODE: process.env.ENABLE_EMAIL_TEST_MODE,
+  PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT:
+    process.env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT || "/",
+  PASSPORT_GOOGLEAUTH_FAILURE_REDIRECT:
+    process.env.PASSPORT_GOOGLEAUTH_FAILURE_REDIRECT || "/error",
+  PASSPORT_OIDCAUTH_SUCCESS_REDIRECT:
+    process.env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT || "/",
+  PASSPORT_OIDCAUTH_FAILURE_REDIRECT:
+    process.env.PASSPORT_OIDCAUTH_FAILURE_REDIRECT || "/error",
+
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
@@ -103,3 +112,4 @@ for (let [key, value] of Object.entries(environment)) {
 }
 
 export default environment
+
