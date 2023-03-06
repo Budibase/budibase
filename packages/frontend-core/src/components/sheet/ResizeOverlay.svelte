@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
 
-  const { columns, rand, scroll, visibleColumns, stickyColumn } =
+  const { columns, rand, scroll, visibleColumns, stickyColumn, isReordering } =
     getContext("sheet")
   const MinColumnWidth = 100
 
@@ -75,26 +75,28 @@
   }
 </script>
 
-{#if $stickyColumn}
-  <div
-    class="resize-slider sticky"
-    class:visible={columnIdx === "sticky"}
-    on:mousedown={e => startResizing("sticky", e)}
-    style="--left:{40 + $stickyColumn.width}px;"
-  >
-    <div class="resize-indicator" />
-  </div>
+{#if !$isReordering}
+  {#if $stickyColumn}
+    <div
+      class="resize-slider sticky"
+      class:visible={columnIdx === "sticky"}
+      on:mousedown={e => startResizing("sticky", e)}
+      style="--left:{40 + $stickyColumn.width}px;"
+    >
+      <div class="resize-indicator" />
+    </div>
+  {/if}
+  {#each $visibleColumns as col}
+    <div
+      class="resize-slider"
+      class:visible={columnIdx === col.idx}
+      on:mousedown={e => startResizing(col.idx, e)}
+      style={getStyle(col, offset, scrollLeft)}
+    >
+      <div class="resize-indicator" />
+    </div>
+  {/each}
 {/if}
-{#each $visibleColumns as col}
-  <div
-    class="resize-slider"
-    class:visible={columnIdx === col.idx}
-    on:mousedown={e => startResizing(col.idx, e)}
-    style={getStyle(col, offset, scrollLeft)}
-  >
-    <div class="resize-indicator" />
-  </div>
-{/each}
 
 <style>
   .resize-slider {

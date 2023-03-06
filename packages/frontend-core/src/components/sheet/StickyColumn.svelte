@@ -79,7 +79,7 @@
     </SheetCell>
 
     {#if $stickyColumn}
-      <HeaderCell column={$stickyColumn} />
+      <HeaderCell column={$stickyColumn} orderable={false} />
     {/if}
   </div>
 
