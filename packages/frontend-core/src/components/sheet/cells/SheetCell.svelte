@@ -95,9 +95,6 @@
   .cell.reorder-source {
     background: var(--spectrum-global-color-gray-100);
   }
-  .cell.header.reorder-source {
-    background: var(--spectrum-global-color-gray-200);
-  }
   .cell.reorder-target:after {
     content: " ";
     position: absolute;

@@ -5,6 +5,7 @@
   import { getIconForField } from "../utils"
 
   export let column
+  export let orderable = true
 
   const { reorder, isReordering, rand } = getContext("sheet")
 
@@ -43,8 +44,8 @@
   <SheetCell
     reorderSource={$reorder.sourceColumn === column.name}
     reorderTarget={$reorder.targetColumn === column.name}
-    on:mousedown={startReordering}
-    on:mouseup={stopReordering}
+    on:mousedown={orderable ? startReordering : null}
+    on:mouseup={orderable ? stopReordering : null}
     on:click={onClick}
     width={column.width}
     left={column.left}
@@ -75,8 +76,10 @@
     <MenuItem icon="Edit">Edit column</MenuItem>
     <MenuItem icon="SortOrderUp">Sort ascending</MenuItem>
     <MenuItem icon="SortOrderDown">Sort descending</MenuItem>
-    <MenuItem icon="ArrowLeft">Move left</MenuItem>
-    <MenuItem icon="ArrowRight">Move right</MenuItem>
+    {#if orderable}
+      <MenuItem icon="ArrowLeft">Move left</MenuItem>
+      <MenuItem icon="ArrowRight">Move right</MenuItem>
+    {/if}
     <MenuItem icon="Delete">Delete</MenuItem>
   </Menu>
 </Popover>

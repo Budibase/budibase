@@ -48,7 +48,6 @@ export const createReorderStores = context => {
 
     // Trigger a move event immediately so ensure a candidate column is chosen
     onReorderMouseMove(e)
-    document.getElementById(`sheet-${rand}`).classList.add("is-reordering")
   }
 
   // Callback when moving the mouse when reordering columns
@@ -107,7 +106,6 @@ export const createReorderStores = context => {
     // Remove event handlers
     document.removeEventListener("mousemove", onReorderMouseMove)
     document.removeEventListener("mouseup", stopReordering)
-    document.getElementById(`sheet-${rand}`).classList.remove("is-reordering")
   }
 
   return {
