@@ -232,7 +232,7 @@ export async function fetch(ctx: BBContext) {
       : automationsQuotaLimit
   )
   ctx.body = outputString
-  ctx.set('Content-Type', 'text/plain');
+  ctx.set("Content-Type", "text/plain")
 }
 
 export function convertToOpenMetrics(
