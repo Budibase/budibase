@@ -12,6 +12,7 @@
   export { createUserStores } from "./stores/users"
   import { createWebsocket } from "./websocket"
   import { createUserStores } from "./stores/users"
+  import { createResizeStores } from "./stores/resize"
   import DeleteButton from "./DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "./ResizeOverlay.svelte"
@@ -50,12 +51,16 @@
   }
   context = { ...context, ...createRowsStore(context) }
   context = { ...context, ...createColumnsStores(context) }
+  context = { ...context, ...createResizeStores(context) }
   context = { ...context, ...createBoundsStores(context) }
   context = { ...context, ...createScrollStores(context) }
   context = { ...context, ...createViewportStores(context) }
   context = { ...context, ...createReorderStores(context) }
   context = { ...context, ...createInterfaceStores(context) }
   context = { ...context, ...createUserStores(context) }
+
+  // Reference some stores for local use
+  const isResizing = context.isResizing
 
   // Keep config store up to date
   $: config.set({
@@ -72,7 +77,12 @@
   onMount(() => createWebsocket(context))
 </script>
 
-<div class="sheet" style="--cell-height:{cellHeight}px;" id="sheet-{rand}">
+<div
+  class="sheet"
+  class:is-resizing={$isResizing}
+  style="--cell-height:{cellHeight}px;"
+  id="sheet-{rand}"
+>
   <div class="controls">
     <div class="controls-left">
       <slot name="controls" />
@@ -115,6 +125,9 @@
   .sheet,
   .sheet :global(*) {
     box-sizing: border-box;
+  }
+  .sheet.is-resizing :global(*) {
+    cursor: col-resize !important;
   }
 
   .sheet-data {

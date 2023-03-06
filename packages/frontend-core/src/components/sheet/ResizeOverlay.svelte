@@ -1,77 +1,23 @@
 <script>
   import { getContext } from "svelte"
 
-  const { columns, rand, scroll, visibleColumns, stickyColumn, isReordering } =
-    getContext("sheet")
-  const MinColumnWidth = 100
-
-  let initialMouseX = null
-  let initialWidth = null
-  let columnIdx = null
-  let width = 0
-  let left = 0
-  let columnCount = 0
+  const {
+    columns,
+    resize,
+    scroll,
+    visibleColumns,
+    stickyColumn,
+    isReordering,
+  } = getContext("sheet")
 
   $: scrollLeft = $scroll.left
   $: cutoff = scrollLeft + 40 + ($columns[0]?.width || 0)
   $: offset = 40 + ($stickyColumn?.width || 0)
+  $: columnIdx = $resize.columnIdx
 
-  const startResizing = (idx, e) => {
-    // Prevent propagation to stop reordering triggering
-    e.stopPropagation()
-
-    const col = idx === "sticky" ? $stickyColumn : $columns[idx]
-    width = col.width
-    left = col.left
-    initialWidth = width
-    initialMouseX = e.clientX
-    columnIdx = idx
-    columnCount = $columns.length
-
-    // Add mouse event listeners to handle resizing
-    document.addEventListener("mousemove", onResizeMouseMove)
-    document.addEventListener("mouseup", stopResizing)
-    document.getElementById(`sheet-${rand}`).classList.add("is-resizing")
-  }
-
-  const onResizeMouseMove = e => {
-    const dx = e.clientX - initialMouseX
-    const newWidth = Math.round(Math.max(MinColumnWidth, initialWidth + dx))
-
-    if (Math.abs(width - newWidth) < 10) {
-      return
-    }
-
-    if (columnIdx === "sticky") {
-      stickyColumn.update(state => ({
-        ...state,
-        width: newWidth,
-      }))
-    } else {
-      columns.update(state => {
-        state[columnIdx].width = newWidth
-        let offset = state[columnIdx].left + newWidth
-        for (let i = columnIdx + 1; i < state.length; i++) {
-          state[i].left = offset
-          offset += state[i].width
-        }
-        return [...state]
-      })
-    }
-
-    width = newWidth
-  }
-
-  const stopResizing = () => {
-    columnIdx = null
-    document.removeEventListener("mousemove", onResizeMouseMove)
-    document.removeEventListener("mouseup", stopResizing)
-    document.getElementById(`sheet-${rand}`).classList.remove("is-resizing")
-  }
-
-  const getStyle = (col, offset, scrollLeft) => {
-    const left = offset + col.left + col.width - scrollLeft
-    return `--left:${left}px;`
+  const getStyle = (column, offset, scrollLeft) => {
+    const left = offset + column.left + column.width - scrollLeft
+    return `left:${left}px;`
   }
 </script>
 
@@ -80,18 +26,18 @@
     <div
       class="resize-slider sticky"
       class:visible={columnIdx === "sticky"}
-      on:mousedown={e => startResizing("sticky", e)}
-      style="--left:{40 + $stickyColumn.width}px;"
+      on:mousedown={e => resize.actions.startResizing($stickyColumn, e)}
+      style="left:{40 + $stickyColumn.width}px;"
     >
       <div class="resize-indicator" />
     </div>
   {/if}
-  {#each $visibleColumns as col}
+  {#each $visibleColumns as column}
     <div
       class="resize-slider"
-      class:visible={columnIdx === col.idx}
-      on:mousedown={e => startResizing(col.idx, e)}
-      style={getStyle(col, offset, scrollLeft)}
+      class:visible={columnIdx === column.idx}
+      on:mousedown={e => resize.actions.startResizing(column, e)}
+      style={getStyle(column, offset, scrollLeft)}
     >
       <div class="resize-indicator" />
     </div>
@@ -104,7 +50,6 @@
     top: 0;
     z-index: 1;
     height: var(--cell-height);
-    left: var(--left);
     opacity: 0;
     padding: 0 8px;
     transform: translateX(-50%);
@@ -123,12 +68,5 @@
     width: 2px;
     height: 100%;
     background: var(--spectrum-global-color-blue-400);
-  }
-
-  :global(.sheet.is-resizing *) {
-    cursor: col-resize !important;
-  }
-  :global(.sheet.is-reordering .resize-slider) {
-    display: none;
   }
 </style>
