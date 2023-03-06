@@ -1,19 +1,6 @@
-const { roles, utils } = require("@budibase/backend-core")
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
-const { BUILTIN_ROLE_IDS } = roles
+const setup = require("../../tests/utilities")
 
 jest.setTimeout(30000)
-
-// jest.mock("../../../utilities/workerRequests", () => ({
-//   getGlobalUsers: jest.fn(() => {
-//     return {}
-//   }),
-//   getGlobalSelf: jest.fn(() => {
-//     return {}
-//   }),
-//   deleteGlobalUser: jest.fn(),
-// }))
 
 describe("/metrics", () => {
   let request = setup.getRequest()
@@ -36,13 +23,11 @@ describe("/metrics", () => {
       expect(res.text).toContain("budibase_tenant_user_count")
     })
 
-    it("should apply authorization to endpoint", async () => {
-      // await config.createUser()
-      const res = await request
+    it("endpoint should not be publicly exposed", async () => {
+      await request
       .get(`/api/public/v1/metrics`)
       .set(config.publicHeaders())
       .expect(403)
-
     })
   })
 
