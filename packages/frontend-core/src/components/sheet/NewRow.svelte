@@ -1,5 +1,5 @@
 <script>
-  import SheetCell from "./SheetCell.svelte"
+  import SheetCell from "./cells/SheetCell.svelte"
   import { getContext } from "svelte"
 
   const { visibleColumns, hoveredRowId, rows, selectedCellId, reorder } =

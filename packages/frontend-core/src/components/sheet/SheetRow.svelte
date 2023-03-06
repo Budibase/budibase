@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import SheetCell from "./SheetCell.svelte"
+  import SheetCell from "./cells/SheetCell.svelte"
   import { getCellRenderer } from "./renderers"
 
   export let row

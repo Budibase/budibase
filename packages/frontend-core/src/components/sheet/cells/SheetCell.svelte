@@ -1,7 +1,4 @@
 <script>
-  import Avatar from "./Avatar.svelte"
-
-  export let header = false
   export let label = false
   export let rowSelected = false
   export let rowHovered = false
@@ -27,7 +24,6 @@
 
 <div
   class="cell"
-  class:header
   class:label
   class:row-selected={rowSelected}
   class:row-hovered={rowHovered}
@@ -90,24 +86,6 @@
   }
   .cell.center {
     justify-content: center;
-  }
-
-  /* Header cells */
-  .cell.header {
-    background: var(--background);
-    padding: 0 var(--cell-padding);
-    gap: calc(2 * var(--cell-spacing));
-    border-bottom: none;
-  }
-  .cell.header :global(> span) {
-    flex: 1 1 auto;
-    width: 0;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
-  .cell.header:hover {
-    cursor: pointer;
   }
 
   /* Reorder styles */
