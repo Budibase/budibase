@@ -19,6 +19,7 @@
   import ScrollOverlay from "./ScrollOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
   import UserAvatars from "./UserAvatars.svelte"
+  import RowCount from "./RowCount.svelte"
 
   export let API
   export let tableId
